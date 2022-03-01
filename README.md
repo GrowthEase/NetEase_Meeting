@@ -51,7 +51,7 @@
 整套会议系统客户端支持 Android、iOS、Web、Electron、Windows、macOS等平台, 如何确保用户快速接入以及各端一致性问题, 我们对会议客户端进行了一定的拆分设计。
 
 ## 网易会议组件架构：
-![meeting framework](https://github.com/J-yying/MeetingDocument/blob/main/%E7%BD%91%E6%98%93%E4%BC%9A%E8%AE%AE%E7%BB%84%E4%BB%B6%E6%9E%B6%E6%9E%84.jpeg)
+![meeting framework](./images/网易会议组件架构.jpeg)
 
 ### Base
 
@@ -82,13 +82,13 @@ Meeting SDK 是一个带UI的会议服务组件, 相比于RoomKit 我们提供�
 在此基础上我们重点对会议相关特性进行了设计, 包括多租户账号体系、安全入会、会议预定、会议控制、视图布局、角色控制等。
 
 
-![meeting_server](https://github.com/J-yying/MeetingDocument/blob/main/%E4%BC%9A%E8%AE%AE%E6%9C%8D%E5%8A%A1.jpeg)
+![meeting_server](./images/会议服务.jpeg)
 
 --------------------
 
 
 为便于开发者对网易会议系统的理解，我们提供了网易会议相关的时序图供开发者进行流程上的参考；    
-![meeting_flow_chart](https://github.com/J-yying/MeetingDocument/blob/main/meeting_flow_chart.png)
+![meeting_flow_chart](./images/meeting_flow_chart.png)
 
 --------------------
 
