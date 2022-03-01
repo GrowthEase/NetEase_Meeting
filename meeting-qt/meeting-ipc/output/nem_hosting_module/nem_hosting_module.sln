@@ -1,0 +1,66 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31005.135
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nem_hosting_module", "nem_hosting_module.vcxproj", "{2904CEA7-3169-35AC-80E1-77EDAAFA96ED}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C39D112E-EB17-3E5C-A52C-D10D59B52240} = {C39D112E-EB17-3E5C-A52C-D10D59B52240}
+		{327A1172-6928-3418-93DB-0E0B59442CC0} = {327A1172-6928-3418-93DB-0E0B59442CC0}
+		{573DF8B0-3513-3BAA-917D-0C68B3D356F7} = {573DF8B0-3513-3BAA-917D-0C68B3D356F7}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nem_hosting_module_core", "..\nem_hosting_module_core\nem_hosting_module_core.vcxproj", "{C39D112E-EB17-3E5C-A52C-D10D59B52240}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nem_hosting_module_protocol", "..\nem_hosting_module_protocol\nem_hosting_module_protocol.vcxproj", "{327A1172-6928-3418-93DB-0E0B59442CC0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nipc", "..\nipclib\nipc.vcxproj", "{573DF8B0-3513-3BAA-917D-0C68B3D356F7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		MinSizeRel|Win32 = MinSizeRel|Win32
+		Release|Win32 = Release|Win32
+		RelWithDebInfo|Win32 = RelWithDebInfo|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2904CEA7-3169-35AC-80E1-77EDAAFA96ED}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2904CEA7-3169-35AC-80E1-77EDAAFA96ED}.Debug|Win32.Build.0 = Debug|Win32
+		{2904CEA7-3169-35AC-80E1-77EDAAFA96ED}.MinSizeRel|Win32.ActiveCfg = MinSizeRel|Win32
+		{2904CEA7-3169-35AC-80E1-77EDAAFA96ED}.MinSizeRel|Win32.Build.0 = MinSizeRel|Win32
+		{2904CEA7-3169-35AC-80E1-77EDAAFA96ED}.Release|Win32.ActiveCfg = Release|Win32
+		{2904CEA7-3169-35AC-80E1-77EDAAFA96ED}.Release|Win32.Build.0 = Release|Win32
+		{2904CEA7-3169-35AC-80E1-77EDAAFA96ED}.RelWithDebInfo|Win32.ActiveCfg = RelWithDebInfo|Win32
+		{2904CEA7-3169-35AC-80E1-77EDAAFA96ED}.RelWithDebInfo|Win32.Build.0 = RelWithDebInfo|Win32
+		{C39D112E-EB17-3E5C-A52C-D10D59B52240}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C39D112E-EB17-3E5C-A52C-D10D59B52240}.Debug|Win32.Build.0 = Debug|Win32
+		{C39D112E-EB17-3E5C-A52C-D10D59B52240}.MinSizeRel|Win32.ActiveCfg = MinSizeRel|Win32
+		{C39D112E-EB17-3E5C-A52C-D10D59B52240}.MinSizeRel|Win32.Build.0 = MinSizeRel|Win32
+		{C39D112E-EB17-3E5C-A52C-D10D59B52240}.Release|Win32.ActiveCfg = Release|Win32
+		{C39D112E-EB17-3E5C-A52C-D10D59B52240}.Release|Win32.Build.0 = Release|Win32
+		{C39D112E-EB17-3E5C-A52C-D10D59B52240}.RelWithDebInfo|Win32.ActiveCfg = RelWithDebInfo|Win32
+		{C39D112E-EB17-3E5C-A52C-D10D59B52240}.RelWithDebInfo|Win32.Build.0 = RelWithDebInfo|Win32
+		{327A1172-6928-3418-93DB-0E0B59442CC0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{327A1172-6928-3418-93DB-0E0B59442CC0}.Debug|Win32.Build.0 = Debug|Win32
+		{327A1172-6928-3418-93DB-0E0B59442CC0}.MinSizeRel|Win32.ActiveCfg = MinSizeRel|Win32
+		{327A1172-6928-3418-93DB-0E0B59442CC0}.MinSizeRel|Win32.Build.0 = MinSizeRel|Win32
+		{327A1172-6928-3418-93DB-0E0B59442CC0}.Release|Win32.ActiveCfg = Release|Win32
+		{327A1172-6928-3418-93DB-0E0B59442CC0}.Release|Win32.Build.0 = Release|Win32
+		{327A1172-6928-3418-93DB-0E0B59442CC0}.RelWithDebInfo|Win32.ActiveCfg = RelWithDebInfo|Win32
+		{327A1172-6928-3418-93DB-0E0B59442CC0}.RelWithDebInfo|Win32.Build.0 = RelWithDebInfo|Win32
+		{573DF8B0-3513-3BAA-917D-0C68B3D356F7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{573DF8B0-3513-3BAA-917D-0C68B3D356F7}.Debug|Win32.Build.0 = Debug|Win32
+		{573DF8B0-3513-3BAA-917D-0C68B3D356F7}.MinSizeRel|Win32.ActiveCfg = MinSizeRel|Win32
+		{573DF8B0-3513-3BAA-917D-0C68B3D356F7}.MinSizeRel|Win32.Build.0 = MinSizeRel|Win32
+		{573DF8B0-3513-3BAA-917D-0C68B3D356F7}.Release|Win32.ActiveCfg = Release|Win32
+		{573DF8B0-3513-3BAA-917D-0C68B3D356F7}.Release|Win32.Build.0 = Release|Win32
+		{573DF8B0-3513-3BAA-917D-0C68B3D356F7}.RelWithDebInfo|Win32.ActiveCfg = RelWithDebInfo|Win32
+		{573DF8B0-3513-3BAA-917D-0C68B3D356F7}.RelWithDebInfo|Win32.Build.0 = RelWithDebInfo|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1497477E-BDF2-352B-A625-91CBEA13E377}
+	EndGlobalSection
+EndGlobal

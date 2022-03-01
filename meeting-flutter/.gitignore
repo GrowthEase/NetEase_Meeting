@@ -1,0 +1,5 @@
+.idea
+.vscode
+**/Podfile.lock
+ios/Runner.xcworkspace/
+build

@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31005.135
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nem_hosting_module_protocol", "nem_hosting_module_protocol.vcxproj", "{327A1172-6928-3418-93DB-0E0B59442CC0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		MinSizeRel|Win32 = MinSizeRel|Win32
+		Release|Win32 = Release|Win32
+		RelWithDebInfo|Win32 = RelWithDebInfo|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{327A1172-6928-3418-93DB-0E0B59442CC0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{327A1172-6928-3418-93DB-0E0B59442CC0}.Debug|Win32.Build.0 = Debug|Win32
+		{327A1172-6928-3418-93DB-0E0B59442CC0}.MinSizeRel|Win32.ActiveCfg = MinSizeRel|Win32
+		{327A1172-6928-3418-93DB-0E0B59442CC0}.MinSizeRel|Win32.Build.0 = MinSizeRel|Win32
+		{327A1172-6928-3418-93DB-0E0B59442CC0}.Release|Win32.ActiveCfg = Release|Win32
+		{327A1172-6928-3418-93DB-0E0B59442CC0}.Release|Win32.Build.0 = Release|Win32
+		{327A1172-6928-3418-93DB-0E0B59442CC0}.RelWithDebInfo|Win32.ActiveCfg = RelWithDebInfo|Win32
+		{327A1172-6928-3418-93DB-0E0B59442CC0}.RelWithDebInfo|Win32.Build.0 = RelWithDebInfo|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E9D18514-0617-3A9F-B3DB-1D80857F7072}
+	EndGlobalSection
+EndGlobal
