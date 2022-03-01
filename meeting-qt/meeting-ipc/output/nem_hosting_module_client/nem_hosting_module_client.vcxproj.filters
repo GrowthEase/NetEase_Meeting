@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\nem_hosting_module_client\global\client_global.cpp" />
+    <ClCompile Include="..\..\nem_hosting_module_client\service\client_account_service.cpp" />
+    <ClCompile Include="..\..\nem_hosting_module_client\service\client_auth_service.cpp" />
+    <ClCompile Include="..\..\nem_hosting_module_client\service\client_feedback_service.cpp" />
+    <ClCompile Include="..\..\nem_hosting_module_client\service\client_meeting_service.cpp" />
+    <ClCompile Include="..\..\nem_hosting_module_client\service\client_premeeting_service.cpp" />
+    <ClCompile Include="..\..\nem_hosting_module_client\service\client_setting_service.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\nem_sdk_interface\account_service.h" />
+    <ClInclude Include="..\..\nem_sdk_interface\auth_service.h" />
+    <ClInclude Include="..\..\nem_sdk_interface\build_config.h" />
+    <ClInclude Include="..\..\nem_sdk_interface\callback_interface.h" />
+    <ClInclude Include="..\..\nem_sdk_interface\controller_define.h" />
+    <ClInclude Include="..\..\nem_sdk_interface\error.h" />
+    <ClInclude Include="..\..\nem_sdk_interface\exception.h" />
+    <ClInclude Include="..\..\nem_sdk_interface\exception_define.h" />
+    <ClInclude Include="..\..\nem_sdk_interface\feedback_service.h" />
+    <ClInclude Include="..\..\nem_sdk_interface\meeting_sdk.h" />
+    <ClInclude Include="..\..\nem_sdk_interface\meeting_service.h" />
+    <ClInclude Include="..\..\nem_sdk_interface\metting.h" />
+    <ClInclude Include="..\..\nem_sdk_interface\nemeeting_sdk_interface_export.h" />
+    <ClInclude Include="..\..\nem_sdk_interface\nemeeting_sdk_interface_include.h" />
+    <ClInclude Include="..\..\nem_sdk_interface\premeeting_service.h" />
+    <ClInclude Include="..\..\nem_sdk_interface\public_define.h" />
+    <ClInclude Include="..\..\nem_sdk_interface\sdk_init_config.h" />
+    <ClInclude Include="..\..\nem_sdk_interface\service_define.h" />
+    <ClInclude Include="..\..\nem_sdk_interface\setting_service.h" />
+    <ClInclude Include="..\..\nem_sdk_interface\settings.h" />
+    <ClInclude Include="..\..\nem_sdk_interface_ipc_client\client_account_service.h" />
+    <ClInclude Include="..\..\nem_sdk_interface_ipc_client\client_auth_service.h" />
+    <ClInclude Include="..\..\nem_sdk_interface_ipc_client\client_feedback_service.h" />
+    <ClInclude Include="..\..\nem_sdk_interface_ipc_client\client_meeting_sdk.h" />
+    <ClInclude Include="..\..\nem_sdk_interface_ipc_client\client_meeting_service.h" />
+    <ClInclude Include="..\..\nem_sdk_interface_ipc_client\client_nemeeting_sdk_interface_include.h" />
+    <ClInclude Include="..\..\nem_sdk_interface_ipc_client\client_premeeting_service.h" />
+    <ClInclude Include="..\..\nem_sdk_interface_ipc_client\client_prochandler_define.h" />
+    <ClInclude Include="..\..\nem_sdk_interface_ipc_client\client_setting_service.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{2151D18D-923C-3122-BDEB-91DC85C256D8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{472C9C32-9593-3D44-BE15-068021FEE942}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

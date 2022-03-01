@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31005.135
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nipc", "nipc.vcxproj", "{573DF8B0-3513-3BAA-917D-0C68B3D356F7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		MinSizeRel|Win32 = MinSizeRel|Win32
+		Release|Win32 = Release|Win32
+		RelWithDebInfo|Win32 = RelWithDebInfo|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{573DF8B0-3513-3BAA-917D-0C68B3D356F7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{573DF8B0-3513-3BAA-917D-0C68B3D356F7}.Debug|Win32.Build.0 = Debug|Win32
+		{573DF8B0-3513-3BAA-917D-0C68B3D356F7}.MinSizeRel|Win32.ActiveCfg = MinSizeRel|Win32
+		{573DF8B0-3513-3BAA-917D-0C68B3D356F7}.MinSizeRel|Win32.Build.0 = MinSizeRel|Win32
+		{573DF8B0-3513-3BAA-917D-0C68B3D356F7}.Release|Win32.ActiveCfg = Release|Win32
+		{573DF8B0-3513-3BAA-917D-0C68B3D356F7}.Release|Win32.Build.0 = Release|Win32
+		{573DF8B0-3513-3BAA-917D-0C68B3D356F7}.RelWithDebInfo|Win32.ActiveCfg = RelWithDebInfo|Win32
+		{573DF8B0-3513-3BAA-917D-0C68B3D356F7}.RelWithDebInfo|Win32.Build.0 = RelWithDebInfo|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {575044B1-516D-32F6-9E00-702022011814}
+	EndGlobalSection
+EndGlobal

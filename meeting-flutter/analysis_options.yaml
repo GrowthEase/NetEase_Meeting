@@ -1,0 +1,30 @@
+include: package:pedantic/analysis_options.1.9.0.yaml
+
+analyzer:
+  exclude:
+    - test/**
+    - build/**
+    - test_driver/**
+  strong-mode:
+    implicit-casts: false
+    #implicit-dynamic: false
+
+  errors:
+    todo: ignore
+    dead_code: info
+    missing_return: error
+    invalid_assignment: warning
+
+
+linter:
+  rules:
+    - camel_case_types
+    - empty_constructor_bodies
+    - annotate_overrides
+    - await_only_futures
+    - empty_statements
+    - control_flow_in_finally
+    - cancel_subscriptions
+    - close_sinks
+    - comment_references
+    - constant_identifier_names

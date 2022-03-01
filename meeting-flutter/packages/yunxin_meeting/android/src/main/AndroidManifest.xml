@@ -1,0 +1,16 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.netease.meeting.plugin">
+
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <application>
+        <service
+            android:name=".foregroundservice.NEForegroundService"
+            android:enabled="true"
+            android:foregroundServiceType="mediaProjection"
+            android:exported="false">
+            <intent-filter><action android:name="com.netease.Yunxin.ScreenShare" /></intent-filter>
+        </service>
+    </application>
+
+
+</manifest>

@@ -1,0 +1,18 @@
+{
+  "title": "NetEaseMeeting",
+  "icon": "macx.icns",
+  "window": {
+    "position": {
+      "x": 300,
+      "y": 300
+    },
+    "size": {
+      "width": 620,
+      "height": 420
+    }
+  },
+  "contents": [
+    { "x": 192, "y": 200, "type": "file", "path": "网易会议.app" },
+    { "x": 448, "y": 200, "type": "link", "path": "/Applications" }
+  ]
+}
