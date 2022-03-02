@@ -51,6 +51,7 @@
 整套会议系统客户端支持 Android、iOS、Web、Electron、Windows、macOS等平台, 如何确保用户快速接入以及各端一致性问题, 我们对会议客户端进行了一定的拆分设计。
 
 ## 网易会议组件架构：
+<br>
 ![meeting framework](./images/网易会议组件架构.jpeg)
 
 ### Base
