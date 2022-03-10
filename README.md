@@ -110,7 +110,8 @@ The MIT License（MIT）
 ![小助手](https://user-images.githubusercontent.com/97159926/156147931-85c382e3-7e11-4ec9-bc81-49bf6f504603.jpg)
 
 官方交流社群：
-![企业微信群](https://user-images.githubusercontent.com/97159926/156147948-ef645c5e-73c1-4016-b232-e19043cef91f.jpg)
+![7cf4117d26d6fd815e4fff2b50a081d2](https://user-images.githubusercontent.com/97159926/157569489-65a4f0db-36a2-4ef6-a7c0-10c20e375918.jpg)
+
 
 
 
