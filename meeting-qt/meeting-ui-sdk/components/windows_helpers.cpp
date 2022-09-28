@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "windows_helpers.h"
 #include <Psapi.h>
@@ -13,7 +12,6 @@
 #include <shlwapi.h>
 #include <wingdi.h>
 #include <QtWin>
-#include "glog/logging.h"
 
 #pragma comment(lib, "Version.lib")
 #pragma comment(lib, "Shlwapi.lib")
@@ -83,7 +81,7 @@ WindowsHelpers::WindowsHelpers() {
             CloseHandle(hToken);
         }
         if (!fOk) {
-            YXLOG(Info) << "OpenProcessToken failed: GetLastError = " << dwRet;
+            // YXLOG(Info) << "OpenProcessToken failed: GetLastError: " << dwRet << YXLOGEnd;
         }
     }
 }
@@ -141,7 +139,7 @@ int WindowsHelpers::getNTDLLVersion() {
 BOOL CALLBACK WindowsEnumerationHandler(HWND hwnd, LPARAM param) {
     WindowsHelpers::CaptureTargetInfoList* list = reinterpret_cast<WindowsHelpers::CaptureTargetInfoList*>(param);
     if (nullptr == list) {
-        YXLOG(Info) << "list is nullptr" << YXLOGEnd;;
+        YXLOG(Info) << "list is nullptr" << YXLOGEnd;
         return TRUE;
     }
 
@@ -155,32 +153,33 @@ BOOL CALLBACK WindowsEnumerationHandler(HWND hwnd, LPARAM param) {
     //        return TRUE;
     //    }
 
-     // YXLOG(Info) << "hwnd: " << hwnd << "IsWindow: " << ::IsWindow(hwnd) << ", IsWindowVisible: " << ::IsWindowVisible(hwnd) << ", GetWindowLong: " << ::GetWindowLong(hwnd, GWL_HWNDPARENT) << ", GetLastError: " << GetLastError() << YXLOGEnd;
-     const size_t kTitleLength = 500;
-     WCHAR window_title[kTitleLength] = {0};
+    // YXLOG(Info) << "hwnd: " << hwnd << "IsWindow: " << ::IsWindow(hwnd) << ", IsWindowVisible: " << ::IsWindowVisible(hwnd) << ", GetWindowLong: "
+    // << ::GetWindowLong(hwnd, GWL_HWNDPARENT) << ", GetLastError: " << GetLastError() << YXLOGEnd;
+    const size_t kTitleLength = 500;
+    WCHAR window_title[kTitleLength] = {0};
 
-     const size_t kClassLength = 256;
-     WCHAR class_name[kClassLength] = {0};
+    const size_t kClassLength = 256;
+    WCHAR class_name[kClassLength] = {0};
 
-     if (::IsWindow(hwnd) && ::IsWindowVisible(hwnd) && (::GetWindowLong(hwnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW) != WS_EX_TOOLWINDOW) {
-         int class_name_length = GetClassName(hwnd, class_name, kClassLength);
-         if (0 == class_name_length) {
-             // YXLOG(Info) << "class_name_length: 0" << YXLOGEnd;
-             return TRUE;
-         }
+    if (::IsWindow(hwnd) && ::IsWindowVisible(hwnd) && (::GetWindowLong(hwnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW) != WS_EX_TOOLWINDOW) {
+        int class_name_length = GetClassName(hwnd, class_name, kClassLength);
+        if (0 == class_name_length) {
+            // YXLOG(Info) << "class_name_length: 0" << YXLOGEnd;
+            return TRUE;
+        }
 
-         // std::string strClassName = wideCharToString(class_name);
-         // YXLOG(Info) << "class_name: " << strClassName << YXLOGEnd;
+        // std::string strClassName = wideCharToString(class_name);
+        // YXLOG(Info) << "class_name: " << strClassName << YXLOGEnd;
 
-         GetWindowText(hwnd, window_title, kTitleLength);
-         // std::string strWindowTitle = wideCharToString(window_title);
-         // YXLOG(Info) << "window_title: " << strWindowTitle << YXLOGEnd;
-         QString strText = QString::fromStdWString(window_title);
+        GetWindowText(hwnd, window_title, kTitleLength);
+        // std::string strWindowTitle = wideCharToString(window_title);
+        // YXLOG(Info) << "window_title: " << strWindowTitle << YXLOGEnd;
+        QString strText = QString::fromStdWString(window_title);
 
-         if (wcscmp(class_name, L"TXGuiFoundation") == 0 && strText == QStringLiteral("腾讯视频")){
-         } else if (::GetWindowLong(hwnd, GWL_HWNDPARENT) != 0) {
-             return TRUE;
-         }
+        if (wcscmp(class_name, L"TXGuiFoundation") == 0 && strText == QStringLiteral("腾讯视频")) {
+        } else if (::GetWindowLongPtr(hwnd, GWLP_HWNDPARENT) != 0) {
+            return TRUE;
+        }
     } else {
         return TRUE;
     }
@@ -280,7 +279,7 @@ QRectF WindowsHelpers::getWindowRect(HWND hWnd) const {
     RECT rect = {0, 0, 0, 0};
     BOOL bRet = GetWindowRect(hWnd, &rect);
     if (TRUE != bRet) {
-        YXLOG(Info) << "getWindowRect failed. GetLastError: " << GetLastError();
+        YXLOG(Info) << "getWindowRect failed. GetLastError: " << GetLastError() << YXLOGEnd;
     }
     QRectF rectTmp(QPointF(rect.left, rect.top), QSizeF(rect.right - rect.left, rect.bottom - rect.top));
     return rectTmp;
@@ -315,7 +314,7 @@ QPixmap WindowsHelpers::getWindowIcon(HWND hWnd) const {
     DWORD dwPathNameSize = sizeof(exePath);
     if (TRUE != QueryFullProcessImageName(hProcess, 0, exePath, &dwPathNameSize)) {
         CloseHandle(hProcess);
-        YXLOG(Info) << "GetLastError: " << GetLastError();
+        YXLOG(Info) << "GetLastError: " << GetLastError() << YXLOGEnd;
         return pixmap;
     }
     CloseHandle(hProcess);
@@ -345,29 +344,36 @@ bool WindowsHelpers::getCaptureWindowList(CaptureTargetInfoList* windows) {
     return false;
 }
 
+HWND WindowsHelpers::getForegroundWindow() const {
+    return GetForegroundWindow();
+}
+
 void WindowsHelpers::setForegroundWindow(HWND hWnd) const {
     if (GetForegroundWindow() == hWnd) {
-         YXLOG(Info) << "GetForegroundWindow() == hWnd.";
-        //return;
+        YXLOG(Info) << "GetForegroundWindow() == hWnd." << YXLOGEnd;
+        // return;
     }
 
     if (::IsIconic(hWnd)) {
         BOOL bRet = ::ShowWindow(hWnd, SW_RESTORE);
         if (TRUE != bRet) {
-            YXLOG(Info) << "ShowWindow failed(SW_RESTORE). GetLastError: " << GetLastError();
+            YXLOG(Info) << "ShowWindow failed(SW_RESTORE). GetLastError: " << GetLastError() << YXLOGEnd;
+            if (0 == ::SendMessage(hWnd, WM_SYSCOMMAND, SC_RESTORE, 0)) {
+                YXLOG(Info) << "SendMessage WM_SYSCOMMAND failed(SC_RESTORE). GetLastError: " << GetLastError() << YXLOGEnd;
+            }
         }
     } else {
         if (!::IsWindowVisible(hWnd)) {
             BOOL bRet = ::ShowWindow(hWnd, SW_SHOW);
             if (TRUE != bRet) {
-                YXLOG(Info) << "ShowWindow failed(SW_SHOW). GetLastError: " << GetLastError();
+                YXLOG(Info) << "ShowWindow failed(SW_SHOW). GetLastError: " << GetLastError() << YXLOGEnd;
             }
         }
     }
 
     BOOL bRet = SetForegroundWindow(hWnd);
     if (TRUE != bRet) {
-        YXLOG(Info) << "SetForegroundWindow failed. GetLastError: " << GetLastError();
+        YXLOG(Info) << "SetForegroundWindow failed. GetLastError: " << GetLastError() << YXLOGEnd;
     }
 }
 
@@ -375,16 +381,16 @@ void WindowsHelpers::sharedOutsideWindow(WId wid, HWND hWnd, bool bFullScreen) {
     if (bFullScreen) {
         BOOL bRet = SetWindowPos((HWND)wid, hWnd, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
         if (TRUE != bRet) {
-            YXLOG(Info) << "SetWindowPos failed. GetLastError: " << GetLastError();
+            YXLOG(Info) << "SetWindowPos failed. GetLastError: " << GetLastError() << YXLOGEnd;
         }
         bRet = SetWindowPos(hWnd, (HWND)wid, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
         if (TRUE != bRet) {
-            YXLOG(Info) << "SetWindowPos failed. GetLastError: " << GetLastError();
+            YXLOG(Info) << "SetWindowPos failed. GetLastError: " << GetLastError() << YXLOGEnd;
         }
     } else {
         BOOL bRet = SetWindowPos((HWND)wid, hWnd, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
         if (TRUE != bRet) {
-            YXLOG(Info) << "SetWindowPos failed. GetLastError: " << GetLastError();
+            YXLOG(Info) << "SetWindowPos failed. GetLastError: " << GetLastError() << YXLOGEnd;
         }
     }
 }
@@ -392,7 +398,14 @@ void WindowsHelpers::sharedOutsideWindow(WId wid, HWND hWnd, bool bFullScreen) {
 void WindowsHelpers::setWindowTop(WId wid) {
     BOOL bRet = SetWindowPos((HWND)wid, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
     if (TRUE != bRet) {
-        YXLOG(Info) << "SetWindowPos failed. GetLastError: " << GetLastError();
+        YXLOG(Info) << "SetWindowPos failed. GetLastError: " << GetLastError() << YXLOGEnd;
+    }
+}
+
+void WindowsHelpers::setShowWindow(HWND hWnd, int nCmdShow) {
+    BOOL bRet = ShowWindow(hWnd, nCmdShow);
+    if (TRUE != bRet) {
+        YXLOG(Info) << "ShowWindow failed. GetLastError: " << GetLastError() << YXLOGEnd;
     }
 }
 
@@ -539,13 +552,30 @@ BOOL WindowsHelpers::findFullScreenWindow(DWORD& dwProcessID, std::string& strPr
         int nBottomPoint = itor->bottom;
 
         // 左上
-        HWND hLTPid = getHwndByPoint(nLeftPoint, nTopPoint);
+        HWND hLTPid = (HWND)WindowFromPoint(POINT{nLeftPoint + 5, nTopPoint + 5});
+        // HWND hLTPid = WindowFromPoint(nLeftPoint + 5, nTopPoint + 5);
+        // 右上
+        HWND hRTPid = (HWND)WindowFromPoint(POINT{nRightPoint - 5, nTopPoint + 5});
+        // HWND hRTPid = getHwndByPoint(nRightPoint - 5, nTopPoint + 5);
         // 右下
-        HWND hRBPid = getHwndByPoint(nRightPoint - 70, nBottomPoint - 70);
-        // YXLOG(Info) << "hLTPid, hRBPid: " << hLTPid << ", " << hRBPid << YXLOGEnd;
+        HWND hRBPid = (HWND)WindowFromPoint(POINT{nRightPoint - 5, nBottomPoint - 5});
+        // HWND hRBPid = getHwndByPoint(nRightPoint - 5, nBottomPoint - 5);
+        // 左下
+        HWND hLBPid = (HWND)WindowFromPoint(POINT{nLeftPoint + 5, nBottomPoint - 5});
+        // HWND hLBPid = getHwndByPoint(nLeftPoint + 5, nBottomPoint - 5);
+        // 中心
+        // HWND hCPid = (HWND)WindowFromPoint(POINT{(nRightPoint - nLeftPoint) / 2, (nBottomPoint - nTopPoint) / 2});
+        // HWND hCPid = getHwndByPoint((nRightPoint - nLeftPoint) / 2, (nBottomPoint - nTopPoint) / 2);
+
+        // YXLOG(Info) << "hLTPid, hRBPid, hLBPid, hRTPid, hCPid: " << hLTPid << ", " << hRBPid << ", " << hLBPid << ", " << hRTPid << ", " << hCPid
+        // << YXLOGEnd;
+
         // 找到全屏应用
-        if (hLTPid == hRBPid) {
-            hWnd = hRBPid;
+        if ((hLTPid == hRBPid /* && hCPid == hRBPid*/) || (hRTPid == hLBPid /* && hCPid == hRTPid*/)) {
+            if (hLTPid == hRBPid)
+                hWnd = hRBPid;
+            else
+                hWnd = hLBPid;
             GetWindowThreadProcessId(hWnd, &dwProcessID);
             strProcessName = getModuleNameByPid(dwProcessID);
 
@@ -554,7 +584,7 @@ BOOL WindowsHelpers::findFullScreenWindow(DWORD& dwProcessID, std::string& strPr
             std::transform(strProcessName.begin(), strProcessName.end(), std::back_inserter(strDst), ::tolower);
             if (strDst == "wpp.exe" || strDst == "powerpnt.exe") {
                 // YXLOG(Info) << strDst.c_str() << "%s is playing ..." << YXLOGEnd;
-                if(strDst == "powerpnt.exe") {
+                if (strDst == "powerpnt.exe") {
                     bPowerpnt = true;
                 }
                 return true;

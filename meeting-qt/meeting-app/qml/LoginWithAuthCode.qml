@@ -3,8 +3,8 @@ import Qt.labs.settings 1.0
 
 LoginWithAuthCodeForm {
     Component.onCompleted: {
-        if (ssoToken !== '' && ssoAppKey !== '') {
-            meetingManager.loginBySSOToken(ssoAppKey, ssoToken)
+        if (ssoToken !== '' && ssoAppKey !== '' && ssoUser !== '') {
+            meetingManager.login(ssoAppKey, ssoUser, ssoToken)
             return
         }
         meetingManager.tryAutoLogin()

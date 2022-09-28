@@ -1,17 +1,13 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
-
-// Copyright (c) 2014-2020 NetEase, Inc.
-// All right reserved.
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef LIVEMEMBERSMODEL_H
 #define LIVEMEMBERSMODEL_H
 
 #include <QAbstractListModel>
 
-#include "controller/user_ctrl_interface.h"
+#include "manager/live_manager.h"
 #include "manager/meeting/members_manager.h"
 #include "manager/meeting/share_manager.h"
 #include "manager/meeting/video_manager.h"
@@ -60,7 +56,7 @@ signals:
 
 private:
     void initManagerConnect();
-    bool isLiveMember(const SharedUserPtr& member);
+    bool isLiveMember(const MemberInfo& member);
     void addLiveMember(const QString& nickName, const QString& accountId);
     void updateCheckState(bool DisableChecked);
     void updateCheckNumber(int number);

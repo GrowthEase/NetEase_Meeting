@@ -7,6 +7,7 @@ Rectangle {
     Image {
         id: _image
         smooth: true
+        mipmap: true
         visible: false
         anchors.fill: parent
         source: img_src

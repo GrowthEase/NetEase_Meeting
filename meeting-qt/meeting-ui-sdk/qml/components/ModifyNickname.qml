@@ -51,20 +51,26 @@ CustomPopup {
                 font.pixelSize: 17
                 Layout.preferredWidth: 328
                 Layout.topMargin: 5
-                validator: RegExpValidator {
-                    regExp: /\w{1,20}/
-                }
+//                validator: RegExpValidator {
+//                    regExp: /\w{1,20}/
+//                }
                 onTextChanged: {
                     const currentText = textNewNickname.text
-
                     if (currentText === lastNicknameText)
                         return
 
+//                    if (getByteLength(currentText) > 20) {
+//                        textNewNickname.text = lastNicknameText
+//                    } else {
+//                        lastNicknameText = currentText
+//                    }
                     if (getByteLength(currentText) > 20) {
-                        textNewNickname.text = lastNicknameText
                     } else {
                         lastNicknameText = currentText
+                        const regStr = /[\uD83C|\uD83D|\uD83E][\uDC00-\uDFFF][\u200D|\uFE0F]|[\uD83C|\uD83D|\uD83E][\uDC00-\uDFFF]|[0-9|*|#]\uFE0F\u20E3|[0-9|#]\u20E3|[\u203C-\u3299]\uFE0F\u200D|[\u203C-\u3299]\uFE0F|[\u2122-\u2B55]|\u303D|[\A9|\AE]\u3030|\uA9|\uAE|\u3030/gi
+                        lastNicknameText = lastNicknameText.replace(regStr, '')
                     }
+                    textNewNickname.text = lastNicknameText
                 }
             }
 
@@ -91,7 +97,7 @@ CustomPopup {
             Layout.bottomMargin: 10
             Layout.alignment: Qt.AlignHCenter
             highlighted: true
-            enabled: textNewNickname.length > 0 && textNewNickname.text !== authManager.authNickName
+            enabled: textNewNickname.length > 0 && textNewNickname.text !== nick
             onClicked: {
                 console.log("liangpeng modify nickname : " + btnPopupClose.title)
                 buttonModifyNick.enabled = false

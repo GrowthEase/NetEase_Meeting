@@ -1,16 +1,34 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "audio_manager.h"
+#include "controller/audio_controller.h"
+#include "members_manager.h"
 #include "share_manager.h"
 #include "video_manager.h"
 
+#ifdef Q_OS_MACX
+#include "components/auth_checker.h"
+#endif
+
 AudioManager::AudioManager(QObject* parent)
     : QObject(parent) {
-    qRegisterMetaType<NEMeeting::HandsUpStatus>();
-    m_audioController = MeetingManager::getInstance()->getInRoomAudioController();
+    m_audioController = std::make_shared<NEMeetingAudioController>();
+}
+
+bool AudioManager::hasMicrophonePermission() {
+#ifdef Q_OS_WIN32
+    return true;
+#else
+    return checkAuthMicrophone();
+#endif
+}
+
+void AudioManager::openSystemMicrophoneSettings() {
+#ifdef Q_OS_MACX
+    openMicrophoneSettings();
+#endif
 }
 
 void AudioManager::onUserAudioStatusChanged(const std::string& accountId, NEMeeting::DeviceStatus deviceStatus) {
@@ -23,11 +41,20 @@ void AudioManager::onActiveSpeakerChanged(const std::string& accountId, const st
                               Q_ARG(QString, QString::fromStdString(nickname)));
 }
 
-void AudioManager::onRemoteUserAudioStats(const std::vector<AudioStats>& videoStats) {
+void AudioManager::onUserSpeakerChanged(const std::list<std::string>& nickname) {
+    QStringList nickNameTmp;
+    if (NEMeeting::DEVICE_ENABLED == m_localAudioStatus && !nickname.empty()) {
+        nickNameTmp << MembersManager::getInstance()->getNicknameByAccountId(AuthManager::getInstance()->authAccountId());
+    }
+    std::for_each(nickname.begin(), nickname.end(), [&nickNameTmp](auto& it) { nickNameTmp << QString::fromStdString(it); });
+    QMetaObject::invokeMethod(this, "onUserSpeakerChangedUI", Qt::AutoConnection, Q_ARG(QStringList, nickNameTmp));
+}
+
+void AudioManager::onRemoteUserAudioStats(const std::vector<NEAudioStats>& videoStats) {
     QJsonArray statsArray;
     for (auto& stats : videoStats) {
         QJsonObject statsObj;
-        statsObj["accountId"] = QString::fromStdString(stats.userId);
+        statsObj["accountId"] = QString::fromStdString(stats.userUuid);
         statsObj["bitRate"] = (qint32)(stats.bitRate);
         statsObj["lossRate"] = (qint32)(stats.lossRate);
         statsObj["volume"] = (qint32)(stats.volume);
@@ -40,45 +67,73 @@ void AudioManager::onError(uint32_t errorCode, const std::string& errorMessage) 
     emit error(errorCode, QString::fromStdString(errorMessage));
 }
 
-void AudioManager::onHandsUpStatusChanged(const std::string& accountId, NEHandsUpStatus handsUpStatus) {
-    QMetaObject::invokeMethod(this, "onHandsUpStatusChangedUI", Qt::AutoConnection, Q_ARG(QString, QString::fromStdString(accountId)),
-                              Q_ARG(NEMeeting::HandsUpStatus, (NEMeeting::HandsUpStatus)handsUpStatus));
+void AudioManager::muteLocalAudio(bool mute) {
+    if (!mute && !hasMicrophonePermission()) {
+        emit showPermissionWnd();
+        return;
+    }
+
+    if (mute && m_localAudioStatus != NEMeeting::DEVICE_ENABLED) {
+        return;
+    }
+
+    if (!mute && m_localAudioStatus == NEMeeting::DEVICE_ENABLED) {
+        return;
+    }
+
+    m_audioController->muteMyAudio(mute, [=](uint32_t errorCode, const std::string& errorMessage) {
+        YXLOG(Info) << "muteMyAudio: errorCode " << errorCode << ", errorMessage: " << errorMessage << YXLOGEnd;
+        if (errorCode != 0) {
+            QString qstrErrorMessage = mute ? tr("mute My Audio failed") : tr("unmute My Audio failed");
+            MeetingManager::getInstance()->onError(errorCode, qstrErrorMessage.toStdString());
+        }
+    });
 }
 
-void AudioManager::muteLocalAudio(bool mute) {
-    m_audioController->muteMyAudio(mute, std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
+bool AudioManager::startAudioDump() {
+    return m_audioController->startAudioDump();
+}
+
+bool AudioManager::stopAudioDump() {
+    return m_audioController->stopAudioDump();
+}
+
+bool AudioManager::enableAudioVolumeIndication(bool enable) {
+    return m_audioController->enableAudioVolumeIndication(enable, 200);
+}
+
+std::shared_ptr<NEMeetingAudioController> AudioManager::getAudioController() {
+    return m_audioController;
 }
 
 void AudioManager::muteRemoteAudio(const QString& accountId, bool mute, bool bAllowOpenByself) {
     QByteArray byteAccountId = accountId.toUtf8();
     if (accountId.isEmpty()) {
         if (mute) {
-            m_audioController->muteAllParticipantsAudio(
-                bAllowOpenByself, std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
+            m_audioController->muteAllParticipantsAudio(bAllowOpenByself, [=](int code, const std::string& msg) {
+                MeetingManager::getInstance()->onError(code, msg);
+                if (code == 0) {
+                    MeetingManager::getInstance()->onRoomMuteStatusChanged(true);
+                }
+            });
         } else {
-            m_audioController->unmuteAllParticipantsAudio(
-                std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
+            m_audioController->unmuteAllParticipantsAudio([=](int code, const std::string& msg) {
+                MeetingManager::getInstance()->onError(code, msg);
+                if (code == 0) {
+                    MeetingManager::getInstance()->onRoomMuteStatusChanged(false);
+                }
+            });
         }
     } else {
-        m_audioController->muteParticipantAudio(byteAccountId.data(), mute,
-                                                std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
+        m_audioController->muteParticipantAudio(
+            byteAccountId.data(), mute,
+            std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
     }
 }
 
-void AudioManager::allowRemoteMemberHandsUp(const QString& accountId, bool bAllowHandsUp) {
-    QByteArray byteAccountId = accountId.toUtf8();
-    m_audioController->lowerHand(byteAccountId.data(),
-                                 std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
-}
-
-void AudioManager::handsUpToSpeak(bool bHandsUp) {
-    m_audioController->raiseMyHand(bHandsUp, std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
-}
-
 void AudioManager::onUserAudioStatusChangedUI(const QString& changedAccountId, NEMeeting::DeviceStatus deviceStatus) {
-
     auto authInfo = AuthManager::getInstance()->getAuthInfo();
-    if (authInfo && authInfo->getAccountId() == changedAccountId.toStdString()) {
+    if (authInfo.accountId == changedAccountId.toStdString()) {
         if (m_localAudioStatus != deviceStatus) {
             emit userAudioStatusChanged(changedAccountId, deviceStatus);
         }
@@ -94,22 +149,8 @@ void AudioManager::onActiveSpeakerChangedUI(const QString& accountId, const QStr
     setActiveSpeakerNickname(nickname);
 }
 
-void AudioManager::onHandsUpStatusChangedUI(const QString& accountId, NEMeeting::HandsUpStatus status) {
-    YXLOG(Info) << "onHandsUpStatusChangedUI accountId = " << accountId.toStdString() << " audio handstatus : " << status << YXLOGEnd;
-    auto authInfo = AuthManager::getInstance()->getAuthInfo();
-    if (nullptr == authInfo) {
-        return;
-    }
-
-    if (authInfo->getAccountId() == accountId.toStdString()) {
-        if (status == NEMeeting::HAND_STATUS_RAISE) {
-            m_bHandsUp = true;
-        } else {
-            m_bHandsUp = false;
-        }
-    }
-
-    emit handsupStatusChanged(accountId, status);
+void AudioManager::onUserSpeakerChangedUI(const QStringList& nickname) {
+    emit userSpeakerChanged(nickname.join(tr(",")));
 }
 
 QString AudioManager::activeSpeaker() const {
@@ -120,6 +161,7 @@ void AudioManager::setActiveSpeaker(const QString& activeSpeaker) {
     if (activeSpeaker != m_activeSpeaker && VideoManager::getInstance()->focusAccountId().isEmpty() &&
         ShareManager::getInstance()->shareAccountId().isEmpty()) {
         m_activeSpeaker = activeSpeaker;
+        MeetingManager::getInstance()->getMeetingController()->getRoomInfo().speakerUserId = m_activeSpeaker.toStdString();
         emit activeSpeakerChanged();
     }
 }
@@ -135,14 +177,6 @@ void AudioManager::setActiveSpeakerNickname(const QString& activeSpeakerNickname
     }
 }
 
-bool AudioManager::handsUpStatus() const {
-    return m_bHandsUp;
-}
-
-void AudioManager::setHandsUpStatus(bool handsUp) {
-    m_bHandsUp = handsUp;
-}
-
 int AudioManager::localAudioStatus() const {
     return m_localAudioStatus;
 }
@@ -150,6 +184,7 @@ int AudioManager::localAudioStatus() const {
 void AudioManager::setLocalAudioStatus(const int& localAudioStatus) {
     if (m_localAudioStatus != localAudioStatus) {
         m_localAudioStatus = (NEMeeting::DeviceStatus)localAudioStatus;
+        YXLOG(Info) << "m_localAudioStatus changed :" << m_localAudioStatus << YXLOGEnd;
         emit localAudioStatusChanged();
     }
 }

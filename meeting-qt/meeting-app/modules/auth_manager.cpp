@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "auth_manager.h"
 #include <QDirIterator>
@@ -11,54 +10,33 @@
 
 AuthManager::AuthManager(QObject* parent)
     : QObject(parent)
-    , m_httpManager(new HttpManager(parent)) {}
+    , m_httpManager(new HttpManager(parent)) {
+    m_phoneNumber = ConfigManager::getInstance()->getValue("localPhoneNumber", "").toString();
+}
 
 AuthManager::~AuthManager() {}
 
 void AuthManager::getAuthCode(const QString& phonePrefix, const QString& phoneNumber, int scene) {
-#if 0
-    AppGetAuthCodeRequest request(phonePrefix, phoneNumber, static_cast<GetAuthCodeScene>(scene));
-    m_httpManager->postRequest(request, [this, phoneNumber](int code, const QJsonObject& response) {
-        if (code == 200) {
-            emit gotAuthCode(phoneNumber);
-        } else {
-            emit error(code, response);
-        }
-    });
-#else
     nem_auth::VerifyCode request(phoneNumber, (nem_auth::VerifyScene)scene);
-    m_httpManager->postRequest(request, [=](int code, const QJsonObject& response) {
-        if (code == 200) {
+    m_httpManager->getRequest(request, [=](int code, const QJsonObject& response) {
+        if (0 == code) {
             emit gotAuthCode(phoneNumber);
         } else {
             emit error(code, response);
         }
     });
-#endif
 }
 
 void AuthManager::verifyAuthCode(const QString& phonePrefix, const QString& phoneNumber, const QString& code, int scene) {
-#if 0
-    AppVerifyCodeRequest request(phonePrefix, phoneNumber, code, static_cast<GetAuthCodeScene>(scene));
-    m_httpManager->postRequest(request, [this](int code, const QJsonObject& response) {
-        if (code == 200) {
-            setAuthCodeInternal(response["authCodeInternal"].toString());
-            emit verifiedAuthCode(response["authCodeInternal"].toString());
-        } else {
-            emit error(code, response);
-        }
-    });
-#else
     nem_auth::CheckVerifyCode request(phoneNumber, code.toUInt(), (nem_auth::VerifyScene)scene);
     m_httpManager->postRequest(request, [=](int code, const QJsonObject& response) {
-        if (code == 200) {
+        if (0 == code) {
             setAuthCodeInternal(response["authCodeInternal"].toString());
             emit verifiedAuthCode(response["authCodeInternal"].toString());
         } else {
             emit error(code, response);
         }
     });
-#endif
 }
 
 void AuthManager::registerAccount(const QString& phonePrefix, const QString& phoneNumber, const QString& nickname, const QString& password) {
@@ -129,10 +107,12 @@ void AuthManager::loginByPassword(const QString& username, const QString& passwo
 
 void AuthManager::loginByVerifyCode(const QString& phoneNumber, const QString& verifyCode) {
     nem_auth::LoginWithVerifyCode request(phoneNumber, verifyCode);
+    setPhoneNumber(phoneNumber);
     m_httpManager->postRequest(request, std::bind(&AuthManager::onLoginCallback, this, std::placeholders::_1, std::placeholders::_2, false));
 }
 
 void AuthManager::getAccountApps(const QString& appKey, const QString& accountId, const QString& accountToken) {
+    return;
     nem_auth::GetApps request(appKey, accountId, accountToken);
     m_httpManager->postRequest(request, [=](int code, const QJsonObject& response) {
         if (code == 200) {
@@ -149,6 +129,7 @@ void AuthManager::getAccountApps(const QString& appKey, const QString& accountId
 }
 
 void AuthManager::getAccountAppInfo(const QString& appKey, const QString& accountId, const QString& accountToken) {
+    return;
     nem_auth::GetAppInfo request(appKey, accountId, accountToken);
     m_httpManager->postRequest(request, [=](int code, const QJsonObject& response) {
         if (code == 200) {
@@ -192,6 +173,7 @@ void AuthManager::switchApp(const QString& appKey, const QString& accountId, con
 }
 
 void AuthManager::logout(bool needsLogout /* = true*/, bool cleanup /* = false*/) {
+    YXLOG(Info) << "logout, needsLogout: " << needsLogout << ", cleanup: " << cleanup << YXLOGEnd;
     ConfigManager::getInstance()->setValue("localUserId", "");
     ConfigManager::getInstance()->setValue("localUserToken", "");
     ConfigManager::getInstance()->setValue("localPaasAppKey", "");
@@ -211,6 +193,8 @@ void AuthManager::logout(bool needsLogout /* = true*/, bool cleanup /* = false*/
     setAPaasAccountId("");
     setAPaasAccountToken("");
     setAPaasAppKey("");
+    setPersonalShortMeetingId("");
+    setPersonalMeetingId("");
     m_accountApps = QJsonArray();
     emit loggedOut(needsLogout, cleanup);
 }
@@ -261,27 +245,15 @@ void AuthManager::resetPasswordByVerifyCode(const QString& phoneNumber, const QS
 }
 
 void AuthManager::updateProfile(const QString& nickname, const QString& appKey, const QString& userId, const QString& token) {
-#if 0
-    AppUpdateProfileRequest request(nickname, userId, token);
-    m_httpManager->postRequest(request, [this, nickname](int code, const QJsonObject& response) {
-        if (code == 200) {
-            setAppUserNick(nickname);
-            emit updatedProfile();
-        } else {
-            emit error(code, response);
-        }
-    });
-#else
     nem_auth::ModifyNickname request(appKey, userId, token, nickname);
     m_httpManager->postRequest(request, [=](int code, const QJsonObject& response) {
-        if (code == 200) {
+        if (0 == code) {
             setAppUserNick(nickname);
             emit updatedProfile();
         } else {
             Q_EMIT error(code, response);
         }
     });
-#endif
 }
 
 void AuthManager::resetAuthInfo() {
@@ -298,16 +270,20 @@ void AuthManager::resetAuthInfo() {
 }
 
 void AuthManager::onLoginCallback(int code, const QJsonObject& response, bool registerMode) {
-    if (code == 200) {
-        setAPaasAccountId(response["accountId"].toString());
-        setAPaasAccountToken(response["accountToken"].toString());
-        setAPaasAppKey(response["appKey"].toString());
-        ConfigManager::getInstance()->setValue("localPaasAppKey", response["appKey"].toString());
+    if (0 == code) {
+        setAPaasAccountId(response["userUuid"].toString());
+        setAPaasAccountToken(response["userToken"].toString());
+        setAppUserNick(response["nickname"].toString());
+        setPersonalMeetingId(response["privateMeetingNum"].toString());
+        setPersonalShortMeetingId(response["shortMeetingNum"].toString());
+        // setAPaasAppKey(response["appKey"].toString());
+        // ConfigManager::getInstance()->setValue("localPaasAppKey", response["appKey"].toString());
         if (registerMode)
             Q_EMIT registeredAccount();
         else
-            Q_EMIT loggedIn(response["userId"].toString());
+            Q_EMIT loggedIn(response["userUuid"].toString());
     } else {
+        setPhoneNumber("");
         emit error(code, response);
     }
 }
@@ -319,6 +295,45 @@ QString AuthManager::extraInfo() const {
 void AuthManager::setExtraInfo(const QString& extraInfo) {
     m_extraInfo = extraInfo;
     Q_EMIT extraInfoChanged();
+}
+
+bool AuthManager::autoRegistered() const {
+    return m_autoRegistered;
+}
+
+void AuthManager::setAutoRegistered(bool autoRegistered) {
+    m_autoRegistered = autoRegistered;
+    Q_EMIT autoRegisteredChanged();
+}
+
+QString AuthManager::personalShortMeetingId() const {
+    return m_shortPersonalMeetingId;
+}
+
+void AuthManager::setPersonalShortMeetingId(const QString& shortMeetingId) {
+    m_shortPersonalMeetingId = shortMeetingId;
+    emit personalShortMeetingIdChanged();
+}
+
+QString AuthManager::personalMeetingId() const {
+    return m_personalMeetingId;
+}
+
+void AuthManager::setPersonalMeetingId(const QString& personalMeetingId) {
+    m_personalMeetingId = personalMeetingId;
+    emit personalMeetingIdChanged();
+
+    auto prettyMeetingId = personalMeetingId.mid(0, 3).append("-").append(personalMeetingId.mid(3, 3)).append("-").append(personalMeetingId.mid(6));
+    setPrettyMeetingId(prettyMeetingId);
+}
+
+QString AuthManager::prettyMeetingId() const {
+    return m_prettyMeetingId;
+}
+
+void AuthManager::setPrettyMeetingId(const QString& prettyMeetingId) {
+    m_prettyMeetingId = prettyMeetingId;
+    emit prettyMeetingIdChanged();
 }
 
 QString AuthManager::curDisplayCompany() const {
@@ -358,8 +373,9 @@ void AuthManager::setCurDisplayVersion(const QString& curDisplayVersion) {
 }
 
 QString AuthManager::paasServerAddress() const {
-    auto cachedServerAddress = ConfigManager::getInstance()->getValue("localPaasServerAddress", "https://meeting-api.netease.im/");
-    return cachedServerAddress.toString();
+    auto cachedServerAddress =
+        ConfigManager::getInstance()->getAPaasServerAddress() + kHttpScene + ConfigManager::getInstance()->getAPaasAppKey() + "/";
+    return cachedServerAddress;
 }
 
 bool AuthManager::resetPasswordFlag() const {
@@ -380,20 +396,21 @@ void AuthManager::setAppUserOpenId(const QString& appUserOpenId) {
 }
 
 QString AuthManager::aPaasAppKey() const {
-    return m_aPaasAppKey;
+    return ConfigManager::getInstance()->getAPaasAppKey();
 }
 
-void AuthManager::setAPaasAppKey(const QString& aPassAppKey) {
-    m_aPaasAppKey = aPassAppKey;
-    emit aPaasAppKeyChanged();
+void AuthManager::setAPaasAppKey(const QString& aPaasAppKey) {
+    if (ConfigManager::getInstance()->getAPaasAppKey() != aPaasAppKey) {
+        emit aPaasAppKeyChanged();
+    }
 }
 
 QString AuthManager::aPaasAccountToken() const {
     return m_aPaasAccountToken;
 }
 
-void AuthManager::setAPaasAccountToken(const QString& aPassAccountToken) {
-    m_aPaasAccountToken = aPassAccountToken;
+void AuthManager::setAPaasAccountToken(const QString& aPaasAccountToken) {
+    m_aPaasAccountToken = aPaasAccountToken;
     emit aPaasAccountTokenChanged();
 }
 
@@ -401,8 +418,8 @@ QString AuthManager::aPaasAccountId() const {
     return m_aPaasAccountId;
 }
 
-void AuthManager::setAPaasAccountId(const QString& aPassAccountId) {
-    m_aPaasAccountId = aPassAccountId;
+void AuthManager::setAPaasAccountId(const QString& aPaasAccountId) {
+    m_aPaasAccountId = aPaasAccountId;
     emit aPaasAccountIdChanged();
 }
 
@@ -439,6 +456,7 @@ QString AuthManager::phoneNumber() const {
 
 void AuthManager::setPhoneNumber(const QString& phoneNumber) {
     m_phoneNumber = phoneNumber;
+    ConfigManager::getInstance()->setValue("localPhoneNumber", phoneNumber);
     emit phoneNumberChanged();
 }
 

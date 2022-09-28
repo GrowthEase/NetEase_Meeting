@@ -42,9 +42,10 @@ Popup {
     property alias checkenable: handsup.checked
 
     property string checkText: ""
+    property string controlType: "audio" //&video
 
-    signal muteNotAllowOpenByself
-    signal muteAllowOpenByself
+    signal muteNotAllowOpenByself(string type)
+    signal muteAllowOpenByself(string type)
     signal cancel
 
     onClosed: {
@@ -77,7 +78,7 @@ Popup {
                 id:handsup
                 width: 16
                 height: 16
-                checked: meetingManager.meetingAllowSelfAudioOn
+                checked: controlType === "audio" ? meetingManager.meetingAllowSelfAudioOn : meetingManager.meetingAllowSelfVideoOn
                 text: checkText
             }
         }
@@ -125,15 +126,17 @@ Popup {
             Layout.preferredWidth: 158
             borderSize: 0
             normalTextColor: "#337EFF"
-            text: qsTr("mute")
+            text: controlType === "audio" ? qsTr("mute") : qsTr("muteVideo")
             onClicked: {
                 if (handsup.checked) {
-                    muteAllowOpenByself()
+                    muteAllowOpenByself(controlType)
                 } else {
-                    muteNotAllowOpenByself()
+                    muteNotAllowOpenByself(controlType)
                 }
                 close()
             }
         }
     }
+
+    Accessible.name: "MuteConfirmDialog"
 }

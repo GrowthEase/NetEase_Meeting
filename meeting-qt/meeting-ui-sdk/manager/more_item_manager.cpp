@@ -1,12 +1,12 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "more_item_manager.h"
 #include <QUuid>
 #include "auth_manager.h"
 #include "chat_manager.h"
+#include "config_manager.h"
 #include "global_manager.h"
 #include "meeting/members_manager.h"
 #include "meeting/share_manager.h"
@@ -85,37 +85,26 @@ MoreItemManager::MoreItemManager(QObject* parent)
                                "qrc:/qml/images/meeting/footerbar/btn_invite_normal.png"};
     m_itemsPresetMore.push_back(itemInvitation);
 
-    connect(AuthManager::getInstance(), &AuthManager::isHostAccountChanged, this, [this]() {
-        emit micItemVisibleChanged();
-        emit cameraItemVisibleChanged();
-        emit screenShareItemVisibleChanged();
-        emit participantsItemVisibleChanged();
-        emit mangeParticipantsItemVisibleChanged();
-        emit inviteItemVisibleChanged();
-        emit whiteboardItemVisibleChanged();
-        emit chatItemVisibleChanged();
-        emit viewItemVisibleChanged();
+    MoreItem itemsipInvitation = {(int)MoreItemEnum::SipInviteMenuId, QUuid::createUuid().toString(), MoreItemEnum::VisibleAlways, tr("SIP"),
+                                  "qrc:/qml/images/meeting/footerbar/btn_sip.png"};
+    m_itemsPresetMore.push_back(itemsipInvitation);
 
-        auto meetingInfo = MeetingManager::getInstance()->getMeetingInfo();
-        if (meetingInfo && meetingInfo->getLiveStreamInfo().enable && AuthManager::getInstance()->isHostAccount()) {
-            setLiveVisible(true);
-        } else {
-            setLiveVisible(false);
+    connect(AuthManager::getInstance(), &AuthManager::isHostAccountChanged, this, [this]() { updateItemVisible(); });
+
+    connect(MembersManager::getInstance(), &MembersManager::managerAccountIdChanged, this, [this](const QString& managerAccountId, bool bAdd) {
+        if (managerAccountId == AuthManager::getInstance()->authAccountId()) {
+            updateItemVisible();
         }
-
-        emit beginResetItemsMore();
-        updateItemsMoreVisible();
-        emit endResetItemsMore();
-        emit itemCountMoreChanged();
     });
 
     connect(MeetingManager::getInstance(), &MeetingManager::meetingStatusChanged,
             [this](NEMeeting::Status status, int errorCode, const QString& errorMessage) {
                 if (NEMeeting::MEETING_CONNECTED == status || NEMeeting::MEETING_RECONNECTED == status) {
                     auto meetingInfo = MeetingManager::getInstance()->getMeetingInfo();
-                    if (meetingInfo && meetingInfo->getLiveStreamInfo().enable && AuthManager::getInstance()->isHostAccount()) {
+                    if (meetingInfo.enableLive && AuthManager::getInstance()->isHostAccount()) {
                         setLiveVisible(true);
                     }
+                    emit whiteboardItemVisibleChanged();
                 }
             });
 
@@ -200,6 +189,9 @@ void MoreItemManager::updateItemsMoreVisible() {
             case (int)MoreItemEnum::LiveMenuId:
                 bVisible = m_moreItemLiveVisible;
                 break;
+            case (int)MoreItemEnum::SipInviteMenuId:
+                bVisible = m_moreItemSipInviteVisible && !MeetingManager::getInstance()->hideSip();
+                break;
             default:
                 bVisible = getItemVisible(it.itemVisibility);
         }
@@ -208,6 +200,31 @@ void MoreItemManager::updateItemsMoreVisible() {
             m_itemsMoreVisible.append(it);
         }
     }
+}
+
+void MoreItemManager::updateItemVisible() {
+    emit micItemVisibleChanged();
+    emit cameraItemVisibleChanged();
+    emit screenShareItemVisibleChanged();
+    emit participantsItemVisibleChanged();
+    emit mangeParticipantsItemVisibleChanged();
+    emit inviteItemVisibleChanged();
+    emit whiteboardItemVisibleChanged();
+    emit chatItemVisibleChanged();
+    emit viewItemVisibleChanged();
+
+    auto meetingInfo = MeetingManager::getInstance()->getMeetingInfo();
+    if (meetingInfo.enableLive && (AuthManager::getInstance()->isHostAccount() ||
+                                   MembersManager::getInstance()->isManagerRoleEx(AuthManager::getInstance()->authAccountId()))) {
+        setLiveVisible(true);
+    } else {
+        setLiveVisible(false);
+    }
+
+    emit beginResetItemsMore();
+    updateItemsMoreVisible();
+    emit endResetItemsMore();
+    emit itemCountMoreChanged();
 }
 
 void MoreItemManager::setBeautyVisible(bool visible) {
@@ -223,6 +240,16 @@ void MoreItemManager::setBeautyVisible(bool visible) {
 void MoreItemManager::setLiveVisible(bool visible) {
     if (visible != m_moreItemLiveVisible) {
         m_moreItemLiveVisible = visible;
+        emit beginResetItemsMore();
+        updateItemsMoreVisible();
+        emit endResetItemsMore();
+        emit itemCountMoreChanged();
+    }
+}
+
+void MoreItemManager::setSipInviteVisible(bool visible) {
+    if (visible != m_moreItemSipInviteVisible) {
+        m_moreItemSipInviteVisible = visible;
         emit beginResetItemsMore();
         updateItemsMoreVisible();
         emit endResetItemsMore();
@@ -257,6 +284,10 @@ bool MoreItemManager::initializeToolbar(const QVector<MoreItem>& items) {
         return true;
     }
 
+    if (m_itemsToolbar == items) {
+        return true;
+    }
+
     emit beginResetItemsToolbar();
     if (m_itemsToolbar.size() > 0)
         m_itemsToolbar.clear();
@@ -272,6 +303,10 @@ QVector<MoreItem> MoreItemManager::itemsToolbar() const {
 }
 
 void MoreItemManager::restoreToolbar() {
+    if (QVector<MoreItem>(m_vPresetItems.begin(), m_vPresetItems.end()) == m_itemsToolbar) {
+        updateItemVisible();
+        return;
+    }
     emit beginResetItemsToolbar();
     QVector<MoreItem> items(m_vPresetItems.begin(), m_vPresetItems.end());
     m_itemsToolbar.swap(items);
@@ -429,7 +464,11 @@ bool MoreItemManager::whiteboardItemVisible() const {
 bool MoreItemManager::chatItemVisible() const {
     MoreItem item;
     if (findItem(kChatMenuId, item)) {
-        return (0 != GlobalManager::getInstance()->getGlobalConfig()->isChatSupported()) && !MeetingManager::getInstance()->hideChatroom() &&
+        if (nullptr == MeetingManager::getInstance()->getInRoomChatController()) {
+            return false;
+        }
+
+        return MeetingManager::getInstance()->getInRoomChatController()->isSupported() && !MeetingManager::getInstance()->hideChatroom() &&
                getItemVisible(item.itemVisibility);
     }
 
@@ -467,9 +506,11 @@ bool MoreItemManager::getItemVisible(MoreItemEnum::Visibility visibility) const 
         case MoreItemEnum::VisibleAlways:
             return true;
         case MoreItemEnum::VisibleExcludeHost:
-            return !AuthManager::getInstance()->isHostAccount();
+            return !AuthManager::getInstance()->isHostAccount() &&
+                   !MembersManager::getInstance()->isManagerRoleEx(AuthManager::getInstance()->authAccountId());
         case MoreItemEnum::VisibleToHostOnly:
-            return AuthManager::getInstance()->isHostAccount();
+            return AuthManager::getInstance()->isHostAccount() ||
+                   MembersManager::getInstance()->isManagerRoleEx(AuthManager::getInstance()->authAccountId());
         default:
             break;
     }

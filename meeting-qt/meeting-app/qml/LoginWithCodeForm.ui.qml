@@ -28,6 +28,25 @@ Item {
                 Layout.preferredHeight: 36
                 Layout.preferredWidth: 330
                 title: qsTr("Login with Phone")
+                MouseArea {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 40
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    property int clickedCount: 0
+                    onClicked: {
+                        if (Qt.LeftButton === mouse.button) {
+                            clickedCount++
+                            if (clickedCount >= 10) {
+                                clickedCount = 0
+                                passwordLogin.visible = !passwordLogin.visible
+                            }
+                        } else {
+                            clickedCount = 0
+                        }
+                    }
+                }
             }
 
             PhoneNumberField {
@@ -47,6 +66,8 @@ Item {
             }
 
             Rectangle {
+                id: passwordLogin
+                visible: false
                 width: 330
                 height: buttonLoginWithPassword.height
                 Layout.topMargin: -11
@@ -62,7 +83,7 @@ Item {
 
             CustomButton {
                 id: buttonSubmit
-                enabled: textPhoneNumber.length === 13 && textCode.length > 0
+                enabled: textPhoneNumber.length === 13 && textCode.length >= 6
                 highlighted: true
                 font.pixelSize: 16
                 text: qsTr("Login")

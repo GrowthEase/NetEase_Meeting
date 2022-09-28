@@ -1,17 +1,12 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
-
-// Copyright (c) 2014-2020 NetEase, Inc.
-// All right reserved.
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef MEMBERSMODEL_H
 #define MEMBERSMODEL_H
 
 #include <QAbstractListModel>
 #include <QSortFilterProxyModel>
-#include "controller/user_ctrl_interface.h"
 #include "manager/meeting/audio_manager.h"
 #include "manager/meeting/members_manager.h"
 #include "manager/meeting/video_manager.h"
@@ -35,7 +30,10 @@ public:
         kMemberRoleHansUpStatus,
         kMemberRoleClientType,
         kMemberRoleWhiteboard,
-        kMemberWhiteboardShareOwner
+        kMemberWhiteboardShareOwner,
+        kMemberRoleAudioVolume,
+        kMemberRoleTag,
+        kMemberRoleType
     };
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;

@@ -1,6 +1,6 @@
 QT += quick quickcontrols2
 
-CONFIG      += c++11
+CONFIG      += c++17
 TARGET      = NEMeetingSample
 DESTDIR     = $$PWD/bin
 
@@ -9,6 +9,7 @@ DESTDIR     = $$PWD/bin
 # depend on your compiler). Refer to the documentation for the
 # deprecated API to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
+DEFINES += QT_MESSAGELOGCONTEXT
 
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -30,7 +31,6 @@ win32 {
     CONFIG(debug, debug|release) {
         DESTDIR = $$PWD/../bin
         LIBS += -L$$PWD/../meeting-ipc/output/nem_hosting_module/Debug -lnem_hosting_moduled
- 
     } else {
         LIBS += -L$$PWD/../meeting-ipc/output/nem_hosting_module/Release -lnem_hosting_module
     }
@@ -74,3 +74,11 @@ QML_DESIGNER_IMPORT_PATH =
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+win32 {
+    QMAKE_LFLAGS_RELEASE    += /MAP
+    QMAKE_CFLAGS_RELEASE    += /Zi
+    QMAKE_LFLAGS_RELEASE    += /debug /opt:ref
+    QMAKE_CXXFLAGS_WARN_ON -= -w34100
+    QMAKE_CXXFLAGS += -wd4100
+    QMAKE_CXXFLAGS += /MP
+}

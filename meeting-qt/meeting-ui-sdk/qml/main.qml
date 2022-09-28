@@ -5,6 +5,7 @@ import QtQuick.Controls.Material 2.12
 import QtQuick.Layouts 1.12
 import Clipboard 1.0
 import Qt.labs.settings 1.0
+import NetEase.Meeting.MessageModel 1.0
 
 import "components"
 import "chattingroom"
@@ -16,6 +17,7 @@ ApplicationWindow {
     readonly property int defaultWindowWidth: 1185
     readonly property int defaultWindowHieght: 703
     readonly property int defaultSiderbarWidth: 315
+    readonly property int taskbarHeight : Qt.platform.os === 'windows' ? 60 : 0
     property bool sidebarVisibled: false
     property var sharedWnd: undefined
     property int displayWidth: Screen.width
@@ -30,9 +32,9 @@ ApplicationWindow {
     color: 'transparent'
 
     Component.onCompleted: {
-        x: (Screen.width - width) / 2
-        y: (Screen.height - height) / 2
         pageLoader.setSource(Qt.resolvedUrl('qrc:/qml/MainPanel.qml'))
+        x: (Screen.width - width) / 2 + Screen.virtualX
+        y: (Screen.height - height - taskbarHeight) / 2 + Screen.virtualY
     }
 
     signal beforeClose
@@ -72,10 +74,25 @@ ApplicationWindow {
 
     Members {
         id: membersWindow
+        onVisibleChanged: {
+            if (Qt.platform.os === 'windows') {
+                visible ? shareManager.addExcludeShareWindow(membersWindow) : shareManager.removeExcludeShareWindow(membersWindow)
+            }
+        }
+    }
+
+    MessageModel {
+        id: chatMessageModel
     }
 
     ChattingroomWindow {
         id: chattingWindow
+        messageModel: chatMessageModel
+        onVisibleChanged: {
+            if (Qt.platform.os === 'windows') {
+                visible ? shareManager.addExcludeShareWindow(chattingWindow) : shareManager.removeExcludeShareWindow(chattingWindow)
+            }
+        }
     }
 
     DragDelegate {
@@ -119,17 +136,26 @@ ApplicationWindow {
         mainWindow.showNormal()
         mainWindow.flags = Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
         mainWindow.flags = Qt.Window | Qt.FramelessWindowHint
+        if (Qt.platform.os === 'windows') {
+            mainWindow.x = (Screen.width - mainWindow.width) / 2 + Screen.virtualX
+            mainWindow.y = (Screen.height - mainWindow.height - taskbarHeight) / 2 + Screen.virtualY
+        }
     }
 
     function centerInScreen() {
+        if (Qt.platform.os === 'windows') {
+            return false;
+        }
         mainWindow.x = (Screen.width - mainWindow.width) / 2 + Screen.virtualX
         mainWindow.y = (Screen.height - mainWindow.height) / 2 + Screen.virtualY
     }
 
     function adjustWindow() {
+        if (Qt.platform.os === 'windows') {
+            return false;
+        }
         let adjusted = false
 
-        const taskbarHeight = Qt.platform.os === 'windows' ? 60 : 0
         if (mainWindow.height > Screen.height - taskbarHeight) {
             if (Screen.height < mainWindow.minimumHeight) {
                 mainWindow.height = mainWindow.minimumHeight

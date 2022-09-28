@@ -12,11 +12,13 @@ Menu {
     property string nickname: ""
     property int audioStatus: 1
     property int videoStatus: 1
+    property int clientType: -1
     property bool isWhiteboardEnable: false
+    property bool isManagerRole: false
     property var popupModifyNickname: undefined
 
     id: popupMenu
-    width: 108
+    width: 120
     background: Rectangle {
         id: bgRectangle
         radius: 4
@@ -72,7 +74,7 @@ Menu {
         id: mute
         width: parent.width
         height: visible ? 32 : 0
-        visible: membersManager.hostAccountId === authManager.authAccountId
+        visible: membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole
         Label {
             id: muteItem
             text: audioStatus === 1 ? qsTr("Mute")
@@ -87,7 +89,11 @@ Menu {
             color: mute.hovered ? "#F2F3F5" : "#FFFFFF"
         }
         onClicked: {
-            audioManager.muteRemoteAudio(accountId, audioStatus === 1)
+            if (accountId === authManager.authAccountId) {
+                audioManager.muteLocalAudio(audioStatus === 1)
+            } else {
+                audioManager.muteRemoteAudio(accountId, audioStatus === 1)
+            }
         }
         Accessible.role: Accessible.Button
         Accessible.name: muteItem.text
@@ -98,7 +104,7 @@ Menu {
         id: disableVideo
         width: parent.width
         height: visible ? 32 : 0
-        visible: shareManager.shareAccountId !== accountId && membersManager.hostAccountId === authManager.authAccountId
+        visible: membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole
         Label {
             id: disableVideoItem
             text: videoStatus === 1 ? qsTr("Disable Video") : qsTr("Enable Video")
@@ -120,10 +126,54 @@ Menu {
     }
 
     MenuItem {
+        id: muteVideoAndAudio
+        width: parent.width
+        height: visible ? 32 : 0
+        visible: membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole
+        Label {
+            id: muteVideoAndAudioItem
+            text: (videoStatus == 1 && audioStatus == 1) ? qsTr("mute Video and Audio") : qsTr("unmute Video and Audio")
+            color: muteVideoAndAudio.hovered ? "#337EFF" : "#333333"
+            anchors.left: parent.left
+            anchors.leftMargin: 10
+            anchors.verticalCenter: parent.verticalCenter
+        }
+        background: Rectangle {
+            anchors.fill: parent
+            color: muteVideoAndAudio.hovered ? "#F2F3F5" : "#FFFFFF"
+        }
+        onClicked: {
+            if (accountId === authManager.authAccountId) {
+                if (muteVideoAndAudioItem.text === qsTr("mute Video and Audio")) {
+                    if (audioStatus === 1) {
+                        audioManager.muteLocalAudio(true)
+                    }
+                    if (videoStatus === 1) {
+                        videoManager.disableLocalVideo(true)
+                    }
+                } else {
+                    if (audioStatus !== 1) {
+                        audioManager.muteLocalAudio(false)
+                    }
+                    if (videoStatus !== 1) {
+                        videoManager.disableLocalVideo(false)
+                    }
+                }
+            } else {
+                membersManager.muteRemoteVideoAndAudio(accountId, (videoStatus === 1 && audioStatus === 1))
+            }
+        }
+        Accessible.role: Accessible.Button
+        Accessible.name: muteVideoAndAudioItem.text
+        Accessible.onPressAction: if (enabled) clicked(Qt.LeftButton)
+    }
+
+    MenuItem {
         id: setupSpeaker
         width: parent.width
         height: visible ? 32 : 0
-        visible: membersManager.hostAccountId === authManager.authAccountId && shareManager.shareAccountId.length === 0
+        visible: (membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole)
+                 && shareManager.shareAccountId.length === 0
         Label {
             id: setupSpeakerItem
             text: {
@@ -158,7 +208,9 @@ Menu {
         id: transferHost
         width: parent.width
         height: visible ? 32 : 0
-        visible: membersManager.hostAccountId !== accountId &&  membersManager.hostAccountId === authManager.authAccountId
+        visible: membersManager.hostAccountId !== accountId
+                 && membersManager.hostAccountId === authManager.authAccountId
+                 && clientType != 5
         Label {
             id: transferHostItem
             text: qsTr("TransferHost")
@@ -179,13 +231,41 @@ Menu {
         Accessible.role: Accessible.Button
         Accessible.name: transferHostItem.text
         Accessible.onPressAction: if (enabled) clicked(Qt.LeftButton)
+
+    }
+
+    MenuItem {
+        id: setManager
+        width: parent.width
+        height: visible ? 32 : 0
+        visible: membersManager.hostAccountId !== accountId && (membersManager.hostAccountId === authManager.authAccountId)
+
+        Label {
+            id: setManagerItem
+            text: isManagerRole ? qsTr("unsetManager") : qsTr("setManager")
+            color: setManager.hovered ? "#337EFF" : "#333333"
+            anchors.left: parent.left
+            anchors.leftMargin: 10
+            anchors.verticalCenter: parent.verticalCenter
+        }
+        background: Rectangle {
+            anchors.fill: parent
+            color: setManager.hovered ? "#F2F3F5" : "#FFFFFF"
+        }
+        onClicked: {
+            isManagerRole ? membersManager.setAsMember(accountId, nickname) : membersManager.setAsManager(accountId, nickname)
+        }
+        Accessible.role: Accessible.Button
+        Accessible.name: setManagerItem.text
+        Accessible.onPressAction: if (enabled) clicked(Qt.LeftButton)
     }
 
     MenuItem {
         id: removeMember
         width: parent.width
         height: visible ? 32 : 0
-        visible: membersManager.hostAccountId !== accountId && membersManager.hostAccountId === authManager.authAccountId
+        visible: (membersManager.hostAccountId === authManager.authAccountId && membersManager.hostAccountId !== accountId)
+                    || (membersManager.isManagerRole && membersManager.hostAccountId !== accountId && !isManagerRole)
         Label {
             id: removeMemberItem
             text: qsTr("Remove")
@@ -216,7 +296,7 @@ Menu {
         id: enableWhiteboard
         width: parent.width
         height: visible ? 32 : 0
-        visible: (whiteboardManager.whiteboardSharing == true)
+        visible: (whiteboardManager.whiteboardSharing === true)
                  && (accountId !== authManager.authAccountId)
                  && (whiteboardManager.whiteboardSharerAccountId === authManager.authAccountId)
         Label {
@@ -247,8 +327,8 @@ Menu {
         id: closeWhiteboardShare
         width: parent.width
         height: visible ? 32 : 0
-        visible: (whiteboardManager.whiteboardSharing == true)
-                 && (membersManager.hostAccountId === authManager.authAccountId)
+        visible: (whiteboardManager.whiteboardSharing === true)
+                 && (membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole)
                  && (whiteboardManager.whiteboardSharerAccountId === accountId)
                  && (accountId !== membersManager.hostAccountId)
         Label {
@@ -277,7 +357,7 @@ Menu {
         id: closeScreenShare
         width: parent.width
         height: visible ? 32 : 0
-        visible:  (membersManager.hostAccountId === authManager.authAccountId)
+        visible:  (membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole)
                   && (shareManager.shareAccountId === accountId)
                   && (accountId !== membersManager.hostAccountId)
         Label {

@@ -14,15 +14,13 @@ Rectangle {
     anchors.fill: parent
     anchors.margins: 40
     property bool internalRender: (SettingsManager.enableInternalRender
-                                   && !(MeetingStatus.MEETING_CONNECTED
-                                        === meetingManager.getRoomStatus()
-                                        || MeetingStatus.MEETING_RECONNECTED
-                                        === meetingManager.getRoomStatus()))
+                                   && !(MeetingStatus.MEETING_CONNECTED === meetingManager.getRoomStatus()
+                                        || MeetingStatus.MEETING_RECONNECTED === meetingManager.getRoomStatus()))
 
     Component.onCompleted: {
-        SettingsManager.setEnableInternalRender(
-                    SettingsManager.enableInternalRender)
+        SettingsManager.setEnableInternalRender(SettingsManager.enableInternalRender)
         SettingsManager.initFaceBeautyLevel()
+        //SettingsManager.setEnableFaceBeauty(true)
         beautyValue.value = SettingsManager.faceBeautyLevel
 
         //        if (internalRender) {
@@ -33,8 +31,8 @@ Rectangle {
                                DeviceSelector.DeviceType.CaptureType)
         deviceManager.selectDevice(DeviceSelector.DeviceType.CaptureType,
                                    currentIndex)
-        //videoManager.startLocalVideoPreview(/*internalRender ? idVideoWindow : */frameProvider)
-        //videoManager.stopLocalVideoPreview(/*internalRender ? idVideoWindow : */frameProvider)
+        //        videoManager.startLocalVideoPreview(/*internalRender ? idVideoWindow : */frameProvider)
+        //        videoManager.stopLocalVideoPreview(/*internalRender ? idVideoWindow : */frameProvider)
         videoManager.startLocalVideoPreview(
                     /*internalRender ? idVideoWindow : */ frameProvider)
     }
@@ -62,9 +60,9 @@ Rectangle {
                 to: 10
                 stepSize: 1
                 onValueChanged: {
-                    SettingsManager.setEnableFaceBeauty(true)
                     SettingsManager.setFaceBeautyLevel(value)
                 }
+                Accessible.name: beautyLabel.text
             }
 
             FrameProvider {
@@ -82,6 +80,7 @@ Rectangle {
                     //visible: MeetingStatus.DEVICE_ENABLED !== videoManager.localVideoStatus
                     visible: !internalRender
                     anchors.centerIn: parent
+                    mipmap: true
                     source: "qrc:/qml/images/settings/camera_empty.png"
                 }
 
@@ -105,11 +104,17 @@ Rectangle {
         target: rootWindow
         onVisibilityChanged: {
             if (rootWindow.visibility === Window.Hidden) {
-                videoManager.stopLocalVideoPreview(
-                            /*internalRender ? idVideoWindow : */ frameProvider)
-                SettingsManager.setEnableFaceBeauty(false)
                 SettingsManager.setFaceBeautyLevel(beautyValue.value)
                 SettingsManager.saveFaceBeautyLevel()
+                if (MeetingStatus.MEETING_CONNECTED === meetingManager.roomStatus || MeetingStatus.MEETING_RECONNECTED === meetingManager.roomStatus) {
+                    //videoManager.removeVideoCanvas(authManager.authAccountId, frameProvider)
+                } else {
+                    videoManager.stopLocalVideoPreview(/*internalRender ? idVideoWindow : */frameProvider)
+                }
+            } else {
+                if (MeetingStatus.MEETING_CONNECTED === meetingManager.roomStatus || MeetingStatus.MEETING_RECONNECTED === meetingManager.roomStatus) {
+                    videoManager.setupVideoCanvas(authManager.authAccountId, frameProvider, SettingsManager.remoteVideoResolution, frameProvider.uuid);
+                }
             }
         }
     }

@@ -1,9 +1,7 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
-// Copyright (c) 2011, NetEase Inc. All rights reserved.
 //
 // Author: Wang Rongtao <rtwang@corp.netease.com>
 // Date: 2011/6/8
@@ -19,57 +17,53 @@
 #include <windows.h>
 #include "base/time/time.h"
 
-namespace nbase
-{
+namespace nbase {
 
-class BASE_EXPORT WinMessagePump: public MessagePump
-{
+class BASE_EXPORT WinMessagePump : public MessagePump {
 public:
+    //	UI消息派发器
+    //	UI消息泵如果使用消息派发器，那么将不再使用经典的
+    //	TranslateMessage/DispatchMessage模式而改由Dispatcher来完成
+    class BASE_EXPORT Dispatcher {
+    public:
+        virtual ~Dispatcher() {}
+        virtual bool Dispatch(const MSG& message) = 0;
+    };
 
-	//	UI消息派发器
-	//	UI消息泵如果使用消息派发器，那么将不再使用经典的
-	//	TranslateMessage/DispatchMessage模式而改由Dispatcher来完成
-	class BASE_EXPORT Dispatcher
-	{
-	public:
+    WinMessagePump()
+        : have_work_(0)
+        , state_(NULL) {}
+    virtual ~WinMessagePump() {}
 
-		virtual ~Dispatcher() {}
-		virtual bool Dispatch(const MSG &message) = 0;
-	};
+    void RunWithDispatcher(Delegate* delegate, Dispatcher* dispatcher);
 
-	WinMessagePump() : have_work_(0), state_(NULL) {}
-	virtual ~WinMessagePump() {}
-
-	void RunWithDispatcher(Delegate* delegate, Dispatcher* dispatcher);
-
-	virtual void Run(Delegate* delegate) { return RunWithDispatcher(delegate, NULL); }
-	virtual void Quit();
+    virtual void Run(Delegate* delegate) { return RunWithDispatcher(delegate, NULL); }
+    virtual void Quit();
 
 protected:
-	struct RunState
-	{
-		int run_depth;				// 嵌套调用深度
-		bool should_quit;			// 是否应该立即退出
-		Delegate* delegate;			// 处理任务的委托
-		Dispatcher* dispatcher;		// 消息派发器
-	};
+    struct RunState {
+        int run_depth;           // 嵌套调用深度
+        bool should_quit;        // 是否应该立即退出
+        Delegate* delegate;      // 处理任务的委托
+        Dispatcher* dispatcher;  // 消息派发器
+    };
 
-	// 取当前定时间隔
-	int64_t GetCurrentDelay() const;
-	virtual void DoRunLoop() = 0;
+    // 取当前定时间隔
+    int64_t GetCurrentDelay() const;
+    virtual void DoRunLoop() = 0;
 
-	// 定时任务下次运行的时间
-	TimeTicks delayed_work_time_;
+    // 定时任务下次运行的时间
+    TimeTicks delayed_work_time_;
 
-	// 指示消息队列中是否有kMsgDoWork消息
-	long have_work_;
+    // 指示消息队列中是否有kMsgDoWork消息
+    long have_work_;
 
-	// 指示当前MessagePump的状态
-	RunState* state_;
+    // 指示当前MessagePump的状态
+    RunState* state_;
 };
 
-}
+}  // namespace nbase
 
 #endif  // OS_WIN
 
-#endif // BASE_FRAMEWORK_WIN_MESSAGE_PUMP_H_
+#endif  // BASE_FRAMEWORK_WIN_MESSAGE_PUMP_H_

@@ -16,7 +16,7 @@ Window {
     color: 'transparent'
     Material.theme: Material.Light
 
-    enum ModelType{
+    enum ModelType {
         Model_Min = 0,
         Model_Share,
         Model_All
@@ -67,7 +67,8 @@ Window {
                     movePos = Qt.point(mouse.x, mouse.y)
                 }
                 onPositionChanged: {
-                    const delta = Qt.point(mouse.x - movePos.x, mouse.y - movePos.y)
+                    const delta = Qt.point(mouse.x - movePos.x,
+                                           mouse.y - movePos.y)
                     Window.window.x = Window.window.x + delta.x
                     Window.window.y = Window.window.y + delta.y
                 }
@@ -97,7 +98,8 @@ Window {
                     id: btnShare
                     Layout.preferredHeight: 14
                     Layout.preferredWidth: 14
-                    normalImage: ShareVideo.ModelType.Model_Share === modelTyle ? 'qrc:/qml/images/meeting/model_share_hover.svg' : 'qrc:/qml/images/meeting/model_share_normal.svg'
+                    normalImage: ShareVideo.ModelType.Model_Share
+                                 === modelTyle ? 'qrc:/qml/images/meeting/model_share_hover.svg' : 'qrc:/qml/images/meeting/model_share_normal.svg'
                     hoveredImage: 'qrc:/qml/images/meeting/model_share_hover.svg'
                     pushedImage: 'qrc:/qml/images/meeting/model_share_hover.svg'
                     onClicked: modelTyle = ShareVideo.ModelType.Model_Share
@@ -138,6 +140,7 @@ Window {
                     width: 24
                     height: 24
                     source: "qrc:/qml/images/meeting/microphone.svg"
+                    mipmap: true
                 }
                 ToolSeparator {
                     id: helloline
@@ -203,7 +206,8 @@ Window {
                 onWheel: {
                     //console.log("555555", currentPage, nextPage, prePage, wheel.angleDelta.y)
                     const angle = wheel.angleDelta.y
-                    if (scrollEnable && (nextPage && angle < 0) || (prePage && angle > 0)) {
+                    if (scrollEnable && (nextPage && angle < 0)
+                            || (prePage && angle > 0)) {
                         scrollEnable = false
                         goPage(angle / 120)
                     }
@@ -223,6 +227,7 @@ Window {
                     width: 10
                     height: 6
                     source: "qrc:/qml/images/meeting/go_page.svg"
+                    mipmap: true
                 }
                 MouseArea {
                     anchors.fill: parent
@@ -246,6 +251,7 @@ Window {
                     width: 10
                     height: 6
                     source: "qrc:/qml/images/meeting/go_page.svg"
+                    mipmap: true
                     rotation: 180
                 }
                 MouseArea {
@@ -272,10 +278,10 @@ Window {
     Connections {
         target: audioManager
         function onActiveSpeakerNicknameChanged() {
-            if(audioManager.activeSpeakerNickname.length !== 0){
-                speakerNickname.text = qsTr("Speaking: ") + audioManager.activeSpeakerNickname
-            }
-            else{
+            if (audioManager.activeSpeakerNickname.length !== 0) {
+                speakerNickname.text = qsTr(
+                            "Speaking: ") + audioManager.activeSpeakerNickname
+            } else {
                 speakerNickname.text = ''
             }
         }
@@ -288,15 +294,16 @@ Window {
                 return
             }
 
-            console.info('Members info changed:', JSON.stringify(primaryMember),
-                         JSON.stringify(secondaryMembers),
-                         realPage,
-                         realCount)
+            console.info('Members info changed:',
+                         JSON.stringify(primaryMember),
+                         JSON.stringify(secondaryMembers), realPage, realCount)
             if (currentPage !== realPage) {
                 multVideoModel.clear()
-                currentPage = realPage;
+                currentPage = realPage
             }
-            MeetingHelpers.arrangeSpeakerLayout(primaryMember, secondaryMembers, realPage, realCount, null, multVideoModel)
+            MeetingHelpers.arrangeSpeakerLayout(primaryMember,
+                                                secondaryMembers, realPage,
+                                                realCount, null, multVideoModel)
             console.info('Secondary members count: ', multVideoModel.count)
             nextPage = currentPage * pageSize < realCount
             prePage = currentPage > 1
@@ -304,11 +311,11 @@ Window {
         }
 
         function onNicknameChanged(accountId, nickname) {
-            var rowCount = multVideoModel.count;
+            var rowCount = multVideoModel.count
             var found = false
-            for( var i = 0;i < rowCount;i++ ) {
-                var model = multVideoModel.get(i);
-                if(model.accountId === accountId){
+            for (var i = 0; i < rowCount; i++) {
+                var model = multVideoModel.get(i)
+                if (model.accountId === accountId) {
                     model.nickname = nickname
                     found = true
                 }
@@ -319,7 +326,9 @@ Window {
     function switchModel() {
         switch (modelTyle) {
         case ShareVideo.ModelType.Model_Min:
-            height = Qt.binding(function() { return idTitle.height + speaker.height })
+            height = Qt.binding(function () {
+                return idTitle.height + speaker.height
+            })
             multVideoModel.clear()
             break
         case ShareVideo.ModelType.Model_Share:
@@ -329,7 +338,9 @@ Window {
             currentPage = 1
             pageSize = 1
             membersManager.getMembersPaging(pageSize, currentPage)
-            height = Qt.binding(function() { return idTitle.height + videoList.height })
+            height = Qt.binding(function () {
+                return idTitle.height + videoList.height
+            })
             break
         case ShareVideo.ModelType.Model_All:
             viewMode = MainPanel.ViewMode.ShareMode
@@ -338,7 +349,9 @@ Window {
             currentPage = 1
             pageSize = 4
             membersManager.getMembersPaging(pageSize, currentPage)
-            height = Qt.binding(function() { return idTitle.height + videoList.height })
+            height = Qt.binding(function () {
+                return idTitle.height + videoList.height
+            })
             break
         default:
             console.log("error modelTyle!")
@@ -350,8 +363,10 @@ Window {
         currentPage -= page
         if (currentPage <= 0) {
             currentPage = 1
-        } else{
-            var pages = (0 === membersManager.count % pageSize) ? membersManager.count / pageSize : (membersManager.count / pageSize + 1)
+        } else {
+            var pages = (0 === membersManager.count
+                         % pageSize) ? membersManager.count
+                                       / pageSize : (membersManager.count / pageSize + 1)
             if (currentPage > pages) {
                 currentPage = pages
             }

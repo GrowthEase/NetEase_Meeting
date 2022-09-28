@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef AUTHMANAGER_H
 #define AUTHMANAGER_H
@@ -35,6 +34,10 @@ public:
     Q_PROPERTY(QString maxDuration READ maxDuration WRITE setMaxDuration NOTIFY maxDurationChanged)
     Q_PROPERTY(QString maxMemberCount READ maxMemberCount WRITE setMaxMemberCount NOTIFY maxMemberCountChanged)
     Q_PROPERTY(QString extraInfo READ extraInfo WRITE setExtraInfo NOTIFY extraInfoChanged)
+    Q_PROPERTY(bool autoRegistered READ autoRegistered WRITE setAutoRegistered NOTIFY autoRegisteredChanged)
+    Q_PROPERTY(QString personalShortMeetingId READ personalShortMeetingId WRITE setPersonalShortMeetingId NOTIFY personalShortMeetingIdChanged)
+    Q_PROPERTY(QString personalMeetingId READ personalMeetingId WRITE setPersonalMeetingId NOTIFY personalMeetingIdChanged)
+    Q_PROPERTY(QString prettyMeetingId READ prettyMeetingId WRITE setPrettyMeetingId NOTIFY prettyMeetingIdChanged)
 
     QString authCodeInternal() const;
     void setAuthCodeInternal(const QString& authCodeInternal);
@@ -86,6 +89,18 @@ public:
 
     QString extraInfo() const;
     void setExtraInfo(const QString& extraInfo);
+
+    bool autoRegistered() const;
+    void setAutoRegistered(bool autoRegistered);
+
+    QString personalShortMeetingId() const;
+    void setPersonalShortMeetingId(const QString& personalShortMeetingId);
+
+    QString personalMeetingId() const;
+    void setPersonalMeetingId(const QString& personalMeetingId);
+
+    QString prettyMeetingId() const;
+    void setPrettyMeetingId(const QString& prettyMeetingId);
 
 signals:
     /**
@@ -148,7 +163,7 @@ signals:
      * @param ssoAppKey
      * @param ssoToken
      */
-    void loginWithSSO(const QString& ssoAppKey, const QString& ssoToken);
+    void loginWithSSO(const QString& ssoAppKey, const QString& ssoUser, const QString& ssoToken);
     /**
      * @brief gotAccountApps
      * 在线获取 app 列表
@@ -181,6 +196,10 @@ signals:
     void maxDurationChanged();
     void maxMemberCountChanged();
     void extraInfoChanged();
+    void autoRegisteredChanged();
+    void personalShortMeetingIdChanged();
+    void personalMeetingIdChanged();
+    void prettyMeetingIdChanged();
 
 public slots:
     /**
@@ -331,10 +350,13 @@ private:
     QString m_appUserNick;
     QString m_aPaasAccountId;
     QString m_aPaasAccountToken;
-    QString m_aPaasAppKey;
     bool m_resetPasswordFlag = false;
-    QString m_paasServerAddress = "https://meeting-api-test.netease.im/";
     QString m_paasApiVersion = "v1";
+
+    bool m_autoRegistered = false;
+    QString m_shortPersonalMeetingId;
+    QString m_personalMeetingId;
+    QString m_prettyMeetingId;
 };
 
 #endif  // AUTHMANAGER_H

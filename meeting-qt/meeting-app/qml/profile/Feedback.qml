@@ -11,6 +11,8 @@ Window {
     id: feedbackWindow
 
     property bool showOptions: true
+    property bool showAudioDumpTip: false
+    property bool feedbacking: false
     property var problemsArray: []
     property int problemsCount: 0
 
@@ -18,7 +20,6 @@ Window {
     height: Qt.platform.os === 'windows' ? mainContainer.height + 20 : mainContainer.height
     color: "transparent"
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
-
     Material.theme: Material.Light
 
     onVisibleChanged: {
@@ -35,6 +36,7 @@ Window {
             if (showOptions) {
                 authHideTimer.restart()
             }
+
             repeaterModel.append({ option: qsTr('No sound') })
             repeaterModel.append({ option: qsTr('Noise') })
             repeaterModel.append({ option: qsTr('Sound freezes') })
@@ -43,6 +45,7 @@ Window {
             repeaterModel.append({ option: qsTr('Blurred video') })
             repeaterModel.append({ option: qsTr('Sound and picture are out of sync') })
             repeaterModel.append({ option: qsTr('Quit unexpectedly') })
+
         }
     }
 
@@ -110,6 +113,7 @@ Window {
                         Image {
                             Layout.preferredHeight: 21
                             Layout.preferredWidth: 21
+                            mipmap: true
                             source: mainContainer.state === 'good' ? 'qrc:/qml/images/front/feedback/thumb-up-active.svg' : 'qrc:/qml/images/front/feedback/thumb-up.svg'
                         }
                         Label {
@@ -139,6 +143,7 @@ Window {
                         Image {
                             Layout.preferredHeight: 21
                             Layout.preferredWidth: 21
+                            mipmap: true
                             source: mainContainer.state == 'bad' ? 'qrc:/qml/images/front/feedback/thumbs-down-active.svg' : 'qrc:/qml/images/front/feedback/thumbs-down.svg'
                         }
                         Label {
@@ -239,7 +244,18 @@ Window {
                         }
                     }
                 }
+
+                Label {
+                    text: qsTr('If the audio problem is selected, the system will record a 10s audio file by default for problem analysis ')
+                    color: '#888888'
+                    visible: showAudioDumpTip && mainContainer.state == 'bad'
+                    font.pixelSize: 10
+                    elide: Text.ElideRight
+                    anchors.top: textArea.bottom
+                    width: textArea.width
+                }
             }
+
             Rectangle {
                 Layout.preferredHeight: 1
                 Layout.fillWidth: true
@@ -250,7 +266,7 @@ Window {
                 buttonRadius: 18
                 highlighted: true
                 visible: mainContainer.state == 'bad'
-                enabled: problemsCount !== 0 || textArea.text.length !== 0
+                enabled: (problemsCount !== 0 || textArea.text.length !== 0) && !feedbacking
                 Layout.topMargin: 11
                 Layout.bottomMargin: 11
                 Layout.preferredHeight: 36
@@ -262,7 +278,8 @@ Window {
                     mainContainer.state = 'submit'
                     mouseAreaBad.enabled = false
                     closeTimer.restart()
-                    feedbackManager.invokeFeedback(problemsArray, textArea.text)
+                    feedbacking = true
+                    feedbackManager.invokeFeedback(problemsArray, textArea.text, false)
                 }
             }
             Rectangle {
@@ -276,6 +293,7 @@ Window {
                     Image {
                         Layout.preferredHeight: 24
                         Layout.preferredWidth: 24
+                        mipmap: true
                         source: 'qrc:/qml/images/front/feedback/smlie-active.svg'
                     }
                     Label {
@@ -327,5 +345,12 @@ Window {
         showOptions = options
         feedbackWindow.x = (Screen.width - feedbackWindow.width) / 2 + Screen.virtualX
         feedbackWindow.y = (Screen.height - feedbackWindow.height) / 2 + Screen.virtualY
+    }
+
+    Connections {
+        target: feedbackManager
+        onFeedbackFinished: {
+            feedbacking = false;
+        }
     }
 }

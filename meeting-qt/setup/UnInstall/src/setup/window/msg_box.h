@@ -1,15 +1,14 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 /*
 MsgBoxRet ret =	MsgBox(L"TITLE_ID", L"TEXT_ID")
-	->SetIcon(L"warning.png")					//小图标
-	->AddButton(L"BUTTON_TEXT_ID")				//添加按钮，按钮个数1<= N <=3
-	->AddButton(L"BUTTON_TEXT_ID")				//
-	->AddButton(L"BUTTON_TEXT_ID")				//
-	->AsynShow(m_hWnd, cb);						//显示消息框（伪模态），真正模态请使用ShowModal
+        ->SetIcon(L"warning.png")					//Сͼ
+        ->AddButton(L"BUTTON_TEXT_ID")				//Ӱťť1<= N <=3
+        ->AddButton(L"BUTTON_TEXT_ID")				//
+        ->AddButton(L"BUTTON_TEXT_ID")				//
+        ->AsynShow(m_hWnd, cb);						//ʾϢαģ̬ģ̬ʹShowModal
 */
 #ifndef MSG_BOX_H_
 #define MSG_BOX_H_
@@ -17,86 +16,91 @@ MsgBoxRet ret =	MsgBox(L"TITLE_ID", L"TEXT_ID")
 
 class MsgForm;
 
-//返回值
-enum MsgBoxRet { kMsgBtnClose = 0, kMsgBtn1 = 1, kMsgBtn2 = 2, kMsgBtn3 = 4,  kMsgCheck = 64 };
+//ֵ
+enum MsgBoxRet { kMsgBtnClose = 0, kMsgBtn1 = 1, kMsgBtn2 = 2, kMsgBtn3 = 4, kMsgCheck = 64 };
 
-//图标类型
+//ͼ
 enum MsgBoxIconType { kMsgIconQuestion = 0, kMsgIconTip, kMsgIconWarn, kMsgIconError, kMsgIconOK };
 
 MsgForm* MsgBox();
 MsgForm* MsgBox(std::wstring titleID, std::wstring inforID);
 
-class MsgForm : public ui::WindowImplBase
-{
-	struct MsgBoxButton
-	{
-		std::wstring text_;  //文本
-		bool		 gray_;  //状态图样式
-	};
-public:
-	typedef std::function<void(MsgBoxRet)> MsgboxCallback; 
-	typedef std::function<void(int)> MsgboxCallback2; 
-
-	MsgForm();
-	virtual ~MsgForm();
+class MsgForm : public ui::WindowImplBase {
+    struct MsgBoxButton {
+        std::wstring text_;  //ı
+        bool gray_;          //״̬ͼʽ
+    };
 
 public:
-	MsgForm* SetTitle(std::wstring titleID);
-	MsgForm* SetIcon(MsgBoxIconType type);
-	MsgForm* SetInfor(std::wstring inforID, bool is_id = true);
-	MsgForm* SetInfor2(std::wstring infor2){ infor2_ = infor2; return this; }
-	MsgForm* SetPathInfo(std::wstring path_info){ path_info_ = path_info; return this; }
-	MsgForm* SetCheckBox(std::wstring checkID, bool checked = false);
-	MsgForm* AddButton(std::wstring strID, bool gray = false);
-	int AsynShow(HWND parent_hwnd, const MsgboxCallback& msgbox_callback);
-	int AsynShow(HWND parent_hwnd, const MsgboxCallback2& msgbox_callback); //带CheckBox的使用这个回调
+    typedef std::function<void(MsgBoxRet)> MsgboxCallback;
+    typedef std::function<void(int)> MsgboxCallback2;
+
+    MsgForm();
+    virtual ~MsgForm();
 
 public:
-	//接口实现
-	virtual std::wstring GetSkinFolder() override;
-	virtual std::wstring GetSkinFile() override;
-	virtual LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    MsgForm* SetTitle(std::wstring titleID);
+    MsgForm* SetIcon(MsgBoxIconType type);
+    MsgForm* SetInfor(std::wstring inforID, bool is_id = true);
+    MsgForm* SetInfor2(std::wstring infor2) {
+        infor2_ = infor2;
+        return this;
+    }
+    MsgForm* SetPathInfo(std::wstring path_info) {
+        path_info_ = path_info;
+        return this;
+    }
+    MsgForm* SetCheckBox(std::wstring checkID, bool checked = false);
+    MsgForm* AddButton(std::wstring strID, bool gray = false);
+    int AsynShow(HWND parent_hwnd, const MsgboxCallback& msgbox_callback);
+    int AsynShow(HWND parent_hwnd, const MsgboxCallback2& msgbox_callback);  // CheckBoxʹص
 
 public:
-	//覆盖虚函数
-	virtual std::wstring GetWindowClassName() const override;
-	virtual UINT GetClassStyle() const override;
-	virtual void OnFinalMessage( HWND hWnd );
-	virtual void InitWindow() override;
-	virtual bool Notify(ui::EventArgs* msg);
+    //ӿʵ
+    virtual std::wstring GetSkinFolder() override;
+    virtual std::wstring GetSkinFile() override;
+    virtual LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+
+public:
+    //麯
+    virtual std::wstring GetWindowClassName() const override;
+    virtual UINT GetClassStyle() const override;
+    virtual void OnFinalMessage(HWND hWnd);
+    virtual void InitWindow() override;
+    virtual bool Notify(ui::EventArgs* msg);
 
 private:
-	std::wstring GetWindowId() const;
-	MsgBoxRet ShowModal(HWND hwnd);   //一般情况都使用AsynShow，特殊情况需要使用ShowModal的话，需要加为此类的友元类，如：friend MainThread;
-	void AdjustContent();	// 调整内容区的位置
-	void AdjustButtons();	// 调整按钮们的位置
-	void OnClicked(MsgBoxRet ret);
-	void ActiveWindow();
+    std::wstring GetWindowId() const;
+    MsgBoxRet ShowModal(HWND hwnd);  //һʹAsynShowҪʹShowModalĻҪΪԪ࣬磺friend MainThread;
+    void AdjustContent();            // λ
+    void AdjustButtons();            // ťǵλ
+    void OnClicked(MsgBoxRet ret);
+    void ActiveWindow();
 
 public:
-	static const LPCTSTR kClassName;
-	static const LPCTSTR kCheckBoxName;
+    static const LPCTSTR kClassName;
+    static const LPCTSTR kCheckBoxName;
 
 private:
-	std::wstring	title_;		//窗口标题
+    std::wstring title_;  //ڱ
 
-	MsgBoxIconType	icon_;		//图标
-	std::wstring	infor_;		//提示信息
-	std::wstring	path_info_;		//提示信息
-	std::wstring	infor2_;		//提示信息
-	bool			is_use_infor_id_;
+    MsgBoxIconType icon_;     //ͼ
+    std::wstring infor_;      //ʾϢ
+    std::wstring path_info_;  //ʾϢ
+    std::wstring infor2_;     //ʾϢ
+    bool is_use_infor_id_;
 
-	bool			has_check_;
-	std::wstring	check_;		//复选框
-	bool			is_checked_;
+    bool has_check_;
+    std::wstring check_;  //ѡ
+    bool is_checked_;
 
-	MsgBoxButton	button_[3];		// 3个按钮
-	int				buttons_;       // 按钮个数
+    MsgBoxButton button_[3];  // 3ť
+    int buttons_;             // ť
 
 private:
-	//TabKeyManager	 tabkey_manager_;
-	MsgboxCallback	 msgbox_callback_;
-	MsgboxCallback2  msgbox_callback2_;
+    // TabKeyManager	 tabkey_manager_;
+    MsgboxCallback msgbox_callback_;
+    MsgboxCallback2 msgbox_callback2_;
 };
 
-#endif // MSG_BOX_H_
+#endif  // MSG_BOX_H_

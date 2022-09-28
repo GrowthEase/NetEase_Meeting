@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 /*
  *
@@ -15,27 +14,23 @@
 #ifndef BASE_UTIL_CMD_LINE_ARGS_H_
 #define BASE_UTIL_CMD_LINE_ARGS_H_
 
-#include "base/base_export.h"
-#include <vector>
 #include <ctype.h>
+#include <vector>
+#include "base/base_export.h"
 
-namespace nbase
-{
+namespace nbase {
 
-class BASE_EXPORT CmdLineArgs: public std::vector<wchar_t*>
-{
+class BASE_EXPORT CmdLineArgs : public std::vector<wchar_t*> {
 public:
-
-	CmdLineArgs(const wchar_t *command_line = 0);
-	virtual ~CmdLineArgs();
+    CmdLineArgs(const wchar_t* command_line = 0);
+    virtual ~CmdLineArgs();
 
 private:
+    bool ParseCommandLine();
 
-	bool ParseCommandLine();
-
-	wchar_t *buffer_;
+    wchar_t* buffer_;
 };
 
-} // namespace
+}  // namespace nbase
 
-#endif // BASE_UTIL_CMD_LINE_ARGS_H_
+#endif  // BASE_UTIL_CMD_LINE_ARGS_H_

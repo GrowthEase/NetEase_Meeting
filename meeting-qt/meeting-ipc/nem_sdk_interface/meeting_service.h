@@ -1,4 +1,8 @@
-﻿/**
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+
+/**
  * @file meeting_service.h
  * @brief 会议服务头文件
  * @copyright (c) 2014-2021, NetEase Inc. All rights reserved
@@ -9,31 +13,29 @@
 #ifndef NEM_SDK_INTERFACE_INTERFACE_METTING_SERVICE_H_
 #define NEM_SDK_INTERFACE_INTERFACE_METTING_SERVICE_H_
 
+#include "meeting.h"
 #include "service_define.h"
-#include "metting.h"
 
 NNEM_SDK_INTERFACE_BEGIN_DECLS
 
 /**
  * @brief 监听会议状态变更通知
  */
-class NEMeetingStatusListener : public NEObject
-{
+class NEMeetingStatusListener : public NEObject {
 public:
-   /**
-    * @brief 会议的状态信息
-    * @param status 会议状态，参考NEMeetingStatus
-    * @param code 错误码
-    * @return void
-    */
+    /**
+     * @brief 会议的状态信息
+     * @param status 会议状态，参考NEMeetingStatus
+     * @param code 错误码
+     * @return void
+     */
     virtual void onMeetingStatusChanged(int status, int code) = 0;
 };
 
 /**
  * @brief 监听会议中按钮点击状态变更通知
  */
-class NEMeetingOnInjectedMenuItemClickListener : public NEObject
-{
+class NEMeetingOnInjectedMenuItemClickListener : public NEObject {
 public:
     /**
      * @brief 多个状态的菜单的返回回调
@@ -63,8 +65,7 @@ public:
 /**
  * @brief 会议服务
  */
-class NEM_SDK_INTERFACE_EXPORT NEMeetingService : public NEService
-{
+class NEM_SDK_INTERFACE_EXPORT NEMeetingService : public NEService {
 public:
     using NEStartMeetingCallback = NEEmptyCallback;
     using NEJoinMeetingCallback = NEEmptyCallback;
@@ -92,9 +93,18 @@ public:
     virtual void joinMeeting(const NEJoinMeetingParams& param, const NEJoinMeetingOptions& opts, const NEJoinMeetingCallback& cb) = 0;
 
     /**
+     * @brief 匿名加入会议
+     * @param param 加入会议参数
+     * @param opts 加入会议选项
+     * @param cb 回调
+     * @return void
+     */
+    virtual void anonymousJoinMeeting(const NEJoinMeetingParams& param, const NEJoinMeetingOptions& opts, const NEJoinMeetingCallback& cb) = 0;
+
+    /**
      * @brief 离开会议
      * @param finish 是否要结束会议，true结束，false不结束
-     * @attention 目前只支持false
+     * @attention 只有主持人才能结束会议
      * @param cb 回调
      * @return void
      */
@@ -163,5 +173,4 @@ public:
 };
 
 NNEM_SDK_INTERFACE_END_DECLS
-#endif // NEM_SDK_INTERFACE_INTERFACE_METTING_SERVICE_H_
-
+#endif  // NEM_SDK_INTERFACE_INTERFACE_METTING_SERVICE_H_

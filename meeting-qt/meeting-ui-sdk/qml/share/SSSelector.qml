@@ -22,6 +22,9 @@ Popup {
     margins: 0
     modal: true
     dim: false
+    Accessible.name: idDragArea.title
+    focus: true
+
     background: Rectangle {
         id: backgroundRect
         radius: Qt.platform.os === 'windows' ? 0 : 10
@@ -68,6 +71,7 @@ Popup {
         anchors.horizontalCenter: parent.horizontalCenter
 
         DragArea {
+            id: idDragArea
             title: qsTr("Select screen")
             windowMode: false
             titleFontSize: 18
@@ -137,8 +141,11 @@ Popup {
                             anchors.left: parent.left
                             width: parent.width
                             height: parent.height
+                            sourceSize.width: width
+                            sourceSize.height: height
                             asynchronous: true
                             fillMode: model.screenAppWinMinimized ? Image.Pad : Image.PreserveAspectFit
+                            mipmap: true
                             source: {
                                 if (0 === model.screenType) {
                                     return "image://shareScreen/" + model.index + randImage
@@ -266,7 +273,7 @@ Popup {
                         sharedWnd.destroy()
                         sharedWnd = undefined
                     }
-                    shareManager.clearShareWindow()
+                    shareManager.clearExcludeShareWindow()
                     const screens = Qt.application.screens;
                     var screen = mainWindow.screen
                     if (shareSelector.screenIndex <= screens.length - 1)
@@ -278,6 +285,9 @@ Popup {
                     sharedWnd.screen = screen
 
                     console.log("screenIndex: ", shareSelector.screenIndex)
+                    if (Qt.platform.os === 'osx') {
+                        shareManager.addExcludeShareWindow(MessageBubble)
+                    }
                     if (shareSelector.screenIndex <= screens.length - 1)
                     {
                         close();

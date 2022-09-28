@@ -10,13 +10,25 @@ CustomWindow {
     title: qsTr("Schedule Meeting")
     customWidth: 400
     customHeight: 604
-
-    property bool isSupportLive: false
+    property string lastSubjectText: ''
 
     onVisibleChanged: {
         if (visible){
             idLoader.item.init()
         }
+    }
+
+    function getByteLength(string) {
+        var len = 0
+        for (var i = 0; i < string.length; i++) {
+            var a = string.charAt(i);
+            if (a.match(/[^\x00-\xff]/ig) !== null) {
+                len += 2
+            } else {
+                len += 1
+            }
+        }
+        return len
     }
 
     Component {
@@ -25,7 +37,8 @@ CustomWindow {
             id: rect
             function init () {
                 // 初始化主题
-                idSubjectText.text = qsTr("%1's scheduled meeting").arg(authManager.appUserNick)
+                lastSubjectText = qsTr("%1's scheduled meeting").arg(authManager.appUserNick)
+                idSubjectText.text = lastSubjectText
                 idSubjectText.focus = true
 
                 // 初始化开始日期
@@ -62,8 +75,6 @@ CustomWindow {
                     idLiveSettingCheck.checked = false
 
                 idLiveAccessCheck.checked = false
-
-                isSupportLive = meetingManager.getIsSupportLive()
             }
             anchors.fill: parent
 
@@ -92,8 +103,21 @@ CustomWindow {
                         CustomTextFieldEx {
                             id: idSubjectText
                             placeholderText: qsTr("Please enter meeting subject")
-                            validator: RegExpValidator { regExp: /\w{1,30}/ }
                             Layout.fillWidth: true
+
+                            onTextChanged: {
+                                const currentText = idSubjectText.text
+                                if (currentText === lastSubjectText)
+                                    return
+
+                                if (getByteLength(currentText) > 30) {
+                                } else {
+                                    lastSubjectText = currentText
+                                    const regStr = /[\uD83C|\uD83D|\uD83E][\uDC00-\uDFFF][\u200D|\uFE0F]|[\uD83C|\uD83D|\uD83E][\uDC00-\uDFFF]|[0-9|*|#]\uFE0F\u20E3|[0-9|#]\u20E3|[\u203C-\u3299]\uFE0F\u200D|[\u203C-\u3299]\uFE0F|[\u2122-\u2B55]|\u303D|[\A9|\AE]\u3030|\uA9|\uAE|\u3030/gi
+                                    lastSubjectText = lastSubjectText.replace(regStr, '')
+                                }
+                                idSubjectText.text = lastSubjectText
+                            }
                         }
                     }
 
@@ -210,6 +234,7 @@ CustomWindow {
                                 placeholderText: qsTr("Please enter 6-digit password")
                                 validator: RegExpValidator { regExp: /[0-9]{6}/ }
                                 Layout.fillWidth: true
+                                Accessible.name: "passwordInput"
                             }
                         }
                     }
@@ -232,7 +257,7 @@ CustomWindow {
                     Column {
                         spacing: 8
                         Layout.preferredHeight: 56
-                        visible: isSupportLive
+                        visible: meetingManager.isSupportLive
                         Label {
                             id: idLiveSetting
                             text: qsTr("Live Setting")

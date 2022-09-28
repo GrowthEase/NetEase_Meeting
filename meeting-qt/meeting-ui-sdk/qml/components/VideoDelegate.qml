@@ -24,12 +24,22 @@ Rectangle {
 
     Component.onCompleted: {
         if (accountId.length !== 0)
-            videoManager.setupVideoCanvas(accountId, frameProvider, highQuality);
+            videoManager.setupVideoCanvas(accountId, frameProvider, highQuality, frameProvider.uuid);
     }
 
     Component.onDestruction: {
-        if (accountId.length !== 0)
+        if (accountId.length !== 0) {
             videoManager.removeVideoCanvas(accountId, frameProvider)
+            if(authManager.authAccountId !== accountId) {
+                videoManager.unSubscribeRemoteVideoStream(accountId, frameProvider.uuid)
+            }
+        }
+    }
+
+    onHighQualityChanged: {
+        if (accountId.length !== 0) {
+            videoManager.subscribeRemoteVideoStream(accountId, highQuality, frameProvider.uuid);
+        }
     }
 
     Rectangle {
@@ -38,6 +48,7 @@ Rectangle {
 
         RowLayout {
             anchors.centerIn: parent
+            spacing: 30
             Label {
                 id: nicknameText
                 text: nickname
@@ -54,6 +65,7 @@ Rectangle {
             width: primary === 1 ? 40 : 25
             height: primary === 1 ? 40 : 25
             visible: videoStatus === 1
+            mipmap: true
             source: "qrc:/qml/images/settings/camera_empty.png"
         }
     }
@@ -101,9 +113,12 @@ Rectangle {
 
             Image {
                 id: microphoneIcon
-                source: "qrc:/qml/images/public/icons/voice_off.png"
-                visible: audioStatus !== 1
+                source: audioStatus !== 1 ? "qrc:/qml/images/meeting/footerbar/btn_audio_off_normal.png" : "qrc:/qml/images/meeting/volume/volume_level_1.png"
+                mipmap: true
+                visible: true
                 Layout.alignment: Qt.AlignVCenter
+                Layout.preferredWidth: 14
+                Layout.preferredHeight: 14
             }
 
             Label {
@@ -230,8 +245,14 @@ Rectangle {
     Connections {
         target: audioManager
         onUserAudioStatusChanged: {
-            if (changedAccountId === accountId)
+            if (changedAccountId === accountId) {
                 audioStatus = deviceStatus
+                if(audioStatus !== 1) {
+                    microphoneIcon.source = "qrc:/qml/images/meeting/footerbar/btn_audio_off_normal.png"
+                } else {
+                    microphoneIcon.source = "qrc:/qml/images/meeting/volume/volume_level_1.png"
+                }
+            }
         }
         onRemoteUserAudioStats: {
             for (let i = 0; i < userStats.length; i++) {
@@ -258,6 +279,28 @@ Rectangle {
             if(accountId === root.accountId){
                 root.nickname = nickname
             }
+        }
+
+        onUserReJoined: {
+            if (root.accountId === accountId) {
+                videoManager.subscribeRemoteVideoStream(accountId, highQuality, frameProvider.uuid);
+                videoManager.setupVideoCanvas(accountId, frameProvider, highQuality, frameProvider.uuid);
+            }
+        }
+    }
+
+    Connections {
+        target: deviceManager
+        function onUserAudioVolumeIndication(accountId, level) {
+            if(accountId !== root.accountId) {
+                return
+            }
+
+            if(audioStatus !== 1) {
+                return
+            }
+
+            microphoneIcon.source = getAudioVolumeSourceImage(level)
         }
     }
 }

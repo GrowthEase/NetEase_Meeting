@@ -31,6 +31,7 @@ RoundButton {
     topInset: 0
     leftInset: 0
     rightInset: 0
+    focusPolicy: Qt.NoFocus
 
     contentItem: Label {
         text: control.text

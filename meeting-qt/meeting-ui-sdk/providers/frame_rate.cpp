@@ -1,24 +1,20 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "frame_rate.h"
 #include <QBrush>
 
-FrameRate::FrameRate(QQuickItem *parent)
-    : QQuickPaintedItem(parent)
-{
+FrameRate::FrameRate(QQuickItem* parent)
+    : QQuickPaintedItem(parent) {
     setFlag(QQuickItem::ItemHasContents);
 }
 
-int FrameRate::value() const
-{
+int FrameRate::value() const {
     return m_value;
 }
 
-void FrameRate::paint(QPainter * painter)
-{
+void FrameRate::paint(QPainter* painter) {
     refreshFPS();
 
     QBrush brush(Qt::yellow);
@@ -37,13 +33,11 @@ void FrameRate::paint(QPainter * painter)
     update();
 }
 
-void FrameRate::qmlRegisterType()
-{
+void FrameRate::qmlRegisterType() {
     ::qmlRegisterType<FrameRate>("NetEase.Meeting.FrameRate", 1, 0, "FrameRate");
 }
 
-void FrameRate::refreshFPS()
-{
+void FrameRate::refreshFPS() {
     qint64 currentTime = QDateTime::currentDateTime().toMSecsSinceEpoch();
     m_frames.push_back(currentTime);
 

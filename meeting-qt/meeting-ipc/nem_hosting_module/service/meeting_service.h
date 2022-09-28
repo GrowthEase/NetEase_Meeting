@@ -1,13 +1,12 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef NEM_HOSTING_MODULE_SERVICE_MEETING_SERVICE_H_
 #define NEM_HOSTING_MODULE_SERVICE_MEETING_SERVICE_H_
-#include "nemeeting_sdk_interface_include.h"
 #include "nem_hosting_module/config/build_config.h"
 #include "nem_hosting_module_core/service/service.h"
+#include "nemeeting_sdk_interface_include.h"
 
 NNEM_SDK_HOSTING_MODULE_BEGIN_DECLS
 
@@ -15,9 +14,9 @@ USING_NS_NNEM_SDK_INTERFACE
 
 USING_NS_NNEM_SDK_HOSTING_MODULE_CORE
 
-class NEM_SDK_INTERFACE_EXPORT NEMeetingServiceIMP : public NEMeetingService, public IService<NS_NIPCLIB::IPCServer>
-{
-    friend NEMeetingSDK* NEMeetingSDK::getInstance();
+class NEM_SDK_INTERFACE_EXPORT NEMeetingServiceIMP : public NEMeetingService, public IService<NS_NIPCLIB::IPCServer> {
+    friend NEMeetingKit* NEMeetingKit::getInstance();
+
 public:
     NEMeetingServiceIMP();
     virtual ~NEMeetingServiceIMP();
@@ -25,6 +24,7 @@ public:
 public:
     virtual void startMeeting(const NEStartMeetingParams& param, const NEStartMeetingOptions& opts, const NEStartMeetingCallback& cb) override;
     virtual void joinMeeting(const NEJoinMeetingParams& param, const NEJoinMeetingOptions& opts, const NEJoinMeetingCallback& cb) override;
+    virtual void anonymousJoinMeeting(const NEJoinMeetingParams& param, const NEJoinMeetingOptions& opts, const NEJoinMeetingCallback& cb) override;
     virtual void leaveMeeting(bool finish, const NELeaveMeetingCallback& cb) override;
     virtual void getCurrentMeetingInfo(const NEGetMeetingInfoCallback& cb) override;
     virtual NEMeetingStatus getMeetingStatus() override;
@@ -40,12 +40,11 @@ private:
     virtual void OnPack(int cid, const std::string& data, uint64_t sn) override;
 
 private:
-    NEMeetingStatus  meeting_status_;
+    NEMeetingStatus meeting_status_;
     NEMeetingStatusListener* meeting_srv_listener_;
     NEMeetingOnInjectedMenuItemClickListener* meeting_menu_item_listener_;
 };
 
 NNEM_SDK_HOSTING_MODULE_END_DECLS
 
-#endif //NEM_HOSTING_MODULE_SERVICE_MEETING_SERVICE_H_
-
+#endif  // NEM_HOSTING_MODULE_SERVICE_MEETING_SERVICE_H_

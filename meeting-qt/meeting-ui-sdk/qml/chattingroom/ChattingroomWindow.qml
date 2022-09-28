@@ -6,64 +6,65 @@ import QtQuick.Controls.Styles 1.4
 import QtGraphicalEffects 1.0
 import QtQuick.Controls.Material 2.12
 import NetEase.Meeting.MeetingStatus 1.0
+import NetEase.Meeting.MessageModel 1.0
+import QtQuick.Dialogs 1.3
 
 import "../components"
 
 Window {
-    id:chatWindow
+    id: chatWindow
     visible: false
     width: Qt.platform.os === 'windows' ? 417 : 417 + 20
     height: Qt.platform.os === 'windows' ? 520 : 520 + 20
     x: (Screen.width - width) / 2
     y: (Screen.height - height) / 2
     color: "#00000000"
-    title:qsTr("chatroom")
-    flags:  Qt.Window | Qt.FramelessWindowHint
+    title: qsTr("chatroom")
+    flags: Qt.Window | Qt.FramelessWindowHint
     Material.theme: Material.Light
 
     signal newMsgNotity(int msgCount, string sender, string text)
 
-    property point  movePos    : "0,0"
-    property var    msgtimeGap : undefined
-    property var    nickname   : meetingManager.nickname
-    property int    msgCount   : 0
+    property point movePos: "0,0"
+    property var msgtimeGap: undefined
+    property var nickname: meetingManager.nickname
+    property int msgCount: 0
+    property MessageModel messageModel
 
-    ToastManager{
-        id:operator
+    ToastManager {
+        id: operator
     }
 
     Component.onCompleted: {
-        chatroom.listmodel.clear()
+        messageModel.clearMessage()
         chatroom.msglistView.positionViewAtEnd()
         msgtimeGap = new Date()
     }
 
-    Component.onDestruction:{
-        chatroom.listmodel.clear()
+    Component.onDestruction: {
+        messageModel.clearMessage()
         nickname = ""
         close()
     }
 
     onVisibleChanged: {
-        if (visible){
-            newMsgNotity(0,"","")
+        if (visible) {
+            newMsgNotity(0, "", "")
             msgCount = 0
             chatroom.msglistView.positionViewAtEnd()
-            if (msgTipBtn.visible){
+            if (msgTipBtn.visible) {
                 msgTipBtn.visible = false
             }
 
             GlobalChatManager.noNewMsgNotity()
-        }
-        else{
+        } else {
             messageField.focus = false
         }
-
     }
 
-    onVisibilityChanged:{
+    onVisibilityChanged: {
         if (mainWindow.visibility === Window.Minimized) {
-            messageField.focus = false;
+            messageField.focus = false
         }
     }
 
@@ -111,14 +112,15 @@ Window {
             anchors.right: parent.right
             spacing: 0
             Rectangle {
-                id:listviewlayout
+                id: listviewlayout
                 Layout.preferredWidth: parent.width
                 Layout.fillHeight: true
 
                 ChatListView {
-                    id:chatroom
+                    id: chatroom
+                    messageModel: chatWindow.messageModel
                     Rectangle {
-                        id:msgTipBtn
+                        id: msgTipBtn
                         width: 74
                         height: 28
                         anchors.right: chatroom.right
@@ -130,24 +132,24 @@ Window {
                         radius: 14
                         z: 2
 
-                        RowLayout{
+                        RowLayout {
                             spacing: 4
                             anchors.centerIn: parent
                             Image {
                                 id: btnImage
-                                Layout.preferredWidth:8
-                                Layout.preferredHeight:8
+                                Layout.preferredWidth: 8
+                                Layout.preferredHeight: 8
+                                mipmap: true
                                 source: "qrc:/qml/images/chatroom/messagedown.png"
                             }
 
                             Label {
-                                id:tipLabel
-                                Layout.preferredWidth:36
-                                Layout.preferredHeight:17
+                                id: tipLabel
+                                Layout.preferredWidth: 36
+                                Layout.preferredHeight: 17
                                 font.pixelSize: 12
                                 color: "#FFFFFF"
                                 text: qsTr("new message")
-
                             }
                         }
 
@@ -155,10 +157,10 @@ Window {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                chatroom.msglistView.positionViewAtEnd();
+                                chatroom.msglistView.positionViewAtEnd()
                                 msgTipBtn.visible = false
-                                chatroom.msglistView.msgTimeTip = false;
-                                newMsgNotity(0,"","")
+                                chatroom.msglistView.msgTimeTip = false
+                                newMsgNotity(0, "", "")
                             }
                         }
                     }
@@ -169,13 +171,16 @@ Window {
                 Layout.fillWidth: true
                 color: "#EBEDF0"
             }
-            Rectangle{
+            Rectangle {
                 id: input
                 Layout.preferredHeight: 78
                 Layout.preferredWidth: parent.width
-                Flickable  {
+                Flickable {
                     id: scView
-                    anchors.fill: parent
+                    width: !idTool.visible ? parent.width : parent.width - idTool.width -14
+                    height: parent.height
+                    anchors.top: parent.top
+                    anchors.left: parent.left
                     ScrollBar.vertical: ScrollBar {
                         width: 5
                         onActiveChanged: {
@@ -187,13 +192,13 @@ Window {
 
                     TextArea.flickable: TextArea {
                         id: messageField
-                        font.pixelSize:14
-                        selectByMouse:true
-                        selectByKeyboard:true
+                        font.pixelSize: 14
+                        selectByMouse: true
+                        selectByKeyboard: true
                         leftPadding: 12
                         rightPadding: leftPadding
                         topPadding: 8
-                        bottomPadding:topPadding
+                        bottomPadding: topPadding
                         placeholderText: qsTr("Input a message and press Enter to send it...")
                         wrapMode: TextArea.Wrap
                         background: Rectangle {
@@ -202,26 +207,71 @@ Window {
                         }
 
                         Keys.onReturnPressed: {
-                            if(text.match(/^[ ]*$/)){
-                                operator.show(qsTr("can not send empty message"), 1500)
-                                return;
+                            if (text.match(/^[ ]*$/)) {
+                                operator.show(
+                                            qsTr("can not send empty message"),
+                                            1500)
+                                return
                             }
-
-                            //addToList("msg", messageField.text, nickname, true)
-                            chatManager.sendIMTextMsg(messageField.text,"share")
-                            messageField.text = "";
-                            messageField.focus = true;
+                            chatManager.sendTextMsg(messageField.text)
+                            messageField.text = ""
+                            messageField.focus = true
                         }
 
                         Keys.onEnterPressed: {
-                            if(text.match(/^[ ]*$/)){
-                                operator.show(qsTr("can not send empty message"), 1500)
-                                return;
+                            if (text.match(/^[ ]*$/)) {
+                                operator.show(
+                                            qsTr("can not send empty message"),
+                                            1500)
+                                return
                             }
-                            //addToList("msg", messageField.text, nickname, true)
-                            chatManager.sendIMTextMsg(messageField.text,"share")
-                            messageField.text = "";
-                            messageField.focus = true;
+                            chatManager.sendTextMsg(messageField.text)
+                            messageField.text = ""
+                            messageField.focus = true
+                        }
+                    }
+                }
+
+                Rectangle {
+                    id: idTool
+                    visible: meetingManager.enableImageMessage || meetingManager.enableFileMessage
+                    width: (meetingManager.enableImageMessage && meetingManager.enableFileMessage) ? 48 : 16
+                    height: 16
+                    anchors.top: scView.top
+                    anchors.topMargin: 13
+                    anchors.right: parent.right
+                    anchors.rightMargin: 14
+
+                    RowLayout {
+                        spacing: 16
+                        anchors.fill: parent
+                        Layout.alignment: Qt.AlignRight
+                        ImageButton {
+                            id: idImage
+                            visible: meetingManager.enableImageMessage
+                            Layout.preferredWidth: 18
+                            Layout.preferredHeight: 16
+                            normalImage: 'qrc:/qml/images/chatroom/image.svg'
+                            hoveredImage: 'qrc:/qml/images/chatroom/image.svg'
+                            pushedImage: 'qrc:/qml/images/chatroom/image.svg'
+                            onClicked: {
+                                fileDialog.imageType = true
+                                fileDialog.open()
+                            }
+                        }
+
+                        ImageButton {
+                            id: idFile
+                            visible: meetingManager.enableFileMessage
+                            Layout.preferredWidth: 17
+                            Layout.preferredHeight: 16
+                            normalImage: 'qrc:/qml/images/chatroom/file.svg'
+                            hoveredImage: 'qrc:/qml/images/chatroom/file.svg'
+                            pushedImage: 'qrc:/qml/images/chatroom/file.svg'
+                            onClicked: {
+                                fileDialog.imageType = false
+                                fileDialog.open()
+                            }
                         }
                     }
                 }
@@ -237,15 +287,51 @@ Window {
         source: mainLayout
         color: "#3217171A"
         visible: Qt.platform.os === 'windows'
-        Behavior on radius { PropertyAnimation { duration: 100 } }
+        Behavior on radius {
+            PropertyAnimation {
+                duration: 100
+            }
+        }
+    }
+
+    FileDialog {
+        id: fileDialog
+        property bool imageType: true
+        nameFilters: imageType ? ["%1 (*.jpg *.png *.jpeg *.bmp)".arg(qsTr("image files"))] :
+                     ["%1 (*.mp3 *.aac *.wav *.pcm *.mp4 *.flv *.mov *.doc *.docx *.xls *.xlsx *.ppt *.pptx *.jpg *.png *.jpeg *.bmp *.pdf *.zip *.7z *.biz *.tar *.txt *.apk *.ipa)".arg(qsTr("all files")),
+                      "%1 (*.mp3 *.aac *.wav *.pcm)".arg(qsTr("audio files")),
+                      "%1 (*.mp4 *.flv *.mov)".arg(qsTr("video files")),
+                      "%1 (*.doc *.docx *.xls *.xlsx *.ppt *.pptx)".arg(qsTr("office files")),
+                      "%1 (*.jpg *.png *.jpeg *.bmp)".arg(qsTr("image files")),
+                      "%1 (*.zip *.7z *.biz *.tar)".arg(qsTr("zip files")),
+                      "%1 (*.pdf)".arg(qsTr("pdf files")),
+                      "%1 (*.txt)".arg(qsTr("text files")),
+                      "%1 (*.apk *.ipa)".arg(qsTr("pack files"))]
+        folder: shortcuts.home
+        onAccepted: {
+            console.log("sendFileMsg image: " + fileDialog.fileUrl)
+            var filePath = ""
+            filePath = fileDialog.fileUrl.toString()
+            if(Qt.platform.os === 'osx') {
+                filePath = filePath.replace("file://", "")
+            } else {
+                filePath = filePath.replace("file:///", "")
+            }
+
+            if(imageType) {
+                chatManager.sendFileMsg(3, filePath)
+            } else {
+                chatManager.sendFileMsg(2, filePath)
+            }
+        }
     }
 
     Connections {
-        target:GlobalChatManager
-        onNoNewMsgNotity:{
+        target: GlobalChatManager
+        onNoNewMsgNotity: {
             msgCount = 0
             chatroom.msglistView.positionViewAtEnd()
-            if (msgTipBtn.visible){
+            if (msgTipBtn.visible) {
                 msgTipBtn.visible = false
             }
         }
@@ -253,64 +339,76 @@ Window {
 
     Connections {
         target: chatManager
-        onRecvMsgSiganl:{
-            if(status != 200){
-                operator.show(qsTr("send message fail"))
-                return
-            }
-            else{
-                if( msg.sendFlag === "share"  || msg.sendFlag === "main")
-                    addToList(msg.msgType, msg.content, msg.nickName, true)
-                else
-                    addToList(msg.msgType, msg.content, msg.nickName, msg.sendByme)
+        onMsgTipSignal: {
+            ++msgCount
+            if (chatWindow.visible){
+                if (chatroom.msglistView.atYEnd) {
+                    chatroom.msglistView.positionViewAtEnd()
+                    newMsgNotity(0, "", "")
+                    GlobalChatManager.noNewMsgNotity()
+                    msgCount = 0
+                } else {
+                    newMsgNotity(msgCount, nickname, tip)
+                    if (!msgTipBtn.visible) {
+                        msgTipBtn.visible = true
+                    }
+                }
+            } else{
+                newMsgNotity(msgCount, nickname, tip)
             }
         }
 
-        onError : {
-
+        onMsgSendSignal: {
+            chatroom.msglistView.positionViewAtEnd()
+            GlobalChatManager.noNewMsgNotity()
         }
-        onDisconnect:{
-            switch(code) {
+
+        onError: {
+            operator.show(text)
+        }
+
+        onDisconnect: {
+            switch (code) {
             case 0:
-                if(chatbusyContainer.visible){
+                if (chatbusyContainer.visible) {
                     chatbusyContainer.visible = false
                     messageField.focus = true
                 }
-                break;
+                break
             case 1:
             case 2:
-                if(!chatbusyContainer.visible){
+                if (!chatbusyContainer.visible) {
                     busyNotice.text = qsTr("Connection is disconnect!")
-                    chatbusyContainer.visible = true;
+                    chatbusyContainer.visible = true
                     messageField.focus = false
                 }
-                break;
+                break
             default:
-                if(chatbusyContainer.visible){
+                if (chatbusyContainer.visible) {
                     chatbusyContainer.visible = false
                     messageField.focus = true
-                    break;
+                    break
                 }
             }
-
         }
     }
 
     Connections {
-        target:meetingManager
+        target: meetingManager
         onMeetingStatusChanged: {
             switch (status) {
             case MeetingStatus.MEETING_CONNECTED:
                 nickname = meetingManager.nickname
+                chatbusyContainer.visible = false
                 break
             case MeetingStatus.MEETING_CONNECT_FAILED:
             case MeetingStatus.MEETING_RECONNECT_FAILED:
-                chatroom.listmodel.clear()
-                messageField.text = "";
+                messageModel.clearMessage()
+                messageField.text = ""
                 nickname = ""
-                if(!chatbusyContainer.visible){
+                if (!chatbusyContainer.visible) {
                     busyNotice.text = qsTr("Connection is disconnect!")
-                    chatbusyContainer.visible = true;
+                    chatbusyContainer.visible = true
                     messageField.focus = false
                 }
                 break
@@ -318,17 +416,16 @@ Window {
             case MeetingStatus.MEETING_KICKOUT_BY_HOST:
             case MeetingStatus.MEETING_MULTI_SPOT_LOGIN:
             case MeetingStatus.MEETING_ENDED:
-                messageField.text = "";
-                chatroom.listmodel.clear()
+                messageField.text = ""
+                messageModel.clearMessage()
                 nickname = ""
                 chatbusyContainer.visible = false
                 GlobalChatManager.noNewMsgNotity()
                 close()
                 break
-
             default:
 
-                break;
+                break
             }
         }
     }
@@ -336,103 +433,22 @@ Window {
     Connections {
         target: chatroom.verScrollBar
         onPositionChanged: {
-            if(shareManager.shareAccountId === authManager.authAccountId && chatWindow.visible === true){
-                if (chatroom.msglistView.atYEnd){
+            if (chatWindow.visible) {
+                if (chatroom.msglistView.atYEnd) {
                     chatroom.msglistView.positionViewAtEnd()
-                    newMsgNotity(0,"","")
+                    newMsgNotity(0, "", "")
                     GlobalChatManager.noNewMsgNotity()
-
                 }
             }
         }
     }
 
-    function addToList(type, text, nickName, me) {
-        if(text.length <= 0 || text.match(/^[ ]*$/))
-        {
-            return;
-        }
-        if( me === false && type === "msg"){
-            ++msgCount;
-        }
-
-        var current = new Date().getTime()
-        var startTime = chatWindow.msgtimeGap.getTime()
-
-        var gap = (current-startTime)
-        var oneday = parseInt(gap/1000/3600/24)
-        //update time
-        chatWindow.msgtimeGap = new Date()
-
-
-        //in one day  insert time
-        if (oneday === 0){
-
-            if (gap/1000 >= 300 && chatroom.listmodel.count >= 1){
-                //append one timestamp
-                chatroom.msglistView.msgTimeTip = true
-                chatroom.msglistView.model.append({"msgType":"time","content": Qt.formatDateTime(new Date(), "hh:mm"), "sentByMe": false,"nickName":""});
-            }
-            else{
-                chatroom.msglistView.msgTimeTip = false
-            }
-        }
-        else if(oneday === 1 && chatroom.listmodel.count >= 1){
-            chatroom.msglistView.msgTimeTip = true
-            chatroom.msglistView.model.append({"msgType":"time","content": Qt.formatDateTime(new Date(), "hh:mm"), "sentByMe": false,"nickName":""});
-        }
-
-        //console.log("msgtype = " + type)
-        chatroom.msglistView.appendByme = me
-
-        chatroom.msglistView.model.append({"msgType":type,"content": text, "sentByMe": me,"nickName":nickName});
-        //var scollbar = Math.abs(verScrollBar.position + verScrollBar.visualSize)
-
-        if(me) {
-            chatroom.msglistView.positionViewAtEnd()
-            GlobalChatManager.noNewMsgNotity()
-        }
-        else{
-            if(chatWindow.visible){       
-                if (chatroom.msglistView.atYEnd){
-                    chatroom.msglistView.positionViewAtEnd()
-                    newMsgNotity(0,"","")
-                    GlobalChatManager.noNewMsgNotity()
-                    msgCount = 0;
-                }
-                else{
-                    newMsgNotity(msgCount,nickName,text)
-                    if(!msgTipBtn.visible){
-                        msgTipBtn.visible = true
-                    }
-                }
-
-            }
-            else{
-                newMsgNotity(msgCount,nickName,text)
-                //msglistView.positionViewAtEnd()
-            }
-
-        }
-
-
-    }
-
-
-    function getShowedNickname(name){
-        if(name.length <= 2){
+    function getShowedNickname(name) {
+        if (name.length <= 2) {
             return name
-        }
-        else if( name.length >=3 ) {
+        } else if (name.length >= 3) {
             return name.substring(name.length - 2)
         }
-        return name;
-
+        return name
     }
 }
-
-
-
-
-
-

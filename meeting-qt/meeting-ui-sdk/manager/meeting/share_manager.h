@@ -1,17 +1,13 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
-
-// Copyright (c) 2014-2020 NetEase, Inc.
-// All right reserved.
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef SHAREMANAGER_H
 #define SHAREMANAGER_H
 
 #include <QObject>
 #include <list>
-#include "controller/sharing_ctrl_interface.h"
+#include "controller/screenshare_controller.h"
 #include "manager/meeting_manager.h"
 
 using namespace neroom;
@@ -22,6 +18,10 @@ using namespace neroom;
 #include "components/macx_helpers.h"
 #endif
 
+/**
+ * @brief 屏幕共享状态
+ */
+enum NERoomScreenShareStatus { kNERoomScreenShareStatusStart = 0, kNERoomScreenShareStatusEnd, kNERoomScreenShareStopByHost };
 Q_DECLARE_METATYPE(NERoomScreenShareStatus)
 
 class ShareManager : public QObject {
@@ -40,6 +40,7 @@ public:
     Q_INVOKABLE bool hasRecordPermission();
     Q_INVOKABLE void openSystemSettings();
     Q_INVOKABLE void sharedOutsideWindow(QQuickWindow* pWindow, int borderWidth);
+    Q_INVOKABLE bool isExistScreen(const QString& name) const;
 
     void onRoomUserScreenShareStatusChanged(const std::string& usdrId, NERoomScreenShareStatus status);
     void onError(uint32_t errorCode, const std::string& errorMessage);
@@ -54,6 +55,7 @@ public:
     bool appMinimized() const;
     bool shareSystemSound() const;
     bool smoothPriority() const;
+    bool isAppShared() const;
 
 signals:
     void error(int errorCode, const QString& errorMessage);
@@ -81,17 +83,17 @@ private:
     void switchMonitorShare(const uint32_t& monitor_id, const std::list<void*>& excludedWindowList = std::list<void*>());
 
 public slots:
-    void addShareWindow(QQuickWindow* pShareWindow);
-    void removeShareWindow(QQuickWindow* pShareWindow);
-    void clearShareWindow();
+    void addExcludeShareWindow(QQuickWindow* pShareWindow);
+    void removeExcludeShareWindow(QQuickWindow* pShareWindow);
+    void clearExcludeShareWindow();
     void startScreenSharing(quint32 screenIndex);
     void startAppSharing(quint32 id);
     void stopScreenSharing(const QString& accountId);
+    void stopScreenSharing();
     void pauseScreenSharing();
     void resumeScreenSharing();
     void startSystemAudioLoopbackCapture();
     void stopSystemAudioLoopbackCapture();
-    void fixScreenSharingPos();
     void onSharingStatusChangedUI(const QString& userId, NERoomScreenShareStatus status);
     void setPaused(bool paused);
     void setOwnerSharing(bool ownerSharing);
@@ -104,15 +106,14 @@ public slots:
     void onAppSharingPause();
 
 private:
-    INEScreenShareController* m_shareController = nullptr;
+    std::shared_ptr<NEMeetingScreenShareController> m_shareController = nullptr;
     QString m_shareAccountId;
-    quint32 m_currentScreenIndex = -1;
     bool m_paused = false;         // sdk的暂停状态
     bool m_pausedEx = false;       // 是否是是UI的暂停，不是sdk的状态
     bool m_bMiniRestored = false;  // 是否是最小化恢复
     bool m_ownerSharing = false;   // 是否是自己发起的共享
     quint32 m_shareAppId = 0;
-    std::list<QQuickWindow*> m_shareWindowList;
+    std::list<QQuickWindow*> m_excludeShareWindowList;
     QTimer m_timer;
     QRectF m_latestAppRect;
     QRectF m_latestOutsideRect;
@@ -133,6 +134,7 @@ private:
     bool m_bLatestForegroundWindow = false;
     bool m_shareSystemSound = false;
     bool m_smoothPriority = false;
+    bool m_systemAudioLoopbackCapture = false;
 };
 
 #endif  // SHAREMANAGER_H

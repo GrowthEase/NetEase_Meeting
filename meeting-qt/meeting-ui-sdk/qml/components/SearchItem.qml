@@ -18,6 +18,7 @@ Rectangle {
             Layout.preferredWidth: 16
             visible: true
             source: "qrc:/qml/images/public/icons/search.svg"
+            mipmap: true
             Layout.leftMargin: 10
             Layout.topMargin: -10
         }

@@ -1,9 +1,7 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
-// Copyright (c) 2013, NetEase Inc. All rights reserved.
 //
 // Wang Rongtao <rtwang@corp.netease.com>
 // 2013/9/17
@@ -15,8 +13,7 @@
 
 #include <string>
 
-namespace nbase
-{
+namespace nbase {
 
 #if defined(OS_POSIX)
 typedef std::string PathString;
@@ -26,6 +23,6 @@ typedef std::wstring PathString;
 
 typedef PathString::value_type PathChar;
 
-} // namespace nbase
+}  // namespace nbase
 
-#endif // BASE_FILE_FILE_PATH_H_
+#endif  // BASE_FILE_FILE_PATH_H_

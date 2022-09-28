@@ -1,291 +1,208 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef UI_UTILS_UTILS_H_
 #define UI_UTILS_UTILS_H_
 
 #pragma once
 
-#include <oaidl.h> // for VARIANT
+#include <oaidl.h>  // for VARIANT
 
-namespace ui
-{
-
-/////////////////////////////////////////////////////////////////////////////////////
-//
-
-class STRINGorID
-{
-public:
-	STRINGorID(LPCTSTR lpString) : m_lpstr(lpString)
-	{ }
-	STRINGorID(UINT nID) : m_lpstr(MAKEINTRESOURCE(nID))
-	{ }
-	LPCTSTR m_lpstr;
-};
+namespace ui {
 
 /////////////////////////////////////////////////////////////////////////////////////
 //
 
-class UILIB_API CPoint : public tagPOINT
-{
+class STRINGorID {
 public:
-	CPoint()
-	{
-		x = y = 0;
-	}
-
-	CPoint(const POINT& src)
-	{
-		x = src.x;
-		y = src.y;
-	}
-
-	CPoint(int _x, int _y)
-	{
-		x = _x;
-		y = _y;
-	}
-
-	CPoint(LPARAM lParam)
-	{
-		x = GET_X_LPARAM(lParam);
-		y = GET_Y_LPARAM(lParam);
-	}
-
-	inline void Offset(int offsetX, int offsetY)
-	{
-		x += offsetX;
-		y += offsetY;
-	}
-
-	inline void Offset(CPoint offsetPoint)
-	{
-		x += offsetPoint.x;
-		y += offsetPoint.y;
-	}
+    STRINGorID(LPCTSTR lpString)
+        : m_lpstr(lpString) {}
+    STRINGorID(UINT nID)
+        : m_lpstr(MAKEINTRESOURCE(nID)) {}
+    LPCTSTR m_lpstr;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////
 //
 
-class UILIB_API CSize : public tagSIZE
-{
+class UILIB_API CPoint : public tagPOINT {
 public:
-	CSize()
-	{
-		cx = cy = 0;
-	}
+    CPoint() { x = y = 0; }
 
-	CSize(const CSize& src)
-	{
-		cx = src.cx;
-		cy = src.cy;
-	}
+    CPoint(const POINT& src) {
+        x = src.x;
+        y = src.y;
+    }
 
-	CSize(int _cx, int _cy)
-	{
-		cx = _cx;
-		cy = _cy;
-	}
+    CPoint(int _x, int _y) {
+        x = _x;
+        y = _y;
+    }
 
-	inline void Offset(int offsetCX, int offsetCY)
-	{
-		cx += offsetCX;
-		cy += offsetCY;
-	}
+    CPoint(LPARAM lParam) {
+        x = GET_X_LPARAM(lParam);
+        y = GET_Y_LPARAM(lParam);
+    }
 
-	inline void Offset(CSize offsetPoint)
-	{
-		cx += offsetPoint.cx;
-		cy += offsetPoint.cy;
-	}
+    inline void Offset(int offsetX, int offsetY) {
+        x += offsetX;
+        y += offsetY;
+    }
+
+    inline void Offset(CPoint offsetPoint) {
+        x += offsetPoint.x;
+        y += offsetPoint.y;
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////
 //
 
-class UILIB_API UiRect : public tagRECT
-{
+class UILIB_API CSize : public tagSIZE {
 public:
-	inline UiRect()
-	{
-		left = top = right = bottom = 0;
-	}
+    CSize() { cx = cy = 0; }
 
-	inline UiRect(const RECT& src)
-	{
-		left = src.left;
-		top = src.top;
-		right = src.right;
-		bottom = src.bottom;
-	}
+    CSize(const CSize& src) {
+        cx = src.cx;
+        cy = src.cy;
+    }
 
-	inline UiRect(int iLeft, int iTop, int iRight, int iBottom)
-	{
-		left = iLeft;
-		top = iTop;
-		right = iRight;
-		bottom = iBottom;
-	}
+    CSize(int _cx, int _cy) {
+        cx = _cx;
+        cy = _cy;
+    }
 
-	inline int GetWidth() const
-	{
-		return right - left;
-	}
+    inline void Offset(int offsetCX, int offsetCY) {
+        cx += offsetCX;
+        cy += offsetCY;
+    }
 
-	inline int GetHeight() const
-	{
-		return bottom - top;
-	}
-
-	inline void Clear()
-	{
-		left = top = right = bottom = 0;
-	}
-
-	inline bool IsRectEmpty() const
-	{
-		return ::IsRectEmpty(this) == TRUE; 
-	}
-
-	inline void ResetOffset()
-	{
-		::OffsetRect(this, -left, -top);
-	}
-
-	inline void Normalize()
-	{
-		if( left > right ) { int iTemp = left; left = right; right = iTemp; }
-		if( top > bottom ) { int iTemp = top; top = bottom; bottom = iTemp; }
-	}
-
-	inline void Offset(int cx, int cy)
-	{
-		::OffsetRect(this, cx, cy);
-	}
-
-	inline void Offset(const CPoint& offset)
-	{
-		::OffsetRect(this, offset.x, offset.y);
-	}
-
-	inline void Inflate(int cx, int cy)
-	{
-		::InflateRect(this, cx, cy);
-	}
-
-	inline void Inflate(const UiRect& rect)
-	{
-		this->left -= rect.left;
-		this->top -= rect.top;
-		this->right += rect.right;
-		this->bottom += rect.bottom;
-	}
-
-	inline void Deflate(int cx, int cy)
-	{
-		::InflateRect(this, -cx, -cy);
-	}
-
-	inline void Deflate(const UiRect& rect)
-	{
-		this->left += rect.left;
-		this->top += rect.top;
-		this->right -= rect.right;
-		this->bottom -= rect.bottom;
-	}
-
-	inline void Union(const UiRect& rc)
-	{
-		::UnionRect(this, this, &rc);
-	}
-
-	inline void Intersect(const UiRect& rc)
-	{
-		::IntersectRect(this, this, &rc);
-	}
-
-	inline void Subtract(const UiRect& rc)
-	{
-		::SubtractRect(this, this, &rc);
-	}
-
-	inline bool IsPointIn(const CPoint& point) const
-	{
-		return ::PtInRect(this, point) == TRUE;
-	}
-
-	inline bool Equal(const UiRect& rect) const
-	{
-		return this->left == rect.left && this->top == rect.top 
-			&& this->right == rect.right && this->bottom == rect.bottom;
-	}
+    inline void Offset(CSize offsetPoint) {
+        cx += offsetPoint.cx;
+        cy += offsetPoint.cy;
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////
 //
 
-class CVariant : public VARIANT
-{
+class UILIB_API UiRect : public tagRECT {
 public:
-	CVariant() 
-	{ 
-		VariantInit(this); 
-	}
-	CVariant(int i)
-	{
-		VariantInit(this);
-		this->vt = VT_I4;
-		this->intVal = i;
-	}
-	CVariant(float f)
-	{
-		VariantInit(this);
-		this->vt = VT_R4;
-		this->fltVal = f;
-	}
-	CVariant(LPOLESTR s)
-	{
-		VariantInit(this);
-		this->vt = VT_BSTR;
-		this->bstrVal = s;
-	}
-	CVariant(IDispatch *disp)
-	{
-		VariantInit(this);
-		this->vt = VT_DISPATCH;
-		this->pdispVal = disp;
-	}
+    inline UiRect() { left = top = right = bottom = 0; }
 
-	~CVariant() 
-	{ 
-		VariantClear(this); 
-	}
+    inline UiRect(const RECT& src) {
+        left = src.left;
+        top = src.top;
+        right = src.right;
+        bottom = src.bottom;
+    }
+
+    inline UiRect(int iLeft, int iTop, int iRight, int iBottom) {
+        left = iLeft;
+        top = iTop;
+        right = iRight;
+        bottom = iBottom;
+    }
+
+    inline int GetWidth() const { return right - left; }
+
+    inline int GetHeight() const { return bottom - top; }
+
+    inline void Clear() { left = top = right = bottom = 0; }
+
+    inline bool IsRectEmpty() const { return ::IsRectEmpty(this) == TRUE; }
+
+    inline void ResetOffset() { ::OffsetRect(this, -left, -top); }
+
+    inline void Normalize() {
+        if (left > right) {
+            int iTemp = left;
+            left = right;
+            right = iTemp;
+        }
+        if (top > bottom) {
+            int iTemp = top;
+            top = bottom;
+            bottom = iTemp;
+        }
+    }
+
+    inline void Offset(int cx, int cy) { ::OffsetRect(this, cx, cy); }
+
+    inline void Offset(const CPoint& offset) { ::OffsetRect(this, offset.x, offset.y); }
+
+    inline void Inflate(int cx, int cy) { ::InflateRect(this, cx, cy); }
+
+    inline void Inflate(const UiRect& rect) {
+        this->left -= rect.left;
+        this->top -= rect.top;
+        this->right += rect.right;
+        this->bottom += rect.bottom;
+    }
+
+    inline void Deflate(int cx, int cy) { ::InflateRect(this, -cx, -cy); }
+
+    inline void Deflate(const UiRect& rect) {
+        this->left += rect.left;
+        this->top += rect.top;
+        this->right -= rect.right;
+        this->bottom -= rect.bottom;
+    }
+
+    inline void Union(const UiRect& rc) { ::UnionRect(this, this, &rc); }
+
+    inline void Intersect(const UiRect& rc) { ::IntersectRect(this, this, &rc); }
+
+    inline void Subtract(const UiRect& rc) { ::SubtractRect(this, this, &rc); }
+
+    inline bool IsPointIn(const CPoint& point) const { return ::PtInRect(this, point) == TRUE; }
+
+    inline bool Equal(const UiRect& rect) const {
+        return this->left == rect.left && this->top == rect.top && this->right == rect.right && this->bottom == rect.bottom;
+    }
 };
 
+/////////////////////////////////////////////////////////////////////////////////////
+//
 
-
-
-
-class PathUtil
-{
+class CVariant : public VARIANT {
 public:
-	static std::wstring GetCurrentModuleDir()
-	{
-		std::wstring moduleFilePath;
-		moduleFilePath.resize(MAX_PATH);
-		::GetModuleFileNameW(::GetModuleHandle(NULL), &moduleFilePath[0], moduleFilePath.length());
-		return moduleFilePath.substr(0, moduleFilePath.find_last_of(L"\\") + 1);
-	}
+    CVariant() { VariantInit(this); }
+    CVariant(int i) {
+        VariantInit(this);
+        this->vt = VT_I4;
+        this->intVal = i;
+    }
+    CVariant(float f) {
+        VariantInit(this);
+        this->vt = VT_R4;
+        this->fltVal = f;
+    }
+    CVariant(LPOLESTR s) {
+        VariantInit(this);
+        this->vt = VT_BSTR;
+        this->bstrVal = s;
+    }
+    CVariant(IDispatch* disp) {
+        VariantInit(this);
+        this->vt = VT_DISPATCH;
+        this->pdispVal = disp;
+    }
+
+    ~CVariant() { VariantClear(this); }
 };
 
+class PathUtil {
+public:
+    static std::wstring GetCurrentModuleDir() {
+        std::wstring moduleFilePath;
+        moduleFilePath.resize(MAX_PATH);
+        ::GetModuleFileNameW(::GetModuleHandle(NULL), &moduleFilePath[0], moduleFilePath.length());
+        return moduleFilePath.substr(0, moduleFilePath.find_last_of(L"\\") + 1);
+    }
+};
 
-	
+}  // namespace ui
 
-
-}// namespace ui
-
-#endif // UI_UTILS_UTILS_H_
+#endif  // UI_UTILS_UTILS_H_

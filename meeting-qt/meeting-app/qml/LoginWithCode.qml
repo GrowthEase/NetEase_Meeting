@@ -9,7 +9,7 @@ LoginWithCodeForm {
     }
 
     buttonLoginWithPassword.onClicked: {
-        pageLoader.setSource(Qt.resolvedUrl("qrc:/qml/LoginWithPassword.qml"), { rememberPhoneNumber: textPhoneNumber.text })
+        pageLoader.setSource(Qt.resolvedUrl("qrc:/qml/LoginWithPassword.qml")/*, { rememberPhoneNumber: textPhoneNumber.text }*/)
     }
 
     textCode.onGetAuthCode: {
@@ -47,14 +47,8 @@ LoginWithCodeForm {
             buttonSubmit.enabled = Qt.binding(function() {
                 return textPhoneNumber.length === 13 && textCode.length > 0
             })
-            switch (resCode) {
-            case 300:
-            case 1006:
-                message.error(result.msg)
-                break;
-            default:
-                message.error(result.msg)
-            }
+
+            message.error(result.msg)
         }
     }
 

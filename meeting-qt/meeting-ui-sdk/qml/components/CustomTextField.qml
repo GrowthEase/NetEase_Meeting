@@ -30,6 +30,7 @@ TextField {
         Image {
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
+            mipmap: true
             source: "qrc:/qml/images/public/button/btn_clear.svg"
         }
     }

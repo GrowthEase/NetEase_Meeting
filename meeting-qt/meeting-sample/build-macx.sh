@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) 2022 NetEase, Inc. All rights reserved.
+# Use of this source code is governed by a MIT license that can be
+# found in the LICENSE file.
 
 TIMESTAMP=`date +%s`
 GIT_COMMIT_COUNT=`git rev-list HEAD --count`

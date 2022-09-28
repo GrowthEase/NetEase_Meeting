@@ -18,6 +18,18 @@ Column {
     // anchors.centerIn: parent
 
     property var toastComponent
+    property string lastToastText: ""
+
+    Timer {
+        id: timer;
+        interval: 2000
+        repeat: false
+        running: false
+        triggeredOnStart: false
+        onTriggered: {
+            //do nonthing
+        }
+    }
 
     /**
      * @brief Shows a Toast
@@ -25,11 +37,17 @@ Column {
      * @param {string} text Text to show
      * @param {real} duration Duration to show in milliseconds, defaults to 3000
      */
-    function show(text, duration) {
+    function show(text, duration){
+        if(text === lastToastText && timer.running) {
+            return
+        }
+
         if (toastComponent !== undefined) {
             const toast = toastComponent.createObject(root, { background: "#771E1E1E", textColor: "#FFFFFF", margin: 8 })
             toast.selfDestroying = true;
             toast.show(text, duration);
+            lastToastText = text
+            timer.restart()
         }
     }
 

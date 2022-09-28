@@ -30,6 +30,7 @@ Window{
                 height: 16
                 Layout.alignment: Qt.AlignHCenter
                 source: "qrc:/qml/images/meeting/hand_raised.svg"
+                mipmap: true
             }
             Label {
                 id:handstip

@@ -15,6 +15,7 @@ Window {
     height: 500 + 20
     color: "transparent"
     Material.theme: Material.Light
+    title: qsTr("Settings")
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
 
     property int beautyIndex: -1
@@ -53,11 +54,11 @@ Window {
         onLogin:{
             if(beautyIndex== -1 && authStatus == 2 && authManager.isSupportBeauty){
                 optionModel.append({
-                    optionName: qsTr("Beauty"),
-                    iconActive: "qrc:/qml/images/settings/beauty_active.svg",
-                    iconNormal: "qrc:/qml/images/settings/beauty_normal.svg",
-                    page: "qrc:/qml/settings/Beauty.qml",
-                })
+                                       optionName: qsTr("Beauty"),
+                                       iconActive: "qrc:/qml/images/settings/beauty_active.svg",
+                                       iconNormal: "qrc:/qml/images/settings/beauty_normal.svg",
+                                       page: "qrc:/qml/settings/Beauty.qml",
+                                   })
                 beautyIndex = optionModel.count - 1
             }
         }
@@ -65,32 +66,39 @@ Window {
 
     Component.onCompleted: {
         optionModel.append({
-            optionName: qsTr("General"),
-            iconActive: "qrc:/qml/images/settings/general_active.svg",
-            iconNormal: "qrc:/qml/images/settings/general_normal.svg",
-            page: "qrc:/qml/settings/MeetingSettings.qml",
-        })
+                               optionName: qsTr("General"),
+                               iconActive: "qrc:/qml/images/settings/general_active.svg",
+                               iconNormal: "qrc:/qml/images/settings/general_normal.svg",
+                               page: "qrc:/qml/settings/MeetingSettings.qml",
+                           })
         optionModel.append({
-            optionName: qsTr("Videos"),
-            iconActive: "qrc:/qml/images/settings/video_active.svg",
-            iconNormal: "qrc:/qml/images/settings/video_normal.svg",
-            page: "qrc:/qml/settings/VideoDevice.qml",
-        })
+                               optionName: qsTr("Videos"),
+                               iconActive: "qrc:/qml/images/settings/video_active.svg",
+                               iconNormal: "qrc:/qml/images/settings/video_normal.svg",
+                               page: "qrc:/qml/settings/VideoDevice.qml",
+                           })
         optionModel.append({
-            optionName: qsTr("Audios"),
-            iconActive: "qrc:/qml/images/settings/microphone_active.svg",
-            iconNormal: "qrc:/qml/images/settings/microphone_normal.svg",
-            page: "qrc:/qml/settings/AudioDevice.qml",
-        })
-
-        if(authManager.isSupportBeauty){
+                               optionName: qsTr("Audios"),
+                               iconActive: "qrc:/qml/images/settings/microphone_active.svg",
+                               iconNormal: "qrc:/qml/images/settings/microphone_normal.svg",
+                               page: "qrc:/qml/settings/AudioDevice.qml",
+                           })
+        if(authManager.isSupportBeauty && SettingsManager.getEnableBeauty()){
             optionModel.append({
-                optionName: qsTr("Beauty"),
-                iconActive: "qrc:/qml/images/settings/beauty_active.svg",
-                iconNormal: "qrc:/qml/images/settings/beauty_normal.svg",
-                page: "qrc:/qml/settings/Beauty.qml",
-            })
+                                   optionName: qsTr("Beauty"),
+                                   iconActive: "qrc:/qml/images/settings/beauty_active.svg",
+                                   iconNormal: "qrc:/qml/images/settings/beauty_normal.svg",
+                                   page: "qrc:/qml/settings/Beauty.qml",
+                               })
             beautyIndex = optionModel.count - 1
+        }
+        if (SettingsManager.showVirtualBackground) {
+            optionModel.append({
+                                   optionName: qsTr("VirtualBackground"),
+                                   iconActive: "qrc:/qml/images/settings/virtaulbackground_active.svg",
+                                   iconNormal: "qrc:/qml/images/settings/virtaulbackground_normal.svg",
+                                   page: "qrc:/qml/settings/VirtualBackground.qml",
+                               })
         }
 
         loader.setSource(Qt.resolvedUrl(optionModel.get(0).page))
@@ -143,6 +151,7 @@ Window {
                             anchors.leftMargin: 18
                             Image {
                                 id: icon
+                                mipmap: true
                                 source: optionList.currentIndex === model.index ? model.iconActive : model.iconNormal
                             }
                             Label {
@@ -179,12 +188,30 @@ Window {
                     }
                 }
 
-                Loader {
-                    id: loader
+                Flickable {
+                    id: idFlickable
+                    clip: true
                     anchors.left: separator.right
                     anchors.top: parent.top
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
+                    ScrollBar.vertical: ScrollBar {
+                        id: vsb
+                        visible: loader.source == 'qrc:/qml/settings/AudioDevice.qml' || loader.source == 'qrc:/qml/settings/VideoDevice.qml'
+                        width: 5
+                    }
+                    Loader {
+                        id: loader
+                        anchors.fill: parent
+                        onLoaded: {
+                            vsb.position = 0
+                            if (source == 'qrc:/qml/settings/AudioDevice.qml' || source == 'qrc:/qml/settings/VideoDevice.qml') {
+                                idFlickable.contentHeight = loader.item.childrenRect.height + 70
+                            } else {
+                                idFlickable.contentHeight = 400
+                            }
+                        }
+                    }
                 }
             }
         }

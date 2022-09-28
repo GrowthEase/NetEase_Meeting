@@ -16,7 +16,7 @@ Window {
         if (Qt.platform.os === 'windows')
             Qt.Popup | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
         else
-            Qt.Popup | Qt.FramelessWindowHint
+            Qt.FramelessWindowHint
     }
 
     property string titleText: ''

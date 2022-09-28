@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef MOREITEMMANAGER_H
 #define MOREITEMMANAGER_H
@@ -24,8 +23,9 @@ public:
         ViewMenuId = kViewMenuId,
         WhiteboardMenuId = kWhiteboardMenuId,
 
-        BeautyMenuId = 50,  // 预置的更多按钮
-        LiveMenuId = 51,    // 预置的更多按钮
+        BeautyMenuId = 50,     // 预置的更多按钮
+        LiveMenuId = 51,       // 预置的更多按钮
+        SipInviteMenuId = 57,  // 预置的更多按钮
     };
     Q_ENUM(Status)
 
@@ -115,6 +115,7 @@ public:
     Q_INVOKABLE int itemCountMore_S() const;
     Q_INVOKABLE void setBeautyVisible(bool visible);
     Q_INVOKABLE void setLiveVisible(bool visible);
+    Q_INVOKABLE void setSipInviteVisible(bool visible);
 
     bool micItemVisible() const;
     bool cameraItemVisible() const;
@@ -157,6 +158,7 @@ private:
     bool findItem(int itemIndex, MoreItem& item) const;
     bool getItemVisible(MoreItemEnum::Visibility visibility) const;
     void updateItemsMoreVisible();
+    void updateItemVisible();
 
 private:
     QVector<MoreItem> m_itemsMore;
@@ -168,6 +170,7 @@ private:
     bool m_moreItemInjected = false;
     bool m_moreItemBeautyVisible = false;
     bool m_moreItemLiveVisible = false;
+    bool m_moreItemSipInviteVisible = false;
 };
 
 #endif  // MOREITEMMANAGER_H

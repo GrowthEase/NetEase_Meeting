@@ -8,6 +8,8 @@ import Qt.labs.settings 1.0
 import NetEase.Meeting.Clipboard 1.0
 
 import "qml/components/"
+import "qml/profile/"
+import "qml/"
 
 ApplicationWindow {
     id: mainWindow
@@ -65,6 +67,10 @@ ApplicationWindow {
         id: toast
     }
 
+    CustomWindowEx {
+        id: exitWindow
+    }
+
     Clipboard {
         id: clipboard
     }
@@ -81,12 +87,22 @@ ApplicationWindow {
             width: parent.width
         }
 
+//        UrsLoginPage {
+//            id: ursPage
+//            anchors.left: parent.left
+//            anchors.top: caption.bottom
+//            width: defaultWindowWidth - shadowSize * 2
+//            anchors.bottom: parent.bottom
+//            visible: false
+//        }
+
         Loader {
             id: pageLoader
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: caption.bottom
             anchors.bottom: parent.bottom
+            //visible: !ursPage.visible
             onSourceChanged: {
                 if (source == 'qrc:/qml/FrontPage.qml') {
                     mainWindow.width = frontPageWidth
@@ -134,6 +150,25 @@ ApplicationWindow {
         }
     }
 
+    Rectangle {
+        color: "#00000000"
+        anchors.fill: mainWindow.contentItem
+        width: mainWindow.width
+        height: mainWindow.height
+        visible: windowModifyNickname.visible
+
+        ModifyNicknameWindow {
+            id: windowModifyNickname
+            screen: mainWindow.screen
+            visible: false
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            propagateComposedEvents: false
+        }
+    }
+
     DropShadow {
         anchors.fill: mainLayout
         horizontalOffset: 0
@@ -151,9 +186,20 @@ ApplicationWindow {
         target: authManager
         onLoginWithSSO: {
             if (pageLoader.source != 'qrc:/qml/FrontPage.qml' && mainWindow.visible) {
-                console.info('Login with SSO, argument:', ssoAppKey, ssoToken)
+                //console.info('Login with SSO, argument:', ssoAppKey, ssoUser, ssoToken)
                 raiseOnTop()
-                pageLoader.setSource(Qt.resolvedUrl('qrc:/qml/LoginWithAuthCode.qml'), { ssoAppKey: ssoAppKey, ssoToken: ssoToken })
+                pageLoader.setSource(Qt.resolvedUrl('qrc:/qml/LoginWithAuthCode.qml'), { ssoAppKey: ssoAppKey, ssoUser: ssoUser, ssoToken: ssoToken })
+            }
+        }
+    }
+
+    Connections {
+        target: meetingManager
+        onInitializeSignal: {
+            updateEnable = true
+            if (errorCode !== 0) {
+                message.error(errorMessage)
+                pageLoader.setSource(Qt.resolvedUrl("qrc:/qml/HomePage.qml"))
             }
         }
     }

@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "http_manager.h"
 #include <QDebug>
@@ -42,7 +41,9 @@ void HttpManager::postRequest(const IHttpRequest& request, const HttpRequestCall
         }
 
         YXLOG(Info) << "[HTTP] Post new request, url\n\tpath - " << request.url().toString().toStdString() << "\n\thead - \n"
-                << (ConfigManager::getInstance()->getLocalDebugLevel() ? header.toStdString() : "") << "\n\tbody - \n\t\t" << request.getParams().toStdString() << "\n\tuuid - " << requestId.toStdString() << YXLOGEnd;
+                    << (ConfigManager::getInstance()->getLocalDebugLevel() ? header.toStdString() : "") << "\n\tbody - \n\t\t"
+                    << (ConfigManager::getInstance()->getLocalDebugLevel() ? request.getParams().toStdString() : "") << "\n\tuuid - "
+                    << requestId.toStdString() << YXLOGEnd;
     }
 }
 
@@ -68,8 +69,11 @@ void HttpManager::getRequest(const IHttpRequest& request, const HttpRequestCallb
         }
         pFile->write(reply->readAll());
     });
-    connect(reply, &QNetworkReply::downloadProgress, this,
-            [proCallback](qint64 bytesReceived, qint64 bytesTotal) { proCallback(bytesReceived, bytesTotal); });
+    connect(reply, &QNetworkReply::downloadProgress, this, [proCallback](qint64 bytesReceived, qint64 bytesTotal) {
+        if (proCallback) {
+            proCallback(bytesReceived, bytesTotal);
+        }
+    });
 
     if (request.displayDetails()) {
         auto headers = request.rawHeaderList();
@@ -77,8 +81,9 @@ void HttpManager::getRequest(const IHttpRequest& request, const HttpRequestCallb
         for (auto it : headers) {
             header.append(it.data()).append(":").append(request.rawHeader(it).data()).append(" ");
         }
-        YXLOG(Info) << "[HTTP] Get new request, url\r\n\tpath -" << request.url().toString().toStdString() << "\r\n\thead -" << (ConfigManager::getInstance()->getLocalDebugLevel() ? header.toStdString() : "")
-                << "\r\n\tuuid -" << requestId.toStdString() << YXLOGEnd;
+        YXLOG(Info) << "[HTTP] Get new request, url\r\n\tpath -" << request.url().toString().toStdString() << "\r\n\thead -"
+                    << (ConfigManager::getInstance()->getLocalDebugLevel() ? header.toStdString() : "") << "\r\n\tuuid -" << requestId.toStdString()
+                    << YXLOGEnd;
     }
 }
 
@@ -112,15 +117,18 @@ void HttpManager::handleFinished(QNetworkReply* reply) {
             }
 
             QJsonObject responseObject = document.object();
-            int resultCode = responseObject["code"].toInt();
-            if (resultCode != 200) {
-                qInfo() << "[HTTP] Server response error: " << resultCode << responseObject;
-                userCallback(resultCode, responseObject);
+            code = responseObject["code"].toInt();
+            if (0 != code && 200 != code) {
+                qInfo() << "[HTTP] Server response error: " << code << responseObject;
+                userCallback(code, responseObject);
                 break;
             }
 
             // successfully
-            QJsonObject result = responseObject["ret"].toObject();
+            QJsonObject result = responseObject["data"].toObject();
+            if (result.isEmpty()) {
+                result = responseObject["ret"].toObject();
+            }
             userCallback(code, result);
         } while (false);
     } else if (QNetworkAccessManager::GetOperation == reply->operation()) {

@@ -3,7 +3,7 @@ import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 import QtQuick.Window 2.14
 
-import '../components'
+import "../components"
 
 Rectangle {
     id: rootItem
@@ -48,13 +48,18 @@ Rectangle {
                     const todayBegin = new Date().setHours(0, 0, 0, 0)
                     const todayEnd = new Date().setHours(23, 59, 59, 999)
                     const compareDate = new Date(startTime).setHours(0, 0, 0, 0)
-                    const tomorrow = new Date(new Date().setDate(new Date().getDate() + 1)).setHours(23, 59, 59, 999)
+                    const tomorrow = new Date(new Date().setDate(
+                                                  new Date().getDate(
+                                                      ) + 1)).setHours(23, 59,
+                                                                       59, 999)
                     // console.log(todayBegin, todayEnd, compareDate, startTime, tomorrow)
                     if (compareDate < todayBegin) {
                         return qsTr('Yesterday')
-                    } else if (compareDate >= todayBegin && compareDate <= todayEnd) {
+                    } else if (compareDate >= todayBegin
+                               && compareDate <= todayEnd) {
                         return qsTr('Today')
-                    } else if (compareDate > todayEnd && compareDate <= tomorrow) {
+                    } else if (compareDate > todayEnd
+                               && compareDate <= tomorrow) {
                         return qsTr('Tomorrow')
                     } else {
                         const day = new Date(compareDate).getDay()
@@ -91,6 +96,7 @@ Rectangle {
                 Layout.preferredWidth: 21
                 Layout.alignment: Qt.AlignVCenter
                 source: 'qrc:/qml/images/front/icon_schedule_meeting.svg'
+                mipmap: true
             }
             RowLayout {
                 spacing: 22
@@ -106,14 +112,20 @@ Rectangle {
                             text: {
                                 const hours = new Date(startTime).getHours()
                                 const minutes = new Date(startTime).getMinutes()
-                                return (hours >= 10 ? hours : '0' + hours) + ':' + (minutes >= 10 ? minutes : '0' + minutes)
+                                return (hours >= 10 ? hours : '0' + hours) + ':'
+                                        + (minutes >= 10 ? minutes : '0' + minutes)
                             }
                         }
-                        Rectangle { height: 14; width: 1; color: '#999999' }
+                        Rectangle {
+                            height: 14
+                            width: 1
+                            color: '#999999'
+                        }
                         RowLayout {
                             Label {
                                 id: itemMeetingId
-                                text: qsTr('Meeting ID: %1').arg(prettyConferenceId(meetingId))
+                                text: qsTr('Meeting ID: %1').arg(
+                                          prettyConferenceId(meetingId))
                                 font.pixelSize: 12
                                 color: '#999999'
                             }
@@ -145,8 +157,8 @@ Rectangle {
                     }
                 }
 
-                Timer{
-                    id:btnJoinTimer
+                Timer {
+                    id: btnJoinTimer
                     running: false
                     repeat: false
                     interval: 3000
@@ -173,13 +185,19 @@ Rectangle {
                             let micStatus = false
                             let cameraStatus = false
                             if (Qt.platform.os === 'windows') {
-                                micStatus = globalSettings.value('localMicStatusEx') === 'true'
-                                cameraStatus = globalSettings.value('localCameraStatusEx') === 'true'
+                                micStatus = globalSettings.value(
+                                            'localMicStatusEx') === 'true'
+                                cameraStatus = globalSettings.value(
+                                            'localCameraStatusEx') === 'true'
                             } else {
-                                micStatus = globalSettings.value('localMicStatusEx')
-                                cameraStatus = globalSettings.value('localCameraStatusEx')
+                                micStatus = globalSettings.value(
+                                            'localMicStatusEx')
+                                cameraStatus = globalSettings.value(
+                                            'localCameraStatusEx')
                             }
-                            meetingManager.invokeJoin(meetingId, authManager.appUserNick, micStatus, cameraStatus)
+                            meetingManager.invokeJoin(meetingId,
+                                                      authManager.appUserNick,
+                                                      micStatus, cameraStatus)
                             btnJoinTimer.restart()
                         }
                     }
@@ -211,8 +229,12 @@ Rectangle {
                             const screenTmp = mainWindow.screen
                             idScheduleDetailsWindow.screen = screenTmp
                             idScheduleDetailsWindow.showNormal()
-                            idScheduleDetailsWindow.x = (screenTmp.width - idScheduleDetailsWindow.width) / 2 + screenTmp.virtualX
-                            idScheduleDetailsWindow.y = (screenTmp.height - idScheduleDetailsWindow.height) / 2 + screenTmp.virtualY
+                            idScheduleDetailsWindow.x
+                                    = (screenTmp.width - idScheduleDetailsWindow.width)
+                                    / 2 + screenTmp.virtualX
+                            idScheduleDetailsWindow.y
+                                    = (screenTmp.height - idScheduleDetailsWindow.height)
+                                    / 2 + screenTmp.virtualY
                         }
                     }
                 }
@@ -220,10 +242,10 @@ Rectangle {
         }
     }
 
-    Connections{
+    Connections {
         target: idScheduleDetailsWindow
         onJoinMeeting: {
-            if(idScheduleDetailsWindow.meetingId === rootItem.meetingId) {
+            if (idScheduleDetailsWindow.meetingId === rootItem.meetingId) {
                 btnJoin.enabled = false
                 btnMore.enabled = false
                 btnJoinTimer.restart()

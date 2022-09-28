@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef NEMEETINGSDKMANAGER_H
 #define NEMEETINGSDKMANAGER_H
@@ -47,33 +46,51 @@ public:
     Q_ENUM(Status)
     enum ExtStatus {
         MEETING_DISCONNECTING_BY_SELF = 0,
-        MEETING_DISCONNECTING_REMOVED_BY_HOST,
-        MEETING_DISCONNECTING_CLOSED_BY_HOST,
-        MEETING_DISCONNECTING_LOGIN_ON_OTHER_DEVICE,
-        MEETING_DISCONNECTING_CLOSED_BY_SELF_AS_HOST,
-        MEETING_DISCONNECTING_AUTH_INFO_EXPIRED,
-        MEETING_DISCONNECTING_BY_SERVER,
-        MEETING_WAITING_VERIFY_PASSWORD = 20,
+        MEETING_DISCONNECTING_REMOVED_BY_HOST = 1,
+        MEETING_DISCONNECTING_CLOSED_BY_HOST = 2,
+        MEETING_DISCONNECTING_LOGIN_ON_OTHER_DEVICE = 3,
+        MEETING_DISCONNECTING_CLOSED_BY_SELF_AS_HOST = 4,
+        MEETING_DISCONNECTING_AUTH_INFO_EXPIRED = 5,
+        MEETING_DISCONNECTING_BY_SERVER = 6,
+        MEETING_DISCONNECTING_BY_ROOMNOTEXIST = 7,
+        MEETING_DISCONNECTING_BY_SYNCDATAERROR = 8,
+        MEETING_DISCONNECTING_BY_RTCINITERROR = 9,
+        MEETING_DISCONNECTING_BY_JOINCHANNELERROR = 10,
+        MEETING_DISCONNECTING_BY_TIMEOUT = 11,
+        MEETING_WAITING_VERIFY_PASSWORD = 20
     };
     Q_ENUM(ExtStatus)
 };
 
+class NEMeetingSDKManager;
 class SettingsEventHandler : public QObject, public NESettingsChangeNotifyHandler {
     Q_OBJECT
 public:
-    SettingsEventHandler(QObject* parent = nullptr)
-        : QObject(parent) {}
+    SettingsEventHandler(NEMeetingSDKManager* pNEMeetingSDKManager = nullptr, QObject* parent = nullptr)
+        : QObject(parent)
+        , m_pNEMeetingSDKManager(pNEMeetingSDKManager) {}
     ~SettingsEventHandler() {}
 
     virtual void OnAudioSettingsChange(bool status) override;
     virtual void OnVideoSettingsChange(bool status) override;
     virtual void OnOtherSettingsChange(bool status) override;
-
+    virtual void OnAudioAINSSettingsChange(bool status) override;
+    virtual void OnAudioVolumeAutoAdjustSettingsChange(bool status) override;
+    virtual void OnAudioQualitySettingsChange(AudioQuality enumAudioQuality) override;
+    virtual void OnAudioEchoCancellationSettingsChange(bool status) override;
+    virtual void OnAudioEnableStereoSettingsChange(bool status) override;
+    virtual void OnRemoteVideoResolutionSettingsChange(RemoteVideoResolution enumRemoteVideoResolution) override;
+    virtual void OnMyVideoResolutionSettingsChange(LocalVideoResolution enumLocalVideoResolution) override;
 signals:
     void audioSettingsChanged(bool status);
     void videoSettingsChanged(bool status);
+
+private:
+    NEMeetingSDKManager* m_pNEMeetingSDKManager = nullptr;
 };
 
+class AuthManager;
+class HistoryManager;
 class NEMeetingSDKManager : public QObject,
                             public NEAuthListener,
                             public NEMeetingStatusListener,
@@ -84,7 +101,7 @@ public:
     enum LoginType { kLoginTypeDefault, kLoginTypeSSO };
     Q_ENUM(LoginType)
 
-    explicit NEMeetingSDKManager(QObject* parent = nullptr);
+    explicit NEMeetingSDKManager(AuthManager* authManager = nullptr, HistoryManager* historyManager = nullptr, QObject* parent = nullptr);
     ~NEMeetingSDKManager();
 
     using InitCallback = std::function<void(NEErrorCode, const QString&)>;
@@ -100,20 +117,27 @@ public:
     Q_PROPERTY(int neLoginType READ neLoginType WRITE setNELoginType NOTIFY neLoginTypeChanged)
     Q_PROPERTY(QString neUsername READ neUsername WRITE setNEUsername NOTIFY neUsernameChanged)
     Q_PROPERTY(bool isSupportRecord READ isSupportRecord WRITE setIsSupportRecord NOTIFY isSupportRecordChanged)
+    Q_PROPERTY(bool isSupportLive READ isSupportLive WRITE setIsSupportLive NOTIFY isSupportLiveChanged)
 
     Q_INVOKABLE void initialize(const QString& appKey, const InitCallback& callback = nullptr);
     Q_INVOKABLE void unInitialize(const UnInitCallback& callback = nullptr);
     Q_INVOKABLE bool unInitializeSync();
     Q_INVOKABLE void activeWindow();
     Q_INVOKABLE void loginByPassword(const QString& appKey, const QString& username, const QString& password);
-    Q_INVOKABLE void loginBySSOToken(const QString& appKey, const QString& ssoToken);
+    Q_INVOKABLE void loginBySSOToken(const QString& appKey, const QString& ssoUser, const QString& ssoToken);
     Q_INVOKABLE void tryAutoLogin();
     Q_INVOKABLE void login(const QString& appKey, const QString& accountId, const QString& accountToken, LoginType loginType = kLoginTypeDefault);
     Q_INVOKABLE void logout(bool cleanup = false);
     Q_INVOKABLE void showSettings();
-    Q_INVOKABLE void invokeStart(const QString& meetingId, const QString& nickname, bool audio, bool video, bool enableRecord);
+    Q_INVOKABLE void invokeStart(const QString& meetingId,
+                                 const QString& nickname,
+                                 const QString& password,
+                                 bool audio,
+                                 bool video,
+                                 bool enableRecord);
     Q_INVOKABLE void invokeJoin(const QString& meetingId, const QString& nickname, bool audio, bool video, bool anonJoinMode = false);
     Q_INVOKABLE void getAccountInfo();
+    Q_INVOKABLE void getMeetingUserList();
     Q_INVOKABLE void scheduleMeeting(const QString& meetingSubject,
                                      qint64 startTime,
                                      qint64 endTime,
@@ -135,8 +159,12 @@ public:
     Q_INVOKABLE void cancelMeeting(const qint64& meetingUniqueId);
     Q_INVOKABLE void getMeetingList();
     Q_INVOKABLE void loginBySwitchAppInfo();
-    Q_INVOKABLE bool getIsSupportLive();
+    Q_INVOKABLE void getIsSupportLive();
     Q_INVOKABLE void getIsSupportRecord();
+    Q_INVOKABLE void getNeedResumeMeeting();
+    Q_INVOKABLE void addHistoryInfo();
+
+    int getCurrentMeetingStatus() const;
 
     QString personalMeetingId() const;
     void setPersonalMeetingId(const QString& personalMeetingId);
@@ -166,9 +194,14 @@ public:
     void setNEUsername(const QString& NEUsername);
 
     bool isSupportRecord() const;
-    void setIsSupportRecord(bool isSupportRecord);
+    void setIsSupportRecord(bool isSupportLive);
 
-    virtual void onKickOut() override{};
+    bool isSupportLive() const;
+    void setIsSupportLive(bool isSupportLive);
+
+    void setAudioAINSEnabled(bool bAudioAINSEnabled);
+
+    virtual void onKickOut() override;
     virtual void onAuthInfoExpired() override;
     virtual void onMeetingStatusChanged(int status, int code) override;
     virtual void onScheduleMeetingStatusChanged(uint64_t uniqueMeetingId, const int& meetingStatus) override;
@@ -193,6 +226,10 @@ signals:
     void getScheduledMeetingList(int errorCode, const QJsonArray& meetingList);
     void gotAccountInfo();
     void feedback();
+    void unInitializeFeedback();
+    void resumeMeetingSignal(const QString& meetingId);
+    void getMeetingUserListSignal(const QJsonArray& userList);
+    void kickOut();
 
 signals:
     void neAppKeyChanged();
@@ -207,6 +244,7 @@ signals:
     void audioSettingsChangedNotify(const QJsonObject& audioSettings);
     void videoSettingsChangedNotify(const QJsonObject& videoSettings);
     void isSupportRecordChanged();
+    void isSupportLiveChanged();
 
 public slots:
     void onDockClicked();
@@ -215,11 +253,14 @@ public slots:
 private:
     void onException(const NEException& exception);
     void onSettingsChangedNotify();
+    void initConfig();
 
 private:
     QString m_switchAppKey;
     QString m_switchAccountId;
     QString m_switchAccountToken;
+    AuthManager* m_pAuthManager = nullptr;
+    HistoryManager* m_pHistoryManager = nullptr;
     /* ------------------------------------------- */
 
     QString m_NEUsername;
@@ -228,7 +269,10 @@ private:
     QString m_NEAccountToken;
     NELoginType m_NELoginType;
 
-    int m_nTryInitTimes =0;
+    bool m_bUseNewAccountId = false;
+
+    int m_nTryInitTimes = 0;
+    int m_nCurrentMeetingStatus = 1;
 
     QString m_personalMeetingId;
     QString m_prettyMeetingId;
@@ -236,6 +280,8 @@ private:
     QString m_displayName;
     bool m_bInitialized = false;
     bool m_bSupportRecord = true;
+    bool m_bSupportLive = false;
+    std::atomic_bool m_bAudioAINSEnabled;
     std::atomic_bool m_bAllowActive;
     std::unique_ptr<SettingsEventHandler> m_pSettingsEventHandler = nullptr;
 };

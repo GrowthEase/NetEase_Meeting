@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef NIPCLIB_IPC_IPC_BASE_H_
 #define NIPCLIB_IPC_IPC_BASE_H_
@@ -51,8 +50,8 @@ public:
         init_ = true;
         return true;
     }
-    virtual void Start() { IPCThread::Start(); }
-    virtual void Stop() {
+    virtual void Start() override { IPCThread::Start(); }
+    virtual void Stop() override {
         IPCThread::Stop();
         IPCThread::Join();
     }
@@ -64,48 +63,77 @@ public:
     }
     virtual void AttachReceiveData(const IPCReceiveDataCallback& receive_callback) override { receive_callback_ = receive_callback; }
     virtual int SendData(const IPCData& data) override {
+        Log(1, "SendData: ");
+        if (!TaskLoop()) {
+            Log(1, "!TaskLoop(): ");
+            return 0;
+        }
         TaskLoop()->PostTask(ToWeakCallback([this, data]() {
+            Log(1, "PostTask SendData: ");
             IPCData data_send = std::make_shared<IPCData::element_type>();
-            socket_data_warpper_->PackSendData(*data, *data_send);
+            if (socket_data_warpper_)
+                socket_data_warpper_->PackSendData(*data, *data_send);
+            Log(1, "socket_data_warpper_ PackSendData.");
             InvokeSendData(data_send);
         }));
         return 0;
     }
     virtual void Close() override {
+        Log(1, "Close.");
         TaskLoop()->PostTask(ToWeakCallback([this]() {
-                DoClose();
-                InvokeCloseCallback();
+            Log(1, "PostTask Close.");
+            DoClose();
+            InvokeCloseCallback();
         }));
+
+        auto keep_alive_latest_ = std::chrono::steady_clock::now();
+
+        while (!keep_alive_exit_ &&
+               (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - keep_alive_latest_).count() < 3)) {
+            std::this_thread::yield();
+        };
     }
     virtual bool Ready() override { return ready_; }
 
 protected:
     virtual bool OnAcceptClient(void* client_fd) override { return OnAccept(client_fd); }
     virtual void OnReceiveSocketData(int error_code, const void* data, size_t size) override {
+        Log(1, "OnReceiveSocketData: ");
         std::shared_ptr<std::string> received_data = std::make_shared<std::string>();
         // received_data->resize(size);
         received_data->append((char*)data, size);
         TaskLoop()->PostTask(ToWeakCallback([this, received_data]() {
+            Log(1, "PostTask OnReceiveSocketData: ");
             if (socket_data_warpper_->OnReceiveData(received_data->data(), received_data->size())) {
+                Log(1, "socket_data_warpper_ OnReceiveData: ");
                 std::string raw_data_buf;
                 socket_data_warpper_->GetReceivedPack(raw_data_buf);
                 do {
                     IPCData ipc_data = std::make_shared<IPCData::element_type>();
                     ipc_data->append(raw_data_buf);
+                    Log(1, "do OnReceive: ");
                     OnReceive(ipc_data);
                 } while (socket_data_warpper_->GetReceivedPack(raw_data_buf));
+            } else {
+                Log(1, "socket_data_warpper_ OnReceiveData failed.");
             }
         }));
     }
     virtual void OnSendSocketData(int error_code) override {}
     virtual void OnSocketClose(int error_code) override { OnClose(error_code); }
     virtual void OnSocketConnect(int error_code) override { OnConnect(error_code); }
+    virtual void OnSocketError(int error_code, const void* data, size_t size) override {}
 
 protected:
     virtual void SetReady(bool value = true) {
         ready_ = value;
-        if (ready_)
+        std::string d = ready_ ? "true" : "false";
+        Log(1, "ready_:" + d);
+        if (ready_) {
             TaskLoop()->PostTask(ToWeakCallback([this]() { InvokeReadyCallback(); }));
+            keep_alive_exit_ = false;
+        } else {
+        }
     }
     virtual void OnInternalBegin() = 0;
     virtual void OnInternalEnd() = 0;
@@ -140,6 +168,7 @@ protected:
 protected:
     std::shared_ptr<TcpImpl> tcp_impl_;
     int ipc_port_;
+    std::atomic_bool keep_alive_exit_{true};
 
 private:
     std::atomic_bool init_;

@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "local_socket.h"
 #include <QUrl>
@@ -9,32 +8,26 @@
 
 QString LocalSocket::SOCKET_SERVER_NAME = "NEMEETING_LOCAL_SOCKET_FLAG";
 
-const QString kSSOToken = "ssoToken";
-const QString kSSOAppKey = "appKey";
+const QString kSSOAppKey = "appId";
+const QString kSSOUser = "userUuid";
+const QString kSSOToken = "userToken";
 
-LocalSocket::LocalSocket(QObject *parent)
+LocalSocket::LocalSocket(QObject* parent)
     : QObject(parent)
     , m_localServer(new QLocalServer)
-    , m_localSocket(new QLocalSocket)
-{
+    , m_localSocket(new QLocalSocket) {}
 
-}
-
-LocalSocket::~LocalSocket()
-{
-    if (m_localServer->isListening())
-    {
+LocalSocket::~LocalSocket() {
+    if (m_localServer->isListening()) {
         m_localServer->close();
     }
 
-    if (m_localSocket->isOpen())
-    {
+    if (m_localSocket->isOpen()) {
         m_localSocket->disconnectFromServer();
     }
 }
 
-bool LocalSocket::listen()
-{
+bool LocalSocket::listen() {
     if (!m_localServer)
         return false;
 
@@ -42,8 +35,7 @@ bool LocalSocket::listen()
     return m_localServer->listen(LocalSocket::SOCKET_SERVER_NAME);
 }
 
-bool LocalSocket::connectToServer()
-{
+bool LocalSocket::connectToServer() {
     if (!m_localSocket)
         return false;
 
@@ -51,8 +43,7 @@ bool LocalSocket::connectToServer()
     return m_localSocket->waitForConnected(500);
 }
 
-bool LocalSocket::notify(const QString &data)
-{
+bool LocalSocket::notify(const QString& data) {
     if (!m_localSocket)
         return false;
     m_localSocket->open(QIODevice::ReadWrite);
@@ -61,23 +52,20 @@ bool LocalSocket::notify(const QString &data)
     return m_localSocket->waitForBytesWritten(500);
 }
 
-void LocalSocket::newConnectionHandler()
-{
+void LocalSocket::newConnectionHandler() {
     QLocalSocket* socket = m_localServer->nextPendingConnection();
     connect(socket, SIGNAL(readyRead()), this, SLOT(readyReadHandler()));
     connect(socket, SIGNAL(disconnected()), socket, SLOT(deleteLater()));
 }
 
-void LocalSocket::readyReadHandler()
-{
+void LocalSocket::readyReadHandler() {
     auto* socket = dynamic_cast<QLocalSocket*>(sender());
-    if (socket)
-    {
+    if (socket) {
         QTextStream stream(socket);
         auto arguments = stream.readAll();
         QUrl url(arguments);
         QUrlQuery urlQuery(url.query());
         qInfo() << arguments;
-        emit loginWithSSO(urlQuery.queryItemValue(kSSOAppKey), urlQuery.queryItemValue(kSSOToken));
+        emit loginWithSSO(urlQuery.queryItemValue(kSSOAppKey), urlQuery.queryItemValue(kSSOUser), urlQuery.queryItemValue(kSSOToken));
     }
 }

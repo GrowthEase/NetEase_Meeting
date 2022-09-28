@@ -1,10 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
-
-// Copyright (c) 2014-2020 NetEase, Inc.
-// All right reserved.
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "more_item_model.h"
 
@@ -167,11 +163,12 @@ QVariant ToolbarItemModel::data(const QModelIndex& index, int role) const {
     if (!index.isValid() || !m_itemManager)
         return QVariant();
 
-    if (index.row() > m_itemManager->itemsToolbar().size() - 1)
+    if (index.row() > m_itemManager->itemsToolbar().size() - 1) {
+        YXLOG(Error) << "data index too long, size: " << m_itemManager->itemsToolbar().size() << YXLOGEnd;
         return QVariant();
+    }
 
     auto item = m_itemManager->itemsToolbar().at(index.row());
-
     switch (role) {
         case kItemIndex:
             return QVariant(item.itemIndex);
@@ -190,6 +187,7 @@ QVariant ToolbarItemModel::data(const QModelIndex& index, int role) const {
         case kItemCheckedIndex:
             return QVariant(item.itemCheckedIndex);
         default:
+            YXLOG(Error) << "data role is error, role: " << role << YXLOGEnd;
             break;
     }
 

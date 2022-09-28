@@ -1,10 +1,5 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
-
-// Copyright (c) 2012 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
 // Ported by Wang Rongtao <rtwang@corp.netease.com>
@@ -201,19 +196,25 @@
 //
 // The workaround is to explicitly declare your copy constructor.
 //
-#define MOVE_ONLY_TYPE_FOR_CPP_03(type, rvalue_type) \
- private: \
-  struct rvalue_type : public type { \
-    rvalue_type(); \
-    ~rvalue_type(); \
-    rvalue_type(const rvalue_type&); \
-    void operator=(const rvalue_type&); \
-  }; \
-  type(type&); \
-  void operator=(type&); \
- public: \
-  operator rvalue_type&() { return *reinterpret_cast<rvalue_type*>(this); } \
-  type Pass() { return type(*reinterpret_cast<rvalue_type*>(this)); } \
- private:
+#define MOVE_ONLY_TYPE_FOR_CPP_03(type, rvalue_type)        \
+private:                                                    \
+    struct rvalue_type : public type {                      \
+        rvalue_type();                                      \
+        ~rvalue_type();                                     \
+        rvalue_type(const rvalue_type&);                    \
+        void operator=(const rvalue_type&);                 \
+    };                                                      \
+    type(type&);                                            \
+    void operator=(type&);                                  \
+                                                            \
+public:                                                     \
+    operator rvalue_type&() {                               \
+        return *reinterpret_cast<rvalue_type*>(this);       \
+    }                                                       \
+    type Pass() {                                           \
+        return type(*reinterpret_cast<rvalue_type*>(this)); \
+    }                                                       \
+                                                            \
+private:
 
 #endif  // BASE_UTIL_MOVE_H_

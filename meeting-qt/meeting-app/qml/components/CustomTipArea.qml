@@ -27,6 +27,7 @@ Rectangle {
         anchors.top: parent.top
         anchors.topMargin: 12
         source: "qrc:/qml/images/public/toast/icon_warning.svg"
+        mipmap: true
     }
 
     Label {

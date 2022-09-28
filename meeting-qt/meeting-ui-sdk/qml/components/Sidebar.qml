@@ -10,11 +10,21 @@ import '../components'
 Rectangle {
     id: root
 
+    Accessible.name: "Sidebar"
+
     property int sidebarWidth: 280
     property string backgroundColor: "#EF23232B"
     property string fontColor: "#333333"
     property int  listviewHeight: 546
     property bool showTitle: true
+
+    enum AudioVolumeLevel {
+        Level_1 = 1,
+        Level_2,
+        Level_3,
+        Level_4,
+        Level_5
+    }
 
     MouseArea {
         width: parent.width - sidebar.width
@@ -28,6 +38,7 @@ Rectangle {
 
     MenuEx {
         id: popupMenu
+        Accessible.name: "moreMenu"
     }
 
     Component.onCompleted: {
@@ -53,10 +64,11 @@ Rectangle {
                 Layout.preferredHeight: 40
                 Label {
                     id: title
-                    text: qsTr("Members") + " (" + listView.count.toString() + ")"
+                    text: qsTr("Members") + " (" + listView.count.toString() + (meetingManager.maxCount > 0 ? ('/' + meetingManager.maxCount) : '')  + ")"
                     color: fontColor
                     font.pixelSize: 16
                     font.bold: true
+                    Accessible.name: qsTr("Members")
                 }
 
                 Image {
@@ -64,6 +76,7 @@ Rectangle {
                     height: 18
                     mirror: true
                     visible: meetingManager.meetingMuted
+                    mipmap: true
                     source: "qrc:/qml/images/sidebar/muted_all.png"
                 }
             }
@@ -134,11 +147,20 @@ Rectangle {
                                 let begin = ""
                                 let middle = ""
                                 let end = ""
-                                if (membersManager.hostAccountId === accountId) {
+                                if(roleType == 2){
                                     begin = " ("
                                     end = ")"
                                     middle = qsTr("Host、")
+                                } else if(roleType == 3){
+                                    begin = " ("
+                                    end = ")"
+                                    middle = qsTr("Manager、")
                                 }
+
+                                if(meetingManager.showMemberTag) {
+                                    middle += model.tag.length > 0 ? (model.tag + '、') : ''
+                                }
+
                                 if (authManager.authAccountId === accountId) {
                                     begin = " ("
                                     end = ")"
@@ -154,11 +176,12 @@ Rectangle {
                             id: itemClientType
                             width: 14
                             height: 14
-                            anchors.left: itemNickname.right
-                            anchors.leftMargin: 5
+                            anchors.right: itemHandsUp.visible ? itemHandsUp.left : itemVideo.left
+                            anchors.rightMargin: 8
                             anchors.verticalCenter: parent.verticalCenter
                             source: 'qrc:/qml/images/sidebar/member_sip.svg'
-                            visible: model.clientType === MembersModel.CLIENT_TYPE_SIP
+                            mipmap: true
+                            visible: model.clientType === 5
                         }
                         Image {
                             id: itemScreenSharing
@@ -169,6 +192,7 @@ Rectangle {
                             width: 14
                             height: 14
                             source: "qrc:/qml/images/sidebar/screen_sharing.svg"
+                            mipmap: true
                             Layout.alignment: Qt.AlignHRight | Qt.AlignVCenter
                             Connections {
                                 target: shareManager
@@ -184,8 +208,10 @@ Rectangle {
                             anchors.verticalCenter: parent.verticalCenter
                             width: 14
                             height: 14
-                            visible: model.handsUpStatus === MeetingStatus.HAND_STATUS_RAISE && membersManager.hostAccountId === authManager.authAccountId
+                            visible: model.handsUpStatus === MeetingStatus.HAND_STATUS_RAISE &&
+                                     (membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole)
                             source: "qrc:/qml/images/meeting/hand_raised_share.svg"
+                            mipmap: true
                             Layout.alignment: Qt.AlignHRight | Qt.AlignVCenter
                         }
                         Image {
@@ -196,6 +222,7 @@ Rectangle {
                             width: 14
                             height: 14
                             source: model.videoStatus === 1 ? "qrc:/qml/images/sidebar/video_on.svg" : "qrc:/qml/images/sidebar/video_off.svg"
+                            mipmap: true
                             Layout.alignment: Qt.AlignHRight | Qt.AlignVCenter
                         }
                         Image {
@@ -204,7 +231,8 @@ Rectangle {
                             anchors.verticalCenter: parent.verticalCenter
                             width: 14
                             height: 14
-                            source: model.audioStatus === 1 ? "qrc:/qml/images/sidebar/voice_on.svg" : "qrc:/qml/images/sidebar/voice_off.svg"
+                            source: getAudioVolumeSourceImage(model.audioStatus !== 1, model.audioVolume)
+                            mipmap: true
                         }
                         Image {
                             id: itemWhiteboard
@@ -215,6 +243,7 @@ Rectangle {
                             width: 14
                             height: 14
                             source: "qrc:/qml/images/sidebar/whiteboard_sharing.png"
+                            mipmap: true
                             Layout.alignment: Qt.AlignHRight | Qt.AlignVCenter
                             Connections {
                                 target: whiteboardManager
@@ -232,11 +261,13 @@ Rectangle {
                             height: 22
                             radius: 2
                             color: "#337EFF"
-                            visible:  model.handsUpStatus === MeetingStatus.HAND_STATUS_RAISE && btnShowMore.visible === true && membersManager.hostAccountId === authManager.authAccountId
+                            visible:  model.handsUpStatus === MeetingStatus.HAND_STATUS_RAISE && btnShowMore.visible === true &&
+                                      (membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole)
                             MouseArea {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 visible: membersManager.hostAccountId === authManager.authAccountId
+                                         || membersManager.isManagerRole
                                 onEntered: {
                                     parent.color = "#649DFF"
                                 }
@@ -253,7 +284,7 @@ Rectangle {
                                         parent.color = "#337EFF"
                                 }
                                 onClicked: {
-                                    audioManager.allowRemoteMemberHandsUp( model.accountId, false)
+                                    membersManager.allowRemoteMemberHandsUp(model.accountId, false)
                                 }
 
                                 Label {
@@ -298,6 +329,8 @@ Rectangle {
                                     popupMenu.audioStatus = model.audioStatus
                                     popupMenu.videoStatus = model.videoStatus
                                     popupMenu.isWhiteboardEnable = model.isWhiteboardEnable
+                                    popupMenu.clientType = model.clientType
+                                    popupMenu.isManagerRole = model.roleType === 3
                                     const menuPostion = btnShowMore.mapToItem(sidebar, -60, btnShowMore.height + 5)
                                     popupMenu.x = menuPostion.x
                                     popupMenu.y = menuPostion.y
@@ -322,22 +355,19 @@ Rectangle {
                         hoverEnabled: true
                         propagateComposedEvents: true
                         visible: {
-                                    if(membersManager.hostAccountId === authManager.authAccountId){
-                                        return true
-                                    }
-                                    else{
-                                        if(authManager.authAccountId === accountId && meetingManager.reName === true){
-                                            return true
-                                        }
-                                        else{
-                                            if(whiteboardManager.whiteboardSharerAccountId === authManager.authAccountId && authManager.authAccountId !== accountId){
-                                                return true
-                                            }
-                                            return false
-                                        }
-
-                                    }
+                            if(membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole){
+                                return true
+                            }
+                            if(authManager.authAccountId === accountId && meetingManager.reName === true){
+                                return true
+                            }
+                            else{
+                                if(whiteboardManager.whiteboardSharerAccountId === authManager.authAccountId && authManager.authAccountId !== accountId){
+                                    return true
                                 }
+                                return false
+                            }
+                        }
                         cursorShape: Qt.PointingHandCursor
                         onEntered: {
                             itemScreenSharing.visible = false
@@ -353,8 +383,10 @@ Rectangle {
                             itemScreenSharing.visible = Qt.binding(function(){ return shareManager.shareAccountId === accountId })
                             itemVideo.visible = true
                             itemAudio.visible = true
-                            itemClientType.visible = Qt.binding(function() { return model.clientType === MembersModel.CLIENT_TYPE_SIP })
-                            itemHandsUp.visible = Qt.binding(function(){return model.handsUpStatus === MeetingStatus.HAND_STATUS_RAISE && membersManager.hostAccountId === authManager.authAccountId })
+                            itemClientType.visible = Qt.binding(function() { return model.clientType === 5 })
+                            itemHandsUp.visible = Qt.binding(function(){
+                                return model.handsUpStatus === MeetingStatus.HAND_STATUS_RAISE
+                                        && (membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole) })
                             btnShowMore.visible = false
                             itemWhiteboard.visible = Qt.binding(function(){return whiteboardManager.whiteboardSharerAccountId === model.accountId})
                         }
@@ -381,7 +413,7 @@ Rectangle {
                 Layout.fillWidth: true
                 color: "#EBEDF0"
                 opacity: .6
-                visible: membersManager.hostAccountId === authManager.authAccountId
+                visible: membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole
             }
 
             RowLayout {
@@ -390,7 +422,7 @@ Rectangle {
                 Layout.preferredHeight: 46
                 Layout.leftMargin: 20
                 Layout.rightMargin: 20
-                visible: membersManager.hostAccountId === authManager.authAccountId
+                visible: membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole
                 Label {
                     Layout.alignment: Qt.AlignLeft
                     text: qsTr("Lock")
@@ -407,6 +439,7 @@ Rectangle {
                         anchors.fill: parent
                         onClicked: meetingManager.lockMeeting(!switchLock.checked)
                     }
+                    Accessible.name: qsTr("Lock")
                 }
             }
 
@@ -415,47 +448,101 @@ Rectangle {
                 Layout.fillWidth: true
                 color: "#EBEDF0"
                 opacity: .6
-                visible: membersManager.hostAccountId === authManager.authAccountId
+                visible: membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole === true
             }
         }
 
-        RowLayout {
+        ColumnLayout {
             id: toolbuttonLayout
-            spacing: 10
+            spacing: 0
             Layout.fillWidth: true
-            Layout.fillHeight: true
-            Layout.preferredHeight: 68
-            visible: membersManager.hostAccountId === authManager.authAccountId
-            Item { Layout.fillWidth: true }
-            CustomButton {
-                Layout.preferredHeight: 36
-                Layout.preferredWidth: 135
-                highlighted: true
-                text: qsTr("Mute All")
-                font.pixelSize: 15
-                buttonRadius: 18
-                onClicked: {
-                    muteConfirmDialog.text = qsTr('all and new member will be muted')
-                    muteConfirmDialog.checkText = qsTr("allow member self audio on");
-                    muteConfirmDialog.muteAllowOpenByself.disconnect(muteAllowOpenbyself)
-                    muteConfirmDialog.muteNotAllowOpenByself.disconnect(muteNotAllowOpenbyself)
-                    muteConfirmDialog.muteAllowOpenByself.connect(muteAllowOpenbyself)
-                    muteConfirmDialog.muteNotAllowOpenByself.connect(muteNotAllowOpenbyself)
-                    muteConfirmDialog.open()
+            Layout.preferredHeight: (meetingManager.hideMuteAllVideo || meetingManager.hideMuteAllAudio) ? 56 : 102
+            visible: (membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole)
+                     && (!meetingManager.hideMuteAllVideo || !meetingManager.hideMuteAllAudio)
+
+            RowLayout {
+                id: videoAllControl
+                spacing: 10
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.preferredHeight:46
+                visible: (membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole)
+                         && !meetingManager.hideMuteAllVideo
+                Item { Layout.fillWidth: true }
+                CustomButton {
+                    Layout.preferredHeight: 36
+                    Layout.preferredWidth: 135
+                    highlighted: true
+                    text: qsTr("Mute All Video")
+                    font.pixelSize: 15
+                    buttonRadius: 18
+                    onClicked: {
+                        muteConfirmDialog.text = qsTr('all and new member video will be muted')
+                        muteConfirmDialog.checkText = qsTr("allow member self video on");
+                        muteConfirmDialog.controlType = "video"
+                        muteConfirmDialog.muteAllowOpenByself.disconnect(muteAllowOpenbyself)
+                        muteConfirmDialog.muteNotAllowOpenByself.disconnect(muteNotAllowOpenbyself)
+                        muteConfirmDialog.muteAllowOpenByself.connect(muteAllowOpenbyself)
+                        muteConfirmDialog.muteNotAllowOpenByself.connect(muteNotAllowOpenbyself)
+                        muteConfirmDialog.open()
+                    }
                 }
-            }
-            CustomButton {
-                Layout.preferredHeight: 36
-                Layout.preferredWidth: 135
-                highlighted: true
-                text: qsTr("Unmute All")
-                font.pixelSize: 15
-                buttonRadius: 18
-                onClicked: {
-                    audioManager.muteRemoteAudio("", false)
+                CustomButton {
+                    Layout.preferredHeight: 36
+                    Layout.preferredWidth: 135
+                    highlighted: true
+                    text: qsTr("Unmute All Video")
+                    font.pixelSize: 15
+                    buttonRadius: 18
+                    onClicked: {
+                        videoManager.disableRemoteVideo("", false)
+                    }
                 }
+                Item { Layout.fillWidth: true }
             }
-            Item { Layout.fillWidth: true }
+
+            RowLayout {
+                id: audioAllControl
+                spacing: 10
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.preferredHeight: 46
+                visible: (membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole === true) && !meetingManager.hideMuteAllAudio
+
+//                    console.log("audioAllControl visible")
+
+                Item { Layout.fillWidth: true }
+                CustomButton {
+                    Layout.preferredHeight: 36
+                    Layout.preferredWidth: 135
+                    highlighted: true
+                    text: qsTr("Mute All")
+                    font.pixelSize: 15
+                    buttonRadius: 18
+                    onClicked: {
+                        muteConfirmDialog.text = qsTr('all and new member will be muted')
+                        muteConfirmDialog.checkText = qsTr("allow member self audio on");
+                        muteConfirmDialog.controlType = "audio"
+                        muteConfirmDialog.muteAllowOpenByself.disconnect(muteAllowOpenbyself)
+                        muteConfirmDialog.muteNotAllowOpenByself.disconnect(muteNotAllowOpenbyself)
+                        muteConfirmDialog.muteAllowOpenByself.connect(muteAllowOpenbyself)
+                        muteConfirmDialog.muteNotAllowOpenByself.connect(muteNotAllowOpenbyself)
+                        muteConfirmDialog.open()
+                    }
+                }
+                CustomButton {
+                    Layout.preferredHeight: 36
+                    Layout.preferredWidth: 135
+                    highlighted: true
+                    text: qsTr("Unmute All")
+                    font.pixelSize: 15
+                    buttonRadius: 18
+                    onClicked: {
+                        audioManager.muteRemoteAudio("", false)
+                    }
+                }
+                Item { Layout.fillWidth: true }
+            }
         }
     }
 
@@ -513,14 +600,43 @@ Rectangle {
         searchItem.resetSearchBar()
     }
 
-
-    function muteAllowOpenbyself(){
+    function muteAllowOpenbyself(type){
         muteConfirmDialog.muteAllowOpenByself.disconnect(muteAllowOpenbyself)
-        audioManager.muteRemoteAudio("", true)
+        if(type === "audio") {
+            audioManager.muteRemoteAudio("", true)
+        } else if(type === "video") {
+            videoManager.disableRemoteVideo("",true)
+        }
     }
 
-    function muteNotAllowOpenbyself(){
+    function muteNotAllowOpenbyself(type){
         muteConfirmDialog.muteNotAllowOpenByself.disconnect(muteNotAllowOpenbyself)
-        audioManager.muteRemoteAudio("", true, false);
+        if(type === "audio") {
+            audioManager.muteRemoteAudio("", true, false);
+        } else if(type === "video") {
+            videoManager.disableRemoteVideo("",true, false)
+        }
+
+    }
+
+    function getAudioVolumeSourceImage(mute,level) {
+        if(mute) {
+            return "qrc:/qml/images/sidebar/voice_off.svg"
+        }
+
+        switch (level) {
+            case Sidebar.AudioVolumeLevel.Level_1:
+                return "qrc:/qml/images/sidebar/voice_on.png"
+            case Sidebar.AudioVolumeLevel.Level_2:
+                return "qrc:/qml/images/sidebar/voice_on_1.png"
+            case Sidebar.AudioVolumeLevel.Level_3:
+                return "qrc:/qml/images/sidebar/voice_on_2.png"
+            case Sidebar.AudioVolumeLevel.Level_4:
+                return "qrc:/qml/images/sidebar/voice_on_3.png"
+            case Sidebar.AudioVolumeLevel.Level_5:
+                return "qrc:/qml/images/sidebar/voice_on_4.png"
+            default:
+                return "qrc:/qml/images/sidebar/voice_on.png"
+        }
     }
 }

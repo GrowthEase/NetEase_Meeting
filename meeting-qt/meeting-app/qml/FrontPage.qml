@@ -8,47 +8,73 @@ FrontPageForm {
     Component.onCompleted: {
         const sharedMeetingId = globalSettings.value('sharedMeetingId', '')
         if (sharedMeetingId !== '') {
-            textMeetingId.text = sharedMeetingId.substring(0, 3) + "-" +
-                    sharedMeetingId.substring(3, 6) + "-" +
-                    sharedMeetingId.substring(6)
+            textMeetingId.text = sharedMeetingId.substring(
+                        0, 3) + "-" + sharedMeetingId.substring(
+                        3, 6) + "-" + sharedMeetingId.substring(6)
 
             popupMode = FrontPage.JoinMode
             popupWindow.open()
             globalSettings.setValue('sharedMeetingId', '')
         }
         meetingManager.getAccountInfo()
-        meetingManager.getIsSupportRecord()
 
-        if(!hasReadSafeTip) {
-            if(configManager.needSafeTip) {
+        if (!hasReadSafeTip) {
+            if (configManager.needSafeTip) {
                 initSaveTip()
             } else {
                 configManager.requestServerAppConfigs()
             }
         }
 
+        meetingManager.getNeedResumeMeeting()
+
         caption.schedule.visible = Qt.binding(function() { return scheduleList.count > 0 })
+        caption.history.visible = true
+
+//        if(ursPage.visible) {
+//            ursPage.visible = false
+//        }
+
+        if(authManager.autoRegistered) {
+            windowModifyNickname.screen = mainWindow.screen
+            windowModifyNickname.x
+                    = (mainWindow.screen.width - windowModifyNickname.width)
+                    / 2 + mainWindow.screen.virtualX
+            windowModifyNickname.y
+                    = (mainWindow.screen.height - windowModifyNickname.height)
+                    / 2 + mainWindow.screen.virtualY
+            windowModifyNickname.visible = true
+            windowModifyNickname.show()
+        }
     }
 
     Component.onDestruction: {
         caption.schedule.visible = false
+        caption.history.visible = false
     }
 
     popupWindow.onOpened: {
         globalSettings.sync()
         const cameraStatus = globalSettings.value("localCameraStatusEx")
         const microphoneStatus = globalSettings.value("localMicStatusEx")
-        checkOpenCamera.checked = cameraStatus === undefined ? false : cameraStatus === true || cameraStatus === "true";
-        checkOpenMicrophone.checked = microphoneStatus === undefined ? false : microphoneStatus === true || microphoneStatus === "true";
+        checkOpenCamera.checked = cameraStatus === undefined ? false : cameraStatus === true
+                                                               || cameraStatus === "true"
+        checkOpenMicrophone.checked = microphoneStatus
+                === undefined ? false : microphoneStatus === true
+                                || microphoneStatus === "true"
     }
 
     popupWindow.onClosed: {
+        idProperty.pswd = ""
+        inputMeetingPwd.text = ""
         checkUsePersonalId.checked = false
+        checkMeetingPwd.checked = false
     }
 
     createButton.onClicked: {
         popupMode = FrontPage.CreateMode
         buttonSubmit.text = qsTr("Create")
+        inputMeetingPwd.enabled = false
         popupWindow.open()
     }
 
@@ -56,6 +82,14 @@ FrontPageForm {
         popupMode = FrontPage.JoinMode
         textMeetingId.text = ""
         buttonSubmit.text = qsTr("Join")
+        var meetingList = historyManager.getRecentMeetingList();
+        if(meetingList.length > 0) {
+            textMeetingId.acceptToolClickOnly = true
+            textMeetingId.visibleComboBox = true
+        } else {
+            textMeetingId.acceptToolClickOnly = false
+            textMeetingId.visibleComboBox = false
+        }
         popupWindow.open()
     }
 
@@ -75,7 +109,7 @@ FrontPageForm {
 
     infoArea.onEntered: {
         tooltips.x = 270
-        tooltips.y = 150
+        tooltips.y = 170
         tooltips.open()
     }
 
@@ -100,33 +134,59 @@ FrontPageForm {
     //        }
     //        lastLengthOfMeetingId = control.length
     //    }
-
     personalMeetingId.onClicked: {
         checkUsePersonalId.checked = !checkUsePersonalId.checked
     }
 
     checkUsePersonalId.onToggled: {
-        statisticsManager.meetingStatistics("use_personal_id", "meeting", { value: checkUsePersonalId.checked ? 1 : 0 })
+        statisticsManager.meetingStatistics("use_personal_id", "meeting", {
+                                                "value": checkUsePersonalId.checked ? 1 : 0
+                                            })
     }
 
     checkOpenCamera.onToggled: {
-        statisticsManager.meetingStatistics("open_camera", "meeting", { value: checkOpenCamera.checked ? 1 : 0 })
+        statisticsManager.meetingStatistics("open_camera", "meeting", {
+                                                "value": checkOpenCamera.checked ? 1 : 0
+                                            })
     }
 
     checkOpenMicrophone.onToggled: {
-        statisticsManager.meetingStatistics("open_micro", "meeting", { value: checkOpenMicrophone.checked ? 1 : 0 })
+        statisticsManager.meetingStatistics("open_micro", "meeting", {
+                                                "value": checkOpenMicrophone.checked ? 1 : 0
+                                            })
+    }
+
+    checkMeetingPwd.onToggled: {
+        inputMeetingPwd.enabled = checkMeetingPwd.checked
+        if (checkMeetingPwd.checked) {
+            inputMeetingPwd.text = idProperty.pswd
+            if (inputMeetingPwd.text.trim().length === 0) {
+                inputMeetingPwd.text = ('000000' + Math.floor(
+                                            Math.random() * 999999)).slice(-6)
+            }
+        } else if (!inputMeetingPwd.checked) {
+            idProperty.pswd = inputMeetingPwd.text
+            inputMeetingPwd.text = ""
+        }
     }
 
     buttonSubmit.onClicked: {
+        if (checkMeetingPwd.checked && inputMeetingPwd.text.trim(
+                    ).length !== 6) {
+            messageTip.warning(qsTr("Please enter 6-digit password"))
+            return
+        }
+
         buttonSubmit.enabled = false
         createButton.enabled = false
         joinButton.enabled = false
         if (popupMode === FrontPage.CreateMode) {
             statisticsManager.meetingStatistics("meeting_create", "meeting")
-            meetingManager.invokeStart(checkUsePersonalId.checked ? meetingManager.personalMeetingId : "",
-                                       authManager.appUserNick,
-                                       checkOpenMicrophone.checked,
-                                       checkOpenCamera.checked, meetingManager.isSupportRecord)
+            meetingManager.invokeStart(
+                        checkUsePersonalId.checked ? meetingManager.personalMeetingId : "",
+                        authManager.appUserNick, inputMeetingPwd.text,
+                        checkOpenMicrophone.checked, checkOpenCamera.checked,
+                        meetingManager.isSupportRecord)
         } else {
             statisticsManager.meetingStatistics("meeting_join", "meeting")
             meetingManager.invokeJoin(textMeetingId.text.split("-").join(""),
@@ -145,16 +205,15 @@ FrontPageForm {
     }
 
     appTipArea.onSigContentClicked: {
-        function confirm() {
-            //hasReadSafeTip = true
+        function confirm() {//hasReadSafeTip = true
         }
 
-        function cancel() {
-            //do nonthing
+        function cancel() {//do nonthing
         }
 
         var obj = configManager.getSafeTipContent()
-        DialogManager.dynamicDialog(obj.title, obj.content, confirm, cancel, mainWindow, obj.okBtnLabel, "", false)
+        DialogManager.dynamicDialog(obj.title, obj.content, confirm, cancel,
+                                    mainWindow, obj.okBtnLabel, "", false)
     }
 
     appTipArea.onSigCloseClicked: {
@@ -171,13 +230,22 @@ FrontPageForm {
     Connections {
         target: caption
         onAvatarClicked: {
-            const popupPosition = caption.avatar.mapToGlobal(-profile.width + caption.avatar.width + 20 /* shadow size */, caption.avatar.height + 8)
+            const popupPosition = caption.avatar.mapToGlobal(
+                                    -profile.width + caption.avatar.width + 20 /* shadow size */
+                                    , caption.avatar.height + 8)
             profile.x = popupPosition.x
             profile.y = popupPosition.y
             profile.show()
         }
         onScheduleClicked: {
             btnScheduleMeeting.clicked()
+        }
+        onHistoryClicked: {
+            const screenTmp = mainWindow.screen
+            idHistoryMeeting.screen = screenTmp
+            idHistoryMeeting.show()
+            idHistoryMeeting.x = (screenTmp.width - idHistoryMeeting.width) / 2 + screenTmp.virtualX
+            idHistoryMeeting.y = (screenTmp.height - idHistoryMeeting.height) / 2 + screenTmp.virtualY
         }
     }
 
@@ -189,7 +257,8 @@ FrontPageForm {
                 meetingManager.logout(cleanup)
             }
             profile.closeAllProfileDialog()
-            if (customDialog.visible) customDialog.close()
+            if (customDialog.visible)
+                customDialog.close()
             globalSettings.setValue('localUserId', '')
             globalSettings.setValue('localUserToken', '')
         }
@@ -205,7 +274,7 @@ FrontPageForm {
                 message.error(result.msg)
                 break
             }
-            buttonSubmit.enabled = Qt.binding(function() {
+            buttonSubmit.enabled = Qt.binding(function () {
                 return popupMode === FrontPage.JoinMode ? textMeetingId.length >= 1 : true
             })
         }
@@ -214,14 +283,20 @@ FrontPageForm {
     Connections {
         target: clientUpdater
         onCheckUpdateSignal: {
-            console.info(updateIgnore, resultCode, resultType, JSON.stringify(response))
-            if (0 !== updateIgnore && updateIgnore <= clientUpdater.getLatestVersion()) return
-            if (resultCode !== 200) return
+            console.info(updateIgnore, resultCode, resultType,
+                         JSON.stringify(response))
+            if (0 !== updateIgnore
+                    && updateIgnore <= clientUpdater.getLatestVersion())
+                return
+            if (resultCode !== 200)
+                return
             if (resultType === 4 || resultType === 5) {
-                const popup = Qt.createComponent("qrc:/qml/components/CheckUpdate.qml").createObject(mainWindow, {
-                                                                                     updateType: resultType,
-                                                                                     clientUpdateInfo: response
-                                                                                 })
+                const popup = Qt.createComponent(
+                                "qrc:/qml/components/CheckUpdate.qml").createObject(
+                                mainWindow, {
+                                    "updateType": resultType,
+                                    "clientUpdateInfo": response
+                                })
                 popup.open()
             }
         }
@@ -230,15 +305,14 @@ FrontPageForm {
     Connections {
         target: meetingManager
         onFeedback: {
-            feedback.showOptions = false
-            feedback.showFeedbackWindow(false)
+            inMeetingfeedback.showInMeetingFeedbackWindow()
         }
         onGotAccountInfo: {
             if (updateEnable) {
                 updateEnable = false
                 clientUpdater.checkUpdate()
             }
-            if (meetingManager.displayName !== '')
+            if (meetingManager.displayName !== '' && !authManager.autoRegistered)
                 authManager.appUserNick = meetingManager.displayName
             meetingManager.getMeetingList()
             authManager.getAccountApps(meetingManager.neAppKey,
@@ -264,7 +338,23 @@ FrontPageForm {
                 mainWindow.raiseOnTop()
             }
             if (!authManager.resetPasswordFlag) {
-                message.warning(qsTr('Auth information has expired, please relogin.'))
+                message.warning(
+                            qsTr('Auth information has expired, please relogin.'))
+                authManager.logout(false)
+                updateEnable = true
+                pageLoader.setSource(Qt.resolvedUrl('qrc:/qml/HomePage.qml'))
+            } else {
+                authManager.resetPasswordFlag = false
+            }
+        }
+        onKickOut: {
+            if (!mainWindow.visible) {
+                mainWindow.showNormal()
+                mainWindow.raiseOnTop()
+            }
+            if (!authManager.resetPasswordFlag) {
+                message.warning(
+                            qsTr('You have been kickout by muti client.'))
                 authManager.logout(false)
                 updateEnable = true
                 pageLoader.setSource(Qt.resolvedUrl('qrc:/qml/HomePage.qml'))
@@ -277,21 +367,32 @@ FrontPageForm {
             case MeetingStatus.ERROR_CODE_SUCCESS:
                 popupWindow.close()
                 mainWindow.hide()
+                meetingManager.addHistoryInfo();
                 break
             case MeetingStatus.MEETING_ERROR_FAILED_MEETING_ALREADY_EXIST:
                 customDialog.text = qsTr('Join Meeting')
-                customDialog.description = qsTr('The meeting is still in progress. Do you want to join directly?')
+                customDialog.description = qsTr(
+                            'The meeting is still in progress. Do you want to join directly?')
                 customDialog.confirm.connect(joinmeeting)
                 customDialog.open()
                 break
             case MeetingStatus.ERROR_CODE_FAILED:
-                message.error(errorMessage !== '' ? errorMessage : qsTr('Failed to start meeting'))
+                if(popupWindow.visible) {
+                    messageTip.error(
+                                errorMessage !== '' ? errorMessage : qsTr(
+                                                          'Failed to start meeting'))
+                } else {
+                    message.error(
+                                errorMessage !== '' ? errorMessage : qsTr(
+                                                          'Failed to start meeting'))
+                }
+
                 break
             default:
-                message.error(errorMessage)
+                messageTip.error(errorMessage)
                 break
             }
-            buttonSubmit.enabled = Qt.binding(function() {
+            buttonSubmit.enabled = Qt.binding(function () {
                 return popupMode === FrontPage.JoinMode ? textMeetingId.length >= 1 : true
             })
             createButton.enabled = true
@@ -302,14 +403,24 @@ FrontPageForm {
             case MeetingStatus.ERROR_CODE_SUCCESS:
                 popupWindow.close()
                 mainWindow.hide()
+                meetingManager.addHistoryInfo();
                 break
             case MeetingStatus.ERROR_CODE_FAILED:
             default:
-                message.error(errorMessage !== '' ? errorMessage : qsTr('Failed to join meeting'))
+                if(popupWindow.visible) {
+                    messageTip.error(
+                                errorMessage !== '' ? errorMessage : qsTr(
+                                                          'Failed to join meeting'))
+                } else {
+                    message.error(
+                                errorMessage !== '' ? errorMessage : qsTr(
+                                                          'Failed to join meeting'))
+                }
+
                 mainWindow.raiseOnTop()
                 break
             }
-            buttonSubmit.enabled = Qt.binding(function() {
+            buttonSubmit.enabled = Qt.binding(function () {
                 return popupMode === FrontPage.JoinMode ? textMeetingId.length >= 1 : true
             })
             createButton.enabled = true
@@ -332,13 +443,21 @@ FrontPageForm {
                 else if (extCode === RunningStatus.MEETING_DISCONNECTING_LOGIN_ON_OTHER_DEVICE) {
                     toast.show(qsTr('You have been kickout by other client'))
                     authManager.logout()
-                }
+                } else if (extCode === RunningStatus.MEETING_DISCONNECTING_BY_ROOMNOTEXIST)
+                    toast.show(qsTr('The meeting does not exist'))
+                else if (extCode === RunningStatus.MEETING_DISCONNECTING_BY_SYNCDATAERROR)
+                    toast.show(qsTr('Failed to synchronize meeting information'))
+                else if (extCode === RunningStatus.MEETING_DISCONNECTING_BY_RTCINITERROR)
+                    toast.show(qsTr('The RTC module fails to be initialized'))
+                else if (extCode === RunningStatus.MEETING_DISCONNECTING_BY_JOINCHANNELERROR)
+                    toast.show(qsTr('Failed to join the channel of RTC'))
+                else if (extCode === RunningStatus.MEETING_DISCONNECTING_BY_TIMEOUT)
+                    toast.show(qsTr('Meeting timeout'))
                 createButton.enabled = true
                 joinButton.enabled = true
                 mainWindow.showNormal()
                 mainWindow.raiseOnTop()
-                feedback.showOptions = true
-                feedback.showFeedbackWindow()
+                showFeedbackTimer.start()
                 break
             case RunningStatus.MEETING_STATUS_WAITING:
                 if (extCode === RunningStatus.MEETING_WAITING_VERIFY_PASSWORD) {
@@ -348,18 +467,24 @@ FrontPageForm {
         }
         onGetScheduledMeetingList: {
             listModel.clear()
-            let datetimeFlag = 0;
+            let datetimeFlag = 0
             meetingList.sort(sortByMultiFields)
-            for (let i = 0; i < meetingList.length; i++) {
+            for (var i = 0; i < meetingList.length; i++) {
                 const meeting = meetingList[i]
-                const dayBegin = new Date(new Date(meeting.startTime).setHours(0,0,0,0))
-                const dayEnd = new Date(new Date(meeting.startTime).setHours(23,59,59,999))
+                const dayBegin = new Date(new Date(meeting.startTime).setHours(
+                                              0, 0, 0, 0))
+                const dayEnd = new Date(new Date(meeting.startTime).setHours(
+                                            23, 59, 59, 999))
                 if (dayBegin.getTime() > datetimeFlag) {
-                    Object.assign(meeting, { showDatetime: true })
+                    Object.assign(meeting, {
+                                      "showDatetime": true
+                                  })
                     listModel.append(meeting)
                     datetimeFlag = dayEnd.getTime()
                 } else {
-                    Object.assign(meeting, { showDatetime: false })
+                    Object.assign(meeting, {
+                                      "showDatetime": false
+                                  })
                     listModel.append(meeting)
                 }
             }
@@ -371,6 +496,30 @@ FrontPageForm {
                 message.error(errorMessage)
             }
         }
+        onResumeMeetingSignal: {
+            idProperty.resumemeetingId = meetingId
+            customDialog.text = qsTr('Join Meeting')
+            customDialog.description = qsTr(
+                        'It was detected that you exited abnormally last time, do you want to resume the meeting?')
+            customDialog.confirm.connect(resumemeeting)
+            customDialog.open()
+        }
+    }
+
+    Timer {
+        id: showFeedbackTimer
+        repeat: false
+        interval: 500
+        onTriggered: {
+            feedback.showOptions = true
+            feedback.showFeedbackWindow()
+        }
+    }
+
+    QtObject {
+        id: idProperty
+        property string pswd: ""
+        property string resumemeetingId: ""
     }
 
     function sortByMultiFields(src, dest) {
@@ -399,9 +548,31 @@ FrontPageForm {
         customDialog.confirm.disconnect(joinmeeting)
     }
 
+    function resumemeeting() {
+        let micStatus = false
+        let cameraStatus = false
+        if (Qt.platform.os === 'windows') {
+            micStatus = globalSettings.value(
+                        'localMicStatusEx') === 'true'
+            cameraStatus = globalSettings.value(
+                        'localCameraStatusEx') === 'true'
+        } else {
+            micStatus = globalSettings.value(
+                        'localMicStatusEx')
+            cameraStatus = globalSettings.value(
+                        'localCameraStatusEx')
+        }
+        meetingManager.invokeJoin(idProperty.resumemeetingId,
+                                  authManager.appUserNick,
+                                  micStatus, cameraStatus)
+
+        customDialog.confirm.disconnect(resumemeeting)
+    }
+
     function initSaveTip() {
-        appTipArea.visible = configManager.needSafeTip && !hasReadSafeTip
-        if(appTipArea.visible) {
+        var visible = (configManager.needSafeTip && !hasReadSafeTip)
+        appTipArea.visible = visible
+        if (visible) {
             var obj = configManager.getSafeTipContent()
             appTipArea.description = obj.content
         }

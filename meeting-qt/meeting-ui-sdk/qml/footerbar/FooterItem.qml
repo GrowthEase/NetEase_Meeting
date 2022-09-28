@@ -8,15 +8,17 @@ Button {
     topInset: 0
     leftInset: 0
     rightInset: 0
+    focusPolicy: Qt.NoFocus
 
     property string itemIcon: ''
     property string itemText: ''
+    property string accessibleName: ''
     property int imageWidth: 24
     property int imageHieght: 24
     property int imageTopMargin: 0
 
     background: Rectangle {
-        color: root.hovered ? (root.pressed ? '#1D1D24' : '#22222B') : 'transparent';
+        color: root.hovered ? (root.pressed ? '#1D1D24' : '#22222B') : 'transparent'
         implicitHeight: root.height
         implicitWidth: root.width
         ColumnLayout {
@@ -24,6 +26,7 @@ Button {
             spacing: 0
             Image {
                 source: itemIcon
+                mipmap: true
                 fillMode: Image.PreserveAspectFit
                 Layout.preferredWidth: imageWidth
                 Layout.preferredHeight: imageHieght
@@ -41,7 +44,8 @@ Button {
             }
         }
         Accessible.role: Accessible.Button
-        Accessible.name: itemText
-        Accessible.onPressAction: if (enabled) clicked(Qt.LeftButton)
+        Accessible.name: accessibleName !== '' ? accessibleName : itemText
+        Accessible.onPressAction: if (enabled)
+                                      clicked(Qt.LeftButton)
     }
 }
