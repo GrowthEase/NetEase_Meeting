@@ -13,6 +13,7 @@ CheckBox {
     bottomPadding: 0
     leftPadding: 0
     rightPadding: 0
+    focusPolicy: Qt.NoFocus
     contentItem: Label {
         text: control.text
         font: control.font
@@ -30,7 +31,7 @@ CheckBox {
         implicitHeight: 16
         color: !control.enabled ? "#F2F2F5" : "transparent"
         x: control.text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
-        y: control.topPadding + (control.availableHeight - height) / 2
+        y: control.topPadding + (control.availableHeight - height) / 2 + 1
         border.color: (checkState !== Qt.Unchecked && control.enabled ) ? control.Material.accentColor : "#E1E3E6"
         border.width: checkState !== Qt.Unchecked ? width / 2 : 1
         radius: 2
@@ -51,6 +52,7 @@ CheckBox {
             height: 11
             source: "qrc:/qml/images/public/icons/right_white.svg"
             fillMode: Image.PreserveAspectFit
+            mipmap: true
 
             scale: control.checkState === Qt.Checked ? 1 : 0
             Behavior on scale { NumberAnimation { duration: 100 } }

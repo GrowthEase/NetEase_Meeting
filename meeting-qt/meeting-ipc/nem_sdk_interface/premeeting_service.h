@@ -1,4 +1,8 @@
-﻿/**
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+
+/**
  * @file premeeting_service.h
  * @brief 预约会议头文件
  * @copyright (c) 2014-2021, NetEase Inc. All rights reserved
@@ -9,16 +13,16 @@
 #ifndef NEM_SDK_INTERFACE_INTERFACE_PREMEETING_SERVICE_H_
 #define NEM_SDK_INTERFACE_INTERFACE_PREMEETING_SERVICE_H_
 
-#include "service_define.h"
 #include <list>
+#include "meeting.h"
+#include "service_define.h"
 
 NNEM_SDK_INTERFACE_BEGIN_DECLS
 
 /**
  * @brief 监听预约会议状态变更通知
  */
-class NEScheduleMeetingStatusListener : public NEObject
-{
+class NEScheduleMeetingStatusListener : public NEObject {
 public:
     /**
      * @brief 监听预约会议状态变更通知
@@ -31,12 +35,12 @@ public:
 /**
  * @brief 预约会议服务
  */
-class NEM_SDK_INTERFACE_EXPORT NEPreMeetingService : public NEService
-{
+class NEM_SDK_INTERFACE_EXPORT NEPreMeetingService : public NEService {
 public:
     using NEScheduleMeetingItemCallback = NECallback<NEMeetingItem>;
     using NEOperateScheduleMeetingCallback = NEEmptyCallback;
     using NEGetMeetingListCallback = NECallback<std::list<NEMeetingItem>&>;
+
 public:
     /**
      * @brief 预约会议
@@ -58,7 +62,7 @@ public:
      * @param callback 回调
      * @return void
      */
-    virtual void cancelMeeting(const int64_t &meetingUniqueId, const NEOperateScheduleMeetingCallback& callback) = 0;
+    virtual void cancelMeeting(const int64_t& meetingUniqueId, const NEOperateScheduleMeetingCallback& callback) = 0;
 
     /**
      * @brief 编辑会议
@@ -74,7 +78,7 @@ public:
      * @param callback 回调
      * @return void
      */
-    virtual void getMeetingItemById(const int64_t &meetingUniqueId, const NEScheduleMeetingItemCallback& callback) = 0;
+    virtual void getMeetingItemById(const int64_t& meetingUniqueId, const NEScheduleMeetingItemCallback& callback) = 0;
 
     /**
      * @brief 查询特定状态下的会议列表，目前仅仅支持查询待开始、进行中及已结束，后续将支持已取消和已回收状态。
@@ -82,7 +86,7 @@ public:
      * @param callback 回调
      * @return void
      */
-    virtual void getMeetingList(std::list<NEMeetingItemStatus> status,const NEGetMeetingListCallback& callback) = 0;
+    virtual void getMeetingList(std::list<NEMeetingItemStatus> status, const NEGetMeetingListCallback& callback) = 0;
 
     /**
      * @brief 注册预约会议状态变更监听器
@@ -100,5 +104,4 @@ public:
 };
 
 NNEM_SDK_INTERFACE_END_DECLS
-#endif // NEM_SDK_INTERFACE_INTERFACE_PREMEETING_SERVICE_H_
-
+#endif  // NEM_SDK_INTERFACE_INTERFACE_PREMEETING_SERVICE_H_

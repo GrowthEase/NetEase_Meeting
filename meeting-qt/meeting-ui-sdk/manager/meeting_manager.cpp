@@ -1,39 +1,56 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "meeting_manager.h"
-#include "controller/beauty_ctrl_interface.h"
-#include "controller/chat_ctrl_interface.h"
-#include "controller/livestream_ctrl_interface.h"
-#include "controller/record_ctrl_interface.h"
-#include "controller/video_ctrl_interface.h"
-#include "controller/whiteboard_ctrl_interface.h"
+#include "feedback_manager.h"
 #include "global_manager.h"
 #include "listeners/meeting_service_listener.h"
-#include "listeners/meeting_stats_listener.h"
+#include "manager/auth_manager.h"
 #include "manager/chat_manager.h"
 #include "manager/config_manager.h"
 #include "manager/device_manager.h"
 #include "manager/live_manager.h"
-#include "manager/meeting/whiteboard_manager.h"
 #include "manager/more_item_manager.h"
+#include "meeting/invite_manager.h"
 #include "meeting/members_manager.h"
 #include "meeting/share_manager.h"
 #include "meeting/video_manager.h"
+#include "meeting/whiteboard_manager.h"
 #include "settings_manager.h"
 
 MeetingManager::MeetingManager(QObject* parent)
     : QObject(parent) {
     qRegisterMetaType<NEMeeting::Status>();
 
+    m_meetingController = std::make_shared<NEMeetingController>();
+    m_subscribeHelper = std::make_shared<SubscribeHelper>();
+
     m_durationTimer.setTimerType(Qt::PreciseTimer);
     m_durationTimer.setInterval(1000);
     m_durationTimer.callOnTimeout([this]() {
         auto currenttime = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()).time_since_epoch().count();
-        m_uMeetingDuration = (currenttime - m_uMeetingStartTime) + m_uMeetingDurationEx;
+        m_uMeetingDuration = (currenttime - m_uMeetingStartTime);
         emit meetingDurationChanged();
+    });
+
+    m_joinTimeoutTimer.setTimerType(Qt::PreciseTimer);
+    m_joinTimeoutTimer.setSingleShot(true);
+    m_joinTimeoutTimer.callOnTimeout([this]() {
+        if (m_meetingStatus == NEMeeting::MEETING_CONNECTING) {
+            YXLOG(Info) << "joinTimeoutTimer, leaveMeeting." << YXLOGEnd;
+            leaveMeeting(false);
+            emit meetingStatusChanged(NEMeeting::MEETING_CONNECT_FAILED, 408, "joinTimeoutTimer");
+            m_meetingStatus = NEMeeting::MEETING_IDLE;
+            emit meetingStatusChanged(NEMeeting::MEETING_IDLE, 0);
+        }
+    });
+
+    m_remainingTipTimer.setTimerType(Qt::PreciseTimer);
+    m_remainingTipTimer.setInterval(1000);
+    m_remainingTipTimer.callOnTimeout([this]() {
+        m_uRemainingSeconds--;
+        setRemainingSeconds(m_uRemainingSeconds);
     });
 
     qmlRegisterUncreatableType<NEMeeting>("NetEase.Meeting.MeetingStatus", 1, 0, "MeetingStatus", "");
@@ -45,41 +62,51 @@ bool MeetingManager::autoStartMeeting() {
 
     MoreItemManager::getInstance()->restoreToolbar();
     if (m_autoStartInfo.isCreate) {
-        NEStartRoomParams param;
-        NEStartRoomOptions option;
-        QByteArray byteMeetingId = m_autoStartInfo.meetingId.toUtf8();
-        QByteArray byteNickname = m_autoStartInfo.nickname.toUtf8();
-        param.roomId = byteMeetingId.data();
-        param.displayName = byteNickname.data();
-        option.noAudio = !m_autoStartInfo.audio;
-        option.noVideo = !m_autoStartInfo.video;
-        createMeeting(param, option);
+        //        NEStartRoomParams param;
+        //        NEStartRoomOptions option;
+        //        QByteArray byteMeetingId = m_autoStartInfo.meetingId.toUtf8();
+        //        QByteArray byteNickname = m_autoStartInfo.nickname.toUtf8();
+        //        param.roomId = byteMeetingId.data();
+        //        param.displayName = byteNickname.data();
+        //        option.noAudio = !m_autoStartInfo.audio;
+        //        option.noVideo = !m_autoStartInfo.video;
+        //        createMeeting(param, option);
     } else {
-        NEJoinRoomParams param;
-        NEJoinRoomOptions option;
-        QByteArray byteMeetingId = m_autoStartInfo.meetingId.toUtf8();
-        QByteArray byteNickname = m_autoStartInfo.nickname.toUtf8();
-        param.roomId = byteMeetingId.data();
-        param.displayName = byteNickname.data();
-        option.noAudio = !m_autoStartInfo.audio;
-        option.noVideo = !m_autoStartInfo.video;
-        joinMeeting(param, option);
+        //        NEJoinRoomParams param;
+        //        NEJoinRoomOptions option;
+        //        QByteArray byteMeetingId = m_autoStartInfo.meetingId.toUtf8();
+        //        QByteArray byteNickname = m_autoStartInfo.nickname.toUtf8();
+        //        param.roomId = byteMeetingId.data();
+        //        param.displayName = byteNickname.data();
+        //        option.noAudio = !m_autoStartInfo.audio;
+        //        option.noVideo = !m_autoStartInfo.video;
+        //        joinMeeting(param, option);
     }
 
     return true;
 }
 
-neroom::NEErrorCode MeetingManager::createMeeting(const NEStartRoomParams& param, const NEStartRoomOptions& option) {
-    return m_meetingService->startRoom(param, option, [=](int errorCode, const std::string& errorMessage) {
-        if (errorCode != 200 && errorCode != 0) {
+bool MeetingManager::createMeeting(const NS_I_NEM_SDK::NEStartMeetingParams& param, const NERoomOptions& option) {
+    m_noVideo = option.noVideo;
+    m_noAudio = option.noAudio;
+
+    onConnecting();
+    m_meetingController->startRoom(param, option, [=](int errorCode, const std::string& errorMessage) {
+        if (errorCode == 0) {
+        } else {
             emit meetingStatusChanged(NEMeeting::MEETING_CONNECT_FAILED, errorCode, QString::fromStdString(errorMessage));
+            m_meetingStatus = NEMeeting::MEETING_IDLE;
+            emit meetingStatusChanged(NEMeeting::MEETING_IDLE, 0);
         }
     });
+    return true;
 }
 
 void MeetingManager::cancelJoinMeeting() {
     YXLOG(Info) << "CancelJoinMeeting." << YXLOGEnd;
     emit meetingStatusChanged(NEMeeting::MEETING_CONNECT_FAILED, -1);
+    m_meetingStatus = NEMeeting::MEETING_IDLE;
+    emit meetingStatusChanged(NEMeeting::MEETING_IDLE, 0);
 }
 
 void MeetingManager::joinMeeting(const QString& strPassword) {
@@ -88,16 +115,28 @@ void MeetingManager::joinMeeting(const QString& strPassword) {
     joinMeeting(m_joinRoomParams, m_joinRoomOptions);
 }
 
-neroom::NEErrorCode MeetingManager::joinMeeting(const NEJoinRoomParams& param, const NEJoinRoomOptions& option) {
+bool MeetingManager::joinMeeting(const nem_sdk_interface::NEJoinMeetingParams& param, const NERoomOptions& option) {
     m_joinRoomParams = param;
     m_joinRoomOptions = option;
-    return m_meetingService->joinRoom(param, option, [=](int errorCode, const std::string& errorMessage) {
-        if (errorCode == kErrorPassword || errorCode == kErrorPasswordNotPresent) {
+
+    m_noVideo = option.noVideo;
+    m_noAudio = option.noAudio;
+
+    if (m_meetingStatus == NEMeeting::MEETING_IDLE) {
+        onConnecting();
+    }
+    m_meetingController->joinRoom(m_joinRoomParams, m_joinRoomOptions, [=](int errorCode, const std::string& errorMessage) {
+        if (errorCode == 1020) {
+            if (m_joinTimeoutTimer.isActive())
+                m_joinTimeoutTimer.stop();
             emit meetingStatusChanged(NEMeeting::MEETING_WAITING_VERIFY_PASSWORD, errorCode, QString::fromStdString(errorMessage));
         } else if (errorCode != 200 && errorCode != 0) {
             emit meetingStatusChanged(NEMeeting::MEETING_CONNECT_FAILED, errorCode, QString::fromStdString(errorMessage));
+            m_meetingStatus = NEMeeting::MEETING_IDLE;
+            emit meetingStatusChanged(NEMeeting::MEETING_IDLE, 0);
         }
     });
+    return true;
 }
 
 NEMeeting::Status MeetingManager::getRoomStatus() const {
@@ -105,10 +144,24 @@ NEMeeting::Status MeetingManager::getRoomStatus() const {
 }
 
 void MeetingManager::modifyNicknameInMeeting(const QString& newnickname, const QString& meetingID) {
-    if (m_inMeetingService) {
-        m_inMeetingService->getInRoomUserController()->changeMyName(
-            newnickname.toStdString(), [this](int errCode, const std::string&) { emit modifyNicknameResult(errCode == 200); });
+    auto roomContext = m_meetingController->getRoomContext();
+    if (roomContext) {
+        roomContext->changeMyName(newnickname.toStdString(), [this, newnickname](int errCode, const std::string&) {
+            m_invoker.execute([=]() {
+                if (errCode == 0) {
+                    m_meetingController->updateDisplayName(newnickname.toStdString());
+                }
+                emit modifyNicknameResult(errCode == 0);
+            });
+        });
     }
+}
+
+void MeetingManager::activeMainWindow() const {
+#if defined(Q_OS_MACX)
+    MacXHelpers helpers;
+    helpers.activeWindow(ShareManager::getInstance()->getMainWindow());
+#endif
 }
 
 void MeetingManager::onIdle() {
@@ -125,20 +178,22 @@ void MeetingManager::onConnected() {
     onRoomStatusChanged(NEMeeting::MEETING_CONNECTED);
 }
 
-void MeetingManager::onDisconnecting() {
-    // dononthing
-}
-
 void MeetingManager::onDisconnected(int reason) {
-    if (reason == kReasonLeaveBySelf || reason == kReasonCloseBySelf) {
+    if (reason == kNERoomEndReasonLeaveBySelf) {
         onRoomStatusChanged(NEMeeting::MEETING_ENDED, 0);
+    } else if (reason == kNERoomEndReasonCloseByMember) {
+        if (MembersManager::getInstance()->hostAccountId() == AuthManager::getInstance()->authAccountId()) {
+            onRoomStatusChanged(NEMeeting::MEETING_ENDED, 0);
+        } else {
+            onRoomStatusChanged(NEMeeting::MEETING_DISCONNECTED, reason);
+        }
     } else {
         onRoomStatusChanged(NEMeeting::MEETING_DISCONNECTED, reason);
     }
 }
 
 void MeetingManager::onConnectFail(int reason) {
-    onRoomStatusChanged(NEMeeting::MEETING_DISCONNECTED, reason);
+    onRoomStatusChanged(NEMeeting::MEETING_CONNECT_FAILED, reason);
 }
 
 void MeetingManager::onReConnecting() {
@@ -153,110 +208,72 @@ void MeetingManager::onReConnectFail() {
     onRoomStatusChanged(NEMeeting::MEETING_RECONNECT_FAILED);
 }
 
-void MeetingManager::activeMeetingWindow() {
-    if (!m_meetingService)
-        return;
-    if (m_meetingStatus != NEMeeting::MEETING_CONNECTED && m_meetingStatus != NEMeeting::MEETING_WAITING_VERIFY_PASSWORD)
+void MeetingManager::startJoinTimer() {
+    if (m_joinTimeoutTimer.isActive())
+        m_joinTimeoutTimer.stop();
+    m_joinTimeoutTimer.start(m_joinTimeout);
+}
+
+void MeetingManager::activeMeetingWindow(bool bRaise) {
+    if (m_meetingStatus != NEMeeting::MEETING_CONNECTED && m_meetingStatus != NEMeeting::MEETING_WAITING_VERIFY_PASSWORD &&
+        m_meetingStatus != NEMeeting::MEETING_RECONNECTED)
         return;
     YXLOG(Info) << "Active meeting window on top of others windows." << YXLOGEnd;
-    emit activeWindow();
+    emit activeWindow(bRaise);
 }
 
 bool MeetingManager::initialize() {
-    m_meetingService = GlobalManager::getInstance()->getRoomService();
-    if (m_meetingService == nullptr)
-        return false;
-    m_meetingService->addRoomLifeCycleListener(this);
-
-    m_inMeetingService = GlobalManager::getInstance()->getInRoomService();
-    if (m_inMeetingService == nullptr)
-        return false;
-
-    m_inMeetingServiceListener = new NEInRoomServiceListener;
-    m_inMeetingService->addListener(m_inMeetingServiceListener);
-
-    m_rtcRtcStatsEventListener = new NERtcStatsEventListener;
-    m_inMeetingService->addRtcStatsEventListener(m_rtcRtcStatsEventListener);
     return true;
 }
 
-void MeetingManager::release() {
-    if (!m_meetingService) {
-        return;
-    }
-    m_meetingService->removeRoomLifeCycleListener(this);
+void MeetingManager::release() {}
 
-    if (m_inMeetingServiceListener) {
-        delete m_inMeetingServiceListener;
-        m_inMeetingServiceListener = nullptr;
-        m_inMeetingService->removeListener(nullptr);
-    }
-
-    if (m_rtcRtcStatsEventListener) {
-        delete m_rtcRtcStatsEventListener;
-        m_rtcRtcStatsEventListener = nullptr;
-        m_inMeetingService->removeRtcStatsEventListener(nullptr);
-    }
+NERoomInfo MeetingManager::getMeetingInfo() const {
+    return m_meetingController->getRoomInfo();
 }
 
-INERoomInfo* MeetingManager::getMeetingInfo() {
-    return m_meetingService->getCurrentRoomInfo();
-}
-
-INEInRoomAudioController* MeetingManager::getInRoomAudioController() const {
-    if (m_inMeetingService)
-        return m_inMeetingService->getInRoomAudioController();
-
-    return nullptr;
-}
-
-INERoomUserController* MeetingManager::getUserController() const {
-    if (m_inMeetingService)
-        return m_inMeetingService->getInRoomUserController();
-
-    return nullptr;
-}
-
-INEInRoomVideoController* MeetingManager::getInRoomVideoController() const {
-    if (m_inMeetingService)
-        return m_inMeetingService->getInRoomVideoController();
-
-    return nullptr;
-}
-
-INEScreenShareController* MeetingManager::getScreenShareController() const {
-    if (m_inMeetingService)
-        return m_inMeetingService->getScreenShareController();
-
-    return nullptr;
-}
-
-INERoomLivingController* MeetingManager::getLivingController() const {
-    if (m_inMeetingService)
-        return m_inMeetingService->getInRoomLiveStreamController();
-
-    return nullptr;
+INERoomContext* MeetingManager::getRoomContext() {
+    return m_meetingController->getRoomContext();
 }
 
 INERoomWhiteboardController* MeetingManager::getWhiteboardController() const {
-    if (m_inMeetingService)
-        return m_inMeetingService->getWhiteboardController();
-
+    auto context = m_meetingController->getRoomContext();
+    if (context) {
+        return context->getWhiteboardController();
+    }
     return nullptr;
 }
 
-INEInRoomBeautyController* MeetingManager::getInRoomBeautyController() const {
-    if (m_inMeetingService)
-        return m_inMeetingService->getInRoomBeautyController();
-
-    return nullptr;
+std::shared_ptr<NEMeetingController> MeetingManager::getMeetingController() const {
+    return m_meetingController;
 }
 
 INERoomChatController* MeetingManager::getInRoomChatController() const {
-    if (m_inMeetingService)
-        return m_inMeetingService->getInRoomChatController();
-
+    auto context = m_meetingController->getRoomContext();
+    if (context) {
+        return context->getChatController();
+    }
     return nullptr;
+}
+
+INERoomRtcController* MeetingManager::getInRoomRtcController() const {
+    auto context = m_meetingController->getRoomContext();
+    if (context) {
+        return context->getRtcController();
+    }
+    return nullptr;
+}
+
+INERoomLiveController* MeetingManager::getLiveController() const {
+    auto context = m_meetingController->getRoomContext();
+    if (context) {
+        return context->getLiveController();
+    }
+    return nullptr;
+}
+
+std::shared_ptr<SubscribeHelper> MeetingManager::getSubscribeHelper() const {
+    return m_subscribeHelper;
 }
 
 void MeetingManager::setStartMeetingInfo(bool isCreate,
@@ -277,67 +294,126 @@ void MeetingManager::setStartMeetingInfo(bool isCreate,
 
 void MeetingManager::onRoomStatusChanged(NEMeeting::Status status, int errorCode) {
     m_invoker.execute([=]() {
+        bool bEnd = false;
         if (status == NEMeeting::MEETING_CONNECTED) {
+            if (m_joinTimeoutTimer.isActive())
+                m_joinTimeoutTimer.stop();
+
+            m_meetingController->initRoomInfo();
+            m_subscribeHelper->init();
+
             auto congigSvr = GlobalManager::getInstance()->getGlobalConfig();
-            bool beautySupport = false;
             if (congigSvr != nullptr) {
-                beautySupport = congigSvr->isBeautySupported();
+                bool beautySupport = congigSvr->isBeautySupported();
+                beautySupport = (beautySupport && SettingsManager::getInstance()->getEnableBeauty());
                 MoreItemManager::getInstance()->setBeautyVisible(beautySupport);
+                if (beautySupport) {
+                    SettingsManager::getInstance()->initFaceBeautyLevel();
+                }
+                SettingsManager::getInstance()->setEnableFaceBeauty(beautySupport);
             }
 
-            auto meetingInfo = m_meetingService->getCurrentRoomInfo();
-            if (meetingInfo != nullptr) {
-                auto beautyController = m_inMeetingService->getInRoomBeautyController();
+            auto meetingInfo = m_meetingController->getRoomInfo();
 
-                if(beautyController) {
-                    beautyController->enableBeauty(beautySupport && beautyController->getBeautyFaceValue() > 0);
-                }
-
-                setMeetingUniqueId(QString::fromStdString(meetingInfo->getRoomUniqueId()));
-                setMeetingId(QString::fromStdString(meetingInfo->getRoomId()));
-                setShortMeetingId(QString::fromStdString(meetingInfo->getShortRoomId()));
-                setMeetingTopic(QString::fromStdString(meetingInfo->getSubject()));
-                setMeetingPassword(QString::fromStdString(meetingInfo->getPassword()));
-                setMeetingSIPChannelId(QString::fromStdString(meetingInfo->getSIPId()));
-                MembersManager::getInstance()->setHostAccountId(
-                    QString::fromStdString(meetingInfo->getHostUserId()));  //主持人设置提前，避免设置静音等逻辑出现找不到主持人的异常
-                setMeetingMuted(meetingInfo->getAudioAllMute());
-                setMeetingAllowSelfAudioOn(m_inMeetingService->isParticipantsUnmuteSelfAllowed());
-                setNickname(QString::fromStdString(m_inMeetingService->getMyUserInfo()->getDisplayName()));
-                setMeetingSchdeuleStarttime(meetingInfo->getSheduleStartTime());
-                setMeetingSchdeuleEndtime(meetingInfo->getSheduleEndTime());
-                setMeetingLocked(meetingInfo->getLocked());
-                auto recordController = m_inMeetingService->getInRoomRecordController();
-                if (nullptr != recordController) {
-                    setEnableRecord(recordController->isCloudRecordEnabled());
-                }
-
-                if (meetingInfo->getLiveStreamInfo().enable) {
-                    LiveManager::getInstance()->initLiveStreamStatus(meetingInfo->getLiveStreamInfo().state);
-                }
-                ChatManager::getInstance()->setChatRoomOpen(true);
-                VideoManager::getInstance()->setFocusAccountId(QString::fromStdString(meetingInfo->getPinnedUserId()));
-                ShareManager::getInstance()->setShareAccountId(QString::fromStdString(meetingInfo->getScreenSharingUserId()));
-                ShareManager::getInstance()->setPaused(false);
-                WhiteboardManager::getInstance()->onWhiteboardInitStatus();
+            if (m_showMeetingRemainingTip) {
+                setRemainingSeconds(meetingInfo.remainingSeconds);
+                m_remainingTipTimer.start();
             }
+
+            setMeetingUniqueId(QString::fromStdString(meetingInfo.roomUniqueId));
+            setMeetingId(QString::fromStdString(meetingInfo.roomId));
+            setShortMeetingId(QString::fromStdString(meetingInfo.shortRoomId));
+            setMeetingTopic(QString::fromStdString(meetingInfo.subject));
+            setMeetingPassword(QString::fromStdString(meetingInfo.password));
+            setMeetingSIPChannelId(QString::fromStdString(meetingInfo.sipId));
+            MoreItemManager::getInstance()->setSipInviteVisible(!meetingInfo.sipId.empty());
+            setMeetingMuted(meetingInfo.audioAllMute);
+            setMeetingVideoMuted(meetingInfo.videoAllmute);
+
+            bool isHost = m_meetingController->getRoomContext()->getLocalMember()->getUserRole().name == "host";
+            bool isManager = m_meetingController->getRoomContext()->getLocalMember()->getUserRole().name == "cohost";
+
+            if (!isHost && !isManager && meetingInfo.audioAllMute) {
+                AudioManager::getInstance()->onUserAudioStatusChanged(AuthManager::getInstance()->authAccountId().toStdString(),
+                                                                      NEMeeting::DEVICE_DISABLED_BY_HOST);
+            }
+
+            if (!isHost && !isManager && meetingInfo.videoAllmute) {
+                VideoManager::getInstance()->onUserVideoStatusChanged(AuthManager::getInstance()->authAccountId().toStdString(),
+                                                                      NEMeeting::DEVICE_DISABLED_BY_HOST);
+            }
+
+            MembersManager::getInstance()->initMemberList(m_meetingController->getRoomContext()->getLocalMember(),
+                                                          m_meetingController->getRoomContext()->getRemoteMembers());
+            setMeetingAllowSelfAudioOn(meetingInfo.allowSelfAudioOn);
+            setMeetingAllowSelfVideoOn(meetingInfo.allowSelfVideoOn);
+            setNickname(QString::fromStdString(meetingInfo.displayName));
+            setMeetingSchdeuleStarttime(meetingInfo.scheduleTimeBegin);
+            setMeetingSchdeuleEndtime(meetingInfo.scheduleTimeEnd);
+            setMeetingLocked(meetingInfo.lock);
+            ChatManager::getInstance()->setChatRoomOpen(meetingInfo.isOpenChatroom);
+            VideoManager::getInstance()->setFocusAccountId(QString::fromStdString(meetingInfo.focusAccountId));
+            ShareManager::getInstance()->setPaused(false);
+            WhiteboardManager::getInstance()->initWhiteboardStatus();
+            setMaxCount(QString::fromStdString(meetingInfo.extraData));
+            DeviceManager::getInstance()->startVolumeIndication();
+            InviteManager::getInstance()->getInviteList();
+            LiveManager::getInstance()->initLiveStreamStatus();
+
+            onRoomStartTimeChanged(m_meetingController->getRoomContext()->getRtcStartTime());
+
+            //            auto recordController = m_inMeetingService->getInRoomRecordController();
+            //            if (nullptr != recordController) {
+            //                setEnableRecord(recordController->isCloudRecordEnabled());
+            //            }
+
+            auto previewRoomContext = GlobalManager::getInstance()->getPreviewRoomContext();
+            if (previewRoomContext) {
+                previewRoomContext->removePreviewRoomListener(m_meetingController->getRoomServiceListener());
+            }
+
+            QTimer::singleShot(100, [=]() {
+                if (!m_noVideo) {
+                    if (isHost || isManager || !meetingInfo.videoAllmute) {
+                        VideoManager::getInstance()->disableLocalVideo(false);
+                    }
+                }
+
+                if (!m_noAudio) {
+                    if (isHost || isManager || !meetingInfo.audioAllMute) {
+                        AudioManager::getInstance()->muteLocalAudio(false);
+                    }
+                }
+            });
+        } else if (status == NEMeeting::MEETING_RECONNECTED) {
         } else if (status == NEMeeting::MEETING_PREPARED) {
+            AudioManager::getInstance()->userSpeakerChanged("");
             DeviceManager::getInstance()->getCaptureDevices();
             DeviceManager::getInstance()->getPlayoutDevices();
             DeviceManager::getInstance()->getRecordDevices();
         } else if (status == NEMeeting::MEETING_ENDED || status == NEMeeting::MEETING_DISCONNECTED || status == NEMeeting::MEETING_CONNECT_FAILED) {
-            auto beautyController = m_inMeetingService->getInRoomBeautyController();
-            if (nullptr != beautyController) {
-                beautyController->enableBeauty(false);
-            }
+            if (m_joinTimeoutTimer.isActive())
+                m_joinTimeoutTimer.stop();
 
+            if (m_remainingTipTimer.isActive())
+                m_remainingTipTimer.stop();
+
+            m_subscribeHelper->reset();
+
+            bEnd = true;
+            m_meetingStatus = status;
+            emit meetingStatusChanged(m_meetingStatus, errorCode, "");
+            emit roomStatusChanged(m_meetingStatus);
+            m_nMaxCount = -1;
             setMeetingUniqueId("");
             setMeetingId("");
             setMeetingTopic("");
             setMeetingPassword("");
             setMeetingMuted(false);
+            setMeetingVideoMuted(false);
             setMeetingLocked(false);
             setMeetingAllowSelfAudioOn(false);
+            setMeetingAllowSelfVideoOn(false);
             setMeetingDuration(0);
             setMeetingSchdeuleStarttime(0);
             setMeetingSchdeuleEndtime(0);
@@ -348,15 +424,60 @@ void MeetingManager::onRoomStatusChanged(NEMeeting::Status status, int errorCode
             VideoManager::getInstance()->setFocusAccountId("");
             ShareManager::getInstance()->setShareAccountId("");
             ShareManager::getInstance()->setPaused(false);
-            AudioManager::getInstance()->setHandsUpStatus(false);
-            auto authInfo = AuthManager::getInstance()->getAuthInfo();
-            if (authInfo == nullptr) {
-                YXLOG(Info) << "Reset device info after finished meeting." << YXLOGEnd;
-                DeviceManager::getInstance()->resetDevicesInfo();
+            ShareManager::getInstance()->stopScreenSharing();
+            MembersManager::getInstance()->setHandsUpStatus(false);
+            MembersManager::getInstance()->setHandsUpCount(0);
+            MembersManager::getInstance()->setIsManagerRole(false);
+            MembersManager::getInstance()->resetManagerList();
+            DeviceManager::getInstance()->stopVolumeIndication();
+            VideoManager::getInstance()->setLocalVideoStatus(2);
+            AudioManager::getInstance()->onUserAudioStatusChanged(AuthManager::getInstance()->authAccountId().toStdString(),
+                                                                  NEMeeting::DEVICE_DISABLED_BY_DELF);
+            AudioManager::getInstance()->onActiveSpeakerChanged("", "");
+            LiveManager::getInstance()->initLiveStreamStatus();
+
+            if (FeedbackManager::getInstance()->isAudioDumping()) {
+                FeedbackManager::getInstance()->stopAudioDump();
+            }
+            auto previewRoomContext = GlobalManager::getInstance()->getPreviewRoomContext();
+            if (previewRoomContext && getMeetingController()) {
+                previewRoomContext->addPreviewRoomListener(getMeetingController()->getRoomServiceListener());
+            }
+            m_meetingController->resetRoomContext();
+        }
+
+        QString errorMessage;
+        if (status == NEMeeting::MEETING_CONNECT_FAILED) {
+            //            switch (errorCode) {
+            //                case kReasonRoomNotExist:
+            //                    errorMessage = "kReasonRoomNotExist";
+            //                    break;
+            //                case kReasonSyncDataError:
+            //                    errorMessage = "kReasonSyncDataError";
+            //                    break;
+            //                case kReasonRtcInitError:
+            //                    errorMessage = "kReasonRtcInitError";
+            //                    break;
+            //                case kReasonJoinChannelError:
+            //                    errorMessage = "kReasonJoinChannelError";
+            //                    break;
+            //                default:
+            //                    break;
+            //            }
+        }
+        if (!bEnd) {
+            m_meetingStatus = status;
+            emit meetingStatusChanged(m_meetingStatus, errorCode, errorMessage);
+            emit roomStatusChanged(m_meetingStatus);
+            if (status == NEMeeting::MEETING_CONNECTED) {
+                ShareManager::getInstance()->setShareAccountId(QString::fromStdString(m_meetingController->getRoomInfo().screenSharingUserId));
             }
         }
-        emit meetingStatusChanged(status, errorCode);
-        m_meetingStatus = status;
+
+        if (status == NEMeeting::MEETING_ENDED || status == NEMeeting::MEETING_CONNECT_FAILED || status == NEMeeting::MEETING_DISCONNECTED) {
+            m_meetingStatus = NEMeeting::MEETING_IDLE;
+            emit meetingStatusChanged(NEMeeting::MEETING_IDLE, 0);
+        }
     });
 }
 
@@ -371,17 +492,21 @@ void MeetingManager::onRoomMuteStatusChanged(bool muted) {
     m_invoker.execute([=]() { setMeetingMuted(muted); });
 }
 
-void MeetingManager::onRoomMuteNeedHandsUpChanged(bool bNeedHandsUp) {
-    m_invoker.execute([=]() { setMeetingAllowSelfAudioOn(bNeedHandsUp); });
+void MeetingManager::onRoomMuteAllVideoStatusChanged(bool muted) {
+    m_invoker.execute([=]() { setMeetingVideoMuted(muted); });
 }
 
-void MeetingManager::onRoomDurationChanged(const uint64_t& duration) {
-    m_invoker.execute([=]() { m_uMeetingDurationEx = duration; });
+void MeetingManager::onRoomMuteNeedHandsUpChanged(bool bNeedHandsUp) {
+    m_invoker.execute([=]() { setMeetingAllowSelfAudioOn(!bNeedHandsUp); });
+}
+
+void MeetingManager::onRoomMuteVideoNeedHandsUpChanged(bool bNeedHandsUp) {
+    m_invoker.execute([=]() { setMeetingAllowSelfVideoOn(!bNeedHandsUp); });
 }
 
 void MeetingManager::onRoomStartTimeChanged(uint64_t startTime) {
     m_invoker.execute([=]() {
-        m_uMeetingStartTime = startTime;
+        m_uMeetingStartTime = startTime / 1000;
         if (!m_durationTimer.isActive()) {
             m_durationTimer.start();
         }
@@ -389,7 +514,13 @@ void MeetingManager::onRoomStartTimeChanged(uint64_t startTime) {
 }
 
 void MeetingManager::onError(uint32_t errorCode, const std::string& errorMessage) {
-    m_invoker.execute([=]() { emit error(errorCode, QString::fromStdString(errorMessage)); });
+    m_invoker.execute([=]() {
+        QString qstrErrorMessage = QString::fromStdString(errorMessage);
+        if (errorMessage == "kFailed_connect_server") {
+            qstrErrorMessage = tr("Failed to connect to server, please try agine.");
+        }
+        emit error(errorCode, qstrErrorMessage);
+    });
 }
 
 QString MeetingManager::meetingUniqueId() const {
@@ -402,12 +533,19 @@ void MeetingManager::setMeetingUniqueId(const QString& meetingUniqueId) {
 }
 
 void MeetingManager::lockMeeting(bool lock) {
-    m_inMeetingService->lockRoom(lock);
+    auto roomContext = m_meetingController->getRoomContext();
+    if (roomContext) {
+        if (lock) {
+            roomContext->lockRoom({});
+        } else {
+            roomContext->unlockRoom({});
+        }
+    }
 }
 
-void MeetingManager::leaveMeeting(bool finish) {
-    YXLOG(Info) << "leaveMeeting, finish =" << finish << YXLOGEnd;
-    m_meetingService->leaveCurrentRoom(finish);
+void MeetingManager::leaveMeeting(bool finish, const neroom::NECallback<>& callback) {
+    YXLOG(Info) << "leaveMeeting, finish: " << finish << YXLOGEnd;
+    m_meetingController->leaveCurrentRoom(finish, callback);
 }
 
 bool MeetingManager::isInMeeting() {
@@ -477,6 +615,15 @@ void MeetingManager::setMeetingAllowSelfAudioOn(bool bHandsUp) {
     emit meetingAllowSelfAudioOnChanged();
 }
 
+bool MeetingManager::meetingAllowSelfVideoOn() const {
+    return m_meetingAllowSelfVideoOn;
+}
+
+void MeetingManager::setMeetingAllowSelfVideoOn(bool bHandsUp) {
+    m_meetingAllowSelfVideoOn = bHandsUp;
+    emit meetingAllowSelfVideoOnChanged();
+}
+
 QString MeetingManager::meetingPassword() const {
     return m_meetingPassword;
 }
@@ -504,6 +651,42 @@ void MeetingManager::setHideChatroom(bool hideChatroom) {
     emit hideChatroomChanged();
 }
 
+bool MeetingManager::hideMuteAllVideo() const {
+    return m_hideMuteAllVideo;
+}
+
+void MeetingManager::setHideMuteAllVideo(bool hideMuteAllVideo) {
+    m_hideMuteAllVideo = hideMuteAllVideo;
+    emit hideMuteAllVideoChanged();
+}
+
+bool MeetingManager::hideMuteAllAudio() const {
+    return m_hideMuteAllAudio;
+}
+
+void MeetingManager::setHideMuteAllAudio(bool hideMuteAllAudio) {
+    m_hideMuteAllAudio = hideMuteAllAudio;
+    emit hideMuteAllAudioChanged();
+}
+
+bool MeetingManager::enableFileMessage() const {
+    return m_enableFileMessage;
+}
+
+void MeetingManager::setEnableFileMessage(bool enableFileMessage) {
+    m_enableFileMessage = enableFileMessage;
+    emit enableFileMessageChanged();
+}
+
+bool MeetingManager::enableImageMessage() const {
+    return m_enableImageMessage;
+}
+
+void MeetingManager::setEnableImageMessage(bool enableImageMessage) {
+    m_enableImageMessage = enableImageMessage;
+    emit enableImageMessageChanged();
+}
+
 bool MeetingManager::hideInvitation() const {
     return m_hideInvitation;
 }
@@ -516,6 +699,7 @@ void MeetingManager::setHideInvitation(bool hideInvitation) {
 bool MeetingManager::hideScreenShare() const {
     return m_hideScreenShare;
 }
+
 void MeetingManager::setHideScreenShare(bool hideScreenShare) {
     if (hideScreenShare != m_hideScreenShare) {
         m_hideScreenShare = hideScreenShare;
@@ -526,6 +710,7 @@ void MeetingManager::setHideScreenShare(bool hideScreenShare) {
 bool MeetingManager::hideView() const {
     return m_hideView;
 }
+
 void MeetingManager::setHideView(bool hideView) {
     if (hideView != m_hideView) {
         m_hideView = hideView;
@@ -572,15 +757,26 @@ void MeetingManager::setMeetingDuration(qint64 /*duration*/) {
 
         m_uMeetingDuration = 0;
         emit meetingDurationChanged();
-        m_uMeetingDurationEx = 0;
         m_uMeetingStartTime = 0;
     }
 }
 
+bool MeetingManager::showMemberTag() const {
+    return m_bshowMemberTag;
+}
+
+void MeetingManager::setShowMemberTag(bool showMemberTag) {
+    m_bshowMemberTag = showMemberTag;
+    emit showMemberTagChanged();
+}
+
 QString MeetingManager::nickname() const {
-    if (m_meetingService && m_meetingService->getCurrentRoomInfo()) {
-        return QString::fromStdString(m_inMeetingService->getMyUserInfo()->getDisplayName());
-    }
+    //    if (m_meetingService && m_meetingService->getCurrentRoomInfo()) {
+    //        auto myUserInfo = m_inMeetingService->getMyUserInfo();
+    //        if (myUserInfo) {
+    //            return QString::fromStdString(myUserInfo->getDisplayName());
+    //        }
+    //    }
     return "";
 }
 
@@ -605,6 +801,7 @@ bool MeetingManager::meetingLocked() const {
 void MeetingManager::setMeetingLocked(bool meetingLocked) {
     if (m_meetingLocked != meetingLocked) {
         m_meetingLocked = meetingLocked;
+        m_meetingController->updateIsLock(meetingLocked);
         emit meetingLockedChanged();
     }
 }
@@ -614,7 +811,7 @@ bool MeetingManager::meetingMuted() const {
 }
 
 void MeetingManager::setMeetingMuted(bool meetingMuted) {
-    if(meetingMuted) {
+    if (meetingMuted) {
         m_meetingMuteCount++;
     } else {
         m_meetingMuteCount = 0;
@@ -624,6 +821,18 @@ void MeetingManager::setMeetingMuted(bool meetingMuted) {
         m_meetingMuted = meetingMuted;
         emit muteStatusNotify(meetingMuted);
         emit meetingMutedChanged();
+    }
+}
+
+bool MeetingManager::meetingVideoMuted() const {
+    return m_meetingVideoMuted;
+}
+
+void MeetingManager::setMeetingVideoMuted(bool mute) {
+    if (m_meetingVideoMuted != mute) {
+        m_meetingVideoMuted = mute;
+        emit muteStatusNotify(mute, false);
+        emit meetingVideoMutedChanged();
     }
 }
 
@@ -646,4 +855,51 @@ QString MeetingManager::shortMeetingId() const {
 void MeetingManager::setShortMeetingId(const QString& meetingId) {
     m_shortMeetingId = meetingId;
     emit shortMeetingIdChanged();
+}
+
+int MeetingManager::joinTimeout() const {
+    return m_joinTimeout;
+}
+
+void MeetingManager::setJoinTimeout(int joinTimeout) {
+    if (m_joinTimeout != joinTimeout) {
+        m_joinTimeout = joinTimeout;
+        emit joinTimeoutChanged(m_joinTimeout);
+    }
+}
+
+bool MeetingManager::hideSip() const {
+    return m_hideSip;
+}
+
+void MeetingManager::setHideSip(bool hideSip) {
+    if (hideSip != m_hideSip) {
+        m_hideSip = hideSip;
+    }
+}
+
+int MeetingManager::maxCount() const {
+    return m_nMaxCount;
+}
+
+void MeetingManager::setRemainingSeconds(qint64 remainingSeconds) {
+    m_uRemainingSeconds = remainingSeconds;
+    emit remainingSecondsChanged();
+}
+
+void MeetingManager::setMaxCount(const QString& extraData) {
+    YXLOG(Info) << "setMaxCount, extraData:" << extraData.toStdString() << YXLOGEnd;
+    QJsonParseError err;
+    QJsonDocument doc = QJsonDocument::fromJson(extraData.toUtf8(), &err);
+    if (err.error != QJsonParseError::NoError)
+        return;
+
+    QJsonObject obj = doc.object();
+    if (obj.contains("maxCount")) {
+        int temp = obj["maxCount"].toInt();
+        if (temp > 0) {
+            m_nMaxCount = temp;
+            YXLOG(Info) << "setMaxCount, m_nMaxCount:" << m_nMaxCount << YXLOGEnd;
+        }
+    }
 }

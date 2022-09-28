@@ -29,6 +29,7 @@ ToolButton {
         width: 14
         height: 14
         anchors.centerIn: parent
+        mipmap: true
         source: direction === CustomToolButton.Direction.Left
                 ? "qrc:/qml/images/public/button/btn_left_white.svg"
                 : "qrc:/qml/images/public/button/btn_right_white.svg"

@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "nem_hosting_module/service/meeting_service.h"
 #include "nem_hosting_module_protocol/protocol/meeting_protocol.h"
@@ -36,6 +35,15 @@ void NEMeetingServiceIMP::joinMeeting(const NEJoinMeetingParams& param, const NE
     }));
 }
 
+void NEMeetingServiceIMP::anonymousJoinMeeting(const NEJoinMeetingParams& param, const NEJoinMeetingOptions& opts, const NEJoinMeetingCallback& cb) {
+    PostTaskToProcThread(ToWeakCallback([this, param, opts, cb]() {
+        JoinRequest request;
+        request.param_ = param;
+        request.options_ = opts;
+        SendData(MettingCID::MettingCID_AnonymousJoin, request, IPCAsyncResponseCallback(cb));
+    }));
+}
+
 void NEMeetingServiceIMP::leaveMeeting(bool finish, const NELeaveMeetingCallback& cb) {
     /*if (meeting_status_ != MEETING_STATUS_INMEETING)
     {
@@ -43,8 +51,9 @@ void NEMeetingServiceIMP::leaveMeeting(bool finish, const NELeaveMeetingCallback
         return;
     }*/
 
-    PostTaskToProcThread(ToWeakCallback([this, cb]() {
+    PostTaskToProcThread(ToWeakCallback([this, finish, cb]() {
         LeaveMeetingRequest request;
+        request.finish_ = finish;
         SendData(MettingCID::MeetingCID_Leave, request, IPCAsyncResponseCallback(cb));
     }));
 }
@@ -84,9 +93,7 @@ void NEMeetingServiceIMP::subscribeRemoteAudioStream(const std::string& accountI
         SendData(MettingCID::MettingCID_SubscribeAudioStream, request, IPCAsyncResponseCallback(cb));
     }));
 }
-void NEMeetingServiceIMP::subscribeRemoteAudioStreams(const std::vector<std::string>& accountIdList,
-                                                           bool subscribe,
-                                                           const NEEmptyCallback& cb) {
+void NEMeetingServiceIMP::subscribeRemoteAudioStreams(const std::vector<std::string>& accountIdList, bool subscribe, const NEEmptyCallback& cb) {
     PostTaskToProcThread(ToWeakCallback([this, accountIdList, subscribe, cb]() {
         SubscribeAudioStreamsRequest request;
         request.accountIdList_ = accountIdList;
@@ -121,6 +128,14 @@ void NEMeetingServiceIMP::OnPack(int cid, const std::string& data, const IPCAsyn
             if (join_cb != nullptr)
                 join_cb(response.error_code_, response.error_msg_);
         } break;
+        case MettingCID::MettingCID_AnonymousJoin_CB: {
+            JoinResponse response;
+            if (!response.Parse(data))
+                response.error_code_ = NEErrorCode::ERROR_CODE_FAILED;
+            NEJoinMeetingCallback join_cb = cb.GetResponseCallback<NEJoinMeetingCallback>();
+            if (join_cb != nullptr)
+                join_cb(response.error_code_, response.error_msg_);
+        } break;
         case MettingCID::MeetingCID_Leave_CB: {
             LeaveMeetingResponse response;
             if (!response.Parse(data))
@@ -145,17 +160,7 @@ void NEMeetingServiceIMP::OnPack(int cid, const std::string& data, const IPCAsyn
             if (get_preset_menu_items_cb)
                 get_preset_menu_items_cb(response.error_code_, response.error_msg_, response.menu_items_);
         } break;
-        case MettingCID::MettingCID_SubscribeAudioStream_CB:
-            {
-                NEMIPCProtocolErrorInfoBody response;
-            if (!response.Parse(data))
-                response.error_code_ = NEErrorCode::ERROR_CODE_FAILED;
-            NEEmptyCallback cb_ = cb.GetResponseCallback<NEEmptyCallback>();
-            if (cb_ != nullptr)
-                cb_(response.error_code_, response.error_msg_);
-        } break;
-        case MettingCID::MettingCID_SubscribeAudioStreams_CB:
-            {
+        case MettingCID::MettingCID_SubscribeAudioStream_CB: {
             NEMIPCProtocolErrorInfoBody response;
             if (!response.Parse(data))
                 response.error_code_ = NEErrorCode::ERROR_CODE_FAILED;
@@ -163,8 +168,15 @@ void NEMeetingServiceIMP::OnPack(int cid, const std::string& data, const IPCAsyn
             if (cb_ != nullptr)
                 cb_(response.error_code_, response.error_msg_);
         } break;
-        case MettingCID::MettingCID_SubscribeAllAudioStreams_CB:
-            {
+        case MettingCID::MettingCID_SubscribeAudioStreams_CB: {
+            NEMIPCProtocolErrorInfoBody response;
+            if (!response.Parse(data))
+                response.error_code_ = NEErrorCode::ERROR_CODE_FAILED;
+            NEEmptyCallback cb_ = cb.GetResponseCallback<NEEmptyCallback>();
+            if (cb_ != nullptr)
+                cb_(response.error_code_, response.error_msg_);
+        } break;
+        case MettingCID::MettingCID_SubscribeAllAudioStreams_CB: {
             NEMIPCProtocolErrorInfoBody response;
             if (!response.Parse(data))
                 response.error_code_ = NEErrorCode::ERROR_CODE_FAILED;

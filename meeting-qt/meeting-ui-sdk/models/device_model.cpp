@@ -1,18 +1,14 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "device_model.h"
 #include <QDebug>
 
-DeviceModel::DeviceModel(QObject *parent)
-    : QAbstractListModel(parent)
-{
-}
+DeviceModel::DeviceModel(QObject* parent)
+    : QAbstractListModel(parent) {}
 
-int DeviceModel::rowCount(const QModelIndex &parent) const
-{
+int DeviceModel::rowCount(const QModelIndex& parent) const {
     // For list models only the root node (an invalid parent) should return the list's size. For all
     // other (valid) parents, rowCount() should return 0 so that it does not become a tree model.
     if (parent.isValid() || !m_manager)
@@ -33,8 +29,7 @@ int DeviceModel::rowCount(const QModelIndex &parent) const
     return devices.size();
 }
 
-QVariant DeviceModel::data(const QModelIndex &index, int role) const
-{
+QVariant DeviceModel::data(const QModelIndex& index, int role) const {
     if (!index.isValid() || !m_manager)
         return QVariant();
 
@@ -55,23 +50,22 @@ QVariant DeviceModel::data(const QModelIndex &index, int role) const
     auto device = devices.at(index.row());
 
     switch (role) {
-    case kDeviceName:
-        return QVariant(device.deviceName);
-    case kDevicePath:
-        return QVariant(device.devicePath);
-    case kDeviceDefault:
-        return QVariant(device.defaultDevice);
-    case kDeviceSelected:
-        return QVariant(device.selectedDevice);
-    case kDeviceUnavailable:
-        return QVariant(device.unavailable);
+        case kDeviceName:
+            return QVariant(device.deviceName);
+        case kDevicePath:
+            return QVariant(device.devicePath);
+        case kDeviceDefault:
+            return QVariant(device.defaultDevice);
+        case kDeviceSelected:
+            return QVariant(device.selectedDevice);
+        case kDeviceUnavailable:
+            return QVariant(device.unavailable);
     }
 
     return QVariant();
 }
 
-bool DeviceModel::insertRows(int row, int count, const QModelIndex &parent)
-{
+bool DeviceModel::insertRows(int row, int count, const QModelIndex& parent) {
     beginInsertRows(parent, row, row + count - 1);
     // FIXME: Implement me!
     endInsertRows();
@@ -79,8 +73,7 @@ bool DeviceModel::insertRows(int row, int count, const QModelIndex &parent)
     return true;
 }
 
-bool DeviceModel::removeRows(int row, int count, const QModelIndex &parent)
-{
+bool DeviceModel::removeRows(int row, int count, const QModelIndex& parent) {
     beginRemoveRows(parent, row, row + count - 1);
     // FIXME: Implement me!
     endRemoveRows();
@@ -88,8 +81,7 @@ bool DeviceModel::removeRows(int row, int count, const QModelIndex &parent)
     return true;
 }
 
-QHash<int, QByteArray> DeviceModel::roleNames() const
-{
+QHash<int, QByteArray> DeviceModel::roleNames() const {
     QHash<int, QByteArray> names;
     names[kDeviceName] = "deviceName";
     names[kDevicePath] = "devicePath";
@@ -99,23 +91,19 @@ QHash<int, QByteArray> DeviceModel::roleNames() const
     return names;
 }
 
-int DeviceModel::deviceType() const
-{
+int DeviceModel::deviceType() const {
     return m_deviceType;
 }
 
-void DeviceModel::setDeviceType(int deviceType)
-{
+void DeviceModel::setDeviceType(int deviceType) {
     m_deviceType = deviceType;
 }
 
-DeviceManager *DeviceModel::manager() const
-{
+DeviceManager* DeviceModel::manager() const {
     return m_manager;
 }
 
-void DeviceModel::setManager(DeviceManager *deviceManager)
-{
+void DeviceModel::setManager(DeviceManager* deviceManager) {
     beginResetModel();
 
     if (m_manager)

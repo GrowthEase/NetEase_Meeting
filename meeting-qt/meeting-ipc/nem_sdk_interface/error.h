@@ -1,4 +1,8 @@
-﻿/**
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+
+/**
  * @file error.h
  * @brief 错误码头文件
  * @copyright (c) 2014-2021, NetEase Inc. All rights reserved
@@ -16,8 +20,7 @@ NNEM_SDK_INTERFACE_BEGIN_DECLS
 /**
  * @brief 错误枚举
  */
-enum NEErrorCode
-{
+enum NEErrorCode {
     /**
      * 对应接口调用成功
      */
@@ -85,7 +88,7 @@ enum NEErrorCode
      */
     ERROR_CODE_SDK_UNINITIALIZE = -100002,
 
-	/**
+    /**
      * 接口调用失败，原因为不支持该服务
      */
     ERROR_CODE_SDK_SERVICE_NOTSUPPORT = -100003,
@@ -93,4 +96,4 @@ enum NEErrorCode
 
 NNEM_SDK_INTERFACE_END_DECLS
 
-#endif //NEM_SDK_INTERFACE_DEFINE_ERROR_H_
+#endif  // NEM_SDK_INTERFACE_DEFINE_ERROR_H_

@@ -1,12 +1,11 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "meeting_sdk_prochandler.h"
+#include "hosting_module_client.h"
 #include "manager/global_manager.h"
 #include "manager/meeting_manager.h"
-#include "hosting_module_client.h"
 #include "version.h"
 
 extern HostingModuleClient ipcClient;
@@ -15,12 +14,11 @@ NEMeetingSDKProcHandlerIMP::NEMeetingSDKProcHandlerIMP(QObject* parent /* = null
     , sdk_init_callback_(nullptr)
     , init_local_enviroment_cb_(nullptr) {}
 
-void NEMeetingSDKProcHandlerIMP::onInitialize(const NS_I_NEM_SDK::NEMeetingSDKConfig& config,
-                                              const NS_I_NEM_SDK::NEMeetingSDK::NEInitializeCallback& cb) {
+void NEMeetingSDKProcHandlerIMP::onInitialize(const NS_I_NEM_SDK::NEMeetingKitConfig& config,
+                                              const NS_I_NEM_SDK::NEMeetingKit::NEInitializeCallback& cb) {
     YXLOG_API(Info) << "Received initialize request, organization name: " << config.getAppInfo()->OrganizationName()
-              << ", application name: " << config.getAppInfo()->ApplicationName()
-              << ", application display name: " << config.getAppInfo()->ProductName()
-              << YXLOGEnd;
+                    << ", application name: " << config.getAppInfo()->ApplicationName()
+                    << ", application display name: " << config.getAppInfo()->ProductName() << YXLOGEnd;
 
     if (g_bInitialized) {
         ipcClient.WriteLog("g_bInitialized has inited.");
@@ -33,10 +31,10 @@ void NEMeetingSDKProcHandlerIMP::onInitialize(const NS_I_NEM_SDK::NEMeetingSDKCo
 
     QString logPath = QString::fromStdString(config.getLoggerConfig()->LoggerPath());
     if (!logPath.isEmpty()) {
-        logPath.append("/UI");
+        logPath.append("/app/ui");
         QDir logDir;
         if (!logDir.exists(logPath)) {
-            if(!logDir.mkpath(logPath)) {
+            if (!logDir.mkpath(logPath)) {
                 ipcClient.WriteLog(QString("mkpath ").append(logPath).append(" failed!"));
                 ipcClient.WriteLog("onInitialize init end.");
                 if (cb) {
@@ -44,7 +42,7 @@ void NEMeetingSDKProcHandlerIMP::onInitialize(const NS_I_NEM_SDK::NEMeetingSDKCo
                 }
                 return;
             } else {
-                logDir.setPath(logPath.remove("/UI"));
+                logDir.setPath(logPath.remove("/app/ui"));
                 logPath = logDir.canonicalPath();
                 config.getLoggerConfig()->LoggerPath(logPath.toStdString());
             }
@@ -68,12 +66,12 @@ void NEMeetingSDKProcHandlerIMP::onInitialize(const NS_I_NEM_SDK::NEMeetingSDKCo
     ipcClient.WriteLog("onInitialize init end.");
 }
 
-void NEMeetingSDKProcHandlerIMP::onUnInitialize(const NS_I_NEM_SDK::NEMeetingSDK::NEUnInitializeCallback& cb) {
+void NEMeetingSDKProcHandlerIMP::onUnInitialize(const NS_I_NEM_SDK::NEMeetingKit::NEUnInitializeCallback& cb) {
     YXLOG_API(Info) << "Received uninitialize request, post exit to application event loop." << YXLOGEnd;
     if (cb) {
         cb(NS_I_NEM_SDK::ERROR_CODE_SUCCESS, "");
     }
-    if (AuthManager::getInstance()->getAuthInfo() != nullptr) {
+    if (AuthManager::getInstance()->getAuthStatus() == kAuthLoginSuccessed) {
         YXLOG(Info) << "GetAuthInfo is not nullptr." << YXLOGEnd;
         AuthManager::getInstance()->doLogout(true);
     } else {
@@ -81,16 +79,16 @@ void NEMeetingSDKProcHandlerIMP::onUnInitialize(const NS_I_NEM_SDK::NEMeetingSDK
     }
 }
 
-void NEMeetingSDKProcHandlerIMP::onQuerySDKVersion(const NS_I_NEM_SDK::NEMeetingSDK::NEQuerySDKVersionCallback& cb) {
+void NEMeetingSDKProcHandlerIMP::onQuerySDKVersion(const NS_I_NEM_SDK::NEMeetingKit::NEQueryKitVersionCallback& cb) {
     YXLOG_API(Info) << "Received query sdk version request." << YXLOGEnd;
     if (cb) {
         cb(NS_I_NEM_SDK::ERROR_CODE_SUCCESS, "", APPLICATION_VERSION);
     }
 }
 
-void NEMeetingSDKProcHandlerIMP::onActiveWindow(const NS_I_NEM_SDK::NEMeetingSDK::NEActiveWindowCallback& cb) {
-    YXLOG_API(Info) << "Received active window request." << YXLOGEnd;
-    MeetingManager::getInstance()->activeMeetingWindow();
+void NEMeetingSDKProcHandlerIMP::onActiveWindow(bool bRaise, const NS_I_NEM_SDK::NEMeetingKit::NEActiveWindowCallback& cb) {
+    YXLOG_API(Info) << "Received active window request, bRaise: " << bRaise << YXLOGEnd;
+    MeetingManager::getInstance()->activeMeetingWindow(bRaise);
     if (cb)
         cb(NS_I_NEM_SDK::ERROR_CODE_SUCCESS, "");
 }
@@ -107,6 +105,6 @@ void NEMeetingSDKProcHandlerIMP::onInitLocalEnviroment(bool success) {
         sdk_init_callback_(success);
 }
 
-nem_sdk_interface::NEMeetingSDKConfig NEMeetingSDKProcHandlerIMP::getSDKConfig() const {
+nem_sdk_interface::NEMeetingKitConfig NEMeetingSDKProcHandlerIMP::getSDKConfig() const {
     return sdk_config_;
 }

@@ -1,9 +1,7 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
-// Copyright (c) 2012, NetEase Inc. All rights reserved.
 //
 // Wang Rongtao <rtwang@corp.netease.com>
 // 2012/5/31
@@ -17,13 +15,11 @@
 
 #if defined(OS_WIN)
 
-#include "base/base_export.h"
 #include <accctrl.h>
+#include "base/base_export.h"
 
-namespace nbase
-{
-namespace win32
-{
+namespace nbase {
+namespace win32 {
 
 BASE_EXPORT bool SetObjectToLowIntegrity(HANDLE hObject, SE_OBJECT_TYPE type = SE_KERNEL_OBJECT);
 
@@ -47,8 +43,8 @@ HRESULT GetSidIntegrityLevel(PSID sid, MANDATORY_LEVEL* level);
 //     MandatoryLevelHigh( Elevated Admin)
 //   On error, level remains unchanged
 BASE_EXPORT HRESULT GetProcessIntegrityLevel(DWORD processID, MANDATORY_LEVEL* level);
-}
-}
+}  // namespace win32
+}  // namespace nbase
 
-#endif // OS_WIN
-#endif // BASE_WIN32_SECURITY_UTIL_H_
+#endif  // OS_WIN
+#endif  // BASE_WIN32_SECURITY_UTIL_H_

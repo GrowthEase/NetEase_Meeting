@@ -40,6 +40,7 @@ Item {
     signal btnChatClicked()
     signal btnMoreClicked()
     signal btnLiveClicked()
+    signal btnSipInviteClicked()
 
     enum DataRole {
         ItemIndex = 256,
@@ -118,6 +119,9 @@ Item {
             case MoreItemEnum.LiveMenuId:
                 btnLiveClicked()
                 break
+            case MoreItemEnum.SipInviteMenuId:
+                btnSipInviteClicked()
+                break
             case MoreItemEnum.WhiteboardMenuId:
                 btnWhiteboardClicked()
                 break
@@ -184,7 +188,7 @@ Item {
                     btnAudioCtrl.objectName = 'btnAudioCtrl'
                     btnAudioCtrl.clicked.connect(btnAudioCtrlClicked)
                     btnAudioCtrl.itemText = Qt.binding(function(){ return idToolbarModel.data(modelIndex[i], (audioManager.localAudioStatus === FooterBar.DeviceStatus.DeviceEnabled) ? MToolBar.DataRole.ItemTitle : MToolBar.DataRole.ItemTitle2) })
-                    btnAudioCtrl.itemIcon = Qt.binding(function(){ return getItemImage(idToolbarModel.data(modelIndex[i], (audioManager.localAudioStatus === FooterBar.DeviceStatus.DeviceEnabled) ? MToolBar.DataRole.ItemImage : MToolBar.DataRole.ItemImage2)) })
+                    btnAudioCtrl.itemIcon = audioManager.localAudioStatus !== FooterBar.DeviceStatus.DeviceEnabled ? "qrc:/qml/images/meeting/footerbar/btn_audio_off_normal.png" : "qrc:/qml/images/meeting/volume/volume_level_1.png"
                     btnAudioSettings = ctrlBtn
                     btnAudioSettings.objectName = 'btnAudioSettings'
                     btnAudioSettings.clicked.connect(btnAudioSettingsClicked)
@@ -271,10 +275,19 @@ Item {
                 case MoreItemEnum.ViewMenuId:
                     btnSwitchView = btnTmp
                     btnSwitchView.objectName = 'btnSwitchView'
-                    btnSwitchView.clicked.connect(function() { btnSwitchViewClicked(); moreItemManager.clickedItem(idToolbarModel.data(modelIndex[i], MToolBar.DataRole.ItemGuid)) })
+                    btnSwitchView.clicked.connect(function() {
+                        btnSwitchViewClicked();
+                        moreItemManager.clickedItem(idToolbarModel.data(modelIndex[i], MToolBar.DataRole.ItemGuid))
+                        var isFocus = (1 === idToolbarModel.data(modelIndex[i], MToolBar.DataRole.ItemCheckedIndex))
+                        // console.log("btnSwitchView.accessibleName", btnSwitchView.accessibleName)
+                        btnSwitchView.accessibleName = isFocus ? "FocusPage" : "GalleryPage"
+                    })
                     btnSwitchView.visible = Qt.binding(function(){ return !bSSToolbar && moreItemManager.viewItemVisible })
                     btnSwitchView.itemText = Qt.binding(function(){ return idToolbarModel.data(modelIndex[i], (1 === idToolbarModel.data(modelIndex[i], MToolBar.DataRole.ItemCheckedIndex)) ? MToolBar.DataRole.ItemTitle : MToolBar.DataRole.ItemTitle2) })
-                    btnSwitchView.itemIcon = Qt.binding(function(){ return getItemImage(idToolbarModel.data(modelIndex[i], (1 === idToolbarModel.data(modelIndex[i], MToolBar.DataRole.ItemCheckedIndex)) ? MToolBar.DataRole.ItemImage : MToolBar.DataRole.ItemImage2)) })
+                    btnSwitchView.itemIcon = Qt.binding(function(){
+                        var isFocus = (1 === idToolbarModel.data(modelIndex[i], MToolBar.DataRole.ItemCheckedIndex))
+                        return getItemImage(idToolbarModel.data(modelIndex[i], isFocus ? MToolBar.DataRole.ItemImage : MToolBar.DataRole.ItemImage2))
+                    })
                     break
                 default:
                     btnTmp.visible = Qt.binding(function(){ return getItemVisible(idToolbarModel.data(modelIndex[i], MToolBar.DataRole.ItemVisibility)) })
@@ -293,6 +306,40 @@ Item {
         btnMore.visible = Qt.binding(function(){ if (bSSToolbar && moreItemManager.moreItemInjected) { return false } return !(0 === moreItemManager.itemCountMore || (!bSSToolbar ? false : 0 === moreItemManager.itemCountMore_S()))})
         btnMore.itemIcon = 'qrc:/qml/images/meeting/btn_more_normal.png'
         btnMore.itemText = qsTr('More')
+    }
+
+    Connections {
+        target: deviceManager
+        onUserAudioVolumeIndication: {
+            if (!root.visible) {
+                return
+            }
+
+            if(accountId !== authManager.authAccountId || undefined === btnAudioCtrl || null === btnAudioCtrl || !btnAudioCtrl.hasOwnProperty('itemIcon')) {
+                return
+            }
+
+            if(audioManager.localAudioStatus !== FooterBar.DeviceStatus.DeviceEnabled) {
+                return
+            }
+
+            btnAudioCtrl.itemIcon = getAudioVolumeSourceImage(level)
+        }
+    }
+
+    Connections {
+        target: audioManager
+        onUserAudioStatusChanged: {
+            if (changedAccountId !== authManager.authAccountId || undefined === btnAudioCtrl || null === btnAudioCtrl || !btnAudioCtrl.hasOwnProperty('itemIcon')) {
+                return
+            }
+
+            if(deviceStatus === FooterBar.DeviceStatus.DeviceEnabled) {
+                btnAudioCtrl.itemIcon = "qrc:/qml/images/meeting/volume/volume_level_1.png"
+            } else {
+                btnAudioCtrl.itemIcon = "qrc:/qml/images/meeting/footerbar/btn_audio_off_normal.png"
+            }
+        }
     }
 
     function getItemImage(imagePath) {

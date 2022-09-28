@@ -1,4 +1,4 @@
-QT += core quick quickcontrols2 multimedia svg webengine webchannel
+QT += core quick quickcontrols2 multimedia svg webengine webchannel sql
 QTPLUGIN += qsvg
 
 CONFIG += c++14 qtquickcompiler precompile_header
@@ -17,9 +17,7 @@ DESTDIR     = $$PWD/../bin
 # deprecated API to know how to port your code away from it.
 DEFINES +=  QT_DEPRECATED_WARNINGS \
             NEM_SDK_INTERFACE_COMPONENT_BUILD \
-            NEM_SDK_INTERFACE_IMPLEMENTATION \
-            GLOG_NO_ABBREVIATED_SEVERITIES \
-            GOOGLE_GLOG_DLL_DECL=
+            NEM_SDK_INTERFACE_IMPLEMENTATION
 
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -31,27 +29,40 @@ win32 {
     INCLUDEPATH += $$PWD/ \
                $$PWD/../ \
                $$PWD/../third_party_libs/roomkit/include \
-               $$PWD/../third_party_libs/glog/include \
                $$PWD/../third_party_libs/alog/include \
                $$PWD/../third_party_libs/libyuv/include \
                $$PWD/../meeting-ipc/ \
                $$PWD/../meeting-ipc/nem_sdk_interface/ \
                $$PWD/../meeting-ipc/nem_sdk_interface_ipc_client/
     CONFIG(debug, debug|release) {
-        LIBS += -L$$PWD/../third_party_libs/roomkit/libs/x86/Debug/lib -lroomkit_d \
-                -L$$PWD/../third_party_libs/glog/libs/win32/Debug -lglogd \
-                -L$$PWD/../third_party_libs/alog/lib/x86/Debug -lyx_alog \
-                -L$$PWD/../third_party_libs/jsoncpp/libs/win32/Debug -ljsoncpp \
-                -L$$PWD/../third_party_libs/libyuv/libs/win32/Debug -lyuv \
-                -L$$PWD/../meeting-ipc/output/nem_hosting_module_client/Debug -lnem_hosting_module_clientd
+        !contains(QMAKE_TARGET.arch, x86_64) {
+            LIBS += -L$$PWD/../third_party_libs/roomkit/libs/x86/Debug/lib -lroomkit_d \
+                    -L$$PWD/../third_party_libs/alog/lib/x86/Debug -lyx_alog \
+                    -L$$PWD/../third_party_libs/jsoncpp/libs/x86/Debug -ljsoncpp \
+                    -L$$PWD/../third_party_libs/libyuv/libs/x86/Debug -lyuv
+        } else {
+            LIBS += -L$$PWD/../third_party_libs/roomkit/libs/x64/Debug/lib -lroomkit_d \
+                    -L$$PWD/../third_party_libs/alog/lib/x64/Debug -lyx_alog \
+                    -L$$PWD/../third_party_libs/jsoncpp/libs/x64/Debug -ljsoncpp \
+                    -L$$PWD/../third_party_libs/libyuv/libs/x64/Debug -lyuv
+        }
+
+        LIBS += -L$$PWD/../meeting-ipc/output/nem_hosting_module_client/Debug -lnem_hosting_module_clientd
         DEPENDPATH += $$PWD/../meeting-ipc/output/nem_hosting_module_client/Debug
     } else {
-        LIBS += -L$$PWD/../third_party_libs/roomkit/libs/x86/Release/lib -lroomkit \
-                -L$$PWD/../third_party_libs/glog/libs/win32/Release -lglog \
-                -L$$PWD/../third_party_libs/alog/lib/x86/Release -lyx_alog \
-                -L$$PWD/../third_party_libs/jsoncpp/libs/win32/Release -ljsoncpp \
-                -L$$PWD/../third_party_libs/libyuv/libs/win32/Release -lyuv \
-                -L$$PWD/../meeting-ipc/output/nem_hosting_module_client/Release -lnem_hosting_module_client
+        !contains(QMAKE_TARGET.arch, x86_64) {
+            LIBS += -L$$PWD/../third_party_libs/roomkit/libs/x86/Release/lib -lroomkit \
+                    -L$$PWD/../third_party_libs/alog/lib/x86/Release -lyx_alog \
+                    -L$$PWD/../third_party_libs/jsoncpp/libs/x86/Release -ljsoncpp \
+                    -L$$PWD/../third_party_libs/libyuv/libs/x86/Release -lyuv
+        } else {
+        LIBS += -L$$PWD/../third_party_libs/roomkit/libs/x64/Release/lib -lroomkit \
+                -L$$PWD/../third_party_libs/alog/lib/x64/Release -lyx_alog \
+                -L$$PWD/../third_party_libs/jsoncpp/libs/x64/Release -ljsoncpp \
+                -L$$PWD/../third_party_libs/libyuv/libs/x64/Release -lyuv
+        }
+
+        LIBS += -L$$PWD/../meeting-ipc/output/nem_hosting_module_client/Release -lnem_hosting_module_client
         DEPENDPATH += $$PWD/../meeting-ipc/output/nem_hosting_module_client/Release
     }
 }
@@ -61,30 +72,25 @@ macx {
     INCLUDEPATH += \
             $$PWD/../ \
             $$PWD/../third_party_libs/alog/yx_alog.framework/Headers \
-            $$PWD/../third_party_libs/glog/include/mac \
-            $$PWD/../third_party_libs/glog/src \
             $$PWD/../third_party_libs/libyuv/include \
             $$PWD/../meeting-ipc/output_mac/nem_hosting_module_client/Release/nem_hosting_module_client.framework/Headers
 
     LIBS += -ObjC \
-            -L$$PWD/../third_party_libs/glog/libs/mac -lglog \
             -L$$PWD/../third_party_libs/libyuv/libs/mac -lyuv \
             -F$$PWD/../third_party_libs/alog -framework yx_alog \
             -F$$PWD/../meeting-ipc/output_mac/nem_hosting_module_client/Release -framework nem_hosting_module_client
 
     CONFIG(debug, debug|release) {
         INCLUDEPATH += $$PWD/../third_party_libs/roomkit/Debug/framework/roomkit.framework/Headers
-        LIBS += -F$$PWD/../third_party_libs/roomkit/Debug/framework -framework roomkit -framework NEFundation_Mac -framework nertc_sdk_Mac -framework nim_chatroom -framework nim \
-                -L$$PWD/../third_party_libs/roomkit/Debug/lib -lCNamaSDK -lfuai -lh_available
+        LIBS += -F$$PWD/../third_party_libs/roomkit/Debug/framework -framework roomkit -framework NEFundation_Mac -framework nertc_sdk_Mac -framework AVFoundation\
+                -L$$PWD/../third_party_libs/roomkit/Debug/lib -lh_available -lnim_chatroom -lnim -lnim_qchat -lnim_tools_http
 
         QMAKE_POST_LINK += rm -rf $$PWD/../bin/NetEaseMeetingClient.app/Contents/Frameworks &&
         QMAKE_POST_LINK += mkdir $$PWD/../bin/NetEaseMeetingClient.app/Contents/Frameworks &&
         QMAKE_POST_LINK += ln -s -f $$PWD/../third_party_libs/roomkit/Debug/lib/*  $$PWD/../bin/NetEaseMeetingClient.app/Contents/Frameworks/ &&
-
-        QMAKE_POST_LINK += rm -rf $$PWD/../bin/NetEaseMeetingClient.app/Contents/Resources/assert &&
-        QMAKE_POST_LINK += mkdir $$PWD/../bin/NetEaseMeetingClient.app/Contents/Resources/assert &&
-        QMAKE_POST_LINK += ln -s -f $$PWD/../third_party_libs/roomkit/Debug/assert/* $$PWD/../bin/NetEaseMeetingClient.app/Contents/Resources/assert/
-
+        QMAKE_POST_LINK += rm -rf $$PWD/../bin/NetEaseMeetingClient.app/Contents/Resources/assets &&
+        QMAKE_POST_LINK += mkdir $$PWD/../bin/NetEaseMeetingClient.app/Contents/Resources/assets &&
+        QMAKE_POST_LINK += ln -s -f $$PWD/../third_party_libs/roomkit/Debug/assets/* $$PWD/../bin/NetEaseMeetingClient.app/Contents/Resources/assets/
 
         QMAKE_RPATHDIR += $$PWD/../bin \
                           $$PWD/../meeting-ipc/output_mac/nem_hosting_module_client/Release \
@@ -93,21 +99,18 @@ macx {
                           $$PWD/../third_party_libs/alog \
     } else {
         INCLUDEPATH += $$PWD/../third_party_libs/roomkit/Release/framework/roomkit.framework/Headers
-        LIBS += -F$$PWD/../third_party_libs/roomkit/Release/framework -framework roomkit -framework NEFundation_Mac -framework nertc_sdk_Mac -framework nim_chatroom -framework nim \
-                -L$$PWD/../third_party_libs/roomkit/Release/lib -lCNamaSDK -lfuai -lh_available
+        LIBS += -F$$PWD/../third_party_libs/roomkit/Release/framework -framework roomkit -framework NEFundation_Mac -framework nertc_sdk_Mac -framework AVFoundation\
+                -L$$PWD/../third_party_libs/roomkit/Release/lib -lh_available -lnim_chatroom -lnim -lnim_qchat -lnim_tools_http
 
         ROOM_KIT_FRAMEWORK.files = $$PWD/../third_party_libs/roomkit/Release/framework/roomkit.framework \
                                    $$PWD/../third_party_libs/roomkit/Release/framework/NEFundation_Mac.framework \
                                    $$PWD/../third_party_libs/roomkit/Release/framework/nertc_sdk_Mac.framework \
-                                   $$PWD/../third_party_libs/roomkit/Release/framework/nim_chatroom.framework \
-                                   $$PWD/../third_party_libs/roomkit/Release/framework/nim.framework \
-                                   $$PWD/../third_party_libs/roomkit/Release/lib/libfuai.dylib \
-                                   $$PWD/../third_party_libs/roomkit/Release/lib/libCNamaSDK.dylib \
-                                   $$PWD/../third_party_libs/roomkit/Release/lib/libh_available.dylib
+                                   $$PWD/../third_party_libs/roomkit/Release/lib/libh_available.dylib \
+                                   $$PWD/../third_party_libs/roomkit/Release/lib/libnim_chatroom.dylib \
+                                   $$PWD/../third_party_libs/roomkit/Release/lib/libnim_qchat.dylib \
+                                   $$PWD/../third_party_libs/roomkit/Release/lib/libnim_tools_http.dylib \
+                                   $$PWD/../third_party_libs/roomkit/Release/lib/libnim.dylib
         ROOM_KIT_FRAMEWORK.path = /Contents/Frameworks
-
-        FU_BUNDLE.files = $$PWD/../third_party_libs/roomkit/Release/assert/face_beautification.bundle
-        FU_BUNDLE.path = /Contents/Resources/assert
 
         IPC_CLIENT_SDK_FRAMEWORK.files = $$PWD/../meeting-ipc/output_mac/nem_hosting_module_client/Release/nem_hosting_module_client.framework
         IPC_CLIENT_SDK_FRAMEWORK.path = /Contents/Frameworks
@@ -118,11 +121,26 @@ macx {
         MEDIA_PLAYER.files = $$PWD/../bin/rain.mp3
         MEDIA_PLAYER.path = /Contents/Resources
 
+        BEAUTY_BUNDLE.files = $$PWD/../third_party_libs/roomkit/Release/assets
+        BEAUTY_BUNDLE.path = /Contents/Resources
+
         QMAKE_BUNDLE_DATA += ROOM_KIT_FRAMEWORK \
                              IPC_CLIENT_SDK_FRAMEWORK \
                              YXLOG_FRAMEWORK \
                              MEDIA_PLAYER \
-                             FU_BUNDLE
+                             BEAUTY_BUNDLE
+    }
+
+    VIRTUAL_BACKGROUND.files = $$PWD/../bin/image
+    VIRTUAL_BACKGROUND.path = /Contents/Resources
+
+    QMAKE_BUNDLE_DATA += VIRTUAL_BACKGROUND
+
+    exists($$PWD/../bin/xkit_server.config) {
+        XKIT_SERVER.files = $$PWD/../bin/xkit_server.config
+        XKIT_SERVER.path = /Contents/MacOS
+
+        QMAKE_BUNDLE_DATA += XKIT_SERVER
     }
 }
 
@@ -130,11 +148,26 @@ PRECOMPILED_HEADER = stable.h
 
 HEADERS += \
     app_dump.h \
+    models/message_model.h \
+    version.h \
     base/log_instance.h \
     components/clipboard.h \
     components/mouse_event_spy.h \
     components/screensaver.h \
     components/whiteboard_jsBridge.h \
+    controller/audio_controller.h \
+    controller/audio_controller.h \
+    controller/auth_controller.h \
+    controller/config_controller.h \
+    controller/meeting_controller.h \
+    controller/premeeting_controller.h \
+    controller/screenshare_controller.h \
+    controller/sip_controller.h \
+    controller/subscribe_helper.h \
+    controller/user_controller.h \
+    controller/user_controller.h \
+    controller/video_controller.h \
+    controller/video_controller.h \
     ipc_handlers/account_prochandler.h \
     ipc_handlers/auth_prochandler.h \
     ipc_handlers/feedback_prochandler.h \
@@ -144,7 +177,6 @@ HEADERS += \
     ipc_handlers/premeeting_prochandler.h \
     ipc_handlers/setting_prochandler.h \
     listeners/meeting_service_listener.h \
-    listeners/meeting_stats_listener.h \
     manager/auth_manager.h \
     manager/chat_manager.h \
     manager/config_manager.h \
@@ -152,6 +184,7 @@ HEADERS += \
     manager/feedback_manager.h \
     manager/global_manager.h \
     manager/live_manager.h \
+    manager/meeting/invite_manager.h \
     manager/meeting/whiteboard_manager.h \
     manager/more_item_manager.h \
     manager/meeting/audio_manager.h \
@@ -162,17 +195,24 @@ HEADERS += \
     manager/pre_meeting_manager.h \
     manager/settings_manager.h \
     models/device_model.h \
+    models/invite_model.h \
     models/live_members_model.h \
     models/members_model.h \
     models/more_item_model.h \
     models/screen_model.h \
+    models/virtualbackground_model.h \
     modules/command_parser.h \
+    modules/http/http_manager.h \
+    modules/http/http_request.h \
     providers/frame_provider.h \
     providers/frame_rate.h \
     providers/screen_provider.h \
     providers/video_window.h \
     utils/invoker.h \
     utils/singleton.h \
+    utils/miniz/miniz.h \
+    utils/miniz/zip.h \
+    utils/zipper.h \
     windows/windows_manager.h
 
 SOURCES += \
@@ -180,6 +220,16 @@ SOURCES += \
     components/clipboard.cpp \
     components/mouse_event_spy.cpp \
     components/whiteboard_jsBridge.cpp \
+    controller/audio_controller.cpp \
+    controller/auth_controller.cpp \
+    controller/config_controller.cpp \
+    controller/meeting_controller.cpp \
+    controller/premeeting_controller.cpp \
+    controller/screenshare_controller.cpp \
+    controller/sip_controller.cpp \
+    controller/subscribe_helper.cpp \
+    controller/user_controller.cpp \
+    controller/video_controller.cpp \
     ipc_handlers/account_prochandler.cpp \
     ipc_handlers/auth_prochandler.cpp \
     ipc_handlers/feedback_prochandler.cpp \
@@ -189,7 +239,6 @@ SOURCES += \
     ipc_handlers/premeeting_prochandler.cpp \
     ipc_handlers/setting_prochandler.cpp \
     listeners/meeting_service_listener.cpp \
-    listeners/meeting_stats_listener.cpp \
     main.cpp \
     manager/auth_manager.cpp \
     manager/chat_manager.cpp \
@@ -198,6 +247,7 @@ SOURCES += \
     manager/feedback_manager.cpp \
     manager/global_manager.cpp \
     manager/live_manager.cpp \
+    manager/meeting/invite_manager.cpp \
     manager/meeting/whiteboard_manager.cpp \
     manager/more_item_manager.cpp \
     manager/meeting/audio_manager.cpp \
@@ -208,16 +258,23 @@ SOURCES += \
     manager/pre_meeting_manager.cpp \
     manager/settings_manager.cpp \
     models/device_model.cpp \
+    models/invite_model.cpp \
     models/live_members_model.cpp \
     models/members_model.cpp \
+    models/message_model.cpp \
     models/more_item_model.cpp \
     models/screen_model.cpp \
+    models/virtualbackground_model.cpp \
     modules/command_parser.cpp \
+    modules/http/http_manager.cpp \
+    modules/http/http_request.cpp \
     providers/frame_provider.cpp \
     providers/frame_rate.cpp \
     providers/screen_provider.cpp \
     providers/video_window.cpp \
-    windows/windows_manager.cpp
+    windows/windows_manager.cpp \
+    utils/miniz/zip.cpp \
+    utils/zipper.cpp
 
 win32 {
     HEADERS += components/windows_helpers.h
@@ -260,9 +317,11 @@ win32 {
     QMAKE_LFLAGS_RELEASE    += /debug /opt:ref
     QMAKE_CXXFLAGS_WARN_ON -= -w34100
     QMAKE_CXXFLAGS += -wd4100
+    QMAKE_CXXFLAGS += /MP
+    QMAKE_LFLAGS += /LARGEADDRESSAWARE
     QMAKE_TARGET_COMPANY     = "NetEase"
     QMAKE_TARGET_DESCRIPTION = "NetEase Meeting"
-    QMAKE_TARGET_COPYRIGHT   = "Copyright (C) 2015~2021 NetEase. All rights reserved."
+    QMAKE_TARGET_COPYRIGHT   = "Copyright (C) 2015~2022 NetEase. All rights reserved."
     QMAKE_TARGET_PRODUCT     = "NetEase Meeting"
     VERSION = 1.0.0.0
 }
@@ -272,6 +331,8 @@ macx {
     QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter -Wno-unused-function
     QMAKE_TARGET_BUNDLE_PREFIX = com.netease.nmc
     QMAKE_BUNDLE = MeetingClient
+    QMAKE_DEVELOPMENT_TEAM = 569GNZ5392
+    QMAKE_PROVISIONING_PROFILE = afe9bf95-033c-4592-abac-e0aab5328ce0
     QMAKE_INFO_PLIST = $$PWD/Info.plist
     DISTFILES += $$PWD/Info.plist
     VERSION = 1.0.0
@@ -289,3 +350,7 @@ macx {
 # qmllint.commands = qmllint ${QMAKE_FILE_NAME} && $${MY_TOUCH_CMD} ${QMAKE_FILE_OUT}
 # qmllint.CONFIG += no_link recursive target_predeps
 # QMAKE_EXTRA_COMPILERS += qmllint
+
+DISTFILES += \
+    qml/images/public/icons/icon_close_min.png \
+    qml/images/public/icons/icon_warning.svg

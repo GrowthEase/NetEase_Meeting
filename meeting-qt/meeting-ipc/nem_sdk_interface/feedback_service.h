@@ -1,4 +1,8 @@
-﻿/**
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+
+/**
  * @file feedback_service.h
  * @brief 反馈服务头文件
  * @copyright (c) 2014-2021, NetEase Inc. All rights reserved
@@ -17,8 +21,7 @@ NNEM_SDK_INTERFACE_BEGIN_DECLS
  * @brief 监听反馈状态变更通知
  * @see NEFeedbackService#addListener
  */
-class FeedbackServiceListener : public NEObject
-{
+class FeedbackServiceListener : public NEObject {
 public:
     /**
      * @brief 反馈的状态信息
@@ -33,21 +36,22 @@ public:
 /**
  * @brief 反馈服务
  */
-class NEM_SDK_INTERFACE_EXPORT NEFeedbackService : public NEService
-{
+class NEM_SDK_INTERFACE_EXPORT NEFeedbackService : public NEService {
 public:
     using NEFeedbackCallback = NECallback<const std::string&, const int&>;
+
 public:
     /**
      * @brief 反馈接口
-     * @param type 0是日志类型，2是崩溃类型
+     * @param type 反馈类型，仅负责透传
      * @param path 文件路径
+     * @param needAudioDump 是否需要音频Dump
      * @param cb 回调
      * @return void
      */
-    virtual void feedback(const int& type, const std::string& path, const NEFeedbackCallback& cb) = 0;
+    virtual void feedback(const int& type, const std::string& path, bool needAudioDump, const NEFeedbackCallback& cb) = 0;
 
-     /**
+    /**
      * @brief 添加反馈监听，接收反馈状态
      * @param listener 监听对象
      * @return void
@@ -56,5 +60,4 @@ public:
 };
 
 NNEM_SDK_INTERFACE_END_DECLS
-#endif // NEM_SDK_INTERFACE_INTERFACE_FEEDBACK_SERVICE_H_
-
+#endif  // NEM_SDK_INTERFACE_INTERFACE_FEEDBACK_SERVICE_H_

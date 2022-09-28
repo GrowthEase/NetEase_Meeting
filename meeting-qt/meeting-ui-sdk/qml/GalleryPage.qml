@@ -53,7 +53,7 @@ Rectangle {
                         nickname: model.nickname
                         audioStatus: model.audioStatus
                         videoStatus: model.videoStatus
-                        highQuality: model.highQuality
+                        highQuality: !SettingsManager.remoteVideoResolution ? (model.index > 3 ? false : true) : true
                     }
                 }
             }
@@ -125,6 +125,11 @@ Rectangle {
             if (hasRecordPermission) {
                 shareSelector.open()
             } else {
+                requestPermission.sigOpenSetting.connect(function(){
+                    shareManager.openSystemSettings()
+                })
+                requestPermission.titleText = qsTr("Screen Record Permission")
+                requestPermission.contentText = qsTr('Due to the security control of MacOS system, it is necessary to turn on the system screen recording permission before starting to share the screen%1Open System Preferences > Security and privacy grant access').arg('\r\n\r\n')
                 requestPermission.open()
             }
         }
@@ -203,7 +208,7 @@ Rectangle {
                 mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/FocusPage.qml'))
                 return
             }
-            MeetingHelpers.arrangeGridLayout(secondaryMembers, realPage, realCount, rootContainer, gridLayout, gridModel)
+            MeetingHelpers.arrangeGridLayout(secondaryMembers, realPage, realCount, rootContainer, gridLayout, gridModel, !SettingsManager.remoteVideoResolution ? 3 : 99999)
             previousPage.visible = currentPage > 1
             nextPage.visible = currentPage * pageSize < (realCount) // Except myself
             labelPageCount.text = (Math.ceil((realCount) / pageSize)).toString()

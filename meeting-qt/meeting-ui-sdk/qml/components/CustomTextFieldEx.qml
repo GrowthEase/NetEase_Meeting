@@ -52,6 +52,7 @@ TextField {
         Image {
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
+            mipmap: true
             source: "qrc:/qml/images/public/button/btn_clear.svg"
         }
     }
@@ -64,6 +65,7 @@ TextField {
         anchors.left: control.left
         anchors.leftMargin: 12
         anchors.verticalCenter: parent.verticalCenter
+        mipmap: true
         source: "qrc:/qml/images/public/icons/calendar.svg"
     }
 
@@ -75,6 +77,7 @@ TextField {
         anchors.rightMargin: 12
         anchors.verticalCenter: control.verticalCenter
         visible: visibleComboBox
+        mipmap: true
         source: "qrc:/qml/images/public/icons/triangle.svg"
 
         transform: Rotation {

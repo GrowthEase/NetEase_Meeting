@@ -113,6 +113,7 @@ Window{
                     anchors.rightMargin: 10
                     anchors.verticalCenter: parent.verticalCenter
                     source: "qrc:/qml/images/public/button/btn_down_white.svg"
+                    mipmap: true
                 }
             }
             Label {
@@ -249,6 +250,7 @@ Window{
                     anchors.rightMargin: 13
                     source: "qrc:/qml/images/public/icons/right.svg"
                     visible: false
+                    mipmap: true
                 }
                 Image {
                     id: downIcon
@@ -259,6 +261,7 @@ Window{
                     anchors.rightMargin: 13
                     source: "qrc:/qml/images/public/button/btn_down_white.svg"
                     visible: !model.selectable
+                    mipmap: true
                 }
                 MouseArea {
                     anchors.fill: parent

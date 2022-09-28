@@ -1,4 +1,8 @@
-﻿/**
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+
+/**
  * @file sdk_init_config.h
  * @brief SDK初始化配置头文件
  * @copyright (c) 2014-2021, NetEase Inc. All rights reserved
@@ -9,90 +13,73 @@
 #ifndef NEM_SDK_INTERFACE_DEFINE_SDK_INIT_CONFIG_H__
 #define NEM_SDK_INTERFACE_DEFINE_SDK_INIT_CONFIG_H__
 
-#include "public_define.h"
 #include <string>
+#include "public_define.h"
 
 NNEM_SDK_INTERFACE_BEGIN_DECLS
 
 /**
  * @brief 应用信息
  */
-class NEM_SDK_INTERFACE_EXPORT NEMAppInfo : public NEObject
-{
+class NEM_SDK_INTERFACE_EXPORT NEMAppInfo : public NEObject {
 public:
     /**
      * @brief 构造函数
      */
-    NEMAppInfo() {
-    }
+    NEMAppInfo() {}
 
     /**
      * @brief 获取SDK路径
      * @return std::string
      */
-    std::string SDKPath() const {
-        return sdk_path_;
-    }
+    std::string SDKPath() const { return sdk_path_; }
 
     /**
      * @brief 设置SDK路径
      * @param path SDK路径
      * @return void
      */
-    void SDKPath(const std::string& path) {
-        sdk_path_ = path;
-    }
+    void SDKPath(const std::string& path) { sdk_path_ = path; }
 
     /**
      * @brief 获取组织名称
      * @return std::string
      */
-    std::string OrganizationName() const {
-        return organization_name_;
-    }
+    std::string OrganizationName() const { return organization_name_; }
 
     /**
      * @brief 设置组织名称
      * @param organization_name 组织名称
      * @return void
      */
-    void OrganizationName(const std::string& organization_name) {
-        organization_name_ = organization_name;
-    }
+    void OrganizationName(const std::string& organization_name) { organization_name_ = organization_name; }
 
     /**
      * @brief 获取应用名称
      * @return std::string
      */
-    std::string ApplicationName() const {
-        return application_name_;
-    }
+    std::string ApplicationName() const { return application_name_; }
 
     /**
      * @brief 设置应用名称
      * @param application_name 应用名称
      * @return void
      */
-    void ApplicationName(const std::string& application_name) {
-        application_name_ = application_name;
-    }
+    void ApplicationName(const std::string& application_name) { application_name_ = application_name; }
 
     /**
      * @brief 获取产品名称
      * @return std::string
      */
-    std::string ProductName() const {
-        return product_name_;
-    }
+    std::string ProductName() const { return product_name_; }
 
     /**
      * @brief 设置产品名称
      * @param product_name 产品名称
      * @return void
      */
-    void ProductName(const std::string& product_name) {
-        product_name_ = product_name;
-    }
+    void ProductName(const std::string& product_name) { product_name_ = product_name; }
+
 private:
     std::string sdk_path_;          /**< SDK路径 */
     std::string organization_name_; /**< 组织名称 */
@@ -156,117 +143,59 @@ private:
 /**
  * @brief SDK的配置
  */
-class NEM_SDK_INTERFACE_EXPORT NEMeetingSDKConfig : public NEObject
-{
+class NEM_SDK_INTERFACE_EXPORT NEMeetingKitConfig : public NEObject {
 public:
     /**
      * @brief 构造函数
      */
-    NEMeetingSDKConfig() = default;
+    NEMeetingKitConfig() = default;
 
     /**
      * @brief 构造函数
      * @param strDomain 域名
      */
-    NEMeetingSDKConfig(const std::string& strDomain)
-        : domain(strDomain) {
-    }
+    NEMeetingKitConfig(const std::string& strDomain)
+        : domain(strDomain) {}
 
     /**
      * @brief 构造函数
      * @param strDomain 域名
      */
-    NEMeetingSDKConfig(std::string&& strDomain)
-        : domain(std::move(strDomain)) {
-    }
+    NEMeetingKitConfig(std::string&& strDomain)
+        : domain(std::move(strDomain)) {}
 
 public:
     /**
      * @brief 获取应用信息
      * @return NEMAppInfo*
      */
-    NEMAppInfo* getAppInfo() const {
-        return &appInfo;
-    }
+    NEMAppInfo* getAppInfo() const { return &appInfo; }
 
     /**
      * @brief 获取应用appkey
      * @return std::string
      */
-    std::string getAppKey() const {
-        return appKey;
-    }
+    std::string getAppKey() const { return appKey; }
 
     /**
      * @brief 设置应用appkey
      * @param value 应用appkey
      * @return void
      */
-    void setAppKey(const std::string& value) {
-        appKey = value;
-    }
+    void setAppKey(const std::string& value) { appKey = value; }
 
     /**
      * @brief 获取域名
      * @return std::string
      */
-    std::string getDomain() const {
-        return domain;
-    }
+    std::string getDomain() const { return domain; }
 
     /**
      * @brief 设置域名
      * @param value 域名
      * @return void
      */
-    void setDomain(const std::string& value) {
-        domain = value;
-    }
-
-    /**
-     * @brief 获取debug日志是否开启
-     * @warning 不再使用，内部不做作处理
-     * @deprecated 已废弃
-     * @return
-     * - true: 开启
-     * - false: 关闭
-     */
-    bool getEnableDebugLog() const {
-        return enableDebugLog;
-    }
-
-    /**
-     * @brief 设置debug日志是否开启
-     * @warning 不再使用，内部不做作处理
-     * @deprecated 已废弃
-     * @param value true开启, false关闭
-     * @return void
-     */
-    void setEnableDebugLog(bool value) {
-        enableDebugLog = value;
-    }
-
-    /**
-     * @brief 获取日志大小
-     * @warning 不再使用，内部不做作处理
-     * @deprecated 已废弃
-     * @note 单位为MB
-     * @return int
-     */
-    int getLogSize() const {
-        return logSize;
-    }
-
-    /**
-     * @brief 设置日志大小
-     * @warning 不再使用，内部不做作处理
-     * @deprecated 已废弃
-     * @param value 日志大小，单位为MB
-     * @return void
-     */
-    void setLogSize(int value) {
-        logSize = value;
-    }
+    void setDomain(const std::string& value) { domain = value; }
 
     /**
      * @brief 获取是否使用私有化服务配置
@@ -274,27 +203,21 @@ public:
      * - true: 使用
      * - false: 不使用
      */
-    bool getUseAssetServerConfig() const { 
-        return useAssetServerConfig;
-    }
+    bool getUseAssetServerConfig() const { return useAssetServerConfig; }
 
     /**
      * @brief 设置是否使用私有化服务配置
      * @param bUse true使用，false不使用
      * @return void
      */
-    void setUseAssetServerConfig(bool bUse) {
-        useAssetServerConfig = bUse;
-    }
+    void setUseAssetServerConfig(bool bUse) { useAssetServerConfig = bUse; }
 
     /**
      * @brief 获取保活间隔
      * @note 单位为秒
      * @return int
      */
-    int getKeepAliveInterval() const {
-        return keepAliveInterval;
-    }
+    int getKeepAliveInterval() const { return keepAliveInterval; }
 
     /**
      * @brief 设置保活间隔
@@ -302,9 +225,7 @@ public:
      * @note 小于0则不进行保活，如果要保活则最小为3秒，建议设置超过5秒
      * @return void
      */
-    void setKeepAliveInterval(int interval) {
-        keepAliveInterval = interval;
-    }
+    void setKeepAliveInterval(int interval) { keepAliveInterval = interval; }
 
     /**
      * @brief 获取日志配置
@@ -327,17 +248,15 @@ public:
     void setRunAdmin(bool admin) { runAdmin = admin; }
 
 private:
-    mutable NEMAppInfo appInfo;         /**< 应用信息 */
-    std::string appKey;                 /**< 应用appkey */
-    std::string domain;                 /**< 应用域名 */
-    bool enableDebugLog = true;         /**< 已不使用，改用loggerConfig，debug日志使能 */
-    int logSize = 10;                   /**< 已不使用，日志大小，单位MB */
-    bool useAssetServerConfig = false;  /**< 使用私有化配置使能 */
-    int keepAliveInterval = 10;         /**< 保活间隔，单位为秒，小于0则不进行保活 */
-    bool runAdmin = true;               /**< 是否使用管理员权限启动，仅Windows下有效 */
+    mutable NEMAppInfo appInfo;          /**< 应用信息 */
+    std::string appKey;                  /**< 应用appkey */
+    std::string domain;                  /**< 应用域名 */
+    bool useAssetServerConfig = false;   /**< 使用私有化配置使能 */
+    int keepAliveInterval = 10;          /**< 保活间隔，单位为秒，小于0则不进行保活 */
+    bool runAdmin = false;               /**< 是否使用管理员权限启动，仅Windows下有效 */
     mutable NELoggerConfig loggerConfig; /**< 日志配置 */
 };
 
 NNEM_SDK_INTERFACE_END_DECLS
 
-#endif // NEM_SDK_INTERFACE_DEFINE_SDK_INIT_CONFIG_H__
+#endif  // NEM_SDK_INTERFACE_DEFINE_SDK_INIT_CONFIG_H__

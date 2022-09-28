@@ -49,6 +49,7 @@ TextField {
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
             source: "qrc:/qml/images/public/button/btn_clear.svg"
+            mipmap: true
         }
     }
 
@@ -126,7 +127,7 @@ TextField {
             messageTimer.start()
         }
         onError: {
-            if (resCode === 300 || resCode === 510 || resCode === 1003 || resCode === 1004 || resCode === 1010 || resCode === 1011 || resCode === 1015) {
+            if (resCode === 203) {
                 buttonSendMsg.visible = true
                 buttonSendMsg.enabled = enableSendButton
             }

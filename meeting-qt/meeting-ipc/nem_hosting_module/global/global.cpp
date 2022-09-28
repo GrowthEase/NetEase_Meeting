@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "nem_hosting_module/global/global.h"
 #include "nem_hosting_module/service/account_service.h"
@@ -18,8 +17,8 @@
 #define MEETING_HOST_EXECUTOR "NetEaseMeetingClient.exe"
 #else
 #include <sys/shm.h>
-#include "nem_hosting_module/base/lunch_mac.h"
 #include <algorithm>
+#include "nem_hosting_module/base/lunch_mac.h"
 #endif
 
 #define SHARED_TEXT_SIZE 2048
@@ -29,7 +28,7 @@ typedef struct tagSharedData {
 } SharedData;
 
 // std::unique_ptr<NS_NEM_SDK_HOSTMOD::Global> g_global_ = nullptr;
-NS_I_NEM_SDK::NEMeetingSDK* NS_I_NEM_SDK::NEMeetingSDK::getInstance() {
+NS_I_NEM_SDK::NEMeetingKit* NS_I_NEM_SDK::NEMeetingKit::getInstance() {
     if (NS_NEM_SDK_HOSTMOD::NEMeetingSDKIMP::global_object_ == nullptr) {
         NS_NEM_SDK_HOSTMOD::NEMeetingSDKIMP::global_object_ = std::make_shared<NS_NEM_SDK_HOSTMOD::NEMeetingSDKIMP>();
         NS_NEM_SDK_HOSTMOD::NEMeetingSDKIMP::global_object_->AttachUnInit([]() { NS_NEM_SDK_HOSTMOD::NEMeetingSDKIMP::global_object_ = nullptr; });
@@ -58,10 +57,10 @@ NEMeetingSDKIMP::NEMeetingSDKIMP()
     , exception_handler_(nullptr)
     , log_callback_(nullptr) {}
 NEMeetingSDKIMP::~NEMeetingSDKIMP() {}
-void NEMeetingSDKIMP::initialize(const NEMeetingSDKConfig& config, const NEInitializeCallback& cb) {
+void NEMeetingSDKIMP::initialize(const NEMeetingKitConfig& config, const NEInitializeCallback& cb) {
     if (isInitialized()) {
         if (nullptr != cb)
-            cb(NEErrorCode::ERROR_CODE_SUCCESS, "NEMeetingSDK already initialize.");
+            cb(NEErrorCode::ERROR_CODE_SUCCESS, "NEMeetingKit already initialize.");
         return;
     }
     if (config.getAppKey().empty()) {
@@ -69,7 +68,7 @@ void NEMeetingSDKIMP::initialize(const NEMeetingSDKConfig& config, const NEIniti
             cb(NEErrorCode::ERROR_CODE_FAILED, "Application key is empty.");
         return;
     }
-    auto instance = NEMeetingSDK::getInstance();
+    auto instance = NEMeetingKit::getInstance();
     global_config_ = config;
     int keepAliveInterval = global_config_.getKeepAliveInterval();
     if (keepAliveInterval >= 0 && keepAliveInterval < 3) {
@@ -80,7 +79,7 @@ void NEMeetingSDKIMP::initialize(const NEMeetingSDKConfig& config, const NEIniti
 void NEMeetingSDKIMP::unInitialize(const NEUnInitializeCallback& cb) {
     if (!initting_ && !inited_) {
         if (nullptr != cb)
-            cb(NEErrorCode::ERROR_CODE_SUCCESS, "NEMeetingSDK already uninitialize.");
+            cb(NEErrorCode::ERROR_CODE_SUCCESS, "NEMeetingKit already uninitialize.");
         return;
     }
 
@@ -91,23 +90,33 @@ void NEMeetingSDKIMP::unInitialize(const NEUnInitializeCallback& cb) {
     UnInitRequest request;
     SendData(GlobalCID::GlobalCID_UnInit, request, IPCAsyncResponseCallback(cb));
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    if (ipc_server_ != nullptr)
+    if (ipc_server_ != nullptr) {
+        ipc_server_->Close();
         ipc_server_->Stop();
+    }
     auto global = shared_from_this();
     global->Stop();
     global->Join();
     ServiceManager<NS_NIPCLIB::IPCServer>::Clear();
+
     auth_service_->OnRelease();
     meeting_service_->OnRelease();
     setting_service_->OnRelease();
+    account_service_->OnRelease();
+    feedback_service_->OnRelease();
+    premeeting_service_->OnRelease();
     global->OnRelease();
+
     auth_service_.reset();
     meeting_service_.reset();
     setting_service_.reset();
+    account_service_.reset();
+    feedback_service_.reset();
+    premeeting_service_.reset();
+
     global->SetProcThread(nullptr);
     global->SetIPCController(nullptr);
-    if (ipc_server_ != nullptr)
-        ipc_server_->Close();
+
     if (cb != nullptr && !global_config_.getAppKey().empty())
         cb(NEErrorCode::ERROR_CODE_SUCCESS, "Uninit success.");
     if (uninit_callback_ != nullptr)
@@ -118,12 +127,57 @@ bool NEMeetingSDKIMP::isInitialized() {
     return inited_ && !initting_;
 }
 
-void NEMeetingSDKIMP::activeWindow(const NEActiveWindowCallback& cb) {
+void NEMeetingSDKIMP::activeWindow(/*bool bRaise, */ const NEActiveWindowCallback& cb) {
     ActiveWindowRequest request;
+    request.bRaise_ = true;  // bRaise;
     SendData(GlobalCID::GlobalCID_ActiveWindow, request, IPCAsyncResponseCallback(cb));
 }
 
-void NEMeetingSDKIMP::querySDKVersion(const NEQuerySDKVersionCallback& cb) {
+void NEMeetingSDKIMP::setSoftwareRender(bool bSoftware, const NEEmptyCallback& cb) {
+#if defined(_WIN32)
+    std::string sdk_path = global_config_.getAppInfo()->SDKPath();
+    if (sdk_path.empty()) {
+        CHAR strModule[2048] = {0};
+        GetModuleFileNameA(NULL, strModule, 2048);  //得到当前模块路径
+        sdk_path = strModule;
+    }
+    sdk_path = sdk_path.substr(0, sdk_path.find_last_of('\\'));
+    sdk_path.append("\\config\\custom.ini");
+
+    BOOL bRet = WritePrivateProfileStringA("Render", "GraphicsApi", bSoftware ? "1" : "0", sdk_path.c_str());
+    if (cb) {
+        cb(0 != bRet ? NEErrorCode::ERROR_CODE_SUCCESS : NEErrorCode::ERROR_CODE_FAILED, 0 != bRet ? "" : "error: " + std::to_string(GetLastError()));
+    }
+#else
+    if (cb) {
+        cb(NEErrorCode::ERROR_CODE_FAILED, "error: not support");
+    }
+#endif  //
+}
+
+void NEMeetingSDKIMP::isSoftwareRender(const NEBoolCallback& cb) {
+#if defined(_WIN32)
+    if (cb) {
+        std::string sdk_path = global_config_.getAppInfo()->SDKPath();
+        if (sdk_path.empty()) {
+            CHAR strModule[2048] = {0};
+            GetModuleFileNameA(NULL, strModule, 2048);  //得到当前模块路径
+            sdk_path = strModule;
+        }
+        sdk_path = sdk_path.substr(0, sdk_path.find_last_of('\\'));
+        sdk_path.append("\\config\\custom.ini");
+
+        UINT iRet = GetPrivateProfileIntA("Render", "GraphicsApi", 0, sdk_path.c_str());
+        cb(NEErrorCode::ERROR_CODE_SUCCESS, "", 1 == iRet);
+    }
+#else
+    if (cb) {
+        cb(NEErrorCode::ERROR_CODE_FAILED, "error: not support", false);
+    }
+#endif  //
+}
+
+void NEMeetingSDKIMP::queryKitVersion(const NEQueryKitVersionCallback& cb) {
     QuerySDKVersionRequest request;
     SendData(GlobalCID::GlobalCID_QuerySDKVersion, request, IPCAsyncResponseCallback(cb));
 }
@@ -164,7 +218,7 @@ NEPreMeetingService* nem_sdk_hosting_module::NEMeetingSDKIMP::getPremeetingServi
     return nullptr;
 }
 
-NEMeetingSDKConfig NEMeetingSDKIMP::GetInitConfig() const {
+NEMeetingKitConfig NEMeetingSDKIMP::GetInitConfig() const {
     return global_config_;
 }
 
@@ -183,12 +237,14 @@ void NEMeetingSDKIMP::InvokeInit(const NEInitializeCallback& cb) {
     }
     if (!initting_)
         initting_ = true;
-    if (ipc_server_ == nullptr)
+
+    if (ipc_server_ == nullptr) {
         ipc_server_ = std::make_shared<NS_NIPCLIB::IPCServer>();
+    }
 
     init_callback_ = std::move(cb);
     ipc_server_->AttachInit(
-                NS_NIPCLIB::Bind(&NEMeetingSDKIMP::OnIPCServerInit, this, cb, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+        NS_NIPCLIB::Bind(&NEMeetingSDKIMP::OnIPCServerInit, this, cb, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
     ipc_server_->AttachReady(NS_NIPCLIB::Bind(&NEMeetingSDKIMP::OnIPCServerReady, this, cb));
     ipc_server_->AttachReceiveData(NS_NIPCLIB::Bind(&NEMeetingSDKIMP::OnReceiveIPCData, this, std::placeholders::_1));
     ipc_server_->AttachClientClose(NS_NIPCLIB::Bind(&NEMeetingSDKIMP::OnIPCClientClosed, this));
@@ -198,7 +254,21 @@ void NEMeetingSDKIMP::InvokeInit(const NEInitializeCallback& cb) {
 }
 
 void NEMeetingSDKIMP::OnIPCServerInit(const NEInitializeCallback& cb, bool ret, const std::string& host, int port) {
+    LOG_IPCSERVICE_INFO(std::string("OnIPCServerInit, ret: ")
+                            .append(ret ? "true" : "false")
+                            .append(", host: ")
+                            .append(host)
+                            .append(", port: ")
+                            .append(std::to_string(port)));
     IThread::SetLogger(log_callback_);
+    if (!ret) {
+        PostTaskToProcThread([this, cb]() {
+            if (cb != nullptr)
+                cb(NEErrorCode::ERROR_CODE_FAILED, "ipc server init error");
+        });
+        return;
+    }
+
     auto global = shared_from_this();
     auth_service_ = std::make_shared<NEAuthServiceIMP>();
     meeting_service_ = std::make_shared<NEMeetingServiceIMP>();
@@ -240,12 +310,7 @@ void NEMeetingSDKIMP::OnIPCServerInit(const NEInitializeCallback& cb, bool ret, 
     ServiceManager<NS_NIPCLIB::IPCServer>::RegisterService(premeeting_service_);
     SetKeepAliveInterval(global_config_.getKeepAliveInterval());
 
-    if (!ret) {
-        PostTaskToProcThread([this, cb]() {
-            if (cb != nullptr)
-                cb(NEErrorCode::ERROR_CODE_FAILED, "ipc server init error");
-        });
-    } else {
+    if (ret) {
         PostTaskToProcThread([this, port, cb]() {
             std::string shared_key = global_config_.getAppInfo()->OrganizationName();
             shared_key.append(global_config_.getAppInfo()->ApplicationName());
@@ -374,13 +439,13 @@ void NEMeetingSDKIMP::OnIPCServerInit(const NEInitializeCallback& cb, bool ret, 
         });
     }
 
-    read_init_thread_ = std::make_unique<std::thread>([this]() {
+    /*read_init_thread_ = std::make_unique<std::thread>([this]() {
         auto start = std::chrono::steady_clock::now();
         int count = 3;
         while (!read_init_ && count > 0) {
             auto end = std::chrono::steady_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
-            if (duration > 3) {
+            if (duration > 5) {
                 OnIPCServerReady(init_callback_);
                 start = end;
                 count--;
@@ -389,11 +454,13 @@ void NEMeetingSDKIMP::OnIPCServerInit(const NEInitializeCallback& cb, bool ret, 
             }
         }
     });
-    read_init_thread_->detach();
+    read_init_thread_->detach();*/
 }
 
 void NEMeetingSDKIMP::OnIPCServerReady(const NEInitializeCallback& cb) {
+    LOG_IPCSERVICE_INFO("OnIPCServerReady start.");
     PostTaskToProcThread([this, cb]() {
+        LOG_IPCSERVICE_INFO("OnIPCServerReady .......");
         InitRequest request;
         request.init_config_ = global_config_;
         SendData(GlobalCID::GlobalCID_Init, request, IPCAsyncResponseCallback(cb));
@@ -401,10 +468,12 @@ void NEMeetingSDKIMP::OnIPCServerReady(const NEInitializeCallback& cb) {
 }
 
 void NEMeetingSDKIMP::OnReceiveIPCData(const NS_NIPCLIB::IPCData& data) {
+    LOG_IPCSERVICE_INFO("OnReceiveIPCData.");
     NEMIPCProtocol protocol;
     if (protocol.Parse(data)) {
         auto service = ServiceManager<NS_NIPCLIB::IPCServer>::GetService(protocol.SID());
         if (service != nullptr) {
+            LOG_IPCSERVICE_INFO("OnReceiveIPCData, sid: " + std::to_string(protocol.SID()) + ", cid: " + std::to_string(protocol.CID()) + ", data: ");
             if (protocol.SN() > 0) {
                 IPCAsyncResponseCallback cb;
                 if (IPCAsyncRequestManager::GetInstance()->GetResponseCallback(protocol.SN(), cb))
@@ -417,43 +486,45 @@ void NEMeetingSDKIMP::OnReceiveIPCData(const NS_NIPCLIB::IPCData& data) {
 }
 
 void NEMeetingSDKIMP::OnPack(int cid, const std::string& data, const IPCAsyncResponseCallback& cb) {
+    LOG_IPCSERVICE_INFO("OnPack cid: " + std::to_string(cid) + ", data: ");
     switch (cid) {
-    case GlobalCID::GlobalCID_Init_CB:
-        read_init_ = true;
-        OnPack_InitCallback(data, cb);
-        init_callback_ = nullptr;
-        read_init_thread_ = nullptr;
-        break;
-    case GlobalCID::GlobalCID_UnInit_CB: {
-        UnInitResponse response;
-        if (response.Parse(data)) {
-            NEUnInitializeCallback uninit_cb = cb.GetResponseCallback<NEUnInitializeCallback>();
-            if (uninit_cb != nullptr) {
-                global_config_.setAppKey("");
-                uninit_cb(response.error_code_, "");
+        case GlobalCID::GlobalCID_Init_CB:
+            read_init_ = true;
+            OnPack_InitCallback(data, cb);
+            init_callback_ = nullptr;
+            read_init_thread_ = nullptr;
+            break;
+        case GlobalCID::GlobalCID_UnInit_CB: {
+            UnInitResponse response;
+            if (response.Parse(data)) {
+                NEUnInitializeCallback uninit_cb = cb.GetResponseCallback<NEUnInitializeCallback>();
+                if (uninit_cb != nullptr) {
+                    global_config_.setAppKey("");
+                    uninit_cb(response.error_code_, "");
+                }
             }
-        }
-    } break;
-    case GlobalCID_QuerySDKVersion_CB: {
-        QuerySDKVersionResponse response;
-        if (response.Parse(data)) {
-            NEQuerySDKVersionCallback query_cb = cb.GetResponseCallback<NEQuerySDKVersionCallback>();
-            if (query_cb != nullptr)
-                query_cb(response.error_code_, response.error_msg_, response.sdkVersion);
-        }
-    } break;
-    case GlobalCID_ActiveWindow_CB: {
-        ActiveWindowResponse response;
-        NEActiveWindowCallback active_cb = cb.GetResponseCallback<NEActiveWindowCallback>();
-        if (active_cb)
-            active_cb(ERROR_CODE_SUCCESS, "");
-    } break;
-    default:
-        break;
+        } break;
+        case GlobalCID_QuerySDKVersion_CB: {
+            QuerySDKVersionResponse response;
+            if (response.Parse(data)) {
+                NEQueryKitVersionCallback query_cb = cb.GetResponseCallback<NEQueryKitVersionCallback>();
+                if (query_cb != nullptr)
+                    query_cb(response.error_code_, response.error_msg_, response.sdkVersion);
+            }
+        } break;
+        case GlobalCID_ActiveWindow_CB: {
+            ActiveWindowResponse response;
+            NEActiveWindowCallback active_cb = cb.GetResponseCallback<NEActiveWindowCallback>();
+            if (active_cb)
+                active_cb(ERROR_CODE_SUCCESS, "");
+        } break;
+        default:
+            break;
     }
 }
 
 void NEMeetingSDKIMP::OnPack_InitCallback(const std::string& data, const IPCAsyncResponseCallback& cb) {
+    LOG_IPCSERVICE_INFO("OnPack_InitCallback, data: ");
     initting_ = false;
     bool bRet = true;
     InitResponse response;

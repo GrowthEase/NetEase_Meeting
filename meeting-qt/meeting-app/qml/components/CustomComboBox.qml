@@ -95,6 +95,7 @@ CustomTextFieldEx {
                         anchors.right: parent.right
                         anchors.rightMargin: 12
                         source: "qrc:/qml/images/public/icons/right.svg"
+                        mipmap: true
                         visible: listView.currentIndex === model.index
                     }
 

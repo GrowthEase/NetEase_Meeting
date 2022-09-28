@@ -8,10 +8,11 @@ import "../utils/dialogManager.js" as DialogManager
 CustomPopup {
     id: popupProfile
 
-    property var popupChangePassword: undefined
     property var popupModifyNickname: undefined
     property var popupFeedback: undefined
     property var popupAboutus: undefined
+
+    Accessible.name: "profileWindow"
 
     x: parent.width - width - 20
     y: 20
@@ -65,6 +66,7 @@ CustomPopup {
                 width: 14
                 height: 14
                 source: "qrc:/qml/images/front/icon_edit.svg"
+                mipmap: true
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                 visible: meetingManager.neLoginType !== 3
                 MouseArea {
@@ -97,38 +99,6 @@ CustomPopup {
                 text: authManager.phoneNumber
                 color: "#999999"
                 Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-            }
-        }
-        CustomToolSeparator {}
-        RowLayout {
-            id: rowPassword
-            Layout.preferredWidth: parent.width
-            Layout.preferredHeight: 50
-            Label {
-                text: qsTr("Change password")
-                font.pixelSize: 16
-                color: "#222222"
-                Layout.alignment: Qt.AlignVCenter
-            }
-            Image {
-                width: 14
-                height: 14
-                source: "qrc:/qml/images/front/icon_edit.svg"
-                Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        meetingManager.prettyMeetingId
-                        popupProfile.close()
-                        if (popupChangePassword != undefined) {
-                            popupChangePassword.destroy()
-                            popupChangePassword = undefined
-                        }
-                        popupChangePassword = Qt.createComponent("ChangePassword.qml").createObject(mainWindow)
-                        popupChangePassword.open()
-                    }
-                }
             }
         }
         CustomToolSeparator {}
@@ -167,6 +137,7 @@ CustomPopup {
                     width: 14
                     height: 14
                     source: "qrc:/qml/images/public/icons/arrow_right.png"
+                    mipmap: true
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.right: parent.right
                 }
@@ -211,6 +182,7 @@ CustomPopup {
                     width: 14
                     height: 14
                     source: "qrc:/qml/images/public/icons/arrow_right.png"
+                    mipmap: true
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.right: parent.right
                 }
@@ -268,10 +240,6 @@ CustomPopup {
     }
 
     function closeAllProfileDialog(){
-        if (popupChangePassword != undefined) {
-            popupChangePassword.destroy()
-            popupChangePassword = undefined
-        }
         if (popupModifyNickname != undefined) {
             popupModifyNickname.destroy()
             popupModifyNickname = undefined

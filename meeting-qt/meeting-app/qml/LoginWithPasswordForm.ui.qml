@@ -1,7 +1,7 @@
 ﻿import QtQuick 2.15
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
-import "components/"
+import "components"
 
 Item {
     property alias header: header
@@ -31,10 +31,10 @@ Item {
                 title: qsTr("Login with Password")
             }
 
-            PhoneNumberField {
+            CustomTextField {
                 id: textPhoneNumber
-                placeholderText: qsTr("Phone number")
-                text: rememberPhoneNumber
+                placeholderText: qsTr("Please enter a username")
+                //text: rememberPhoneNumber
                 KeyNavigation.tab: textPassword
                 Layout.preferredWidth: 330
                 Layout.topMargin: 20
@@ -54,6 +54,7 @@ Item {
 
                 LabelButton {
                     id: buttonForgotPwd
+                    visible: false
                     anchors.left: parent.left
                     anchors.leftMargin: 4
                     text: qsTr("Forgot password")
@@ -75,7 +76,7 @@ Item {
 
             CustomButton {
                 id: buttonSubmit
-                enabled: textPhoneNumber.length === 13 && textPassword.length >= 8 && textPassword.length <= 16
+                enabled: textPhoneNumber.length > 0 && textPassword.length > 0
                 highlighted: true
                 text: qsTr("Login")
                 font.pixelSize: 16

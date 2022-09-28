@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "nem_hosting_module_client/service/client_meeting_service.h"
 #include "nem_hosting_module_protocol/protocol/meeting_protocol.h"
@@ -27,6 +26,11 @@ void NEMeetingServiceIMP::startMeeting(const NEStartMeetingParams& param, const 
 void NEMeetingServiceIMP::joinMeeting(const NEJoinMeetingParams& param, const NEJoinMeetingOptions& opts, const NEJoinMeetingCallback& cb) {
     if (_ProcHandler() != nullptr)
         _ProcHandler()->onJoinMeeting(param, opts, cb);
+}
+
+void NEMeetingServiceIMP::anonymousJoinMeeting(const NEJoinMeetingParams& param, const NEJoinMeetingOptions& opts, const NEJoinMeetingCallback& cb) {
+    if (_ProcHandler() != nullptr)
+        _ProcHandler()->onAnonymousJoinMeeting(param, opts, cb);
 }
 
 void NEMeetingServiceIMP::leaveMeeting(bool finish, const NELeaveMeetingCallback& cb) {
@@ -65,9 +69,7 @@ void NEMeetingServiceIMP::subscribeRemoteAudioStream(const std::string& accountI
     if (_ProcHandler() != nullptr)
         _ProcHandler()->onSubscribeRemoteAudioStream(accountId, subscribe, cb);
 }
-void NEMeetingServiceIMP::subscribeRemoteAudioStreams(const std::vector<std::string>& accountIdList,
-                                                           bool subscribe,
-                                                           const NEEmptyCallback& cb) {
+void NEMeetingServiceIMP::subscribeRemoteAudioStreams(const std::vector<std::string>& accountIdList, bool subscribe, const NEEmptyCallback& cb) {
     if (_ProcHandler() != nullptr)
         _ProcHandler()->onSubscribeRemoteAudioStreams(accountIdList, subscribe, cb);
 }
@@ -98,6 +100,18 @@ void NEMeetingServiceIMP::OnPack(int cid, const std::string& data, uint64_t sn) 
                                 response.error_msg_ = error_msg;
                                 SendData(MettingCID::MettingCID_Join_CB, response, sn);
                             }));
+            }
+        } break;
+        case MettingCID::MettingCID_AnonymousJoin: {
+            JoinRequest request;
+            if (request.Parse(data)) {
+                anonymousJoinMeeting(request.param_, request.options_,
+                                     ToWeakCallback([this, sn](NEErrorCode error_code, const std::string& error_msg) {
+                                         JoinResponse response;
+                                         response.error_code_ = error_code;
+                                         response.error_msg_ = error_msg;
+                                         SendData(MettingCID::MettingCID_AnonymousJoin_CB, response, sn);
+                                     }));
             }
         } break;
         case MeetingCID_Leave: {
@@ -149,36 +163,35 @@ void NEMeetingServiceIMP::OnPack(int cid, const std::string& data, uint64_t sn) 
             SubscribeAudioStreamsRequest request;
             if (request.Parse(data)) {
                 subscribeRemoteAudioStream(request.accountIdList_.front(), request.subscribe_,
-                    ToWeakCallback([this, sn](NEErrorCode error_code, const std::string& error_message) {
-                        NEMIPCProtocolErrorInfoBody response;
-                        response.error_code_ = error_code;
-                        response.error_msg_ = error_message;
-                        SendData(MettingCID::MettingCID_SubscribeAudioStream_CB, response, sn);
-                    }));
+                                           ToWeakCallback([this, sn](NEErrorCode error_code, const std::string& error_message) {
+                                               NEMIPCProtocolErrorInfoBody response;
+                                               response.error_code_ = error_code;
+                                               response.error_msg_ = error_message;
+                                               SendData(MettingCID::MettingCID_SubscribeAudioStream_CB, response, sn);
+                                           }));
             }
         } break;
         case MettingCID::MettingCID_SubscribeAudioStreams: {
             SubscribeAudioStreamsRequest request;
             if (request.Parse(data)) {
                 subscribeRemoteAudioStreams(request.accountIdList_, request.subscribe_,
-                                                 ToWeakCallback([this, sn](NEErrorCode error_code, const std::string& error_message) {
-                                                     NEMIPCProtocolErrorInfoBody response;
-                                                     response.error_code_ = error_code;
-                                                     response.error_msg_ = error_message;
-                                                     SendData(MettingCID::MettingCID_SubscribeAudioStreams_CB, response, sn);
-                                                 }));
+                                            ToWeakCallback([this, sn](NEErrorCode error_code, const std::string& error_message) {
+                                                NEMIPCProtocolErrorInfoBody response;
+                                                response.error_code_ = error_code;
+                                                response.error_msg_ = error_message;
+                                                SendData(MettingCID::MettingCID_SubscribeAudioStreams_CB, response, sn);
+                                            }));
             }
         } break;
         case MettingCID::MettingCID_SubscribeAllAudioStreams: {
             SubscribeAllAudioStreamsRequest request;
             if (request.Parse(data)) {
-                subscribeAllRemoteAudioStreams(request.finish_,
-                                           ToWeakCallback([this, sn](NEErrorCode error_code, const std::string& error_message) {
-                                               NEMIPCProtocolErrorInfoBody response;
-                                               response.error_code_ = error_code;
-                                               response.error_msg_ = error_message;
-                                               SendData(MettingCID::MettingCID_SubscribeAllAudioStreams_CB, response, sn);
-                                           }));
+                subscribeAllRemoteAudioStreams(request.finish_, ToWeakCallback([this, sn](NEErrorCode error_code, const std::string& error_message) {
+                                                   NEMIPCProtocolErrorInfoBody response;
+                                                   response.error_code_ = error_code;
+                                                   response.error_msg_ = error_message;
+                                                   SendData(MettingCID::MettingCID_SubscribeAllAudioStreams_CB, response, sn);
+                                               }));
             }
         } break;
     }

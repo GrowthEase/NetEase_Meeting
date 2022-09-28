@@ -1,4 +1,8 @@
-﻿/**
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+
+/**
  * @file meeting_sdk.h
  * @brief SDK头文件
  * @copyright (c) 2014-2021, NetEase Inc. All rights reserved
@@ -9,9 +13,9 @@
 #ifndef NEM_SDK_INTERFACE_INTERFACE_MEETING_SDK_H_
 #define NEM_SDK_INTERFACE_INTERFACE_MEETING_SDK_H_
 
-#include "sdk_init_config.h"
 #include "callback_interface.h"
 #include "exception_define.h"
+#include "sdk_init_config.h"
 
 NNEM_SDK_INTERFACE_BEGIN_DECLS
 
@@ -25,26 +29,27 @@ class NEPreMeetingService;
 /**
  * @brief SDK单例
  */
-class NEM_SDK_INTERFACE_EXPORT NEMeetingSDK : public NEObject
-{
+class NEM_SDK_INTERFACE_EXPORT NEMeetingKit : public NEObject {
 public:
     using NEInitializeCallback = NEEmptyCallback;
     using NEUnInitializeCallback = NEEmptyCallback;
-    using NEQuerySDKVersionCallback = NECallback<std::string>;
+    using NEQueryKitVersionCallback = NECallback<std::string>;
     using NEActiveWindowCallback = NEEmptyCallback;
+    using NEBoolCallback = NECallback<bool>;
     using NEExceptionHandler = std::function<void(const NEException&)>;
+
 public:
     ////////////////////////////////////////////////////////
-    /** \addtogroup getNEMeetingSDK
+    /** \addtogroup getNEMeetingKit
      @{
      */
     ////////////////////////////////////////////////////////
 
     /**
      * @brief 获取SDK单例
-     * @return NEMeetingSDK* 单例对象指针
+     * @return NEMeetingKit* 单例对象指针
      */
-    static NEMeetingSDK* getInstance();
+    static NEMeetingKit* getInstance();
 
     ////////////////////////////////////////////////////////
     /** @} */
@@ -56,7 +61,7 @@ public:
      * @param cb 回调，NEInitializeCallback
      * @return void
      */
-    virtual void initialize(const NEMeetingSDKConfig& config, const NEInitializeCallback& cb) = 0;
+    virtual void initialize(const NEMeetingKitConfig& config, const NEInitializeCallback& cb) = 0;
 
     /**
      * @brief 反初始化
@@ -78,7 +83,7 @@ public:
      * @param cb 回调
      * @return void
      */
-    virtual void querySDKVersion(const NEQuerySDKVersionCallback& cb) = 0;
+    virtual void queryKitVersion(const NEQueryKitVersionCallback& cb) = 0;
 
     /**
      * @brief 激活主窗口
@@ -86,6 +91,23 @@ public:
      * @return void
      */
     virtual void activeWindow(const NEActiveWindowCallback& cb) = 0;
+
+    /**
+     * @brief 设置SDK程序是否为软件渲染
+     * @note 只在Windows下有效，需要在初始化前调用
+     * @param bSoftware 是否为软件渲染，true软件渲染，false默认方式
+     * @param cb 回调
+     * @return void
+     */
+    virtual void setSoftwareRender(bool bSoftware, const NEEmptyCallback& cb) = 0;
+
+    /**
+     * @brief 获取SDK程序是否为软件渲染
+     * @note 只在Windows下有效
+     * @param cb 回调
+     * @return void
+     */
+    virtual void isSoftwareRender(const NEBoolCallback& cb) = 0;
 
     /**
      * @brief 设置异常回调
@@ -97,7 +119,7 @@ public:
     /**
      * @brief 设置日志回调
      * @param cb 回调
-     * @note level的含义和取值有DEBUG = 0, INFO = 1, WARNING=2, ERROR=3, FATAL=4
+     * @note level 日志级别
      * @attention 只有少量的组件接口层关键日志
      * @return void
      */
@@ -140,4 +162,4 @@ public:
     virtual NEPreMeetingService* getPremeetingService() = 0;
 };
 NNEM_SDK_INTERFACE_END_DECLS
-#endif // NEM_SDK_INTERFACE_INTERFACE_MEETING_SDK_H_
+#endif  // NEM_SDK_INTERFACE_INTERFACE_MEETING_SDK_H_

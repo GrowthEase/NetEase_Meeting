@@ -65,23 +65,51 @@ Window {
 
     Connections {
         target: meetingManager
-        onMuteStatusNotify: {
-            if (authManager.authAccountId === membersManager.hostAccountId) {
-                if (meetingManager.meetingMuted)
-                    toast.show(qsTr('You have turned on all mute'))
-                else
-                    toast.show(qsTr('You have turned off all mute'))
+        onMuteStatusNotify: {            
+            if(audio) {
+                if (authManager.authAccountId === membersManager.hostAccountId
+                        || membersManager.isManagerRole) {
+                    if (meetingManager.meetingMuted)
+                        toast.show(qsTr('You have turned on all mute'))
+                    else
+                        toast.show(qsTr('You have turned off all mute'))
+                } else {
+                    if (meetingManager.meetingMuted && audioManager.localAudioStatus !== 3 && audioManager.localAudioStatus !== 2){
+                        toast.show(qsTr('This meeting has been turned on all mute by host'))
+                    }
+                }
             } else {
-                if (meetingManager.meetingMuted && audioManager.localAudioStatus !== 3 && audioManager.localAudioStatus !== 2)
-                    toast.show(qsTr('This meeting has been turned on all mute by host'))
+                if (authManager.authAccountId === membersManager.hostAccountId
+                        || membersManager.isManagerRole) {
+                    if (meetingManager.meetingVideoMuted)
+                        toast.show(qsTr('You have turned on all mute video'))
+                    else
+                        toast.show(qsTr('You have turned off all mute video'))
+                } else {
+                    if (meetingManager.meetingVideoMuted && videoManager.localVideoStatus !== 3 && videoManager.localVideoStatus !== 2){
+                        toast.show(qsTr('This meeting has been turned on all mute video by host'))
+                    }
+                }
             }
         }
         onLockStatusNotify: {
-            if (authManager.authAccountId === membersManager.hostAccountId) {
+            if (authManager.authAccountId === membersManager.hostAccountId
+                    || membersManager.isManagerRole) {
                 if (meetingManager.meetingLocked)
-                toast.show(qsTr('You have been locked this meeting'))
+                    toast.show(qsTr('You have been locked this meeting'))
                 else
-                toast.show(qsTr('You have been unlocked this meeting'))
+                    toast.show(qsTr('You have been unlocked this meeting'))
+            }
+        }
+    }
+
+    Connections {
+        target: membersManager
+        onManagerUpdateSuccess: {
+            if(set) {
+                toast.show(nickname + qsTr('has been set as manager'))
+            } else {
+                toast.show(nickname + qsTr('has been unset as manager'))
             }
         }
     }

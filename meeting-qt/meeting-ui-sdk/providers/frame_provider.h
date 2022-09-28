@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef VIDEO_SOURCE_H
 #define VIDEO_SOURCE_H
@@ -22,6 +21,7 @@ class FrameProvider : public QObject {
     Q_PROPERTY(QAbstractVideoSurface* videoSurface READ videoSurface WRITE setVideoSurface)
     Q_PROPERTY(QString accountId READ accountId WRITE setAccountId NOTIFY accountIdChanged)
     Q_PROPERTY(bool subVideo READ subVideo WRITE setSubVideo NOTIFY subVideoChanged)
+    Q_PROPERTY(QString uuid READ uuid)
 
 public:
     explicit FrameProvider(QObject* parent = nullptr);
@@ -35,6 +35,8 @@ public:
 
     bool subVideo() const;
     void setSubVideo(bool subVideo);
+
+    QString uuid() const { return m_uuid; }
 
 signals:
     void receivedVideoFrame(const QVideoFrame& frame, const QSize& videoSize);
@@ -56,6 +58,7 @@ private:
     int m_iLastStreamFps = -1;
     QTimer m_timer;
     bool m_subVideo = false;
+    QString m_uuid;
 };
 
 #endif  // VIDEO_SOURCE_H

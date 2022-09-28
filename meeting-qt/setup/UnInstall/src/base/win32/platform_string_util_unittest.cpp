@@ -1,9 +1,7 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
-// Copyright (c) 2011, NetEase Inc. All rights reserved.
 // All rights reserved.
 //
 // Author: Wang Rongtao <rtwang@corp.netease.com>
@@ -20,20 +18,19 @@
 #define TEST_STRING "asfj我是中国宁"
 #define TEST_WSTRING L"asfj我是中国宁"
 
-TEST(Win32, MBCSUnicodeConversion)
-{
-	std::string mbcs;
-	std::wstring unicode;
-	nbase::win32::MBCSToUnicode(TEST_STRING, unicode);
-	EXPECT_EQ(std::wstring(TEST_WSTRING), unicode);
-	nbase::win32::UnicodeToMBCS(unicode, mbcs);
-	EXPECT_EQ(std::string(TEST_STRING), mbcs);
+TEST(Win32, MBCSUnicodeConversion) {
+    std::string mbcs;
+    std::wstring unicode;
+    nbase::win32::MBCSToUnicode(TEST_STRING, unicode);
+    EXPECT_EQ(std::wstring(TEST_WSTRING), unicode);
+    nbase::win32::UnicodeToMBCS(unicode, mbcs);
+    EXPECT_EQ(std::string(TEST_STRING), mbcs);
 
-	nbase::win32::UnicodeToMBCS(TEST_WSTRING, mbcs);
-	EXPECT_EQ(std::string(TEST_STRING), mbcs);
-	nbase::win32::MBCSToUnicode(mbcs, unicode);
-	EXPECT_EQ(std::wstring(TEST_WSTRING), unicode);
+    nbase::win32::UnicodeToMBCS(TEST_WSTRING, mbcs);
+    EXPECT_EQ(std::string(TEST_STRING), mbcs);
+    nbase::win32::MBCSToUnicode(mbcs, unicode);
+    EXPECT_EQ(std::wstring(TEST_WSTRING), unicode);
 }
 
-#endif // OS_WIN
-#endif // WITH_UNITTEST
+#endif  // OS_WIN
+#endif  // WITH_UNITTEST

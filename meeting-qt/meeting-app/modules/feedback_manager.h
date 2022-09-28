@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef HTTPUP_LOADER_H
 #define HTTPUP_LOADER_H
@@ -121,13 +120,18 @@ public:
     FeedbackManager(AuthManager* auth, QObject* parent = nullptr);
     ~FeedbackManager();
 
-    Q_INVOKABLE void invokeFeedback(const QJsonArray& category, const QString& description);
+    Q_INVOKABLE void invokeFeedback(const QJsonArray& category, const QString& description, bool needAudioDump = false);
 
 public:
     virtual void onFeedbackStatus(int type, int status, std::string url) override;
+
+public slots:
+    void resetFeedback();
+
 signals:
     void postRequest(const HttpFeedbackRequest& request);
     void feedbackResult(int code, const QString& result);
+    void feedbackFinished();
 private slots:
     void onInvokeFeedback();
     void onPostRequest(const HttpFeedbackRequest& request);
@@ -144,6 +148,7 @@ private:
     QTimer m_feedbackTimer;
     AuthManager* m_authsvr;
     std::shared_ptr<HttpManager> m_httpManager;
+    bool m_needAudioDump = false;
 };
 
 #endif  // HTTPUP_LOADER_H

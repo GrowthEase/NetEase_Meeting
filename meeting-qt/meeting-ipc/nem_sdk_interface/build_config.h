@@ -1,4 +1,8 @@
-﻿/**
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+
+/**
  * @file build_config.h
  * @brief 编译配置头文件
  * @copyright (c) 2014-2021, NetEase Inc. All rights reserved
@@ -18,4 +22,4 @@
  */
 #define NS_I_NEM_SDK nem_sdk_interface
 
-#endif //NEM_SDK_INTERFACE_BUILD_CONFIG_H_
+#endif  // NEM_SDK_INTERFACE_BUILD_CONFIG_H_

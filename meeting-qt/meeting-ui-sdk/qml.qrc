@@ -251,5 +251,44 @@
         <file>qml/images/live/share_preview_3.png</file>
         <file>qml/images/live/share_preview_4.png</file>
         <file>qml/images/meeting/go_page.svg</file>
+        <file>qml/share/SSRequestPermissionWindow.qml</file>
+        <file>qml/images/sidebar/voice_on_1.svg</file>
+        <file>qml/images/sidebar/voice_on_2.svg</file>
+        <file>qml/images/sidebar/voice_on_3.svg</file>
+        <file>qml/images/sidebar/voice_on_4.svg</file>
+        <file>qml/images/sidebar/voice_on_1.png</file>
+        <file>qml/images/sidebar/voice_on_2.png</file>
+        <file>qml/images/sidebar/voice_on_3.png</file>
+        <file>qml/images/sidebar/voice_on_4.png</file>
+        <file>qml/invite/InvitationList.qml</file>
+        <file>qml/images/meeting/footerbar/btn_sip.png</file>
+        <file>qml/settings/VirtualBackground.qml</file>
+        <file>qml/images/settings/virtaulbackground_active.svg</file>
+        <file>qml/images/settings/virtaulbackground_normal.svg</file>
+        <file>qml/images/settings/vb/add.svg</file>
+        <file>qml/images/settings/vb/add_s.svg</file>
+        <file>qml/images/settings/vb/delete.svg</file>
+        <file>qml/components/CustomTipArea.qml</file>
+        <file>qml/images/public/icons/icon_close_min.png</file>
+        <file>qml/images/public/icons/icon_warning.svg</file>
+        <file>qml/images/chatroom/file.svg</file>
+        <file>qml/images/chatroom/image.svg</file>
+        <file>qml/components/RingProgressbar.qml</file>
+        <file>qml/images/chatroom/file/audio.svg</file>
+        <file>qml/images/chatroom/file/doc.svg</file>
+        <file>qml/images/chatroom/file/excel.svg</file>
+        <file>qml/images/chatroom/file/pdf.svg</file>
+        <file>qml/images/chatroom/file/ppt.svg</file>
+        <file>qml/images/chatroom/file/rar.svg</file>
+        <file>qml/images/chatroom/file/text.svg</file>
+        <file>qml/images/chatroom/file/unknow.svg</file>
+        <file>qml/images/chatroom/file/video.svg</file>
+        <file>qml/images/chatroom/error.svg</file>
+        <file>qml/images/chatroom/file/image.svg</file>
+        <file>qml/images/meeting/volume/volume_level_1.png</file>
+        <file>qml/images/meeting/volume/volume_level_2.png</file>
+        <file>qml/images/meeting/volume/volume_level_3.png</file>
+        <file>qml/images/meeting/volume/volume_level_4.png</file>
+        <file>qml/images/meeting/volume/volume_level_5.png</file>
     </qresource>
 </RCC>

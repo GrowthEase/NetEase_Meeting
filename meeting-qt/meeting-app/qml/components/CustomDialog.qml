@@ -5,6 +5,8 @@ import QtGraphicalEffects 1.0
 
 Dialog {
     id: root
+    Accessible.name: title.text
+
     width: 330
     height: 160
     modal: true

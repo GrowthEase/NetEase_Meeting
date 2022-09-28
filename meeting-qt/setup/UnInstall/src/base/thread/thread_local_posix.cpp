@@ -1,9 +1,7 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
-// Copyright (c) 2011, NetEase Inc. All rights reserved.
 //
 // Author: Wang Rongtao <rtwang@corp.netease.com>
 // Date: 2011/6/14
@@ -20,34 +18,30 @@ namespace nbase {
 namespace internal {
 
 // static
-void ThreadLocalPlatform::AllocateSlot(SlotType &slot)
-{
-	int error = pthread_key_create(&slot, NULL);
-	assert(error == 0);
+void ThreadLocalPlatform::AllocateSlot(SlotType& slot) {
+    int error = pthread_key_create(&slot, NULL);
+    assert(error == 0);
 }
 
 // static
-void ThreadLocalPlatform::FreeSlot(SlotType &slot)
-{
-	int error = pthread_key_delete(slot);
-	assert(error == 0);
+void ThreadLocalPlatform::FreeSlot(SlotType& slot) {
+    int error = pthread_key_delete(slot);
+    assert(error == 0);
 }
 
 // static
-void* ThreadLocalPlatform::GetValueFromSlot(SlotType &slot)
-{
-	return pthread_getspecific(slot);
+void* ThreadLocalPlatform::GetValueFromSlot(SlotType& slot) {
+    return pthread_getspecific(slot);
 }
 
 // static
-void ThreadLocalPlatform::SetValueInSlot(SlotType &slot, void *value)
-{
-	int error = pthread_setspecific(slot, value);
-	assert(error == 0);
+void ThreadLocalPlatform::SetValueInSlot(SlotType& slot, void* value) {
+    int error = pthread_setspecific(slot, value);
+    assert(error == 0);
 }
 
 }  // namespace internal
 
-}  // namespace base
+}  // namespace nbase
 
-#endif // OS_POSIX
+#endif  // OS_POSIX

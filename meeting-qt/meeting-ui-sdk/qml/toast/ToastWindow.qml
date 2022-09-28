@@ -25,6 +25,12 @@ Window {
 
     }
 
+    onVisibleChanged: {
+        if (Qt.platform.os === 'windows') {
+            visible ? shareManager.addExcludeShareWindow(root) : shareManager.removeExcludeShareWindow(root)
+        }
+    }
+
     function displayText(text, screen) {
         if (screen !== undefined) {
             root.screen = screen
@@ -75,8 +81,9 @@ Window {
             duration: fadeTime
         }
         onRunningChanged: {
-            if (!running)
-                root.hide();
+            if (!running) {
+                root.hide()
+            }
         }
     }
 }

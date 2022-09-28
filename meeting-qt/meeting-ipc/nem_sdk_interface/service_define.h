@@ -1,4 +1,8 @@
-﻿/**
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+
+/**
  * @file service_define.h
  * @brief 公共服务定义头文件
  * @copyright (c) 2014-2021, NetEase Inc. All rights reserved
@@ -9,15 +13,14 @@
 #ifndef NEM_SDK_INTERFACE_DEFINE_SERVICE_H_
 #define NEM_SDK_INTERFACE_DEFINE_SERVICE_H_
 
-#include "public_define.h"
 #include "callback_interface.h"
+#include "public_define.h"
 NNEM_SDK_INTERFACE_BEGIN_DECLS
 
 /**
  * @brief 公共服务
  */
-class NEM_SDK_INTERFACE_EXPORT NEService : public NEObject
-{
+class NEM_SDK_INTERFACE_EXPORT NEService : public NEObject {
 public:
     /**
      * @brief 构造函数
@@ -27,9 +30,9 @@ public:
     /**
      * @brief 析构函数
      */
-    virtual ~NEService() {};
+    virtual ~NEService(){};
 };
 
 NNEM_SDK_INTERFACE_END_DECLS
 
-#endif//NEM_SDK_INTERFACE_DEFINE_SERVICE_H_
+#endif  // NEM_SDK_INTERFACE_DEFINE_SERVICE_H_

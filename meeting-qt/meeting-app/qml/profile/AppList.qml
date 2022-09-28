@@ -61,6 +61,7 @@ CustomPopup {
                     anchors.right: parent.right
                     anchors.rightMargin: 18
                     anchors.verticalCenter: parent.verticalCenter
+                    mipmap: true
                     source: 'qrc:/qml/images/front/icon-selected.svg'
                 }
                 onClicked: {
@@ -73,7 +74,7 @@ CustomPopup {
     Connections {
         target: authManager
         onGotAccountApps: {
-            console.info('Got account app list: ', JSON.stringify(accountApps))
+            //console.info('Got account app list: ', JSON.stringify(accountApps))
             appListModel.clear()
             for (let i = 0; i < accountApps.length; i++) {
                 appListModel.append({ appName: accountApps[i].appName, appKey: accountApps[i].appKey })

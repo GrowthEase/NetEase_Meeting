@@ -25,7 +25,7 @@ LoginWithPasswordForm {
     }
 
     buttonLoginWithCode.onClicked: {
-        pageLoader.setSource(Qt.resolvedUrl("qrc:/qml/LoginWithCode.qml"), { rememberPhoneNumber: textPhoneNumber.text })
+        pageLoader.setSource(Qt.resolvedUrl("qrc:/qml/LoginWithCode.qml")/*, { rememberPhoneNumber: textPhoneNumber.text }*/)
     }
 
     buttonSubmit.onClicked: {
@@ -36,8 +36,8 @@ LoginWithPasswordForm {
                                 textPhoneNumber.phoneNumber(),
                                 textPassword.text)
         */
-        authManager.loginByPassword(textPhoneNumber.phoneNumber(),
-                                    textPassword.text);
+
+        meetingManager.loginByPassword(authManager.aPaasAppKey, textPhoneNumber.text, textPassword.text);
         buttonSubmit.enabled = false
     }
 
@@ -45,11 +45,10 @@ LoginWithPasswordForm {
         target: authManager
         onLoggedIn: {
             console.info('Login to application server successful.')
-            meetingManager.loginByPassword(authManager.aPaasAppKey, textPhoneNumber.phoneNumber(), textPassword.text);
         }
         onError: {
             buttonSubmit.enabled = Qt.binding(function() {
-                return textPhoneNumber.length === 13 && textPassword.length >= 8 && textPassword.length <= 16
+                return textPhoneNumber.length > 0 && textPassword.length > 0
             })
             message.error(result.msg)
         }
@@ -63,7 +62,7 @@ LoginWithPasswordForm {
                 pageLoader.setSource(Qt.resolvedUrl("qrc:/qml/FrontPage.qml"))
             } else {
                 message.error(errorMessage)
-                buttonSubmit.enabled = Qt.binding(function() { return textPhoneNumber.length === 13 && textPassword.length >= 8 && textPassword.length <= 16 })
+                buttonSubmit.enabled = Qt.binding(function() { return textPhoneNumber.length > 0 && textPassword.length > 0 })
             }
         }
     }

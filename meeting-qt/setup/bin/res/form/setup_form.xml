@@ -20,7 +20,7 @@
 							<Button name="custom_path" width="40" height="32" normalimage="btn_path_normal.png" hotimage="btn_path_hovered.png" pushedimage="btn_path_pressed.png" />
 						</HBox>
 						<HBox margin="40,7,80,0" >
-							<Label font="1" normaltextcolor="lightcolor" text="所需空间：30M" />
+							<Label font="1" normaltextcolor="lightcolor" text="所需空间：400M" />
 							<Label font="1" name="local_space" normaltextcolor="lightcolor" margin="14,0,0,0"/>
 							<Control />
 							<Label font="1" name="path_err_tip" normaltextcolor="tip" />
@@ -32,7 +32,7 @@
 							<Control width="stretch"/>
 							<CheckBox class="checkbox_font14" name="chkbox_read" align="vcenter" text="我已经阅读并认可" normaltextcolor="darkcolor" selected="false"/>
 							<Button name="btn_readme" cursortype="hand" font="2" align="vcenter" normaltextcolor="green" text="《网易会议用户协议》"/>
-							<Button name="btn_readme2" cursortype="hand" font="2" align="vcenter" normaltextcolor="green" text="《网易集团隐私政策》"/>
+							<Button name="btn_readme2" cursortype="hand" font="2" align="vcenter" normaltextcolor="green" text="《网易会议隐私政策》"/>
 							<Control width="stretch"/>
 						</HBox>
 						<Button name="setup" width="290" height="40" halign="center" normalimage="btn_installation_normal.png" hotimage="btn_installation_hovered.png" pushedimage="btn_installation_pressed.png" disabledimage="btn_installation_disable.png" font="7" normaltextcolor="white" disabledtextcolor="white" margin="0,10,0,0" text="一键安装"/>

@@ -8,6 +8,7 @@ import NetEase.Meeting.GlobalToast 1.0
 import NetEase.Meeting.GlobalChatManager 1.0
 import NetEase.Meeting.ScreenSaver 1.0
 import NetEase.Meeting.MessageBubble 1.0
+import QtQuick.Dialogs 1.3
 
 import "utils/dialogManager.js" as DialogManager
 import "components"
@@ -38,6 +39,21 @@ Rectangle {
     property string defaultDuration: '00:00:00'
     property int latestMeetingStatus: -1
     property bool extensionsShow: membersBar.show || chatBar.show
+    property var tempDynamicDialog: undefined
+    property var tempDynamicDialogEx: undefined
+    property var microphoneDynamicDialog: undefined
+    property var cameraDynamicDialog: undefined
+    property bool hasShowRemainingTip: false
+    property bool spacePressed: false
+    property bool temporarilyUnmute: false
+
+    enum AudioVolumeLevel {
+        Level_1 = 1,
+        Level_2,
+        Level_3,
+        Level_4,
+        Level_5
+    }
 
     signal newMsgNotity(int msgCount, string sender, string text)
 
@@ -61,6 +77,45 @@ Rectangle {
         extensions.visible = extensionsShow
     }
 
+    onSpacePressedChanged: {
+        if(!SettingsManager.enableUnmuteBySpace) {
+            return
+        }
+
+        if(spacePressed) {
+            console.log("SpacePressed start...")
+            if(audioManager.localAudioStatus === MeetingStatus.DEVICE_ENABLED) {
+                return
+            }
+
+            var enterTemporarilyUnmute = false
+            if(membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole) {
+                enterTemporarilyUnmute = true
+            } else {
+                if(!meetingManager.meetingMuted) {
+                    enterTemporarilyUnmute = true
+                } else {
+                    if(meetingManager.meetingAllowSelfAudioOn) {
+                        enterTemporarilyUnmute = true
+                    }
+                }
+            }
+
+            if(enterTemporarilyUnmute) {
+                audioManager.muteLocalAudio(false)
+                temporarilyUnmute = true
+                console.log("temporarilyUnmute start...")
+            }
+        } else {
+            console.log("SpacePressed end...")
+            if(temporarilyUnmute) {
+                audioManager.muteLocalAudio(true)
+                temporarilyUnmute = false
+                console.log("temporarilyUnmute end...")
+            }
+        }
+    }
+
     Shortcut {
         sequence: "Ctrl+V,Ctrl+S"
         onActivated: {
@@ -82,7 +137,7 @@ Rectangle {
     }
 
     MuteConfirmDialog{
-        id:muteConfirmDialog;
+        id:muteConfirmDialog
     }
 
     DeviceSelector {
@@ -108,16 +163,27 @@ Rectangle {
 
     Invitation {
         id: invitation
+        onVisibleChanged: {
+            if (Qt.platform.os === 'windows') {
+                visible ? shareManager.addExcludeShareWindow(invitation) : shareManager.removeExcludeShareWindow(invitation)
+            }
+        }
+    }
+
+    InvitationList {
+        id: invitationList
+        onVisibleChanged: {
+            if (Qt.platform.os === 'windows') {
+                visible ? shareManager.addExcludeShareWindow(invitationList) : shareManager.removeExcludeShareWindow(invitationList)
+            }
+        }
     }
 
     MoreItemsMenu {
         id: moreItemsMenu
         y: footerBar.y - height - 10
         onVisibleChanged: {
-            if (visible)
-                hideFooterBarTimer.stop()
-            else
-                hideFooterBarTimer.start()
+            visible ? hideFooterBarTimer.stop() : hideFooterBarTimer.start()
         }
     }
 
@@ -125,10 +191,7 @@ Rectangle {
         id: moreItemsMenuEx
         y: footerBar.y - height - 10
         onVisibleChanged: {
-            if (visible)
-                hideFooterBarTimer.stop()
-            else
-                hideFooterBarTimer.start()
+            visible ? hideFooterBarTimer.stop() : hideFooterBarTimer.start()
         }
     }
 
@@ -139,11 +202,21 @@ Rectangle {
 
     ShareVideo {
         id: shareVideo
+        onVisibleChanged: {
+            if (Qt.platform.os === 'windows') {
+                visible ? shareManager.addExcludeShareWindow(shareVideo) : shareManager.removeExcludeShareWindow(shareVideo)
+            }
+        }
     }
 
     LiveSetting {
         id: liveSetting
         screen: mainWindow.screen
+        onVisibleChanged: {
+            if (Qt.platform.os === 'windows') {
+                visible ? shareManager.addExcludeShareWindow(liveSetting) : shareManager.removeExcludeShareWindow(liveSetting)
+            }
+        }
     }
 
     SSRequestPermission {
@@ -153,6 +226,11 @@ Rectangle {
 
     SSOutsideWindow {
         id: sSOutsideWindow
+        onVisibleChanged: {
+            if (Qt.platform.os === 'windows') {
+                visible ? shareManager.addExcludeShareWindow(sSOutsideWindow) : shareManager.removeExcludeShareWindow(sSOutsideWindow)
+            }
+        }
     }
 
     ScreenSaver {
@@ -173,7 +251,7 @@ Rectangle {
                 anchors.left: parent.left
                 width: parent.width
                 placeholderText: qsTr("Please enter password")
-                validator: RegExpValidator { regExp: /[0-9a-zA-Z]{4,20}/ }
+                validator: RegExpValidator { regExp: /[0-9]{4,1000}/ }
             }
             Label {
                 id: idTFieldPwdError
@@ -233,12 +311,45 @@ Rectangle {
     Item {
         id: mainLayoutEx
         anchors.fill: parent
+
+        Keys.enabled: true
+        Keys.onSpacePressed: {
+            if(event.isAutoRepeat && !temporarilyUnmute) {
+                root.spacePressed = true
+            }
+        }
+        Keys.onReleased: {
+            if(event.key === Qt.Key_Space && !event.isAutoRepeat) {
+                root.spacePressed = false
+            }
+        }
+
+        onActiveFocusChanged: {
+            if(!activeFocus) {
+                if(SettingsManager.enableUnmuteBySpace && temporarilyUnmute && root.spacePressed) {
+                    audioManager.muteLocalAudio(true)
+                    temporarilyUnmute = false
+                    console.log("temporarilyUnmute end by lose focus...")
+                }
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            propagateComposedEvents: true
+            onClicked: {
+                mainLayoutEx.forceActiveFocus()
+                mouse.accepted = false
+            }
+        }
+
         Rectangle {
             id: loaderLayout
             anchors.left: parent.left
             anchors.top: parent.top
             width: parent.width - (extensions.visible ? extensions.width : 0)
             height: parent.height
+
             Loader {
                 id: mainLoader
                 anchors.fill: parent
@@ -266,6 +377,7 @@ Rectangle {
                             anchors.centerIn: parent
                             width: 11
                             height: 11
+                            mipmap: true
                             source: 'qrc:/qml/images/meeting/icon_information.png'
                         }
                         MouseArea {
@@ -294,6 +406,7 @@ Rectangle {
                             height: 13
                             opacity: 1.0
                             anchors.centerIn: parent
+                            mipmap: true
                             source: {
                                 const netWorkQualityType = membersManager.netWorkQualityType
                                 if (MeetingStatus.NETWORKQUALITY_GOOD === netWorkQualityType) {
@@ -379,7 +492,9 @@ Rectangle {
                                 }
                             }
                             color: "#FFFFFF"
+                            width: Qt.platform.os === 'osx' ? 52 : undefined
                             font.pixelSize: 12
+                            Accessible.name: "duration"
                         }
                     }
                     Rectangle {
@@ -393,6 +508,7 @@ Rectangle {
                             height: 13
                             opacity: 1.0
                             anchors.centerIn: parent
+                            mipmap: true
                             source: mainWindow.visibility === Window.FullScreen
                                     ? "qrc:/qml/images/public/icons/show_normal.png"
                                     : "qrc:/qml/images/public/icons/show_fullscreen.png"
@@ -406,11 +522,12 @@ Rectangle {
                             onClicked: mainWindow.visibility === Window.FullScreen ? mainWindow.showNormal() : mainWindow.showFullScreen()
                         }
                     }
+
                 }
 
                 RowLayout {
                     id: activeSpeakerTootips
-                    visible:false
+                    visible: false
                     Layout.alignment: Qt.AlignRight
                     Rectangle {
                         Layout.preferredHeight: 21
@@ -433,12 +550,78 @@ Rectangle {
                                 Layout.topMargin: 2
                                 color: "#FFFFFF"
                                 font.pixelSize: 12
-                                //text: audioManager.activeSpeakerNickname
                             }
                         }
                     }
                 }
 
+                RowLayout {
+                    id: speakers
+                    visible: false
+                    Layout.alignment: Qt.AlignRight
+                    Rectangle {
+                        id: speaker
+                        Layout.preferredHeight: 21
+                        Layout.preferredWidth: childrenRect.width + 4
+                        radius: 2
+                        color: "#CC313138"
+                        RowLayout {
+                            anchors.left: parent.left
+                            anchors.leftMargin: 0
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 0
+                            Image {
+                                id: microphoneImg
+                                Layout.leftMargin: 2
+                                width: 14
+                                height: 14
+                                source: "qrc:/qml/images/meeting/microphone.svg"
+                                mipmap: true
+                            }
+
+                            CustomToolSeparator {
+                                id: helloline
+                                Layout.leftMargin: 0
+                                opacity: 0.8
+                                width: 1
+                                contentItem: Rectangle {
+                                    width: 1
+                                    implicitWidth: 1
+                                    implicitHeight: 21
+                                    gradient: Gradient {
+                                        GradientStop {
+                                            position: 0.0
+                                            color: "#292938"
+                                        }
+                                        GradientStop {
+                                            position: 1.0
+                                            color: "#1B1B22"
+                                        }
+                                    }
+                                }
+                            }
+
+                            Label {
+                                id: speakersNickname
+                                Layout.preferredWidth: 152
+                                Layout.rightMargin: 4
+                                Layout.leftMargin: 4
+                                color: "#FFFFFF"
+                                font.pixelSize: 12
+                                background: null
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                                ToolTip.text: speakersNickname.text
+                                ToolTip.visible: ma.containsMouse ? speakersNickname.text.length !== 0 && speakersNickname.truncated : false
+                            }
+                            MouseArea {
+                                id: ma
+                                anchors.fill: parent
+                                hoverEnabled: true
+                            }
+                        }
+                    }
+                }
                 RowLayout {
                     id: fPs
                     visible: videoManager.displayVideoStats
@@ -480,6 +663,7 @@ Rectangle {
                         width: 16
                         height: 16
                         Layout.alignment: Qt.AlignHCenter
+                        mipmap: true
                         source: "qrc:/qml/images/meeting/hand_raised.svg"
                     }
                     Label {
@@ -496,35 +680,40 @@ Rectangle {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onEntered: {
-                        if(authManager.authAccountId !== membersManager.hostAccountId)
+                        if(authManager.authAccountId !== membersManager.hostAccountId
+                                && !membersManager.isManagerRole)
                             handstip.text = qsTr("Cancel")
                     }
                     onExited: {
-                        if(authManager.authAccountId !== membersManager.hostAccountId)
+                        if(authManager.authAccountId !== membersManager.hostAccountId
+                                && !membersManager.isManagerRole)
                             handstip.text = qsTr("HandsUp")
                     }
 
                     onClicked: {
-                        if(authManager.authAccountId === membersManager.hostAccountId){
+                        if(authManager.authAccountId === membersManager.hostAccountId
+                                || membersManager.isManagerRole){
                             if(membersBar.visible===false)
                                 footerBar.showMembers()
-                        }
-                        else{
+                        } else{
                             customDialog.cancelBtnText = qsTr("Cancel")
                             customDialog.confirmBtnText = qsTr("OK")
                             customDialog.text = qsTr("Cancel HandsUp")
                             customDialog.description =qsTr("are you sure to cancel hands up")
-                            customDialog.confirm.disconnect(disableLocalVideo)
+                            customDialog.confirm.disconnect(enableLocalVideo)
                             customDialog.confirm.disconnect(leaveMeeting)
                             customDialog.confirm.disconnect(endMeeting)
                             customDialog.confirm.disconnect(muteHandsUp)
                             customDialog.confirm.disconnect(muteLocalAudio)
+                            customDialog.confirm.disconnect(showMaxHubTip)
                             customDialog.confirm.connect(muteHandsDown)
+                            customDialog.cancel.disconnect(disableLocalVideo)
                             customDialog.cancel.disconnect(unMuteLoaclAudio)
                             customDialog.open()
                         }
                     }
                 }
+
             }
 
             HoverHandler {
@@ -551,8 +740,58 @@ Rectangle {
                     }
                 }
             }
-        }
 
+            CustomTipArea {
+                id: remainingTip
+                visible: false
+                width: 250
+                height: 50
+                anchors.top: parent.top
+                anchors.topMargin: 30
+                anchors.horizontalCenter: parent.horizontalCenter
+                onSigCloseClicked: {
+                    showRemainingTipTimer.stop()
+                    hasShowRemainingTip = false
+                    remainingTip.visible = false
+                }
+            }
+
+            Rectangle {
+                id: recVolume
+                visible: temporarilyUnmute
+                width: 100
+                height: 100
+                radius: 6
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 128
+                color: Qt.rgba(0,0,0,0.7)
+
+                ColumnLayout {
+                    spacing: 6
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: 17
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 17
+
+                    Image {
+                        id: imgVolume
+                        source: "qrc:/qml/images/meeting/volume/volume_level_1.png"
+                        mipmap: true
+                        Layout.preferredHeight: 40
+                        Layout.preferredWidth: 40
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    Label {
+                        text: qsTr("unmute")
+                        color: "#ffffff"
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                }
+            }
+        }
 
         Rectangle {
             id: extensions
@@ -563,10 +802,17 @@ Rectangle {
             width: defaultSiderbarWidth
             border.width: 1
             border.color: "#cdcdcd"
+
+            Accessible.name: "chatroom_sidebar"
+
             onVisibleChanged: {
                 if (visible) {
                     if (mainWindow.visibility !== Window.FullScreen && mainWindow.visibility !== Window.Maximized) {
                         mainWindow.width = mainWindow.width + defaultSiderbarWidth
+
+                        if (Qt.platform.os === 'windows' && (mainWindow.x + mainWindow.width) > (Screen.virtualX + Screen.width)) {
+                            mainWindow.x = (Screen.width - mainWindow.width) / 2 + Screen.virtualX
+                        }
                     }
                 } else {
                     if (mainWindow.visibility !== Window.FullScreen && mainWindow.visibility !== Window.Maximized) {
@@ -603,7 +849,6 @@ Rectangle {
                     Layout.preferredWidth: parent.width
                     Layout.fillHeight: true
                     property bool show: false
-                    property var msgtimeGap : undefined
 
                     Rectangle {
                         id: chatbusyContainer
@@ -678,6 +923,7 @@ Rectangle {
                             ChatListView {
                                 id:chatroom
                                 maxMsgUintWidth:224
+                                messageModel: chatMessageModel
                                 Rectangle {
                                     id:msgTipBtn
                                     width: 74
@@ -698,6 +944,7 @@ Rectangle {
                                             id: btnImage
                                             Layout.preferredWidth:8
                                             Layout.preferredHeight:8
+                                            mipmap: true
                                             source: "qrc:/qml/images/chatroom/messagedown.png"
                                         }
 
@@ -738,8 +985,10 @@ Rectangle {
                             Layout.preferredWidth: parent.width
                             Flickable {
                                 id: scView
-                                anchors.centerIn: parent
-                                anchors.fill: parent
+                                width: !idTool.visible ? parent.width : parent.width - idTool.width -14
+                                height: parent.height
+                                anchors.top: parent.top
+                                anchors.left: parent.left
                                 ScrollBar.vertical: ScrollBar {
                                     width: 5
                                     onActiveChanged: {
@@ -759,6 +1008,8 @@ Rectangle {
                                     placeholderTextColor: "#a09f9f"
                                     color: "#333333"
                                     wrapMode: TextArea.Wrap
+                                    Accessible.name: "messageField"
+
                                     background: Rectangle {
                                         //hide the focus line
                                         height: 0
@@ -769,8 +1020,7 @@ Rectangle {
                                             return;
                                         }
 
-                                        //addToList("msg", messageField.text, myNickname, true)
-                                        chatManager.sendIMTextMsg(messageField.text, "main")
+                                        chatManager.sendTextMsg(messageField.text)
                                         messageField.text = "";
                                         messageField.focus = true;
                                     }
@@ -780,10 +1030,54 @@ Rectangle {
                                             operator.show(qsTr("can not send empty message"), 1500)
                                             return;
                                         }
-                                        //addToList("msg", messageField.text, myNickname, true)
-                                        chatManager.sendIMTextMsg(messageField.text,"main")
+
+                                        chatManager.sendTextMsg(messageField.text)
                                         messageField.text = "";
                                         messageField.focus = true;
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                id: idTool
+                                visible: meetingManager.enableImageMessage || meetingManager.enableFileMessage
+                                width: (meetingManager.enableImageMessage && meetingManager.enableFileMessage) ? 48 : 16
+                                height: 16
+                                anchors.top: scView.top
+                                anchors.topMargin: 13
+                                anchors.right: parent.right
+                                anchors.rightMargin: 14
+
+                                RowLayout {
+                                    spacing: 16
+                                    anchors.fill: parent
+                                    Layout.alignment: Qt.AlignRight
+                                    ImageButton {
+                                        id: idImage
+                                        visible: meetingManager.enableImageMessage
+                                        Layout.preferredWidth: 18
+                                        Layout.preferredHeight: 16
+                                        normalImage: 'qrc:/qml/images/chatroom/image.svg'
+                                        hoveredImage: 'qrc:/qml/images/chatroom/image.svg'
+                                        pushedImage: 'qrc:/qml/images/chatroom/image.svg'
+                                        onClicked: {
+                                            fileDialog.imageType = true
+                                            fileDialog.open()
+                                        }
+                                    }
+
+                                    ImageButton {
+                                        id: idFile
+                                        visible: meetingManager.enableFileMessage
+                                        Layout.preferredWidth: 17
+                                        Layout.preferredHeight: 16
+                                        normalImage: 'qrc:/qml/images/chatroom/file.svg'
+                                        hoveredImage: 'qrc:/qml/images/chatroom/file.svg'
+                                        pushedImage: 'qrc:/qml/images/chatroom/file.svg'
+                                        onClicked: {
+                                            fileDialog.imageType = false
+                                            fileDialog.open()
+                                        }
                                     }
                                 }
                             }
@@ -841,6 +1135,33 @@ Rectangle {
     }
 
     Timer {
+        id: synDataTimer
+        repeat: false
+        interval: 1000
+        onTriggered: {
+            if(membersManager.handsUpCount > 0) {
+                if (undefined !== footerBar.idMeetingToolBar.btnMembersCtrl) {
+                    var controlPos = footerBar.idMeetingToolBar.btnMembersCtrl.mapToItem(mainLayout, 0, 0)
+                    handsStatus.x = Qt.binding(function() {return controlPos.x + handsStatus.width / 2})
+                    handsStatus.y = Qt.binding(function() {return controlPos.y - handsStatus.height - 40})
+
+                    if(authManager.authAccountId === membersManager.hostAccountId
+                            || membersManager.isManagerRole) {
+                        handstip.text = membersManager.handsUpCount
+                        membersManager.handsUpStatus = true;
+                        handsStatus.visible = true
+                    }  else {
+                        if(membersManager.getMyHandsupStatus()) {
+                            handstip.text = qsTr("HandsUp")
+                            handsStatus.visible = true
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Timer {
         id: hideFooterBarTimer
         interval: 3000
         running: false
@@ -872,6 +1193,49 @@ Rectangle {
         }
     }
 
+    Timer {
+        id: showRemainingTipTimer
+        repeat: false
+        interval: 1000 * 60
+        onTriggered: {
+            hasShowRemainingTip = false
+            remainingTip.visible = false
+        }
+    }
+
+    FileDialog {
+        id: fileDialog
+        property bool imageType: true
+        nameFilters: imageType ? ["%1 (*.jpg *.png *.jpeg *.bmp)".arg(qsTr("image files"))] :
+                     ["%1 (*.mp3 *.aac *.wav *.pcm *.mp4 *.flv *.mov *.doc *.docx *.xls *.xlsx *.ppt *.pptx *.jpg *.png *.jpeg *.bmp *.pdf *.zip *.7z *.biz *.tar *.txt *.apk *.ipa)".arg(qsTr("all files")),
+                      "%1 (*.mp3 *.aac *.wav *.pcm)".arg(qsTr("audio files")),
+                      "%1 (*.mp4 *.flv *.mov)".arg(qsTr("video files")),
+                      "%1 (*.doc *.docx *.xls *.xlsx *.ppt *.pptx)".arg(qsTr("office files")),
+                      "%1 (*.jpg *.png *.jpeg *.bmp)".arg(qsTr("image files")),
+                      "%1 (*.zip *.7z *.biz *.tar)".arg(qsTr("zip files")),
+                      "%1 (*.pdf)".arg(qsTr("pdf files")),
+                      "%1 (*.txt)".arg(qsTr("text files")),
+                      "%1 (*.apk *.ipa)".arg(qsTr("pack files"))]
+        folder: shortcuts.home
+        onAccepted: {
+            console.log("sendFileMsg image: " + fileDialog.fileUrl)
+            var filePath = ""
+            filePath = fileDialog.fileUrl.toString()
+            if(Qt.platform.os === 'osx') {
+                filePath = filePath.replace("file://", "")
+            } else {
+                filePath = filePath.replace("file:///", "")
+            }
+
+
+            if(imageType) {
+                chatManager.sendFileMsg(3, filePath)
+            } else {
+                chatManager.sendFileMsg(2, filePath)
+            }
+        }
+    }
+
     Connections {
         target: globalManager
         onShowSettingsWindow: {
@@ -888,6 +1252,26 @@ Rectangle {
         onPlayoutDeviceChangedNotify: {
             if (mainWindow.visible)
                 GlobalToast.displayText(qsTr('Current playout device "[%1]"').arg(deviceName), mainWindow.screen)
+        }
+        onShowIndicationTip: {
+            GlobalToast.displayText(qsTr('It is detected that you are speaking, if you need to speak, \n please click the "Contact Mute" button and speak again'), mainWindow.screen)
+        }
+        onShowMaxHubTip: {
+            if (mainWindow.visible) {
+                customDialog.confirmBtnText = qsTr("OK")
+                customDialog.cancelBtnText = qsTr("Cancel")
+                customDialog.text = qsTr('Select the audio output device')
+                customDialog.description = qsTr('The screen is being cast. Do you want to output audio through the large screen?')
+                customDialog.confirm.disconnect(enableLocalVideo)
+                customDialog.confirm.disconnect(leaveMeeting)
+                customDialog.confirm.disconnect(endMeeting)
+                customDialog.confirm.disconnect(muteHandsDown)
+                customDialog.confirm.disconnect(muteHandsUp)
+                customDialog.cancel.disconnect(disableLocalVideo)
+                customDialog.cancel.disconnect(unMuteLoaclAudio)
+                customDialog.confirm.connect(showMaxHubTip)
+                customDialog.open()
+            }
         }
         onError: {
             toast.show(errorMessage)
@@ -909,9 +1293,23 @@ Rectangle {
         onActiveWindow: {
             if (mainWindow.visibility === Window.Minimized)
                 mainWindow.showNormal()
+
             mainWindow.raise()
+
+            //            if (Qt.platform.os === "osx") {
+            //                if (bRaise) {
+            //                    mainWindow.raise()
+            //                } else {
+            //                    if (!shareManager.ownerSharing()) {
+            //                         meetingManager.activeMainWindow();
+            //                    }
+            //                }
+            //            } else {
+            //                mainWindow.raise()
+            //            }
         }
-        onMeetingStatusChanged: {
+
+        onMeetingStatusChanged : {
             console.log("Meeting status changed, status: " + status + "  code: " + errorCode + ", message: " + errorMessage)
             latestMeetingStatus = status
             switch (status) {
@@ -938,12 +1336,9 @@ Rectangle {
                 passwordWindow.errorText = ''
                 switch (errorCode)
                 {
-                case 2014:
+                case 1020:
                     passwordWindow.errorText = errorMessage;
                     passwordWindow.showError = true
-                    break
-                case 2018:
-                    passwordWindow.showError = false
                     break
                 default:
                     break
@@ -980,7 +1375,12 @@ Rectangle {
                     }
                 }
 
+                var localLastModifyNickname = globalSettings.value('localLastModifyNickname')
+                if(localLastModifyNickname !== '' && meetingManager.meetingId !== globalSettings.value('localLastConferenceId')){
+                    globalSettings.setValue('localLastModifyNickname', '')
+                }
 
+                var localLastNickname = globalSettings.value('localLastNickname')
                 if(meetingManager.meetingId !== globalSettings.value('localLastConferenceId')){
                     globalSettings.setValue('localLastNickname', meetingManager.nickname)
                 }
@@ -997,16 +1397,19 @@ Rectangle {
                     chatManager.loginChatroom()
                 deviceManager.getCurrentSelectedDevice()
                 myNickname = meetingManager.nickname
-                chatBar.msgtimeGap = new Date()
                 busyContainer.visible = false
+                hasShowRemainingTip = false
+                remainingTip.visible = false
                 hideFooterBarTimer.start()
                 mainWindow.raise()
+                synDataTimer.start()
 
-//                if(meetingManager.enableRecord) {
-//                    GlobalToast.displayText(qsTr("meeting recording"), mainWindow.screen)
-//                }
+                //                if(meetingManager.enableRecord) {
+                //                    GlobalToast.displayText(qsTr("meeting recording"), mainWindow.screen)
+                //                }
                 break
             case MeetingStatus.MEETING_RECONNECTED:
+                busyContainer.visible = false
                 break
             case MeetingStatus.MEETING_CONNECT_FAILED:
                 if (meetingManager.autoStartMode) {
@@ -1025,26 +1428,34 @@ Rectangle {
                 handstip.text = qsTr("HandsUp")
                 console.log("mainWindow visibility: " + mainWindow.visibility)
                 if (Qt.platform.os === 'osx' && (mainWindow.visibility === Window.FullScreen || mainWindow.visibility === Window.Maximized)) {
-                    mainWindow.showNormal()
+                   // mainWindow.showNormal()
                     hideWindow.start()
                 } else {
                     mainWindow.setVisible(false)
                     mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/LoadingPage.qml'))
                 }
+
                 popupMeetingInfo.close()
                 passwordWindow.setVisible(false)
                 membersBar.restore()
-                chatroom.listmodel.clear()
+                chatMessageModel.clearMessage()
                 messageField.text = "";
                 GlobalChatManager.noNewMsgNotity()
                 chatManager.logoutChatroom()
                 chatbusyContainer.visible = false
                 closeAllDialog()
                 myNickname = ""
+                hasShowRemainingTip = false
+                remainingTip.visible = false
+                temporarilyUnmute = false
+                showRemainingTipTimer.stop()
 
                 break
             case MeetingStatus.MEETING_CMD_CHANNEL_DISCONNECTED:
                 busyContainer.visible = true
+                if(shareSelector.visible) {
+                    shareSelector.close()
+                }
                 break
             default:
                 mainWindow.setVisible(false)
@@ -1053,20 +1464,40 @@ Rectangle {
             }
         }
         onMuteStatusNotify: {
-            if (authManager.authAccountId === membersManager.hostAccountId) {
-                if (meetingManager.meetingMuted)
-                    toast.show(qsTr('You have turned on all mute'))
-                else
-                    toast.show(qsTr('You have turned off all mute'))
-            } else {
+            if(audio) {
+                if (authManager.authAccountId === membersManager.hostAccountId
+                        || membersManager.isManagerRole) {
+                    if (meetingManager.meetingMuted)
+                        toast.show(qsTr('You have turned on all mute'))
+                    else
+                        toast.show(qsTr('You have turned off all mute'))
+                } else {
+                    if (meetingManager.meetingMuted && audioManager.localAudioStatus !== 3 && audioManager.localAudioStatus !== 2){
+                        toast.show(qsTr('This meeting has been turned on all mute by host'))
+                    }
 
-                if (meetingManager.meetingMuted && audioManager.localAudioStatus !== 3 && audioManager.localAudioStatus !== 2){
-                    toast.show(qsTr('This meeting has been turned on all mute by host'))
+                    if(meetingManager.meetingMuted && temporarilyUnmute && spacePressed) {
+                        temporarilyUnmute = false
+                        console.log("temporarilyUnmute end by host")
+                    }
+                }
+            } else {
+                if (authManager.authAccountId === membersManager.hostAccountId
+                        || membersManager.isManagerRole) {
+                    if (meetingManager.meetingVideoMuted)
+                        toast.show(qsTr('You have turned on all mute video'))
+                    else
+                        toast.show(qsTr('You have turned off all mute video'))
+                } else {
+                    if (meetingManager.meetingVideoMuted && videoManager.localVideoStatus !== 3 && videoManager.localVideoStatus !== 2){
+                        toast.show(qsTr('This meeting has been turned on all mute video by host'))
+                    }
                 }
             }
         }
         onLockStatusNotify: {
-            if (authManager.authAccountId === membersManager.hostAccountId) {
+            if (authManager.authAccountId === membersManager.hostAccountId
+                    || membersManager.isManagerRole) {
                 if (meetingManager.meetingLocked)
                     toast.show(qsTr('You have been locked this meeting'))
                 else
@@ -1088,30 +1519,43 @@ Rectangle {
         }
 
         onError: {
-            if(errorCode === 2108){
-                customDialog.cancelBtnText = qsTr("Cancel")
-                customDialog.confirmBtnText = qsTr("HandsUpRaise")
-
-                customDialog.text = qsTr("Mute all")
-                customDialog.description = qsTr("This meeting has been turned on all mute by host,you can hands up to speak")
-                customDialog.confirm.disconnect(disableLocalVideo)
-                customDialog.confirm.disconnect(leaveMeeting)
-                customDialog.confirm.disconnect(endMeeting)
-                customDialog.confirm.disconnect(muteHandsDown)
-                customDialog.confirm.disconnect(muteLocalAudio)
-                customDialog.cancel.disconnect(unMuteLoaclAudio)
-                customDialog.confirm.connect(muteHandsUp)
-                customDialog.open()
-                return;
-            }
-            else if(errorCode === 2110){
+            if(errorCode === 2110){
                 audioManager.muteLocalAudio(false)
                 return
             }
 
-            if (errorMessage !== '') {
+            if (errorMessage !== '' && errorCode != 0) {
                 toast.show(errorMessage)
             }
+        }
+
+        onRemainingSecondsChanged: {
+            if(meetingManager.remainingSeconds === 60 * 10 ||
+                    meetingManager.remainingSeconds === 60 * 5 ||
+                    meetingManager.remainingSeconds === 60 * 1) {
+                if(!hasShowRemainingTip) {
+                    hasShowRemainingTip = true
+                    remainingTip.visible = true
+                    var minNum = meetingManager.remainingSeconds / 60
+                    remainingTip.description = qsTr('The meeting will close in "[%1]" minutes').arg(minNum)
+                    showRemainingTipTimer.restart()
+                }
+            }
+        }
+    }
+
+    Connections {
+        target: deviceManager
+        onUserAudioVolumeIndication: {
+            if (!root.visible) {
+                return
+            }
+
+            if(accountId !== authManager.authAccountId) {
+                return
+            }
+
+            imgVolume.source = getAudioVolumeSourceImage(level)
         }
     }
 
@@ -1121,28 +1565,63 @@ Rectangle {
             if (shareManager.shareAccountId === authManager.authAccountId) {
                 return
             }
-            if (changedAccountId === authManager.authAccountId ) {
-                if (deviceStatus === MeetingStatus.DEVICE_DISABLED_BY_HOST && meetingManager.meetingMuteCount !== 1
-                        && authManager.authAccountId !== membersManager.hostAccountId) {
-                    toast.show(qsTr("You have been muted by host"))
-                }
-                if (deviceStatus === MeetingStatus.DEVICE_NEEDS_TO_CONFIRM) {
-                    if(authManager.authAccountId !== membersManager.hostAccountId){
-                        customDialog.confirmBtnText = qsTr("OK")
-                        customDialog.cancelBtnText = qsTr("Cancel")
-                        customDialog.text = qsTr('Open your microphone')
-                        customDialog.description = qsTr('The host applies to open your microphone, do you agree.')
-                        customDialog.confirm.disconnect(disableLocalVideo)
-                        customDialog.confirm.disconnect(leaveMeeting)
-                        customDialog.confirm.disconnect(endMeeting)
-                        customDialog.confirm.disconnect(muteHandsDown)
-                        customDialog.confirm.disconnect(muteHandsUp)
-                        customDialog.confirm.connect(muteLocalAudio)
-                        customDialog.cancel.connect(unMuteLoaclAudio)
-                        customDialog.open()
+
+            if (changedAccountId === authManager.authAccountId) {
+                if (deviceStatus === MeetingStatus.DEVICE_DISABLED_BY_HOST) {
+                    if(authManager.authAccountId !== membersManager.hostAccountId
+                            && !membersManager.isManagerRole) {
+                        toast.show(qsTr("You have been muted by host"))
+                    }
+                    if(temporarilyUnmute && spacePressed) {
+                        temporarilyUnmute = false
+                        console.log("temporarilyUnmute end by host")
+                    }
+                } else if (deviceStatus === MeetingStatus.DEVICE_NEEDS_TO_CONFIRM) {
+                    if(authManager.authAccountId !== membersManager.hostAccountId
+                            && !membersManager.isManagerRole) {
+                        function confirm() {
+                            if(meetingManager.meetingMuted && !meetingManager.meetingAllowSelfAudioOn
+                                    && audioManager.localAudioStatus === MeetingStatus.DEVICE_DISABLED_BY_DELF) {
+                                footerBar.idMeetingToolBar.btnAudioCtrlClicked()
+                                return
+                            }
+
+                            muteLocalAudio()
+                            if(membersManager.handsUpStatus) {
+                                //举手时打开音频，取消举手
+                                membersManager.handsUp(false)
+                            }
+                        }
+
+                        function cancel() {
+                            audioManager.onUserAudioStatusChangedUI(authManager.authAccountId, 2);
+                        }
+
+                        if(customDialog != undefined && customDialog.visible && customDialog.text === qsTr("Mute all")){
+                            customDialog.close()
+                        }
+
+                        if(microphoneDynamicDialog != undefined && microphoneDynamicDialog.visible) {
+                            return
+                        }
+
+                        microphoneDynamicDialog = DialogManager.dynamicDialog2(qsTr("Open your microphone"),
+                                                                               qsTr("The host applies to open your microphone, do you agree."),
+                                                                               confirm, cancel, qsTr("OK"), qsTr("Cancel"), mainWindow)
                     }
                     else{
                         audioManager.muteLocalAudio(false)
+                    }
+                } else if (deviceStatus === MeetingStatus.DEVICE_DISABLED_BY_DELF) {
+                    if(temporarilyUnmute && spacePressed) {
+                        temporarilyUnmute = false
+                        console.log("temporarilyUnmute end by self")
+                    }
+                } else if (deviceStatus === MeetingStatus.DEVICE_ENABLED) {
+                    if(meetingManager.meetingMuted && !meetingManager.meetingAllowSelfAudioOn
+                            && authManager.authAccountId !== membersManager.hostAccountId
+                            && !membersManager.isManagerRole) {
+                        toast.show(qsTr("you have been ummute bt most,you can speak freely."))
                     }
                 }
             }
@@ -1156,8 +1635,15 @@ Rectangle {
             }
         }
 
+        onUserSpeakerChanged: {
+            speakers.visible = SettingsManager.showSpeaker && nickName !== ''
+            speakersNickname.text = nickName
+        }
+
         onActiveSpeakerNicknameChanged : {
-            if(audioManager.activeSpeakerNickname.length !== 0 && shareManager.shareAccountId.length !== 0){
+            activeSpeakerTootips.visible = false
+            return
+            if(audioManager.activeSpeakerNickname.length !== 0 && shareManager.shareAccountId.length === 0){
                 speakernickname.text = audioManager.activeSpeakerNickname;
                 activeSpeakerTootips.visible = true;
             }
@@ -1167,81 +1653,17 @@ Rectangle {
             }
         }
 
-        onHandsupStatusChanged:{
-            switch(status){
-            case MeetingStatus.HAND_STATUS_RAISE:
-                var controlPos = 0
-                if(accountId === authManager.authAccountId){
-                    toast.show(qsTr("Hands raised up, please wait host handle."))
-                    if (undefined !== footerBar.idMeetingToolBar.btnAudioCtrl) {
-                        controlPos = footerBar.idMeetingToolBar.btnAudioCtrl.mapToItem(mainLayout, 0, 0)
-                        handsStatus.x = Qt.binding(function() {return controlPos.x + handsStatus.width / 2})
-                        handsStatus.y = Qt.binding(function() {return controlPos.y - handsStatus.height - 40})
-                        handstip.text = qsTr("HandsUp")
-                        handsStatus.visible = true
-                    }
-
-                }else if(authManager.authAccountId === membersManager.hostAccountId){
-                    if(membersManager.audioHandsUpCount > 0){
-                        handstip.text = membersManager.audioHandsUpCount
-                        if (undefined !== footerBar.idMeetingToolBar.btnMembersCtrl) {
-                            controlPos = footerBar.idMeetingToolBar.btnMembersCtrl.mapToItem(mainLayout, 0, 0)
-                            handsStatus.x = Qt.binding(function() {return controlPos.x + handsStatus.width / 2})
-                            handsStatus.y = Qt.binding(function() {return controlPos.y - handsStatus.height - 40})
-                            handsStatus.visible = true
-                        }
-                    }
-
-
-                }
-                break
-            case MeetingStatus.HAND_STATUS_DOWN:
-                if(accountId === authManager.authAccountId && accountId !== membersManager.hostAccountId){
-                    handsStatus.visible = false
-                    handstip.text = qsTr("HandsUp")
-                }
-                else if(authManager.authAccountId === membersManager.hostAccountId){
-                    if(membersManager.audioHandsUpCount == 0){
-                        handsStatus.visible = false
-                    }
-                    else{
-                        handstip.text = membersManager.audioHandsUpCount
-                    }
-                }
-                break
-            case MeetingStatus.HAND_STATUS_REJECT:
-                if(accountId === authManager.authAccountId){
-                    toast.show(qsTr("the host have refused your handsup request"))
-                    handsStatus.visible = false
-                    handstip.text = qsTr("HandsUp")
-                }
-                else if(authManager.authAccountId === membersManager.hostAccountId){
-                    if(membersManager.audioHandsUpCount == 0){
-                        handsStatus.visible = false
-                    }
-                    else{
-                        handstip.text = membersManager.audioHandsUpCount
-                    }
-                }
-                break
-            case MeetingStatus.HAND_STATUS_AGREE:
-                if(accountId === authManager.authAccountId){
-                    toast.show(qsTr("you have been ummute bt most,you can speak freely."))
-                    handsStatus.visible = false
-                    handstip.text = qsTr("HandsUp")
-                }
-                else if(authManager.authAccountId === membersManager.hostAccountId){
-                    if(membersManager.audioHandsUpCount == 0){
-                        handsStatus.visible = false
-                        handstip.text = qsTr("HandsUp")
-                    }
-                    else{
-                        handstip.text = membersManager.audioHandsUpCount
-                    }
-                }
-                break
+        onShowPermissionWnd: {
+            if(shareManager.shareAccountId.length !== 0) {
+                return
             }
 
+            requestPermission.sigOpenSetting.connect(function(){
+                audioManager.openSystemMicrophoneSettings()
+            })
+            requestPermission.titleText = qsTr("Microphone Permission")
+            requestPermission.contentText = qsTr('Due to the security control of MacOS system, it is necessary to turn on the system Microphone permission before open Microphone%1Open System Preferences > Security and privacy grant access').arg('\r\n\r\n')
+            requestPermission.open()
         }
 
         onError: {
@@ -1252,48 +1674,88 @@ Rectangle {
     Connections {
         target: videoManager
         onUserVideoStatusChanged: {
+            console.log("onUserVideoStatusChanged changedAccountId", changedAccountId)
+            console.log("onUserVideoStatusChanged deviceStatus", deviceStatus)
+
             if (shareManager.shareAccountId === authManager.authAccountId) {
                 return
             }
             if (changedAccountId === authManager.authAccountId ) {
-                if (deviceStatus === 3 && authManager.authAccountId !== membersManager.hostAccountId) {
-                    toast.show(qsTr("Your camera has been disabled by the host"))
-                }
-                if (deviceStatus === 4 && deviceStatus !== 1) {
-                    if (authManager.authAccountId !== membersManager.hostAccountId){
+                if (deviceStatus === MeetingStatus.DEVICE_DISABLED_BY_HOST) {
+                    if(authManager.authAccountId !== membersManager.hostAccountId
+                            && !membersManager.isManagerRole) {
+                        toast.show(qsTr("Your camera has been disabled by the host"))
+                    }
+                } else if (deviceStatus === MeetingStatus.DEVICE_NEEDS_TO_CONFIRM) {
+                    if (authManager.authAccountId !== membersManager.hostAccountId
+                            && !membersManager.isManagerRole) {
+                        function confirm() {
+                            if(meetingManager.meetingVideoMuted && !meetingManager.meetingAllowSelfVideoOn
+                                    && videoManager.localVideoStatus === MeetingStatus.DEVICE_DISABLED_BY_DELF) {
+                                footerBar.idMeetingToolBar.btnVideoCtrlClicked()
+                                return
+                            }
 
-                        if(audioManager.localAudioStatus === 4){
-                            audioManager.muteLocalAudio(true)
+                            enableLocalVideo()
+
+                            if(membersManager.handsUpStatus) {
+                                //举手时打开视频，取消举手
+                                membersManager.handsUp(false)
+                            }
                         }
 
-                        customDialog.confirmBtnText = qsTr("OK")
-                        customDialog.cancelBtnText = qsTr("Cancel")
-                        customDialog.text = qsTr('Open your camera')
-                        customDialog.description = qsTr('The host applies to open your video, do you agree.')
-                        customDialog.confirm.disconnect(muteLocalAudio)
-                        customDialog.confirm.disconnect(leaveMeeting)
-                        customDialog.confirm.disconnect(endMeeting)
-                        customDialog.confirm.disconnect(muteHandsDown)
-                        customDialog.confirm.disconnect(muteHandsUp)
-                        customDialog.cancel.disconnect(unMuteLoaclAudio)
-                        customDialog.confirm.connect(disableLocalVideo)
-                        customDialog.open()
+                        function cancel() {
+                            console.log("cancel open video")
+                            videoManager.onUserVideoStatusChangedUI(authManager.authAccountId, 2);
+                        }
+
+                        if(tempDynamicDialog != undefined && tempDynamicDialog.text === qsTr("Mute all Video")) {
+                            tempDynamicDialog.close()
+                        }
+
+                        if(customDialog != undefined && customDialog.visible && customDialog.text === qsTr("Mute all")){
+                            customDialog.close()
+                        }
+
+                        if(cameraDynamicDialog != undefined && cameraDynamicDialog.visible) {
+                            console.log("cameraDynamicDialog is already open")
+                            return
+                        }
+
+                        cameraDynamicDialog = DialogManager.dynamicDialog2(qsTr("Open your camera"),
+                                                                           qsTr("The host applies to open your video, do you agree."),
+                                                                           confirm, cancel, qsTr("OK"), qsTr("Cancel"), mainWindow)
                     } else {
                         videoManager.disableLocalVideo(false)
                     }
                 }
             }
         }
+
         onFocusAccountIdChanged: {
             console.info('Focus account Id changed, old focus:', oldSpeaker, ', new focus:', newSpeaker, ', current account:', authManager.authAccountId)
             if (newSpeaker !== '' && newSpeaker === authManager.authAccountId)
                 toast.show(qsTr('You have been set as active speaker.'))
-            if (oldSpeaker !== oldSpeaker && oldSpeaker === authManager.authAccountId)
+            if (oldSpeaker !== newSpeaker && oldSpeaker === authManager.authAccountId)
                 toast.show(qsTr('You have been unset of active speaker.'))
             if (oldSpeaker !== newSpeaker) {
                 membersManager.getMembersPaging(pageSize, currentPage)
             }
         }
+
+        onShowPermissionWnd: {
+            if(shareManager.shareAccountId.length !== 0) {
+                return
+            }
+
+            requestPermission.sigOpenSetting.connect(function(){
+                videoManager.openSystemCameraSettings()
+            })
+            requestPermission.titleText = qsTr("Camera Permission")
+            requestPermission.contentText = qsTr('Due to the security control of MacOS system, it is necessary to turn on the system Camera permission before open Camera%1Open System Preferences > Security and privacy grant access').arg('\r\n\r\n')
+            requestPermission.open()
+        }
+
         onError:{
             toast.show(errorMessage)
         }
@@ -1302,15 +1764,16 @@ Rectangle {
     Connections {
         target: membersManager
         onUserJoinNotify: {
-            if (authManager.authAccountId === membersManager.hostAccountId)
+            if (authManager.authAccountId === membersManager.hostAccountId
+                    || membersManager.isManagerRole)
                 toast.show(qsTr('%1 joined the meeting').arg(nickname))
         }
         onUserLeftNotify: {
-            if (authManager.authAccountId === membersManager.hostAccountId)
+            if (authManager.authAccountId === membersManager.hostAccountId
+                    || membersManager.isManagerRole)
                 toast.show(qsTr('%1 left from the meeting').arg(nickname))
         }
         onHostAccountIdChangedSignal: {
-
             if(oldhostAccountId === authManager.authAccountId){
                 if(handsStatus.visible){
                     handsStatus.visible = false
@@ -1319,9 +1782,9 @@ Rectangle {
             }
             //host rejoin the meeting
             if(hostAccountId === oldhostAccountId && hostAccountId === authManager.authAccountId){
-                if(membersManager.audioHandsUpCount > 0) {
-                    if (undefined !== footerBar.idMeetingToolBar.btnMembersCtrl && membersManager.audioHandsUpCount > 0) {
-                        handstip.text = membersManager.audioHandsUpCount
+                if(membersManager.handsUpCount > 0) {
+                    if (undefined !== footerBar.idMeetingToolBar.btnMembersCtrl && membersManager.handsUpCount > 0) {
+                        handstip.text = membersManager.handsUpCount
                         if (undefined !== footerBar.idMeetingToolBar.btnMembersCtrl) {
                             var controlPos = footerBar.idMeetingToolBar.btnMembersCtrl.mapToItem(mainLayout, 0, 0)
                             handsStatus.x = Qt.binding(function() {return controlPos.x + handsStatus.width / 2})
@@ -1337,12 +1800,12 @@ Rectangle {
                 showFooterContainer.restart()
                 toast.show(qsTr('You have been set as host'))
                 handsStatus.visible = false
-                if(membersManager.audioHandsUpCount > 0) {
-                    if (undefined !== footerBar.idMeetingToolBar.btnAudioCtrl) {
-                        const handsStatusPos = footerBar.idMeetingToolBar.btnAudioCtrl.mapToItem(mainLayout, 0, 0)
+                if(membersManager.handsUpCount > 0) {
+                    if (undefined !== footerBar.idMeetingToolBar.btnMembersCtrl) {
+                        const handsStatusPos = footerBar.idMeetingToolBar.btnMembersCtrl.mapToItem(mainLayout, 0, 0)
                         handsStatus.x = Qt.binding(function() {return handsStatusPos.x + handsStatus.width / 2})
                         handsStatus.y = Qt.binding(function() {return handsStatusPos.y - handsStatus.height - 40})
-                        handstip.text = membersManager.audioHandsUpCount
+                        handstip.text = membersManager.handsUpCount
                         if(handsStatus.visible === false)
                             handsStatus.visible = true
                     }
@@ -1350,11 +1813,126 @@ Rectangle {
             }
         }
 
+        onManagerAccountIdChanged: {
+            if(!bAdd){
+                if(handsStatus.visible && managerAccountId === authManager.authAccountId){
+                    handsStatus.visible = false
+                    handstip.text = qsTr("HandsUp")
+                }
+            }
+
+            if (managerAccountId === authManager.authAccountId){
+                if(bAdd) {
+                    showFooterContainer.restart()
+                    toast.show(qsTr('You have been set as manager'))
+                    handsStatus.visible = false
+                    if(membersManager.handsUpCount > 0) {
+                        if (undefined !== footerBar.idMeetingToolBar.btnMembersCtrl) {
+                            const handsStatusPos = footerBar.idMeetingToolBar.btnMembersCtrl.mapToItem(mainLayout, 0, 0)
+                            handsStatus.x = Qt.binding(function() {return handsStatusPos.x + handsStatus.width / 2})
+                            handsStatus.y = Qt.binding(function() {return handsStatusPos.y - handsStatus.height - 40})
+                            handstip.text = membersManager.handsUpCount
+                            if(handsStatus.visible === false)
+                                handsStatus.visible = true
+                        }
+                    }
+                } else {
+                    toast.show(qsTr('You have been unset as manager'))
+                }
+            }
+        }
+
+        onManagerUpdateSuccess: {
+            if(set) {
+                toast.show(nickname + qsTr('has been set as manager'))
+            } else {
+                toast.show(nickname + qsTr('has been unset as manager'))
+            }
+        }
+
         onNicknameChanged:{
             if( authManager.authAccountId === accountId){
                 globalSettings.setValue("localLastNickname", nickname)
+                globalSettings.setValue('localLastModifyNickname', nickname)
             }
         }
+
+        onHandsupStatusChanged:{
+            switch(status){
+            case MeetingStatus.HAND_STATUS_RAISE:
+                var controlPos = 0
+                if(accountId === authManager.authAccountId){
+                    toast.show(qsTr("Hands raised up, please wait host handle."))
+                    if (undefined !== footerBar.idMeetingToolBar.btnMembersCtrl) {
+                        controlPos = footerBar.idMeetingToolBar.btnMembersCtrl.mapToItem(mainLayout, 0, 0)
+                        handsStatus.x = Qt.binding(function() {return controlPos.x + handsStatus.width / 2})
+                        handsStatus.y = Qt.binding(function() {return controlPos.y - handsStatus.height - 40})
+                        handstip.text = qsTr("HandsUp")
+                        handsStatus.visible = true
+                    }
+
+                } else if(authManager.authAccountId === membersManager.hostAccountId
+                          || membersManager.isManagerRole) {
+                    if(membersManager.handsUpCount > 0){
+                        handstip.text = membersManager.handsUpCount
+                        if (undefined !== footerBar.idMeetingToolBar.btnMembersCtrl) {
+                            controlPos = footerBar.idMeetingToolBar.btnMembersCtrl.mapToItem(mainLayout, 0, 0)
+                            handsStatus.x = Qt.binding(function() {return controlPos.x + handsStatus.width / 2})
+                            handsStatus.y = Qt.binding(function() {return controlPos.y - handsStatus.height - 40})
+                            handsStatus.visible = true
+                        }
+                    }
+                }
+                break
+            case MeetingStatus.HAND_STATUS_DOWN:
+                if(accountId === authManager.authAccountId
+                        && accountId !== membersManager.hostAccountId
+                        /*&& !membersManager.isManagerRoleEx(accountId)*/) {
+                    handsStatus.visible = false
+                    handstip.text = qsTr("HandsUp")
+                } else if(authManager.authAccountId === membersManager.hostAccountId
+                          || membersManager.isManagerRole) {
+                    if(membersManager.handsUpCount === 0){
+                        handsStatus.visible = false
+                    }
+                    else{
+                        handstip.text = membersManager.handsUpCount
+                    }
+                }
+                break
+            case MeetingStatus.HAND_STATUS_REJECT:
+                if(accountId === authManager.authAccountId){
+                    toast.show(qsTr("the host have refused your handsup request"))
+                    handsStatus.visible = false
+                    handstip.text = qsTr("HandsUp")
+                } else if(authManager.authAccountId === membersManager.hostAccountId
+                          || membersManager.isManagerRole) {
+                    if(membersManager.handsUpCount === 0){
+                        handsStatus.visible = false
+                    } else{
+                        handstip.text = membersManager.handsUpCount
+                    }
+                }
+                break
+            case MeetingStatus.HAND_STATUS_AGREE:
+                if(accountId === authManager.authAccountId){
+                    handsStatus.visible = false
+                    handstip.text = qsTr("HandsUp")
+                } else if(authManager.authAccountId === membersManager.hostAccountId
+                          || membersManager.isManagerRole){
+                    if(membersManager.handsUpCount === 0){
+                        handsStatus.visible = false
+                        handstip.text = qsTr("HandsUp")
+                    }
+                    else{
+                        handstip.text = membersManager.handsUpCount
+                    }
+                }
+                break
+            }
+
+        }
+
     }
 
     Timer {
@@ -1363,26 +1941,22 @@ Rectangle {
         repeat: false
         interval: 1000
         onTriggered: {
-            shareSelector.close()
-            mainWindow.setVisible(false)
+            console.log("macShareTimer triggered.")
             if (sharedWnd !== undefined) {
                 sharedWnd.show()
             }
+            shareSelector.close()
+            mainWindow.setVisible(true)
+            mainWindow.setVisible(false)
         }
     }
 
     Connections {
         target: shareManager
         onShareAccountIdChanged: {
-            console.info("Screen sharing status changed: ", shareManager.shareAccountId)
+            console.info("Screen sharing status changed:", shareManager.shareAccountId)
             if (shareManager.shareAccountId.length !== 0) {
                 if (shareManager.shareAccountId === authManager.authAccountId) {
-                    //if member start sharing screen, auto put his hands down
-                    if(authManager.authAccountId !== membersManager.hostAccountId && audioManager.handsUpStatus === true){
-                        if(audioManager.handsUpStatus)
-                            audioManager.handsUpToSpeak(false);
-                    }
-
                     if (Qt.platform.os === "windows") {
                         shareSelector.close()
                         mainWindow.setVisible(false)
@@ -1401,12 +1975,28 @@ Rectangle {
                             }
                         }
                     }
+                    //if member start sharing screen, auto put his hands down
+                    if(authManager.authAccountId !== membersManager.hostAccountId
+                            && !membersManager.isManagerRole
+                            && membersManager.handsUpStatus === true) {
+                        if(membersManager.handsUpStatus)
+                            membersManager.handsUp(false)
+                    }
                 } else {
-                    if (viewMode !== MainPanel.ViewMode.FocusViewMode)
+                    if (viewMode !== MainPanel.ViewMode.FocusViewMode && viewMode !== MainPanel.ViewMode.WhiteboardMode)
                         mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/FocusPage.qml'))
                     membersManager.getMembersPaging(pageSize, currentPage)
                 }
-            } else {
+
+                if(microphoneDynamicDialog != undefined && microphoneDynamicDialog.visible) {
+                    microphoneDynamicDialog.close()
+                }
+
+                if(cameraDynamicDialog != undefined && cameraDynamicDialog.visible) {
+                    cameraDynamicDialog.close()
+                }
+
+            } else if (MeetingStatus.MEETING_CONNECTED === meetingManager.roomStatus || MeetingStatus.MEETING_RECONNECTED === meetingManager.roomStatus){
                 if (mainWindow.visibility !== Window.Windowed) {
                     mainWindow.setVisible(true)
                 }
@@ -1415,9 +2005,10 @@ Rectangle {
                     SettingsWnd.raise()
                 }
 
-                if(membersManager.hostAccountId === authManager.authAccountId && membersManager.audioHandsUpCount > 0){
-                    handstip.text = membersManager.audioHandsUpCount
-                    if (undefined !== footerBar.idMeetingToolBar.btnMembersCtrl && membersManager.audioHandsUpCount > 0) {
+                if((membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole)
+                        && membersManager.handsUpCount > 0) {
+                    handstip.text = membersManager.handsUpCount
+                    if (undefined !== footerBar.idMeetingToolBar.btnMembersCtrl && membersManager.handsUpCount > 0) {
                         const handsStatusPos = footerBar.idMeetingToolBar.btnMembersCtrl.mapToItem(mainLayout, 0, 0)
                         handsStatus.x = Qt.binding(function() {return handsStatusPos.x + handsStatus.width / 2})
                         handsStatus.y = Qt.binding(function() {return handsStatusPos.y - handsStatus.height - 40})
@@ -1429,7 +2020,7 @@ Rectangle {
                     sharedWnd.hide()
                     mainWindow.raiseOnTop()
                 }
-                if (viewMode !== MainPanel.ViewMode.FocusViewMode)
+                if (viewMode !== MainPanel.ViewMode.FocusViewMode && viewMode !== MainPanel.ViewMode.WhiteboardMode)
                     mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/FocusPage.qml'))
                 membersManager.getMembersPaging(pageSize, currentPage)
             }
@@ -1454,8 +2045,9 @@ Rectangle {
                 return
             }
 
-            if (authManager.authAccountId === membersManager.hostAccountId) {
-                DialogManager.dynamicDialogEx(qsTr('End Meeting'), qsTr('Do you want to quit this meeting?'), function () {
+            if (authManager.authAccountId === membersManager.hostAccountId
+                    || membersManager.isManagerRole) {
+                tempDynamicDialogEx = DialogManager.dynamicDialogEx(qsTr('End Meeting'), qsTr('Do you want to quit this meeting?'), function () {
                     meetingManager.leaveMeeting(false)
                 }, function () {
                     meetingManager.leaveMeeting(true)
@@ -1466,10 +2058,12 @@ Rectangle {
                 customDialog.text = qsTr('Exit')
                 customDialog.description = qsTr('Do you want to quit this meeting?')
                 customDialog.confirm.disconnect(muteLocalAudio)
-                customDialog.confirm.disconnect(disableLocalVideo)
+                customDialog.confirm.disconnect(enableLocalVideo)
                 customDialog.confirm.disconnect(endMeeting)
                 customDialog.confirm.disconnect(muteHandsDown)
                 customDialog.confirm.disconnect(muteHandsUp)
+                customDialog.confirm.disconnect(showMaxHubTip)
+                customDialog.cancel.disconnect(disableLocalVideo)
                 customDialog.cancel.disconnect(unMuteLoaclAudio)
                 customDialog.confirm.connect(leaveMeeting)
                 customDialog.open()
@@ -1491,8 +2085,7 @@ Rectangle {
                 }
 
                 const bottomSide = mainWindow.y + mainWindow.height
-                const taskbarHeight = Qt.platform.os === 'windows' ? 60 : 0
-                if (bottomSide > Screen.height - taskbarHeight) {
+                if (bottomSide > Screen.height - mainWindow.taskbarHeight) {
                     if (!adjustWindow())
                         centerInScreen()
                 }
@@ -1508,26 +2101,26 @@ Rectangle {
                 return
             }
 
-            if (authManager.authAccountId === membersManager.hostAccountId)
-            {
-                DialogManager.dynamicDialogEx(qsTr('End Meeting'), qsTr('Do you want to quit this meeting?'), function () {
+            if (authManager.authAccountId === membersManager.hostAccountId
+                    || membersManager.isManagerRole){
+                tempDynamicDialogEx = DialogManager.dynamicDialogEx(qsTr('End Meeting'), qsTr('Do you want to quit this meeting?'), function () {
                     meetingManager.leaveMeeting(false)
                 }, function () {
                     meetingManager.leaveMeeting(true)
                 })
-            }
-            else
-            {
+            } else {
                 customDialog.confirmBtnText = qsTr("OK")
                 customDialog.cancelBtnText = qsTr("Cancel")
                 customDialog.text = qsTr('Exit')
                 customDialog.description = qsTr('Do you want to quit this meeting?')
                 customDialog.confirm.disconnect(muteLocalAudio)
-                customDialog.confirm.disconnect(disableLocalVideo)
+                customDialog.confirm.disconnect(enableLocalVideo)
                 customDialog.confirm.disconnect(endMeeting)
                 customDialog.confirm.disconnect(muteHandsDown)
                 customDialog.confirm.disconnect(muteHandsUp)
+                customDialog.confirm.disconnect(showMaxHubTip)
                 customDialog.cancel.disconnect(unMuteLoaclAudio)
+                customDialog.cancel.disconnect(disableLocalVideo)
                 customDialog.confirm.connect(leaveMeeting)
                 customDialog.open()
             }
@@ -1580,20 +2173,28 @@ Rectangle {
 
     Connections {
         target: chatManager
-        onRecvMsgSiganl:{
-            if(status != 200){
-                operator.show(qsTr("send message fail"));
-                return
-            }
-            else{
-                if(msg.sendFlag === "main" || msg.sendFlag === "share")
-                    addToList(msg.msgType, msg.content, msg.nickName, true)
-                else
-                    addToList(msg.msgType, msg.content, msg.nickName, false)
+        onMsgTipSignal: {
+            ++msgCount
+            if (chatBar.visible){
+                if (chatroom.msglistView.atYEnd && shareManager.shareAccountId !== authManager.authAccountId) {
+                    chatroom.msglistView.positionViewAtEnd()
+                } else {
+                    footerBar.recvNewChatMsg(msgCount, nickname, tip)
+                    if (!msgTipBtn.visible){
+                        msgTipBtn.visible = true
+                    }
+                }
+            } else{
+                footerBar.recvNewChatMsg(msgCount,nickname, tip)
             }
         }
 
+        onMsgSendSignal: {
+            chatroom.msglistView.positionViewAtEnd()
+        }
+
         onError : {
+            operator.show(text)
             // busyNotice.text = qsTr("chartoom errorcode: %1").arg(error_code)
             // chatbusyContainer.visible = true;
             // messageField.focus = false
@@ -1734,38 +2335,20 @@ Rectangle {
         target: footerBar
         onWidthChanged:{
             if(handsStatus.visible === true){
-                if(authManager.authAccountId === membersManager.hostAccountId){
-                    if (undefined !== footerBar.idMeetingToolBar.btnMembersCtrl) {
-                        const handsStatusPos = footerBar.idMeetingToolBar.btnMembersCtrl.mapToItem(mainLayout, 0, 0)
-                        handsStatus.x = Qt.binding(function() {return handsStatusPos.x + handsStatus.width / 2})
-                        handsStatus.y = Qt.binding(function() {return handsStatusPos.y - handsStatus.height - 40})
-                    }
-                }
-                else{
-                    if (undefined !== footerBar.idMeetingToolBar.btnAudioCtrl) {
-                        const handsStatusPos = footerBar.idMeetingToolBar.btnAudioCtrl.mapToItem(mainLayout, 0, 0)
-                        handsStatus.x = Qt.binding(function() {return handsStatusPos.x + handsStatus.width / 2})
-                        handsStatus.y = Qt.binding(function() {return handsStatusPos.y - handsStatus.height - 40})
-                    }
+                if (undefined !== footerBar.idMeetingToolBar.btnMembersCtrl) {
+                    const handsStatusPos = footerBar.idMeetingToolBar.btnMembersCtrl.mapToItem(mainLayout, 0, 0)
+                    handsStatus.x = Qt.binding(function() {return handsStatusPos.x + handsStatus.width / 2})
+                    handsStatus.y = Qt.binding(function() {return handsStatusPos.y - handsStatus.height - 40})
                 }
             }
         }
 
         onHeightChanged:{
             if(handsStatus.visible === true){
-                if(authManager.authAccountId === membersManager.hostAccountId){
-                    if (undefined !== footerBar.idMeetingToolBar.btnMembersCtrl) {
-                        const handsStatusPos = footerBar.idMeetingToolBar.btnMembersCtrl.mapToItem(mainLayout, 0, 0)
-                        handsStatus.x = Qt.binding(function() {return handsStatusPos.x + handsStatus.width / 2})
-                        handsStatus.y = Qt.binding(function() {return handsStatusPos.y - handsStatus.height - 40})
-                    }
-                }
-                else{
-                    if (undefined !== footerBar.idMeetingToolBar.btnAudioCtrl) {
-                        const handsStatusPos = footerBar.idMeetingToolBar.btnAudioCtrl.mapToItem(mainLayout, 0, 0)
-                        handsStatus.x = Qt.binding(function() {return handsStatusPos.x + handsStatus.width / 2})
-                        handsStatus.y = Qt.binding(function() {return handsStatusPos.y - handsStatus.height - 40})
-                    }
+                if (undefined !== footerBar.idMeetingToolBar.btnMembersCtrl) {
+                    const handsStatusPos = footerBar.idMeetingToolBar.btnMembersCtrl.mapToItem(mainLayout, 0, 0)
+                    handsStatus.x = Qt.binding(function() {return handsStatusPos.x + handsStatus.width / 2})
+                    handsStatus.y = Qt.binding(function() {return handsStatusPos.y - handsStatus.height - 40})
                 }
             }
         }
@@ -1775,38 +2358,20 @@ Rectangle {
         target: mainWindow
         onWidthChanged:{
             if(handsStatus.visible === true){
-                if(authManager.authAccountId === membersManager.hostAccountId){
-                    if (undefined !== footerBar.idMeetingToolBar.btnMembersCtrl) {
-                        const handsStatusPos = footerBar.idMeetingToolBar.btnMembersCtrl.mapToItem(mainLayout, 0, 0)
-                        handsStatus.x = Qt.binding(function() {return handsStatusPos.x + handsStatus.width / 2})
-                        handsStatus.y = Qt.binding(function() {return handsStatusPos.y - handsStatus.height - 40})
-                    }
-                }
-                else{
-                    if (undefined !== footerBar.idMeetingToolBar.btnAudioCtrl) {
-                        const handsStatusPos = footerBar.idMeetingToolBar.btnAudioCtrl.mapToItem(mainLayout, 0, 0)
-                        handsStatus.x = Qt.binding(function() {return handsStatusPos.x + handsStatus.width / 2})
-                        handsStatus.y = Qt.binding(function() {return handsStatusPos.y - handsStatus.height - 40})
-                    }
+                if (undefined !== footerBar.idMeetingToolBar.btnMembersCtrl) {
+                    const handsStatusPos = footerBar.idMeetingToolBar.btnMembersCtrl.mapToItem(mainLayout, 0, 0)
+                    handsStatus.x = Qt.binding(function() {return handsStatusPos.x + handsStatus.width / 2})
+                    handsStatus.y = Qt.binding(function() {return handsStatusPos.y - handsStatus.height - 40})
                 }
             }
         }
 
         onHeightChanged:{
             if(handsStatus.visible === true){
-                if(authManager.authAccountId === membersManager.hostAccountId){
-                    if (undefined !== footerBar.idMeetingToolBar.btnMembersCtrl) {
-                        const handsStatusPos = footerBar.idMeetingToolBar.btnMembersCtrl.mapToItem(mainLayout, 0, 0)
-                        handsStatus.x = Qt.binding(function() {return handsStatusPos.x + handsStatus.width / 2})
-                        handsStatus.y = Qt.binding(function() {return handsStatusPos.y - handsStatus.height - 40})
-                    }
-                }
-                else{
-                    if (undefined !== footerBar.idMeetingToolBar.btnAudioCtrl) {
-                        const handsStatusPos = footerBar.idMeetingToolBar.btnAudioCtrl.mapToItem(mainLayout, 0, 0)
-                        handsStatus.x = Qt.binding(function() {return handsStatusPos.x + handsStatus.width / 2})
-                        handsStatus.y = Qt.binding(function() {return handsStatusPos.y - handsStatus.height - 40})
-                    }
+                if (undefined !== footerBar.idMeetingToolBar.btnMembersCtrl) {
+                    const handsStatusPos = footerBar.idMeetingToolBar.btnMembersCtrl.mapToItem(mainLayout, 0, 0)
+                    handsStatus.x = Qt.binding(function() {return handsStatusPos.x + handsStatus.width / 2})
+                    handsStatus.y = Qt.binding(function() {return handsStatusPos.y - handsStatus.height - 40})
                 }
             }
         }
@@ -1839,21 +2404,22 @@ Rectangle {
     Connections {
         target: liveManager
         onLiveStateChanged:{
-            liveTip.visible = isLive;
-            console.log("onLiveStateChanged")
+            liveTip.visible = state === 2;
+            console.log("onLiveStateChanged state: ", state)
         }
     }
 
     function muteHandsUp(){
         customDialog.confirm.disconnect(muteHandsUp)
-        audioManager.handsUpToSpeak(true);
-
+        if(meetingManager.meetingMuted && !meetingManager.meetingAllowSelfAudioOn) {
+            membersManager.handsUp(true);
+        }
     }
 
     function muteHandsDown(){
         customDialog.confirm.disconnect(muteHandsDown)
-        if(audioManager.handsUpStatus){
-            audioManager.handsUpToSpeak(false)
+        if(membersManager.handsUpStatus){
+            membersManager.handsUp(false)
         }
     }
 
@@ -1866,14 +2432,19 @@ Rectangle {
         customDialog.confirm.disconnect(unMuteLoaclAudio)
     }
 
-    function disableLocalVideo(){
+    function enableLocalVideo(){
         videoManager.disableLocalVideo(false)
+        customDialog.confirm.disconnect(enableLocalVideo)
+    }
+
+    function disableLocalVideo(){
+        videoManager.disableLocalVideo(true)
         customDialog.confirm.disconnect(disableLocalVideo)
     }
 
     function leaveMeeting(){
-        if(audioManager.handsUpStatus){
-            audioManager.handsUpToSpeak(false)
+        if(membersManager.handsUpStatus){
+            membersManager.handsUp(false)
         }
         meetingManager.leaveMeeting(false)
         customDialog.confirm.disconnect(leaveMeeting)
@@ -1888,12 +2459,19 @@ Rectangle {
         if (membersWindow.visible === true){
             membersWindow.hide()
         }
+
         if (invitation.visible === true){
             invitation.close()
         }
+
+        if (invitationList.visible === true){
+            invitationList.close()
+        }
+
         if(liveSetting.visible === true){
             liveSetting.close()
         }
+
         if (SettingsWnd.visible === true){
             SettingsWnd.hide();
         }
@@ -1908,6 +2486,15 @@ Rectangle {
         shareSelector.close()
         requestPermission.close()
         customDialog.close()
+
+        if(tempDynamicDialogEx != undefined) {
+            tempDynamicDialogEx.close()
+        }
+    }
+
+    function showMaxHubTip(){
+        deviceManager.selectMaxHubDevice(DeviceSelector.DeviceType.PlayoutType)
+        customDialog.confirm.disconnect(showMaxHubTip)
     }
 
     function appendZero(obj) {
@@ -1921,64 +2508,20 @@ Rectangle {
         return [parseInt(sec/3600), parseInt(sec/60 % 60), sec % 60].join(":").replace(/\b(\d)\b/g, "0$1");
     }
 
-    function addToList(type, text, nickName, me) {
-        if (text.length <= 0 || text.match(/^[ ]*$/)) {
-            return;
-        }
-
-        if ( me === false && type === "msg") {
-            ++msgCount;
-        }
-
-        var current = new Date().getTime()
-        var startTime = chatBar.msgtimeGap.getTime()
-
-        var gap = (current-startTime)
-        var oneday = parseInt(gap/1000/3600/24)
-        //update time
-        chatBar.msgtimeGap = new Date()
-
-        //in one day  insert time
-        if (oneday === 0) {
-
-            if (gap/1000 >= 300 && chatroom.listmodel.count >= 1) {
-                //append one timestamp
-                chatroom.msglistView.msgTimeTip = true
-                chatroom.msglistView.model.append({"msgType":"time","content": Qt.formatDateTime(new Date(), "hh:mm"), "sentByMe": false,"nickName":""});
-            } else {
-                chatroom.msglistView.msgTimeTip = false
-            }
-        } else if (oneday === 1 && chatroom.listmodel.count >= 1) {
-            chatroom.msglistView.msgTimeTip = true
-            chatroom.msglistView.model.append({"msgType":"time","content": Qt.formatDateTime(new Date(), "hh:mm"), "sentByMe": false,"nickName":""});
-        }
-
-        //console.log("msgtype = " + type)
-        chatroom.msglistView.appendByme = me
-
-        chatroom.msglistView.model.append({"msgType":type,"content": text, "sentByMe": me,"nickName":nickName});
-        //var scollbar = Math.abs(verScrollBar.position + verScrollBar.visualSize)
-
-        if (me) {
-            if(shareManager.shareAccountId !== authManager.authAccountId)
-                chatroom.msglistView.positionViewAtEnd()
-
-        } else {
-            if (chatBar.visible){
-                if (chatroom.msglistView.atYEnd && shareManager.shareAccountId !== authManager.authAccountId) {
-                    chatroom.msglistView.positionViewAtEnd()
-                    //msgCount = 0;
-                } else {
-                    footerBar.recvNewChatMsg(msgCount,nickName,text)
-                    if (!msgTipBtn.visible){
-                        msgTipBtn.visible = true
-                    }
-                }
-
-            } else{
-                footerBar.recvNewChatMsg(msgCount,nickName,text)
-                //msglistView.positionViewAtEnd()
-            }
+    function getAudioVolumeSourceImage(level) {
+        switch (level) {
+            case MainPanel.AudioVolumeLevel.Level_1:
+                return "qrc:/qml/images/meeting/volume/volume_level_1.png"
+            case MainPanel.AudioVolumeLevel.Level_2:
+                return "qrc:/qml/images/meeting/volume/volume_level_2.png"
+            case MainPanel.AudioVolumeLevel.Level_3:
+                return "qrc:/qml/images/meeting/volume/volume_level_3.png"
+            case MainPanel.AudioVolumeLevel.Level_4:
+                return "qrc:/qml/images/meeting/volume/volume_level_4.png"
+            case MainPanel.AudioVolumeLevel.Level_5:
+                return "qrc:/qml/images/meeting/volume/volume_level_5.png"
+            default:
+                return "qrc:/qml/images/meeting/volume/volume_level_1.png"
         }
     }
 }

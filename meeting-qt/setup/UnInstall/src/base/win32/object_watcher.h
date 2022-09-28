@@ -1,10 +1,5 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
-
-// Copyright (c) 2011 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
 // Ported & Modified by Wang Rongtao <rtwang@corp.netease.com>
@@ -14,11 +9,11 @@
 #define BASE_WIN_OBJECT_WATCHER_H_
 #pragma once
 
-#include "base/base_export.h"
 #include "base/base_config.h"
+#include "base/base_export.h"
 #include "base/framework/message_loop.h"
-#include "base/util/callback.h"
 #include "base/std_helper/weak_callback.h"
+#include "base/util/callback.h"
 
 namespace nbase {
 namespace win32 {
@@ -52,55 +47,55 @@ namespace win32 {
 // OnObjectSignaled being called on a deleted MyClass pointer.  Easy!
 //
 class BASE_EXPORT ObjectWatcher : public MessageLoop::DestructionObserver {
- public:
-  class BASE_EXPORT Delegate {
-   public:
-    virtual ~Delegate() {}
-    // Called from the MessageLoop when a signaled object is detected.  To
-    // continue watching the object, StartWatching must be called again.
-    virtual void OnObjectSignaled(HANDLE object) = 0;
-  };
+public:
+    class BASE_EXPORT Delegate {
+    public:
+        virtual ~Delegate() {}
+        // Called from the MessageLoop when a signaled object is detected.  To
+        // continue watching the object, StartWatching must be called again.
+        virtual void OnObjectSignaled(HANDLE object) = 0;
+    };
 
-  ObjectWatcher();
-  ~ObjectWatcher();
+    ObjectWatcher();
+    ~ObjectWatcher();
 
-  // When the object is signaled, the given delegate is notified on the thread
-  // where StartWatching is called.  The ObjectWatcher is not responsible for
-  // deleting the delegate.
-  //
-  // Returns true if the watch was started.  Otherwise, false is returned.
-  //
-  bool StartWatching(HANDLE object, Delegate* delegate);
+    // When the object is signaled, the given delegate is notified on the thread
+    // where StartWatching is called.  The ObjectWatcher is not responsible for
+    // deleting the delegate.
+    //
+    // Returns true if the watch was started.  Otherwise, false is returned.
+    //
+    bool StartWatching(HANDLE object, Delegate* delegate);
 
-  // Stops watching.  Does nothing if the watch has already completed.  If the
-  // watch is still active, then it is canceled, and the associated delegate is
-  // not notified.
-  //
-  // Returns true if the watch was canceled.  Otherwise, false is returned.
-  //
-  bool StopWatching();
+    // Stops watching.  Does nothing if the watch has already completed.  If the
+    // watch is still active, then it is canceled, and the associated delegate is
+    // not notified.
+    //
+    // Returns true if the watch was canceled.  Otherwise, false is returned.
+    //
+    bool StopWatching();
 
-  // Returns the handle of the object being watched, or NULL if the object
-  // watcher is stopped.
-  HANDLE GetWatchedObject();
+    // Returns the handle of the object being watched, or NULL if the object
+    // watcher is stopped.
+    HANDLE GetWatchedObject();
 
- private:
-  // Called on a background thread when done waiting.
-  static void CALLBACK DoneWaiting(void* param, BOOLEAN timed_out);
+private:
+    // Called on a background thread when done waiting.
+    static void CALLBACK DoneWaiting(void* param, BOOLEAN timed_out);
 
-  void Signal(Delegate* delegate);
+    void Signal(Delegate* delegate);
 
-  // MessageLoop::DestructionObserver implementation:
-  virtual void PreDestroyCurrentMessageLoop();
+    // MessageLoop::DestructionObserver implementation:
+    virtual void PreDestroyCurrentMessageLoop();
 
-  // Internal state.
-  nbase::WeakCallbackFlag signal_weakflag_;
-  StdClosure callback_;
-  HANDLE object_;             // The object being watched
-  HANDLE wait_object_;        // Returned by RegisterWaitForSingleObject
-  MessageLoop* origin_loop_;  // Used to get back to the origin thread
+    // Internal state.
+    nbase::WeakCallbackFlag signal_weakflag_;
+    StdClosure callback_;
+    HANDLE object_;             // The object being watched
+    HANDLE wait_object_;        // Returned by RegisterWaitForSingleObject
+    MessageLoop* origin_loop_;  // Used to get back to the origin thread
 
-  DISALLOW_COPY_AND_ASSIGN(ObjectWatcher);
+    DISALLOW_COPY_AND_ASSIGN(ObjectWatcher);
 };
 
 }  // namespace win32

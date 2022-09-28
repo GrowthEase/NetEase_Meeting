@@ -1,22 +1,20 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef LOCALSOCKET_H
 #define LOCALSOCKET_H
 
-#include <QObject>
-#include <QLocalSocket>
 #include <QLocalServer>
+#include <QLocalSocket>
+#include <QObject>
 
-class LocalSocket : public QObject
-{
+class LocalSocket : public QObject {
     Q_OBJECT
 public:
     static QString SOCKET_SERVER_NAME;
 
-    explicit LocalSocket(QObject *parent = nullptr);
+    explicit LocalSocket(QObject* parent = nullptr);
     ~LocalSocket();
 
     bool listen();
@@ -24,7 +22,7 @@ public:
     bool notify(const QString& data);
 
 signals:
-    void loginWithSSO(const QString& ssoAppKey, const QString& ssoToken);
+    void loginWithSSO(const QString& ssoAppKey, const QString& ssoUser, const QString& ssoToken);
 
 public slots:
     void newConnectionHandler();
@@ -35,4 +33,4 @@ private:
     std::unique_ptr<QLocalSocket> m_localSocket = nullptr;
 };
 
-#endif // LOCALSOCKET_H
+#endif  // LOCALSOCKET_H

@@ -1,15 +1,13 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef LOGINSTANCE_H
 #define LOGINSTANCE_H
 
 #include <mutex>
 
-class LogInstance
-{
+class LogInstance {
 public:
     LogInstance(char* argv[]);
     static LogInstance* getInstance() {
@@ -26,11 +24,10 @@ public:
 
 private:
     LogInstance();
-    void configureGoogleLog();
-    static void messageHandler(QtMsgType, const QMessageLogContext &, const QString &);
+    static void messageHandler(QtMsgType, const QMessageLogContext&, const QString&);
 
 private:
     static LogInstance* m_instance;
 };
 
-#endif // LOGINSTANCE_H
+#endif  // LOGINSTANCE_H

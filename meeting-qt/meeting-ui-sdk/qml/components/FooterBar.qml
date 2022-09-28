@@ -4,6 +4,7 @@ import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 import NetEase.Meeting.MessageBubble 1.0
 import NetEase.Meeting.GlobalChatManager 1.0
+import NetEase.Meeting.MeetingStatus 1.0
 
 import "../components"
 import "../footerbar"
@@ -32,6 +33,7 @@ Rectangle {
     }
 
     property alias idMeetingToolBar: idMeetingToolBar
+    property var tempDynamicDialogEx: undefined
 
     signal screenShare(bool hasRecordPermission)
     signal showMembers()
@@ -84,7 +86,9 @@ Rectangle {
         height: 28
         width: 76
         text: qsTr("Leave")
-        visible: authManager.authAccountId !== membersManager.hostAccountId && parent.height > height
+        visible: authManager.authAccountId !== membersManager.hostAccountId
+                 && !membersManager.isManagerRole
+                 && parent.height > height
         anchors.right: parent.right
         anchors.rightMargin: 20
         anchors.verticalCenter: parent.verticalCenter
@@ -99,11 +103,12 @@ Rectangle {
             customDialog.text = qsTr('Exit')
             customDialog.description = qsTr('Do you want to quit this meeting?')
             customDialog.confirm.disconnect(muteLocalAudio)
-            customDialog.confirm.disconnect(disableLocalVideo)
+            customDialog.confirm.disconnect(enableLocalVideo)
             customDialog.confirm.disconnect(endMeeting)
             customDialog.confirm.disconnect(muteHandsDown)
             customDialog.confirm.disconnect(muteHandsUp)
             customDialog.cancel.disconnect(unMuteLoaclAudio)
+            customDialog.cancel.disconnect(disableLocalVideo)
             customDialog.confirm.connect(leaveMeeting)
             customDialog.open()
         }
@@ -114,7 +119,8 @@ Rectangle {
         height: 28
         width: 76
         text: qsTr("End")
-        visible: authManager.authAccountId === membersManager.hostAccountId && parent.height > height
+        visible: (authManager.authAccountId === membersManager.hostAccountId || membersManager.isManagerRole)
+                 && parent.height > height
         anchors.right: parent.right
         anchors.rightMargin: 20
         anchors.verticalCenter: parent.verticalCenter
@@ -124,7 +130,7 @@ Rectangle {
         normalTextColor: "#FE3B30"
         buttonRadius: 4
         onClicked: {
-            DialogManager.dynamicDialogEx(qsTr('End Meeting'), qsTr('Do you want to quit this meeting?'), function () {
+            tempDynamicDialogEx = DialogManager.dynamicDialogEx(qsTr('End Meeting'), qsTr('Do you want to quit this meeting?'), function () {
                 mainWindow.width = defaultWindowWidth
                 meetingManager.leaveMeeting(false)
             }, function () {
@@ -146,7 +152,6 @@ Rectangle {
         target: GlobalChatManager
         onNoNewMsgNotity:{
             msgCount = 0;
-
         }
     }
 
@@ -163,19 +168,33 @@ Rectangle {
     Connections {
         target: idMeetingToolBar
         onBtnAudioCtrlClicked: {
-            if(audioManager.handsUpStatus === true) {
-                customDialog.cancelBtnText = qsTr("Cancel")
-                customDialog.confirmBtnText = qsTr("OK")
-                customDialog.text = qsTr("Cancel HandsUp")
-                customDialog.description =qsTr("are you sure to cancel hands up")
-                customDialog.confirm.disconnect(disableLocalVideo)
-                customDialog.confirm.disconnect(leaveMeeting)
-                customDialog.confirm.disconnect(endMeeting)
-                customDialog.confirm.disconnect(muteHandsUp)
-                customDialog.confirm.disconnect(muteLocalAudio)
-                customDialog.cancel.disconnect(unMuteLoaclAudio)
-                customDialog.confirm.connect(muteHandsDown)
-                customDialog.open()
+            console.log("membersManager.handsUpStatus", membersManager.handsUpStatus)
+            console.log("meetingManager.meetingMuted", meetingManager.meetingMuted)
+            console.log("audioManager.localAudioStatus", audioManager.localAudioStatus)
+            console.log("meetingManager.meetingAllowSelfAudioOn", meetingManager.meetingAllowSelfAudioOn)
+            console.log("authManager.authAccountId", authManager.authAccountId)
+
+            if(meetingManager.meetingMuted && audioManager.localAudioStatus !== FooterBar.DeviceStatus.DeviceEnabled &&
+                    !meetingManager.meetingAllowSelfAudioOn && authManager.authAccountId !== membersManager.hostAccountId
+                    && !membersManager.isManagerRole) {
+                if(membersManager.handsUpStatus) {
+                    toast.show(qsTr("You have raised your hand, please wait for the host to deal with it"))
+                } else {
+                    customDialog.cancelBtnText = qsTr("Cancel")
+                    customDialog.confirmBtnText = qsTr("HandsUpRaise")
+                    customDialog.text = qsTr("Mute all")
+                    customDialog.description = qsTr("This meeting has been turned on all mute by host,you can hands up to speak")
+                    customDialog.confirm.disconnect(enableLocalVideo)
+                    customDialog.confirm.disconnect(leaveMeeting)
+                    customDialog.confirm.disconnect(endMeeting)
+                    customDialog.confirm.disconnect(muteHandsDown)
+                    customDialog.confirm.disconnect(muteLocalAudio)
+                    customDialog.confirm.disconnect(showMaxHubTip)
+                    customDialog.cancel.disconnect(disableLocalVideo)
+                    customDialog.cancel.disconnect(unMuteLoaclAudio)
+                    customDialog.confirm.connect(muteHandsUp)
+                    customDialog.open()
+                }
                 return
             }
 
@@ -190,7 +209,31 @@ Rectangle {
             deviceSelector.open()
         }
 
-        onBtnVideoCtrlClicked: {
+        onBtnVideoCtrlClicked: {            
+            if(meetingManager.meetingVideoMuted && videoManager.localVideoStatus !== FooterBar.DeviceStatus.DeviceEnabled &&
+                    !meetingManager.meetingAllowSelfVideoOn && authManager.authAccountId !== membersManager.hostAccountId
+                    && !membersManager.isManagerRole) {
+                if(membersManager.handsUpStatus) {
+                    toast.show(qsTr("You have raised your hand, please wait for the host to deal with it"))
+                } else {
+
+                    function confirm() {
+                        if(meetingManager.meetingVideoMuted && !meetingManager.meetingAllowSelfVideoOn) {
+                             membersManager.handsUp(true);
+                        }
+                    }
+
+                    function cancel() {
+                        //do nonthing
+                    }
+
+                    tempDynamicDialog = DialogManager.dynamicDialog2(qsTr("Mute all Video"),
+                                                 qsTr("This meeting has been turned on all mute video by host,you can hands up to speak"),
+                                                 confirm, cancel, qsTr("HandsUpRaise"), qsTr("Cancel"), mainWindow)
+                }
+                return
+            }
+
             videoManager.disableLocalVideo(videoManager.localVideoStatus === FooterBar.DeviceStatus.DeviceEnabled)
         }
 
@@ -274,6 +317,17 @@ Rectangle {
             liveSetting.raise()
         }
 
+        onBtnSipInviteClicked: {
+            if (shareManager.ownerSharing) {
+                return
+            }
+            invitationList.screen = mainWindow.screen
+            invitationList.x = (mainWindow.screen.width - invitationList.width) / 2 + mainWindow.screen.virtualX
+            invitationList.y = (mainWindow.screen.height - invitationList.height) / 2 + mainWindow.screen.virtualY
+            invitationList.show()
+            invitationList.raise()
+        }
+
         onBtnWhiteboardClicked: {
             if(shareManager.shareAccountId !== "") {
                 toast.show(qsTr("Screen sharing does not currently support screen share"))
@@ -291,6 +345,21 @@ Rectangle {
                 whiteboardManager.closeWhiteboard(authManager.authAccountId)
             }else {
                 toast.show(qsTr("Someone is currently sharing a whiteboard"))
+            }
+        }
+    }
+
+    Connections {
+        target: meetingManager
+        onMeetingStatusChanged: {
+            switch (status) {
+            case MeetingStatus.MEETING_ENDED:
+                if(tempDynamicDialogEx != undefined) {
+                    tempDynamicDialogEx.close()
+                }
+                break
+            default:
+                break
             }
         }
     }
