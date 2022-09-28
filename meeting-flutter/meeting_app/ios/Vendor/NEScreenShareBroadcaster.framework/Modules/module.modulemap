@@ -1,0 +1,6 @@
+framework module NEScreenShareBroadcaster {
+  umbrella header "NEScreenShareBroadcaster.h"
+
+  export *
+  module * { export * }
+}
