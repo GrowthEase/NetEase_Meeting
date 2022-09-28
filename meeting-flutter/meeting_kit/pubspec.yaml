@@ -1,0 +1,31 @@
+name: netease_meeting_core
+description: A package provide related APIs to start、schedule、join meeting.
+version: 3.0.0
+homepage: https://yunxin.163.com/
+publish_to: none
+
+environment:
+  sdk: ">=2.12.0 <3.0.0"
+  flutter: ">=1.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  connectivity: ^3.0.6
+  url_launcher: ^6.1.4
+  async: 2.8.2
+  shared_preferences: ^2.0.15
+  dio: ^4.0.6
+
+  path_provider: ^2.0.11
+  uuid: ^3.0.6
+  device_info_plus: 4.0.0
+  device_info_plus_platform_interface: 2.3.0+1
+  package_info: ^2.0.2
+
+  netease_roomkit: ^0.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
