@@ -23,14 +23,17 @@ Window {
     property bool liveAccess: false
     property bool recordEnable: false
     property string liveUrl:""
+    property string lastSubjectText: ''
     property int detailsHeight: Qt.platform.os === 'windows' ? 626 + 20 : 646   // 根据视觉调整
     property int editHeight: Qt.platform.os === 'windows' ? 644 + 20 : 644      // 根据视觉调整
-    property alias title: idDragArea.title
+    //property alias title: idDragArea.title
     width: Qt.platform.os === 'windows' ? 400 + 20 : 400                        // 根据视觉调整
 
     color: "#00000000"
     Material.theme: Material.Light
     flags: Qt.Window | Qt.FramelessWindowHint  | Qt.WindowStaysOnTopHint
+
+    Accessible.name: "scheduleDetailsWindow"
 
     signal joinMeeting()
 
@@ -66,11 +69,10 @@ Window {
     }
 
     function init () {
-        title = qsTr("Meeting Details")
+        idScheduleDetailsWindow.title = qsTr("Meeting Details")
 
-        var isSupportLive = meetingManager.getIsSupportLive()
         meetingManager.getIsSupportRecord()
-        if(isSupportLive){
+        if(meetingManager.isSupportLive){
             detailsHeight += 30
 
             if(liveEanble){
@@ -88,6 +90,7 @@ Window {
 
         idScheduleDetailsWindow.height = detailsHeight
         idProperty.bEdit = false
+        lastSubjectText = meetingTopic
         idSubjectText.text = meetingTopic
 
         // 初始化日期
@@ -145,6 +148,7 @@ Window {
             anchors.fill: parent
             DragArea {
                 id: idDragArea
+                title: idScheduleDetailsWindow.title
                 Layout.preferredHeight: 50
                 Layout.fillWidth: true
                 onCloseClicked: {
@@ -182,7 +186,19 @@ Window {
                             Layout.fillWidth: true
                             readOnly: !idProperty.bEdit
                             placeholderText: qsTr("Please enter meeting subject")
-                            validator: RegExpValidator { regExp: /\w{1,30}/ }
+                            onTextChanged: {
+                                const currentText = idSubjectText.text
+                                if (currentText === lastSubjectText)
+                                    return
+
+                                if (getByteLength(currentText) > 30) {
+                                } else {
+                                    lastSubjectText = currentText
+                                    const regStr = /[\uD83C|\uD83D|\uD83E][\uDC00-\uDFFF][\u200D|\uFE0F]|[\uD83C|\uD83D|\uD83E][\uDC00-\uDFFF]|[0-9|*|#]\uFE0F\u20E3|[0-9|#]\u20E3|[\u203C-\u3299]\uFE0F\u200D|[\u203C-\u3299]\uFE0F|[\u2122-\u2B55]|\u303D|[\A9|\AE]\u3030|\uA9|\uAE|\u3030/gi
+                                    lastSubjectText = lastSubjectText.replace(regStr, '')
+                                }
+                                idSubjectText.text = lastSubjectText
+                            }
                         }
                     }
 
@@ -218,7 +234,7 @@ Window {
                                     }
                                 }
                                 Accessible.role: Accessible.Button
-                                Accessible.name: idCopyId.text
+                                Accessible.name: "copy_id"
                                 Accessible.onPressAction: if (enabled) copyIdBtn.clicked(Qt.LeftButton)
                             }
                         }
@@ -378,7 +394,7 @@ Window {
                                     }
                                 }
                                 Accessible.role: Accessible.Button
-                                Accessible.name: idCopyPassword.text
+                                Accessible.name: "copy_password"
                                 Accessible.onPressAction: if (enabled) copyPasswordBtn.clicked(Qt.LeftButton)
                             }
                         }
@@ -453,6 +469,8 @@ Window {
                                     font.pixelSize: 14
                                     text: liveUrl
                                     elide: Text.ElideRight
+
+                                    Accessible.name: "liveUrl"
                                 }
                             }
                             Label {
@@ -469,7 +487,7 @@ Window {
                                     }
                                 }
                                 Accessible.role: Accessible.Button
-                                Accessible.name: idCopyliveUrl.text
+                                Accessible.name: "copy_liveUrl"
                                 Accessible.onPressAction: if (enabled) copyLiveUrlBtn.clicked(Qt.LeftButton)
                             }
                         }

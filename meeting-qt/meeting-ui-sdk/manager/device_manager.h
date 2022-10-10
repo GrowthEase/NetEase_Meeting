@@ -1,10 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
-
-// Copyright (c) 2014-2020 NetEase, Inc.
-// All right reserved.
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef DEVICEMANAGER_H
 #define DEVICEMANAGER_H
@@ -13,6 +9,14 @@
 #include "manager/global_manager.h"
 
 using namespace neroom;
+
+/**
+ * @brief 设备插拔状态
+ */
+enum NEDeviceState {
+    kDeviceAdded,  /**< 设备插入 */
+    kDeviceRemoved /**< 设备拔出 */
+};
 
 typedef struct tagDEVICE_INFO {
     QString deviceName;
@@ -31,7 +35,6 @@ typedef struct tagDEVICE_INFO {
 enum DeviceType { DeviceTypeDefault, DeviceTypePlayout, DeviceTypeRecord, DeviceTypeCapture };
 
 enum SelectDeviceMode {
-    kDeviceAuto,     // 使用 SDK 推荐设备
     kDeviceDefault,  // 使用系统默认设备
     kDeviceUser      // 使用用户选择设备
 };
@@ -54,6 +57,8 @@ public:
     bool initialize();
     void release();
     void resetDevicesInfo();
+    void startVolumeIndication();
+    void stopVolumeIndication();
 
     QVector<DEVICE_INFO>& getPlayoutDevices();
     QVector<DEVICE_INFO>& getRecordDevices();
@@ -77,7 +82,8 @@ signals:
     void videoDeviceChangedSignal(const QString& deviceId, VideoDeviceType deviceType, NEDeviceState deviceState);
 
     void localAudioVolumeIndication(int volume);
-    void remoteAudioVolumeIndication(int volume);
+    void remoteAudioVolumeIndication(const QString& accountId, int volume);
+    void userAudioVolumeIndication(const QString& accountId, int level);
 
     void playoutDeviceChangedNotify(const QString& deviceName, const QString& devicePath);
     void recordDeviceChangedNotify(const QString& deviceName, const QString& devicePath);
@@ -85,9 +91,13 @@ signals:
 
     void error(int errorCode, const QString& errorMessage);
 
+    void showIndicationTip();
+    void showMaxHubTip();
+
 public slots:
     int currentIndex(int deviceType);
     void selectDevice(int deviceType, int index);
+    void selectMaxHubDevice(int deviceType);
 
     unsigned int getRecordDeviceVolume();
     bool setRecordDeviceVolume(unsigned int volumeValue = 255);
@@ -104,6 +114,8 @@ public slots:
     int getDeviceCount(int deviceType);
     void getCurrentSelectedDevice();
 
+    void onLocalVolumeIndicationUI(int volume);
+
 public:
     void onPlayoutDeviceChanged(const std::string& deviceId, NEDeviceState deviceState);
     void onRecordDeviceChanged(const std::string& deviceId, NEDeviceState deviceState);
@@ -111,7 +123,7 @@ public:
     void onDefualtRecordDeviceChanged(const std::string& deviceId);
     void onCameraDeviceChanged(const std::string& deviceId, NEDeviceState deviceState);
     void onLocalVolumeIndication(int volume);
-    void onRemoteVolumeIndication(int volume);
+    void onRemoteVolumeIndication(const std::string& accountId, int level);
 
     QString userSelectPlayout() const;
     void setUserSelectPlayout(const QString& userSelectPlayout);
@@ -125,6 +137,7 @@ private:
 
 private:
     bool enumDevices(DeviceType deviceType, const DEVICE_INFO& oldSelectedDevice = DEVICE_INFO());
+    int convertVolumeToLevel(int volume);
 
 private:
     QVector<DEVICE_INFO> m_playoutDevices;
@@ -135,12 +148,16 @@ private:
     DEVICE_INFO m_lastSelectedRecord;
     DEVICE_INFO m_lastSelectedCapture;
 
-    SelectDeviceMode m_recordSelectedMode = kDeviceAuto;
-    SelectDeviceMode m_playoutSelectedMode = kDeviceAuto;
+    SelectDeviceMode m_recordSelectedMode = kDeviceDefault;
+    SelectDeviceMode m_playoutSelectedMode = kDeviceDefault;
 
     QTimer m_enumPlayoutTimer;
     QTimer m_enumRecordTimer;
     QTimer m_enumCaptureTimer;
+    QTimer m_indicationTimer;
+
+    int m_nIndicationTimes = 0;
+    bool m_bCanShowIndicationTip = true;
 };
 
 #endif  // DEVICEMANAGER_H

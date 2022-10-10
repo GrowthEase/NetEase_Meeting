@@ -11,16 +11,18 @@ import "../utils/dialogManager.js" as DialogManager
 Window {
     id: profileWindow
 
-    property var popupChangePassword: undefined
     property var popupModifyNickname: undefined
     property var popupForgotPassword: undefined
     property var popupFeedback: undefined
     property var popupAboutus: undefined
 
+    title: "profileWindow"
+    Accessible.name: "profileWindow"
+
     width: profileLayout.width + 20
     height: profileLayout.height + 20
     color: "#00000000"
-    flags: Qt.Window | Qt.FramelessWindowHint// | Qt.WindowStaysOnTopHint
+    flags: Qt.Window | Qt.FramelessWindowHint //| Qt.WindowStaysOnTopHint
 
     Material.theme: Material.Light
 
@@ -126,6 +128,7 @@ Window {
                         Image {
                             width: 14
                             height: 14
+                            mipmap: true
                             source: "qrc:/qml/images/front/icon_edit.svg"
                             visible: meetingManager.neLoginType !== 0 && meetingManager.neLoginType !== 3
                             Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
@@ -161,6 +164,8 @@ Window {
                         Image {
                             Layout.preferredHeight: 14
                             Layout.preferredWidth: 14
+                            visible: false
+                            mipmap: true
                             source: 'qrc:/qml/images/front/icon-switch.svg'
                             MouseArea {
                                 id: appListSwitchBtn
@@ -209,6 +214,7 @@ Window {
                     Layout.preferredWidth: 16
                     Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
                     source: 'qrc:/qml/images/front/short_id_info.svg'
+                    mipmap: true
                     Layout.leftMargin: 8
                     Layout.rightMargin: 20
                     MouseArea {
@@ -283,7 +289,7 @@ Window {
             }
             RowLayout {
                 id: rowPhone
-                visible: meetingManager.neUsername !== ''
+                visible: authManager.phoneNumber !== ''
                 Layout.preferredWidth: parent.width
                 Layout.minimumHeight: 56
                 Label {
@@ -294,7 +300,7 @@ Window {
                     Layout.leftMargin: 20
                 }
                 Label {
-                    text: meetingManager.neUsername
+                    text: authManager.phoneNumber
                     color: "#999999"
                     Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                     Layout.rightMargin: 20
@@ -306,58 +312,11 @@ Window {
                 Layout.preferredHeight: 1
                 Layout.fillWidth: true
                 color: '#EBEDF0'
-                visible: meetingManager.neLoginType !== 0 && meetingManager.neLoginType !== 3
-            }
-            RowLayout {
-                id: rowPassword
-                visible: meetingManager.neLoginType !== 0 && meetingManager.neLoginType !== 3
-                Layout.preferredWidth: parent.width
-                Layout.minimumHeight: 56
-                Label {
-                    id: changePasswordLabel
-                    text: qsTr("Change password")
-                    font.pixelSize: 16
-                    color: "#222222"
-                    Layout.alignment: Qt.AlignVCenter
-                    Layout.leftMargin: 20
-                }
-                Image {
-                    width: 14
-                    height: 14
-                    source: "qrc:/qml/images/front/icon_edit.svg"
-                    Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-                    Layout.rightMargin: 20
-                    MouseArea {
-                        id: changePasswordBtn
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            meetingManager.prettyMeetingId
-                            profileWindow.close()
-                            if (popupChangePassword != undefined) {
-                                popupChangePassword.destroy()
-                                popupChangePassword = undefined
-                            }
-                            popupChangePassword = Qt.createComponent("ChangePassword.qml").createObject(mainWindow)
-                            popupChangePassword.open()
-                        }
-                    }
-                    Accessible.role: Accessible.Button
-                    Accessible.name: changePasswordLabel.text
-                    Accessible.onPressAction: if (enabled) changePasswordBtn.clicked(Qt.LeftButton)
-                }
-            }
-            Rectangle {
-                Layout.leftMargin: 20
-                Layout.rightMargin: 20
-                Layout.preferredHeight: 1
-                Layout.fillWidth: true
-                color: '#EBEDF0'
-                visible: meetingManager.personalShortMeetingId !== ''
+                visible: authManager.personalShortMeetingId !== ''
             }
             RowLayout {
                 id: rowShortId
-                visible: meetingManager.personalShortMeetingId !== ''// && authManager.loginType === 1
+                visible: authManager.personalShortMeetingId !== ''// && authManager.loginType === 1
                 Layout.preferredWidth: parent.width
                 Layout.minimumHeight: 56
                 Label {
@@ -383,7 +342,7 @@ Window {
                 }
                 Item { Layout.fillWidth: true }
                 Label {
-                    text: meetingManager.personalShortMeetingId
+                    text: authManager.personalShortMeetingId
                     color: "#999999"
                     Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
                 }
@@ -392,6 +351,7 @@ Window {
                     Layout.preferredWidth: 16
                     Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
                     source: 'qrc:/qml/images/front/short_id_info.svg'
+                    mipmap: true
                     Layout.leftMargin: 8
                     Layout.rightMargin: 20
                     MouseArea {
@@ -460,6 +420,7 @@ Window {
                         width: 14
                         height: 14
                         source: "qrc:/qml/images/public/icons/arrow_right.png"
+                        mipmap: true
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.right: parent.right
                         anchors.rightMargin: 20
@@ -511,6 +472,7 @@ Window {
                         width: 14
                         height: 14
                         source: "qrc:/qml/images/public/icons/arrow_right.png"
+                        mipmap: true
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.right: parent.right
                         anchors.rightMargin: 20
@@ -570,6 +532,7 @@ Window {
                         width: 14
                         height: 14
                         source: "qrc:/qml/images/public/icons/arrow_right.png"
+                        mipmap: true
                         anchors.verticalCenter: parent.verticalCenter
                         anchors.right: parent.right
                         anchors.rightMargin: 20
@@ -668,10 +631,6 @@ Window {
         if (popupForgotPassword !== undefined) {
             popupForgotPassword.destroy()
             popupForgotPassword = undefined
-        }
-        if (popupChangePassword !== undefined) {
-            popupChangePassword.destroy()
-            popupChangePassword = undefined
         }
         if (popupModifyNickname !== undefined) {
             popupModifyNickname.destroy()

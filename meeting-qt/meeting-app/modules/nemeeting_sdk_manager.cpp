@@ -1,14 +1,15 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "nemeeting_sdk_manager.h"
 #include <QElapsedTimer>
 #include <future>
 #include "auth_manager.h"
+#include "config_manager.h"
+#include "history_manager.h"
 
-const int maxInitRetryTimes = 1;
+const int maxInitRetryTimes = 2;
 
 #define CHECK_INIT                                                                              \
     {                                                                                           \
@@ -24,10 +25,13 @@ const int maxInitRetryTimes = 1;
         }                                                                                       \
     }
 
-NEMeetingSDKManager::NEMeetingSDKManager(QObject* parent)
+NEMeetingSDKManager::NEMeetingSDKManager(AuthManager* authManager, HistoryManager* historyManager, QObject* parent)
     : QObject(parent)
+    , m_pAuthManager(authManager)
+    , m_pHistoryManager(historyManager)
+    , m_bAudioAINSEnabled(false)
     , m_bAllowActive(false)
-    , m_pSettingsEventHandler(new SettingsEventHandler) {}
+    , m_pSettingsEventHandler(new SettingsEventHandler(this)) {}
 
 NEMeetingSDKManager::~NEMeetingSDKManager() {
     if (m_bInitialized)
@@ -42,26 +46,30 @@ void NEMeetingSDKManager::initialize(const QString& appKey, const InitCallback& 
             callback(NEErrorCode(0), "");
         return;
     }
-    NEMeetingSDKConfig config;
+    setIsSupportLive(ConfigManager::getInstance()->getSSOLogin());
+    NEMeetingKitConfig config;
     QString displayName = QObject::tr("NetEase Meeting");
     QByteArray byteDisplayName = displayName.toUtf8();
     QByteArray byteAppKey = appKey.toUtf8();
     config.setAppKey(byteAppKey.data());
-    config.setLogSize(10);
     config.getAppInfo()->ProductName(byteDisplayName.data());
     config.getAppInfo()->OrganizationName("NetEase");
     config.getAppInfo()->ApplicationName("Meeting");
     config.setDomain("yunxin.163.com");
-    config.setUseAssetServerConfig(false);
+    config.setRunAdmin(false);
+    config.setUseAssetServerConfig(ConfigManager::getInstance()->getPrivate());
+
 #ifdef QT_NO_DEBUG
-    config.setEnableDebugLog(false);
 #else
-    config.setEnableDebugLog(true);
     config.setKeepAliveInterval(-1);
     config.getLoggerConfig()->LoggerLevel(NEDEBUG);
 #endif
-    auto pMeetingSDK = NEMeetingSDK::getInstance();
-    pMeetingSDK->setLogHandler([](int level, const std::string& log) {
+
+    auto pMeetingSDK = NEMeetingKit::getInstance();
+    pMeetingSDK->setLogHandler([this](int level, const std::string& log) {
+        if (m_bInitialized) {
+            return;  // 暂时去掉日志打印
+        }
         switch (level) {
             case 0:
             case 1:
@@ -82,7 +90,7 @@ void NEMeetingSDKManager::initialize(const QString& appKey, const InitCallback& 
     });
     pMeetingSDK->initialize(config, [this, callback](NEErrorCode errorCode, const std::string& errorMessage) {
         YXLOG(Info) << "Initialize callback, error code: " << errorCode << ", error message: " << errorMessage << YXLOGEnd;
-        auto pMeetingSDK = NEMeetingSDK::getInstance();
+        auto pMeetingSDK = NEMeetingKit::getInstance();
         auto ipcAuthService = pMeetingSDK->getAuthService();
         if (ipcAuthService)
             ipcAuthService->addAuthListener(this);
@@ -97,21 +105,48 @@ void NEMeetingSDKManager::initialize(const QString& appKey, const InitCallback& 
         if (ipcPreMeetingService)
             ipcPreMeetingService->registerScheduleMeetingStatusListener(this);
 
-        pMeetingSDK->setExceptionHandler(std::bind(&NEMeetingSDKManager::onException, this, std::placeholders::_1));
+        auto ipcSettingsService = NEMeetingKit::getInstance()->getSettingsService();
+        if (ipcSettingsService)
+            ipcSettingsService->setNESettingsChangeNotifyHandler(m_pSettingsEventHandler.get());
 
+        pMeetingSDK->setExceptionHandler(std::bind(&NEMeetingSDKManager::onException, this, std::placeholders::_1));
         m_bInitialized = true;
         emit initializeSignal(errorCode, QString::fromStdString(errorMessage));
         if (callback)
             callback(errorCode, QString::fromStdString(errorMessage));
+        std::thread tmp1([=]() {
+            NEMeetingKit::getInstance()->getSettingsService()->GetBeautyFaceController()->enableBeautyFace(
+                true, [=](NEErrorCode errorCode, const std::string& errorMessage, const bool& enabled) {
+                    qInfo() << "enableBeautyFace callback, error code: " << errorCode << ", error message: " << QString::fromStdString(errorMessage)
+                            << ", enabled: " << enabled;
+                    if (ERROR_CODE_SUCCESS == errorCode) {
+                    } else {
+                        // emit error(errorCode, QString::fromStdString(errorMessage));
+                    }
+                });
+
+            if (!ConfigManager::getInstance()->contains("localEnableUnmuteBySpace")) {
+                NEMeetingKit::getInstance()->getSettingsService()->GetOtherController()->enableUnmuteBySpace(
+                    true, [](NEErrorCode errorCode, const std::string& errorMessage) {
+                        qInfo() << "enableUnmuteBySpace callback, error code: " << errorCode
+                                << ", error message: " << QString::fromStdString(errorMessage);
+                    });
+            }
+        });
+        tmp1.detach();
     });
 
-#ifdef Q_OS_MAC
     if (m_nTryInitTimes < maxInitRetryTimes && !m_bInitialized) {
         YXLOG(Info) << "m_bInitialized: " << m_bInitialized << ", m_nTryInitTimes: " << m_nTryInitTimes << YXLOGEnd;
-        QTimer::singleShot(5 * 1000, [=] {
+#ifdef _DEBUG
+        constexpr int kInterval = 60 * 60 * 1000;
+#else
+        constexpr int kInterval = 14 * 1000;
+#endif
+        QTimer::singleShot(kInterval, this, [=] {
             if (!m_bInitialized) {
-                YXLOG(Info) << "Do initialize again start: "
-                            << "m_bInitialized: " << m_bInitialized << ", m_nTryInitTimes: " << m_nTryInitTimes << YXLOGEnd;
+                YXLOG(Info) << "Do initialize again start, m_bInitialized: " << m_bInitialized << ", m_nTryInitTimes: " << m_nTryInitTimes
+                            << YXLOGEnd;
                 m_nTryInitTimes++;
 
                 bool bUnInitialize = false;
@@ -134,11 +169,21 @@ void NEMeetingSDKManager::initialize(const QString& appKey, const InitCallback& 
                 }
 
                 initialize(appKey, callback);
-                YXLOG(Info) << "Do initialize again end" << YXLOGEnd;
+                YXLOG(Info) << "Do initialize again end." << YXLOGEnd;
+                if (m_nTryInitTimes == maxInitRetryTimes) {
+                    QTimer::singleShot(15 * 1000, this, [=, &bUnInitialize] {
+                        YXLOG(Info) << "m_nTryInitTimes == maxInitRetryTimes == " << maxInitRetryTimes << YXLOGEnd;
+                        m_bInitialized = true;
+                        m_nTryInitTimes = 0;
+                        unInitialize([&bUnInitialize](NEErrorCode /*errorCode*/, const QString& /*errorMessage*/) { bUnInitialize = true; });
+                        emit initializeSignal(-1, tr("init sdk failed."));
+                        if (callback)
+                            callback(NEErrorCode(-1), tr("init sdk failed."));
+                    });
+                }
             }
         });
     }
-#endif
 }
 
 void NEMeetingSDKManager::unInitialize(const UnInitCallback& callback) {
@@ -149,17 +194,30 @@ void NEMeetingSDKManager::unInitialize(const UnInitCallback& callback) {
 
     m_bInitialized = false;
 
-    NEMeetingSDK::getInstance()->setExceptionHandler(nullptr);
+    emit unInitializeFeedback();
 
-    auto ipcMeetingService = NEMeetingSDK::getInstance()->getMeetingService();
-    if (ipcMeetingService)
+    auto pMeetingSDK = NEMeetingKit::getInstance();
+    pMeetingSDK->setExceptionHandler(nullptr);
+
+    auto ipcMeetingService = pMeetingSDK->getMeetingService();
+    if (ipcMeetingService) {
         ipcMeetingService->addMeetingStatusListener(nullptr);
+        ipcMeetingService->setOnInjectedMenuItemClickListener(nullptr);
+    }
 
-    auto ipcPreMeetingService = NEMeetingSDK::getInstance()->getPremeetingService();
+    auto ipcPreMeetingService = pMeetingSDK->getPremeetingService();
     if (ipcPreMeetingService)
-        ipcPreMeetingService->unRegisterScheduleMeetingStatusListener(this);
+        ipcPreMeetingService->unRegisterScheduleMeetingStatusListener(nullptr);
 
-    NEMeetingSDK::getInstance()->unInitialize([this, callback](NEErrorCode errorCode, const std::string& errorMessage) {
+    auto ipcAuthService = pMeetingSDK->getAuthService();
+    if (ipcAuthService)
+        ipcAuthService->removeAuthListener(this);
+
+    auto ipcSettingsService = pMeetingSDK->getSettingsService();
+    if (ipcSettingsService)
+        ipcSettingsService->setNESettingsChangeNotifyHandler(nullptr);
+
+    NEMeetingKit::getInstance()->unInitialize([this, callback](NEErrorCode errorCode, const std::string& errorMessage) {
         YXLOG(Info) << "Uninitialize callback, error code: " << errorCode << ", error message: " << errorMessage << YXLOGEnd;
         if (callback)
             callback(errorCode, QString::fromStdString(errorMessage));
@@ -171,9 +229,10 @@ bool NEMeetingSDKManager::unInitializeSync() {
     YXLOG(Info) << "unInitializeSync." << YXLOGEnd;
     bool bRet = false;
     NEErrorCode error = ERROR_CODE_SUCCESS;
-    unInitialize([&bRet, &error](NEErrorCode errorCode, const QString& /*errorMessage*/) {
+    unInitialize([&bRet, &error, this](NEErrorCode errorCode, const QString& /*errorMessage*/) {
         error = errorCode;
         bRet = true;
+        m_nTryInitTimes = 0;
     });
     while (!bRet) {
         std::this_thread::yield();
@@ -188,10 +247,7 @@ void NEMeetingSDKManager::activeWindow() {
         return;
 
     YXLOG(Info) << "Request active meeting window." << YXLOGEnd;
-
-    NEMeetingSDK::getInstance()->activeWindow([](NEErrorCode /*errorCode*/, const std::string& /*errorMessage*/) {
-
-    });
+    NEMeetingKit::getInstance()->activeWindow([](NEErrorCode /*errorCode*/, const std::string& /*errorMessage*/) {});
 }
 
 void NEMeetingSDKManager::loginByPassword(const QString& appKey, const QString& username, const QString& password) {
@@ -201,22 +257,26 @@ void NEMeetingSDKManager::loginByPassword(const QString& appKey, const QString& 
 
     initialize(appKey, [=](NEErrorCode errorCode, const QString& errorMessage) {
         if (errorCode == ERROR_CODE_SUCCESS) {
-            auto authService = NEMeetingSDK::getInstance()->getAuthService();
-            if (authService) {
-                authService->loginWithNEMeeting(username.toStdString(), password.toStdString(),
-                                                [=](NEErrorCode errorCode, const std::string& errorMessage) {
-                                                    YXLOG(Info) << "Login with netease meeting account callback, error code: " << errorCode
-                                                                << ", error message: " << errorMessage << YXLOGEnd;
-                                                    emit loginSignal(errorCode, QString::fromStdString(errorMessage));
-                                                });
-            }
+            auto asyncRet = std::async(std::launch::async, [this, username, password, appKey]() {
+                auto authService = NEMeetingKit::getInstance()->getAuthService();
+                if (authService) {
+                    authService->loginWithNEMeeting(username.toStdString(), password.toStdString(),
+                                                    [=](NEErrorCode errorCode, const std::string& errorMessage) {
+                                                        YXLOG(Info) << "Login with netease meeting account callback, error code: " << errorCode
+                                                                    << ", error message: " << errorMessage << YXLOGEnd;
+                                                        if (ERROR_CODE_SUCCESS == errorCode) {
+                                                        }
+                                                        emit loginSignal(errorCode, QString::fromStdString(errorMessage));
+                                                    });
+                }
+            });
         } else {
             emit error((int)errorCode, errorMessage);
         }
     });
 }
 
-void NEMeetingSDKManager::loginBySSOToken(const QString& appKey, const QString& ssoToken) {
+void NEMeetingSDKManager::loginBySSOToken(const QString& appKey, const QString& ssoUser, const QString& ssoToken) {
     YXLOG(Info) << "Request login by SSO token." << YXLOGEnd;
 #if 0
     CHECK_INIT;
@@ -227,17 +287,18 @@ void NEMeetingSDKManager::loginBySSOToken(const QString& appKey, const QString& 
 
     initialize(appKey, [=](NEErrorCode errorCode, const QString& errorMessage) {
         if (errorCode == ERROR_CODE_SUCCESS) {
-            auto authService = NEMeetingSDK::getInstance()->getAuthService();
-            if (authService) {
-                authService->loginWithSSOToken(ssoToken.toStdString(), [=](NEErrorCode errorCode, const std::string& errorMessage) {
-                    YXLOG(Info) << "Login with SSO token account callback, error code: " << errorCode << ", error message: " << errorMessage
-                                << YXLOGEnd;
-                    if (ERROR_CODE_SUCCESS == errorCode) {
-                        ConfigManager::getInstance()->setValue("localPaasAppKey", appKey);
-                    }
-                    emit loginSignal(errorCode, QString::fromStdString(errorMessage));
-                });
-            }
+            auto asyncRet = std::async(std::launch::async, [this, appKey, ssoToken]() {
+                auto authService = NEMeetingKit::getInstance()->getAuthService();
+                if (authService) {
+                    authService->loginWithSSOToken(ssoToken.toStdString(), [=](NEErrorCode errorCode, const std::string& errorMessage) {
+                        YXLOG(Info) << "Login with SSO token account callback, error code: " << errorCode << ", error message: " << errorMessage
+                                    << YXLOGEnd;
+                        if (ERROR_CODE_SUCCESS == errorCode) {
+                        }
+                        emit loginSignal(errorCode, QString::fromStdString(errorMessage));
+                    });
+                }
+            });
         } else {
             emit error((int)errorCode, errorMessage);
         }
@@ -253,19 +314,23 @@ void NEMeetingSDKManager::tryAutoLogin() {
     if (m_bInitialized)
         unInitializeSync();
 
-    auto appKey = ConfigManager::getInstance()->getValue("localPaasAppKey", "").toString();
-    if (appKey.isEmpty()) {
+    auto appKey = ConfigManager::getInstance()->getAPaasAppKey();
+
+    auto accountId = ConfigManager::getInstance()->getValue("localNEAccountId", "").toString();
+    auto appKeyTmp = ConfigManager::getInstance()->getValue("localNEAppKey", "").toString();
+    if (accountId.isEmpty() || appKey != appKeyTmp) {
+        YXLOG(Info) << "Request try auto login, but the cache information does not exist." << YXLOGEnd;
         emit tryAutoLoginSignal(-1, "");
         return;
     }
 
     initialize(appKey, [=](NEErrorCode errorCode, const QString& errorMessage) {
         if (errorCode == ERROR_CODE_SUCCESS) {
-            std::async(std::launch::async, [this]() {
+            auto autoLogin = std::async(std::launch::async, [this]() {
 #ifdef Q_OS_MACX
                 std::this_thread::sleep_for(std::chrono::milliseconds(300));
 #endif
-                auto authService = NEMeetingSDK::getInstance()->getAuthService();
+                auto authService = NEMeetingKit::getInstance()->getAuthService();
                 if (authService) {
                     authService->tryAutoLogin([=](NEErrorCode errorCode, const std::string& errorMessage) {
                         YXLOG(Info) << "Try auto login callback, error code: " << errorCode << ", error message: " << errorMessage << YXLOGEnd;
@@ -275,6 +340,7 @@ void NEMeetingSDKManager::tryAutoLogin() {
             });
         } else {
             emit error((int)errorCode, errorMessage);
+            // emit tryAutoLoginSignal((int)errorCode, errorMessage);
         }
     });
 }
@@ -287,7 +353,7 @@ void NEMeetingSDKManager::login(const QString& appKey,
         YXLOG(Debug) << "Login to apaas server, appkey: " << appKey.toStdString() << ", account ID: " << accountId.toStdString()
                      << ", token: " << accountToken.toStdString() << ", login type: " << loginType << YXLOGEnd;
     } else {
-        YXLOG(Info) << "Login to apaas server, appkey: " << appKey.toStdString() << ", login type: " << loginType << YXLOGEnd;
+        YXLOG(Info) << "Login to apaas server, login type: " << loginType << YXLOGEnd;
     }
 #if 0
     CHECK_INIT;
@@ -298,15 +364,28 @@ void NEMeetingSDKManager::login(const QString& appKey,
 
     initialize(appKey, [=](NEErrorCode errorCode, const QString& errorMessage) {
         if (errorCode == ERROR_CODE_SUCCESS) {
-            auto ipcAuthService = NEMeetingSDK::getInstance()->getAuthService();
-            if (ipcAuthService) {
-                QByteArray byteAccountId = accountId.toUtf8();
-                QByteArray byteAccountToken = accountToken.toUtf8();
-                ipcAuthService->login(byteAccountId.data(), byteAccountToken.data(), [=](NEErrorCode errorCode, const std::string& errorMessage) {
-                    YXLOG(Info) << "Login callback, error code: " << errorCode << ", error message: " << errorMessage << YXLOGEnd;
-                    emit loginSignal(errorCode, QString::fromStdString(errorMessage));
-                });
-            }
+            auto asyncRet = std::async(std::launch::async, [this, appKey, accountId, accountToken]() {
+                auto ipcAuthService = NEMeetingKit::getInstance()->getAuthService();
+                if (ipcAuthService) {
+                    QByteArray byteAccountId = accountId.toUtf8();
+                    QByteArray byteAccountToken = accountToken.toUtf8();
+
+                    QString lastAccountId = ConfigManager::getInstance()->getValue("localNEAccountId", "").toString();
+                    if (lastAccountId != byteAccountId) {
+                        m_bUseNewAccountId = true;
+                    } else {
+                        m_bUseNewAccountId = false;
+                    }
+
+                    ipcAuthService->login(byteAccountId.data(), byteAccountToken.data(), [=](NEErrorCode errorCode, const std::string& errorMessage) {
+                        YXLOG(Info) << "Login callback, error code: " << errorCode << ", error message: " << errorMessage << YXLOGEnd;
+                        if (ERROR_CODE_SUCCESS == errorCode) {
+                        }
+
+                        emit loginSignal(errorCode, QString::fromStdString(errorMessage));
+                    });
+                }
+            });
         } else {
             emit error((int)errorCode, errorMessage);
         }
@@ -314,9 +393,9 @@ void NEMeetingSDKManager::login(const QString& appKey,
 }
 
 void NEMeetingSDKManager::logout(bool cleanup /* = false*/) {
-    YXLOG(Info) << "Logout from apaas server." << YXLOGEnd;
+    YXLOG(Info) << "Logout from apaas server, cleanup:" << cleanup << YXLOGEnd;
 
-    auto ipcAuthService = NEMeetingSDK::getInstance()->getAuthService();
+    auto ipcAuthService = NEMeetingKit::getInstance()->getAuthService();
     if (ipcAuthService) {
         // connect(this, &NEMeetingSDKManager::logoutSignal, this, [=](int errorCode, const QString& errorMessage) { unInitializeAsync(); },
         // Qt::UniqueConnection);
@@ -340,7 +419,7 @@ void NEMeetingSDKManager::logout(bool cleanup /* = false*/) {
 void NEMeetingSDKManager::showSettings() {
     YXLOG(Info) << "Post show settings request." << YXLOGEnd;
     CHECK_INIT
-    auto ipcSettingsService = NEMeetingSDK::getInstance()->getSettingsService();
+    auto ipcSettingsService = NEMeetingKit::getInstance()->getSettingsService();
     if (ipcSettingsService) {
         ipcSettingsService->showSettingUIWnd(NESettingsUIWndConfig(), [this](NEErrorCode errorCode, const std::string& errorMessage) {
             YXLOG(Info) << "Show settings wnd callback, error code: " << errorCode << ", error message: " << errorMessage << YXLOGEnd;
@@ -349,21 +428,28 @@ void NEMeetingSDKManager::showSettings() {
     }
 }
 
-void NEMeetingSDKManager::invokeStart(const QString& meetingId, const QString& nickname, bool audio, bool video, bool enableRecord) {
+void NEMeetingSDKManager::invokeStart(const QString& meetingId,
+                                      const QString& nickname,
+                                      const QString& password,
+                                      bool audio,
+                                      bool video,
+                                      bool enableRecord) {
     m_bAllowActive = true;
     YXLOG(Info) << "Start a meeting with meeting ID:" << meetingId.toStdString() << ", nickname: " << nickname.toStdString() << ", audio: " << audio
-                << ", video: " << video << YXLOGEnd;
+                << ", video: " << video << ", password: " << password.toStdString() << YXLOGEnd;
 
     CHECK_INIT
-    auto ipcMeetingService = NEMeetingSDK::getInstance()->getMeetingService();
+
+    auto ipcMeetingService = NEMeetingKit::getInstance()->getMeetingService();
     if (ipcMeetingService) {
         auto lastmeetingId = ConfigManager::getInstance()->getValue("localLastConferenceId", "").toString();
         auto lastshortmeetingId = ConfigManager::getInstance()->getValue("localLastMeetingshortId", "").toString();
         QByteArray byteNickname = "";
         QByteArray byteMeetingId = meetingId.toUtf8();
+        QByteArray bytePassword = password.toUtf8();
         //当前会议与上次会议一致时，优先使用上次会议中昵称
         if (byteMeetingId == lastmeetingId || (lastshortmeetingId == byteMeetingId && meetingId != "")) {
-            byteNickname = ConfigManager::getInstance()->getValue("localLastNickname", "").toString().toUtf8();
+            byteNickname = ConfigManager::getInstance()->getValue("localLastModifyNickname", "").toString().toUtf8();
             if (byteNickname == "") {
                 byteNickname = nickname.toUtf8();
             }
@@ -374,6 +460,7 @@ void NEMeetingSDKManager::invokeStart(const QString& meetingId, const QString& n
         NEStartMeetingParams params;
         params.meetingId = byteMeetingId.data();
         params.displayName = byteNickname.data();
+        params.password = bytePassword.data();
 
         NEStartMeetingOptions options;
         options.noAudio = !audio;
@@ -382,6 +469,13 @@ void NEMeetingSDKManager::invokeStart(const QString& meetingId, const QString& n
         //        options.noWhiteboard = true;
         //        options.noRename = true;
         options.meetingIdDisplayOption = kDisplayAll;
+        options.audioAINSEnabled = m_bAudioAINSEnabled;
+        options.noMuteAllVideo = false;
+        //        if(m_pAuthManager && m_pAuthManager->phoneNumber().isEmpty()) {
+        //            options.noSip = false;
+        //        }
+        options.noSip = false;
+        options.showMeetingRemainingTip = true;
 
         NEMeetingMenuItem menuItem;
 #ifdef Q_OS_WIN32
@@ -398,7 +492,11 @@ void NEMeetingSDKManager::invokeStart(const QString& meetingId, const QString& n
 
         ipcMeetingService->startMeeting(params, options, [this](NEErrorCode errorCode, const std::string& errorMessage) {
             YXLOG(Info) << "Start meeting callback, error code: " << errorCode << ", error message: " << errorMessage << YXLOGEnd;
-            emit startSignal(errorCode, QString::fromStdString(errorMessage));
+            QString qstrErrorMessage = QString::fromStdString(errorMessage);
+            if (qstrErrorMessage == "IM disconnect") {
+                qstrErrorMessage = tr("Failed to connect to server, please try agine.");
+            }
+            emit startSignal(errorCode, qstrErrorMessage);
         });
     }
 }
@@ -410,20 +508,28 @@ void NEMeetingSDKManager::invokeJoin(const QString& meetingId, const QString& ni
 
     auto task = [=](NEErrorCode errorCode, const QString& errorMessage) {
         if (errorCode == ERROR_CODE_SUCCESS) {
-            auto ipcMeetingService = NEMeetingSDK::getInstance()->getMeetingService();
+            auto ipcMeetingService = NEMeetingKit::getInstance()->getMeetingService();
             if (ipcMeetingService) {
                 auto lastmeetingId = ConfigManager::getInstance()->getValue("localLastConferenceId", "").toString();
                 auto lastshortmeetingId = ConfigManager::getInstance()->getValue("localLastMeetingshortId", "").toString();
                 QByteArray byteNickname = "";
                 QByteArray byteMeetingId = meetingId.toUtf8();
                 if ((byteMeetingId == lastmeetingId || byteMeetingId == lastshortmeetingId) &&
-                    ConfigManager::getInstance()->getValue("localNELoginType") != kLoginTypeSSOToken) {
-                    byteNickname = ConfigManager::getInstance()->getValue("localLastNickname", "").toString().toUtf8();
+                    ConfigManager::getInstance()->getValue("localNELoginType") != kLoginTypeSSOToken && !anonJoinMode && !m_bUseNewAccountId) {
+                    byteNickname = ConfigManager::getInstance()->getValue("localLastModifyNickname", "").toString().toUtf8();
                     if (byteNickname == "") {
                         byteNickname = nickname.toUtf8();
                     }
                 } else {
                     byteNickname = nickname.toUtf8();
+                }
+
+                YXLOG(Info) << "Join meeting byteNickname: " << byteNickname.toStdString() << YXLOGEnd;
+
+                if (m_bUseNewAccountId) {
+                    m_bUseNewAccountId = false;
+                    ConfigManager::getInstance()->setValue("localLastModifyNickname", "");
+                    ConfigManager::getInstance()->setValue("localLastNickname", "");
                 }
 
                 NEJoinMeetingParams params;
@@ -436,6 +542,13 @@ void NEMeetingSDKManager::invokeJoin(const QString& meetingId, const QString& ni
                 //                options.noWhiteboard = true;
                 //                options.noRename = true;
                 options.meetingIdDisplayOption = kDisplayAll;
+                options.audioAINSEnabled = m_bAudioAINSEnabled;
+                options.noMuteAllVideo = false;
+                //                if(m_pAuthManager && m_pAuthManager->phoneNumber().isEmpty()) {
+                //                    options.noSip = false;
+                //                }
+                options.noSip = false;
+                options.showMeetingRemainingTip = true;
 
                 NEMeetingMenuItem menuItem;
 #ifdef Q_OS_WIN32
@@ -469,20 +582,23 @@ void NEMeetingSDKManager::invokeJoin(const QString& meetingId, const QString& ni
 
     if (!m_bInitialized) {
         auto defaultKey = ConfigManager::getInstance()->getValue("localAnonAppKey", LOCAL_DEFAULT_APPKEY);
-        initialize(defaultKey.toString(), task);
+        auto taskAsync = [task](NEErrorCode errorCode, const QString& errorMessage) {
+            auto asyncRet = std::async(std::launch::async, [task, errorCode, errorMessage]() { task(errorCode, errorMessage); });
+        };
+        initialize(defaultKey.toString(), taskAsync);
     } else {
         task(ERROR_CODE_SUCCESS, "");
     }
 }
 
 void NEMeetingSDKManager::getAccountInfo() {
-    YXLOG(Info) << "Post getAccountInfo request." << YXLOGEnd;
+    YXLOG(Info) << "getAccountInfo." << YXLOGEnd;
     CHECK_INIT
-    auto ipcAuthService = NEMeetingSDK::getInstance()->getAuthService();
+    auto ipcAuthService = NEMeetingKit::getInstance()->getAuthService();
     if (ipcAuthService) {
         ipcAuthService->getAccountInfo([this](NEErrorCode errorCode, const std::string& errorMessage, AccountInfo info) {
             if (errorCode == ERROR_CODE_SUCCESS) {
-                YXLOG(Info) << "Get account info callback, personal meeting ID: " << info.personalMeetingId
+                YXLOG(Info) << "getAccountInfo callback, personal meeting ID: " << info.personalMeetingId
                             << ", short meeting ID: " << info.shortMeetingId << ", display name: " << info.accountName
                             << ", login type: " << info.loginType << ", username: " << info.username << YXLOGEnd;
                 setNEUsername(QString::fromStdString(info.username));
@@ -493,9 +609,61 @@ void NEMeetingSDKManager::getAccountInfo() {
                 setPersonalShortMeetingId(QString::fromStdString(info.shortMeetingId));
                 setPersonalMeetingId(QString::fromStdString(info.personalMeetingId));
                 setDisplayName(QString::fromStdString(info.accountName));
+                if (m_pAuthManager) {
+                    m_pAuthManager->setAPaasAccountId(neAccountId());
+                    m_pAuthManager->setAPaasAccountToken(neAccountToken());
+                    m_pAuthManager->setAppUserNick(neUsername());
+                    m_pAuthManager->setPersonalMeetingId(personalMeetingId());
+                    m_pAuthManager->setPersonalShortMeetingId(personalShortMeetingId());
+                    m_pAuthManager->setCurDisplayCompany(
+                        (nem_sdk_interface::kLoginTypeNEAccount == info.loginType && m_pAuthManager->phoneNumber().isEmpty())
+                            ? tr("Enterprise Edition")
+                            : tr("Free Edition"));
+                }
+
+                QString logPathEx = qApp->property("logPath").toString();
+                if (logPathEx.isEmpty())
+                    logPathEx = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+                do {
+                    if (logPathEx.endsWith("/")) {
+                        logPathEx = logPathEx.left(logPathEx.size() - 1);
+                    } else if (logPathEx.endsWith("\\")) {
+                        logPathEx = logPathEx.left(logPathEx.size() - 1);
+                    } else {
+                        break;
+                    }
+                } while (true);
+
+                logPathEx.append("_Files/").append(QString::fromStdString(info.accountId)).append("/db/");
+                m_pHistoryManager->init(logPathEx);
+
                 emit gotAccountInfo();
             } else {
                 emit error(errorCode, QString::fromStdString(errorMessage));
+            }
+        });
+    }
+}
+
+void NEMeetingSDKManager::getMeetingUserList() {
+    YXLOG(Info) << "Post getMeetingUserList request." << YXLOGEnd;
+    CHECK_INIT
+
+    auto ipcMeetingService = NEMeetingKit::getInstance()->getMeetingService();
+    if (ipcMeetingService) {
+        ipcMeetingService->getCurrentMeetingInfo([this](NEErrorCode errorCode, const std::string& errorMessage, NEMeetingInfo info) {
+            if (errorCode == ERROR_CODE_SUCCESS) {
+                QJsonArray array;
+                for (auto user : info.userList) {
+                    if (user.userId == m_NEAccountId.toStdString()) {
+                        continue;
+                    }
+                    QJsonObject obj;
+                    obj["accountId"] = QString::fromStdString(user.userId);
+                    obj["nickname"] = QString::fromStdString(user.userName);
+                    array.append(obj);
+                }
+                emit getMeetingUserListSignal(array);
             }
         });
     }
@@ -531,6 +699,11 @@ void NEMeetingSDKManager::setPersonalShortMeetingId(const QString& shortMeetingI
     emit personalShortMeetingIdChanged();
 }
 
+void NEMeetingSDKManager::onKickOut() {
+    YXLOG(Info) << "Received onKickOut." << YXLOGEnd;
+    emit kickOut();
+}
+
 void NEMeetingSDKManager::onAuthInfoExpired() {
     YXLOG(Info) << "Received auth information expired notification." << YXLOGEnd;
     ConfigManager::getInstance()->setValue("localUserId", "");
@@ -540,6 +713,7 @@ void NEMeetingSDKManager::onAuthInfoExpired() {
 
 void NEMeetingSDKManager::onMeetingStatusChanged(int status, int code) {
     YXLOG(Info) << "Received meeting status changed event, status: " << status << ", code: " << code << YXLOGEnd;
+    m_nCurrentMeetingStatus = status;
     emit meetingStatusChanged(status, code);
 }
 
@@ -564,7 +738,7 @@ void NEMeetingSDKManager::onDockClicked() {
         return;
 
     YXLOG(Info) << "Request active window, send command to IPC module." << YXLOGEnd;
-    NEMeetingSDK::getInstance()->activeWindow([](NEErrorCode /*errorCode*/, const std::string& /*errorMessage*/) {});
+    NEMeetingKit::getInstance()->activeWindow([](NEErrorCode /*errorCode*/, const std::string& /*errorMessage*/) {});
 }
 
 void NEMeetingSDKManager::onGetMeetingListUI() {
@@ -597,6 +771,20 @@ void NEMeetingSDKManager::setIsSupportRecord(bool isSupportRecord) {
     YXLOG(Info) << "setIsSupportRecord: " << isSupportRecord << YXLOGEnd;
     m_bSupportRecord = isSupportRecord;
     Q_EMIT isSupportRecordChanged();
+}
+
+bool NEMeetingSDKManager::isSupportLive() const {
+    return m_bSupportLive;
+}
+
+void NEMeetingSDKManager::setIsSupportLive(bool isSupportLive) {
+    YXLOG(Info) << "setIsSupportLive: " << isSupportLive << YXLOGEnd;
+    m_bSupportLive = isSupportLive;
+    Q_EMIT isSupportLiveChanged();
+}
+
+void NEMeetingSDKManager::setAudioAINSEnabled(bool bAudioAINSEnabled) {
+    m_bAudioAINSEnabled = bAudioAINSEnabled;
 }
 
 int NEMeetingSDKManager::neLoginType() const {
@@ -652,6 +840,25 @@ void SettingsEventHandler::OnVideoSettingsChange(bool status) {
     emit videoSettingsChanged(status);
 }
 
+void SettingsEventHandler::OnAudioAINSSettingsChange(bool status) {
+    if (m_pNEMeetingSDKManager) {
+        YXLOG(Info) << "OnAudioAINSSettingsChange enable " << status << YXLOGEnd;
+        m_pNEMeetingSDKManager->setAudioAINSEnabled(status);
+    }
+}
+
+void SettingsEventHandler::OnAudioVolumeAutoAdjustSettingsChange(bool status) {}
+
+void SettingsEventHandler::OnAudioQualitySettingsChange(AudioQuality enumAudioQuality) {}
+
+void SettingsEventHandler::OnAudioEchoCancellationSettingsChange(bool status) {}
+
+void SettingsEventHandler::OnAudioEnableStereoSettingsChange(bool status) {}
+
+void SettingsEventHandler::OnRemoteVideoResolutionSettingsChange(RemoteVideoResolution enumRemoteVideoResolution) {}
+
+void SettingsEventHandler::OnMyVideoResolutionSettingsChange(LocalVideoResolution enumLocalVideoResolution) {}
+
 void SettingsEventHandler::OnOtherSettingsChange(bool status) {}
 
 // 预定会议
@@ -669,21 +876,34 @@ void NEMeetingSDKManager::scheduleMeeting(const QString& meetingSubject,
                 << ", password: " << strPassword.toStdString() << YXLOGEnd;
 
     CHECK_INIT
-    auto ipcPreMeetingService = NEMeetingSDK::getInstance()->getPremeetingService();
+    auto ipcPreMeetingService = NEMeetingKit::getInstance()->getPremeetingService();
     if (ipcPreMeetingService) {
         NEMeetingItem item;
         item.subject = meetingSubject.toUtf8().data();
         item.startTime = startTime;
         item.endTime = endTime;
         item.password = password.toUtf8().data();
-        item.setting.attendeeAudioOff = attendeeAudioOff;
+        if (attendeeAudioOff) {
+            NEMeetingControl control;
+            control.type = kControlTypeAudio;
+            control.attendeeOff = kAttendeeOffAllowSelfOn;
+            item.setting.controls.push_back(control);
+        }
         item.setting.cloudRecordOn = enableRecord;
         item.enableLive = enableLive;
         item.liveWebAccessControlLevel = needLiveAuthentication ? LIVE_ACCESS_APP_TOKEN : LIVE_ACCESS_TOKEN;
+        item.noSip = false;
+        //        if(m_pAuthManager && m_pAuthManager->phoneNumber().isEmpty()) {
+        //            item.noSip = false;
+        //        }
 
         ipcPreMeetingService->scheduleMeeting(item, [this](NEErrorCode errorCode, const std::string& errorMessage, const NEMeetingItem& item) {
             YXLOG(Info) << "Schedule meeting callback, error code: " << errorCode << ", error message: " << errorMessage << YXLOGEnd;
-            emit scheduleSignal(errorCode, QString::fromStdString(errorMessage));
+            QString strMsg = QString::fromStdString(errorMessage);
+            if (errorCode == 3412) {
+                strMsg = tr("Meeting duration too long!");
+            }
+            emit scheduleSignal(errorCode, strMsg);
         });
     }
 }
@@ -705,7 +925,7 @@ void NEMeetingSDKManager::editMeeting(const qint64& meetingUniqueId,
                 << YXLOGEnd;
 
     CHECK_INIT
-    auto ipcPreMeetingService = NEMeetingSDK::getInstance()->getPremeetingService();
+    auto ipcPreMeetingService = NEMeetingKit::getInstance()->getPremeetingService();
     if (ipcPreMeetingService) {
         NEMeetingItem item;
         item.meetingUniqueId = meetingUniqueId;
@@ -714,14 +934,25 @@ void NEMeetingSDKManager::editMeeting(const qint64& meetingUniqueId,
         item.startTime = startTime;
         item.endTime = endTime;
         item.password = password.toUtf8().data();
-        item.setting.attendeeAudioOff = attendeeAudioOff;
+        NEMeetingControl control;
+        control.type = kControlTypeAudio;
+        control.attendeeOff = attendeeAudioOff ? kAttendeeOffAllowSelfOn : kAttendeeOffNone;
+        item.setting.controls.push_back(control);
         item.setting.cloudRecordOn = enableRecord;
         item.enableLive = enableLive;
         item.liveWebAccessControlLevel = needLiveAuthentication ? LIVE_ACCESS_APP_TOKEN : LIVE_ACCESS_TOKEN;
+        item.noSip = false;
+        //        if(m_pAuthManager && m_pAuthManager->phoneNumber().isEmpty()) {
+        //            item.noSip = false;
+        //        }
 
         ipcPreMeetingService->editMeeting(item, [this](NEErrorCode errorCode, const std::string& errorMessage) {
             YXLOG(Info) << "Edit meeting callback, error code: " << errorCode << ", error message: " << errorMessage << YXLOGEnd;
-            emit editSignal(errorCode, QString::fromStdString(errorMessage));
+            QString strMsg = QString::fromStdString(errorMessage);
+            if (errorCode == 3412) {
+                strMsg = tr("Meeting duration too long!");
+            }
+            emit editSignal(errorCode, strMsg);
         });
     }
 }
@@ -729,7 +960,7 @@ void NEMeetingSDKManager::cancelMeeting(const qint64& meetingUniqueId) {
     YXLOG(Info) << "cancel a meeting with meeting uniqueId:" << meetingUniqueId << YXLOGEnd;
 
     CHECK_INIT
-    auto ipcPreMeetingService = NEMeetingSDK::getInstance()->getPremeetingService();
+    auto ipcPreMeetingService = NEMeetingKit::getInstance()->getPremeetingService();
     if (ipcPreMeetingService) {
         ipcPreMeetingService->cancelMeeting(meetingUniqueId, [this](NEErrorCode errorCode, const std::string& errorMessage) {
             YXLOG(Info) << "Cancel meeting callback, error code: " << errorCode << ", error message: " << errorMessage << YXLOGEnd;
@@ -739,10 +970,10 @@ void NEMeetingSDKManager::cancelMeeting(const qint64& meetingUniqueId) {
 }
 
 void NEMeetingSDKManager::getMeetingList() {
-    YXLOG(Info) << "Get meeting list from IPC client." << YXLOGEnd;
+    YXLOG(Info) << "getMeetingList." << YXLOGEnd;
 
     CHECK_INIT
-    auto ipcPreMeetingService = NEMeetingSDK::getInstance()->getPremeetingService();
+    auto ipcPreMeetingService = NEMeetingKit::getInstance()->getPremeetingService();
     if (ipcPreMeetingService) {
         std::list<NEMeetingItemStatus> status;
         status.push_back(MEETING_INIT);
@@ -750,7 +981,8 @@ void NEMeetingSDKManager::getMeetingList() {
         status.push_back(MEETING_ENDED);
         ipcPreMeetingService->getMeetingList(
             status, [this](NEErrorCode errorCode, const std::string& errorMessage, std::list<NEMeetingItem>& meetingItems) {
-                YXLOG(Info) << "GetMeetingList callback, error code: " << errorCode << ", error message: " << errorMessage << YXLOGEnd;
+                YXLOG(Info) << "getMeetingList callback, error code: " << errorCode << ", error message: " << errorMessage << YXLOGEnd;
+                initConfig();
                 QJsonArray jsonArray;
                 if (errorCode == ERROR_CODE_SUCCESS) {
                     for (auto& item : meetingItems) {
@@ -769,7 +1001,13 @@ void NEMeetingSDKManager::getMeetingList() {
                         object["createTime"] = item.createTime;
                         object["updateTime"] = item.updateTime;
                         object["status"] = item.status;
-                        object["attendeeAudioOff"] = item.setting.attendeeAudioOff;
+                        bool attendeeAudioOff = false;
+                        for (auto control : item.setting.controls) {
+                            if (control.type == kControlTypeAudio) {
+                                attendeeAudioOff = control.attendeeOff != kAttendeeOffNone;
+                            }
+                        }
+                        object["attendeeAudioOff"] = attendeeAudioOff;
                         object["enableLive"] = item.enableLive;
                         object["liveAccess"] = item.liveWebAccessControlLevel == LIVE_ACCESS_APP_TOKEN;
                         object["liveUrl"] = QString::fromStdString(item.liveUrl);
@@ -792,7 +1030,7 @@ void NEMeetingSDKManager::loginBySwitchAppInfo() {
         YXLOG(Info) << "Login by switch app info, appkey: " << m_switchAppKey.toStdString() << YXLOGEnd;
     }
     CHECK_INIT
-    auto ipcAuthService = NEMeetingSDK::getInstance()->getAuthService();
+    auto ipcAuthService = NEMeetingKit::getInstance()->getAuthService();
     if (ipcAuthService) {
         QByteArray byteAppKey = m_switchAppKey.toUtf8();
         QByteArray byteAccountId = m_switchAccountId.toUtf8();
@@ -809,26 +1047,104 @@ void NEMeetingSDKManager::loginBySwitchAppInfo() {
     m_switchAppKey = "";
 }
 
-bool NEMeetingSDKManager::getIsSupportLive() {
-    auto ipcSettingsService = NEMeetingSDK::getInstance()->getSettingsService();
-
-    std::promise<bool> bShowLive;
+void NEMeetingSDKManager::getIsSupportLive() {
+    YXLOG(Info) << "getIsSupportLive." << YXLOGEnd;
+    auto ipcSettingsService = NEMeetingKit::getInstance()->getSettingsService();
     if (ipcSettingsService) {
         ipcSettingsService->GetLiveController()->isLiveEnabled(
-            [&bShowLive](NEErrorCode code, const std::string& message, bool enable) { bShowLive.set_value(enable); });
+            [this](NEErrorCode code, const std::string& message, bool enable) { setIsSupportLive(enable); });
     }
-
-    std::future<bool> future = bShowLive.get_future();
-    bool ret = future.get();
-
-    return ret;
 }
 
 void NEMeetingSDKManager::getIsSupportRecord() {
-    auto ipcSettingsService = NEMeetingSDK::getInstance()->getSettingsService();
-
+    YXLOG(Info) << "getIsSupportRecord." << YXLOGEnd;
+    auto ipcSettingsService = NEMeetingKit::getInstance()->getSettingsService();
     if (ipcSettingsService) {
         ipcSettingsService->GetRecordController()->isCloudRecordEnabled(
             [this](NEErrorCode code, const std::string& message, bool enable) { setIsSupportRecord(enable); });
     }
+}
+
+void NEMeetingSDKManager::getNeedResumeMeeting() {
+    QString lastMeetingId = ConfigManager::getInstance()->getValue("localLastConferenceId", "").toString();
+    int lastMeetingStatus = ConfigManager::getInstance()->getValue("lastMeetingStatus", "").toInt();
+    int lastExceptionTime = ConfigManager::getInstance()->getValue("lastExceptionTime", "").toInt();
+    qint64 timestamp = QDateTime::currentDateTime().toSecsSinceEpoch();
+
+    YXLOG(Info) << "lastMeetingId:" << lastMeetingId.toStdString() << YXLOGEnd;
+    YXLOG(Info) << "lastMeetingStatus:" << lastMeetingStatus << YXLOGEnd;
+    YXLOG(Info) << "lastExceptionTime:" << lastExceptionTime << YXLOGEnd;
+    YXLOG(Info) << "currentTimestamp:" << timestamp << YXLOGEnd;
+
+    if ((timestamp <= lastExceptionTime + 15 * 60) && (lastMeetingStatus == 4 || lastMeetingStatus == 3)) {
+        emit resumeMeetingSignal(lastMeetingId);
+        ConfigManager::getInstance()->setValue("lastMeetingStatus", 1);
+    }
+}
+
+void NEMeetingSDKManager::addHistoryInfo() {
+    YXLOG(Info) << "addHistoryInfo." << YXLOGEnd;
+    YXLOG(Info) << "Post getCurrentMeetingInfo request." << YXLOGEnd;
+    CHECK_INIT
+
+    auto ipcMeetingService = NEMeetingKit::getInstance()->getMeetingService();
+    if (ipcMeetingService) {
+        ipcMeetingService->getCurrentMeetingInfo([this](NEErrorCode errorCode, const std::string& errorMessage, NEMeetingInfo info) {
+            YXLOG(Info) << "getCurrentMeetingInfo meetingCreatorName: " << info.meetingCreatorName << YXLOGEnd;
+            // Invoker::getInstance()->execute([=]() {
+            if (errorCode == ERROR_CODE_SUCCESS) {
+                HistoryMeetingInfo historyMeetingInfo;
+                historyMeetingInfo.isCollect = false;
+                historyMeetingInfo.meetingID = QString::fromStdString(info.meetingId);
+                historyMeetingInfo.meetingUniqueID = info.meetingUniqueId;
+                historyMeetingInfo.meetingSuject = QString::fromStdString(info.subject);
+                historyMeetingInfo.meetingCreator = QString::fromStdString(info.meetingCreatorName);
+                historyMeetingInfo.meetingJoinTime = QDateTime::currentDateTime().toMSecsSinceEpoch();
+                historyMeetingInfo.meetingStartTime = info.startTime;
+                m_pHistoryManager->addHistoryMeeting(historyMeetingInfo);
+            }
+            //});
+        });
+    }
+}
+
+int NEMeetingSDKManager::getCurrentMeetingStatus() const {
+    return m_nCurrentMeetingStatus;
+}
+
+void NEMeetingSDKManager::initConfig() {
+    static bool bInit = false;
+    if (bInit) {
+        return;
+    }
+    auto asyncRet = std::async(std::launch::async, [this]() {
+        auto ipcSettingsService = NEMeetingKit::getInstance()->getSettingsService();
+        if (ipcSettingsService) {
+            auto audioController = ipcSettingsService->GetAudioController();
+            if (audioController) {
+                bInit = true;
+                YXLOG(Info) << "getIsTurnOnMyAudioAINSWhenInMeetingEnabled." << YXLOGEnd;
+                audioController->isTurnOnMyAudioAINSWhenInMeetingEnabled([this, ipcSettingsService](NEErrorCode code, const std::string& message,
+                                                                                                    bool enable) {
+                    setAudioAINSEnabled(enable);
+                    std::async(std::launch::async, [this, ipcSettingsService]() {
+                        if (ipcSettingsService->GetLiveController()) {
+                            YXLOG(Info) << "getIsSupportLive." << YXLOGEnd;
+                            ipcSettingsService->GetLiveController()->isLiveEnabled(
+                                [this, ipcSettingsService](NEErrorCode code, const std::string& message, bool enable) {
+                                    setIsSupportLive(enable);
+                                    std::async(std::launch::async, [this, ipcSettingsService]() {
+                                        if (ipcSettingsService->GetRecordController()) {
+                                            YXLOG(Info) << "getIsSupportRecord." << YXLOGEnd;
+                                            ipcSettingsService->GetRecordController()->isCloudRecordEnabled(
+                                                [this](NEErrorCode code, const std::string& message, bool enable) { setIsSupportRecord(enable); });
+                                        }
+                                    });
+                                });
+                        }
+                    });
+                });
+            }
+        }
+    });
 }

@@ -18,6 +18,18 @@ Column {
     // anchors.centerIn: parent
 
     property var toastComponent
+    property string lastToastText: ""
+
+    Timer {
+        id: timer
+        interval: 2000
+        repeat: false
+        running: false
+        triggeredOnStart: false
+        onTriggered: {
+            //do nonthing
+        }
+    }
 
     /**
      * @brief Shows a Toast
@@ -26,30 +38,58 @@ Column {
      * @param {real} duration Duration to show in milliseconds, defaults to 3000
      */
     function show(text, duration) {
+        if(text === lastToastText && timer.running) {
+            return
+        }
+
         const toast = toastComponent.createObject(root, { background: "#FFFFFF", textColor: "#333333", margin: 10 })
         toast.selfDestroying = true;
         toast.show(text, duration);
+
+        lastToastText = text
+        timer.restart()
     }
 
     function warning(text, duration) {
+        if(text === lastToastText && timer.running) {
+            return
+        }
+
         const toast = toastComponent.createObject(root, { background: "#FFFFFF", textColor: "#333333", margin: 10 })
         toast.selfDestroying = true;
         toast.icon = "qrc:/qml/images/public/toast/icon_warning.svg"
         toast.show(text, duration);
+
+        lastToastText = text
+        timer.restart()
     }
 
     function error(text, duration) {
+        if(text === lastToastText && timer.running) {
+            return
+        }
+
         const toast = toastComponent.createObject(root, { background: "#FFFFFF", textColor: "#333333", margin: 10 })
         toast.selfDestroying = true;
         toast.icon = "qrc:/qml/images/public/toast/icon_error.svg"
         toast.show(text, duration);
+
+        lastToastText = text
+        timer.restart()
     }
 
     function info(text, duration) {
+        if(text === lastToastText && timer.running) {
+            return
+        }
+
         const toast = toastComponent.createObject(root, { background: "#FFFFFF", textColor: "#333333", margin: 10 })
         toast.selfDestroying = true;
         toast.icon = "qrc:/qml/images/public/toast/icon_info.svg"
         toast.show(text, duration);
+
+        lastToastText = text
+        timer.restart()
     }
 
     Component.onCompleted: {

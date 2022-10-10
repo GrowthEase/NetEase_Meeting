@@ -77,7 +77,7 @@ function setActiveSpeaker(primaryMember, primaryContainer) {
     currentSpeaker.anchors.fill = primaryContainer
 }
 
-function arrangeGridLayout(members, page, memberCount, rootContainer, membersContainer, membersModel) {
+function arrangeGridLayout(members, page, memberCount, rootContainer, membersContainer, membersModel, highQualityCount) {
     console.info("Arrang gallery layout, current page:", currentPage,
                  "actual page:", page,
                  "page size:", pageSize,
@@ -90,7 +90,7 @@ function arrangeGridLayout(members, page, memberCount, rootContainer, membersCon
     const remainder = members.length % columnCount
     const lastFirst = members.length - remainder
     let highQuality = true
-    if (members.length > 3) highQuality = false
+    if (members.length > highQualityCount) highQuality = false
     membersModel.clear()
     for (let i = 0; i < members.length; i++) {
         let member = members[i]

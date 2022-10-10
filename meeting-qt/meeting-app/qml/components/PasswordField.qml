@@ -36,6 +36,7 @@ TextField {
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
             source: "qrc:/qml/images/public/button/btn_eye.svg"
+            mipmap: true
         }
     }
 
@@ -55,6 +56,7 @@ TextField {
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
             source: "qrc:/qml/images/public/button/btn_close_eye.svg"
+            mipmap: true
         }
     }
 }

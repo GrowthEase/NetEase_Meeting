@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "feedback_manager.h"
 
@@ -16,17 +15,29 @@ FeedbackManager::FeedbackManager(AuthManager* auth, QObject* parent)
 
 FeedbackManager::~FeedbackManager() {}
 
-void FeedbackManager::invokeFeedback(const QJsonArray& category, const QString& description) {
-    auto ipcFeedbackService = NEMeetingSDK::getInstance()->getFeedbackService();
+void FeedbackManager::invokeFeedback(const QJsonArray& category, const QString& description, bool needAudioDump) {
+    auto ipcFeedbackService = NEMeetingKit::getInstance()->getFeedbackService();
     if (ipcFeedbackService) {
         if (m_bInitialized == false) {
             m_bInitialized = true;
             ipcFeedbackService->addListener(this);
         }
     }
+
+    m_needAudioDump = needAudioDump;
     m_feedbackCategory = category;
     m_feedbackDescription = description;
     m_feedbackTimer.start(1500);
+}
+
+void FeedbackManager::resetFeedback() {
+    auto ipcFeedbackService = NEMeetingKit::getInstance()->getFeedbackService();
+    if (ipcFeedbackService) {
+        if (m_bInitialized) {
+            ipcFeedbackService->addListener(nullptr);
+            m_bInitialized = false;
+        }
+    }
 }
 
 void FeedbackManager::onFeedbackStatus(int type, int status, std::string url) {
@@ -38,9 +49,10 @@ void FeedbackManager::onFeedbackStatus(int type, int status, std::string url) {
     info.Nickname = m_authsvr->appUserNick();
     if (type == 0) {
         // report logs
-        if (200 != status) {
+        if (status != 200) {
             clean();
             emit feedbackResult(status, "fail to zip logs");
+            emit feedbackFinished();
             return;
         }
         request.InitFeedbackInfo(info, m_feedbackCategory, m_feedbackDescription, QString::fromStdString(url));
@@ -51,6 +63,7 @@ void FeedbackManager::onFeedbackStatus(int type, int status, std::string url) {
     }
 
     emit postRequest(request);
+    emit feedbackFinished();
 }
 
 void FeedbackManager::onInvokeFeedback() {
@@ -75,10 +88,10 @@ void FeedbackManager::onInvokeFeedback() {
     info.feedback_category_ = m_feedbackCategory;
     info.feedback_content_ = m_feedbackDescription;
     std::string path = ziplog(info);
-    auto ipcFeedbackService = NEMeetingSDK::getInstance()->getFeedbackService();
+    auto ipcFeedbackService = NEMeetingKit::getInstance()->getFeedbackService();
     if (ipcFeedbackService) {
         int type = 0;
-        ipcFeedbackService->feedback(type, path,
+        ipcFeedbackService->feedback(type, path, m_needAudioDump,
                                      [this](NEErrorCode errorCode, const std::string& errorMessage, const std::string& url, const int& type) {});
     }
 }
@@ -129,6 +142,7 @@ std::string FeedbackManager::ziplog(FeedbackInfo& info) {
     }
     QByteArray byteLogsPath = zip_logs_path_.toUtf8();
     nim_tool::Zipper::Zip(byteLogsPath.data(), logs_backup_path);
+
     QFile file(zip_logs_path_);
     if (!file.exists())
         YXLOG(Info) << "ERROR!" << YXLOGEnd;

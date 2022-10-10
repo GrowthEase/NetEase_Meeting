@@ -3,3 +3,8 @@
 **/Podfile.lock
 ios/Runner.xcworkspace/
 build
+
+**/Pods
+**/.symlinks
+**/.flutter-plugins
+**/.flutter-plugins-dependencies

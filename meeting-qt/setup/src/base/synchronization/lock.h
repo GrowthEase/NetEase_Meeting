@@ -1,9 +1,7 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
-// Copyright (c) 2011, NetEase Inc. All rights reserved.
 //
 // Author: Ruan Liang <ruanliang@corp.netease.com>
 // Date: 2011/6/9
@@ -13,8 +11,8 @@
 #ifndef BASE_SYNCHRONIZATION_LOCK_H
 #define BASE_SYNCHRONIZATION_LOCK_H
 
-#include "base/base_export.h"
 #include "base/base_config.h"
+#include "base/base_export.h"
 
 #if defined(OS_WIN)
 #include <windows.h>
@@ -23,79 +21,73 @@
 #endif
 #include <assert.h>
 
-namespace nbase
-{
+namespace nbase {
 
-class BASE_EXPORT NLock
-{
+class BASE_EXPORT NLock {
 public:
 #if defined(OS_WIN)
-      typedef CRITICAL_SECTION OSLockType;
+    typedef CRITICAL_SECTION OSLockType;
 #elif defined(OS_POSIX)
-      typedef pthread_mutex_t  OSLockType;
+    typedef pthread_mutex_t OSLockType;
 #endif
 
-      NLock();
-      ~NLock();
+    NLock();
+    ~NLock();
 
-      // If the lock is not held, take it and return true.  If the lock is already
-      // held by something else, immediately return false.
-      bool Try();
+    // If the lock is not held, take it and return true.  If the lock is already
+    // held by something else, immediately return false.
+    bool Try();
 
-      // Take the lock, blocking until it is available if necessary.
-      void Lock();
+    // Take the lock, blocking until it is available if necessary.
+    void Lock();
 
-      // Release the lock.  This must only be called by the lock's holder: after
-      // a successful call to Try, or a call to Lock.
-      void Unlock();
+    // Release the lock.  This must only be called by the lock's holder: after
+    // a successful call to Try, or a call to Lock.
+    void Unlock();
 
-      // Return the native underlying lock.  Not supported for Windows builds.
+    // Return the native underlying lock.  Not supported for Windows builds.
 #if !defined(OS_WIN)
-      OSLockType* os_lock() { return &os_lock_; }
+    OSLockType* os_lock() {
+        return &os_lock_;
+    }
 #endif
 
 private:
-      OSLockType os_lock_;
+    OSLockType os_lock_;
 };
 
-class BASE_EXPORT NAutoLock
-{
+class BASE_EXPORT NAutoLock {
 public:
-	NAutoLock(NLock * lock)
-	{
-		assert(lock);
-		lock_ = lock;
-		lock_->Lock();
-	}
+    NAutoLock(NLock* lock) {
+        assert(lock);
+        lock_ = lock;
+        lock_->Lock();
+    }
 
-	~NAutoLock()
-	{
-		if (lock_)
-			lock_->Unlock();
-	}
+    ~NAutoLock() {
+        if (lock_)
+            lock_->Unlock();
+    }
 
 private:
-	NLock *lock_;
+    NLock* lock_;
 };
 
-class BASE_EXPORT NAutoUnlock
-{
+class BASE_EXPORT NAutoUnlock {
 public:
-	NAutoUnlock(NLock * lock)
-	{
-		assert(lock);
-		lock_ = lock;
-		lock_->Unlock();
-	}
+    NAutoUnlock(NLock* lock) {
+        assert(lock);
+        lock_ = lock;
+        lock_->Unlock();
+    }
 
-	~NAutoUnlock()
-	{
-		if (lock_)
-			lock_->Lock();
-	}
+    ~NAutoUnlock() {
+        if (lock_)
+            lock_->Lock();
+    }
 
 private:
-	NLock *lock_;
+    NLock* lock_;
 };
 
 }  // namespace nbase

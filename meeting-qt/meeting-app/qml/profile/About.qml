@@ -19,7 +19,7 @@ Window {
 
     Component.onCompleted: {
         listModel.append({ text: qsTr("User Services Agreement"), url: "https://netease.im/meeting/clauses?serviceType=0" })
-        listModel.append({ text: qsTr("Privacy Policy"), url: "https://reg.163.com/agreement_mobile_ysbh_wap.shtml?v=20171127" })
+        listModel.append({ text: qsTr("Privacy Policy"), url: "https://meeting.163.com/privacy/agreement_mobile_ysbh_wap.shtml" })
     }
 
     DropShadow {
@@ -32,6 +32,10 @@ Window {
         color: "#3217171A"
         visible: Qt.platform.os === 'windows'
         Behavior on radius { PropertyAnimation { duration: 100 } }
+    }
+
+    MessageManager {
+        id: message
     }
 
     Rectangle  {
@@ -54,6 +58,7 @@ Window {
             Image {
                 id: aboutLogo
                 source: "qrc:/qml/images/about_logo.png"
+                mipmap: true
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredHeight: 124
                 Layout.preferredWidth: 118
@@ -68,10 +73,28 @@ Window {
                 Layout.preferredHeight: 22
                 color: "#FFFFFF"
                 Label {
+                    id: versionValue
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: qsTr("Version: %1").arg(Qt.application.version)
+                    text: qsTr("Version: %1").arg(Qt.application.version) + (configManager.getTestEnv() ? qsTr("(Test Env)") : "")
                     font.pixelSize: 12
                     color: "#9f333333"
+                    MouseArea {
+                        anchors.fill: parent
+                        property int clickedCount: 0
+                        onClicked: {
+                            if (Qt.LeftButton === mouse.button) {
+                                clickedCount++
+                                if (clickedCount >= 10) {
+                                    clickedCount = 0
+                                    configManager.setTestEnv(!configManager.getTestEnv())
+                                    versionValue.text = qsTr("Version: %1").arg(Qt.application.version) + (configManager.getTestEnv() ? qsTr("(Test Env)") : "")
+                                    message.info(qsTr("You need to restart the client."))
+                                }
+                            } else {
+                                clickedCount = 0
+                            }
+                        }
+                    }
                 }
             }
 
@@ -107,6 +130,7 @@ Window {
                         }
                         Image {
                             source: "qrc:/qml/images/public/icons/arrow_right.png"
+                            mipmap: true
                             anchors.right: parent.right
                             anchors.rightMargin: 30
                             anchors.verticalCenter: parent.verticalCenter

@@ -9,8 +9,6 @@ HomePageForm {
             updateEnable = false
             clientUpdater.checkUpdate()
         }
-        if (globalSettings.value('sharedMeetingId', '') !== '')
-            pageLoader.setSource(Qt.resolvedUrl('qrc:/qml/AnonJoinPage.qml'))
 
         if(!hasReadSafeTip) {
             if(configManager.needSafeTip) {
@@ -20,20 +18,14 @@ HomePageForm {
             }
         }
 
+        if(authManager.autoRegistered) {
+            authManager.autoRegistered = false
+        }
     }
 
     privacyCheck.onToggled: {
         isAgreePrivacyPolicy = privacyCheck.checked
         console.log("isAgreePrivacyPolicy", isAgreePrivacyPolicy)
-    }
-
-    buttonJoin.onClicked: {
-        if(!privacyCheck.checked) {
-            toast.show(qsTr('Please check to agree to the privacy policy and user service agreement'))
-            return
-        }
-
-        pageLoader.setSource(Qt.resolvedUrl("qrc:/qml/AnonJoinPage.qml"))
     }
 
     buttonLogin.onClicked: {
@@ -42,19 +34,22 @@ HomePageForm {
             return
         }
 
+        //ursPage.visible = true
+        configManager.setSSOLogin(false)
         pageLoader.setSource(Qt.resolvedUrl("qrc:/qml/LoginWithCode.qml"))
     }
 
-    buttonRegister.onClicked: {
-        pageLoader.setSource(Qt.resolvedUrl("qrc:/qml/RegisterPage.qml"))
-    }
-
     buttonSSO.onClicked: {
+        if(!privacyCheck.checked) {
+            toast.show(qsTr('Please check to agree to the privacy policy and user service agreement'))
+            return
+        }
+
         pageLoader.setSource(Qt.resolvedUrl('qrc:/qml/LoginWithSSO.qml'))
     }
 
     privacyPolicy.onClicked: {
-        Qt.openUrlExternally("https://reg.163.com/agreement_mobile_ysbh_wap.shtml?v=20171127")
+        Qt.openUrlExternally("https://meeting.163.com/privacy/agreement_mobile_ysbh_wap.shtml")
     }
 
     userServiceAgreement.onClicked: {
@@ -105,6 +100,7 @@ HomePageForm {
         appTipArea.visible = configManager.needSafeTip && !hasReadSafeTip
         if(appTipArea.visible) {
             var obj = configManager.getSafeTipContent()
+            console.log("obj.content", obj.content)
             appTipArea.description = obj.content
         }
     }

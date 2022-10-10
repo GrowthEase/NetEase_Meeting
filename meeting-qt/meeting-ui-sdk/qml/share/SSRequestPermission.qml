@@ -16,6 +16,11 @@ Popup {
     bottomInset: 0
     modal: true
     dim: false
+
+    property var contentText: ""
+    property var titleText: qsTr('Permission')
+    signal sigOpenSetting
+
     background: Rectangle {
         id: backgroundRect
         radius: Qt.platform.os === 'windows' ? 0 : 10
@@ -46,7 +51,7 @@ Popup {
             Layout.preferredHeight: 54
             Layout.preferredWidth: parent.width
             windowMode: false
-            title: qsTr('Permission')
+            title: titleText
             onCloseClicked: root.close()
         }
 
@@ -66,7 +71,7 @@ Popup {
 
             }
             wrapMode: Text.WrapAnywhere
-            text: qsTr('Due to the security control of MacOS system, it is necessary to turn on the system screen recording permission before starting to share the screen%1Open System Preferences > Security and privacy grant access').arg('\r\n\r\n')
+            text: contentText
         }
 
         Rectangle {
@@ -85,7 +90,7 @@ Popup {
             Layout.topMargin: 10
             Layout.bottomMargin: 10
             onClicked: {
-                shareManager.openSystemSettings()
+                sigOpenSetting()
                 enabled = false
                 enableTimer.start()
             }

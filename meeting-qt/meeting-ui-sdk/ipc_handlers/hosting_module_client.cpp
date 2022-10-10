@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "hosting_module_client.h"
 #include <fstream>
@@ -17,7 +16,7 @@ HostingModuleClient::HostingModuleClient(QObject* parent)
     , feedback_service_proc_handler_(nullptr)
     , premeeting_service_proc_handler_(nullptr) {
     auto appDataDir = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation);
-    appDataDir.append("/Netease/Meeting/UI/");
+    appDataDir.append("/Netease/Meeting/app/ui/");
     QDir logDir = appDataDir;
     if (!logDir.exists(appDataDir))
         logDir.mkpath(appDataDir);
@@ -28,12 +27,19 @@ HostingModuleClient::HostingModuleClient(QObject* parent)
             dir.remove(mfi.fileName());
         }
     }
-    m_strLogPath = appDataDir + QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss").append("-log.txt1");
+    m_strLogPath = appDataDir + "meeting_ui_" + QDateTime::currentDateTime().toString("yyyyMMddhh-mm-ss").append("_log.txt1");
 }
 
 HostingModuleClient::~HostingModuleClient() {}
 
 void HostingModuleClient::setBugList(const char* argv) {
+#if 0
+    bool bRet = qputenv("QT_LOGGING_RULES", "qt.qpa.gl = true");
+    if (!bRet) {
+        qWarning() << "set qt.qpa.gl failed.";
+    }
+#endif
+
     QString strPath = QFileInfo(argv).absolutePath().append("/config/custom.json");
     if (!QFile::exists(strPath)) {
         qWarning() << "custom strPath is null.";
@@ -44,12 +50,29 @@ void HostingModuleClient::setBugList(const char* argv) {
         }
     }
 
-#if 0
-    bool bRet = qputenv("QT_LOGGING_RULES", "qt.qpa.gl = true");
-    if (!bRet) {
-        qWarning() << "set qt.qpa.gl failed.";
+    QString ss = QFileInfo(argv).absolutePath().append("/config/custom.ini");
+    QSettings settings(QFileInfo(argv).absolutePath().append("/config/custom.ini"), QSettings::IniFormat);
+    settings.sync();
+
+    //    QSGRendererInterface::GraphicsApi graphicsApi = (QSGRendererInterface::GraphicsApi)settings.value("Render/GraphicsApi", 0).toInt();
+    //    if (graphicsApi != QSGRendererInterface::Unknown) {
+    //        QQuickWindow::setSceneGraphBackend(graphicsApi);
+    //    }
+
+    int attribute = settings.value("Render/GraphicsApi", 0).toInt();
+    switch (attribute) {
+        case 1:
+            QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
+            break;
+        case 2:
+            QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+            break;
+        case 5:
+            QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
+            break;
+        default:
+            break;
     }
-#endif
 }
 
 void HostingModuleClient::WriteLog(const QString& strLog) {
@@ -60,76 +83,77 @@ void HostingModuleClient::WriteLog(const QString& strLog) {
 }
 
 bool HostingModuleClient::InitLocalEnviroment(int port) {
-    YXLOG(Info) << "Initialize local enviroment on port: " << port << YXLOGEnd;
+    YXLOG(Info) << "InitLocalEnviroment, port: " << port << YXLOGEnd;
     auto* client = dynamic_cast<NEMeetingSDKIPCClient*>(NEMeetingSDKIPCClient::getInstance());
-    if (client == nullptr)
+    if (client == nullptr) {
+        YXLOG(Info) << "client is null." << YXLOGEnd;
         return false;
+    }
 
     client->setLogCallBack([this](NEMeetingSDKIPCClient::LogLevel level, const std::string& strLog) {
         if (!g_bInitialized) {
             WriteLog(QString::fromStdString(strLog));
             return;
         }
+
+        return;  // 暂时去掉日志打印
         switch (level) {
             case NEMeetingSDKIPCClient::LogLevel_DEBUG:
-                YXLOG(Info) << strLog;
+                YXLOG(Info) << strLog << YXLOGEnd;
                 break;
             case NEMeetingSDKIPCClient::LogLevel_INFO:
-                YXLOG(Info) << strLog;
+                YXLOG(Info) << strLog << YXLOGEnd;
                 break;
             case NEMeetingSDKIPCClient::LogLevel_WARNING:
-                YXLOG(Warn) << strLog;
+                YXLOG(Warn) << strLog << YXLOGEnd;
                 break;
             case NEMeetingSDKIPCClient::LogLevel_ERROR:
-                YXLOG(Error) << strLog;
+                YXLOG(Error) << strLog << YXLOGEnd;
                 break;
             case NEMeetingSDKIPCClient::LogLevel_FATAL:
-                YXLOG(Fatal) << strLog;
+                YXLOG(Fatal) << strLog << YXLOGEnd;
                 break;
             case NEMeetingSDKIPCClient::LogLevel_V0:
-#ifdef USE_GOOGLE_LOG
-                VLOG(0) << strLog;
-#else
-                YXLOG(Info) << strLog;
-#endif
+                YXLOG(Info) << strLog << YXLOGEnd;
                 break;
             case NEMeetingSDKIPCClient::LogLevel_V1:
-#ifdef USE_GOOGLE_LOG
-                VLOG(1) << strLog;
-#else
-                YXLOG(Info) << strLog;
-#endif
+                YXLOG(Info) << strLog << YXLOGEnd;
                 break;
             case NEMeetingSDKIPCClient::LogLevel_V2:
-#ifdef USE_GOOGLE_LOG
-                VLOG(2) << strLog;
-#else
-                YXLOG(Info) << strLog;
-#endif
+                YXLOG(Info) << strLog << YXLOGEnd;
                 break;
             case NEMeetingSDKIPCClient::LogLevel_V3:
-#ifdef USE_GOOGLE_LOG
-                VLOG(3) << strLog;
-#else
-                YXLOG(Info) << strLog;
-#endif
+                YXLOG(Info) << strLog << YXLOGEnd;
                 break;
             case NEMeetingSDKIPCClient::LogLevel_V4:
-#ifdef USE_GOOGLE_LOG
-                VLOG(4) << strLog;
-#else
-                YXLOG(Info) << strLog;
-#endif
+                YXLOG(Info) << strLog << YXLOGEnd;
                 break;
             default:
-                YXLOG(Info) << strLog;
+                YXLOG(Info) << strLog << YXLOGEnd;
         }
     });
 
     client->setExceptionHandler(std::bind(&HostingModuleClient::onException, this, std::placeholders::_1));
-    client->attachPrivateInitialize([this](bool ret) {
-        if (!ret)
-            return;
+    client->attachPrivateInitialize([this, &client, port](bool ret) {
+        if (!ret) {
+            static int tryCount = 3;
+            if (tryCount-- > 0) {
+                YXLOG(Info) << "attachPrivateInitialize ret is false, tryCount: " << tryCount << YXLOGEnd;
+                QTimer::singleShot(20, this, [&client, port]() {
+                    YXLOG(Info) << "attachPrivateInitialize singleShot." << YXLOGEnd;
+                    if (client) {
+                        YXLOG(Info) << "attachPrivateInitialize singleShot client not nullptr." << YXLOGEnd;
+                        client->privateInitialize(port);
+                    }
+                });
+                return;
+            };
+            YXLOG(Info) << "attachPrivateInitialize ret is false, tryCount: " << tryCount << YXLOGEnd;
+            Invoker::getInstance()->execute([]() {
+                YXLOG(Info) << "attachPrivateInitialize ret is false, qApp->exit." << YXLOGEnd;
+                qApp->exit(0);
+            });
+        }
         auto* client = NEMeetingSDKIPCClient::getInstance();
         meeting_sdk_proc_handler_ = std::make_unique<NEMeetingSDKProcHandlerIMP>();
         client->setProcHandler(meeting_sdk_proc_handler_.get());
@@ -168,12 +192,12 @@ bool HostingModuleClient::InitLocalEnviroment(int port) {
 
             connect(MeetingManager::getInstance(), &MeetingManager::meetingStatusChanged, this,
                     [](NEMeeting::Status status, int errorCode, const QString& errorMessage) {
-                        YXLOG(Info) << "Connection meeting status chagned, status: " << status << ", ext code: " << errorCode
+                        YXLOG(Info) << "Connection meeting status changed, status: " << status << ", ext code: " << errorCode
                                     << ", error message: " << errorMessage.toStdString() << YXLOGEnd;
                         if (status == NEMeeting::MEETING_DISCONNECTED || status == NEMeeting::MEETING_IDLE ||
                             status == NEMeeting::MEETING_CONNECTED || status == NEMeeting::MEETING_ENDED ||
                             status == NEMeeting::MEETING_MULTI_SPOT_LOGIN || status == NEMeeting::MEETING_CONNECTING ||
-                            status == NEMeeting::MEETING_WAITING_VERIFY_PASSWORD) {
+                            status == NEMeeting::MEETING_WAITING_VERIFY_PASSWORD || status == NEMeeting::MEETING_CONNECT_FAILED) {
                             int interface_status = MEETING_STATUS_IDLE;
                             int interface_code = MEETING_DISCONNECTING_BY_SELF;
 
@@ -189,23 +213,23 @@ bool HostingModuleClient::InitLocalEnviroment(int port) {
                                     break;
                                 case NEMeeting::MEETING_DISCONNECTED:
                                     interface_status = MEETING_STATUS_DISCONNECTING;
-                                    if (errorCode == kReasonRemovedByHost)
+                                    if (errorCode == kNERoomEndReasonKickOut)
                                         interface_code = MEETING_DISCONNECTING_REMOVED_BY_HOST;
-                                    else if (errorCode == kReasonCloseByHost)
+                                    else if (errorCode == kNERoomEndReasonCloseByMember)
                                         interface_code = MEETING_DISCONNECTING_CLOSED_BY_HOST;
-                                    else if (errorCode == kReasonLoginOnOtherDevice)
-                                        interface_code = MEETING_DISCONNECTING_LOGIN_ON_OTHER_DEVICE;
-                                    else if (errorCode == kReasonAuthInfoExpired)
-                                        interface_code = MEETING_DISCONNECTING_AUTH_INFO_EXPIRED;
-                                    else if (errorCode == kReasonOtherError)
+                                    else if (errorCode == kNERoomEndReasonKickSelf)
+                                        interface_code = MEETING_DISCONNECTING_REMOVED_BY_HOST;
+                                    //                                    else if (errorCode == kReasonAuthInfoExpired)
+                                    //                                        interface_code = MEETING_DISCONNECTING_AUTH_INFO_EXPIRED;
+                                    else if (errorCode == kNERoomEndReasonUnKnown || errorCode == 30015)
                                         interface_code = MEETING_DISCONNECTING_BY_SERVER;
                                     break;
                                 case NEMeeting::MEETING_ENDED:
                                     interface_status = MEETING_STATUS_DISCONNECTING;
-                                    if (errorCode == kReasonDefault)
-                                        interface_code = MEETING_DISCONNECTING_BY_SELF;
-                                    else
-                                        interface_code = MEETING_DISCONNECTING_CLOSED_BY_SELF_AS_HOST;
+                                    // if (errorCode == kReasonDefault)
+                                    interface_code = MEETING_DISCONNECTING_BY_SELF;
+                                    // else
+                                    // interface_code = MEETING_DISCONNECTING_CLOSED_BY_SELF_AS_HOST;
                                     break;
                                 case NEMeeting::MEETING_MULTI_SPOT_LOGIN:
                                     interface_status = MEETING_STATUS_DISCONNECTING;
@@ -215,6 +239,21 @@ bool HostingModuleClient::InitLocalEnviroment(int port) {
                                     interface_status = MEETING_STATUS_WAITING;
                                     interface_code = MEETING_WAITING_VERIFY_PASSWORD;
                                     break;
+                                case NEMeeting::MEETING_CONNECT_FAILED:
+                                    interface_status = MEETING_STATUS_DISCONNECTING;
+                                    if ("kReasonRoomNotExist" == errorMessage)
+                                        interface_code = MEETING_DISCONNECTING_BY_MEETINGNOTEXIST;
+                                    else if ("kReasonSyncDataError" == errorMessage)
+                                        interface_code = MEETING_DISCONNECTING_BY_SYNCDATAERROR;
+                                    else if ("kReasonRtcInitError" == errorMessage)
+                                        interface_code = MEETING_DISCONNECTING_BY_RTCINITERROR;
+                                    else if ("kReasonJoinChannelError" == errorMessage)
+                                        interface_code = MEETING_DISCONNECTING_BY_JOINCHANNELERROR;
+                                    else if ("joinTimeoutTimer" == errorMessage)
+                                        interface_code = MEETING_DISCONNECTING_BY_TIMEOUT;
+                                    else
+                                        return;
+                                    break;
                                 default:
                                     break;
                             }
@@ -222,9 +261,11 @@ bool HostingModuleClient::InitLocalEnviroment(int port) {
                             auto* client = NEMeetingSDKIPCClient::getInstance();
                             auto* meeting_service = dynamic_cast<NEMeetingServiceIPCClient*>(client->getMeetingService());
                             if (meeting_service != nullptr) {
-                                YXLOG_API(Info) << "onMeetingStatusChanged status chagned, interface_status: " << interface_status
-                                                << ", interface_code: " << interface_code << YXLOGEnd;
-                                meeting_service->onMeetingStatusChanged(interface_status, interface_code);
+                                QTimer::singleShot(100, [meeting_service, interface_status, interface_code] {
+                                    YXLOG_API(Info) << "onMeetingStatusChanged status chagned, interface_status: " << interface_status
+                                                    << ", interface_code: " << interface_code << YXLOGEnd;
+                                    meeting_service->onMeetingStatusChanged(interface_status, interface_code);
+                                });
                             }
                         }
                     });
@@ -240,12 +281,12 @@ void HostingModuleClient::OnInitLocalEnviroment(bool success) {
         meeting_sdk_proc_handler_->onInitLocalEnviroment(success);
 }
 
-NEMeetingSDKConfig HostingModuleClient::getSDKConfig() const {
+NEMeetingKitConfig HostingModuleClient::getSDKConfig() const {
     YXLOG(Info) << "getSDKConfig." << YXLOGEnd;
     if (meeting_sdk_proc_handler_)
         return meeting_sdk_proc_handler_->getSDKConfig();
     else
-        return NEMeetingSDKConfig();
+        return NEMeetingKitConfig();
 }
 
 void HostingModuleClient::Uninit() {

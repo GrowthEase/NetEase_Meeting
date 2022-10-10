@@ -45,8 +45,10 @@ Rectangle {
                 if (Window.window.visibility !== Window.Maximized) {
                     Window.window.x = Window.window.x + delta.x
                     Window.window.y = Window.window.y + delta.y
-                    Window.window.width = lastWindowWidth
-                    Window.window.height = lastWindowHeight
+                    if (Qt.platform.os !== 'windows') {
+                        Window.window.width = lastWindowWidth
+                        Window.window.height = lastWindowHeight
+                    }
                 }
             }
         }
@@ -54,10 +56,10 @@ Rectangle {
         }
         onDoubleClicked: {
             isDoubleClicked = true
-            if (mainWindow.visibility === Window.Maximized) {
+            if (mainWindow.visibility === Window.Maximized || mainWindow.visibility === Window.FullScreen) {
                 mainWindow.showNormal()
                 mainWindow.flags = Qt.Window | Qt.FramelessWindowHint
-            } else {           
+            } else {
                 mainWindow.flags = Qt.Window | Qt.WindowFullscreenButtonHint | Qt.CustomizeWindowHint | Qt.WindowMinimizeButtonHint
                 mainWindow.visibility = Window.Maximized
             }
@@ -88,14 +90,14 @@ Rectangle {
             Layout.preferredWidth: 12
             Layout.preferredHeight: 12
             normalImage: mainWindow.visibility !== Window.FullScreen
-                        ? 'qrc:/qml/images/public/caption/btn_min_normal.png'
-                        : 'qrc:/qml/images/public/caption/btn_min_prohibit.png'
+                         ? 'qrc:/qml/images/public/caption/btn_min_normal.png'
+                         : 'qrc:/qml/images/public/caption/btn_min_prohibit.png'
             hoveredImage: mainWindow.visibility !== Window.FullScreen
-                        ? 'qrc:/qml/images/public/caption/btn_min_hovered.png'
-                        : 'qrc:/qml/images/public/caption/btn_min_prohibit.png'
+                          ? 'qrc:/qml/images/public/caption/btn_min_hovered.png'
+                          : 'qrc:/qml/images/public/caption/btn_min_prohibit.png'
             pushedImage: mainWindow.visibility !== Window.FullScreen
-                        ? 'qrc:/qml/images/public/caption/btn_min_pushed.png'
-                        : 'qrc:/qml/images/public/caption/btn_min_prohibit.png'
+                         ? 'qrc:/qml/images/public/caption/btn_min_pushed.png'
+                         : 'qrc:/qml/images/public/caption/btn_min_prohibit.png'
             onClicked: {
                 if(mainWindow.visibility !== Window.FullScreen)
                     macMinimized()

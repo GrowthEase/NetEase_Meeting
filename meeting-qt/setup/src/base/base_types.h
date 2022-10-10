@@ -1,9 +1,7 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
-// Copyright (c) 2011, NetEase Inc. All rights reserved.
 //
 // Author: Ruan Liang <ruanliang@corp.netease.com>
 // Date: 2011/6/8
@@ -21,60 +19,60 @@
 
 #ifndef COMPILER_MSVC
 // stdint.h is part of C99 but MSVC doesn't have it.
-#include <stdint.h>         // For intptr_t.
+#include <stdint.h>  // For intptr_t.
 #endif
 
 /* Even in pure C, we still need a standard boolean typedef */
 #ifndef __cplusplus
 typedef unsigned char bool;
-#define true    1
-#define false   0
+#define true 1
+#define false 0
 #endif  // __cplusplus
 
 #ifndef NULL
-#define NULL    0
+#define NULL 0
 #endif
 
 /* define int types*/
 #if defined(COMPILER_GCC)
 
-#ifndef	_STDINT_H
+#ifndef _STDINT_H
 
 /* FreeBSD has these C99 int types defined in /sys/inttypes.h already */
 #ifndef _SYS_TYPES_H
-typedef     signed char         int8_t;
-typedef     signed short        int16_t;
-typedef     signed int          int32_t;
-typedef     signed long long    int64_t;
-typedef     unsigned char       uint8_t;
-typedef     unsigned short      uint16_t;
-typedef     unsigned int        uint32_t;
-typedef     unsigned long long  uint64_t;
+typedef signed char int8_t;
+typedef signed short int16_t;
+typedef signed int int32_t;
+typedef signed long long int64_t;
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned int uint32_t;
+typedef unsigned long long uint64_t;
 #else
-typedef     u_int8_t            uint8_t;
-typedef     u_int16_t           uint16_t;
-typedef     u_int32_t           uint32_t;
-typedef     u_int64_t           uint64_t;
+typedef u_int8_t uint8_t;
+typedef u_int16_t uint16_t;
+typedef u_int32_t uint32_t;
+typedef u_int64_t uint64_t;
 #endif  // _SYS_TYPES_H
 
 #endif  // _STDINT_H
 
 #elif defined(COMPILER_MSVC)
-typedef     signed char         int8_t;
-typedef     signed short        int16_t;
-typedef     signed int          int32_t;
-typedef     signed __int64      int64_t;
-typedef     unsigned char       uint8_t;
-typedef     unsigned short      uint16_t;
-typedef     unsigned int        uint32_t;
-typedef     unsigned __int64    uint64_t;
+typedef signed char int8_t;
+typedef signed short int16_t;
+typedef signed int int32_t;
+typedef signed __int64 int64_t;
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned int uint32_t;
+typedef unsigned __int64 uint64_t;
 
 /* the following definitions are from VS2010's stdint.h */
 #ifndef _INTPTR_T_DEFINED
 #define _INTPTR_T_DEFINED
 #ifdef _WIN64
 typedef __int64 intptr_t;
-#else /* _WIN64 */
+#else  /* _WIN64 */
 typedef _W64 int intptr_t;
 #endif /* _WIN64 */
 #endif /* _INTPTR_T_DEFINED */
@@ -83,31 +81,31 @@ typedef _W64 int intptr_t;
 #define _UINTPTR_T_DEFINED
 #ifdef _WIN64
 typedef unsigned __int64 uintptr_t;
-#else /* _WIN64 */
+#else  /* _WIN64 */
 typedef _W64 unsigned int uintptr_t;
 #endif /* _WIN64 */
 #endif /* _UINTPTR_T_DEFINED */
 
-#endif // COMPILER_GCC/COMPILER_MSVC
+#endif  // COMPILER_GCC/COMPILER_MSVC
 
-const uint8_t  kUint8Max  = (( uint8_t) 0xFF);
-const uint16_t kUint16Max = ((uint16_t) 0xFFFF);
-const uint32_t kUint32Max = ((uint32_t) 0xFFFFFFFF);
-const uint64_t kUint64Max = ((uint64_t) GG_LONGLONG(0xFFFFFFFFFFFFFFFF));
-const int8_t   kInt8Min   = ((  int8_t) 0x80);
-const int8_t   kInt8Max   = ((  int8_t) 0x7F);
-const int16_t  kInt16Min  = (( int16_t) 0x8000);
-const int16_t  kInt16Max  = (( int16_t) 0x7FFF);
-const int32_t  kInt32Min  = (( int32_t) 0x80000000);
-const int32_t  kInt32Max  = (( int32_t) 0x7FFFFFFF);
-const int64_t  kInt64Min  = (( int64_t) GG_LONGLONG(0x8000000000000000));
-const int64_t  kInt64Max  = (( int64_t) GG_LONGLONG(0x7FFFFFFFFFFFFFFF));
+const uint8_t kUint8Max = ((uint8_t)0xFF);
+const uint16_t kUint16Max = ((uint16_t)0xFFFF);
+const uint32_t kUint32Max = ((uint32_t)0xFFFFFFFF);
+const uint64_t kUint64Max = ((uint64_t)GG_LONGLONG(0xFFFFFFFFFFFFFFFF));
+const int8_t kInt8Min = ((int8_t)0x80);
+const int8_t kInt8Max = ((int8_t)0x7F);
+const int16_t kInt16Min = ((int16_t)0x8000);
+const int16_t kInt16Max = ((int16_t)0x7FFF);
+const int32_t kInt32Min = ((int32_t)0x80000000);
+const int32_t kInt32Max = ((int32_t)0x7FFFFFFF);
+const int64_t kInt64Min = ((int64_t)GG_LONGLONG(0x8000000000000000));
+const int64_t kInt64Max = ((int64_t)GG_LONGLONG(0x7FFFFFFFFFFFFFFF));
 
 // A macro to disallow the copy constructor and operator= functions
 // This should be used in the private: declarations for a class
 #define DISALLOW_COPY_AND_ASSIGN(TypeName) \
-  TypeName(const TypeName&);               \
-  void operator=(const TypeName&)
+    TypeName(const TypeName&);             \
+    void operator=(const TypeName&)
 
 // An older, deprecated, politically incorrect name for the above.
 #define DISALLOW_EVIL_CONSTRUCTORS(TypeName) DISALLOW_COPY_AND_ASSIGN(TypeName)
@@ -119,8 +117,8 @@ const int64_t  kInt64Max  = (( int64_t) GG_LONGLONG(0x7FFFFFFFFFFFFFFF));
 // that wants to prevent anyone from instantiating it. This is
 // especially useful for classes containing only static methods.
 #define DISALLOW_IMPLICIT_CONSTRUCTORS(TypeName) \
-  TypeName();                                    \
-  DISALLOW_COPY_AND_ASSIGN(TypeName)
+    TypeName();                                  \
+    DISALLOW_COPY_AND_ASSIGN(TypeName)
 
 // The arraysize(arr) macro returns the # of elements in an array arr.
 // The expression is a compile-time constant, and therefore can be
@@ -186,10 +184,7 @@ char (&ArraySizeHelper(const T (&array)[N]))[N];
 // where a pointer is 4 bytes, this means all pointers to a type whose
 // size is 3 or greater than 4 will be (righteously) rejected.
 
-#define ARRAYSIZE_UNSAFE(a) \
-  ((sizeof(a) / sizeof(*(a))) / \
-   static_cast<size_t>(!(sizeof(a) % sizeof(*(a)))))
-
+#define ARRAYSIZE_UNSAFE(a) ((sizeof(a) / sizeof(*(a))) / static_cast<size_t>(!(sizeof(a) % sizeof(*(a)))))
 
 // Use implicit_cast as a safe version of static_cast or const_cast
 // for upcasting in the type hierarchy (i.e. casting a pointer to Foo
@@ -208,9 +203,9 @@ char (&ArraySizeHelper(const T (&array)[N]))[N];
 // implicit_cast would have been part of the C++ standard library,
 // but the proposal was submitted too late.  It will probably make
 // its way into the language in the future.
-template<typename To, typename From>
-inline To implicit_cast(From const &f) {
-  return f;
+template <typename To, typename From>
+inline To implicit_cast(From const& f) {
+    return f;
 }
 
 // The COMPILE_ASSERT macro can be used to verify that a compile time
@@ -229,12 +224,10 @@ inline To implicit_cast(From const &f) {
 // containing the name of the variable.
 
 template <bool>
-struct CompileAssert {
-};
+struct CompileAssert {};
 
 #undef COMPILE_ASSERT
-#define COMPILE_ASSERT(expr, msg) \
-  typedef CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1]
+#define COMPILE_ASSERT(expr, msg) typedef CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1]
 
 // Implementation details of COMPILE_ASSERT:
 //
@@ -280,10 +273,7 @@ struct CompileAssert {
 // Argument type used in interfaces that can optionally take ownership
 // of a passed in argument.  If TAKE_OWNERSHIP is passed, the called
 // object takes ownership of the argument.  Otherwise it does not.
-enum Ownership {
-  DO_NOT_TAKE_OWNERSHIP,
-  TAKE_OWNERSHIP
-};
+enum Ownership { DO_NOT_TAKE_OWNERSHIP, TAKE_OWNERSHIP };
 
 // bit_cast<Dest,Source> is a template function that implements the
 // equivalent of "*reinterpret_cast<Dest*>(&source)".  We need this in
@@ -341,13 +331,13 @@ enum Ownership {
 
 template <class Dest, class Source>
 inline Dest bit_cast(const Source& source) {
-  // Compile time assertion: sizeof(Dest) == sizeof(Source)
-  // A compile error here means your Dest and Source have different sizes.
-  typedef char VerifySizesAreEqual [sizeof(Dest) == sizeof(Source) ? 1 : -1];
+    // Compile time assertion: sizeof(Dest) == sizeof(Source)
+    // A compile error here means your Dest and Source have different sizes.
+    typedef char VerifySizesAreEqual[sizeof(Dest) == sizeof(Source) ? 1 : -1];
 
-  Dest dest;
-  memcpy(&dest, &source, sizeof(dest));
-  return dest;
+    Dest dest;
+    memcpy(&dest, &source, sizeof(dest));
+    return dest;
 }
 
 // The following enum should be used only as a constructor argument to indicate
@@ -365,6 +355,6 @@ inline Dest bit_cast(const Source& source) {
 //       static MyClass my_variable_name(base::LINKER_INITIALIZED);
 namespace nbase {
 enum LinkerInitialized { LINKER_INITIALIZED };
-}  // base
+}  // namespace nbase
 
 #endif  // BASE_BASE_TYPES_H

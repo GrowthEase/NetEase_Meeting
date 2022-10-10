@@ -14,6 +14,9 @@ Popup {
     bottomInset: 0
     margins: 0
     dim: false
+
+    Accessible.name: title.text
+
     background: Rectangle {
         radius: 8
     }

@@ -1,100 +1,66 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include <QDebug>
 
+#include "controller/live_ctrl_interface.h"
 #include "live_manager.h"
 #include "manager/meeting_manager.h"
+#include "utils/invoker.h"
 
 LiveManager::LiveManager(QObject* parent)
-    : QObject(parent) {
-    m_liveStreamController = MeetingManager::getInstance()->getLivingController();
-}
+    : QObject(parent) {}
 
 LiveManager::~LiveManager() {}
 
 void LiveManager::onLiveStreamStatusChanged(int liveState) {
-    if (liveState == 1 || liveState == 3) {
-        liveStateChanged(false, false);
-    } else {
-        liveStateChanged(true, false);
-    }
+    Invoker::getInstance()->execute([=]() {
+        initLiveInfo();
+        emit liveStateChanged(liveState);
+    });
 }
 
-void LiveManager::initLiveStreamStatus(int liveState) {
-    if (liveState == 1 || liveState == 3) {
-        liveStateChanged(false, true);
+void LiveManager::initLiveStreamStatus() {
+    if (initLiveInfo()) {
+        emit liveStateChanged(m_liveInfo.state);
     } else {
-        liveStateChanged(true, true);
+        liveStateChanged(1);
     }
 }
 
 QString LiveManager::getLiveUrl() {
-    if (MeetingManager::getInstance()->getMeetingInfo() == nullptr) {
-        return "";
-    }
-
-    return QString::fromStdString(MeetingManager::getInstance()->getMeetingInfo()->getLiveStreamInfo().liveUrl);
+    return QString::fromStdString(MeetingManager::getInstance()->getMeetingInfo().liveUrl);
 }
 
 QString LiveManager::getLiveTittle() {
-    if (MeetingManager::getInstance()->getMeetingInfo() == nullptr) {
-        return "";
-    }
-
-    QString title = QString::fromStdString(MeetingManager::getInstance()->getMeetingInfo()->getLiveStreamInfo().title);
-
-    if (title.isEmpty()) {
-        title = QString::fromStdString(MeetingManager::getInstance()->getMeetingInfo()->getSubject());
-    }
-
-    return title;
+    return m_liveInfo.title.empty() ? QString::fromStdString(MeetingManager::getInstance()->getMeetingInfo().subject)
+                                    : QString::fromStdString(m_liveInfo.title);
 }
 
 QString LiveManager::getLivePassword() {
-    if (MeetingManager::getInstance()->getMeetingInfo() == nullptr) {
-        return "";
-    }
-    return QString::fromStdString(MeetingManager::getInstance()->getMeetingInfo()->getLiveStreamInfo().password);
+    return QString::fromStdString(m_liveInfo.password);
 }
 
 bool LiveManager::getLiveChatRoomEnable() {
-    if (MeetingManager::getInstance()->getMeetingInfo() == nullptr) {
-        return false;
-    }
-
-    return MeetingManager::getInstance()->getMeetingInfo()->getLiveStreamInfo().liveChatRoomEnable;
+    return m_liveChatRoomEnable;
 }
-bool LiveManager::getLiveAccessEnable() {
-    if (MeetingManager::getInstance()->getMeetingInfo() == nullptr) {
-        return false;
-    }
 
-    return MeetingManager::getInstance()->getMeetingInfo()->getLiveStreamInfo().liveWebAccessControlLevel == kNERoomLiveAccessAppToken;
+bool LiveManager::getLiveAccessEnable() {
+    return m_onlyEmployeesAllow;
 }
 
 int LiveManager::getLiveLayout() {
-    auto meetingInfo = MeetingManager::getInstance()->getMeetingInfo();
-    if (meetingInfo) {
-        return meetingInfo->getLiveStreamInfo().liveLayout;
-    }
-    return 1;
+    return m_liveInfo.liveLayout;
 }
 
 int LiveManager::getLiveUserCount() {
-    return m_liveParam.userList.size();
+    return m_liveInfo.userUuidList.size();
 }
 
 QJsonArray LiveManager::getLiveUsersList() {
     QJsonArray array;
-    auto meetingInfo = MeetingManager::getInstance()->getMeetingInfo();
-    if (Q_NULLPTR == meetingInfo) {
-        return array;
-    }
-
-    std::vector<std::string> vecUsers = MeetingManager::getInstance()->getMeetingInfo()->getLiveStreamInfo().userList;
+    std::vector<std::string> vecUsers = m_liveInfo.userUuidList;
     for (auto user : vecUsers) {
         QJsonValue value = QString::fromStdString(user);
         array << value;
@@ -105,63 +71,133 @@ QJsonArray LiveManager::getLiveUsersList() {
 
 bool LiveManager::startLive(QJsonObject liveParams) {
     qInfo() << "liveParams: " << liveParams;
-    m_liveParam.userList.clear();
 
+    NERoomLiveRequest live;
+    live.title = liveParams["liveTitle"].toString().toStdString();
+    live.password = liveParams["password"].toString().toStdString();
+    live.liveLayout = (NERoomLiveLayout)liveParams["layoutType"].toInt();
+
+    QJsonArray extensionUserArray;
     QJsonArray userArray = liveParams["liveUsers"].toArray();
     for (int i = 0; i < userArray.size(); i++) {
         QJsonObject obj = userArray[i].toObject();
-        std::string uid = obj["accountId"].toVariant().toString().toStdString();
-        m_liveParam.userList.push_back(uid);
+        QString uid = obj["accountId"].toVariant().toString();
+        live.userUuidList.push_back(uid.toStdString());
+        extensionUserArray << uid;
     }
 
-    int layoutMode = liveParams["layoutType"].toInt();
+    QJsonObject extentionConfig;
+    extentionConfig["onlyEmployeesAllow"] = liveParams["liveAccessEnable"].toBool();
+    extentionConfig["liveChatRoomEnable"] = liveParams["liveChatRoomEnable"].toBool();
+    extentionConfig["listUids"] = extensionUserArray;
+    QByteArray byteArray = QJsonDocument(extentionConfig).toJson(QJsonDocument::Compact);
+    live.extentionConfig = byteArray.data();
 
-    m_liveParam.title = liveParams["liveTitle"].toString().toStdString();
-    m_liveParam.liveChatRoomEnable = liveParams["liveChatRoomEnable"].toBool();
-    m_liveParam.password = liveParams["password"].toString().toStdString();
-    m_liveParam.liveLayout = (NELiveLayout)layoutMode;
-    m_liveParam.liveWebAccessControlLevel = liveParams["liveAccessEnable"].toBool() ? kNERoomLiveAccessAppToken : kNERoomLiveAccessToken;
+    auto liveController = MeetingManager::getInstance()->getLiveController();
+    if (liveController) {
+        liveController->startLive(live, [this](int code, const std::string& msg) {
+            YXLOG(Info) << "startLive code: " << code << YXLOGEnd;
+            YXLOG(Info) << "startLive msg: " << msg << YXLOGEnd;
 
-    m_liveStreamController->startLiveStream(m_liveParam, [this](bool success, uint32_t errorCode, const std::string& errorMessage) {
-        emit liveStartFinished(success, QString::fromStdString(errorMessage));
+            QString qstrErrorMessage = QString::fromStdString(msg);
+            if (msg == "kFailed_connect_server") {
+                qstrErrorMessage = tr("Failed to connect to server, please try agine.");
+            }
 
-        if (success) {
-            emit liveStateChanged(true, false);
-        }
-    });
+            emit liveStartFinished(code == 0, qstrErrorMessage);
+        });
+    }
 
     return true;
 }
 
 bool LiveManager::updateLive(QJsonObject liveParams) {
-    m_liveParam.userList.clear();
+    NERoomLiveRequest live;
+    live.title = m_liveInfo.title;
+    live.password = m_liveInfo.password;
+    live.liveLayout = (NERoomLiveLayout)liveParams["layoutType"].toInt();
+
+    QJsonArray extensionUserArray;
     QJsonArray userArray = liveParams["liveUsers"].toArray();
     for (int i = 0; i < userArray.size(); i++) {
         QJsonObject obj = userArray[i].toObject();
-        std::string uid = obj["accountId"].toVariant().toString().toStdString();
-        m_liveParam.userList.push_back(uid);
+        QString uid = obj["accountId"].toVariant().toString();
+        live.userUuidList.push_back(uid.toStdString());
+        extensionUserArray << uid;
     }
 
-    int layoutMode = liveParams["layoutType"].toInt();
+    QJsonObject extentionConfig;
+    extentionConfig["onlyEmployeesAllow"] = m_onlyEmployeesAllow;
+    extentionConfig["liveChatRoomEnable"] = liveParams["liveChatRoomEnable"].toBool();
+    extentionConfig["listUids"] = extensionUserArray;
+    QByteArray byteArray = QJsonDocument(extentionConfig).toJson(QJsonDocument::Compact);
+    live.extentionConfig = byteArray.data();
 
-    m_liveParam.liveChatRoomEnable = liveParams["liveChatRoomEnable"].toBool();
-    m_liveParam.liveLayout = (NELiveLayout)layoutMode;
+    auto liveController = MeetingManager::getInstance()->getLiveController();
+    if (liveController) {
+        liveController->updateLive(live, [this](int code, const std::string& msg) {
+            YXLOG(Info) << "updateLive code: " << code << YXLOGEnd;
+            YXLOG(Info) << "updateLive msg: " << msg << YXLOGEnd;
 
-    m_liveStreamController->updateLiveStream(m_liveParam, [this](bool success, uint32_t errorCode, const std::string& errorMessage) {
-        emit liveUpdateFinished(success, QString::fromStdString(errorMessage));
-    });
+            QString qstrErrorMessage = QString::fromStdString(msg);
+            if (msg == "kFailed_connect_server") {
+                qstrErrorMessage = tr("Failed to connect to server, please try agine.");
+            }
+            emit liveUpdateFinished(code == 0, qstrErrorMessage);
+        });
+    }
 
     return true;
 }
 
 bool LiveManager::stopLive() {
-    m_liveStreamController->stopLiveStream([this](bool success, uint32_t errorCode, const std::string& errorMessage) {
-        emit liveStopFinished(success, QString::fromStdString(errorMessage));
+    auto liveController = MeetingManager::getInstance()->getLiveController();
+    if (liveController) {
+        liveController->stopLive([this](int code, const std::string& msg) {
+            YXLOG(Info) << "stopLive code: " << code << YXLOGEnd;
+            YXLOG(Info) << "stopLive msg: " << msg << YXLOGEnd;
 
-        if (success) {
-            emit liveStateChanged(false, false);
-        }
-    });
+            QString qstrErrorMessage = QString::fromStdString(msg);
+            if (msg == "kFailed_connect_server") {
+                qstrErrorMessage = tr("Failed to connect to server, please try agine.");
+            }
+
+            emit liveStopFinished(code == 0, qstrErrorMessage);
+        });
+    }
 
     return true;
+}
+
+bool LiveManager::initLiveInfo() {
+    auto liveController = MeetingManager::getInstance()->getLiveController();
+    if (liveController) {
+        m_liveInfo = liveController->getLiveInfo();
+
+        QJsonParseError err;
+        QJsonDocument doc = QJsonDocument::fromJson(QString::fromStdString(m_liveInfo.extentionConfig).toUtf8(), &err);
+        if (err.error != QJsonParseError::NoError)
+            return false;
+
+        auto extentionConfig = doc.object();
+        if (extentionConfig.contains("onlyEmployeesAllow")) {
+            m_onlyEmployeesAllow = extentionConfig["onlyEmployeesAllow"].toBool();
+        }
+        if (extentionConfig.contains("liveChatRoomEnable")) {
+            m_liveChatRoomEnable = extentionConfig["liveChatRoomEnable"].toBool();
+        }
+        if (m_liveInfo.state == kNERoomLiveStateStarted) {
+            if (extentionConfig.contains("listUids")) {
+                m_liveInfo.userUuidList.clear();
+                auto array = extentionConfig["listUids"].toArray();
+                for (auto item : array) {
+                    m_liveInfo.userUuidList.push_back(item.toString().toStdString());
+                }
+            }
+        }
+
+        return true;
+    }
+
+    return false;
 }

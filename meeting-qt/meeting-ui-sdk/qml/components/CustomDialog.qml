@@ -13,6 +13,9 @@ Dialog {
     topInset: 0
     bottomInset: 0
     margins: 0
+
+    Accessible.name: text
+
     background: Rectangle {
         radius: 8
     }
@@ -25,10 +28,16 @@ Dialog {
     property alias description: description.text
     property var   cancelBtnText : qsTr("Cancel")
     property var   confirmBtnText : qsTr("OK")
+    property bool  emitCancelWhenClosed : false
+    property bool  autoClose : true
     signal confirm
     signal cancel
 
     onClosed: {
+        if(emitCancelWhenClosed && autoClose) {
+            root.cancel()
+        }
+        autoClose = true
         // When created dynamically, is called when the dialog is closed only but the parent object is not destroyed
         //root.destroy()
     }
@@ -97,6 +106,7 @@ Dialog {
         normalTextColor: "#337EFF"
         borderSize: 0
         onClicked: {
+            autoClose = false
             root.confirm()
             root.close()
         }
@@ -114,6 +124,7 @@ Dialog {
         normalTextColor: "#333333"
         borderSize: 0
         onClicked: {
+            autoClose = false
             root.cancel()
             root.close()
         }

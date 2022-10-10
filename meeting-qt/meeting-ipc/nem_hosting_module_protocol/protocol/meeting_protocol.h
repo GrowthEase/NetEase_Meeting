@@ -1,24 +1,24 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef NEM_HOSTING_MODULE_PROTOCOL_METTING_PROTOCOL_H_
 #define NEM_HOSTING_MODULE_PROTOCOL_METTING_PROTOCOL_H_
 
-#include "nem_hosting_module_protocol/config/build_config.h"
 #include "nem_hosting_module_core/protocol/protocol.h"
+#include "nem_hosting_module_protocol/config/build_config.h"
 
 NNEM_SDK_HOSTING_MODULE_PROTOCOL_BEGIN_DECLS
 
 USING_NS_NNEM_SDK_HOSTING_MODULE_CORE
 
-enum MettingCID
-{
+enum MettingCID {
     MettingCID_Start = 1,
     MettingCID_Start_CB,
     MettingCID_Join,
     MettingCID_Join_CB,
+    MettingCID_AnonymousJoin,
+    MettingCID_AnonymousJoin_CB,
     MeetingCID_Leave,
     MeetingCID_Leave_CB,
     MeetingCID_GetInfo,
@@ -53,8 +53,7 @@ enum MettingCID
     MettingCID_Notify_End,
 };
 
-class StartRequest : public NEMIPCProtocolBody
-{
+class StartRequest : public NEMIPCProtocolBody {
 public:
     virtual void OnPack(Json::Value& root) const override;
     virtual void OnParse(const Json::Value& root) override;
@@ -65,8 +64,7 @@ public:
 };
 using StartResponse = NEMIPCProtocolErrorInfoBody;
 
-class JoinRequest : public NEMIPCProtocolBody
-{
+class JoinRequest : public NEMIPCProtocolBody {
 public:
     virtual void OnPack(Json::Value& root) const override;
     virtual void OnParse(const Json::Value& root) override;
@@ -77,18 +75,17 @@ public:
 };
 using JoinResponse = NEMIPCProtocolErrorInfoBody;
 
-class LeaveMeetingRequest : public NEMIPCProtocolBody
-{
+class LeaveMeetingRequest : public NEMIPCProtocolBody {
 public:
     virtual void OnPack(Json::Value& root) const override;
     virtual void OnParse(const Json::Value& root) override;
+
 public:
     bool finish_ = false;
 };
 using LeaveMeetingResponse = NEMIPCProtocolErrorInfoBody;
 
-class MeetingStatusChangePack : public NEMIPCProtocolBody
-{
+class MeetingStatusChangePack : public NEMIPCProtocolBody {
 public:
     virtual void OnPack(Json::Value& root) const override;
     virtual void OnParse(const Json::Value& root) override;
@@ -98,8 +95,7 @@ public:
     int code_;
 };
 
-class MeetingMenuItemClickedPack : public NEMIPCProtocolBody
-{
+class MeetingMenuItemClickedPack : public NEMIPCProtocolBody {
 public:
     virtual void OnPack(Json::Value& root) const override;
     virtual void OnParse(const Json::Value& root) override;
@@ -108,8 +104,7 @@ public:
     NEMeetingMenuItem menu_item_;
 };
 
-class GetPresetMenuItemsResponse : public NEMIPCProtocolErrorInfoBody
-{
+class GetPresetMenuItemsResponse : public NEMIPCProtocolErrorInfoBody {
 public:
     virtual void OnOtherPack(Json::Value& root) const override;
     virtual void OnOtherParse(const Json::Value& root) override;
@@ -118,8 +113,7 @@ public:
     std::vector<NEMeetingMenuItem> menu_items_;
 };
 
-class GetPresetMenuItemsRequest : public NEMIPCProtocolBody
-{
+class GetPresetMenuItemsRequest : public NEMIPCProtocolBody {
 public:
     virtual void OnPack(Json::Value& root) const override;
     virtual void OnParse(const Json::Value& root) override;
@@ -128,15 +122,13 @@ public:
     std::vector<int> menu_items_id_;
 };
 
-class GetMeetingInfoRequest : public NEMIPCProtocolBody
-{
+class GetMeetingInfoRequest : public NEMIPCProtocolBody {
 public:
     virtual void OnPack(Json::Value& root) const override;
     virtual void OnParse(const Json::Value& root) override;
 };
 
-class GetMeetingInfoResponse : public NEMIPCProtocolErrorInfoBody
-{
+class GetMeetingInfoResponse : public NEMIPCProtocolErrorInfoBody {
 public:
     virtual void OnOtherPack(Json::Value& root) const override;
     virtual void OnOtherParse(const Json::Value& root) override;
@@ -145,44 +137,43 @@ public:
     NEMeetingInfo meeting_info_;
 };
 
-class PreMeetingRequest : public NEMIPCProtocolBody
-{
+class PreMeetingRequest : public NEMIPCProtocolBody {
 public:
     virtual void OnPack(Json::Value& root) const override;
     virtual void OnParse(const Json::Value& root) override;
+
 public:
     NEMeetingItem param_;
 };
 
-class PreMeetingResponse : public NEMIPCProtocolErrorInfoBody
-{
+class PreMeetingResponse : public NEMIPCProtocolErrorInfoBody {
 public:
     virtual void OnOtherPack(Json::Value& root) const override;
     virtual void OnOtherParse(const Json::Value& root) override;
+
 public:
     NEMeetingItem param_;
 };
 
-class GetPreMeetingListRequest : public NEMIPCProtocolErrorInfoBody
-{
+class GetPreMeetingListRequest : public NEMIPCProtocolErrorInfoBody {
 public:
     virtual void OnOtherPack(Json::Value& root) const override;
     virtual void OnOtherParse(const Json::Value& root) override;
+
 public:
     std::list<NEMeetingItemStatus> params_;
 };
 
-class GetPreMeetingListResponse : public NEMIPCProtocolErrorInfoBody
-{
+class GetPreMeetingListResponse : public NEMIPCProtocolErrorInfoBody {
 public:
     virtual void OnOtherPack(Json::Value& root) const override;
     virtual void OnOtherParse(const Json::Value& root) override;
+
 public:
     std::list<NEMeetingItem> meeting_items;
 };
 
-class PreMeetingStatusChangePack : public NEMIPCProtocolBody
-{
+class PreMeetingStatusChangePack : public NEMIPCProtocolBody {
 public:
     virtual void OnPack(Json::Value& root) const override;
     virtual void OnParse(const Json::Value& root) override;
@@ -206,4 +197,4 @@ using SubscribeAllAudioStreamsRequest = LeaveMeetingRequest;
 
 NNEM_SDK_HOSTING_MODULE_PROTOCOL_END_DECLS
 
-#endif//NEM_HOSTING_MODULE_PROTOCOL_METTING_PROTOCOL_H_
+#endif  // NEM_HOSTING_MODULE_PROTOCOL_METTING_PROTOCOL_H_

@@ -1,17 +1,17 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "client_updator.h"
 #include <QCryptographicHash>
 #include <QProcess>
 #include <QTimer>
 #include "components/macxhelper.h"
+#include "config_manager.h"
 #include "nemeeting_sdk_manager.h"
 
 #ifdef Q_OS_WIN
-#define SetUp_File QString updateFile = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/newSetup.exe";
+#define SetUp_File QString updateFile = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/app/newSetup.exe";
 #endif
 
 #ifdef Q_OS_LINUX
@@ -19,7 +19,7 @@
 #endif
 
 #ifdef Q_OS_MAC
-#define SetUp_File QString updateFile = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/newSetup.dmg";
+#define SetUp_File QString updateFile = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/app/newSetup.dmg";
 #endif
 
 QString UpdateInfoKey_latestVersionCode = "latestVersionCode";    // int 最新版本码
@@ -91,12 +91,12 @@ int ClientUpdater::getLatestVersion() const {
 }
 
 ClientUpdater::ClientUpdater(NEMeetingSDKManager* sdk, QObject* parent)
-    : m_pSDK(sdk),
-      QObject(parent) {
+    : m_pSDK(sdk)
+    , QObject(parent) {
     m_httpManager = new HttpManager;
     SetUp_File
-            // 删除自动更新的安装包
-            if (QFile::exists(updateFile)) {
+        // 删除自动更新的安装包
+        if (QFile::exists(updateFile)) {
         QFile::remove(updateFile);
     }
     // 安装安装包
@@ -106,8 +106,7 @@ ClientUpdater::ClientUpdater(NEMeetingSDKManager* sdk, QObject* parent)
         }
 
 #ifdef Q_OS_MACX
-        SetUp_File
-        YXLOG(Info) << "Start installing updates." << YXLOGEnd;
+        SetUp_File YXLOG(Info) << "Start installing updates." << YXLOGEnd;
         QThread* pThread = new QThread(this);
         Macxhelper* pHelper = new Macxhelper(updateFile);
         pHelper->moveToThread(pThread);
@@ -129,11 +128,10 @@ ClientUpdater::ClientUpdater(NEMeetingSDKManager* sdk, QObject* parent)
 
 void ClientUpdater::lanchApp() {
 #if defined(Q_OS_WIN)
-    SetUp_File
-    YXLOG(Info) << "Start installing updates." << YXLOGEnd;
+    SetUp_File YXLOG(Info) << "Start installing updates." << YXLOGEnd;
     QStringList arguments;
     arguments << "/nim-update=true";
-    QProcess::startDetached(updateFile, arguments, QStandardPaths::writableLocation(QStandardPaths::DataLocation));
+    QProcess::startDetached(updateFile, arguments, QStandardPaths::writableLocation(QStandardPaths::DataLocation).append("/app"));
 #elif defined(Q_OS_MACX)
     YXLOG(Info) << "Start lanchApp." << YXLOGEnd;
     QProcess::startDetached(qApp->applicationFilePath(), QStringList());
@@ -141,7 +139,10 @@ void ClientUpdater::lanchApp() {
 }
 
 void ClientUpdater::checkUpdate() {
-    QString dir_path = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    if (ConfigManager::getInstance()->getPrivate()) {
+        return;
+    }
+    QString dir_path = QStandardPaths::writableLocation(QStandardPaths::DataLocation).append("/app");
     QDir updateInfoCatchDir(dir_path);
     if (!updateInfoCatchDir.exists()) {
         updateInfoCatchDir.mkpath(dir_path);
@@ -154,7 +155,9 @@ void ClientUpdater::checkUpdate() {
     }
 
     // 删除自动更新的安装包
-    SetUp_File if (QFile::exists(updateFile)) { QFile::remove(updateFile); }
+    SetUp_File if (QFile::exists(updateFile)) {
+        QFile::remove(updateFile);
+    }
 
     AppCheckUpdateRequest checkUpdateRequest(getCurrentVersion(), m_pSDK != nullptr ? m_pSDK->neAccountId() : "");
     m_httpManager->postRequest(checkUpdateRequest, [this](int code, const QJsonObject& response) {
@@ -217,7 +220,7 @@ UpdateType ClientUpdater::doCheck(const ClientUpdateInfo& update_info) const {
 }
 
 bool ClientUpdater::update() {
-    QString updateInfoFile = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/update_info.cache";
+    QString updateInfoFile = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/app/update_info.cache";
     ClientUpdateInfo updateInfo;
     if (!ClientUpdateInfoSerializer::read(updateInfoFile, updateInfo)) {
         return false;
@@ -238,23 +241,23 @@ bool ClientUpdater::update() {
 
     AppDownloadRequest appDownloadRequest(updateInfo.m_download_url, m_pFile);
     m_httpManager->getRequest(
-                appDownloadRequest,
-                [this](int code, const QJsonObject& response) {
-        m_pFile->flush();
-        m_pFile->close();
-        m_pFile->deleteLater();
-        m_pFile = nullptr;
+        appDownloadRequest,
+        [this](int code, const QJsonObject& response) {
+            m_pFile->flush();
+            m_pFile->close();
+            m_pFile->deleteLater();
+            m_pFile = nullptr;
 
-        SetUp_File if (QNetworkReply::OperationCanceledError == code) {
-            // 删除自动更新的安装包
-            if (QFile::exists(updateFile)) {
-                QFile::remove(updateFile);
+            SetUp_File if (QNetworkReply::OperationCanceledError == code) {
+                // 删除自动更新的安装包
+                if (QFile::exists(updateFile)) {
+                    QFile::remove(updateFile);
+                }
+                return;
             }
-            return;
-        }
-        else if (QNetworkReply::NoError == code) {
-            do {
-                    QString updateInfoFile = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/update_info.cache";
+            else if (QNetworkReply::NoError == code) {
+                do {
+                    QString updateInfoFile = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/app/update_info.cache";
                     ClientUpdateInfo updateInfo;
                     if (!ClientUpdateInfoSerializer::read(updateInfoFile, updateInfo)) {
                         YXLOG(Error) << "Failed to open update cache file." << YXLOGEnd;
@@ -268,36 +271,44 @@ bool ClientUpdater::update() {
 
                     QFile file(updateFile);
                     if (file.open(QIODevice::ReadOnly)) {
-                        QCryptographicHash hash(QCryptographicHash::Sha1);
-                        hash.addData(&file);
-                        QString strCheckcode(hash.result().toHex());
+                        QCryptographicHash hashSha1(QCryptographicHash::Sha1);
+                        hashSha1.addData(&file);
+                        QString strCheckcodeSha1(hashSha1.result().toHex());
+
+                        QCryptographicHash hashMd5(QCryptographicHash::Md5);
+                        file.seek(0);
+                        hashMd5.addData(&file);
+                        QString strCheckcodeMd5(hashMd5.result().toHex());
                         file.close();
-                        if (0 != strCheckcode.compare(updateInfo.m_checkCode, Qt::CaseInsensitive)) {
+
+                        if (0 != strCheckcodeSha1.compare(updateInfo.m_checkCode, Qt::CaseInsensitive) &&
+                            0 != strCheckcodeMd5.compare(updateInfo.m_checkCode, Qt::CaseInsensitive)) {
                             // 删除自动更新的安装包
                             if (QFile::exists(updateFile)) {
                                 QFile::remove(updateFile);
+                            }
+                            YXLOG(Error) << "Checkcode of Setup file does not match, localfile, Sha1: " << strCheckcodeSha1.toStdString()
+                                         << ", Md5: " << strCheckcodeMd5.toStdString() << ", remotefile: " << updateInfo.m_checkCode.toStdString()
+                                         << YXLOGEnd;
+                            break;
                         }
-                        YXLOG(Error) << "Checkcode of Setup file does not match, localfile: " << strCheckcode.toStdString()
-                                    << ", remotefile: " << updateInfo.m_checkCode.toStdString() << YXLOGEnd;
-                        break;
                     }
-                }
 
-                emit downloadResultSignal(true, QJsonObject());
-                return;
-            } while (0);
-        }
+                    emit downloadResultSignal(true, QJsonObject());
+                    return;
+                } while (0);
+            }
 
-        emit downloadResultSignal(false, response);
-    },
-    [this](qint64 bytesReceived, qint64 bytesTotal) {
-        float fReceived = bytesReceived / (1024.0 * 1024.0);
-        fReceived = ((float)((int)((fReceived + 0.05) * 10))) / 10;
+            emit downloadResultSignal(false, response);
+        },
+        [this](qint64 bytesReceived, qint64 bytesTotal) {
+            float fReceived = bytesReceived / (1024.0 * 1024.0);
+            fReceived = ((float)((int)((fReceived + 0.05) * 10))) / 10;
 
-        float fTotal = bytesTotal / (1024.0 * 1024.0);
-        fTotal = ((float)((int)((fTotal + 0.05) * 10))) / 10;
-        emit downloadProgressSignal(fReceived, fTotal);
-    });
+            float fTotal = bytesTotal / (1024.0 * 1024.0);
+            fTotal = ((float)((int)((fTotal + 0.05) * 10))) / 10;
+            emit downloadProgressSignal(fReceived, fTotal);
+        });
 
     return true;
 }

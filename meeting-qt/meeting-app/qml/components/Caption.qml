@@ -3,28 +3,33 @@ import QtQuick.Window 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 
-Item {
-    property alias  avatar      : avatar
-    property alias  schedule    : schedule
-    property point  movePos     : "0,0"
-    property var    timestamp   : 0
-    property bool   isDoubleClicked: false
-    property bool   verified    : false
-    property var    popupProfile: undefined
-    property int    lastWindowWidth: 0
-    property int    lastWindowHeight: 0
+import "../utils/dialogManager.js" as DialogManager
 
-    signal close()
-    signal avatarClicked()
-    signal scheduleClicked()
+Item {
+    property alias avatar: avatar
+    property alias schedule: schedule
+    property alias history: history
+    property point movePos: "0,0"
+    property var timestamp: 0
+    property bool isDoubleClicked: false
+    property bool verified: false
+    property var popupProfile: undefined
+    property int lastWindowWidth: 0
+    property int lastWindowHeight: 0
+
+    signal close
+    signal avatarClicked
+    signal scheduleClicked
+    signal historyClicked
 
     id: caption
     z: 999
 
     Component.onCompleted: {
+
     }
 
-    function updateSize(width, height){
+    function updateSize(width, height) {
         lastWindowWidth = width
         lastWindowHeight = height
         mainWindow.width = lastWindowWidth
@@ -62,6 +67,7 @@ Item {
         anchors.leftMargin: 12
         anchors.verticalCenter: parent.verticalCenter
         source: "qrc:/qml/images/public/caption/logo.png"
+        mipmap: true
     }
 
     RowLayout {
@@ -80,7 +86,11 @@ Item {
             hoveredImage: 'qrc:/qml/images/public/caption/btn_close_hovered.png'
             pushedImage: 'qrc:/qml/images/public/caption/btn_close_pushed.png'
             onClicked: {
-                closeWindow()
+                if(pageLoader.source == "qrc:/qml/FrontPage.qml") {
+                    exitWindow.visible = true
+                } else {
+                    closeWindow()
+                }
             }
         }
         ImageButton {
@@ -101,26 +111,45 @@ Item {
             normalImage: 'qrc:/qml/images/public/caption/btn_max_normal.png'
             hoveredImage: 'qrc:/qml/images/public/caption/btn_max_hovered.png'
             pushedImage: 'qrc:/qml/images/public/caption/btn_max_pushed.png'
-            visible: pageLoader.source == "qrc:/qml/MeetingPage.qml" && Qt.platform.os === 'osx'
+            visible: pageLoader.source == "qrc:/qml/MeetingPage.qml"
+                     && Qt.platform.os === 'osx'
             onClicked: {
                 mainWindow.showFullScreen()
             }
         }
     }
 
-    CustomButton {
+    CustomImageButton {
         id: schedule
-        anchors.right: avatar.left
+        anchors.right: history.left
         anchors.rightMargin: 16
         anchors.verticalCenter: parent.verticalCenter
         visible: false
         width: 110
         height: 32
         highlighted: true
+        imageSource: "qrc:/qml/images/front/schedule.png"
         text: qsTr("Schedule")
         display: AbstractButton.TextBesideIcon
         onClicked: {
             scheduleClicked()
+        }
+    }
+
+    CustomImageButton {
+        id: history
+        anchors.right: avatar.left
+        anchors.rightMargin: 16
+        anchors.verticalCenter: parent.verticalCenter
+        visible: false
+        width: 110
+        height: 32
+        highlighted: false
+        text: qsTr("history")
+        display: AbstractButton.TextBesideIcon
+        imageSource: "qrc:/qml/images/front/history.png"
+        onClicked: {
+            historyClicked()
         }
     }
 
@@ -130,7 +159,8 @@ Item {
         anchors.rightMargin: 20
         anchors.verticalCenter: parent.verticalCenter
         nickname: authManager.appUserNick
-        visible: nickname !== '' && pageLoader.source == 'qrc:/qml/FrontPage.qml'
+        visible: nickname !== ''
+                 && pageLoader.source == 'qrc:/qml/FrontPage.qml'
         onVisibleChanged: {
             if (!visible) {
                 if (popupProfile !== undefined) {
@@ -147,7 +177,8 @@ Item {
         id: minButton
         width: 24
         height: 24
-        anchors.right: pageLoader.source == "qrc:/qml/MeetingPage.qml" ? maxButton.left : closeButton.left
+        anchors.right: pageLoader.source
+                       == "qrc:/qml/MeetingPage.qml" ? maxButton.left : closeButton.left
         anchors.rightMargin: 5
         anchors.verticalCenter: parent.verticalCenter
         visible: Qt.platform.os === 'windows'
@@ -168,17 +199,11 @@ Item {
         anchors.right: closeButton.left
         anchors.rightMargin: 8
         anchors.verticalCenter: parent.verticalCenter
-        visible: pageLoader.source === "qrc:/qml/MeetingPage.qml" && Qt.platform.os === 'windows'
-
-        normalImage: mainWindow.visibility === Window.Maximized
-                    ? "qrc:/qml/images/public/caption/btn_wnd_white_restore_normal.png"
-                    : "qrc:/qml/images/public/caption/btn_wnd_white_max_normal.png"
-        hoveredImage: mainWindow.visibility === Window.Maximized
-                    ? "qrc:/qml/images/public/caption/btn_wnd_white_restore_hovered.png"
-                    : "qrc:/qml/images/public/caption/btn_wnd_white_max_hovered.png"
-        pushedImage: mainWindow.visibility === Window.Maximized
-                    ? "qrc:/qml/images/public/caption/btn_wnd_white_restore_pushed.png"
-                    : "qrc:/qml/images/public/caption/btn_wnd_white_max_pushed.png"
+        visible: pageLoader.source === "qrc:/qml/MeetingPage.qml"
+                 && Qt.platform.os === 'windows'
+        normalImage: mainWindow.visibility === Window.Maximized ? "qrc:/qml/images/public/caption/btn_wnd_white_restore_normal.png" : "qrc:/qml/images/public/caption/btn_wnd_white_max_normal.png"
+        hoveredImage: mainWindow.visibility === Window.Maximized ? "qrc:/qml/images/public/caption/btn_wnd_white_restore_hovered.png" : "qrc:/qml/images/public/caption/btn_wnd_white_max_hovered.png"
+        pushedImage: mainWindow.visibility === Window.Maximized ? "qrc:/qml/images/public/caption/btn_wnd_white_restore_pushed.png" : "qrc:/qml/images/public/caption/btn_wnd_white_max_pushed.png"
 
         onClicked: {
             if (mainWindow.visibility === Window.Maximized) {
@@ -197,13 +222,18 @@ Item {
         anchors.rightMargin: 13
         anchors.verticalCenter: parent.verticalCenter
         visible: Qt.platform.os === 'windows'
+        Accessible.name : "Caption_close"
 
         normalImage: 'qrc:/qml/images/public/caption/btn_wnd_white_close_normal.png'
         hoveredImage: 'qrc:/qml/images/public/caption/btn_wnd_white_close_hovered.png'
         pushedImage: 'qrc:/qml/images/public/caption/btn_wnd_white_close_pushed.png'
 
         onClicked: {
-            closeWindow()
+            if(pageLoader.source == "qrc:/qml/FrontPage.qml") {
+                exitWindow.visible = true
+            } else {
+                closeWindow()
+            }
         }
     }
 

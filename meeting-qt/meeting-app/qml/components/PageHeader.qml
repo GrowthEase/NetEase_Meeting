@@ -21,6 +21,7 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
             source: "qrc:/qml/images/public/button/btn_left.svg"
+            mipmap: true
         }
     }
 

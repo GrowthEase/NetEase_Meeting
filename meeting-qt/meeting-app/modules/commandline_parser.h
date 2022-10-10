@@ -1,24 +1,18 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef COMMANDLINEPARSER_H
 #define COMMANDLINEPARSER_H
 
 #include <QObject>
 
-enum RunType
-{
-    kRunTypeKnown,
-    kRunTypeSSO
-};
+enum RunType { kRunTypeKnown, kRunTypeSSO };
 
-class CommandLineParser : public QObject
-{
+class CommandLineParser : public QObject {
     Q_OBJECT
 public:
-    explicit CommandLineParser(QObject *parent = nullptr);
+    explicit CommandLineParser(QObject* parent = nullptr);
     RunType parseCommandLine(const QGuiApplication& app);
 
     QString getSSOArguments() const;
@@ -32,4 +26,4 @@ private:
     QString m_ssoArguments;
 };
 
-#endif // COMMANDLINEPARSER_H
+#endif  // COMMANDLINEPARSER_H

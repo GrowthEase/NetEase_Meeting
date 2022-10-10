@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef NEM_SDK_INTERFACE_APP_MANAGER_HOSTING_MODULE_CLIENT_H_
 #define NEM_SDK_INTERFACE_APP_MANAGER_HOSTING_MODULE_CLIENT_H_
@@ -39,7 +38,7 @@ public:
 public:
     bool InitLocalEnviroment(int port);
     void OnInitLocalEnviroment(bool success);
-    NEMeetingSDKConfig getSDKConfig() const;
+    NEMeetingKitConfig getSDKConfig() const;
     void Uninit();
     void WriteLog(const QString& strLog);
 

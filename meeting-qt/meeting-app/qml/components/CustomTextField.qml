@@ -7,6 +7,9 @@ TextField {
     rightPadding: 35
     selectByMouse: true
     placeholderTextColor: "#B0B6BE"
+
+    Accessible.name: placeholderText
+
     background: Rectangle {
         y: control.height - height - control.bottomPadding + 8
         implicitWidth: 120
@@ -31,7 +34,10 @@ TextField {
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
             source: "qrc:/qml/images/public/button/btn_clear.svg"
+            mipmap: true
         }
+
+        Accessible.name: "clear"
     }
 
     onFocusChanged: {

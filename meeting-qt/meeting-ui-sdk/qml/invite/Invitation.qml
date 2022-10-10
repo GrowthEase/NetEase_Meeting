@@ -125,7 +125,7 @@ Window {
                             }
                         }
 
-                        if (meetingManager.meetingSIPChannelId !== '') {
+                        if (meetingManager.meetingSIPChannelId !== '' && !meetingManager.hideSip()) {
                             inviteInfo += '\r\n'
                             inviteInfo += qsTr('SIP Channel ID:') + meetingManager.meetingSIPChannelId
                         }

@@ -1,4 +1,8 @@
-﻿/**
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+
+/**
  * @file exception.h
  * @brief 异常码头文件
  * @copyright (c) 2014-2021, NetEase Inc. All rights reserved
@@ -16,15 +20,14 @@ NNEM_SDK_INTERFACE_BEGIN_DECLS
 /**
  * @brief 异常码
  */
-enum NEExceptionCode
-{
+enum NEExceptionCode {
     kBegin = 0,
-    kUISDKDisconnect,   /**< UI SDK 断开连接 */
-    kAppDisconnect,     /**< 应用层断开连接 */
-    kUnknown,           /**< 未知错误，或者不方便告诉你 */
+    kUISDKDisconnect, /**< UI SDK 断开连接 */
+    kAppDisconnect,   /**< 应用层断开连接 */
+    kUnknown,         /**< 未知错误，或者不方便告诉你 */
     kEnd = kUnknown
 };
 
 NNEM_SDK_INTERFACE_END_DECLS
 
-#endif //NEM_SDK_INTERFACE_DEFINE_EXCEPTION_H_
+#endif  // NEM_SDK_INTERFACE_DEFINE_EXCEPTION_H_

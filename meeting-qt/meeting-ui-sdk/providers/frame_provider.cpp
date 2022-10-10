@@ -1,25 +1,26 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "frame_provider.h"
 #include <QDebug>
+#include <QUuid>
 
 FrameProvider::FrameProvider(QObject* parent)
     : QObject(parent)
     , m_videoFormat(QSize(0, 0), QVideoFrame::Format_YUV420P)
     , m_videoSurface(nullptr)
     , m_iStreamFps(0) {
+    m_uuid = QUuid::createUuid().toString();
     m_timer.callOnTimeout([this]() {
         int istreamFps = m_iStreamFps / 2;
         m_iStreamFps = 0;
         if (istreamFps < 25 && m_iLastStreamFps != istreamFps) {
             m_iLastStreamFps = istreamFps;
-            YXLOG(Info) << "deliver Frame, m_accountId: " << m_accountId.toStdString() << ", FPS: " << istreamFps << YXLOGEnd;
+            // YXLOG(Info) << "deliver Frame, m_accountId: " << m_accountId.toStdString() << ", FPS: " << istreamFps << YXLOGEnd;
         } else if (istreamFps >= 25 && -1 != m_iLastStreamFps) {
             m_iLastStreamFps = -1;
-            YXLOG(Info) << "deliver Frame, m_accountId: " << m_accountId.toStdString() << ", FPS: " << istreamFps << YXLOGEnd;
+            // YXLOG(Info) << "deliver Frame, m_accountId: " << m_accountId.toStdString() << ", FPS: " << istreamFps << YXLOGEnd;
         }
         emit streamFpsChanged(istreamFps);
     });
@@ -39,7 +40,7 @@ void FrameProvider::deliverFrame(const QString& accountId, const QVideoFrame& fr
         return;
     }
 
-    if (accountId != m_accountId || (sub != m_subVideo)) {
+    if ((accountId != m_accountId && !accountId.isEmpty()) || (sub != m_subVideo)) {
         return;
     }
 

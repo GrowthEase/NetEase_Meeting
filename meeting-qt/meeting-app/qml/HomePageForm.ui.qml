@@ -8,10 +8,8 @@ import "components/"
 Item {
     id: root
 
-    property alias buttonJoin: buttonJoin
     property alias buttonLogin: buttonLogin
     property alias buttonSSO: buttonSSO
-    property alias buttonRegister: buttonRegister
     property alias privacyPolicy: privacyPolicy
     property alias userServiceAgreement: userServiceAgreement
     property alias privacyCheck: idPrivacyCheck
@@ -43,6 +41,7 @@ Item {
             anchors.top: container.top
             anchors.horizontalCenter: parent.horizontalCenter
             source: "qrc:/qml/images/logo.png"
+            mipmap: true
             horizontalAlignment: Text.AlignHCenter
         }
 
@@ -52,45 +51,22 @@ Item {
             anchors.topMargin: 73
 
             CustomButton {
-                id: buttonJoin
+                id: buttonLogin
                 Layout.preferredHeight: 50
                 Layout.preferredWidth: 320
-                text: qsTr("Join")
+                text: qsTr("Register/Login")
                 highlighted: true
                 font.pixelSize: 16
             }
 
-            CustomButton {
-                id: buttonLogin
-                Layout.preferredHeight: 50
-                Layout.preferredWidth: 320
-                text: qsTr("Login")
-                Layout.topMargin: 10
-                font.pixelSize: 16
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
+            LabelButton {
+                id: buttonSSO
+                text: qsTr("SSO")
+                Layout.topMargin: 6
                 Layout.preferredHeight: 30
                 Layout.alignment: Qt.AlignHCenter
-                spacing: 30
-                LabelButton {
-                    id: buttonRegister
-                    visible: false
-                    text: qsTr("Register")
-                    Layout.topMargin: 6
-                    Layout.preferredHeight: 30
-                    Layout.alignment: Qt.AlignHCenter
-                    font.pixelSize: 14
-                }
-                LabelButton {
-                    id: buttonSSO
-                    text: qsTr("SSO")
-                    Layout.topMargin: 6
-                    Layout.preferredHeight: 30
-                    Layout.alignment: Qt.AlignHCenter
-                    font.pixelSize: 14
-                }
+                font.pixelSize: 14
+                visible: false
             }
         }
     }

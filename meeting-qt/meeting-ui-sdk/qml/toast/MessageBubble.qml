@@ -6,11 +6,11 @@ import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 import "../components"
 Window{
-    id:root
+    id: root
     visible: false
     width: 240
     height: 60
-    flags:  Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
+    flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
 
     color: "transparent"
 
@@ -25,6 +25,12 @@ Window{
 
     Component.onCompleted: {
 
+    }
+
+    onVisibleChanged: {
+        if (Qt.platform.os === 'windows') {
+            visible ? shareManager.addExcludeShareWindow(root) : shareManager.removeExcludeShareWindow(root)
+        }
     }
 
     function toastChatMessage(sender, text, bshareScreen = false) {
@@ -121,10 +127,12 @@ Window{
             duration: fadeTime
         }
         onRunningChanged: {
-            if (!running)
-            root.hide();
-            else
-            root.show();
+            if (!running) {
+                root.hide();
+            }
+            else {
+                root.show();
+            }
         }
     }
 }

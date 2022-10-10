@@ -1,21 +1,19 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef VIDEO_WINDOW_H
 #define VIDEO_WINDOW_H
 
 #include <QQuickItem>
 
-class VideoWindow : public QQuickItem
-{
+class VideoWindow : public QQuickItem {
     Q_OBJECT
     Q_PROPERTY(QColor fillColor READ fillColor WRITE setfillColor NOTIFY fillColorChanged)
     Q_PROPERTY(QQuickItem* frontItem READ frontItem WRITE setFrontItem NOTIFY frontItemChanged)
 
 public:
-    explicit VideoWindow(QQuickItem *parent = nullptr);
+    explicit VideoWindow(QQuickItem* parent = nullptr);
     ~VideoWindow();
 
     // 设置视频窗口相对父窗口的位置和大小
@@ -48,4 +46,4 @@ private:
     QColor m_fillColor = Qt::black;
 };
 
-#endif // VIDEO_WINDOW_H
+#endif  // VIDEO_WINDOW_H

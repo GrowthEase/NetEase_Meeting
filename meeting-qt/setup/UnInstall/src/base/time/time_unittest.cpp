@@ -1,9 +1,7 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
-// Copyright (c) 2011, NetEase Inc. All rights reserved.
 //
 // Author: Ruan Liang <ruanliang@corp.netease.com>
 // Date: 2011/6/9
@@ -21,14 +19,12 @@ using nbase::TimeDelta;
 using nbase::TimeTicks;
 
 // TimeDelta Unittest
-TEST(TimeDelta, FromAndTo)
-{
+TEST(TimeDelta, FromAndTo) {
     EXPECT_TRUE(TimeDelta::FromDays(2) == TimeDelta::FromHours(48));
     EXPECT_TRUE(TimeDelta::FromHours(3) == TimeDelta::FromMinutes(180));
     EXPECT_TRUE(TimeDelta::FromMinutes(2) == TimeDelta::FromSeconds(120));
     EXPECT_TRUE(TimeDelta::FromSeconds(2) == TimeDelta::FromMilliseconds(2000));
-    EXPECT_TRUE(TimeDelta::FromMilliseconds(2) ==
-        TimeDelta::FromMicroseconds(2000));
+    EXPECT_TRUE(TimeDelta::FromMilliseconds(2) == TimeDelta::FromMicroseconds(2000));
 
     EXPECT_EQ(13, TimeDelta::FromDays(13).ToDays());
     EXPECT_EQ(13, TimeDelta::FromHours(13).ToHours());
@@ -40,8 +36,7 @@ TEST(TimeDelta, FromAndTo)
     EXPECT_EQ(13, TimeDelta::FromMicroseconds(13).ToMicroseconds());
 }
 
-TEST(TimeDelta, Operator)
-{
+TEST(TimeDelta, Operator) {
     EXPECT_EQ(1, (TimeDelta::FromDays(13) - TimeDelta::FromDays(12)).ToDays());
     EXPECT_EQ(5, (TimeDelta::FromHours(3) + TimeDelta::FromHours(2)).ToHours());
 
@@ -63,16 +58,14 @@ TEST(TimeDelta, TimeSpecConversion) {
     EXPECT_EQ(result.tv_sec, 0);
     EXPECT_EQ(result.tv_nsec, 1000);
 
-    result = TimeDelta::FromMicroseconds(
-        Time::kMicrosecondsPerSecond + 1).ToTimeSpec();
+    result = TimeDelta::FromMicroseconds(Time::kMicrosecondsPerSecond + 1).ToTimeSpec();
     EXPECT_EQ(result.tv_sec, 1);
     EXPECT_EQ(result.tv_nsec, 1000);
 }
 #endif  // OS_POSIX
 
 // TimeTicks Unittest
-TEST(TimeTicks, Delta)
-{
+TEST(TimeTicks, Delta) {
     TimeTicks ticks_start = TimeTicks::Now();
     nbase::Thread::Sleep(10);
     TimeTicks ticks_stop = TimeTicks::Now();
@@ -83,21 +76,18 @@ TEST(TimeTicks, Delta)
     EXPECT_EQ(delta.ToSeconds(), 0);
 }
 
-TEST(TimeTicks, HighResNow)
-{
+TEST(TimeTicks, HighResNow) {
     const int kTargetGranularityUs = 10000;  // 10ms
 
     bool success = false;
     int retries = 100;  // Arbitrary.
     TimeDelta delta;
-    while (!success && retries--)
-    {
+    while (!success && retries--) {
         TimeTicks ticks_start = TimeTicks::HighResNow();
         // Loop until we can detect that the clock has changed.  Non-HighRes timers
         // will increment in chunks, e.g. 10ms.  By spinning until we see a clock
         // change, we detect the minimum time between measurements.
-        do
-        {
+        do {
             delta = TimeTicks::HighResNow() - ticks_start;
         } while (delta.ToMilliseconds() == 0);
 
@@ -111,12 +101,11 @@ TEST(TimeTicks, HighResNow)
 }
 
 // Time Unittest
-TEST(Time, Construct)
-{
+TEST(Time, Construct) {
     Time t1(true, 2011, 6, 23, 16, 20, 0, 0);
 
     Time::TimeStruct ts;
-    ts.year_  = 2011;
+    ts.year_ = 2011;
     ts.month_ = 6;
     ts.day_of_month_ = 23;
     ts.hour_ = 16;
@@ -128,8 +117,7 @@ TEST(Time, Construct)
     EXPECT_TRUE(t1 == t2);
 }
 
-TEST(Time, TimeTAndTimeStruct)
-{
+TEST(Time, TimeTAndTimeStruct) {
     // C library time and exploded time.
     time_t now_t_1 = time(NULL);
     struct tm tms;
@@ -176,25 +164,22 @@ TEST(Time, TimeTAndTimeStruct)
     EXPECT_TRUE(t_a != t_b);
 }
 
-TEST(Time, Operator)
-{
+TEST(Time, Operator) {
     Time t_now = Time::Now();
     Time::TimeStruct ts_now = t_now.ToTimeStruct(true);
     Time t_a = Time::FromTimeStruct(true, ts_now);
     EXPECT_TRUE((t_now - t_a) < TimeDelta::FromSeconds(1));
 
     Time::TimeStruct ts_b = t_now.ToTimeStruct(true);
-	if (ts_now.day_of_month() < 30 && ts_now.month() != 2)
-	{
-		ts_b.day_of_month_ = ts_now.day_of_month() + 1;
-		Time t_b = Time::FromTimeStruct(true, ts_b);
-		EXPECT_TRUE(t_b > t_a);
-		EXPECT_TRUE((t_b - t_a) == TimeDelta::FromDays(1));
+    if (ts_now.day_of_month() < 30 && ts_now.month() != 2) {
+        ts_b.day_of_month_ = ts_now.day_of_month() + 1;
+        Time t_b = Time::FromTimeStruct(true, ts_b);
+        EXPECT_TRUE(t_b > t_a);
+        EXPECT_TRUE((t_b - t_a) == TimeDelta::FromDays(1));
 
-		Time t_c = t_a + TimeDelta::FromDays(1);
-		EXPECT_TRUE(t_c == t_b);
-	}
+        Time t_c = t_a + TimeDelta::FromDays(1);
+        EXPECT_TRUE(t_c == t_b);
+    }
 }
 
 #endif  // WITH_UNITTEST
-

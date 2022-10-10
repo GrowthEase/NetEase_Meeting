@@ -8,6 +8,14 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
@@ -16,9 +24,17 @@
       <Configuration>MinSizeRel</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="RelWithDebInfo|Win32">
       <Configuration>RelWithDebInfo</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -35,7 +51,17 @@
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
@@ -45,7 +71,17 @@
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
@@ -62,27 +98,51 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)Debug\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nem_hosting_module_client.dir\Debug\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">nem_hosting_module_clientd</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">nem_hosting_module_clientd</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.dll</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.dll</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</GenerateManifest>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)Release\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nem_hosting_module_client.dir\Release\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">nem_hosting_module_client</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">nem_hosting_module_client</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.dll</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.dll</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</GenerateManifest>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">..\..\output\nem_hosting_module_client\MinSizeRel\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">nem_hosting_module_client.dir\MinSizeRel\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">nem_hosting_module_client</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">nem_hosting_module_client</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">.dll</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.dll</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">false</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|Win32'">true</GenerateManifest>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</GenerateManifest>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">..\..\output\nem_hosting_module_client\RelWithDebInfo\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">nem_hosting_module_client.dir\RelWithDebInfo\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">nem_hosting_module_client</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">nem_hosting_module_client</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">.dll</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.dll</TargetExt>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">true</GenerateManifest>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(ProjectDir)Release\</OutDir>
+    <IntDir>nem_hosting_module_client.dir\Release\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(ProjectDir)Debug\</OutDir>
+    <IntDir>nem_hosting_module_client.dir\Debug\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -101,6 +161,7 @@
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WIN32;_WINDOWS;UNICODE;_UNICODE;TINYNET_EXPORTS;NEM_SDK_INTERFACE_COMPONENT_BUILD;NEM_SDK_INTERFACE_IMPLEMENTATION;CMAKE_INTDIR="Debug";nem_hosting_module_client_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;UNICODE;_UNICODE;TINYNET_EXPORTS;NEM_SDK_INTERFACE_COMPONENT_BUILD;NEM_SDK_INTERFACE_IMPLEMENTATION;CMAKE_INTDIR=\"Debug\";nem_hosting_module_client_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -128,6 +189,51 @@
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
     </ProjectReference>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\nem_hosting_module_client;..\..\nem_hosting_module_client\..;..\..\nem_hosting_module_client\..\nem_sdk_interface;..\..\nem_hosting_module_client\..\nem_sdk_interface_ipc_client;..\..\nem_hosting_module_client\..\third_party;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinyNET\include;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinySAK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;UNICODE;_UNICODE;TINYNET_EXPORTS;NEM_SDK_INTERFACE_COMPONENT_BUILD;NEM_SDK_INTERFACE_IMPLEMENTATION;CMAKE_INTDIR="Debug";nem_hosting_module_client_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;UNICODE;_UNICODE;TINYNET_EXPORTS;NEM_SDK_INTERFACE_COMPONENT_BUILD;NEM_SDK_INTERFACE_IMPLEMENTATION;CMAKE_INTDIR=\"Debug\";nem_hosting_module_client_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\nem_hosting_module_client;..\..\nem_hosting_module_client\..;..\..\nem_hosting_module_client\..\nem_sdk_interface;..\..\nem_hosting_module_client\..\nem_sdk_interface_ipc_client;..\..\nem_hosting_module_client\..\third_party;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinyNET\include;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinySAK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>..\..\nem_hosting_module_client;..\..\nem_hosting_module_client\..;..\..\nem_hosting_module_client\..\nem_sdk_interface;..\..\nem_hosting_module_client\..\nem_sdk_interface_ipc_client;..\..\nem_hosting_module_client\..\third_party;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinyNET\include;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinySAK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>jsoncpp_d.lib;tinyNETd.lib;tinySAKd.lib;libcryptod.lib;libssld.lib;Iphlpapi.lib;Winmm.lib;Crypt32.lib;Ws2_32.lib;..\nipclib\Debug\nipcd.lib;..\nem_hosting_module_core\Debug\nem_hosting_module_cored.lib;..\nem_hosting_module_protocol\Debug\nem_hosting_module_protocold.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../../third_party/jsoncpp/prebuild/windows/x64;../../third_party/jsoncpp/prebuild/windows/x64/$(Configuration);../../third_party/openssl/prebuild/windows/x64;../../third_party/openssl/prebuild/windows/x64/$(Configuration);../../third_party/doubanguo/tinyNET/prebuild/windows/x64;../../third_party/doubanguo/tinyNET/prebuild/windows/x64/$(Configuration);../../third_party/doubanguo/tinySAK/prebuild/windows/x64;../../third_party/doubanguo/tinySAK/prebuild/windows/x64/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:X64</AdditionalOptions>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>../nem_hosting_module_client/Debug/nem_hosting_module_clientd.lib</ImportLibrary>
+      <ProgramDataBaseFile>../nem_hosting_module_client/Debug/nem_hosting_module_clientd.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\..\nem_hosting_module_client;..\..\nem_hosting_module_client\..;..\..\nem_hosting_module_client\..\nem_sdk_interface;..\..\nem_hosting_module_client\..\nem_sdk_interface_ipc_client;..\..\nem_hosting_module_client\..\third_party;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinyNET\include;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinySAK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -144,6 +250,7 @@
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;TINYNET_EXPORTS;NEM_SDK_INTERFACE_COMPONENT_BUILD;NEM_SDK_INTERFACE_IMPLEMENTATION;CMAKE_INTDIR="Release";nem_hosting_module_client_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ObjectFileName>$(IntDir)</ObjectFileName>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;TINYNET_EXPORTS;NEM_SDK_INTERFACE_COMPONENT_BUILD;NEM_SDK_INTERFACE_IMPLEMENTATION;CMAKE_INTDIR=\"Release\";nem_hosting_module_client_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -161,6 +268,52 @@
       <AdditionalDependencies>jsoncpp.lib;tinyNET.lib;tinySAK.lib;libcrypto.lib;libssl.lib;Iphlpapi.lib;Winmm.lib;Crypt32.lib;Ws2_32.lib;..\nipclib\Release\nipc.lib;..\nem_hosting_module_core\Release\nem_hosting_module_core.lib;..\nem_hosting_module_protocol\Release\nem_hosting_module_protocol.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>../../third_party/jsoncpp/prebuild/windows/x86;../../third_party/jsoncpp/prebuild/windows/x86/$(Configuration);../../third_party/openssl/prebuild/windows/x86;../../third_party/openssl/prebuild/windows/x86/$(Configuration);../../third_party/doubanguo/tinyNET/prebuild/windows/x86;../../third_party/doubanguo/tinyNET/prebuild/windows/x86/$(Configuration);../../third_party/doubanguo/tinySAK/prebuild/windows/x86;../../third_party/doubanguo/tinySAK/prebuild/windows/x86/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:X86</AdditionalOptions>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>../nem_hosting_module_client/Release/nem_hosting_module_client.lib</ImportLibrary>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ProgramDataBaseFile>../nem_hosting_module_client/Release/nem_hosting_module_client.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\nem_hosting_module_client;..\..\nem_hosting_module_client\..;..\..\nem_hosting_module_client\..\nem_sdk_interface;..\..\nem_hosting_module_client\..\nem_sdk_interface_ipc_client;..\..\nem_hosting_module_client\..\third_party;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinyNET\include;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinySAK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;TINYNET_EXPORTS;NEM_SDK_INTERFACE_COMPONENT_BUILD;NEM_SDK_INTERFACE_IMPLEMENTATION;CMAKE_INTDIR="Release";nem_hosting_module_client_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;TINYNET_EXPORTS;NEM_SDK_INTERFACE_COMPONENT_BUILD;NEM_SDK_INTERFACE_IMPLEMENTATION;CMAKE_INTDIR=\"Release\";nem_hosting_module_client_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\nem_hosting_module_client;..\..\nem_hosting_module_client\..;..\..\nem_hosting_module_client\..\nem_sdk_interface;..\..\nem_hosting_module_client\..\nem_sdk_interface_ipc_client;..\..\nem_hosting_module_client\..\third_party;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinyNET\include;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinySAK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>..\..\nem_hosting_module_client;..\..\nem_hosting_module_client\..;..\..\nem_hosting_module_client\..\nem_sdk_interface;..\..\nem_hosting_module_client\..\nem_sdk_interface_ipc_client;..\..\nem_hosting_module_client\..\third_party;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinyNET\include;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinySAK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>jsoncpp.lib;tinyNET.lib;tinySAK.lib;libcrypto.lib;libssl.lib;Iphlpapi.lib;Winmm.lib;Crypt32.lib;Ws2_32.lib;..\nipclib\Release\nipc.lib;..\nem_hosting_module_core\Release\nem_hosting_module_core.lib;..\nem_hosting_module_protocol\Release\nem_hosting_module_protocol.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../../third_party/jsoncpp/prebuild/windows/x64;../../third_party/jsoncpp/prebuild/windows/x64/$(Configuration);../../third_party/openssl/prebuild/windows/x64;../../third_party/openssl/prebuild/windows/x64/$(Configuration);../../third_party/doubanguo/tinyNET/prebuild/windows/x64;../../third_party/doubanguo/tinyNET/prebuild/windows/x64/$(Configuration);../../third_party/doubanguo/tinySAK/prebuild/windows/x64;../../third_party/doubanguo/tinySAK/prebuild/windows/x64/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:X64</AdditionalOptions>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -217,6 +370,50 @@
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
     </ProjectReference>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\nem_hosting_module_client;..\..\nem_hosting_module_client\..;..\..\nem_hosting_module_client\..\nem_sdk_interface;..\..\nem_hosting_module_client\..\nem_sdk_interface_ipc_client;..\..\nem_hosting_module_client\..\third_party;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinyNET\include;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinySAK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;TINYNET_EXPORTS;NEM_SDK_INTERFACE_COMPONENT_BUILD;NEM_SDK_INTERFACE_IMPLEMENTATION;CMAKE_INTDIR="MinSizeRel";nem_hosting_module_client_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;TINYNET_EXPORTS;NEM_SDK_INTERFACE_COMPONENT_BUILD;NEM_SDK_INTERFACE_IMPLEMENTATION;CMAKE_INTDIR=\"MinSizeRel\";nem_hosting_module_client_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\nem_hosting_module_client;..\..\nem_hosting_module_client\..;..\..\nem_hosting_module_client\..\nem_sdk_interface;..\..\nem_hosting_module_client\..\nem_sdk_interface_ipc_client;..\..\nem_hosting_module_client\..\third_party;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinyNET\include;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinySAK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>..\..\nem_hosting_module_client;..\..\nem_hosting_module_client\..;..\..\nem_hosting_module_client\..\nem_sdk_interface;..\..\nem_hosting_module_client\..\nem_sdk_interface_ipc_client;..\..\nem_hosting_module_client\..\third_party;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinyNET\include;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinySAK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>jsoncpp.lib;tinyNET.lib;tinySAK.lib;libcrypto.lib;libssl.lib;Iphlpapi.lib;Winmm.lib;Crypt32.lib;Ws2_32.lib;..\nipclib\MinSizeRel\nipc.lib;..\nem_hosting_module_core\MinSizeRel\nem_hosting_module_core.lib;..\nem_hosting_module_protocol\MinSizeRel\nem_hosting_module_protocol.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/jsoncpp/prebuild/windows/x64;D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/jsoncpp/prebuild/windows/x64/$(Configuration);D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/openssl/prebuild/windows/x64;D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/openssl/prebuild/windows/x64/$(Configuration);D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/doubanguo/tinyNET/prebuild/windows/x64;D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/doubanguo/tinyNET/prebuild/windows/x64/$(Configuration);D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/doubanguo/tinySAK/prebuild/windows/x64;D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/doubanguo/tinySAK/prebuild/windows/x64/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:X64</AdditionalOptions>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>D:/code/meeting-sdk-desktop/meeting-ipc/output/nem_hosting_module_client/MinSizeRel/nem_hosting_module_client.lib</ImportLibrary>
+      <ProgramDataBaseFile>D:/code/meeting-sdk-desktop/meeting-ipc/output/nem_hosting_module_client/MinSizeRel/nem_hosting_module_client.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\..\nem_hosting_module_client;..\..\nem_hosting_module_client\..;..\..\nem_hosting_module_client\..\nem_sdk_interface;..\..\nem_hosting_module_client\..\nem_sdk_interface_ipc_client;..\..\nem_hosting_module_client\..\third_party;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinyNET\include;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinySAK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -250,6 +447,49 @@
       <AdditionalDependencies>jsoncpp.lib;tinyNET.lib;tinySAK.lib;libcrypto.lib;libssl.lib;Iphlpapi.lib;Winmm.lib;Crypt32.lib;Ws2_32.lib;..\nipclib\RelWithDebInfo\nipc.lib;..\nem_hosting_module_core\RelWithDebInfo\nem_hosting_module_core.lib;..\nem_hosting_module_protocol\RelWithDebInfo\nem_hosting_module_protocol.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/jsoncpp/prebuild/windows/x86;D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/jsoncpp/prebuild/windows/x86/$(Configuration);D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/openssl/prebuild/windows/x86;D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/openssl/prebuild/windows/x86/$(Configuration);D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/doubanguo/tinyNET/prebuild/windows/x86;D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/doubanguo/tinyNET/prebuild/windows/x86/$(Configuration);D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/doubanguo/tinySAK/prebuild/windows/x86;D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/doubanguo/tinySAK/prebuild/windows/x86/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalOptions>%(AdditionalOptions) /machine:X86</AdditionalOptions>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>D:/code/meeting-sdk-desktop/meeting-ipc/output/nem_hosting_module_client/RelWithDebInfo/nem_hosting_module_client.lib</ImportLibrary>
+      <ProgramDataBaseFile>D:/code/meeting-sdk-desktop/meeting-ipc/output/nem_hosting_module_client/RelWithDebInfo/nem_hosting_module_client.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\nem_hosting_module_client;..\..\nem_hosting_module_client\..;..\..\nem_hosting_module_client\..\nem_sdk_interface;..\..\nem_hosting_module_client\..\nem_sdk_interface_ipc_client;..\..\nem_hosting_module_client\..\third_party;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinyNET\include;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinySAK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;TINYNET_EXPORTS;NEM_SDK_INTERFACE_COMPONENT_BUILD;NEM_SDK_INTERFACE_IMPLEMENTATION;CMAKE_INTDIR="RelWithDebInfo";nem_hosting_module_client_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;UNICODE;_UNICODE;TINYNET_EXPORTS;NEM_SDK_INTERFACE_COMPONENT_BUILD;NEM_SDK_INTERFACE_IMPLEMENTATION;CMAKE_INTDIR=\"RelWithDebInfo\";nem_hosting_module_client_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\nem_hosting_module_client;..\..\nem_hosting_module_client\..;..\..\nem_hosting_module_client\..\nem_sdk_interface;..\..\nem_hosting_module_client\..\nem_sdk_interface_ipc_client;..\..\nem_hosting_module_client\..\third_party;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinyNET\include;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinySAK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>..\..\nem_hosting_module_client;..\..\nem_hosting_module_client\..;..\..\nem_hosting_module_client\..\nem_sdk_interface;..\..\nem_hosting_module_client\..\nem_sdk_interface_ipc_client;..\..\nem_hosting_module_client\..\third_party;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinyNET\include;..\..\nem_hosting_module_client\..\third_party\doubanguo\tinySAK\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>jsoncpp.lib;tinyNET.lib;tinySAK.lib;libcrypto.lib;libssl.lib;Iphlpapi.lib;Winmm.lib;Crypt32.lib;Ws2_32.lib;..\nipclib\RelWithDebInfo\nipc.lib;..\nem_hosting_module_core\RelWithDebInfo\nem_hosting_module_core.lib;..\nem_hosting_module_protocol\RelWithDebInfo\nem_hosting_module_protocol.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/jsoncpp/prebuild/windows/x64;D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/jsoncpp/prebuild/windows/x64/$(Configuration);D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/openssl/prebuild/windows/x64;D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/openssl/prebuild/windows/x64/$(Configuration);D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/doubanguo/tinyNET/prebuild/windows/x64;D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/doubanguo/tinyNET/prebuild/windows/x64/$(Configuration);D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/doubanguo/tinySAK/prebuild/windows/x64;D:/code/meeting-sdk-desktop/meeting-ipc/nem_hosting_module_client/../third_party/doubanguo/tinySAK/prebuild/windows/x64/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:X64</AdditionalOptions>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ImportLibrary>D:/code/meeting-sdk-desktop/meeting-ipc/output/nem_hosting_module_client/RelWithDebInfo/nem_hosting_module_client.lib</ImportLibrary>

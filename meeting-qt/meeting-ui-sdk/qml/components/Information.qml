@@ -21,6 +21,12 @@ Popup {
 
     }
 
+    onVisibleChanged: {
+        if(visible) {
+            sipRow.visible = meetingSIPChannelId !== '' && !meetingManager.hideSip()
+        }
+    }
+
     onMeetingHostChanged: {
         labelHostNick.text = membersManager.getNicknameByAccountId(meetingHost)
     }
@@ -30,6 +36,12 @@ Popup {
         onAfterUserJoined: {
             if (accountId === meetingHost) {
                 labelHostNick.text = membersManager.getNicknameByAccountId(meetingHost)
+            }
+        }
+
+        onAfterUserLeft: {
+            if (accountId === meetingHost) {
+                labelHostNick.text = ""
             }
         }
 
@@ -61,6 +73,7 @@ Popup {
                 Layout.preferredHeight: 15
                 Layout.preferredWidth: 15
                 source: 'qrc:/qml/images/meeting/information/icon_safety_certificate.png'
+                mipmap: true
             }
             Label {
                 text: qsTr('The meeting is being encrypted and protected')
@@ -112,6 +125,7 @@ Popup {
                 Layout.preferredWidth: 14
                 Layout.leftMargin: 18
                 source: 'qrc:/qml/images/meeting/information/icon_copy.png'
+                mipmap: true
                 MouseArea {
                     id: meetingShortIdCopyBtn
                     anchors.fill: parent
@@ -148,6 +162,7 @@ Popup {
                 Layout.preferredWidth: 14
                 Layout.leftMargin: 18
                 source: 'qrc:/qml/images/meeting/information/icon_copy.png'
+                mipmap: true
                 MouseArea {
                     id: meetingIdCopyBtn
                     anchors.fill: parent
@@ -182,6 +197,7 @@ Popup {
                 Layout.preferredWidth: 14
                 Layout.leftMargin: 18
                 source: 'qrc:/qml/images/meeting/information/icon_copy.png'
+                mipmap: true
                 MouseArea {
                     id: meetingPasswordCopyBtn
                     anchors.fill: parent
@@ -215,9 +231,10 @@ Popup {
             }
         }
         RowLayout {
+            id: sipRow
             Layout.fillWidth: true
             Layout.preferredHeight: 20
-            visible: meetingSIPChannelId !== ''
+            visible: false
             spacing: 0
             Label {
                 text: qsTr('SIP')
@@ -235,6 +252,7 @@ Popup {
                 Layout.preferredWidth: 14
                 Layout.leftMargin: 18
                 source: 'qrc:/qml/images/meeting/information/icon_copy.png'
+                mipmap: true
                 MouseArea {
                     id: meetingSIPCopyBtn
                     anchors.fill: parent

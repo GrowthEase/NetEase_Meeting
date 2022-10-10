@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "share_manager.h"
 #include "../auth_manager.h"
@@ -23,7 +22,7 @@ ShareManager::ShareManager(QObject* parent)
 
     qRegisterMetaType<NERoomScreenShareStatus>();
 
-    m_shareController = MeetingManager::getInstance()->getScreenShareController();
+    m_shareController = std::make_shared<NEMeetingScreenShareController>();
 
     connect(qApp, &QGuiApplication::screenAdded, [=](QScreen* addedScreen) {
         connect(addedScreen, &QScreen::virtualGeometryChanged, [=]() { emit screenSizeChanged(); });
@@ -56,6 +55,17 @@ ShareManager::ShareManager(QObject* parent)
     }
 }
 
+bool ShareManager::isExistScreen(const QString& name) const {
+    QList<QScreen*> screens = QGuiApplication::screens();
+    for (auto& it : screens) {
+        if (it->name() == name) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 ShareManager::~ShareManager() {
     if (m_pSharedOutsideWindow && nullptr == m_pSharedOutsideWindow->parent()) {
         delete m_pSharedOutsideWindow;
@@ -73,7 +83,7 @@ bool ShareManager::hasRecordPermission() {
 
 void ShareManager::openSystemSettings() {
 #ifdef Q_OS_MACX
-    openSettings();
+    openRecordSettings();
 #endif
 }
 
@@ -86,16 +96,43 @@ void ShareManager::onError(uint32_t errorCode, const std::string& errorMessage) 
     emit error(errorCode, QString::fromStdString(errorMessage));
 }
 
-void ShareManager::addShareWindow(QQuickWindow* pShareWindow) {
-    m_shareWindowList.push_back(pShareWindow);
+void ShareManager::addExcludeShareWindow(QQuickWindow* pShareWindow) {
+    m_excludeShareWindowList.emplace_back(pShareWindow);
+#ifdef Q_OS_WIN32
+    INERoomRtcController* pRtc = MeetingManager::getInstance()->getInRoomRtcController();
+    if (pRtc && 0 == m_shareAppId && !m_shareAccountId.isEmpty()) {
+        std::list<void*> excludedWindowList;
+        for (auto& it : m_excludeShareWindowList) {
+            excludedWindowList.push_back((void*)it->winId());
+        }
+        pRtc->setExcludeWindowList(excludedWindowList);
+    }
+#endif
 }
 
-void ShareManager::removeShareWindow(QQuickWindow* pShareWindow) {
-    m_shareWindowList.remove(pShareWindow);
+void ShareManager::removeExcludeShareWindow(QQuickWindow* pShareWindow) {
+    m_excludeShareWindowList.remove(pShareWindow);
+#ifdef Q_OS_WIN32
+    INERoomRtcController* pRtc = MeetingManager::getInstance()->getInRoomRtcController();
+    if (pRtc && 0 == m_shareAppId && !m_shareAccountId.isEmpty()) {
+        std::list<void*> excludedWindowList;
+        for (auto& it : m_excludeShareWindowList) {
+            excludedWindowList.emplace_back((void*)it->winId());
+        }
+        pRtc->setExcludeWindowList(excludedWindowList);
+    }
+#endif
 }
 
-void ShareManager::clearShareWindow() {
-    m_shareWindowList.clear();
+void ShareManager::clearExcludeShareWindow() {
+    m_excludeShareWindowList.clear();
+#ifdef Q_OS_WIN32
+    INERoomRtcController* pRtc = MeetingManager::getInstance()->getInRoomRtcController();
+    if (pRtc && 0 == m_shareAppId && !m_shareAccountId.isEmpty()) {
+        std::list<void*> excludedWindowList;
+        pRtc->setExcludeWindowList(excludedWindowList);
+    }
+#endif
 }
 
 void ShareManager::startScreenSharing(quint32 screenIndex) {
@@ -104,32 +141,35 @@ void ShareManager::startScreenSharing(quint32 screenIndex) {
     auto screens = QGuiApplication::screens();
     auto screen = screens.at(screenIndex);
 
-    NEMRectangle sourceRectangle;
+    NERectangle sourceRectangle;
     sourceRectangle.x = screen->geometry().x();
     sourceRectangle.y = screen->geometry().y();
     sourceRectangle.width = screen->geometry().width() * screen->devicePixelRatio();
     sourceRectangle.height = screen->geometry().height() * screen->devicePixelRatio();
 
-    NEMRectangle regionRectangle = {0, 0, 0, 0};
+    NERectangle regionRectangle;
 
-    for (auto& it : m_shareWindowList) {
-        excludedWindowList.push_back((void*)it->winId());
+    for (auto& it : m_excludeShareWindowList) {
+        excludedWindowList.emplace_back((void*)it->winId());
     }
-    m_shareController->startRectShare(sourceRectangle, regionRectangle, excludedWindowList, m_smoothPriority);
+    m_shareController->startRectShare(sourceRectangle, regionRectangle, excludedWindowList, m_smoothPriority,
+                                      [this](int code, const std::string& msg) {
+                                          MeetingManager::getInstance()->onError(code, msg);
+                                          if (code == 0) {
+#ifdef Q_OS_WIN32
+                                              if (m_shareSystemSound) {
+                                                  startSystemAudioLoopbackCapture();
+                                              }
+#endif
+                                          }
+                                      });
 #else
     auto nativeDisplayId = m_pHelper->getDisplayId(screenIndex);
-    for (auto& it : m_shareWindowList) {
-        excludedWindowList.push_back((void*)m_pHelper->getWindowId(it->winId()));
+    for (auto& it : m_excludeShareWindowList) {
+        excludedWindowList.emplace_back((void*)m_pHelper->getWindowId(it->winId()));
     }
     m_shareController->startScreenShare(nativeDisplayId, excludedWindowList, m_smoothPriority);
 #endif
-
-#ifdef Q_OS_WIN32
-    if (m_shareSystemSound) {
-        startSystemAudioLoopbackCapture();
-    }
-#endif
-    m_currentScreenIndex = screenIndex;
 }
 
 void ShareManager::startAppSharing(quint32 id) {
@@ -147,6 +187,7 @@ void ShareManager::startAppSharing(quint32 id) {
     bool bPpt = false;
     //转换成小写
     std::transform(strExe.begin(), strExe.end(), std::back_inserter(strDst), ::tolower);
+    YXLOG(Info) << "startAppShare by " << strExe << YXLOGEnd;
     if (strDst == "wps.exe" || strDst == "powerpnt.exe") {
         bPpt = true;
         if (strDst == "powerpnt.exe") {
@@ -154,44 +195,47 @@ void ShareManager::startAppSharing(quint32 id) {
         }
         bool bPowerpnt = false;
         bIsPptPlaying = m_pHelper->isPptPlaying(hWnd, bPowerpnt);
+        // YXLOG(Info) << "startAppShare by bIsPptPlaying bPpt " << bIsPptPlaying << bPpt << YXLOGEnd;
     }
 
-    // if (!bIsPptPlaying)
-    { m_pHelper->setForegroundWindow((HWND)id); }
+    if (!bIsPptPlaying) {
+        m_pHelper->setForegroundWindow((HWND)id);
+    }
 #elif defined(Q_OS_MACX)
     m_pHelper->setForegroundWindow(id);
 #endif
-    int ret = m_shareController->startAppShare((void*)id, m_smoothPriority);
-    if (kNENoError == ret) {
-        m_shareAppId = id;
-        m_pausedCount = kpausedCount;
+
+    m_shareController->startAppShare((void*)id, m_smoothPriority, [=](int code, const std::string& msg) {
+        MeetingManager::getInstance()->onError(code, msg);
+        if (code == 0) {
+            m_shareAppId = id;
+            m_pausedCount = kpausedCount;
 #ifdef Q_OS_WIN32
-        if ((!bIsPptPlaying && bPpt) || (bIsPptPlaying && hWnd != (HWND)id)) {
-            m_bPpt = true;
-        }
-#elif defined(Q_OS_MACX)
-        std::string strExe = m_pHelper->getModuleName(id);
-        std::string strDst;
-        //转换成小写
-        std::transform(strExe.begin(), strExe.end(), std::back_inserter(strDst), ::tolower);
-        if (0 == strDst.rfind("keynote", 0) || 0 == strDst.rfind("wps office", 0) || 0 == strDst.rfind("wpsoffice", 0)) {
-            m_bPpt = true;
-            if (0 == strDst.rfind("keynote", 0)) {
-                m_bPowerpnt = true;
+            if ((!bIsPptPlaying && bPpt) || (bIsPptPlaying && hWnd != (HWND)id)) {
+                m_bPpt = true;
             }
-            YXLOG(Info) << "startAppShare is 'keynote', 'wps office' or 'wpsoffice'." << YXLOGEnd;
-        }
+#elif defined(Q_OS_MACX)
+                uint32_t winId = id;
+                std::string strExe = m_pHelper->getModuleName(winId);
+                std::string strDst;
+                //转换成小写
+                std::transform(strExe.begin(), strExe.end(), std::back_inserter(strDst), ::tolower);
+                if (0 == strDst.rfind("keynote", 0) || 0 == strDst.rfind("wps office", 0) || 0 == strDst.rfind("wpsoffice", 0)) {
+                    m_bPpt = true;
+                    if (0 == strDst.rfind("keynote", 0)) {
+                        m_bPowerpnt = true;
+                    }
+                    YXLOG(Info) << "startAppShare is 'keynote', 'wps office' or 'wpsoffice'." << YXLOGEnd;
+                }
 #endif
 
 #ifdef Q_OS_WIN32
-        if (m_shareSystemSound) {
-            startSystemAudioLoopbackCapture();
-        }
+            if (m_shareSystemSound) {
+                startSystemAudioLoopbackCapture();
+            }
 #endif
-
-    } else {
-        YXLOG(Info) << "startAppShare failed." << YXLOGEnd;
-    }
+        }
+    });
 }
 
 void ShareManager::switchAppSharing(quint32 id) {
@@ -200,8 +244,7 @@ void ShareManager::switchAppSharing(quint32 id) {
 #elif defined(Q_OS_MACX)
     m_pHelper->setForegroundWindow(id);
 #endif
-    int ret = m_shareController->switchAppShare((void*)id, m_smoothPriority);
-    if (kNENoError != ret) {
+    if (m_shareController->switchAppShare((void*)id, m_smoothPriority)) {
         YXLOG(Info) << "switchAppSharing failed." << YXLOGEnd;
     } else {
 #ifdef Q_OS_WIN32
@@ -213,8 +256,7 @@ void ShareManager::switchAppSharing(quint32 id) {
 }
 
 void ShareManager::switchMonitorShare(const uint32_t& monitor_id, const std::list<void*>& excludedWindowList) {
-    int ret = m_shareController->switchMonitorShare(monitor_id, excludedWindowList, m_smoothPriority);
-    if (kNENoError != ret) {
+    if (m_shareController->switchMonitorShare(monitor_id, excludedWindowList, m_smoothPriority)) {
         YXLOG(Info) << "switchMonitorSharing failed." << YXLOGEnd;
     } else {
 #ifdef Q_OS_WIN32
@@ -225,42 +267,58 @@ void ShareManager::switchMonitorShare(const uint32_t& monitor_id, const std::lis
     }
 }
 
+bool ShareManager::isAppShared() const {
+    return 0 != m_shareAppId;
+}
+
 void ShareManager::stopScreenSharing(const QString& accountId) {
-    m_shareAppId = 0;
-    m_timer.stop();
-    auto pWindow = getSharedOutsideWindow();
-    if (pWindow) {
-        pWindow->hide();
-    }
+    auto callback = [this](int code, const std::string& msg) {
+        if (0 != code) {
+            MeetingManager::getInstance()->onError(code, msg);
+        } else {
+            stopScreenSharing();
+        }
+    };
 
-    int ret = 0;
+    bool ret = false;
     if (accountId == AuthManager::getInstance()->authAccountId()) {
-        ret = m_shareController->stopScreenShare(std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
+        ret = m_shareController->stopScreenShare(callback);
     } else {
-        ret = m_shareController->stopParticipantScreenShare(accountId.toStdString(), std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
+        ret = m_shareController->stopParticipantScreenShare(accountId.toStdString(), callback);
     }
 
-    if (kNENoError != ret) {
+    if (!ret) {
         YXLOG(Info) << "stopParticipantScreenShare failed." << YXLOGEnd;
     }
+}
+
+void ShareManager::stopScreenSharing() {
+    Invoker::getInstance()->execute([this]() {
+        m_shareAppId = 0;
+        m_timer.stop();
+        auto pWindow = getSharedOutsideWindow();
+        if (pWindow) {
+            pWindow->hide();
+        }
 
 #ifdef Q_OS_WIN32
-    if (m_shareSystemSound) {
-        stopSystemAudioLoopbackCapture();
-    }
+        if (m_shareSystemSound) {
+            stopSystemAudioLoopbackCapture();
+        }
 #endif
+    });
 }
 
 void ShareManager::pauseScreenSharing() {
     // G2 bug
-    if (m_shareController->pauseShare() == 0) {
+    if (m_shareController->pauseShare()) {
         setPaused(true);
     }
 }
 
 void ShareManager::resumeScreenSharing() {
     // G2 bug
-    if (m_shareController->resumeShare() == 0) {
+    if (m_shareController->resumeShare()) {
         setPaused(false);
     }
 }
@@ -269,22 +327,27 @@ void ShareManager::startSystemAudioLoopbackCapture() {
     m_shareController->startSystemAudioLoopbackCapture();
 }
 void ShareManager::stopSystemAudioLoopbackCapture() {
-    m_shareController->stopSystemAudioLoopbackCapture();
-}
-
-void ShareManager::fixScreenSharingPos() {
-    YXLOG(Info) << "fixScreenSharingPos." << YXLOGEnd;
-    stopScreenSharing(QString::fromStdString(AuthManager::getInstance()->getAuthInfo()->getAccountId()));
-    startScreenSharing(m_currentScreenIndex);
+    m_systemAudioLoopbackCapture = !m_shareController->stopSystemAudioLoopbackCapture();
 }
 
 void ShareManager::onSharingStatusChangedUI(const QString& userId, NERoomScreenShareStatus status) {
     if (status == kNERoomScreenShareStopByHost) {
         emit closeScreenShareByHost();
+        if (m_shareSystemSound) {
+            stopSystemAudioLoopbackCapture();
+        }
     }
 
     setShareAccountId(status == kNERoomScreenShareStatusStart ? userId : "");
+#ifdef Q_OS_WIN32
+    if (0 != m_shareAppId) {
+        setPaused(m_pHelper->isMinimized((HWND)m_shareAppId));
+    } else {
+        setPaused(false);
+    }
+#elif defined Q_OS_MACX
     setPaused(false);
+#endif
 }
 
 void ShareManager::dealwithPause(const QString& sharingAccountId, bool isSharing, bool isPause) {
@@ -325,17 +388,20 @@ QString ShareManager::shareAccountId() const {
 }
 
 void ShareManager::setShareAccountId(const QString& shareAccountId) {
-    if (shareAccountId != m_shareAccountId) {
-        m_shareAccountId = shareAccountId;
-        emit shareAccountIdChanged();
+    NEMeeting::Status status = MeetingManager::getInstance()->roomStatus();
+    if (NEMeeting::MEETING_CONNECTED == status || NEMeeting::MEETING_RECONNECTED == status) {
+    } else {
+        MeetingManager::getInstance()->getMeetingController()->getRoomInfo().screenSharingUserId = shareAccountId.toStdString();
+        return;
     }
 
+    m_shareAccountId = shareAccountId;
+    MeetingManager::getInstance()->getMeetingController()->getRoomInfo().screenSharingUserId = m_shareAccountId.toStdString();
+    MembersManager::getInstance()->handleShareAccountIdChanged();
+    emit shareAccountIdChanged();
+
     auto authInfo = AuthManager::getInstance()->getAuthInfo();
-    if (authInfo) {
-        setOwnerSharing(authInfo->getAccountId() == m_shareAccountId.toStdString());
-    } else {
-        setOwnerSharing(false);
-    }
+    setOwnerSharing(authInfo.accountId == m_shareAccountId.toStdString());
 }
 
 bool ShareManager::paused() const {
@@ -360,9 +426,8 @@ void ShareManager::setOwnerSharing(bool ownerSharing) {
         m_ownerSharing = ownerSharing;
         emit ownerSharingChanged(m_ownerSharing);
         if (!ownerSharing) {
-            bool bEnable = false;
-            if (0 == m_shareController->systemAudioLoopbackCapture(bEnable) && bEnable) {
-                m_shareController->stopSystemAudioLoopbackCapture();
+            if (m_systemAudioLoopbackCapture) {
+                stopSystemAudioLoopbackCapture();
             }
         }
     }
@@ -409,6 +474,7 @@ void ShareManager::onAppSharingPause() {
                     m_bPptPlay = true;
                     // m_pHelper->setForegroundWindow(hWnd);
                     switchAppSharing(quint32(hWnd));
+                    m_pHelper->setShowWindow((HWND)m_shareAppId, SW_MINIMIZE);
                 }
                 shareAppId = quint32(hWnd);
             } else {
@@ -471,7 +537,8 @@ void ShareManager::onAppSharingPause() {
                 pWindow->hide();
             }
 
-            stopScreenSharing(QString::fromStdString(AuthManager::getInstance()->getAuthInfo()->getAccountId()));
+            setPaused(true);
+            stopScreenSharing(QString::fromStdString(AuthManager::getInstance()->getAuthInfo().accountId));
             break;
         }
 #ifdef Q_OS_WIN32
@@ -577,8 +644,29 @@ void ShareManager::onAppSharingPause() {
                     }
                 } else {
                     m_bLatestFullScreen = false;
+#ifdef Q_OS_WIN32
+                    bool bShareAppIdForegroundWindow = m_pHelper->getForegroundWindow((HWND)shareAppId);
+                    bool bSharedOutsideForegroundWindow = m_pHelper->getForegroundWindow((HWND)pWindow->winId());
+                    if (bShareAppIdForegroundWindow && !m_bLatestForegroundWindow) {
+                        m_bLatestForegroundWindow = true;
+                        m_pHelper->setForegroundWindow((HWND)pWindow->winId());
+                    } else if (bSharedOutsideForegroundWindow) {
+                        m_pHelper->setForegroundWindow((HWND)shareAppId);
+                    }
+
+                    if (!bShareAppIdForegroundWindow && !bSharedOutsideForegroundWindow) {
+                        m_bLatestForegroundWindow = false;
+                    }
+
+                    if (m_bMiniRestored && m_pHelper->getForegroundWindow((HWND)shareAppId)) {
+                        pWindow->showMinimized();
+                        pWindow->showNormal();
+                        m_pHelper->setForegroundWindow((HWND)pWindow->winId());
+                    }
+#elif defined Q_OS_MACX
                     m_bLatestForegroundWindow = false;
-                    m_pHelper->sharedOutsideWindow(pWindow->winId(), (HWND)shareAppId, m_bLatestFullScreen);
+#endif
+                    m_pHelper->sharedOutsideWindow(pWindow->winId(), (HWND)shareAppId, false);
                 }
 
                 if (!pWindow->isVisible())

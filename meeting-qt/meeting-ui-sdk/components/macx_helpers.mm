@@ -1,8 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
-
+// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 #include "macx_helpers.h"
 //#include <qcocoaintegration.h>
 #import <AppKit/AppKit.h>
@@ -98,6 +96,12 @@ void MacXHelpers::setAppPolicy() {
     [NSApp setActivationPolicy:NSApplicationActivationPolicyProhibited];
 }
 
+void MacXHelpers::activeWindow(QWindow* window) const {
+    NSView* nativeView = reinterpret_cast<NSView*>(window->winId());
+    NSWindow* nativeWindow = nativeView.window;
+    [nativeWindow orderFront:nativeView.window];
+}
+
 bool MacXHelpers::isWindow(uint32_t winId) const {
     CFArrayRef window_array = CGWindowListCopyWindowInfo(kCGWindowListOptionIncludingWindow | kCGWindowListExcludeDesktopElements, CGWindowID(winId));
     if (window_array) {
@@ -185,7 +189,7 @@ QPixmap MacXHelpers::getCapture(uint32_t winId) const {
 
 bool MacXHelpers::getCaptureWindowList(MacXHelpers::CaptureTargetInfoList* windows) const {
     bool bRet = false;
-    CFArrayRef window_array = CGWindowListCopyWindowInfo(kCGWindowListOptionAll | kCGWindowListExcludeDesktopElements, kCGNullWindowID);
+    CFArrayRef window_array = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements, kCGNullWindowID);
     if (window_array) {
         CFIndex count = CFArrayGetCount(window_array);
         for (CFIndex i = 0; i < count; ++i) {
@@ -288,30 +292,25 @@ bool MacXHelpers::getWindowInfo(uint32_t winId, bool& isWindow, bool& isMinimize
         CFIndex count = CFArrayGetCount(window_array);
         for (CFIndex i = 0; i < count; ++i) {
             CFDictionaryRef window = reinterpret_cast<CFDictionaryRef>(CFArrayGetValueAtIndex(window_array, i));
-            if (!window)
-            {
+            if (!window) {
                 YXLOG(Info) << "!window" << YXLOGEnd;
                 continue;
             }
 
             CFNumberRef window_id = reinterpret_cast<CFNumberRef>(CFDictionaryGetValue(window, kCGWindowNumber));
-            if (!window_id)
-            {
+            if (!window_id) {
                 YXLOG(Info) << "!window_id" << YXLOGEnd;
                 continue;
             }
 
             NSNumber* windowId = (__bridge NSNumber*)window_id;
             uint32_t idTmp = [windowId longValue];
-            //YXLOG(Info) <<"-----------: "<< idTmp <<" " << winId << "." << YXLOGEnd;
+            // YXLOG(Info) <<"-----------: "<< idTmp <<" " << winId << "." << YXLOGEnd;
 
-            if (idTmp == winId)
-            {
+            if (idTmp == winId) {
                 isWindow = true;
-                //YXLOG(Info) << "isWindow = true." << YXLOGEnd;
-            }
-            else
-            {
+                // YXLOG(Info) << "isWindow = true." << YXLOGEnd;
+            } else {
                 continue;
             }
 
@@ -418,8 +417,7 @@ std::string MacXHelpers::getModuleName(uint32_t& winId) {
     return strApp;
 }
 
-bool MacXHelpers::isPptPlaying(uint32_t& winId, bool& bKeynote, const QScreen* pScreen) const
-{
+bool MacXHelpers::isPptPlaying(uint32_t& winId, bool& bKeynote, const QScreen* pScreen) const {
     bKeynote = false;
     bool bRet = false;
     CFArrayRef window_array = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements, kCGNullWindowID);
@@ -452,8 +450,7 @@ bool MacXHelpers::isPptPlaying(uint32_t& winId, bool& bKeynote, const QScreen* p
             std::string strApp;
             std::transform(strAppTmp.begin(), strAppTmp.end(), std::back_inserter(strApp), ::tolower);
             // YXLOG(Info) <<"strApp: "<< strApp <<", strAppTmp: " << strAppTmp << YXLOGEnd;
-            if (0 != strApp.rfind("keynote", 0) && 0 != strApp.rfind("wps office", 0) && 0 != strApp.rfind("wpsoffice", 0))
-            {
+            if (0 != strApp.rfind("keynote", 0) && 0 != strApp.rfind("wps office", 0) && 0 != strApp.rfind("wpsoffice", 0)) {
                 continue;
             }
 
@@ -469,32 +466,26 @@ bool MacXHelpers::isPptPlaying(uint32_t& winId, bool& bKeynote, const QScreen* p
 
             // YXLOG(Info) <<"strApp: "<< strApp <<", layer: " << layer << YXLOGEnd;
             bool bFind = false;
-            if (0 == strApp.rfind("keynote", 0) && layer > 0)
-            {
+            if (0 == strApp.rfind("keynote", 0) && layer > 0) {
                 CFDictionaryRef bounds = reinterpret_cast<CFDictionaryRef>(CFDictionaryGetValue(window, kCGWindowBounds));
-                if (bounds)
-                {
+                if (bounds) {
                     CGRect rectTmp;
                     CGRectMakeWithDictionaryRepresentation(bounds, &rectTmp);
                     QRectF rect = QRectF::fromCGRect(rectTmp);
                     QList<QScreen*> listScreen = qApp->screens();
-                    for (auto& screen : listScreen)
-                    {
-//                        qInfo() << "availableVirtualGeometry: "<<pScreen->availableVirtualGeometry() << screen->availableVirtualGeometry();
-//                        qInfo() << "virtualGeometry: "<<pScreen->virtualGeometry() << screen->virtualGeometry();
-//                        qInfo() << "name: "<<pScreen->name() << screen->name();
-//                        qInfo() << "geometry: "<<pScreen->geometry() << screen->geometry();
-//                        qInfo() << "screen: "<<pScreen << screen;
-                        if ((pScreen != nullptr ? pScreen == screen : 1) && screen->size() == rect.size().toSize())
-                        {
+                    for (auto& screen : listScreen) {
+                        //                        qInfo() << "availableVirtualGeometry: "<<pScreen->availableVirtualGeometry() <<
+                        //                        screen->availableVirtualGeometry(); qInfo() << "virtualGeometry: "<<pScreen->virtualGeometry() <<
+                        //                        screen->virtualGeometry(); qInfo() << "name: "<<pScreen->name() << screen->name(); qInfo() <<
+                        //                        "geometry: "<<pScreen->geometry() << screen->geometry(); qInfo() << "screen: "<<pScreen << screen;
+                        if ((pScreen != nullptr ? pScreen == screen : 1) && screen->size() == rect.size().toSize()) {
                             bKeynote = true;
                             bFind = true;
                         }
                     }
                 }
             }
-            if (!bFind && (0 == strApp.rfind("wps office", 0) || 0 == strApp.rfind("wpsoffice", 0)) && 0 == layer)
-            {
+            if (!bFind && (0 == strApp.rfind("wps office", 0) || 0 == strApp.rfind("wpsoffice", 0)) && 0 == layer) {
                 CFDictionaryRef bounds = reinterpret_cast<CFDictionaryRef>(CFDictionaryGetValue(window, kCGWindowBounds));
                 if (bounds) {
                     CGRect rectTmp;

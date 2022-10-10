@@ -1,18 +1,12 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
-
-// Copyright (c) 2014-2020 NetEase, Inc.
-// All right reserved.
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef LIVEMANAGER_H
 #define LIVEMANAGER_H
 
 #include <QObject>
-#include "controller/livestream_ctrl_interface.h"
-
-using namespace neroom;
+#include "controller/live_ctrl_interface.h"
 
 enum LiveStreamLayout { Gallery_layout = 1, Focus_layout = 2, No_Layout = 3 };
 
@@ -25,7 +19,7 @@ private:
 
 public:
     void onLiveStreamStatusChanged(int liveState);
-    void initLiveStreamStatus(int liveState);
+    void initLiveStreamStatus();
 
 public:
     SINGLETONG(LiveManager)
@@ -42,15 +36,20 @@ public:
     Q_INVOKABLE bool updateLive(QJsonObject liveParams);
     Q_INVOKABLE bool stopLive();
 
+private:
+    bool initLiveInfo();
+
 signals:
     void liveStateChanged(bool isLive, bool isJoin);
+    void liveStateChanged(int state);
     void liveUpdateFinished(bool success, QString errMsg);
     void liveStartFinished(bool success, QString errMsg);
     void liveStopFinished(bool success, QString errMsg);
 
 private:
-    INERoomLivingController* m_liveStreamController = nullptr;
-    NEInRoomLiveInfo m_liveParam;
+    neroom::NERoomLiveInfo m_liveInfo;
+    bool m_liveChatRoomEnable = false;
+    bool m_onlyEmployeesAllow = false;
 };
 
 #endif  // LIVEMANAGER_H

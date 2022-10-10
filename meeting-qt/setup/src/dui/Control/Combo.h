@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef UI_CONTROL_COMBO_H_
 #define UI_CONTROL_COMBO_H_
@@ -14,9 +13,9 @@ namespace ui {
 
 class CComboWnd;
 
-class UILIB_API Combo : public Box, public IListOwner
-{
+class UILIB_API Combo : public Box, public IListOwner {
     friend class CComboWnd;
+
 public:
     Combo();
 
@@ -29,14 +28,12 @@ public:
     CSize GetDropBoxSize() const;
     void SetDropBoxSize(CSize szDropBox);
 
-    int GetCurSel() const;  
+    int GetCurSel() const;
     virtual bool SelectItem(int iIndex, bool bTakeFocus = false, bool bTrigger = true) override;
-	void EnsureVisible(const UiRect& rcItem)
-	{
-	}
+    void EnsureVisible(const UiRect& rcItem) {}
     bool SetItemIndex(Control* pControl, std::size_t iIndex);
     virtual bool Add(Control* pControl) override;
-	virtual bool AddAt(Control* pControl, std::size_t iIndex) override;
+    virtual bool AddAt(Control* pControl, std::size_t iIndex) override;
     virtual bool Remove(Control* pControl) override;
     virtual bool RemoveAt(std::size_t iIndex) override;
     virtual void RemoveAll() override;
@@ -50,10 +47,10 @@ public:
 
     virtual void SetPos(UiRect rc) override;
     virtual void HandleMessage(EventArgs& event) override;
-	virtual void HandleMessageTemplate(EventArgs& event) override;
+    virtual void HandleMessageTemplate(EventArgs& event) override;
     virtual void SetAttribute(const std::wstring& pstrName, const std::wstring& pstrValue) override;
-    
-	virtual void Paint(HDC hDC, const UiRect& rcPaint) override;
+
+    virtual void Paint(HDC hDC, const UiRect& rcPaint) override;
     virtual void PaintText(HDC hDC) override;
 
 protected:
@@ -62,10 +59,10 @@ protected:
     UiRect m_rcTextPadding;
     std::wstring m_sDropBoxAttributes;
     CSize m_szDropBox;
-	ControlStateType m_uButtonState = ControlStateType::NORMAL;
-	Facade m_Facade;
+    ControlStateType m_uButtonState = ControlStateType::NORMAL;
+    Facade m_Facade;
 };
 
-} // namespace ui
+}  // namespace ui
 
-#endif // UI_CONTROL_COMBO_H_
+#endif  // UI_CONTROL_COMBO_H_

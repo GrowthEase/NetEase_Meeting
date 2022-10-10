@@ -14,6 +14,7 @@ Item {
     property bool whiteboardIsOpen: false
     property bool whiteboardIsJoinFinished: false
     property string whiteboardDefaultDownloadPath: ""
+    property alias jsBridge: jsBridge
 
     signal webLoadFinished();
     signal whiteboardLoadFinished()
@@ -23,9 +24,8 @@ Item {
     signal joinWriteBoardFailed(int errorCode, string errorMessage)
     signal leaveWriteBoard()
     signal writeBoardError(string errorMessage)
-    signal loginIMSucceed()
-    signal loginIMFailed(int errorCode, string errorMessage)
     signal downloadFinished(string path)
+    signal whiteboardGetAuth()
 
     WhiteboardJsBridge {
         id: jsBridge
@@ -64,16 +64,12 @@ Item {
             writeBoardError(errorMessage)
         }
 
-        onWebLoginIMSucceed: {
-            loginIMSucceed()
-        }
-
-        onWebLoginIMFailed: {
-            loginIMFailed(errorCode, errorMessage)
-        }
-
         onWebJsError: {
             writeBoardError(errorMessage)
+        }
+
+        onWebGetAuth: {
+            whiteboardGetAuth()
         }
     }
 
@@ -97,6 +93,12 @@ Item {
         profile.onDownloadFinished: {
             console.log("onDownloadFinished")
             downloadFinished(download.path)
+        }
+
+        onLoadingChanged: {
+            console.log("loadRequest.status", loadRequest.status)
+            console.log("loadRequest.errorDomain", loadRequest.errorDomain)
+            console.log("loadRequest.errorCode", loadRequest.errorCode, loadRequest.errorString)
         }
     }
 

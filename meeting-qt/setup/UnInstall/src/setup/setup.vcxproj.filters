@@ -1,0 +1,129 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="app">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="main">
+      <UniqueIdentifier>{2220d1d1-97fb-4d7b-944b-381dd3186dd1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="window">
+      <UniqueIdentifier>{e8fb9762-d570-47c5-b39e-2a42112b30c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{71e01558-c482-4789-8375-916920002b22}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Resource.h">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="setup.h">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="..\build\stdafx.h">
+      <Filter>app</Filter>
+    </ClInclude>
+    <ClInclude Include="main\main_thread.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="main\misc_thread.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="window\msg_box.h">
+      <Filter>window</Filter>
+    </ClInclude>
+    <ClInclude Include="main\setup_data.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\public.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\7zDec.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="window\setup_wnd.h">
+      <Filter>window</Filter>
+    </ClInclude>
+    <ClInclude Include="window\file_dialog_ex.h">
+      <Filter>window</Filter>
+    </ClInclude>
+    <ClInclude Include="window\async_do_modal.h">
+      <Filter>window</Filter>
+    </ClInclude>
+    <ClInclude Include="window\async_modal_runner.h">
+      <Filter>window</Filter>
+    </ClInclude>
+    <ClInclude Include="window\modal_wnd_base.h">
+      <Filter>window</Filter>
+    </ClInclude>
+    <ClInclude Include="window\licence_box.h">
+      <Filter>window</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="setup.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="..\build\stdafx.cpp">
+      <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="main\main_thread.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="main\misc_thread.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="window\msg_box.cpp">
+      <Filter>window</Filter>
+    </ClCompile>
+    <ClCompile Include="main\setup_data.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="window\setup_wnd.cpp">
+      <Filter>window</Filter>
+    </ClCompile>
+    <ClCompile Include="window\setup_misc.cpp">
+      <Filter>window</Filter>
+    </ClCompile>
+    <ClCompile Include="window\file_dialog_ex.cpp">
+      <Filter>window</Filter>
+    </ClCompile>
+    <ClCompile Include="window\async_do_modal.cpp">
+      <Filter>window</Filter>
+    </ClCompile>
+    <ClCompile Include="window\async_modal_runner.cpp">
+      <Filter>window</Filter>
+    </ClCompile>
+    <ClCompile Include="window\licence_box.cpp">
+      <Filter>window</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="setup.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="small.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="setup.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="zip1.bin">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res.zip" />
+  </ItemGroup>
+</Project>

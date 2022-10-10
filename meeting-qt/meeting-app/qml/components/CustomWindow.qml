@@ -8,7 +8,7 @@ import QtQuick.Controls.Material 2.12
 Window {
     id: rootWindow
 
-    property alias title: idDragArea.title
+    //property alias title: idDragArea.title
     property alias idLoader: idLoader
     property alias idMessage: idMessage
     property alias minVisible : idDragArea.minVisible
@@ -29,7 +29,7 @@ Window {
     color: "#00000000"
 
     Material.theme: Material.Light
-    flags: Qt.Window | Qt.FramelessWindowHint  | Qt.WindowStaysOnTopHint
+    flags: Qt.Window | Qt.FramelessWindowHint  | Qt.WindowStaysOnTopHint | Qt.MSWindowsFixedSizeDialogHint
 
     onCustomWidthChanged: {
         width = Qt.platform.os === 'windows' ? customWidth + 20 : customWidth
@@ -70,6 +70,8 @@ Window {
             anchors.margins: 1
             DragArea {
                 id: idDragArea
+                title: rootWindow.title
+                closeVisible: closeVisible
                 Layout.preferredHeight: 50
                 Layout.fillWidth: true
                 onCloseClicked: {

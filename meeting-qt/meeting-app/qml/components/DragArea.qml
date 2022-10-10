@@ -115,11 +115,15 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         anchors.right: parent.right
         anchors.rightMargin: 5
-        visible: Qt.platform.os === 'windows'
+        visible: Qt.platform.os === 'windows' && closeVisible
+
+        Accessible.name: "close"
+
         Image {
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
             source: "qrc:/qml/images/public/icons/close_gray.svg"
+            mipmap: true
         }
         onClicked: {
             closeClicked()

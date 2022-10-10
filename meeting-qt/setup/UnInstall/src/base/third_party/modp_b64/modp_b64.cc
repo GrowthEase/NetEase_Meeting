@@ -1,3 +1,6 @@
+// Copyright 2005, 2006, Nick Galbreath -- nickg [at] modp [dot] com
+// All rights reserved.
+ 
 /* -*- mode: c; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 4 -*- */
 /* vi: set expandtab shiftwidth=4 tabstop=4: */
 /**

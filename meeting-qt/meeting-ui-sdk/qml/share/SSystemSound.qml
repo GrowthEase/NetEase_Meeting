@@ -61,6 +61,7 @@ Window {
                 anchors.right: parent.right
                 anchors.rightMargin: 10
                 source: "qrc:/qml/images/public/icons/right_white.svg"
+                mipmap: true
             }
         }
 

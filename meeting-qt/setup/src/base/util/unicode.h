@@ -1,9 +1,7 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
-// Copyright (c) 2013, NetEase Inc. All rights reserved.
 //
 // Wang Rongtao <rtwang@corp.netease.com>
 // 2013/9/17
@@ -32,4 +30,4 @@ typedef UTF16String U16String;
 typedef std::basic_string<UTF32Char> UTF32String;
 typedef UTF32String U32String;
 
-#endif // BASE_UTIL_UNICODE_H_
+#endif  // BASE_UTIL_UNICODE_H_

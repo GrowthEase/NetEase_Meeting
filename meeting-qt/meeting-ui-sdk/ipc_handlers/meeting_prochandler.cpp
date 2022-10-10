@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "meeting_prochandler.h"
 #include <QUuid>
@@ -11,11 +10,13 @@
 #include <set>
 #include "manager/auth_manager.h"
 #include "manager/global_manager.h"
+#include "manager/meeting/audio_manager.h"
 #include "manager/meeting/members_manager.h"
+#include "manager/meeting/video_manager.h"
 #include "manager/meeting/whiteboard_manager.h"
 #include "manager/meeting_manager.h"
 #include "manager/more_item_manager.h"
-#include "settings_service_interface.h"
+#include "manager/settings_manager.h"
 
 #define MENU_ITEM_TITLE_LIMIT 10
 
@@ -29,11 +30,31 @@ bool NEMeetingServiceProcHandlerIMP::onStartMeeting(const NS_I_NEM_SDK::NEStartM
                                                     const NS_I_NEM_SDK::NEMeetingService::NEStartMeetingCallback& cb) {
     YXLOG_API(Info) << "Received start meeting request, meeting ID: " << param.meetingId << ", nickname: " << param.displayName
                     << ", enable audio: " << !opts.noAudio << ", enable video: " << !opts.noVideo << ", enable chatroom: " << !opts.noChat
-                    << ", enable invitation: " << !opts.noInvite << ", enable ScreenShare: " << !opts.noScreenShare
-                    << ", enable View: " << !opts.noView << ", meeting show options: " << opts.meetingIdDisplayOption
-                    << ", injected_more submenu size: " << opts.injected_more_menu_items_.size()
-                    << ", full_more submenu size: " << opts.full_more_menu_items_.size()
-                    << ", full_toolbar submenu size: " << opts.full_toolbar_menu_items_.size() << YXLOGEnd;
+                    << ", enable invitation: " << !opts.noInvite << ", enable screenShare: " << !opts.noScreenShare
+                    << ", enable view: " << !opts.noView << ", meeting show options: " << opts.meetingIdDisplayOption
+                    << ", enable sip: " << !opts.noSip << ", enable bAudioAINSEnabled: " << opts.audioAINSEnabled
+                    << ", showMemberTag: " << opts.showMemberTag << ", extraData: " << param.extraData << ", joinTimeout: " << opts.joinTimeout
+                    << ", enable noMuteAllVideo: " << opts.noMuteAllVideo << ", full_more submenu size: " << opts.full_more_menu_items_.size()
+                    << ", full_toolbar submenu size: " << opts.full_toolbar_menu_items_.size()
+                    << ", showMeetingRemainingTip: " << opts.showMeetingRemainingTip
+                    << ", enableFileMessage: " << opts.chatroomConfig.enableFileMessage
+                    << ", enableImageMessage: " << opts.chatroomConfig.enableImageMessage << YXLOGEnd;
+
+    for (auto control : param.controls) {
+        YXLOG_API(Info) << "control.attendeeOff" << control.attendeeOff << YXLOGEnd;
+        YXLOG_API(Info) << "control.type" << control.type << YXLOGEnd;
+    }
+
+    for (auto iter = param.roleBinds.begin(); iter != param.roleBinds.end(); iter++) {
+        YXLOG_API(Info) << "roleBinds userId: " << iter->first << ", role: " << iter->second << YXLOGEnd;
+    }
+
+    if (m_startMeetingCallback != nullptr) {
+        if (cb != nullptr) {
+            cb(NS_I_NEM_SDK::ERROR_CODE_FAILED, tr("Frequent operation, please try again later").toStdString());
+        }
+        return false;
+    }
 
     QStringList listError;
     do {
@@ -57,26 +78,8 @@ bool NEMeetingServiceProcHandlerIMP::onStartMeeting(const NS_I_NEM_SDK::NEStartM
             if (!checkOptions(opts.full_more_menu_items_, false)) {
                 listError << tr("%1 or %2 in %3 is invalid").arg("title", "image", "full_more_menu_items_");
             }
-        } else {
-            if (opts.injected_more_menu_items_.size() > 0) {
-                std::vector<NEMeetingMenuItem> items(opts.full_toolbar_menu_items_.begin(), opts.full_toolbar_menu_items_.end());
-                items.insert(items.end(), opts.injected_more_menu_items_.begin(), opts.injected_more_menu_items_.end());
-                if (!checkOptionsEx(items)) {
-                    listError << tr("the %1 of the %2 and the %3 cannot be duplicated")
-                                     .arg("itemId", "full_toolbar_menu_items_", "injected_more_menu_items_");
-                }
-                if (opts.injected_more_menu_items_.size() > 3) {
-                    listError << tr("%1 cannot exceed %2 items").arg("injected_more_menu_items_", "3");
-                }
-                if (!checkOptionsId(opts.injected_more_menu_items_, true)) {
-                    listError << tr("%1 in %2 cannot be less than %3").arg("itemId", "injected_more_menu_items_", "NEM_MORE_MENU_USER_INDEX");
-                }
-                if (!checkOptions(opts.injected_more_menu_items_, true)) {
-                    listError << tr("%1 in %2 is invalid").arg("itemTitle", "injected_more_menu_items_");
-                }
-            }
         }
-        if (opts.full_more_menu_items_.empty() && opts.injected_more_menu_items_.empty()) {
+        if (opts.full_more_menu_items_.empty()) {
             if (!checkOptionsEx(opts.full_toolbar_menu_items_)) {
                 listError << tr("%1 in %2 cannot be duplicated").arg("itemId", "full_toolbar_menu_items_");
             }
@@ -89,6 +92,17 @@ bool NEMeetingServiceProcHandlerIMP::onStartMeeting(const NS_I_NEM_SDK::NEStartM
         }
         if (!checkOptions(opts.full_toolbar_menu_items_, false)) {
             listError << tr("%1 or %2 in %3 is invalid").arg("title", "image", "full_toolbar_menu_items_");
+        }
+
+        auto isDigit = [](const std::string& str) {
+            for (char const& c : str) {
+                if (std::isdigit(c) == 0)
+                    return false;
+            }
+            return true;
+        };
+        if (!param.password.empty() && (param.password.length() < 4 || !isDigit(param.password))) {
+            listError << tr("The password must contain at least %1 digits").arg(4);
         }
     } while (0);
 
@@ -111,6 +125,7 @@ bool NEMeetingServiceProcHandlerIMP::onStartMeeting(const NS_I_NEM_SDK::NEStartM
 
     auto meetingStatus = MeetingManager::getInstance()->getRoomStatus();
     if (NEMeeting::MEETING_IDLE != meetingStatus) {
+        YXLOG(Info) << "getRoomStatus, meetingStatus: " << meetingStatus << YXLOGEnd;
         if (cb) {
             cb(NS_I_NEM_SDK::MEETING_ERROR_ALREADY_INMEETING, tr("The last meeting is not end yet.").toStdString());
         }
@@ -118,28 +133,57 @@ bool NEMeetingServiceProcHandlerIMP::onStartMeeting(const NS_I_NEM_SDK::NEStartM
         return true;
     }
 
+    if (!param.meetingId.empty() && param.meetingId != AuthManager::getInstance()->getAuthInfo().personalRoomId) {
+        YXLOG_API(Info) << "Only supports personal meeting ID" << YXLOGEnd;
+        if (cb) {
+            cb(NS_I_NEM_SDK::MEETING_ERROR_FAILED_PARAM_ERROR, tr("Only supports personal meeting ID.").toStdString());
+        }
+        return false;
+    }
+
     m_startMeetingCallback = cb;
 
     Invoker::getInstance()->execute([=]() {
-        NEStartRoomParams params;
-        NEStartRoomOptions options;
-        params.roomId = param.meetingId;
-        params.displayName = param.displayName;
-        options.noAudio = opts.noAudio;
-        options.noVideo = opts.noVideo;
-        options.noAutoOpenWhiteboard =
-            !((opts.defaultWindowMode == WHITEBOARD_MODE) && GlobalManager::getInstance()->getGlobalConfig()->isWhiteboardSupported());
+        NERoomOptions options;
+        if (!opts.noVideo && !VideoManager::getInstance()->hasCameraPermission()) {
+            options.noVideo = true;
+        } else {
+            options.noVideo = opts.noVideo;
+        }
+
+        if (!opts.noAudio && !AudioManager::getInstance()->hasMicrophonePermission()) {
+            options.noAudio = true;
+        } else {
+            options.noAudio = opts.noAudio;
+        }
+
+        options.noAutoOpenWhiteboard = !((opts.defaultWindowMode == WHITEBOARD_MODE) &&
+                                         GlobalManager::getInstance()->getGlobalConfig()->isWhiteboardSupported() && !opts.noWhiteboard);
         options.noCloudRecord = opts.noCloudRecord;
+        options.noChat = opts.noChat;
+        options.noSip = opts.noSip;
 
         WhiteboardManager::getInstance()->setAutoOpenWhiteboard(!options.noAutoOpenWhiteboard);
         MeetingManager::getInstance()->setMeetingIdDisplayOption((NEMeeting::MeetingIdDisplayOptions)opts.meetingIdDisplayOption);
+        MeetingManager::getInstance()->setShowMeetingRemainingTip(opts.showMeetingRemainingTip &&
+                                                                  GlobalManager::getInstance()->getGlobalConfig()->isEndTimeTipSupported());
         MeetingManager::getInstance()->setHideChatroom(opts.noChat);
         MeetingManager::getInstance()->setHideInvitation(opts.noInvite);
         MeetingManager::getInstance()->setHideScreenShare(opts.noScreenShare);
         MeetingManager::getInstance()->setHideView(opts.noView);
         MeetingManager::getInstance()->setHideWhiteboard(opts.noWhiteboard);
+        MeetingManager::getInstance()->setHideSip(opts.noSip);
+        MeetingManager::getInstance()->setHideMuteAllVideo(opts.noMuteAllVideo);
+        MeetingManager::getInstance()->setHideMuteAllAudio(opts.noMuteAllAudio);
         MeetingManager::getInstance()->setReName(!opts.noRename);
+        MeetingManager::getInstance()->setJoinTimeout(opts.joinTimeout <= 0 ? 45 * 1000 : opts.joinTimeout);
+        MeetingManager::getInstance()->setShowMemberTag(opts.showMemberTag);
+        MeetingManager::getInstance()->setEnableFileMessage(opts.chatroomConfig.enableFileMessage &&
+                                                            GlobalManager::getInstance()->getGlobalConfig()->isFileMessageSupported());
+        MeetingManager::getInstance()->setEnableImageMessage(opts.chatroomConfig.enableImageMessage &&
+                                                             GlobalManager::getInstance()->getGlobalConfig()->isImageMessageSupported());
         MoreItemManager::getInstance()->setMoreItemInjected(opts.full_more_menu_items_.empty());
+        SettingsManager::getInstance()->setEnableAudioAINS(opts.audioAINSEnabled);
         if (opts.full_more_menu_items_.size() > 0) {
             QVector<MoreItem> items;
             for (auto& item : opts.full_more_menu_items_) {
@@ -157,26 +201,9 @@ bool NEMeetingServiceProcHandlerIMP::onStartMeeting(const NS_I_NEM_SDK::NEStartM
                 items.push_back(it);
             }
             MoreItemManager::getInstance()->initializeMore(items);
-        } else {
-            QVector<MoreItem> items;
-            for (auto& item : opts.injected_more_menu_items_) {
-                YXLOG(Info) << "Insert submenu to more button list, menu id: " << item.itemId << ", title: " << item.itemTitle
-                            << ", image: " << item.itemImage << YXLOGEnd;
-                MoreItem it;
-                it.itemIndex = item.itemId;
-                it.itemGuid = QUuid::createUuid().toString();
-                it.itemTitle = QString::fromStdString(item.itemTitle);
-                it.itemImagePath = MoreItemManager::getInstance()->strPathToPath(item.itemImage);
-                //                it.itemTitle2 = QString::fromStdString(item.itemTitle2);
-                //                it.itemImagePath2 = MoreItemManager::getInstance()->strPathToPath(item.itemImage2);
-                it.itemVisibility = MoreItemManager::getInstance()->switchVisibility(item.itemVisibility);
-                it.itemCheckedIndex = item.itemCheckedIndex;
-                items.push_back(it);
-            }
-            MoreItemManager::getInstance()->initializeMore(items);
         }
 
-        if (opts.injected_more_menu_items_.empty() && opts.full_more_menu_items_.empty()) {
+        if (opts.full_more_menu_items_.empty()) {
             MoreItemManager::getInstance()->restoreMore();
         }
 
@@ -200,7 +227,7 @@ bool NEMeetingServiceProcHandlerIMP::onStartMeeting(const NS_I_NEM_SDK::NEStartM
         } else {
             MoreItemManager::getInstance()->restoreToolbar();
         }
-        MeetingManager::getInstance()->createMeeting(params, options);
+        MeetingManager::getInstance()->createMeeting(param, options);
     });
 
     return true;
@@ -209,222 +236,67 @@ bool NEMeetingServiceProcHandlerIMP::onStartMeeting(const NS_I_NEM_SDK::NEStartM
 bool NEMeetingServiceProcHandlerIMP::onJoinMeeting(const NS_I_NEM_SDK::NEJoinMeetingParams& param,
                                                    const NS_I_NEM_SDK::NEJoinMeetingOptions& opts,
                                                    const NS_I_NEM_SDK::NEMeetingService::NEJoinMeetingCallback& cb) {
-    QString strPassword = param.password.empty() ? "null" : "not null";
-    YXLOG_API(Info) << "Received join meeting request, meeting ID: " << param.meetingId << ", nickname: " << param.displayName
-                    << ", password: " << strPassword.toStdString() << ", enable audio: " << !opts.noAudio << ", enable video: " << !opts.noVideo
-                    << ", enable chatroom: " << !opts.noChat << ", enable invitation: " << !opts.noInvite
-                    << ", enable ScreenShare: " << !opts.noScreenShare << ", enable View: " << !opts.noView
-                    << ", meeting show options: " << opts.meetingIdDisplayOption
-                    << ", injected_more submenu size: " << opts.injected_more_menu_items_.size()
-                    << ", full_more submenu size: " << opts.full_more_menu_items_.size()
-                    << ", full_toolbar submenu size: " << opts.full_toolbar_menu_items_.size() << YXLOGEnd;
+    YXLOG_API(Info) << "Received join meeting request" << YXLOGEnd;
+    return joinMeeting(param, opts, cb);
+}
 
-    QStringList listError;
-    do {
-        if (opts.full_more_menu_items_.size() > 0) {
-            std::vector<NEMeetingMenuItem> items(opts.full_toolbar_menu_items_.begin(), opts.full_toolbar_menu_items_.end());
-            items.insert(items.end(), opts.full_more_menu_items_.begin(), opts.full_more_menu_items_.end());
-            if (!checkOptionsEx(items)) {
-                listError
-                    << tr("the %1 of the %2 and the %3 cannot be duplicated").arg("itemId", "full_toolbar_menu_items_", "full_more_menu_items_");
-            }
-            if (!checkOptionsVisibility(opts.full_more_menu_items_, 10)) {
-                listError << tr("%1 cannot exceed %2 items").arg("full_more_menu_items_", "10");
-            }
-            if (!checkOptionsId(opts.full_more_menu_items_, false)) {
-                listError << tr("%1 in %2 cannot be less than %3").arg("itemId", "full_more_menu_items_", "kFirstinjectedMenuId");
-            }
-            if (!checkOptionsExMore(opts.full_more_menu_items_)) {
-                listError << tr("%1 can not add %2, %3, %4, %5")
-                                 .arg("full_more_menu_items_", "kMicMenuId", "kCameraMenuId", "kMangeParticipantsMenuId", "kChatMenuId");
-            }
-            if (!checkOptions(opts.full_more_menu_items_, false)) {
-                listError << tr("%1 or %2 in %3 is invalid").arg("title", "image", "full_more_menu_items_");
-            }
-        } else {
-            if (opts.injected_more_menu_items_.size() > 0) {
-                std::vector<NEMeetingMenuItem> items(opts.full_toolbar_menu_items_.begin(), opts.full_toolbar_menu_items_.end());
-                items.insert(items.end(), opts.injected_more_menu_items_.begin(), opts.injected_more_menu_items_.end());
-                if (!checkOptionsEx(items)) {
-                    listError << tr("the %1 of the %2 and the %3 cannot be duplicated")
-                                     .arg("itemId", "full_toolbar_menu_items_", "injected_more_menu_items_");
-                }
-                if (opts.injected_more_menu_items_.size() > 3) {
-                    listError << tr("%1 cannot exceed %2 items").arg("injected_more_menu_items_", "3");
-                }
-                if (!checkOptionsId(opts.injected_more_menu_items_, true)) {
-                    listError << tr("%1 in %2 cannot be less than %3").arg("itemId", "injected_more_menu_items_", "NEM_MORE_MENU_USER_INDEX");
-                }
-                if (!checkOptions(opts.injected_more_menu_items_, true)) {
-                    listError << tr("%1 in %2 is invalid").arg("itemTitle", "injected_more_menu_items_");
-                }
-            }
-        }
-        if (opts.full_more_menu_items_.empty() && opts.injected_more_menu_items_.empty()) {
-            if (!checkOptionsEx(opts.full_toolbar_menu_items_)) {
-                listError << tr("%1 in %2 cannot be duplicated").arg("itemId", "full_toolbar_menu_items_");
-            }
-        }
-        if (!checkOptionsVisibility(opts.full_toolbar_menu_items_, 7)) {
-            listError << tr("%1 cannot exceed %2 items").arg("full_toolbar_menu_items_", "7");
-        }
-        if (!checkOptionsId(opts.full_toolbar_menu_items_, false)) {
-            listError << tr("%1 in %2 cannot be less than %3").arg("itemId", "full_toolbar_menu_items_", "kFirstinjectedMenuId");
-        }
-        if (!checkOptions(opts.full_toolbar_menu_items_, false)) {
-            listError << tr("%1 or %2 in %3 is invalid").arg("title", "image", "full_toolbar_menu_items_");
-        }
-    } while (0);
-
-    if (!listError.isEmpty()) {
-        if (cb) {
-            QString strError;
-            strError.append(tr("Invalid params:"));
-            strError.append("\n");
-            int listSize = listError.size();
-            for (int i = 0; i < listSize; i++) {
-                strError.append(listError.at(i));
-                if (i != listSize - 1) {
-                    strError.append("\n");
-                }
-            }
-            cb(NS_I_NEM_SDK::MEETING_ERROR_FAILED_PARAM_ERROR, strError.toStdString());
-        }
-        return false;
-    }
-
-    auto meetingStatus = MeetingManager::getInstance()->getRoomStatus();
-    if (NEMeeting::MEETING_IDLE != meetingStatus) {
-        if (cb) {
-            cb(NS_I_NEM_SDK::MEETING_ERROR_ALREADY_INMEETING, tr("The last meeting is not end yet.").toStdString());
-        }
-
-        return true;
-    }
-
-    m_joinMeetingCallback = cb;
+bool NEMeetingServiceProcHandlerIMP::onAnonymousJoinMeeting(const NEJoinMeetingParams& param,
+                                                            const NEJoinMeetingOptions& opts,
+                                                            const NEMeetingService::NEJoinMeetingCallback& cb) {
+    YXLOG_API(Info) << "Received anonymous join meeting request" << YXLOGEnd;
 
     Invoker::getInstance()->execute([=]() {
-        MeetingManager::getInstance()->setMeetingIdDisplayOption((NEMeeting::MeetingIdDisplayOptions)opts.meetingIdDisplayOption);
-        MeetingManager::getInstance()->setHideChatroom(opts.noChat);
-        MeetingManager::getInstance()->setHideInvitation(opts.noInvite);
-        MeetingManager::getInstance()->setHideScreenShare(opts.noScreenShare);
-        MeetingManager::getInstance()->setHideView(opts.noView);
-        MeetingManager::getInstance()->setHideWhiteboard(opts.noWhiteboard);
-        MeetingManager::getInstance()->setReName(!opts.noRename);
-        MoreItemManager::getInstance()->setMoreItemInjected(opts.full_more_menu_items_.empty());
-        if (opts.full_more_menu_items_.size() > 0) {
-            QVector<MoreItem> items;
-            for (auto& item : opts.full_more_menu_items_) {
-                YXLOG(Info) << "Insert submenu to more button list, menu id: " << item.itemId << ", title: " << item.itemTitle
-                            << ", image: " << item.itemImage << YXLOGEnd;
-                MoreItem it;
-                it.itemIndex = item.itemId;
-                it.itemGuid = QUuid::createUuid().toString();
-                it.itemTitle = QString::fromStdString(item.itemTitle);
-                it.itemImagePath = MoreItemManager::getInstance()->strPathToPath(item.itemImage);
-                it.itemTitle2 = QString::fromStdString(item.itemTitle2);
-                it.itemImagePath2 = MoreItemManager::getInstance()->strPathToPath(item.itemImage2);
-                it.itemVisibility = MoreItemManager::getInstance()->switchVisibility(item.itemVisibility);
-                it.itemCheckedIndex = item.itemCheckedIndex;
-                items.push_back(it);
+        AuthManager::getInstance()->doAnonymousLogin([=](int code, const std::string& msg) {
+            if (code == 0) {
+                joinMeeting(param, opts, cb);
+            } else {
+                if (cb) {
+                    cb((nem_sdk_interface::NEErrorCode)code, msg);
+                }
             }
-            MoreItemManager::getInstance()->initializeMore(items);
-        } else {
-            QVector<MoreItem> items;
-            for (auto& item : opts.injected_more_menu_items_) {
-                YXLOG(Info) << "Insert submenu to more button list, menu id: " << item.itemId << ", title: " << item.itemTitle
-                            << ", image: " << item.itemImage << YXLOGEnd;
-                MoreItem it;
-                it.itemIndex = item.itemId;
-                it.itemGuid = QUuid::createUuid().toString();
-                it.itemTitle = QString::fromStdString(item.itemTitle);
-                it.itemImagePath = MoreItemManager::getInstance()->strPathToPath(item.itemImage);
-                //                it.itemTitle2 = QString::fromStdString(item.itemTitle2);
-                //                it.itemImagePath2 = MoreItemManager::getInstance()->strPathToPath(item.itemImage2);
-                it.itemVisibility = MoreItemManager::getInstance()->switchVisibility(item.itemVisibility);
-                it.itemCheckedIndex = item.itemCheckedIndex;
-                items.push_back(it);
-            }
-            MoreItemManager::getInstance()->initializeMore(items);
-        }
-
-        if (opts.injected_more_menu_items_.empty() && opts.full_more_menu_items_.empty()) {
-            MoreItemManager::getInstance()->restoreMore();
-        }
-
-        if (opts.full_toolbar_menu_items_.size() != 0) {
-            QVector<MoreItem> items;
-            for (auto& item : opts.full_toolbar_menu_items_) {
-                YXLOG(Info) << "Insert submenu to toolbar button list, menu id: " << item.itemId << ", title: " << item.itemTitle
-                            << ", image: " << item.itemImage << YXLOGEnd;
-                MoreItem it;
-                it.itemIndex = item.itemId;
-                it.itemGuid = QUuid::createUuid().toString();
-                it.itemTitle = QString::fromStdString(item.itemTitle);
-                it.itemImagePath = MoreItemManager::getInstance()->strPathToPath(item.itemImage);
-                it.itemTitle2 = QString::fromStdString(item.itemTitle2);
-                it.itemImagePath2 = MoreItemManager::getInstance()->strPathToPath(item.itemImage2);
-                it.itemVisibility = MoreItemManager::getInstance()->switchVisibility(item.itemVisibility);
-                it.itemCheckedIndex = item.itemCheckedIndex;
-                items.push_back(it);
-            }
-            MoreItemManager::getInstance()->initializeToolbar(items);
-        } else {
-            MoreItemManager::getInstance()->restoreToolbar();
-        }
-
-        if (AuthManager::getInstance()->getAuthStatus() == kAuthLoginSuccessed) {
-            YXLOG(Info) << "Invoke join meeting." << YXLOGEnd;
-        } else {
-            YXLOG(Info) << "Invoke anonjoin meeting." << YXLOGEnd;
-        }
-
-        NEJoinRoomParams params;
-        NEJoinRoomOptions options;
-        params.roomId = param.meetingId;
-        params.password = param.password;
-        params.displayName = param.displayName;
-        options.noAudio = opts.noAudio;
-        options.noVideo = opts.noVideo;
-        options.noAutoOpenWhiteboard =
-            !((opts.defaultWindowMode == WHITEBOARD_MODE) && GlobalManager::getInstance()->getGlobalConfig()->isWhiteboardSupported());
-
-        WhiteboardManager::getInstance()->setAutoOpenWhiteboard(!options.noAutoOpenWhiteboard);
-        MeetingManager::getInstance()->joinMeeting(params, options);
+        });
     });
-
     return true;
 }
 
 bool NEMeetingServiceProcHandlerIMP::onLeaveMeeting(bool finish, const nem_sdk_interface::NEMeetingService::NELeaveMeetingCallback& cb) {
-    YXLOG_API(Info) << "Received leave meeting request, finish: " << finish << YXLOGEnd;
+    YXLOG_API(Info) << "Received onLeaveMeeting, finish: " << finish << YXLOGEnd;
+    if (m_leaveMeetingCallback != nullptr) {
+        if (cb != nullptr) {
+            cb(NS_I_NEM_SDK::ERROR_CODE_FAILED, tr("Frequent operation, please try again later").toStdString());
+        }
+
+        return false;
+    }
 
     m_leaveMeetingCallback = cb;
     Invoker::getInstance()->execute([=]() {
         if (finish) {
-            auto meetingInfo = MeetingManager::getInstance()->getMeetingInfo();
-            if (!meetingInfo) {
-                cb(NS_I_NEM_SDK::ERROR_CODE_FAILED, tr("The meeting has not yet started.").toStdString());
-                return;
-            }
-
-            auto authInfo = AuthManager::getInstance()->getAuthInfo();
-            if (!authInfo) {
+            if (kAuthLoginSuccessed != AuthManager::getInstance()->getAuthStatus()) {
                 cb(NS_I_NEM_SDK::ERROR_CODE_FAILED, tr("Did not logged in.").toStdString());
+                m_leaveMeetingCallback = nullptr;
                 return;
             }
 
-            if (meetingInfo->getHostUserId() != authInfo->getAccountId()) {
+            auto meetingStatus = MeetingManager::getInstance()->getRoomStatus();
+            if (meetingStatus != NEMeeting::MEETING_CONNECTED && meetingStatus != NEMeeting::MEETING_RECONNECTED) {
+                cb(NS_I_NEM_SDK::ERROR_CODE_FAILED, tr("The meeting has not yet started.").toStdString());
+                m_leaveMeetingCallback = nullptr;
+                return;
+            }
+
+            if (MeetingManager::getInstance()->getMeetingInfo().hostAccountId != AuthManager::getInstance()->getAuthInfo().accountId) {
                 cb(NS_I_NEM_SDK::ERROR_CODE_FAILED, tr("You have no permission").toStdString());
+                m_leaveMeetingCallback = nullptr;
                 return;
             }
 
             MeetingManager::getInstance()->leaveMeeting(true);
         } else {
             auto meetingStatus = MeetingManager::getInstance()->getRoomStatus();
-            if (meetingStatus != NEMeeting::MEETING_CONNECTED) {
+            if (meetingStatus != NEMeeting::MEETING_CONNECTED && meetingStatus != NEMeeting::MEETING_RECONNECTED) {
                 cb(NS_I_NEM_SDK::ERROR_CODE_FAILED, "The meeting has not yet started.");
+                m_leaveMeetingCallback = nullptr;
                 return;
             }
             MeetingManager::getInstance()->leaveMeeting(false);
@@ -438,48 +310,54 @@ bool NEMeetingServiceProcHandlerIMP::onGetCurrentMeetingInfo(const nem_sdk_inter
     YXLOG_API(Info) << "Received get current meeting info request." << YXLOGEnd;
     Invoker::getInstance()->execute([=]() {
         auto authInfo = AuthManager::getInstance()->getAuthInfo();
-        if (!authInfo) {
+
+        if (kAuthLoginSuccessed != AuthManager::getInstance()->getAuthStatus()) {
+            cb(NS_I_NEM_SDK::ERROR_CODE_FAILED, "", NS_I_NEM_SDK::NEMeetingInfo());
+            return;
+        }
+
+        auto meetingStatus = MeetingManager::getInstance()->getRoomStatus();
+        if (meetingStatus != NEMeeting::MEETING_CONNECTED && meetingStatus != NEMeeting::MEETING_RECONNECTED) {
             cb(NS_I_NEM_SDK::ERROR_CODE_FAILED, "", NS_I_NEM_SDK::NEMeetingInfo());
             return;
         }
 
         auto meetingInfo = MeetingManager::getInstance()->getMeetingInfo();
-        if (meetingInfo) {
-            NS_I_NEM_SDK::NEMeetingInfo info;
-            info.isHost = authInfo->getAccountId() == meetingInfo->getHostUserId();
-            info.isLocked = meetingInfo->getLocked();
-            info.meetingId = meetingInfo->getRoomId();
-            info.shortMeetingId = meetingInfo->getShortRoomId();
-            info.duration = MeetingManager::getInstance()->meetingDuration() * 1000;
-            info.hostUserId = meetingInfo->getHostUserId();
-            info.meetingUniqueId = std::atoll(meetingInfo->getRoomUniqueId().c_str());
-            info.password = meetingInfo->getPassword();
-            info.subject = meetingInfo->getSubject();
-            info.startTime = meetingInfo->getCreatedTime() * 1000;
-            info.sipId = meetingInfo->getSIPId();
-
-            if (meetingInfo->getRoomType() == kNERoomScheduled) {
-                info.scheduleStartTime = meetingInfo->getSheduleStartTime();
-                info.scheduleEndTime = meetingInfo->getSheduleEndTime();
-            } else {
-                info.scheduleStartTime = -1;
-                info.scheduleEndTime = -1;
-            }
-
-            QVector<MemberInfo> userList = MembersManager::getInstance()->items();
-            for (auto item : userList) {
-                NS_I_NEM_SDK::NEInMeetingUserInfo user;
-                user.userId = item.accountId.toStdString();
-                user.userName = item.nickname.toStdString();
-                info.userList.push_back(user);
-            }
-            YXLOG(Info) << "Got current meeting info, meeting ID: " << info.meetingId << ", shortId: " << info.shortMeetingId
-                        << ", is host: " << info.isHost << ", is locked: " << info.isLocked << ", duration: " << info.duration
-                        << ", sipId: " << info.sipId << YXLOGEnd;
-            cb(NS_I_NEM_SDK::ERROR_CODE_SUCCESS, "", info);
+        NS_I_NEM_SDK::NEMeetingInfo info;
+        info.isHost = authInfo.accountId == meetingInfo.hostAccountId;
+        info.isLocked = meetingInfo.lock;
+        info.meetingId = meetingInfo.roomId;
+        info.shortMeetingId = meetingInfo.shortRoomId;
+        info.duration = MeetingManager::getInstance()->meetingDuration() * 1000;
+        info.hostUserId = meetingInfo.hostAccountId;
+        info.meetingUniqueId = std::atoll(meetingInfo.roomUniqueId.c_str());
+        info.password = meetingInfo.password;
+        info.subject = meetingInfo.subject;
+        info.startTime = meetingInfo.startTime;
+        info.sipId = meetingInfo.sipId;
+        info.extraData = meetingInfo.extraData;
+        info.meetingCreatorId = meetingInfo.creatorUserId;
+        info.meetingCreatorName = meetingInfo.creatorUserName;
+        if (NEMeetingType::schduleType == meetingInfo.type) {
+            info.scheduleStartTime = meetingInfo.scheduleTimeBegin;
+            info.scheduleEndTime = meetingInfo.scheduleTimeEnd;
         } else {
-            cb(NS_I_NEM_SDK::ERROR_CODE_FAILED, "", NS_I_NEM_SDK::NEMeetingInfo());
+            info.scheduleStartTime = -1;
+            info.scheduleEndTime = -1;
         }
+
+        QVector<MemberInfo> userList = MembersManager::getInstance()->items();
+        for (auto item : userList) {
+            NS_I_NEM_SDK::NEInMeetingUserInfo user;
+            user.userId = item.accountId.toStdString();
+            user.userName = item.nickname.toStdString();
+            user.tag = item.tag.toStdString();
+            info.userList.push_back(user);
+        }
+        YXLOG(Info) << "Got current meeting info, meeting ID: " << info.meetingId << ", shortId: " << info.shortMeetingId
+                    << ", is host: " << info.isHost << ", is locked: " << info.isLocked << ", duration: " << info.duration
+                    << ", sipId: " << info.sipId << YXLOGEnd;
+        cb(NS_I_NEM_SDK::ERROR_CODE_SUCCESS, "", info);
     });
 
     return true;
@@ -521,55 +399,55 @@ void NEMeetingServiceProcHandlerIMP::onInjectedMenuItemClickExReturn(int itemId,
 void NEMeetingServiceProcHandlerIMP::onSubscribeRemoteAudioStream(const std::string& accountId,
                                                                   bool subscribe,
                                                                   const NS_I_NEM_SDK::NEEmptyCallback& cb) {
-    YXLOG_API(Info) << "Received onSubscribeRemoteAudioStream, accountId: " << accountId << ", subscribe: " << subscribe << YXLOGEnd;
-    auto meetingInfo = MeetingManager::getInstance()->getMeetingInfo();
-    if (!meetingInfo) {
-        if (cb) {
-            cb((nem_sdk_interface::NEErrorCode)2200, tr("The meeting is not in progress").toStdString());
-        }
-        return;
-    }
+    //    YXLOG_API(Info) << "Received onSubscribeRemoteAudioStream, accountId: " << accountId << ", subscribe: " << subscribe << YXLOGEnd;
+    //    auto meetingInfo = MeetingManager::getInstance()->getMeetingInfo();
+    //    if (!meetingInfo) {
+    //        if (cb) {
+    //            cb((nem_sdk_interface::NEErrorCode)2200, tr("The meeting is not in progress").toStdString());
+    //        }
+    //        return;
+    //    }
 
-    Invoker::getInstance()->execute([=]() {
-        auto membersController = MeetingManager::getInstance()->getUserController();
-        auto audioController = MeetingManager::getInstance()->getInRoomAudioController();
-        if (!membersController || !audioController) {
-            if (cb) {
-                cb((nem_sdk_interface::NEErrorCode)2200, tr("The meeting is not in progress").toStdString());
-            }
-            return;
-        }
+    //    Invoker::getInstance()->execute([=]() {
+    //        auto membersController = MeetingManager::getInstance()->getUserController();
+    //        auto audioController = MeetingManager::getInstance()->getInRoomAudioController();
+    //        if (!membersController || !audioController) {
+    //            if (cb) {
+    //                cb((nem_sdk_interface::NEErrorCode)2200, tr("The meeting is not in progress").toStdString());
+    //            }
+    //            return;
+    //        }
 
-        if (QString::fromStdString(accountId).trimmed().isEmpty()) {
-            if (cb) {
-                cb((nem_sdk_interface::NEErrorCode)300, tr("%1 is null").arg("accountId").toStdString());
-            }
-            return;
-        } else if (accountId == AuthManager::getInstance()->getAuthInfo()->getAccountId()) {
-            if (cb) {
-                cb((nem_sdk_interface::NEErrorCode)300, tr("You can't subscribe to your own audio").toStdString());
-            }
-            return;
-        }
+    //        if (QString::fromStdString(accountId).trimmed().isEmpty()) {
+    //            if (cb) {
+    //                cb((nem_sdk_interface::NEErrorCode)300, tr("%1 is null").arg("accountId").toStdString());
+    //            }
+    //            return;
+    //        } else if (accountId == AuthManager::getInstance()->getAuthInfo()->getAccountId()) {
+    //            if (cb) {
+    //                cb((nem_sdk_interface::NEErrorCode)300, tr("You can't subscribe to your own audio").toStdString());
+    //            }
+    //            return;
+    //        }
 
-        SharedUserPtr memberPtr = GlobalManager::getInstance()->getInRoomService()->getUserInfoById(accountId);
-        if (!memberPtr) {
-            if (cb) {
-                cb((nem_sdk_interface::NEErrorCode)2101, tr("Member is not in the meeting").toStdString());
-            }
-            return;
-        }
+    //        SharedUserPtr memberPtr = GlobalManager::getInstance()->getInRoomService()->getUserInfoById(accountId);
+    //        if (!memberPtr) {
+    //            if (cb) {
+    //                cb((nem_sdk_interface::NEErrorCode)2101, tr("Member is not in the meeting").toStdString());
+    //            }
+    //            return;
+    //        }
 
-        if (subscribe) {
-            audioController->subscribeRemoteAudioStream(std::vector<std::string>{accountId});
-        } else {
-            audioController->unsubscribeRemoteAudioStream(std::vector<std::string>{accountId});
-        }
+    //        if (subscribe) {
+    //            audioController->subscribeRemoteAudioStream(std::vector<std::string>{accountId});
+    //        } else {
+    //            audioController->unsubscribeRemoteAudioStream(std::vector<std::string>{accountId});
+    //        }
 
-        if (cb) {
-            cb(NS_I_NEM_SDK::ERROR_CODE_SUCCESS, "");
-        }
-    });
+    //        if (cb) {
+    //            cb(NS_I_NEM_SDK::ERROR_CODE_SUCCESS, "");
+    //        }
+    //    });
 }
 
 void NEMeetingServiceProcHandlerIMP::onSubscribeRemoteAudioStreams(const std::vector<std::string>& accountIdList,
@@ -579,112 +457,115 @@ void NEMeetingServiceProcHandlerIMP::onSubscribeRemoteAudioStreams(const std::ve
     for (auto& it : accountIdList) {
         strTmp += it;
     }
-    YXLOG_API(Info) << "Received onSubscribeRemoteAudioStreams, accountIdList: " << strTmp << ", subscribe: " << subscribe << YXLOGEnd;
-    auto meetingInfo = MeetingManager::getInstance()->getMeetingInfo();
-    if (!meetingInfo) {
-        if (cb) {
-            cb((nem_sdk_interface::NEErrorCode)2200, tr("The meeting is not in progress").toStdString());
-        }
-        return;
-    }
+    //    YXLOG_API(Info) << "Received onSubscribeRemoteAudioStreams, accountIdList: " << strTmp << ", subscribe: " << subscribe << YXLOGEnd;
+    //    auto meetingInfo = MeetingManager::getInstance()->getMeetingInfo();
+    //    if (!meetingInfo) {
+    //        if (cb) {
+    //            cb((nem_sdk_interface::NEErrorCode)2200, tr("The meeting is not in progress").toStdString());
+    //        }
+    //        return;
+    //    }
 
-    Invoker::getInstance()->execute([=]() {
-        auto membersController = MeetingManager::getInstance()->getUserController();
-        auto audioController = MeetingManager::getInstance()->getInRoomAudioController();
-        if (!membersController || !audioController) {
-            if (cb) {
-                cb((nem_sdk_interface::NEErrorCode)2200, tr("The meeting is not in progress").toStdString());
-            }
-            return;
-        }
+    //    Invoker::getInstance()->execute([=]() {
+    //        auto membersController = MeetingManager::getInstance()->getUserController();
+    //        auto audioController = MeetingManager::getInstance()->getInRoomAudioController();
+    //        if (!membersController || !audioController) {
+    //            if (cb) {
+    //                cb((nem_sdk_interface::NEErrorCode)2200, tr("The meeting is not in progress").toStdString());
+    //            }
+    //            return;
+    //        }
 
-        if (accountIdList.empty()) {
-            if (cb) {
-                cb((nem_sdk_interface::NEErrorCode)300, tr("%1 list is null").arg("accountId").toStdString());
-            }
-            return;
-        } else {
-            auto authAccountId = AuthManager::getInstance()->getAuthInfo()->getAccountId();
-            auto it =
-                std::find_if(accountIdList.begin(), accountIdList.end(), [authAccountId](const std::string& id) { return id == authAccountId; });
-            if (accountIdList.end() != it) {
-                if (cb) {
-                    cb((nem_sdk_interface::NEErrorCode)300, tr("You can't subscribe to your own audio").toStdString());
-                }
-                return;
-            }
+    //        if (accountIdList.empty()) {
+    //            if (cb) {
+    //                cb((nem_sdk_interface::NEErrorCode)300, tr("%1 list is null").arg("accountId").toStdString());
+    //            }
+    //            return;
+    //        } else {
+    //            auto authAccountId = AuthManager::getInstance()->getAuthInfo()->getAccountId();
+    //            auto it =
+    //                std::find_if(accountIdList.begin(), accountIdList.end(), [authAccountId](const std::string& id) { return id == authAccountId;
+    //                });
+    //            if (accountIdList.end() != it) {
+    //                if (cb) {
+    //                    cb((nem_sdk_interface::NEErrorCode)300, tr("You can't subscribe to your own audio").toStdString());
+    //                }
+    //                return;
+    //            }
 
-            std::vector<std::string> accountIdListTmp;
-            accountIdListTmp.reserve(accountIdList.size());
-            std::list<std::string> strInvaildIdList;
-            std::vector<SharedUserPtr> members;
-            GlobalManager::getInstance()->getInRoomService()->getAllUsers(members);
-            for (auto& id : accountIdList) {
-                auto it = std::find_if(members.begin(), members.end(), [id](const SharedUserPtr& accountId) { return id == accountId->getUserId(); });
-                if (members.end() == it) {
-                    if (strInvaildIdList.empty()) {
-                        strInvaildIdList.push_back(id);
-                    } else {
-                        strInvaildIdList.push_back(",");
-                        strInvaildIdList.push_back(id);
-                    }
-                } else {
-                    accountIdListTmp.push_back(id);
-                }
-            }
+    //            std::vector<std::string> accountIdListTmp;
+    //            accountIdListTmp.reserve(accountIdList.size());
+    //            std::list<std::string> strInvaildIdList;
+    //            std::vector<SharedUserPtr> members;
+    //            GlobalManager::getInstance()->getInRoomService()->getAllUsers(members);
+    //            for (auto& id : accountIdList) {
+    //                auto it = std::find_if(members.begin(), members.end(), [id](const SharedUserPtr& accountId) { return id ==
+    //                accountId->getUserId(); }); if (members.end() == it) {
+    //                    if (strInvaildIdList.empty()) {
+    //                        strInvaildIdList.push_back(id);
+    //                    } else {
+    //                        strInvaildIdList.push_back(",");
+    //                        strInvaildIdList.push_back(id);
+    //                    }
+    //                } else {
+    //                    accountIdListTmp.push_back(id);
+    //                }
+    //            }
 
-            if (!accountIdList.empty()) {
-                if (subscribe) {
-                    audioController->subscribeRemoteAudioStream(accountIdListTmp);
-                } else {
-                    audioController->unsubscribeRemoteAudioStream(accountIdListTmp);
-                }
-            }
+    //            if (!accountIdList.empty()) {
+    //                if (subscribe) {
+    //                    audioController->subscribeRemoteAudioStream(accountIdListTmp);
+    //                } else {
+    //                    audioController->unsubscribeRemoteAudioStream(accountIdListTmp);
+    //                }
+    //            }
 
-            if (!strInvaildIdList.empty()) {
-                if (cb) {
-                    std::string strTmp = std::accumulate(strInvaildIdList.begin(), strInvaildIdList.end(), std::string(""),
-                                                         [](const std::string& str1, const std::string& str2) -> std::string { return str1 + str2; });
-                    cb((nem_sdk_interface::NEErrorCode)2101,
-                       tr("Some members were absent from the meeting,(%1)").arg(QString::fromStdString(strTmp)).toStdString());
-                }
-            } else {
-                cb(NS_I_NEM_SDK::ERROR_CODE_SUCCESS, "");
-            }
-            return;
-        }
-    });
+    //            if (!strInvaildIdList.empty()) {
+    //                if (cb) {
+    //                    std::string strTmp = std::accumulate(strInvaildIdList.begin(), strInvaildIdList.end(), std::string(""),
+    //                                                         [](const std::string& str1, const std::string& str2) -> std::string { return str1 +
+    //                                                         str2; });
+    //                    cb((nem_sdk_interface::NEErrorCode)2101,
+    //                       tr("Some members were absent from the meeting,(%1)").arg(QString::fromStdString(strTmp)).toStdString());
+    //                }
+    //            } else {
+    //                cb(NS_I_NEM_SDK::ERROR_CODE_SUCCESS, "");
+    //            }
+    //            return;
+    //        }
+    //    });
 }
 
 void NEMeetingServiceProcHandlerIMP::onSubscribeAllRemoteAudioStreams(bool subscribe, const NS_I_NEM_SDK::NEEmptyCallback& cb) {
     YXLOG_API(Info) << "Received onSubscribeAllRemoteAudioStreams, subscribe: " << subscribe << YXLOGEnd;
-    auto meetingInfo = MeetingManager::getInstance()->getMeetingInfo();
-    if (!meetingInfo) {
-        if (cb) {
-            cb((nem_sdk_interface::NEErrorCode)2200, tr("The meeting is not in progress").toStdString());
-        }
-        return;
-    }
-
-    Invoker::getInstance()->execute([=]() {
-        auto audioController = MeetingManager::getInstance()->getInRoomAudioController();
-        if (!audioController) {
+    /*    auto meetingInfo = MeetingManager::getInstance()->getMeetingInfo();
+        if (!meetingInfo) {
             if (cb) {
                 cb((nem_sdk_interface::NEErrorCode)2200, tr("The meeting is not in progress").toStdString());
             }
             return;
         }
 
-        if (subscribe) {
-            audioController->subscribeAllRemoteAudioStream();
-        } else {
-            audioController->unsubscribeAllRemoteAudioStream();
-        }
+        Invoker::getInstance()->execute([=]() {
+            auto audioController = MeetingManager::getInstance()->getInRoomAudioController();
+            if (!audioController) {
+                if (cb) {
+                    cb((nem_sdk_interface::NEErrorCode)2200, tr("The meeting is not in progress").toStdString());
+                }
+                return;
+            }
 
-        if (cb) {
-            cb(NS_I_NEM_SDK::ERROR_CODE_SUCCESS, "");
-        }
-    });
+            if (subscribe) {
+                audioController->subscribeAllRemoteAudioStream();
+            } else {
+                audioController->unsubscribeAllRemoteAudioStream();
+            }
+
+            if (cb) {
+                cb(NS_I_NEM_SDK::ERROR_CODE_SUCCESS, "");
+            }
+        })*/
+    ;
 }
 
 NS_I_NEM_SDK::NEErrorCode NEMeetingServiceProcHandlerIMP::convertExtentedCode(int extentedCode) {
@@ -694,7 +575,7 @@ NS_I_NEM_SDK::NEErrorCode NEMeetingServiceProcHandlerIMP::convertExtentedCode(in
         case 200:
             resultCode = NS_I_NEM_SDK::ERROR_CODE_SUCCESS;
             break;
-        case kErrorRoomAlreadyExist:
+        case 3100:
             resultCode = NS_I_NEM_SDK::MEETING_ERROR_FAILED_ALREADY_IN_MEETING;
             break;
         default:
@@ -704,10 +585,28 @@ NS_I_NEM_SDK::NEErrorCode NEMeetingServiceProcHandlerIMP::convertExtentedCode(in
 }
 
 void NEMeetingServiceProcHandlerIMP::onMeetingStatusChanged(NEMeeting::Status status, int errorCode, const QString& errorMessage) {
-    YXLOG_API(Info) << "Meeting process handler, meeting status changed: " << status << ", extended code: " << errorCode << YXLOGEnd;
+    YXLOG_API(Info) << "Meeting process handler, meeting status changed: " << status << ", extended code: " << errorCode
+                    << ", errorMessage: " << errorMessage.toStdString() << YXLOGEnd;
 
     NS_I_NEM_SDK::NEErrorCode responseCode = NS_I_NEM_SDK::ERROR_CODE_FAILED;
+    if (NEMeeting::MEETING_CONNECT_FAILED == status &&
+        ("joinTimeoutTimer" == errorMessage || "kReasonRoomNotExist" == errorMessage || "kReasonSyncDataError" == errorMessage ||
+         "kReasonRtcInitError" == errorMessage || "kReasonJoinChannelError" == errorMessage)) {
+        responseCode = NS_I_NEM_SDK::ERROR_CODE_SUCCESS;
+        if (m_startMeetingCallback != nullptr) {
+            YXLOG(Info) << "Invoke start meeting callback, error code: " << errorCode << ", error message: " << errorMessage.toStdString()
+                        << YXLOGEnd;
+            m_startMeetingCallback(responseCode, "");
+            m_startMeetingCallback = nullptr;
+        }
 
+        if (m_joinMeetingCallback != nullptr) {
+            YXLOG(Info) << "Invoke join meeting callback, error code: " << errorCode << ", error message: " << errorMessage.toStdString() << YXLOGEnd;
+            m_joinMeetingCallback(responseCode, "");
+            m_joinMeetingCallback = nullptr;
+        }
+        return;
+    }
     switch (status) {
         case NEMeeting::MEETING_IDLE:        // 初始状态
         case NEMeeting::MEETING_CONNECTING:  // 连接中
@@ -765,6 +664,177 @@ bool NEMeetingServiceProcHandlerIMP::checkOptionsId(const std::vector<NS_I_NEM_S
             return false;
         }
     }
+
+    return true;
+}
+
+bool NEMeetingServiceProcHandlerIMP::joinMeeting(const NEJoinMeetingParams& param,
+                                                 const NEJoinMeetingOptions& opts,
+                                                 const NEMeetingService::NEJoinMeetingCallback& cb) {
+    QString strPassword = param.password.empty() ? "null" : "not null";
+    YXLOG_API(Info) << param.meetingId << ", nickname: " << param.displayName << ", password: " << strPassword.toStdString()
+                    << ", enable audio: " << !opts.noAudio << ", enable video: " << !opts.noVideo << ", enable chatroom: " << !opts.noChat
+                    << ", enable invitation: " << !opts.noInvite << ", enable ScreenShare: " << !opts.noScreenShare
+                    << ", enable View: " << !opts.noView << ", enable sip: " << !opts.noSip << ", enable bAudioAINSEnabled: " << opts.audioAINSEnabled
+                    << ", meeting show options: " << opts.meetingIdDisplayOption << ", joinTimeout: " << opts.joinTimeout
+                    << ", enable noMuteAllVideo: " << opts.noMuteAllVideo << ", full_more submenu size: " << opts.full_more_menu_items_.size()
+                    << ", full_toolbar submenu size: " << opts.full_toolbar_menu_items_.size()
+                    << ", showMeetingRemainingTip: " << opts.showMeetingRemainingTip
+                    << ", enableFileMessage: " << opts.chatroomConfig.enableFileMessage
+                    << ", enableImageMessage: " << opts.chatroomConfig.enableImageMessage << YXLOGEnd;
+
+    if (m_joinMeetingCallback != nullptr) {
+        if (cb != nullptr) {
+            cb(NS_I_NEM_SDK::ERROR_CODE_FAILED, tr("Frequent operation, please try again later").toStdString());
+        }
+        return false;
+    }
+
+    QStringList listError;
+    do {
+        if (opts.full_more_menu_items_.size() > 0) {
+            std::vector<NEMeetingMenuItem> items(opts.full_toolbar_menu_items_.begin(), opts.full_toolbar_menu_items_.end());
+            items.insert(items.end(), opts.full_more_menu_items_.begin(), opts.full_more_menu_items_.end());
+            if (!checkOptionsEx(items)) {
+                listError
+                    << tr("the %1 of the %2 and the %3 cannot be duplicated").arg("itemId", "full_toolbar_menu_items_", "full_more_menu_items_");
+            }
+            if (!checkOptionsVisibility(opts.full_more_menu_items_, 10)) {
+                listError << tr("%1 cannot exceed %2 items").arg("full_more_menu_items_", "10");
+            }
+            if (!checkOptionsId(opts.full_more_menu_items_, false)) {
+                listError << tr("%1 in %2 cannot be less than %3").arg("itemId", "full_more_menu_items_", "kFirstinjectedMenuId");
+            }
+            if (!checkOptionsExMore(opts.full_more_menu_items_)) {
+                listError << tr("%1 can not add %2, %3, %4, %5")
+                                 .arg("full_more_menu_items_", "kMicMenuId", "kCameraMenuId", "kMangeParticipantsMenuId", "kChatMenuId");
+            }
+            if (!checkOptions(opts.full_more_menu_items_, false)) {
+                listError << tr("%1 or %2 in %3 is invalid").arg("title", "image", "full_more_menu_items_");
+            }
+        }
+        if (opts.full_more_menu_items_.empty()) {
+            if (!checkOptionsEx(opts.full_toolbar_menu_items_)) {
+                listError << tr("%1 in %2 cannot be duplicated").arg("itemId", "full_toolbar_menu_items_");
+            }
+        }
+        if (!checkOptionsVisibility(opts.full_toolbar_menu_items_, 7)) {
+            listError << tr("%1 cannot exceed %2 items").arg("full_toolbar_menu_items_", "7");
+        }
+        if (!checkOptionsId(opts.full_toolbar_menu_items_, false)) {
+            listError << tr("%1 in %2 cannot be less than %3").arg("itemId", "full_toolbar_menu_items_", "kFirstinjectedMenuId");
+        }
+        if (!checkOptions(opts.full_toolbar_menu_items_, false)) {
+            listError << tr("%1 or %2 in %3 is invalid").arg("title", "image", "full_toolbar_menu_items_");
+        }
+    } while (0);
+
+    if (!listError.isEmpty()) {
+        if (cb) {
+            QString strError;
+            strError.append(tr("Invalid params:"));
+            strError.append("\n");
+            int listSize = listError.size();
+            for (int i = 0; i < listSize; i++) {
+                strError.append(listError.at(i));
+                if (i != listSize - 1) {
+                    strError.append("\n");
+                }
+            }
+            cb(NS_I_NEM_SDK::MEETING_ERROR_FAILED_PARAM_ERROR, strError.toStdString());
+        }
+        return false;
+    }
+
+    auto meetingStatus = MeetingManager::getInstance()->getRoomStatus();
+    if (NEMeeting::MEETING_IDLE != meetingStatus) {
+        if (cb) {
+            cb(NS_I_NEM_SDK::MEETING_ERROR_ALREADY_INMEETING, tr("The last meeting is not end yet.").toStdString());
+        }
+
+        return true;
+    }
+
+    m_joinMeetingCallback = cb;
+
+    Invoker::getInstance()->execute([=]() {
+        MeetingManager::getInstance()->setMeetingIdDisplayOption((NEMeeting::MeetingIdDisplayOptions)opts.meetingIdDisplayOption);
+        MeetingManager::getInstance()->setShowMeetingRemainingTip(opts.showMeetingRemainingTip &&
+                                                                  GlobalManager::getInstance()->getGlobalConfig()->isEndTimeTipSupported());
+        MeetingManager::getInstance()->setHideChatroom(opts.noChat);
+        MeetingManager::getInstance()->setHideInvitation(opts.noInvite);
+        MeetingManager::getInstance()->setHideScreenShare(opts.noScreenShare);
+        MeetingManager::getInstance()->setHideView(opts.noView);
+        MeetingManager::getInstance()->setHideWhiteboard(opts.noWhiteboard);
+        MeetingManager::getInstance()->setHideSip(opts.noSip);
+        MeetingManager::getInstance()->setHideMuteAllVideo(opts.noMuteAllVideo);
+        MeetingManager::getInstance()->setHideMuteAllAudio(opts.noMuteAllAudio);
+        MeetingManager::getInstance()->setReName(!opts.noRename);
+        MeetingManager::getInstance()->setJoinTimeout(opts.joinTimeout <= 0 ? 45 * 1000 : opts.joinTimeout);
+        MeetingManager::getInstance()->setShowMemberTag(opts.showMemberTag);
+        MeetingManager::getInstance()->setEnableFileMessage(opts.chatroomConfig.enableFileMessage);
+        MeetingManager::getInstance()->setEnableImageMessage(opts.chatroomConfig.enableImageMessage);
+        MoreItemManager::getInstance()->setMoreItemInjected(opts.full_more_menu_items_.empty());
+        SettingsManager::getInstance()->setEnableAudioAINS(opts.audioAINSEnabled);
+        if (opts.full_more_menu_items_.size() > 0) {
+            QVector<MoreItem> items;
+            for (auto& item : opts.full_more_menu_items_) {
+                YXLOG(Info) << "Insert submenu to more button list, menu id: " << item.itemId << ", title: " << item.itemTitle
+                            << ", image: " << item.itemImage << YXLOGEnd;
+                MoreItem it;
+                it.itemIndex = item.itemId;
+                it.itemGuid = QUuid::createUuid().toString();
+                it.itemTitle = QString::fromStdString(item.itemTitle);
+                it.itemImagePath = MoreItemManager::getInstance()->strPathToPath(item.itemImage);
+                it.itemTitle2 = QString::fromStdString(item.itemTitle2);
+                it.itemImagePath2 = MoreItemManager::getInstance()->strPathToPath(item.itemImage2);
+                it.itemVisibility = MoreItemManager::getInstance()->switchVisibility(item.itemVisibility);
+                it.itemCheckedIndex = item.itemCheckedIndex;
+                items.push_back(it);
+            }
+            MoreItemManager::getInstance()->initializeMore(items);
+        }
+
+        if (opts.full_more_menu_items_.empty()) {
+            MoreItemManager::getInstance()->restoreMore();
+        }
+
+        if (opts.full_toolbar_menu_items_.size() != 0) {
+            QVector<MoreItem> items;
+            for (auto& item : opts.full_toolbar_menu_items_) {
+                YXLOG(Info) << "Insert submenu to toolbar button list, menu id: " << item.itemId << ", title: " << item.itemTitle
+                            << ", image: " << item.itemImage << YXLOGEnd;
+                MoreItem it;
+                it.itemIndex = item.itemId;
+                it.itemGuid = QUuid::createUuid().toString();
+                it.itemTitle = QString::fromStdString(item.itemTitle);
+                it.itemImagePath = MoreItemManager::getInstance()->strPathToPath(item.itemImage);
+                it.itemTitle2 = QString::fromStdString(item.itemTitle2);
+                it.itemImagePath2 = MoreItemManager::getInstance()->strPathToPath(item.itemImage2);
+                it.itemVisibility = MoreItemManager::getInstance()->switchVisibility(item.itemVisibility);
+                it.itemCheckedIndex = item.itemCheckedIndex;
+                items.push_back(it);
+            }
+            MoreItemManager::getInstance()->initializeToolbar(items);
+        } else {
+            MoreItemManager::getInstance()->restoreToolbar();
+        }
+
+        if (AuthManager::getInstance()->getAuthStatus() == kAuthLoginSuccessed) {
+            YXLOG(Info) << "Invoke join meeting." << YXLOGEnd;
+        } else {
+            YXLOG(Info) << "Invoke anonjoin meeting." << YXLOGEnd;
+        }
+
+        NERoomOptions option_;
+        option_.noVideo = opts.noVideo;
+        option_.noAudio = opts.noAudio;
+        option_.noAutoOpenWhiteboard = !((opts.defaultWindowMode == WHITEBOARD_MODE) &&
+                                         GlobalManager::getInstance()->getGlobalConfig()->isWhiteboardSupported() && !opts.noWhiteboard);
+
+        WhiteboardManager::getInstance()->setAutoOpenWhiteboard(!option_.noAutoOpenWhiteboard);
+        MeetingManager::getInstance()->joinMeeting(param, option_);
+    });
 
     return true;
 }
