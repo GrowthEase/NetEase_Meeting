@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "sys_info.h"
 #include <QDebug>
@@ -10,13 +9,10 @@
 #pragma comment(lib, "Advapi32.lib")
 #endif
 
-SysInfo::SysInfo(QObject *parent) : QObject(parent)
-{
+SysInfo::SysInfo(QObject* parent)
+    : QObject(parent) {}
 
-}
-
-QString SysInfo::GetSystemManufacturer()
-{
+QString SysInfo::GetSystemManufacturer() {
 #ifdef Q_OS_WIN32
     return ReadBisoValueFromReg("SystemManufacturer");
 #else
@@ -24,8 +20,7 @@ QString SysInfo::GetSystemManufacturer()
 #endif
 }
 
-QString SysInfo::GetSystemProductName()
-{
+QString SysInfo::GetSystemProductName() {
 #ifdef Q_OS_WIN32
     return ReadBisoValueFromReg("SystemProductName");
 #else
@@ -33,8 +28,7 @@ QString SysInfo::GetSystemProductName()
 #endif
 }
 
-QString SysInfo::ReadBisoValueFromReg(const QString &key)
-{
+QString SysInfo::ReadBisoValueFromReg(const QString& key) {
     QString strValueData;
 #ifdef Q_OS_WIN32
     static const wchar_t kBios[] = L"HARDWARE\\DESCRIPTION\\System\\BIOS";

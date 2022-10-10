@@ -1,10 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
-
-// Copyright (c) 2014-2020 NetEase, Inc.
-// All right reserved.
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "members_model.h"
 #include <bitset>
@@ -55,6 +51,12 @@ QVariant MembersModel::data(const QModelIndex& index, int role) const {
             return QVariant(member.isWhiteboardEnable);
         case kMemberWhiteboardShareOwner:
             return QVariant(member.isWhiteboardShareOwner);
+        case kMemberRoleAudioVolume:
+            return QVariant(member.audioVolume);
+        case kMemberRoleTag:
+            return QVariant(member.tag);
+        case kMemberRoleType:
+            return QVariant(member.roleType);
     }
 
     return QVariant();
@@ -71,6 +73,9 @@ QHash<int, QByteArray> MembersModel::roleNames() const {
     names[kMemberRoleClientType] = "clientType";
     names[kMemberRoleWhiteboard] = "isWhiteboardEnable";
     names[kMemberWhiteboardShareOwner] = "isWhiteboardShareOwner";
+    names[kMemberRoleAudioVolume] = "audioVolume";
+    names[kMemberRoleTag] = "tag";
+    names[kMemberRoleType] = "roleType";
     return names;
 }
 
@@ -198,8 +203,9 @@ void FilterProxyModel::setSortModel(QAbstractItemModel* sourceModel) {
 }
 
 bool FilterProxyModel::lessThan(const QModelIndex& source_left, const QModelIndex& source_right) const {
-    std::bitset<8> left;
-    std::bitset<8> right;
+    std::bitset<9> left;
+    std::bitset<9> right;
+    int index = 8;
 
     // sort by host account id
     QVariant leftData = sourceModel()->data(source_left, MembersModel::kMemberRoleAccountId);
@@ -207,20 +213,70 @@ bool FilterProxyModel::lessThan(const QModelIndex& source_left, const QModelInde
     auto accidLeft = leftData.toString();
     auto accidRight = rightData.toString();
     if (accidLeft == MembersManager::getInstance()->hostAccountId())
-        left[7] = 1;
+        left[index] = 1;
     if (accidRight == MembersManager::getInstance()->hostAccountId())
-        right[7] = 1;
-    if (left[7] == 1 || right[7] == 1) {
-        return left[7] > right[7];
+        right[index] = 1;
+    if (left[index] == 1 || right[index] == 1) {
+        return left[index] > right[index];
+    }
+
+    index--;
+    if (index < 0) {
+        return false;
+    }
+
+    // sort by manager account id
+    leftData = sourceModel()->data(source_left, MembersModel::kMemberRoleType);
+    rightData = sourceModel()->data(source_right, MembersModel::kMemberRoleType);
+    auto roleLeft = static_cast<NERoleType>(leftData.toInt());
+    auto roleRight = static_cast<NERoleType>(rightData.toInt());
+    if (roleLeft == kRoleManager) {
+        left[index] = 1;
+        if (accidLeft == AuthManager::getInstance()->authAccountId())
+            left[index] = 2;
+    }
+    if (roleRight == kRoleManager) {
+        right[index] = 1;
+        if (accidLeft == AuthManager::getInstance()->authAccountId())
+            right[index] = 2;
+    }
+
+    if (left[index] >= 1 || right[index] >= 1) {
+        return left[index] > right[index];
+    }
+
+    index--;
+    if (index < 0) {
+        return false;
     }
 
     // sort by auth account id
     if (accidLeft == AuthManager::getInstance()->authAccountId())
-        left[6] = 1;
+        left[index] = 1;
     if (accidRight == AuthManager::getInstance()->authAccountId())
-        right[6] = 1;
-    if (left[6] == 1 || right[6] == 1) {
-        return left[6] > right[6];
+        right[index] = 1;
+    if (left[index] == 1 || right[index] == 1) {
+        return left[index] > right[index];
+    }
+
+    index--;
+    if (index < 0) {
+        return false;
+    }
+
+    // sort by hangup status
+    leftData = sourceModel()->data(source_left, MembersModel::kMemberRoleHansUpStatus);
+    rightData = sourceModel()->data(source_right, MembersModel::kMemberRoleHansUpStatus);
+    auto handsupLeft = leftData.toUInt();
+    auto handsupRight = rightData.toUInt();
+    if (handsupLeft == 1)
+        left[index] = 1;
+    if (handsupRight == 1)
+        right[index] = 1;
+
+    index--;
+    if (index < 0) {
+        return false;
     }
 
     // sort by sharing status
@@ -229,19 +285,44 @@ bool FilterProxyModel::lessThan(const QModelIndex& source_left, const QModelInde
     auto bShareLeft = leftData.toBool();
     auto bShareRight = rightData.toBool();
     if (bShareLeft)
-        left[5] = 1;
+        left[index] = 1;
     if (bShareRight)
-        right[5] = 1;
+        right[index] = 1;
 
-    // sort by hangup status
-    leftData = sourceModel()->data(source_left, MembersModel::kMemberRoleHansUpStatus);
-    rightData = sourceModel()->data(source_right, MembersModel::kMemberRoleHansUpStatus);
-    auto handsupLeft = leftData.toUInt();
-    auto handsupRight = rightData.toUInt();
-    if (handsupLeft == 1)
-        left[4] = 1;
-    if (handsupRight == 1)
-        right[4] = 1;
+    index--;
+    if (index < 0) {
+        return false;
+    }
+
+    // sort by whiteboard status
+    leftData = sourceModel()->data(source_left, MembersModel::kMemberWhiteboardShareOwner);
+    rightData = sourceModel()->data(source_right, MembersModel::kMemberWhiteboardShareOwner);
+    auto whiteboardLeft = leftData.toBool();
+    auto whiteboardRight = rightData.toBool();
+    if (whiteboardLeft)
+        left[index] = 1;
+    if (whiteboardRight)
+        right[index] = 1;
+
+    index--;
+    if (index < 0) {
+        return false;
+    }
+
+    // sort by videso status
+    leftData = sourceModel()->data(source_left, MembersModel::kMemberRoleVideo);
+    rightData = sourceModel()->data(source_right, MembersModel::kMemberRoleVideo);
+    auto videoEnableLeft = leftData.toUInt() == 1;
+    auto videoEnableRight = rightData.toUInt() == 1;
+    if (videoEnableLeft == 1)
+        left[index] = 1;
+    if (videoEnableRight == 1)
+        right[index] = 1;
+
+    index--;
+    if (index < 0) {
+        return false;
+    }
 
     // sort by audio status
     leftData = sourceModel()->data(source_left, MembersModel::kMemberRoleAudio);
@@ -249,9 +330,14 @@ bool FilterProxyModel::lessThan(const QModelIndex& source_left, const QModelInde
     auto audioEnableLeft = leftData.toUInt() == 1;
     auto audioEnableRight = rightData.toUInt() == 1;
     if (audioEnableLeft == 1)
-        left[3] = 1;
+        left[index] = 1;
     if (audioEnableRight == 1)
-        right[3] = 1;
+        right[index] = 1;
+
+    index--;
+    if (index < 0) {
+        return false;
+    }
 
     // sort by nickname
     leftData = sourceModel()->data(source_left, MembersModel::kMemberRoleNickname);
@@ -259,9 +345,9 @@ bool FilterProxyModel::lessThan(const QModelIndex& source_left, const QModelInde
     auto nickLeft = leftData.toString();
     auto nickRight = rightData.toString();
     if (nickLeft < nickRight) {
-        left[2] = 1;
+        left[index] = 1;
     } else {
-        right[2] = 1;
+        right[index] = 1;
     }
 
     return left.to_ulong() > right.to_ulong();

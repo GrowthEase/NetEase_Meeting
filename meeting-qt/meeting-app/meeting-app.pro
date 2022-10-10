@@ -1,4 +1,4 @@
-QT += core quick quickcontrols2 svg
+QT += core quick quickcontrols2 svg webengine webchannel sql
 QTPLUGIN += qsvg
 
 CONFIG += c++11 qtquickcompiler precompile_header
@@ -15,9 +15,7 @@ TARGET      = NetEaseMeeting
 # any Qt feature that has been marked deprecated (the exact warnings
 # depend on your compiler). Refer to the documentation for the
 # deprecated API to know how to port your code away from it.
-DEFINES +=  QT_DEPRECATED_WARNINGS \
-            GLOG_NO_ABBREVIATED_SEVERITIES \
-            GOOGLE_GLOG_DLL_DECL=
+DEFINES +=  QT_DEPRECATED_WARNINGS
 
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -30,19 +28,26 @@ DEFINES +=  QT_DEPRECATED_WARNINGS \
 win32 {
     INCLUDEPATH += $$PWD/../ \
                    $$PWD/modules/ \
-                   $$PWD/../third_party_libs/glog/include \
                    $$PWD/../third_party_libs/alog/include \
                    $$PWD/../meeting-ipc/ \
                    $$PWD/../meeting-ipc/nem_sdk_interface/
     CONFIG(debug, debug|release) {
-        LIBS += -L$$PWD/../third_party_libs/glog/libs/win32/Debug -lglogd \
-                -L$$PWD/../third_party_libs/alog/lib/x86/Debug -lyx_alog \
-                -L$$PWD/../meeting-ipc/output/nem_hosting_module/Debug -lnem_hosting_moduled
+        !contains(QMAKE_TARGET.arch, x86_64) {
+            LIBS += -L$$PWD/../third_party_libs/alog/lib/x86/Debug -lyx_alog
+        } else {
+            LIBS += -L$$PWD/../third_party_libs/alog/lib/x64/Debug -lyx_alog
+        }
+
+        LIBS += -L$$PWD/../meeting-ipc/output/nem_hosting_module/Debug -lnem_hosting_moduled
         DEPENDPATH += $$PWD/../meeting-ipc/output/nem_hosting_module/Debug
     } else {
-        LIBS += -L$$PWD/../third_party_libs/glog/libs/win32/Release -lglog \
-                -L$$PWD/../third_party_libs/alog/lib/x86/Release -lyx_alog \
-                -L$$PWD/../meeting-ipc/output/nem_hosting_module/Release -lnem_hosting_module
+        !contains(QMAKE_TARGET.arch, x86_64) {
+            LIBS += -L$$PWD/../third_party_libs/alog/lib/x86/Release -lyx_alog
+        } else {
+            LIBS += -L$$PWD/../third_party_libs/alog/lib/x64/Release -lyx_alog
+        }
+
+        LIBS += -L$$PWD/../meeting-ipc/output/nem_hosting_module/Release -lnem_hosting_module
         DEPENDPATH += $$PWD/../meeting-ipc/output/nem_hosting_module/Release
     }
 }
@@ -50,13 +55,10 @@ win32 {
 macx {
     INCLUDEPATH += $$PWD/../ \
                    $$PWD/modules/ \
-                   $$PWD/../third_party_libs/glog/include/mac \
-                   $$PWD/../third_party_libs/glog/src \
                    $$PWD/../third_party_libs/alog/yx_alog.framework/Headers \
                    $$PWD/../meeting-ipc/output_mac/nem_hosting_module/Release/nem_hosting_module.framework/Headers
 
     LIBS += -ObjC \
-            -L$$PWD/../third_party_libs/glog/libs/mac -lglog \
             -F$$PWD/../third_party_libs/alog -framework yx_alog \
             -F$$PWD/../meeting-ipc/output_mac/nem_hosting_module/Release -framework nem_hosting_module
 
@@ -89,6 +91,7 @@ macx {
 HEADERS += \
     app_dump.h \
     base/log_instance.h \
+    components/urs_jsBridge.h \
     meeting_app.h \
     modules/auth_manager.h \
     modules/base/http_manager.h \
@@ -97,12 +100,16 @@ HEADERS += \
     modules/client_updator.h \
     modules/commandline_parser.h \
     modules/config_manager.h \
+    modules/database_manager.h \
     modules/event_track/event_track_statistic.h \
     modules/event_track/nemeeting_event_track_static_strings.h \
     modules/event_track/nemetting_event_track_statistic.h \
     modules/event_track/string_converter.h \
     modules/feedback_manager.h \
+    modules/history_manager.h \
     modules/local_socket.h \
+    modules/models/history_model.h \
+    modules/models/members_model.h \
     modules/nemeeting_sdk_manager.h \
     modules/statistics_manager.h \
     modules/sys_info.h \
@@ -116,6 +123,7 @@ HEADERS += \
 
 SOURCES += \
     base/log_instance.cpp \
+    components/urs_jsBridge.cpp \
     main.cpp \
     meeting_app.cpp \
     modules/auth_manager.cpp \
@@ -125,10 +133,14 @@ SOURCES += \
     modules/client_updator.cpp \
     modules/commandline_parser.cpp \
     modules/config_manager.cpp \
+    modules/database_manager.cpp \
     modules/event_track/nemetting_event_track_statistic.cpp \
     modules/event_track/string_converter.cpp \
     modules/feedback_manager.cpp \
+    modules/history_manager.cpp \
     modules/local_socket.cpp \
+    modules/models/history_model.cpp \
+    modules/models/members_model.cpp \
     modules/nemeeting_sdk_manager.cpp \
     modules/statistics_manager.cpp \
     modules/sys_info.cpp \
@@ -163,9 +175,10 @@ win32 {
     QMAKE_LFLAGS_RELEASE    += /debug /opt:ref
     QMAKE_CXXFLAGS_WARN_ON -= -w34100
     QMAKE_CXXFLAGS += -wd4100
+    QMAKE_CXXFLAGS += /MP
     QMAKE_TARGET_COMPANY     = "NetEase"
     QMAKE_TARGET_DESCRIPTION = "NetEase Meeting"
-    QMAKE_TARGET_COPYRIGHT   = "Copyright (C) 2015~2021 NetEase. All rights reserved."
+    QMAKE_TARGET_COPYRIGHT   = "Copyright (C) 2015~2022 NetEase. All rights reserved."
     QMAKE_TARGET_PRODUCT     = "NetEase Meeting"
     VERSION = 1.0.0.0
 }
@@ -175,6 +188,8 @@ macx {
     QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter -Wno-unused-function
     QMAKE_TARGET_BUNDLE_PREFIX = com.netease.nmc
     QMAKE_BUNDLE = Meeting
+    QMAKE_DEVELOPMENT_TEAM = 569GNZ5392
+    QMAKE_PROVISIONING_PROFILE = afe9bf95-033c-4592-abac-e0aab5328ce0
     QMAKE_INFO_PLIST = $$PWD/Info.plist
     DISTFILES += $$PWD/Info.plist
     VERSION = 1.0.0

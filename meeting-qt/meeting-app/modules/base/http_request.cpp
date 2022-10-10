@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "http_request.h"
 #include <QCryptographicHash>
@@ -10,6 +9,8 @@
 IHttpRequest::IHttpRequest(const QString& requestSubUrl, const QString& requestMainUrl /* = ""*/) {
     setUrl(QUrl(requestMainUrl + requestSubUrl));
     setHeader(QNetworkRequest::ContentTypeHeader, "application/json;charset=utf-8");
+    setRawHeader("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8");
+    setRawHeader("AppKey", ConfigManager::getInstance()->getAPaasAppKey().toLocal8Bit());
 }
 
 void IHttpRequest::setParams(const QByteArray& params) {
@@ -117,9 +118,8 @@ AppUpdateProfileRequest::AppUpdateProfileRequest(const QString& nickname, const 
 }
 
 AppHttpRequest::AppHttpRequest(const QString& requestSubUrl)
-    : IHttpRequest(requestSubUrl, ConfigManager::getInstance()->getValue("localServerAddress", "https://meeting.netease.im/").toString()) {
+    : IHttpRequest(requestSubUrl, ConfigManager::getInstance()->getValue("localServerAddressEx", LOCAL_DEFAULT_SERVER_ADDRESS).toString()) {
     setRawHeader(kHttpClientType, MEETING_CLIENT_TYPE);
-    setRawHeader(kHttpSDKVersion, NERTC_SDK_VERSION);
     setRawHeader(kHttpAppVersionName, APPLICATION_VERSION);
     setRawHeader(kHttpAppVersionCode, QString::number(COMMIT_COUNT).toUtf8());
     setRawHeader(kHttpAppDeviceId, QSysInfo::machineUniqueId().data());
@@ -127,9 +127,12 @@ AppHttpRequest::AppHttpRequest(const QString& requestSubUrl)
 
 AppCheckUpdateRequest::AppCheckUpdateRequest(int versionCode, const QString& accountId)
     : AppHttpRequest(APPFUN_CLINET_UPDATE) {
+    setUrl(QUrl(ConfigManager::getInstance()->getValue("localUpdateServerAddressEx", LOCAL_DEFAULT_UPDATE_SERVER_ADDRESS).toString() +
+                APPFUN_CLINET_UPDATE));
+    setRawHeader("sdkVersion", "3.5.4");
     QJsonObject json;
     json.insert("versionCode", versionCode);
-    json.insert("clientAppCode", 1);
+    json.insert("clientAppCode", 2);
     json.insert("accountId", accountId);
     QByteArray byteArray = QJsonDocument(json).toJson(QJsonDocument::Compact);
     setParams(byteArray);

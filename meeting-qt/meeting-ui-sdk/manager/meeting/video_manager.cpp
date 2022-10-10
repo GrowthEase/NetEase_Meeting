@@ -1,29 +1,45 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "video_manager.h"
 #include "../settings_manager.h"
 #include "providers/video_window.h"
 #include "share_manager.h"
 
+#ifdef Q_OS_MACX
+#include "components/auth_checker.h"
+#endif
+
 VideoFrameDelegate::VideoFrameDelegate(QObject* parent)
     : QObject(parent) {}
 
+DelegatePtr VideoManager::m_videoFrameDelegate = nullptr;
 VideoManager::VideoManager(QObject* parent)
-    : QObject(parent)
-    , m_videoFrameDelegate(new VideoFrameDelegate) {
-    m_videoController = MeetingManager::getInstance()->getInRoomVideoController();
+    : QObject(parent) {
+    m_videoFrameDelegate = std::make_unique<VideoFrameDelegate>();
+    m_videoController = std::make_shared<NEMeetingVideoController>();
 
     qRegisterMetaType<NEMeeting::DeviceStatus>();
+}
+
+bool VideoManager::hasCameraPermission() {
+#ifdef Q_OS_WIN32
+    return true;
+#else
+    return checkAuthCamera();
+#endif
+}
+
+void VideoManager::openSystemCameraSettings() {
+#ifdef Q_OS_MACX
+    openCameraSettings();
+#endif
 }
 
 void VideoManager::onUserVideoStatusChanged(const std::string& accountId, NEMeeting::DeviceStatus deviceStatus) {
     QMetaObject::invokeMethod(this, "onUserVideoStatusChangedUI", Qt::AutoConnection, Q_ARG(QString, QString::fromStdString(accountId)),
                               Q_ARG(NEMeeting::DeviceStatus, deviceStatus));
-
-    emit userVideoStatusChanged(QString::fromStdString(accountId), deviceStatus);
 }
 
 void VideoManager::onFocusVideoChanged(const std::string& accountId, bool isFocus) {
@@ -31,7 +47,25 @@ void VideoManager::onFocusVideoChanged(const std::string& accountId, bool isFocu
                               Q_ARG(bool, isFocus));
 }
 
-bool VideoManager::setupVideoCanvas(const QString& accountId, QObject* view, bool highQuality) {
+bool VideoManager::subscribeRemoteVideoStream(const QString& accountId, bool highQuality, const QString& uuid) {
+    auto subscribeHelper = MeetingManager::getInstance()->getSubscribeHelper();
+    if (subscribeHelper) {
+        return subscribeHelper->subscribe(accountId.toStdString(), highQuality, uuid);
+    }
+    return false;
+}
+
+bool VideoManager::unSubscribeRemoteVideoStream(const QString& accountId, const QString& uuid) {
+    auto subscribeHelper = MeetingManager::getInstance()->getSubscribeHelper();
+    if (subscribeHelper) {
+        subscribeHelper->unsubscribe(accountId.toStdString(), uuid);
+        return true;
+    }
+    return false;
+}
+
+bool VideoManager::setupVideoCanvas(const QString& accountId, QObject* view, bool highQuality, const QString& uuid) {
+    auto subscribeHelper = MeetingManager::getInstance()->getSubscribeHelper();
     auto timestamp = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
     Canvas canvas;
     canvas.timestamp = timestamp.time_since_epoch().count();
@@ -42,23 +76,11 @@ bool VideoManager::setupVideoCanvas(const QString& accountId, QObject* view, boo
     auto authInfo = AuthManager::getInstance()->getAuthInfo();
     void* userData = nullptr;
     void* window = nullptr;
-    // if (!SettingsManager::getInstance()->useInternalRender())
-    {
-        if (m_videoFrameDelegate) {
-            connect(m_videoFrameDelegate.get(), &VideoFrameDelegate::receivedVideoFrame, qobject_cast<FrameProvider*>(view),
-                    &FrameProvider::deliverFrame);
-        }
-
-        userData = m_videoFrameDelegate.get();
+    if (m_videoFrameDelegate) {
+        connect(m_videoFrameDelegate.get(), &VideoFrameDelegate::receivedVideoFrame, qobject_cast<FrameProvider*>(view),
+                &FrameProvider::deliverFrame);
     }
-    //    else
-    //    {
-    //        VideoWindow* pWindow = qobject_cast<VideoWindow*>(view);
-    //        if (pWindow)
-    //        {
-    //            window = pWindow->getWindowId();
-    //        }
-    //    }
+    userData = m_videoFrameDelegate.get();
 
     m_videoCanvas[accountId].sub = false;
     FrameProvider* pFrameProvider = qobject_cast<FrameProvider*>(view);
@@ -69,15 +91,20 @@ bool VideoManager::setupVideoCanvas(const QString& accountId, QObject* view, boo
     auto userId = accountId.toStdString();
     int ret = 0;
     if (!m_videoCanvas[accountId].sub) {
-        m_videoController->setupVideoCanvas(userId, userData, window, highQuality);
-        if (0 == ret && !((authInfo && accountId.toStdString() == authInfo->getAccountId()) || accountId.isEmpty())) {
-            if (userData != nullptr || window != nullptr)
-                ret = m_videoController->subscribeRemoteVideoStream(userId, highQuality ? kNERemoteVideoStreamTypeHigh : kNERemoteVideoStreamTypeLow);
-            else
-                ret = m_videoController->unsubscribeRemoteVideoStream(userId);
+        m_videoController->setupVideoCanvas(userId, userData, window);
+        if (0 == ret && !((accountId.toStdString() == authInfo.accountId) || accountId.isEmpty())) {
+            if (userData != nullptr || window != nullptr) {
+                if (subscribeHelper) {
+                    subscribeHelper->subscribe(userId, highQuality, uuid);
+                }
+            } else {
+                if (subscribeHelper) {
+                    subscribeHelper->unsubscribe(userId, uuid);
+                }
+            }
         }
     } else {
-        ret = m_videoController->setupSubVideoCanvas(userId, userData, window, highQuality);
+        ret = m_videoController->setupSubVideoCanvas(userId, userData, window);
         if (0 == ret) {
             if (userData != nullptr || window != nullptr)
                 ret = m_videoController->subscribeRemoteVideoSubStream(userId);
@@ -121,20 +148,60 @@ bool VideoManager::removeVideoCanvas(const QString& accountId, QObject* view) {
 }
 
 void VideoManager::disableLocalVideo(bool disable) {
-    m_videoController->muteMyVideo(disable, std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
+    if (!disable && !hasCameraPermission()) {
+        emit showPermissionWnd();
+        return;
+    }
+
+    if (disable && m_localVideoStatus != NEMeeting::DEVICE_ENABLED) {
+        return;
+    }
+
+    if (!disable && m_localVideoStatus == NEMeeting::DEVICE_ENABLED) {
+        return;
+    }
+
+    m_videoController->muteMyVideo(disable, [=](uint32_t errorCode, const std::string& errorMessage) {
+        YXLOG(Info) << "muteMyVideo: errorCode " << errorCode << ", errorMessage: " << errorMessage << YXLOGEnd;
+        if (errorCode != 0) {
+            QString qstrErrorMessage = disable ? tr("mute My Video failed") : tr("unmute My Video failed");
+            MeetingManager::getInstance()->onError(errorCode, qstrErrorMessage.toStdString());
+        }
+    });
 }
 
-void VideoManager::disableRemoteVideo(const QString& accountId, bool disable) {
+void VideoManager::disableRemoteVideo(const QString& accountId, bool disable, bool bAllowOpenByself) {
     QByteArray byteAccountId = accountId.toUtf8();
-    if (disable) {
-        m_videoController->stopParticipantVideo(accountId.toStdString(), std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
+
+    if (accountId.isEmpty()) {
+        if (disable) {
+            m_videoController->muteAllParticipantsVideo(bAllowOpenByself, [=](int code, const std::string& msg) {
+                MeetingManager::getInstance()->onError(code, msg);
+                if (code == 0) {
+                    MeetingManager::getInstance()->onRoomMuteAllVideoStatusChanged(true);
+                }
+            });
+        } else {
+            m_videoController->unmuteAllParticipantsVideo([=](int code, const std::string& msg) {
+                MeetingManager::getInstance()->onError(code, msg);
+                if (code == 0) {
+                    MeetingManager::getInstance()->onRoomMuteAllVideoStatusChanged(false);
+                }
+            });
+        }
     } else {
-        m_videoController->askParticipantStartVideo(accountId.toStdString(), std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
+        if (disable) {
+            m_videoController->stopParticipantVideo(accountId.toStdString(), std::bind(&MeetingManager::onError, MeetingManager::getInstance(),
+                                                                                       std::placeholders::_1, std::placeholders::_2));
+        } else {
+            m_videoController->askParticipantStartVideo(accountId.toStdString(), std::bind(&MeetingManager::onError, MeetingManager::getInstance(),
+                                                                                           std::placeholders::_1, std::placeholders::_2));
+        }
     }
 }
 
 void VideoManager::startLocalVideoPreview(QObject* pProvider) {
-    if (MeetingManager::getInstance()->getRoomStatus() != NEMeeting::MEETING_CONNECTED) {
+    if (MeetingManager::getInstance()->getRoomStatus() == NEMeeting::MEETING_IDLE) {
         void* windowId = nullptr;
         if (SettingsManager::getInstance()->useInternalRender()) {
             VideoWindow* pWindow = qobject_cast<VideoWindow*>(pProvider);
@@ -142,7 +209,7 @@ void VideoManager::startLocalVideoPreview(QObject* pProvider) {
                 windowId = pWindow->getWindowId();
             }
         }
-       // m_videoController->setupVideoCanvas(AuthManager::getInstance()->authAccountId().toStdString(), m_videoFrameDelegate.get(), windowId);
+        // m_videoController->setupVideoCanvas(AuthManager::getInstance()->authAccountId().toStdString(), m_videoFrameDelegate.get(), windowId);
         m_videoController->setupPreviewCanvas(m_videoFrameDelegate.get(), windowId);
         m_videoController->startVideoPreview();
     }
@@ -154,10 +221,11 @@ void VideoManager::startLocalVideoPreview(QObject* pProvider) {
 }
 
 void VideoManager::stopLocalVideoPreview(QObject* pProvider) {
-    if (MeetingManager::getInstance()->getRoomStatus() != NEMeeting::MEETING_CONNECTED) {
-        m_videoController->setupVideoCanvas(
-            "", !SettingsManager::getInstance()->useInternalRender() ? qobject_cast<FrameProvider*>(pProvider) : nullptr, nullptr);
+    if (MeetingManager::getInstance()->getRoomStatus() == NEMeeting::MEETING_IDLE) {
+        // m_videoController->setupVideoCanvas("", !SettingsManager::getInstance()->useInternalRender() ? qobject_cast<FrameProvider*>(pProvider) :
+        // nullptr, nullptr);
         m_videoController->stopVideoPreview();
+        m_videoController->setupPreviewCanvas(nullptr, nullptr);
     }
 
     if (!SettingsManager::getInstance()->useInternalRender()) {
@@ -168,8 +236,14 @@ void VideoManager::stopLocalVideoPreview(QObject* pProvider) {
 
 void VideoManager::onUserVideoStatusChangedUI(const QString& changedAccountId, NEMeeting::DeviceStatus deviceStatus) {
     auto authInfo = AuthManager::getInstance()->getAuthInfo();
-    if (authInfo && changedAccountId == QString::fromStdString(authInfo->getAccountId())) {
+    if (authInfo.accountId == changedAccountId.toStdString()) {
+        if (m_localVideoStatus != deviceStatus) {
+            emit userVideoStatusChanged(changedAccountId, deviceStatus);
+        }
+
         setLocalVideoStatus(deviceStatus);
+    } else {
+        emit userVideoStatusChanged(changedAccountId, deviceStatus);
     }
 }
 
@@ -203,6 +277,7 @@ int VideoManager::localVideoStatus() const {
 void VideoManager::setLocalVideoStatus(const int& localVideoStatus) {
     if (m_localVideoStatus != localVideoStatus) {
         m_localVideoStatus = (NEMeeting::DeviceStatus)localVideoStatus;
+        YXLOG(Info) << "m_localVideoStatus changed :" << m_localVideoStatus << YXLOGEnd;
         emit localVideoStatusChanged();
     }
 }
@@ -215,8 +290,7 @@ void VideoManager::onReceivedUserVideoFrame(const std::string& accountId, const 
     //              << ", rotation: " << frame.rotation << ", data: " << frame.data
     //              << ", user_data: " << frame.user_data;
 
-    auto videoDelegate = reinterpret_cast<VideoFrameDelegate*>(frame.user_data);
-    if (videoDelegate == nullptr)
+    if (nullptr == VideoManager::m_videoFrameDelegate)
         return;
     auto rotationWidth = frame.width;
     auto rotationHeight = frame.height;
@@ -259,15 +333,15 @@ void VideoManager::onReceivedUserVideoFrame(const std::string& accountId, const 
         videoFrame.unmap();
 
         QSize size = QSize(static_cast<int>(rotationWidth), static_cast<int>(rotationHeight));
-        emit videoDelegate->receivedVideoFrame(QString::fromStdString(accountId), videoFrame, size, bSub);
+        emit VideoManager::m_videoFrameDelegate->receivedVideoFrame(QString::fromStdString(accountId), videoFrame, size, bSub);
     }
 }
 
-void VideoManager::onRemoteUserVideoStats(const std::vector<VideoStats>& videoStats) {
+void VideoManager::onRemoteUserVideoStats(const std::vector<NEVideoStats>& videoStats) {
     QJsonArray statsArray;
     for (auto& stats : videoStats) {
         QJsonObject statsObj;
-        statsObj["accountId"] = QString::fromStdString(stats.userId);
+        statsObj["accountId"] = QString::fromStdString(stats.userUuid);
         statsObj["layerType"] = (qint32)(stats.layerType);
         statsObj["frameRate"] = (qint32)(stats.frameRate);
         statsObj["bitRate"] = (qint32)(stats.bitRate);
@@ -278,11 +352,11 @@ void VideoManager::onRemoteUserVideoStats(const std::vector<VideoStats>& videoSt
     emit remoteUserVideoStats(statsArray);
 }
 
-void VideoManager::onLocalUserVideoStats(const std::vector<VideoStats>& stats) {
+void VideoManager::onLocalUserVideoStats(const std::vector<NEVideoStats>& stats) {
     QJsonArray statsArray;
     for (auto& stats : stats) {
         QJsonObject statsObj;
-        statsObj["accountId"] = QString::fromStdString(stats.userId);
+        statsObj["accountId"] = QString::fromStdString(stats.userUuid);
         statsObj["layerType"] = (qint32)(stats.layerType);
         statsObj["frameRate"] = (qint32)(stats.frameRate);
         statsObj["bitRate"] = (qint32)(stats.bitRate);
@@ -295,4 +369,8 @@ void VideoManager::onLocalUserVideoStats(const std::vector<VideoStats>& stats) {
 
 void VideoManager::onError(uint32_t errorCode, const std::string& errorMessage) {
     emit error(errorCode, QString::fromStdString(errorMessage));
+}
+
+std::shared_ptr<NEMeetingVideoController> VideoManager::getVideoController() {
+    return m_videoController;
 }

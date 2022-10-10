@@ -7,8 +7,8 @@ import QtGraphicalEffects 1.0
 Window {
     id: mainWindow
     visible: true
-    width: 1088
-    height: 680
+    width: 780
+    height: 600
     title: qsTr("NetEase Meeting SDK Sample")
 
     Component.onCompleted: {

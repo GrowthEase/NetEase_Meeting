@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef NEMEETING_EVENT_TRACK_STATIC_STRINGS_H
 #define NEMEETING_EVENT_TRACK_STATIC_STRINGS_H
@@ -49,6 +48,6 @@ const QString kFirstVideoFrameReceived = "first_video_data_received";
 const QString kUserVideoProfileChanged = "user_change_profile";
 const QString kUserLeaveMeeting = "user_leave_meeting";
 
-}
+}  // namespace ststist_static_strings
 
-#endif // NEMEETING_EVENT_TRACK_STATIC_STRINGS_H
+#endif  // NEMEETING_EVENT_TRACK_STATIC_STRINGS_H

@@ -9,6 +9,7 @@ Button {
     topInset: 0
     leftInset: 0
     rightInset: 0
+    focusPolicy: Qt.NoFocus
 
     property string itemIcon: ''
     property string itemText: ''
@@ -25,6 +26,7 @@ Button {
             Image {
                 source: itemIcon
                 fillMode: Image.PreserveAspectFit
+                mipmap: true
                 Layout.preferredWidth: 24
                 Layout.preferredHeight: 24
                 Layout.alignment: Qt.AlignTop | Qt.AlignHCenter

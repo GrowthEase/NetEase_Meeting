@@ -74,6 +74,7 @@ Popup {
                     Image {
                         source: getItemImage(model.itemImage)
                         visible: model.itemImage.length > 0
+                        mipmap: true
                         Layout.preferredWidth: 18
                         Layout.preferredHeight: 18
                         Layout.leftMargin: 8

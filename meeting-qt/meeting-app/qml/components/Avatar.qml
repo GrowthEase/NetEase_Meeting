@@ -22,7 +22,7 @@ Rectangle {
     }
 
     Label {
-        text: nickname.substring(0, 1)
+        text: nickname.length === 0 ? '' : nickname.substring(0, 1)
         anchors.verticalCenter: parent.verticalCenter
         anchors.horizontalCenter: parent.horizontalCenter
         font.pixelSize: 18

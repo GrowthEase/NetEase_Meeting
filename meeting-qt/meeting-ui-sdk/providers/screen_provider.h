@@ -1,29 +1,27 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef DESKTOPPROVIDER_H
 #define DESKTOPPROVIDER_H
 
-#include <QTimer>
+#include <QAbstractVideoSurface>
 #include <QDebug>
+#include <QGuiApplication>
 #include <QObject>
 #include <QPixmap>
 #include <QScreen>
-#include <QGuiApplication>
+#include <QTimer>
 #include <QVideoSurfaceFormat>
-#include <QAbstractVideoSurface>
 
-class ScreenProvider : public QObject
-{
+class ScreenProvider : public QObject {
     Q_OBJECT
-    Q_PROPERTY(QAbstractVideoSurface *videoSurface READ videoSurface WRITE setVideoSurface)
+    Q_PROPERTY(QAbstractVideoSurface* videoSurface READ videoSurface WRITE setVideoSurface)
     Q_PROPERTY(int screenIndex READ screenIndex WRITE setScreenIndex)
     Q_PROPERTY(bool capture READ capture WRITE setCapture NOTIFY captureChanged)
 
 public:
-    explicit ScreenProvider(QObject *parent = nullptr);
+    explicit ScreenProvider(QObject* parent = nullptr);
     ~ScreenProvider();
 
     QAbstractVideoSurface* videoSurface() const { return m_videoSurface; }
@@ -45,11 +43,11 @@ public slots:
     void deliverFrame(const QVideoFrame& frame, const QSize& videoSize);
 
 private:
-    QVideoSurfaceFormat     m_videoFormat;
-    QAbstractVideoSurface*  m_videoSurface;
-    QTimer                  m_captureTimer;
-    int                     m_screenIndex = 0;
-    bool                    m_capture = false;
+    QVideoSurfaceFormat m_videoFormat;
+    QAbstractVideoSurface* m_videoSurface;
+    QTimer m_captureTimer;
+    int m_screenIndex = 0;
+    bool m_capture = false;
 };
 
-#endif // DESKTOPPROVIDER_H
+#endif  // DESKTOPPROVIDER_H

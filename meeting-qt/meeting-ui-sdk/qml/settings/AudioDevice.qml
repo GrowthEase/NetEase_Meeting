@@ -4,10 +4,13 @@ import QtQuick.Layouts 1.12
 import QtQuick.Controls.Styles 1.4
 import NetEase.Meeting.DeviceModel 1.0
 import NetEase.Meeting.Settings 1.0
+import NetEase.Meeting.MeetingStatus 1.0
 import "../components"
 
-Rectangle {
+Item {
+    id: root
     property int deviceTestMode: AudioDevice.TestMode.UnknownMode
+    property bool musicModeSelectEnable: true
 
     anchors.fill: parent
     anchors.margins: 35
@@ -20,16 +23,17 @@ Rectangle {
 
     Component.onCompleted: {
         videoManager.stopLocalVideoPreview()
+        root.musicModeSelectEnable = true
     }
 
     Component.onDestruction: {
         stopTest()
+        root.musicModeSelectEnable = true
     }
 
     Connections {
         target: deviceManager
         onLocalAudioVolumeIndication: {
-
             if(deviceTestMode === AudioDevice.TestMode.SpeakerTestMode) {
                 speakerProgress.value = volume;
                 microphoneProgress.value = 0;
@@ -45,6 +49,7 @@ Rectangle {
         function onVisibleStatus() {
             if (!SettingsWnd.visible) {
                 stopTest()
+                root.musicModeSelectEnable = true
             }
         }
     }
@@ -64,7 +69,17 @@ Rectangle {
         }
     }
 
+    Timer {
+        id: clickTimer
+        interval: 500
+        repeat: false
+        onTriggered: {
+            musicModeSelectEnable = true
+        }
+    }
+
     ColumnLayout {
+        width: root.width
         RowLayout {
             spacing: 35
             Label {
@@ -118,8 +133,11 @@ Rectangle {
                             comboSpeakers.currentIndex = currentIndex
                         }
                         Component.onCompleted: {
-                            const currentIndex = deviceManager.currentIndex(model.deviceType)
-                            comboSpeakers.currentIndex = currentIndex
+                            if (MeetingStatus.MEETING_CONNECTED === meetingManager.roomStatus || MeetingStatus.MEETING_RECONNECTED === meetingManager.roomStatus) {
+                                comboSpeakers.currentIndex = deviceManager.currentIndex(model.deviceType)
+                            } else {
+                                comboSpeakers.currentIndex = 0
+                            }
                         }
                     }
                     CustomButton {
@@ -181,12 +199,14 @@ Rectangle {
                     Image {
                         Layout.preferredHeight: 16
                         Layout.preferredWidth: 16
+                        mipmap: true
                         source: "qrc:/qml/images/settings/speaker_mute.png"
                     }
                     CustomSlider {
                         id: speakerSlider
                         Layout.fillWidth: true
                         to: 255
+                        value: 1
                         Component.onCompleted: {
                             const volume = deviceManager.getPlayoutDeviceVolume()
                             value = volume
@@ -198,6 +218,7 @@ Rectangle {
                     Image {
                         Layout.preferredHeight: 16
                         Layout.preferredWidth: 16
+                        mipmap: true
                         source: "qrc:/qml/images/settings/speaker_unmute.png"
                     }
                 }
@@ -258,8 +279,11 @@ Rectangle {
                             comboMicrophones.currentIndex = currentIndex
                         }
                         Component.onCompleted: {
-                            const currentIndex = deviceManager.currentIndex(model.deviceType)
-                            comboMicrophones.currentIndex = currentIndex
+                            if (MeetingStatus.MEETING_CONNECTED === meetingManager.roomStatus || MeetingStatus.MEETING_RECONNECTED === meetingManager.roomStatus) {
+                                comboMicrophones.currentIndex = deviceManager.currentIndex(model.deviceType)
+                            } else {
+                                comboMicrophones.currentIndex = 0
+                            }
                         }
                     }
 
@@ -320,12 +344,15 @@ Rectangle {
                     Image {
                         Layout.preferredHeight: 16
                         Layout.preferredWidth: 16
+                        mipmap: true
                         source: "qrc:/qml/images/settings/speaker_mute.png"
                     }
                     CustomSlider {
                         id: microphoneSlider
                         Layout.fillWidth: true
                         to: 255
+                        value: 1
+                        enabled: !checkAutoMicVolume.checked
                         Component.onCompleted: {
                             const volume = deviceManager.getRecordDeviceVolume()
                             value = volume
@@ -337,7 +364,159 @@ Rectangle {
                     Image {
                         Layout.preferredHeight: 16
                         Layout.preferredWidth: 16
+                        mipmap: true
                         source: "qrc:/qml/images/settings/speaker_unmute.png"
+                    }
+                }
+
+                CustomCheckBox {
+                    id: checkAutoMicVolume
+                    font.weight: Font.Light
+                    text: qsTr("Automatically adjust microphone volume")
+                    checked: SettingsManager.enableMicVolumeAutoAdjust
+                    Layout.topMargin: 8
+                    onClicked: {
+                        SettingsManager.setEnableMicVolumeAutoAdjust(checked)
+                        if ((MeetingStatus.MEETING_CONNECTED === meetingManager.roomStatus || MeetingStatus.MEETING_RECONNECTED === meetingManager.roomStatus) && microphoneSlider.value < 200) {
+                            microphoneSlider.value = 200
+                        }
+                    }
+                }
+
+                CustomCheckBox {
+                    id: checkEnableMicBySpace
+                    font.weight: Font.Light
+                    text: qsTr("Long press the space bar to temporarily turn on the microphone")
+                    checked: SettingsManager.enableUnmuteBySpace
+                    Layout.topMargin: 8
+                    onClicked: {
+                        SettingsManager.enableUnmuteBySpace = checkEnableMicBySpace.checked
+                    }
+                }
+            }
+        }
+
+        CustomToolSeparator {
+            id: horizontalSep
+            orientation: Qt.Horizontal
+            Layout.topMargin: 35
+            contentItem: Rectangle {
+                implicitWidth: root.width
+                implicitHeight: 1
+                color: "#EDEEF0"
+            }
+        }
+
+        RowLayout {
+            spacing: 35
+            Layout.topMargin: 20
+
+            Label {
+                Layout.alignment: Qt.AlignTop
+                Layout.preferredWidth: 70
+                Layout.topMargin: 12
+                text: qsTr("Audio noise reduction")
+                color: "#333333"
+                font.weight: Font.Medium
+                font.pixelSize: 16
+            }
+
+            ColumnLayout {
+                spacing: 5
+                CustomCheckBox {
+                    id: checkAudioAINS
+                    font.weight: Font.Light
+                    text: qsTr("Smart noise reduction")
+                    enabled: talkMode.checked
+                    checked: SettingsManager.enableAudioAINS
+                    Layout.topMargin: 12
+                    onClicked: SettingsManager.enableAudioAINS = checked
+                }
+                Text {
+                    Layout.leftMargin: 25
+                    Layout.preferredWidth: 435
+                    wrapMode: Text.WordWrap
+                    text: qsTr("If the environment is noisy or a common meeting is held, you can enable this option")
+                }
+            }
+        }
+
+        RowLayout {
+            spacing: 35
+            Layout.topMargin: 15
+
+            Label {
+                Layout.alignment: Qt.AlignTop
+                Layout.preferredWidth: 70
+                Layout.topMargin: 12
+                text: qsTr("Audio quality")
+                color: "#333333"
+                font.weight: Font.Medium
+                font.pixelSize: 16
+            }
+
+            ColumnLayout {
+                spacing: 0
+                Layout.leftMargin: -10
+                RadioButton {
+                    id: talkMode
+                    font.weight: Font.Light
+                    text: qsTr("Talk Mode")
+                    enabled: MeetingStatus.MEETING_IDLE === meetingManager.roomStatus && musicModeSelectEnable
+                    checked: 0 === SettingsManager.audioProfile
+                    onClicked: {
+                        musicModeSelectEnable = false
+                        musicMode.checked = false
+                        SettingsManager.setAudioProfile(0)
+                        clickTimer.restart()
+                    }
+                }
+
+                ColumnLayout {
+                    spacing: 10
+                    ColumnLayout {
+                        spacing: 0
+                        RadioButton {
+                            id: musicMode
+                            font.weight: Font.Light
+                            text: qsTr("Music Mode")
+                            enabled: MeetingStatus.MEETING_IDLE === meetingManager.roomStatus && musicModeSelectEnable
+                            checked: !talkMode.checked
+                            onClicked: {
+                                musicModeSelectEnable = false
+                                talkMode.checked = false
+                                SettingsManager.setAudioProfile(1)
+                                clickTimer.restart()
+                            }
+                        }
+                        Text {
+                            Layout.leftMargin: 35
+                            Layout.topMargin: -10
+                            Layout.preferredWidth: 435
+                            wrapMode: Text.WordWrap
+                            text: qsTr("You can enable this option in professional and music scenarios that have high requirements on sound quality")
+                        }
+                    }
+                    ColumnLayout {
+                        spacing: 20
+                        Layout.leftMargin: 35
+                        CustomCheckBox {
+                            id: echoCanceller
+                            font.weight: Font.Light
+                            enabled: musicMode.checked
+                            text: qsTr("Echo Canceller")
+                            checked: SettingsManager.enableAudioEchoCancellation
+                            onClicked: { SettingsManager.setEnableAudioEchoCancellation(checked) }
+                        }
+
+                        CustomCheckBox {
+                            id: enableStereo
+                            font.weight: Font.Light
+                            enabled: musicMode.checked && MeetingStatus.MEETING_IDLE === meetingManager.roomStatus
+                            text: qsTr("Enable Stereo")
+                            checked: SettingsManager.enableAudioStereo
+                            onClicked: { SettingsManager.setEnableAudioStereo(checked) }
+                        }
                     }
                 }
             }
@@ -349,6 +528,28 @@ Rectangle {
             deviceManager.startSpeakerTest(false)
         } else if (deviceTestMode === AudioDevice.TestMode.MicrophoneTestMode) {
             deviceManager.startMicrophoneTest(false)
+        }
+    }
+
+    Connections {
+        target: meetingManager
+        onMeetingStatusChanged: {
+            switch (status) {
+            case MeetingStatus.MEETING_CONNECTED:
+                if (checkAutoMicVolume.checked && microphoneSlider.value < 200) {
+                    microphoneSlider.value = 200
+                }
+                break
+            case MeetingStatus.MEETING_CONNECT_FAILED:
+            case MeetingStatus.MEETING_RECONNECT_FAILED:
+            case MeetingStatus.MEETING_DISCONNECTED:
+            case MeetingStatus.MEETING_KICKOUT_BY_HOST:
+            case MeetingStatus.MEETING_MULTI_SPOT_LOGIN:
+            case MeetingStatus.MEETING_ENDED:
+                break
+            default:
+                break
+            }
         }
     }
 }

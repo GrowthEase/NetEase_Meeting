@@ -1,55 +1,48 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #pragma once
 
-#include <Windows.h>
 #include <DbgHelp.h>
-#include <QString>
-#include <QProcess>
+#include <Windows.h>
 #include <QDateTime>
 #include <QDir>
 #include <QGuiApplication>
+#include <QProcess>
 #include <QStandardPaths>
+#include <QString>
 
 #pragma comment(lib, "Dbghelp.lib")
 
-BOOL CALLBACK MyMiniDumpCallback(PVOID, const PMINIDUMP_CALLBACK_INPUT input, PMINIDUMP_CALLBACK_OUTPUT output)
-{
-    if(input == NULL || output == NULL)
+BOOL CALLBACK MyMiniDumpCallback(PVOID, const PMINIDUMP_CALLBACK_INPUT input, PMINIDUMP_CALLBACK_OUTPUT output) {
+    if (input == NULL || output == NULL)
         return FALSE;
 
     BOOL ret = FALSE;
-    switch(input->CallbackType)
-    {
-    case IncludeModuleCallback:
-    case IncludeThreadCallback:
-    case ThreadCallback:
-    case ThreadExCallback:
-        ret = TRUE;
-        break;
-    case ModuleCallback:
-    {
-        if( !(output->ModuleWriteFlags & ModuleReferencedByMemory) )
-        {
-            output->ModuleWriteFlags &= ~ModuleWriteModule;
-        }
-        ret = TRUE;
-    }
-        break;
-    default:
-        break;
+    switch (input->CallbackType) {
+        case IncludeModuleCallback:
+        case IncludeThreadCallback:
+        case ThreadCallback:
+        case ThreadExCallback:
+            ret = TRUE;
+            break;
+        case ModuleCallback: {
+            if (!(output->ModuleWriteFlags & ModuleReferencedByMemory)) {
+                output->ModuleWriteFlags &= ~ModuleWriteModule;
+            }
+            ret = TRUE;
+        } break;
+        default:
+            break;
     }
 
     return ret;
 }
 
-void WriteDump(EXCEPTION_POINTERS* exp, const std::wstring &path)
-{
-    HANDLE h = ::CreateFile(path.c_str(), GENERIC_WRITE | GENERIC_READ, FILE_SHARE_WRITE | FILE_SHARE_READ,
-                            NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+void WriteDump(EXCEPTION_POINTERS* exp, const std::wstring& path) {
+    HANDLE h = ::CreateFile(path.c_str(), GENERIC_WRITE | GENERIC_READ, FILE_SHARE_WRITE | FILE_SHARE_READ, NULL, CREATE_ALWAYS,
+                            FILE_ATTRIBUTE_NORMAL, NULL);
 
     MINIDUMP_EXCEPTION_INFORMATION info;
     info.ThreadId = ::GetCurrentThreadId();
@@ -66,11 +59,14 @@ void WriteDump(EXCEPTION_POINTERS* exp, const std::wstring &path)
     ::CloseHandle(h);
 }
 
-LONG WINAPI MyUnhandledExceptionFilter(EXCEPTION_POINTERS* exp)
-{
+LONG WINAPI MyUnhandledExceptionFilter(EXCEPTION_POINTERS* exp) {
     QString app_dir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    app_dir.append("/app");
     QDateTime current_date_time = QDateTime::currentDateTime();
-    QString dump_dir = app_dir + "/" + current_date_time.toString("yyyyMMdd_hhmmss") + ".dmp";
+    QString dump_dir = app_dir + "/meeting_" + current_date_time.toString("yyyyMMdd_hhmmss") + ".dmp";
+    QDir dumpDir;
+    if (!dumpDir.exists(dump_dir))
+        dumpDir.mkpath(dump_dir);
     WriteDump(exp, dump_dir.toStdWString());
     QStringList arguments;
     arguments << "-crashed=" + dump_dir;

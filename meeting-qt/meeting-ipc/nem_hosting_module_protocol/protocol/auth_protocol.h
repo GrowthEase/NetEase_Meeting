@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef NEM_HOSTING_MODULE_PROTOCOL_AUTH_PROTOCOL_H_
 #define NEM_HOSTING_MODULE_PROTOCOL_AUTH_PROTOCOL_H_
@@ -24,8 +23,8 @@ enum AuthCID {
     AuthCID_LoginWithSSOToken_CB,
     AuthCID_TryAutoLogin,
     AuthCID_TryAutoLogin_CB,
-	AuthCID_LoginAnonymous,
-	AuthCID_LoginAnonymous_CB,
+    AuthCID_LoginAnonymous,
+    AuthCID_LoginAnonymous_CB,
     AuthCID_QueryAccountInfo,
     AuthCID_QueryAccountInfo_CB,
     AuthCID_Logout,
@@ -35,8 +34,7 @@ enum AuthCID {
     AuthCID_Notify_AuthInfoExpired,
 };
 
-class LoginRequestEx : public NEMIPCProtocolBody
-{
+class LoginRequestEx : public NEMIPCProtocolBody {
 public:
     virtual void OnPack(Json::Value& root) const override;
     virtual void OnParse(const Json::Value& root) override;
@@ -80,15 +78,12 @@ public:
 };
 using LoginWithSSOResponse = NEMIPCProtocolErrorInfoBody;
 
-
-
 class LoginAnonymousRequest : public NEMIPCProtocolBody {
 public:
-	virtual void OnPack(Json::Value& root) const override;
-	virtual void OnParse(const Json::Value& root) override;
+    virtual void OnPack(Json::Value& root) const override;
+    virtual void OnParse(const Json::Value& root) override;
 
 public:
-
 };
 using LoginAnonymousResponse = NEMIPCProtocolErrorInfoBody;
 

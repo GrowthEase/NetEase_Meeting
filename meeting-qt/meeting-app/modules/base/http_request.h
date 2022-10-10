@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef IHTTPREQUEST_H
 #define IHTTPREQUEST_H
@@ -13,8 +12,10 @@ const QByteArray kHttpAppGroupName = "appGroupName";
 const QByteArray kHttpAppVersionName = "appVersionName";
 const QByteArray kHttpAppDeviceId = "deviceId";
 const QByteArray kHttpAppVersionCode = "appVersionCode";
+
 const QByteArray kHttpClientType = "clientType";
-const QByteArray kHttpSDKVersion = "sdkVersion";
+const QByteArray kHttpMeetingVersion = "meetingVer";
+const QByteArray kHttpRoomkitVersion = "roomKitVer";
 
 const QString kHttpUserId = "userId";
 const QString kHttpMeetingToken = "meetingToken";
@@ -40,8 +41,6 @@ const QString HTTP_CREATE_ROOM = "meeting/create";
 const QString HTTP_JOIN_ROOM = "meeting/joinInfo";
 const QString HTTP_ANON_JOIN_ROOM = "meeting/anonymousJoinInfo";
 
-// json key
-const QString kHttpScene = "scene";
 // Accounts
 const QString APPFUN_GET_AUTH_CODE = "account/authCode/get";
 const QString APPFUN_VERIFY_AUTH_CODE = "account/authCode/verify";
@@ -52,6 +51,8 @@ const QString APPFUN_RESET_PASSWORD = "account/password/reset";
 const QString APPFUN_UPDATE_PROFILE = "account/info/modify";
 // Update
 const QString APPFUN_CLINET_UPDATE = "client/latestVersion";
+
+const QString kHttpScene = "scene/meeting/";
 
 enum GetAuthCodeScene { kGetAuthCodeLogin, kGetAuthCodeRegister, kGetAuthCodeResetPassword };
 

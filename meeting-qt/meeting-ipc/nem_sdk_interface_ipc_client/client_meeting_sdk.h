@@ -1,30 +1,26 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef NEM_SDK_INTERFACE_IPC_CLIENT_INTERFACE_MEETING_SDK_H_
 #define NEM_SDK_INTERFACE_IPC_CLIENT_INTERFACE_MEETING_SDK_H_
 
-#include "meeting_sdk.h"
 #include "client_prochandler_define.h"
+#include "meeting_sdk.h"
 
 NNEM_SDK_INTERFACE_BEGIN_DECLS
-class NEM_SDK_INTERFACE_EXPORT NEMeetingSDKProcHandler : public NEProcHandler
-{
+class NEM_SDK_INTERFACE_EXPORT NEMeetingSDKProcHandler : public NEProcHandler {
 public:
-    virtual void onInitialize(const NEMeetingSDKConfig& config, const NEMeetingSDK::NEInitializeCallback& cb) = 0;
-    virtual void onUnInitialize(const NEMeetingSDK::NEUnInitializeCallback& cb) = 0;
-    virtual void onQuerySDKVersion(const NEMeetingSDK::NEQuerySDKVersionCallback& cb) = 0;
-    virtual void onActiveWindow(const NEMeetingSDK::NEActiveWindowCallback& cb) = 0;
+    virtual void onInitialize(const NEMeetingKitConfig& config, const NEMeetingKit::NEInitializeCallback& cb) = 0;
+    virtual void onUnInitialize(const NEMeetingKit::NEUnInitializeCallback& cb) = 0;
+    virtual void onQuerySDKVersion(const NEMeetingKit::NEQueryKitVersionCallback& cb) = 0;
+    virtual void onActiveWindow(bool bRaise, const NEMeetingKit::NEActiveWindowCallback& cb) = 0;
     virtual void attachSDKInitialize(const std::function<void(bool)>& cb) = 0;
 };
-class NEM_SDK_INTERFACE_EXPORT NEMeetingSDKIPCClient : public NEServiceIPCClient< NEMeetingSDKProcHandler, NEMeetingSDK>
-{
+class NEM_SDK_INTERFACE_EXPORT NEMeetingSDKIPCClient : public NEServiceIPCClient<NEMeetingSDKProcHandler, NEMeetingKit> {
 public:
     static NEMeetingSDKIPCClient* getInstance();
-    enum LogLevel
-    {
+    enum LogLevel {
         LogLevel_DEBUG = 0,
         LogLevel_INFO,
         LogLevel_WARNING,
@@ -36,6 +32,7 @@ public:
         LogLevel_V3,
         LogLevel_V4,
     };
+
 public:
     virtual void privateInitialize(int port) = 0;
     virtual void attachPrivateInitialize(const std::function<void(bool)>& cb) = 0;
@@ -44,4 +41,4 @@ public:
 
 NNEM_SDK_INTERFACE_END_DECLS
 
-#endif // NEM_SDK_INTERFACE_IPC_CLIENT_INTERFACE_MEETING_SDK_H_
+#endif  // NEM_SDK_INTERFACE_IPC_CLIENT_INTERFACE_MEETING_SDK_H_

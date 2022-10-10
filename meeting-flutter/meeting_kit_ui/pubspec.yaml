@@ -1,0 +1,53 @@
+name: netease_meeting_ui
+description: A package implements standard UI for netease_meeting.
+version: 3.0.0
+homepage: https://yunxin.163.com/
+publish_to: none
+
+environment:
+  sdk: ">=2.12.0 <3.0.0"
+  flutter: ">=1.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.5
+
+  bot_toast: ^4.0.2
+  permission_handler: 8.3.0
+
+  path_provider: ^2.0.11
+  uuid: ^3.0.6
+  pedantic: ^1.11.1
+  wakelock: ^0.6.2
+  wakelock_platform_interface: ^0.3.0
+  shared_preferences: ^2.0.15
+
+  image_size_getter: ^2.1.2
+  image_gallery_saver: ^1.7.1
+  open_file: ^3.2.1
+  scrollable_positioned_list: ^0.2.3
+
+  file_picker: ^4.6.1
+
+  netease_meeting_assets:
+    path: ../meeting_kit_assets
+  netease_meeting_core:
+    path: ../meeting_kit
+  netease_common: ^0.0.2
+  netease_roomkit: ^0.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^1.0.0
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.netease.meeting.plugin
+        pluginClass: MeetingPlugin
+      ios:
+        pluginClass: MeetingPlugin

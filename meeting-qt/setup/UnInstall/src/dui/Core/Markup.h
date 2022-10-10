@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef UI_CORE_MARKUP_H_
 #define UI_CORE_MARKUP_H_
@@ -10,8 +9,7 @@
 
 namespace ui {
 
-enum
-{
+enum {
     XMLFILE_ENCODING_UTF8 = 0,
     XMLFILE_ENCODING_UNICODE = 1,
     XMLFILE_ENCODING_ASNI = 2,
@@ -20,10 +18,9 @@ enum
 class CMarkup;
 class CMarkupNode;
 
-
-class UILIB_API CMarkup
-{
+class UILIB_API CMarkup {
     friend class CMarkupNode;
+
 public:
     CMarkup(LPCTSTR pstrXML = NULL);
     ~CMarkup();
@@ -41,8 +38,7 @@ public:
     CMarkupNode GetRoot();
 
 private:
-    typedef struct tagXMLELEMENT
-    {
+    typedef struct tagXMLELEMENT {
         ULONG iStart;
         ULONG iChild;
         ULONG iNext;
@@ -72,10 +68,9 @@ private:
     bool _Failed(LPCTSTR pstrError, LPCTSTR pstrLocation = NULL);
 };
 
-
-class UILIB_API CMarkupNode
-{
+class UILIB_API CMarkupNode {
     friend class CMarkup;
+
 private:
     CMarkupNode();
     CMarkupNode(CMarkup* pOwner, int iPos);
@@ -107,8 +102,7 @@ private:
 
     enum { MAX_XML_ATTRIBUTES = 64 };
 
-    typedef struct
-    {
+    typedef struct {
         ULONG iName;
         ULONG iValue;
     } XMLATTRIBUTE;
@@ -119,6 +113,6 @@ private:
     CMarkup* m_pOwner;
 };
 
-} // namespace ui
+}  // namespace ui
 
-#endif // UI_CORE_MARKUP_H_
+#endif  // UI_CORE_MARKUP_H_

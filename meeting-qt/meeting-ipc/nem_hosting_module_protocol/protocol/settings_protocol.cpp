@@ -1,75 +1,57 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "nem_hosting_module_protocol/protocol/settings_protocol.h"
 NNEM_SDK_HOSTING_MODULE_PROTOCOL_BEGIN_DECLS
 
 USING_NS_NNEM_SDK_HOSTING_MODULE_CORE
 
-void ShowUIWndRequest::OnPack(Json::Value& root) const
-{
-}
-void ShowUIWndRequest::OnParse(const Json::Value& root)
-{
-}
+void ShowUIWndRequest::OnPack(Json::Value& root) const {}
+void ShowUIWndRequest::OnParse(const Json::Value& root) {}
 
-void SettingsChangeNotify::OnPack(Json::Value& root) const
-{
+void SettingsChangeNotify::OnPack(Json::Value& root) const {
     root["type_"] = type_;
     root["status_"] = status_;
+    root["value_"] = value_;
 }
-void SettingsChangeNotify::OnParse(const Json::Value& root)
-{
+void SettingsChangeNotify::OnParse(const Json::Value& root) {
     type_ = (SettingChangType)root["type_"].asInt();
     status_ = root["status_"].asBool();
+    value_ = root["value_"].asInt();
 }
 
-void SettingsBoolRequest::OnPack(Json::Value& root) const
-{
+void SettingsBoolRequest::OnPack(Json::Value& root) const {
     root["status_"] = status_;
 }
-void SettingsBoolRequest::OnParse(const Json::Value& root)
-{
+void SettingsBoolRequest::OnParse(const Json::Value& root) {
     status_ = root["status_"].asBool();
 }
 
-void SettingsBoolResponse::OnOtherPack(Json::Value& root) const
-{
+void SettingsBoolResponse::OnOtherPack(Json::Value& root) const {
     root["status_"] = status_;
 }
-void SettingsBoolResponse::OnOtherParse(const Json::Value& root)
-{
+void SettingsBoolResponse::OnOtherParse(const Json::Value& root) {
     status_ = root["status_"].asBool();
 }
 
-
-void SettingsIntRequest::OnPack(Json::Value& root) const
-{
-	root["value_"] = value_;
+void SettingsIntRequest::OnPack(Json::Value& root) const {
+    root["value_"] = value_;
 }
-void SettingsIntRequest::OnParse(const Json::Value& root)
-{
-	value_ = root["value_"].asUInt();
+void SettingsIntRequest::OnParse(const Json::Value& root) {
+    value_ = root["value_"].asInt();
 }
 
-void SettingsIntResponse::OnOtherPack(Json::Value& root) const
-{
-	root["value_"] = value_;
+void SettingsIntResponse::OnOtherPack(Json::Value& root) const {
+    root["value_"] = value_;
 }
-void SettingsIntResponse::OnOtherParse(const Json::Value& root)
-{
-	value_ = root["value_"].asUInt();
+void SettingsIntResponse::OnOtherParse(const Json::Value& root) {
+    value_ = root["value_"].asInt();
 }
 
-void SettingsGetHistoryMeetingRequest::OnPack(Json::Value& root) const {
-    ;
-}
+void SettingsGetHistoryMeetingRequest::OnPack(Json::Value& root) const {}
 
-void SettingsGetHistoryMeetingRequest::OnParse(const Json::Value& root) {
-    ;
-}
+void SettingsGetHistoryMeetingRequest::OnParse(const Json::Value& root) {}
 
 void SettingsGetHistoryMeetingResponse::OnOtherPack(Json::Value& root) const {
     if (params_.empty() == false) {
@@ -86,9 +68,6 @@ void SettingsGetHistoryMeetingResponse::OnOtherPack(Json::Value& root) const {
         }
     }
 }
-
-
-
 void SettingsGetHistoryMeetingResponse::OnOtherParse(const Json::Value& root) {
     for (auto& item : root["HistoryMeetingItems"]) {
         NEHistoryMeetingItem meetingItem;
@@ -100,6 +79,23 @@ void SettingsGetHistoryMeetingResponse::OnOtherParse(const Json::Value& root) {
         meetingItem.nickname = item["nickname"].asString();
         meetingItem.sipId = item["sipId"].asString();
         params_.push_back(meetingItem);
+    }
+}
+
+void SettingsGetVirtualBackgroundListResponse::OnOtherPack(Json::Value& root) const {
+    if (params_.empty() == false) {
+        for (auto& item : params_) {
+            Json::Value json_item;
+            json_item["path"] = item.path;
+            root["virtualBackgroundList"].append(json_item);
+        }
+    }
+}
+void SettingsGetVirtualBackgroundListResponse::OnOtherParse(const Json::Value& root) {
+    for (auto& item : root["virtualBackgroundList"]) {
+        NEMeetingVirtualBackground itemTmp;
+        itemTmp.path = item["path"].asString();
+        params_.push_back(itemTmp);
     }
 }
 

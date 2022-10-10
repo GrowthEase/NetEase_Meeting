@@ -3,14 +3,17 @@ import QtQuick.Controls 2.12
 import QtGraphicalEffects 1.0
 import QtQuick.Layouts 1.12
 
+
 /**
 * @brief An Android-like timed message text in a box that selfdestroys when finished if desired
 */
 Rectangle {
 
+
     /**
     * Public
     */
+
 
     /**
     * @brief Shows this Toast
@@ -19,16 +22,15 @@ Rectangle {
     * @param {real} duration Duration to show in milliseconds, defaults to 3000
     */
     function show(text, duration) {
-        theText.text = text;
-        if(typeof duration !== "undefined") {
-            if(duration >= 2*fadeTime)
-                time = duration;
+        theText.text = text
+        if (typeof duration !== "undefined") {
+            if (duration >= 2 * fadeTime)
+                time = duration
             else
-                time = 2*fadeTime;
-        }
-        else
-            time = defaultTime;
-        anim.start();
+                time = 2 * fadeTime
+        } else
+            time = defaultTime
+        anim.start()
     }
 
     property bool selfDestroying: false ///< Whether this Toast will selfdestroy when it is finished
@@ -36,10 +38,10 @@ Rectangle {
     property var textColor: "#FFFFFF"
     property var icon: ""
 
+
     /**
     * Private
     */
-
     id: root
 
     property real time: defaultTime
@@ -74,6 +76,7 @@ Rectangle {
 
             Image {
                 source: icon
+                mipmap: true
                 sourceSize.width: 14
                 sourceSize.height: 14
                 visible: icon.length > 0
@@ -97,15 +100,15 @@ Rectangle {
             duration: fadeTime
         }
         PauseAnimation {
-            duration: time - 2*fadeTime
+            duration: time - 2 * fadeTime
         }
         NumberAnimation {
             to: 0
             duration: fadeTime
         }
         onRunningChanged: {
-            if(!running && selfDestroying)
-                root.destroy();
+            if (!running && selfDestroying)
+                root.destroy()
         }
     }
 
@@ -117,6 +120,10 @@ Rectangle {
         samples: 17
         source: rect
         color: "#661E1E1E"
-        Behavior on radius { PropertyAnimation { duration: 100 } }
+        Behavior on radius {
+            PropertyAnimation {
+                duration: 100
+            }
+        }
     }
 }

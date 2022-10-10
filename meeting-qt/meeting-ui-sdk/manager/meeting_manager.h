@@ -1,42 +1,24 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
-
-// Copyright (c) 2014-2020 NetEase, Inc.
-// All right reserved.
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef MEETINGMANAGER_H
 #define MEETINGMANAGER_H
 
 #include <QObject>
-#include "controller/beauty_ctrl_interface.h"
 #include "controller/chat_ctrl_interface.h"
-#include "controller/livestream_ctrl_interface.h"
-#include "controller/user_ctrl_interface.h"
+#include "controller/live_ctrl_interface.h"
+#include "controller/meeting_controller.h"
+#include "controller/rtc_ctrl_interface.h"
 #include "controller/whiteboard_ctrl_interface.h"
-#include "in_room_service_interface.h"
-#include "in_room_stats_listener.h"
 #include "room_service_interface.h"
-#include "room_service_listener.h"
 
+#include "controller/subscribe_helper.h"
 #include "utils/invoker.h"
 
 using namespace neroom;
 
-namespace neroom {
-
-class INERoomInfo;
-class INEUserController;
-class INEAudioController;
-class INEVideoController;
-class INEScreenShareController;
-class INERoomLivingController;
-class INERoomWhiteboardController;
-class INEInRoomBeautyController;
-class INERoomChatController;
-
-}  // namespace neroom
+namespace neroom {}  // namespace neroom
 
 typedef struct tagAutoStartInfo {
     bool isCreate;
@@ -72,7 +54,7 @@ public:
     enum ExtCode { EXT_DEFAULT, EXT_CODE_KICKOUTED_BY_HOST, EXT_CODE_MEETING_FINISHED, EXT_CODE_FAILED_TO_RELOGIN };
     Q_ENUM(ExtCode)
 
-    enum DeviceStatus { DEVICE_ENABLED = kAudioEnabled, DEVICE_DISABLED_BY_DELF, DEVICE_DISABLED_BY_HOST, DEVICE_NEEDS_TO_CONFIRM };
+    enum DeviceStatus { DEVICE_ENABLED = 1, DEVICE_DISABLED_BY_DELF, DEVICE_DISABLED_BY_HOST, DEVICE_NEEDS_TO_CONFIRM };
     Q_ENUM(DeviceStatus)
 
     enum NetWorkQualityType { NETWORKQUALITY_GOOD = 0, NETWORKQUALITY_GENERAL, NETWORKQUALITY_BAD };
@@ -81,13 +63,16 @@ public:
     enum MeetingIdDisplayOptions { DISPLAY_SHORT_ID_ONLY, DISPLAY_LONG_ID_ONLY, DISPLAY_ALL };
     Q_ENUM(MeetingIdDisplayOptions)
 
-    enum HandsUpStatus { HAND_STATUS_RAISE = kHandsUpRaise, HAND_STATUS_DOWN, HAND_STATUS_AGREE, HAND_STATUS_REJECT };
+    enum HandsUpStatus { HAND_STATUS_RAISE = 1, HAND_STATUS_DOWN, HAND_STATUS_AGREE, HAND_STATUS_REJECT };
     Q_ENUM(HandsUpStatus)
+
+    enum HandsUpType { HAND_TYPE_DEFAULT, HAND_TYPE_AUDIO, HAND_TYPE_VIDEO };
+    Q_ENUM(HandsUpType)
 };
 
 Q_DECLARE_METATYPE(NEMeeting::Status)
 
-class MeetingManager : public QObject, public INERoomLifeCycleListener {
+class MeetingManager : public QObject {
     Q_OBJECT
 
 private:
@@ -109,6 +94,7 @@ public:
     Q_PROPERTY(bool meetingLocked READ meetingLocked WRITE setMeetingLocked NOTIFY meetingLockedChanged)
     Q_PROPERTY(bool showMeetingDuration READ showMeetingDuration WRITE setShowMeetingDuration NOTIFY showMeetingDurationChanged)
     Q_PROPERTY(qint64 meetingDuration READ meetingDuration WRITE setMeetingDuration NOTIFY meetingDurationChanged)
+    Q_PROPERTY(qint64 remainingSeconds READ remainingSeconds WRITE setRemainingSeconds NOTIFY remainingSecondsChanged)
     Q_PROPERTY(QString nickname READ nickname WRITE setNickname NOTIFY nicknameChanged)
     Q_PROPERTY(bool autoStartMode READ autoStartMode WRITE setAutoStartMode NOTIFY autoStartModeChanged)
     Q_PROPERTY(bool hideInvitation READ hideInvitation WRITE setHideInvitation NOTIFY hideInvitationChanged)
@@ -121,50 +107,64 @@ public:
     Q_PROPERTY(bool reName READ reName WRITE setReName NOTIFY reNameChanged)
     Q_PROPERTY(bool enableRecord READ enableRecord WRITE setEnableRecord NOTIFY enableRecordChanged)
     Q_PROPERTY(int meetingMuteCount READ meetingMuteCount)
-    Q_INVOKABLE bool autoStartMeeting();
+    Q_PROPERTY(int joinTimeout READ joinTimeout WRITE setJoinTimeout NOTIFY joinTimeoutChanged)
+    Q_PROPERTY(bool meetingAllowSelfAudioOn READ meetingAllowSelfAudioOn WRITE setMeetingAllowSelfAudioOn NOTIFY meetingAllowSelfAudioOnChanged)
+    Q_PROPERTY(bool meetingAllowSelfVideoOn READ meetingAllowSelfVideoOn WRITE setMeetingAllowSelfVideoOn NOTIFY meetingAllowSelfVideoOnChanged)
+    Q_PROPERTY(bool showMemberTag READ showMemberTag WRITE setShowMemberTag NOTIFY showMemberTagChanged)
+    Q_PROPERTY(bool meetingVideoMuted READ meetingVideoMuted WRITE setMeetingVideoMuted NOTIFY meetingVideoMutedChanged)
+    Q_PROPERTY(int maxCount READ maxCount CONSTANT)
+    Q_PROPERTY(NEMeeting::Status roomStatus READ roomStatus NOTIFY roomStatusChanged)
+    Q_PROPERTY(bool hideMuteAllVideo READ hideMuteAllVideo WRITE setHideMuteAllVideo NOTIFY hideMuteAllVideoChanged)
+    Q_PROPERTY(bool hideMuteAllAudio READ hideMuteAllAudio WRITE setHideMuteAllAudio NOTIFY hideMuteAllAudioChanged)
+    Q_PROPERTY(bool enableFileMessage READ enableFileMessage WRITE setEnableFileMessage NOTIFY enableFileMessageChanged)
+    Q_PROPERTY(bool enableImageMessage READ enableImageMessage WRITE setEnableImageMessage NOTIFY enableImageMessageChanged)
 
+    Q_INVOKABLE bool autoStartMeeting();
     // 输入密码入会
     Q_INVOKABLE void joinMeeting(const QString& strPassword);
     Q_INVOKABLE void cancelJoinMeeting();
     Q_INVOKABLE NEMeeting::Status getRoomStatus() const;
     Q_INVOKABLE void modifyNicknameInMeeting(const QString& newnickname, const QString& meetingID);
+    Q_INVOKABLE void activeMainWindow() const;
 
-    virtual void onIdle() override;
-    virtual void onConnecting() override;
-    virtual void onConnected() override;
-    virtual void onDisconnecting() override;
-    virtual void onDisconnected(int reason) override;
-    virtual void onConnectFail(int reason) override;
-    virtual void onReConnecting() override;
-    virtual void onReConnected() override;
-    virtual void onReConnectFail() override;
+    void onIdle();
+    void onConnecting();
+    void onConnected();
+    void onDisconnected(int reason);
+    void onConnectFail(int reason);
+    void onReConnecting();
+    void onReConnected();
+    void onReConnectFail();
+
+    void startJoinTimer();
 
     void onRoomStatusChanged(NEMeeting::Status status, int errorCode = 0);
     void onError(uint32_t errorCode, const std::string& errorMessage);
 
-    neroom::NEErrorCode createMeeting(const NEStartRoomParams& param, const NEStartRoomOptions& option);
-    neroom::NEErrorCode joinMeeting(const NEJoinRoomParams& param, const NEJoinRoomOptions& option);
-    void activeMeetingWindow();
+    bool createMeeting(const nem_sdk_interface::NEStartMeetingParams& param, const NERoomOptions& option);
+    bool joinMeeting(const nem_sdk_interface::NEJoinMeetingParams& param, const NERoomOptions& option);
+    void activeMeetingWindow(bool bRaise);
+    void setShowMeetingRemainingTip(bool show) { m_showMeetingRemainingTip = show; }
 
     bool initialize();
     void release();
-    INERoomInfo* getMeetingInfo();
-    INEInRoomAudioController* getInRoomAudioController() const;
-    INEInRoomVideoController* getInRoomVideoController() const;
-    INERoomUserController* getUserController() const;
-    INEScreenShareController* getScreenShareController() const;
-    INERoomLivingController* getLivingController() const;
+    NERoomInfo getMeetingInfo() const;
+    INERoomContext* getRoomContext();
     INERoomWhiteboardController* getWhiteboardController() const;
-    INEInRoomBeautyController* getInRoomBeautyController() const;
+    std::shared_ptr<NEMeetingController> getMeetingController() const;
     INERoomChatController* getInRoomChatController() const;
+    INERoomRtcController* getInRoomRtcController() const;
+    INERoomLiveController* getLiveController() const;
+    std::shared_ptr<SubscribeHelper> getSubscribeHelper() const;
 
     void setStartMeetingInfo(bool isCreate, const QString& meetingId, const QString& nickname, bool audio, bool video, bool hideInvitation);
 
     void onRoomLockStatusChanged(bool isLock);
     void onRoomMuteStatusChanged(bool muted);
+    void onRoomMuteAllVideoStatusChanged(bool muted);
     void onRoomMuteNeedHandsUpChanged(bool bNeedHandsUp);
+    void onRoomMuteVideoNeedHandsUpChanged(bool bNeedHandsUp);
     void onRoomSIPChannelIdChanged(const std::string /*sipChannelId*/) {}
-    void onRoomDurationChanged(const uint64_t& duration);
     void onRoomStartTimeChanged(uint64_t startTime);
 
     QString meetingUniqueId() const;
@@ -179,6 +179,9 @@ public:
     bool meetingMuted() const;
     void setMeetingMuted(bool meetingMuted);
 
+    bool meetingVideoMuted() const;
+    void setMeetingVideoMuted(bool mute);
+
     bool meetingLocked() const;
     void setMeetingLocked(bool meetingLocked);
 
@@ -191,6 +194,9 @@ public:
     qint64 meetingDuration() const;
     void setMeetingDuration(qint64 duration);
 
+    bool showMemberTag() const;
+    void setShowMemberTag(bool showMemberTag);
+
     QString nickname() const;
     void setNickname(const QString& nickname);
 
@@ -202,6 +208,18 @@ public:
 
     bool hideChatroom() const;
     void setHideChatroom(bool hideChatroom);
+
+    bool hideMuteAllVideo() const;
+    void setHideMuteAllVideo(bool hideMuteAllVideo);
+
+    bool hideMuteAllAudio() const;
+    void setHideMuteAllAudio(bool hideMuteAllAudio);
+
+    bool enableFileMessage() const;
+    void setEnableFileMessage(bool enableFileMessage);
+
+    bool enableImageMessage() const;
+    void setEnableImageMessage(bool enableImageMessage);
 
     QString meetingTopic() const;
     void setMeetingTopic(const QString& meetingTopic);
@@ -223,6 +241,9 @@ public:
     bool meetingAllowSelfAudioOn() const;
     void setMeetingAllowSelfAudioOn(bool bHandsUp);
 
+    bool meetingAllowSelfVideoOn() const;
+    void setMeetingAllowSelfVideoOn(bool bHandsUp);
+
     bool hideScreenShare() const;
     void setHideScreenShare(bool hideScreenShare);
 
@@ -238,11 +259,23 @@ public:
     bool enableRecord() const;
     void setEnableRecord(bool enableRecord);
 
-    int meetingMuteCount() const {return m_meetingMuteCount;}
+    int meetingMuteCount() const { return m_meetingMuteCount; }
+
+    int joinTimeout() const;
+    void setJoinTimeout(int joinTimeout);
+
+    Q_INVOKABLE bool hideSip() const;
+    void setHideSip(bool hideSip);
+
+    int maxCount() const;
+    NEMeeting::Status roomStatus() const { return getRoomStatus(); }
+
+    void setRemainingSeconds(qint64 remainingSeconds);
+    qint64 remainingSeconds() const { return m_uRemainingSeconds; }
 
 signals:
     void error(int errorCode, const QString& errorMessage);
-    void activeWindow();
+    void activeWindow(bool bRaise);
     void meetingStatusChanged(NEMeeting::Status status, int errorCode, const QString& errorMessage = "");
 
     // Members signals
@@ -259,38 +292,51 @@ signals:
     void meetingSchdeuleStarttimeChanged();
     void meetingSchdeuleEndtimeChanged();
     void meetingMutedChanged();
+    void meetingVideoMutedChanged();
     void meetingLockedChanged();
     void prettyMeetingIdChanged();
     void showMeetingDurationChanged();
+    void showMemberTagChanged();
     void meetingDurationChanged();
+    void remainingSecondsChanged();
     void nicknameChanged();
     void autoStartModeChanged();
     void hideInvitationChanged();
     void hideChatroomChanged();
+    void hideMuteAllVideoChanged();
+    void hideMuteAllAudioChanged();
     void hideScreenShareChanged();
     void hideViewChanged();
     void meetingIdDisplayOptionChanged();
     void hideWhiteboardChanged();
     void meetingAllowSelfAudioOnChanged();
+    void meetingAllowSelfVideoOnChanged();
     void reNameChanged();
     void enableRecordChanged();
+    void joinTimeoutChanged(int joinTimeout);
     // Notifications
     void lockStatusNotify(bool locked);
-    void muteStatusNotify(bool muted);
+    void muteStatusNotify(bool muted, bool audio = true);
     void hostChangedNotify(const QString& changedAccountId);
 
     void modifyNicknameResult(bool success);
+    void roomStatusChanged(NEMeeting::Status roomStatus);
+
+    void enableFileMessageChanged();
+    void enableImageMessageChanged();
+
 public slots:
     void lockMeeting(bool lock);
-    void leaveMeeting(bool finish);
+    void leaveMeeting(bool finish, const neroom::NECallback<>& callback = neroom::NECallback<>());
     bool isInMeeting();
 
 private:
-    INERoomService* m_meetingService = nullptr;
-    INEInRoomService* m_inMeetingService = nullptr;
-    INEInRoomServiceListener* m_inMeetingServiceListener = nullptr;
-    INERtcStatsEventListener* m_rtcRtcStatsEventListener = nullptr;
+    void setMaxCount(const QString& extraData);
+
+private:
+    std::shared_ptr<NEMeetingController> m_meetingController = nullptr;
     QTimer m_durationTimer;
+    QTimer m_remainingTipTimer;
     QString m_shortMeetingId = "";
     QString m_meetingUniqueId;
     QString m_meetingId;
@@ -302,17 +348,23 @@ private:
     bool m_meetingMuted = false;
     bool m_meetingLocked = false;
     bool m_meetingAllowSelfAudioOn = false;
+    bool m_meetingAllowSelfVideoOn = false;
     bool m_showMeetingDuration = true;
     qint64 m_uMeetingDuration = 0;
-    qint64 m_uMeetingDurationEx = 0;
     qint64 m_uMeetingStartTime = 0;
+    qint64 m_uRemainingSeconds = 0;
     bool m_hideInvitation = false;
     bool m_hideChatroom = false;
-    bool m_hideScreenShare = true;  // 是否显示共享屏幕
-    bool m_hideView = true;         // 是否显示视图切换
-    bool m_hideWhiteboard = false;  // 是否显示共享白板
-    bool m_reName = true;           // 是否支持会中改名
-    bool m_enableRecord = false;    // 是否显示"录制中"状态
+    bool m_hideScreenShare = true;     // 是否显示共享屏幕
+    bool m_hideView = true;            // 是否显示视图切换
+    bool m_hideWhiteboard = false;     // 是否显示共享白板
+    bool m_hideSip = false;            // 是否显示SIP
+    bool m_reName = true;              // 是否支持会中改名
+    bool m_enableRecord = false;       // 是否显示"录制中"状态
+    bool m_hideMuteAllVideo = true;    // 是否显示"全体关闭/打开视频"按钮
+    bool m_hideMuteAllAudio = false;   // 是否显示"全体静音"按钮
+    bool m_enableFileMessage = true;   // 是否支持"聊天室文件消息"
+    bool m_enableImageMessage = true;  // 是否支持"聊天室图片消息"
     QString m_prettyMeetingId;
     QString m_userNickname = "";
     Invoker m_invoker;
@@ -323,9 +375,23 @@ private:
     int m_meetingMuteCount = 0;
 
     // 需要密码时缓存一下登录信息
-    NEJoinRoomParams m_joinRoomParams;
-    NEJoinRoomOptions m_joinRoomOptions;
+    nem_sdk_interface::NEJoinMeetingParams m_joinRoomParams;
+    NERoomOptions m_joinRoomOptions;
     NEMeeting::Status m_meetingStatus = NEMeeting::MEETING_IDLE;
+    int m_joinTimeout = 45 * 1000;
+    QTimer m_joinTimeoutTimer;
+
+    bool m_bshowMemberTag = false;
+    int m_nMaxCount = -1;
+
+    bool m_meetingVideoMuted = false;
+
+    bool m_noVideo = true;
+    bool m_noAudio = true;
+
+    std::shared_ptr<SubscribeHelper> m_subscribeHelper = nullptr;
+
+    bool m_showMeetingRemainingTip = false;
 };
 
 #endif  // MEETINGMANAGER_H

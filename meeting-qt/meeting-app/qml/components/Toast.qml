@@ -74,6 +74,7 @@ Rectangle {
 
             Image {
                 source: icon
+                mipmap: true
                 sourceSize.width: 14
                 sourceSize.height: 14
                 visible: icon.length > 0

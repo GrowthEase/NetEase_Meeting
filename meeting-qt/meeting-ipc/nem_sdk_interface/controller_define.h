@@ -1,4 +1,8 @@
-﻿/**
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+
+/**
  * @file controller_define.h
  * @brief 通用控制接口头文件
  * @copyright (c) 2014-2021, NetEase Inc. All rights reserved
@@ -16,8 +20,7 @@ NNEM_SDK_INTERFACE_BEGIN_DECLS
 /**
  * @brief 通用控制接口基类
  */
-class NEM_SDK_INTERFACE_EXPORT NEController : public virtual NEObject
-{
+class NEM_SDK_INTERFACE_EXPORT NEController : public virtual NEObject {
 public:
     /**
      * @brief 构造函数
@@ -27,9 +30,9 @@ public:
     /**
      * @brief 析构函数
      */
-    virtual ~NEController() {};
+    virtual ~NEController(){};
 };
 
 NNEM_SDK_INTERFACE_END_DECLS
 
-#endif//NEM_SDK_INTERFACE_DEFINE_CONTROLLER_H_
+#endif  // NEM_SDK_INTERFACE_DEFINE_CONTROLLER_H_

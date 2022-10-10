@@ -1,13 +1,13 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef NEM_SDK_INTERFACE_APP_PROCHANDLER_AUTH_PROCHANDLER_H_
 #define NEM_SDK_INTERFACE_APP_PROCHANDLER_AUTH_PROCHANDLER_H_
 
 #include "auth_service_interface.h"
 #include "client_auth_service.h"
+#include "controller/auth_controller.h"
 
 class NEAuthServiceProcHandlerIMP : public QObject, public NS_I_NEM_SDK::NEAuthServiceProcHandler {
     Q_OBJECT
@@ -34,7 +34,7 @@ signals:
     void logoutSignal(void* cb);
 
 public slots:
-    void onAuthStatusChanged(neroom::NEAuthStatus status, const neroom::NEAuthStatusExCode& error);
+    void onAuthStatusChanged(NEAuthStatus status, const NEAuthStatusExCode& error);
 
 private:
     NS_I_NEM_SDK::NEAuthService::NEAuthLoginCallback m_loginCallback = nullptr;

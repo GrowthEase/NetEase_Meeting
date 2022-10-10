@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "screen_model.h"
 #include <QDebug>
@@ -27,7 +26,7 @@ ScreenModel::ScreenModel(QObject* parent)
         endResetModel();
     });
     connect(qApp, &QGuiApplication::screenRemoved, this, [this](QScreen* screen) {
-        YXLOG(Info) << "Received screen removed event, screen name: " << screen->name().toStdString()<< YXLOGEnd;
+        YXLOG(Info) << "Received screen removed event, screen name: " << screen->name().toStdString() << YXLOGEnd;
         beginResetModel();
         endResetModel();
     });
@@ -205,6 +204,9 @@ QImage ShareImageProvider::requestImage(const QString& idTmp, QSize* size, const
             QPixmap pixmap =
                 screen->grabWindow(0, screen->geometry().x(), screen->geometry().y(), screen->geometry().width(), screen->geometry().height());
 #endif
+            if (requestedSize.isValid()) {
+                pixmap = pixmap.scaled(requestedSize);
+            }
             return pixmap.toImage().convertToFormat(QImage::Format_ARGB32);
         }
     } else if (ScreenModel::kScreenType_App == m_screenType) {
@@ -222,7 +224,11 @@ QImage ShareImageProvider::requestImage(const QString& idTmp, QSize* size, const
                 if (captureHelper.Capture()) {
                     bCapture = true;
                     HBITMAP hBitmap = captureHelper.GetBitmap();
-                    return QtWin::fromHBITMAP(hBitmap).toImage().convertToFormat(QImage::Format_ARGB32);
+                    QPixmap pixmap = QtWin::fromHBITMAP(hBitmap);
+                    if (requestedSize.isValid()) {
+                        pixmap = pixmap.scaled(requestedSize);
+                    }
+                    return pixmap.toImage().convertToFormat(QImage::Format_ARGB32);
                 }
             }
 
@@ -243,12 +249,19 @@ QImage ShareImageProvider::requestImage(const QString& idTmp, QSize* size, const
                 break;
             }
             QPixmap pixmap = helpers.getCapture(winid);
+            if (requestedSize.isValid()) {
+                pixmap = pixmap.scaled(requestedSize);
+            }
+            if (size) {
+                *size = pixmap.size();
+            }
             return pixmap.toImage().convertToFormat(QImage::Format_ARGB32);
         } while (0);
 #endif
     }
 
-    QImage image(requestedSize.width() > 0 ? requestedSize.width() : 112, requestedSize.height() > 0 ? requestedSize.height() : 200, QImage::Format_ARGB32);
+    QImage image(requestedSize.width() > 0 ? requestedSize.width() : 112, requestedSize.height() > 0 ? requestedSize.height() : 200,
+                 QImage::Format_ARGB32);
     image.fill(Qt::white);
     return image;
 }

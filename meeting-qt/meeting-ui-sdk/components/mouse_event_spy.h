@@ -1,21 +1,19 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef MOUSEEVENTSPY_H
 #define MOUSEEVENTSPY_H
 
-#include <QObject>
-#include <QtQml>
-#include <QQmlEngine>
 #include <QJSEngine>
+#include <QObject>
+#include <QQmlEngine>
+#include <QtQml>
 
-class MouseEventSpy : public QObject
-{
+class MouseEventSpy : public QObject {
     Q_OBJECT
 public:
-    explicit MouseEventSpy(QObject *parent = 0);
+    explicit MouseEventSpy(QObject* parent = 0);
     ~MouseEventSpy();
 
 signals:
@@ -29,4 +27,4 @@ private:
     QPoint m_lastMousePos;
 };
 
-#endif // MOUSEEVENTSPY_H
+#endif  // MOUSEEVENTSPY_H

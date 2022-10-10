@@ -1,10 +1,5 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
-
-// Copyright (c) 2012 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
 // Ported & Modified by Wang Rongtao <rtwang@corp.netease.com>
@@ -31,12 +26,11 @@
 
 // MSVC_SUPPRESS_WARNING disables warning |n| for the remainder of the line and
 // for the next line of the source file.
-#define MSVC_SUPPRESS_WARNING(n) __pragma(warning(suppress:n))
+#define MSVC_SUPPRESS_WARNING(n) __pragma(warning(suppress : n))
 
 // MSVC_PUSH_DISABLE_WARNING pushes |n| onto a stack of warnings to be disabled.
 // The warning remains disabled until popped by MSVC_POP_WARNING.
-#define MSVC_PUSH_DISABLE_WARNING(n) __pragma(warning(push)) \
-                                     __pragma(warning(disable:n))
+#define MSVC_PUSH_DISABLE_WARNING(n) __pragma(warning(push)) __pragma(warning(disable : n))
 
 // MSVC_PUSH_WARNING_LEVEL pushes |n| as the global warning level.  The level
 // remains in effect until popped by MSVC_POP_WARNING().  Use 0 to disable all
@@ -58,9 +52,9 @@
 //
 // Compiler warning C4355: 'this': used in base member initializer list:
 // http://msdn.microsoft.com/en-us/library/3c594ae3(VS.80).aspx
-#define ALLOW_THIS_IN_INITIALIZER_LIST(code) MSVC_PUSH_DISABLE_WARNING(4355) \
-                                             code \
-                                             MSVC_POP_WARNING()
+#define ALLOW_THIS_IN_INITIALIZER_LIST(code) \
+    MSVC_PUSH_DISABLE_WARNING(4355)          \
+    code MSVC_POP_WARNING()
 
 // Allows exporting a class that inherits from a non-exported base class.
 // This uses suppress instead of push/pop because the delimiter after the
@@ -74,8 +68,9 @@
 // Note that this is intended to be used only when no access to the base class'
 // static data is done through derived classes or inline methods. For more info,
 // see http://msdn.microsoft.com/en-us/library/3tdb471s(VS.80).aspx
-#define NON_EXPORTED_BASE(code) MSVC_SUPPRESS_WARNING(4275) \
-                                code
+#define NON_EXPORTED_BASE(code) \
+    MSVC_SUPPRESS_WARNING(4275) \
+    code
 
 #else  // Not MSVC
 
@@ -89,7 +84,6 @@
 #define NON_EXPORTED_BASE(code) code
 
 #endif  // COMPILER_MSVC
-
 
 // Annotate a variable indicating it's ok if the variable is not used.
 // (Typically used to silence a compiler warning when the assignment
@@ -160,8 +154,7 @@
 // For v*printf functions (which take a va_list), pass 0 for dots_param.
 // (This is undocumented but matches what the system C headers do.)
 #if defined(COMPILER_GCC)
-#define PRINTF_FORMAT(format_param, dots_param) \
-    __attribute__((format(printf, format_param, dots_param)))
+#define PRINTF_FORMAT(format_param, dots_param) __attribute__((format(printf, format_param, dots_param)))
 #else
 #define PRINTF_FORMAT(format_param, dots_param)
 #endif

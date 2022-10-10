@@ -16,9 +16,9 @@ Window {
     color: "transparent"
     flags: {
         if (Qt.platform.os === 'windows')
-            Qt.Popup | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+        Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
         else
-            Qt.Popup | Qt.FramelessWindowHint
+        Qt.FramelessWindowHint
     }
 
     property string content: ""
@@ -77,9 +77,15 @@ Window {
         }
         onRunningChanged: {
             if (!running)
-                root.hide();
+            	root.hide();
             else
-                root.show();
+            	root.show();
+        }
+    }
+
+    onVisibleChanged: {
+        if (Qt.platform.os === 'windows') {
+            visible ? shareManager.addExcludeShareWindow(root) : shareManager.removeExcludeShareWindow(root)
         }
     }
 }

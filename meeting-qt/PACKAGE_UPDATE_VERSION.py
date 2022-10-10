@@ -8,16 +8,23 @@ import re
 root_directory = os.path.split(os.path.realpath(__file__))[0].replace('\\', '/') + "/"
 
 def update_version(tag, target, encoding='utf-8'):
-    repo = git.Repo(root_directory)
+    repo = git.Repo(root_directory + '../')
     f = open(target, 'r', encoding=encoding)
     results = f.readlines()
     lines = []
-    #last_tag = str(repo.tags[-1])
     last_tag = tag
     env_dist = os.environ
-    commits_count = "2190"
-    # if env_dist["CI_COMMIT_BRANCH"] == "master":
-        # commits_count = str(int(repo.git.rev_list('--all', '--count')) + 1550)
+
+    strlist = last_tag.split('.')
+    max = int(strlist[0])
+    min = int(strlist[1])
+    end = int(strlist[2])
+    commits_count = str(max * 10000 + min * 100 + end) 
+    
+    strBeta = ''
+    if(end%2 != 0):
+        strBeta = ''
+
     version = last_tag + '.' + commits_count
     base_version = version.replace('.', ',')
     show_version = base_version.replace(',', '.')
@@ -30,7 +37,7 @@ def update_version(tag, target, encoding='utf-8'):
         elif line.startswith(' PRODUCTVERSION '):
             line = ' PRODUCTVERSION ' + base_version + '\n'
         elif line.startswith('#define APPLICATION_VERSION '):
-            line = '#define APPLICATION_VERSION "' + show_version + '"\n'
+            line = '#define APPLICATION_VERSION "' + show_version + strBeta + '"\n'
         elif line.startswith('#define COMMIT_COUNT '):
             line = '#define COMMIT_COUNT ' + commits_count + '\n'
         elif line.startswith("#define COMMIT_HASH "):

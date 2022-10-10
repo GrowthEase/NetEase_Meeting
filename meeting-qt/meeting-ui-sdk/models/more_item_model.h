@@ -1,10 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
-
-// Copyright (c) 2014-2020 NetEase, Inc.
-// All right reserved.
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef MOREITEMMODEL_H
 #define MOREITEMMODEL_H
@@ -13,12 +9,11 @@
 #include <QQuickImageProvider>
 #include "manager/more_item_manager.h"
 
-class MoreItemModel : public QAbstractListModel
-{
+class MoreItemModel : public QAbstractListModel {
     Q_OBJECT
 
 public:
-    explicit MoreItemModel(QObject *parent = nullptr);
+    explicit MoreItemModel(QObject* parent = nullptr);
     ~MoreItemModel();
 
     Q_PROPERTY(MoreItemManager* itemManager READ itemManager WRITE setItemManager NOTIFY itemManagerChanged)
@@ -35,14 +30,14 @@ public:
         kItemCheckedIndex,
     };
 
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
 
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
 
     virtual QHash<int, QByteArray> roleNames() const override;
 
-    MoreItemManager *itemManager() const;
-    void setItemManager(MoreItemManager *itemManager);
+    MoreItemManager* itemManager() const;
+    void setItemManager(MoreItemManager* itemManager);
 
     bool sharing() const;
     void setSharing(bool sharing);
@@ -62,12 +57,11 @@ private:
 };
 
 /////////////////////////////////////////////////////////////////////
-class ToolbarItemModel : public QAbstractListModel
-{
+class ToolbarItemModel : public QAbstractListModel {
     Q_OBJECT
 
 public:
-    explicit ToolbarItemModel(QObject *parent = nullptr);
+    explicit ToolbarItemModel(QObject* parent = nullptr);
     ~ToolbarItemModel();
 
     Q_PROPERTY(MoreItemManager* itemManager READ itemManager WRITE setItemManager NOTIFY itemManagerChanged)
@@ -83,14 +77,14 @@ public:
         kItemCheckedIndex,
     };
 
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
 
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
 
     virtual QHash<int, QByteArray> roleNames() const override;
 
-    MoreItemManager *itemManager() const;
-    void setItemManager(MoreItemManager *itemManager);
+    MoreItemManager* itemManager() const;
+    void setItemManager(MoreItemManager* itemManager);
 
 signals:
     void itemManagerChanged();
@@ -104,10 +98,9 @@ private:
     MoreItemManager* m_itemManager = nullptr;
 };
 
-class localImageProvider : public QQuickImageProvider
-{
+class localImageProvider : public QQuickImageProvider {
 public:
     localImageProvider();
     virtual QPixmap requestPixmap(const QString& filePath, QSize* size, const QSize& requestedSize) override;
 };
-#endif // MOREITEMMODEL_H
+#endif  // MOREITEMMODEL_H

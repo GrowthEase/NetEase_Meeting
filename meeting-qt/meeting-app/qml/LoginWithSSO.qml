@@ -32,7 +32,13 @@ LoginWithSSOForm {
             return
         }
 
-        const launchUrl = composeArguments(encodeURIComponent(textCode.text), encodeURIComponent('NEMEETING://'))
+        if (textCode.text.toLowerCase() !== "netease") {
+            toast.show(qsTr('No affiliated enterprise temporarily'))
+            return
+        }
+        configManager.setSSOLogin(true)
+        const launchUrl = composeArgumentsEx(encodeURIComponent('NEMEETING://'))
+        //console.log("sso:", launchUrl)
         Qt.openUrlExternally(launchUrl)
     }
 
@@ -44,20 +50,28 @@ LoginWithSSOForm {
         Qt.openUrlExternally("https://netease.im/meeting/clauses?serviceType=0")
     }
 
-    function composeArguments(ssoAppNamespace = '', ssoClientLoginUrl = '') {
+//    function composeArguments(ssoAppNamespace = '', ssoClientLoginUrl = '') {
+//        let apiUrl = authManager.paasServerAddress
+//        let baseUrl = apiUrl + 'v1/sso/authorize';
+//        baseUrl += '?ssoAppNamespaceType='
+//        baseUrl += loginByEmail ? 2 : 0
+//        if (ssoAppNamespace !== '') {
+//            baseUrl += '&'
+//            baseUrl += 'ssoAppNamespace=' + ssoAppNamespace
+//        }
+//        if (ssoClientLoginUrl !== '') {
+//            baseUrl += '&'
+//            baseUrl += 'ssoClientLoginUrl=' + ssoClientLoginUrl
+//        }
+
+//        return baseUrl
+//    }
+
+    function composeArgumentsEx(ssoClientLoginUrl = '') {
         let apiUrl = authManager.paasServerAddress
-        apiUrl = apiUrl.replace('sdk/', '')
-        apiUrl += "v1/"
-        let baseUrl = apiUrl + 'auth/sso/authorize';
-        baseUrl += '?ssoAppNamespaceType='
-        baseUrl += loginByEmail ? 2 : 0
-        if (ssoAppNamespace !== '') {
-            baseUrl += '&'
-            baseUrl += 'ssoAppNamespace=' + ssoAppNamespace
-        }
+        let baseUrl = apiUrl + 'v1/sso/authorize';
         if (ssoClientLoginUrl !== '') {
-            baseUrl += '&'
-            baseUrl += 'ssoClientLoginUrl=' + ssoClientLoginUrl
+            baseUrl += '?clientCallbackUrl=' + ssoClientLoginUrl
         }
 
         return baseUrl

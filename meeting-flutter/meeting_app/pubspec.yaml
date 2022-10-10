@@ -1,0 +1,67 @@
+name: nemeeting
+description: A meeting application which depends on GrowthEase's base SDKs.
+publish_to: none
+
+version: 3.0.0+30000
+
+environment:
+  sdk: ">=2.12.0 <3.0.0"
+  flutter: ">=1.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  archive: ^3.1.6
+  flutter_datetime_picker: ^1.5.1
+  connectivity: ^3.0.6
+
+  path_provider: ^2.0.11
+
+  package_info: ^2.0.2
+
+  yaml: ^3.1.1
+  dio: ^4.0.6
+  nos: ^1.0.0-rc.0
+  event_bus: ^2.0.0
+
+  pin_input_text_field: ^4.1.2
+  url_launcher: ^6.1.4
+  webview_flutter: ^3.0.4
+  convert: ^3.0.0
+
+  # GrowthEase SDKs
+  netease_meeting_ui:
+    path: ../meeting_kit_ui
+
+#dev_dependencies:
+#  flutter_driver:
+#    sdk: flutter
+
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter.
+flutter:
+
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+
+  # other module assets must declare here
+  # To add assets to your application, add an assets section, like this:
+  assets:
+    - assets/images/
+    - assets/images/2.0x/
+    - assets/images/3.0x/
+    - assets/config.properties
+    - assets/beauty_resources/beauty.zip
+
+  fonts:
+    - family: iconfont
+      fonts:
+        - asset: assets/fonts/iconfont.ttf

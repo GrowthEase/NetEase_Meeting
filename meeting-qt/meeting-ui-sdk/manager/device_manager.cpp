@@ -1,29 +1,32 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "device_manager.h"
 #include <QGuiApplication>
+#include "meeting/audio_manager.h"
+#include "meeting/video_manager.h"
 
 #define ENUM_DEVICE_TIMEOUT 2000
+#define INDICATION_TIMEOUT 5 * 60 * 1000
+#define INDICATION_TIME 10
 
-#define CHECK_INIT                                                           \
-    bool bRet = true;                                                        \
-    auto preRoomService = GlobalManager::getInstance()->getPreRoomService(); \
-    if (!preRoomService) {                                                   \
-        bRet = false;                                                        \
-    }                                                                        \
-                                                                             \
-    auto audioController = preRoomService->getPreRoomAudioController();      \
-    if (!audioController) {                                                  \
-        bRet = false;                                                        \
-    }                                                                        \
-                                                                             \
-    auto videoController = preRoomService->getPreRoomVideoController();      \
-    if (!videoController) {                                                  \
-        bRet = false;                                                        \
-    }
+//#define CHECK_INIT                                                           \
+//    bool bRet = true;                                                        \
+//    auto preRoomService = GlobalManager::getInstance()->getPreRoomService(); \
+//    if (!preRoomService) {                                                   \
+//        bRet = false;                                                        \
+//    }                                                                        \
+//                                                                             \
+//    auto audioController = preRoomService->getPreRoomAudioController();      \
+//    if (!audioController) {                                                  \
+//        bRet = false;                                                        \
+//    }                                                                        \
+//                                                                             \
+//    auto videoController = preRoomService->getPreRoomVideoController();      \
+//    if (!videoController) {                                                  \
+//        bRet = false;                                                        \
+//    }
 
 #define CHECK_0 \
     CHECK_INIT  \
@@ -69,6 +72,12 @@ DeviceManager::DeviceManager(QObject* parent)
         emit postDeviceListReset(DeviceTypeCapture);
     });
     m_enumCaptureTimer.setSingleShot(true);
+
+    m_indicationTimer.setSingleShot(true);
+    connect(&m_indicationTimer, &QTimer::timeout, [this]() {
+        m_nIndicationTimes = 0;
+        m_bCanShowIndicationTip = true;
+    });
 }
 
 bool DeviceManager::initialize() {
@@ -86,8 +95,22 @@ void DeviceManager::resetDevicesInfo() {
     m_recordDevices.clear();
     m_playoutDevices.clear();
     m_captureDevices.clear();
-    m_playoutSelectedMode = kDeviceAuto;
-    m_recordSelectedMode = kDeviceAuto;
+    m_playoutSelectedMode = kDeviceDefault;
+    m_recordSelectedMode = kDeviceDefault;
+}
+
+void DeviceManager::startVolumeIndication() {
+    AudioManager::getInstance()->enableAudioVolumeIndication(true);
+}
+
+void DeviceManager::stopVolumeIndication() {
+    AudioManager::getInstance()->enableAudioVolumeIndication(false);
+    if (m_indicationTimer.isActive()) {
+        m_indicationTimer.stop();
+    }
+
+    m_nIndicationTimes = 0;
+    m_bCanShowIndicationTip = true;
 }
 
 QVector<DEVICE_INFO>& DeviceManager::getPlayoutDevices() {
@@ -125,18 +148,55 @@ int DeviceManager::getDeviceCount(int deviceType) {
 }
 
 void DeviceManager::getCurrentSelectedDevice() {
-    CHECK_void;
-    NEAudioDeviceInfo audioInfo;
-    memset(&audioInfo, 0x00, sizeof(audioInfo));
-    audioController->getDefaultPlayoutDevice(audioInfo);
-    if (!audioInfo.deviceName.empty())
-        emit playoutDeviceChangedNotify(QString::fromStdString(audioInfo.deviceName), QString::fromStdString(audioInfo.deviceId));
+    //    CHECK_void;
+    NEDeviceBaseInfo playoutInfo;
+    memset(&playoutInfo, 0x00, sizeof(playoutInfo));
+    AudioManager::getInstance()->getAudioController()->getDefaultPlayoutDevice(playoutInfo);
+    if (!playoutInfo.deviceName.empty())
+        emit playoutDeviceChangedNotify(QString::fromStdString(playoutInfo.deviceName), QString::fromStdString(playoutInfo.deviceId));
 
-    NEAudioDeviceInfo videoInfo;
-    memset(&videoInfo, 0x00, sizeof(videoInfo));
-    audioController->getDefaultRecordDevice(videoInfo);
-    if (!videoInfo.deviceName.empty())
-        emit recordDeviceChangedNotify(QString::fromStdString(videoInfo.deviceName), QString::fromStdString(videoInfo.deviceId));
+    NEDeviceBaseInfo recordInfo;
+    memset(&recordInfo, 0x00, sizeof(recordInfo));
+    AudioManager::getInstance()->getAudioController()->getDefaultRecordDevice(recordInfo);
+    if (!recordInfo.deviceName.empty())
+        emit recordDeviceChangedNotify(QString::fromStdString(recordInfo.deviceName), QString::fromStdString(recordInfo.deviceId));
+}
+
+void DeviceManager::onLocalVolumeIndicationUI(int volume) {
+    auto currentMeetingStatus = MeetingManager::getInstance()->getRoomStatus();
+    if (currentMeetingStatus == NEMeeting::MEETING_IDLE) {
+        emit localAudioVolumeIndication(volume);
+        return;
+    }
+
+    bool mute = AudioManager::getInstance()->localAudioStatus() != NEMeeting::DEVICE_ENABLED;
+    if (!mute) {
+        emit userAudioVolumeIndication(AuthManager::getInstance()->authAccountId(), convertVolumeToLevel(volume));
+    }
+
+    //    注释静音检测功能
+    //    if (mute) {
+    //        if (volume > 20) {
+    //            m_nIndicationTimes++;
+    //        } else {
+    //            m_nIndicationTimes = 0;
+    //        }
+    //    } else {
+    //        if (m_nIndicationTimes > 0) {
+    //            m_nIndicationTimes = 0;
+    //        }
+
+    //        emit userAudioVolumeIndication(AuthManager::getInstance()->authAccountId(), convertVolumeToLevel(volume));
+    //    }
+
+    //    if (m_nIndicationTimes >= INDICATION_TIME) {
+    //        if (m_bCanShowIndicationTip) {
+    //            emit showIndicationTip();
+    //            YXLOG(Info) << "onLocalVolumeIndicationUI showIndicationTip " << YXLOGEnd;
+    //            m_bCanShowIndicationTip = false;
+    //            m_indicationTimer.start(INDICATION_TIMEOUT);
+    //        }
+    //    }
 }
 
 void DeviceManager::onPlayoutDeviceChanged(const std::string& deviceId, NEDeviceState deviceState) {
@@ -160,11 +220,12 @@ void DeviceManager::onCameraDeviceChanged(const std::string& deviceId, NEDeviceS
 }
 
 void DeviceManager::onLocalVolumeIndication(int volume) {
-    emit localAudioVolumeIndication(volume);
+    QMetaObject::invokeMethod(this, "onLocalVolumeIndicationUI", Qt::AutoConnection, Q_ARG(int, volume));
 }
 
-void DeviceManager::onRemoteVolumeIndication(int volume) {
-    emit remoteAudioVolumeIndication(volume);
+void DeviceManager::onRemoteVolumeIndication(const std::string& accountId, int volume) {
+    QMetaObject::invokeMethod(this, "userAudioVolumeIndication", Qt::AutoConnection, Q_ARG(QString, QString::fromStdString(accountId)),
+                              Q_ARG(int, convertVolumeToLevel(volume)));
 }
 
 void DeviceManager::selectRecordDevice(const QString& devicePath) {}
@@ -300,7 +361,7 @@ int DeviceManager::currentIndex(int deviceType) {
 
 void DeviceManager::selectDevice(int deviceType, int index) {
     YXLOG(Info) << "Select a new device, device type: " << deviceType << ", index: " << index << YXLOGEnd;
-    CHECK_void;
+    //    CHECK_void;
     emit preDeviceListReset((DeviceType)deviceType);
     if (deviceType == DeviceTypeRecord) {
         for (auto i = 0; i < m_recordDevices.size(); i++) {
@@ -314,7 +375,7 @@ void DeviceManager::selectDevice(int deviceType, int index) {
         DEVICE_INFO selectedDevice = m_recordDevices.at(index);
         selectedDevice.selectedDevice = true;
         QByteArray byteDevicePath = selectedDevice.devicePath.toUtf8();
-        if (audioController->selectRecordDevice(byteDevicePath.data()) == kNENoError) {
+        if (AudioManager::getInstance()->getAudioController()->selectRecordDevice(byteDevicePath.data())) {
             m_recordDevices.replace(index, selectedDevice);
             if (selectedDevice.devicePath != m_lastSelectedRecord.devicePath && selectedDevice.deviceName != m_lastSelectedRecord.deviceName)
                 emit recordDeviceChangedNotify(selectedDevice.deviceName, selectedDevice.devicePath);
@@ -341,7 +402,7 @@ void DeviceManager::selectDevice(int deviceType, int index) {
         DEVICE_INFO selectedDevice = m_playoutDevices.at(index);
         selectedDevice.selectedDevice = true;
         QByteArray byteDevicePath = selectedDevice.devicePath.toUtf8();
-        if (audioController->selectPlayoutDevice(byteDevicePath.data()) == kNENoError) {
+        if (AudioManager::getInstance()->getAudioController()->selectPlayoutDevice(byteDevicePath.data())) {
             m_playoutDevices.replace(index, selectedDevice);
             if (selectedDevice.devicePath != m_lastSelectedPlayout.devicePath && selectedDevice.deviceName != m_lastSelectedPlayout.deviceName)
                 emit playoutDeviceChangedNotify(selectedDevice.deviceName, selectedDevice.devicePath);
@@ -369,7 +430,7 @@ void DeviceManager::selectDevice(int deviceType, int index) {
             DEVICE_INFO selectedDevice = m_captureDevices.at(index);
             selectedDevice.selectedDevice = true;
             QByteArray byteDevicePath = selectedDevice.devicePath.toUtf8();
-            if (videoController->selectCameraDevice(byteDevicePath.data()) == kNENoError) {
+            if (VideoManager::getInstance()->getVideoController()->selectCameraDevice(byteDevicePath.data())) {
                 m_captureDevices.replace(index, selectedDevice);
                 if (selectedDevice.devicePath != m_lastSelectedCapture.devicePath && selectedDevice.deviceName != m_lastSelectedCapture.deviceName)
                     emit captureDeviceChangedNotify(selectedDevice.deviceName, selectedDevice.devicePath);
@@ -385,66 +446,42 @@ void DeviceManager::selectDevice(int deviceType, int index) {
 }
 
 unsigned int DeviceManager::getRecordDeviceVolume() {
-    auto preRoomService = GlobalManager::getInstance()->getPreRoomService();
-    if (!preRoomService) {
-        return 0;
-    }
-
-    auto audioController = preRoomService->getPreRoomAudioController();
-    if (!audioController) {
-        return 0;
-    }
-
-    unsigned int volumeValue = audioController->getRecordDeviceVolume();
-    return volumeValue;
+    return AudioManager::getInstance()->getAudioController()->getRecordDeviceVolume();
 }
 
 bool DeviceManager::setRecordDeviceVolume(unsigned int volumeValue) {
-    auto preRoomService = GlobalManager::getInstance()->getPreRoomService();
-    if (!preRoomService) {
-        return false;
-    }
-
-    auto audioController = preRoomService->getPreRoomAudioController();
-    if (!audioController) {
-        return false;
-    }
-
-    return audioController->setRecordDeviceVolume(volumeValue) == kNENoError;
+    return AudioManager::getInstance()->getAudioController()->setRecordDeviceVolume(volumeValue);
 }
 
 unsigned int DeviceManager::getPlayoutDeviceVolume() {
-    auto preRoomService = GlobalManager::getInstance()->getPreRoomService();
-    if (!preRoomService) {
-        return 0;
-    }
-
-    auto audioController = preRoomService->getPreRoomAudioController();
-    if (!audioController) {
-        return 0;
-    }
-
-    unsigned int volumeValue = audioController->getPlayoutDeviceVolume();
-    return volumeValue;
+    return AudioManager::getInstance()->getAudioController()->getPlayoutDeviceVolume();
 }
 
 bool DeviceManager::setPlayoutDeviceVolume(unsigned int volumeValue) {
-    CHECK_false;
-    return audioController->setPlayoutDeviceVolume(volumeValue) == kNENoError;
+    return AudioManager::getInstance()->getAudioController()->setPlayoutDeviceVolume(volumeValue);
 }
 
 void DeviceManager::startMicrophoneTest(bool start /* = true*/) {
-    CHECK_void;
+    //    CHECK_void;
     if (start) {
-        audioController->startRecordDeviceTest();
+        if (MeetingManager::getInstance()->getRoomStatus() == NEMeeting::MEETING_IDLE) {
+            AudioManager::getInstance()->enableAudioVolumeIndication(true);
+        }
+        AudioManager::getInstance()->getAudioController()->startRecordDeviceTest();
     } else {
-        audioController->stopRecordDeviceTest();
+        if (MeetingManager::getInstance()->getRoomStatus() == NEMeeting::MEETING_IDLE) {
+            AudioManager::getInstance()->enableAudioVolumeIndication(false);
+        }
+        AudioManager::getInstance()->getAudioController()->stopRecordDeviceTest();
     }
 }
 
 void DeviceManager::startSpeakerTest(bool start) {
-    CHECK_void;
+    //    CHECK_void;
     if (start) {
+        if (MeetingManager::getInstance()->getRoomStatus() == NEMeeting::MEETING_IDLE) {
+            AudioManager::getInstance()->enableAudioVolumeIndication(true);
+        }
         QString applicationDir = qApp->applicationDirPath();
 #ifdef Q_OS_MACX
         QString mediaFile = applicationDir + "/../Resources/rain.mp3";
@@ -454,16 +491,19 @@ void DeviceManager::startSpeakerTest(bool start) {
         YXLOG(Info) << "Playout media file:" << mediaFile.toStdString() << YXLOGEnd;
         QByteArray byteFile = mediaFile.toUtf8();
         startMicrophoneTest(true);
-        audioController->startPlayoutDeviceTest(byteFile.data());
+        AudioManager::getInstance()->getAudioController()->startPlayoutDeviceTest(byteFile.data());
     } else {
-        audioController->stopPlayoutDeviceTest();
+        if (MeetingManager::getInstance()->getRoomStatus() == NEMeeting::MEETING_IDLE) {
+            AudioManager::getInstance()->enableAudioVolumeIndication(false);
+        }
+        AudioManager::getInstance()->getAudioController()->stopPlayoutDeviceTest();
         startMicrophoneTest(false);
     }
 }
 
 void DeviceManager::onAudioDeviceStateChanged(const QString& deviceId, AudioDeviceType deviceType, NEDeviceState deviceState) {
-    YXLOG(Info) << "Audio device state changed, device ID: " << deviceId.toStdString() << ", device type: " << deviceType
-                << ", device state: " << deviceState << YXLOGEnd;
+    YXLOG(Info) << "Audio device state changed, deviceId: " << deviceId.toStdString() << ", deviceType: " << deviceType
+                << ", deviceState: " << deviceState << YXLOGEnd;
 
     if (deviceType == kAudioDeviceTypeRecord) {
         if (m_enumRecordTimer.isActive())
@@ -484,14 +524,14 @@ void DeviceManager::onAudioDeviceStateChanged(const QString& deviceId, AudioDevi
 }
 
 void DeviceManager::onAudioDefaultDeviceChanged(const QString& deviceId, AudioDeviceType deviceType) {
-    YXLOG(Info) << "Audio default device changed, device ID: " << deviceId.toStdString() << ", device type: " << deviceType << YXLOGEnd;
+    YXLOG(Info) << "Audio default device changed, deviceId: " << deviceId.toStdString() << ", deviceType: " << deviceType << YXLOGEnd;
 
     bool foundDevice = false;
 
     if (deviceType == kAudioDeviceTypeRecord) {
         for (auto& device : m_recordDevices) {
-            if (device.devicePath == deviceId) {
-                YXLOG(Info) << "Found device in current device list, device Id: " << device.devicePath.toStdString() << YXLOGEnd;
+            if (device.devicePath == deviceId || device.deviceName == deviceId || device.deviceName.remove(tr(" (Unavailable)")) == deviceId) {
+                YXLOG(Info) << "Found device in current device list, deviceId: " << device.devicePath.toStdString() << YXLOGEnd;
                 foundDevice = true;
                 break;
             }
@@ -506,7 +546,7 @@ void DeviceManager::onAudioDefaultDeviceChanged(const QString& deviceId, AudioDe
 
     if (deviceType == kAudioDeviceTypePlayout) {
         for (auto& device : m_playoutDevices) {
-            if (device.devicePath == deviceId) {
+            if (device.devicePath == deviceId || device.deviceName == deviceId || device.deviceName.remove(tr(" (Unavailable)")) == deviceId) {
                 YXLOG(Info) << "Found device in current device list, device Id: " << device.devicePath.toStdString() << YXLOGEnd;
                 foundDevice = true;
                 break;
@@ -522,8 +562,8 @@ void DeviceManager::onAudioDefaultDeviceChanged(const QString& deviceId, AudioDe
 }
 
 void DeviceManager::onVideoDeviceStateChanged(const QString& deviceId, VideoDeviceType deviceType, NEDeviceState deviceState) {
-    YXLOG(Info) << "Video device state changed, device ID: " << deviceId.toStdString() << ", device type: " << deviceType
-                << ", device state: " << deviceState << YXLOGEnd;
+    YXLOG(Info) << "Video device state changed, deviceId: " << deviceId.toStdString() << ", deviceType: " << deviceType
+                << ", deviceState: " << deviceState << YXLOGEnd;
 
     if (m_enumCaptureTimer.isActive())
         m_enumCaptureTimer.stop();
@@ -532,21 +572,22 @@ void DeviceManager::onVideoDeviceStateChanged(const QString& deviceId, VideoDevi
 }
 
 bool DeviceManager::enumDevices(DeviceType deviceType, const DEVICE_INFO& oldSelectedDevice) {
-    YXLOG(Info) << "Enum deivces, device type: " << deviceType << ", old selected device: " << oldSelectedDevice.deviceName.toStdString() << YXLOGEnd;
-    CHECK_false;
+    YXLOG(Info) << "Enum deivces, deviceType: " << deviceType << ", old selected deviceName: " << oldSelectedDevice.deviceName.toStdString()
+                << YXLOGEnd;
+    // CHECK_false;
     int selectedIndex = -1;
-    std::vector<NEAudioDeviceInfo> audioDeviceList;
-    std::vector<NEVideoDeviceInfo> videoDeviceList;
+    std::vector<NEDeviceBaseInfo> audioDeviceList;
+    std::vector<NEDeviceBaseInfo> videoDeviceList;
 
     if (deviceType == DeviceTypeRecord) {
         m_recordDevices.clear();
-        audioController->enumRecordDevices(audioDeviceList);
+        AudioManager::getInstance()->getAudioController()->enumRecordDevices(audioDeviceList);
     } else if (deviceType == DeviceTypePlayout) {
         m_playoutDevices.clear();
-        audioController->enumPlayoutDevices(audioDeviceList);
+        AudioManager::getInstance()->getAudioController()->enumPlayoutDevices(audioDeviceList);
     } else if (deviceType == DeviceTypeCapture) {
         m_captureDevices.clear();
-        videoController->enumCameraDevices(videoDeviceList);
+        VideoManager::getInstance()->getVideoController()->enumCameraDevices(videoDeviceList);
     }
 
     for (uint32_t i = 0; i < audioDeviceList.size(); i++) {
@@ -570,11 +611,13 @@ bool DeviceManager::enumDevices(DeviceType deviceType, const DEVICE_INFO& oldSel
             defaultDevice.devicePath = QString::fromStdString(device.deviceId);
             defaultDevice.unavailable = device.unavailable;
             defaultDevice.defaultDevice = device.defaultDevice;
-            defaultDevice.selectedDevice = false;
-            if (deviceType == DeviceTypeRecord)
+            if (deviceType == DeviceTypeRecord) {
+                defaultDevice.selectedDevice = m_recordSelectedMode == kDeviceDefault;
                 m_recordDevices.push_front(defaultDevice);
-            if (deviceType == DeviceTypePlayout)
+            } else if (deviceType == DeviceTypePlayout) {
+                defaultDevice.selectedDevice = m_playoutSelectedMode == kDeviceDefault;
                 m_playoutDevices.push_front(defaultDevice);
+            }
         }
     }
 
@@ -627,42 +670,43 @@ bool DeviceManager::enumDevices(DeviceType deviceType, const DEVICE_INFO& oldSel
     }
 
     if (deviceType == DeviceTypeRecord) {
+        YXLOG(Info) << "m_recordSelectedMode: " << m_recordSelectedMode << YXLOGEnd;
         if (m_recordSelectedMode == kDeviceUser) {
             bool foundDevice = false;
             for (auto i = 0; i < m_recordDevices.size(); i++) {
                 auto deviceInfo = m_recordDevices.at(i);
-                if (m_lastSelectedRecord.deviceName == deviceInfo.deviceName && m_lastSelectedPlayout.devicePath == deviceInfo.devicePath) {
+                if (m_lastSelectedRecord.deviceName == deviceInfo.deviceName && m_lastSelectedRecord.devicePath == deviceInfo.devicePath) {
                     foundDevice = true;
                     deviceInfo.selectedDevice = true;
                     QByteArray byteDevicePath = deviceInfo.devicePath.toUtf8();
                     m_recordDevices.replace(i, deviceInfo);
-                    if (audioController->selectRecordDevice(byteDevicePath.data()) == kNENoError) {
+                    if (AudioManager::getInstance()->getAudioController()->selectRecordDevice(byteDevicePath.data())) {
                         if (deviceInfo.deviceName != m_lastSelectedRecord.deviceName && deviceInfo.devicePath != m_lastSelectedRecord.devicePath)
                             emit recordDeviceChangedNotify(deviceInfo.deviceName, deviceInfo.devicePath);
                         m_lastSelectedRecord = deviceInfo;
-                        YXLOG(Info) << "[DeviceManager] Select " << byteDevicePath.data() << " as default record device, index: " << i << YXLOGEnd;
+                        YXLOG(Info) << "[DeviceManager] Select " << deviceInfo.devicePath.toStdString() << " as default record device, index: " << i
+                                    << YXLOGEnd;
                         break;
                     } else {
-                        YXLOG(Error) << "Failed to select record device, device ID: " << byteDevicePath.data() << YXLOGEnd;
+                        YXLOG(Error) << "Failed to select record device, deviceId: " << deviceInfo.devicePath.toStdString() << YXLOGEnd;
                         emit error(0, tr("Failed to select record device."));
-                        ;
                     }
                     break;
                 }
             }
             if (!foundDevice)
-                m_recordSelectedMode = kDeviceAuto;
+                m_recordSelectedMode = kDeviceDefault;
         }
 
-        if (m_recordSelectedMode == kDeviceAuto) {
-            if (m_recordDevices.size() > 0 && audioController->selectRecordDevice("nertc-audio-device-auto") == kNENoError) {
+        if (m_recordSelectedMode == kDeviceDefault) {
+            if (m_recordDevices.size() > 0 && AudioManager::getInstance()->getAudioController()->selectRecordDevice("nertc-audio-device-auto")) {
                 std::string deviceId;
-                audioController->getSelectedRecordDevice(deviceId);
+                AudioManager::getInstance()->getAudioController()->getSelectedRecordDevice(deviceId);
                 // 从 1 开始，跳过第一个插入的默认设备
                 for (int i = 1; i < m_recordDevices.size(); i++) {
                     if (m_recordDevices.at(i).devicePath == QString::fromStdString(deviceId)) {
                         auto replacedDevice = m_recordDevices.at(i);
-                        replacedDevice.selectedDevice = true;
+                        replacedDevice.selectedDevice = false;
                         m_recordDevices.replace(i, replacedDevice);
                         if (replacedDevice.deviceName != m_lastSelectedRecord.deviceName &&
                             replacedDevice.devicePath != m_lastSelectedRecord.devicePath)
@@ -673,7 +717,6 @@ bool DeviceManager::enumDevices(DeviceType deviceType, const DEVICE_INFO& oldSel
                 }
             } else {
                 emit error(0, tr("Failed to select record device."));
-                ;
             }
         }
 
@@ -683,19 +726,20 @@ bool DeviceManager::enumDevices(DeviceType deviceType, const DEVICE_INFO& oldSel
                 deviceInfo.selectedDevice = true;
                 QByteArray byteDevicePath = deviceInfo.devicePath.toUtf8();
                 m_recordDevices.replace(0, deviceInfo);
-                if (audioController->selectRecordDevice(byteDevicePath.data()) == kNENoError) {
+                if (AudioManager::getInstance()->getAudioController()->selectRecordDevice(byteDevicePath.data())) {
                     if (deviceInfo.deviceName != m_lastSelectedRecord.deviceName && deviceInfo.devicePath != m_lastSelectedRecord.devicePath)
                         emit recordDeviceChangedNotify(deviceInfo.deviceName, deviceInfo.devicePath);
                     m_lastSelectedRecord = deviceInfo;
-                    YXLOG(Info) << "[DeviceManager] Select " << byteDevicePath.data() << " as default record device, index: " << 0 << YXLOGEnd;
+                    YXLOG(Info) << "[DeviceManager] Select " << deviceInfo.devicePath.toStdString() << " as default record device, index: " << 0
+                                << YXLOGEnd;
                 } else {
-                    YXLOG(Error) << "Failed to select record device, device ID: " << byteDevicePath.data() << YXLOGEnd;
+                    YXLOG(Error) << "Failed to select record device, deviceId: " << deviceInfo.devicePath.toStdString() << YXLOGEnd;
                     emit error(0, tr("Failed to select record device."));
-                    ;
                 }
             }
         }
     } else if (deviceType == DeviceTypePlayout) {
+        YXLOG(Info) << "m_playoutSelectedMode: " << m_playoutSelectedMode << YXLOGEnd;
         if (m_playoutSelectedMode == kDeviceUser) {
             bool foundDevice = false;
             for (auto i = 0; i < m_playoutDevices.size(); i++) {
@@ -705,32 +749,32 @@ bool DeviceManager::enumDevices(DeviceType deviceType, const DEVICE_INFO& oldSel
                     deviceInfo.selectedDevice = true;
                     QByteArray byteDevicePath = deviceInfo.devicePath.toUtf8();
                     m_playoutDevices.replace(i, deviceInfo);
-                    if (audioController->selectPlayoutDevice(byteDevicePath.data()) == kNENoError) {
+                    if (AudioManager::getInstance()->getAudioController()->selectPlayoutDevice(byteDevicePath.data())) {
                         if (deviceInfo.deviceName != m_lastSelectedPlayout.deviceName && deviceInfo.devicePath != m_lastSelectedPlayout.devicePath)
                             emit playoutDeviceChangedNotify(deviceInfo.deviceName, deviceInfo.devicePath);
                         m_lastSelectedPlayout = deviceInfo;
-                        YXLOG(Info) << "[DeviceManager] Select " << byteDevicePath.data() << " as default playout device, index: " << i << YXLOGEnd;
+                        YXLOG(Info) << "[DeviceManager] Select " << deviceInfo.devicePath.toStdString() << " as default playout device, index: " << i
+                                    << YXLOGEnd;
                     } else {
-                        YXLOG(Error) << "Failed to select playout device, device ID: " << byteDevicePath.data() << YXLOGEnd;
+                        YXLOG(Error) << "Failed to select playout device, deviceId: " << byteDevicePath.data() << YXLOGEnd;
                         emit error(0, tr("Failed to select playout device."));
-                        ;
                     }
                     break;
                 }
             }
             if (!foundDevice)
-                m_playoutSelectedMode = kDeviceAuto;
+                m_playoutSelectedMode = kDeviceDefault;
         }
 
-        if (m_playoutSelectedMode == kDeviceAuto) {
-            if (audioController->selectPlayoutDevice("nertc-audio-device-auto") == kNENoError) {
+        if (m_playoutSelectedMode == kDeviceDefault) {
+            if (AudioManager::getInstance()->getAudioController()->selectPlayoutDevice("nertc-audio-device-auto")) {
                 std::string deviceId;
-                audioController->getSelectedPlayoutDevice(deviceId);
+                AudioManager::getInstance()->getAudioController()->getSelectedPlayoutDevice(deviceId);
                 // 从 1 开始，跳过第一个插入的默认设备
                 for (int i = 1; i < m_playoutDevices.size(); i++) {
                     if (m_playoutDevices.at(i).devicePath == QString::fromStdString(deviceId)) {
                         auto replacedDevice = m_playoutDevices.at(i);
-                        replacedDevice.selectedDevice = true;
+                        replacedDevice.selectedDevice = false;
                         m_playoutDevices.replace(i, replacedDevice);
                         if (replacedDevice.deviceName != m_lastSelectedPlayout.deviceName &&
                             replacedDevice.devicePath != m_lastSelectedPlayout.devicePath)
@@ -741,7 +785,6 @@ bool DeviceManager::enumDevices(DeviceType deviceType, const DEVICE_INFO& oldSel
                 }
             } else {
                 emit error(0, tr("Failed to select record device."));
-                ;
             }
         }
 
@@ -751,15 +794,15 @@ bool DeviceManager::enumDevices(DeviceType deviceType, const DEVICE_INFO& oldSel
                 deviceInfo.selectedDevice = true;
                 QByteArray byteDevicePath = deviceInfo.devicePath.toUtf8();
                 m_playoutDevices.replace(0, deviceInfo);
-                if (audioController->selectPlayoutDevice(byteDevicePath.data()) == kNENoError) {
+                if (AudioManager::getInstance()->getAudioController()->selectPlayoutDevice(byteDevicePath.data())) {
                     if (deviceInfo.deviceName != m_lastSelectedPlayout.deviceName && deviceInfo.devicePath != m_lastSelectedPlayout.devicePath)
                         emit playoutDeviceChangedNotify(deviceInfo.deviceName, deviceInfo.devicePath);
                     m_lastSelectedPlayout = deviceInfo;
-                    YXLOG(Info) << "[DeviceManager] Select " << byteDevicePath.data() << " as default playout device, index: " << 0 << YXLOGEnd;
+                    YXLOG(Info) << "[DeviceManager] Select " << deviceInfo.devicePath.toStdString() << " as default playout device, index: " << 0
+                                << YXLOGEnd;
                 } else {
-                    YXLOG(Error) << "Failed to select playout device, device ID: " << byteDevicePath.data() << YXLOGEnd;
+                    YXLOG(Error) << "Failed to select playout device, deviceId: " << deviceInfo.devicePath.toStdString() << YXLOGEnd;
                     emit error(0, tr("Failed to select playout device."));
-                    ;
                 }
             }
         }
@@ -772,18 +815,56 @@ bool DeviceManager::enumDevices(DeviceType deviceType, const DEVICE_INFO& oldSel
         deviceInfo.selectedDevice = true;
         QByteArray byteDevicePath = deviceInfo.devicePath.toUtf8();
         m_captureDevices.replace(captureDeviceIndex, deviceInfo);
-        if (videoController->selectCameraDevice(byteDevicePath.data()) == kNENoError) {
+        if (VideoManager::getInstance()->getVideoController()->selectCameraDevice(byteDevicePath.data())) {
             if (deviceInfo.deviceName != m_lastSelectedCapture.deviceName && deviceInfo.devicePath != m_lastSelectedCapture.devicePath)
                 emit captureDeviceChangedNotify(deviceInfo.deviceName, deviceInfo.devicePath);
             m_lastSelectedCapture = deviceInfo;
-            YXLOG(Info) << "[DeviceManager] Select " << byteDevicePath.data() << " as default video device, index: " << captureDeviceIndex
-                        << YXLOGEnd;
+            YXLOG(Info) << "[DeviceManager] Select " << deviceInfo.devicePath.toStdString()
+                        << " as default video device, index: " << captureDeviceIndex << YXLOGEnd;
         } else {
-            YXLOG(Error) << "Failed to select capture device, device ID: " << byteDevicePath.data() << YXLOGEnd;
+            YXLOG(Error) << "Failed to select capture device, deviceId: " << byteDevicePath.data() << YXLOGEnd;
             emit error(0, tr("Failed to select capture device."));
-            ;
         }
     }
 
+    //    if (std::any_of(m_playoutDevices.begin(), m_playoutDevices.end(), [](const DEVICE_INFO& deviceInfo) {
+    //            if (deviceInfo.deviceName.contains("MAXHUB Audio") && !deviceInfo.selectedDevice) {
+    //                return true;
+    //            }
+    //            return false;
+    //        })) {
+    //        YXLOG(Info) << "find MAXHUB Audio device." << YXLOGEnd;
+    //        emit showMaxHubTip();
+    //    }
+
     return true;
+}
+
+void DeviceManager::selectMaxHubDevice(int deviceType) {
+    //    if (DeviceTypePlayout == deviceType) {
+    //        for (int index = 0; index < m_playoutDevices.size(); index++) {
+    //            if (m_playoutDevices[index].deviceName.contains("MAXHUB Audio") && !m_playoutDevices[index].selectedDevice) {
+    //                selectDevice(deviceType, index);
+    //                return;
+    //            }
+    //        }
+    //    }
+}
+
+int DeviceManager::convertVolumeToLevel(int volume) {
+    int level = 1;
+
+    if (volume == 0) {
+        level = 1;
+    } else if (volume > 0 && volume <= 30) {
+        level = 2;
+    } else if (volume > 30 && volume <= 70) {
+        level = 3;
+    } else if (volume > 71 && volume <= 99) {
+        level = 4;
+    } else if (volume == 100) {
+        level = 5;
+    }
+
+    return level;
 }

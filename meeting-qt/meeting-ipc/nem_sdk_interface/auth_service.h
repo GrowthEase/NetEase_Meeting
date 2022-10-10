@@ -1,4 +1,8 @@
-﻿/**
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+
+/**
  * @file auth_service.h
  * @brief 登录服务头文件
  * @copyright (c) 2014-2021, NetEase Inc. All rights reserved
@@ -9,6 +13,7 @@
 #ifndef NEM_SDK_INTERFACE_INTERFACE_AUTHSERVICE_H_
 #define NEM_SDK_INTERFACE_INTERFACE_AUTHSERVICE_H_
 #include <string>
+#include "meeting.h"
 #include "service_define.h"
 
 NNEM_SDK_INTERFACE_BEGIN_DECLS
@@ -18,8 +23,7 @@ NNEM_SDK_INTERFACE_BEGIN_DECLS
  * @see NEAuthService#addAuthListener
  * @see NEAuthService#removeAuthListener
  */
-class NEAuthListener : public NEObject
-{
+class NEAuthListener : public NEObject {
 public:
     /**
      * @brief 被踢出，登录状态变更为未登录，原因为当前登录账号已在其他设备上重新登录
@@ -37,12 +41,12 @@ public:
 /**
  * @brief 登录服务
  */
-class NEM_SDK_INTERFACE_EXPORT NEAuthService : public NEService
-{
+class NEM_SDK_INTERFACE_EXPORT NEAuthService : public NEService {
 public:
     using NEAuthLoginCallback = NEEmptyCallback;
     using NEAuthLogoutCallback = NEEmptyCallback;
     using NEGetAccountInfoCallback = NECallback<AccountInfo>;
+
 public:
     /**
      * 登录鉴权。在已登录状态下可以创建和加入会议，但在未登录状态下只能加入会议
@@ -54,10 +58,16 @@ public:
 
     /**
      * 登录鉴权。在已登录状态下可以创建和加入会议，但在未登录状态下只能加入会议
+     * @deprecated 已废弃
      * @param ssoToken 单点登录时返回的 token 串
      * @param cb 回调接口，该回调不会返回额外的结果数据
      */
-    virtual void loginWithSSOToken(const std::string& ssoToken, const NEAuthLoginCallback& cb) = 0;
+#ifdef WIN32
+    __declspec(deprecated)
+#else
+    __attribute__((deprecated("", "")))
+#endif
+        virtual void loginWithSSOToken(const std::string& ssoToken, const NEAuthLoginCallback& cb) = 0;
 
     /**
      * 自动登录鉴权。
@@ -86,7 +96,7 @@ public:
 #else
     __attribute__((deprecated("", "")))
 #endif
-    virtual void login(const std::string& appKey, const std::string& accountId, const std::string& token, const NEAuthLoginCallback& cb) = 0;
+        virtual void login(const std::string& appKey, const std::string& accountId, const std::string& token, const NEAuthLoginCallback& cb) = 0;
 
     /**
      * 获取账号信息，该会议号可在创建会议时使用
@@ -123,9 +133,9 @@ public:
 #else
     __attribute__((deprecated("", "")))
 #endif
-	virtual void loginAnonymous(const NEAuthLoginCallback& cb) = 0;
+        virtual void loginAnonymous(const NEAuthLoginCallback& cb) = 0;
 };
 
 NNEM_SDK_INTERFACE_END_DECLS
 
-#endif // ! NEM_SDK_INTERFACE_INTERFACE_AUTHSERVICE_H_
+#endif  // ! NEM_SDK_INTERFACE_INTERFACE_AUTHSERVICE_H_

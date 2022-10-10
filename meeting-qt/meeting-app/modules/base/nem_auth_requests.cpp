@@ -1,36 +1,28 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "nem_auth_requests.h"
+#include <QCryptographicHash>
 
 namespace nem_auth {
 
 NEMeetingRequestBase::NEMeetingRequestBase(const QString& api)
-    : IHttpRequest(api, ConfigManager::getInstance()->getValue("localPaasServerAddress", "https://meeting-api.netease.im/").toString()) {
-    setRawHeader(kHttpClientType, MEETING_CLIENT_TYPE);
-    setRawHeader(kHttpSDKVersion, NERTC_SDK_VERSION);
-    setRawHeader(kHttpAppVersionName, APPLICATION_VERSION);
+    : IHttpRequest(api, ConfigManager::getInstance()->getAPaasServerAddress() + kHttpScene + ConfigManager::getInstance()->getAPaasAppKey() + "/") {
+    setRawHeader(kHttpClientType, QSysInfo::productType().contains("win") ? "pc" : "mac");
+    setRawHeader(kHttpMeetingVersion, std::string(APPLICATION_VERSION).c_str());
+    setRawHeader(kHttpRoomkitVersion, "");
     setRawHeader(kHttpAppVersionCode, QString::number(COMMIT_COUNT).toUtf8());
     setRawHeader(kHttpAppDeviceId, QSysInfo::machineUniqueId().data());
 }
 
 VerifyCode::VerifyCode(const QString& phoneNumber, VerifyScene scene)
-    : NEMeetingRequestBase(kHttpVerifyCode) {
-    QJsonObject json;
-    json.insert("mobile", phoneNumber);
-    json.insert("scene", scene);
-    QByteArray byteArray = QJsonDocument(json).toJson(QJsonDocument::Compact);
-    setParams(byteArray);
-}
+    : NEMeetingRequestBase(kHttpVerifyCode + phoneNumber + "/" + QString::number(scene)) {}
 
 CheckVerifyCode::CheckVerifyCode(const QString& phoneNumber, int code, VerifyScene scene)
-    : NEMeetingRequestBase(kHttpCheckVerifyCode) {
+    : NEMeetingRequestBase(kHttpVerifyCode + phoneNumber + "/" + QString::number(scene)) {
     QJsonObject json;
-    json.insert("mobile", phoneNumber);
-    json.insert("verifyCode", code);
-    json.insert("scene", scene);
+    json.insert("verifyCode", QString::number(code));
     QByteArray byteArray = QJsonDocument(json).toJson(QJsonDocument::Compact);
     setParams(byteArray);
 }
@@ -52,9 +44,8 @@ RegisterAccount::RegisterAccount(const QString& phoneNumber,
 }
 
 LoginWithVerifyCode::LoginWithVerifyCode(const QString& phoneNumber, const QString& verifyCode)
-    : NEMeetingRequestBase(kHttpLoginByMobile) {
+    : NEMeetingRequestBase(kHttpLoginByMobile + phoneNumber + "/login") {
     QJsonObject json;
-    json.insert("mobile", phoneNumber);
     json.insert("verifyCode", verifyCode);
     QByteArray byteArray = QJsonDocument(json).toJson(QJsonDocument::Compact);
     setParams(byteArray);
@@ -85,9 +76,8 @@ ChangePassword::ChangePassword(const QString& appKey, const QString& accountId, 
 
 ModifyNickname::ModifyNickname(const QString& appKey, const QString& accountId, const QString& accountToken, const QString& newNickname)
     : NEMeetingRequestBase(kHttpModifyNick) {
-    setRawHeader("appKey", appKey.toUtf8());
-    setRawHeader("accountId", accountId.toUtf8());
-    setRawHeader("accountToken", accountToken.toUtf8());
+    setRawHeader("user", accountId.toUtf8());
+    setRawHeader("token", accountToken.toUtf8());
 
     QJsonObject json;
     json.insert("nickname", newNickname);
@@ -128,8 +118,15 @@ ResetPassword::ResetPassword(const QString& phoneNumber, const QString& verifyCo
     setParams(byteArray);
 }
 
-GetAppConfigs::GetAppConfigs(const QString &timestamp)
+GetAppConfigs::GetAppConfigs(const QString& timestamp)
     : NEMeetingRequestBase(kHttpGetConfigs) {
+    setUrl(QUrl(ConfigManager::getInstance()->getValue("localAppConfigsServerAddressEx", LOCAL_DEFAULT_APPCONFIGS_SERVER_ADDRESS).toString() +
+                kHttpGetConfigs));
+    setRawHeader(kHttpClientType, MEETING_CLIENT_TYPE);
+    setRawHeader(kHttpAppVersionName, APPLICATION_VERSION);
+    setRawHeader(kHttpAppVersionCode, QString::number(COMMIT_COUNT).toUtf8());
+    setRawHeader(kHttpAppDeviceId, QSysInfo::machineUniqueId().data());
+
     QJsonObject json;
     json.insert("time", timestamp);
     QByteArray byteArray = QJsonDocument(json).toJson(QJsonDocument::Compact);

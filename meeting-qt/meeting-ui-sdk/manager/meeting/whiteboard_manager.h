@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef WHITEBOARDMANAGER_H
 #define WHITEBOARDMANAGER_H
@@ -12,8 +11,8 @@
 
 using namespace neroom;
 
+enum NERoomWhiteboardShareStatus { kNERoomWhiteboardShareStatusStart, kNERoomWhiteboardShareStatusEnd, kNERoomWhiteboardShareStatusStopByHost };
 Q_DECLARE_METATYPE(NERoomWhiteboardShareStatus)
-
 class WhiteboardManager : public QObject {
     Q_OBJECT
 public:
@@ -25,14 +24,11 @@ public:
         QString whiteboardSharerAccountId READ whiteboardSharerAccountId WRITE setWhiteboardSharerAccountId NOTIFY whiteboardSharerAccountIdChanged)
 
     void setAutoOpenWhiteboard(bool bAutoOpenWhiteboard) { m_bAutoOpenWhiteboard = bAutoOpenWhiteboard; }
-
-    void onWhiteboardInitStatus();
-
+    void initWhiteboardStatus();
     void onRoomUserWhiteboardShareStatusChanged(const std::string& userId, NERoomWhiteboardShareStatus status);
-
     void onRoomUserWhiteboardDrawEnableStatusChanged(const std::string& userId, bool enable);
 
-    Q_INVOKABLE void openWhiteboard(const QString& accountId);
+    Q_INVOKABLE void openWhiteboard(const QString& accountId = "");
     Q_INVOKABLE void closeWhiteboard(const QString& accountId);
     Q_INVOKABLE void enableWhiteboardDraw(const QString& accountId);
     Q_INVOKABLE void disableWhiteboardDraw(const QString& accountId);
@@ -41,10 +37,12 @@ public:
     Q_INVOKABLE void showFileInFolder(const QString& path);
 
     Q_INVOKABLE QString getWhiteboardUrl();
+    Q_INVOKABLE QString getWhiteboardAuthInfo();
     Q_INVOKABLE QString getWhiteboardLoginMessage();
     Q_INVOKABLE QString getWhiteboardLogoutMessage();
     Q_INVOKABLE QString getWhiteboardDrawPrivilegeMessage();
     Q_INVOKABLE QString getWhiteboardToolConfigMessage();
+    Q_INVOKABLE QString getWhiteboardUploadLogMessage(bool display = true);
 
     bool whiteboardSharing() const;
     void setWhiteboardSharing(bool whiteboardSharing);
@@ -69,7 +67,6 @@ private:
     explicit WhiteboardManager(QObject* parent = nullptr);
 
 private:
-    INERoomWhiteboardController* m_whiteboardController = nullptr;
     bool m_whiteboardSharing = false;
     bool m_whiteboardDrawEnable = false;
     QString m_whiteboardSharerAccountId = "";

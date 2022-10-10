@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef NEM_SDK_INTERFACE_APP_PROCHANDLER_MEETING_PROCHANDLER_H_
 #define NEM_SDK_INTERFACE_APP_PROCHANDLER_MEETING_PROCHANDLER_H_
@@ -20,6 +19,9 @@ public:
     virtual bool onJoinMeeting(const NS_I_NEM_SDK::NEJoinMeetingParams& param,
                                const NS_I_NEM_SDK::NEJoinMeetingOptions& opts,
                                const NS_I_NEM_SDK::NEMeetingService::NEJoinMeetingCallback& cb) override;
+    virtual bool onAnonymousJoinMeeting(const NS_I_NEM_SDK::NEJoinMeetingParams& param,
+                                        const NS_I_NEM_SDK::NEJoinMeetingOptions& opts,
+                                        const NS_I_NEM_SDK::NEMeetingService::NEJoinMeetingCallback& cb) override;
     virtual bool onLeaveMeeting(bool finish, const NS_I_NEM_SDK::NEMeetingService::NELeaveMeetingCallback& cb) override;
     virtual bool onGetCurrentMeetingInfo(const NS_I_NEM_SDK::NEMeetingService::NEGetMeetingInfoCallback& cb) override;
     virtual void onGetPresetMenuItems(const std::vector<int>& menuItemsId,
@@ -39,6 +41,9 @@ private:
     bool checkOptionsEx(const std::vector<NS_I_NEM_SDK::NEMeetingMenuItem>& items);
     bool checkOptionsExMore(const std::vector<NS_I_NEM_SDK::NEMeetingMenuItem>& items);
     bool checkOptionsId(const std::vector<NS_I_NEM_SDK::NEMeetingMenuItem>& items, bool bInjected);
+    bool joinMeeting(const NS_I_NEM_SDK::NEJoinMeetingParams& param,
+                     const NS_I_NEM_SDK::NEJoinMeetingOptions& opts,
+                     const NS_I_NEM_SDK::NEMeetingService::NEJoinMeetingCallback& cb);
 
 public slots:
     void onMeetingStatusChanged(NEMeeting::Status status, int errorCode, const QString& errorMessage);

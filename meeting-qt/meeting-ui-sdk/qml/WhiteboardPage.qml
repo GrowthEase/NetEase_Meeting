@@ -3,7 +3,7 @@ import QtQuick.Window 2.14
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 import QtMultimedia 5.12
-
+import WhiteboardJsBridge 1.0
 import NetEase.Meeting.MembersModel 1.0
 import NetEase.Meeting.GlobalChatManager 1.0
 
@@ -71,6 +71,7 @@ Rectangle {
                         nickname: model.nickname
                         videoStatus: model.videoStatus
                         audioStatus: model.audioStatus
+                        highQuality: authManager.authAccountId === model.accountId ? false : SettingsManager.remoteVideoResolution
                     }
                 }
 
@@ -99,6 +100,7 @@ Rectangle {
                 id: idWhiteboard
                 anchors.fill: parent
                 whiteboardUrl: whiteboardManager.getWhiteboardUrl()
+                whiteboardDefaultDownloadPath: whiteboardManager.getDefaultDownloadPath()
                 onWebLoadFinished: {
                     sendMessageToWeb(whiteboardManager.getWhiteboardLoginMessage())
                     membersManager.getMembersPaging(pageSize, currentPage)
@@ -120,9 +122,9 @@ Rectangle {
                 }
 
                 onJoinWriteBoardSucceed: {
-                    var enable = whiteboardManager.whiteboardDrawEnable || idWhiteboard.whiteboardAccount === idWhiteboard.whiteboardOwnerAccount
                     sendMessageToWeb(whiteboardManager.getWhiteboardDrawPrivilegeMessage())
                     sendMessageToWeb(whiteboardManager.getWhiteboardToolConfigMessage())
+                    sendMessageToWeb(whiteboardManager.getWhiteboardUploadLogMessage())
                 }
 
                 onJoinWriteBoardFailed: {
@@ -143,8 +145,12 @@ Rectangle {
                     console.log("onDownloadFinished", path)
                     whiteboardManager.showFileInFolder(path)
                 }
-            }
 
+                onWhiteboardGetAuth: {
+                    console.log("onWhiteboardGetAuth")
+                    sendMessageToWeb(whiteboardManager.getWhiteboardAuthInfo())
+                }
+            }
         }
     }
 
@@ -179,7 +185,7 @@ Rectangle {
             if(sharedAccountId === authManager.authAccountId){
                 idWhiteboard.sendMessageToWeb(whiteboardManager.getWhiteboardDrawPrivilegeMessage())
                 idWhiteboard.sendMessageToWeb(whiteboardManager.getWhiteboardToolConfigMessage())
-
+                idWhiteboard.sendMessageToWeb(whiteboardManager.getWhiteboardUploadLogMessage(enable))
                 if(enable){
                     toast.show(qsTr("You have been granted permission to interact with the whiteboard"))
                 }else{

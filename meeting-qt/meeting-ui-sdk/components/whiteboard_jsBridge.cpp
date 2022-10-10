@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "whiteboard_jsBridge.h"
 
@@ -26,20 +25,10 @@ void WhiteboardJsBridge::NativeFunction(QString toast) {
 
     if (action == "webPageLoaded") {
         emit webPageLoadFinished();
-    } else if (action == "webLoginIMSucceed") {
-        emit webLoginIMSucceed();
     } else if (action == "webCreateWBSucceed") {
         emit webCreateWriteBoardSucceed();
     } else if (action == "webJoinWBSucceed") {
         emit webJoinWriteBoardSucceed();
-    } else if (action == "webLoginIMFailed") {
-        int errorCode = param["code"].toInt();
-        QString errorMessage = param["msg"].toString();
-        emit webLoginIMFailed(errorCode, errorMessage);
-    } else if (action == "webJoinWBFailed") {
-        int errorCode = param["code"].toInt();
-        QString errorMessage = param["msg"].toString();
-        emit webJoinWriteBoardFailed(errorCode, errorMessage);
     } else if (action == "webCreateWBFailed") {
         int errorCode = param["code"].toInt();
         QString errorMessage = param["msg"].toString();
@@ -54,5 +43,7 @@ void WhiteboardJsBridge::NativeFunction(QString toast) {
         QString errorMessage = param["msg"].toString();
         QString errorType = param["type"].toString();
         emit webError(errorCode, errorMessage, errorType);
+    } else if (action == "webGetAuth") {
+        emit webGetAuth();
     }
 }

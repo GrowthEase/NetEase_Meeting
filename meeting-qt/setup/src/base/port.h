@@ -1,9 +1,7 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
-// Copyright (c) 2011, NetEase Inc. All rights reserved.
 //
 // Author: Ruan Liang <ruanliang@corp.netease.com>
 // Date: 2011/6/8
@@ -26,15 +24,15 @@
 // guarantee that the INTn_C macros can be defined by including <stdint.h> at
 // any specific point.  Provide GG_INTn_C macros instead.
 
-#define GG_INT8_C(x)    (x)
-#define GG_INT16_C(x)   (x)
-#define GG_INT32_C(x)   (x)
-#define GG_INT64_C(x)   GG_LONGLONG(x)
+#define GG_INT8_C(x) (x)
+#define GG_INT16_C(x) (x)
+#define GG_INT32_C(x) (x)
+#define GG_INT64_C(x) GG_LONGLONG(x)
 
-#define GG_UINT8_C(x)   (x ## U)
-#define GG_UINT16_C(x)  (x ## U)
-#define GG_UINT32_C(x)  (x ## U)
-#define GG_UINT64_C(x)  GG_ULONGLONG(x)
+#define GG_UINT8_C(x) (x##U)
+#define GG_UINT16_C(x) (x##U)
+#define GG_UINT32_C(x) (x##U)
+#define GG_UINT64_C(x) GG_ULONGLONG(x)
 
 // It's possible for functions that use a va_list, such as StringPrintf, to
 // invalidate the data in it upon use.  The fix is to make a copy of the

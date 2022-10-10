@@ -34,7 +34,7 @@ Window {
 
     property string pswd: ""
     property bool isLive: false
-    property bool isReJoin: false
+    //property bool isReJoin: false
     property bool isLiveLayoutChanged: false
     property bool isLiveUserCountChanged: false
     property bool isLiveChatroomChanged: false
@@ -132,24 +132,23 @@ Window {
     Connections {
         target: liveManager
         onLiveStateChanged:{
-            root.isLive = isLive
+            root.isLive = state === 2
             pswEdit.enabled = !root.isLive
 
             if(root.isLive){
                 btnLive.enabled = true
-                if(isJoin){
-                    root.isReJoin = true
-                }
+//                if(isJoin){
+//                    root.isReJoin = true
+//                }
             }else{
                 isLiveLayoutChanged = false
                 isLiveUserCountChanged = false
                 isLiveChatroomChanged = false
-
                 var currentCount = liveMemberListModel.getliveMemberCount()
                 btnLive.enabled = currentCount !== 0
             }
 
-            console.log("onLiveStateChanged")
+            console.log("onLiveStateChanged state: ", state)
         }
     }
 
@@ -247,6 +246,7 @@ Window {
 
                 Image {
                     source: "qrc:/qml/images/live/warning.png"
+                    mipmap: true
                     Layout.preferredWidth:  16
                     Layout.preferredHeight:  16
                 }
@@ -358,6 +358,7 @@ Window {
                                 text: liveManager.getLiveTittle()
                                 validator: RegExpValidator { regExp: /\w{1,30}/ }
                                 placeholderText: qsTr("Please enter Live subject")
+                                Accessible.name: placeholderText
                             }
                         }
 
@@ -578,6 +579,7 @@ Window {
                                             onClicked: {
                                                 liveMemberListModel.setChecked(model.index)
                                             }
+                                            Accessible.name: model.index
                                         }
                                         Label {
                                             text: model.nickname
@@ -931,15 +933,26 @@ Window {
             galleryRect.check = liveManager.getLiveLayout() === 1
             focusRect.check= !galleryRect.check
 
-            if(root.isReJoin){
-                root.isReJoin = false
-                if(liveMemberListModel.updateLiveMembers(liveManager.getLiveUsersList()) === false){
-                    return;
-                }
+//            if(root.isReJoin){
+//                root.isReJoin = false
+//                if(liveMemberListModel.updateLiveMembers(liveManager.getLiveUsersList()) === false){
+//                    return;
+//                }
 
-                liveMemberCount = liveMemberListModel.getliveMemberCount()
-                imgPreview.source = getPreviewImageSource()
+//                liveMemberCount = liveMemberListModel.getliveMemberCount()
+//                imgPreview.source = getPreviewImageSource()
+//            }
+
+            if(liveMemberListModel.updateLiveMembers(liveManager.getLiveUsersList()) === false){
+                return;
             }
+
+            liveMemberCount = liveMemberListModel.getliveMemberCount()
+            isShareMode = liveMemberListModel.getLiveMemberIsSharing()
+            if(!isLive) {
+                btnLive.enabled = liveMemberCount !== 0;
+            }
+            imgPreview.source = getPreviewImageSource()
 
             liveViewChanged()
         }

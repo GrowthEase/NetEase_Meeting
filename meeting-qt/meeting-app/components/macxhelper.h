@@ -1,16 +1,14 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef MOUNTFILE_H
 #define MOUNTFILE_H
 
-#include <string>
 #include <QObject>
+#include <string>
 
-class Macxhelper : public QObject
-{
+class Macxhelper : public QObject {
     Q_OBJECT
 public:
     Macxhelper(const QString& dmgFile, QObject* parent = nullptr);
@@ -25,4 +23,4 @@ private:
     QString m_strDmgFile;
 };
 
-#endif // MOUNTFILE_H
+#endif  // MOUNTFILE_H

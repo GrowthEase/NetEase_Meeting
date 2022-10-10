@@ -42,6 +42,7 @@ Rectangle {
                 sourceSize.width: 100
                 sourceSize.height: 100
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                mipmap: true
                 source: "qrc:/qml/images/loading/logo.png"
             }
 

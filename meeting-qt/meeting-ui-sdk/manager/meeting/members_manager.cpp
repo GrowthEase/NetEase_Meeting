@@ -1,16 +1,17 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "members_manager.h"
 #include "../../models/members_model.h"
 #include "manager/global_manager.h"
+#include "manager/meeting/share_manager.h"
 #include "manager/meeting/whiteboard_manager.h"
 
 MembersManager::MembersManager(QObject* parent)
     : QObject(parent) {
-    m_membersController = MeetingManager::getInstance()->getUserController();
+    qRegisterMetaType<NEMeeting::HandsUpStatus>();
+    m_membersController = std::make_shared<NEMeetingUserController>();
 
     auto globalConfig = GlobalManager::getInstance()->getGlobalConfig();
     auto galleryViewPageSize = globalConfig->getGalleryPageSize();
@@ -28,111 +29,203 @@ MembersManager::~MembersManager() {
 }
 
 QString MembersManager::getNicknameByAccountId(const QString& accountId) {
-    if (m_membersController == nullptr)
-        return QString();
-    QByteArray byteAccountId = accountId.toUtf8();
-    auto memberInfo = GlobalManager::getInstance()->getInRoomService()->getUserInfoById(byteAccountId.data());
-    return memberInfo == nullptr ? "" : QString::fromStdString(memberInfo->getDisplayName());
+    for (int i = 0; i < m_items.size(); i++) {
+        auto item = m_items.at(i);
+        if (item.accountId == accountId) {
+            return item.nickname;
+        }
+    }
+    return "";
 }
 
-void MembersManager::onBeforeUserJoin(const std::string& /*accountId*/, uint32_t /*memberCount*/) {
-    // emit beforeUserJoin(QString::fromStdString(accountId), memberCount);
+bool MembersManager::getMyHandsupStatus() {
+    for (int i = 0; i < m_items.size(); i++) {
+        auto item = m_items.at(i);
+        if (item.accountId == AuthManager::getInstance()->authAccountId()) {
+            bool status = item.handsupStatus == NEMeeting::HAND_STATUS_RAISE;
+            setHandsUpStatus(status);
+            return status;
+        }
+    }
+    return false;
 }
 
-void MembersManager::onAfterUserJoined(const std::string& accountId, bool bNotify) {
-#if 0
-    emit afterUserJoined(QString::fromStdString(accountId), bNotify);
-#else
+bool MembersManager::isManagerRoleEx(const QString& accountId) {
+    return m_managerList.contains(accountId);
+}
+
+void MembersManager::initMemberList(const SharedMemberPtr& localMember, const std::list<SharedMemberPtr>& remoteMemberList) {
+    onUserJoined(localMember, false);
+    for (auto member : remoteMemberList) {
+        onUserJoined(member, false);
+    }
+}
+
+void MembersManager::resetManagerList() {
+    m_managerList.clear();
+    setIsManagerRole(false);
+    // emit managerAccountIdChanged(AuthManager::getInstance()->authAccountId(), false);
+}
+
+void MembersManager::onUserJoined(const SharedMemberPtr& member, bool bNotify) {
     m_invoker.execute([=]() {
-        if (m_membersController) {
-            auto member = GlobalManager::getInstance()->getInRoomService()->getUserInfoById(accountId);
-            if (member) {
-                if (kRoleHiding != member->getRoleType()) {
-                    Q_EMIT preItemAppended();
-                    MemberInfo info;
-                    info.accountId = QString::fromStdString(member->getUserId());
-                    info.audioStatus = member->getAudioStatus();
-                    info.videoStatus = member->getVideoStatus();
-                    info.handsupStatus = (NEMeeting::HandsUpStatus)member->getRaiseHandDetail().status;
-                    info.nickname = QString::fromStdString(member->getDisplayName());
-                    info.sharing = member->getScreenSharing();
-                    info.isWhiteboardEnable = member->getWhiteBoardInteractStatus() == kNERoomWhiteBoardInteractionStatusOpen;
-                    info.isWhiteboardShareOwner = info.accountId == WhiteboardManager::getInstance()->whiteboardSharerAccountId();
-                    m_items.append(info);
-                    Q_EMIT postItemAppended();
-                }
+        for (auto item : m_items) {
+            if (member->getUserUuid() == item.accountId.toStdString()) {
+                emit userReJoined(item.accountId);
+                return;
             }
         }
-        setCount(m_items.size());
-        emit afterUserJoined(QString::fromStdString(accountId), bNotify);
+
+        // todo 影子用户角色名
+        NERoleType roleType = getRoleType(member->getUserRole().name);
+        if (kRoleHiding != roleType /*&& member->getIsInRtcChannel()*/) {
+            Q_EMIT preItemAppended();
+            MemberInfo info;
+            info.accountId = QString::fromStdString(member->getUserUuid());
+            info.roleType = roleType;
+            if (info.roleType == kRoleHost) {
+                setHostAccountId(info.accountId);
+                MeetingManager::getInstance()->getMeetingController()->updateHostAccountId(info.accountId.toStdString());
+            } else if (info.roleType == kRoleManager) {
+                onManagerChanged(info.accountId.toStdString(), true);
+            }
+
+            info.clientType = member->getClientType();
+            info.audioStatus = member->getIsAudioOn() ? 1 : 2;
+            info.videoStatus = member->getIsVideoOn() ? 1 : 2;
+            info.nickname = QString::fromStdString(member->getUserName());
+            info.sharing = member->getIsSharingScreen();
+            info.isWhiteboardEnable = false;
+            info.isWhiteboardShareOwner = info.accountId == WhiteboardManager::getInstance()->whiteboardSharerAccountId();
+            convertPropertiesToMember(member->getProperties(), info);
+
+            if (info.accountId == AuthManager::getInstance()->authAccountId()) {
+                AudioManager::getInstance()->setLocalAudioStatus(member->getIsAudioOn() ? NEMeeting::DEVICE_ENABLED
+                                                                                        : NEMeeting::DEVICE_DISABLED_BY_DELF);
+                VideoManager::getInstance()->setLocalVideoStatus(member->getIsVideoOn() ? NEMeeting::DEVICE_ENABLED
+                                                                                        : NEMeeting::DEVICE_DISABLED_BY_DELF);
+                m_items.insert(0, info);
+            } else {
+                m_items.append(info);
+            }
+            Q_EMIT postItemAppended();
+
+            setCount(m_items.size());
+            emit afterUserJoined(QString::fromStdString(member->getUserUuid()), QString::fromStdString(member->getUserName()), bNotify);
+        }
     });
-#endif
 }
 
-void MembersManager::onBeforeUserLeave(const std::string& accountId, uint32_t memberIndex) {
-    m_ptrLeaveUsr = GlobalManager::getInstance()->getInRoomService()->getUserInfoById(accountId);
-    emit beforeUserLeave(QString::fromStdString(accountId), memberIndex);
-}
-
-void MembersManager::onAfterUserLeft(const std::string& accountId, bool bNotify) {
-#if 0
-    emit afterUserLeft(QString::fromStdString(accountId));
-#else
+void MembersManager::onUserLeft(const SharedMemberPtr& member) {
     m_invoker.execute([=]() {
+        QString qstrAccountId = QString::fromStdString(member->getUserUuid());
         for (int i = 0; i < m_items.size(); i++) {
-            QString qstrAccountId = QString::fromStdString(accountId);
-            if (m_items.at(i).accountId == qstrAccountId) {
+            auto item = m_items.at(i);
+            if (item.accountId == qstrAccountId) {
+                if (item.accountId == m_hostAccountId) {
+                    setHostAccountId("");
+                    MeetingManager::getInstance()->getMeetingController()->updateHostAccountId("");
+                } else if (item.roleType == kRoleManager) {
+                    onManagerChanged(item.accountId.toStdString(), false);
+                }
+
+                if (member->getUserUuid() == MeetingManager::getInstance()->getMeetingController()->getRoomInfo().focusAccountId) {
+                    MeetingManager::getInstance()->getMeetingController()->updateFocusAccountId("");
+                    VideoManager::getInstance()->onFocusVideoChanged("", false);
+                }
+
+                if (item.accountId == ShareManager::getInstance()->shareAccountId()) {
+                    ShareManager::getInstance()->onRoomUserScreenShareStatusChanged(item.accountId.toStdString(), kNERoomScreenShareStatusEnd);
+                }
+                if (item.handsupStatus == NEMeeting::HAND_STATUS_RAISE) {
+                    m_nHandsUpCount--;
+                    emit handsUpCountChange();
+                    emit handsupStatusChanged(qstrAccountId, NEMeeting::HAND_STATUS_DOWN);
+                }
                 Q_EMIT preItemRemoved(i);
                 m_items.remove(i);
                 Q_EMIT postItemRemoved();
+
+                setCount(m_items.size());
+                emit afterUserLeft(QString::fromStdString(member->getUserUuid()), QString::fromStdString(member->getUserName()));
                 break;
             }
         }
-        setCount(m_items.size());
-        emit afterUserLeft(QString::fromStdString(accountId), bNotify);
     });
-#endif
 }
 
 void MembersManager::onHostChanged(const std::string& hostAccountId) {
-    if (AuthManager::getInstance()->getAuthInfo()->getAccountId() == hostAccountId) {
-        AudioManager::getInstance()->setHandsUpStatus(false);
-    }
+    m_invoker.execute([=]() {
+        if (AuthManager::getInstance()->getAuthInfo().accountId == hostAccountId) {
+            if (m_bHandsUp) {
+                handsUp(false);
+            }
+        }
 
-    QMetaObject::invokeMethod(this, "onHostChangedUI", Qt::AutoConnection, Q_ARG(QString, QString::fromStdString(hostAccountId)));
+        QMetaObject::invokeMethod(this, "onHostChangedUI", Qt::AutoConnection, Q_ARG(QString, QString::fromStdString(hostAccountId)));
+    });
+}
+
+void MembersManager::onManagerChanged(const std::string& managerAccountId, bool bAdd) {
+    m_invoker.execute([=]() {
+        QString qstrManagerAccountId = QString::fromStdString(managerAccountId);
+        if (bAdd) {
+            m_managerList << qstrManagerAccountId;
+            if (AuthManager::getInstance()->authAccountId() == qstrManagerAccountId) {
+                setIsManagerRole(true);
+                if (m_bHandsUp) {
+                    handsUp(false);
+                }
+            }
+        } else {
+            for (auto iter = m_managerList.begin(); iter != m_managerList.end(); ++iter) {
+                if (iter == qstrManagerAccountId) {
+                    m_managerList.erase(iter);
+                    break;
+                }
+            }
+
+            if (AuthManager::getInstance()->authAccountId() == qstrManagerAccountId) {
+                setIsManagerRole(false);
+            }
+        }
+
+        emit managerAccountIdChanged(qstrManagerAccountId, bAdd);
+    });
 }
 
 void MembersManager::onMemberNicknameChanged(const std::string& accountId, const std::string& nickname) {
-    YXLOG(Info) << "onMemberNicknameChanged accountId : " << accountId << ", nickname: " << nickname << YXLOGEnd;
-
     QMetaObject::invokeMethod(this, "handleNicknameChanged", Qt::AutoConnection, Q_ARG(QString, QString::fromStdString(accountId)),
                               Q_ARG(QString, QString::fromStdString(nickname)));
 }
 
-SharedUserPtr MembersManager::getPrimaryMember() {
+std::shared_ptr<NEMeetingUserController> MembersManager::getUserController() {
+    return m_membersController;
+}
+
+bool MembersManager::getPrimaryMember(MemberInfo& memberInfo) {
     auto membersCount = m_items.size();
-    auto audioController = MeetingManager::getInstance()->getInRoomAudioController();
     auto meetingInfo = MeetingManager::getInstance()->getMeetingInfo();
     auto authInfo = AuthManager::getInstance()->getAuthInfo();
     std::string primary;
     do {
-        if (!meetingInfo->getScreenSharingUserId().empty()) {
-            primary = meetingInfo->getScreenSharingUserId();
+        if (!meetingInfo.screenSharingUserId.empty()) {
+            primary = meetingInfo.screenSharingUserId;
             YXLOG(Info) << "Select screen sharing member as primary member: " << primary << YXLOGEnd;
             break;
         }
-        if (!meetingInfo->getPinnedUserId().empty()) {
-            primary = meetingInfo->getPinnedUserId();
+        if (!meetingInfo.focusAccountId.empty()) {
+            primary = meetingInfo.focusAccountId;
             YXLOG(Info) << "Select focus member as primary member: " << primary << YXLOGEnd;
             break;
         }
-        if (!meetingInfo->getSpeakerUserId().empty() && membersCount > 2) {
-            primary = meetingInfo->getSpeakerUserId();
+        if (!meetingInfo.speakerUserId.empty() && membersCount > 2 && meetingInfo.speakerUserId != authInfo.accountId) {
+            primary = meetingInfo.speakerUserId;
             YXLOG(Info) << "Select active speaker member as primary member: " << primary << YXLOGEnd;
             break;
         }
-        if (!meetingInfo->getHostUserId().empty() && membersCount > 2 && meetingInfo->getHostUserId() != authInfo->getAccountId()) {
-            primary = meetingInfo->getHostUserId();
+        if (!meetingInfo.hostAccountId.empty() && membersCount > 2 && meetingInfo.hostAccountId != authInfo.accountId) {
+            primary = meetingInfo.hostAccountId;
             YXLOG(Info) << "Select meeting host member as primary member: " << primary << YXLOGEnd;
             break;
         }
@@ -144,11 +237,19 @@ SharedUserPtr MembersManager::getPrimaryMember() {
         YXLOG(Info) << "Select the last member to join as primary member: " << primary << YXLOGEnd;
     } while (false);
 
-    return GlobalManager::getInstance()->getInRoomService()->getUserInfoById(primary);
+    return getMemberByAccountId(QString::fromStdString(primary), memberInfo);
 }
 
-SharedUserPtr MembersManager::getMemberByAccountId(const QString& accountId) {
-    return GlobalManager::getInstance()->getInRoomService()->getUserInfoById(accountId.toStdString());
+void MembersManager::updateMembersPaging() {
+    getMembersPaging(m_pageSize, m_currentPage);
+}
+
+bool MembersManager::handsUpStatus() const {
+    return m_bHandsUp;
+}
+
+void MembersManager::setHandsUpStatus(bool handsUp) {
+    m_bHandsUp = handsUp;
 }
 
 void MembersManager::getMembersPaging(quint32 pageSize, quint32 pageNumber) {
@@ -162,48 +263,87 @@ void MembersManager::getMembersPaging(quint32 pageSize, quint32 pageNumber) {
 }
 
 void MembersManager::setAsHost(const QString& accountId) {
-    QByteArray byteAccountId = accountId.toUtf8();
-    m_membersController->makeHost(byteAccountId.data(), std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
+    auto roomContext = MeetingManager::getInstance()->getRoomContext();
+    if (roomContext) {
+        roomContext->handOverMyRole(accountId.toStdString(),
+                                    std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
+    }
+}
+
+void MembersManager::setAsManager(const QString& accountId, const QString& nickname) {
+    auto roomContext = MeetingManager::getInstance()->getRoomContext();
+    if (roomContext) {
+        roomContext->changeMemberRole(accountId.toStdString(), "cohost", [=](int code, const std::string& msg) {
+            if (code == 0) {
+                emit managerUpdateSuccess(nickname, true);
+            } else {
+                QString errorMsg = QString::fromStdString(msg);
+                if (code == 1002) {
+                    errorMsg = tr("The assigned role exceeds the number limit");
+                }
+                MeetingManager::getInstance()->onError(code, errorMsg.toStdString());
+            }
+        });
+    }
+}
+
+void MembersManager::setAsMember(const QString& accountId, const QString& nickname) {
+    auto roomContext = MeetingManager::getInstance()->getRoomContext();
+    if (roomContext) {
+        roomContext->changeMemberRole(accountId.toStdString(), "member", [=](int code, const std::string& msg) {
+            MeetingManager::getInstance()->onError(code, msg);
+            if (code == 0) {
+                emit managerUpdateSuccess(nickname, false);
+            }
+        });
+    }
 }
 
 void MembersManager::setAsFocus(const QString& accountId, bool set) {
     QByteArray byteAccountId = accountId.toUtf8();
-    MeetingManager::getInstance()->getInRoomVideoController()->pinVideo(accountId.toStdString(), set, std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
+    auto roomContext = MeetingManager::getInstance()->getRoomContext();
+    if (roomContext) {
+        QString value = set ? accountId : "";
+        roomContext->updateRoomProperty(
+            "focus", value.toStdString(), accountId.toStdString(),
+            std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
+    }
 }
 
 void MembersManager::kickMember(const QString& accountId) {
     QByteArray byteAccountId = accountId.toUtf8();
-    m_membersController->removeUser(byteAccountId.data(), std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
+    m_membersController->removeUser(byteAccountId.data(),
+                                    std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
 }
 
 void MembersManager::pagingFocusView(quint32 pageSize, quint32 pageNumber) {
-    std::vector<SharedUserPtr> members;
-    GlobalManager::getInstance()->getInRoomService()->getUsersByRoleType(members);
-    if (members.size() == 0)
+    QVector<MemberInfo> members = getMembersByRoleType();
+    if (members.count() == 0)
         return;
 
-    SharedUserPtr primaryMemberPtr = getPrimaryMember();
-    if (primaryMemberPtr == nullptr)
+    MemberInfo primaryMemberInfo;
+    if (!getPrimaryMember(primaryMemberInfo)) {
         return;
+    }
 
-    std::vector<SharedUserPtr> secondaryMembers;
+    QVector<MemberInfo> secondaryMembers;
     auto meetingInfo = MeetingManager::getInstance()->getMeetingInfo();
-    std::string strSharingAccountId = meetingInfo->getScreenSharingUserId();
+    std::string strSharingAccountId = meetingInfo.screenSharingUserId;
     if (strSharingAccountId.empty()) {
         for (auto& member : members) {
-            if (member->getUserId() == primaryMemberPtr->getUserId())
+            if (member.accountId == primaryMemberInfo.accountId)
                 continue;
             secondaryMembers.push_back(member);
         }
     } else {
         auto authInfo = AuthManager::getInstance()->getAuthInfo();
-        if (authInfo && (strSharingAccountId != authInfo->getAccountId())) {
+        if (strSharingAccountId != authInfo.accountId) {
             auto it = std::find_if(members.begin(), members.end(),
-                                   [strSharingAccountId](const SharedUserPtr& accountId) { return accountId->getUserId() == strSharingAccountId; });
+                                   [strSharingAccountId](const MemberInfo& info) { return info.accountId.toStdString() == strSharingAccountId; });
             if (members.end() != it) {
                 secondaryMembers.push_back(*it);
                 for (auto& member : members) {
-                    if (*it == member)
+                    if (it->accountId == member.accountId)
                         continue;
                     secondaryMembers.push_back(member);
                 }
@@ -215,40 +355,41 @@ void MembersManager::pagingFocusView(quint32 pageSize, quint32 pageNumber) {
         }
     }
 
-    uint32_t pageCount =
-        secondaryMembers.size() <= pageSize ? 1 : secondaryMembers.size() / pageSize + (secondaryMembers.size() % pageSize == 0 ? 0 : 1);
+    uint32_t pageCount = (uint32_t)secondaryMembers.size() <= pageSize
+                             ? 1
+                             : (uint32_t)secondaryMembers.size() / pageSize + ((uint32_t)secondaryMembers.size() % pageSize == 0 ? 0 : 1);
     m_currentPage = pageNumber > pageCount ? pageCount : pageNumber;
     m_pageSize = pageSize;
 
     QJsonArray pagedMembers;
     int begin = (m_currentPage - 1) * pageSize;
-    int end = begin + pageSize > secondaryMembers.size() ? secondaryMembers.size() : begin + pageSize;
+    int end = begin + (int)pageSize > (int)secondaryMembers.size() ? (int)secondaryMembers.size() : begin + (int)pageSize;
     YXLOG(Info) << "Get members from cache list: " << begin << " to " << end << ", current page: " << m_currentPage << ", page count: " << pageCount
                 << ", page size: " << m_pageSize << YXLOGEnd;
     for (int i = begin; i < end; i++) {
         auto member_item = secondaryMembers[i];
         QJsonObject member;
-        member[kMemberAccountId] = QString::fromStdString(member_item->getUserId());
-        member[kMemberNickanme] = QString::fromStdString(member_item->getDisplayName());
-        member[kMemberAudioStatus] = member_item->getAudioStatus();
-        member[kMemberVideoStatus] = member_item->getVideoStatus();
-        member[kMemberSharingStatus] = member_item->getScreenSharing();
-        member[kMemberAudioHandsUpStatus] = member_item->getRaiseHandDetail().status;
-        member[kMemberClientType] = member_item->getClientType();
+        member[kMemberAccountId] = member_item.accountId;
+        member[kMemberNickname] = member_item.nickname;
+        member[kMemberAudioStatus] = member_item.audioStatus;
+        member[kMemberVideoStatus] = member_item.videoStatus;
+        member[kMemberSharingStatus] = member_item.sharing;
+        member[kMemberAudioHandsUpStatus] = member_item.handsupStatus;
+        member[kMemberClientType] = member_item.clientType;
         pagedMembers.push_back(member);
     }
 
     QJsonObject primaryMember;
-    primaryMember[kMemberAccountId] = QString::fromStdString(primaryMemberPtr->getUserId());
-    primaryMember[kMemberNickanme] = QString::fromStdString(primaryMemberPtr->getDisplayName());
-    primaryMember[kMemberAudioStatus] = primaryMemberPtr->getAudioStatus();
-    primaryMember[kMemberVideoStatus] = primaryMemberPtr->getVideoStatus();
-    primaryMember[kMemberSharingStatus] = primaryMemberPtr->getScreenSharing();
-    primaryMember[kMemberAudioHandsUpStatus] = primaryMemberPtr->getRaiseHandDetail().status;
-    primaryMember[kMemberClientType] = primaryMemberPtr->getClientType();
+    primaryMember[kMemberAccountId] = primaryMemberInfo.accountId;
+    primaryMember[kMemberNickname] = primaryMemberInfo.nickname;
+    primaryMember[kMemberAudioStatus] = primaryMemberInfo.audioStatus;
+    primaryMember[kMemberVideoStatus] = primaryMemberInfo.videoStatus;
+    primaryMember[kMemberSharingStatus] = primaryMemberInfo.sharing;
+    primaryMember[kMemberAudioHandsUpStatus] = primaryMemberInfo.handsupStatus;
+    primaryMember[kMemberClientType] = primaryMemberInfo.clientType;
 
     YXLOG(Debug) << "-------------------------------------------------" << YXLOGEnd;
-    YXLOG(Debug) << "Focus view, primary member: " << primaryMemberPtr->getUserId() << YXLOGEnd;
+    YXLOG(Debug) << "Focus view, primary member: " << primaryMemberInfo.accountId.toStdString() << YXLOGEnd;
     for (int i = 0; i < pagedMembers.size(); i++) {
         const QJsonObject& member = pagedMembers.at(i).toObject();
         YXLOG(Debug) << "Secondary members: " << i << ", member info: " << member[kMemberAccountId].toString().toStdString() << YXLOGEnd;
@@ -259,24 +400,22 @@ void MembersManager::pagingFocusView(quint32 pageSize, quint32 pageNumber) {
 }
 
 void MembersManager::pagingWhiteboardView(quint32 pageSize, quint32 pageNumber) {
-    std::vector<SharedUserPtr> members;
-    GlobalManager::getInstance()->getInRoomService()->getUsersByRoleType(members);
-
-    if (members.size() == 0)
+    QVector<MemberInfo> members = getMembersByRoleType();
+    if (members.count() == 0)
         return;
 
-    std::vector<SharedUserPtr> secondaryMembers;
-    SharedUserPtr whiteboardShareMember;
+    QVector<MemberInfo> secondaryMembers;
+    MemberInfo whiteboardMember;
     for (auto& member : members) {
-        if (member->getUserId() == WhiteboardManager::getInstance()->whiteboardSharerAccountId().toStdString()) {
-            whiteboardShareMember = member;
+        if (member.accountId == WhiteboardManager::getInstance()->whiteboardSharerAccountId()) {
+            whiteboardMember = member;
         } else {
             secondaryMembers.push_back(member);
         }
     }
 
-    if (whiteboardShareMember != nullptr) {
-        secondaryMembers.insert(secondaryMembers.begin(), whiteboardShareMember);
+    if (!whiteboardMember.accountId.isEmpty()) {
+        secondaryMembers.insert(secondaryMembers.begin(), whiteboardMember);
     }
 
     uint32_t pageCount =
@@ -286,16 +425,16 @@ void MembersManager::pagingWhiteboardView(quint32 pageSize, quint32 pageNumber) 
 
     QJsonArray pagedMembers;
     int begin = (m_currentPage - 1) * pageSize;
-    int end = begin + pageSize > secondaryMembers.size() ? secondaryMembers.size() : begin + pageSize;
+    int end = begin + pageSize > (int)secondaryMembers.size() ? (int)secondaryMembers.size() : begin + pageSize;
 
     for (int i = begin; i < end; i++) {
         auto member_item = secondaryMembers[i];
         QJsonObject member;
-        member[kMemberAccountId] = QString::fromStdString(member_item->getUserId());
-        member[kMemberNickanme] = QString::fromStdString(member_item->getDisplayName());
-        member[kMemberAudioStatus] = member_item->getAudioStatus();
-        member[kMemberVideoStatus] = member_item->getVideoStatus();
-        member[kMemberSharingStatus] = member_item->getScreenSharing();
+        member[kMemberAccountId] = member_item.accountId;
+        member[kMemberNickname] = member_item.nickname;
+        member[kMemberAudioStatus] = member_item.audioStatus;
+        member[kMemberVideoStatus] = member_item.videoStatus;
+        member[kMemberSharingStatus] = member_item.sharing;
         pagedMembers.push_back(member);
     }
 
@@ -303,13 +442,11 @@ void MembersManager::pagingWhiteboardView(quint32 pageSize, quint32 pageNumber) 
 }
 
 void MembersManager::pagingGalleryView(quint32 pageSize, quint32 pageNumber) {
-    std::vector<SharedUserPtr> members;
-    GlobalManager::getInstance()->getInRoomService()->getUsersByRoleType(members);
-
-    if (members.size() == 0)
+    QVector<MemberInfo> members = getMembersByRoleType();
+    if (members.count() == 0)
         return;
 
-    std::vector<SharedUserPtr> secondaryMembers;
+    QVector<MemberInfo> secondaryMembers;
     auto authInfo = AuthManager::getInstance()->getAuthInfo();
     for (auto& member : members) {
         secondaryMembers.push_back(member);
@@ -328,23 +465,22 @@ void MembersManager::pagingGalleryView(quint32 pageSize, quint32 pageNumber) {
     for (int i = begin; i < end; i++) {
         auto member_item = secondaryMembers[i];
         QJsonObject member;
-        member[kMemberAccountId] = QString::fromStdString(member_item->getUserId());
-        member[kMemberNickanme] = QString::fromStdString(member_item->getDisplayName());
-        member[kMemberAudioStatus] = member_item->getAudioStatus();
-        member[kMemberVideoStatus] = member_item->getVideoStatus();
-        member[kMemberSharingStatus] = member_item->getScreenSharing();
+        member[kMemberAccountId] = member_item.accountId;
+        member[kMemberNickname] = member_item.nickname;
+        member[kMemberAudioStatus] = member_item.audioStatus;
+        member[kMemberVideoStatus] = member_item.videoStatus;
+        member[kMemberSharingStatus] = member_item.sharing;
         pagedMembers.push_back(member);
     }
 
-    //    QJsonObject selfMember;
-    //    auto& firstMember = members.front();
-    //    selfMember[kMemberAccountId] = QString::fromStdString(firstMember->getAccountId());
-    //    selfMember[kMemberAvRoomUid] = (qint64)firstMember->getAvRoomUid();
-    //    selfMember[kMemberNickanme] = QString::fromStdString(firstMember->getNickname());
-    //    selfMember[kMemberAudioStatus] = firstMember->getAudioStatus();
-    //    selfMember[kMemberVideoStatus] = firstMember->getVideoStatus();
-    //    selfMember[kMemberSharingStatus] = firstMember->getSharingStatus();
-    //    pagedMembers.push_front(selfMember);
+    //        QJsonObject selfMember;
+    //        auto& firstMember = members.front();
+    //        selfMember[kMemberAccountId] = firstMember.accountId;
+    //        selfMember[kMemberNickname] = firstMember.nickname;
+    //        selfMember[kMemberAudioStatus] = firstMember.audioStatus;
+    //        selfMember[kMemberVideoStatus] = firstMember.videoStatus;
+    //        selfMember[kMemberSharingStatus] = firstMember.sharing;
+    //        pagedMembers.push_front(selfMember);
 
     YXLOG(Debug) << "-------------------------------------------------" << YXLOGEnd;
     for (int i = 0; i < pagedMembers.size(); i++) {
@@ -356,35 +492,64 @@ void MembersManager::pagingGalleryView(quint32 pageSize, quint32 pageNumber) {
     emit membersChanged(QJsonObject(), pagedMembers, m_currentPage, members.size());
 }
 
-void MembersManager::onBeforeUserJoinUI(const QString& accountId, int memberCount) {}
+void MembersManager::convertPropertiesToMember(const std::map<std::string, std::string>& properties, MemberInfo& info) {
+    qInfo() << "convertPropertiesToMember properties:" << properties.size();
+    auto iter = properties.begin();
+    for (; iter != properties.end(); iter++) {
+        if (iter->first == "tag") {
+            info.tag = QString::fromStdString(iter->second);
+        } else if (iter->first == "handsUp") {
+            auto tagJson = iter->second;
+            QString status = QString::fromStdString(iter->second);
+            if (status == "0") {
+                info.handsupStatus = NEMeeting::HAND_STATUS_DOWN;
+            } else if (status == "1") {
+                info.handsupStatus = NEMeeting::HAND_STATUS_RAISE;
+                m_nHandsUpCount++;
+            } else if (status == "2") {
+                info.handsupStatus = NEMeeting::HAND_STATUS_REJECT;
+            }
+        }
+    }
+}
 
-void MembersManager::onAfterUserJoinedUI(const QString& accountId, bool bNotify) {
+bool MembersManager::getMemberByAccountId(const QString& accountId, MemberInfo& memberInfo) {
+    for (auto item : m_items) {
+        if (accountId == item.accountId) {
+            memberInfo = item;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+QVector<MemberInfo> MembersManager::getMembersByRoleType(const QVector<NERoleType>& roleType) {
+    QVector<MemberInfo> members;
+    for (auto& member : m_items) {
+        auto it = std::find_if(roleType.begin(), roleType.end(), [member](const auto& it) { return member.roleType == it; });
+        if (roleType.end() != it) {
+            members.push_back(member);
+        }
+    }
+    return members;
+}
+
+void MembersManager::onAfterUserJoinedUI(const QString& accountId, const QString& nickname, bool bNotify) {
     if (m_refreshTime.isActive())
         m_refreshTime.stop();
     m_refreshTime.start(500);
-    QByteArray byteAccountId = accountId.toUtf8();
-    QString strAccountid = AuthManager::getInstance()->authAccountId();
-    QByteArray strid = strAccountid.toUtf8();
-    auto member = GlobalManager::getInstance()->getInRoomService()->getUserInfoById(byteAccountId.data());
-    if (member && accountId != strid.data() && bNotify)
-        emit userJoinNotify(QString::fromStdString(member->getDisplayName()));
+    if (accountId != AuthManager::getInstance()->authAccountId() && bNotify) {
+        emit userJoinNotify(nickname);
+    }
     emit countChanged();
 }
 
-void MembersManager::onBeforeUserLeaveUI(const QString& /*accountId*/, int /*memberIndex*/) {}
-
-void MembersManager::onAfterUserLeftUI(const QString& accountId, bool bNotify) {
+void MembersManager::onAfterUserLeftUI(const QString& accountId, const QString& nickname) {
     if (m_refreshTime.isActive())
         m_refreshTime.stop();
     m_refreshTime.start(500);
-    QString strAccountId = AuthManager::getInstance()->authAccountId();
-    QByteArray byteAccountId = strAccountId.toUtf8();
-    if (m_ptrLeaveUsr && byteAccountId.data() != accountId) {
-        if (bNotify) {
-            emit userLeftNotify(QString::fromStdString(m_ptrLeaveUsr->getDisplayName()));
-        }
-        m_ptrLeaveUsr = nullptr;
-    }
+    emit userLeftNotify(nickname);
     emit countChanged();
 }
 
@@ -394,53 +559,47 @@ void MembersManager::onHostChangedUI(const QString& hostAccountId) {
 }
 
 void MembersManager::handleAudioStatusChanged(const QString& accountId, int status) {
-    if (m_membersController) {
-        for (int i = 0; i < m_items.size(); i++) {
-            auto item = m_items.at(i);
-            if (item.accountId == accountId) {
-                int statusTmp = item.audioStatus;
-                item.audioStatus = status;
-                m_items[i] = item;
-                if ((1 == statusTmp && 1 != status) || (1 != statusTmp && 1 == status)) {
-                    Q_EMIT dataChanged(i, MembersModel::kMemberRoleAudio);
-                }
-                break;
+    for (int i = 0; i < m_items.size(); i++) {
+        auto item = m_items.at(i);
+        if (item.accountId == accountId) {
+            int statusTmp = item.audioStatus;
+            item.audioStatus = status;
+            m_items[i] = item;
+            if ((1 == statusTmp && 1 != status) || (1 != statusTmp && 1 == status)) {
+                Q_EMIT dataChanged(i, MembersModel::kMemberRoleAudio);
             }
+            break;
         }
     }
 }
 
 void MembersManager::handleVideoStatusChanged(const QString& accountId, int status) {
-    if (m_membersController) {
-        for (int i = 0; i < m_items.size(); i++) {
-            auto item = m_items.at(i);
-            if (item.accountId == accountId) {
-                int statusTmp = item.videoStatus;
-                item.videoStatus = status;
-                m_items[i] = item;
-                if ((1 == statusTmp && 1 != status) || (1 != statusTmp && 1 == status)) {
-                    Q_EMIT dataChanged(i, MembersModel::kMemberRoleVideo);
-                }
-                break;
+    for (int i = 0; i < m_items.size(); i++) {
+        auto item = m_items.at(i);
+        if (item.accountId == accountId) {
+            int statusTmp = item.videoStatus;
+            item.videoStatus = status;
+            m_items[i] = item;
+            if ((1 == statusTmp && 1 != status) || (1 != statusTmp && 1 == status)) {
+                Q_EMIT dataChanged(i, MembersModel::kMemberRoleVideo);
             }
+            break;
         }
     }
 }
 
 void MembersManager::handleHandsupStatusChanged(const QString& accountId, NEMeeting::HandsUpStatus status) {
-    if (m_membersController) {
-        for (int i = 0; i < m_items.size(); i++) {
-            auto item = m_items.at(i);
-            if (item.accountId == accountId) {
-                int statusTmp = item.handsupStatus;
-                item.handsupStatus = status;
-                m_items[i] = item;
-                if ((NEMeeting::HAND_STATUS_RAISE == statusTmp && NEMeeting::HAND_STATUS_RAISE != status) ||
-                    (NEMeeting::HAND_STATUS_RAISE != statusTmp && NEMeeting::HAND_STATUS_RAISE == status)) {
-                    Q_EMIT dataChanged(i, MembersModel::kMemberRoleHansUpStatus);
-                }
-                break;
+    for (int i = 0; i < m_items.size(); i++) {
+        auto item = m_items.at(i);
+        if (item.accountId == accountId) {
+            int statusTmp = item.handsupStatus;
+            item.handsupStatus = status;
+            m_items[i] = item;
+            if ((NEMeeting::HAND_STATUS_RAISE == statusTmp && NEMeeting::HAND_STATUS_RAISE != status) ||
+                (NEMeeting::HAND_STATUS_RAISE != statusTmp && NEMeeting::HAND_STATUS_RAISE == status)) {
+                Q_EMIT dataChanged(i, MembersModel::kMemberRoleHansUpStatus);
             }
+            break;
         }
     }
 }
@@ -453,18 +612,16 @@ void MembersManager::handleMeetingStatusChanged(NEMeeting::Status status, int /*
 }
 
 void MembersManager::handleWhiteboardDrawEnableChanged(const QString& sharedAccountId, bool enable) {
-    if (m_membersController) {
-        for (int i = 0; i < m_items.size(); i++) {
-            auto item = m_items.at(i);
-            if (item.accountId == sharedAccountId) {
-                bool statusTmp = item.isWhiteboardEnable;
-                item.isWhiteboardEnable = enable;
-                m_items[i] = item;
-                if (statusTmp != enable) {
-                    Q_EMIT dataChanged(i, MembersModel::kMemberRoleWhiteboard);
-                }
-                break;
+    for (int i = 0; i < m_items.size(); i++) {
+        auto item = m_items.at(i);
+        if (item.accountId == sharedAccountId) {
+            bool statusTmp = item.isWhiteboardEnable;
+            item.isWhiteboardEnable = enable;
+            m_items[i] = item;
+            if (statusTmp != enable) {
+                Q_EMIT dataChanged(i, MembersModel::kMemberRoleWhiteboard);
             }
+            break;
         }
     }
 }
@@ -487,15 +644,7 @@ void MembersManager::handleNicknameChanged(const QString& accountId, const QStri
 
 void MembersManager::handleShareAccountIdChanged() {
     auto meetingInfo = MeetingManager::getInstance()->getMeetingInfo();
-    if (nullptr == meetingInfo) {
-        return;
-    }
-
-    if (nullptr == m_membersController) {
-        return;
-    }
-
-    QString accountId = QString::fromStdString(meetingInfo->getScreenSharingUserId());
+    QString accountId = QString::fromStdString(meetingInfo.screenSharingUserId);
     bool sharing = !accountId.isEmpty();
 
     if (sharing) {
@@ -521,26 +670,100 @@ void MembersManager::handleShareAccountIdChanged() {
     }
 }
 
+void MembersManager::handleAudioVolumeIndication(const QString& accountId, int volume) {
+    for (int i = 0; i < m_items.size(); i++) {
+        auto item = m_items.at(i);
+        if (item.accountId == accountId) {
+            if (item.audioStatus != 1) {
+                break;
+            }
+
+            int temp = item.audioVolume;
+            item.audioVolume = volume;
+            m_items[i] = item;
+            if (temp != volume) {
+                Q_EMIT dataChanged(i, MembersModel::kMemberRoleAudioVolume);
+            }
+            break;
+        }
+    }
+}
+
+void MembersManager::handleRoleChanged(const QString& accountId, NERoleType roleType) {
+    for (int i = 0; i < m_items.size(); i++) {
+        auto item = m_items.at(i);
+        if (item.accountId == accountId) {
+            if (item.roleType != roleType) {
+                item.roleType = roleType;
+                m_items[i] = item;
+                Q_EMIT dataChanged(i, MembersModel::kMemberRoleType);
+                break;
+            }
+        }
+    }
+}
+
+void MembersManager::allowRemoteMemberHandsUp(const QString& accountId, bool bAllowHandsUp) {
+    QByteArray byteAccountId = accountId.toUtf8();
+    m_membersController->lowerHand(byteAccountId.data(),
+                                   std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
+}
+
+void MembersManager::handsUp(bool bHandsUp) {
+    m_membersController->raiseMyHand(
+        bHandsUp, std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
+}
+
+void MembersManager::muteRemoteVideoAndAudio(const QString& accountId, bool mute) {
+    QByteArray byteAccountId = accountId.toUtf8();
+    m_membersController->muteParticipantAudioAndVideo(
+        byteAccountId.data(), mute, std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
+}
+
+void MembersManager::onHandsUpStatusChangedUI(const QString& accountId, NEMeeting::HandsUpStatus status) {
+    YXLOG(Info) << "onHandsUpStatusChangedUI accountId = " << accountId.toStdString() << " audio handstatus : " << status << YXLOGEnd;
+    auto authInfo = AuthManager::getInstance()->getAuthInfo();
+    if (authInfo.accountId == accountId.toStdString()) {
+        if (status == NEMeeting::HAND_STATUS_RAISE) {
+            m_bHandsUp = true;
+        } else {
+            m_bHandsUp = false;
+        }
+    }
+
+    if (status == NEMeeting::HAND_STATUS_RAISE) {
+        m_nHandsUpCount++;
+    } else {
+        m_nHandsUpCount--;
+    }
+
+    if (authInfo.accountId == m_hostAccountId.toStdString()) {
+        emit handsUpCountChange();
+    }
+
+    emit handsupStatusChanged(accountId, status);
+    handleHandsupStatusChanged(accountId, status);
+}
+
+void MembersManager::onRoleChangedUI(const QString& accountId, const QString& strRoleType) {
+    handleRoleChanged(accountId, getRoleType(strRoleType.toStdString()));
+}
+
 uint32_t MembersManager::count() const {
-    std::vector<SharedUserPtr> members;
-    GlobalManager::getInstance()->getInRoomService()->getUsersByRoleType(members);
-    return members.size();
+    return m_items.count();
 }
 
 void MembersManager::setCount(const uint32_t& count) {
     m_count = count;
 }
 
-int MembersManager::audioHandsUpCount() const {
-    int iCount = 0;
-    std::vector<SharedUserPtr> members;
-    GlobalManager::getInstance()->getInRoomService()->getUsersByRoleType(members);
-    for (auto member : members) {
-        if (member->getRaiseHandDetail().status == kHandsUpRaise) {
-            iCount++;
-        }
-    }
-    return iCount;
+int MembersManager::handsUpCount() const {
+    return m_nHandsUpCount;
+}
+
+void MembersManager::setHandsUpCount(int count) {
+    m_nHandsUpCount = count;
+    emit handsUpCountChange();
 }
 
 void MembersManager::resetWhiteboardDrawEnable() {
@@ -556,6 +779,17 @@ void MembersManager::resetWhiteboardDrawEnable() {
     }
 }
 
+void MembersManager::updateWhiteboardOwner(const QString& whiteboardOwner, bool isSharing) {
+    for (int i = 0; i < m_items.size(); i++) {
+        auto item = m_items.at(i);
+        if (item.accountId == whiteboardOwner) {
+            item.isWhiteboardShareOwner = isSharing;
+            m_items[i] = item;
+            Q_EMIT dataChanged(i, MembersModel::kMemberWhiteboardShareOwner);
+        }
+    }
+}
+
 int MembersManager::galleryViewPageSize() const {
     return m_galleryViewPageSize;
 }
@@ -565,13 +799,54 @@ void MembersManager::setGalleryViewPageSize(const int& galleryViewPageSize) {
     emit galleryViewPageSizeChanged();
 }
 
-void MembersManager::onNetworkQuality(const std::string& accountId, NENetWorkQuality up, NENetWorkQuality down) {
+NEMeeting::HandsUpType MembersManager::handsUpType() const {
+    return m_handsUpType;
+}
+
+void MembersManager::setHandsUpType(NEMeeting::HandsUpType type) {
+    m_handsUpType = type;
+}
+
+void MembersManager::onNetworkQuality(const std::string& accountId, NERoomRtcNetWorkQuality up, NERoomRtcNetWorkQuality down) {
     // 只通知当前登录的用户网络状况
-    if (AuthManager::getInstance()->authAccountId().toStdString() != accountId) {
+    if (AuthManager::getInstance()->authAccountId().toStdString() != accountId || kNERoomRtcNetworkQualityUnknown == up ||
+        kNERoomRtcNetworkQualityUnknown == down) {
         return;
     }
 
-    emit netWorkQualityTypeChanged(netWorkQualityType(up, down));
+    auto nwt = netWorkQualityType(up, down);
+    auto localMember = std::find_if(m_items.begin(), m_items.end(),
+                                    [](const MemberInfo& it) { return it.accountId == AuthManager::getInstance()->authAccountId(); });
+    if (localMember != m_items.end()) {
+        localMember->netWorkQualityType = nwt;
+    }
+
+    emit netWorkQualityTypeChanged(nwt);
+}
+
+void MembersManager::onHandsUpStatusChanged(const std::string& accountId, NEMeeting::HandsUpStatus handsUpStatus) {
+    QMetaObject::invokeMethod(this, "onHandsUpStatusChangedUI", Qt::AutoConnection, Q_ARG(QString, QString::fromStdString(accountId)),
+                              Q_ARG(NEMeeting::HandsUpStatus, handsUpStatus));
+}
+
+void MembersManager::onRoleChanged(const std::string& accountId, const std::string& beforeRole, const std::string& afterRole) {
+    NERoleType newRoleType = getRoleType(afterRole);
+    NERoleType oldRoleType = getRoleType(beforeRole);
+    QString qstrAccountId = QString::fromStdString(accountId);
+
+    if (newRoleType == kRoleHost) {
+        MeetingManager::getInstance()->getMeetingController()->updateHostAccountId(accountId);
+        onHostChanged(accountId);
+    } else if (newRoleType == kRoleManager) {
+        onManagerChanged(accountId, true);
+    }
+
+    if (oldRoleType == kRoleManager) {
+        onManagerChanged(accountId, false);
+    }
+
+    QMetaObject::invokeMethod(this, "onRoleChangedUI", Qt::AutoConnection, Q_ARG(QString, QString::fromStdString(accountId)),
+                              Q_ARG(QString, QString::fromStdString(afterRole)));
 }
 
 QVector<MemberInfo> MembersManager::items() const {
@@ -579,19 +854,22 @@ QVector<MemberInfo> MembersManager::items() const {
 }
 
 int MembersManager::netWorkQualityType() const {
-    auto member = GlobalManager::getInstance()->getInRoomService()->getUserInfoById(AuthManager::getInstance()->authAccountId().toStdString());
-    if (!member) {
-        return (int)NEMeeting::NETWORKQUALITY_GOOD;
+    auto localMember = std::find_if(m_items.begin(), m_items.end(),
+                                    [](const MemberInfo& it) { return it.accountId == AuthManager::getInstance()->authAccountId(); });
+    if (localMember != m_items.end()) {
+        return localMember->netWorkQualityType;
     }
-    return (int)netWorkQualityType(member->getUpNetWorkQuality(), member->getDownNetWorkQuality());
+
+    return NEMeeting::NETWORKQUALITY_GOOD;
 }
 
-NEMeeting::NetWorkQualityType MembersManager::netWorkQualityType(NENetWorkQuality upNetWorkQuality, NENetWorkQuality downNetWorkQuality) const {
-    if ((kNetworkQualityVeryBad == upNetWorkQuality || kNetworkQualityDown == upNetWorkQuality) ||
-        (kNetworkQualityVeryBad == downNetWorkQuality || kNetworkQualityDown == downNetWorkQuality)) {
+NEMeeting::NetWorkQualityType MembersManager::netWorkQualityType(NERoomRtcNetWorkQuality upNetWorkQuality,
+                                                                 NERoomRtcNetWorkQuality downNetWorkQuality) const {
+    if ((kNERoomRtcNetworkQualityVeryBad == upNetWorkQuality || kNERoomRtcNetworkQualityDown == upNetWorkQuality) ||
+        (kNERoomRtcNetworkQualityVeryBad == downNetWorkQuality || kNERoomRtcNetworkQualityDown == downNetWorkQuality)) {
         return NEMeeting::NETWORKQUALITY_BAD;
-    } else if ((kNetworkQualityExcellent == upNetWorkQuality || kNetworkQualityGood == upNetWorkQuality) &&
-               (kNetworkQualityExcellent == downNetWorkQuality || kNetworkQualityGood == downNetWorkQuality)) {
+    } else if ((kNERoomRtcNetworkQualityExcellent == upNetWorkQuality || kNERoomRtcNetworkQualityGood == upNetWorkQuality) &&
+               (kNERoomRtcNetworkQualityExcellent == downNetWorkQuality || kNERoomRtcNetworkQualityGood == downNetWorkQuality)) {
         return NEMeeting::NETWORKQUALITY_GOOD;
     } else {
         return NEMeeting::NETWORKQUALITY_GENERAL;
@@ -606,11 +884,7 @@ void MembersManager::setHostAccountId(const QString& hostAccountId) {
     m_hostAccountId = hostAccountId;
     emit hostAccountIdChanged();
     auto anthInfo = AuthManager::getInstance()->getAuthInfo();
-    if (anthInfo) {
-        AuthManager::getInstance()->setIsHostAccount(anthInfo->getAccountId() == hostAccountId.toStdString());
-    } else {
-        AuthManager::getInstance()->setIsHostAccount(false);
-    }
+    AuthManager::getInstance()->setIsHostAccount(anthInfo.accountId == hostAccountId.toStdString());
 
     //刷新成员列表排序
     if (m_membersController) {
@@ -645,6 +919,26 @@ bool MembersManager::isWhiteboardView() const {
 
 void MembersManager::setIsWhiteboardView(bool isWhiteboardView) {
     m_isWhiteboardView = isWhiteboardView;
-
     emit isWhiteboardViewChanged();
+}
+
+NERoleType MembersManager::getRoleType(const std::string& strRoleType) {
+    if ("host" == strRoleType) {
+        return kRoleHost;
+    } else if ("cohost" == strRoleType) {
+        return kRoleManager;
+    } else if ("member" == strRoleType) {
+        return kRoleMember;
+    } else {
+        return kRoleInvaild;
+    }
+}
+
+bool MembersManager::isManagerRole() {
+    return m_isManagerRole;
+}
+
+void MembersManager::setIsManagerRole(bool isManagerRole) {
+    m_isManagerRole = isManagerRole;
+    emit isManagerRoleChanged();
 }

@@ -72,6 +72,7 @@ Rectangle {
                         nickname: model.nickname
                         videoStatus: model.videoStatus
                         audioStatus: model.audioStatus
+                        highQuality: authManager.authAccountId === model.accountId ? false : SettingsManager.remoteVideoResolution
                     }
                 }
 
@@ -103,7 +104,9 @@ Rectangle {
                 anchors.topMargin: 8
                 spacing: 10
                 z: 1
-                visible: authManager.authAccountId === membersManager.hostAccountId && videoManager.focusAccountId.length !== 0 && shareManager.shareAccountId === 0
+                visible: (authManager.authAccountId === membersManager.hostAccountId || membersManager.isManagerRole)
+                         && videoManager.focusAccountId.length !== 0
+                         && shareManager.shareAccountId.length === 0
                 Rectangle {
                     width: 90
                     height: 22
@@ -131,6 +134,11 @@ Rectangle {
             if (hasRecordPermission) {
                 shareSelector.open()
             } else {
+                requestPermission.sigOpenSetting.connect(function(){
+                    shareManager.openSystemSettings()
+                })
+                requestPermission.titleText = qsTr("Screen Record Permission")
+                requestPermission.contentText = qsTr('Due to the security control of MacOS system, it is necessary to turn on the system screen recording permission before starting to share the screen%1Open System Preferences > Security and privacy grant access').arg('\r\n\r\n')
                 requestPermission.open()
             }
         }

@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "modules/event_track/nemetting_event_track_statistic.h"
 #include <QDateTime>
@@ -63,7 +62,6 @@ void NEMeetinEventTrackDataBase::FillStaticData(QJsonObject& itme) const {
         static_data_.model_ = SysInfo::GetSystemProductName();
         static_data_.app_key_ = "";
         static_data_.version_name_ = APPLICATION_VERSION;
-        static_data_.sdk_version_ = NERTC_SDK_VERSION;
     });
 
     itme["platform"] = static_data_.platform_;
@@ -129,7 +127,7 @@ bool NEMeetinEventTrackData_Action::OnFill(QJsonObject& itme) const {
     return true;
 }
 NEMeetingEventTrackStatistic* NEMeetingEventTrackStatistic::instance_ = nullptr;
-QString NEMeetingEventTrackStatistic::EventReportHttpRequest::kEventReportMainUrl = "";
+QString NEMeetingEventTrackStatistic::EventReportHttpRequest::kEventReportMainUrl = "https://statistic.live.126.net/";
 QString NEMeetingEventTrackStatistic::EventReportHttpRequest::kEventReportSubUrl = "statics/report/common/form";
 IEventTrackStatistic<QJsonObject>* NEMeetingEventTrackStatistic::getInstance() {
     static QMutex mutex;

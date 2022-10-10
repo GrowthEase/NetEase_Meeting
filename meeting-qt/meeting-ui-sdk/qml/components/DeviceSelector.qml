@@ -145,6 +145,7 @@ Popup {
                                 anchors.right: parent.right
                                 anchors.rightMargin: 10
                                 visible: model.deviceSelected
+                                mipmap: true
                                 source: "qrc:/qml/images/public/icons/right_white.svg"
                             }
                             onClicked: {

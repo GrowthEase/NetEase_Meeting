@@ -6,6 +6,7 @@ Item {
     anchors.fill: parent
 
     property string ssoAppKey: ''
+    property string ssoUser: ''
     property string ssoToken: ''
 
     ColumnLayout {
@@ -16,6 +17,7 @@ Item {
             Layout.preferredWidth: 220
             Layout.preferredHeight: 58
             source: "qrc:/qml/images/logo.png"
+            mipmap: true
         }
 
         RowLayout {

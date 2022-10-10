@@ -7,8 +7,8 @@ import QtQuick.Layouts 1.12
 
 Popup {
     id: root
-    width: 260   // 300
-    height: 260  // 340
+    width: 260 // 300
+    height: 260 // 340
     padding: 0
     leftInset: 0
     rightInset: 0
@@ -40,17 +40,19 @@ Popup {
     property alias calendar: idCalendar
 
     onClosed: {
+
         // When created dynamically, is called when the dialog is closed only but the parent object is not destroyed
         //root.destroy()
     }
 
     QtObject {
         id: idProperty
-        property var week: [qsTr("Sun"), qsTr("Mon"), qsTr("Tue"), qsTr("Wed"), qsTr("Thu"), qsTr("Fri"), qsTr("Sat")]
+        property var week: [qsTr("Sun"), qsTr("Mon"), qsTr("Tue"), qsTr(
+                "Wed"), qsTr("Thu"), qsTr("Fri"), qsTr("Sat")]
     }
 
     QC14.Calendar {
-        id : idCalendar
+        id: idCalendar
         anchors.horizontalCenter: parent.horizontalCenter
         //anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
@@ -64,7 +66,7 @@ Popup {
             id: idStyle
             gridVisible: false
 
-            background: Rectangle{
+            background: Rectangle {
                 anchors.fill: parent
                 color: "#FFFFFF"
             }
@@ -94,7 +96,8 @@ Popup {
                     text: styleData.date.getDate()
                     anchors.centerIn: parent
                     font.pixelSize: 12
-                    color: styleData.selected ? "#FFFFFF" :  (styleData.visibleMonth && styleData.valid ? (styleData.hovered ? "#337EFF" : "#222222") : "#CCCCCC")
+                    color: styleData.selected ? "#FFFFFF" : (styleData.visibleMonth
+                                                             && styleData.valid ? (styleData.hovered ? "#337EFF" : "#222222") : "#CCCCCC")
                 }
             }
 
@@ -106,7 +109,10 @@ Popup {
                 Label {
                     id: weekTxt
                     anchors.fill: parent
-                    text: Qt.locale().uiLanguages[0] === "zh-CN" ? idProperty.week[styleData.dayOfWeek] : Qt.locale().dayName(styleData.dayOfWeek, control.dayOfWeekFormat)
+                    text: Qt.locale().uiLanguages[0]
+                          === "zh-CN" ? idProperty.week[styleData.dayOfWeek] : Qt.locale(
+                                            ).dayName(styleData.dayOfWeek,
+                                                      control.dayOfWeekFormat)
                     color: "#222222"
                     font.pixelSize: 12
                     horizontalAlignment: Text.AlignHCenter
@@ -123,6 +129,7 @@ Popup {
                     anchors.topMargin: 10
                     Image {
                         source: "qrc:/qml/images/public/calendar/left2.svg"
+                        mipmap: true
                         Layout.preferredWidth: 24
                         Layout.preferredHeight: width
                         Layout.alignment: Qt.AlignVCenter
@@ -130,13 +137,14 @@ Popup {
                         MouseArea {
                             anchors.fill: parent
                             onClicked: {
-                               control.visibleYear = control.visibleYear - 1;
+                                control.visibleYear = control.visibleYear - 1
                             }
                         }
                     }
 
                     Image {
                         source: "qrc:/qml/images/public/calendar/left.svg"
+                        mipmap: true
                         Layout.preferredWidth: 24
                         Layout.preferredHeight: width
                         Layout.alignment: Qt.AlignVCenter
@@ -161,6 +169,7 @@ Popup {
 
                     Image {
                         source: "qrc:/qml/images/public/calendar/right.svg"
+                        mipmap: true
                         Layout.preferredWidth: 24
                         Layout.preferredHeight: width
                         Layout.alignment: Qt.AlignVCenter
@@ -175,6 +184,7 @@ Popup {
 
                     Image {
                         source: "qrc:/qml/images/public/calendar/right2.svg"
+                        mipmap: true
                         Layout.preferredWidth: 24
                         Layout.preferredHeight: width
                         Layout.alignment: Qt.AlignVCenter
@@ -190,4 +200,3 @@ Popup {
         }
     }
 }
-

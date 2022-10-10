@@ -1,11 +1,7 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
-
-// Copyright (c) 2010 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
+
 //
 // Ported & Modified by Wang Rongtao <rtwang@corp.netease.com>
 // 2013/8/30
@@ -42,8 +38,8 @@
 #if defined(OS_WIN)
 
 // Second-level utility macros to let us expand symbols.
-#define LSTRINGIZE_NO_EXPANSION(x) L ## #x
-#define TO_L_STRING_NO_EXPANSION(x) L ## x
+#define LSTRINGIZE_NO_EXPANSION(x) L## #x
+#define TO_L_STRING_NO_EXPANSION(x) L##x
 
 // L version of STRINGIZE(). For examples above,
 //   LSTRINGIZE(A) produces L"FOO"

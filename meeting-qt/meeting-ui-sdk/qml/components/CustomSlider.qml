@@ -19,7 +19,7 @@ Slider {
         Rectangle {
             width: control.visualPosition * parent.width
             height: parent.height
-            color: "#337EFF"
+            color: enabled ? "#337EFF" : "#F2F2F5"
             radius: 2
         }
     }
@@ -41,7 +41,6 @@ Slider {
             anchors.bottom: handle.top
             text: control.value
             font.pixelSize: 14
-
         }
     }
 }

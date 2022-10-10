@@ -1,25 +1,23 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #ifndef _WINDOWS_HELPERS_H_
 #define _WINDOWS_HELPERS_H_
 
-#include <QObject>
 #include <windows.h>
+#include <QObject>
 #include <string>
 
 class PrintCaptureHelper;
-class WindowsHelpers : public QObject
-{
+class WindowsHelpers : public QObject {
     Q_OBJECT
 
 public:
     struct CaptureTargetInfo {
-        HWND              id = 0;
-        std::wstring      title;
-        std::string       app;
+        HWND id = 0;
+        std::wstring title;
+        std::string app;
     };
     typedef std::vector<CaptureTargetInfo> CaptureTargetInfoList;
 
@@ -35,11 +33,13 @@ public:
     QPixmap getWindowIcon(HWND hWnd) const;
     bool static getCaptureWindowList(CaptureTargetInfoList* windows);
     void setForegroundWindow(HWND hWnd) const;
+    HWND getForegroundWindow() const;
     void sharedOutsideWindow(WId wid, HWND hWnd, bool bFullScreen);
     void setWindowTop(WId wid);
+    void setShowWindow(HWND hWnd, int nCmdShow);
     QRectF getWindowFrameRect(HWND hWnd) const;
     // pos：任务栏位置1左边，2上边，3右边，4下边
-    void getTaskbarInfo(int &width, int &height, int &pos);
+    void getTaskbarInfo(int& width, int& height, int& pos);
     std::string getModuleName(HWND hWnd);
     bool isPptPlaying(HWND& hWnd, bool& bPowerpnt);
     bool getForegroundWindow(HWND hWnd) const;
@@ -47,7 +47,7 @@ public:
     bool getFocusWindow(HWND hWnd) const;
     bool getDisplayRect(HWND hWnd, QRectF& rect, QRectF& availableRect, bool bPpt = false) const;
 
-    bool static getFileVersion(const wchar_t *file_path, WORD *major_version, WORD *minor_version, WORD *build_number, WORD *revision_number);
+    bool static getFileVersion(const wchar_t* file_path, WORD* major_version, WORD* minor_version, WORD* build_number, WORD* revision_number);
     int static getNTDLLVersion();
     std::wstring static getCurrentExe();
 
@@ -57,7 +57,7 @@ private:
     //根据屏幕上指定的坐标点，获取坐标点窗口对应的HWND
     HWND getHwndByPoint(int nX, int nY);
     //查找全屏的应用窗口
-    BOOL findFullScreenWindow(DWORD &dwProcessID, std::string &strProcessName, HWND &hWnd, bool& bPowerpnt);
+    BOOL findFullScreenWindow(DWORD& dwProcessID, std::string& strProcessName, HWND& hWnd, bool& bPowerpnt);
     //根据进程id获得进程名
     std::string getModuleNameByPid(DWORD dwPid);
 
@@ -66,8 +66,7 @@ private:
     PrintCaptureHelper* m_pPrintCaptureHelper = nullptr;
 };
 
-class PrintCaptureHelper
-{
+class PrintCaptureHelper {
 public:
     PrintCaptureHelper();
     virtual ~PrintCaptureHelper();
@@ -98,4 +97,4 @@ private:
     RECT clientRect_ = {0, 0, 0, 0};
     int bmpDataSize_ = 0;
 };
-#endif // _WINDOWS_HELPERS_H_
+#endif  // _WINDOWS_HELPERS_H_

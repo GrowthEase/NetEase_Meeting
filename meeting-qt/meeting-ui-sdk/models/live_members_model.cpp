@@ -1,7 +1,6 @@
-/**
- * @copyright Copyright (c) 2021 NetEase, Inc. All rights reserved.
- *            Use of this source code is governed by a MIT license that can be found in the LICENSE file.
- */
+﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
 
 #include "live_members_model.h"
 
@@ -9,7 +8,6 @@
 
 LiveMembersModel::LiveMembersModel(QObject* parent)
     : QAbstractListModel(parent) {
-    qInfo() << "LiveMembersModel::LiveMembersModel";
     initManagerConnect();
 }
 
@@ -201,23 +199,24 @@ bool LiveMembersModel::getLiveMemberIsSharing() {
 void LiveMembersModel::initManagerConnect() {
     beginResetModel();
 
-    connect(MembersManager::getInstance(), &MembersManager::afterUserJoined, this, [=](const QString& accountId, bool bNotify) {
-        SharedUserPtr member = MembersManager::getInstance()->getMemberByAccountId(accountId);
-        if (member.get() == nullptr) {
+    connect(MembersManager::getInstance(), &MembersManager::afterUserJoined, this, [=](const QString& accountId, const QString& nickname) {
+        MemberInfo memberInfo;
+        bool findMember = MembersManager::getInstance()->getMemberByAccountId(accountId, memberInfo);
+        if (!findMember) {
             return;
         }
 
         //判断该成员是否满足直播条件
-        if (!isLiveMember(member)) {
+        if (!isLiveMember(memberInfo)) {
             return;
         }
 
         beginInsertRows(QModelIndex(), m_members.size(), m_members.size());
-        addLiveMember(QString::fromStdString(member->getDisplayName()), QString::fromStdString(member->getUserId()));
+        addLiveMember(memberInfo.nickname, memberInfo.accountId);
         endInsertRows();
     });
 
-    connect(MembersManager::getInstance(), &MembersManager::beforeUserLeave, this, [=](const QString& accountId, int /*memberIndex*/) {
+    connect(MembersManager::getInstance(), &MembersManager::afterUserLeft, this, [=](const QString& accountId, const QString& nickname) {
         for (int index = 0; index < m_members.count(); index++) {
             if (m_members[index].accountId == accountId) {
                 if (m_members[index].checkState == Checked) {
@@ -265,8 +264,9 @@ void LiveMembersModel::initManagerConnect() {
                     }
                 }
 
-                SharedUserPtr member = MembersManager::getInstance()->getMemberByAccountId(changedAccountId);
-                if (member.get() == nullptr) {
+                MemberInfo member;
+                bool findMember = MembersManager::getInstance()->getMemberByAccountId(changedAccountId, member);
+                if (!findMember) {
                     return;
                 }
 
@@ -274,7 +274,7 @@ void LiveMembersModel::initManagerConnect() {
                     //如果成员摄像头打开，则加入直播列表
                     if (!bFound) {
                         beginInsertRows(QModelIndex(), m_members.size(), m_members.size());
-                        addLiveMember(QString::fromStdString(member->getDisplayName()), QString::fromStdString(member->getUserId()));
+                        addLiveMember(member.nickname, member.accountId);
                         endInsertRows();
                     }
                 } else {
@@ -308,8 +308,9 @@ void LiveMembersModel::initManagerConnect() {
             emit liveMemberShareStatusChanged(false);
         }
 
-        SharedUserPtr member = MembersManager::getInstance()->getMemberByAccountId(accountId);
-        if (member.get() == Q_NULLPTR) {
+        MemberInfo member;
+        bool findMember = MembersManager::getInstance()->getMemberByAccountId(accountId, member);
+        if (!findMember) {
             return;
         }
 
@@ -322,18 +323,19 @@ void LiveMembersModel::initManagerConnect() {
             }
         }
 
+        m_shareAccountId = accountId;
+
         if (!bFound) {
-            if (member->getScreenSharing()) {
+            if (member.sharing) {
                 //开启屏幕共享，则加入直播成员列表
                 beginInsertRows(QModelIndex(), m_members.size(), m_members.size());
-                m_shareAccountId = QString::fromStdString(member->getUserId());
-                addLiveMember(QString::fromStdString(member->getDisplayName()), QString::fromStdString(member->getUserId()));
+                addLiveMember(member.nickname, member.accountId);
                 emit liveMemberShareStatusChanged(true);
                 endInsertRows();
             }
         } else {
             //如果成员摄像头关闭、并且未共享屏幕，则在直播列表中移除
-            if (member->getVideoStatus() != NEMeeting::DEVICE_ENABLED && !member->getScreenSharing()) {
+            if (member.videoStatus != NEMeeting::DEVICE_ENABLED && !member.sharing) {
                 if (m_members[index].checkState == Checked) {
                     //更新序号
                     updateCheckNumber(m_members[index].number);
@@ -343,11 +345,10 @@ void LiveMembersModel::initManagerConnect() {
                     emit liveMemberCountChanged();
                 }
 
-                m_shareAccountId = "";
                 beginRemoveRows(QModelIndex(), index, index);
                 m_members.remove(index);
                 endRemoveRows();
-            } else if (member->getScreenSharing()) {
+            } else if (member.sharing) {
                 emit liveMemberShareStatusChanged(true);
             }
         }
@@ -372,14 +373,14 @@ void LiveMembersModel::initManagerConnect() {
     endResetModel();
 }
 
-bool LiveMembersModel::isLiveMember(const SharedUserPtr& member) {
-    if (member->getVideoStatus() != NEMeeting::DEVICE_ENABLED && member->getScreenSharing() == false) {
+bool LiveMembersModel::isLiveMember(const MemberInfo& member) {
+    if (member.videoStatus != NEMeeting::DEVICE_ENABLED && member.sharing == false) {
         return false;
     }
 
     // 如果在成员列表中已经存在，则不允许再次插入
     for (auto& insideMember : m_members) {
-        if (insideMember.accountId == QString::fromStdString(member->getUserId()))
+        if (insideMember.accountId == member.accountId)
             return false;
     }
 
@@ -394,7 +395,13 @@ void LiveMembersModel::addLiveMember(const QString& nickName, const QString& acc
 
     if (m_liveMemberCount == 4) {
         info.checkState = DisableChecked;
-    }
+    } /*else {
+        m_members.push_back(info);
+        auto userList = LiveManager::getInstance()->getLiveUsersList();
+        if (std::find_if(userList.begin(), userList.end(), [accountId](const QJsonValue& obj) { return obj.toString() == accountId; }) !=
+    userList.end()) { updateLiveMembers(userList);
+        }
+    }*/
 
     m_members.push_back(info);
 }
