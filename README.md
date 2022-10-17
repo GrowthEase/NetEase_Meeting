@@ -105,12 +105,3 @@ The MIT License（MIT）
 # 交流 & 反馈
 有疑问请添加网易智企小助手微信或添加官方社群
 
-网易智企小助手：
-![小助手](https://user-images.githubusercontent.com/97159926/156147931-85c382e3-7e11-4ec9-bc81-49bf6f504603.jpg)
-
-官方交流社群：
-![社群二维码](https://github.com/GrowthEase/NetEase_Meeting/blob/main/images/%E7%A4%BE%E7%BE%A4%E4%BA%8C%E7%BB%B4%E7%A0%81-5.9.jpg)
-
-
-
-
