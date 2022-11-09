@@ -103,5 +103,6 @@ Meeting SDK 是一个带UI的会议服务组件, 相比于NERoom 我们提供了
 The MIT License（MIT）
 
 # 交流 & 反馈
-有疑问请添加网易智企小助手微信或添加官方社群
+扫码入群
+[开源交流群](https://github.com/GrowthEase/NetEase_Meeting/blob/main/images/%E7%A4%BE%E7%BE%A4%E4%BA%8C%E7%BB%B4%E7%A0%81.jpg)
 
