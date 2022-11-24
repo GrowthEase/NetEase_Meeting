@@ -230,7 +230,7 @@ class _PreVirtualBackgroundPageState
   }
 
   Future<void> _initRenderer() async {
-    renderer = await VideoRendererFactory.createVideoRenderer('');
+    renderer = await NERtcVideoRendererFactory.createVideoRenderer('');
     await renderer!.attachToLocalVideo();
     if (Platform.isAndroid) {
       renderer!.setMirror(true);

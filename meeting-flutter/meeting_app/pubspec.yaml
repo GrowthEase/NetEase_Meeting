@@ -29,6 +29,7 @@ dependencies:
 
   pin_input_text_field: ^4.1.2
   url_launcher: ^6.1.4
+  url_launcher_android: 6.0.20
   webview_flutter: ^3.0.4
   convert: ^3.0.0
 
