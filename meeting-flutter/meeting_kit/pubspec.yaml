@@ -24,7 +24,7 @@ dependencies:
   device_info_plus_platform_interface: 2.3.0+1
   package_info: ^2.0.2
 
-  netease_roomkit: ^0.0.2
+  netease_roomkit: ^0.0.3+1
 
 dev_dependencies:
   flutter_test:
