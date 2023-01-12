@@ -106,7 +106,7 @@ class _PreVirtualBackgroundPageState
                         borderRadius: BorderRadius.circular(4), // 设置四周圆角
                       ),
                       // color: UIColors.grey_8F8F8F,
-                      child: buildItem(index, sourceList)),
+                      child: buildItem(context, index, sourceList)),
                   onTap: () async {
                     bool selected = true;
                     if (index < sourceList.length - 1) {
@@ -115,7 +115,9 @@ class _PreVirtualBackgroundPageState
                           addExternalVirtualList!.length >=
                               addExternalVirtualMax) {
                         ToastUtils.showToast(
-                            context, _Strings.virtualBackgroundImageMax);
+                            context,
+                            NEMeetingUIKitLocalizations.of(context)!
+                                .virtualBackgroundImageMax);
                         setState(() {});
                         return;
                       }
@@ -153,7 +155,8 @@ class _PreVirtualBackgroundPageState
               child: GestureDetector(
                   child: Padding(
                     padding: EdgeInsets.only(left: 16),
-                    child: Text("删除", style: TextStyle(color: Colors.grey)),
+                    child: Text(NEMeetingUIKitLocalizations.of(context)!.delete,
+                        style: TextStyle(color: Colors.grey)),
                   ),
                   onTap: () async {
                     if (bCanPress) {
@@ -196,14 +199,17 @@ class _PreVirtualBackgroundPageState
             ),
             Expanded(
               child: Center(
-                child: Text("所选背景立即生效", style: TextStyle(color: Colors.black)),
+                child: Text(
+                    NEMeetingUIKitLocalizations.of(context)!
+                        .virtualBackgroundSelectTip,
+                    style: TextStyle(color: Colors.black)),
               ),
             ),
             GestureDetector(
               child: Padding(
                 padding: EdgeInsets.only(right: 16),
                 child: Text(
-                  "确定",
+                  NEMeetingUIKitLocalizations.of(context)!.sure,
                   style: TextStyle(color: Colors.blue),
                 ),
               ),
@@ -219,7 +225,10 @@ class _PreVirtualBackgroundPageState
     var granted = (await Permission.camera.status) == PermissionStatus.granted;
     if (!granted) {
       granted = await PermissionHelper.requestPermissionSingle(
-          context, Permission.camera, '', _Strings.cameraPermission);
+          context,
+          Permission.camera,
+          '',
+          NEMeetingUIKitLocalizations.of(context)!.cameraPermission);
       if (!granted) UINavUtils.pop(context, rootNavigator: true);
     }
     return granted;
@@ -304,15 +313,22 @@ class _PreVirtualBackgroundPageState
             'preview onRtcVirtualBackgroundSourceEnabled enabled=$enabled,reason:$reason');
     switch (reason) {
       case NERoomVirtualBackgroundSourceStateReason.kImageNotExist:
-        ToastUtils.showToast(context, _Strings.virtualBackgroundImageNotExist);
+        ToastUtils.showToast(
+            context,
+            NEMeetingUIKitLocalizations.of(context)!
+                .virtualBackgroundImageNotExist);
         break;
       case NERoomVirtualBackgroundSourceStateReason.kImageFormatNotSupported:
         ToastUtils.showToast(
-            context, _Strings.virtualBackgroundImageFormatNotSupported);
+            context,
+            NEMeetingUIKitLocalizations.of(context)!
+                .virtualBackgroundImageFormatNotSupported);
         break;
       case NERoomVirtualBackgroundSourceStateReason.kDeviceNotSupported:
         ToastUtils.showToast(
-            context, _Strings.virtualBackgroundImageDeviceNotSupported);
+            context,
+            NEMeetingUIKitLocalizations.of(context)!
+                .virtualBackgroundImageDeviceNotSupported);
         break;
     }
   }
@@ -352,13 +368,14 @@ void enableVirtualBackground(
     NEPreviewRoomRtcController? previewRoomRtcController,
     bool enable,
     String path) async {
-  await previewRoomRtcController?.enableVirtualBackground(
+  final result = await previewRoomRtcController?.enableVirtualBackground(
       enable,
       NERoomVirtualBackgroundSource(
           backgroundSourceType: NERoomVirtualBackgroundType.kBackgroundImg,
           source: path,
           color: 0,
           blurDegree: NERoomVirtualBackgroundType.kBlurDegreeHigh));
+  debugPrint('enableVirtualBackground result:$result');
 }
 
 Future<bool> pickFiles(
@@ -378,7 +395,9 @@ Future<bool> pickFiles(
         originName.endsWith('.png') &&
         originName.endsWith('.jpeg')) {
       ToastUtils.showToast(
-          context, _Strings.virtualBackgroundImageFormatNotSupported);
+          context,
+          NEMeetingUIKitLocalizations.of(context)!
+              .virtualBackgroundImageFormatNotSupported);
       return false;
     }
     File originFile = File(originPath);
@@ -387,7 +406,8 @@ Future<bool> pickFiles(
 
     ///定义MB的计算常量
     if (size >= 5 * mb) {
-      ToastUtils.showToast(context, _Strings.virtualBackgroundImageLarge);
+      ToastUtils.showToast(context,
+          NEMeetingUIKitLocalizations.of(context)!.virtualBackgroundImageLarge);
       return false;
     }
     Directory? directory;
@@ -425,12 +445,16 @@ Future<bool> pickFiles(
   return selected;
 }
 
-Widget buildItem(int index, List<String> sourceList) {
+Widget buildItem(BuildContext context, int index, List<String> sourceList) {
   Widget view = Container();
   if (index == 0) {
     view = Container(
-        alignment: Alignment.center,
-        child: Text("无", style: TextStyle(color: Colors.black)));
+      alignment: Alignment.center,
+      child: Text(
+        NEMeetingUIKitLocalizations.of(context)!.nothing,
+        style: TextStyle(color: Colors.black),
+      ),
+    );
   } else if (index > 0 && index < sourceList.length - 1) {
     view = Center(
         child: Image.file(

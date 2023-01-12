@@ -103,11 +103,14 @@ class AuthManager {
     if (appKey == null || appKey.isEmpty) {
       return Result(code: NEMeetingErrorCode.failed, msg: 'appKey is empty');
     }
-    final foregroundServiceConfig = NEForegroundServiceConfig()
-      ..contentTitle = Strings.appName
-      ..contentText = Strings.foregroundContentText
-      ..channelName = Strings.appName
-      ..channelDesc = Strings.appName;
+    final foregroundServiceConfig = NEForegroundServiceConfig(
+      contentTitle: Strings.appName,
+      contentText: Strings.foregroundContentText,
+      ticker: Strings.appName,
+      channelId: 'netease_meeting_channel',
+      channelName: Strings.appName,
+      channelDesc: Strings.appName,
+    );
     final initializeResult = await NEMeetingUIKit().initialize(
       NEMeetingUIKitConfig(
         appKey: appKey,
@@ -115,7 +118,6 @@ class AuthManager {
         iosBroadcastAppGroup: iosBroadcastExtensionAppGroup,
         extras: {
           'debugMode': AppConfig.isInDebugMode ? 1 : 0,
-          'serverUrl': Servers().baseUrl,
         },
         foregroundServiceConfig: foregroundServiceConfig,
       ),

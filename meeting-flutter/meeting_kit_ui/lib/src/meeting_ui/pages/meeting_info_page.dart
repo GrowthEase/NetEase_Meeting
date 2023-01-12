@@ -34,15 +34,22 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
   @override
   Widget build(BuildContext context) {
     return Container(
-        height: 260,
-        decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius:
-                BorderRadius.only(topLeft: _radius, topRight: _radius)),
-        child: SafeArea(
-          top: false,
+      padding: EdgeInsets.symmetric(
+        horizontal: 20.0,
+      ),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(topLeft: _radius, topRight: _radius)),
+      child: SafeArea(
+        top: false,
+        minimum: EdgeInsets.symmetric(
+          vertical: 20.0,
+        ),
+        child: IntrinsicHeight(
           child: buildContent(),
-        ));
+        ),
+      ),
+    );
   }
 
   Widget buildContent() {
@@ -50,6 +57,7 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
       stream: widget.roomInfoUpdatedEventStream,
       builder: (context, snapshot) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           _title(),
           _desc(),
@@ -59,8 +67,12 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
           ),
           ..._buildMeetingId(),
           if (!TextUtils.isEmpty(roomContext.password)) _buildPwd(),
-          _buildHost(),
+          if (!TextUtils.isEmpty(getHostName())) _buildHost(),
           if (!TextUtils.isEmpty(roomContext.sipCid)) _buildSip(),
+          if (!TextUtils.isEmpty(widget.meetingInfo.inviteUrl))
+            buildCopyItem(
+                NEMeetingUIKitLocalizations.of(context)!.meetingInviteUrl,
+                widget.meetingInfo.inviteUrl!),
           ...buildDebugView(),
         ],
       ),
@@ -78,14 +90,7 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
 
   Widget _title() {
     return Container(
-      padding: EdgeInsets.only(left: 20, right: 20, top: 20),
-      decoration: ShapeDecoration(
-          shape: RoundedRectangleBorder(
-              side: BorderSide(
-                color: _UIColors.white,
-              ),
-              borderRadius:
-                  BorderRadius.only(topLeft: _radius, topRight: _radius))),
+      padding: EdgeInsets.only(left: 20, right: 20),
       child: Text(
         roomContext.roomName,
         style: TextStyle(
@@ -114,7 +119,7 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
                   fontWeight: FontWeight.w400),
               alignment: PlaceholderAlignment.middle),
           TextSpan(
-              text: _Strings.meetingInfoDesc,
+              text: NEMeetingUIKitLocalizations.of(context)!.meetingInfoDesc,
               style: TextStyle(
                   color: _UIColors.color_94979A,
                   fontWeight: FontWeight.w400,
@@ -126,33 +131,51 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
   List<Widget> _buildMeetingId() {
     final meetingId = roomContext.meetingId;
     final shortMeetingId = widget.meetingInfo.shortMeetingNum;
+    String meetingIdCopyFormatter(String value) {
+      return value.replaceAll(RegExp(r'-'), '');
+    }
+
     if (!widget.options.isShortMeetingIdEnabled ||
         TextUtils.isEmpty(shortMeetingId)) {
       //do not show short meeting id ,or short meeting id is empty, show only full meeting id
-      return [buildCopyItem(_Strings.meetingId, meetingId.toMeetingIdFormat())];
+      return [
+        buildCopyItem(NEMeetingUIKitLocalizations.of(context)!.meetingId,
+            meetingId.toMeetingIdFormat(),
+            itemDetailCopyFormatter: meetingIdCopyFormatter)
+      ];
     } else if (!widget.options.isLongMeetingIdEnabled) {
       //show only short meeting id
-      return [buildCopyItem(_Strings.meetingId, shortMeetingId)];
+      return [
+        buildCopyItem(
+            NEMeetingUIKitLocalizations.of(context)!.meetingId, shortMeetingId)
+      ];
     } else {
       //show both
       return [
-        buildCopyItem(_Strings.shortMeetingId, shortMeetingId,
-            itemLabel: _Strings.internalSpecial),
-        buildCopyItem(_Strings.meetingId, meetingId.toMeetingIdFormat()),
+        buildCopyItem(NEMeetingUIKitLocalizations.of(context)!.shortMeetingId,
+            shortMeetingId,
+            itemLabel:
+                NEMeetingUIKitLocalizations.of(context)!.internalSpecial),
+        buildCopyItem(NEMeetingUIKitLocalizations.of(context)!.meetingId,
+            meetingId.toMeetingIdFormat(),
+            itemDetailCopyFormatter: meetingIdCopyFormatter),
       ];
     }
   }
 
   Widget _buildSip() {
-    return buildCopyItem(_Strings.sip, roomContext.sipCid);
+    return buildCopyItem(
+        NEMeetingUIKitLocalizations.of(context)!.sipNumber, roomContext.sipCid);
   }
 
   Widget _buildPwd() {
-    return buildCopyItem(_Strings.meetingPassword, roomContext.password);
+    return buildCopyItem(
+        NEMeetingUIKitLocalizations.of(context)!.meetingPassword,
+        roomContext.password);
   }
 
   Widget buildCopyItem(String itemTitle, String? itemDetail,
-      {String? itemLabel}) {
+      {String? itemLabel, String Function(String)? itemDetailCopyFormatter}) {
     return Container(
       height: 32,
       color: Colors.white,
@@ -170,12 +193,20 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
                     decoration: TextDecoration.none,
                     fontWeight: FontWeight.w400)),
           ),
-          Text('${itemDetail ?? ""}',
+          Flexible(
+            child: Text(
+              '${itemDetail ?? ""}',
+              overflow: TextOverflow.fade,
+              softWrap: false,
+              maxLines: 1,
               style: TextStyle(
-                  fontSize: 14,
-                  color: _UIColors.black_222222,
-                  decoration: TextDecoration.none,
-                  fontWeight: FontWeight.w400)),
+                fontSize: 14,
+                color: _UIColors.black_222222,
+                decoration: TextDecoration.none,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
           if (TextUtils.isNotEmpty(itemLabel))
             Container(
               height: 20,
@@ -207,9 +238,12 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
                   color: _UIColors.blue_337eff, size: 12),
             ),
             onTap: () {
-              var value = itemDetail?.replaceAll(RegExp(r'-'), '') ?? '';
+              if (TextUtils.isEmpty(itemDetail)) return;
+              var value =
+                  itemDetailCopyFormatter?.call(itemDetail!) ?? itemDetail;
               Clipboard.setData(ClipboardData(text: value));
-              ToastUtils.showToast(context, _Strings.copySuccess);
+              ToastUtils.showToast(context,
+                  NEMeetingUIKitLocalizations.of(context)!.copySuccess);
             },
           ),
         ],
@@ -228,7 +262,7 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
         children: <Widget>[
           Container(
               width: 130,
-              child: Text(_Strings.host,
+              child: Text(NEMeetingUIKitLocalizations.of(context)!.host,
                   style: TextStyle(
                       fontSize: 14,
                       color: _UIColors.color_94979A,

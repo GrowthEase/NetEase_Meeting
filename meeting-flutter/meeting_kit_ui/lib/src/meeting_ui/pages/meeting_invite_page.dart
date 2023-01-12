@@ -60,7 +60,7 @@ class _MeetingInvitePageState extends State<MeetingInvitePage> {
             Container(
               padding: EdgeInsets.only(left: 30),
               child: Text(
-                _Strings.meetingInvitePageTitle,
+                NEMeetingUIKitLocalizations.of(context)!.meetingInvitePageTitle,
                 style: TextStyle(
                   fontSize: 28,
                   color: _UIColors.black_222222,
@@ -69,9 +69,11 @@ class _MeetingInvitePageState extends State<MeetingInvitePage> {
               ),
             ),
             SizedBox(height: 25),
-            buildInput(_Strings.sipNumber, sipNumber),
+            buildInput(
+                NEMeetingUIKitLocalizations.of(context)!.sipNumber, sipNumber),
             SizedBox(height: 20),
-            buildInput(_Strings.sipHost, sipHost),
+            buildInput(
+                NEMeetingUIKitLocalizations.of(context)!.sipHost, sipHost),
             buildInviteButton(),
             Expanded(
               child: inviteList(),
@@ -88,7 +90,7 @@ class _MeetingInvitePageState extends State<MeetingInvitePage> {
       centerTitle: true,
       backgroundColor: _UIColors.white,
       elevation: 0.0,
-      systemOverlayStyle: SystemUiOverlayStyle.light,
+      systemOverlayStyle: SystemUiOverlayStyle.dark,
       leading: IconButton(
         icon: const Icon(
           NEMeetingIconFont.icon_yx_returnx,
@@ -108,6 +110,9 @@ class _MeetingInvitePageState extends State<MeetingInvitePage> {
       child: Theme(
         data: ThemeData(hintColor: _UIColors.greyDCDFE5),
         child: TextField(
+          key: hint == NEMeetingUIKitLocalizations.of(context)!.sipNumber
+              ? MeetingUIValueKeys.sipNumber
+              : MeetingUIValueKeys.sipHost,
           autofocus: true,
           style: TextStyle(color: _UIColors.color_333333, fontSize: 17),
           // inputFormatters: [
@@ -167,7 +172,7 @@ class _MeetingInvitePageState extends State<MeetingInvitePage> {
                 borderRadius: BorderRadius.all(Radius.circular(25))))),
         onPressed: inviteEnable ? invite : null,
         child: Text(
-          _Strings.add,
+          NEMeetingUIKitLocalizations.of(context)!.add,
           style: TextStyle(color: Colors.white, fontSize: 16),
           textAlign: TextAlign.center,
         ),
@@ -189,7 +194,7 @@ class _MeetingInvitePageState extends State<MeetingInvitePage> {
             height: 50,
             alignment: Alignment.centerLeft,
             child: Text(
-              _Strings.inviteListTitle,
+              NEMeetingUIKitLocalizations.of(context)!.inviteListTitle,
               style: TextStyle(
                 color: _UIColors.color_999999,
                 fontSize: 16,
@@ -253,8 +258,9 @@ class _MeetingInvitePageState extends State<MeetingInvitePage> {
       ToastUtils.showToast(
           context,
           result.isSuccess()
-              ? _Strings.invitationSendSuccess
-              : (result.msg ?? _Strings.invitationSendFail));
+              ? NEMeetingUIKitLocalizations.of(context)!.invitationSendSuccess
+              : (result.msg ??
+                  NEMeetingUIKitLocalizations.of(context)!.invitationSendFail));
     });
   }
 }

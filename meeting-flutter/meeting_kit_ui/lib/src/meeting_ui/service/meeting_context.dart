@@ -17,7 +17,8 @@ extension NEMeetingUIRtcController on NERoomRtcController {
             ? result
             : Future.value(const VoidResult.success());
       }
-      return const NEResult<void>(code: -1, msg: _Strings.noPermission);
+      return NEResult<void>(
+          code: -1, msg: NEMeetingUIKit().ofLocalizations().noPermission);
     });
   }
 
@@ -33,7 +34,8 @@ extension NEMeetingUIRtcController on NERoomRtcController {
             ? result
             : Future.value(const VoidResult.success());
       }
-      return const NEResult<void>(code: -1, msg: _Strings.noPermission);
+      return NEResult<void>(
+          code: -1, msg: NEMeetingUIKit().ofLocalizations().noPermission);
     });
   }
 }

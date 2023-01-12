@@ -38,10 +38,6 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
 
   final FocusNode _focusNode = FocusNode();
 
-  final List<String> actions = [
-    _Strings.copy,
-  ];
-
   static const _kSupportedImageFileExtensions = {
     'png', 'jpg', 'jpeg', 'bmp', //'gif', 'webp', 'tiff', 'ico'
   };
@@ -125,16 +121,12 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
     if (index < 0 || index >= _arguments.msgSize) {
       return;
     }
-    postOnFrame(() {
-      if (mounted) {
-        itemScrollController.scrollTo(
-          index: index,
-          alignment: alignment,
-          duration: Duration(milliseconds: delayDuration),
-          curve: Curves.decelerate,
-        );
-      }
-    });
+    itemScrollController.scrollTo(
+      index: index,
+      alignment: alignment,
+      duration: Duration(milliseconds: delayDuration),
+      curve: Curves.decelerate,
+    );
   }
 
   void _handleItemPositionsChanged() {
@@ -204,19 +196,19 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
   AppBar buildAppBar(BuildContext context) {
     return AppBar(
         title: Text(
-          _Strings.chat,
+          NEMeetingUIKitLocalizations.of(context)!.chat,
           style: TextStyle(color: _UIColors.color_222222, fontSize: 17),
         ),
         centerTitle: true,
         backgroundColor: _UIColors.colorF6F6F6,
         elevation: 0.0,
-        systemOverlayStyle: SystemUiOverlayStyle.light,
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
         leading: GestureDetector(
           child: Container(
             alignment: Alignment.center,
             key: MeetingUIValueKeys.chatRoomClose,
             child: Text(
-              _Strings.close,
+              NEMeetingUIKitLocalizations.of(context)!.close,
               style: TextStyle(color: _UIColors.blue_337eff, fontSize: 16),
               textAlign: TextAlign.center,
             ),
@@ -254,7 +246,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
               children: <Widget>[
                 Icon(Icons.arrow_downward, size: 16, color: Colors.white),
                 Text(
-                  _Strings.newMessage,
+                  NEMeetingUIKitLocalizations.of(context)!.newMessage,
                   style: TextStyle(color: Colors.white, fontSize: 12),
                 )
               ],
@@ -409,7 +401,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
             filled: true,
             isDense: true,
             fillColor: Colors.transparent,
-            hintText: _Strings.inputMessageHint,
+            hintText: NEMeetingUIKitLocalizations.of(context)!.inputMessageHint,
             hintStyle: TextStyle(
                 fontSize: 14,
                 color: _UIColors.color_999999,
@@ -429,11 +421,13 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
     Connectivity().checkConnectivity().then((value) async {
       if (value == ConnectivityResult.none) {
         sending = false;
-        ToastUtils.showToast(context, _Strings.networkUnavailableCheck);
+        ToastUtils.showToast(context,
+            NEMeetingKitLocalizations.of(context)!.networkUnavailableCheck);
       } else {
         var content = _contentController.text.trim();
         if (TextUtils.isEmpty(content)) {
-          ToastUtils.showToast(context, _Strings.cannotSendBlankLetter);
+          ToastUtils.showToast(context,
+              NEMeetingUIKitLocalizations.of(context)!.cannotSendBlankLetter);
           sending = false;
           return;
         }
@@ -445,7 +439,10 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
               .append(message, message.time, incUnread: false);
           _contentController.clear();
         } else {
-          ToastUtils.showToast(context, MeetingErrorCode.getMsg(result.msg));
+          ToastUtils.showToast(
+              context,
+              result.msg ??
+                  NEMeetingKit.instance.localizations.networkUnavailableCheck);
         }
       }
     });
@@ -481,7 +478,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
       message: message,
       key: Key(message.uuid),
       onTap: (msg) {
-        Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+        Navigator.of(context).push(MaterialMeetingPageRoute(builder: (context) {
           return MeetingImageMessageViewer(
             message: msg,
             downloadAttachmentCallback: (msg) {
@@ -550,13 +547,16 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
     );
     if (!mounted) return;
     if (resultType == ResultType.noAppToOpen) {
-      showToast(_Strings.openFileFailAppNotFound);
+      showToast(
+          NEMeetingUIKitLocalizations.of(context)!.openFileFailAppNotFound);
     } else if (resultType == ResultType.fileNotFound) {
-      showToast(_Strings.openFileFailFileNotFound);
+      showToast(
+          NEMeetingUIKitLocalizations.of(context)!.openFileFailFileNotFound);
     } else if (resultType == ResultType.permissionDenied) {
-      showToast(_Strings.openFileFailNoPermission);
+      showToast(
+          NEMeetingUIKitLocalizations.of(context)!.openFileFailNoPermission);
     } else if (resultType == ResultType.error) {
-      showToast(_Strings.openFileFail);
+      showToast(NEMeetingUIKitLocalizations.of(context)!.openFileFail);
     }
   }
 
@@ -612,7 +612,9 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
         onShow: () => actionMenuShowing = true,
         onDismiss: () => actionMenuShowing = false,
         pressType: PressType.longPress,
-        actions: actions,
+        actions: [
+          NEMeetingUIKitLocalizations.of(context)!.copy,
+        ],
         child: Container(
           padding: EdgeInsets.only(left: 12, right: 12, top: 10, bottom: 10),
           decoration: BoxDecoration(
@@ -660,8 +662,10 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
               supportedExtensions,
               maxFileSize,
               type == SelectType.image
-                  ? _Strings.imageSizeExceedTheLimit
-                  : _Strings.fileSizeExceedTheLimit,
+                  ? NEMeetingUIKitLocalizations.of(context)!
+                      .imageSizeExceedTheLimit
+                  : NEMeetingUIKitLocalizations.of(context)!
+                      .fileSizeExceedTheLimit,
             ))
         .whenComplete(() => _selectingType = SelectType.none);
   }
@@ -681,7 +685,8 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
       if (file.existsSync()) {
         String? errorMsg;
         if (!supportedExtensions.contains(extension?.toLowerCase())) {
-          errorMsg = _Strings.unsupportedFileExtension;
+          errorMsg =
+              NEMeetingUIKitLocalizations.of(context)!.unsupportedFileExtension;
         } else if (size > maxFileSize) {
           errorMsg = sizeExceedErrorMsg;
         }
@@ -744,7 +749,8 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
     final value = await Connectivity().checkConnectivity();
     if (value == ConnectivityResult.none) {
       if (mounted) {
-        ToastUtils.showToast(context, _Strings.networkUnavailableCheck);
+        ToastUtils.showToast(context,
+            NEMeetingKitLocalizations.of(context)!.networkUnavailableCheck);
       }
       return false;
     }
@@ -949,7 +955,7 @@ class _ImageContentState extends State<_ImageContent>
                   print('Build image error: $error');
                   if (!_errorEventNotified) {
                     _errorEventNotified = true;
-                    WidgetsBinding.instance!.addPostFrameCallback((_) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
                       widget.onImageError?.call(widget.message);
                     });
                   }
@@ -966,7 +972,7 @@ class _ImageContentState extends State<_ImageContent>
                     bool? wasSynchronouslyLoaded) {
                   if (frame == 0 && !_loadedEventNotified) {
                     _loadedEventNotified = true;
-                    WidgetsBinding.instance!.addPostFrameCallback((_) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
                       widget.onImageLoaded?.call(widget.message);
                     });
                   }
@@ -1060,7 +1066,7 @@ class _FileContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final child = Container(
+    Widget child = Container(
       width: min(size.width, size.height) * 0.68,
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(

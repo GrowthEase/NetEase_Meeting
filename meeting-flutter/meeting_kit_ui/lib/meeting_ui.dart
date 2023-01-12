@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 import 'package:connectivity/connectivity.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -21,10 +22,10 @@ import 'package:netease_meeting_core/meeting_kit.dart';
 import 'package:netease_meeting_core/meeting_service.dart';
 import 'dart:math';
 import 'package:netease_meeting_ui/meeting_plugin.dart';
+import 'package:netease_meeting_ui/meeting_localization.dart';
 import 'package:uuid/uuid.dart';
 import 'package:image_size_getter/file_input.dart';
 import 'package:image_size_getter/image_size_getter.dart' as isg;
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:open_file/open_file.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:wakelock/wakelock.dart';
@@ -41,10 +42,9 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:async/async.dart';
 
 export 'package:netease_meeting_core/meeting_kit.dart';
-// export 'package:netease_meeting_core/meeting_service.dart';
-
 export 'package:netease_meeting_ui/meeting_plugin.dart'
     show NEForegroundServiceConfig;
+export 'package:netease_meeting_ui/meeting_localization.dart';
 
 part 'src/meeting_ui/arguments/meeting_arguments.dart';
 part 'src/meeting_ui/arguments/meeting_options.dart';
@@ -60,7 +60,6 @@ part 'src/meeting_ui/pages/meeting_chatroom_page.dart';
 part 'src/meeting_ui/pages/meeting_info_page.dart';
 part 'src/meeting_ui/pages/meeting_invite_page.dart';
 part 'src/meeting_ui/state/meeting_state.dart';
-part 'src/meeting_ui/values/strings.dart';
 part 'src/meeting_ui/values/colors.dart';
 part 'src/meeting_ui/widget/meeting_duration.dart';
 part 'src/meeting_ui/widget/slider_widget.dart';
@@ -82,6 +81,8 @@ part 'src/meeting_ui/menu/meeting_menus.dart';
 part 'src/meeting_ui/menu/base_widgets.dart';
 part 'src/meeting_ui/widget/popup_menu_widget.dart';
 part 'src/meeting_ui/widget/triangle_painter.dart';
+part 'src/meeting_ui/widget/localizations.dart';
+part 'src/meeting_ui/widget/draggable_positioned.dart';
 part 'src/meeting_ui/module_name.dart';
 part 'src/meeting_ui/option/window_mode.dart';
 part 'src/meeting_ui/pages/meeting_whiteboard_page.dart';
@@ -119,7 +120,37 @@ class MeetingCore {
 
   MeetingCore._internal();
 
-  NEForegroundServiceConfig? foregroundConfig;
+  NEForegroundServiceConfig? _foregroundConfig;
+
+  set foregroundConfig(NEForegroundServiceConfig? value) {
+    _foregroundConfig = value;
+  }
+
+  Future<NEForegroundServiceConfig?> getForegroundConfig() async {
+    if (_foregroundConfig != null) return _foregroundConfig;
+    if (Platform.isAndroid) {
+      final sdkInt = await DeviceInfoPlugin()
+              .androidInfo
+              .then((value) => value.version.sdkInt) ??
+          0;
+      // // Android Q以上屏幕共享需要一个前台Service
+      if (sdkInt >= 29) {
+        return NEForegroundServiceConfig(
+          contentTitle:
+              NEMeetingUIKit().ofLocalizations().notificationContentTitle,
+          contentText:
+              NEMeetingUIKit().ofLocalizations().notificationContentText,
+          ticker: NEMeetingUIKit().ofLocalizations().notificationContentTicker,
+          channelId: NEMeetingUIKit().ofLocalizations().notificationChannelId,
+          channelName:
+              NEMeetingUIKit().ofLocalizations().notificationChannelName,
+          channelDesc:
+              NEMeetingUIKit().ofLocalizations().notificationChannelDesc,
+        );
+      }
+    }
+    return null;
+  }
 
   NEMeetingStatus _meetingStatus = NEMeetingStatus(NEMeetingEvent.idle);
 

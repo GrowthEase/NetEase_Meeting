@@ -28,6 +28,7 @@ class ToastUtils {
   static Widget _textToastBuilder(BuildContext context, String text, Key? key) {
     return Center(
       child: Container(
+        margin: EdgeInsets.all(20.0),
         padding: edgeInsets,
         decoration: decoration,
         child: Text(
@@ -94,10 +95,10 @@ class ToastUtils {
 
     if (!_scheduled) {
       _scheduled = true;
-      SchedulerBinding.instance!.addPostFrameCallback((_) {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
         _showNextToast();
       });
-      SchedulerBinding.instance!.ensureVisualUpdate();
+      SchedulerBinding.instance.ensureVisualUpdate();
     }
   }
 
@@ -134,10 +135,10 @@ class ToastUtils {
       await Future.delayed(duration);
       entry.remove();
     }
-    SchedulerBinding.instance!.addPostFrameCallback((_) {
+    SchedulerBinding.instance.addPostFrameCallback((_) {
       _showNextToast();
     });
-    SchedulerBinding.instance!.ensureVisualUpdate();
+    SchedulerBinding.instance.ensureVisualUpdate();
   }
 }
 

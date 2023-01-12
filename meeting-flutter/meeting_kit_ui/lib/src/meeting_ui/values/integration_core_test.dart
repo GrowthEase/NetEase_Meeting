@@ -36,6 +36,13 @@ class MeetingUIValueKeys {
   ///会中界面 meeting_members_page.dart
   static const close = ValueKey('close');
   static const muteAudioAll = ValueKey('muteAudioAll');
+  static const muteAudioAllCheckbox = ValueKey("muteAudioAllCheckbox");
+  static const muteVideoAll = ValueKey('muteVideoAll');
+  static const muteVideoAllCheckbox = ValueKey("muteVideoAllCheckbox");
+  static const rename = ValueKey("rename");
+  static const raiseHands = ValueKey("raiseHands");
+  static const sipNumber = ValueKey("sipNumber");
+  static const sipHost = ValueKey("sipHost");
 
   ///会中聊天界面 meeting_chatroom_page.dart
   static const inputMessageKey = ValueKey('inputMessageKey');

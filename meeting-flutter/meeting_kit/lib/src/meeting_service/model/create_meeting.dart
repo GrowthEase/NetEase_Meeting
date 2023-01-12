@@ -110,6 +110,16 @@ class MeetingInfo {
   late final String subject;
 
   ///
+  /// 会议邀请链接
+  ///
+  late final String? inviteUrl;
+
+  ///
+  /// 会议邀请码
+  ///
+  late final String? inviteCode;
+
+  ///
   /// 开始时间，单位毫秒
   ///
   late final int startTime;
@@ -143,6 +153,8 @@ class MeetingInfo {
     roomUuid = map['roomUuid'] as String;
     type = MeetingTypeExtension.fromType(map['type'] as int);
     subject = map['subject'] as String;
+    inviteUrl = map['meetingInviteUrl'] as String?;
+    inviteCode = map['meetingCode'] as String?;
     startTime = map['startTime'] as int? ?? 0;
     endTime = map['endTime'] as int? ?? 0;
     state = _MeetingStateExtension.fromState(map['state'] as int);

@@ -36,13 +36,13 @@ NEMeetingMenuItem? _buildSingleStateMenuItem(Map json) {
     return NESingleStateMenuItem(
       itemId: json['itemId'] as int,
       visibility: NEMenuVisibility.values[json['visibility'] as int],
-      singleStateItem: NEMenuItemInfo(
-        info['text'] as String,
+      singleStateItem: NEMenuItemInfo._nullable(
+        text: info['text'] as String?,
         icon: info['icon']?.toString(),
       ),
     );
   } catch (e) {
-    //noop
+    debugPrint('buildSingleStateMenuItem error: $e');
   }
   return null;
 }
@@ -54,17 +54,17 @@ NEMeetingMenuItem? _buildCheckableMenuItem(Map json) {
     return NECheckableMenuItem(
       itemId: json['itemId'] as int,
       visibility: NEMenuVisibility.values[json['visibility'] as int],
-      uncheckStateItem: NEMenuItemInfo(
-        uncheckInfo['text'] as String,
+      uncheckStateItem: NEMenuItemInfo._nullable(
+        text: uncheckInfo['text'] as String?,
         icon: uncheckInfo['icon']?.toString(),
       ),
-      checkedStateItem: NEMenuItemInfo(
-        checkInfo['text'] as String,
+      checkedStateItem: NEMenuItemInfo._nullable(
+        text: checkInfo['text'] as String?,
         icon: checkInfo['icon']?.toString(),
       ),
     );
   } catch (e) {
-    //noop
+    debugPrint('buildCheckableMenuItem error: $e');
   }
   return null;
 }

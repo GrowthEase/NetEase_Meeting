@@ -14,15 +14,17 @@ class VirtualBackgroundPageProxy extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      child: Navigator(
-        key: _sdkVirtualNavigatorKey,
-        observers: [VirtualBackgroundRouteObserver(context)],
-        onGenerateRoute: (RouteSettings settings) {
-          return MaterialPageRoute(
-              builder: (context) => PreVirtualBackgroundPage(
-                    callback: () {},
-                  ));
-        },
+      child: NEMeetingUIKitLocalizationsScope(
+        child: Navigator(
+          key: _sdkVirtualNavigatorKey,
+          observers: [VirtualBackgroundRouteObserver(context)],
+          onGenerateRoute: (RouteSettings settings) {
+            return MaterialPageRoute(
+                builder: (context) => PreVirtualBackgroundPage(
+                      callback: () {},
+                    ));
+          },
+        ),
       ),
       onWillPop: () async {
         await _sdkVirtualNavigatorKey.currentState!.maybePop();

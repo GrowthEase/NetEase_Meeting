@@ -27,6 +27,8 @@ class NEMeetingPlugin {
 
   static NEAssetService? _assetService;
 
+  static NEImageGallerySaver? _imageGallerySaver;
+
   /// notification service
   NENotificationService getNotificationService() {
     return _notificationService ??
@@ -38,6 +40,11 @@ class NEMeetingPlugin {
   NEAssetService getAssetService() {
     return _assetService ??
         (_assetService = NEAssetService(_methodChannel, handlerMap));
+  }
+
+  NEImageGallerySaver get imageGallerySaver {
+    _imageGallerySaver ??= NEImageGallerySaver(_methodChannel, handlerMap);
+    return _imageGallerySaver!;
   }
 
   /// native  --  dart

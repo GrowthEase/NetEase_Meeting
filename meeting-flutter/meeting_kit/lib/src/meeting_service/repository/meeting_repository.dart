@@ -35,6 +35,16 @@ class MeetingRepository {
     return HttpApiHelper.execute(_GetMeetingInfoApi(meetingId));
   }
 
+  static Future<NEResult<MeetingInfo>> getMeetingInfoEx(
+      {String? meetingId, String? meetingCode}) async {
+    if (meetingId != null && meetingId.isNotEmpty) {
+      return HttpApiHelper.execute(_GetMeetingInfoApi(meetingId));
+    } else if (meetingCode != null && meetingCode.isNotEmpty) {
+      return HttpApiHelper.execute(_GetMeetingInfoApi2(meetingCode));
+    }
+    return NEResult(code: -1);
+  }
+
   /// 匿名登陆
   static Future<NEResult<AnonymousLoginInfo>> anonymousLogin() {
     return HttpApiHelper._anonymousLogin();

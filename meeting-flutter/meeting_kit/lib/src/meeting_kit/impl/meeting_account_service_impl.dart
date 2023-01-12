@@ -35,5 +35,5 @@ class _NEMeetingAccountServiceImpl extends NEMeetingAccountService {
   }
 
   @override
-  bool get _isAnonymous => _anonymous;
+  bool get isAnonymous => _anonymous;
 }

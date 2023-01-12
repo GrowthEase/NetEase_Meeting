@@ -9,7 +9,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:flutter/widgets.dart';
 import 'package:netease_common/netease_common.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -94,12 +93,6 @@ class MeetingErrorCode {
   /// 网络错误
   static const int networkError = -4;
 
-  /// IM复用匿名登录失败，原因是不支持
-  static const int loginErrorAnonymousLoginNotSupport = -8;
-
-  /// 取消
-  static const int cancelled = -9;
-
   /// 服务端错误码
   static const int success = 0;
   static const int paramsError = 300;
@@ -151,15 +144,4 @@ class MeetingErrorCode {
 
   /// 已有其他人共享白板
   static const int meetingNotInProgress = 1004;
-
-  /// 会议不在进行中，或者会议不存在
-
-  static String getMsg(String? msg, [String? defaultTips]) {
-    if (msg == null || msg.isEmpty) {
-      return (defaultTips == null || defaultTips.isEmpty)
-          ? '网络连接失败，请检查你的网络连接！'
-          : defaultTips;
-    }
-    return msg;
-  }
 }

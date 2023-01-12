@@ -78,54 +78,61 @@ class NEMenuItems {
         whiteBoard,
       ];
 
-  static const NEMeetingMenuItem microphone = NECheckableMenuItem(
-      itemId: NEMenuIDs.microphone,
-      visibility: NEMenuVisibility.visibleAlways,
-      uncheckStateItem: NEMenuItemInfo("静音"),
-      checkedStateItem: NEMenuItemInfo("解除静音"));
+  static final NEMeetingMenuItem microphone = NECheckableMenuItem(
+    itemId: NEMenuIDs.microphone,
+    visibility: NEMenuVisibility.visibleAlways,
+    uncheckStateItem: NEMenuItemInfo.undefine,
+    checkedStateItem: NEMenuItemInfo.undefine,
+  );
 
-  static const NEMeetingMenuItem camera = NECheckableMenuItem(
-      itemId: NEMenuIDs.camera,
-      visibility: NEMenuVisibility.visibleAlways,
-      uncheckStateItem: NEMenuItemInfo("停止视频"),
-      checkedStateItem: NEMenuItemInfo("开启视频"));
+  static final NEMeetingMenuItem camera = NECheckableMenuItem(
+    itemId: NEMenuIDs.camera,
+    visibility: NEMenuVisibility.visibleAlways,
+    uncheckStateItem: NEMenuItemInfo.undefine,
+    checkedStateItem: NEMenuItemInfo.undefine,
+  );
 
-  static const NEMeetingMenuItem screenShare = NECheckableMenuItem(
-      itemId: NEMenuIDs.screenShare,
-      visibility: NEMenuVisibility.visibleAlways,
-      uncheckStateItem: NEMenuItemInfo("共享屏幕"),
-      checkedStateItem: NEMenuItemInfo("结束共享"));
+  static final NEMeetingMenuItem screenShare = NECheckableMenuItem(
+    itemId: NEMenuIDs.screenShare,
+    visibility: NEMenuVisibility.visibleAlways,
+    uncheckStateItem: NEMenuItemInfo.undefine,
+    checkedStateItem: NEMenuItemInfo.undefine,
+  );
 
-  static const NEMeetingMenuItem participants = NESingleStateMenuItem(
-      itemId: NEMenuIDs.participants,
-      visibility: NEMenuVisibility.visibleExcludeHost,
-      singleStateItem: NEMenuItemInfo("参会者"));
+  static final NEMeetingMenuItem participants = NESingleStateMenuItem(
+    itemId: NEMenuIDs.participants,
+    visibility: NEMenuVisibility.visibleExcludeHost,
+    singleStateItem: NEMenuItemInfo.undefine,
+  );
 
-  static const NEMeetingMenuItem managerParticipants = NESingleStateMenuItem(
-      itemId: NEMenuIDs.managerParticipants,
-      visibility: NEMenuVisibility.visibleToHostOnly,
-      singleStateItem: NEMenuItemInfo("管理参会者"));
+  static final NEMeetingMenuItem managerParticipants = NESingleStateMenuItem(
+    itemId: NEMenuIDs.managerParticipants,
+    visibility: NEMenuVisibility.visibleToHostOnly,
+    singleStateItem: NEMenuItemInfo.undefine,
+  );
 
   // static const NEMeetingMenuItem MORE_MENU = NESingleStateMenuItem(
   //     itemId: NEMenuIDs.MORE_MENU_ID,
   //     visibility: NEMenuVisibility.visibleAlways,
   //     singleStateItem: NEMenuItemInfo("更多"));
 
-  static const NEMeetingMenuItem invitation = NESingleStateMenuItem(
-      itemId: NEMenuIDs.invitation,
-      visibility: NEMenuVisibility.visibleAlways,
-      singleStateItem: NEMenuItemInfo("邀请"));
+  static final NEMeetingMenuItem invitation = NESingleStateMenuItem(
+    itemId: NEMenuIDs.invitation,
+    visibility: NEMenuVisibility.visibleAlways,
+    singleStateItem: NEMenuItemInfo.undefine,
+  );
 
-  static const NEMeetingMenuItem chatroom = NESingleStateMenuItem(
-      itemId: NEMenuIDs.chatroom,
-      visibility: NEMenuVisibility.visibleAlways,
-      singleStateItem: NEMenuItemInfo("聊天"));
+  static final NEMeetingMenuItem chatroom = NESingleStateMenuItem(
+    itemId: NEMenuIDs.chatroom,
+    visibility: NEMenuVisibility.visibleAlways,
+    singleStateItem: NEMenuItemInfo.undefine,
+  );
 
   /// 白板菜单
-  static const whiteBoard = NECheckableMenuItem(
+  static final whiteBoard = NECheckableMenuItem(
     itemId: NEMenuIDs.whiteBoard,
     visibility: NEMenuVisibility.visibleAlways,
-    uncheckStateItem: NEMenuItemInfo('共享白板'),
-    checkedStateItem: NEMenuItemInfo('退出白板'),
+    uncheckStateItem: NEMenuItemInfo.undefine,
+    checkedStateItem: NEMenuItemInfo.undefine,
   );
 }

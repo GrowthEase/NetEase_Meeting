@@ -12,9 +12,11 @@ class WhiteBoardWebPage extends StatefulWidget {
   final NERoomContext roomContext;
 
   WhiteBoardWebPage(
-      {required this.whiteBoardPageStatusCallback,
+      {Key? key,
+      required this.whiteBoardPageStatusCallback,
       required this.valueNotifier,
-      required this.roomContext});
+      required this.roomContext})
+      : super(key: key);
 
   @override
   _WhiteBoardWebPageState createState() {
@@ -70,7 +72,10 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage> {
             child: Container(
               color: _UIColors.white,
               child: Center(
-                child: whiteBoardController.createWhiteboardView(),
+                child: AbsorbPointer(
+                  absorbing: !isEditing,
+                  child: whiteBoardController.createWhiteboardView(),
+                ),
               ),
             ),
           ),
@@ -103,8 +108,10 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage> {
                       onPressed: () => updateEditWhiteBoardStatus(!isEditing),
                       child: Text(
                         isEditing
-                            ? _Strings.packUpWhiteBoard
-                            : _Strings.editWhiteBoard,
+                            ? NEMeetingUIKitLocalizations.of(context)!
+                                .packUpWhiteBoard
+                            : NEMeetingUIKitLocalizations.of(context)!
+                                .editWhiteBoard,
                         style: TextStyle(color: Colors.white, fontSize: 14),
                         textAlign: TextAlign.center,
                       ),
@@ -137,17 +144,22 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage> {
   void showLogoutDialog() {
     showDialog(
         context: context,
-        builder: (BuildContext context) {
-          return CupertinoAlertDialog(
-            content: Text(_Strings.noAuthorityWhiteBoard),
-            actions: <Widget>[
-              CupertinoDialogAction(
-                child: Text(_Strings.ok),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
+        builder: (_) {
+          return NEMeetingUIKitLocalizationsScope(
+            builder: (context) {
+              return CupertinoAlertDialog(
+                content: Text(NEMeetingUIKitLocalizations.of(context)!
+                    .noAuthorityWhiteBoard),
+                actions: <Widget>[
+                  CupertinoDialogAction(
+                    child: Text(NEMeetingUIKitLocalizations.of(context)!.ok),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            },
           );
         });
   }

@@ -264,10 +264,8 @@ class LoginByAccountTokenState extends LifecycleBaseState {
     final loginResult = AuthManager().loginMeetingKitWithToken(
         LoginType.token,
         LoginInfo(
-          // accountId: _accountIdController.value.text,
-          // accountToken: _accountTokenController.value.text,
-          accountId: '8667762e6b6aba99ae1216b9',
-          accountToken: '6c8d7ae9',
+          accountId: _accountIdController.value.text,
+          accountToken: _accountTokenController.value.text,
           appKey: AppConfig().appKey,
         ));
     lifecycleExecuteUI(loginResult).then((result) {

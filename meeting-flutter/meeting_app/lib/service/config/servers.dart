@@ -7,8 +7,7 @@ import 'app_config.dart';
 import 'package:yunxin_alog/yunxin_alog.dart';
 
 class Servers {
-  static const _serverUrl = 'https://roomkit-dev.netease.im/';
-  // static const _serverUrl = 'https://roomkit.netease.im/';
+  static const _serverUrl = 'https://roomkit.netease.im/';
 
   final privacy =
       'https://meeting.163.com/privacy/agreement_mobile_ysbh_wap.shtml';

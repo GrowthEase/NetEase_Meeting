@@ -86,6 +86,37 @@ class NEMeetingUIOptions {
   /// 配置会议中是否开启剩余时间提醒
   late final bool showMeetingRemainingTip;
 
+  ///
+  /// 是否开启麦克风静音检测，默认开启。
+  /// 开启该功能后，SDK在检测到麦克风有音频输入，
+  /// 但此时处于静音打开的状态时，会提示用户关闭静音。
+  ///
+  late final bool detectMutedMic;
+
+  ///
+  /// 本地静音时，是否关闭静音包发送。默认为true，即关闭静音包。
+  ///
+  late final bool unpubAudioOnMute;
+
+  ///
+  /// 配置会议中主页是否显示屏幕共享者的摄像头画面，当前正在共享的内容画面不受影响。
+  /// 如果设置为关闭，屏幕共享者的摄像头画面会被隐藏，不会遮挡共享内容画面。
+  /// 默认为 true，即显示。
+  ///
+  late final bool showScreenShareUserVideo;
+
+  ///
+  /// 配置会议中主页是否显示白板共享者的摄像头画面。
+  /// 如果设置为开启，白板共享者的摄像头画面会以小窗口的方法覆盖在白板画面上显示。
+  /// 默认为 false，即不显示。
+  ///
+  late final bool showWhiteboardShareUserVideo;
+
+  ///
+  /// 配置会议中是否显示麦克风浮窗，默认为显示
+  ///
+  late final bool showFloatingMicrophone;
+
   /// 聊天室相关配置
   late final NEMeetingChatroomConfig? chatroomConfig;
 
@@ -127,6 +158,13 @@ class NEMeetingUIOptions {
     chatroomConfig =
         NEMeetingChatroomConfig.fromJson(json['chatroomConfig'] as Map?);
     extras = (json['extras'] ?? <String, dynamic>{}) as Map<String, dynamic>;
+    detectMutedMic = (json['detectMutedMic'] ?? true) as bool;
+    unpubAudioOnMute = (json['unpubAudioOnMute'] ?? true) as bool;
+    showScreenShareUserVideo =
+        (json['showScreenShareUserVideo'] ?? true) as bool;
+    showWhiteboardShareUserVideo =
+        (json['showWhiteboardShareUserVideo'] ?? false) as bool;
+    showFloatingMicrophone = (json['showFloatingMicrophone'] ?? true) as bool;
   }
 
   NEMeetingUIOptions({
@@ -152,6 +190,11 @@ class NEMeetingUIOptions {
     bool? noMuteAllVideo,
     bool? noMuteAllAudio,
     bool? showMeetingRemainingTip,
+    bool? detectMutedMic,
+    bool? unpubAudioOnMute,
+    bool? showScreenShareUserVideo,
+    bool? showWhiteboardShareUserVideo,
+    bool? showFloatingMicrophone,
     this.chatroomConfig,
     this.audioProfile,
     List<DeviceOrientation>? restorePreferredOrientations,
@@ -186,6 +229,11 @@ class NEMeetingUIOptions {
     this.extras = extras ?? <String, dynamic>{};
     this.showMemberTag = showMemberTag ?? false;
     this.showMeetingRemainingTip = showMeetingRemainingTip ?? false;
+    this.detectMutedMic = detectMutedMic ?? true;
+    this.unpubAudioOnMute = unpubAudioOnMute ?? true;
+    this.showScreenShareUserVideo = showScreenShareUserVideo ?? true;
+    this.showWhiteboardShareUserVideo = showWhiteboardShareUserVideo ?? false;
+    this.showFloatingMicrophone = showFloatingMicrophone ?? true;
   }
 
   bool get isLongMeetingIdEnabled =>

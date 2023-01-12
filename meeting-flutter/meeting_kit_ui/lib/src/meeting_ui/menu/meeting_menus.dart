@@ -41,7 +41,7 @@ class InternalMenuIDs {
 class InternalMenuItems {
   /// 动态菜单按钮
   /// 需要在"更多"菜单中优先展示
-  static const List<NEMeetingMenuItem> dynamicFeatureMenuItemList = [
+  static final List<NEMeetingMenuItem> dynamicFeatureMenuItemList = [
     beauty,
     live,
     sip,
@@ -49,35 +49,36 @@ class InternalMenuItems {
   ];
 
   /// 更多菜单
-  static const more = NESingleStateMenuItem(
+  static final more = NESingleStateMenuItem(
     itemId: InternalMenuIDs.more,
     visibility: NEMenuVisibility.visibleAlways,
-    singleStateItem: NEMenuItemInfo(_Strings.more),
+    singleStateItem: NEMenuItemInfo.undefine,
   );
 
   /// 美颜菜单
-  static const beauty = NESingleStateMenuItem(
+  static final beauty = NESingleStateMenuItem(
     itemId: InternalMenuIDs.beauty,
     visibility: NEMenuVisibility.visibleAlways,
-    singleStateItem: NEMenuItemInfo(_Strings.beauty),
+    singleStateItem: NEMenuItemInfo.undefine,
   );
 
   /// 直播菜单
-  static const live = NESingleStateMenuItem(
+  static final live = NESingleStateMenuItem(
     itemId: InternalMenuIDs.live,
     visibility: NEMenuVisibility.visibleToHostOnly,
-    singleStateItem: NEMenuItemInfo(_Strings.live),
+    singleStateItem: NEMenuItemInfo.undefine,
   );
 
-  static const sip = NESingleStateMenuItem(
+  static final sip = NESingleStateMenuItem(
     itemId: InternalMenuIDs.sip,
     visibility: NEMenuVisibility.visibleAlways,
-    singleStateItem: NEMenuItemInfo('SIP'),
+    singleStateItem: NEMenuItemInfo(text: 'SIP'),
   );
-  static const virtualBackground = NESingleStateMenuItem(
+
+  static final virtualBackground = NESingleStateMenuItem(
     itemId: InternalMenuIDs.virtualBackground,
     visibility: NEMenuVisibility.visibleAlways,
-    singleStateItem: NEMenuItemInfo(_Strings.virtualBackground),
+    singleStateItem: NEMenuItemInfo.undefine,
   );
 }
 
@@ -316,13 +317,13 @@ class MenuItemInfo extends StatelessWidget {
         tipBuilder?.call(context, icon) ?? icon,
         SizedBox(height: 2),
         Text(
-          itemInfo.text.trim(),
+          _getMenuTitle(context, itemInfo, itemState),
           maxLines: 1,
           softWrap: false,
           overflow: TextOverflow.fade,
           style: TextStyle(
             color: _UIColors.colorECEDEF,
-            fontSize: 10,
+            fontSize: 9,
             decoration: TextDecoration.none,
             fontWeight: FontWeight.w400,
           ),
@@ -341,4 +342,49 @@ class MenuItemInfo extends StatelessWidget {
     }
     return PlatformImage(key: itemInfo.icon ?? '');
   }
+
+  String _getMenuTitle(BuildContext context, NEMenuItemInfo itemInfo,
+      NEMenuItemState itemState) {
+    if (!itemInfo.isValid) {
+      return _getDefaultMenuTitle(context, itemId, itemState) ?? '';
+    }
+    return (itemInfo.textGetter?.call(context) ?? itemInfo.text)!.trim();
+  }
+}
+
+String? _getDefaultMenuTitle(
+    BuildContext context, int itemId, NEMenuItemState itemState) {
+  final localizations = NEMeetingUIKitLocalizations.of(context);
+  final bool checked = itemState == NEMenuItemState.checked;
+  switch (itemId) {
+    case NEMenuIDs.microphone:
+      return checked ? localizations!.unMuteAudio : localizations!.muteAudio;
+    case NEMenuIDs.camera:
+      return checked ? localizations!.unMuteVideo : localizations!.muteVideo;
+    case NEMenuIDs.screenShare:
+      return checked
+          ? localizations!.unScreenShare
+          : localizations!.screenShare;
+    case NEMenuIDs.participants:
+      return localizations!.menuTitleParticipants;
+    case NEMenuIDs.managerParticipants:
+      return localizations!.menuTitleManagerParticipants;
+    case NEMenuIDs.invitation:
+      return localizations!.menuTitleInvite;
+    case NEMenuIDs.chatroom:
+      return localizations!.menuTitleChatroom;
+    case NEMenuIDs.whiteBoard:
+      return checked
+          ? localizations!.menuTitleCloseWhiteboard
+          : localizations!.menuTitleShareWhiteboard;
+    case InternalMenuIDs.more:
+      return localizations!.more;
+    case InternalMenuIDs.beauty:
+      return localizations!.beauty;
+    case InternalMenuIDs.live:
+      return localizations!.live;
+    case InternalMenuIDs.virtualBackground:
+      return localizations!.virtualBackground;
+  }
+  return null;
 }

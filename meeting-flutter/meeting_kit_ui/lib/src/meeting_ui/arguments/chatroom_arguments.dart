@@ -100,6 +100,7 @@ class ChatRoomMessageSource {
           msg.fromNick,
           msg.thumbPath as String,
           msg.path as String,
+          msg.extension,
           msg.size,
           msg.width,
           msg.height,
@@ -335,6 +336,8 @@ mixin ImageMessageState on MessageState {
 
   String get originPath;
 
+  String? extension;
+
   int get size;
 
   int? width, height;
@@ -416,6 +419,7 @@ class InImageMessage with MessageState, ImageMessageState, InMessageState {
   final String originPath;
   final int size;
   final int? width, height;
+  final String? extension;
 
   InImageMessage(
     this.uuid,
@@ -423,6 +427,7 @@ class InImageMessage with MessageState, ImageMessageState, InMessageState {
     this.nickname,
     this.thumbPath,
     this.originPath,
+    this.extension,
     this.size,
     this.width,
     this.height,

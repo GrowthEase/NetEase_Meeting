@@ -12,10 +12,10 @@ class PermissionHelper {
       BuildContext context, bool on, String title) async {
     var result = true;
     if (on) {
-      result = await requestPermissionSingle(
-          context, Permission.camera, title, _Strings.cameraPermission,
+      result = await requestPermissionSingle(context, Permission.camera, title,
+          NEMeetingUIKitLocalizations.of(context)!.cameraPermission,
           message:
-              '${_Strings.permissionRationalePrefix}${_Strings.cameraPermission}${_Strings.permissionRationaleSuffixVideo}',
+              '${NEMeetingUIKitLocalizations.of(context)!.permissionRationalePrefix}${NEMeetingUIKitLocalizations.of(context)!.cameraPermission}${NEMeetingUIKitLocalizations.of(context)!.permissionRationaleSuffixVideo}',
           useDialog: Platform.isAndroid);
     }
     return result;
@@ -26,9 +26,12 @@ class PermissionHelper {
     var result = true;
     if (on) {
       result = await PermissionHelper.requestPermissionSingle(
-          context, Permission.microphone, title, _Strings.microphonePermission,
+          context,
+          Permission.microphone,
+          title,
+          NEMeetingUIKitLocalizations.of(context)!.microphonePermission,
           message:
-              '${_Strings.permissionRationalePrefix}${_Strings.microphonePermission}${_Strings.permissionRationaleSuffixAudio}',
+              '${NEMeetingUIKitLocalizations.of(context)!.permissionRationalePrefix}${NEMeetingUIKitLocalizations.of(context)!.microphonePermission}${NEMeetingUIKitLocalizations.of(context)!.permissionRationaleSuffixAudio}',
           useDialog: Platform.isAndroid);
     }
     return result;
@@ -46,11 +49,15 @@ class PermissionHelper {
     if (granted) return granted;
     if (useDialog) {
       final action = await showDialog<ConfirmAction>(
-          context: context,
-          builder: (BuildContext context) {
-            return buildPermissionDialog(
-                context, title, permissionName, message);
-          });
+        context: context,
+        builder: (_) {
+          return NEMeetingUIKitLocalizationsScope(
+            builder: (ctx) {
+              return buildPermissionDialog(ctx, title, permissionName, message);
+            },
+          );
+        },
+      );
       if (action == ConfirmAction.accept) {
         granted = await requestSingle(permission);
       }
@@ -60,21 +67,22 @@ class PermissionHelper {
     return granted;
   }
 
-  static CupertinoAlertDialog buildPermissionDialog(BuildContext context,
-      String title, String permissionName, String? message) {
+  static Widget buildPermissionDialog(BuildContext context, String title,
+      String permissionName, String? message) {
     return CupertinoAlertDialog(
-      title: Text('${_Strings.notWork}$permissionName'),
+      title: Text(
+          '${NEMeetingUIKitLocalizations.of(context)!.notWork}$permissionName'),
       content: Text(message ??
-          '${_Strings.funcNeed}$permissionName,${_Strings.needPermissionTipsFirst}$title${_Strings.needPermissionTipsTail}$permissionName${_Strings.permissionTips}？'),
+          '${NEMeetingUIKitLocalizations.of(context)!.funcNeed}$permissionName,${NEMeetingUIKitLocalizations.of(context)!.needPermissionTipsFirst}$title${NEMeetingUIKitLocalizations.of(context)!.needPermissionTipsTail}$permissionName${NEMeetingUIKitLocalizations.of(context)!.permissionTips}？'),
       actions: <Widget>[
         CupertinoDialogAction(
-          child: const Text(_Strings.cancel),
+          child: Text(NEMeetingUIKitLocalizations.of(context)!.cancel),
           onPressed: () {
             Navigator.of(context).pop(ConfirmAction.cancel);
           },
         ),
         CupertinoDialogAction(
-          child: const Text(_Strings.toSetUp),
+          child: Text(NEMeetingUIKitLocalizations.of(context)!.toSetUp),
           onPressed: () {
             Navigator.of(context).pop(ConfirmAction.accept);
           },

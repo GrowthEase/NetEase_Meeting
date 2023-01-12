@@ -56,7 +56,6 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
   Widget build(BuildContext context) {
     width = MediaQuery.of(context).size.width;
     height = MediaQuery.of(context).size.height;
-
     return WillPopScope(
         child: Scaffold(
             body: Container(
@@ -111,7 +110,7 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
                             style: BorderStyle.solid),
                         borderRadius: BorderRadius.circular(4), // 设置四周圆角
                       ),
-                      child: buildItem(index, sourceList)),
+                      child: buildItem(context, index, sourceList)),
                   onTap: () async {
                     bool selected = true;
                     if (index < sourceList.length - 1) {
@@ -120,7 +119,9 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
                           addExternalVirtualList!.length >=
                               addExternalVirtualMax) {
                         ToastUtils.showToast(
-                            context, _Strings.virtualBackgroundImageMax);
+                            context,
+                            NEMeetingUIKitLocalizations.of(context)!
+                                .virtualBackgroundImageMax);
                         setState(() {});
                         return;
                       }
@@ -157,7 +158,8 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
               child: GestureDetector(
                   child: Padding(
                     padding: EdgeInsets.only(left: 16),
-                    child: Text("删除", style: TextStyle(color: Colors.grey)),
+                    child: Text(NEMeetingUIKitLocalizations.of(context)!.delete,
+                        style: TextStyle(color: Colors.grey)),
                   ),
                   onTap: () async {
                     if (bCanPress) {
@@ -215,14 +217,17 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
             ),
             Expanded(
               child: Center(
-                child: Text("所选背景立即生效", style: TextStyle(color: Colors.black)),
+                child: Text(
+                    NEMeetingUIKitLocalizations.of(context)!
+                        .virtualBackgroundSelectTip,
+                    style: TextStyle(color: Colors.black)),
               ),
             ),
             GestureDetector(
               child: Padding(
                 padding: EdgeInsets.only(right: 16),
                 child: Text(
-                  "确定",
+                  NEMeetingUIKitLocalizations.of(context)!.sure,
                   style: TextStyle(color: Colors.blue),
                 ),
               ),
@@ -238,8 +243,11 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
     var granted = (await Permission.camera.status) == PermissionStatus.granted;
     if (!granted) {
       granted = await PermissionHelper.requestPermissionSingle(
-          context, Permission.camera, '', _Strings.cameraPermission);
-      if (!granted) UINavUtils.pop(context, rootNavigator: true);
+          context,
+          Permission.camera,
+          '',
+          NEMeetingUIKitLocalizations.of(context)!.cameraPermission);
+      if (!granted) UINavUtils.pop(context);
     }
     return granted;
   }

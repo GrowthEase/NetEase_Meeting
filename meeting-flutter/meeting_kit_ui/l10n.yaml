@@ -1,0 +1,8 @@
+arb-dir: lib/l10n
+output-dir: lib/src/meeting_localization
+template-arb-file: strings_en.arb
+output-localization-file: meeting_ui_kit_localizations.dart
+output-class: NEMeetingUIKitLocalizations
+header-file: header.txt
+synthetic-package: false
+untranslated-messages-file: untranslated.txt

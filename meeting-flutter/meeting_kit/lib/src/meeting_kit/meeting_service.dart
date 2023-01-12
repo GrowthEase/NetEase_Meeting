@@ -69,10 +69,17 @@ class NEStartMeetingOptions {
   ///
   final bool noSip;
 
+  ///
+  /// 配置在加入Rtc频道成功后是否打开本地音频设备，默认打开。
+  /// 该选项若配置为打开，则SDK会提前初始化音频设备，但不会对外发送本地音频流。
+  ///
+  final bool enableMyAudioDeviceOnJoinRtc;
+
   NEStartMeetingOptions({
     this.noChat = false,
     this.noCloudRecord = true,
     this.noSip = false,
+    this.enableMyAudioDeviceOnJoinRtc = true,
   });
 }
 
@@ -109,7 +116,17 @@ class NEJoinMeetingParams {
   }
 }
 
-class NEJoinMeetingOptions {}
+class NEJoinMeetingOptions {
+  ///
+  /// 配置在加入Rtc频道成功后是否打开本地音频设备，默认打开。
+  /// 该选项若配置为打开，则SDK会提前初始化音频设备，但不会对外发送本地音频流。
+  ///
+  final bool enableMyAudioDeviceOnJoinRtc;
+
+  NEJoinMeetingOptions({
+    this.enableMyAudioDeviceOnJoinRtc = true,
+  });
+}
 
 /// 提供会议相关的服务接口，诸如创建会议、加入会议、添加会议状态监听等。可通过 [NEMeetingKit.getMeetingService] 获取对应的服务实例
 abstract class NEMeetingService {
@@ -193,6 +210,16 @@ class NEMeetingInfo {
 
   final String? extraData;
 
+  ///
+  /// 会议邀请链接
+  ///
+  final String? inviteUrl;
+
+  ///
+  /// 会议邀请码
+  ///
+  final String? inviteCode;
+
   final List<NEInMeetingUserInfo> userList;
 
   NEMeetingInfo({
@@ -206,6 +233,8 @@ class NEMeetingInfo {
     required this.startTime,
     this.scheduleStartTime = 0,
     this.scheduleEndTime = 0,
+    this.inviteUrl,
+    this.inviteCode,
     required this.duration,
     required this.isHost,
     required this.isLocked,
@@ -217,19 +246,19 @@ class NEMeetingInfo {
   Map<String, dynamic> toMap() => {
         'meetingUniqueId': meetingUniqueId,
         'meetingId': meetingId,
-        'shortMeetingId': shortMeetingId,
-        'sipId': sipCid,
+        if (shortMeetingId != null) 'shortMeetingId': shortMeetingId,
+        if (sipCid != null) 'sipId': sipCid,
         'type': type,
         'isLocked': isLocked,
         'isHost': isHost,
-        'password': password,
+        if (password != null) 'password': password,
         'subject': subject,
         'startTime': startTime,
         'scheduleStartTime': scheduleStartTime,
         'scheduleEndTime': scheduleEndTime,
         'duration': duration,
         'hostUserId': hostUserId,
-        'extraData': extraData,
+        if (extraData != null) 'extraData': extraData,
         'userList': userList.map((e) => e.toMap()).toList(growable: false),
       };
 
@@ -259,7 +288,7 @@ class NEInMeetingUserInfo {
   Map<String, dynamic> toMap() => <String, dynamic>{
         'userId': userId,
         'userName': userName,
-        'tag': tag,
+        if (tag != null) 'tag': tag,
         'isSelf': isSelf,
         'roleType': roleType.index,
       };

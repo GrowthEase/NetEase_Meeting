@@ -46,7 +46,7 @@ class _PopupMenuWidgetState extends State<PopupMenuWidget> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance!.addPostFrameCallback((call) {
+    WidgetsBinding.instance.addPostFrameCallback((call) {
       if (!mounted) return;
       if (context.size != null) {
         width = context.size!.width;

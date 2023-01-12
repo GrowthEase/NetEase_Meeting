@@ -84,6 +84,8 @@ abstract class NEMeetingItem {
   /// 获取会议是否支持sip,[noSip]默认为 true
   bool get noSip;
 
+  String? get inviteUrl;
+
   Map toJson();
 
   Map request();

@@ -87,15 +87,15 @@ class MeetingLiveSettingState
 
   AppBar buildAppBar(BuildContext context) {
     return AppBar(
-        title: Text(_Strings.liveViewSetting,
+        title: Text(NEMeetingUIKitLocalizations.of(context)!.liveViewSetting,
             style: TextStyle(color: _UIColors.color_222222, fontSize: 17)),
         centerTitle: true,
         backgroundColor: _UIColors.white,
         elevation: 0.0,
-        systemOverlayStyle: SystemUiOverlayStyle.light,
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
         actions: [
           TextButton(
-              child: Text(_Strings.save,
+              child: Text(NEMeetingUIKitLocalizations.of(context)!.save,
                   style:
                       TextStyle(color: _UIColors.color_337eff, fontSize: 16.0)),
               onPressed: () {
@@ -116,7 +116,7 @@ class MeetingLiveSettingState
           child: Container(
               alignment: Alignment.center,
               key: MeetingUIValueKeys.liveLayoutClose,
-              child: Text(_Strings.close,
+              child: Text(NEMeetingUIKitLocalizations.of(context)!.close,
                   style: TextStyle(color: _UIColors.blue_337eff, fontSize: 16),
                   textAlign: TextAlign.center)),
           onTap: () {
@@ -151,7 +151,7 @@ class MeetingLiveSettingState
       height: 48,
       color: _UIColors.globalBg,
       padding: EdgeInsets.only(left: 20, top: 20),
-      child: Text(_Strings.liveChooseView,
+      child: Text(NEMeetingUIKitLocalizations.of(context)!.liveChooseView,
           style: TextStyle(fontSize: 14, color: _UIColors.color_999999)),
     );
   }
@@ -163,7 +163,7 @@ class MeetingLiveSettingState
         buildPreview(
             buildGalleryView(liveLayout == NERoomLiveLayout.gallery),
             MeetingUIValueKeys.liveLayoutGallery,
-            _Strings.liveGalleryView,
+            NEMeetingUIKitLocalizations.of(context)!.liveGalleryView,
             liveUids.isEmpty
                 ? null
                 : () {
@@ -179,7 +179,7 @@ class MeetingLiveSettingState
         buildPreview(
             buildFocusView(liveLayout == NERoomLiveLayout.focus),
             MeetingUIValueKeys.liveLayoutFocus,
-            _Strings.liveFocusView,
+            NEMeetingUIKitLocalizations.of(context)!.liveFocusView,
             liveUids.isEmpty
                 ? null
                 : () {
@@ -195,7 +195,7 @@ class MeetingLiveSettingState
         buildPreview(
             buildScreenShareView(liveLayout == NERoomLiveLayout.screenShare),
             MeetingUIValueKeys.liveLayoutScreenShare,
-            _Strings.liveScreenShareView,
+            NEMeetingUIKitLocalizations.of(context)!.liveScreenShareView,
             null,
             liveLayout == NERoomLiveLayout.screenShare),
     ];
@@ -206,10 +206,11 @@ class MeetingLiveSettingState
         padding:
             EdgeInsets.fromLTRB(horizontalPadding, 20, horizontalPadding, 0),
         child: Row(
-          mainAxisAlignment: children.length >= 2
-              ? MainAxisAlignment.spaceBetween
-              : MainAxisAlignment.center,
-          children: children,
+          // mainAxisAlignment: children.length >= 2
+          //     ? MainAxisAlignment.spaceBetween
+          //     : MainAxisAlignment.center,
+          children:
+              children.map((e) => Expanded(child: Center(child: e))).toList(),
         ));
   }
 
@@ -335,18 +336,20 @@ class MeetingLiveSettingState
                   borderRadius: BorderRadius.all(Radius.circular(2))),
             ),
             SizedBox(height: 6),
-            Text(viewType)
+            Text(
+              viewType,
+              style: TextStyle(fontSize: 14),
+            ),
           ],
         ));
   }
 
   Widget buildViewCountTips() {
     return Container(
-      height: 48,
       color: _UIColors.globalBg,
-      padding: EdgeInsets.only(left: 20, top: 20),
+      padding: EdgeInsets.all(20),
       child: Text(
-        _Strings.liveChooseCountTips,
+        NEMeetingUIKitLocalizations.of(context)!.liveChooseCountTips,
         style: TextStyle(fontSize: 16, color: _UIColors.color_999999),
       ),
     );

@@ -23,7 +23,7 @@ typedef MeetingPageRouteWillPushCallback = Future Function();
 ///
 typedef MeetingPageRouteDidPushCallback = void Function(Future<Object?> popped);
 
-class NEMeetingUIKit with _AloggerMixin {
+class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
   static final NEMeetingUIKit _instance = NEMeetingUIKit._();
 
   factory NEMeetingUIKit() => _instance;
@@ -170,6 +170,28 @@ class NEMeetingUIKit with _AloggerMixin {
     return result;
   }
 
+  ///
+  /// 切换语言
+  ///
+  Future<NEResult<void>> switchLanguage(NEMeetingLanguage? language) {
+    return NEMeetingKit.instance
+        .switchLanguage(language ?? NEMeetingLanguage.automatic);
+  }
+
+  ValueListenable<Locale> get localeListenable =>
+      NEMeetingKit.instance.localeListenable;
+
+  NEMeetingUIKitLocalizations ofLocalizations([BuildContext? context]) {
+    NEMeetingUIKitLocalizations? localizations;
+    if (context != null) {
+      localizations = NEMeetingUIKitLocalizations.of(context);
+    }
+    if (localizations == null) {
+      localizations = lookupNEMeetingUIKitLocalizations(localeListenable.value);
+    }
+    return localizations;
+  }
+
   Future<NEResult<void>> startMeetingUI(
     BuildContext context,
     NEStartMeetingUIParams param,
@@ -201,6 +223,7 @@ class NEMeetingUIKit with _AloggerMixin {
             noChat: opts.noChat,
             noCloudRecord: opts.noCloudRecord,
             noSip: opts.noSip,
+            enableMyAudioDeviceOnJoinRtc: opts.detectMutedMic,
           ),
         )
         .map<void>((roomContext) async {
@@ -238,7 +261,9 @@ class NEMeetingUIKit with _AloggerMixin {
     MeetingPageRouteDidPushCallback? onMeetingPageRouteDidPush,
   }) async {
     apiLogger.i('joinMeetingUI');
-    final joinOpts = NEJoinMeetingOptions();
+    final joinOpts = NEJoinMeetingOptions(
+      enableMyAudioDeviceOnJoinRtc: opts.detectMutedMic,
+    );
     return _joinMeetingUIInner(
       context,
       param,
@@ -271,7 +296,8 @@ class NEMeetingUIKit with _AloggerMixin {
           NEMeetingErrorCode.reuseIMNotSupportAnonymousLogin) {
         return NEResult(
           code: loginResult.code,
-          msg: _Strings.reuseIMNotSupportAnonymousJoinMeeting,
+          msg: NEMeetingUIKitLocalizations.of(context)!
+              .reuseIMNotSupportAnonymousJoinMeeting,
         );
       } else if (!loginResult.isSuccess()) {
         return NEResult(
@@ -395,14 +421,8 @@ class NEMeetingUIKit with _AloggerMixin {
       return checkIdleResult;
     }
 
-    final level = NEMeetingKit.instance
-            .getAccountService()
-            .getAccountInfo()
-            ?.settings
-            ?.beauty
-            ?.beauty
-            .level ??
-        0;
+    final level =
+        await NEMeetingKit.instance.getSettingsService().getBeautyFaceValue();
 
     Navigator.push(
         context,
@@ -424,15 +444,15 @@ class NEMeetingUIKit with _AloggerMixin {
   }
 
   NEResult<void>? _checkParameters(NEMeetingUIOptions opts) {
-    if (_exceedMaxVisibleCount(opts.injectedToolbarMenuItems, 4)) {
-      return const NEResult<void>(
-          code: NEMeetingErrorCode.paramError,
-          msg: '\'Toolbar\'菜单列表最多允许同时显示4个菜单项');
-    }
-    if (_exceedMaxVisibleCount(opts.injectedMoreMenuItems, 10)) {
-      return const NEResult<void>(
-          code: NEMeetingErrorCode.paramError, msg: '\'更多\'菜单列表最多允许同时显示10个菜单项');
-    }
+    // if (_exceedMaxVisibleCount(opts.injectedToolbarMenuItems, 4)) {
+    //   return const NEResult<void>(
+    //       code: NEMeetingErrorCode.paramError,
+    //       msg: '\'Toolbar\'菜单列表最多允许同时显示4个菜单项');
+    // }
+    // if (_exceedMaxVisibleCount(opts.injectedMoreMenuItems, 10)) {
+    //   return const NEResult<void>(
+    //       code: NEMeetingErrorCode.paramError, msg: '\'更多\'菜单列表最多允许同时显示10个菜单项');
+    // }
 
     final allMenuItems =
         opts.injectedToolbarMenuItems.followedBy(opts.injectedMoreMenuItems);
@@ -502,7 +522,7 @@ class NEMeetingUIKit with _AloggerMixin {
 
 class NEMeetingUIKitConfig extends NEMeetingKitConfig {
   /// 应用名称，显示在会议页面的标题栏中
-  final String appName;
+  final String? appName;
 
   /// Broadcast Upload Extension的App Group名称，iOS屏幕共享时使用
   final String? iosBroadcastAppGroup;
@@ -511,28 +531,27 @@ class NEMeetingUIKitConfig extends NEMeetingKitConfig {
   final bool useAssetServerConfig;
 
   /// 前台服务配置
-  late final NEForegroundServiceConfig foregroundServiceConfig;
+  final NEForegroundServiceConfig? foregroundServiceConfig;
 
   NEMeetingUIKitConfig({
     required String appKey,
-    this.appName = NEMeetingKitStrings.defaultAppName,
+    this.appName,
     this.useAssetServerConfig = false,
     this.iosBroadcastAppGroup,
-    NEForegroundServiceConfig? foregroundServiceConfig,
+    this.foregroundServiceConfig,
     NEMeetingKitServerConfig? serverConfig,
+    String? serverUrl,
     bool reuseIM = false,
     Map<String, dynamic>? extras,
     ALoggerConfig? aLoggerConfig,
   }) : super(
           appKey: appKey,
           serverConfig: serverConfig,
+          serverUrl: serverUrl,
           reuseIM: reuseIM,
           aLoggerConfig: aLoggerConfig,
           extras: extras,
-        ) {
-    this.foregroundServiceConfig =
-        foregroundServiceConfig ?? NEForegroundServiceConfig();
-  }
+        );
 }
 
 class NEStartMeetingUIParams extends NEStartMeetingParams {

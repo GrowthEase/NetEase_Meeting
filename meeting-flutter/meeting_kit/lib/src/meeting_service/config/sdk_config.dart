@@ -15,8 +15,8 @@ part of meeting_service;
 class SDKConfig {
   ///android version修改对应packages/meeting_sdk_android/gradle.properties的内容
   ///iOS version修改packages/meeting_sdk_ios/NEMeetingScript/spec/NEMeetingSDK.podspec的内容
-  static const String sdkVersionName = '3.5.0';
-  static const int sdkVersionCode = 30500;
+  static const String sdkVersionName = '3.8.0';
+  static const int sdkVersionCode = 30800;
   static const String sdkType = 'official'; //pub
 
   static const _tag = 'SDKConfig';
@@ -115,18 +115,6 @@ class SDKConfig {
   static int get galleryPageSize =>
       (instance.configs['galleryPageSize'] ?? 4) as int;
 
-  /// 会议音频录制开启，true：开启，false：关闭，true由服务器抄送给应用的回调接口
-  static bool get meetingRecordAudioEnable =>
-      (instance.configs['meetingRecordAudioEnable'] ?? false) as bool;
-
-  /// 会议视频录制开启，true：开启，false：关闭，true由服务器抄送给应用的回调接口
-  static bool get meetingRecordVideoEnable =>
-      (instance.configs['meetingRecordVideoEnable'] ?? false) as bool;
-
-  /// 会议录制模式，0：混合与单人，1：混合，2：单人，但只在有值的时候，才会由服务器抄送给应用的回调接口
-  static int get meetingRecordMode =>
-      (instance.configs['meetingRecordMode'] ?? 0) as int;
-
   /// 美颜参数配置：证书，开关状态
   static BeautyGlobalConfig get beauty =>
       BeautyGlobalConfig.fromJson(_functionConfig('beauty'));
@@ -160,16 +148,10 @@ class SDKConfig {
       MeetingFeatureConfig.fromJson(_config('ROOM_END_TIME_TIP'),
           fallback: true);
 
-  /// 会议录制开关状态
-  static FunBaseConfig get meetingRecord =>
-      FunBaseConfig.fromJson(_functionConfig('meetingRecord'));
-
-  /// 会议聊天室开关状态
-  static FunBaseConfig get meetingChat =>
-      FunBaseConfig.fromJson(_functionConfig('chatroom'));
-
-  static FunBaseConfig get sip =>
-      FunBaseConfig.fromJson(_functionConfig('sip'));
+  /// 静音时关闭音频流Pub通道，默认为true
+  static MeetingFeatureConfig get unpubAudioOnMuteConfig =>
+      MeetingFeatureConfig.fromJson(_config('UNPUB_AUDIO_ON_MUTE'),
+          fallback: true);
 
   static Map<String, dynamic> _functionConfig(String function) {
     var config = instance.configs['functionConfigs'] ?? {};
@@ -372,42 +354,3 @@ class WhiteBoardConfig extends BaseConfig {
         'version': version,
       };
 }
-
-// class MeetingLiveConfig extends FunBaseConfig {
-//   MeetingLiveConfig.fromJson(Map<String, dynamic> json) : super.fromJson(json);
-
-//   @override
-//   BaseConfig fromJson(Map<String, dynamic>? config) {
-//     return BaseConfig.fromJson(config);
-//   }
-// }
-
-// class MeetingWhiteBoardConfig extends FunBaseConfig {
-//   MeetingWhiteBoardConfig.fromJson(Map<String, dynamic> json)
-//       : super.fromJson(json);
-
-//   @override
-//   BaseConfig fromJson(Map<String, dynamic>? config) {
-//     return BaseConfig.fromJson(config);
-//   }
-// }
-
-// class MeetingRecordConfig extends FunBaseConfig {
-//   MeetingRecordConfig.fromJson(Map<String, dynamic> json)
-//       : super.fromJson(json);
-
-//   @override
-//   BaseConfig fromJson(Map<String, dynamic>? config) {
-//     return BaseConfig.fromJson(config);
-//   }
-// }
-
-// class MeetingChatConfig extends FunBaseConfig {
-//   MeetingChatConfig.fromJson(Map<String, dynamic> json)
-//       : super.fromJson(json);
-
-//   @override
-//   BaseConfig fromJson(Map<String, dynamic>? config) {
-//     return BaseConfig.fromJson(config);
-//   }
-// }

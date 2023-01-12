@@ -42,7 +42,7 @@ class _BeautySettingPageState extends BaseState<BeautySettingPage> {
         child: Scaffold(
             appBar: AppBar(
                 title: Text(
-                  _Strings.beauty,
+                  NEMeetingUIKitLocalizations.of(context)!.beauty,
                   style: TextStyle(
                       color: _UIColors.color_222222,
                       fontSize: 19,
@@ -52,7 +52,7 @@ class _BeautySettingPageState extends BaseState<BeautySettingPage> {
                 centerTitle: true,
                 backgroundColor: Colors.white,
                 elevation: 0.0,
-                systemOverlayStyle: SystemUiOverlayStyle.light,
+                systemOverlayStyle: SystemUiOverlayStyle.dark,
                 leading: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   key: ValueKey('back'),
@@ -62,7 +62,7 @@ class _BeautySettingPageState extends BaseState<BeautySettingPage> {
                       alignment: Alignment.center,
                       padding: EdgeInsets.only(top: 20, bottom: 10),
                       child: Text(
-                        _Strings.save,
+                        NEMeetingUIKitLocalizations.of(context)!.save,
                         style: TextStyle(
                             color: Color(0xff2575FF),
                             fontSize: 14,
@@ -105,14 +105,17 @@ class _BeautySettingPageState extends BaseState<BeautySettingPage> {
     var granted = (await Permission.camera.status) == PermissionStatus.granted;
     if (!granted) {
       granted = await PermissionHelper.requestPermissionSingle(
-          context, Permission.camera, '', _Strings.cameraPermission);
+          context,
+          Permission.camera,
+          '',
+          NEMeetingUIKitLocalizations.of(context)!.cameraPermission);
       if (!granted) UINavUtils.pop(context, rootNavigator: true);
     }
     return granted;
   }
 
   void _requestPop() {
-    SettingsRepository.setBeautyFaceValue(beautyLevel);
+    NEMeetingKit.instance.getSettingsService().setBeautyFaceValue(beautyLevel);
     UINavUtils.pop(context, rootNavigator: true);
   }
 
@@ -132,7 +135,6 @@ class _BeautySettingPageState extends BaseState<BeautySettingPage> {
   @override
   void dispose() {
     EventBus().emit(NEMeetingUIEvents.flutterPageDisposed);
-    SettingsRepository.setBeautyFaceValue(beautyLevel);
     previewRoomRtcController?.stopBeauty();
     previewRoomRtcController?.stopPreview();
     renderer?.detach();

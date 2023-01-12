@@ -19,11 +19,17 @@ enum NEMenuVisibility {
   visibleToHostOnly,
 }
 
+typedef NEMenuItemTextGetter(BuildContext context);
+
 /// 菜单项某一状态下的描述信息，包括菜单文本和图标。
 class NEMenuItemInfo {
+  static const undefine = NEMenuItemInfo._nullable();
+
   static const int maxTextLength = 10;
 
-  final String text;
+  final NEMenuItemTextGetter? textGetter;
+
+  final String? text;
 
   /// Android平台下该字段为图片资源ID；
   /// iOS平台下该字段为资源名称；
@@ -33,11 +39,18 @@ class NEMenuItemInfo {
   /// flutter平台下，如果传入该字段，则会从flutter平台加载资源
   final String? platformPackage;
 
-  const NEMenuItemInfo(this.text, {this.icon, this.platformPackage});
+  const NEMenuItemInfo._nullable(
+      {this.textGetter, this.text, this.icon, this.platformPackage});
+
+  const NEMenuItemInfo(
+      {this.textGetter, this.text, this.icon, this.platformPackage})
+      : assert(textGetter != null || text != null);
 
   bool get hasIcon => icon != null && icon != '0';
 
-  bool get isValid => text.length > 0 && text.length <= maxTextLength;
+  bool get isValid =>
+      textGetter != null ||
+      (text != null && text!.length > 0 && text!.length <= maxTextLength);
 
   bool get hasPlatformPackage =>
       platformPackage != null && platformPackage != '';
@@ -117,6 +130,9 @@ abstract class NEMeetingMenuItem {
 
   bool get isValid => true;
 
+  @protected
+  bool get isBuiltInMenuItem => itemId < firstInjectedItemId;
+
   @override
   String toString() {
     return 'NEMeetingMenuItem{itemId: $itemId, visibility: $visibility}';
@@ -134,7 +150,9 @@ class NESingleStateMenuItem extends NEMeetingMenuItem {
       : super(itemId: itemId, visibility: visibility);
 
   @override
-  bool get isValid => super.isValid && singleStateItem.isValid;
+  bool get isValid {
+    return isBuiltInMenuItem || (super.isValid && singleStateItem.isValid);
+  }
 
   @override
   String toString() {
@@ -158,7 +176,8 @@ class NECheckableMenuItem extends NEMeetingMenuItem {
 
   @override
   bool get isValid =>
-      super.isValid && checkedStateItem.isValid && uncheckStateItem.isValid;
+      isBuiltInMenuItem ||
+      (super.isValid && checkedStateItem.isValid && uncheckStateItem.isValid);
 
   @override
   String toString() {

@@ -5,9 +5,6 @@
 part of meeting_service;
 
 class SettingsRepository {
-  static int? _beautyLevelCache;
-
-  static int? get beautyLevelCache => _beautyLevelCache;
   static Uint8List? _beautyKeyCache;
 
   ///保存用户信息配置
@@ -41,8 +38,7 @@ class SettingsRepository {
   }
 
   /// 美颜等级在[0-10]范围
-  static Future<NEResult<void>> setBeautyFaceValue(int value) async {
-    _beautyLevelCache = value;
+  static Future<NEResult<void>> saveBeautyFaceValue(int value) async {
     return await SettingsRepository.saveSettingsApi(
         BeautySettings(beauty: Beauty(level: value)));
   }
@@ -75,17 +71,7 @@ class SettingsRepository {
     return SDKConfig.appRoomResConfig.sip;
   }
 
-  /// 会议音频录制开启，true：开启，false：关闭，true由服务器抄送给应用的回调接口
-  bool get meetingRecordAudioEnable => SDKConfig.meetingRecordAudioEnable;
-
-  /// 会议视频录制开启，true：开启，false：关闭，true由服务器抄送给应用的回调接口
-  bool get meetingRecordVideoEnable => SDKConfig.meetingRecordVideoEnable;
-
-  /// 会议录制模式，0：混合与单人，1：混合，2：单人，但只在有值的时候，才会由服务器抄送给应用的回调接口
-  int get meetingRecordMode => SDKConfig.meetingRecordMode;
-
   static Future<void> clear() async {
-    _beautyLevelCache = null;
     _beautyKeyCache = null;
   }
 }

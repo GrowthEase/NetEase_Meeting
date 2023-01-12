@@ -78,11 +78,11 @@ class _ValueListenableBuilderState<T>
   // so it is necessary to delay the setState call to next frame
   void _valueChanged() {
     if (SchedulerBinding.instance != null &&
-        SchedulerBinding.instance!.schedulerPhase != SchedulerPhase.idle &&
-        SchedulerBinding.instance!.schedulerPhase !=
+        SchedulerBinding.instance.schedulerPhase != SchedulerPhase.idle &&
+        SchedulerBinding.instance.schedulerPhase !=
             SchedulerPhase.postFrameCallbacks) {
       if (setStateScheduled) return;
-      SchedulerBinding.instance!.addPostFrameCallback((timeStamp) {
+      SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
         if (mounted) {
           setState(() {
             setStateScheduled = false;
