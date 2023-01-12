@@ -14,20 +14,22 @@ class MeetingPageProxy extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      child: Navigator(
-        key: _sdkNavigatorKey,
-        observers: [MeetingRouteObserver(context)],
-        onGenerateRoute: (RouteSettings settings) {
-          final arg = settings.arguments ?? arguments;
-          if (arg is MeetingArguments) {
-            return LoggingMaterialPageRoute(
-                builder: (context) => MeetingPage(arg));
-          } else if (arg is MeetingWaitingArguments) {
-            return MaterialPageRoute(
-                builder: (context) => MeetingWaitingPage(arg));
-          }
-          return null;
-        },
+      child: NEMeetingUIKitLocalizationsScope(
+        child: Navigator(
+          key: _sdkNavigatorKey,
+          observers: [MeetingRouteObserver(context)],
+          onGenerateRoute: (RouteSettings settings) {
+            final arg = settings.arguments ?? arguments;
+            if (arg is MeetingArguments) {
+              return LoggingMaterialPageRoute(
+                  builder: (context) => MeetingPage(arg));
+            } else if (arg is MeetingWaitingArguments) {
+              return MaterialPageRoute(
+                  builder: (context) => MeetingWaitingPage(arg));
+            }
+            return null;
+          },
+        ),
       ),
       onWillPop: () async {
         await _sdkNavigatorKey.currentState!.maybePop();

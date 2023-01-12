@@ -62,7 +62,7 @@ abstract class NESettingsService extends ValueNotifier<Map> {
 
   /// 设置美颜参数
   ///  [value] 传入美颜等级，参数规则为[0,10]整数
-  void setBeautyFaceValue(int value);
+  Future<void> setBeautyFaceValue(int value);
 
   ///
   /// 查询会议是否拥有直播权限
@@ -98,6 +98,11 @@ abstract class NESettingsService extends ValueNotifier<Map> {
   /// true 显示，false不显示
   ///
   Future<bool> isVirtualBackgroundEnabled();
+
+  ///
+  /// 查询静音时是否需要关闭音频流pub
+  ///
+  bool shouldUnpubOnAudioMute();
 
   ///
   /// 设置内置虚拟背景列表
@@ -177,10 +182,10 @@ class NEHistoryMeetingItem {
   Map<String, dynamic> toJson() => <String, dynamic>{
         'meetingUniqueId': meetingUniqueId,
         'meetingId': meetingId,
-        'shortMeetingId': shortMeetingId,
-        'password': password,
+        if (shortMeetingId != null) 'shortMeetingId': shortMeetingId,
+        if (password != null) 'password': password,
         'subject': subject,
         'nickname': nickname,
-        'sipId': sipId,
+        if (sipId != null) 'sipId': sipId,
       };
 }

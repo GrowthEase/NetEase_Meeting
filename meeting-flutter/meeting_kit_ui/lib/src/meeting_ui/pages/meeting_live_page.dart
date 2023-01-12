@@ -63,7 +63,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
   bool liveChatRoomEnable() {
     if (_arguments.live.extensionConfig != null) {
       var map = jsonDecode(_arguments.live.extensionConfig!);
-      return map['liveChatRoomEnable'];
+      return map['liveChatRoomEnable'] ?? false;
     }
     return true;
   }
@@ -71,7 +71,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
   bool onlyEmployeesAllow() {
     if (_arguments.live.extensionConfig != null) {
       var map = jsonDecode(_arguments.live.extensionConfig!);
-      return map['onlyEmployeesAllow'];
+      return map['onlyEmployeesAllow'] ?? false;
     }
     return false;
   }
@@ -113,12 +113,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
 
   void initPassword() {
     livePassword = _arguments.live.password;
-    if (TextUtils.isEmpty(livePassword)) {
-      livePwdSwitch = false;
-      generatePassword();
-    } else {
-      livePwdSwitch = true;
-    }
+    livePwdSwitch = !TextUtils.isEmpty(livePassword);
     _livePasswordController = TextEditingController(text: livePassword);
   }
 
@@ -144,19 +139,19 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
   AppBar buildAppBar(BuildContext context) {
     return AppBar(
         title: Text(
-          _Strings.meetingLive,
+          NEMeetingUIKitLocalizations.of(context)!.meetingLive,
           style: TextStyle(color: _UIColors.color_222222, fontSize: 17),
         ),
         centerTitle: true,
         backgroundColor: _UIColors.white,
         elevation: 0.0,
-        systemOverlayStyle: SystemUiOverlayStyle.light,
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
         leading: GestureDetector(
           child: Container(
             alignment: Alignment.center,
             key: MeetingUIValueKeys.chatRoomClose,
             child: Text(
-              _Strings.close,
+              NEMeetingUIKitLocalizations.of(context)!.close,
               style: TextStyle(color: _UIColors.blue_337eff, fontSize: 16),
               textAlign: TextAlign.center,
             ),
@@ -264,7 +259,8 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
           setState(() {});
         },
         decoration: InputDecoration(
-            hintText: '${_Strings.meetingLiveTitle}',
+            hintText:
+                '${NEMeetingUIKitLocalizations.of(context)!.meetingLiveTitle}',
             hintStyle: TextStyle(fontSize: 16, color: _UIColors.color_999999),
             border: InputBorder.none,
             suffixIcon: _focusNode.hasFocus &&
@@ -282,8 +278,10 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
   }
 
   Widget buildLiveUrl() {
-    return buildCopyItem(MeetingUIValueKeys.copyLiveUrl,
-        _Strings.meetingLiveUrl, _arguments.liveAddress ?? '');
+    return buildCopyItem(
+        MeetingUIValueKeys.copyLiveUrl,
+        NEMeetingUIKitLocalizations.of(context)!.meetingLiveUrl,
+        _arguments.liveAddress ?? '');
   }
 
   Widget buildCopyItem(Key key, String itemTitle, String itemDetail) {
@@ -311,11 +309,12 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
                   overflow: TextOverflow.fade)),
           GestureDetector(
             key: key,
-            child: Text(_Strings.copy,
+            child: Text(NEMeetingUIKitLocalizations.of(context)!.copy,
                 style: TextStyle(fontSize: 14, color: _UIColors.blue_337eff)),
             onTap: () {
               Clipboard.setData(ClipboardData(text: itemDetail));
-              ToastUtils.showToast(context, _Strings.copySuccess);
+              ToastUtils.showToast(context,
+                  NEMeetingUIKitLocalizations.of(context)!.copySuccess);
             },
           ),
         ],
@@ -339,8 +338,10 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
   }
 
   Widget buildNotModifyPwd() {
-    return buildCopyItem(MeetingUIValueKeys.copyLivePassword,
-        _Strings.livePassword, _arguments.live.password!);
+    return buildCopyItem(
+        MeetingUIValueKeys.copyLivePassword,
+        NEMeetingUIKitLocalizations.of(context)!.livePassword,
+        _arguments.live.password!);
   }
 
   Widget buildPwd() {
@@ -353,7 +354,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
           Expanded(
             flex: 1,
             child: Text(
-              _Strings.livePassword,
+              NEMeetingUIKitLocalizations.of(context)!.livePassword,
               style: TextStyle(color: _UIColors.black_222222, fontSize: 16),
             ),
           ),
@@ -398,7 +399,8 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
           setState(() {});
         },
         decoration: InputDecoration(
-            hintText: '${_Strings.pleaseInputLivePasswordHint}',
+            hintText:
+                '${NEMeetingUIKitLocalizations.of(context)!.pleaseInputLivePasswordHint}',
             hintStyle: TextStyle(fontSize: 14, color: _UIColors.color_999999),
             border: InputBorder.none,
             suffixIcon: TextUtils.isEmpty(_livePasswordController.text)
@@ -429,10 +431,12 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(_Strings.liveInteraction,
+                  Text(NEMeetingUIKitLocalizations.of(context)!.liveInteraction,
                       style: TextStyle(
                           color: _UIColors.black_222222, fontSize: 16)),
-                  Text(_Strings.liveInteractionTips,
+                  Text(
+                      NEMeetingUIKitLocalizations.of(context)!
+                          .liveInteractionTips,
                       style: TextStyle(
                           color: _UIColors.color_999999, fontSize: 12)),
                 ],
@@ -467,10 +471,10 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(_Strings.liveLevel,
+                  Text(NEMeetingUIKitLocalizations.of(context)!.liveLevel,
                       style: TextStyle(
                           color: _UIColors.black_222222, fontSize: 16)),
-                  Text(_Strings.liveLevelTip,
+                  Text(NEMeetingUIKitLocalizations.of(context)!.liveLevelTip,
                       style: TextStyle(
                           color: _UIColors.color_999999, fontSize: 12)),
                 ],
@@ -487,7 +491,10 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
                     liveLevelEnableSwitch = value;
                   });
                 } else {
-                  ToastUtils.showToast(context, _Strings.disableLiveAuthLevel);
+                  ToastUtils.showToast(
+                      context,
+                      NEMeetingUIKitLocalizations.of(context)!
+                          .disableLiveAuthLevel);
                 }
               },
               activeColor: _UIColors.blue_337eff)
@@ -502,7 +509,8 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
         behavior: HitTestBehavior.opaque,
         onTap: () {
           FocusScope.of(context).unfocus();
-          Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+          Navigator.of(context)
+              .push(MaterialMeetingPageRoute(builder: (context) {
             return MeetingLiveSettingPage(
                 _arguments,
                 NERoomLiveInfo(
@@ -532,7 +540,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
           padding: EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             children: <Widget>[
-              Text(_Strings.liveViewSetting,
+              Text(NEMeetingUIKitLocalizations.of(context)!.liveViewSetting,
                   style:
                       TextStyle(fontSize: 16, color: _UIColors.black_222222)),
               Spacer(),
@@ -551,11 +559,12 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
     if (_arguments.live.state == NERoomLiveState.init) {
       return Text(
           liveUids.isNotEmpty
-              ? '${_Strings.livePickerCount}${liveUids.length}${_Strings.livePickerCountPrefix}'
+              ? '${NEMeetingUIKitLocalizations.of(context)!.livePickerCount}${liveUids.length}${NEMeetingUIKitLocalizations.of(context)!.livePickerCountPrefix}'
               : '',
           style: TextStyle(fontSize: 14, color: _UIColors.color_999999));
     } else if (viewChange && _arguments.live.state != NERoomLiveState.ended) {
-      return Text(_Strings.liveViewSettingChange,
+      return Text(
+          NEMeetingUIKitLocalizations.of(context)!.liveViewSettingChange,
           style: TextStyle(fontSize: 14, color: _UIColors.colorEB352B));
     }
     return Container();
@@ -568,7 +577,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
         alignment: Alignment.topCenter,
         padding: EdgeInsets.only(top: 8),
         child: Text(
-          _Strings.liveViewPreviewTips,
+          NEMeetingUIKitLocalizations.of(context)!.liveViewPreviewTips,
           style: TextStyle(fontSize: 12, color: _UIColors.color_999999),
         ));
   }
@@ -577,7 +586,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
     Widget preview;
     if (liveUids.isEmpty) {
       preview = Text(
-        _Strings.liveViewPreviewDesc,
+        NEMeetingUIKitLocalizations.of(context)!.liveViewPreviewDesc,
         style: TextStyle(color: _UIColors.black_333333, fontSize: 12),
         textAlign: TextAlign.center,
       );
@@ -772,7 +781,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
                       updateLiveParams(NERoomLiveState.init, checkParams: true);
                     },
           child: Text(
-            _Strings.liveStart,
+            NEMeetingUIKitLocalizations.of(context)!.liveStart,
             style: TextStyle(
                 color: Colors.white, fontSize: 16, fontWeight: FontWeight.w400),
             textAlign: TextAlign.center,
@@ -798,13 +807,13 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
                 MaterialStateProperty.all(EdgeInsets.symmetric(vertical: 13)),
             shape: MaterialStateProperty.all(RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(25))))),
-        onPressed: isUpdate()
+        onPressed: isStateDirty()
             ? () {
                 updateLiveParams(NERoomLiveState.started, checkParams: true);
               }
             : null,
         child: Text(
-          _Strings.liveUpdate,
+          NEMeetingUIKitLocalizations.of(context)!.liveUpdate,
           style: TextStyle(
               color: Colors.white, fontSize: 16, fontWeight: FontWeight.w400),
           textAlign: TextAlign.center,
@@ -813,7 +822,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
     );
   }
 
-  bool isUpdate() {
+  bool isStateDirty() {
     var live = _arguments.live;
     return liveChatRoomEnable() != chatRoomEnableSwitch ||
         live.password != livePassword ||
@@ -839,7 +848,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
           updateLiveParams(NERoomLiveState.ended);
         },
         child: Text(
-          _Strings.liveStop,
+          NEMeetingUIKitLocalizations.of(context)!.liveStop,
           style: TextStyle(
               color: Colors.white, fontSize: 16, fontWeight: FontWeight.w400),
           textAlign: TextAlign.center,
@@ -853,17 +862,22 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
       livePassword = _livePasswordController.text.trim();
       if (livePwdSwitch == true) {
         if (TextUtils.isEmpty(livePassword)) {
-          ToastUtils.showToast(context, _Strings.pleaseInputLivePassword);
+          ToastUtils.showToast(context,
+              NEMeetingUIKitLocalizations.of(context)!.pleaseInputLivePassword);
           return;
         } else if (livePassword!.length != 6) {
-          ToastUtils.showToast(context, _Strings.pleaseInputLivePasswordHint);
+          ToastUtils.showToast(
+              context,
+              NEMeetingUIKitLocalizations.of(context)!
+                  .pleaseInputLivePasswordHint);
           return;
         }
       }
     }
     Connectivity().checkConnectivity().then((value) {
       if (value == ConnectivityResult.none) {
-        ToastUtils.showToast(context, _Strings.networkUnavailableCheck);
+        ToastUtils.showToast(context,
+            NEMeetingKitLocalizations.of(context)!.networkUnavailableCheck);
       } else {
         // var live = NEInRoomLiveInfo()
         //   ..password = livePwdSwitch ? (livePassword ?? '') : ''
@@ -896,28 +910,40 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
       final result = await liveStreamController.startLive(live);
       if (!mounted) return;
       if (result.isSuccess()) {
-        ToastUtils.showToast(context, _Strings.liveStartSuccess);
+        ToastUtils.showToast(
+            context, NEMeetingUIKitLocalizations.of(context)!.liveStartSuccess);
         Navigator.pop(context);
       } else {
-        ToastUtils.showToast(context, result.msg ?? _Strings.liveStartFail);
+        ToastUtils.showToast(
+            context,
+            result.msg ??
+                NEMeetingUIKitLocalizations.of(context)!.liveStartFail);
       }
     } else if (status == NERoomLiveState.started) {
       final result = await liveStreamController.updateLive(live);
       if (!mounted) return;
       if (result.isSuccess()) {
-        ToastUtils.showToast(context, _Strings.liveUpdateSuccess);
+        ToastUtils.showToast(context,
+            NEMeetingUIKitLocalizations.of(context)!.liveUpdateSuccess);
         Navigator.pop(context);
       } else {
-        ToastUtils.showToast(context, result.msg ?? _Strings.liveUpdateFail);
+        ToastUtils.showToast(
+            context,
+            result.msg ??
+                NEMeetingUIKitLocalizations.of(context)!.liveUpdateFail);
       }
     } else {
       final result = await liveStreamController.stopLive();
       if (!mounted) return;
       if (result.isSuccess()) {
         Navigator.pop(context);
-        ToastUtils.showToast(context, _Strings.liveStopSuccess);
+        ToastUtils.showToast(
+            context, NEMeetingUIKitLocalizations.of(context)!.liveStopSuccess);
       } else {
-        ToastUtils.showToast(context, result.msg ?? _Strings.liveStopFail);
+        ToastUtils.showToast(
+            context,
+            result.msg ??
+                NEMeetingUIKitLocalizations.of(context)!.liveStopFail);
       }
     }
   }

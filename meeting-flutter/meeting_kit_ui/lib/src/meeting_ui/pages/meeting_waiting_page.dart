@@ -67,7 +67,7 @@ class MeetingWaitingPageState extends BaseState<MeetingWaitingPage> {
 
   Widget buildEnterPasswordUI() {
     return CupertinoAlertDialog(
-      title: Text(_Strings.meetingPassword),
+      title: Text(NEMeetingUIKitLocalizations.of(context)!.meetingPassword),
       content: Container(
           margin: EdgeInsets.only(top: 10),
           child: Column(
@@ -77,7 +77,8 @@ class MeetingWaitingPageState extends BaseState<MeetingWaitingPage> {
                   key: MeetingUIValueKeys.inputMeetingPassword,
                   autofocus: true,
                   controller: _textFieldController,
-                  placeholder: _Strings.inputMeetingPassword,
+                  placeholder: NEMeetingUIKitLocalizations.of(context)!
+                      .inputMeetingPassword,
                   placeholderStyle: const TextStyle(
                     fontSize: 13,
                     color: CupertinoColors.placeholderText,
@@ -98,12 +99,12 @@ class MeetingWaitingPageState extends BaseState<MeetingWaitingPage> {
           )),
       actions: <Widget>[
         CupertinoDialogAction(
-          child: Text(_Strings.cancel),
+          child: Text(NEMeetingUIKitLocalizations.of(context)!.cancel),
           onPressed: cancel,
         ),
         CupertinoDialogAction(
             key: MeetingUIValueKeys.inputMeetingPasswordJoinMeeting,
-            child: Text(_Strings.joinMeeting),
+            child: Text(NEMeetingUIKitLocalizations.of(context)!.joinMeeting),
             onPressed: canRetryJoining() ? _verifyPassword : null),
       ],
     );
@@ -120,8 +121,9 @@ class MeetingWaitingPageState extends BaseState<MeetingWaitingPage> {
                 strokeWidth: 2,
               )));
     } else {
-      final error =
-          errorCode == NEErrorCode.badPassword ? _Strings.wrongPassword : '';
+      final error = errorCode == NEErrorCode.badPassword
+          ? NEMeetingUIKitLocalizations.of(context)!.wrongPassword
+          : '';
       return error.isNotEmpty
           ? Padding(
               padding: EdgeInsets.only(right: 6),

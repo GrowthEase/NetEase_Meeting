@@ -13,7 +13,7 @@ abstract class BaseState<T extends StatefulWidget> extends State<T>
   void initState() {
     tag = "$runtimeType@$hashCode";
     Alog.i(tag: tag, moduleName: _moduleName, content: "$tag init state");
-    WidgetsBinding.instance!.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
     super.initState();
   }
 
@@ -21,7 +21,7 @@ abstract class BaseState<T extends StatefulWidget> extends State<T>
   @mustCallSuper
   void dispose() {
     Alog.i(tag: tag, moduleName: _moduleName, content: "$tag dispose");
-    WidgetsBinding.instance!.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 

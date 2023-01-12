@@ -56,8 +56,9 @@ abstract class LifecycleBaseState<T extends StatefulWidget>
   }
 
   void postOnFrame(VoidCallback callback) {
-    WidgetsBinding.instance!.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       callback();
     });
+    WidgetsBinding.instance.ensureVisualUpdate();
   }
 }

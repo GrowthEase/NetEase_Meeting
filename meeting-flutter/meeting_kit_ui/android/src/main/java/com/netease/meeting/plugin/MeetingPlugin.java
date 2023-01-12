@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import com.netease.meeting.plugin.base.Handler;
 import com.netease.meeting.plugin.base.asset.AssetService;
 import com.netease.meeting.plugin.base.notification.NotificationService;
+import com.netease.meeting.plugin.images.ImageGallerySaver;
 import com.netease.meeting.plugin.images.ImageLoader;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodCall;
@@ -61,6 +62,7 @@ public class MeetingPlugin implements FlutterPlugin, MethodCallHandler {
     new NotificationService(channel, context).register(handlerMap);
     new AssetService(channel, context).register(handlerMap);
     new ImageLoader(channel, context).register(handlerMap);
+    new ImageGallerySaver(channel, context).register(handlerMap);
   }
 
   @Override

@@ -6,26 +6,27 @@ group 'com.netease.meeting.plugin.meeting_plugin'
 version '1.0'
 
 buildscript {
+    ext.kotlin_version = '1.6.10'
     repositories {
         google()
-        jcenter()
         mavenCentral()
+        jcenter()
     }
 
     dependencies {
         classpath 'com.android.tools.build:gradle:3.5.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
-rootProject.allprojects {
-    repositories {
-        google()
-        jcenter()
-        mavenCentral()
-    }
+repositories {
+    google()
+    mavenCentral()
+    jcenter()
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 31
@@ -36,4 +37,13 @@ android {
     lintOptions {
         disable 'InvalidPackage'
     }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    implementation 'com.netease.yunxin:nertc-beauty:4.6.29'
+    implementation 'com.netease.yunxin:nertc-facedetect:4.6.29'
+    // 4.6.29 `nertc-segment` module is corrupt, use 4.6.28 instead
+    implementation 'com.netease.yunxin:nertc-segment:4.6.28'
 }

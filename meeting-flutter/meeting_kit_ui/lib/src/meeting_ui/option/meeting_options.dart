@@ -54,21 +54,6 @@ class MeetingConfig {
   int get focusSwitchInterval {
     return SDKConfig.focusSwitchInterval;
   }
-
-  /// 会议音频录制开启，true：开启，false：关闭，true由服务器抄送给应用的回调接口
-  bool get meetingRecordAudioEnable => SDKConfig.meetingRecordAudioEnable;
-
-  /// 会议视频录制开启，true：开启，false：关闭，true由服务器抄送给应用的回调接口
-  bool get meetingRecordVideoEnable => SDKConfig.meetingRecordVideoEnable;
-
-  /// 会议录制模式，0：混合与单人，1：混合，2：单人，但只在有值的时候，才会由服务器抄送给应用的回调接口
-  NERtcServerRecordMode get meetingRecordMode {
-    var mode = SDKConfig.meetingRecordMode;
-    if (mode >= NERtcServerRecordMode.values.length || mode < 0) {
-      mode = 0;
-    }
-    return NERtcServerRecordMode.values[mode];
-  }
 }
 
 ///

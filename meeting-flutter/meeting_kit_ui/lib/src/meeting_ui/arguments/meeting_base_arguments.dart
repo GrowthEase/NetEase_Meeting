@@ -54,7 +54,7 @@ class MeetingBaseArguments {
     if (title != null && title.isNotEmpty) {
       return title;
     }
-    return _Strings.defaultMeetingTitle;
+    return NEMeetingUIKit().ofLocalizations().defaultMeetingTitle;
   }
 
   String? get iosBroadcastAppGroup =>

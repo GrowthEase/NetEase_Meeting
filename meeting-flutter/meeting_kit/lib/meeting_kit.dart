@@ -17,12 +17,6 @@ import 'package:netease_common/netease_common.dart';
 
 import 'package:netease_roomkit/netease_roomkit.dart'
     hide
-        NERtcAudioDevice,
-        NERtcRemoteVideoStreamType,
-        NERtcVideoProfile,
-        NERtcVideoFrameRate,
-        NERtcScreenConfig,
-        NERtcAudioDeviceState,
         NERtcServerRecordMode,
         NERtcVideoView,
         NERtcVideoRenderer,
@@ -58,7 +52,6 @@ part 'src/meeting_kit/settings_service.dart';
 part 'src/meeting_kit/live_meeting_service.dart';
 part 'src/meeting_kit/impl/live_meeting_service_impl.dart';
 part 'src/meeting_kit/module_name.dart';
-part 'src/meeting_kit/utils/meeting_utils.dart';
 part 'src/meeting_kit/invocation_manager.dart';
 part 'src/meeting_kit/log/log_service.dart';
 part 'src/meeting_kit/utils/rtc_utils.dart';
@@ -112,6 +105,8 @@ class NEMeetingKitConfig {
 
   NEMeetingKitServerConfig? serverConfig;
 
+  final String? serverUrl;
+
   /// 日志参数配置
   final ALoggerConfig aLoggerConfig;
 
@@ -120,6 +115,7 @@ class NEMeetingKitConfig {
   NEMeetingKitConfig({
     required this.appKey,
     this.serverConfig,
+    this.serverUrl,
     this.reuseIM = false,
     this.extras,
     ALoggerConfig? aLoggerConfig,
@@ -166,6 +162,16 @@ abstract class NEMeetingKit {
   /// 初始化SDK
   /// * [config]   初始化配置对象
   Future<NEResult<void>> initialize(NEMeetingKitConfig config);
+
+  ///
+  /// 切换语言
+  ///
+  Future<NEResult<void>> switchLanguage(NEMeetingLanguage? language);
+
+  ValueListenable<Locale> get localeListenable;
+
+  NEMeetingKitLocalizations get localizations =>
+      NEMeetingKitLocalizations.ofLocale(localeListenable.value);
 
   /// 注册登录状态监听器
   ///
@@ -274,4 +280,33 @@ abstract class NEMeetingAuthListener {
 
   /// 账号信息过期通知，原因为用户修改了密码，应用层随后应该重新登录
   void onAuthInfoExpired();
+}
+
+///
+/// 组件支持的语言类型
+///
+class NEMeetingLanguage {
+  static const automatic =
+      NEMeetingLanguage._(Locale('*'), NERoomLanguage.automatic);
+  static const chinese =
+      NEMeetingLanguage._(Locale('zh', 'CN'), NERoomLanguage.chinese);
+  static const english =
+      NEMeetingLanguage._(Locale('en', 'US'), NERoomLanguage.english);
+  static const japanese =
+      NEMeetingLanguage._(Locale('ja', 'JP'), NERoomLanguage.japanese);
+
+  final Locale locale;
+  final NERoomLanguage roomLang;
+
+  const NEMeetingLanguage._(this.locale, this.roomLang);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is NEMeetingLanguage &&
+          runtimeType == other.runtimeType &&
+          locale == other.locale;
+
+  @override
+  int get hashCode => locale.hashCode;
 }

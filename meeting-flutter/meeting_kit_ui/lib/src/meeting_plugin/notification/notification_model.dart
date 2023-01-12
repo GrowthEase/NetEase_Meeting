@@ -4,53 +4,56 @@
 part of meeting_plugin;
 
 class NEForegroundServiceConfig {
-  static final String defaultContentTitle = _Strings.defaultContentTitle;
-
-  static final String defaultContentText = _Strings.defaultContentText;
-
-  static final String defaultContentTicker = _Strings.defaultContentTicker;
-
-  static final String defaultChannelId = _Strings.defaultChannelId;
-
-  static final String defaultChannelName = _Strings.defaultChannelName;
-
-  static final String defaultChannelDesc = _Strings.defaultChannelDesc;
-
   ///
   ///前台服务通知标题
   ///
-  String contentTitle = defaultContentTitle;
+  final String contentTitle;
 
   ///
   ///前台服务通知內容
   ///
-  String contentText = defaultContentText;
+  final String contentText;
 
   ///
   ///前台服务通知图标，如果不设置默认显示应用图标
   ///
-  int smallIcon = 0;
+  final int smallIcon;
 
+  ///
   ///通知点击落页， 不配置默认应用首页
-  String? launchClassName;
+  ///
+  final String? launchClassName;
 
+  ///
   ///前台服务通知提示
-  String ticker = defaultContentTicker;
+  ///
+  final String ticker;
 
   ///
   ///前台服务通知通道id
   ///
-  String channelId = defaultChannelId;
+  final String channelId;
 
   ///
   ///台服务通知通道名称
   ///
-  String channelName = defaultChannelName;
+  final String channelName;
 
   ///
   ///前台服务通知通道描述
   ///
-  String channelDesc = defaultChannelDesc;
+  final String channelDesc;
+
+  NEForegroundServiceConfig({
+    required this.contentTitle,
+    required this.contentText,
+    required this.ticker,
+    required this.channelId,
+    required this.channelName,
+    required this.channelDesc,
+    this.smallIcon = 0,
+    this.launchClassName,
+  });
 
   _toMap() => {
         'contentTitle': contentTitle,
@@ -67,16 +70,15 @@ class NEForegroundServiceConfig {
     if (map == null) {
       return null;
     }
-    final config = new NEForegroundServiceConfig();
-    config.contentTitle =
-        map['contentTitle']?.toString() ?? defaultContentTitle;
-    config.contentText = map['contentText']?.toString() ?? defaultContentText;
-    config.smallIcon = map['smallIcon'] as int? ?? 0;
-    config.launchClassName = map['launchClassName']?.toString();
-    config.ticker = map['ticker']?.toString() ?? defaultContentTicker;
-    config.channelId = map['channelId']?.toString() ?? defaultChannelId;
-    config.channelName = map['channelName']?.toString() ?? defaultChannelName;
-    config.channelDesc = map['channelDesc']?.toString() ?? defaultChannelDesc;
-    return config;
+    return NEForegroundServiceConfig(
+      contentTitle: map['contentTitle'] as String,
+      contentText: map['contentText'] as String,
+      ticker: map['ticker'] as String,
+      channelId: map['channelId'] as String,
+      channelName: map['channelName'] as String,
+      channelDesc: map['channelDesc'] as String,
+      smallIcon: map['smallIcon'] as int? ?? 0,
+      launchClassName: map['launchClassName'] as String?,
+    );
   }
 }

@@ -5,7 +5,7 @@
 part of meeting_kit;
 
 class _NEMeetingServiceImpl extends NEMeetingService
-    with _AloggerMixin, EventTrackMixin {
+    with _AloggerMixin, EventTrackMixin, _MeetingKitLocalizationsMixin {
   static final _NEMeetingServiceImpl _instance = _NEMeetingServiceImpl._();
 
   factory _NEMeetingServiceImpl() => _instance;
@@ -26,9 +26,7 @@ class _NEMeetingServiceImpl extends NEMeetingService
       return checkParamsResult.cast();
     }
     if (await Connectivity().checkConnectivity() == ConnectivityResult.none) {
-      return _handleMeetingResultCode(
-              MeetingErrorCode.networkError, 'network error')
-          .cast();
+      return _handleMeetingResultCode(MeetingErrorCode.networkError).cast();
     }
 
     // 如果指定了会议ID，需要检查会议ID是否为个人会议ID或个人会议短ID
@@ -104,7 +102,9 @@ class _NEMeetingServiceImpl extends NEMeetingService
                 }
               : null,
         ),
-        NEJoinRoomOptions(),
+        NEJoinRoomOptions(
+          enableMyAudioDeviceOnJoinRtc: opts.enableMyAudioDeviceOnJoinRtc,
+        ),
       );
     }).map<void>((roomContext) async {
       _roomContext = roomContext;
@@ -118,40 +118,32 @@ class _NEMeetingServiceImpl extends NEMeetingService
     });
   }
 
-  NEResult<void> _handleMeetingResultCode(int code, String? msg) {
+  NEResult<void> _handleMeetingResultCode(int code, [String? msg]) {
     if (code == MeetingErrorCode.success) {
       return NEResult<void>(code: NEMeetingErrorCode.success);
     } else if (code == MeetingErrorCode.meetingAlreadyExists) {
       return NEResult<void>(
-          code: NEMeetingErrorCode.meetingAlreadyExist,
-          msg: msg ?? 'meeting already exist');
-    } else if (code == MeetingErrorCode.loginErrorAnonymousLoginNotSupport) {
-      return NEResult<void>(
-          code: NEMeetingErrorCode.failed,
-          msg: NEMeetingKitStrings.imLoginErrorAnonymousLoginUnSupported);
+          code: NEMeetingErrorCode.meetingAlreadyExist, msg: msg);
     } else if (code == MeetingErrorCode.networkError) {
       return NEResult<void>(
-          code: NEMeetingErrorCode.noNetwork, msg: msg ?? 'no network');
-    } else if (code == MeetingErrorCode.cancelled) {
-      return NEResult<void>(
-          code: NEMeetingErrorCode.cancelled,
-          msg: msg ?? NEMeetingKitStrings.cancelled);
+          code: NEMeetingErrorCode.noNetwork,
+          msg: localizations.networkUnavailableCheck);
     } else if (code == MeetingErrorCode.unauthorized) {
       return NEResult<void>(
           code: NEMeetingErrorCode.noAuth,
-          msg: msg ?? NEMeetingKitStrings.unauthorized);
+          msg: msg ?? localizations.unauthorized);
     } else if (code == MeetingErrorCode.roomLock) {
       return NEResult<void>(
           code: NEMeetingErrorCode.meetingLocked,
-          msg: NEMeetingKitStrings.meetingLocked);
+          msg: localizations.meetingLocked);
     } else if (code == MeetingErrorCode.meetingNotInProgress) {
       return NEResult<void>(
           code: NEMeetingErrorCode.meetingNotInProgress,
-          msg: NEMeetingKitStrings.meetingNotExist);
+          msg: localizations.meetingNotExist);
     } else if (code == NEMeetingErrorCode.meetingNotExist) {
       return NEResult<void>(
           code: NEMeetingErrorCode.meetingNotExist,
-          msg: NEMeetingKitStrings.meetingNotExist);
+          msg: localizations.meetingNotExist);
     } else {
       return NEResult<void>(code: code, msg: msg);
     }
@@ -169,9 +161,7 @@ class _NEMeetingServiceImpl extends NEMeetingService
       return checkParamsResult.cast();
     }
     if (await Connectivity().checkConnectivity() == ConnectivityResult.none) {
-      return _handleMeetingResultCode(
-              MeetingErrorCode.networkError, 'network error')
-          .cast();
+      return _handleMeetingResultCode(MeetingErrorCode.networkError).cast();
     }
 
     final meetingInfoResult =
@@ -194,7 +184,9 @@ class _NEMeetingServiceImpl extends NEMeetingService
               }
             : null,
       ),
-      NEJoinRoomOptions(),
+      NEJoinRoomOptions(
+        enableMyAudioDeviceOnJoinRtc: opts.enableMyAudioDeviceOnJoinRtc,
+      ),
     );
     if (joinRoomResult.code == MeetingErrorCode.success &&
         joinRoomResult.data != null) {
@@ -220,7 +212,7 @@ class _NEMeetingServiceImpl extends NEMeetingService
       if (NEMeetingKit.instance.config?.reuseIM ?? false) {
         return NEResult(
             code: NEMeetingErrorCode.reuseIMNotSupportAnonymousLogin,
-            msg: NEMeetingKitStrings.reuseIMNotSupportAnonymousLogin);
+            msg: localizations.reuseIMNotSupportAnonymousLogin);
       }
       var result = await MeetingRepository.anonymousLogin();
       if (result.isSuccess()) {
@@ -256,7 +248,7 @@ class _NEMeetingServiceImpl extends NEMeetingService
     if (param is NEStartMeetingParams && param.displayName.isEmpty) {
       return NEResult<void>(
           code: NEMeetingErrorCode.paramError,
-          msg: NEMeetingKitStrings.displayNameShouldNotBeEmpty);
+          msg: localizations.displayNameShouldNotBeEmpty);
     }
 
     if (param is NEStartMeetingParams &&
@@ -268,19 +260,19 @@ class _NEMeetingServiceImpl extends NEMeetingService
                 !TextUtils.isLetterOrDigital(param.password!)))) {
       return NEResult<void>(
           code: NEMeetingErrorCode.paramError,
-          msg: NEMeetingKitStrings.meetingPasswordNotValid);
+          msg: localizations.meetingPasswordNotValid);
     }
 
     if (param is NEJoinMeetingParams && param.displayName.isEmpty) {
       return NEResult<void>(
           code: NEMeetingErrorCode.paramError,
-          msg: NEMeetingKitStrings.displayNameShouldNotBeEmpty);
+          msg: localizations.displayNameShouldNotBeEmpty);
     }
 
     if (param is NEJoinMeetingParams && param.meetingId.isEmpty) {
       return NEResult<void>(
           code: NEMeetingErrorCode.paramError,
-          msg: NEMeetingKitStrings.meetingIdShouldNotBeEmpty);
+          msg: localizations.meetingIdShouldNotBeEmpty);
     }
 
     return null;

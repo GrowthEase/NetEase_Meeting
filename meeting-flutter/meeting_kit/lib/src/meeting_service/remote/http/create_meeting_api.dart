@@ -42,3 +42,21 @@ class _GetMeetingInfoApi extends HttpApi<MeetingInfo> {
   @override
   Map data() => {};
 }
+
+class _GetMeetingInfoApi2 extends HttpApi<MeetingInfo> {
+  final String meetingCode;
+
+  _GetMeetingInfoApi2(this.meetingCode);
+
+  @override
+  String get method => 'GET';
+
+  @override
+  String path() => 'scene/meeting/v1/invite/info/$meetingCode';
+
+  @override
+  MeetingInfo result(Map map) => MeetingInfo.fromMap(map);
+
+  @override
+  Map data() => {};
+}

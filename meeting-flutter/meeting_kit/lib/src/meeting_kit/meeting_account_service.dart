@@ -14,5 +14,5 @@ abstract class NEMeetingAccountService {
 
   _setAccountInfo(NEAccountInfo? accountInfo, [bool anonymous = false]);
 
-  bool get _isAnonymous;
+  bool get isAnonymous;
 }

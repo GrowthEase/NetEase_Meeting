@@ -25,6 +25,7 @@ class _NESettingsServiceImpl extends NESettingsService {
   Future<Map> _ensureSettings() async {
     _sharedPreferences = await SharedPreferences.getInstance();
     if (_userId != getCurrentUserId()) {
+      _beautyFaceValue = null;
       _userId = getCurrentUserId();
       _key = '${_userId}_localSetting';
       var settings = _sharedPreferences.getString(_key);
@@ -93,42 +94,42 @@ class _NESettingsServiceImpl extends NESettingsService {
   String getCurrentUserId() {
     final accountService = NEMeetingKit.instance.getAccountService();
     final id = accountService.getAccountInfo()?.userUuid;
-    final anonymous = accountService._isAnonymous;
+    final anonymous = accountService.isAnonymous;
     return id == null || id.isEmpty || anonymous ? '0' : id;
   }
 
+  int? _beautyFaceValue;
   @override
   Future<int> getBeautyFaceValue() async {
-    //TODO 从配置中获取
-    var beautyFaceValue = 0;
-    _writeSettings(Keys.keyGetBeautyFaceValue, beautyFaceValue);
-    return beautyFaceValue;
+    _beautyFaceValue ??= NEMeetingKit.instance
+            .getAccountService()
+            .getAccountInfo()
+            ?.settings
+            ?.beauty
+            ?.beauty
+            .level ??
+        0;
+    return _beautyFaceValue!;
   }
 
   @override
   Future<bool> isBeautyFaceEnabled() =>
       Future.value(SettingsRepository.isBeautyFaceSupported());
 
-  ///同步美颜漫游
-  // Future<int> _syncBeautyLevel() async {
-  //   int beautyLevel = 0;
-  //   final loginInfo = await SDKPreferences.getLoginInfo();
-  //   if (loginInfo != null) {
-  //     var accountInfo = await AuthRepository.fetchAccountInfoByToken(
-  //         loginInfo.userUuid, loginInfo.userToken);
-  //     beautyLevel = accountInfo.data?.settings?.beauty?.beauty.level ?? 0;
-  //   }
-  //   return beautyLevel;
-  // }
-
   @override
-  void setBeautyFaceValue(int value) => {
-        // NEMeetingKit.instance
-        //     .getPreRoomService()
-        //     .getPreRoomBeautyController()
-        //     .setBeautyFaceValue(value),
-        _writeSettings(Keys.keySetBeautyFaceValue, value)
-      };
+  Future<void> setBeautyFaceValue(int value) async {
+    if (_beautyFaceValue != value) {
+      if (NEMeetingKit.instance.getAccountService().isAnonymous) {
+        _beautyFaceValue = value;
+        return;
+      }
+      final result = await SettingsRepository.saveBeautyFaceValue(value);
+      if (result.isSuccess()) {
+        _beautyFaceValue = value;
+        _writeSettings(Keys.keySetBeautyFaceValue, value);
+      }
+    }
+  }
 
   /// 查询会议是否拥有直播权限
   ///
@@ -192,6 +193,11 @@ class _NESettingsServiceImpl extends NESettingsService {
         ((_settingsCache[Keys.enableVirtualBackground] as bool?) ?? true) &&
             SettingsRepository.isVirtualBackgroundFaceSupported();
     return Future.value(isVirtualBackgroundEnabled);
+  }
+
+  @override
+  bool shouldUnpubOnAudioMute() {
+    return SDKConfig.unpubAudioOnMuteConfig.enable;
   }
 
   @override

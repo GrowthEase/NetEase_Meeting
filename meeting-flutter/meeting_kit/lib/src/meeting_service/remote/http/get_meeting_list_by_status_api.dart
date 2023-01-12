@@ -15,15 +15,11 @@ class _GetMeetingListByStatusApi extends HttpApi<List<NEMeetingItem>> {
 
   @override
   String path() {
-    StringBuffer buffer = StringBuffer();
-    for (int i = 0; i < status.length; i++) {
-      if (i != status.length - 1) {
-        buffer.write('states=${status[i].index}' + '&');
-      } else {
-        buffer.write('states=${status[i].index}');
-      }
+    var query = status.map((e) => 'states=${e.index}').join('&');
+    if (query.isNotEmpty) {
+      query = '?$query';
     }
-    return 'scene/meeting/${ServiceRepository().appKey}/v1/list/0/0?${buffer.toString()}';
+    return 'scene/meeting/${ServiceRepository().appKey}/v1/list/0/0$query';
   }
 
   @override

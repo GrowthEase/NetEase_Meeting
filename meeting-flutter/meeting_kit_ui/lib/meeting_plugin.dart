@@ -18,5 +18,5 @@ part 'src/meeting_plugin/base/base_service.dart';
 part 'src/meeting_plugin/notification/notification_model.dart';
 part 'src/meeting_plugin/notification/notification_service.dart';
 part 'src/meeting_plugin/asset/asset_service.dart';
-part 'src/meeting_plugin/strings.dart';
 part 'src/meeting_plugin/platform_image/platform_image.dart';
+part 'src/meeting_plugin/image_gallery_saver/image_gallery_saver.dart';

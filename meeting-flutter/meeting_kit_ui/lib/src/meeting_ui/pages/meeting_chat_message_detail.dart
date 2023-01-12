@@ -75,7 +75,7 @@ class _MeetingImageMessageViewerState extends State<MeetingImageMessageViewer> {
     final size = MediaQuery.of(context).size;
     // double sw = min(size.width, size.height);
     double sh = max(size.width, size.height);
-    final child = SafeArea(
+    Widget child = SafeArea(
       child: Container(
         color: Colors.black,
         child: Stack(
@@ -163,14 +163,22 @@ class _MeetingImageMessageViewerState extends State<MeetingImageMessageViewer> {
       Permission.storage,
     ].request();
     if (statuses[Permission.storage] == PermissionStatus.granted) {
-      final result = await ImageGallerySaver.saveFile(path);
+      final result = await NEMeetingPlugin().imageGallerySaver.saveFile(
+            path,
+            extension: widget.message.extension,
+          );
       if (result['isSuccess'] == true) {
-        _toastResult(true, _Strings.saveToGallerySuccess);
+        _toastResult(true,
+            NEMeetingUIKitLocalizations.of(context)!.saveToGallerySuccess);
       } else {
-        _toastResult(false, _Strings.saveToGalleryFail);
+        _toastResult(
+            false, NEMeetingUIKitLocalizations.of(context)!.saveToGalleryFail);
       }
     } else {
-      _toastResult(false, _Strings.saveToGalleryFailNoPermission);
+      _toastResult(
+          false,
+          NEMeetingUIKitLocalizations.of(context)!
+              .saveToGalleryFailNoPermission);
     }
   }
 

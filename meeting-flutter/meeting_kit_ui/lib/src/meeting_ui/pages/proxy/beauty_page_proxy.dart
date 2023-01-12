@@ -15,15 +15,17 @@ class BeautyPageProxy extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      child: Navigator(
-        key: _sdkBeautyNavigatorKey,
-        observers: [BeautyRouteObserver(context)],
-        onGenerateRoute: (RouteSettings settings) {
-          return MaterialPageRoute(
-              builder: (context) => BeautySettingPage(
-                    beautyLevel: beautyLevel,
-                  ));
-        },
+      child: NEMeetingUIKitLocalizationsScope(
+        child: Navigator(
+          key: _sdkBeautyNavigatorKey,
+          observers: [BeautyRouteObserver(context)],
+          onGenerateRoute: (RouteSettings settings) {
+            return MaterialPageRoute(
+                builder: (context) => BeautySettingPage(
+                      beautyLevel: beautyLevel,
+                    ));
+          },
+        ),
       ),
       onWillPop: () async {
         await _sdkBeautyNavigatorKey.currentState!.maybePop();

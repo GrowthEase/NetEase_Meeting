@@ -4,7 +4,8 @@
 
 part of meeting_kit;
 
-class _NEMeetingKitImpl extends NEMeetingKit with EventTrackMixin {
+class _NEMeetingKitImpl extends NEMeetingKit
+    with EventTrackMixin, WidgetsBindingObserver {
   static const _tag = '_NEMeetingKitImpl';
   static const _serverUrlExtraKey = 'serverUrl';
 
@@ -17,6 +18,9 @@ class _NEMeetingKitImpl extends NEMeetingKit with EventTrackMixin {
 
   Map? assetServerConfig;
 
+  NEMeetingLanguage? _userSetLanguage;
+  ValueNotifier<Locale>? _localeNotifier;
+
   final _loginStatusChangeNotifier = ValueNotifier(false);
 
   final NERoomKit _roomKit = NERoomKit.instance;
@@ -28,11 +32,44 @@ class _NEMeetingKitImpl extends NEMeetingKit with EventTrackMixin {
   _NEMeetingKitImpl() {
     HttpHeaderRegistry().addContributor(() {
       final appKey = config?.appKey;
-      if (appKey != null) {
-        return {'AppKey': appKey};
-      }
-      return {};
+      final languageTag = localeListenable.value.toLanguageTag();
+      return {
+        if (appKey != null) 'AppKey': appKey,
+        if (languageTag != 'und') 'Accept-Language': languageTag,
+      };
     });
+    NERoomKit.instance.authService.onAuthEvent.listen((event) {
+      if (event == NEAuthEvent.kKickOut) {
+        _authListenerSet.toList().forEach((listener) => listener.onKickOut());
+      } else if (event == NEAuthEvent.kTokenExpired) {
+        _authListenerSet
+            .toList()
+            .forEach((listener) => listener.onAuthInfoExpired());
+      }
+    });
+    NERoomKit.instance.messageChannelService.addMessageChannelCallback(
+        NEMessageChannelCallback(onReceiveCustomMessage: (message) {
+      if (message.commandId == 98 && message.roomUuid == null) {
+        try {
+          final data = jsonDecode(message.data);
+          if (data['type'] == 200 && data['reason'] != null) {
+            Alog.i(
+                tag: _tag,
+                moduleName: _moduleName,
+                content: 'receive auth message: ${message.data}');
+            _authListenerSet
+                .toList()
+                .forEach((listener) => listener.onAuthInfoExpired());
+          }
+        } catch (e) {}
+      }
+    }));
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeLocales(List<Locale>? locales) {
+    localeListenable.value = _determineLocale();
   }
 
   @override
@@ -53,16 +90,17 @@ class _NEMeetingKitImpl extends NEMeetingKit with EventTrackMixin {
       return NEResult.success();
     }
     await NERoomLogService().init(loggerConfig: config.aLoggerConfig);
-    final serverUrlInExtras = config.extras?[_serverUrlExtraKey] as String?;
+    // final serverUrlInExtras = config.extras?[_serverUrlExtraKey] as String?;
     final initResult = await _roomKit.initialize(
       NERoomKitOptions(
         appKey: config.appKey,
+        serverUrl: config.serverUrl,
         serverConfig: config.serverConfig?.roomKitServerConfig,
-        extras: serverUrlInExtras.isNotEmpty
-            ? {
-                _serverUrlExtraKey: serverUrlInExtras as String,
-              }
-            : null,
+        // extras: serverUrlInExtras.isNotEmpty
+        //     ? {
+        //         _serverUrlExtraKey: serverUrlInExtras as String,
+        //       }
+        //     : null,
         reuseIM: config.reuseIM,
       ),
     );
@@ -73,7 +111,7 @@ class _NEMeetingKitImpl extends NEMeetingKit with EventTrackMixin {
         config.appKey,
         MeetingServerConfig.parse(
             config.serverConfig?.meetingServerConfig?.meetingServer ??
-                serverUrlInExtras),
+                config.serverUrl),
         config.extras,
       );
       SDKConfig.initialize(config.appKey);
@@ -98,6 +136,42 @@ class _NEMeetingKitImpl extends NEMeetingKit with EventTrackMixin {
         moduleName: _moduleName,
         content: 'initialize result: $initResult');
     return initResult;
+  }
+
+  @override
+  Future<NEResult<void>> switchLanguage(NEMeetingLanguage? language) async {
+    Alog.i(
+        tag: _tag,
+        moduleName: _moduleName,
+        type: AlogType.api,
+        content: 'switch language: ${language?.locale}');
+    final result = await NERoomKit.instance
+        .switchLanguage(language?.roomLang ?? NERoomLanguage.automatic);
+    if (result.isSuccess()) {
+      _userSetLanguage = language;
+      localeListenable.value = _determineLocale();
+    }
+    return result;
+  }
+
+  @override
+  ValueNotifier<Locale> get localeListenable {
+    _localeNotifier ??= ValueNotifier(_determineLocale());
+    return _localeNotifier!;
+  }
+
+  Locale _determineLocale() {
+    final locale = _userSetLanguage == null ||
+            _userSetLanguage == NEMeetingLanguage.automatic
+        ? WidgetsBinding.instance.platformDispatcher.locale
+        : _userSetLanguage!.locale;
+    if (locale.languageCode == 'zh') {
+      return NEMeetingLanguage.chinese.locale;
+    }
+    if (locale.languageCode == 'ja') {
+      return NEMeetingLanguage.japanese.locale;
+    }
+    return NEMeetingLanguage.english.locale;
   }
 
   @override
@@ -133,7 +207,7 @@ class _NEMeetingKitImpl extends NEMeetingKit with EventTrackMixin {
     if (config?.reuseIM ?? false) {
       return NEResult(
         code: NEMeetingErrorCode.reuseIMNotSupportAnonymousLogin,
-        msg: NEMeetingKitStrings.reuseIMNotSupportAnonymousLogin,
+        msg: localizations.reuseIMNotSupportAnonymousLogin,
       );
     }
     return _loginWithAccountInfo(
@@ -234,7 +308,7 @@ class _NEMeetingKitImpl extends NEMeetingKit with EventTrackMixin {
         tag: _tag,
         moduleName: _moduleName,
         type: AlogType.api,
-        content: 'addAuthListener');
+        content: 'addAuthListener $listener');
     _authListenerSet.add(listener);
   }
 
@@ -244,7 +318,7 @@ class _NEMeetingKitImpl extends NEMeetingKit with EventTrackMixin {
         tag: _tag,
         moduleName: _moduleName,
         type: AlogType.api,
-        content: 'removeAuthListener');
+        content: 'removeAuthListener $listener');
     _authListenerSet.remove(listener);
   }
 

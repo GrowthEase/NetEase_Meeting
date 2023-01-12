@@ -39,13 +39,7 @@ class _Executors {
         'versionCode': SDKConfig.sdkVersionCode,
         'clientType': 'android',
         ...HttpHeaderRegistry()._collectHeaders(),
-        if (_getLanguageTag() != null) 'Accept-Language': _getLanguageTag(),
       };
-
-  String? _getLanguageTag() {
-    final locale = WidgetsBinding.instance!.platformDispatcher.locale;
-    return locale.languageCode != 'und' ? locale.toLanguageTag() : null;
-  }
 
   static _Executors? _instance;
 

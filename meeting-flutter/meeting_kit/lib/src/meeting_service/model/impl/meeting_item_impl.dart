@@ -142,6 +142,15 @@ class _MeetingItemImpl extends NEMeetingItem {
     _roleBinds = roleBinds;
   }
 
+  String? _inviteUrl;
+
+  @override
+  get inviteUrl => _inviteUrl;
+
+  set inviteUrl(String? value) {
+    _inviteUrl = value;
+  }
+
   Map handleRoomProperties() {
     var roomProperties = {}; // 参考 创建会议 ，从seeting里获取controls就可以了
     if (settings.controls?.isEmpty ?? true) {
@@ -192,7 +201,7 @@ class _MeetingItemImpl extends NEMeetingItem {
         /// flutter 传递 native 使用
         'meetingUniqueId': _meetingId,
         'roomUuid': _roomUuid,
-        'subject': _subject,
+        if (_subject != null) 'subject': _subject,
         'meetingNum': _meetingNum,
         'meetingId': _meetingNum,
         'startTime': _startTime,
@@ -284,6 +293,7 @@ class _MeetingItemImpl extends NEMeetingItem {
     impl.extraData = settings.extraData;
     impl.roleBinds = settings.roleBinds;
     impl.noSip = settings.noSip;
+    impl.inviteUrl = map['meetingInviteUrl'] as String?;
     return impl;
   }
 

@@ -4,7 +4,11 @@
 
 #import "MeetingPlugin.h"
 #import "FLTImageUtil.h"
-
+#if __has_include(<netease_meeting_ui/netease_meeting_ui-Swift.h>)
+#import <netease_meeting_ui/netease_meeting_ui-Swift.h>
+#else
+#import "netease_meeting_ui-Swift.h"
+#endif
 @implementation MeetingPlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
   FlutterMethodChannel *channel =
@@ -15,16 +19,16 @@
 }
 
 - (void)handleMethodCall:(FlutterMethodCall *)call result:(FlutterResult)result {
-  //获取模块id
+  // 获取模块id
   id modelName = nil;
   NSDictionary *arguments = call.arguments;
   modelName = arguments[@"module"];
-  //模块校验
+  // 模块校验
   if (!modelName || ![modelName isKindOfClass:[NSString class]]) {
     result(@(-1001));
     return;
   }
-  //转发
+  // 转发
 #ifdef DEBUG
   NSLog(@"[iOS] Call Model:%@ Menthod:%@ argument:%@", modelName, call.method, call.arguments);
 #endif
@@ -65,6 +69,9 @@
       result(nil);
     }
     return;
+  } else if ([modelName isEqualToString:@"NEImageGallerySaver"]) {
+    ImageGallerySaver *saver = [[ImageGallerySaver alloc] init];
+    [saver handle:call result:result];
   } else {
     result(FlutterMethodNotImplemented);
   }
