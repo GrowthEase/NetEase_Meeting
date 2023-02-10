@@ -531,7 +531,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
       if (FileTypeUtils.getMimeType(path) == '*/*') {
         mime = FileTypeUtils.getMimeType(name);
       }
-      result = await OpenFile.open(path, type: mime);
+      result = await OpenFilex.open(path, type: mime);
     } catch (e) {
       resultType = ResultType.error;
       error = e.toString();

@@ -19,10 +19,11 @@ dependencies:
 
   path_provider: ^2.0.11
   uuid: ^3.0.6
-  device_info_plus: 4.0.0
-  device_info_plus_platform_interface: 2.3.0+1
+  device_info_plus: ^5.0.0
+  # device_info_plus_platform_interface: 2.3.0+1
 
   netease_roomkit: ^0.0.5-rc.0
+  yunxin_alog: ^1.0.11
 
 dev_dependencies:
   flutter_test:
