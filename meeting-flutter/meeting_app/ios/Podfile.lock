@@ -1,0 +1,228 @@
+PODS:
+  - connectivity (0.0.1):
+    - Flutter
+    - Reachability
+  - device_info_plus (0.0.1):
+    - Flutter
+  - DKImagePickerController/Core (4.3.4):
+    - DKImagePickerController/ImageDataManager
+    - DKImagePickerController/Resource
+  - DKImagePickerController/ImageDataManager (4.3.4)
+  - DKImagePickerController/PhotoGallery (4.3.4):
+    - DKImagePickerController/Core
+    - DKPhotoGallery
+  - DKImagePickerController/Resource (4.3.4)
+  - DKPhotoGallery (0.0.17):
+    - DKPhotoGallery/Core (= 0.0.17)
+    - DKPhotoGallery/Model (= 0.0.17)
+    - DKPhotoGallery/Preview (= 0.0.17)
+    - DKPhotoGallery/Resource (= 0.0.17)
+    - SDWebImage
+    - SwiftyGif
+  - DKPhotoGallery/Core (0.0.17):
+    - DKPhotoGallery/Model
+    - DKPhotoGallery/Preview
+    - SDWebImage
+    - SwiftyGif
+  - DKPhotoGallery/Model (0.0.17):
+    - SDWebImage
+    - SwiftyGif
+  - DKPhotoGallery/Preview (0.0.17):
+    - DKPhotoGallery/Model
+    - DKPhotoGallery/Resource
+    - SDWebImage
+    - SwiftyGif
+  - DKPhotoGallery/Resource (0.0.17):
+    - SDWebImage
+    - SwiftyGif
+  - file_picker (0.0.1):
+    - DKImagePickerController/PhotoGallery
+    - Flutter
+  - Flutter (1.0.0)
+  - NECommonExt (0.1.0)
+  - NECoreIMKit (9.4.0):
+    - NECoreKit
+    - NIMSDK_LITE (>= 9.6.4)
+    - YXAlog (= 1.0.7)
+  - NECoreKit (9.4.0):
+    - NECommonExt (= 0.1.0)
+    - YXAlog (= 1.0.7)
+  - NERoomKit (1.13.0):
+    - NECoreIMKit (>= 9.3.2)
+    - NECoreKit (>= 9.3.2)
+    - NERtcSDK/Beauty (>= 4.6.50)
+    - NERtcSDK/FaceDetect (>= 4.6.50)
+    - NERtcSDK/RtcBasic (>= 4.6.50)
+    - NERtcSDK/Segment (>= 4.6.50)
+    - NEScreenShareHost (= 0.5.3)
+    - NIMSDK_LITE (= 9.9.3)
+  - NERtcSDK/AiDenoise (4.6.50):
+    - NMCBasicModule (>= 1.9.0)
+  - NERtcSDK/AiHowling (4.6.50):
+    - NMCBasicModule (>= 1.9.0)
+  - NERtcSDK/Beauty (4.6.50):
+    - NMCBasicModule (>= 1.9.0)
+  - NERtcSDK/FaceDetect (4.6.50):
+    - NMCBasicModule (>= 1.9.0)
+  - NERtcSDK/RtcBasic (4.6.50):
+    - NMCBasicModule (>= 1.9.0)
+  - NERtcSDK/Segment (4.6.50):
+    - NMCBasicModule (>= 1.9.0)
+  - NEScreenShareBroadcaster (0.5.3):
+    - NEWEYUV (~> 0.0.2)
+  - NEScreenShareHost (0.5.3)
+  - netease_meeting_ui (0.0.1):
+    - Flutter
+  - netease_roomkit (0.0.1):
+    - Flutter
+    - NERoomKit (= 1.13.0)
+    - NERtcSDK/AiDenoise (= 4.6.50)
+    - NERtcSDK/AiHowling (= 4.6.50)
+    - NERtcSDK/Beauty (= 4.6.50)
+    - NERtcSDK/FaceDetect (= 4.6.50)
+    - NERtcSDK/RtcBasic (= 4.6.50)
+    - NERtcSDK/Segment (= 4.6.50)
+    - NEWEYUV
+    - NIMSDK_LITE (= 9.9.3)
+  - NEWEYUV (0.0.2)
+  - NIMSDK_LITE (9.9.3):
+    - NIMSDK_LITE/NOS (= 9.9.3)
+  - NIMSDK_LITE/NOS (9.9.3)
+  - NMCBasicModule (2.0.0)
+  - nos (0.0.1):
+    - Flutter
+  - open_filex (0.0.2):
+    - Flutter
+  - package_info (0.0.1):
+    - Flutter
+  - path_provider_ios (0.0.1):
+    - Flutter
+  - permission_handler_apple (9.0.4):
+    - Flutter
+  - Reachability (3.2)
+  - SDWebImage (5.15.5):
+    - SDWebImage/Core (= 5.15.5)
+  - SDWebImage/Core (5.15.5)
+  - shared_preferences_ios (0.0.1):
+    - Flutter
+  - SwiftyGif (5.4.4)
+  - url_launcher_ios (0.0.1):
+    - Flutter
+  - wakelock (0.0.1):
+    - Flutter
+  - webview_flutter_wkwebview (0.0.1):
+    - Flutter
+  - yunxin_alog (0.0.1):
+    - Flutter
+    - YXAlog (~> 1.0.7)
+  - YXAlog (1.0.7)
+
+DEPENDENCIES:
+  - connectivity (from `.symlinks/plugins/connectivity/ios`)
+  - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
+  - file_picker (from `.symlinks/plugins/file_picker/ios`)
+  - Flutter (from `Flutter`)
+  - NEScreenShareBroadcaster (= 0.5.3)
+  - netease_meeting_ui (from `.symlinks/plugins/netease_meeting_ui/ios`)
+  - netease_roomkit (from `.symlinks/plugins/netease_roomkit/ios`)
+  - nos (from `.symlinks/plugins/nos/ios`)
+  - open_filex (from `.symlinks/plugins/open_filex/ios`)
+  - package_info (from `.symlinks/plugins/package_info/ios`)
+  - path_provider_ios (from `.symlinks/plugins/path_provider_ios/ios`)
+  - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
+  - shared_preferences_ios (from `.symlinks/plugins/shared_preferences_ios/ios`)
+  - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
+  - wakelock (from `.symlinks/plugins/wakelock/ios`)
+  - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/ios`)
+  - yunxin_alog (from `.symlinks/plugins/yunxin_alog/ios`)
+
+SPEC REPOS:
+  https://github.com/CocoaPods/Specs.git:
+    - DKImagePickerController
+    - DKPhotoGallery
+    - NECommonExt
+    - NECoreIMKit
+    - NECoreKit
+    - NERoomKit
+    - NERtcSDK
+    - NEScreenShareBroadcaster
+    - NEScreenShareHost
+    - NEWEYUV
+    - NIMSDK_LITE
+    - NMCBasicModule
+    - Reachability
+    - SDWebImage
+    - SwiftyGif
+    - YXAlog
+
+EXTERNAL SOURCES:
+  connectivity:
+    :path: ".symlinks/plugins/connectivity/ios"
+  device_info_plus:
+    :path: ".symlinks/plugins/device_info_plus/ios"
+  file_picker:
+    :path: ".symlinks/plugins/file_picker/ios"
+  Flutter:
+    :path: Flutter
+  netease_meeting_ui:
+    :path: ".symlinks/plugins/netease_meeting_ui/ios"
+  netease_roomkit:
+    :path: ".symlinks/plugins/netease_roomkit/ios"
+  nos:
+    :path: ".symlinks/plugins/nos/ios"
+  open_filex:
+    :path: ".symlinks/plugins/open_filex/ios"
+  package_info:
+    :path: ".symlinks/plugins/package_info/ios"
+  path_provider_ios:
+    :path: ".symlinks/plugins/path_provider_ios/ios"
+  permission_handler_apple:
+    :path: ".symlinks/plugins/permission_handler_apple/ios"
+  shared_preferences_ios:
+    :path: ".symlinks/plugins/shared_preferences_ios/ios"
+  url_launcher_ios:
+    :path: ".symlinks/plugins/url_launcher_ios/ios"
+  wakelock:
+    :path: ".symlinks/plugins/wakelock/ios"
+  webview_flutter_wkwebview:
+    :path: ".symlinks/plugins/webview_flutter_wkwebview/ios"
+  yunxin_alog:
+    :path: ".symlinks/plugins/yunxin_alog/ios"
+
+SPEC CHECKSUMS:
+  connectivity: c4130b2985d4ef6fd26f9702e886bd5260681467
+  device_info_plus: e5c5da33f982a436e103237c0c85f9031142abed
+  DKImagePickerController: b512c28220a2b8ac7419f21c491fc8534b7601ac
+  DKPhotoGallery: fdfad5125a9fdda9cc57df834d49df790dbb4179
+  file_picker: ce3938a0df3cc1ef404671531facef740d03f920
+  Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
+  NECommonExt: cf124cd7ece5b638e7ce1e94241dbe7c17a6408b
+  NECoreIMKit: 1f8b919e481d87cabc8b6d96d76059034a91dc71
+  NECoreKit: 2c7c734907ba37d1b3d594eea629f1f4aafb1edd
+  NERoomKit: c9b0d8b6a17e87f815bc8ae74d0138720792a714
+  NERtcSDK: 4a123939a87d7d1382c9de30e33a63facf904710
+  NEScreenShareBroadcaster: 901a3589497383b25cd5b9cdf82295a6b5f2e47c
+  NEScreenShareHost: a8c2c2b2a53b699365a630df44404bdf8525cdcb
+  netease_meeting_ui: f0e3e3437d192902be95e9e31bb0587b769cb466
+  netease_roomkit: 7a2cedc8eccd9acabc4cbf966b03a3d7e42ca522
+  NEWEYUV: 98dd84c08b6eb1437f7c228603e803aaa34e8aea
+  NIMSDK_LITE: 93890684fab9074ba8c5d949e47e24856a356bcb
+  NMCBasicModule: 1ba35e839f95e93c4f4df12c3271104937290aef
+  nos: e45d078df0d039a6b72c7cbf975010b89954d7d5
+  open_filex: 6e26e659846ec990262224a12ef1c528bb4edbe4
+  package_info: 873975fc26034f0b863a300ad47e7f1ac6c7ec62
+  path_provider_ios: 14f3d2fd28c4fdb42f44e0f751d12861c43cee02
+  permission_handler_apple: 44366e37eaf29454a1e7b1b7d736c2cceaeb17ce
+  Reachability: 33e18b67625424e47b6cde6d202dce689ad7af96
+  SDWebImage: fd7e1a22f00303e058058278639bf6196ee431fe
+  shared_preferences_ios: 548a61f8053b9b8a49ac19c1ffbc8b92c50d68ad
+  SwiftyGif: 93a1cc87bf3a51916001cf8f3d63835fb64c819f
+  url_launcher_ios: ae1517e5e344f5544fb090b079e11f399dfbe4d2
+  wakelock: d0fc7c864128eac40eba1617cb5264d9c940b46f
+  webview_flutter_wkwebview: b7e70ef1ddded7e69c796c7390ee74180182971f
+  yunxin_alog: c5532d2a6ab378baef9927fcae5ab19fe36c1103
+  YXAlog: ac9bab3aff1326caa72cc25aedc358bc8d4f1b31
+
+PODFILE CHECKSUM: 6b008c0a32a875672e5a555250c0b8366a0b2182
+
+COCOAPODS: 1.11.2
