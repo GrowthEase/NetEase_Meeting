@@ -201,13 +201,11 @@ abstract class EventTrackMixin {
       {String module = _TrackModuleName.meeting,
       String? category,
       Map? extra}) {
-
   }
 
   void trackImmediateEvent(String name,
       {String module = _TrackModuleName.meeting,
       String? category,
       Map? extra}) {
-
   }
 }

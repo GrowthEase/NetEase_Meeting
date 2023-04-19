@@ -28,7 +28,6 @@ class NEImageGallerySaver extends _Service {
       {int quality = 80,
       String? name,
       bool isReturnImagePathOfIOS = false}) async {
-    assert(imageBytes != null);
     final result = await _methodChannel.invokeMethod(
       'saveImageToGallery',
       buildArguments(arg: <String, dynamic>{
@@ -44,7 +43,6 @@ class NEImageGallerySaver extends _Service {
   /// Save the PNG，JPG，JPEG image or video located at [file] to the local device media gallery.
   Future saveFile(String file,
       {String? name, String? extension, bool isReturnPathOfIOS = false}) async {
-    assert(file != null);
     final result = await _methodChannel.invokeMethod(
       'saveFileToGallery',
       buildArguments(arg: <String, dynamic>{

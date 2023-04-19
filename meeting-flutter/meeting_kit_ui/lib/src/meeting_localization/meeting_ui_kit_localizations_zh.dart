@@ -213,8 +213,7 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get micphoneNotWorksDialogTitle => '无法使用麦克风';
 
   @override
-  String get micphoneNotWorksDialogMessage =>
-      '检测到您正在讲话，如需发言，请\n点击\"解除静音\"按钮后再次发言';
+  String get micphoneNotWorksDialogMessage => '您已静音，请点击\"解除静音\"开启麦克风';
 
   @override
   String get hostOpenCameraTips => '主持人已重新打开您的摄像头，确认打开？';
@@ -434,12 +433,6 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get headsetState => '您正在使用耳机';
-
-  @override
-  String get meetingId => '会议ID';
-
-  @override
-  String get shortMeetingId => '会议短号';
 
   @override
   String get copy => '复制';
@@ -691,10 +684,10 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get meetingTime => '会议时间：';
 
   @override
-  String get meetingID => '会议ID：';
+  String get meetingNum => '会议号：';
 
   @override
-  String get shortMeetingID => '会议短号：';
+  String get shortMeetingNum => '会议短号：';
 
   @override
   String get invitationUrl => '入会链接：';
@@ -731,6 +724,12 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get microphonePermission => '麦克风';
+
+  @override
+  String get bluetoothPermission => '蓝牙';
+
+  @override
+  String get phoneStatePermission => '电话';
 
   @override
   String get noPermission => '权限未授权';
@@ -800,4 +799,22 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get userHasBeenRevokeCoHostRole => '已被取消联席主持人';
+
+  @override
+  String get isInCall => '正在接听系统电话';
+
+  @override
+  String get networkConnectionGood => '网络连接良好';
+
+  @override
+  String get networkConnectionGeneral => '网络连接一般';
+
+  @override
+  String get networkConnectionPoor => '网络连接较差';
+
+  @override
+  String get localLatency => '延迟';
+
+  @override
+  String get packetLossRate => '丢包率';
 }

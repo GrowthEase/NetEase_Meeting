@@ -20,3 +20,5 @@ part 'src/meeting_plugin/notification/notification_service.dart';
 part 'src/meeting_plugin/asset/asset_service.dart';
 part 'src/meeting_plugin/platform_image/platform_image.dart';
 part 'src/meeting_plugin/image_gallery_saver/image_gallery_saver.dart';
+part 'src/meeting_plugin/bluetooth/bluetooth_service.dart';
+part 'src/meeting_plugin/phone_state/phone_state_service.dart';

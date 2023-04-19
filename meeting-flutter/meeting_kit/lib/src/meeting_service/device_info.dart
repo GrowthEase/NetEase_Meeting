@@ -29,10 +29,10 @@ class DeviceInfo {
       if (Platform.isAndroid) {
         _platform = 'Android';
         var androidInfo = await plat.androidInfo;
-        _manufacturer = androidInfo.manufacturer ?? 'unknown';
+        _manufacturer = androidInfo.manufacturer;
         _clientType = ClientType.android;
-        _model = androidInfo.model ?? 'unknown';
-        _osVer = androidInfo.version.release ?? 'unknown';
+        _model = androidInfo.model;
+        _osVer = androidInfo.version.release;
       } else if (Platform.isIOS) {
         _platform = 'iOS';
         var iosDeviceInfo = await plat.iosInfo;

@@ -9,15 +9,36 @@
 #else
 #import "netease_meeting_ui-Swift.h"
 #endif
+
+@interface MeetingPlugin ()
+@property(nonatomic, strong) TelephoneServer *phoneServer;
+@end
+
 @implementation MeetingPlugin
+- (TelephoneServer *)phoneServer {
+  if (!_phoneServer) {
+    _phoneServer = [TelephoneServer new];
+  }
+  return _phoneServer;
+}
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
   FlutterMethodChannel *channel =
       [FlutterMethodChannel methodChannelWithName:@"meeting_plugin"
                                   binaryMessenger:[registrar messenger]];
-  MeetingPlugin *instance = [[MeetingPlugin alloc] init];
+
+  MeetingPlugin *instance = [[MeetingPlugin alloc] initWithMessenger:[registrar messenger]];
   [registrar addMethodCallDelegate:instance channel:channel];
 }
-
+- (instancetype)initWithMessenger:(NSObject<FlutterBinaryMessenger> *)messenger {
+  self = [super init];
+  if (self) {
+    FlutterEventChannel *channel =
+        [FlutterEventChannel eventChannelWithName:@"meeting_plugin.phone_state_service.states"
+                                  binaryMessenger:messenger];
+    [channel setStreamHandler:self.phoneServer];
+  }
+  return self;
+}
 - (void)handleMethodCall:(FlutterMethodCall *)call result:(FlutterResult)result {
   // 获取模块id
   id modelName = nil;

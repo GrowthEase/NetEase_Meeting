@@ -15,6 +15,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:netease_common/netease_common.dart';
@@ -65,6 +66,7 @@ part 'src/meeting_ui/widget/meeting_duration.dart';
 part 'src/meeting_ui/widget/slider_widget.dart';
 part 'src/meeting_ui/widget/round_slider_trackshape.dart';
 part 'src/meeting_ui/widget/dots_indicator.dart';
+part 'src/meeting_ui/widget/pointer_event_aware.dart';
 part 'src/meeting_ui/service/meeting_ui_kit.dart';
 part 'src/meeting_ui/pages/meeting_waiting_page.dart';
 part 'src/meeting_ui/arguments/meeting_waiting_arguments.dart';
@@ -110,6 +112,8 @@ part 'src/meeting_ui/uikit/style/app_style_util.dart';
 part 'src/meeting_ui/uikit/permission/permission_helper.dart';
 part 'src/meeting_ui/uikit/helpers.dart';
 
+part 'src/meeting_ui/utils/image_size_getter.dart';
+
 class MeetingCore {
   static MeetingCore? _instance;
   static const _tag = 'MeetingCore';
@@ -130,9 +134,8 @@ class MeetingCore {
     if (_foregroundConfig != null) return _foregroundConfig;
     if (Platform.isAndroid) {
       final sdkInt = await DeviceInfoPlugin()
-              .androidInfo
-              .then((value) => value.version.sdkInt) ??
-          0;
+          .androidInfo
+          .then((value) => value.version.sdkInt);
       // // Android Q以上屏幕共享需要一个前台Service
       if (sdkInt >= 29) {
         return NEForegroundServiceConfig(

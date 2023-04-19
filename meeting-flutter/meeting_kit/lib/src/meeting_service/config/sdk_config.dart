@@ -15,8 +15,8 @@ part of meeting_service;
 class SDKConfig {
   ///android version修改对应packages/meeting_sdk_android/gradle.properties的内容
   ///iOS version修改packages/meeting_sdk_ios/NEMeetingScript/spec/NEMeetingSDK.podspec的内容
-  static const String sdkVersionName = '3.8.0';
-  static const int sdkVersionCode = 30800;
+  static const String sdkVersionName = '3.10.0';
+  static const int sdkVersionCode = 31000;
   static const String sdkType = 'official'; //pub
 
   static const _tag = 'SDKConfig';
@@ -24,69 +24,73 @@ class SDKConfig {
   static const periodicRefreshConfigTime =
       const Duration(hours: 1); // 定时刷新sdkConfig时间
 
-  static String? _appKey;
-  static bool _initialized = false;
-  static bool _periodicRefreshTaskScheduled = false;
+  final String appKey;
+  Timer? _timer;
+  Completer<bool>? _initialized;
+  bool _periodicRefreshTaskScheduled = false;
+  bool _disposed = false;
 
-  static final StreamController<bool> _initNotify =
-      StreamController.broadcast();
+  final StreamController<bool> _configUpdated = StreamController.broadcast();
 
-  static Stream<bool> get initNotifyStream => _initNotify.stream;
+  Stream<bool> get onConfigUpdated => _configUpdated.stream;
 
-  static SDKConfig instance = SDKConfig._();
+  static late SDKConfig current = SDKConfig('');
 
-  SDKConfig._() {
-    Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
-      if (!_initialized &&
-          result != ConnectivityResult.none &&
-          _appKey != null) {
-        _doFetchConfig(_appKey!);
-      }
-    });
-  }
+  SDKConfig(this.appKey);
 
-  static void _schedulePeriodicRefreshConfigTask() {
+  void _schedulePeriodicRefreshConfigTask() {
     if (_periodicRefreshTaskScheduled) {
       return;
     }
     _periodicRefreshTaskScheduled = true;
-    Timer.periodic(periodicRefreshConfigTime, (Timer timer) {
-      if (_appKey != null) {
-        _doFetchConfig(_appKey!, forceRefresh: true);
-      }
+    _timer = Timer.periodic(periodicRefreshConfigTime, (Timer timer) {
+      _doFetchConfig();
     });
   }
 
-  static Future<bool> initialize(String appKey) async {
-    return _doFetchConfig(appKey);
+  Future<bool> initialize() async {
+    Alog.i(
+      tag: _tag,
+      moduleName: _moduleName,
+      content: 'initialize: version=$sdkVersionName type=$sdkType app=$appKey',
+    );
+    if (_initialized == null) {
+      _initialized = Completer();
+      _doFetchConfig();
+    }
+    return _initialized!.future;
   }
 
-  static Future<bool> _doFetchConfig(String appKey,
-      {bool forceRefresh = false}) async {
-    if (TextUtils.isEmpty(appKey)) {
+  void dispose() {
+    _disposed = true;
+    _configUpdated.close();
+    _timer?.cancel();
+    if (_initialized != null && !_initialized!.isCompleted) {
+      _initialized!.complete(false);
+    }
+  }
+
+  Future<bool> _doFetchConfig() async {
+    if (TextUtils.isEmpty(appKey) || _disposed) {
       return false;
     }
-    if (_appKey == appKey && _initialized && !forceRefresh) {
-      return true;
-    }
-    Alog.i(
-        tag: _tag,
-        moduleName: _moduleName,
-        content: 'initialize: version=$sdkVersionName type=$sdkType');
-    _appKey = appKey;
     for (var index = 0; index < getSdkConfigRetryTime; ++index) {
+      await ensureNetwork();
+      if (_disposed) return false;
       var sdkGlobalConfig = await HttpApiHelper._getSDKGlobalConfig(appKey);
-      if (_appKey != appKey) return false;
+      if (_disposed) return false;
       if (sdkGlobalConfig.code == MeetingErrorCode.success) {
         Alog.i(
             tag: _tag,
             moduleName: _moduleName,
-            content: 'SDKConfig initialize success');
+            content: 'fetch sdk config success');
         var globalConfig = sdkGlobalConfig.data;
-        instance.configs.clear();
-        instance.configs.addAll(globalConfig!.configs);
-        _initialized = true;
-        _initNotify.add(true);
+        configs.clear();
+        configs.addAll(globalConfig!.configs);
+        if (_initialized != null && !_initialized!.isCompleted) {
+          _initialized!.complete(true);
+        }
+        _configUpdated.add(true);
         _schedulePeriodicRefreshConfigTask();
         return true;
       } else {
@@ -98,68 +102,83 @@ class SDKConfig {
         await Future.delayed(Duration(seconds: pow(2, index + 1).toInt()));
       }
     }
+    ensureNetwork().then((value) => _doFetchConfig());
     return false;
+  }
+
+  Future ensureNetwork() async {
+    if (await Connectivity().checkConnectivity() == ConnectivityResult.none) {
+      await Connectivity()
+          .onConnectivityChanged
+          .firstWhere((element) => element != ConnectivityResult.none);
+    }
   }
 
   Map configs = {};
 
   /// 切换焦点视频的间隔（单位：s）
-  static int get focusSwitchInterval =>
-      (instance.configs['focusSwitchInterval'] ?? 5) as int;
+  int get focusSwitchInterval => (configs['focusSwitchInterval'] ?? 2) as int;
 
   /// 订阅视频流个数 (deviceType相关
-  static int get videoStreamCount =>
-      (instance.configs['videoStreamCount'] ?? 0) as int;
+  int get videoStreamCount => (configs['videoStreamCount'] ?? 0) as int;
 
   /// 画廊单页显示数量 (clientType相关)
-  static int get galleryPageSize =>
-      (instance.configs['galleryPageSize'] ?? 4) as int;
+  int get galleryPageSize => (configs['galleryPageSize'] ?? 4) as int;
 
   /// 美颜参数配置：证书，开关状态
-  static BeautyGlobalConfig get beauty =>
-      BeautyGlobalConfig.fromJson(_functionConfig('beauty'));
+  // BeautyGlobalConfig get beauty =>
+  //     BeautyGlobalConfig.fromJson(_functionConfig('beauty'));
 
   /// 直播开关状态
-  static FunBaseConfig get live =>
-      FunBaseConfig.fromJson(_functionConfig('meetingLive'));
+  // FunBaseConfig get live =>
+  //     FunBaseConfig.fromJson(_functionConfig('meetingLive'));
 
   /// 白板版本配置
-  static WhiteBoardGlobalConfig get whiteboardConfig =>
-      WhiteBoardGlobalConfig.fromJson(_functionConfig('whiteboard'));
+  // WhiteBoardGlobalConfig get whiteboardConfig =>
+  //     WhiteBoardGlobalConfig.fromJson(_functionConfig('whiteboard'));
 
   /// app config
-  static AppRoomResConfig get appRoomResConfig =>
+  AppRoomResConfig get _appRoomResConfig =>
       AppRoomResConfig.fromJson(_config('APP_ROOM_RESOURCE'));
+  bool get isSipSupported => _appRoomResConfig.sip;
+  bool get isLiveSupported => _appRoomResConfig.live;
+  bool get isWhiteboardSupported => _appRoomResConfig.whiteboard;
+  bool get isCloudRecordSupported => _appRoomResConfig.record;
+  bool get isMeetingChatSupported => _appRoomResConfig.chatRoom;
 
   /// 聊天室
-  static MeetingChatroomServerConfig get meetingChatroomConfig =>
+  MeetingChatroomServerConfig get meetingChatroomConfig =>
       MeetingChatroomServerConfig.fromJson(_config('MEETING_CHATROOM'));
 
   /// 美颜
-  static MeetingBeautyConfig get meetingBeautyConfig =>
+  MeetingBeautyConfig get _meetingBeautyConfig =>
       MeetingBeautyConfig.fromJson(_config('MEETING_BEAUTY'));
+  bool get isBeautyFaceSupported => _meetingBeautyConfig.enable;
 
   /// 虚拟背景
-  static MeetingFeatureConfig get meetingVirtualBackgroundConfig =>
+  MeetingFeatureConfig get _meetingVirtualBackgroundConfig =>
       MeetingFeatureConfig.fromJson(_config('MEETING_VIRTUAL_BACKGROUND'));
+  bool get isVirtualBackgroundSupported =>
+      _meetingVirtualBackgroundConfig.enable;
 
   /// 最大时长快到时间时进行提示
-  static MeetingFeatureConfig get meetingEndTimeTipConfig =>
+  MeetingFeatureConfig get _meetingEndTimeTipConfig =>
       MeetingFeatureConfig.fromJson(_config('ROOM_END_TIME_TIP'),
           fallback: true);
+  bool get isMeetingEndTimeTipSupported => _meetingEndTimeTipConfig.enable;
 
   /// 静音时关闭音频流Pub通道，默认为true
-  static MeetingFeatureConfig get unpubAudioOnMuteConfig =>
+  MeetingFeatureConfig get unpubAudioOnMuteConfig =>
       MeetingFeatureConfig.fromJson(_config('UNPUB_AUDIO_ON_MUTE'),
           fallback: true);
 
-  static Map<String, dynamic> _functionConfig(String function) {
-    var config = instance.configs['functionConfigs'] ?? {};
-    return (config[function] ?? <String, dynamic>{}) as Map<String, dynamic>;
-  }
+  // Map<String, dynamic> _functionConfig(String function) {
+  //   var config = configs['functionConfigs'] ?? {};
+  //   return (config[function] ?? <String, dynamic>{}) as Map<String, dynamic>;
+  // }
 
-  static Map<String, dynamic> _config(String function) {
-    var config = instance.configs['appConfig'] ?? {};
+  Map<String, dynamic> _config(String function) {
+    var config = configs['appConfig'] ?? {};
     return (config[function] ?? <String, dynamic>{}) as Map<String, dynamic>;
   }
 }

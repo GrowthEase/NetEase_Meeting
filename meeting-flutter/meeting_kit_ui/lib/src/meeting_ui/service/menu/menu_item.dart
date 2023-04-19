@@ -39,8 +39,9 @@ class NEMenuItemInfo {
   /// flutter平台下，如果传入该字段，则会从flutter平台加载资源
   final String? platformPackage;
 
-  const NEMenuItemInfo._nullable(
-      {this.textGetter, this.text, this.icon, this.platformPackage});
+  const NEMenuItemInfo._nullable({this.text, this.icon})
+      : textGetter = null,
+        platformPackage = null;
 
   const NEMenuItemInfo(
       {this.textGetter, this.text, this.icon, this.platformPackage})

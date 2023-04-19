@@ -15,7 +15,7 @@ abstract class NEPreMeetingService {
   Future<NEResult<NEMeetingItem>> editMeeting(NEMeetingItem item);
 
   /// 取消预约会议，开始前可以取消
-  Future<NEResult<void>> cancelMeeting(int meetingUniqueId);
+  Future<NEResult<void>> cancelMeeting(int meetingId);
 
   /// 根据唯一id获取会议信息
   Future<NEResult<NEMeetingItem>> getMeetingItemById(String meetingNum);

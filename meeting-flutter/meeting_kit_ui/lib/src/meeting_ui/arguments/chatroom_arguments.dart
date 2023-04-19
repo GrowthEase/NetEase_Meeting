@@ -43,23 +43,22 @@ class ChatRoomMessageSource {
 
   StreamController<int> unreadNotify = StreamController.broadcast();
 
+  final SDKConfig sdkConfig;
   final NEMeetingChatroomConfig _chatroomConfig;
 
-  ChatRoomMessageSource(this._chatroomConfig);
+  ChatRoomMessageSource(this.sdkConfig, this._chatroomConfig);
 
   bool get isFileMessageEnabled {
-    return SDKConfig.meetingChatroomConfig.enableFileMessage &&
+    return sdkConfig.meetingChatroomConfig.enableFileMessage &&
         _chatroomConfig.enableFileMessage;
   }
 
   bool get isImageMessageEnabled {
-    return SDKConfig.meetingChatroomConfig.enableImageMessage &&
+    return sdkConfig.meetingChatroomConfig.enableImageMessage &&
         _chatroomConfig.enableImageMessage;
   }
 
   Stream get messageStream => messageNotify.stream;
-
-  Stream get unreadStream => unreadNotify.stream;
 
   int _unread = 0;
   final ValueNotifier<int> _unreadMessageListenable = ValueNotifier(0);
@@ -372,22 +371,16 @@ mixin ImageMessageState on MessageState {
   }
 
   void _getSizeAsync(String path) async {
-    try {
-      if (width == null || height == null) {
-        final size = await isg.ImageSizeGetter.getSizeAsync(
-            isg.AsyncImageInput.input(FileInput(File(path))));
-        width = size.width;
-        height = size.height;
-        assert(() {
-          print('thumbImageInfo3: $uuid, $path, $size');
-          return true;
-        }());
-      }
-      _thumbImageInfo!.complete(_ImageInfo(path, width!, height!));
-    } catch (e) {
-      print('_getSizeAsync error: $uuid $e');
-      _thumbImageInfo!.complete(_ImageInfo(path, 0, 0));
+    if (width == null || height == null) {
+      final size = await ImageSizeGetter.getSizeAsync(path);
+      width = size[0];
+      height = size[1];
+      assert(() {
+        print('thumbImageInfo3: $uuid, $path, $size');
+        return true;
+      }());
     }
+    _thumbImageInfo!.complete(_ImageInfo(path, width!, height!));
   }
 }
 

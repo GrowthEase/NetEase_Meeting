@@ -5,16 +5,22 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/config/scene_type.dart';
 import 'package:nemeeting/service/model/account_app_info.dart';
 import 'package:nemeeting/service/model/account_apps.dart';
+import 'package:nemeeting/service/model/history_meeting.dart';
 import 'package:nemeeting/service/model/login_info.dart';
 import 'package:nemeeting/service/model/parse_sso_token.dart';
 import 'package:nemeeting/service/proto/app_http_proto/auth_code_proto.dart';
 import 'package:nemeeting/service/proto/app_http_proto/download_file_proto.dart';
 import 'package:nemeeting/service/proto/app_http_proto/get_account_appinfo_proto.dart';
 import 'package:nemeeting/service/proto/app_http_proto/get_account_apps_proto.dart';
+import 'package:nemeeting/service/proto/app_http_proto/history_meeting_proto.dart';
+import 'package:nemeeting/service/proto/app_http_proto/favourited_meeting_proto.dart';
 import 'package:nemeeting/service/proto/app_http_proto/login_proto.dart';
+import 'package:nemeeting/service/proto/app_http_proto/meeting_cancle_favourite_proto.dart';
+import 'package:nemeeting/service/proto/app_http_proto/meeting_favourite_proto.dart';
 import 'package:nemeeting/service/proto/app_http_proto/parse_ssotoken_proto.dart';
 import 'package:nemeeting/service/proto/app_http_proto/password_modify_proto.dart';
 import 'package:nemeeting/service/proto/app_http_proto/password_reset_by_exchange_code_proto.dart';
@@ -103,5 +109,53 @@ class AppService extends BaseService {
   /// 切换公司
   Future<Result<LoginInfo>> switchApp() {
     return execute(SwitchAppProto());
+  }
+
+  // 获取所有历史会议信息
+  Future<Result<List<HistoryMeeting>>> getAllHistoryMeetings(
+      [int? startId, int limit = 20]) async {
+    final appKey = AuthManager().appKey;
+    if (appKey != null) {
+      return execute(HistoryAllMeetingProto(appKey, startId, limit));
+    }
+    return Result(code: -1, msg: 'Empty appKey or userId');
+  }
+
+  // 获取会议收藏列表
+  Future<Result<List<FavoriteMeeting>>> getFavoriteMeetings(
+      [int? startId, int limit = 20]) async {
+    final appKey = AuthManager().appKey;
+    if (appKey != null) {
+      return execute(FavoriteMeetingProto(appKey, startId, limit));
+    }
+    return Result(code: -1, msg: 'Empty appKey or userId');
+  }
+
+  // 收藏会议
+  Future<Result<int?>> favouriteMeeting(int roomArchiveId) async {
+    final appKey = AuthManager().appKey;
+    if (appKey != null) {
+      return execute(FavouriteMeetingProto(appKey, roomArchiveId));
+    }
+    return Result(code: -1, msg: 'Empty appKey or userId');
+  }
+
+  //  使用roomArchiveId取消收藏参会记录
+  Future<Result<void>> cancelFavoriteMeetingByRoomArchiveId(
+      int roomArchiveId) async {
+    final appKey = AuthManager().appKey;
+    if (appKey != null) {
+      return execute(CancelFavoriteByRoomArchiveIdProto(appKey, roomArchiveId));
+    }
+    return Result(code: -1, msg: 'Empty appKey or userId');
+  }
+
+  // 使用favoriteId取消收藏参会记录
+  Future<Result<void>> cancelFavoriteMeetingByFavoriteId(int favoriteId) async {
+    final appKey = AuthManager().appKey;
+    if (appKey != null) {
+      return execute(CancelFavoriteByFavoriteIdProto(appKey, favoriteId));
+    }
+    return Result(code: -1, msg: 'Empty appKey or userId');
   }
 }

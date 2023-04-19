@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:async';
-
+import 'package:flutter/foundation.dart';
 import 'package:nemeeting/service/config/app_config.dart';
 import 'package:nemeeting/service/values/app_constants.dart';
 import 'package:nemeeting/base/util/text_util.dart';
@@ -19,7 +19,6 @@ import 'package:nemeeting/service/response/result.dart';
 import 'package:nemeeting/service/values/strings.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 
-import '../config/servers.dart';
 import '../module_name.dart' as module;
 
 class AuthManager {
@@ -90,9 +89,14 @@ class AuthManager {
   }
 
   Future<Result<void>> autoLoginMeetingKit() async {
+    final id = accountId;
+    final token = accountToken;
+    if (id == null || token == null || id.isEmpty || token.isEmpty) {
+      return Result(code: NEMeetingErrorCode.failed);
+    }
     return loginProcedure(
       appKey,
-      () => _neMeetingKit.tryAutoLogin(),
+      () => _neMeetingKit.loginWithToken(id, token),
     );
   }
 
@@ -111,14 +115,18 @@ class AuthManager {
       channelName: Strings.appName,
       channelDesc: Strings.appName,
     );
+    await NEMeetingUIKit().switchLanguage(NEMeetingLanguage.chinese);
     final initializeResult = await NEMeetingUIKit().initialize(
       NEMeetingUIKitConfig(
         appKey: appKey,
         appName: Strings.appName,
         iosBroadcastAppGroup: iosBroadcastExtensionAppGroup,
-        extras: {
-          'debugMode': AppConfig.isInDebugMode ? 1 : 0,
-        },
+        extras: AppConfig.isInDebugMode
+            ? {
+                'debugMode': 1,
+                'rtcLogLevel': '4', // DETAIL_INFO
+              }
+            : null,
         foregroundServiceConfig: foregroundServiceConfig,
       ),
     );
@@ -138,6 +146,10 @@ class AuthManager {
     );
     if (loginResult.isSuccess()) {
       loginResultSuccess();
+      assert(() {
+        debugPrint('loginProcedure: loginType=$loginType');
+        return true;
+      }());
     }
     return Result(code: loginResult.code, msg: loginResult.msg);
   }
@@ -151,7 +163,6 @@ class AuthManager {
     }
   }
 
-  /// TODO
   void updateAppKey(String appKey) {
     final loginInfo = _loginInfo;
     if (loginInfo != null) {

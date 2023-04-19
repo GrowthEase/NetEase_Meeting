@@ -10,9 +10,10 @@ extension NEMeetingUIRtcController on NERoomRtcController {
       {bool needAwaitResult = true}) {
     return PermissionHelper.enableLocalAudioAndCheckPermission(
             context, true, title)
-        .then((enable) {
+        .then((enable) async {
       if (enable) {
-        final result = unmuteMyAudio();
+        final isInCall = await NEMeetingPlugin().phoneStateService.isInCall;
+        final result = unmuteMyAudio(!isInCall);
         return needAwaitResult
             ? result
             : Future.value(const VoidResult.success());

@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 class UrlUtil {
-  static const paramMeetingId = 'meetingid';
+  // static const paramMeetingId = 'meetingid';
   static const paramUserUuid = 'userUuid';
   static const paramUserToken = 'userToken';
   static const paramAppId = 'appId';

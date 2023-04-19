@@ -33,19 +33,15 @@ class MeetCreateRoute extends StatefulWidget {
 }
 
 class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
-  bool userSelfMeetingId = false;
+  bool userSelfMeetingNum = false;
 
   bool openCamera = true;
 
   bool openMicrophone = true;
 
-  bool openRecord = !noCloudRecord;
+  bool openRecord = !kNoCloudRecord;
 
   bool showMeetingRecord = false;
-
-  bool showMeetingTime = true;
-
-  bool audioAINSEnabled = true;
 
   bool meetingPwdSwitch = false;
 
@@ -61,16 +57,12 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
     Future.wait([
       settingsService.isTurnOnMyVideoWhenJoinMeetingEnabled(),
       settingsService.isTurnOnMyAudioWhenJoinMeetingEnabled(),
-      settingsService.isShowMyMeetingElapseTimeEnabled(),
       settingsService.isMeetingCloudRecordEnabled(),
-      settingsService.isAudioAINSEnabled(),
     ]).then((values) {
       setState(() {
         openCamera = values[0];
         openMicrophone = values[1];
-        showMeetingTime = values[2];
         // showMeetingRecord = values[3];
-        audioAINSEnabled = values[4];
       });
     });
   }
@@ -109,14 +101,14 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
           title: Text(Strings.createMeeting,
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.black_222222, fontSize: 17)),
-          systemOverlayStyle: SystemUiOverlayStyle.light,
+          // systemOverlayStyle: SystemUiOverlayStyle.dark,
         ),
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             SizedBox(height: 10),
             buildUseSelfMeetingItem(),
-            if (!TextUtil.isEmpty(MeetingUtil.getShortMeetingId()))
+            if (!TextUtil.isEmpty(MeetingUtil.getShortMeetingNum()))
               ...buildShortMeetingIdItem(),
             ...buildMeetingIdItem(),
             Container(
@@ -165,14 +157,14 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
             ),
           ),
           MeetingValueKey.addTextWidgetTest(
-              valueKey: MeetingValueKey.userSelfMeetingIdCreateMeeting,
-              value: userSelfMeetingId),
+              valueKey: MeetingValueKey.userSelfMeetingNumCreateMeeting,
+              value: userSelfMeetingNum),
           CupertinoSwitch(
-              key: MeetingValueKey.userSelfMeetingIdCreateMeeting,
-              value: userSelfMeetingId,
+              key: MeetingValueKey.userSelfMeetingNumCreateMeeting,
+              value: userSelfMeetingNum,
               onChanged: (bool value) {
                 setState(() {
-                  userSelfMeetingId = value;
+                  userSelfMeetingNum = value;
                 });
               },
               activeColor: AppColors.blue_337eff)
@@ -191,7 +183,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
         child: Row(
           children: <Widget>[
             Text(
-              Strings.personalShortMeetingId,
+              Strings.personalShortMeetingNum,
               style: TextStyle(fontSize: 16, color: AppColors.black_222222),
             ),
             Container(
@@ -208,7 +200,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
             ),
             Spacer(),
             Text(
-              MeetingUtil.getShortMeetingId(),
+              MeetingUtil.getShortMeetingNum(),
               style: TextStyle(fontSize: 14, color: AppColors.color_999999),
             ),
           ],
@@ -227,12 +219,12 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
         child: Row(
           children: <Widget>[
             Text(
-              Strings.personalMeetingId,
+              Strings.personalMeetingNum,
               style: TextStyle(fontSize: 16, color: AppColors.black_222222),
             ),
             Spacer(),
             Text(
-              TextUtil.applyMask(MeetingUtil.getMeetingId(), '000-000-0000'),
+              TextUtil.applyMask(MeetingUtil.getMeetingNum(), '000-000-0000'),
               key: MeetingValueKey.personalMeetingId,
               style: TextStyle(fontSize: 14, color: AppColors.color_999999),
             ),
@@ -450,41 +442,33 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
     String? lastUsedNickname;
     if (historyItem != null &&
         historyItem.isNotEmpty &&
-        (historyItem.first.meetingId ==
-                (userSelfMeetingId ? MeetingUtil.getMeetingId() : '') ||
-            historyItem.first.shortMeetingId ==
-                (userSelfMeetingId ? MeetingUtil.getShortMeetingId() : ''))) {
+        (historyItem.first.meetingNum ==
+                (userSelfMeetingNum ? MeetingUtil.getMeetingNum() : '') ||
+            historyItem.first.shortMeetingNum ==
+                (userSelfMeetingNum ? MeetingUtil.getShortMeetingNum() : ''))) {
       lastUsedNickname = historyItem.first.nickname;
     }
     onCreateMeeting(nickname: lastUsedNickname);
   }
 
   void onCreateMeeting({String? nickname}) async {
-    final useSelfId = userSelfMeetingId;
+    final useSelfNum = userSelfMeetingNum;
     final openCamera = this.openCamera;
     final openMicrophone = this.openMicrophone;
 
-    var meetingId = useSelfId ? MeetingUtil.getMeetingId() : '';
+    var meetingNum = useSelfNum ? MeetingUtil.getMeetingNum() : '';
     LoadingUtil.showLoading();
     final result = await NEMeetingUIKit().startMeetingUI(
       context,
       NEStartMeetingUIParams(
-        meetingId: meetingId,
+        meetingNum: meetingNum,
         password: meetingPwdSwitch ? _meetingPasswordController.text : null,
         displayName: nickname ?? MeetingUtil.getNickName(),
       ),
-      NEMeetingUIOptions(
+      await buildMeetingUIOptions(
         noVideo: !openCamera,
         noAudio: !openMicrophone,
-        noWhiteBoard: !openWhiteBoard,
-        noMuteAllVideo: noMuteAllVideo,
-        showMeetingTime: showMeetingTime,
         noCloudRecord: !openRecord,
-        audioAINSEnabled: audioAINSEnabled,
-        noSip: kNoSip,
-        showMeetingRemainingTip: kShowMeetingRemainingTip,
-        restorePreferredOrientations: [DeviceOrientation.portraitUp],
-        extras: {'shareScreenTips': Strings.shareScreenTips},
       ),
       onMeetingPageRouteWillPush: () async {
         LoadingUtil.cancelLoading();
@@ -497,25 +481,18 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
     if (errorCode == NEMeetingErrorCode.success) {
       //do nothing
     } else if (errorCode == NEMeetingErrorCode.meetingAlreadyExist &&
-        useSelfId) {
+        useSelfNum) {
       //shareScreenTips 屏幕共享弹窗提示文案
       switchToJoin(
-          context,
-          NEJoinMeetingUIParams(
-              meetingId: meetingId,
-              displayName: nickname ?? MeetingUtil.getNickName()),
-          NEMeetingUIOptions(
-            noVideo: !openCamera,
-            noAudio: !openMicrophone,
-            noWhiteBoard: !openWhiteBoard,
-            noMuteAllVideo: noMuteAllVideo,
-            showMeetingTime: showMeetingTime,
-            audioAINSEnabled: audioAINSEnabled,
-            noSip: kNoSip,
-            showMeetingRemainingTip: kShowMeetingRemainingTip,
-            restorePreferredOrientations: [DeviceOrientation.portraitUp],
-            extras: {'shareScreenTips': Strings.shareScreenTips},
-          ));
+        context,
+        NEJoinMeetingUIParams(
+            meetingNum: meetingNum,
+            displayName: nickname ?? MeetingUtil.getNickName()),
+        await buildMeetingUIOptions(
+          noVideo: !openCamera,
+          noAudio: !openMicrophone,
+        ),
+      );
     } else if (errorCode == NEMeetingErrorCode.noNetwork) {
       ToastUtils.showToast(context, Strings.networkUnavailableCheck);
     } else if (errorCode == NEMeetingErrorCode.noAuth) {

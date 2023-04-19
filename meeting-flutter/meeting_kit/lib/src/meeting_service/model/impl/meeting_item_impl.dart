@@ -199,11 +199,10 @@ class _MeetingItemImpl extends NEMeetingItem {
   @override
   Map toJson() => {
         /// flutter 传递 native 使用
-        'meetingUniqueId': _meetingId,
         'roomUuid': _roomUuid,
         if (_subject != null) 'subject': _subject,
         'meetingNum': _meetingNum,
-        'meetingId': _meetingNum,
+        'meetingId': _meetingId,
         'startTime': _startTime,
         'endTime': _endTime,
         'status': _state.index,
@@ -213,7 +212,7 @@ class _MeetingItemImpl extends NEMeetingItem {
         if (_password != null) 'password': _password,
         'settings': {
           'cloudRecordOn': settings.cloudRecordOn &&
-              SettingsRepository.isMeetingCloudRecordSupported(),
+              SDKConfig.current.isCloudRecordSupported,
           'controls':
               settings.controls?.map((e) => e.toJson()).toList(growable: false)
         },
@@ -254,7 +253,7 @@ class _MeetingItemImpl extends NEMeetingItem {
     }
     var impl = _MeetingItemImpl();
     impl.subject = map['subject'] as String?;
-    impl.meetingId = map['meetingUniqueId'] as int?;
+    impl.meetingId = map['meetingId'] as int?;
     impl.startTime = (map['startTime'] ?? 0) as int;
     impl.endTime = (map['endTime'] ?? 0) as int;
     impl.noSip = (map['noSip'] ?? true) as bool;

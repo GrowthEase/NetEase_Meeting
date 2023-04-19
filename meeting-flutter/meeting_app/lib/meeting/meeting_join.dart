@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:nemeeting/utils/const_config.dart';
 import 'package:nemeeting/utils/integration_test.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
+import 'package:nemeeting/service/event/track_app_event.dart';
 import 'package:nemeeting/uikit/const/consts.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/client/http_code.dart';
@@ -32,10 +33,6 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
 
   bool openMicrophone = true;
 
-  bool showMeetingTime = true;
-
-  bool audioAINSEnabled = true;
-
   final maxIdLength = 12;
 
   late TextEditingController _meetingIdController;
@@ -54,14 +51,10 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
     Future.wait([
       settingsService.isTurnOnMyVideoWhenJoinMeetingEnabled(),
       settingsService.isTurnOnMyAudioWhenJoinMeetingEnabled(),
-      settingsService.isShowMyMeetingElapseTimeEnabled(),
-      settingsService.isAudioAINSEnabled(),
     ]).then((values) {
       setState(() {
         openCamera = values[0];
         openMicrophone = values[1];
-        showMeetingTime = values[2];
-        audioAINSEnabled = values[3];
       });
     });
   }
@@ -89,7 +82,7 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
           centerTitle: true,
           backgroundColor: Colors.white,
           title: Text(''),
-          systemOverlayStyle: SystemUiOverlayStyle.light,
+          // systemOverlayStyle: SystemUiOverlayStyle.light,
         ),
         body: GestureDetector(
           behavior: HitTestBehavior.opaque,
@@ -274,14 +267,14 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
 
     if (historyItem != null &&
         historyItem.isNotEmpty &&
-        (historyItem.first.meetingId == targetMeetingID ||
-            historyItem.first.shortMeetingId == targetMeetingID)) {
+        (historyItem.first.meetingNum == targetMeetingNum ||
+            historyItem.first.shortMeetingNum == targetMeetingNum)) {
       lastUsedNickname = historyItem.first.nickname;
     }
     _onJoinMeeting(nickname: lastUsedNickname);
   }
 
-  String get targetMeetingID =>
+  String get targetMeetingNum =>
       TextUtil.replace(_meetingIdController.text, RegExp(r'-'), '');
 
   void _onJoinMeeting({String? nickname}) async {
@@ -290,19 +283,11 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
     final result = await NEMeetingUIKit().joinMeetingUI(
       context,
       NEJoinMeetingUIParams(
-          meetingId: targetMeetingID,
+          meetingNum: targetMeetingNum,
           displayName: nickname ?? MeetingUtil.getNickName()),
-      NEMeetingUIOptions(
+      await buildMeetingUIOptions(
         noVideo: !openCamera,
         noAudio: !openMicrophone,
-        noMuteAllVideo: noMuteAllVideo,
-        noWhiteBoard: !openWhiteBoard,
-        noSip: kNoSip,
-        showMeetingTime: showMeetingTime,
-        audioAINSEnabled: audioAINSEnabled,
-        showMeetingRemainingTip: kShowMeetingRemainingTip,
-        restorePreferredOrientations: [DeviceOrientation.portraitUp],
-        extras: {'shareScreenTips': Strings.shareScreenTips},
       ),
       onPasswordPageRouteWillPush: () async {
         LoadingUtil.cancelLoading();

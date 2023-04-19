@@ -45,7 +45,7 @@ class PermissionHelper {
     Alog.i(
         tag: tag,
         moduleName: _moduleName,
-        content: "request permission: $status $useDialog");
+        content: "request permission: $permission $status $useDialog");
     if (granted) return granted;
     if (useDialog) {
       final action = await showDialog<ConfirmAction>(

@@ -3,6 +3,8 @@
 // found in the LICENSE file.
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:nemeeting/service/util/user_preferences.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 import '../uikit/values/asset_name.dart';
 import '../uikit/values/strings.dart';
@@ -12,10 +14,10 @@ const bool openWhiteBoard = true;
 
 ///是否展示全体视频开/关入口
 
-const noMuteAllVideo = false;
+const kNoMuteAllVideo = false;
 
 /// 默认开启录制
-const bool noCloudRecord = false;
+const bool kNoCloudRecord = false;
 
 ///
 const kNoSip = false;
@@ -28,3 +30,44 @@ const kShowMeetingRemainingTip = true;
 
 /// 开启密码登录
 const kEnablePasswordLogin = !kReleaseMode;
+
+const inMeetingMoreMenuItemId = 101;
+const inMeetingFeedbackMenu = NESingleStateMenuItem(
+  itemId: inMeetingMoreMenuItemId,
+  visibility: NEMenuVisibility.visibleAlways,
+  singleStateItem: NEMenuItemInfo(
+      text: Strings.inRoomFeedBack,
+      icon: AssetName.iconInRoomFeedback,
+      platformPackage: '/'),
+);
+
+Future<NEMeetingUIOptions> buildMeetingUIOptions({
+  bool? noVideo,
+  bool? noAudio,
+  bool? showMeetingTime,
+  bool? noCloudRecord,
+  bool? audioAINSEnabled,
+}) async {
+  final settingsService = NEMeetingKit.instance.getSettingsService();
+  noVideo ??= !(await settingsService.isTurnOnMyVideoWhenJoinMeetingEnabled());
+  noAudio ??= !(await settingsService.isTurnOnMyAudioWhenJoinMeetingEnabled());
+  showMeetingTime ??= await settingsService.isShowMyMeetingElapseTimeEnabled();
+  audioAINSEnabled ??= await settingsService.isAudioAINSEnabled();
+  noCloudRecord ??= kNoCloudRecord;
+  final showShareUserVideo = await UserPreferences().getShowShareUserVideo();
+  return NEMeetingUIOptions(
+    noVideo: noVideo,
+    noAudio: noAudio,
+    noMuteAllVideo: kNoMuteAllVideo,
+    noWhiteBoard: !openWhiteBoard,
+    noSip: kNoSip,
+    noCloudRecord: noCloudRecord,
+    showScreenShareUserVideo: showShareUserVideo,
+    showWhiteboardShareUserVideo: showShareUserVideo,
+    showMeetingTime: showMeetingTime,
+    audioAINSEnabled: audioAINSEnabled,
+    showMeetingRemainingTip: kShowMeetingRemainingTip,
+    restorePreferredOrientations: [DeviceOrientation.portraitUp],
+    extras: {'shareScreenTips': Strings.shareScreenTips},
+  );
+}

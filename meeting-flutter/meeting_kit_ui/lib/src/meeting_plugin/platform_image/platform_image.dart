@@ -2,6 +2,8 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+// ignore_for_file: unused_element
+
 part of meeting_plugin;
 
 class _FutureImageStreamCompleter extends ImageStreamCompleter {
@@ -20,6 +22,7 @@ class _FutureImageStreamCompleter extends ImageStreamCompleter {
         informationCollector: informationCollector,
         silent: true,
       );
+      throw error;
     });
   }
 
@@ -36,6 +39,7 @@ class _FutureImageStreamCompleter extends ImageStreamCompleter {
         informationCollector: this.informationCollector,
         silent: true,
       );
+      throw exception;
     }
   }
 }
@@ -147,9 +151,9 @@ class PlatformImage extends ImageProvider<_PlatformImageKey> {
     Completer<double> scaleCompleter = Completer<double>();
     loadInfo.then((map) {
       if (bytesCompleter.isCompleted) return;
-      if (map != null || map!["scale"] != null || map["data"] != null) {
-        scaleCompleter.complete(map["scale"] as double?);
-        bytesCompleter.complete(map["data"] as Uint8List?);
+      if (map != null && map["data"] != null) {
+        scaleCompleter.complete(map["scale"] as double);
+        bytesCompleter.complete(map["data"] as Uint8List);
       } else {
         bytesCompleter.completeError("Load image named '${key.key}' error");
       }

@@ -438,12 +438,6 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get headsetState => 'イヤホンを使用しています';
 
   @override
-  String get meetingId => 'ミーティング ID';
-
-  @override
-  String get shortMeetingId => '会議の短縮番号';
-
-  @override
   String get copy => 'コピー';
 
   @override
@@ -696,10 +690,10 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get meetingTime => '会議時間:';
 
   @override
-  String get meetingID => 'ミーティング ID:';
+  String get meetingNum => 'ミーティング ID:';
 
   @override
-  String get shortMeetingID => '会議の短縮番号:';
+  String get shortMeetingNum => '会議の短縮番号:';
 
   @override
   String get invitationUrl => '参加リンク:';
@@ -736,6 +730,12 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
 
   @override
   String get microphonePermission => 'マイク';
+
+  @override
+  String get bluetoothPermission => 'ブルートゥース';
+
+  @override
+  String get phoneStatePermission => '電話';
 
   @override
   String get noPermission => 'パーミッションは許可されていません';
@@ -805,4 +805,22 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
 
   @override
   String get userHasBeenRevokeCoHostRole => '共同主催者としての活動を停止されました';
+
+  @override
+  String get isInCall => '現在電話対応中';
+
+  @override
+  String get networkConnectionGood => '良好なインターネット回線';
+
+  @override
+  String get networkConnectionGeneral => '一般的なインターネット回線';
+
+  @override
+  String get networkConnectionPoor => 'インターネット接続環境の悪さ';
+
+  @override
+  String get localLatency => '遅延';
+
+  @override
+  String get packetLossRate => 'パケット損失率';
 }

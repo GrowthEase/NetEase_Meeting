@@ -5,8 +5,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.netease.meeting.plugin">
 
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <application>
+
+        <!-- 解决高版本SDK(31以上)中不能访问系统SO库的问题：部分机型虚拟背景不生效 -->
+        <uses-native-library
+                android:name="libOpenCL.so"
+                android:required="false" />
+
         <service
             android:name=".foregroundservice.NEForegroundService"
             android:enabled="true"

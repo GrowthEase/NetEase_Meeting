@@ -8,6 +8,10 @@ mixin InMeetingDataServiceCallback {
   NEMeetingInfo? getCurrentMeetingInfo();
 }
 
+abstract class MinimizeMeetingManager {
+  Future<NEResult<void>> minimizeCurrentMeeting();
+}
+
 abstract class AudioManager {
   /// 订阅会议内某一音频流
   ///
@@ -52,6 +56,9 @@ class InMeetingService with _AloggerMixin {
   AudioManager? get audioManager => _audioDelegate;
 
   NERoomContext? _currentRoomContext;
+
+  MinimizeMeetingManager? _minimizeDelegate;
+  MinimizeMeetingManager? get mininizeDelegte => _minimizeDelegate;
 
   void rememberRoomContext(NERoomContext? context) {
     _currentRoomContext = context;

@@ -9,20 +9,23 @@ const kMeetingTemplateId = 40;
 class MeetingPropertyKeys {
   MeetingPropertyKeys._();
 
+  ///
   /// 房间额外属性
+  ///
   static const kExtraData = 'extraData';
-
-  ///
-  /// 视频控制
-  ///
-  static const kVideoControl = 'videoOff';
 
   ///
   /// 成员自定义属性
   ///
   static const kMemberTag = 'tag';
+}
 
-  static const kCloudRecord = 'cloudRecord';
+///
+/// 系统来电的状态。移动端会修改该属性，其他端仅读该属性
+///
+class PhoneStateProperty {
+  static const key = 'phoneState';
+  static const valueIsInCall = '1';
 }
 
 ///

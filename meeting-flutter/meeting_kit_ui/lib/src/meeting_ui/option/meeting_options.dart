@@ -34,26 +34,6 @@ class MeetingConfig {
   static MeetingConfig? _instance;
 
   MeetingConfig._internal();
-
-  static SDKConfig? globalConfig;
-
-  int get pageSize {
-    var i = SDKConfig.galleryPageSize;
-
-    if (i < minGridSize) {
-      i = minGridSize;
-    }
-    return i;
-  }
-
-  ///except me, server push every page size if null show default size,
-  int get pageSizeExceptMe {
-    return pageSize - 1;
-  }
-
-  int get focusSwitchInterval {
-    return SDKConfig.focusSwitchInterval;
-  }
 }
 
 ///

@@ -459,12 +459,6 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get headsetState => 'You are using the earphone';
 
   @override
-  String get meetingId => 'Meeting ID';
-
-  @override
-  String get shortMeetingId => 'Short code';
-
-  @override
   String get copy => 'Copy';
 
   @override
@@ -596,13 +590,13 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get liveViewSetting => 'View Settings';
 
   @override
-  String get liveViewSettingChange => 'Change of anchor';
+  String get liveViewSettingChange => 'The view is changed';
 
   @override
   String get liveViewPreviewTips => 'Live streaming preview';
 
   @override
-  String get liveViewPreviewDesc => 'Please set up the live view first';
+  String get liveViewPreviewDesc => 'Configure the view settings';
 
   @override
   String get liveStart => 'Start';
@@ -727,10 +721,10 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get meetingTime => 'Time: ';
 
   @override
-  String get meetingID => 'Meeting ID：';
+  String get meetingNum => 'Meeting number: ';
 
   @override
-  String get shortMeetingID => 'Short code: ';
+  String get shortMeetingNum => 'Short Meeting number: ';
 
   @override
   String get invitationUrl => 'Meeting URL: ';
@@ -767,6 +761,12 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
 
   @override
   String get microphonePermission => 'Microphone';
+
+  @override
+  String get bluetoothPermission => 'Bluetooth';
+
+  @override
+  String get phoneStatePermission => 'Phone';
 
   @override
   String get noPermission => 'No permission';
@@ -838,4 +838,22 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
 
   @override
   String get userHasBeenRevokeCoHostRole => ' has been unassigned CO-HOST';
+
+  @override
+  String get isInCall => 'Answering the phone now';
+
+  @override
+  String get networkConnectionGood => 'Network connection is good';
+
+  @override
+  String get networkConnectionGeneral => 'Network connection is general';
+
+  @override
+  String get networkConnectionPoor => 'Network connection is poor';
+
+  @override
+  String get localLatency => 'Latency';
+
+  @override
+  String get packetLossRate => 'Packet Loss Rate';
 }

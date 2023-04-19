@@ -955,18 +955,6 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'You are using the earphone'**
   String get headsetState;
 
-  /// No description provided for @meetingId.
-  ///
-  /// In en, this message translates to:
-  /// **'Meeting ID'**
-  String get meetingId;
-
-  /// No description provided for @shortMeetingId.
-  ///
-  /// In en, this message translates to:
-  /// **'Short code'**
-  String get shortMeetingId;
-
   /// No description provided for @copy.
   ///
   /// In en, this message translates to:
@@ -1216,7 +1204,7 @@ abstract class NEMeetingUIKitLocalizations {
   /// No description provided for @liveViewSettingChange.
   ///
   /// In en, this message translates to:
-  /// **'Change of anchor'**
+  /// **'The view is changed'**
   String get liveViewSettingChange;
 
   /// No description provided for @liveViewPreviewTips.
@@ -1228,7 +1216,7 @@ abstract class NEMeetingUIKitLocalizations {
   /// No description provided for @liveViewPreviewDesc.
   ///
   /// In en, this message translates to:
-  /// **'Please set up the live view first'**
+  /// **'Configure the view settings'**
   String get liveViewPreviewDesc;
 
   /// No description provided for @liveStart.
@@ -1465,17 +1453,17 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'Time: '**
   String get meetingTime;
 
-  /// No description provided for @meetingID.
+  /// No description provided for @meetingNum.
   ///
   /// In en, this message translates to:
-  /// **'Meeting ID：'**
-  String get meetingID;
+  /// **'Meeting number: '**
+  String get meetingNum;
 
-  /// No description provided for @shortMeetingID.
+  /// No description provided for @shortMeetingNum.
   ///
   /// In en, this message translates to:
-  /// **'Short code: '**
-  String get shortMeetingID;
+  /// **'Short Meeting number: '**
+  String get shortMeetingNum;
 
   /// No description provided for @invitationUrl.
   ///
@@ -1548,6 +1536,18 @@ abstract class NEMeetingUIKitLocalizations {
   /// In en, this message translates to:
   /// **'Microphone'**
   String get microphonePermission;
+
+  /// No description provided for @bluetoothPermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth'**
+  String get bluetoothPermission;
+
+  /// No description provided for @phoneStatePermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get phoneStatePermission;
 
   /// No description provided for @noPermission.
   ///
@@ -1686,6 +1686,42 @@ abstract class NEMeetingUIKitLocalizations {
   /// In en, this message translates to:
   /// **' has been unassigned CO-HOST'**
   String get userHasBeenRevokeCoHostRole;
+
+  /// No description provided for @isInCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Answering the phone now'**
+  String get isInCall;
+
+  /// No description provided for @networkConnectionGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Network connection is good'**
+  String get networkConnectionGood;
+
+  /// No description provided for @networkConnectionGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'Network connection is general'**
+  String get networkConnectionGeneral;
+
+  /// No description provided for @networkConnectionPoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Network connection is poor'**
+  String get networkConnectionPoor;
+
+  /// No description provided for @localLatency.
+  ///
+  /// In en, this message translates to:
+  /// **'Latency'**
+  String get localLatency;
+
+  /// No description provided for @packetLossRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Packet Loss Rate'**
+  String get packetLossRate;
 }
 
 class _NEMeetingUIKitLocalizationsDelegate

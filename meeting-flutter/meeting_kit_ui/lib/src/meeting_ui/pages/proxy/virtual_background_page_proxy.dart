@@ -5,7 +5,7 @@
 part of meeting_ui;
 
 class VirtualBackgroundPageProxy extends StatelessWidget {
-  final GlobalKey<NavigatorState> _sdkVirtualNavigatorKey = GlobalKey();
+  final GlobalKey<NavigatorState> _sdkVirtualNavigatorKey = GlobalObjectKey(1);
 
   final dynamic arguments;
 

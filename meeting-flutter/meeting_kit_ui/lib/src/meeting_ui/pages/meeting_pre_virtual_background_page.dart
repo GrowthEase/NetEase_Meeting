@@ -16,13 +16,10 @@ class PreVirtualBackgroundPage extends StatefulWidget {
 class _PreVirtualBackgroundPageState
     extends BaseState<PreVirtualBackgroundPage> {
   NERtcVideoRenderer? renderer;
-  late int beautyLevel;
-  late NEPreviewRoomRtcController? previewRoomRtcController;
-  late double width;
-  late double height;
+  NEPreviewRoomRtcController? previewRoomRtcController;
   List<String> sourceList = <String>[virtualNone];
   List<String>? addExternalVirtualList;
-  late int currentSelected = 0;
+  int currentSelected = 0;
   static late SharedPreferences _sharedPreferences;
   bool allowedDeleteAll = false;
   bool bCanPress = true;
@@ -39,25 +36,20 @@ class _PreVirtualBackgroundPageState
       previewRoomContext = value.nonNullData;
       previewRoomContext?.addEventCallback(eventCallback);
       previewRoomRtcController = previewRoomContext?.previewController;
-    });
-    _checkPermission().then((granted) {
-      if (granted) {
-        _initRenderer();
-      }
+      _checkPermission().then((granted) {
+        if (granted) {
+          _initRenderer();
+        }
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    width = MediaQuery.of(context).size.width;
-    height = MediaQuery.of(context).size.height;
-
     return WillPopScope(
         child: Scaffold(
             body: Container(
           color: Colors.white,
-          width: width,
-          height: height,
           child: buildBeautyPreViewWidget(context),
         )),
         onWillPop: () async {
@@ -85,7 +77,7 @@ class _PreVirtualBackgroundPageState
           alignment: Alignment.center,
           color: Colors.white,
           height: 78,
-          width: width,
+          width: MediaQuery.of(context).size.width,
           child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: sourceList.length,
@@ -241,9 +233,7 @@ class _PreVirtualBackgroundPageState
   Future<void> _initRenderer() async {
     renderer = await NERtcVideoRendererFactory.createVideoRenderer('');
     await renderer!.attachToLocalVideo();
-    if (Platform.isAndroid) {
-      renderer!.setMirror(true);
-    }
+    renderer!.setMirror(true);
     await previewRoomRtcController?.startPreview();
     Directory? cache;
     if (Platform.isAndroid) {
@@ -364,10 +354,8 @@ String replaceBundleIdByStr(String e, String replaceStr) {
   return e;
 }
 
-void enableVirtualBackground(
-    NEPreviewRoomRtcController? previewRoomRtcController,
-    bool enable,
-    String path) async {
+void enableVirtualBackground(NERoomBaseRtcController? previewRoomRtcController,
+    bool enable, String path) async {
   final result = await previewRoomRtcController?.enableVirtualBackground(
       enable,
       NERoomVirtualBackgroundSource(
@@ -387,13 +375,13 @@ Future<bool> pickFiles(
   bool selected = false;
   FilePickerResult? result = await FilePicker.platform.pickFiles(
     type: FileType.image,
+    allowMultiple: false,
   );
-  if (result != null) {
-    String originPath = result.files.single.path!;
-    String originName = result.files.single.name;
-    if (originName.endsWith('.jpg') &&
-        originName.endsWith('.png') &&
-        originName.endsWith('.jpeg')) {
+  if (result != null && result.files.length > 0) {
+    final file = result.files.first;
+    String originPath = file.path!;
+    String originName = file.name;
+    if (!(const {'jpg', 'png', 'jpeg'}.contains(file.extension))) {
       ToastUtils.showToast(
           context,
           NEMeetingUIKitLocalizations.of(context)!

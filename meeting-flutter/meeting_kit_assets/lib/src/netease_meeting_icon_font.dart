@@ -85,4 +85,6 @@ class NEMeetingIconFont {
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_virtual_background = IconData(0xe6b9,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_net_state = IconData(0xe6ef,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
 }

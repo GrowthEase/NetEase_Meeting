@@ -2,55 +2,55 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
-class SecurityNoticeInfo {
-  List<Configs>? configs;
-  int? time = 0;
+import 'dart:convert';
 
-  SecurityNoticeInfo({required this.configs, required this.time});
+class AppNotifications {
+  static const _keyNotifications = 'tips';
+  static const _keyTime = 'curTime';
 
-  SecurityNoticeInfo.fromJson(Map json) {
-    if (json['configs'] != null) {
-      configs = <Configs>[];
-      json['configs'].forEach((v) {
-        configs!.add(Configs.fromJson(v as Map<String, dynamic>));
+  final String appKey;
+  final List<AppNotification> notifications = [];
+  final int time;
+
+  AppNotifications.fromJson(this.appKey, Map json)
+      : time = (json[_keyTime] ?? 0) as int {
+    if (json[_keyNotifications] != null) {
+      json[_keyNotifications].forEach((v) {
+        notifications.add(AppNotification.fromJson((v as Map).cast()));
       });
     }
-    time = (json['time'] ?? 0) as int;
   }
 
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
-    data['configs'] = configs!.map((v) => v.toJson()).toList();
-    data['time'] = time;
+    data[_keyNotifications] = notifications.map((v) => v.toJson()).toList();
+    data[_keyTime] = time;
     return data;
   }
 
   @override
   String toString() {
-    return 'SecurityNoticeInfo{configs: $configs, time: $time}';
+    return jsonEncode(this);
   }
 }
 
-class Configs {
+class AppNotification {
+  static const kTypeTxt = 1;
+  static const kTypeUrl = 2;
+
   String? content;
   String? title;
   String? okBtnLabel;
+  String? url;
   int? type;
   int? time;
   bool? enable;
 
-  Configs(
-      {required this.content,
-      required this.title,
-      required this.okBtnLabel,
-      required this.type,
-      this.time,
-      this.enable});
-
-  Configs.fromJson(Map<String, dynamic> json) {
+  AppNotification.fromJson(Map<String, dynamic> json) {
     content = (json['content'] ?? '') as String;
     title = (json['title'] ?? '') as String;
     okBtnLabel = (json['okBtnLabel'] ?? '') as String;
+    url = json['url'] as String?;
     type = (json['type'] ?? 1) as int;
     time = (json['time'] ?? 0) as int;
     enable = (json['enable'] ?? false) as bool;
@@ -61,6 +61,7 @@ class Configs {
     data['content'] = content;
     data['title'] = title;
     data['okBtnLabel'] = okBtnLabel;
+    if (url != null) data['url'] = url;
     data['type'] = type;
     data['time'] = time;
     data['enable'] = enable;
@@ -69,6 +70,6 @@ class Configs {
 
   @override
   String toString() {
-    return 'Configs{content: $content, title: $title, okBtnLabel: $okBtnLabel, type: $type, time: $time,enable: $enable}';
+    return jsonEncode(this);
   }
 }

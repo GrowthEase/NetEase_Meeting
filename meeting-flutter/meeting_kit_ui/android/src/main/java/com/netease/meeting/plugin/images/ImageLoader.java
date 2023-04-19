@@ -75,6 +75,8 @@ public class ImageLoader extends Handler {
               (Integer) call.argument("imageQuality"),
               result);
         }
+      } else {
+        result.success(null);
       }
     }
   }

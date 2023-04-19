@@ -11,8 +11,10 @@ import androidx.annotation.NonNull;
 import com.netease.meeting.plugin.base.Handler;
 import com.netease.meeting.plugin.base.asset.AssetService;
 import com.netease.meeting.plugin.base.notification.NotificationService;
+import com.netease.meeting.plugin.bluetooth.BluetoothService;
 import com.netease.meeting.plugin.images.ImageGallerySaver;
 import com.netease.meeting.plugin.images.ImageLoader;
+import com.netease.meeting.plugin.phonestate.PhoneStateService;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
@@ -34,12 +36,17 @@ public class MeetingPlugin implements FlutterPlugin, MethodCallHandler {
 
   public static final String PLUGIN_NAME = "meeting_plugin";
 
+  private BluetoothService bluetoothService;
+  private PhoneStateService phoneStateService;
+
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
     channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), PLUGIN_NAME);
     channel.setMethodCallHandler(this);
     context = flutterPluginBinding.getApplicationContext();
     initService();
+    bluetoothService = new BluetoothService(context, flutterPluginBinding);
+    phoneStateService = new PhoneStateService(context, flutterPluginBinding);
   }
 
   @Override
@@ -55,6 +62,12 @@ public class MeetingPlugin implements FlutterPlugin, MethodCallHandler {
       handlerMap.clear();
       handlerMap = null;
     }
+
+    bluetoothService.dispose();
+    bluetoothService = null;
+
+    phoneStateService.dispose();
+    phoneStateService = null;
   }
 
   void initService() {

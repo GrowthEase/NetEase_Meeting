@@ -12,6 +12,7 @@ class MeetingUIValueKeys {
   static const meetingId = ValueKey('meetingId');
   static const switchLoudspeaker = ValueKey('switchLoudspeaker');
   static const switchCamera = ValueKey('switchCamera');
+  static const networkStatus = ValueKey('networkStatus');
   static const meetingDuration = ValueKey('meetingDuration');
   static const meetingFullScreen = ValueKey('meetingFullScreen');
   static const inputMeetingPassword = ValueKey('inputMeetingPassword');
@@ -94,7 +95,7 @@ class MeetingUIValueKeys {
               style: TextStyle(color: Color(0xff222222), fontSize: 10),
             ),
           )
-        : Container();
+        : SizedBox.shrink();
   }
 
   static const bool inProduction = bool.fromEnvironment('dart.vm.product');

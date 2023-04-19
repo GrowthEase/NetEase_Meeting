@@ -15,9 +15,15 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: ^0.17.0
-  device_info_plus: ^5.0.0
+  device_info_plus: ^8.0.0
 
   cupertino_icons: ^1.0.5
+
+#  netease_meeting_assets: ^0.1.0-rc.0
+  netease_meeting_assets:
+    path: ../meeting_kit_assets
+#  netease_common: ^0.0.1-rc.1
+  netease_common: ^0.0.3-rc.0
 
   bot_toast: ^4.0.2
   permission_handler: ^10.0.0
@@ -30,19 +36,19 @@ dependencies:
   shared_preferences: ^2.0.15
 
   image_size_getter: ^2.1.2
-
-  # open_file: ^3.2.1
+#  image_gallery_saver: ^1.7.1
+#  open_file:
+#    path: ../../third_party/open_file
   open_filex: ^4.0.0
-  scrollable_positioned_list: ^0.2.3
+  scrollable_positioned_list: ^0.3.5
 
   file_picker: ^5.0.0
+#  file_picker:
+#    path: ../../third_party/file_picker
 
-  netease_meeting_assets:
-    path: ../meeting_kit_assets
   netease_meeting_core:
     path: ../meeting_kit
-  netease_common: ^0.0.3-rc.0
-  netease_roomkit: ^0.0.5-rc.0
+  netease_roomkit: ^0.0.8-rc.0
 
 dev_dependencies:
   flutter_test:

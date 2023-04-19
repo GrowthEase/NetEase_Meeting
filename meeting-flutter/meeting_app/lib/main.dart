@@ -8,6 +8,8 @@ import 'dart:io';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nemeeting/error_handler/error_handler.dart';
+import 'package:nemeeting/uikit/values/strings.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:nemeeting/arguments/webview_arguments.dart';
 import 'package:nemeeting/setting/package_setting.dart';
@@ -29,6 +31,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:netease_common/netease_common.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:archive/archive_io.dart';
+import 'package:nemeeting/service/config/app_config.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +47,8 @@ void main() {
         }());
         NERoomLogService().init().then((value) => printDeviceInfo());
         Alog.i(tag: 'main', content: 'App env: ${AppConfig().env}');
+        ErrorHandler.instance().install();
+
         AuthManager().init().then((e) {
           runApp(MeetingApp());
           if (Platform.isAndroid) {
@@ -63,6 +68,7 @@ void main() {
     Alog.e(
         tag: 'flutter-crash',
         content: 'crash exception: $error \ncrash stack: $stack');
+    ErrorHandler.instance().recordError(error, stack);
   });
 }
 
@@ -74,7 +80,8 @@ Future<void> copyBeautyRes() async {
     cache = await getApplicationDocumentsDirectory();
   }
   // Read the Zip file from disk.
-  final value = await rootBundle.load('assets/beauty_resources/beauty.zip');
+  final value =
+      await rootBundle.load('assets/virtual_background_images/images.zip');
   // Decode the Zip file
   var bytes =
       value.buffer.asUint8List(value.offsetInBytes, value.lengthInBytes);
@@ -94,7 +101,6 @@ Future<void> copyBeautyRes() async {
       }
     }
   }
-  // defaultFilters().then((value) => _filters = value);
 }
 
 void printDeviceInfo() async {
@@ -137,10 +143,11 @@ class MeetingApp extends StatelessWidget {
     return MaterialApp(
         builder: BotToastInit(),
         color: Colors.white,
+        title: Strings.appName,
         theme: ThemeData(
             brightness: Brightness.light,
             appBarTheme: AppBarTheme(
-              systemOverlayStyle: SystemUiOverlayStyle.light,
+              systemOverlayStyle: SystemUiOverlayStyle.dark,
             )),
         themeMode: ThemeMode.light,
         navigatorKey: NavUtils.navigatorKey,
@@ -190,7 +197,7 @@ class _WelcomePageState extends BaseState<WelcomePage> {
         tag: 'appInit',
         content:
             'vName=${config.versionName} vCode=${config.versionCode} time=${config.time}');
-    WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       loadLoginInfo();
     });
   }

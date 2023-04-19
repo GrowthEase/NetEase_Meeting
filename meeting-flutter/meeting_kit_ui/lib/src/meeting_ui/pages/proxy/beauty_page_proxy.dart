@@ -5,12 +5,13 @@
 part of meeting_ui;
 
 class BeautyPageProxy extends StatelessWidget {
-  final GlobalKey<NavigatorState> _sdkBeautyNavigatorKey = GlobalKey();
+  final GlobalKey<NavigatorState> _sdkBeautyNavigatorKey;
 
   final dynamic arguments;
   final int beautyLevel;
 
-  BeautyPageProxy({this.arguments, this.beautyLevel = 0});
+  BeautyPageProxy({this.arguments, this.beautyLevel = 0})
+      : _sdkBeautyNavigatorKey = GlobalObjectKey(beautyLevel);
 
   @override
   Widget build(BuildContext context) {

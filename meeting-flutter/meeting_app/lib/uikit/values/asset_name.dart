@@ -31,10 +31,32 @@ class AssetName {
   static const String aboutIcon = 'assets/images/icon_meet_about.png';
   static const String iconMail = 'assets/images/icon_mail.png';
   static const String emptyMeetingList = 'assets/images/empty_meeting_list.png';
+
   static const String iconCalendar = 'assets/images/icon_calendar.png';
   static const String iconClose = 'assets/images/icon_close.png';
   static const String iconWarning = 'assets/images/icon_warning.png';
   static const String iconInRoomFeedback =
       'assets/images/icon_inroom_feedback.png';
   static const String iconYunxin = 'assets/images/icon_yunxin.png';
+
+  static const String emptyHistoryMeetingList =
+      'assets/images/empty_historyMeeting_list.png';
+  static const String iconHistoryUncollected =
+      'assets/images/icon_history_uncollected.png';
+  static const String iconHistoryCollected =
+      'assets/images/icon_history_collected.png';
+
+  static const String iconEvaluationCloseSheet =
+      'assets/images/icon_meeting_closesheet.png';
+
+  static const String iconEvaluationAngry =
+      'assets/lottie/icon_evaluation_angry.json';
+  static const String iconEvaluationSad =
+      'assets/lottie/icon_evaluation_sad.json';
+  static const String iconEvaluationHappy =
+      'assets/lottie/icon_evaluation_happy.json';
+  static const String iconEvaluationHeartEye =
+      'assets/lottie/icon_evaluation_hearteye.json';
+  static const String iconEvaluationBlush =
+      'assets/lottie/icon_evaluation_blush.json';
 }

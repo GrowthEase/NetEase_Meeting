@@ -4,7 +4,7 @@
 
 part of meeting_kit;
 
-const _moduleName = 'meeting_kit';
+const _moduleName = 'meeting_core';
 
 mixin _AloggerMixin {
   Alogger? _apiLogger, _commonLogger;

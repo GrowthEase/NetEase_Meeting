@@ -22,7 +22,15 @@ class Result<T> {
     );
   }
 
-  // static Result<T> asFailed<T>(String msg) {
+  String toShortString() {
+    if (code == 0 || code == 200) {
+      return 'Success($msg)';
+    } else {
+      return 'Failure($code, $msg)';
+    }
+  }
+
+// static Result<T> asFailed<T>(String msg) {
   //   return Result(msg: msg);
   // }
 }

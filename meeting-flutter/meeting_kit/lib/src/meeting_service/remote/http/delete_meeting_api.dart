@@ -6,9 +6,9 @@ part of meeting_service;
 
 /// 删除预约会议
 class _DeleteMeetingApi extends HttpApi<void> {
-  int meetingUniqueId;
+  int meetingId;
 
-  _DeleteMeetingApi(this.meetingUniqueId);
+  _DeleteMeetingApi(this.meetingId);
 
   @override
   String path() => 'scene/meeting/v1/sdk/meeting/schedule/cancel';
@@ -19,5 +19,5 @@ class _DeleteMeetingApi extends HttpApi<void> {
   }
 
   @override
-  Map data() => {'meetingUniqueId': meetingUniqueId};
+  Map data() => {'meetingId': meetingId};
 }

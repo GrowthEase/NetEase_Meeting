@@ -19,6 +19,7 @@ class GlobalPreferences extends Preferences {
   static const String keyMeetingInfo = "meetingInfo";
   static const String keyEnablePasswordLogin = 'enablePwdLogin';
   static const String keyPrivacyDialogShowed = 'privacyDialogShowed';
+  static const String keyMeetingEvaluation = 'meetingEvaluation';
 
   GlobalPreferences._internal();
 
@@ -135,6 +136,13 @@ class GlobalPreferences extends Preferences {
     return getSp(keyMeetingInfo);
   }
 
+  Future<void> setMeetingEvaluation(String value) async {
+    setSp(keyMeetingEvaluation, value);
+  }
+
+  Future<String?> get meetingEvaluation async {
+    return getSp(keyMeetingEvaluation);
+  }
   // Future<bool?> get isShowSecurityNotice async {
   //   return getBoolSp(keyIsShowSecurityNotice);
   // }

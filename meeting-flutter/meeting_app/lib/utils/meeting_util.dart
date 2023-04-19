@@ -21,7 +21,7 @@ class MeetingUtil {
     return AuthManager().appKey ?? '';
   }
 
-  static String getMeetingId() {
+  static String getMeetingNum() {
     return NEMeetingKit.instance
             .getAccountService()
             .getAccountInfo()
@@ -29,7 +29,7 @@ class MeetingUtil {
         '';
   }
 
-  static String getShortMeetingId() {
+  static String getShortMeetingNum() {
     return NEMeetingKit.instance
             .getAccountService()
             .getAccountInfo()
@@ -37,8 +37,8 @@ class MeetingUtil {
         '';
   }
 
-  static bool hasShortMeetingId() {
-    return getShortMeetingId() != '';
+  static bool hasShortMeetingNum() {
+    return getShortMeetingNum() != '';
   }
 
   static String getMobilePhone() {

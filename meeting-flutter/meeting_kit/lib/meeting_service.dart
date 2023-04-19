@@ -16,7 +16,6 @@ import 'package:dio/dio.dart' as http;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
-import 'dart:typed_data' show Uint8List;
 import 'package:shared_preferences/shared_preferences.dart';
 
 export 'package:netease_common/netease_common.dart' show NEResult, VoidResult;
@@ -53,7 +52,6 @@ part 'src/meeting_service/remote/http/create_meeting_api.dart';
 part 'src/meeting_service/remote/http/delete_meeting_api.dart';
 part 'src/meeting_service/remote/http/edit_meeting_api.dart';
 part 'src/meeting_service/remote/http/get_config_api.dart';
-part 'src/meeting_service/remote/http/download_beauty_license_api.dart';
 part 'src/meeting_service/remote/http/get_meeting_item_by_id_api.dart';
 part 'src/meeting_service/remote/http/get_meeting_list_by_status_api.dart';
 part 'src/meeting_service/remote/http/login_by_pwd_api.dart';

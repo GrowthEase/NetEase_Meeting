@@ -62,10 +62,11 @@ class MeetingValueKey {
   static const openMicrophone = ValueKey('openMicrophone');
   static const openShowMeetTime = ValueKey('openShowMeetTime');
   static const audioAINS = ValueKey('audioAINS');
+  static const showShareUserVideo = ValueKey('showShareUserVideo');
 
   ///会议创建模板[MeetCreateRoute]
-  static const userSelfMeetingIdCreateMeeting =
-      ValueKey('userSelfMeetingIdCreateMeeting');
+  static const userSelfMeetingNumCreateMeeting =
+      ValueKey('userSelfMeetingNumCreateMeeting');
   static const openMicrophoneCreateMeeting =
       ValueKey('openMicrophoneCreateMeeting');
   static const openRecordEnterMeeting = ValueKey('openRecordEnterMeeting');
@@ -102,10 +103,13 @@ class MeetingValueKey {
   static const scheduleJoin = ValueKey('scheduleJoin');
   static const scheduleCopyID = ValueKey('scheduleCopyID');
   static const scheduleCopyPwd = ValueKey('scheduleCopyPwd');
+  static const scheduleCopyInviteUrl = ValueKey('scheduleCopyInviteUrl');
   static const scheduleLiveSwitch = ValueKey('scheduleLiveSwitch');
   static const scheduleCopyLiveUrl = ValueKey('scheduleCopyLiveUrl');
 
   static const logoutByDialog = ValueKey('logoutByDialog');
+
+  static const feedbackInput = ValueKey("feedbackInput");
 
   /// 非product的版本，则显示。switchButton 默认 valueKey的后缀是value = false  -1; value = true 0，
   static Widget addTextWidgetTest(

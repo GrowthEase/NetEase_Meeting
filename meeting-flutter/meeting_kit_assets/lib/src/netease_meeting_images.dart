@@ -54,6 +54,7 @@ class NEMeetingImages {
   static const String fileTypePdf = 'assets/images/icon_file_type_pdf.png';
   static const String fileTypeUnknown =
       'assets/images/icon_file_type_unknown.png';
+  static const String arrow = 'assets/images/arrow.png';
 
   static Image assetImage(String image) =>
       Image.asset(image, package: meetingAssetsPackageName);
