@@ -21,13 +21,18 @@ class NavUtils {
     if (Platform.isIOS) {
       return await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      if (await canLaunchUrl(uri)) {
-        return await launchUrlString(url,
+      bool result = false;
+      String? error;
+      try {
+        result = await launchUrlString(url,
             mode: LaunchMode.externalNonBrowserApplication);
-      } else {
-        Alog.d(tag: 'NavUtils', content: 'Could not launch $url');
+      } catch (e) {
+        error = e.toString();
       }
-      return Future.value(false);
+      if (!result) {
+        Alog.d(tag: 'NavUtils', content: 'Could not launch $url. $error');
+      }
+      return Future.value(result);
     }
   }
 
@@ -62,6 +67,7 @@ class NavUtils {
       TextUtil.isEmpty(utilRouteName)
           ? (Route<dynamic> route) => false
           : withName(utilRouteName!),
+      arguments: arguments,
     );
   }
 

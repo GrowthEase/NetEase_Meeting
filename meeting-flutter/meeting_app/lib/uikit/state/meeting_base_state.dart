@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../values/colors.dart';
 import '../values/fonts.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
@@ -36,7 +35,7 @@ abstract class MeetingBaseState<T extends StatefulWidget>
                 )
               : null,
           actions: buildActions(),
-          systemOverlayStyle: SystemUiOverlayStyle.light,
+          // systemOverlayStyle: SystemUiOverlayStyle.light,
         ),
         body: SafeArea(
             top: false, left: false, right: false, child: buildBody()));

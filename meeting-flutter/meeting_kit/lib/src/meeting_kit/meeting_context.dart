@@ -22,6 +22,18 @@ extension NEMeetingContext on NERoomContext {
 
   MeetingInfo get meetingInfo => _state.meetingInfo;
 
+  NECrossAppAuthorization? get crossAppAuthorization {
+    final authorization = meetingInfo.authorization;
+    return authorization != null
+        ? NECrossAppAuthorization(
+            appKey: authorization.appKey,
+            user: authorization.user,
+            token: authorization.token)
+        : null;
+  }
+
+  bool get isCrossAppJoining => meetingInfo.authorization != null;
+
   void setupMeetingEnv(MeetingInfo meetingInfo) {
     _stateHolder[this] = _MeetingStates(meetingInfo);
 
@@ -35,6 +47,8 @@ extension NEMeetingContext on NERoomContext {
           _state.hostUuid = member.uuid;
         }
       },
+      memberPropertiesChanged: (member, _) => member._updateStates(),
+      memberPropertiesDeleted: (member, _) => member._updateStates(),
     ));
   }
 
@@ -118,7 +132,17 @@ extension NEMeetingContext on NERoomContext {
   /// 额外数据
   String? get extraData => roomProperties[MeetingPropertyKeys.kExtraData];
 
-  String get meetingId => roomUuid;
+  String get meetingNum => roomUuid;
+
+  Future<NEResult<void>> updateMyPhoneState(bool isInCall) {
+    _alog.i('update my phone state: $isInCall');
+    if (isInCall) {
+      return updateMemberProperty(
+          myUuid, PhoneStateProperty.key, PhoneStateProperty.valueIsInCall);
+    } else {
+      return deleteMemberProperty(myUuid, PhoneStateProperty.key);
+    }
+  }
 
   Future<NEResult<void>> handOverHost(String userId) {
     assert(isMySelfHost());
@@ -176,11 +200,13 @@ extension NEMeetingRtcController on NERoomRtcController {
   ///
   Future<NEResult<void>> inviteParticipantTurnOnAudioAndVideo(String userId) {
     return NERoomKit.instance.messageChannelService.sendCustomMessage(
-        _ctx.roomUuid,
-        userId,
-        MeetingControlMessenger.commandId,
-        MeetingControlMessenger.buildControlMessage(
-            MeetingControlMessenger.inviteToOpenAudioVideo));
+      _ctx.roomUuid,
+      userId,
+      MeetingControlMessenger.commandId,
+      MeetingControlMessenger.buildControlMessage(
+          MeetingControlMessenger.inviteToOpenAudioVideo),
+      crossAppAuthorization: _ctx.crossAppAuthorization,
+    );
   }
 
   ///
@@ -188,11 +214,13 @@ extension NEMeetingRtcController on NERoomRtcController {
   ///
   Future<NEResult<void>> inviteParticipantTurnOnAudio(String userId) {
     return NERoomKit.instance.messageChannelService.sendCustomMessage(
-        _ctx.roomUuid,
-        userId,
-        MeetingControlMessenger.commandId,
-        MeetingControlMessenger.buildControlMessage(
-            MeetingControlMessenger.inviteToOpenAudio));
+      _ctx.roomUuid,
+      userId,
+      MeetingControlMessenger.commandId,
+      MeetingControlMessenger.buildControlMessage(
+          MeetingControlMessenger.inviteToOpenAudio),
+      crossAppAuthorization: _ctx.crossAppAuthorization,
+    );
   }
 
   ///
@@ -200,11 +228,13 @@ extension NEMeetingRtcController on NERoomRtcController {
   ///
   Future<NEResult<void>> inviteParticipantTurnOnVideo(String userId) {
     return NERoomKit.instance.messageChannelService.sendCustomMessage(
-        _ctx.roomUuid,
-        userId,
-        MeetingControlMessenger.commandId,
-        MeetingControlMessenger.buildControlMessage(
-            MeetingControlMessenger.inviteToOpenVideo));
+      _ctx.roomUuid,
+      userId,
+      MeetingControlMessenger.commandId,
+      MeetingControlMessenger.buildControlMessage(
+          MeetingControlMessenger.inviteToOpenVideo),
+      crossAppAuthorization: _ctx.crossAppAuthorization,
+    );
   }
 
   ///主持人将所有与会者静音, [allowUnmuteSelf] true：允许取消自己静音；反之，不允许
@@ -306,6 +336,35 @@ extension NEMeetingMember on NERoomMember {
 
   bool get isHandDownByHost =>
       properties[HandsUpProperty.key] == HandsUpProperty.reject;
+
+  bool get isInCall =>
+      properties[PhoneStateProperty.key] == PhoneStateProperty.valueIsInCall;
+
+  ValueListenable<bool> get isInCallListenable {
+    return _ensureIsInCallNotifier();
+  }
+
+  void updateMyPhoneStateLocal(bool isInCall) {
+    addAttachment(_phoneStateLocalKey, isInCall);
+    _updateStates();
+  }
+
+  static const _phoneStateLocalKey = 'phoneStateLocal';
+  static const _isInCallListenableKey = 'isInCallListenable';
+  ValueNotifier<bool> _ensureIsInCallNotifier() {
+    var notifier = getAttachment(_isInCallListenableKey);
+    if (notifier is ValueNotifier<bool>) {
+      return notifier;
+    }
+    notifier = ValueNotifier(isInCall);
+    addAttachment(_isInCallListenableKey, notifier);
+    return notifier;
+  }
+
+  void _updateStates() {
+    _ensureIsInCallNotifier().value =
+        isInCall || getAttachment(_phoneStateLocalKey) == true;
+  }
 }
 
 class _PropertyKeys {

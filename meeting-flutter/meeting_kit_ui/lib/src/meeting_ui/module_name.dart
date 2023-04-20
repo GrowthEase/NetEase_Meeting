@@ -4,7 +4,7 @@
 
 part of meeting_ui;
 
-const _moduleName = 'meeting_core';
+const _moduleName = 'meeting_ui';
 
 mixin _AloggerMixin {
   Alogger? _apiLogger, _commonLogger;

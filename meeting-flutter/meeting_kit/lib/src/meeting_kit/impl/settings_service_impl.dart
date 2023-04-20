@@ -13,13 +13,22 @@ class _NESettingsServiceImpl extends NESettingsService {
   String? _userId;
   late String _key;
   final Map _settingsCache = {};
+  final Map _transientStates = {};
+  StreamSubscription? subscription;
+
+  SDKConfig? _config;
+  // SDKConfig.current 会在重新初始化后被重新赋值，会指向不同的对象，不能使用字段赋值
+  SDKConfig get sdkConfig => _config ?? SDKConfig.current;
+  set sdkConfig(value) {
+    _config = value;
+    subscription?.cancel();
+    subscription = sdkConfig.onConfigUpdated.listen((event) async {
+      _markChanged();
+    });
+  }
 
   _NESettingsServiceImpl._() {
     _ensureSettings();
-    sdkConfigChangeStream.listen((event) {
-      updateGlobalConfig();
-      _markChanged();
-    });
   }
 
   Future<Map> _ensureSettings() async {
@@ -33,7 +42,6 @@ class _NESettingsServiceImpl extends NESettingsService {
       _settingsCache.addAll((settings == null || settings.isEmpty
           ? {}
           : json.decode(settings)) as Map);
-      updateGlobalConfig();
       _markChanged();
     }
     return _settingsCache;
@@ -72,7 +80,7 @@ class _NESettingsServiceImpl extends NESettingsService {
     _writeSettings(Keys.keyAudioAINSEnabled, enable);
   }
 
-  void _writeSettings(String key, dynamic value) async {
+  void _writeSettings(String key, dynamic value, {bool commit = true}) async {
     await _ensureSettings();
     dynamic oldValue = _settingsCache[key];
     if (oldValue != value) {
@@ -81,14 +89,20 @@ class _NESettingsServiceImpl extends NESettingsService {
       } else {
         _settingsCache[key] = value;
       }
-      await _sharedPreferences.setString(_key, jsonEncode(_settingsCache));
+      if (commit) {
+        await _sharedPreferences.setString(_key, jsonEncode(_settingsCache));
+      }
       _markChanged();
     }
   }
 
   /// 通过[ValueNotifier]通知listeners
-  void _markChanged() {
-    value = Map.unmodifiable(_settingsCache);
+  void _markChanged() async {
+    await updateTransientStates();
+    value = Map.fromEntries([
+      ..._settingsCache.entries,
+      ..._transientStates.entries,
+    ]);
   }
 
   String getCurrentUserId() {
@@ -114,7 +128,7 @@ class _NESettingsServiceImpl extends NESettingsService {
 
   @override
   Future<bool> isBeautyFaceEnabled() =>
-      Future.value(SettingsRepository.isBeautyFaceSupported());
+      Future.value(sdkConfig.isBeautyFaceSupported);
 
   @override
   Future<void> setBeautyFaceValue(int value) async {
@@ -134,23 +148,21 @@ class _NESettingsServiceImpl extends NESettingsService {
   /// 查询会议是否拥有直播权限
   ///
   @override
-  Future<bool> isMeetingLiveEnabled() => _ensureSettings().then(
-      (settings) async => Future.value((settings[Keys.keyMeetingLiveEnabled] ??
-          SettingsRepository.isMeetingLiveSupported()) as bool));
+  Future<bool> isMeetingLiveEnabled() =>
+      Future.value(sdkConfig.isLiveSupported);
 
   /// update global config
-  void updateGlobalConfig() async {
-    final meetingLiveEnabled = SettingsRepository.isMeetingLiveSupported();
-    var isBeautyFaceEnabled = SettingsRepository.isBeautyFaceSupported();
-    final isMeetingWhiteboardEnabled =
-        SettingsRepository.isMeetingWhiteboardSupported();
-    var isMeetingRecordEnabled =
-        SettingsRepository.isMeetingCloudRecordSupported();
-    _writeSettings(Keys.keyMeetingLiveEnabled, meetingLiveEnabled);
-    _writeSettings(Keys.keyBeautyFaceEnabled, isBeautyFaceEnabled);
-    _writeSettings(Keys.keyWhiteboardEnabled, isMeetingWhiteboardEnabled);
-    _writeSettings(Keys.keyMeetingRecordEnabled, isMeetingRecordEnabled);
-    _markChanged();
+  Future updateTransientStates() async {
+    _transientStates.clear();
+    _transientStates[Keys.keyMeetingLiveEnabled] = sdkConfig.isLiveSupported;
+    _transientStates[Keys.keyBeautyFaceEnabled] =
+        sdkConfig.isBeautyFaceSupported;
+    _transientStates[Keys.keyWhiteboardEnabled] =
+        sdkConfig.isWhiteboardSupported;
+    _transientStates[Keys.keyMeetingRecordEnabled] =
+        sdkConfig.isCloudRecordSupported;
+    _transientStates[Keys.enableVirtualBackground] =
+        await isVirtualBackgroundEnabled();
   }
 
   @override
@@ -170,17 +182,15 @@ class _NESettingsServiceImpl extends NESettingsService {
   }
 
   @override
-  Future<bool> isMeetingCloudRecordEnabled() {
-    return Future.value(SettingsRepository.isMeetingCloudRecordSupported());
-  }
+  Future<bool> isMeetingCloudRecordEnabled() =>
+      Future.value(sdkConfig.isCloudRecordSupported);
 
   @override
-  Future<bool> isMeetingWhiteboardEnabled() {
-    return Future.value(SDKConfig.appRoomResConfig.whiteboard);
-  }
+  Future<bool> isMeetingWhiteboardEnabled() =>
+      Future.value(sdkConfig.isWhiteboardSupported);
 
   @override
-  Stream<bool> get sdkConfigChangeStream => SDKConfig.initNotifyStream;
+  Stream<bool> get sdkConfigChangeStream => sdkConfig.onConfigUpdated;
 
   @override
   void enableVirtualBackground(bool enable) {
@@ -188,16 +198,17 @@ class _NESettingsServiceImpl extends NESettingsService {
   }
 
   @override
-  Future<bool> isVirtualBackgroundEnabled() {
+  Future<bool> isVirtualBackgroundEnabled() async {
+    await _ensureSettings();
     var isVirtualBackgroundEnabled =
         ((_settingsCache[Keys.enableVirtualBackground] as bool?) ?? true) &&
-            SettingsRepository.isVirtualBackgroundFaceSupported();
+            sdkConfig.isVirtualBackgroundSupported;
     return Future.value(isVirtualBackgroundEnabled);
   }
 
   @override
   bool shouldUnpubOnAudioMute() {
-    return SDKConfig.unpubAudioOnMuteConfig.enable;
+    return sdkConfig.unpubAudioOnMuteConfig.enable;
   }
 
   @override

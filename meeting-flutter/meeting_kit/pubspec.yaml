@@ -13,16 +13,17 @@ dependencies:
     sdk: flutter
 
   connectivity: ^3.0.6
+#  url_launcher: ^6.1.4
   async: 2.8.2
-  shared_preferences: ^2.0.15
+  shared_preferences: 2.0.15
   dio: ^4.0.6
 
-  path_provider: ^2.0.11
+  path_provider: 2.0.11
   uuid: ^3.0.6
-  device_info_plus: 4.0.0
-  device_info_plus_platform_interface: 2.3.0+1
+  device_info_plus: ^8.0.0
 
-  netease_roomkit: ^0.0.5-rc.0
+  yunxin_alog: ^1.0.11
+  netease_roomkit: ^0.0.8-rc.0
 
 dev_dependencies:
   flutter_test:

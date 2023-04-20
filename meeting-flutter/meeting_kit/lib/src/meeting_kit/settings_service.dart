@@ -131,14 +131,14 @@ class NEMeetingVirtualBackground {
 
 /// 会议历史记录对象
 class NEHistoryMeetingItem {
-  /// 会议唯一ID
-  final int meetingUniqueId;
+  /// 会议号
+  final String meetingNum;
 
-  /// 会议ID
-  final String meetingId;
+  /// 会议唯一标识
+  final int meetingId;
 
   /// 会议短号
-  final String? shortMeetingId;
+  final String? shortMeetingNum;
 
   /// 会议主题
   final String subject;
@@ -153,9 +153,9 @@ class NEHistoryMeetingItem {
   String? sipId;
 
   NEHistoryMeetingItem({
-    required this.meetingUniqueId,
     required this.meetingId,
-    this.shortMeetingId,
+    required this.meetingNum,
+    this.shortMeetingNum,
     required this.subject,
     this.password,
     this.sipId,
@@ -166,9 +166,9 @@ class NEHistoryMeetingItem {
     if (json == null) return null;
     try {
       return NEHistoryMeetingItem(
-        meetingUniqueId: json['meetingUniqueId'] as int,
-        meetingId: json['meetingId'] as String,
-        shortMeetingId: json['shortMeetingId'] as String?,
+        meetingId: json['meetingId'] as int,
+        meetingNum: json['meetingNum'] as String,
+        shortMeetingNum: json['shortMeetingNum'] as String?,
         password: json['password'] as String?,
         subject: json['subject'] as String,
         nickname: json['nickname'] as String,
@@ -180,9 +180,9 @@ class NEHistoryMeetingItem {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'meetingUniqueId': meetingUniqueId,
         'meetingId': meetingId,
-        if (shortMeetingId != null) 'shortMeetingId': shortMeetingId,
+        'meetingNum': meetingNum,
+        if (shortMeetingNum != null) 'shortMeetingNum': shortMeetingNum,
         if (password != null) 'password': password,
         'subject': subject,
         'nickname': nickname,

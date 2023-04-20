@@ -30,17 +30,17 @@ class _NEMeetingServiceImpl extends NEMeetingService
     }
 
     // 如果指定了会议ID，需要检查会议ID是否为个人会议ID或个人会议短ID
-    final meetingId = param.meetingId;
+    final meetingNum = param.meetingNum;
     final accountInfo =
         NEMeetingKit.instance.getAccountService().getAccountInfo();
-    if (meetingId != null &&
-        meetingId.isNotEmpty &&
+    if (meetingNum != null &&
+        meetingNum.isNotEmpty &&
         accountInfo != null &&
-        meetingId != accountInfo.privateShortMeetingNum &&
-        meetingId != accountInfo.privateMeetingNum) {
+        meetingNum != accountInfo.privateShortMeetingNum &&
+        meetingNum != accountInfo.privateMeetingNum) {
       return NEResult(
         code: NEMeetingErrorCode.paramError,
-        msg: 'MeetingId is incorrect',
+        msg: 'MeetingNum is incorrect',
       );
     }
 
@@ -69,7 +69,7 @@ class _NEMeetingServiceImpl extends NEMeetingService
     late MeetingInfo _meetingInfo;
     late NERoomContext _roomContext;
     return MeetingRepository.createMeeting(
-      type: (param.meetingId?.isNotEmpty ?? false)
+      type: (param.meetingNum?.isNotEmpty ?? false)
           ? NEMeetingType.kPersonal
           : NEMeetingType.kRandom,
       subject: param.subject,
@@ -83,10 +83,10 @@ class _NEMeetingServiceImpl extends NEMeetingService
       featureConfig: NEMeetingFeatureConfig(
         enableChatroom: !opts.noChat,
         enableLive: false,
-        enableWhiteboard: SettingsRepository.isMeetingWhiteboardSupported(),
-        enableRecord: !opts.noCloudRecord &&
-            SettingsRepository.isMeetingCloudRecordSupported(),
-        enableSip: !opts.noSip && SettingsRepository.isSipSupported(),
+        enableWhiteboard: SDKConfig.current.isWhiteboardSupported,
+        enableRecord:
+            !opts.noCloudRecord && SDKConfig.current.isCloudRecordSupported,
+        enableSip: !opts.noSip && SDKConfig.current.isSipSupported,
       ),
     ).map<NERoomContext>((meetingInfo) {
       _meetingInfo = meetingInfo;
@@ -96,6 +96,7 @@ class _NEMeetingServiceImpl extends NEMeetingService
           userName: param.displayName,
           role: MeetingRoles.kHost,
           password: param.password,
+          avatar: param.avatar,
           initialMyProperties: param.tag != null && param.tag!.isNotEmpty
               ? {
                   MeetingPropertyKeys.kMemberTag: param.tag!,
@@ -118,37 +119,6 @@ class _NEMeetingServiceImpl extends NEMeetingService
     });
   }
 
-  NEResult<void> _handleMeetingResultCode(int code, [String? msg]) {
-    if (code == MeetingErrorCode.success) {
-      return NEResult<void>(code: NEMeetingErrorCode.success);
-    } else if (code == MeetingErrorCode.meetingAlreadyExists) {
-      return NEResult<void>(
-          code: NEMeetingErrorCode.meetingAlreadyExist, msg: msg);
-    } else if (code == MeetingErrorCode.networkError) {
-      return NEResult<void>(
-          code: NEMeetingErrorCode.noNetwork,
-          msg: localizations.networkUnavailableCheck);
-    } else if (code == MeetingErrorCode.unauthorized) {
-      return NEResult<void>(
-          code: NEMeetingErrorCode.noAuth,
-          msg: msg ?? localizations.unauthorized);
-    } else if (code == MeetingErrorCode.roomLock) {
-      return NEResult<void>(
-          code: NEMeetingErrorCode.meetingLocked,
-          msg: localizations.meetingLocked);
-    } else if (code == MeetingErrorCode.meetingNotInProgress) {
-      return NEResult<void>(
-          code: NEMeetingErrorCode.meetingNotInProgress,
-          msg: localizations.meetingNotExist);
-    } else if (code == NEMeetingErrorCode.meetingNotExist) {
-      return NEResult<void>(
-          code: NEMeetingErrorCode.meetingNotExist,
-          msg: localizations.meetingNotExist);
-    } else {
-      return NEResult<void>(code: code, msg: msg);
-    }
-  }
-
   @override
   Future<NEResult<NERoomContext>> joinMeeting(
     NEJoinMeetingParams param,
@@ -165,19 +135,28 @@ class _NEMeetingServiceImpl extends NEMeetingService
     }
 
     final meetingInfoResult =
-        await MeetingRepository.getMeetingInfo(param.meetingId);
+        await MeetingRepository.getMeetingInfo(param.meetingNum);
     if (!meetingInfoResult.isSuccess()) {
       return _handleMeetingResultCode(
               meetingInfoResult.code, meetingInfoResult.msg)
           .cast();
     }
 
+    final meetingInfo = meetingInfoResult.nonNullData;
+    final authorization = meetingInfo.authorization;
     var joinRoomResult = await _roomService.joinRoom(
       NEJoinRoomParams(
-        roomUuid: meetingInfoResult.nonNullData.roomUuid,
+        roomUuid: meetingInfo.roomUuid,
         userName: param.displayName,
         role: MeetingRoles.kUndefined,
         password: param.password,
+        avatar: param.avatar,
+        crossAppAuthorization: authorization != null
+            ? NECrossAppAuthorization(
+                appKey: authorization.appKey,
+                user: authorization.user,
+                token: authorization.token)
+            : null,
         initialMyProperties: param.tag != null && param.tag!.isNotEmpty
             ? {
                 MeetingPropertyKeys.kMemberTag: param.tag!,
@@ -191,7 +170,7 @@ class _NEMeetingServiceImpl extends NEMeetingService
     if (joinRoomResult.code == MeetingErrorCode.success &&
         joinRoomResult.data != null) {
       final roomContext = joinRoomResult.nonNullData;
-      roomContext.setupMeetingEnv(meetingInfoResult.nonNullData);
+      roomContext.setupMeetingEnv(meetingInfo);
       return NEResult(code: NEMeetingErrorCode.success, data: roomContext);
     } else {
       return _handleMeetingResultCode(joinRoomResult.code, joinRoomResult.msg)
@@ -269,7 +248,7 @@ class _NEMeetingServiceImpl extends NEMeetingService
           msg: localizations.displayNameShouldNotBeEmpty);
     }
 
-    if (param is NEJoinMeetingParams && param.meetingId.isEmpty) {
+    if (param is NEJoinMeetingParams && param.meetingNum.isEmpty) {
       return NEResult<void>(
           code: NEMeetingErrorCode.paramError,
           msg: localizations.meetingIdShouldNotBeEmpty);

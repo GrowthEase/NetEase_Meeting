@@ -33,13 +33,13 @@ class _SliderDemo extends State<SliderWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        height: 160,
+    final child = Container(
         decoration: BoxDecoration(
             borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(10), topRight: Radius.circular(10)),
             color: Colors.white),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
             Container(
@@ -208,6 +208,7 @@ class _SliderDemo extends State<SliderWidget> {
                         ]))),
           ],
         ));
+    return child;
   }
 
   Widget line() {

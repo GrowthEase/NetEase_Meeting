@@ -29,6 +29,10 @@ class NEMeetingPlugin {
 
   static NEImageGallerySaver? _imageGallerySaver;
 
+  static NEBluetoothService? _bluetoothService;
+
+  static NEPhoneStateService? _phoneStateService;
+
   /// notification service
   NENotificationService getNotificationService() {
     return _notificationService ??
@@ -45,6 +49,16 @@ class NEMeetingPlugin {
   NEImageGallerySaver get imageGallerySaver {
     _imageGallerySaver ??= NEImageGallerySaver(_methodChannel, handlerMap);
     return _imageGallerySaver!;
+  }
+
+  NEBluetoothService get bluetoothService {
+    _bluetoothService ??= NEBluetoothService._();
+    return _bluetoothService!;
+  }
+
+  NEPhoneStateService get phoneStateService {
+    _phoneStateService ??= NEPhoneStateService._();
+    return _phoneStateService!;
   }
 
   /// native  --  dart

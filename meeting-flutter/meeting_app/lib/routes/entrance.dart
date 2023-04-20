@@ -13,12 +13,12 @@ import 'package:nemeeting/base/util/global_preferences.dart';
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:nemeeting/base/util/url_util.dart';
 import 'package:flutter/material.dart';
+import 'package:nemeeting/channel/deep_link_manager.dart';
 import 'package:nemeeting/service/config/servers.dart';
 import 'package:nemeeting/utils/privacy_util.dart';
 import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/service/config/app_config.dart';
 import 'package:nemeeting/service/config/scene_type.dart';
-import 'package:nemeeting/service/profile/app_profile.dart';
 import 'package:nemeeting/service/repo/auth_repo.dart';
 import '../uikit/utils/nav_utils.dart';
 import '../uikit/utils/router_name.dart';
@@ -52,7 +52,10 @@ class _EntranceRouteState extends LifecycleBaseState {
       if (value != true) {
         showPrivacyDialog(context);
       }
+      DeepLinkManager().privacyAgreed = value;
     });
+
+    DeepLinkManager().attach(context);
   }
 
   @override
@@ -135,37 +138,6 @@ class _EntranceRouteState extends LifecycleBaseState {
         });
   }
 
-  GestureDetector buildLogin() {
-    return GestureDetector(
-      child: Container(
-        height: 50,
-        decoration: BoxDecoration(
-          border: Border.fromBorderSide(Borders.secondaryBorder),
-          borderRadius: BorderRadius.all(Radius.circular(25.0)),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          AppConfig().isPublicFlavor ? Strings.login : Strings.mailLogin,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-              color: AppColors.blue_337eff,
-              fontWeight: FontWeight.w400,
-              fontSize: 16,
-              decoration: TextDecoration.none),
-        ),
-      ),
-      onTap: () {
-        if (!PrivacyUtil.privateAgreementChecked) {
-          ToastUtils.showToast(context, Strings.privacyCheckedTips);
-          return;
-        }
-        var authModel = AuthArguments();
-        authModel.sceneType = SceneType.login;
-        NavUtils.pushNamed(context, RouterName.login, arguments: authModel);
-      },
-    );
-  }
-
   GestureDetector buildRegisterAndLogin() {
     return GestureDetector(
       child: Container(
@@ -176,7 +148,7 @@ class _EntranceRouteState extends LifecycleBaseState {
         ),
         alignment: Alignment.center,
         child: Text(
-          Strings.registerAndLogin,
+          Strings.login,
           textAlign: TextAlign.center,
           style: TextStyle(
               color: AppColors.secondaryText,
@@ -233,6 +205,7 @@ class _EntranceRouteState extends LifecycleBaseState {
 
   Future<void> ssoLogin(String uuid, String ssoToken, String appKey) async {
     await AuthRepo().loginByToken(uuid, ssoToken, appKey).then((result) {
+      if (!mounted) return;
       if (result.code == HttpCode.success) {
         NavUtils.pushNamedAndRemoveUntil(context, RouterName.homePage);
       } else {
@@ -245,18 +218,11 @@ class _EntranceRouteState extends LifecycleBaseState {
   void dispose() {
     PrivacyUtil.dispose();
     NEPlatformChannel().unListen(_callback);
+    DeepLinkManager().detach(context);
     super.dispose();
   }
 
   void deepLink(String uri) {
-    var meetingId = UrlUtil.getParamValue(uri, UrlUtil.paramMeetingId);
-    AppProfile.deepLinkMeetingId = meetingId;
-    if (!TextUtil.isEmpty(meetingId)) {
-      if (ModalRoute.of(context)!.isCurrent) {
-        openAnonyMeetJoin();
-      }
-    }
-
     var appKey = UrlUtil.getParamValue(uri, UrlUtil.paramAppId);
     var ssoToken = UrlUtil.getParamValue(uri, UrlUtil.paramUserToken);
     var userUuid = UrlUtil.getParamValue(uri, UrlUtil.paramUserUuid);
@@ -353,6 +319,7 @@ class _EntranceRouteState extends LifecycleBaseState {
       if (value == false) {
         exit(0);
       } else if (value == true) {
+        DeepLinkManager().privacyAgreed = true;
         GlobalPreferences().setPrivacyDialogShowed(true);
       }
     });

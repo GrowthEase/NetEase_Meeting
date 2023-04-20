@@ -7,7 +7,7 @@ part of meeting_kit;
 class _NEMeetingKitImpl extends NEMeetingKit
     with EventTrackMixin, WidgetsBindingObserver {
   static const _tag = '_NEMeetingKitImpl';
-  static const _serverUrlExtraKey = 'serverUrl';
+  // static const _serverUrlExtraKey = 'serverUrl';
 
   NEMeetingKitConfig? _lastConfig;
   NEMeetingService meetingService = _NEMeetingServiceImpl();
@@ -102,6 +102,10 @@ class _NEMeetingKitImpl extends NEMeetingKit
         //       }
         //     : null,
         reuseIM: config.reuseIM,
+        extras: config.extras == null
+            ? null
+            : Map.fromEntries(config.extras!.entries
+                .where((element) => element.value is String)).cast(),
       ),
     );
     if (initResult.isSuccess()) {
@@ -111,10 +115,13 @@ class _NEMeetingKitImpl extends NEMeetingKit
         config.appKey,
         MeetingServerConfig.parse(
             config.serverConfig?.meetingServerConfig?.meetingServer ??
-                config.serverUrl),
+                config.serverUrl ??
+                config.extras?['serverUrl']),
         config.extras,
       );
-      SDKConfig.initialize(config.appKey);
+      SDKConfig.current.dispose();
+      SDKConfig.current = SDKConfig(config.appKey)..initialize();
+      settingsService.sdkConfig = SDKConfig.current;
       if (sdkVersionsHeaders == null) {
         _roomKit.sdkVersions.then((value) {
           if (sdkVersionsHeaders == null) {
@@ -268,8 +275,8 @@ class _NEMeetingKitImpl extends NEMeetingKit
         });
       }
     } else {
-      return NEResult<void>(
-          code: accountInfoResult.code, msg: accountInfoResult.msg);
+      return _handleMeetingResultCode(
+          accountInfoResult.code, accountInfoResult.msg);
     }
   }
 
@@ -331,5 +338,37 @@ class _NEMeetingKitImpl extends NEMeetingKit
         settingsService._ensureSettings();
       }
     });
+  }
+}
+
+NEResult<void> _handleMeetingResultCode(int code, [String? msg]) {
+  final localizations = NEMeetingKit.instance.localizations;
+  if (code == MeetingErrorCode.success) {
+    return NEResult<void>(code: NEMeetingErrorCode.success, msg: msg);
+  } else if (code == MeetingErrorCode.meetingAlreadyExists) {
+    return NEResult<void>(
+        code: NEMeetingErrorCode.meetingAlreadyExist, msg: msg);
+  } else if (code == MeetingErrorCode.networkError) {
+    return NEResult<void>(
+        code: NEMeetingErrorCode.noNetwork,
+        msg: localizations.networkUnavailableCheck);
+  } else if (code == MeetingErrorCode.unauthorized) {
+    return NEResult<void>(
+        code: NEMeetingErrorCode.noAuth,
+        msg: msg ?? localizations.unauthorized);
+  } else if (code == MeetingErrorCode.roomLock) {
+    return NEResult<void>(
+        code: NEMeetingErrorCode.meetingLocked,
+        msg: localizations.meetingLocked);
+  } else if (code == MeetingErrorCode.meetingNotInProgress) {
+    return NEResult<void>(
+        code: NEMeetingErrorCode.meetingNotInProgress,
+        msg: localizations.meetingNotExist);
+  } else if (code == NEMeetingErrorCode.meetingNotExist) {
+    return NEResult<void>(
+        code: NEMeetingErrorCode.meetingNotExist,
+        msg: localizations.meetingNotExist);
+  } else {
+    return NEResult<void>(code: code, msg: msg);
   }
 }

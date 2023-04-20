@@ -5,11 +5,11 @@
 part of meeting_ui;
 
 class MeetingPageProxy extends StatelessWidget {
-  final GlobalKey<NavigatorState> _sdkNavigatorKey = GlobalKey();
-
   final Object arguments;
+  final GlobalKey<NavigatorState> _sdkNavigatorKey;
 
-  MeetingPageProxy(this.arguments);
+  MeetingPageProxy(this.arguments)
+      : _sdkNavigatorKey = GlobalObjectKey(arguments);
 
   @override
   Widget build(BuildContext context) {

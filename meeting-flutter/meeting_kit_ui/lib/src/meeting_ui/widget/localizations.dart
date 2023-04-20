@@ -25,7 +25,7 @@ class NEMeetingUIKitLocalizationsScope extends StatelessWidget {
           locale: value,
           delegates: [
             NEMeetingKitLocalizations.delegate,
-            ...NEMeetingUIKitLocalizations.localizationsDelegates,
+            ...NEMeetingUIKitLocalizations.localizationsDelegates
           ],
           child: Builder(
             builder: (ctx) {

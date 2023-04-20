@@ -2,50 +2,64 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:nemeeting/arguments/webview_arguments.dart';
 import 'package:nemeeting/service/model/security_notice_info.dart';
+import 'package:nemeeting/uikit/utils/nav_utils.dart';
+import 'package:nemeeting/uikit/utils/router_name.dart';
+import 'package:nemeeting/utils/security_notice_util.dart';
 
 import '../uikit/values/asset_name.dart';
 import '../uikit/values/borders.dart';
 import '../uikit/values/colors.dart';
 
-class MeetingSecurityNotice extends StatefulWidget {
-  final ValueChanged<bool>? onChanged;
-  final double? width;
-  final double? height;
-  final bool value;
-  final Configs configs;
+class MeetingAppNotificationBar extends StatefulWidget {
+  final VoidCallback? onClose;
 
-  MeetingSecurityNotice({
-    this.width,
-    this.height,
-    required this.value,
-    required this.onChanged,
-    required this.configs,
-  });
+  MeetingAppNotificationBar({
+    Key? key,
+    this.onClose,
+  }) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
-    return MeetingSecurityNoticeState();
+    return MeetingAppNotificationBarState();
   }
 }
 
-class MeetingSecurityNoticeState extends State<MeetingSecurityNotice> {
-  final TapGestureRecognizer _tapPrivacy = TapGestureRecognizer();
-  late bool _value;
-  late Configs _configs;
+class MeetingAppNotificationBarState extends State<MeetingAppNotificationBar> {
+  final TapGestureRecognizer _tap = TapGestureRecognizer();
+  AppNotification? _notification;
+  StreamSubscription? _subscription;
 
   @override
   void initState() {
     super.initState();
+    _subscription = AppNotificationManager().appNotification.listen((event) {
+      setState(() {
+        _notification = event;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _tap.dispose();
+    _subscription?.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    _value = widget.value;
-    _configs = widget.configs;
+    final notification = _notification;
+    if (notification == null) {
+      return Container();
+    }
+
     return Column(
       children: [
         Container(
@@ -58,44 +72,38 @@ class MeetingSecurityNoticeState extends State<MeetingSecurityNotice> {
               border: Border.fromBorderSide(Borders.noticeBorder),
               borderRadius: BorderRadius.all(Radius.circular(4.0)),
             ),
-            child: _value
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                        buildIconBy(AssetName.iconWarning),
-                        Expanded(
-                          child: RichText(
-                            textDirection: TextDirection.ltr,
-                            text: TextSpan(children: [
-                              TextSpan(children: [
-                                TextSpan(
-                                  text: '【${_configs.title}】',
-                                  style: buildTextStyle(AppColors.color_666666),
-                                ),
-                                TextSpan(
-                                    text: _configs.content,
-                                    style:
-                                        buildTextStyle(AppColors.color_666666),
-                                    recognizer: _tapPrivacy
-                                      ..onTap = () => showLogoutDialog()),
-                              ]),
-                            ]),
+            child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  buildIconBy(AssetName.iconWarning),
+                  SizedBox(
+                    width: 4,
+                  ),
+                  Expanded(
+                    child: RichText(
+                      textDirection: TextDirection.ltr,
+                      text: TextSpan(children: [
+                        TextSpan(children: [
+                          TextSpan(
+                            text: notification.title,
+                            style: buildTextStyle(AppColors.color_666666),
                           ),
-                        ),
-                        buildIconBy(AssetName.iconClose,
-                            onChanged: widget.onChanged, paddingLeft: 2)
-                      ])
-                : Container()),
+                          TextSpan(
+                              text: notification.content,
+                              style: buildTextStyle(AppColors.color_666666),
+                              recognizer: _tap
+                                ..onTap =
+                                    () => onNotificationTap(notification)),
+                        ]),
+                      ]),
+                    ),
+                  ),
+                  buildIconBy(AssetName.iconClose, paddingLeft: 2)
+                ])),
       ],
     );
-  }
-
-  @override
-  void dispose() {
-    _tapPrivacy.dispose();
-    super.dispose();
   }
 
   TextStyle buildTextStyle(Color color) {
@@ -107,9 +115,7 @@ class MeetingSecurityNoticeState extends State<MeetingSecurityNotice> {
   }
 
   Align buildIconBy(String assetName,
-      {ValueChanged<bool>? onChanged,
-      double paddingLeft = 0,
-      double paddingRight = 0}) {
+      {double paddingLeft = 0, double paddingRight = 0}) {
     return Align(
         alignment: Alignment.topCenter,
         child: Container(
@@ -117,10 +123,8 @@ class MeetingSecurityNoticeState extends State<MeetingSecurityNotice> {
               EdgeInsets.only(top: 3, right: paddingRight, left: paddingLeft),
           child: GestureDetector(
             onTap: () {
-              if (onChanged == null) return;
-              _value = false;
-              setState(() {});
-              onChanged(_value);
+              AppNotificationManager().hideNotification();
+              widget.onClose?.call();
             },
             child: Image.asset(
               assetName,
@@ -131,16 +135,26 @@ class MeetingSecurityNoticeState extends State<MeetingSecurityNotice> {
         ));
   }
 
-  void showLogoutDialog() {
+  void onNotificationTap(AppNotification notification) {
+    if (notification.type == AppNotification.kTypeUrl) {
+      if (notification.url != null && notification.url!.isNotEmpty) {
+        NavUtils.pushNamed(
+          context,
+          RouterName.webview,
+          arguments: WebViewArguments(notification.url!, ''),
+        );
+      }
+      return;
+    }
     showDialog(
         context: context,
         builder: (BuildContext context) {
           return CupertinoAlertDialog(
-            title: Text(_configs.title ?? ''),
-            content: Text(_configs.content ?? ''),
+            title: Text(notification.title ?? ''),
+            content: Text(notification.content ?? ''),
             actions: <Widget>[
               CupertinoDialogAction(
-                child: Text(_configs.okBtnLabel ?? ''),
+                child: Text(notification.okBtnLabel ?? ''),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },

@@ -6,7 +6,7 @@ part of meeting_ui;
 
 class MeetingBaseArguments {
   /// 会议号
-  String meetingId;
+  String meetingNum;
 
   /// 会议昵称
   String? displayName;
@@ -117,7 +117,7 @@ class MeetingBaseArguments {
   NEMeetingUIOptions options;
 
   MeetingBaseArguments({
-    required this.meetingId,
+    required this.meetingNum,
     this.displayName,
     this.tag,
     this.password,

@@ -144,6 +144,11 @@ class MeetingInfo {
   ///
   late final String? sipCid;
 
+  ///
+  /// 跨appkey的鉴权信息
+  ///
+  late final MeetingAuthorization? authorization;
+
   /// meeting 配置相关
   late final MeetingSettings? settings;
 
@@ -160,8 +165,30 @@ class MeetingInfo {
     state = _MeetingStateExtension.fromState(map['state'] as int);
     shortMeetingNum = map['shortMeetingNum'] as String?;
     sipCid = map['sipCid'] as String?;
+
+    final appKey = map['meetingAppKey'] as String?;
+    final user = map['meetingUserUuid'] as String?;
+    final token = map['meetingUserToken'] as String?;
+    if (appKey != null && user != null && token != null) {
+      authorization = MeetingAuthorization(appKey, user, token);
+    } else {
+      authorization = null;
+    }
+
     settings = MeetingSettings.fromMap(map['settings'] as Map?);
   }
+}
+
+class MeetingAuthorization {
+  final String appKey;
+  final String user;
+  final String token;
+
+  MeetingAuthorization(
+    this.appKey,
+    this.user,
+    this.token,
+  );
 }
 
 class MeetingSettings {

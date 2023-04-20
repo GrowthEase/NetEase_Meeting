@@ -98,7 +98,7 @@ public class ImageGallerySaver: NSObject {
             }
             imageAsset.requestContentEditingInput(with: options) { [unowned self] contentEditingInput, info in
               if let urlStr = contentEditingInput?.fullSizeImageURL?.absoluteString {
-                self.saveResult(isSuccess: true, filePath: urlStr)
+                saveResult(isSuccess: true, filePath: urlStr)
               }
             }
           }
@@ -136,7 +136,7 @@ public class ImageGallerySaver: NSObject {
             }
             imageAsset.requestContentEditingInput(with: options) { [unowned self] contentEditingInput, info in
               if let urlStr = contentEditingInput?.fullSizeImageURL?.absoluteString {
-                self.saveResult(isSuccess: true, filePath: urlStr)
+                saveResult(isSuccess: true, filePath: urlStr)
               }
             }
           }

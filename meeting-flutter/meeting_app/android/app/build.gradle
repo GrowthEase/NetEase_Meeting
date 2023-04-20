@@ -37,7 +37,7 @@ if (keystorePropertiesFile.exists()) {
 
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 33
 
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
@@ -50,7 +50,7 @@ android {
     defaultConfig {
         applicationId "com.netease.yunxin.meeting"
         minSdkVersion 21
-        targetSdkVersion 29
+        targetSdkVersion 31
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -91,7 +91,6 @@ flutter {
 
 dependencies {
     implementation fileTree(include: ['*.jar','*.aar'], dir: 'libs')
-    //implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
     testImplementation 'junit:junit:4.12'

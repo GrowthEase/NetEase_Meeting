@@ -59,15 +59,6 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
               }
             }),
         _buildSplit(),
-        buildPersonItem(
-            title: Strings.company,
-            arrowTip: widget.companyName,
-            isShowArrow: canSwitchCompany(),
-            onTap: () {
-              if (canSwitchCompany()) {
-                NavUtils.pushNamed(context, RouterName.companySetting);
-              }
-            }),
         if (!TextUtil.isEmpty(MeetingUtil.getMobilePhone()) || canModifyPwd())
           Container(
             color: AppColors.globalBg,
@@ -79,7 +70,7 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
           color: AppColors.globalBg,
           height: Dimen.globalPadding,
         ),
-        if (!TextUtil.isEmpty(MeetingUtil.getShortMeetingId()))
+        if (!TextUtil.isEmpty(MeetingUtil.getShortMeetingNum()))
           ...buildShortMeetingId(),
         buildMeetingId(),
         Container(
@@ -87,12 +78,7 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
           height: Dimen.globalPadding,
         ),
         buildLogout(),
-        Expanded(
-          flex: 1,
-          child: Container(
-            color: AppColors.globalBg,
-          ),
-        )
+        Spacer(),
       ],
     );
   }
@@ -142,7 +128,7 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
       child: Row(
         children: <Widget>[
           Text(
-            Strings.personalMeetingId,
+            Strings.personalMeetingNum,
             style: TextStyle(fontSize: 16, color: AppColors.black_222222),
           ),
           Spacer(),
@@ -175,7 +161,7 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
         child: Row(
           children: <Widget>[
             Text(
-              Strings.personalShortMeetingId,
+              Strings.personalShortMeetingNum,
               style: TextStyle(fontSize: 16, color: AppColors.black_222222),
             ),
             Container(
@@ -193,7 +179,7 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
             Spacer(),
             GestureDetector(
               child: Text(
-                MeetingUtil.getShortMeetingId(),
+                MeetingUtil.getShortMeetingNum(),
                 style: TextStyle(fontSize: 14, color: AppColors.color_999999),
               ),
               onTap: () {

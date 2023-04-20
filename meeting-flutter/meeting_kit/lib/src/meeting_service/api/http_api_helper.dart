@@ -49,13 +49,13 @@ class HttpApiHelper {
   }
 
   ///取消预约会议，开始前可以取消
-  static Future<NEResult<void>> _cancelRoom(int meetingUniqueId) {
-    return execute(_CancelMeetingApi(meetingUniqueId));
+  static Future<NEResult<void>> _cancelRoom(int meetingId) {
+    return execute(_CancelMeetingApi(meetingId));
   }
 
   ///删除预约会议
-  static Future<NEResult<void>> _deleteRoom(int meetingUniqueId) {
-    return execute(_DeleteMeetingApi(meetingUniqueId));
+  static Future<NEResult<void>> _deleteRoom(int meetingId) {
+    return execute(_DeleteMeetingApi(meetingId));
   }
 
   ///根据唯一id获取会议信息
@@ -77,11 +77,5 @@ class HttpApiHelper {
   ///获取用户信息配置
   static Future<NEResult<AccountSettings>> _getSettingsApi() {
     return execute(_GetSettingsApi());
-  }
-
-  ///获取用户美颜证书
-  static Future<NEResult<Uint8List>> _getBeautyLicenseApi(
-      String licenseUrl, ProgressCallback progressCallback) {
-    return execute(_DownloadBeautyLicenseApi(licenseUrl, progressCallback));
   }
 }

@@ -24,10 +24,15 @@ class WhiteBoardWebPage extends StatefulWidget {
   }
 }
 
-class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage> {
+class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
+    with AutomaticKeepAliveClientMixin {
   bool isEditing = false;
   late NERoomWhiteboardController whiteBoardController;
   late NERoomEventCallback callback;
+
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   void initState() {
     super.initState();
@@ -60,6 +65,7 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return _buildBody();
   }
 
@@ -72,9 +78,14 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage> {
             child: Container(
               color: _UIColors.white,
               child: Center(
-                child: AbsorbPointer(
-                  absorbing: !isEditing,
-                  child: whiteBoardController.createWhiteboardView(),
+                child: whiteBoardController.createWhiteboardView(
+                  gestureRecognizers: isEditing
+                      ? <Factory<OneSequenceGestureRecognizer>>[
+                          new Factory<OneSequenceGestureRecognizer>(
+                            () => new EagerGestureRecognizer(),
+                          ),
+                        ].toSet()
+                      : null,
                 ),
               ),
             ),
@@ -135,7 +146,9 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage> {
     Alog.i(tag: 'WhiteBoardWebPageState', content: 'switch drawable=$drawable');
     isEditing = drawable;
     whiteBoardController.showWhiteboardTools(drawable);
-    widget.whiteBoardPageStatusCallback.call(drawable);
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      widget.whiteBoardPageStatusCallback.call(drawable);
+    });
     if (update) {
       setState(() {});
     }

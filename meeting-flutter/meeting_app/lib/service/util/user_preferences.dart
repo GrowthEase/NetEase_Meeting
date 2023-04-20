@@ -8,12 +8,22 @@ import 'package:nemeeting/service/profile/app_profile.dart';
 class UserPreferences extends Preferences {
   static const String localSetting = 'localSetting';
   static const String serverSetting = 'serverSettings';
+  static const String showShareUserVideo = 'showShareUserVideo';
 
   UserPreferences._internal();
 
   static final UserPreferences _singleton = UserPreferences._internal();
 
   factory UserPreferences() => _singleton;
+
+  Future<bool> getShowShareUserVideo() async {
+    final value = await getBoolSp(_wrapperKey(showShareUserVideo));
+    return value ?? true;
+  }
+
+  Future<void> setShowShareUserVideo(bool value) async {
+    setBoolSp(_wrapperKey(showShareUserVideo), value);
+  }
 
   /// save
   @override

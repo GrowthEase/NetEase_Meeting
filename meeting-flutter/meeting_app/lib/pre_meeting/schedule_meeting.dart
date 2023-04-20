@@ -57,7 +57,7 @@ class _ScheduleMeetingRouteState
 
   bool isLiveEnabled = false;
 
-  bool attendeeRecordOn = !noCloudRecord;
+  bool attendeeRecordOn = !kNoCloudRecord;
 
   bool showMeetingRecord = false;
 
@@ -478,7 +478,7 @@ class _ScheduleMeetingRouteState
           ),
           // MeetingValueKey.addTextWidgetTest(valueKey: MeetingValueKey.scheduleLiveSwitch, value: liveSwitch),
           CupertinoSwitch(
-              // key: MeetingValueKey.scheduleLiveSwitch,
+              key: MeetingValueKey.scheduleLiveSwitch,
               value: liveLevel,
               onChanged: (bool value) {
                 setState(() {

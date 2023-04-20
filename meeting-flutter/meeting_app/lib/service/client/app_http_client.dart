@@ -64,7 +64,7 @@ class AppHttpClient {
       };
 
   String? _getLanguageTag() {
-    final locale = WidgetsBinding.instance!.platformDispatcher.locale;
+    final locale = WidgetsBinding.instance.platformDispatcher.locale;
     return locale.languageCode != 'und' ? locale.toLanguageTag() : null;
   }
 

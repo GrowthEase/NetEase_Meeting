@@ -4,8 +4,8 @@
 
 part of meeting_ui;
 
-extension MeetingIdFormatter on String {
-  String toMeetingIdFormat() {
+extension MeetingNumFormatter on String {
+  String toMeetingNumFormat() {
     return replaceAllMapped(RegExp(r'(\d{3})(\d{3})(\d{3,})'), (match) {
       return '${match[1]}-${match[2]}-${match[3]}';
     });

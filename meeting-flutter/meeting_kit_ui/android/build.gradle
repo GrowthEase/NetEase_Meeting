@@ -32,7 +32,7 @@ android {
     compileSdkVersion 31
 
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 21
     }
     lintOptions {
         disable 'InvalidPackage'
@@ -42,8 +42,10 @@ android {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
-    implementation 'com.netease.yunxin:nertc-beauty:4.6.29'
-    implementation 'com.netease.yunxin:nertc-facedetect:4.6.29'
-    // 4.6.29 `nertc-segment` module is corrupt, use 4.6.28 instead
-    implementation 'com.netease.yunxin:nertc-segment:4.6.28'
+    def rtc_version = '4.6.50'
+    implementation "com.netease.yunxin:nertc-beauty:$rtc_version"
+    implementation "com.netease.yunxin:nertc-facedetect:$rtc_version"
+    implementation "com.netease.yunxin:nertc-segment:$rtc_version"
+    implementation "com.netease.yunxin:nertc-aidenoise:$rtc_version"
+    implementation "com.netease.yunxin:nertc-aihowling:$rtc_version"
 }

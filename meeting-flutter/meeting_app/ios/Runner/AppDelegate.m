@@ -54,16 +54,10 @@ static NSString *const broadcastExtensionAppGroup = @"group.com.netease.yunxin.m
           result(FlutterMethodNotImplemented);
         }
       }];
-  [self.eventChannel setStreamHandler:self.streamHandler];
-  [GeneratedPluginRegistrant registerWithRegistry:self];
 
-  //  // 判断 是否越狱 或 篡改Mach-O文件
-  //  if ([self prisonBreakenDetection] || [self checkMach_O]) {
-  //    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)),
-  //                   dispatch_get_main_queue(), ^{
-  //                     [self exitApplication];
-  //                   });
-  //  }
+  [self.eventChannel setStreamHandler:self.streamHandler];
+
+  [GeneratedPluginRegistrant registerWithRegistry:self];
 
   BOOL success = [super application:application didFinishLaunchingWithOptions:launchOptions];
   return success;
@@ -104,7 +98,7 @@ static NSString *const broadcastExtensionAppGroup = @"group.com.netease.yunxin.m
 
 /// 退出应用
 - (void)exitApplication {
-  //运行一个不存在的方法,退出界面更加圆滑
+  // 运行一个不存在的方法,退出界面更加圆滑
   [self performSelector:@selector(exitApp)];
   abort();
 }
@@ -133,7 +127,7 @@ static NSString *const broadcastExtensionAppGroup = @"group.com.netease.yunxin.m
   NSBundle *bundle = [NSBundle mainBundle];
   NSDictionary *info = [bundle infoDictionary];
   if ([info objectForKey:@"SignerIdentity"] != nil) {
-    //存在这个key，则说明被二次打包了
+    // 存在这个key，则说明被二次打包了
     return YES;
   }
   return NO;

@@ -304,7 +304,15 @@ class MenuItemInfo extends StatelessWidget {
     } else {
       icon = !itemInfo.hasIcon
           ? _useBuiltinIconById(itemId, NEMenuItemStates.getState([itemState]))
-          : Image(image: getImage(itemInfo));
+          : Image(
+              image: getImage(itemInfo),
+              errorBuilder: (context, error, stackTrace) {
+                return Icon(
+                  Icons.warning,
+                  color: Colors.redAccent,
+                );
+              },
+            );
     }
     icon = Container(
       width: 24,

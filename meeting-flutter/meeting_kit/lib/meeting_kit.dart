@@ -55,6 +55,7 @@ part 'src/meeting_kit/module_name.dart';
 part 'src/meeting_kit/invocation_manager.dart';
 part 'src/meeting_kit/log/log_service.dart';
 part 'src/meeting_kit/utils/rtc_utils.dart';
+part 'src/meeting_kit/utils/network_task_executor.dart';
 part 'src/meeting_kit/meeting_context.dart';
 
 class NEMeetingServerConfig {

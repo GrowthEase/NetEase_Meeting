@@ -28,7 +28,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -96,6 +99,22 @@ public class MainActivity extends FlutterActivity {
     addPlugins(flutterEngine);
   }
 
+  private void notifyResult(MethodChannel.Result result, int code, String msg) {
+    notifyResult(result, code, msg, null);
+  }
+
+  private void notifyResult(MethodChannel.Result result, int code, String msg, Object data) {
+    try {
+      Map<String, Object> map = new HashMap<>(4);
+      map.put("code", code);
+      map.put("msg", msg);
+      map.put("data", data);
+      result.success(map);
+    } catch (Throwable throwable) {
+      throwable.printStackTrace();
+    }
+  }
+
   @Override
   public void cleanUpFlutterEngine(@NonNull FlutterEngine flutterEngine) {
     removePlugins(flutterEngine);
@@ -121,7 +140,7 @@ public class MainActivity extends FlutterActivity {
   @Override
   protected void onNewIntent(Intent intent) {
     super.onNewIntent(intent);
-    if (intent.getAction() == android.content.Intent.ACTION_VIEW && linksReceiver != null) {
+    if (android.content.Intent.ACTION_VIEW.equals(intent.getAction()) && linksReceiver != null) {
       linksReceiver.onReceive(this.getApplicationContext(), intent);
     }
   }
@@ -183,10 +202,8 @@ public class MainActivity extends FlutterActivity {
           }
         }
       }
-    } catch (IOException e) {
+    } catch (IOException | CertificateEncodingException e) {
       e.printStackTrace();
-    } catch (CertificateEncodingException ee) {
-      ee.printStackTrace();
     } finally {
       if (jarFile != null) {
         try {
@@ -202,13 +219,10 @@ public class MainActivity extends FlutterActivity {
   private static Certificate[] loadCertificates(JarFile jarFile, JarEntry jarEntry, byte[] buffer) {
     try {
       InputStream is = new BufferedInputStream(jarFile.getInputStream(jarEntry));
-      while (is.read(buffer, 0, buffer.length) != -1) {;
-      }
+      while (is.read(buffer, 0, buffer.length) != -1) {}
       is.close();
       return jarEntry != null ? jarEntry.getCertificates() : null;
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (RuntimeException e) {
+    } catch (IOException | RuntimeException e) {
       e.printStackTrace();
     }
     return null;
@@ -224,9 +238,7 @@ public class MainActivity extends FlutterActivity {
                 .getPackageInfo(context.getPackageName(), PackageManager.GET_SIGNATURES);
         if (pkgInfo != null) {
           if (pkgInfo.signatures != null) {
-            for (Signature signature : pkgInfo.signatures) {
-              signatures.add(signature);
-            }
+            signatures.addAll(Arrays.asList(pkgInfo.signatures));
           }
         }
       } catch (PackageManager.NameNotFoundException e) {

@@ -122,9 +122,7 @@ class _BeautySettingPageState extends BaseState<BeautySettingPage> {
   Future<void> _initRenderer() async {
     renderer = await NERtcVideoRendererFactory.createVideoRenderer('');
     await renderer!.attachToLocalVideo();
-    if (Platform.isAndroid) {
-      renderer!.setMirror(true);
-    }
+    renderer!.setMirror(true);
     await previewRoomRtcController?.startPreview();
     await previewRoomRtcController?.startBeauty();
     await previewRoomRtcController?.enableBeauty(true);

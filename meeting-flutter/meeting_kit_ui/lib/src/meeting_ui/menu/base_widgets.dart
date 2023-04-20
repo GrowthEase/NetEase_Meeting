@@ -77,8 +77,7 @@ class _ValueListenableBuilderState<T>
   // at wrong time, setState call will be ignored and the widget will not be rebuild
   // so it is necessary to delay the setState call to next frame
   void _valueChanged() {
-    if (SchedulerBinding.instance != null &&
-        SchedulerBinding.instance.schedulerPhase != SchedulerPhase.idle &&
+    if (SchedulerBinding.instance.schedulerPhase != SchedulerPhase.idle &&
         SchedulerBinding.instance.schedulerPhase !=
             SchedulerPhase.postFrameCallbacks) {
       if (setStateScheduled) return;

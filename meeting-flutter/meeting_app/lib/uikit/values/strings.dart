@@ -5,6 +5,7 @@
 class Strings {
   static const String createMeeting = '即刻会议';
   static const String joinMeeting = '加入会议';
+  static const String historyMeeting = '历史会议';
   static const String controlTV = '电视遥控';
   static const String invalidOpenControlTV = '当前遥控器还处于绑定状态，请稍后重试';
   static const String homeTitle = '网易会议';
@@ -124,10 +125,11 @@ class Strings {
   static const String nickSetting = '修改昵称';
   static const String head = '头像';
   static const String mobile = '手机';
-  static const String personalMeetingId = '个人会议ID';
-  static const String personalShortMeetingId = '个人会议短号';
+  static const String personalMeetingNum = '个人会议号';
+  static const String personalShortMeetingNum = '个人会议短号';
   static const String internalSpecial = '内部专用';
   static const String logout = '退出登录';
+  static const String deleteAccount = '注销账号';
   static const String confirmLogout = '确定要退出登录？';
   static const String kicked = '您已经被踢出';
   static const String save = '保存';
@@ -157,6 +159,7 @@ class Strings {
   static const String openMicroMeeting = '默认打开麦克风';
   static const String showMeetTime = '显示会议持续时间';
   static const String audioAINS = '智能降噪';
+  static const String showShareUserVideo = '共享时开启共享人摄像头';
   static const String inputTVPair = '请输入电视端配对码';
   static const String openCamera = '打开摄像头';
   static const String openMicro = '打开麦克风';
@@ -225,6 +228,7 @@ class Strings {
   static const String loginOnOtherDevice = '同时登录设备数超出限制，已自动登出';
   static const String loginTokenExpired = '登录状态已过期，请重新登录';
   static const String noAuth = '请先登录';
+  static const String pleaseLoginFirst = '请先登录网易会议';
   static const String joinAppTipsPrefix = '已经阅读并同意网易会议';
   static const String joinAppAnd = ' 和 ';
   static const String joinAppPrivacy = '隐私协议';
@@ -244,17 +248,21 @@ class Strings {
   static const String scheduleTimeIllegal = '预约时间不能小于当前时间';
   static const String scheduleMeetingSuccess = '会议预约成功';
   static const String scheduleMeetingEditSuccess = '会议修改成功';
-  static const String slashAndMeetingIdPrefix = ' | 会议ID:';
+  static const String slashAndMeetingNumPrefix = ' | 会议号:';
+  static const String year = '年';
   static const String month = '月';
+  static const String day = '日';
   static const String meetingDetail = '会议详情';
+  static const String meetingInviteUrl = '邀请链接';
   static const String copy = '复制';
   static const String copySuccess = '复制成功';
-  static const String meetingId = '会议ID';
+  static const String meetingNum = '会议号';
   static const String confirmCancelMeeting = '是否确定要取消会议？';
   static const String cancelMeeting = '取消会议';
   static const String notCancel = '暂不取消';
   static const String chooseDate = '选择日期';
   static const String scheduleMeetingListEmpty = '当前暂无即将召开的会议';
+  static const String historyMeetingListEmpty = '暂无历史会议';
   static const String meetingStatusInit = '待开始';
   static const String meetingStatusInvalid = '';
   static const String meetingStatusCancel = '已取消';
@@ -282,9 +290,9 @@ class Strings {
   static const String upgradeCancel = '暂不更新';
   static const String meetingEdit = '编辑会议';
   static const String edit = '编辑';
-  static const String shortMeetingId = '个人会议短号';
+  static const String shortMeetingNum = '个人会议短号';
   static const String internalDedicated = '内部专用';
-  static const String personMeetingId = '个人会议 ID';
+  static const String personMeetingNum = '个人会议号';
   static const String switchCompanyFail = '切换企业失败，请检查当前网络';
   static const String ssoNotSupport = '当前不支持SSO登录';
   static const String tcProtocolNotCompatible = "与电视的协议不匹配，请升级客户端";
@@ -299,10 +307,11 @@ class Strings {
   static const String inRoomFeedBackTitleAudio = '音频问题';
   static const String inRoomFeedBackTitleVideo = '视频问题';
   static const String inRoomFeedBackTitleDescription = '问题描述';
-  static const String inRoomFeedBackTitleUser = '问题用户';
+  static const String inRoomFeedBackTitleOthers = '其他';
   static const String inRoomFeedBackSubTitleTip =
       '若选择了音频问题，系统默认录制10秒音频文件用于问题分析';
-  static const String inRoomFeedBackOtherTip = '其他问题...';
+  static const String inRoomFeedBackOtherTip =
+      '请描述您的问题。（当您选中“存在其他问题”时，需填写具体描述才可进行提交）';
 
   static const String setMeetingNick = '设置入会昵称';
   static const String setMeetingOK = '确认';
@@ -334,4 +343,35 @@ class Strings {
 
   static const String privacyDialogActionQuit = '退出';
   static const String privacyDialogActionAgree = '同意';
+
+  static const String meetingInfoDialogMeetingSubject = '会议主题:';
+  static const String meetingInfoDialogMeetingId = '会议ID:';
+  static const String meetingInfoDialogMeetingDateFormat = 'yyyy年MM月dd日';
+  static const String deepLinkTipAlreadyInRightMeeting = '您已在对应会议中';
+  static const String deepLinkTipAlreadyInDifferentMeeting =
+      '您已在其他会议中，请退出当前会议后重试';
+
+  static const String history_allMeeting = '全部会议';
+  static const String history_collectMeeting = '收藏会议';
+
+  static const String evaluationTitleFirst = '您有多大的可能向同事或合作伙伴';
+  static const String evaluationTitleSecond = '推荐网易会议？';
+  static const String evaluationCoreZero = '0-肯定不会';
+  static const String evaluationCoreTen = '10-非常乐意';
+
+  static const String evaluationHitTextOne = '0-6：让您不满意或者失望的点有哪些？（选填）';
+  static const String evaluationHitTextTwo = '7-8：您觉得哪些方面能做的更好？（选填）';
+  static const String evaluationHitTextThree = '9-10：欢迎分享您体验最好的功能或感受（选填）';
+
+  static const String evaluationThankFeedback = '感谢反馈';
+  static const String evaluationGoHome = '返回首页';
+  static const String evaluationToast = '请评分后提交喔~';
+
+  static const String sunday = '周日';
+  static const String monday = '周一';
+  static const String tuesday = '周二';
+  static const String wednesday = '周三';
+  static const String thursday = '周四';
+  static const String friday = '周五';
+  static const String saturday = '周六';
 }

@@ -531,7 +531,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
       if (FileTypeUtils.getMimeType(path) == '*/*') {
         mime = FileTypeUtils.getMimeType(name);
       }
-      result = await OpenFile.open(path, type: mime);
+      result = await OpenFilex.open(path, type: mime);
     } catch (e) {
       resultType = ResultType.error;
       error = e.toString();
@@ -574,26 +574,6 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
   Widget buildName(String nick) {
     return Text(nick,
         style: TextStyle(color: _UIColors.color_333333, fontSize: 12));
-  }
-
-  Widget buildHead(String nick) {
-    return ClipOval(
-        child: Container(
-      height: 24,
-      width: 24,
-      decoration: ShapeDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: <Color>[_UIColors.blue_5996FF, _UIColors.blue_2575FF],
-          ),
-          shape: Border()),
-      alignment: Alignment.center,
-      child: Text(
-        nick.isNotEmpty ? nick.substring(0, 1) : '',
-        style: TextStyle(fontSize: 14, color: Colors.white),
-      ),
-    ));
   }
 
   Widget buildTextContent(BuildContext context, String content, bool isRight) {
@@ -822,13 +802,17 @@ class _MessageItem extends StatelessWidget {
         ),
         alignment: Alignment.center,
         child: Text(
-          message.nickname.substring(0, 1),
+          message.nickname.isNotEmpty ? message.nickname.substring(0, 1) : '',
           style: TextStyle(fontSize: 14, color: Colors.white),
         ),
       ),
     );
-    final nickname = Text(message.nickname,
-        style: TextStyle(color: _UIColors.color_333333, fontSize: 12));
+    final nickname = Text(
+      message.nickname,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(color: _UIColors.color_333333, fontSize: 12),
+    );
     final child = ValueListenableBuilder(
       valueListenable: message.failStatusListenable,
       builder: (BuildContext context, bool fail, Widget? child) {
@@ -843,36 +827,38 @@ class _MessageItem extends StatelessWidget {
             children: <Widget>[
               if (incoming) head,
               SizedBox(width: 4),
-              Column(
-                crossAxisAlignment: outgoing
-                    ? CrossAxisAlignment.end
-                    : CrossAxisAlignment.start,
-                children: <Widget>[
-                  nickname,
-                  SizedBox(height: 4),
-                  Stack(
-                    children: [
-                      if (leftFailIcon)
-                        Positioned.fill(
-                          child: failureIcon,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: outgoing
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start,
+                  children: <Widget>[
+                    nickname,
+                    SizedBox(height: 4),
+                    Stack(
+                      children: [
+                        if (leftFailIcon)
+                          Positioned.fill(
+                            child: failureIcon,
+                          ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (leftFailIcon)
+                              SizedBox(width: _failureIconSize + 4),
+                            contentBuilder(context),
+                            if (rightFailIcon)
+                              SizedBox(width: _failureIconSize + 4),
+                          ],
                         ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (leftFailIcon)
-                            SizedBox(width: _failureIconSize + 4),
-                          contentBuilder(context),
-                          if (rightFailIcon)
-                            SizedBox(width: _failureIconSize + 4),
-                        ],
-                      ),
-                      if (rightFailIcon)
-                        Positioned.fill(
-                          child: failureIcon,
-                        ),
-                    ],
-                  ),
-                ],
+                        if (rightFailIcon)
+                          Positioned.fill(
+                            child: failureIcon,
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
               SizedBox(width: 4),
               if (outgoing) head,
@@ -891,14 +877,14 @@ class _MessageItem extends StatelessWidget {
 class _ImageContent extends StatefulWidget {
   final ImageMessageState message;
   final void Function(ImageMessageState)? onTap;
-  final void Function(ImageMessageState)? onImageLoaded;
+  // final void Function(ImageMessageState)? onImageLoaded;
   final void Function(ImageMessageState)? onImageError;
 
   const _ImageContent({
     Key? key,
     required this.message,
     this.onTap,
-    this.onImageLoaded,
+    // this.onImageLoaded,
     this.onImageError,
   }) : super(key: key);
 
@@ -972,9 +958,9 @@ class _ImageContentState extends State<_ImageContent>
                     bool? wasSynchronouslyLoaded) {
                   if (frame == 0 && !_loadedEventNotified) {
                     _loadedEventNotified = true;
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      widget.onImageLoaded?.call(widget.message);
-                    });
+                    // WidgetsBinding.instance.addPostFrameCallback((_) {
+                    //   widget.onImageLoaded?.call(widget.message);
+                    // });
                   }
                   return child!;
                 },

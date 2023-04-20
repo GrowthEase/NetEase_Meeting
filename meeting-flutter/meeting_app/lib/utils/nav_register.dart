@@ -3,10 +3,10 @@
 // found in the LICENSE file.
 
 import 'package:nemeeting/about/about.dart';
+import 'package:nemeeting/meeting/history_meeting.dart';
 import 'package:nemeeting/meeting/meeting_create.dart';
 import 'package:nemeeting/meeting/meeting_join.dart';
 import 'package:nemeeting/pre_meeting/schedule_meeting.dart';
-import 'package:nemeeting/routes/auth/account_token_login.dart';
 import 'package:nemeeting/routes/auth/check_mobile.dart';
 import 'package:nemeeting/routes/auth/get_mobile_check_code.dart';
 import 'package:nemeeting/routes/auth/password_verify.dart';
@@ -14,6 +14,7 @@ import 'package:nemeeting/routes/backdoor.dart';
 import 'package:nemeeting/routes/entrance.dart';
 import 'package:nemeeting/routes/home_page.dart';
 import 'package:nemeeting/setting/company_setting.dart';
+import '../routes/auth/account_token_login.dart';
 import '../uikit/utils/router_name.dart';
 import 'package:nemeeting/routes/auth/register_user_info.dart';
 import 'package:nemeeting/setting/meeting_setting.dart';
@@ -32,9 +33,10 @@ class RoutesRegister {
     RouterName.homePage: (context) => HomePageRoute(),
     RouterName.meetCreate: (context) => MeetCreateRoute(),
     RouterName.meetJoin: (context) => MeetJoinRoute(),
+    RouterName.historyMeet: (context) => HistoryMeetingRoute(),
     RouterName.meetingSetting: (context) => MeetingSetting(),
     // RouterName.personalSetting: (context) => PersonalSetting(),
-    RouterName.companySetting: (context) => CompanySetting(),
+    // RouterName.companySetting: (context) => CompanySetting(),
     RouterName.nickSetting: (context) => NickSetting(),
     RouterName.backdoor: (context) => BackdoorRoute(),
     RouterName.about: (context) => About(),

@@ -65,7 +65,7 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
           SizedBox(
             height: 9,
           ),
-          ..._buildMeetingId(),
+          ..._buildMeetingNum(),
           if (!TextUtils.isEmpty(roomContext.password)) _buildPwd(),
           if (!TextUtils.isEmpty(getHostName())) _buildHost(),
           if (!TextUtils.isEmpty(roomContext.sipCid)) _buildSip(),
@@ -128,36 +128,36 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
         ])));
   }
 
-  List<Widget> _buildMeetingId() {
-    final meetingId = roomContext.meetingId;
-    final shortMeetingId = widget.meetingInfo.shortMeetingNum;
+  List<Widget> _buildMeetingNum() {
+    final meetingNum = roomContext.meetingNum;
+    final shortMeetingNum = widget.meetingInfo.shortMeetingNum;
     String meetingIdCopyFormatter(String value) {
       return value.replaceAll(RegExp(r'-'), '');
     }
 
     if (!widget.options.isShortMeetingIdEnabled ||
-        TextUtils.isEmpty(shortMeetingId)) {
+        TextUtils.isEmpty(shortMeetingNum)) {
       //do not show short meeting id ,or short meeting id is empty, show only full meeting id
       return [
-        buildCopyItem(NEMeetingUIKitLocalizations.of(context)!.meetingId,
-            meetingId.toMeetingIdFormat(),
+        buildCopyItem(NEMeetingUIKitLocalizations.of(context)!.meetingNum,
+            meetingNum.toMeetingNumFormat(),
             itemDetailCopyFormatter: meetingIdCopyFormatter)
       ];
     } else if (!widget.options.isLongMeetingIdEnabled) {
       //show only short meeting id
       return [
-        buildCopyItem(
-            NEMeetingUIKitLocalizations.of(context)!.meetingId, shortMeetingId)
+        buildCopyItem(NEMeetingUIKitLocalizations.of(context)!.meetingNum,
+            shortMeetingNum)
       ];
     } else {
       //show both
       return [
-        buildCopyItem(NEMeetingUIKitLocalizations.of(context)!.shortMeetingId,
-            shortMeetingId,
+        buildCopyItem(NEMeetingUIKitLocalizations.of(context)!.shortMeetingNum,
+            shortMeetingNum,
             itemLabel:
                 NEMeetingUIKitLocalizations.of(context)!.internalSpecial),
-        buildCopyItem(NEMeetingUIKitLocalizations.of(context)!.meetingId,
-            meetingId.toMeetingIdFormat(),
+        buildCopyItem(NEMeetingUIKitLocalizations.of(context)!.meetingNum,
+            meetingNum.toMeetingNumFormat(),
             itemDetailCopyFormatter: meetingIdCopyFormatter),
       ];
     }

@@ -6,16 +6,12 @@ part of meeting_ui;
 
 class VirtualBackgroundPage extends StatefulWidget {
   final NERoomContext roomContext;
-  final NERtcVideoRenderer? renderer;
-  final bool muteVideo;
-  final Function() callback;
+  final NERoomUserVideoStreamSubscriber videoStreamSubscriber;
 
   VirtualBackgroundPage({
     Key? key,
     required this.roomContext,
-    required this.renderer,
-    required this.muteVideo,
-    required this.callback,
+    required this.videoStreamSubscriber,
   });
 
   @override
@@ -23,15 +19,11 @@ class VirtualBackgroundPage extends StatefulWidget {
 }
 
 class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
-  NERtcVideoRenderer? renderer;
-  late int beautyLevel;
-  late NEPreviewRoomRtcController? previewRoomRtcController;
-  late double width;
-  late double height;
+  late NERoomRtcController rtcController;
   late NERoomContext roomContext;
   List<String> sourceList = <String>['-'];
   List<String>? addExternalVirtualList;
-  late int currentSelected = 0;
+  int currentSelected = 0;
   static late SharedPreferences _sharedPreferences;
   bool bCanPress = true;
   List<NEMeetingVirtualBackground> builtinVirtualBackgroundList = [];
@@ -39,29 +31,20 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
   void initState() {
     super.initState();
     roomContext = widget.roomContext;
-    renderer = widget.renderer;
+    rtcController = roomContext.rtcController;
     _checkPermission().then((granted) {
       if (granted) {
-        NERoomKit.instance.roomService
-            .previewRoom(NEPreviewRoomParams(), NEPreviewRoomOptions())
-            .then((value) {
-          previewRoomRtcController = value.nonNullData.previewController;
-          _initRenderer();
-        });
+        _initVirtualBackgroundPictures();
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    width = MediaQuery.of(context).size.width;
-    height = MediaQuery.of(context).size.height;
     return WillPopScope(
         child: Scaffold(
             body: Container(
           color: Colors.black,
-          width: width,
-          height: height,
           child: buildVirtualPreViewWidget(context),
         )),
         onWillPop: () async {
@@ -71,15 +54,30 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
   }
 
   Widget buildVirtualPreViewWidget(BuildContext context) {
-    return Stack(children: <Widget>[
-      buildCallingVideoViewWidget(context),
-      Positioned(
-        bottom: 0,
-        right: 0,
-        left: 0,
-        child: buildAction(),
-      )
-    ]);
+    return NERoomUserVideoStreamSubscriberProvider(
+      subscriber: widget.videoStreamSubscriber,
+      child: Stack(
+        children: <Widget>[
+          NERoomUserVideoView(
+            roomContext.myUuid,
+            mirror: true,
+            debugName: roomContext.localMember.name,
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            left: 0,
+            child: Container(
+              color: _UIColors.white,
+              child: SafeArea(
+                top: false,
+                child: buildAction(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget buildAction() {
@@ -88,9 +86,8 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
         Container(
           alignment: Alignment.center,
           // color: Color.fromARGB(33, 33, 41, 1),
-          color: _UIColors.white,
           height: 78,
-          width: width,
+          width: MediaQuery.of(context).size.width,
           child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: sourceList.length,
@@ -137,8 +134,8 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
                       currentSelected = index;
                       _sharedPreferences.setInt(
                           currentVirtualSelectedKey, currentSelected);
-                      enableVirtualBackground(previewRoomRtcController,
-                          index != 0, sourceList[index]);
+                      enableVirtualBackground(
+                          rtcController, index != 0, sourceList[index]);
                       setState(() {});
                     }
                   },
@@ -148,7 +145,6 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
         Container(
           height: 48,
           alignment: Alignment.bottomCenter,
-          color: _UIColors.white,
           child: Row(children: <Widget>[
             Opacity(
               opacity: currentSelected > virtualListMax &&
@@ -208,8 +204,7 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
                                 addExternalVirtualList!);
                           }
                         }
-                        enableVirtualBackground(
-                            previewRoomRtcController, false, '');
+                        enableVirtualBackground(rtcController, false, '');
                         setState(() {});
                       });
                     }
@@ -252,26 +247,19 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
     return granted;
   }
 
-  Widget buildCallingVideoViewWidget(BuildContext context) {
-    return renderer != null && !widget.muteVideo
-        ? NERtcVideoView(renderer!)
-        : Container();
-  }
-
-  Future<void> _initRenderer() async {
+  Future<void> _initVirtualBackgroundPictures() async {
     Directory? cache;
     if (Platform.isAndroid) {
       cache = await getExternalStorageDirectory();
     } else {
       cache = await getApplicationDocumentsDirectory();
     }
-    if (!widget.muteVideo) renderer?.attachToLocalVideo();
 
     ///默认的前6张
     var setting = NEMeetingKit.instance.getSettingsService();
     builtinVirtualBackgroundList = await setting.getBuiltinVirtualBackgrounds();
-    await previewRoomRtcController?.startBeauty();
-    await previewRoomRtcController?.enableBeauty(true);
+    await rtcController.startBeauty();
+    await rtcController.enableBeauty(true);
     _sharedPreferences = await SharedPreferences.getInstance();
     bool builtinVirtualBackgroundListAllDelete =
         _sharedPreferences.getBool(builtinVirtualBackgroundListAllDelKey) ??
@@ -304,8 +292,7 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
     sourceList.add('+');
     currentSelected = _sharedPreferences.getInt(currentVirtualSelectedKey) ?? 0;
     if (currentSelected != 0) {
-      enableVirtualBackground(
-          previewRoomRtcController, true, sourceList[currentSelected]);
+      enableVirtualBackground(rtcController, true, sourceList[currentSelected]);
     }
     Future.delayed(Duration(milliseconds: 200), () {
       if (mounted) setState(() {});
@@ -313,14 +300,6 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
   }
 
   void _requestPop() {
-    // beautyController
-    //     .setBeautyFaceValue(beautyLevel);
     Navigator.of(context).pop();
-  }
-
-  @override
-  void dispose() {
-    widget.callback();
-    super.dispose();
   }
 }

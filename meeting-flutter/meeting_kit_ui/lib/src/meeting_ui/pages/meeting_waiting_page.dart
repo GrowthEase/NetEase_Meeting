@@ -46,6 +46,7 @@ class MeetingWaitingPageState extends BaseState<MeetingWaitingPage> {
   @override
   void dispose() {
     if (errorCode != NEErrorCode.success && flutterEngineCanRecycle()) {
+      MeetingCore().notifyStatusChange(NEMeetingStatus(NEMeetingEvent.idle));
       EventBus().emit(NEMeetingUIEvents.flutterPageDisposed);
     }
     super.dispose();
@@ -57,11 +58,14 @@ class MeetingWaitingPageState extends BaseState<MeetingWaitingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final child = Container(
       color: _UIColors.color_292933,
       child: Center(
         child: buildEnterPasswordUI(),
       ),
+    );
+    return Scaffold(
+      body: child,
     );
   }
 
@@ -167,34 +171,32 @@ class MeetingWaitingPageState extends BaseState<MeetingWaitingPage> {
     Navigator.of(context).pop(NEResult(code: errorCode!, msg: errorMsg));
   }
 
-  void _verifyPassword() {
+  void _verifyPassword() async {
+    final network = await Connectivity().checkConnectivity();
+    if (!mounted) return;
+    if (network == ConnectivityResult.none) {
+      showToast(NEMeetingKitLocalizations.of(context)!.networkUnavailableCheck);
+      return;
+    }
+
     setState(() {
       retrying = true;
       retryJoinMeeting();
     });
   }
 
-  void retryJoinMeeting() {
-    Connectivity().checkConnectivity().then((result) async {
-      if (result == ConnectivityResult.none) {
-        cancel(MeetingErrorCode.networkError);
-        return;
-      }
-
-      // MeetingCore()
-      //     .notifyStatusChange(NEMeetingStatus(NEMeetingEvent.connecting));
-      final arguments = widget.waitingArguments;
-      final joinResult =
-          await NEMeetingKit.instance.getMeetingService().joinMeeting(
-                arguments.joinParams.copy(password: _textFieldController.text),
-                arguments.joinOpts,
-              );
-      onRetryResult(joinResult.code, joinResult.msg, joinResult.data);
-    });
+  void retryJoinMeeting() async {
+    final arguments = widget.waitingArguments;
+    final joinResult =
+        await NEMeetingKit.instance.getMeetingService().joinMeeting(
+              arguments.joinParams.copy(password: _textFieldController.text),
+              arguments.joinOpts,
+            );
+    onRetryResult(joinResult.code, joinResult.msg, joinResult.data);
   }
 
   void onRetryResult([int? code, String? msg, NERoomContext? data]) {
-    if (cancelled) return;
+    if (cancelled || !mounted) return;
     errorCode = code;
     errorMsg = msg;
     if (code == NEErrorCode.success) {

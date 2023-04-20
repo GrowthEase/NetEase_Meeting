@@ -93,7 +93,9 @@ class _ScheduleMeetingDetailRouteState
           buildSpace(),
           buildSubject(),
           buildSpace(),
-          buildMeetingId(),
+          buildMeetingNum(),
+          if (item.inviteUrl?.isNotEmpty ?? false) _buildSplit(),
+          if (item.inviteUrl?.isNotEmpty ?? false) buildInviteUrl(),
           buildSpace(),
           buildStartTime(),
           _buildSplit(),
@@ -128,9 +130,22 @@ class _ScheduleMeetingDetailRouteState
     );
   }
 
-  Widget buildMeetingId() {
-    return buildCopyItem(MeetingValueKey.scheduleCopyPwd, Strings.meetingId,
+  Widget buildMeetingNum() {
+    return buildCopyItem(MeetingValueKey.scheduleCopyPwd, Strings.meetingNum,
         TextUtil.applyMask(item.meetingNum!, '000-000-0000'));
+  }
+
+  Widget buildInviteUrl() {
+    final inviteUrl = item.inviteUrl;
+    if (inviteUrl == null || inviteUrl.isEmpty) {
+      return Container();
+    }
+    return buildCopyItem(
+      MeetingValueKey.scheduleCopyInviteUrl,
+      Strings.meetingInviteUrl,
+      inviteUrl,
+      transform: false,
+    );
   }
 
   Widget buildLiveUrl() {
@@ -159,7 +174,8 @@ class _ScheduleMeetingDetailRouteState
     );
   }
 
-  Widget buildCopyItem(Key key, String? itemTitle, String? itemDetail) {
+  Widget buildCopyItem(Key key, String? itemTitle, String? itemDetail,
+      {bool transform = true}) {
     return Container(
       height: Dimen.primaryItemHeight,
       color: Colors.white,
@@ -188,7 +204,9 @@ class _ScheduleMeetingDetailRouteState
                 style: TextStyle(fontSize: 14, color: AppColors.blue_337eff)),
             onTap: () {
               if (itemDetail == null) return;
-              var value = TextUtil.replace(itemDetail, RegExp(r'-'), '');
+              final value = transform
+                  ? TextUtil.replace(itemDetail, RegExp(r'-'), '')
+                  : itemDetail;
               Clipboard.setData(ClipboardData(text: value));
               ToastUtils.showToast(context, Strings.copySuccess);
             },
@@ -312,8 +330,8 @@ class _ScheduleMeetingDetailRouteState
     String? lastUsedNickname;
     if (historyItem != null &&
         historyItem.isNotEmpty &&
-        (historyItem.first.meetingId == item.meetingNum ||
-            historyItem.first.shortMeetingId == item.meetingNum)) {
+        (historyItem.first.meetingNum == item.meetingNum ||
+            historyItem.first.shortMeetingNum == item.meetingNum)) {
       lastUsedNickname = historyItem.first.nickname;
     }
     _onJoinMeeting(nickname: lastUsedNickname);
@@ -322,30 +340,12 @@ class _ScheduleMeetingDetailRouteState
   /// 加入会议
   void _onJoinMeeting({String? nickname}) async {
     LoadingUtil.showLoading();
-    final settingsService = NEMeetingKit.instance.getSettingsService();
-    final openVideo =
-        await settingsService.isTurnOnMyVideoWhenJoinMeetingEnabled();
-    final openAudio =
-        await settingsService.isTurnOnMyAudioWhenJoinMeetingEnabled();
-    final showMeetingTime =
-        await settingsService.isShowMyMeetingElapseTimeEnabled();
     final result = await NEMeetingUIKit().joinMeetingUI(
       context,
       NEJoinMeetingUIParams(
-          meetingId: item.meetingNum!,
+          meetingNum: item.meetingNum!,
           displayName: nickname ?? MeetingUtil.getNickName()),
-      NEMeetingUIOptions(
-        noVideo: !openVideo,
-        noAudio: !openAudio,
-        noWhiteBoard: !openWhiteBoard,
-        noMuteAllVideo: noMuteAllVideo,
-        showMeetingTime: showMeetingTime,
-        audioAINSEnabled: await settingsService.isAudioAINSEnabled(),
-        restorePreferredOrientations: [DeviceOrientation.portraitUp],
-        extras: {'shareScreenTips': Strings.shareScreenTips},
-        noSip: kNoSip,
-        showMeetingRemainingTip: kShowMeetingRemainingTip,
-      ),
+      await buildMeetingUIOptions(),
       onMeetingPageRouteWillPush: () async {
         LoadingUtil.cancelLoading();
         NavUtils.pop(context);

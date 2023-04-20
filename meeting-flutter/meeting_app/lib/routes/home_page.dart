@@ -6,22 +6,25 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:connectivity/connectivity.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:nemeeting/base/util/global_preferences.dart';
 import 'package:nemeeting/base/util/stringutil.dart';
-import 'package:flutter/services.dart';
+import 'package:nemeeting/channel/deep_link_manager.dart';
 import 'package:nemeeting/utils/const_config.dart';
+import 'package:nemeeting/utils/dialog_utils.dart';
 import 'package:nemeeting/widget/length_text_input_formatter.dart';
 import 'package:nemeeting/service/repo/user_repo.dart';
 import 'package:nemeeting/uikit/const/consts.dart';
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:nemeeting/base/util/timeutil.dart';
-import 'package:nemeeting/base/util/url_util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:nemeeting/widget/meeting_security_notice.dart';
 import 'package:netease_common/netease_common.dart';
 import 'package:netease_meeting_core/meeting_service.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
-import 'package:nemeeting/channel/ne_platform_channel.dart';
 import 'package:nemeeting/pre_meeting/schedule_meeting_detail.dart';
 import 'package:nemeeting/utils/integration_test.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
@@ -30,7 +33,6 @@ import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/service/event_name.dart';
 import 'package:nemeeting/service/model/account_app_info.dart';
-import 'package:nemeeting/service/profile/app_profile.dart';
 import 'package:nemeeting/service/repo/accountinfo_repo.dart';
 import 'package:nemeeting/uikit/utils/nav_utils.dart';
 import 'package:nemeeting/uikit/utils/router_name.dart';
@@ -39,6 +41,7 @@ import 'package:nemeeting/uikit/values/colors.dart';
 import 'package:nemeeting/uikit/values/dimem.dart';
 import 'package:nemeeting/uikit/values/fonts.dart';
 import 'package:nemeeting/uikit/values/strings.dart';
+import 'package:lottie/lottie.dart';
 
 ///会议中心
 class HomePageRoute extends StatefulWidget {
@@ -54,8 +57,6 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
   late TextEditingController _textController;
   int _currentIndex = 0;
 
-  late NEMeetingChannelCallback _callback;
-
   late EventCallback _eventCallback;
 
   late NEMeetingStatusListener _meetingStatusListener;
@@ -69,6 +70,16 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
   var timerRecord;
   bool bCanPress = true;
   bool vCanPress = true; //虚拟背景防暴击
+
+  late ValueNotifier<int> _evaluationIndex;
+  ValueListenable<int> get evaluationSelectedIndex => _evaluationIndex;
+  late ValueNotifier<int> _evaluationInputLength;
+  ValueListenable<int> get evaluationInputStringLength =>
+      _evaluationInputLength;
+  final FocusNode _focusNode = FocusNode();
+  String _evaluationContent = "";
+  DateTime meetingStartDate = DateTime.now();
+  late NEMeetingInfo? _evaluateMeetingInfo;
   @override
   void initState() {
     super.initState();
@@ -93,7 +104,6 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
     };
     EventBus().subscribe(EventName.meetingClose, _eventCallback);
     handleMeetingSdk();
-    handleDeepLink();
     scheduleMeeting();
     NEMeetingKit.instance
         .getSettingsService()
@@ -111,7 +121,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
         isVirtualBackgroundEnabled = value;
       });
     });
-    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       if (MeetingUtil.getAutoRegistered()) {
         showSettingNickDialog(context);
       }
@@ -120,41 +130,53 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
       if (TextUtil.isEmpty(meetingInfo)) return;
       var info = jsonDecode(meetingInfo!) as Map?;
       if (info == null) return;
-      var meetingId = info['meetingId'] as String?;
-      if (meetingId == null) return;
+      var meetingNum = info['meetingNum'] as String?;
+      if (meetingNum == null) return;
       var currentTime = info['currentTime'] as int;
       var startDate = DateTime.fromMillisecondsSinceEpoch(currentTime);
       var endDate = DateTime.now();
       var minutes = endDate.difference(startDate).inMinutes;
       if (minutes < 15) {
-        showRecoverJoinMeetingDialog(meetingId);
+        showRecoverJoinMeetingDialog(meetingNum);
       } else {
         Alog.d(tag: tag, content: 'minutes >15 meeting info clean');
         GlobalPreferences().setMeetingInfo('');
       }
     });
+
+    DeepLinkManager()
+      ..privacyAgreed = true
+      ..attach(context);
+
+    _evaluationIndex = ValueNotifier(-1);
+    _evaluationInputLength = ValueNotifier(0);
+    // prepareLottie();
   }
 
   void handleMeetingSdk() {
     _meetingStatusListener = (status) {
       switch (status.event) {
         case NEMeetingEvent.disconnecting:
+          meetingEvaluationAction(meetingStartDate, DateTime.now());
           switch (status.arg) {
             case NEMeetingCode.closeByHost:
 
               /// 主持人关闭会议
               showCloseDialog();
               break;
+
             case NEMeetingCode.authInfoExpired:
 
               /// 认证过期
               ToastUtils.showToast(context, Strings.authInfoExpired);
               break;
+
             case NEMeetingCode.endOfLife:
 
               /// 会议时长超限
               ToastUtils.showToast(context, Strings.endOfLife);
               break;
+
             case NEMeetingCode.loginOnOtherDevice:
 
               /// 账号再其他设备入会
@@ -178,6 +200,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
           break;
         case NEMeetingEvent.inMeeting:
           var meetingInfo = NEMeetingUIKit().getCurrentMeetingInfo();
+          _evaluateMeetingInfo = meetingInfo;
           _setGlobalMeetingInfo(meetingInfo);
 
           /// 定是写入当前时间,每30秒写入
@@ -185,6 +208,9 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
             //callback function
             _setGlobalMeetingInfo(meetingInfo);
           });
+
+          // 记录在会 开始时间
+          meetingStartDate = DateTime.now();
           break;
         default:
       }
@@ -249,31 +275,18 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
         });
   }
 
-  void showRecoverJoinMeetingDialog(String meetingId) {
-    DialogUtils.showCommonDialog(context, '', Strings.recoverMeeting, () {
+  void showRecoverJoinMeetingDialog(String meetingNum) {
+    AppDialogUtils.showCommonDialog(context, '', Strings.recoverMeeting, () {
       NavUtils.closeCurrentState('cancel');
       GlobalPreferences().setMeetingInfo('');
     }, () async {
       NavUtils.closeCurrentState('ok');
       LoadingUtil.showLoading();
-      var settingsService = NEMeetingKit.instance.getSettingsService();
       final result = await NEMeetingUIKit().joinMeetingUI(
           context,
           NEJoinMeetingUIParams(
-              meetingId: meetingId, displayName: MeetingUtil.getNickName()),
-          NEMeetingUIOptions(
-            noVideo:
-                !await settingsService.isTurnOnMyVideoWhenJoinMeetingEnabled(),
-            noAudio:
-                !await settingsService.isTurnOnMyAudioWhenJoinMeetingEnabled(),
-            showMeetingTime:
-                await settingsService.isShowMyMeetingElapseTimeEnabled(),
-            restorePreferredOrientations: [DeviceOrientation.portraitUp],
-            extras: {'shareScreenTips': Strings.shareScreenTips},
-            noMuteAllVideo: noMuteAllVideo,
-            noSip: kNoSip,
-            showMeetingRemainingTip: kShowMeetingRemainingTip,
-          ));
+              meetingNum: meetingNum, displayName: MeetingUtil.getNickName()),
+          await buildMeetingUIOptions());
       LoadingUtil.cancelLoading();
       if (!result.isSuccess()) {
         GlobalPreferences().setMeetingInfo('');
@@ -283,19 +296,6 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
         acceptText: Strings.recoverMeetingText,
         canBack: true,
         isContentCenter: true);
-  }
-
-  void handleDeepLink() {
-    _callback = (String uri) {
-      var meetingId = UrlUtil.getParamValue(uri, UrlUtil.paramMeetingId);
-      AppProfile.deepLinkMeetingId = meetingId;
-      if (!TextUtil.isEmpty(meetingId)) {
-        if (ModalRoute.of(context)!.isCurrent) {
-          _onJoinMeeting();
-        }
-      }
-    };
-    NEPlatformChannel().listen(_callback);
   }
 
   /// 排序和分组
@@ -396,6 +396,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
       children: <Widget>[
         SizedBox(height: 44),
         buildTitle(Strings.homeTitle),
+        MeetingAppNotificationBar(),
         Container(color: AppColors.globalBg, height: 1),
         SizedBox(height: 24),
         Row(
@@ -419,8 +420,45 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
         ),
         Container(color: AppColors.globalBg, height: 1),
         Expanded(
-          child: buildMeetingList(),
+            child: Stack(
+          alignment: AlignmentDirectional.center,
+          children: [
+            buildMeetingList(),
+            Positioned(
+              top: 29.0,
+              right: 0.0,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  alignment: Alignment.center,
+                  width: 81,
+                  height: 28,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(14),
+                          bottomLeft: Radius.circular(14)),
+                      color: AppColors.white,
+                      border: Border.all(color: AppColors.globalBg, width: 0.5),
+                      boxShadow: [
+                        BoxShadow(
+                            color: AppColors.shadow,
+                            offset: Offset(0, 4),
+                            blurRadius: 8,
+                            spreadRadius: 1)
+                      ]),
+                  child: Text(
+                    Strings.historyMeeting,
+                    style:
+                        TextStyle(fontSize: 13, color: AppColors.black_222222),
+                  ),
+                ),
+                onTap: _onHistoryMeeting,
+              ),
+            )
+          ],
         )
+            //buildMeetingList(),
+            ),
       ],
     );
   }
@@ -432,6 +470,10 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
 
   void _onJoinMeeting() {
     NavUtils.pushNamed(context, RouterName.meetJoin);
+  }
+
+  void _onHistoryMeeting() {
+    NavUtils.pushNamed(context, RouterName.historyMeet);
   }
 
   void _onSchedule() {
@@ -451,10 +493,11 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
               child: Column(
         children: [
           Image(
-              image: AssetImage(
-            AssetName.emptyMeetingList,
-            // package: AssetName.package
-          )),
+            image: AssetImage(
+              AssetName.emptyMeetingList,
+              // package: AssetName.package
+            ),
+          ),
           Text(
             Strings.scheduleMeetingListEmpty,
             style: TextStyle(
@@ -474,7 +517,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
           // if (item == null) {
           //   return null;
           // }
-          if (item.meetingId == null) {
+          if (item.meetingNum == null) {
             return buildTimeTitle(item.startTime);
           } else {
             return buildMeetingItem(item);
@@ -548,7 +591,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
                                 color: AppColors.black_222222, fontSize: 12)),
                         TextSpan(
                             text:
-                                "${Strings.slashAndMeetingIdPrefix}${TextUtil.applyMask(item.meetingNum ?? "", "000-000-0000")}",
+                                "${Strings.slashAndMeetingNumPrefix}${TextUtil.applyMask(item.meetingNum ?? "", "000-000-0000")}",
                             style: TextStyle(
                                 color: AppColors.color_999999, fontSize: 12)),
                         TextSpan(
@@ -666,15 +709,15 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
                   company:
                       _accountAppInfo?.appName ?? Strings.defaultCompanyName),
               Visibility(
-                  visible: MeetingUtil.hasShortMeetingId(), child: line()),
+                  visible: MeetingUtil.hasShortMeetingNum(), child: line()),
               Visibility(
-                  visible: MeetingUtil.hasShortMeetingId(),
-                  child: buildPersonItem(Strings.shortMeetingId, null,
+                  visible: MeetingUtil.hasShortMeetingNum(),
+                  child: buildPersonItem(Strings.shortMeetingNum, null,
                       titleTip: Strings.internalDedicated,
-                      arrowTip: MeetingUtil.getShortMeetingId())),
+                      arrowTip: MeetingUtil.getShortMeetingNum())),
               line(),
-              buildPersonItem(Strings.personMeetingId, null,
-                  arrowTip: MeetingUtil.getMeetingId()),
+              buildPersonItem(Strings.personMeetingNum, null,
+                  arrowTip: MeetingUtil.getMeetingNum()),
               // buildSettingItemPadding(),
               // buildSettingItem(
               //     Strings.packageVersion,
@@ -684,9 +727,10 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
               //     iconTip: _accountAppInfo?.edition.name ?? ''),
               buildSettingItemPadding(),
               Visibility(
-                  visible: MeetingUtil.hasShortMeetingId(), child: line()),
+                  visible: MeetingUtil.hasShortMeetingNum(), child: line()),
               buildSettingItem(Strings.meetingSetting,
                   () => NavUtils.pushNamed(context, RouterName.meetingSetting)),
+              line(),
               StreamBuilder(
                 stream: NEMeetingKit.instance
                     .getSettingsService()
@@ -757,12 +801,6 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
                 height: 22,
                 color: AppColors.globalBg,
               ),
-              // Expanded(
-              //   flex: 1,
-              //   child: Container(
-              //     color: AppColors.global_bg,
-              //   ),
-              // )
             ],
           ),
         ),
@@ -1051,12 +1089,12 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
     PrivacyUtil.dispose();
     EventBus().unsubscribe(EventName.meetingClose, _eventCallback);
     _pageController.dispose();
-    NEPlatformChannel().unListen(_callback);
     NEMeetingUIKit().removeListener(_meetingStatusListener);
     NEMeetingKit.instance
         .getPreMeetingService()
         .unRegisterScheduleMeetingStatusChange(scheduleCallback);
     NEMeetingKit.instance.removeAuthListener(this);
+    DeepLinkManager().detach(context);
     super.dispose();
   }
 
@@ -1070,9 +1108,380 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
 
   void _setGlobalMeetingInfo(NEMeetingInfo? currentMeetingInfo) {
     var map = <String, dynamic>{
-      'meetingId': currentMeetingInfo?.meetingId,
+      'meetingNum': currentMeetingInfo?.meetingNum,
       'currentTime': TimeUtil.getCurrentTimeMilliseconds()
     };
     GlobalPreferences().setMeetingInfo(jsonEncode(map));
+  }
+
+  void _setGlobalMeetingEvaluation(DateTime date) {
+    var map = <String, dynamic>{
+      'version': SDKConfig.sdkVersionName,
+      'lastTime': date.millisecondsSinceEpoch
+    };
+    GlobalPreferences().setMeetingEvaluation(jsonEncode(map));
+  }
+
+  void meetingEvaluationAction(DateTime startDate, DateTime endDate) async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none) {
+      return;
+    }
+    var evaluationInfo = await GlobalPreferences().meetingEvaluation;
+    if (TextUtil.isEmpty(evaluationInfo)) {
+      // 入会>=5分钟
+      if (endDate.difference(startDate).inMinutes >= 5) {
+        _setGlobalMeetingEvaluation(endDate);
+        buildEvaluationView();
+      }
+    } else {
+      Map map = jsonDecode(evaluationInfo!);
+      var version = map["version"] as String;
+      // 版本相同
+      if (version == SDKConfig.sdkVersionName) {
+        var lastTimestamp = map["lastTime"] as int;
+        var lastTime = DateTime.fromMillisecondsSinceEpoch(lastTimestamp);
+        var time = DateTime.now();
+        // 每天0点之后弹框
+        if (time.difference(lastTime).inDays >= 1) {
+          // 弹框
+          buildEvaluationView();
+        }
+      } else {
+        if (endDate.difference(startDate).inMinutes >= 5) {
+          _setGlobalMeetingEvaluation(endDate);
+          buildEvaluationView();
+        }
+      }
+    }
+  }
+
+  void buildEvaluationView() {
+    showModalBottomSheet(
+        backgroundColor: Colors.transparent,
+        context: context,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20), topRight: Radius.circular(20))),
+        isDismissible: false,
+        enableDrag: false,
+        isScrollControlled: true,
+        builder: (context) {
+          return Container(
+              padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom),
+              // color: Colors.white,
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20)),
+                  color: Colors.white),
+              height: MediaQuery.of(context).size.height / 3 * 2,
+              child: SingleChildScrollView(
+                  child: Column(
+                children: [
+                  SizedBox(height: 17),
+                  buildEvaluationTitle(),
+                  SizedBox(height: 22),
+                  buildGridView(),
+                  SizedBox(height: 20),
+                  buildEvaluationCore(),
+                  SizedBox(height: 20),
+                  buildEvaluationInputView(),
+                  SizedBox(height: 20),
+                  buildEvaluationSubmitButton()
+                ],
+              )));
+        });
+  }
+
+  Widget buildEvaluationTitle() {
+    return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: EdgeInsets.only(top: 7, left: 20),
+                child: Text(
+                  Strings.evaluationTitleFirst,
+                  softWrap: true,
+                  style: TextStyle(
+                      fontSize: 20,
+                      color: AppColors.color_333333,
+                      fontWeight: FontWeight.w500),
+                ),
+              ),
+              Container(
+                  padding: EdgeInsets.only(left: 20),
+                  child: Text(
+                    Strings.evaluationTitleSecond,
+                    softWrap: true,
+                    style: TextStyle(
+                        fontSize: 20,
+                        color: AppColors.color_333333,
+                        fontWeight: FontWeight.w500),
+                  ))
+            ],
+          ),
+          Container(
+              height: 16,
+              padding: EdgeInsets.only(right: 20),
+              child: GestureDetector(
+                  child: Image(
+                      image: AssetImage(AssetName.iconEvaluationCloseSheet)),
+                  onTap: () {
+                    _setGlobalMeetingEvaluation(DateTime.now());
+                    Navigator.pop(context);
+                  }))
+        ]);
+  }
+
+  Widget buildGridView() {
+    var radius = (MediaQuery.of(context).size.width - 40 - 5 * 16) / 6 / 2;
+    return SafeValueListenableBuilder(
+        valueListenable: evaluationSelectedIndex,
+        builder: (BuildContext context, int value, _) {
+          return GridView.builder(
+              padding: EdgeInsets.only(top: 5, bottom: 5, left: 20, right: 20),
+              physics: NeverScrollableScrollPhysics(),
+              scrollDirection: Axis.vertical,
+              shrinkWrap: true,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 6,
+                  childAspectRatio: 1.0,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16),
+              itemCount: 11,
+              itemBuilder: (BuildContext context, int index) {
+                return GestureDetector(
+                    onTap: () {
+                      _evaluationIndex.value =
+                          _evaluationIndex.value == index ? -1 : index;
+                    },
+                    child: index == value
+                        ? Container(child: getLottie(index))
+                        : Container(
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(radius)),
+                                color: AppColors.colorF2F2F5),
+                            child: Text(
+                              '$index',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontSize: 14, color: AppColors.color394151),
+                            ),
+                          ));
+              });
+        });
+  }
+
+  Widget getLottie(int index) {
+    var assetName = AssetName.iconEvaluationHeartEye;
+    if (0 <= index && index <= 2) {
+      assetName = AssetName.iconEvaluationAngry;
+    } else if (3 <= index && index <= 6) {
+      assetName = AssetName.iconEvaluationSad;
+    } else if (7 <= index && index <= 8) {
+      assetName = AssetName.iconEvaluationHappy;
+    }
+    return OverflowBox(
+        alignment: Alignment.center,
+        maxHeight: (MediaQuery.of(context).size.width - 40 - 5 * 16) / 6 + 15,
+        maxWidth: (MediaQuery.of(context).size.width - 40 - 5 * 16) / 6 + 15,
+        child: Lottie.asset(assetName, repeat: false));
+  }
+
+  Widget buildEvaluationCore() {
+    return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+      Container(
+          padding: EdgeInsets.only(left: 20),
+          child: Text(Strings.evaluationCoreZero,
+              style: TextStyle(fontSize: 13, color: AppColors.black_333333))),
+      Container(
+          padding: EdgeInsets.only(right: 20),
+          child: Text(Strings.evaluationCoreTen,
+              style: TextStyle(fontSize: 13, color: AppColors.black_333333))),
+    ]);
+  }
+
+  Widget buildEvaluationInputView() {
+    return Container(
+        margin: EdgeInsets.only(left: 20, right: 20),
+        height: 140,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(4)),
+          color: Colors.white,
+          border: Border.all(color: AppColors.colorE1E3E6, width: 1),
+        ),
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: EdgeInsets.only(left: 12, right: 12),
+                child: TextField(
+                  autofocus: false,
+                  focusNode: _focusNode,
+                  onEditingComplete: hideKeyboard,
+                  minLines: 5,
+                  maxLines: 5,
+                  keyboardAppearance: Brightness.light,
+                  textInputAction: TextInputAction.done,
+                  inputFormatters: [LengthLimitingTextInputFormatter(500)],
+                  onChanged: (text) {
+                    _evaluationInputLength.value = text.characters.length;
+                    _evaluationContent = text;
+                  },
+                  // maxLength: 500,
+                  decoration: InputDecoration(
+                      hintText: Strings.evaluationHitTextOne +
+                          '\n' +
+                          Strings.evaluationHitTextTwo +
+                          '\n' +
+                          Strings.evaluationHitTextThree,
+                      hintStyle: TextStyle(
+                          fontSize: 14, color: AppColors.color_999999),
+                      border: InputBorder.none),
+                  style: TextStyle(fontSize: 14, color: AppColors.black_333333),
+                ),
+              ),
+              SafeValueListenableBuilder(
+                  valueListenable: evaluationInputStringLength,
+                  builder: (BuildContext context, int value, _) {
+                    return Container(
+                        padding: EdgeInsets.only(right: 12, bottom: 5),
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          '$value/500',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                              fontSize: 12, color: AppColors.colorAAAAAA),
+                        ));
+                  }),
+            ]));
+  }
+
+  Widget buildEvaluationSubmitButton() {
+    return GestureDetector(
+        child: Container(
+          margin: EdgeInsets.only(left: 20, right: 20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(25)),
+            color: AppColors.blue_337eff,
+          ),
+          height: 50,
+          alignment: Alignment.center,
+          child: Text(Strings.submit,
+              style: TextStyle(fontSize: 16, color: Colors.white)),
+        ),
+        onTap: () async {
+          _setGlobalMeetingEvaluation(DateTime.now());
+          int code = await uploadEvaluation();
+          if (code == 200) {
+            Navigator.pop(context);
+            _evaluationIndex.value = -1;
+            _evaluationInputLength.value = 0;
+            _evaluationContent = "";
+            buildEvaluationSuccessView();
+          }
+        });
+  }
+
+  Future<int> uploadEvaluation() async {
+    return 200;
+  }
+
+  void buildEvaluationSuccessView() {
+    showModalBottomSheet(
+        backgroundColor: Colors.transparent,
+        context: context,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20), topRight: Radius.circular(20))),
+        isDismissible: false,
+        enableDrag: false,
+        isScrollControlled: true,
+        builder: (context) {
+          return Container(
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20)),
+                  color: Colors.white),
+              height: MediaQuery.of(context).size.height / 3 * 2,
+              child: SingleChildScrollView(
+                  child: Column(
+                // crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  SizedBox(height: 17),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.max,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.only(right: 17),
+                        height: 16,
+                        child: GestureDetector(
+                            child: Image(
+                                image: AssetImage(
+                                    AssetName.iconEvaluationCloseSheet)),
+                            onTap: () {
+                              Navigator.pop(context);
+                            }),
+                      )
+                    ],
+                  ),
+                  SizedBox(height: 124),
+                  Container(
+                      width: 80,
+                      child: Lottie.asset(AssetName.iconEvaluationBlush)),
+                  SizedBox(height: 4),
+                  Container(
+                    alignment: Alignment.center,
+                    child: Text(
+                      Strings.evaluationThankFeedback,
+                      style: TextStyle(
+                          fontSize: 20,
+                          color: AppColors.black_333333,
+                          fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                  SizedBox(height: 135),
+                  GestureDetector(
+                    child: Container(
+                      margin: EdgeInsets.only(left: 20, right: 20),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(25)),
+                        color: AppColors.blue_337eff,
+                      ),
+                      height: 50,
+                      alignment: Alignment.center,
+                      child: Text(
+                        Strings.evaluationGoHome,
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                  )
+                ],
+              )));
+        });
+  }
+
+  void hideKeyboard() {
+    if (_focusNode.hasFocus) {
+      _focusNode.unfocus();
+      FocusScope.of(context).requestFocus(FocusNode());
+    }
   }
 }

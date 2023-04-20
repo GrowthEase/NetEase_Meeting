@@ -12,7 +12,7 @@ class AppColors {
   static const Color secondaryText = Color.fromARGB(255, 255, 255, 255);
   static const Color accentText = Color.fromARGB(255, 34, 34, 34);
   static const Color noticeBg = Color.fromRGBO(255, 247, 224, 1);
-
+  static const Color shadow = Color.fromRGBO(224, 228, 232, 0.4);
   static const Color globalBg = Color(0xffF2F3F5);
 
   static const Color blue = Color(0xff0000ff);
@@ -75,4 +75,6 @@ class AppColors {
   static const Color color_19000000 = Color(0x19000000);
   static const Color colorE1E3E5 = Color(0xFFE1E3E5);
   static const Color colorE1E3E6 = Color(0xffe1e3e6);
+  static const Color colorAAAAAA = Color(0xffAAAAAA);
+  static const Color color394151 = Color(0xff394151);
 }

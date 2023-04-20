@@ -487,7 +487,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
 
   void _onMuteAllAudio() {
     trackPeriodicEvent(TrackEventName.muteAllAudio,
-        extra: {'meeting_id': roomId});
+        extra: {'meeting_num': roomId});
     DialogUtils.showChildNavigatorDialog(
         context,
         (context) => StatefulBuilder(
@@ -565,7 +565,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
 
   void unMuteAllAudio2Server() {
     trackPeriodicEvent(TrackEventName.unMuteAllAudio,
-        extra: {'meeting_id': roomId});
+        extra: {'meeting_num': roomId});
     lifecycleExecute(rtcController.unmuteAllParticipantsAudio()).then((result) {
       if (!mounted || result == null) return;
       if (result.isSuccess()) {
@@ -582,7 +582,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
 
   void _onMuteAllVideo() {
     trackPeriodicEvent(TrackEventName.muteAllVideo,
-        extra: {'meeting_id': roomId});
+        extra: {'meeting_num': roomId});
     DialogUtils.showChildNavigatorDialog(
         context,
         (context) => StatefulBuilder(
@@ -661,7 +661,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
 
   void unMuteAllVideo2Server() {
     trackPeriodicEvent(TrackEventName.unMuteAllVideo,
-        extra: {'meeting_id': roomId});
+        extra: {'meeting_num': roomId});
     lifecycleExecute(rtcController.unmuteAllParticipantsVideo()).then((result) {
       if (!mounted || result == null) return;
       if (result.isSuccess()) {
@@ -723,33 +723,52 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
         height: 48,
         padding: EdgeInsets.symmetric(horizontal: 20),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             Expanded(
               child: _memberItemNick(user),
             ),
             MeetingUIValueKeys.addTextWidgetTest(
                 valueKey: ValueKey('${user.tag}'), value: true),
-            if (user.isSharingScreen)
-              Icon(NEMeetingIconFont.icon_yx_tv_sharescreen,
-                  color: _UIColors.color_337eff, size: 20),
-            if (user.isSharingWhiteboard)
-              Icon(NEMeetingIconFont.icon_whiteboard,
-                  color: _UIColors.color_337eff, size: 20),
-            if (user.isSharingScreen || user.isSharingWhiteboard)
-              SizedBox(width: 20),
-            if (isSelfHostOrCoHost() && user.isRaisingHand)
-
-              /// 主持人才显示
+            ValueListenableBuilder<bool>(
+              valueListenable: user.isInCallListenable,
+              builder: (context, isInCall, child) {
+                if (!isInCall) {
+                  return SizedBox.shrink();
+                } else {
+                  return Container(
+                    margin: EdgeInsets.only(right: 16.0),
+                    child: const Icon(
+                      Icons.phone,
+                      size: 20.0,
+                      color: const Color(0xFF26CE17),
+                    ),
+                  );
+                }
+              },
+            ),
+            if (isSelfHostOrCoHost() && user.isRaisingHand) ...[
               Icon(NEMeetingIconFont.icon_raisehands,
                   color: _UIColors.color_337eff, size: 20),
-            SizedBox(width: 20),
+              const SizedBox(width: 16),
+            ],
+            if (user.isSharingWhiteboard) ...[
+              Icon(NEMeetingIconFont.icon_whiteboard,
+                  color: _UIColors.color_337eff, size: 20),
+              const SizedBox(width: 16),
+            ],
+            if (user.isSharingScreen) ...[
+              Icon(NEMeetingIconFont.icon_yx_tv_sharescreen,
+                  color: _UIColors.color_337eff, size: 20),
+              const SizedBox(width: 16),
+            ],
             Icon(
                 !user.isVideoOn
                     ? NEMeetingIconFont.icon_yx_tv_video_offx
                     : NEMeetingIconFont.icon_yx_tv_video_onx,
                 color: !user.isVideoOn ? Colors.red : Color(0xFF49494d),
                 size: 20),
-            SizedBox(width: 20),
+            const SizedBox(width: 16),
             SizedBox(
               width: 20,
               height: 20,
@@ -1040,7 +1059,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
 
   void hostRejectHandsUp(NERoomMember user) {
     trackPeriodicEvent(TrackEventName.handsUpDown,
-        extra: {'value': 0, 'member_uid': user.uuid, 'meeting_id': roomId});
+        extra: {'value': 0, 'member_uid': user.uuid, 'meeting_num': roomId});
     lifecycleExecute(roomContext.lowerUserHand(user.uuid))
         .then((NEResult? result) {
       if (mounted && result != null && !result.isSuccess()) {
@@ -1054,7 +1073,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
 
   void removeMember(NERoomMember user) {
     trackPeriodicEvent(TrackEventName.removeMember,
-        extra: {'member_uid': user.uuid, 'meeting_id': roomId});
+        extra: {'member_uid': user.uuid, 'meeting_num': roomId});
     if (roomContext.isMySelf(user.uuid)) {
       ToastUtils.showToast(
           context, NEMeetingUIKitLocalizations.of(context)!.cannotRemoveSelf);
@@ -1106,7 +1125,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     trackPeriodicEvent(TrackEventName.switchAudioMember, extra: {
       'value': mute ? 0 : 1,
       'member_uid': user.uuid,
-      'meeting_id': roomId
+      'meeting_num': roomId
     });
     if (user.uuid == roomContext.myUuid) {
       mute
@@ -1135,7 +1154,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     trackPeriodicEvent(TrackEventName.switchCameraMember, extra: {
       'value': mute ? 0 : 1,
       'member_uid': user.uuid,
-      'meeting_id': roomId
+      'meeting_num': roomId
     });
     if (user.uuid == roomContext.myUuid) {
       mute
@@ -1164,7 +1183,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     trackPeriodicEvent(TrackEventName.muteAudioAndVideo, extra: {
       'value': mute ? 0 : 1,
       'member_uid': user.uuid,
-      'meeting_id': roomId
+      'meeting_num': roomId
     });
     if (user.uuid == roomContext.myUuid) {
       mute
@@ -1198,7 +1217,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     trackPeriodicEvent(TrackEventName.focusMember, extra: {
       'value': focus ? 1 : 0,
       'member_uid': user.uuid,
-      'meeting_id': roomId
+      'meeting_num': roomId
     });
     lifecycleExecute(rtcController.pinVideo(user.uuid, focus))
         .then((NEResult? result) {
@@ -1216,7 +1235,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
 
   void changeHost(NERoomMember user) {
     trackPeriodicEvent(TrackEventName.changeHost,
-        extra: {'member_uid': user.uuid, 'meeting_id': roomId});
+        extra: {'member_uid': user.uuid, 'meeting_num': roomId});
     showDialog(
       context: context,
       builder: (_) {
@@ -1387,7 +1406,9 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     );
   }
 
-  bool _nicknameValid() => _textFieldController.text.isNotEmpty;
+  bool _nicknameValid() =>
+      _textFieldController.text.isNotBlank &&
+      _textFieldController.text.isNotEmpty;
 
   void _doRename(BuildContext dialogContext, NERoomMember user) {
     final nickname = _textFieldController.text;

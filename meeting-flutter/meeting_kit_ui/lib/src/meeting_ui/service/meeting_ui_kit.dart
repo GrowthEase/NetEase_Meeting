@@ -231,15 +231,14 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
         await onMeetingPageRouteWillPush();
       }
       try {
+        final meetingArguments = MeetingArguments(
+          roomContext: roomContext,
+          meetingInfo: roomContext.meetingInfo,
+          options: opts,
+        );
         final popped = navigatorState.push(
           MaterialPageRoute(
-            builder: (context) => MeetingPageProxy(
-              MeetingArguments(
-                roomContext: roomContext,
-                meetingInfo: roomContext.meetingInfo,
-                options: opts,
-              ),
-            ),
+            builder: (context) => MeetingPageProxy(meetingArguments),
           ),
         );
         onMeetingPageRouteDidPush?.call(popped);
@@ -310,7 +309,9 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
     void logoutAnonymous(String reason) {
       if (isAnonymous) {
         commonLogger.i('logoutAnonymous: $reason');
-        NEMeetingKit.instance.logout();
+        if (NEMeetingKit.instance.getAccountService().isAnonymous) {
+          NEMeetingKit.instance.logout();
+        }
       }
     }
 
@@ -359,40 +360,41 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
       if (onMeetingPageRouteWillPush != null) {
         await onMeetingPageRouteWillPush();
       }
+      final meetingArguments = MeetingArguments(
+          roomContext: roomContext,
+          meetingInfo: roomContext.meetingInfo,
+          options: uiOpts);
       final popped = navigatorState.push(MaterialPageRoute(
-          builder: (context) => MeetingPageProxy(
-                MeetingArguments(
-                    roomContext: roomContext,
-                    meetingInfo: roomContext.meetingInfo,
-                    options: uiOpts),
-              )));
+          builder: (context) => MeetingPageProxy(meetingArguments)));
       onMeetingPageRouteDidPush?.call(popped);
       return joinResult.cast();
     } else if (joinResult.code == NEErrorCode.badPassword) {
       if (onPasswordPageRouteWillPush != null) {
         await onPasswordPageRouteWillPush();
       }
+      final meetingWaitingArguments = MeetingWaitingArguments.verifyPassword(
+        joinResult.code,
+        joinResult.msg,
+        param,
+        opts,
+      );
       return navigatorState
           .push(MaterialPageRoute(
               builder: (BuildContext context) =>
-                  MeetingPageProxy(MeetingWaitingArguments.verifyPassword(
-                    joinResult.code,
-                    joinResult.msg,
-                    param,
-                    opts,
-                  ))))
+                  MeetingPageProxy(meetingWaitingArguments)))
           .then((value) async {
         if (value is NERoomContext) {
           if (onMeetingPageRouteWillPush != null) {
             await onMeetingPageRouteWillPush();
           }
+          final meetingArguments = MeetingArguments(
+            roomContext: value,
+            meetingInfo: value.meetingInfo,
+            options: uiOpts,
+          );
           final popped = navigatorState.push(MaterialPageRoute(
-              builder: (context) => MeetingPageProxy(
-                    MeetingArguments(
-                        roomContext: value,
-                        meetingInfo: value.meetingInfo,
-                        options: uiOpts),
-                  )));
+            builder: (context) => MeetingPageProxy(meetingArguments),
+          ));
           onMeetingPageRouteDidPush?.call(popped);
           return const NEResult(code: NEMeetingErrorCode.success);
         } else {
@@ -413,6 +415,14 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
   Future<NEResult<void>> leaveCurrentMeeting(bool closeIfHost) async {
     apiLogger.i('leaveCurrentMeeting: $closeIfHost');
     return InMeetingService().leaveCurrentMeeting(closeIfHost);
+  }
+
+  Future<NEResult<void>> minimizeCurrentMeeting() {
+    if (InMeetingService().mininizeDelegte == null) {
+      return Future.value(const NEResult(
+          code: NEMeetingErrorCode.failed, msg: 'meeting not exists.'));
+    }
+    return InMeetingService().mininizeDelegte!.minimizeCurrentMeeting();
   }
 
   Future<NEResult<void>> openBeautyUI(BuildContext context) async {
@@ -491,22 +501,6 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
     return null;
   }
 
-  bool _exceedMaxVisibleCount(List<NEMeetingMenuItem> items, int max) {
-    var hostVisibleCount = 0;
-    var normalVisibleCount = 0;
-    for (var element in items) {
-      if (element.visibility == NEMenuVisibility.visibleAlways ||
-          element.visibility == NEMenuVisibility.visibleToHostOnly) {
-        hostVisibleCount++;
-      }
-      if (element.visibility == NEMenuVisibility.visibleAlways ||
-          element.visibility == NEMenuVisibility.visibleExcludeHost) {
-        normalVisibleCount++;
-      }
-    }
-    return hostVisibleCount > max || normalVisibleCount > max;
-  }
-
   NEResult<void>? _isMeetingStatusIdle() {
     final status = MeetingCore().meetingStatus.event;
     if (status == NEMeetingEvent.inMeetingMinimized ||
@@ -558,18 +552,20 @@ class NEStartMeetingUIParams extends NEStartMeetingParams {
   NEStartMeetingUIParams({
     required String displayName,
     String? subject,
-    String? meetingId,
+    String? meetingNum,
     String? password,
     String? tag,
+    String? avatar,
     String? extraData,
     List<NERoomControl>? controls,
     Map<String, NEMeetingRoleType>? roleBinds,
   }) : super(
           displayName: displayName,
           subject: subject,
-          meetingId: meetingId,
+          meetingNum: meetingNum,
           password: password,
           tag: tag,
+          avatar: avatar,
           extraData: extraData,
           controls: controls,
           roleBinds: roleBinds,
@@ -578,10 +574,11 @@ class NEStartMeetingUIParams extends NEStartMeetingParams {
   NEStartMeetingUIParams.fromMap(Map map)
       : this(
           subject: map['subject'] as String?,
-          meetingId: map['meetingId'] as String?,
+          meetingNum: map['meetingNum'] as String?,
           displayName: (map['displayName'] ?? '') as String,
           password: map['password'] as String?,
           tag: map['tag'] as String?,
+          avatar: map['avatar'] as String?,
           extraData: map['extraData'] as String?,
           controls: (map['controls'] as List?)
               ?.map((e) =>
@@ -597,23 +594,26 @@ class NEStartMeetingUIParams extends NEStartMeetingParams {
 
 class NEJoinMeetingUIParams extends NEJoinMeetingParams {
   NEJoinMeetingUIParams({
-    required String meetingId,
+    required String meetingNum,
     required String displayName,
     String? password,
     String? tag,
+    String? avatar,
   }) : super(
-          meetingId: meetingId,
+          meetingNum: meetingNum,
           displayName: displayName,
           password: password,
           tag: tag,
+          avatar: avatar,
         );
 
   NEJoinMeetingUIParams.fromMap(Map map)
       : this(
-          meetingId: map['meetingId'] as String,
+          meetingNum: map['meetingNum'] as String,
           displayName: (map['displayName'] ?? '') as String,
           password: map['password'] as String?,
           tag: map['tag'] as String?,
+          avatar: map['avatar'] as String?,
         );
 }
 

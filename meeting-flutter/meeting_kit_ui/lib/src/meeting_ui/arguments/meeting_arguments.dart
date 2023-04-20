@@ -19,7 +19,7 @@ class MeetingArguments extends MeetingBaseArguments {
       String? password,
       required NEMeetingUIOptions options})
       : super(
-            meetingId: roomContext.roomUuid,
+            meetingNum: roomContext.roomUuid,
             displayName: displayName,
             password: password,
             options: options) {
@@ -27,7 +27,7 @@ class MeetingArguments extends MeetingBaseArguments {
   }
 
   @override
-  String get meetingId => roomContext.roomUuid;
+  String get meetingNum => roomContext.roomUuid;
 
   String? getOptionExtraValue(String key) {
     return options.extras[key] as String?;

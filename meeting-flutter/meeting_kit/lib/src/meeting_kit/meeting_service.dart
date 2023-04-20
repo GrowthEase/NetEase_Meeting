@@ -11,10 +11,10 @@ class NEStartMeetingParams {
   ///
   final String? subject;
 
-  /// 指定要创建会议ID
+  /// 指定要创建会议号
   /// * 可指定为个人会议ID或个人会议短号；
   /// * 当不指定时，由服务端随机分配一个会议ID；
-  final String? meetingId;
+  final String? meetingNum;
 
   /// 房间中的用户昵称，不能为空
   final String displayName;
@@ -27,6 +27,8 @@ class NEStartMeetingParams {
   /// 会议中的用户成员标签，自定义，最大长度50
   final String? tag;
 
+  final String? avatar;
+
   /// 透传字段
   final String? extraData;
 
@@ -38,10 +40,11 @@ class NEStartMeetingParams {
 
   NEStartMeetingParams({
     this.subject,
-    this.meetingId,
+    this.meetingNum,
     required this.displayName,
     this.password,
     this.tag,
+    this.avatar,
     this.extraData,
     this.controls,
     this.roleBinds,
@@ -49,7 +52,7 @@ class NEStartMeetingParams {
 
   @override
   String toString() {
-    return 'NEStartMeetingParams{meetingId: $meetingId, displayName: $displayName, tag: $tag}';
+    return 'NEStartMeetingParams{meetingNum: $meetingNum, displayName: $displayName, tag: $tag}';
   }
 }
 
@@ -85,8 +88,8 @@ class NEStartMeetingOptions {
 
 /// 提供加入会议时必要的额外参数，如会议ID、用户会议昵称,tag等
 class NEJoinMeetingParams {
-  /// 会议ID
-  final String meetingId;
+  /// 会议号
+  final String meetingNum;
 
   /// 会议昵称
   final String displayName;
@@ -99,19 +102,23 @@ class NEJoinMeetingParams {
   /// 会议中的用户成员标签，自定义，最大长度50
   final String? tag;
 
+  final String? avatar;
+
   NEJoinMeetingParams({
-    required this.meetingId,
+    required this.meetingNum,
     required this.displayName,
     this.password,
     this.tag,
+    this.avatar,
   });
 
   NEJoinMeetingParams copy({String? password}) {
     return NEJoinMeetingParams(
-      meetingId: meetingId,
+      meetingNum: meetingNum,
       displayName: displayName,
       password: password ?? this.password,
       tag: tag,
+      avatar: avatar,
     );
   }
 }
@@ -166,14 +173,14 @@ abstract class NEMeetingService {
 
 /// 会议信息
 class NEMeetingInfo {
-  /// 预定成功后， 服务器生成唯一id
-  final int meetingUniqueId;
+  /// 会议标识
+  final int meetingId;
 
-  /// 当前会议ID
-  final String meetingId;
+  /// 会议号
+  final String meetingNum;
 
   /// 当前会议短号ID
-  final String? shortMeetingId;
+  final String? shortMeetingNum;
 
   /// 当前会议SIP ID
   final String? sipCid;
@@ -223,9 +230,9 @@ class NEMeetingInfo {
   final List<NEInMeetingUserInfo> userList;
 
   NEMeetingInfo({
-    required this.meetingUniqueId,
     required this.meetingId,
-    this.shortMeetingId,
+    required this.meetingNum,
+    this.shortMeetingNum,
     this.sipCid,
     required this.type,
     required this.subject,
@@ -244,9 +251,9 @@ class NEMeetingInfo {
   });
 
   Map<String, dynamic> toMap() => {
-        'meetingUniqueId': meetingUniqueId,
         'meetingId': meetingId,
-        if (shortMeetingId != null) 'shortMeetingId': shortMeetingId,
+        'meetingNum': meetingNum,
+        if (shortMeetingNum != null) 'shortMeetingNum': shortMeetingNum,
         if (sipCid != null) 'sipId': sipCid,
         'type': type,
         'isLocked': isLocked,
@@ -264,7 +271,7 @@ class NEMeetingInfo {
 
   @override
   String toString() {
-    return 'NEMeetingInfo{meetingUniqueId: $meetingUniqueId, meetingId: $meetingId, shortMeetingId: $shortMeetingId, sipCid: $sipCid, type: $type, subject: $subject, password: $password, startTime: $startTime, scheduleStartTime: $scheduleStartTime, scheduleEndTime: $scheduleEndTime, duration: $duration, isHost: $isHost, isLocked: $isLocked, hostUserId: $hostUserId, userList: $userList}';
+    return 'NEMeetingInfo{meetingId: $meetingId, meetingNum: $meetingNum, shortMeetingNum: $shortMeetingNum, sipCid: $sipCid, type: $type, subject: $subject, password: $password, startTime: $startTime, scheduleStartTime: $scheduleStartTime, scheduleEndTime: $scheduleEndTime, duration: $duration, isHost: $isHost, isLocked: $isLocked, hostUserId: $hostUserId, userList: $userList}';
   }
 }
 

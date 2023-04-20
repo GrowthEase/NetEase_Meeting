@@ -28,8 +28,6 @@
     <!-- 8.0 系统上需要-->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
-
     <application
         android:name=".MeetingApplication"
         android:icon="@mipmap/ic_launcher"
@@ -54,6 +52,7 @@
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:launchMode="singleTask"
+            android:exported="true"
             android:theme="@style/LaunchTheme"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -76,21 +75,6 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-
-        <!-- FireBase Use-->
-        <service
-            tools:node="remove"
-            android:name="com.google.android.gms.measurement.AppMeasurementJobService"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:enabled="false"
-            android:exported="false" />
-
-        <!-- FireBase Use-->
-        <service
-            tools:node="remove"
-            android:name="com.google.android.gms.measurement.AppMeasurementService"
-            android:enabled="false"
-            android:exported="false"/>
 
         <!-- 云信后台辅助服务 -->
         <service
@@ -117,6 +101,7 @@
         <service
             android:name="com.netease.nimlib.service.NimService$Aux"
             android:enabled="false"
+            android:exported="false"
             android:process=":core" />
 
     </application>

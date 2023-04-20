@@ -9,10 +9,10 @@ class _CreateMeetingRequest {
   final String? subject;
 
   /// 开始时间
-  final int? startTime;
+  // final int? startTime;
 
   /// 结束时间
-  final int? endTime;
+  // final int? endTime;
 
   /// 会议密码
   final String? password;
@@ -57,8 +57,8 @@ class _CreateMeetingRequest {
 
   const _CreateMeetingRequest({
     this.subject,
-    this.startTime,
-    this.endTime,
+    // this.startTime,
+    // this.endTime,
     this.password,
     this.roomProperties,
     this.roleBinds,
@@ -68,8 +68,8 @@ class _CreateMeetingRequest {
 
   Map get data => {
         'subject': subject,
-        if (startTime != null) 'startTime': startTime,
-        if (endTime != null) 'endTime': endTime,
+        // if (startTime != null) 'startTime': startTime,
+        // if (endTime != null) 'endTime': endTime,
         if (password != null) 'password': password,
         if (roomProperties?.isNotEmpty ?? false)
           'roomProperties': roomProperties,

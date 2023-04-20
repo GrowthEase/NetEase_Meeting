@@ -45,7 +45,7 @@ class _ScheduleMeetingEditRouteState
   bool liveSwitch = false;
   bool liveLevelSwitch = false;
 
-  bool cloudRecordOn = !noCloudRecord;
+  bool cloudRecordOn = !kNoCloudRecord;
 
   bool showMeetingRecord = false;
 

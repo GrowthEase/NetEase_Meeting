@@ -38,6 +38,7 @@ class _DraggablePositionedState extends State<DraggablePositioned>
 
   var panEnded = true;
   var layoutChanged = false;
+  var resetAlignment = false;
   Animation<RelativeRect>? currentPinAnimation;
 
   var stackSize = Size.zero;
@@ -123,23 +124,32 @@ class _DraggablePositionedState extends State<DraggablePositioned>
 
       final double left, top;
 
+      Alignment? useAlignment = alignment;
+      if (resetAlignment) {
+        resetAlignment = false;
+        useAlignment = null;
+      }
+
       final paddings = viewPaddings;
-      if (Rect.fromLTWH(0, 0, halfWidthOfContainer, halfHeightOfContainer)
-          .contains(currentRect.center)) {
+      if (useAlignment == Alignment.topLeft ||
+          Rect.fromLTWH(0, 0, halfWidthOfContainer, halfHeightOfContainer)
+              .contains(currentRect.center)) {
         // top left
         left = paddings.left;
         top = paddings.top;
         alignment = Alignment.topLeft;
-      } else if (Rect.fromLTWH(0, halfHeightOfContainer, halfWidthOfContainer,
-              halfHeightOfContainer)
-          .contains(currentRect.center)) {
+      } else if (useAlignment == Alignment.bottomLeft ||
+          Rect.fromLTWH(0, halfHeightOfContainer, halfWidthOfContainer,
+                  halfHeightOfContainer)
+              .contains(currentRect.center)) {
         // bottom left
         left = paddings.left;
         top = stackSize.height - paddings.bottom - childHeight;
         alignment = Alignment.bottomLeft;
-      } else if (Rect.fromLTWH(halfWidthOfContainer, 0, halfWidthOfContainer,
-              halfHeightOfContainer)
-          .contains(currentRect.center)) {
+      } else if (useAlignment == Alignment.topRight ||
+          Rect.fromLTWH(halfWidthOfContainer, 0, halfWidthOfContainer,
+                  halfHeightOfContainer)
+              .contains(currentRect.center)) {
         // top right
         left = stackSize.width - paddings.right - childWidth;
         top = paddings.top;
@@ -219,7 +229,7 @@ class _DraggablePositionedState extends State<DraggablePositioned>
           }
           if (initialOffset == Offset.zero) {
             ensureInitialOffset();
-            debugPrintThrottled('$tag: ensureInitialOffset=${initialOffset}');
+            debugPrintThrottled('$tag: ensureInitialOffset=$initialOffset');
           }
           final gestures = <Type, GestureRecognizerFactory>{
             PanGestureRecognizer:
@@ -275,6 +285,7 @@ class _DraggablePositionedState extends State<DraggablePositioned>
     debugPrintThrottled('onPanEnd: $details');
     setState(() {
       panEnded = true;
+      resetAlignment = true;
       currentPinAnimation = null;
     });
   }

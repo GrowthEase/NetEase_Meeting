@@ -4,6 +4,7 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:nemeeting/service/util/user_preferences.dart';
 import 'package:netease_meeting_core/meeting_kit.dart';
 import 'package:nemeeting/utils/integration_test.dart';
 import '../uikit/state/meeting_base_state.dart';
@@ -18,37 +19,6 @@ class MeetingSetting extends StatefulWidget {
 }
 
 class _MeetingSettingState extends MeetingBaseState<MeetingSetting> {
-  bool openCamera = false;
-
-  bool openMicrophone = false;
-
-  bool openShowMeetTime = false;
-
-  bool audioAINSEnabled = false;
-
-  @override
-  void initState() {
-    super.initState();
-    updateSettings();
-  }
-
-  void updateSettings() {
-    var settingsService = NEMeetingKit.instance.getSettingsService();
-    Future.wait([
-      settingsService.isTurnOnMyVideoWhenJoinMeetingEnabled(),
-      settingsService.isTurnOnMyAudioWhenJoinMeetingEnabled(),
-      settingsService.isShowMyMeetingElapseTimeEnabled(),
-      settingsService.isAudioAINSEnabled(),
-    ]).then((values) {
-      setState(() {
-        openCamera = values[0];
-        openMicrophone = values[1];
-        openShowMeetTime = values[2];
-        audioAINSEnabled = values[3];
-      });
-    });
-  }
-
   @override
   Widget buildBody() {
     return Column(
@@ -65,13 +35,19 @@ class _MeetingSettingState extends MeetingBaseState<MeetingSetting> {
           buildSwitchItem(
             MeetingValueKey.audioAINS,
             Strings.audioAINS,
-            audioAINSEnabled,
-            (value) {
-              NEMeetingKit.instance.getSettingsService().enableAudioAINS(value);
-              setState(() {
-                audioAINSEnabled = value;
-              });
-            },
+            false,
+            NEMeetingKit.instance.getSettingsService().isAudioAINSEnabled(),
+            (value) => NEMeetingKit.instance
+                .getSettingsService()
+                .enableAudioAINS(value),
+          ),
+          buildSplit(),
+          buildSwitchItem(
+            MeetingValueKey.showShareUserVideo,
+            Strings.showShareUserVideo,
+            true,
+            UserPreferences().getShowShareUserVideo(),
+            (value) => UserPreferences().setShowShareUserVideo(value),
           ),
         ]);
   }
@@ -90,137 +66,89 @@ class _MeetingSettingState extends MeetingBaseState<MeetingSetting> {
     );
   }
 
-  Container buildSwitchItem(
+  Widget buildSwitchItem(
     ValueKey<String> key,
     String label,
-    bool value,
-    ValueChanged<bool> onChanged,
+    bool initialData,
+    Future<bool> asyncData,
+    ValueChanged<bool> onDataChanged,
   ) {
-    return Container(
-      height: 56,
-      color: AppColors.white,
-      padding: EdgeInsets.only(left: 20, right: 16),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            flex: 1,
-            child: Text(
-              label,
-              style: TextStyle(color: AppColors.black_222222, fontSize: 16),
-            ),
-          ),
-          MeetingValueKey.addTextWidgetTest(
-            valueKey: key,
-            value: value,
-          ),
-          CupertinoSwitch(
-            key: key,
-            value: value,
-            onChanged: onChanged,
-            activeColor: AppColors.blue_337eff,
-          ),
-        ],
-      ),
+    var data = initialData;
+    return FutureBuilder<bool>(
+      future: asyncData,
+      initialData: initialData,
+      builder: (context, snapshot) {
+        data = snapshot.requireData;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Container(
+              height: 56,
+              color: AppColors.white,
+              padding: EdgeInsets.only(left: 20, right: 16),
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    flex: 1,
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                          color: AppColors.black_222222, fontSize: 16),
+                    ),
+                  ),
+                  MeetingValueKey.addTextWidgetTest(
+                    valueKey: key,
+                    value: data,
+                  ),
+                  CupertinoSwitch(
+                    key: key,
+                    value: data,
+                    onChanged: (newValue) {
+                      setState(() {
+                        data = newValue;
+                        onDataChanged(newValue);
+                      });
+                    },
+                    activeColor: AppColors.blue_337eff,
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
-  Container buildCameraItem() {
-    return Container(
-      height: 56,
-      color: AppColors.white,
-      padding: EdgeInsets.only(left: 20, right: 16),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            flex: 1,
-            child: Text(
-              Strings.openCameraMeeting,
-              style: TextStyle(color: AppColors.black_222222, fontSize: 16),
-            ),
-          ),
-          MeetingValueKey.addTextWidgetTest(
-              valueKey: MeetingValueKey.openCameraMeeting, value: openCamera),
-          CupertinoSwitch(
-              key: MeetingValueKey.openCameraMeeting,
-              value: openCamera,
-              onChanged: (bool value) {
-                NEMeetingKit.instance
-                    .getSettingsService()
-                    .setTurnOnMyVideoWhenJoinMeeting(value);
-                setState(() {
-                  openCamera = value;
-                });
-              },
-              activeColor: AppColors.blue_337eff)
-        ],
-      ),
+  Widget buildCameraItem() {
+    final settings = NEMeetingKit.instance.getSettingsService();
+    return buildSwitchItem(
+      MeetingValueKey.openCameraMeeting,
+      Strings.openCameraMeeting,
+      false,
+      settings.isTurnOnMyVideoWhenJoinMeetingEnabled(),
+      (value) => settings.setTurnOnMyVideoWhenJoinMeeting(value),
     );
   }
 
-  Container buildMicrophoneItem() {
-    return Container(
-      height: 56,
-      color: AppColors.white,
-      padding: EdgeInsets.only(left: 20, right: 16),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            flex: 1,
-            child: Text(
-              Strings.openMicroMeeting,
-              style: TextStyle(color: AppColors.black_222222, fontSize: 16),
-            ),
-          ),
-          MeetingValueKey.addTextWidgetTest(
-              valueKey: MeetingValueKey.openMicrophone, value: openMicrophone),
-          CupertinoSwitch(
-              key: MeetingValueKey.openMicrophone,
-              value: openMicrophone,
-              onChanged: (bool value) {
-                NEMeetingKit.instance
-                    .getSettingsService()
-                    .setTurnOnMyAudioWhenJoinMeeting(value);
-                setState(() {
-                  openMicrophone = value;
-                });
-              },
-              activeColor: AppColors.blue_337eff)
-        ],
-      ),
+  Widget buildMicrophoneItem() {
+    final settings = NEMeetingKit.instance.getSettingsService();
+    return buildSwitchItem(
+      MeetingValueKey.openMicrophone,
+      Strings.openMicroMeeting,
+      false,
+      settings.isTurnOnMyAudioWhenJoinMeetingEnabled(),
+      (value) => settings.setTurnOnMyAudioWhenJoinMeeting(value),
     );
   }
 
-  Container buildMeetTimeItem() {
-    return Container(
-      height: 56,
-      color: AppColors.white,
-      padding: EdgeInsets.only(left: 20, right: 16),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            flex: 1,
-            child: Text(
-              Strings.showMeetTime,
-              style: TextStyle(color: AppColors.black_222222, fontSize: 16),
-            ),
-          ),
-          MeetingValueKey.addTextWidgetTest(
-              valueKey: MeetingValueKey.openShowMeetTime,
-              value: openShowMeetTime),
-          CupertinoSwitch(
-              key: MeetingValueKey.openShowMeetTime,
-              value: openShowMeetTime,
-              onChanged: (bool value) {
-                NEMeetingKit.instance
-                    .getSettingsService()
-                    .enableShowMyMeetingElapseTime(value);
-                setState(() {
-                  openShowMeetTime = value;
-                });
-              },
-              activeColor: AppColors.blue_337eff)
-        ],
-      ),
+  Widget buildMeetTimeItem() {
+    final settings = NEMeetingKit.instance.getSettingsService();
+    return buildSwitchItem(
+      MeetingValueKey.openShowMeetTime,
+      Strings.showMeetTime,
+      false,
+      settings.isShowMyMeetingElapseTimeEnabled(),
+      (value) => settings.enableShowMyMeetingElapseTime(value),
     );
   }
 }

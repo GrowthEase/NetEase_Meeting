@@ -31,7 +31,7 @@ class _NEMeetingAccountServiceImpl extends NEMeetingAccountService {
   @override
   _setAccountInfo(NEAccountInfo? accountInfo, [bool anonymous = false]) {
     this._accountInfo = accountInfo;
-    this._anonymous = anonymous;
+    this._anonymous = accountInfo == null ? false : anonymous;
   }
 
   @override

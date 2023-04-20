@@ -88,13 +88,13 @@ class _NEPreMeetingServiceImpl extends NEPreMeetingService {
   }
 
   @override
-  Future<NEResult<void>> cancelMeeting(int uniqueId) {
+  Future<NEResult<void>> cancelMeeting(int meetingId) {
     Alog.i(
         tag: _tag,
         moduleName: _moduleName,
         type: AlogType.api,
-        content: 'cancelMeeting $uniqueId');
-    return PreRoomRepository.cancelRoom(uniqueId);
+        content: 'cancelMeeting $meetingId');
+    return PreRoomRepository.cancelRoom(meetingId);
   }
 
   @override

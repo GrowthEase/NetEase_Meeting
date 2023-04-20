@@ -24,12 +24,6 @@
 @import file_picker;
 #endif
 
-#if __has_include(<image_gallery_saver/ImageGallerySaverPlugin.h>)
-#import <image_gallery_saver/ImageGallerySaverPlugin.h>
-#else
-@import image_gallery_saver;
-#endif
-
 #if __has_include(<netease_meeting_ui/MeetingPlugin.h>)
 #import <netease_meeting_ui/MeetingPlugin.h>
 #else
@@ -48,10 +42,10 @@
 @import nos;
 #endif
 
-#if __has_include(<open_file/OpenFilePlugin.h>)
-#import <open_file/OpenFilePlugin.h>
+#if __has_include(<open_filex/OpenFilePlugin.h>)
+#import <open_filex/OpenFilePlugin.h>
 #else
-@import open_file;
+@import open_filex;
 #endif
 
 #if __has_include(<package_info/FLTPackageInfoPlugin.h>)
@@ -66,10 +60,10 @@
 @import path_provider_ios;
 #endif
 
-#if __has_include(<permission_handler/PermissionHandlerPlugin.h>)
-#import <permission_handler/PermissionHandlerPlugin.h>
+#if __has_include(<permission_handler_apple/PermissionHandlerPlugin.h>)
+#import <permission_handler_apple/PermissionHandlerPlugin.h>
 #else
-@import permission_handler;
+@import permission_handler_apple;
 #endif
 
 #if __has_include(<shared_preferences_ios/FLTSharedPreferencesPlugin.h>)
@@ -108,7 +102,6 @@
   [FLTConnectivityPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTConnectivityPlugin"]];
   [FLTDeviceInfoPlusPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTDeviceInfoPlusPlugin"]];
   [FilePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FilePickerPlugin"]];
-  [ImageGallerySaverPlugin registerWithRegistrar:[registry registrarForPlugin:@"ImageGallerySaverPlugin"]];
   [MeetingPlugin registerWithRegistrar:[registry registrarForPlugin:@"MeetingPlugin"]];
   [RoomKitPlugin registerWithRegistrar:[registry registrarForPlugin:@"RoomKitPlugin"]];
   [NosPlugin registerWithRegistrar:[registry registrarForPlugin:@"NosPlugin"]];
