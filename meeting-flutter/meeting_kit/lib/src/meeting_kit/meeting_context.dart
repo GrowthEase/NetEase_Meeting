@@ -50,6 +50,7 @@ extension NEMeetingContext on NERoomContext {
       memberPropertiesChanged: (member, _) => member._updateStates(),
       memberPropertiesDeleted: (member, _) => member._updateStates(),
     ));
+    localMember.updateMyPhoneStateLocal(false);
   }
 
   void _findHost() {
@@ -356,14 +357,14 @@ extension NEMeetingMember on NERoomMember {
     if (notifier is ValueNotifier<bool>) {
       return notifier;
     }
-    notifier = ValueNotifier(isInCall);
+    notifier = ValueNotifier(false);
     addAttachment(_isInCallListenableKey, notifier);
     return notifier;
   }
 
   void _updateStates() {
     _ensureIsInCallNotifier().value =
-        isInCall || getAttachment(_phoneStateLocalKey) == true;
+        (getAttachment(_phoneStateLocalKey) as bool?) ?? isInCall;
   }
 }
 
