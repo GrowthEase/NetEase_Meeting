@@ -3,11 +3,12 @@
 // found in the LICENSE file.
 part of meeting_kit;
 
-class NetworkTaskExecutor {
+class NetworkTaskExecutor with _AloggerMixin {
   final _globalType = Object();
 
   bool _disposed = false;
   final _taskRegistry = <Object, List<_NetworkTask>>{};
+  final _pendingCompleteTaskRegistry = <Object, Future>{};
   late final StreamSubscription _subscription;
 
   var _latestConnectivityResult = ConnectivityResult.none;
@@ -33,10 +34,7 @@ class NetworkTaskExecutor {
       waitingTasks.forEach((task) {
         task.completer.completeError('Cancelled');
       });
-      assert(() {
-        debugPrint('NetworkTaskExecutor cancel: ${waitingTasks.join('-')}');
-        return true;
-      }());
+      commonLogger.i('tasks cancelled: ${waitingTasks.join('-')}');
     }
 
     final taskWrapper =
@@ -47,12 +45,9 @@ class NetworkTaskExecutor {
 
     Future.value().then((_) => _scheduleTasks());
 
-    assert(() {
-      debugPrint('NetworkTaskExecutor add: $taskWrapper');
-      return true;
-    }());
+    commonLogger.i('task added: $taskWrapper');
 
-    return taskWrapper.completer.future;
+    return taskWrapper.completer.future.then((value) => value as T?);
   }
 
   void dispose() {
@@ -75,25 +70,39 @@ class NetworkTaskExecutor {
     final registry = Map.of(_taskRegistry);
     _taskRegistry.clear();
     registry.forEach((key, tasks) {
-      _executeTaskInParallel(tasks);
+      _executeTaskInParallel(key, tasks);
     });
   }
 
-  void _executeTaskInParallel(List<_NetworkTask> tasks) {
+  void _executeTaskInParallel(Object key, List<_NetworkTask> tasks) {
     final executed = <_NetworkTask>[];
     while (tasks.isNotEmpty && _isNetworkConnected()) {
       final task = tasks.removeAt(0);
       executed.add(task);
+      final _previousTaskFuture =
+          _pendingCompleteTaskRegistry[key] ?? Future.value();
+      final _thisTaskFuture = task.completer.future;
+      _pendingCompleteTaskRegistry[key] = _thisTaskFuture;
       try {
-        task.completer.complete(task.task());
+        task.completer.complete(_previousTaskFuture.then((value) async {
+          var taskResult;
+          try {
+            taskResult = await task.task();
+          } catch (e) {
+            taskResult = null;
+          }
+          commonLogger.i(
+              'task executed: $task:${taskResult != null ? 'Success' : 'Failure'}');
+        }));
       } catch (e, s) {
         task.completer.completeError(e, s);
       }
+      _thisTaskFuture.whenComplete(() {
+        if (_pendingCompleteTaskRegistry[key] == _thisTaskFuture) {
+          _pendingCompleteTaskRegistry.remove(key);
+        }
+      });
     }
-    assert(() {
-      debugPrint('NetworkTaskExecutor execute: ${executed.join('-')}');
-      return true;
-    }());
   }
 }
 
@@ -103,9 +112,9 @@ class _NetworkTask<T> {
   final int _index = counter++;
   final String debugName;
   final Future<T> Function() task;
-  final Completer<T> completer;
+  final Completer completer;
 
-  _NetworkTask(this.task, this.debugName) : completer = Completer<T>();
+  _NetworkTask(this.task, this.debugName) : completer = Completer();
 
   @override
   String toString() {
