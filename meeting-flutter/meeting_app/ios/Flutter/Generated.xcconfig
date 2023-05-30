@@ -1,0 +1,13 @@
+// This is a generated file; do not edit or check into version control.
+FLUTTER_ROOT=/Users/zhouxiaolu/Flutter/flutter
+FLUTTER_APPLICATION_PATH=/Users/zhouxiaolu/Netease/Github/NetEase_Meeting/meeting-flutter/meeting_app
+COCOAPODS_PARALLEL_CODE_SIGN=true
+FLUTTER_TARGET=lib/main.dart
+FLUTTER_BUILD_DIR=build
+FLUTTER_BUILD_NAME=3.10.0
+FLUTTER_BUILD_NUMBER=31000
+EXCLUDED_ARCHS[sdk=iphonesimulator*]=i386 arm64
+DART_OBFUSCATION=false
+TRACK_WIDGET_CREATION=false
+TREE_SHAKE_ICONS=false
+PACKAGE_CONFIG=.dart_tool/package_config.json

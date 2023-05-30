@@ -73,6 +73,7 @@ PODS:
   - NEScreenShareHost (0.5.3)
   - netease_meeting_ui (0.0.1):
     - Flutter
+    - YXAlog
   - netease_roomkit (0.0.1):
     - Flutter
     - NERoomKit (= 1.13.0)
@@ -203,7 +204,7 @@ SPEC CHECKSUMS:
   NERtcSDK: 4a123939a87d7d1382c9de30e33a63facf904710
   NEScreenShareBroadcaster: 901a3589497383b25cd5b9cdf82295a6b5f2e47c
   NEScreenShareHost: a8c2c2b2a53b699365a630df44404bdf8525cdcb
-  netease_meeting_ui: f0e3e3437d192902be95e9e31bb0587b769cb466
+  netease_meeting_ui: 7307f3c7f1bc85bfe718be852aa25f079468000b
   netease_roomkit: 7a2cedc8eccd9acabc4cbf966b03a3d7e42ca522
   NEWEYUV: 98dd84c08b6eb1437f7c228603e803aaa34e8aea
   NIMSDK_LITE: 93890684fab9074ba8c5d949e47e24856a356bcb
@@ -225,4 +226,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 6b008c0a32a875672e5a555250c0b8366a0b2182
 
-COCOAPODS: 1.11.2
+COCOAPODS: 1.12.1
