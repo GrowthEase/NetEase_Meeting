@@ -24,6 +24,8 @@ class MeetingArguments extends MeetingBaseArguments {
             password: password,
             options: options) {
     requestTimeStamp = DateTime.now().millisecondsSinceEpoch;
+    _isWhiteboardTransparent =
+        ValueNotifier(options.enableTransparentWhiteboard);
   }
 
   @override
@@ -32,4 +34,8 @@ class MeetingArguments extends MeetingBaseArguments {
   String? getOptionExtraValue(String key) {
     return options.extras[key] as String?;
   }
+
+  late final ValueNotifier<bool> _isWhiteboardTransparent;
+  bool get isWhiteboardTransparent => _isWhiteboardTransparent.value;
+  set isWhiteboardTransparent(value) => _isWhiteboardTransparent.value = value;
 }

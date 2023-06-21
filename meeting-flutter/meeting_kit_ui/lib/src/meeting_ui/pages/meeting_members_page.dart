@@ -46,7 +46,8 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
 
   final String _tag = 'MeetMemberPage';
 
-  bool moreDialogIsShow = false; // 更多菜单对话框是都展示
+  bool moreDialogIsShow = false; // 更多菜单对话框是否展示
+  String? moreDialogBindingMember; // 更多菜单对话框对应的成员
 
   void onRoomLockStateChanged(bool isLocked) {
     if (mounted) {
@@ -58,11 +59,8 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
 
   void onMemberRoleChanged(
       NERoomMember member, NERoomRole before, NERoomRole after) {
-    if (member.uuid == roomContext.localMember.uuid) {
-      if (moreDialogIsShow) {
-        Navigator.pop(context);
-        moreDialogIsShow = false;
-      }
+    if (moreDialogIsShow && member.uuid == roomContext.localMember.uuid) {
+      Navigator.pop(context);
     }
   }
 
@@ -85,6 +83,12 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     roomContext.addEventCallback(roomEventCallback = NERoomEventCallback(
       roomLockStateChanged: onRoomLockStateChanged,
       memberRoleChanged: onMemberRoleChanged,
+      memberLeaveRoom: (members) {
+        if (moreDialogIsShow &&
+            members.any((member) => member.uuid == moreDialogBindingMember)) {
+          Navigator.pop(context);
+        }
+      },
     ));
     whiteboardController = roomContext.whiteboardController;
     rtcController = roomContext.rtcController;
@@ -897,7 +901,8 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
             MemberActionType.removeMember),
     ];
     if (actions.isEmpty) return;
-
+    moreDialogBindingMember = user.uuid;
+    moreDialogIsShow = true;
     DialogUtils.showChildNavigatorPopup<_ActionData>(
         context,
         (context) => CupertinoActionSheet(
@@ -912,15 +917,16 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
                     NEMeetingUIKitLocalizations.of(context)!.cancel),
                 onPressed: () {
                   Navigator.pop(context);
-                  moreDialogIsShow = false;
                 },
               ),
             )).then<void>((_ActionData? value) {
       if (value != null && value.action.index != -1) {
         handleAction(value.action, value.user);
       }
+    }).then((value) {
+      moreDialogIsShow = false;
+      moreDialogBindingMember = null;
     });
-    moreDialogIsShow = true;
   }
 
   void handleAction(MemberActionType action, NERoomMember user) {
@@ -1129,7 +1135,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     });
     if (user.uuid == roomContext.myUuid) {
       mute
-          ? rtcController.muteMyAudio()
+          ? rtcController.muteMyAudioAndAdjustVolume()
           : rtcController.unmuteMyAudioWithCheckPermission(
               context, arguments.meetingTitle);
       return;
@@ -1187,7 +1193,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     });
     if (user.uuid == roomContext.myUuid) {
       mute
-          ? rtcController.muteMyAudio()
+          ? rtcController.muteMyAudioAndAdjustVolume()
           : rtcController.unmuteMyAudioWithCheckPermission(
               context, arguments.meetingTitle);
       mute

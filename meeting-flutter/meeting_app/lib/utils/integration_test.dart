@@ -63,6 +63,9 @@ class MeetingValueKey {
   static const openShowMeetTime = ValueKey('openShowMeetTime');
   static const audioAINS = ValueKey('audioAINS');
   static const showShareUserVideo = ValueKey('showShareUserVideo');
+  static const enableTransparentWhiteboard =
+      ValueKey('enableTransparentWhiteboard');
+  static const enableFrontCameraMirror = ValueKey('enableFrontCameraMirror');
 
   ///会议创建模板[MeetCreateRoute]
   static const userSelfMeetingNumCreateMeeting =

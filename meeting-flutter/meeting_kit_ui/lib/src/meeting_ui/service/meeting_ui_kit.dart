@@ -418,11 +418,11 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
   }
 
   Future<NEResult<void>> minimizeCurrentMeeting() {
-    if (InMeetingService().mininizeDelegte == null) {
+    if (InMeetingService().minimizeDelegate == null) {
       return Future.value(const NEResult(
           code: NEMeetingErrorCode.failed, msg: 'meeting not exists.'));
     }
-    return InMeetingService().mininizeDelegte!.minimizeCurrentMeeting();
+    return InMeetingService().minimizeDelegate!.minimizeCurrentMeeting();
   }
 
   Future<NEResult<void>> openBeautyUI(BuildContext context) async {
@@ -535,14 +535,12 @@ class NEMeetingUIKitConfig extends NEMeetingKitConfig {
     this.foregroundServiceConfig,
     NEMeetingKitServerConfig? serverConfig,
     String? serverUrl,
-    bool reuseIM = false,
     Map<String, dynamic>? extras,
     ALoggerConfig? aLoggerConfig,
   }) : super(
           appKey: appKey,
           serverConfig: serverConfig,
           serverUrl: serverUrl,
-          reuseIM: reuseIM,
           aLoggerConfig: aLoggerConfig,
           extras: extras,
         );

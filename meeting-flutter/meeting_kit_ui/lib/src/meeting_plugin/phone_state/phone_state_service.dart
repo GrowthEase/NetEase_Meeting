@@ -10,21 +10,33 @@ class NEPhoneStateService {
 
   NEPhoneStateService._();
 
+  final alog = Alogger.normal('NEPhoneStateService', 'meeting_ui');
   final _statesEventChannel = EventChannel(_STATES_EVENT_CHANNEL_NAME);
 
   bool? _isInCall;
   Stream<bool>? _sourceStream;
+  bool _started = false;
+
+  // android 需要在确保有权限的时候调用
+  // ios 不需要
+  void start() {
+    if (!_started) {
+      alog.i('start listen phone state');
+      _ensurePhoneStateSourceStream();
+      _started = true;
+    }
+  }
 
   Future<bool> get isInCall async {
+    if (!_started) return false;
     if (_isInCall == null) {
-      _ensurePhoneStateSourceStream();
       return _sourceStream!.first;
     }
     return _isInCall!;
   }
 
   Stream<bool> get inCallStateChanged {
-    _ensurePhoneStateSourceStream();
+    if (!_started) return Stream.value(false);
     final controller = StreamController<bool>();
     if (_isInCall != null) {
       controller.add(_isInCall!);
@@ -40,11 +52,12 @@ class NEPhoneStateService {
     if (_sourceStream == null) {
       _sourceStream = _statesEventChannel.receiveBroadcastStream().map((event) {
         assert(event is Map);
-        debugPrint('phone state changed: $event');
-        _isInCall = event['isInCall'] as bool;
-        return _isInCall!;
+        return event['isInCall'] as bool;
       }).distinct();
-      _sourceStream!.listen((event) {});
+      _sourceStream!.listen((event) {
+        alog.i('phone state changed: $event');
+        _isInCall = event;
+      });
     }
   }
 }

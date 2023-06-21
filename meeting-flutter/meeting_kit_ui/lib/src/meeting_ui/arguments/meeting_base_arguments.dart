@@ -29,6 +29,9 @@ class MeetingBaseArguments {
   /// 聊天
   bool get noChat => options.noChat;
 
+  /// 直播
+  bool get noLive => options.noLive;
+
   bool get noSwitchCamera => options.noSwitchCamera;
 
   bool get noSwitchAudioMode => options.noSwitchAudioMode;

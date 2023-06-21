@@ -1722,6 +1722,42 @@ abstract class NEMeetingUIKitLocalizations {
   /// In en, this message translates to:
   /// **'Packet Loss Rate'**
   String get packetLossRate;
+
+  /// No description provided for @startAudioShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Sharing system audio'**
+  String get startAudioShare;
+
+  /// No description provided for @stopAudioShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop sharing system audio'**
+  String get stopAudioShare;
+
+  /// No description provided for @switchFcusView.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to Focus view'**
+  String get switchFcusView;
+
+  /// No description provided for @switchGalleryView.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to Gallery view'**
+  String get switchGalleryView;
+
+  /// No description provided for @noSupportSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'iPad does not support switching modes'**
+  String get noSupportSwitch;
+
+  /// No description provided for @funcNotAvailableWhenInCallState.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot use this feature while on a call'**
+  String get funcNotAvailableWhenInCallState;
 }
 
 class _NEMeetingUIKitLocalizationsDelegate

@@ -52,7 +52,6 @@ part 'src/meeting_kit/settings_service.dart';
 part 'src/meeting_kit/live_meeting_service.dart';
 part 'src/meeting_kit/impl/live_meeting_service_impl.dart';
 part 'src/meeting_kit/module_name.dart';
-part 'src/meeting_kit/invocation_manager.dart';
 part 'src/meeting_kit/log/log_service.dart';
 part 'src/meeting_kit/utils/rtc_utils.dart';
 part 'src/meeting_kit/utils/network_task_executor.dart';
@@ -101,9 +100,6 @@ class NEMeetingKitConfig {
   /// 房间App Key，不能为空
   final String appKey;
 
-  /// 是否复用im
-  final bool reuseIM;
-
   NEMeetingKitServerConfig? serverConfig;
 
   final String? serverUrl;
@@ -117,7 +113,6 @@ class NEMeetingKitConfig {
     required this.appKey,
     this.serverConfig,
     this.serverUrl,
-    this.reuseIM = false,
     this.extras,
     ALoggerConfig? aLoggerConfig,
   }) : aLoggerConfig = aLoggerConfig ?? const ALoggerConfig();
@@ -129,15 +124,15 @@ class NEMeetingKitConfig {
     }
     return appKey == other.appKey &&
         serverConfig == other.serverConfig &&
-        reuseIM == other.reuseIM &&
+        serverUrl == other.serverUrl &&
         aLoggerConfig == other.aLoggerConfig &&
         mapEquals(extras, other.extras);
   }
 
   @override
-  int get hashCode => hashValues(
+  int get hashCode => Object.hash(
         appKey,
-        reuseIM,
+        serverUrl,
         serverConfig,
         aLoggerConfig,
         extras,
@@ -145,7 +140,7 @@ class NEMeetingKitConfig {
 
   @override
   String toString() {
-    return 'NEMeetingKitConfig{appKey: $appKey}';
+    return 'NEMeetingKitConfig{$appKey, $serverUrl}';
   }
 }
 

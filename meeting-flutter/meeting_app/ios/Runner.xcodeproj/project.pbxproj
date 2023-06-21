@@ -3,16 +3,17 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 50;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		0709925120BD38EE5B018D70 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 80A5568473CAEA7AC1CDFDDA /* Pods_Runner.framework */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
-		2DB8EC4F2654EEAA00BB171E /* ReplayKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DB8EC4E2654EEAA00BB171E /* ReplayKit.framework */; };
-		2DB8EC532654EEAA00BB171E /* SampleHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 2DB8EC522654EEAA00BB171E /* SampleHandler.m */; };
-		2DB8EC572654EEAA00BB171E /* MeetingBroadcaster.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 2DB8EC4D2654EEAA00BB171E /* MeetingBroadcaster.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		36E782B8D4E80E925E9333C5 /* BuildFile in Frameworks */ = {isa = PBXBuildFile; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
+		530E41932A3760A100ADE1B9 /* ReplayKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DB8EC4E2654EEAA00BB171E /* ReplayKit.framework */; };
+		530E419B2A3760A100ADE1B9 /* MeetingBroadcaster.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 530E41922A3760A100ADE1B9 /* MeetingBroadcaster.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		530E41A92A3763A400ADE1B9 /* SampleHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 530E41A72A3763A400ADE1B9 /* SampleHandler.m */; };
 		530F661A29C4596B00DA53FB /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 530F661929C4596B00DA53FB /* AVFoundation.framework */; };
 		530F661C29C4597500DA53FB /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 530F661B29C4597500DA53FB /* CoreTelephony.framework */; };
 		530F661E29C4597D00DA53FB /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 530F661D29C4597D00DA53FB /* SystemConfiguration.framework */; };
@@ -24,37 +25,27 @@
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		CA2A313725C2511800017C94 /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CA2A313625C2511800017C94 /* CoreML.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		CA3E725E23E7E2F600B775BB /* NTESLinkStreamHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = CA3E725D23E7E2F600B775BB /* NTESLinkStreamHandler.m */; };
-		D4BDDB4CCF302080F62F7C79 /* Pods_MeetingBroadcaster.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B7A4D652189DEBF3DD90161 /* Pods_MeetingBroadcaster.framework */; };
+		E696724C0E5D3C474FFF6930 /* Pods_MeetingBroadcaster.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FE3D2E4E7AFE9501085A4BAF /* Pods_MeetingBroadcaster.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		2DB8EC552654EEAA00BB171E /* PBXContainerItemProxy */ = {
+		530E41992A3760A100ADE1B9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 2DB8EC4C2654EEAA00BB171E;
+			remoteGlobalIDString = 530E41912A3760A100ADE1B9;
 			remoteInfo = MeetingBroadcaster;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		266D27B526F6117000460DC2 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		2DB8EC5C2654EEAA00BB171E /* Embed App Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				2DB8EC572654EEAA00BB171E /* MeetingBroadcaster.appex in Embed App Extensions */,
+				530E419B2A3760A100ADE1B9 /* MeetingBroadcaster.appex in Embed App Extensions */,
 			);
 			name = "Embed App Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -66,28 +57,28 @@
 		0CA29D68292642CCF3C1D923 /* Pods-MeetingBroadcaster.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MeetingBroadcaster.profile.xcconfig"; path = "Target Support Files/Pods-MeetingBroadcaster/Pods-MeetingBroadcaster.profile.xcconfig"; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
-		2DB8EC4D2654EEAA00BB171E /* MeetingBroadcaster.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MeetingBroadcaster.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		21A79E48F9CA0484F1A5BF5F /* Pods-Runner-MeetingBroadcaster.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner-MeetingBroadcaster.release.xcconfig"; path = "Target Support Files/Pods-Runner-MeetingBroadcaster/Pods-Runner-MeetingBroadcaster.release.xcconfig"; sourceTree = "<group>"; };
 		2DB8EC4E2654EEAA00BB171E /* ReplayKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ReplayKit.framework; path = System/Library/Frameworks/ReplayKit.framework; sourceTree = SDKROOT; };
-		2DB8EC512654EEAA00BB171E /* SampleHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SampleHandler.h; sourceTree = "<group>"; };
-		2DB8EC522654EEAA00BB171E /* SampleHandler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SampleHandler.m; sourceTree = "<group>"; };
-		2DB8EC542654EEAA00BB171E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		2DB8EC5D2654EF3C00BB171E /* MeetingBroadcaster.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MeetingBroadcaster.entitlements; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
+		530E41922A3760A100ADE1B9 /* MeetingBroadcaster.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MeetingBroadcaster.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		530E41A52A3763A400ADE1B9 /* SampleHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SampleHandler.h; sourceTree = "<group>"; };
+		530E41A62A3763A400ADE1B9 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		530E41A72A3763A400ADE1B9 /* SampleHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SampleHandler.m; sourceTree = "<group>"; };
 		530F661929C4596B00DA53FB /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		530F661B29C4597500DA53FB /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = System/Library/Frameworks/CoreTelephony.framework; sourceTree = SDKROOT; };
 		530F661D29C4597D00DA53FB /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		530F661F29C4598A00DA53FB /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
+		532836642A42A38A00FA65F1 /* MeetingBroadcaster.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MeetingBroadcaster.entitlements; sourceTree = "<group>"; };
 		5640ED818C20B15ABD841176 /* Pods-MeetingBroadcaster.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MeetingBroadcaster.debug.xcconfig"; path = "Target Support Files/Pods-MeetingBroadcaster/Pods-MeetingBroadcaster.debug.xcconfig"; sourceTree = "<group>"; };
 		64A4E1B0C91E804CDA48AFA7 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
+		755A34F0664B6C0B7D98D2BA /* Pods-Runner-MeetingBroadcaster.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner-MeetingBroadcaster.debug.xcconfig"; path = "Target Support Files/Pods-Runner-MeetingBroadcaster/Pods-Runner-MeetingBroadcaster.debug.xcconfig"; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
 		7AFFD8ED1D35381100E5BB4D /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		7AFFD8EE1D35381100E5BB4D /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		80A5568473CAEA7AC1CDFDDA /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8985AE8F74CEEDADBE40CA39 /* Pods-MeetingBroadcaster.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MeetingBroadcaster.release.xcconfig"; path = "Target Support Files/Pods-MeetingBroadcaster/Pods-MeetingBroadcaster.release.xcconfig"; sourceTree = "<group>"; };
-		8B7A4D652189DEBF3DD90161 /* Pods_MeetingBroadcaster.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MeetingBroadcaster.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		92FEF41FFBDE7BB2875CC8EB /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
-		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
 		97C146EE1CF9000F007C117D /* Runner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runner.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		97C146F21CF9000F007C117D /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		97C146FB1CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -99,15 +90,17 @@
 		CA3E725D23E7E2F600B775BB /* NTESLinkStreamHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NTESLinkStreamHandler.m; sourceTree = "<group>"; };
 		CA3E725F23E7EE7E00B775BB /* RunnerDebug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RunnerDebug.entitlements; sourceTree = "<group>"; };
 		CA3E726023E7EEB400B775BB /* RunnerRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RunnerRelease.entitlements; sourceTree = "<group>"; };
+		F0E7184F2D10019E2FE53A22 /* Pods-Runner-MeetingBroadcaster.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner-MeetingBroadcaster.profile.xcconfig"; path = "Target Support Files/Pods-Runner-MeetingBroadcaster/Pods-Runner-MeetingBroadcaster.profile.xcconfig"; sourceTree = "<group>"; };
+		FE3D2E4E7AFE9501085A4BAF /* Pods_MeetingBroadcaster.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MeetingBroadcaster.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		2DB8EC4A2654EEAA00BB171E /* Frameworks */ = {
+		530E418F2A3760A100ADE1B9 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2DB8EC4F2654EEAA00BB171E /* ReplayKit.framework in Frameworks */,
-				D4BDDB4CCF302080F62F7C79 /* Pods_MeetingBroadcaster.framework in Frameworks */,
+				530E41932A3760A100ADE1B9 /* ReplayKit.framework in Frameworks */,
+				E696724C0E5D3C474FFF6930 /* Pods_MeetingBroadcaster.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -120,6 +113,7 @@
 				530F661C29C4597500DA53FB /* CoreTelephony.framework in Frameworks */,
 				530F661A29C4596B00DA53FB /* AVFoundation.framework in Frameworks */,
 				CA2A313725C2511800017C94 /* CoreML.framework in Frameworks */,
+				36E782B8D4E80E925E9333C5 /* BuildFile in Frameworks */,
 				0709925120BD38EE5B018D70 /* Pods_Runner.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -127,13 +121,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		2DB8EC502654EEAA00BB171E /* MeetingBroadcaster */ = {
+		530E41942A3760A100ADE1B9 /* MeetingBroadcaster */ = {
 			isa = PBXGroup;
 			children = (
-				2DB8EC5D2654EF3C00BB171E /* MeetingBroadcaster.entitlements */,
-				2DB8EC512654EEAA00BB171E /* SampleHandler.h */,
-				2DB8EC522654EEAA00BB171E /* SampleHandler.m */,
-				2DB8EC542654EEAA00BB171E /* Info.plist */,
+				532836642A42A38A00FA65F1 /* MeetingBroadcaster.entitlements */,
+				530E41A62A3763A400ADE1B9 /* Info.plist */,
+				530E41A52A3763A400ADE1B9 /* SampleHandler.h */,
+				530E41A72A3763A400ADE1B9 /* SampleHandler.m */,
 			);
 			path = MeetingBroadcaster;
 			sourceTree = "<group>";
@@ -144,7 +138,6 @@
 				3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */,
 				9740EEB21CF90195004384FC /* Debug.xcconfig */,
 				7AFA3C8E1D35360C0083082E /* Release.xcconfig */,
-				9740EEB31CF90195004384FC /* Generated.xcconfig */,
 			);
 			name = Flutter;
 			sourceTree = "<group>";
@@ -154,7 +147,7 @@
 			children = (
 				9740EEB11CF90186004384FC /* Flutter */,
 				97C146F01CF9000F007C117D /* Runner */,
-				2DB8EC502654EEAA00BB171E /* MeetingBroadcaster */,
+				530E41942A3760A100ADE1B9 /* MeetingBroadcaster */,
 				97C146EF1CF9000F007C117D /* Products */,
 				9E8D7C36D13AA8BDF8A49C6B /* Pods */,
 				9C5325377C8C19237C4ECE3B /* Frameworks */,
@@ -165,7 +158,7 @@
 			isa = PBXGroup;
 			children = (
 				97C146EE1CF9000F007C117D /* Runner.app */,
-				2DB8EC4D2654EEAA00BB171E /* MeetingBroadcaster.appex */,
+				530E41922A3760A100ADE1B9 /* MeetingBroadcaster.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -208,7 +201,7 @@
 				CA2A313625C2511800017C94 /* CoreML.framework */,
 				2DB8EC4E2654EEAA00BB171E /* ReplayKit.framework */,
 				80A5568473CAEA7AC1CDFDDA /* Pods_Runner.framework */,
-				8B7A4D652189DEBF3DD90161 /* Pods_MeetingBroadcaster.framework */,
+				FE3D2E4E7AFE9501085A4BAF /* Pods_MeetingBroadcaster.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -222,6 +215,9 @@
 				5640ED818C20B15ABD841176 /* Pods-MeetingBroadcaster.debug.xcconfig */,
 				8985AE8F74CEEDADBE40CA39 /* Pods-MeetingBroadcaster.release.xcconfig */,
 				0CA29D68292642CCF3C1D923 /* Pods-MeetingBroadcaster.profile.xcconfig */,
+				755A34F0664B6C0B7D98D2BA /* Pods-Runner-MeetingBroadcaster.debug.xcconfig */,
+				21A79E48F9CA0484F1A5BF5F /* Pods-Runner-MeetingBroadcaster.release.xcconfig */,
+				F0E7184F2D10019E2FE53A22 /* Pods-Runner-MeetingBroadcaster.profile.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -229,15 +225,14 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		2DB8EC4C2654EEAA00BB171E /* MeetingBroadcaster */ = {
+		530E41912A3760A100ADE1B9 /* MeetingBroadcaster */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2DB8EC582654EEAA00BB171E /* Build configuration list for PBXNativeTarget "MeetingBroadcaster" */;
+			buildConfigurationList = 530E419C2A3760A200ADE1B9 /* Build configuration list for PBXNativeTarget "MeetingBroadcaster" */;
 			buildPhases = (
-				1D6E712610501B3E2522F3B0 /* [CP] Check Pods Manifest.lock */,
-				2DB8EC492654EEAA00BB171E /* Sources */,
-				2DB8EC4A2654EEAA00BB171E /* Frameworks */,
-				2DB8EC4B2654EEAA00BB171E /* Resources */,
-				266D27B526F6117000460DC2 /* Embed Frameworks */,
+				93935709EAFF71803F4D1F54 /* [CP] Check Pods Manifest.lock */,
+				530E418E2A3760A100ADE1B9 /* Sources */,
+				530E418F2A3760A100ADE1B9 /* Frameworks */,
+				530E41902A3760A100ADE1B9 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -245,7 +240,7 @@
 			);
 			name = MeetingBroadcaster;
 			productName = MeetingBroadcaster;
-			productReference = 2DB8EC4D2654EEAA00BB171E /* MeetingBroadcaster.appex */;
+			productReference = 530E41922A3760A100ADE1B9 /* MeetingBroadcaster.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 		97C146ED1CF9000F007C117D /* Runner */ = {
@@ -264,7 +259,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				2DB8EC562654EEAA00BB171E /* PBXTargetDependency */,
+				530E419A2A3760A100ADE1B9 /* PBXTargetDependency */,
 			);
 			name = Runner;
 			productName = Runner;
@@ -280,8 +275,8 @@
 				LastUpgradeCheck = 1300;
 				ORGANIZATIONNAME = "The Chromium Authors";
 				TargetAttributes = {
-					2DB8EC4C2654EEAA00BB171E = {
-						CreatedOnToolsVersion = 12.5;
+					530E41912A3760A100ADE1B9 = {
+						CreatedOnToolsVersion = 14.2;
 						DevelopmentTeam = 569GNZ5392;
 						ProvisioningStyle = Automatic;
 					};
@@ -306,13 +301,13 @@
 			projectRoot = "";
 			targets = (
 				97C146ED1CF9000F007C117D /* Runner */,
-				2DB8EC4C2654EEAA00BB171E /* MeetingBroadcaster */,
+				530E41912A3760A100ADE1B9 /* MeetingBroadcaster */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		2DB8EC4B2654EEAA00BB171E /* Resources */ = {
+		530E41902A3760A100ADE1B9 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -333,28 +328,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		1D6E712610501B3E2522F3B0 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-MeetingBroadcaster-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
 		3B06AD1E1E4923F5004D2608 /* Thin Binary */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -391,6 +364,28 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		93935709EAFF71803F4D1F54 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-MeetingBroadcaster-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
 		9740EEB61CF901F6004384FC /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -414,22 +409,20 @@
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/DKImagePickerController/DKImagePickerController.framework",
 				"${BUILT_PRODUCTS_DIR}/DKPhotoGallery/DKPhotoGallery.framework",
-				"${PODS_ROOT}/NECommonExt/NECommonExt.framework",
 				"${PODS_ROOT}/NECoreIMKit/NECoreIMKit.framework",
 				"${PODS_ROOT}/NECoreKit/NECoreKit.framework",
+				"${BUILT_PRODUCTS_DIR}/NEDyldYuv/NEDyldYuv.framework",
 				"${PODS_ROOT}/NERoomKit/NERoomKit.framework",
 				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcAiDenoise.framework",
 				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcAiHowling.framework",
 				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcBeauty.framework",
 				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcFaceDetect.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcSDK.framework",
 				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcnn.framework",
+				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcSDK.framework",
+				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcReplayKit.framework",
 				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcPersonSegment.framework",
-				"${PODS_ROOT}/NEScreenShareHost/NEScreenShareHost.framework",
-				"${BUILT_PRODUCTS_DIR}/NEWEYUV/NEWEYUV.framework",
 				"${PODS_ROOT}/NIMSDK_LITE/NIMSDK/NIMSDK.framework",
 				"${PODS_ROOT}/NIMSDK_LITE/NIMSDK/NIMNOS.framework",
-				"${PODS_ROOT}/NMCBasicModule/NMCBasicModuleFramework.framework",
 				"${BUILT_PRODUCTS_DIR}/Reachability/Reachability.framework",
 				"${BUILT_PRODUCTS_DIR}/SDWebImage/SDWebImage.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftyGif/SwiftyGif.framework",
@@ -448,28 +441,25 @@
 				"${BUILT_PRODUCTS_DIR}/wakelock/wakelock.framework",
 				"${BUILT_PRODUCTS_DIR}/webview_flutter_wkwebview/webview_flutter_wkwebview.framework",
 				"${BUILT_PRODUCTS_DIR}/yunxin_alog/yunxin_alog.framework",
-				"${PODS_ROOT}/NEScreenShareBroadcaster/NEScreenShareBroadcaster.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/DKImagePickerController.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/DKPhotoGallery.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NECommonExt.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NECoreIMKit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NECoreKit.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NEDyldYuv.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERoomKit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcAiDenoise.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcAiHowling.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcBeauty.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcFaceDetect.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcSDK.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcnn.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcSDK.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcReplayKit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcPersonSegment.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NEScreenShareHost.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NEWEYUV.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIMSDK.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIMNOS.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NMCBasicModuleFramework.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Reachability.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SDWebImage.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftyGif.framework",
@@ -488,7 +478,6 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/wakelock.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/webview_flutter_wkwebview.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/yunxin_alog.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NEScreenShareBroadcaster.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -498,11 +487,11 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		2DB8EC492654EEAA00BB171E /* Sources */ = {
+		530E418E2A3760A100ADE1B9 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2DB8EC532654EEAA00BB171E /* SampleHandler.m in Sources */,
+				530E41A92A3763A400ADE1B9 /* SampleHandler.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -520,10 +509,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		2DB8EC562654EEAA00BB171E /* PBXTargetDependency */ = {
+		530E419A2A3760A100ADE1B9 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 2DB8EC4C2654EEAA00BB171E /* MeetingBroadcaster */;
-			targetProxy = 2DB8EC552654EEAA00BB171E /* PBXContainerItemProxy */;
+			target = 530E41912A3760A100ADE1B9 /* MeetingBroadcaster */;
+			targetProxy = 530E41992A3760A100ADE1B9 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -611,7 +600,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 31000;
+				CURRENT_PROJECT_VERSION = 31300;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DEVELOPMENT_TEAM = 569GNZ5392;
 				ENABLE_BITCODE = NO;
@@ -638,7 +627,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 3.10.0;
+				MARKETING_VERSION = 3.13.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -671,13 +660,7 @@
 					"-framework",
 					"\"NERtcSDK\"",
 					"-framework",
-					"\"NEScreenShareBroadcaster\"",
-					"-framework",
-					"\"NEScreenShareHost\"",
-					"-framework",
 					"\"NIMSDK\"",
-					"-framework",
-					"\"NMCBasicModuleFramework\"",
 					"-framework",
 					"\"OpenGLES\"",
 					"-framework",
@@ -724,13 +707,12 @@
 			};
 			name = Profile;
 		};
-		2DB8EC592654EEAA00BB171E /* Debug */ = {
+		530E419D2A3760A200ADE1B9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 5640ED818C20B15ABD841176 /* Pods-MeetingBroadcaster.debug.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
@@ -738,108 +720,70 @@
 				CODE_SIGN_ENTITLEMENTS = MeetingBroadcaster/MeetingBroadcaster.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 31000;
-				DEPLOYMENT_POSTPROCESSING = YES;
+				CURRENT_PROJECT_VERSION = 31300;
 				DEVELOPMENT_TEAM = 569GNZ5392;
-				ENABLE_BITCODE = NO;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Vendor",
-				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
 				);
+				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MeetingBroadcaster/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "网易会议";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				MARKETING_VERSION = 3.10.0;
+				MARKETING_VERSION = 3.13.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-l\"c++\"",
-					"-framework",
-					"\"CoreMedia\"",
-					"-framework",
-					"\"CoreVideo\"",
-					"-framework",
-					"\"NEScreenShareBroadcaster\"",
-					"-framework",
-					"\"QuartzCore\"",
-					"-framework",
-					"\"ReplayKit\"",
-					"-Wl,-sectcreate,__RESTRICT,__restrict,/dev/null",
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.MeetingBroadcaster;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
-		2DB8EC5A2654EEAA00BB171E /* Release */ = {
+		530E419E2A3760A200ADE1B9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 8985AE8F74CEEDADBE40CA39 /* Pods-MeetingBroadcaster.release.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_ENTITLEMENTS = MeetingBroadcaster/MeetingBroadcaster.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 31000;
-				DEPLOYMENT_POSTPROCESSING = YES;
-				DEVELOPMENT_TEAM = 569GNZ5392;
-				ENABLE_BITCODE = NO;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Vendor",
-				);
+				CURRENT_PROJECT_VERSION = 31300;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 569GNZ5392;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MeetingBroadcaster/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "网易会议";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				MARKETING_VERSION = 3.10.0;
+				MARKETING_VERSION = 3.13.0;
 				MTL_FAST_MATH = YES;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-l\"c++\"",
-					"-framework",
-					"\"CoreMedia\"",
-					"-framework",
-					"\"CoreVideo\"",
-					"-framework",
-					"\"NEScreenShareBroadcaster\"",
-					"-framework",
-					"\"QuartzCore\"",
-					"-framework",
-					"\"ReplayKit\"",
-					"-Wl,-sectcreate,__RESTRICT,__restrict,/dev/null",
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.MeetingBroadcaster;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = meetingBroadcasterUniversalDistribution;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = meetingBroadcasterUniversalDistribution;
 				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
-		2DB8EC5B2654EEAA00BB171E /* Profile */ = {
+		530E419F2A3760A200ADE1B9 /* Profile */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0CA29D68292642CCF3C1D923 /* Pods-MeetingBroadcaster.profile.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
@@ -847,40 +791,20 @@
 				CODE_SIGN_ENTITLEMENTS = MeetingBroadcaster/MeetingBroadcaster.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 31000;
-				DEPLOYMENT_POSTPROCESSING = YES;
+				CURRENT_PROJECT_VERSION = 31300;
 				DEVELOPMENT_TEAM = 569GNZ5392;
-				ENABLE_BITCODE = NO;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Vendor",
-				);
 				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MeetingBroadcaster/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "网易会议";
 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
-				MARKETING_VERSION = 3.10.0;
+				MARKETING_VERSION = 3.13.0;
 				MTL_FAST_MATH = YES;
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-l\"c++\"",
-					"-framework",
-					"\"CoreMedia\"",
-					"-framework",
-					"\"CoreVideo\"",
-					"-framework",
-					"\"NEScreenShareBroadcaster\"",
-					"-framework",
-					"\"QuartzCore\"",
-					"-framework",
-					"\"ReplayKit\"",
-					"-Wl,-sectcreate,__RESTRICT,__restrict,/dev/null",
-				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.MeetingBroadcaster;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Profile;
@@ -1008,7 +932,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 31000;
+				CURRENT_PROJECT_VERSION = 31300;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DEVELOPMENT_TEAM = 569GNZ5392;
 				ENABLE_BITCODE = NO;
@@ -1035,7 +959,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 3.10.0;
+				MARKETING_VERSION = 3.13.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -1068,13 +992,7 @@
 					"-framework",
 					"\"NERtcSDK\"",
 					"-framework",
-					"\"NEScreenShareBroadcaster\"",
-					"-framework",
-					"\"NEScreenShareHost\"",
-					"-framework",
 					"\"NIMSDK\"",
-					"-framework",
-					"\"NMCBasicModuleFramework\"",
 					"-framework",
 					"\"OpenGLES\"",
 					"-framework",
@@ -1131,7 +1049,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 31000;
+				CURRENT_PROJECT_VERSION = 31300;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DEVELOPMENT_TEAM = 569GNZ5392;
 				ENABLE_BITCODE = NO;
@@ -1158,7 +1076,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 3.10.0;
+				MARKETING_VERSION = 3.13.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -1191,13 +1109,7 @@
 					"-framework",
 					"\"NERtcSDK\"",
 					"-framework",
-					"\"NEScreenShareBroadcaster\"",
-					"-framework",
-					"\"NEScreenShareHost\"",
-					"-framework",
 					"\"NIMSDK\"",
-					"-framework",
-					"\"NMCBasicModuleFramework\"",
 					"-framework",
 					"\"OpenGLES\"",
 					"-framework",
@@ -1247,12 +1159,12 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		2DB8EC582654EEAA00BB171E /* Build configuration list for PBXNativeTarget "MeetingBroadcaster" */ = {
+		530E419C2A3760A200ADE1B9 /* Build configuration list for PBXNativeTarget "MeetingBroadcaster" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				2DB8EC592654EEAA00BB171E /* Debug */,
-				2DB8EC5A2654EEAA00BB171E /* Release */,
-				2DB8EC5B2654EEAA00BB171E /* Profile */,
+				530E419D2A3760A200ADE1B9 /* Debug */,
+				530E419E2A3760A200ADE1B9 /* Release */,
+				530E419F2A3760A200ADE1B9 /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

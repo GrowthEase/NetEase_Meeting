@@ -49,6 +49,21 @@ class _MeetingSettingState extends MeetingBaseState<MeetingSetting> {
             UserPreferences().getShowShareUserVideo(),
             (value) => UserPreferences().setShowShareUserVideo(value),
           ),
+          buildSplit(),
+          buildSwitchItem(
+            MeetingValueKey.enableTransparentWhiteboard,
+            Strings.enableTransparentWhiteboard,
+            false,
+            UserPreferences().isTransparentWhiteboardEnabled(),
+            UserPreferences().setTransparentWhiteboardEnabled,
+          ),
+          buildSplit(),
+          buildSwitchItem(
+              MeetingValueKey.enableFrontCameraMirror,
+              Strings.enableFrontCameraMirror,
+              true,
+              UserPreferences().isFrontCameraMirrorEnabled(),
+              UserPreferences().setFrontCameraMirrorEnabled)
         ]);
   }
 

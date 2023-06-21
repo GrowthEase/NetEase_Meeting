@@ -817,4 +817,22 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get packetLossRate => '丢包率';
+
+  @override
+  String get startAudioShare => '开启音频共享';
+
+  @override
+  String get stopAudioShare => '关闭音频共享';
+
+  @override
+  String get switchFcusView => '切换至演讲者视图';
+
+  @override
+  String get switchGalleryView => '切换至画廊视图';
+
+  @override
+  String get noSupportSwitch => 'iPad不支持切换模式';
+
+  @override
+  String get funcNotAvailableWhenInCallState => '系统通话中，无法使用该功能';
 }

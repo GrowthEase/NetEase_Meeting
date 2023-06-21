@@ -5,10 +5,7 @@
 part of meeting_kit;
 
 class _NEMeetingKitImpl extends NEMeetingKit
-    with EventTrackMixin, WidgetsBindingObserver {
-  static const _tag = '_NEMeetingKitImpl';
-  // static const _serverUrlExtraKey = 'serverUrl';
-
+    with EventTrackMixin, WidgetsBindingObserver, _AloggerMixin {
   NEMeetingKitConfig? _lastConfig;
   NEMeetingService meetingService = _NEMeetingServiceImpl();
   _NEMeetingAccountServiceImpl accountService = _NEMeetingAccountServiceImpl();
@@ -53,10 +50,7 @@ class _NEMeetingKitImpl extends NEMeetingKit
         try {
           final data = jsonDecode(message.data);
           if (data['type'] == 200 && data['reason'] != null) {
-            Alog.i(
-                tag: _tag,
-                moduleName: _moduleName,
-                content: 'receive auth message: ${message.data}');
+            commonLogger.i('receive auth message: ${message.data}');
             _authListenerSet
                 .toList()
                 .forEach((listener) => listener.onAuthInfoExpired());
@@ -81,12 +75,8 @@ class _NEMeetingKitImpl extends NEMeetingKit
 
   @override
   Future<NEResult<void>> initialize(NEMeetingKitConfig config) async {
-    Alog.i(
-        tag: _tag,
-        moduleName: _moduleName,
-        content:
-            'appKey:${config.appKey},_lastConfig appKey:"${_lastConfig?.appKey ?? '空'}');
-    if (config.appKey == _lastConfig?.appKey) {
+    apiLogger.i('initialize: $config');
+    if (config == _lastConfig) {
       return NEResult.success();
     }
     await NERoomLogService().init(loggerConfig: config.aLoggerConfig);
@@ -101,7 +91,6 @@ class _NEMeetingKitImpl extends NEMeetingKit
         //         _serverUrlExtraKey: serverUrlInExtras as String,
         //       }
         //     : null,
-        reuseIM: config.reuseIM,
         extras: config.extras == null
             ? null
             : Map.fromEntries(config.extras!.entries
@@ -138,20 +127,13 @@ class _NEMeetingKitImpl extends NEMeetingKit
         });
       }
     }
-    Alog.i(
-        tag: _tag,
-        moduleName: _moduleName,
-        content: 'initialize result: $initResult');
+    commonLogger.i('initialize result: $initResult');
     return initResult;
   }
 
   @override
   Future<NEResult<void>> switchLanguage(NEMeetingLanguage? language) async {
-    Alog.i(
-        tag: _tag,
-        moduleName: _moduleName,
-        type: AlogType.api,
-        content: 'switch language: ${language?.locale}');
+    apiLogger.i('switch language: ${language?.locale}');
     final result = await NERoomKit.instance
         .switchLanguage(language?.roomLang ?? NERoomLanguage.automatic);
     if (result.isSuccess()) {
@@ -183,11 +165,7 @@ class _NEMeetingKitImpl extends NEMeetingKit
 
   @override
   Future<NEResult<void>> loginWithToken(String accountId, String token) async {
-    Alog.i(
-        tag: _tag,
-        moduleName: _moduleName,
-        type: AlogType.api,
-        content: 'loginWithToken accountId $accountId');
+    apiLogger.i('loginWithToken: $accountId');
     return _loginWithAccountInfo(
         await AuthRepository.fetchAccountInfoByToken(accountId, token));
   }
@@ -195,28 +173,20 @@ class _NEMeetingKitImpl extends NEMeetingKit
   @override
   Future<NEResult<void>> loginWithNEMeeting(
       String username, String password) async {
-    Alog.i(
-        tag: _tag,
-        moduleName: _moduleName,
-        type: AlogType.api,
-        content: 'loginWithNEMeeting');
+    apiLogger.i('loginWithNEMeeting');
     return _loginWithAccountInfo(
         await AuthRepository.fetchAccountInfoByPwd(username, password));
   }
 
   @override
   Future<NEResult<void>> anonymousLogin() async {
-    Alog.i(
-        tag: _tag,
-        moduleName: _moduleName,
-        type: AlogType.api,
-        content: 'anonymousLogin');
-    if (config?.reuseIM ?? false) {
-      return NEResult(
-        code: NEMeetingErrorCode.reuseIMNotSupportAnonymousLogin,
-        msg: localizations.reuseIMNotSupportAnonymousLogin,
-      );
-    }
+    apiLogger.i('anonymousLogin');
+    // if (config?.reuseIM ?? false) {
+    //   return NEResult(
+    //     code: NEMeetingErrorCode.reuseIMNotSupportAnonymousLogin,
+    //     msg: localizations.reuseIMNotSupportAnonymousLogin,
+    //   );
+    // }
     return _loginWithAccountInfo(
         await MeetingRepository.anonymousLogin().map((p0) => NEAccountInfo(
               userUuid: p0.userUuid,
@@ -237,11 +207,7 @@ class _NEMeetingKitImpl extends NEMeetingKit
 
   @override
   Future<NEResult<void>> tryAutoLogin() async {
-    Alog.i(
-        tag: _tag,
-        moduleName: _moduleName,
-        type: AlogType.api,
-        content: 'tryAutoLogin');
+    apiLogger.i('tryAutoLogin');
     final loginInfo = await SDKPreferences.getLoginInfo();
     if (loginInfo != null && loginInfo.appKey == config?.appKey) {
       return loginWithToken(loginInfo.userUuid, loginInfo.userToken);
@@ -267,16 +233,15 @@ class _NEMeetingKitImpl extends NEMeetingKit
         });
       } else {
         return loginResult.onFailure((code, msg) {
-          Alog.i(
-              tag: _tag,
-              moduleName: _moduleName,
-              type: AlogType.api,
-              content: '_loginWithAccountInfo code:$code , msg: $msg ');
+          commonLogger.i('loginWithAccountInfo code:$code , msg: $msg ');
         });
       }
     } else {
       return _handleMeetingResultCode(
-          accountInfoResult.code, accountInfoResult.msg);
+              accountInfoResult.code, accountInfoResult.msg)
+          .onFailure((code, msg) {
+        commonLogger.i('loginWithAccountInfo code:$code , msg: $msg ');
+      });
     }
   }
 
@@ -297,11 +262,7 @@ class _NEMeetingKitImpl extends NEMeetingKit
 
   @override
   Future<NEResult<void>> logout() async {
-    Alog.i(
-        tag: _tag,
-        moduleName: _moduleName,
-        type: AlogType.api,
-        content: 'logout');
+    apiLogger.i('logout');
     return NERoomKit.instance.authService.logout().onSuccess(() {
       accountService._setAccountInfo(null);
       SDKPreferences.setLoginInfo(null);
@@ -311,21 +272,13 @@ class _NEMeetingKitImpl extends NEMeetingKit
 
   @override
   void addAuthListener(NEMeetingAuthListener listener) {
-    Alog.i(
-        tag: _tag,
-        moduleName: _moduleName,
-        type: AlogType.api,
-        content: 'addAuthListener $listener');
+    apiLogger.i('addAuthListener $listener');
     _authListenerSet.add(listener);
   }
 
   @override
   void removeAuthListener(NEMeetingAuthListener listener) {
-    Alog.i(
-        tag: _tag,
-        moduleName: _moduleName,
-        type: AlogType.api,
-        content: 'removeAuthListener $listener');
+    apiLogger.i('removeAuthListener $listener');
     _authListenerSet.remove(listener);
   }
 

@@ -14,6 +14,7 @@ import com.netease.meeting.plugin.base.notification.NotificationService;
 import com.netease.meeting.plugin.bluetooth.BluetoothService;
 import com.netease.meeting.plugin.images.ImageGallerySaver;
 import com.netease.meeting.plugin.images.ImageLoader;
+import com.netease.meeting.plugin.lifecycle.AppLifecycleDetector;
 import com.netease.meeting.plugin.phonestate.PhoneStateService;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodCall;
@@ -39,6 +40,8 @@ public class MeetingPlugin implements FlutterPlugin, MethodCallHandler {
   private BluetoothService bluetoothService;
   private PhoneStateService phoneStateService;
 
+  private AppLifecycleDetector appLifecycleDetector;
+
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
     channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), PLUGIN_NAME);
@@ -47,6 +50,7 @@ public class MeetingPlugin implements FlutterPlugin, MethodCallHandler {
     initService();
     bluetoothService = new BluetoothService(context, flutterPluginBinding);
     phoneStateService = new PhoneStateService(context, flutterPluginBinding);
+    appLifecycleDetector = new AppLifecycleDetector(context, flutterPluginBinding);
   }
 
   @Override
@@ -68,6 +72,9 @@ public class MeetingPlugin implements FlutterPlugin, MethodCallHandler {
 
     phoneStateService.dispose();
     phoneStateService = null;
+
+    appLifecycleDetector.dispose();
+    appLifecycleDetector = null;
   }
 
   void initService() {

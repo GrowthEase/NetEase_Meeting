@@ -48,7 +48,7 @@ dependencies:
 
   netease_meeting_core:
     path: ../meeting_kit
-  netease_roomkit: ^0.0.8-rc.0
+  netease_roomkit: ^0.0.10-rc.0
 
 dev_dependencies:
   flutter_test:

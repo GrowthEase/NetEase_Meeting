@@ -29,6 +29,9 @@ class NEMeetingUIOptions {
   /// 配置是否在会议界面中显示聊天入口
   late final bool noChat;
 
+  // 配置是否在会议界面中显示直播入口
+  late final bool noLive;
+
   /// 配置是否在会议界面中显示邀请入口
   late final bool noInvite;
 
@@ -49,6 +52,14 @@ class NEMeetingUIOptions {
 
   /// 配置会议中是否显示"共享白板"按钮
   late final bool noWhiteBoard;
+
+  ///
+  /// 是否开启透明白板模式
+  ///
+  late final bool enableTransparentWhiteboard;
+
+  /// 配置会议中是否开启前置摄像头视频镜像，默认开启
+  late final bool enableFrontCameraMirror;
 
   /// 配置会议中是否显示"改名"菜单
   late final bool noRename;
@@ -120,6 +131,14 @@ class NEMeetingUIOptions {
   /// 聊天室相关配置
   late final NEMeetingChatroomConfig? chatroomConfig;
 
+  ///
+  /// 开启/关闭音频共享功能。
+  /// 开启后，在发起屏幕共享时，会同时自动开启设备的音频共享；
+  /// 关闭后，在发起屏幕共享时，不会自动打开音频共享，但可以通过UI手动开启音频共享。
+  /// 该设置默认为开启。
+  ///
+  late final bool enableAudioShare;
+
   NEMeetingUIOptions.fromJson(Map<String, dynamic> json) {
     title = json['title'] as String?;
     noVideo = (json['noVideo'] ?? true) as bool;
@@ -128,6 +147,7 @@ class NEMeetingUIOptions {
     noMuteAllAudio = (json['noMuteAllAudio'] ?? false) as bool;
     showMeetingTime = (json['showMeetingTime'] ?? true) as bool;
     noChat = (json['noChat'] ?? false) as bool;
+    noLive = (json['noLive'] ?? false) as bool;
     noInvite = (json['noInvite'] ?? false) as bool;
     noSip = (json['noSip'] ?? false) as bool;
     noMinimize = (json['noMinimize'] ?? true) as bool;
@@ -165,75 +185,54 @@ class NEMeetingUIOptions {
     showWhiteboardShareUserVideo =
         (json['showWhiteboardShareUserVideo'] ?? false) as bool;
     showFloatingMicrophone = (json['showFloatingMicrophone'] ?? true) as bool;
+    enableTransparentWhiteboard =
+        (json['enableTransparentWhiteboard'] ?? false) as bool;
+    enableFrontCameraMirror = (json['enableFrontCameraMirror'] ?? true) as bool;
+    enableAudioShare = (json['enableAudioShare'] ?? false) as bool;
   }
 
   NEMeetingUIOptions({
     this.title,
-    bool? noVideo,
-    bool? noAudio,
-    bool? showMeetingTime,
-    bool? noChat,
-    bool? noInvite,
-    bool? noSip,
-    bool? noMinimize,
-    bool? noGallery,
-    bool? noSwitchAudioMode,
-    bool? noSwitchCamera,
-    bool? noWhiteBoard,
-    bool? noRename,
-    bool? noCloudRecord,
-    int? defaultWindowMode = gallery,
-    int? meetingIdDisplayOption,
-    int? joinTimeout,
-    bool? audioAINSEnabled,
-    bool? showMemberTag,
-    bool? noMuteAllVideo,
-    bool? noMuteAllAudio,
-    bool? showMeetingRemainingTip,
-    bool? detectMutedMic,
-    bool? unpubAudioOnMute,
-    bool? showScreenShareUserVideo,
-    bool? showWhiteboardShareUserVideo,
-    bool? showFloatingMicrophone,
+    this.noVideo = true,
+    this.noAudio = true,
+    this.noMuteAllVideo = true,
+    this.noMuteAllAudio = false,
+    this.showMeetingTime = true,
+    this.noChat = false,
+    this.noInvite = false,
+    this.noSip = false,
+    this.noMinimize = true,
+    this.noGallery = false,
+    this.noSwitchAudioMode = false,
+    this.noSwitchCamera = false,
+    this.noWhiteBoard = false,
+    this.noRename = false,
+    this.noCloudRecord = true,
+    this.defaultWindowMode = gallery,
+    this.meetingIdDisplayOption = MeetingIdDisplayOption.displayAll,
+    this.joinTimeout = NEMeetingConstants.meetingJoinTimeout,
+    this.restorePreferredOrientations = const <DeviceOrientation>[],
+    this.showMemberTag = false,
+    this.showMeetingRemainingTip = false,
+    this.detectMutedMic = true,
+    this.unpubAudioOnMute = true,
+    this.showScreenShareUserVideo = true,
+    this.showWhiteboardShareUserVideo = false,
+    this.showFloatingMicrophone = true,
+    this.enableTransparentWhiteboard = false,
+    this.enableFrontCameraMirror = true,
+    this.enableAudioShare = false,
+    this.noLive = false,
+    this.extras = const <String, dynamic>{},
     this.chatroomConfig,
     this.audioProfile,
-    List<DeviceOrientation>? restorePreferredOrientations,
     List<NEMeetingMenuItem>? injectedToolbarMenuItems,
     List<NEMeetingMenuItem>? injectedMoreMenuItems,
-    Map<String, dynamic>? extras,
   }) {
-    this.noVideo = noVideo ?? true;
-    this.noAudio = noAudio ?? true;
-    this.noMuteAllVideo = noMuteAllVideo ?? true;
-    this.noMuteAllAudio = noMuteAllAudio ?? false;
-    this.showMeetingTime = showMeetingTime ?? true;
-    this.noChat = noChat ?? false;
-    this.noInvite = noInvite ?? false;
-    this.noSip = noSip ?? false;
-    this.noMinimize = noMinimize ?? true;
-    this.noGallery = noGallery ?? false;
-    this.noSwitchAudioMode = noSwitchAudioMode ?? false;
-    this.noSwitchCamera = noSwitchCamera ?? false;
-    this.noWhiteBoard = noWhiteBoard ?? false;
-    this.noRename = noRename ?? false;
-    this.noCloudRecord = noCloudRecord ?? true;
-    this.defaultWindowMode = defaultWindowMode ?? gallery;
-    this.meetingIdDisplayOption = meetingIdDisplayOption ?? 0;
-    this.joinTimeout = joinTimeout ?? NEMeetingConstants.meetingJoinTimeout;
-    this.restorePreferredOrientations =
-        restorePreferredOrientations ?? <DeviceOrientation>[];
     this.injectedToolbarMenuItems =
         injectedToolbarMenuItems ?? NEMenuItems.defaultToolbarMenuItems;
     this.injectedMoreMenuItems =
         injectedMoreMenuItems ?? NEMenuItems.defaultMoreMenuItems;
-    this.extras = extras ?? <String, dynamic>{};
-    this.showMemberTag = showMemberTag ?? false;
-    this.showMeetingRemainingTip = showMeetingRemainingTip ?? false;
-    this.detectMutedMic = detectMutedMic ?? true;
-    this.unpubAudioOnMute = unpubAudioOnMute ?? true;
-    this.showScreenShareUserVideo = showScreenShareUserVideo ?? true;
-    this.showWhiteboardShareUserVideo = showWhiteboardShareUserVideo ?? false;
-    this.showFloatingMicrophone = showFloatingMicrophone ?? true;
   }
 
   bool get isLongMeetingIdEnabled =>

@@ -268,5 +268,11 @@
     "networkConnectionGeneral": "一般的なインターネット回線",
     "networkConnectionPoor": "インターネット接続環境の悪さ",
     "localLatency": "遅延",
-    "packetLossRate": "パケット損失率"
+    "packetLossRate": "パケット損失率",
+    "startAudioShare": "共有音声をオンにする",
+    "stopAudioShare": "音声の共有をやめる",
+    "switchFcusView": "切り替える フォーカス表示",
+    "switchGalleryView": "切り替える ギャラリービュー",
+    "noSupportSwitch": "iPadはモード切り替えに対応していません",
+    "funcNotAvailableWhenInCallState": "通話中は本機能を使用できません"
 }

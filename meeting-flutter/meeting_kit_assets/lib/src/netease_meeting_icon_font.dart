@@ -87,4 +87,6 @@ class NEMeetingIconFont {
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_net_state = IconData(0xe6ef,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_device_audio = IconData(0xe6db,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
 }

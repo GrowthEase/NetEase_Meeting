@@ -312,6 +312,40 @@ extension NEMeetingWhiteboardController on NERoomWhiteboardController {
     );
   }
 
+  Future<VoidResult> updateWhiteboardConfig({
+    bool isTransparent = false,
+  }) {
+    _alog.i('update whiteboard config');
+    return _ctx.updateRoomProperty(
+      WhiteboardConfigProperty.key,
+      currentWhiteboardConfig.copyWith(isTransparent: isTransparent).toJson(),
+      associatedUuid: _ctx.localMember.uuid,
+    );
+  }
+
+  bool isTransparentModeEnabled() {
+    return currentWhiteboardConfig.isTransparent;
+  }
+
+  Future<VoidResult> deleteWhiteboardConfig() {
+    _alog.i('delete whiteboard config');
+    return _ctx.deleteRoomProperty(WhiteboardConfigProperty.key);
+  }
+
+  Future<VoidResult> applyWhiteboardConfig() {
+    _alog.i('apply whiteboard config');
+    var color = const Color(0xFFFFFFFF);
+    if (isTransparentModeEnabled()) {
+      color = color.withAlpha(0);
+    }
+    return setCanvasBackgroundColor(color.stringify());
+  }
+
+  _WhiteboardConfig get currentWhiteboardConfig {
+    return _WhiteboardConfig.fromJson(
+        _ctx.roomProperties[WhiteboardConfigProperty.key]);
+  }
+
   bool isDrawWhiteboardEnabled() => _ctx.localMember.isWhiteboardDrawable;
 
   bool isDrawWhiteboardEnabledWithUserId(String? uuid) =>
@@ -377,6 +411,51 @@ class WhiteboardDrawableProperty {
   static const String key = 'wbDrawable';
   static const String drawable = '1';
   static const String notDrawable = '0';
+}
+
+class WhiteboardConfigProperty {
+  static const String key = 'whiteboardConfig';
+  static const String isTransparent = 'isTransparent';
+}
+
+extension _ColorString on Color {
+  String stringify() {
+    return "rgba($red, $green, $blue, $alpha)";
+  }
+}
+
+class _WhiteboardConfig {
+  static const kDefault = _WhiteboardConfig(false);
+
+  final bool isTransparent;
+
+  const _WhiteboardConfig(this.isTransparent);
+
+  _WhiteboardConfig copyWith({
+    bool? isTransparent,
+  }) {
+    return _WhiteboardConfig(
+      isTransparent ?? this.isTransparent,
+    );
+  }
+
+  factory _WhiteboardConfig.fromJson(String? json) {
+    if (json == null || json.isEmpty) return kDefault;
+    try {
+      final map = jsonDecode(json) as Map;
+      return _WhiteboardConfig(
+        map[WhiteboardConfigProperty.isTransparent] as bool? ?? false,
+      );
+    } catch (e) {
+      return kDefault;
+    }
+  }
+
+  String toJson() {
+    return jsonEncode({
+      WhiteboardConfigProperty.isTransparent: this.isTransparent,
+    });
+  }
 }
 
 class HandsUpProperty {

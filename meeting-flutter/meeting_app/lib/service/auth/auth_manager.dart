@@ -4,13 +4,13 @@
 
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:nemeeting/application.dart';
 import 'package:nemeeting/service/config/app_config.dart';
 import 'package:nemeeting/service/values/app_constants.dart';
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:netease_common/netease_common.dart';
 import 'package:nemeeting/service/auth/auth_state.dart';
 import 'package:nemeeting/service/config/login_type.dart';
-import 'package:nemeeting/service/event/track_app_event.dart';
 import 'package:nemeeting/service/model/login_info.dart';
 import 'dart:convert';
 import 'package:nemeeting/service/profile/app_profile.dart';
@@ -37,7 +37,7 @@ class AuthManager {
 
   final NEMeetingKit _neMeetingKit = NEMeetingKit.instance;
 
-  Future<void> init() async {
+  Future<void> _init() async {
     var loginInfo = await GlobalPreferences().loginInfo;
     if (TextUtil.isEmpty(loginInfo)) return;
     try {
@@ -72,7 +72,8 @@ class AuthManager {
 
   Future<bool> autoLogin() async {
     AuthState().updateState(state: AuthState.init);
-    var result = await autoLoginMeetingKit();
+    await _init();
+    final result = await _autoLoginMeetingKit();
     return Future.value(result.code == NEMeetingErrorCode.success);
   }
 
@@ -88,7 +89,7 @@ class AuthManager {
     );
   }
 
-  Future<Result<void>> autoLoginMeetingKit() async {
+  Future<Result<void>> _autoLoginMeetingKit() async {
     final id = accountId;
     final token = accountToken;
     if (id == null || token == null || id.isEmpty || token.isEmpty) {
@@ -107,6 +108,7 @@ class AuthManager {
     if (appKey == null || appKey.isEmpty) {
       return Result(code: NEMeetingErrorCode.failed, msg: 'appKey is empty');
     }
+    await Application.ensureInitialized();
     final foregroundServiceConfig = NEForegroundServiceConfig(
       contentTitle: Strings.appName,
       contentText: Strings.foregroundContentText,

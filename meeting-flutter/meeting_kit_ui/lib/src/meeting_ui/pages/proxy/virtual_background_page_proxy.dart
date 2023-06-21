@@ -20,9 +20,8 @@ class VirtualBackgroundPageProxy extends StatelessWidget {
           observers: [VirtualBackgroundRouteObserver(context)],
           onGenerateRoute: (RouteSettings settings) {
             return MaterialPageRoute(
-                builder: (context) => PreVirtualBackgroundPage(
-                      callback: () {},
-                    ));
+              builder: (context) => PreVirtualBackgroundPage(),
+            );
           },
         ),
       ),

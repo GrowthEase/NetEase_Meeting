@@ -268,5 +268,11 @@
   "networkConnectionGeneral": "Network connection is general",
   "networkConnectionPoor": "Network connection is poor",
   "localLatency": "Latency",
-  "packetLossRate": "Packet Loss Rate"
+  "packetLossRate": "Packet Loss Rate",
+  "startAudioShare": "Start Sharing system audio",
+  "stopAudioShare": "Stop sharing system audio",
+  "switchFcusView": "Switch to Focus view",
+  "switchGalleryView": "Switch to Gallery view",
+  "noSupportSwitch": "iPad does not support switching modes",
+  "funcNotAvailableWhenInCallState": "Cannot use this feature while on a call"
 }

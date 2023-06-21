@@ -44,7 +44,6 @@ class InternalMenuItems {
   static final List<NEMeetingMenuItem> dynamicFeatureMenuItemList = [
     beauty,
     live,
-    sip,
     virtualBackground,
   ];
 

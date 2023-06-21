@@ -7,10 +7,12 @@ part of meeting_ui;
 class VirtualBackgroundPage extends StatefulWidget {
   final NERoomContext roomContext;
   final NERoomUserVideoStreamSubscriber videoStreamSubscriber;
+  final ValueListenable<bool> mirrorListenable;
 
   VirtualBackgroundPage({
     Key? key,
     required this.roomContext,
+    required this.mirrorListenable,
     required this.videoStreamSubscriber,
   });
 
@@ -58,10 +60,15 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
       subscriber: widget.videoStreamSubscriber,
       child: Stack(
         children: <Widget>[
-          NERoomUserVideoView(
-            roomContext.myUuid,
-            mirror: true,
-            debugName: roomContext.localMember.name,
+          ValueListenableBuilder<bool>(
+            valueListenable: widget.mirrorListenable,
+            builder: (context, mirror, child) {
+              return NERoomUserVideoView(
+                roomContext.myUuid,
+                mirror: mirror,
+                debugName: roomContext.localMember.name,
+              );
+            },
           ),
           Positioned(
             bottom: 0,

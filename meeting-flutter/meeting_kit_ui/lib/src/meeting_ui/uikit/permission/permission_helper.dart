@@ -39,7 +39,9 @@ class PermissionHelper {
 
   static Future<bool> requestPermissionSingle(BuildContext context,
       Permission permission, String title, String permissionName,
-      {String? message, bool useDialog = true}) async {
+      {String? message,
+      bool useDialog = true,
+      bool useRootNavigator = false}) async {
     var status = await permission.status;
     var granted = status == PermissionStatus.granted;
     Alog.i(
@@ -50,10 +52,12 @@ class PermissionHelper {
     if (useDialog) {
       final action = await showDialog<ConfirmAction>(
         context: context,
+        useRootNavigator: useRootNavigator,
         builder: (_) {
           return NEMeetingUIKitLocalizationsScope(
             builder: (ctx) {
-              return buildPermissionDialog(ctx, title, permissionName, message);
+              return _buildPermissionDialog(
+                  ctx, title, permissionName, message);
             },
           );
         },
@@ -67,7 +71,7 @@ class PermissionHelper {
     return granted;
   }
 
-  static Widget buildPermissionDialog(BuildContext context, String title,
+  static Widget _buildPermissionDialog(BuildContext context, String title,
       String permissionName, String? message) {
     return CupertinoAlertDialog(
       title: Text(

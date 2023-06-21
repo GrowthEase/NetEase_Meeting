@@ -8,6 +8,7 @@ class DeviceInfo {
   static late String _deviceId;
   static late String _model;
   static late String _osVer;
+  static int sdkInt = 0;
   static late String _platform;
   static late String _manufacturer;
   static int _clientType = 0;
@@ -33,6 +34,7 @@ class DeviceInfo {
         _clientType = ClientType.android;
         _model = androidInfo.model;
         _osVer = androidInfo.version.release;
+        sdkInt = androidInfo.version.sdkInt;
       } else if (Platform.isIOS) {
         _platform = 'iOS';
         var iosDeviceInfo = await plat.iosInfo;

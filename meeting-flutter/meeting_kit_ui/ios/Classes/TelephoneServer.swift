@@ -4,30 +4,61 @@
 
 import Foundation
 import Flutter
-import CoreTelephony
+import CallKit
+import YXAlog_iOS
+
+let telephoneServerTag: String = "TelephoneServer"
 
 @objcMembers
 public class TelephoneServer: NSObject {
-  var callCenter: CTCallCenter = .init()
+  let callObserver = CXCallObserver()
+  var events: FlutterEventSink?
+
+  func startObserving() {
+    callObserver.setDelegate(self, queue: nil)
+  }
+
+  func stopObserving() {
+    callObserver.setDelegate(nil, queue: nil)
+  }
 }
 
 extension TelephoneServer: FlutterStreamHandler {
   public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
-    let set = callCenter.currentCalls?.filter { $0.callState == CTCallStateConnected || $0.callState == CTCallStateIncoming || $0.callState == CTCallStateDialing }
-    events(["isInCall": set != nil ? true : false])
-    callCenter.callEventHandler = { call in
-      switch call.callState {
-      case CTCallStateConnected, CTCallStateIncoming, CTCallStateDialing:
-        events(["isInCall": true])
-      default:
-        events(["isInCall": false])
-      }
+    self.events = events
+    MeetingUILog.infoLog(telephoneServerTag, desc: "\(telephoneServerTag) -> First Listen")
+    let call = callObserver.calls.first(where: { isInCall($0) })
+    callObserver.calls.forEach {
+      MeetingUILog.infoLog(telephoneServerTag, desc: "☎️ \(telephoneServerTag) -> uuid: \($0.uuid). isOutgoing: \($0.isOutgoing). isOnHold: \($0.isOnHold). hasConnected: \($0.hasConnected). hasEnded: \($0.hasEnded)")
     }
+    if let call = call {
+      MeetingUILog.infoLog(telephoneServerTag, desc: "☎️ \(telephoneServerTag) -> uuid: \(call.uuid). isOutgoing: \(call.isOutgoing). isOnHold: \(call.isOnHold). hasConnected: \(call.hasConnected). hasEnded: \(call.hasEnded)")
+    }
+    events(["isInCall": call != nil ? true : false])
+    startObserving()
     return nil
   }
 
   public func onCancel(withArguments arguments: Any?) -> FlutterError? {
-    callCenter.callEventHandler = nil
+    stopObserving()
     return nil
+  }
+}
+
+extension TelephoneServer: CXCallObserverDelegate {
+  public func callObserver(_ callObserver: CXCallObserver, callChanged call: CXCall) {
+    MeetingUILog.infoLog(telephoneServerTag, desc: "☎️ \(telephoneServerTag) -> callObserver -> uuid: \(call.uuid). isOutgoing: \(call.isOutgoing). isOnHold: \(call.isOnHold). hasConnected: \(call.hasConnected). hasEnded: \(call.hasEnded)")
+    events?(["isInCall": isInCall(call)])
+  }
+
+  func isInCall(_ call: CXCall) -> Bool {
+    if call.isOutgoing {
+      if call.hasEnded { return false }
+      if call.hasConnected || call.isOnHold { return true }
+      return true
+    }
+    if call.hasEnded { return false }
+    if call.hasConnected || call.isOnHold { return true }
+    return true
   }
 }

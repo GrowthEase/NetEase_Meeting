@@ -268,5 +268,11 @@
   "networkConnectionGeneral": "网络连接一般",
   "networkConnectionPoor": "网络连接较差",
   "localLatency": "延迟",
-  "packetLossRate": "丢包率"
+  "packetLossRate": "丢包率",
+  "startAudioShare": "开启音频共享",
+  "stopAudioShare": "关闭音频共享",
+  "switchFcusView": "切换至演讲者视图",
+  "switchGalleryView": "切换至画廊视图",
+  "noSupportSwitch": "iPad不支持切换模式",
+  "funcNotAvailableWhenInCallState": "系统通话中，无法使用该功能"
 }

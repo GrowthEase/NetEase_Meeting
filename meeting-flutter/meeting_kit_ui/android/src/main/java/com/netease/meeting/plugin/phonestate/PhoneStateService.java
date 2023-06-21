@@ -9,6 +9,7 @@ import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Process;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
@@ -21,6 +22,8 @@ import java.util.Map;
 public class PhoneStateService extends BroadcastReceiverEventChannel {
 
   private static final String TAG = "PhoneStateService";
+
+  private static final boolean DEBUG = false;
 
   private static final String STATE_EVENT_CHANNEL_NAME =
       "meeting_plugin.phone_state_service.states";
@@ -55,10 +58,12 @@ public class PhoneStateService extends BroadcastReceiverEventChannel {
     }
   }
 
+  // TelephonyManager.getCallState require READ_PHONE_STATE permission after API 31
   private boolean hasPhoneStatePermission() {
-    return context.checkPermission(
-            Manifest.permission.READ_PHONE_STATE, Process.myPid(), Process.myUid())
-        == PackageManager.PERMISSION_GRANTED;
+    return Build.VERSION.SDK_INT < 31
+        || context.checkPermission(
+                Manifest.permission.READ_PHONE_STATE, Process.myPid(), Process.myUid())
+            == PackageManager.PERMISSION_GRANTED;
   }
 
   private final PhoneStateListener phoneStateListener =
@@ -181,6 +186,9 @@ public class PhoneStateService extends BroadcastReceiverEventChannel {
             new Object[] {1, phoneStateListener, flag});
         Log.e(TAG, "listen to PhoneService succeed1");
       } catch (Throwable unused) {
+        if (DEBUG) {
+          Log.e(TAG, "listen to PhoneService error", unused);
+        }
       }
     } else {
       Log.e(TAG, "PhoneService not found");
@@ -213,6 +221,9 @@ public class PhoneStateService extends BroadcastReceiverEventChannel {
             new Object[] {1, phoneStateListener, flag});
         Log.e(TAG, "listen to Phone2Service succeed2");
       } catch (Throwable unused3) {
+        if (DEBUG) {
+          Log.e(TAG, "listen to Phone2Service error", unused3);
+        }
       }
     }
 
@@ -225,7 +236,9 @@ public class PhoneStateService extends BroadcastReceiverEventChannel {
           new Object[] {phoneStateListener, flag});
       Log.e(TAG, "listen to MSimTelephonyManager succeed");
     } catch (Throwable unused4) {
-      Log.e(TAG, "listen to MSimTelephonyManager error");
+      if (DEBUG) {
+        Log.e(TAG, "listen to MSimTelephonyManager error", unused4);
+      }
     }
   }
 }
