@@ -9,6 +9,8 @@ class UserPreferences extends Preferences {
   static const String localSetting = 'localSetting';
   static const String serverSetting = 'serverSettings';
   static const String showShareUserVideo = 'showShareUserVideo';
+  static const String transparentWB = 'transparentWB';
+  static const String frontCameraMirror = 'frontCameraMirror';
 
   UserPreferences._internal();
 
@@ -23,6 +25,24 @@ class UserPreferences extends Preferences {
 
   Future<void> setShowShareUserVideo(bool value) async {
     setBoolSp(_wrapperKey(showShareUserVideo), value);
+  }
+
+  Future<bool> isTransparentWhiteboardEnabled() async {
+    final value = await getBoolSp(_wrapperKey(transparentWB));
+    return value ?? false;
+  }
+
+  Future<void> setTransparentWhiteboardEnabled(bool value) async {
+    setBoolSp(_wrapperKey(transparentWB), value);
+  }
+
+  Future<bool> isFrontCameraMirrorEnabled() async {
+    final value = await getBoolSp(_wrapperKey(frontCameraMirror));
+    return value ?? true;
+  }
+
+  Future<void> setFrontCameraMirrorEnabled(bool value) async {
+    setBoolSp(_wrapperKey(frontCameraMirror), value);
   }
 
   /// save

@@ -33,6 +33,10 @@ class NEMeetingPlugin {
 
   static NEPhoneStateService? _phoneStateService;
 
+  static NEAppLifecycleDetector? _appLifecycleDetector;
+
+  static NEIpadCheckDetector? _ipadCheckDetector;
+
   /// notification service
   NENotificationService getNotificationService() {
     return _notificationService ??
@@ -51,6 +55,11 @@ class NEMeetingPlugin {
     return _imageGallerySaver!;
   }
 
+  NEIpadCheckDetector get ipadCheckDetector {
+    _ipadCheckDetector ??= NEIpadCheckDetector(_methodChannel, handlerMap);
+    return _ipadCheckDetector!;
+  }
+
   NEBluetoothService get bluetoothService {
     _bluetoothService ??= NEBluetoothService._();
     return _bluetoothService!;
@@ -59,6 +68,11 @@ class NEMeetingPlugin {
   NEPhoneStateService get phoneStateService {
     _phoneStateService ??= NEPhoneStateService._();
     return _phoneStateService!;
+  }
+
+  NEAppLifecycleDetector get appLifecycleDetector {
+    _appLifecycleDetector ??= NEAppLifecycleDetector();
+    return _appLifecycleDetector!;
   }
 
   /// native  --  dart

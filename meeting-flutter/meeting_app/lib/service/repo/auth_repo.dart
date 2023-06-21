@@ -71,9 +71,11 @@ class AuthRepo extends IRepo {
         var sdkLoginResult = await AuthManager().loginMeetingKitWithToken(
             loginProto.loginType, result.data as LoginInfo);
         return result.copy(
-            code: sdkLoginResult.code == NEMeetingErrorCode.success
-                ? HttpCode.success
-                : HttpCode.meetingSDKLoginError);
+          code: sdkLoginResult.code == NEMeetingErrorCode.success
+              ? HttpCode.success
+              : HttpCode.meetingSDKLoginError,
+          msg: sdkLoginResult.msg,
+        );
       } else if (result.code == HttpCode.verifyError ||
           result.code == HttpCode.tokenError ||
           result.code == HttpCode.passwordError ||

@@ -133,6 +133,9 @@ class ChatRoomMessageSource {
   }
 
   void append(Object message, int time, {bool incUnread = true}) {
+    if (Platform.isIOS) {
+      time *= 1000;
+    }
     if (time - lastTime > showTimeInterval) {
       messages.add(TimeMessage(time));
       lastTime = time;
@@ -201,7 +204,9 @@ mixin MessageState {
 mixin OutMessageState on MessageState {
   final String uuid = Uuid().v4().replaceAll(RegExp(r'-'), '');
 
-  final int time = DateTime.now().millisecondsSinceEpoch;
+  final int time = Platform.isIOS
+      ? (DateTime.now().millisecondsSinceEpoch / 1000).floor()
+      : DateTime.now().millisecondsSinceEpoch;
 
   final bool isSend = true;
 

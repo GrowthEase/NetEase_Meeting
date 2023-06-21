@@ -5,8 +5,7 @@
 part of meeting_ui;
 
 class PreVirtualBackgroundPage extends StatefulWidget {
-  final Function() callback;
-  PreVirtualBackgroundPage({Key? key, required this.callback});
+  PreVirtualBackgroundPage({Key? key});
 
   @override
   _PreVirtualBackgroundPageState createState() =>
@@ -291,7 +290,6 @@ class _PreVirtualBackgroundPageState
     enableVirtualBackground(previewRoomRtcController, false, '');
     previewRoomContext?.removeEventCallback(eventCallback);
     renderer?.dispose();
-    widget.callback();
     super.dispose();
   }
 
@@ -435,6 +433,7 @@ Future<bool> pickFiles(
 
 Widget buildItem(BuildContext context, int index, List<String> sourceList) {
   Widget view = Container();
+  final density = MediaQuery.of(context).devicePixelRatio.ceil();
   if (index == 0) {
     view = Container(
       alignment: Alignment.center,
@@ -450,6 +449,8 @@ Widget buildItem(BuildContext context, int index, List<String> sourceList) {
       width: 68,
       height: 68,
       fit: BoxFit.fill,
+      cacheWidth: 68 * density,
+      cacheHeight: 68 * density,
     ));
   } else if (index == sourceList.length - 1) {
     view = Container(

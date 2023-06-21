@@ -20,7 +20,7 @@ const kNoMuteAllVideo = false;
 const bool kNoCloudRecord = false;
 
 ///
-const kNoSip = false;
+const kNoSip = true;
 
 /// 使用默认的短信验证码：081166
 const kUseFakeCheckCode = false;
@@ -52,9 +52,13 @@ Future<NEMeetingUIOptions> buildMeetingUIOptions({
   noVideo ??= !(await settingsService.isTurnOnMyVideoWhenJoinMeetingEnabled());
   noAudio ??= !(await settingsService.isTurnOnMyAudioWhenJoinMeetingEnabled());
   showMeetingTime ??= await settingsService.isShowMyMeetingElapseTimeEnabled();
-  audioAINSEnabled ??= await settingsService.isAudioAINSEnabled();
+  // audioAINSEnabled ??= await settingsService.isAudioAINSEnabled();
   noCloudRecord ??= kNoCloudRecord;
   final showShareUserVideo = await UserPreferences().getShowShareUserVideo();
+  final enableTransparentWhiteboard =
+      await UserPreferences().isTransparentWhiteboardEnabled();
+  final enableFrontCameraMirror =
+      await UserPreferences().isFrontCameraMirrorEnabled();
   return NEMeetingUIOptions(
     noVideo: noVideo,
     noAudio: noAudio,
@@ -65,7 +69,9 @@ Future<NEMeetingUIOptions> buildMeetingUIOptions({
     showScreenShareUserVideo: showShareUserVideo,
     showWhiteboardShareUserVideo: showShareUserVideo,
     showMeetingTime: showMeetingTime,
-    audioAINSEnabled: audioAINSEnabled,
+    // audioAINSEnabled: audioAINSEnabled,
+    enableTransparentWhiteboard: enableTransparentWhiteboard,
+    enableFrontCameraMirror: enableFrontCameraMirror,
     showMeetingRemainingTip: kShowMeetingRemainingTip,
     restorePreferredOrientations: [DeviceOrientation.portraitUp],
     extras: {'shareScreenTips': Strings.shareScreenTips},

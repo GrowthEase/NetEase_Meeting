@@ -214,6 +214,9 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
             ),
           ),
           onTap: () {
+            if (_focusNode.hasFocus) {
+              _focusNode.unfocus();
+            }
             Navigator.pop(context);
           },
         ));

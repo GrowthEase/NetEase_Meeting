@@ -18,10 +18,10 @@ class NERoomAudioProfile {
     enableAINS: false,
   );
 
-  /// index of [NERtcAudioProfile]
+  /// index of [NERtcAudioProfile] or -1 for unspecified
   final int profile;
 
-  /// index of [NERtcAudioScenario]
+  /// index of [NERtcAudioScenario] or -1 for unspecified
   final int scenario;
 
   final bool enableAINS;

@@ -160,6 +160,8 @@ class Strings {
   static const String showMeetTime = '显示会议持续时间';
   static const String audioAINS = '智能降噪';
   static const String showShareUserVideo = '共享时开启共享人摄像头';
+  static const String enableTransparentWhiteboard = '设置白板透明';
+  static const String enableFrontCameraMirror = '前置摄像头镜像';
   static const String inputTVPair = '请输入电视端配对码';
   static const String openCamera = '打开摄像头';
   static const String openMicro = '打开麦克风';

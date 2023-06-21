@@ -856,4 +856,23 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
 
   @override
   String get packetLossRate => 'Packet Loss Rate';
+
+  @override
+  String get startAudioShare => 'Start Sharing system audio';
+
+  @override
+  String get stopAudioShare => 'Stop sharing system audio';
+
+  @override
+  String get switchFcusView => 'Switch to Focus view';
+
+  @override
+  String get switchGalleryView => 'Switch to Gallery view';
+
+  @override
+  String get noSupportSwitch => 'iPad does not support switching modes';
+
+  @override
+  String get funcNotAvailableWhenInCallState =>
+      'Cannot use this feature while on a call';
 }

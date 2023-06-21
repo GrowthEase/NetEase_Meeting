@@ -823,4 +823,22 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
 
   @override
   String get packetLossRate => 'パケット損失率';
+
+  @override
+  String get startAudioShare => '共有音声をオンにする';
+
+  @override
+  String get stopAudioShare => '音声の共有をやめる';
+
+  @override
+  String get switchFcusView => '切り替える フォーカス表示';
+
+  @override
+  String get switchGalleryView => '切り替える ギャラリービュー';
+
+  @override
+  String get noSupportSwitch => 'iPadはモード切り替えに対応していません';
+
+  @override
+  String get funcNotAvailableWhenInCallState => '通話中は本機能を使用できません';
 }

@@ -54,9 +54,11 @@ extension TelephoneServer: CXCallObserverDelegate {
   func isInCall(_ call: CXCall) -> Bool {
     if call.isOutgoing {
       if call.hasEnded { return false }
+      if call.hasConnected || call.isOnHold { return true }
       return true
     }
     if call.hasEnded { return false }
+    if call.hasConnected || call.isOnHold { return true }
     return true
   }
 }

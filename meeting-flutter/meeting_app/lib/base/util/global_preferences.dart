@@ -2,6 +2,8 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+import 'dart:async';
+
 import '../util/sp_util.dart';
 
 class GlobalPreferences extends Preferences {
@@ -76,11 +78,26 @@ class GlobalPreferences extends Preferences {
     setBoolSp(keyMeetingDebug, meetingDebug);
   }
 
+  final _privacyAgreeCompleter = Completer();
+  Future ensurePrivacyAgree() async {
+    if (!_privacyAgreeCompleter.isCompleted) {
+      hasPrivacyDialogShowed.then((value) {
+        if (value && !_privacyAgreeCompleter.isCompleted) {
+          _privacyAgreeCompleter.complete();
+        }
+      });
+    }
+    return _privacyAgreeCompleter.future;
+  }
+
   Future<bool> get hasPrivacyDialogShowed async {
     return await getBoolSp(keyPrivacyDialogShowed) ?? false;
   }
 
   Future<bool> setPrivacyDialogShowed(bool enabled) async {
+    if (enabled && !_privacyAgreeCompleter.isCompleted) {
+      _privacyAgreeCompleter.complete();
+    }
     return setBoolSp(keyPrivacyDialogShowed, enabled);
   }
 

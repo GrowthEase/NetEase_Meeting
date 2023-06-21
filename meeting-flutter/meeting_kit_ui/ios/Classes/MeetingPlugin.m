@@ -4,6 +4,8 @@
 
 #import "MeetingPlugin.h"
 #import "FLTImageUtil.h"
+#import "MeetingUILog.h"
+
 #if __has_include(<netease_meeting_ui/netease_meeting_ui-Swift.h>)
 #import <netease_meeting_ui/netease_meeting_ui-Swift.h>
 #else
@@ -12,6 +14,7 @@
 
 @interface MeetingPlugin ()
 @property(nonatomic, strong) TelephoneServer *phoneServer;
+@property(nonatomic, strong) LifecycleServer *lifecycleServer;
 @end
 
 @implementation MeetingPlugin
@@ -20,6 +23,12 @@
     _phoneServer = [TelephoneServer new];
   }
   return _phoneServer;
+}
+- (LifecycleServer *)lifecycleServer {
+  if (!_lifecycleServer) {
+    _lifecycleServer = [LifecycleServer new];
+  }
+  return _lifecycleServer;
 }
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
   FlutterMethodChannel *channel =
@@ -36,6 +45,11 @@
         [FlutterEventChannel eventChannelWithName:@"meeting_plugin.phone_state_service.states"
                                   binaryMessenger:messenger];
     [channel setStreamHandler:self.phoneServer];
+
+    FlutterEventChannel *lifecycleChannel =
+        [FlutterEventChannel eventChannelWithName:@"meeting_plugin.app_lifecycle_service.states"
+                                  binaryMessenger:messenger];
+    [lifecycleChannel setStreamHandler:self.lifecycleServer];
   }
   return self;
 }
@@ -93,6 +107,9 @@
   } else if ([modelName isEqualToString:@"NEImageGallerySaver"]) {
     ImageGallerySaver *saver = [[ImageGallerySaver alloc] init];
     [saver handle:call result:result];
+  } else if ([modelName isEqualToString:@"NEIPadCheckDetector"]) {
+    CheckIpadServer *iPadSaver = [CheckIpadServer new];
+    [iPadSaver handle:call result:result];
   } else {
     result(FlutterMethodNotImplemented);
   }

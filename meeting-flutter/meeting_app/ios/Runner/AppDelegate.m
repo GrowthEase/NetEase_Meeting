@@ -90,7 +90,7 @@ static NSString *const broadcastExtensionAppGroup = @"group.com.netease.yunxin.m
 
 - (void)applicationWillTerminate:(UIApplication *)application {
   NSString *stopNotificationName =
-      @"com.netease.yunxin.kit.screenshare.notification.host_request_stop";
+      @"com.netease.rtc.kit.screenshare.notification.host_request_stop";
   CFStringRef notificationName = (CFStringRef)CFBridgingRetain(stopNotificationName);
   CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
                                        notificationName, nil, nil, true);

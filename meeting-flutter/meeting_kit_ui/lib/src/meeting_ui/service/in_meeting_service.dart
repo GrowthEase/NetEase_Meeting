@@ -58,7 +58,7 @@ class InMeetingService with _AloggerMixin {
   NERoomContext? _currentRoomContext;
 
   MinimizeMeetingManager? _minimizeDelegate;
-  MinimizeMeetingManager? get mininizeDelegte => _minimizeDelegate;
+  MinimizeMeetingManager? get minimizeDelegate => _minimizeDelegate;
 
   void rememberRoomContext(NERoomContext? context) {
     _currentRoomContext = context;

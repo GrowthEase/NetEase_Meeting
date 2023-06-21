@@ -172,7 +172,9 @@ class _HistoryMeetingRouteState
         }
       });
     }
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void sortAndGroupFavoriteData(List<FavoriteMeeting> list) {
@@ -199,7 +201,9 @@ class _HistoryMeetingRouteState
         }
       });
     }
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Widget buildSelectionBoxes() {
@@ -265,9 +269,11 @@ class _HistoryMeetingRouteState
 
   void onPageChanged(int value) {
     if (_currentIndex == value) return;
-    setState(() {
-      _currentIndex = value;
-    });
+    if (mounted) {
+      setState(() {
+        _currentIndex = value;
+      });
+    }
   }
 
   Widget buildAllMeetingUI() {

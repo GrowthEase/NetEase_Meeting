@@ -187,12 +187,6 @@ class _NEMeetingServiceImpl extends NEMeetingService
       return joinMeeting(param, opts);
     } else {
       apiLogger.i('anonymousJoinMeeting');
-
-      if (NEMeetingKit.instance.config?.reuseIM ?? false) {
-        return NEResult(
-            code: NEMeetingErrorCode.reuseIMNotSupportAnonymousLogin,
-            msg: localizations.reuseIMNotSupportAnonymousLogin);
-      }
       var result = await MeetingRepository.anonymousLogin();
       if (result.isSuccess()) {
         var anonymousLoginInfo = result.data;

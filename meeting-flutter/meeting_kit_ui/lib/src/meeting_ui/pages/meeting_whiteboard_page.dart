@@ -10,13 +10,15 @@ class WhiteBoardWebPage extends StatefulWidget {
   final WhiteBoardPageStatusCallback whiteBoardPageStatusCallback;
   final ValueNotifier<bool> valueNotifier;
   final NERoomContext roomContext;
+  final Color? backgroundColor;
 
-  WhiteBoardWebPage(
-      {Key? key,
-      required this.whiteBoardPageStatusCallback,
-      required this.valueNotifier,
-      required this.roomContext})
-      : super(key: key);
+  WhiteBoardWebPage({
+    Key? key,
+    required this.whiteBoardPageStatusCallback,
+    required this.valueNotifier,
+    required this.roomContext,
+    this.backgroundColor,
+  }) : super(key: key);
 
   @override
   _WhiteBoardWebPageState createState() {
@@ -61,6 +63,7 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
     ///有权限默认开启
     updateEditWhiteBoardStatus(
         whiteBoardController.isDrawWhiteboardEnabled(), false);
+    whiteBoardController.applyWhiteboardConfig();
   }
 
   @override
@@ -76,17 +79,16 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
         children: <Widget>[
           Positioned(
             child: Container(
-              color: _UIColors.white,
-              child: Center(
-                child: whiteBoardController.createWhiteboardView(
-                  gestureRecognizers: isEditing
-                      ? <Factory<OneSequenceGestureRecognizer>>[
-                          new Factory<OneSequenceGestureRecognizer>(
-                            () => new EagerGestureRecognizer(),
-                          ),
-                        ].toSet()
-                      : null,
-                ),
+              alignment: Alignment.center,
+              child: whiteBoardController.createWhiteboardView(
+                gestureRecognizers: isEditing
+                    ? <Factory<OneSequenceGestureRecognizer>>[
+                        new Factory<OneSequenceGestureRecognizer>(
+                          () => EagerGestureRecognizer(),
+                        ),
+                      ].toSet()
+                    : null,
+                backgroundColor: widget.backgroundColor,
               ),
             ),
           ),
