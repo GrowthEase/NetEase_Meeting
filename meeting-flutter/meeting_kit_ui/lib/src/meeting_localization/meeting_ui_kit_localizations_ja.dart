@@ -644,7 +644,7 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get loginOnOtherDevice => '別のデバイスに切り替えました';
 
   @override
-  String get authInfoExpired => '認証期限切れ';
+  String get authInfoExpired => 'ネットワークエラーです。ネットワーク接続を確認してから、再度ミーティングに参加してください';
 
   @override
   String get syncDataError => 'ルーム情報の合わせる失敗しました';

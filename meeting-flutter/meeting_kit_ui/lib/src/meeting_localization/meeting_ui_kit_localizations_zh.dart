@@ -639,7 +639,7 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get loginOnOtherDevice => '已切换至其他设备';
 
   @override
-  String get authInfoExpired => '认证过期';
+  String get authInfoExpired => '网络异常，请检查网络连接后重新入会';
 
   @override
   String get syncDataError => '房间信息同步失败';

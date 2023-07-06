@@ -209,7 +209,7 @@
   "removedByHost": "You are removed",
   "closeByHost": "Meeting ended",
   "loginOnOtherDevice": "Switched to another device",
-  "authInfoExpired": "Authentication expired",
+  "authInfoExpired": "Network error, please check your network connection and rejoin the meeting",
   "syncDataError": "Failed to sync the room information",
   "leaveMeetingBySelf": "Leave",
   "meetingClosed": "Meeting is closed",

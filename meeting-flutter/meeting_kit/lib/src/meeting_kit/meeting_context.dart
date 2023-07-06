@@ -353,7 +353,7 @@ extension NEMeetingWhiteboardController on NERoomWhiteboardController {
 }
 
 extension NEMeetingMember on NERoomMember {
-  bool get isVisible => role.name != 'hide';
+  bool get isVisible => !role.hide;
 
   bool get isHost => role.name == MeetingRoles.kHost;
 

@@ -211,7 +211,7 @@
     "removedByHost": "主催者によってミーティングから削除されました",
     "closeByHost": "会議は終了しました",
     "loginOnOtherDevice": "別のデバイスに切り替えました",
-    "authInfoExpired": "認証期限切れ",
+    "authInfoExpired": "ネットワークエラーです。ネットワーク接続を確認してから、再度ミーティングに参加してください",
     "syncDataError": "ルーム情報の合わせる失敗しました",
     "leaveMeetingBySelf": "ミーティングを退出する",
     "meetingClosed": "会議は終了された",
