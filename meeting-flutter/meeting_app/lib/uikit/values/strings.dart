@@ -327,7 +327,7 @@ class Strings {
   static const String removedByHost = '您已被主持人移除会议';
   static const String closeByHost = '会议已结束';
   static const String switchOtherDevice = '因被主持人移出或切换至其他设备，您已退出会议';
-  static const String authInfoExpired = '认证过期';
+  static const String authInfoExpired = '网络异常，请检查网络连接后重新入会';
   static const String syncDataError = '房间信息同步失败';
   static const String leaveMeetingBySelf = '离开会议';
   static const String meetingClosed = '会议被关闭';

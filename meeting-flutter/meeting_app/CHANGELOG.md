@@ -1,4 +1,8 @@
 # MeetingApp ChangeLog
+## v3.14.0(July 06, 2023)
+### New Features
+* 优化大房间信令交互；
+
 ## v3.13.0(June 21, 2023)
 ### New Features
 * 新增音频共享功能；

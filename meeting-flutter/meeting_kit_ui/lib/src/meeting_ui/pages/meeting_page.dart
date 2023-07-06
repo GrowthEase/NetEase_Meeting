@@ -1012,6 +1012,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
   }
 
   bool shouldShowMenu(NEMeetingMenuItem item) {
+    if (!roomContext.localMember.isVisible) return false;
     final id = item.itemId;
     if (!item.isValid) return false;
     if (id == NEMenuIDs.screenShare && !_isScreenShareSupported()) return false;
@@ -1860,6 +1861,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     return !isWhiteBoardSharing() &&
         !isSelfScreenSharing() &&
         !isOtherScreenSharing() &&
+        roomContext.localMember.isVisible &&
         arguments.options.showFloatingMicrophone;
   }
 
@@ -1900,7 +1902,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
             ),
             alignment: Alignment.center,
           ),
-          if (shouldShowScreenShareUserVideo(roomUid))
+          if (shouldShowScreenShareUserVideo(roomUid) && smallUid != null)
             buildDraggableSmallVideoView(buildSmallView(smallUid!)),
           buildNameView(roomUid, Alignment.topLeft,
               suffix:
@@ -2495,18 +2497,22 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     return !shouldUnpub;
   }
 
+  Object? audioActionToken;
   Future<void> _muteMyAudio(bool mute) async {
     if (mute || roomContext.canUnmuteMyAudio() || _invitingToOpenAudio) {
       _invitingToOpenAudio = false;
       trackPeriodicEvent(TrackEventName.switchAudio,
           extra: {'value': mute ? 0 : 1, 'meeting_num': arguments.meetingNum});
       muteDetectStartedTimer?.cancel();
+      final token = Object();
+      audioActionToken = token;
       if (mute) {
         rtcController.muteMyAudioAndAdjustVolume().onSuccess(() {
           muteDetectStartedTimer = Timer(muteMyAudioDelay, () {
             muteDetectStarted = true;
           });
         }).onFailure((code, msg) {
+          if (!mounted || audioActionToken != token) return;
           showToast(
               msg ?? NEMeetingUIKitLocalizations.of(context)!.muteAudioFail);
         });
@@ -2514,6 +2520,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
         rtcController
             .unmuteMyAudioWithCheckPermission(context, arguments.meetingTitle)
             .onFailure((code, msg) {
+          if (!mounted || audioActionToken != token) return;
           showToast(
               msg ?? NEMeetingUIKitLocalizations.of(context)!.unMuteAudioFail);
         });
@@ -2721,14 +2728,18 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
         extra: {'value': mute ? 0 : 1, 'meeting_num': arguments.meetingNum});
   }
 
+  Object? videoActionToken;
   void _muteMyVideo(bool mute) async {
     if (mute || roomContext.canUnmuteMyVideo() || _invitingToOpenVideo) {
       _trackMuteVideoEvent(mute);
       _invitingToOpenVideo = false;
       // var enable = await  PermissionHelper.enableLocalVideoAndCheckPermission(context,!mute,arguments.meetingTitle);
       // if(!enable) return;
+      final token = Object();
+      videoActionToken = token;
       if (mute) {
         rtcController.muteMyVideo().onFailure((code, msg) {
+          if (!mounted || videoActionToken != token) return;
           showToast(
               msg ?? NEMeetingUIKitLocalizations.of(context)!.muteVideoFail);
         });
@@ -2736,6 +2747,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
         rtcController
             .unmuteMyVideoWithCheckPermission(context, arguments.meetingTitle)
             .onFailure((code, msg) {
+          if (!mounted || videoActionToken != token) return;
           showToast(
               msg ?? NEMeetingUIKitLocalizations.of(context)!.unMuteVideoFail);
         });
@@ -3695,6 +3707,11 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       audioVolumeStreams.remove(user.uuid)?.close();
     });
     onMemberInOrOut();
+    if (!roomContext.localMember.isVisible && userCount == 0) {
+      commonLogger.i('No other members in meeting, leave meeting');
+      roomContext.leaveRoom();
+      return;
+    }
   }
 
   void _determineActiveUser([bool forceUpdate = false]) {
@@ -4598,13 +4615,13 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     );
 
     if (willOpenAudio) {
-      rtcController.unmuteMyAudioWithCheckPermission(
+      await rtcController.unmuteMyAudioWithCheckPermission(
           context, arguments.meetingTitle,
           needAwaitResult: false);
     }
 
     if (willOpenVideo) {
-      rtcController.unmuteMyVideoWithCheckPermission(
+      await rtcController.unmuteMyVideoWithCheckPermission(
           context, arguments.meetingTitle,
           needAwaitResult: false);
     }

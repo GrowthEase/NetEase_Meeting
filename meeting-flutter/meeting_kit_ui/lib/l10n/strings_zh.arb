@@ -211,7 +211,7 @@
   "removedByHost": "您已被主持人移除会议",
   "closeByHost": "会议已结束",
   "loginOnOtherDevice": "已切换至其他设备",
-  "authInfoExpired": "认证过期",
+  "authInfoExpired": "网络异常，请检查网络连接后重新入会",
   "syncDataError": "房间信息同步失败",
   "leaveMeetingBySelf": "离开会议",
   "meetingClosed": "会议被关闭",

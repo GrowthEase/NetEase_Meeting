@@ -8,3 +8,11 @@ build
 **/.symlinks
 **/.flutter-plugins
 **/.flutter-plugins-dependencies
+
+**/*.iml
+
+# iOS/XCode related
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Runner.xcworkspace

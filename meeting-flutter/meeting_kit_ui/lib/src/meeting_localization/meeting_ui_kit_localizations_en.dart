@@ -674,7 +674,8 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get loginOnOtherDevice => 'Switched to another device';
 
   @override
-  String get authInfoExpired => 'Authentication expired';
+  String get authInfoExpired =>
+      'Network error, please check your network connection and rejoin the meeting';
 
   @override
   String get syncDataError => 'Failed to sync the room information';

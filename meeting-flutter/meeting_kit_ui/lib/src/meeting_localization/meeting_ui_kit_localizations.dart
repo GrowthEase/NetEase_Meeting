@@ -1366,7 +1366,7 @@ abstract class NEMeetingUIKitLocalizations {
   /// No description provided for @authInfoExpired.
   ///
   /// In en, this message translates to:
-  /// **'Authentication expired'**
+  /// **'Network error, please check your network connection and rejoin the meeting'**
   String get authInfoExpired;
 
   /// No description provided for @syncDataError.
