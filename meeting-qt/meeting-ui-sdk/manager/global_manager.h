@@ -63,6 +63,7 @@ public slots:
 private:
     NEMessageListener* m_messageListener = nullptr;
     INERoomKit* m_roomkitService = nullptr;
+    std::shared_ptr<INEGlobalEventListener> m_globalEventListener = nullptr;
     neroom::INEPreviewRoomContext* m_pPreviewRoomContext = nullptr;
     std::shared_ptr<NEConfigController> m_configController = nullptr;
     QString m_globalAppKey;

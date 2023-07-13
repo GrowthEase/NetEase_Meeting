@@ -5,6 +5,7 @@
 #include "global_manager.h"
 #include <QFile>
 #include <QGuiApplication>
+#include "listeners/roomkit_listener.h"
 #include "meeting/audio_manager.h"
 #include "meeting/members_manager.h"
 #include "meeting/video_manager.h"
@@ -23,6 +24,12 @@ bool GlobalManager::initialize(const QString& appKey, bool bPrivate, const QStri
         YXLOG(Error) << "initialize, createNERoomKit failed" << YXLOGEnd;
         callback(-1, "createNERoomKit failed");
         return false;
+    }
+
+    if (m_globalEventListener == nullptr) {
+        m_globalEventListener = std::make_shared<RoomKitListener>();
+        if (m_globalEventListener && m_roomkitService)
+            m_roomkitService->addGlobalEventListener(m_globalEventListener.get());
     }
 
     setGlobalAppKey(appKey);
@@ -83,6 +90,9 @@ void GlobalManager::release() {
         }
         delete m_messageListener;
         m_messageListener = nullptr;
+    }
+    if (m_globalEventListener && m_roomkitService) {
+        m_roomkitService->removeGlobalEventListener(m_globalEventListener.get());
     }
     m_roomkitService->release();
     destroyNERoomKit();

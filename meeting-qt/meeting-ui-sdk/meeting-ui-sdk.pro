@@ -177,6 +177,7 @@ HEADERS += \
     ipc_handlers/premeeting_prochandler.h \
     ipc_handlers/setting_prochandler.h \
     listeners/meeting_service_listener.h \
+    listeners/roomkit_listener.h \
     manager/auth_manager.h \
     manager/chat_manager.h \
     manager/config_manager.h \
@@ -239,6 +240,7 @@ SOURCES += \
     ipc_handlers/premeeting_prochandler.cpp \
     ipc_handlers/setting_prochandler.cpp \
     listeners/meeting_service_listener.cpp \
+    listeners/roomkit_listener.cpp \
     main.cpp \
     manager/auth_manager.cpp \
     manager/chat_manager.cpp \
