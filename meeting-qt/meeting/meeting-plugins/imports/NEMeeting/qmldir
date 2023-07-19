@@ -1,3 +1,0 @@
-module NEMeeting
-NEMVideoOutput 1.0 components/NEMVideoOutput.qml
-plugin meeting-plugins

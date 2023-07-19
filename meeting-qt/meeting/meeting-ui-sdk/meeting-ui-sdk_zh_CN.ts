@@ -2551,34 +2551,34 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
 <context>
     <name>SettingsWindow</name>
     <message>
-        <location filename="qml/settings/SettingsWindow.qml" line="82"/>
+        <location filename="qml/settings/SettingsWindow.qml" line="90"/>
         <source>General</source>
         <translation>常规</translation>
     </message>
     <message>
-        <location filename="qml/settings/SettingsWindow.qml" line="88"/>
+        <location filename="qml/settings/SettingsWindow.qml" line="96"/>
         <source>Videos</source>
         <translation>视频</translation>
     </message>
     <message>
-        <location filename="qml/settings/SettingsWindow.qml" line="94"/>
+        <location filename="qml/settings/SettingsWindow.qml" line="102"/>
         <source>Audios</source>
         <translation>音频</translation>
     </message>
     <message>
-        <location filename="qml/settings/SettingsWindow.qml" line="110"/>
+        <location filename="qml/settings/SettingsWindow.qml" line="118"/>
         <source>VirtualBackground</source>
         <translation>虚拟背景</translation>
     </message>
     <message>
-        <location filename="qml/settings/SettingsWindow.qml" line="70"/>
-        <location filename="qml/settings/SettingsWindow.qml" line="101"/>
+        <location filename="qml/settings/SettingsWindow.qml" line="73"/>
+        <location filename="qml/settings/SettingsWindow.qml" line="109"/>
         <source>Beauty</source>
         <translation>美颜</translation>
     </message>
     <message>
         <location filename="qml/settings/SettingsWindow.qml" line="18"/>
-        <location filename="qml/settings/SettingsWindow.qml" line="137"/>
+        <location filename="qml/settings/SettingsWindow.qml" line="147"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
