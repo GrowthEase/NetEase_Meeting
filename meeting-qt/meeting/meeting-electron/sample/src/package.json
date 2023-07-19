@@ -1,0 +1,21 @@
+{
+  "name": "nemeeting-sdk-demo",
+  "productName": "nemeeting-sdk-demo",
+  "version": "3.9.0",
+  "description": "NEMeetingSDKDemo",
+  "main": "./main.prod.js",
+  "author": {
+    "name": "Electron React Boilerplate Maintainers",
+    "email": "electronreactboilerplate@gmail.com",
+    "url": "https://github.com/electron-react-boilerplate"
+  },
+  "scripts": {
+    "electron-rebuild": "node -r ../.erb/scripts/BabelRegister.js ../.erb/scripts/ElectronRebuild.js",
+    "postinstall": "npm run electron-rebuild && npm run mklink",
+    "mklink": "node ../scripts/mklink.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "nemeeting-sdk": "0.2.0-rc.1"
+  }
+}

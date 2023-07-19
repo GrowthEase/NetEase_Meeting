@@ -1,0 +1,109 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="socket">
+      <UniqueIdentifier>{0d82dfb3-8038-4f32-92cb-e2f9931a32a6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="config">
+      <UniqueIdentifier>{678d6d77-6746-45a0-a1ff-7207d592779c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="proxy_config">
+      <UniqueIdentifier>{3a3a613a-dbaa-4fec-9de5-cd5a2fe89921}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ipc">
+      <UniqueIdentifier>{471adafe-5a2f-458e-a12b-4c90e740c514}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="base">
+      <UniqueIdentifier>{36235792-c3e3-4632-a5b1-7b29796c0c76}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ipc\package">
+      <UniqueIdentifier>{6134d5f6-8d6e-4744-81b9-05ee4dc4594d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="socket\socket_handler.h">
+      <Filter>socket</Filter>
+    </ClInclude>
+    <ClInclude Include="socket\socket_wrapper.h">
+      <Filter>socket</Filter>
+    </ClInclude>
+    <ClInclude Include="socket\tcp_client_socket.h">
+      <Filter>socket</Filter>
+    </ClInclude>
+    <ClInclude Include="config\build_config.h">
+      <Filter>config</Filter>
+    </ClInclude>
+    <ClInclude Include="NIPCLib_export.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="proxy_config\proxy_info.h">
+      <Filter>proxy_config</Filter>
+    </ClInclude>
+    <ClInclude Include="socket\server_socket_wrapper.h">
+      <Filter>socket</Filter>
+    </ClInclude>
+    <ClInclude Include="base\threadsave_queue.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="base\callback.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="base\ipc_thread.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="ipc\ipc_client.h">
+      <Filter>ipc</Filter>
+    </ClInclude>
+    <ClInclude Include="ipc\ipc_server.h">
+      <Filter>ipc</Filter>
+    </ClInclude>
+    <ClInclude Include="ipc\ipc_def.h">
+      <Filter>ipc</Filter>
+    </ClInclude>
+    <ClInclude Include="ipc\ipc_base.h">
+      <Filter>ipc</Filter>
+    </ClInclude>
+    <ClInclude Include="ipc\package\socket_data_warpper.h">
+      <Filter>ipc\package</Filter>
+    </ClInclude>
+    <ClInclude Include="base\packet.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="base\blockbuffer.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="base\nexeption_error.h">
+      <Filter>base</Filter>
+    </ClInclude>
+    <ClInclude Include="base\singleton.h">
+      <Filter>base</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="socket\socket_wrapper.cpp">
+      <Filter>socket</Filter>
+    </ClCompile>
+    <ClCompile Include="socket\tcp_client_socket.cpp">
+      <Filter>socket</Filter>
+    </ClCompile>
+    <ClCompile Include="proxy_config\proxy_info.cpp">
+      <Filter>proxy_config</Filter>
+    </ClCompile>
+    <ClCompile Include="socket\server_socket_wrapper.cpp">
+      <Filter>socket</Filter>
+    </ClCompile>
+    <ClCompile Include="ipc\ipc_client.cpp">
+      <Filter>ipc</Filter>
+    </ClCompile>
+    <ClCompile Include="ipc\ipc_server.cpp">
+      <Filter>ipc</Filter>
+    </ClCompile>
+    <ClCompile Include="ipc\package\socket_data_warpper.cpp">
+      <Filter>ipc\package</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

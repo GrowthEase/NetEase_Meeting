@@ -1,0 +1,18 @@
+varying vec2 textureOut;
+uniform sampler2D tex_y;
+uniform sampler2D tex_u;
+uniform sampler2D tex_v;
+void main(void)
+{
+    float y, u, v, r, g, b;
+    y = texture2D(tex_y, textureOut).r;
+    u = texture2D(tex_u, textureOut).r;
+    v = texture2D(tex_v, textureOut).r;
+    y = y - 0.0627;
+    u = u - 0.5;
+    v = v - 0.5;
+    r = 1.164 * y + 1.596 * v;
+    g = 1.164 * y - 0.392 * u - 0.813 * v;
+    b = 1.164 * y + 2.017 * u;
+    gl_FragColor = vec4(r, g, b, 1.0);
+}
