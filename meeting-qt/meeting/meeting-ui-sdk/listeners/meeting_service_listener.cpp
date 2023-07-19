@@ -180,7 +180,8 @@ void NEInRoomServiceListener::onChatroomMessageAttachmentProgress(const std::str
 
 void NEInRoomServiceListener::onRtcChannelError(int code, const std::string& msg) {
     YXLOG(Error) << "onRtcChannelError, code: " << code << ", msg: " << msg << YXLOGEnd;
-    MeetingManager::getInstance()->onConnectFail(code);
+    if (code == 30113)
+        MeetingManager::getInstance()->onConnectFail(code);
 }
 
 void NEInRoomServiceListener::onMemberPropertiesChanged(const std::string& userUuid, const std::map<std::string, std::string>& properties) {
