@@ -23,9 +23,6 @@ Window {
 
     onVisibleChanged: {
         visibleStatus(visible)
-        if (visible) {
-            initializeListMode()
-        }
     }
 
     function hideWindow() {
@@ -81,10 +78,10 @@ Window {
     }
 
     Component.onCompleted: {
-        initializeListMode()
+        initializeListMode(true)
     }
 
-    function initializeListMode () {
+    function initializeListMode (firstTime) {
         optionModel.clear()
         optionModel.append({
                                optionName: qsTr("General"),
