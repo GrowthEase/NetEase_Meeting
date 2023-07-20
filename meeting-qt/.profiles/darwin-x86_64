@@ -1,0 +1,7 @@
+include(default)
+
+[settings]
+arch=x86_64
+os.version=10.14
+compiler.libcxx=libc++
+compiler.cppstd=14
