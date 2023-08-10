@@ -288,14 +288,14 @@ packages:
       name: netease_roomkit
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.0.11-rc.0"
+    version: "1.17.2"
   netease_roomkit_interface:
     dependency: transitive
     description:
       name: netease_roomkit_interface
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.0.11-rc.0"
+    version: "1.17.2"
   nos:
     dependency: "direct main"
     description:
