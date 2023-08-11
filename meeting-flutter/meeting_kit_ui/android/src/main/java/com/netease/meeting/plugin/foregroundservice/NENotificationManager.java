@@ -19,7 +19,9 @@ class NENotificationManager {
 
   android.app.NotificationManager manager;
 
-  private static NENotificationManager notificationManager = new NENotificationManager();
+  Notification mNotification;
+
+  private static final NENotificationManager notificationManager = new NENotificationManager();
 
   public static NENotificationManager getInstance() {
     return notificationManager;
@@ -36,7 +38,20 @@ class NENotificationManager {
     return manager;
   }
 
-  public void createForegroundNotificationChannel(Context context) {
+  Notification ensureNotification(Context context) {
+    createForegroundNotificationChannel(context);
+    // Notification ID cannot be 0.
+    mNotification = buildForegroundNotification(context);
+    return mNotification;
+  }
+
+  Notification getNotification() {
+    Notification notification = mNotification;
+    mNotification = null;
+    return notification;
+  }
+
+  private void createForegroundNotificationChannel(Context context) {
     // Create the NotificationChannel, but only on API 26+ because
     // the NotificationChannel class is new and not in the support library
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -55,7 +70,7 @@ class NENotificationManager {
     }
   }
 
-  public Notification buildForegroundNotification(Context context) {
+  private Notification buildForegroundNotification(Context context) {
     ForegroundServiceConfig config = NEForegroundService.getForegroundServiceConfig();
     if (config == null) {
       return null;
