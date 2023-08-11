@@ -43,6 +43,7 @@ public:
     using NERemoteVideoResolutionCallback = NECallback<RemoteVideoResolution>;
     using NELocalVideoResolutionCallback = NECallback<LocalVideoResolution>;
     using AudioDeviceAutoSelectTypeCallback = NECallback<AudioDeviceAutoSelectType>;
+    using NESharingSidebarViewModeCallback = NECallback<SharingSidebarViewMode>;
     using NEVirtualBackgroundCallback = NECallback<std::vector<NEMeetingVirtualBackground>>;
 
 public:
@@ -341,6 +342,18 @@ public:
      * @return void
      */
     virtual void isUnmuteBySpaceEnabled(const NESettingsService::NEBoolCallback& cb) const = 0;
+
+    /**
+     * @brief 设置屏幕共享侧边栏的展示模式
+     * @param viewMode 展示模式 @see SharingSidebarViewMode
+     */
+    virtual void setSharingSidebarViewMode(SharingSidebarViewMode viewMode, const NEEmptyCallback& cb) = 0;
+
+    /**
+     * @brief 获取屏幕共享侧边栏的展示模式
+     * @param cb
+     */
+    virtual void getSharingSidebarViewMode(const NESettingsService::NESharingSidebarViewModeCallback& cb) const = 0;
 };
 
 /**

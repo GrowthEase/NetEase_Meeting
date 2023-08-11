@@ -150,6 +150,8 @@ public:
     Q_INVOKABLE void getPersonalMeetingId();
 
     Q_INVOKABLE void setVideoFramerate(const QString& framerate);
+    Q_INVOKABLE void setSharingSidebarViewMode(int viewMode);
+    Q_INVOKABLE void getSharingSidebarViewMode();
 
     // override virtual functions
     virtual void onMeetingStatusChanged(int status, int code) override;
@@ -228,18 +230,15 @@ signals:
     void isSupportRecordChanged();
     void isSupportLiveChanged();
     void isAudioAINSChanged();
-
     void audodeviceAutoSelectTypeChanged(bool audodeviceAutoSelectType);
     void softwareRenderChanged(bool softwareRender);
     void virtualBackgroundChanged(bool virtualBackground);
     void virtualBackgroundList(const QString& vbList);
     void getPersonalMeetingIdChanged(const QString& message);
-
     void beautyChanged(bool beauty);
-
     void beautyValueChanged(int beautyValue);
-
     void audioDeviceUseLastSelectedChanged(bool audioDeviceUseLastSelected);
+    void sharingSidebarViewModeNotify(int viewMode);
 
 public slots:
     void onGetMeetingListUI();

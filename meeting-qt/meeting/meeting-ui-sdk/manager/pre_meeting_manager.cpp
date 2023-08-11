@@ -38,21 +38,20 @@ bool PreMeetingManager::cancelSchedule(uint64_t uniqueMeetingId) {
 }
 
 bool PreMeetingManager::getMeetingList(const std::list<nem_sdk_interface::NEMeetingItemStatus>& status) {
-    m_preMeetingController->getRoomList(
-        status, [=](int errorCode, const std::string& errorMessage, const std::list<nem_sdk_interface::NEMeetingItem>& items) {
-            Invoker::getInstance()->execute([=]() {
-                QList<nem_sdk_interface::NEMeetingItem> meetingLists;
-                if (200 == errorCode) {
-                    YXLOG(Info) << "Query meeting list callback: " << items.size() << YXLOGEnd;
-                    for (auto& scheduledMeeting : items) {
-                        YXLOG(Info) << "unique meeting ID: " << scheduledMeeting.meetingId << ",meetingTopic: " << scheduledMeeting.subject
-                                    << YXLOGEnd;
-                        meetingLists.push_back(scheduledMeeting);
-                    }
+    m_preMeetingController->getRoomList(status, [=](int errorCode, const std::string& errorMessage,
+                                                    const std::list<nem_sdk_interface::NEMeetingItem>& items) {
+        Invoker::getInstance()->execute([=]() {
+            QList<nem_sdk_interface::NEMeetingItem> meetingLists;
+            if (200 == errorCode) {
+                YXLOG(Info) << "Query meeting list callback: " << items.size() << YXLOGEnd;
+                for (auto& scheduledMeeting : items) {
+                    YXLOG(Info) << "unique meeting ID: " << scheduledMeeting.meetingId << ", meetingTopic: " << scheduledMeeting.subject << YXLOGEnd;
+                    meetingLists.push_back(scheduledMeeting);
                 }
-                emit getMeetingLists(errorCode, QString::fromStdString(errorMessage), meetingLists);
-            });
+            }
+            emit getMeetingLists(errorCode, QString::fromStdString(errorMessage), meetingLists);
         });
+    });
 
     return true;
 }

@@ -141,10 +141,9 @@ void NEMeetingSDKManager::initialize(const QString& appKey, const InitCallback& 
     config.setDomain("yunxin.163.com");
     config.setRunAdmin(false);
     config.setUseAssetServerConfig(ConfigManager::getInstance()->getPrivate());
-    config.setLanguage(NEMeetingLanguage::kNEChinese);
+    config.setLanguage(NEMeetingLanguage::kNEAutomatic);
 #ifdef QT_NO_DEBUG
 #else
-    config.setKeepAliveInterval(-1);
     config.getLoggerConfig()->LoggerLevel(NEDEBUG);
 #endif
 
@@ -475,6 +474,7 @@ void NEMeetingSDKManager::logout(bool cleanup /* = false*/) {
                 setPersonalMeetingId("");
                 setDisplayName("");
                 m_builtinMenuItems.clear();
+                m_bConfigInitialized = false;
             }
             emit logoutSignal(errorCode, QString::fromStdString(errorMessage));
             dealwithNEPLauncher(false);
@@ -764,7 +764,7 @@ void NEMeetingSDKManager::getAccountInfo() {
 
                 QString logPathEx = qApp->property("logPath").toString();
                 if (logPathEx.isEmpty())
-                    logPathEx = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+                    logPathEx = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
                 do {
                     if (logPathEx.endsWith("/")) {
                         logPathEx = logPathEx.left(logPathEx.size() - 1);
@@ -925,11 +925,16 @@ void NEMeetingSDKManager::onInitMeetingSettings() {
     }
 
     if (!ConfigManager::getInstance()->contains("audioRecordDeviceUseLastSelected")) {
-        NEMeetingKit::getInstance()->getSettingsService()->GetAudioController()->setMyAudioDeviceUseLastSelected(
-            true, [](NEErrorCode errorCode, const std::string& errorMessage) {
-                qInfo() << "setMyAudioDeviceUseLastSelected callback, error code: " << errorCode
-                        << ", error message: " << QString::fromStdString(errorMessage);
-            });
+        auto settingsService = NEMeetingKit::getInstance()->getSettingsService();
+        if (!settingsService)
+            return;
+        auto audioController = settingsService->GetAudioController();
+        if (!audioController)
+            return;
+        audioController->setMyAudioDeviceUseLastSelected(true, [](NEErrorCode errorCode, const std::string& errorMessage) {
+            qInfo() << "setMyAudioDeviceUseLastSelected callback, error code: " << errorCode
+                    << ", error message: " << QString::fromStdString(errorMessage);
+        });
     }
 }
 
@@ -950,10 +955,33 @@ void NEMeetingSDKManager::onInviteByLink(const QString& meetingId) {
     }
 }
 
+std::string NEMeetingSDKManager::covertStatusToString(RunningStatus::Status status) const {
+    switch (status) {
+        case MEETING_STATUS_FAILED:
+            return "MEETING_STATUS_FAILED";
+        case MEETING_STATUS_IDLE:
+            return "MEETING_STATUS_IDLE";
+        case MEETING_STATUS_WAITING:
+            return "MEETING_STATUS_WAITING";
+        case MEETING_STATUS_CONNECTING:
+            return "MEETING_STATUS_CONNECTING";
+        case MEETING_STATUS_INMEETING:
+            return "MEETING_STATUS_INMEETING";
+        case MEETING_STATUS_DISCONNECTING:
+            return "MEETING_STATUS_DISCONNECTING";
+        default:
+            return "MEETING_STATUS_UNKNOWN";
+    }
+    return "MEETING_STATUS_UNKNOWN";
+}
+
 void NEMeetingSDKManager::onMeetingStatusChangedUI(int status, int code) {
-    YXLOG(Info) << "onMeetingStatusChangedUI" << YXLOGEnd;
+    YXLOG(Info) << "Meeting status changed UI, status: " << covertStatusToString(static_cast<RunningStatus::Status>(status)) << ", code: " << code
+                << YXLOGEnd;
     m_nCurrentMeetingStatus = status;
-    if (m_nCurrentMeetingStatus == 4) {
+    if (m_nCurrentMeetingStatus == RunningStatus::Status::MEETING_STATUS_INMEETING) {
+        setLastMeetingDuration(0);
+        m_meetingDurationClock = QDateTime::currentSecsSinceEpoch();
         auto ipcMeetingService = NEMeetingKit::getInstance()->getMeetingService();
         if (ipcMeetingService) {
             ipcMeetingService->getCurrentMeetingInfo([this](NEErrorCode errorCode, const std::string& errorMessage, NEMeetingInfo info) {
@@ -964,6 +992,9 @@ void NEMeetingSDKManager::onMeetingStatusChangedUI(int status, int code) {
         }
     } else {
         m_currentMeetingId = "";
+    }
+    if (m_nCurrentMeetingStatus == RunningStatus::Status::MEETING_STATUS_DISCONNECTING) {
+        setLastMeetingDuration(QDateTime::currentSecsSinceEpoch() - m_meetingDurationClock);
     }
 }
 
@@ -1002,6 +1033,15 @@ void NEMeetingSDKManager::setIsSupportLive(bool isSupportLive) {
     YXLOG(Info) << "setIsSupportLive: " << isSupportLive << YXLOGEnd;
     m_bSupportLive = isSupportLive;
     Q_EMIT isSupportLiveChanged();
+}
+
+qint64 NEMeetingSDKManager::lastMeetingDuration() const {
+    return m_nLastMeetingDuration;
+}
+
+void NEMeetingSDKManager::setLastMeetingDuration(qint64 lastMeetingDuration) {
+    m_nLastMeetingDuration = lastMeetingDuration;
+    Q_EMIT lastMeetingDurationChanged();
 }
 
 void NEMeetingSDKManager::setAudioAINSEnabled(bool bAudioAINSEnabled) {
@@ -1210,7 +1250,7 @@ void NEMeetingSDKManager::cancelMeeting(const qint64& meetingUniqueId) {
 }
 
 void NEMeetingSDKManager::getMeetingList() {
-    YXLOG(Info) << "getMeetingList." << YXLOGEnd;
+    YXLOG(Info) << "[NEMeetingSDKManager] Get meeting list." << YXLOGEnd;
 
     CHECK_INIT
     auto ipcPreMeetingService = NEMeetingKit::getInstance()->getPremeetingService();
@@ -1221,7 +1261,8 @@ void NEMeetingSDKManager::getMeetingList() {
         status.push_back(MEETING_ENDED);
         ipcPreMeetingService->getMeetingList(
             status, [this](NEErrorCode errorCode, const std::string& errorMessage, std::list<NEMeetingItem>& meetingItems) {
-                YXLOG(Info) << "getMeetingList callback, error code: " << errorCode << ", error message: " << errorMessage << YXLOGEnd;
+                YXLOG(Info) << "[NEMeetingSDKManager] Get meeting list callback, error code: " << errorCode << ", error message: " << errorMessage
+                            << YXLOGEnd;
                 initConfig();
                 QJsonArray jsonArray;
                 if (errorCode == ERROR_CODE_SUCCESS) {
@@ -1290,7 +1331,7 @@ void NEMeetingSDKManager::loginBySwitchAppInfo() {
 }
 
 void NEMeetingSDKManager::getIsSupportLive() {
-    YXLOG(Info) << "getIsSupportLive." << YXLOGEnd;
+    YXLOG(Info) << "[NEMeetingSDKManager] Get is support livestream." << YXLOGEnd;
     auto ipcSettingsService = NEMeetingKit::getInstance()->getSettingsService();
     if (ipcSettingsService) {
         ipcSettingsService->GetLiveController()->isLiveEnabled(
@@ -1359,23 +1400,21 @@ QString NEMeetingSDKManager::getInviteMeetingId() const {
 }
 
 void NEMeetingSDKManager::initConfig() {
-    static bool bInit = false;
-    if (bInit) {
+    if (m_bConfigInitialized)
         return;
-    }
     auto asyncRet = std::async(std::launch::async, [this]() {
         auto ipcSettingsService = NEMeetingKit::getInstance()->getSettingsService();
         if (ipcSettingsService) {
             auto audioController = ipcSettingsService->GetAudioController();
             if (audioController) {
-                bInit = true;
                 YXLOG(Info) << "getIsTurnOnMyAudioAINSWhenInMeetingEnabled." << YXLOGEnd;
                 audioController->isTurnOnMyAudioAINSWhenInMeetingEnabled([this, ipcSettingsService](NEErrorCode code, const std::string& message,
                                                                                                     bool enable) {
                     setAudioAINSEnabled(enable);
                     std::async(std::launch::async, [this, ipcSettingsService]() {
                         if (ipcSettingsService->GetLiveController()) {
-                            YXLOG(Info) << "getIsSupportLive." << YXLOGEnd;
+                            m_bConfigInitialized = true;
+                            YXLOG(Info) << "[NEMeetingSDKManager] Init config get is support livestream." << YXLOGEnd;
                             ipcSettingsService->GetLiveController()->isLiveEnabled(
                                 [this, ipcSettingsService](NEErrorCode code, const std::string& message, bool enable) {
                                     setIsSupportLive(enable);
@@ -1397,8 +1436,8 @@ void NEMeetingSDKManager::initConfig() {
 
 QString NEMeetingSDKManager::getThirdPartyCopyrightFile() const {
 #ifdef Q_OS_WIN32
-    return QGuiApplication::applicationDirPath() + "/" + "meeting_license.txt";
+    return QGuiApplication::applicationDirPath() + "/" + "THIRD_PARTY_COPYRIGHT.txt";
 #else
-    return QGuiApplication::applicationDirPath() + "/../Resources/meeting_license.txt";
+    return QGuiApplication::applicationDirPath() + "/../Resources/THIRD_PARTY_COPYRIGHT.txt";
 #endif
 }

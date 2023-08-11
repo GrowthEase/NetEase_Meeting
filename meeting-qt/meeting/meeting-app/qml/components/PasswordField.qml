@@ -16,8 +16,8 @@ TextField {
         height: control.activeFocus || 1
         color: control.activeFocus ? control.Material.accentColor : "#DCDFE5"
     }
-    validator: RegExpValidator {
-        regExp: /[a-zA-Z0-9]{1,16}/
+    validator: RegularExpressionValidator {
+        regularExpression: /[a-zA-Z0-9]{1,16}/
     }
 
     ToolButton {

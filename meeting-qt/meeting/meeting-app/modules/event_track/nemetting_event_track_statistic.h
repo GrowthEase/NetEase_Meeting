@@ -4,6 +4,7 @@
 
 #ifndef NEMETTING_EVENT_TRACK_STATISTIC_H
 #define NEMETTING_EVENT_TRACK_STATISTIC_H
+
 #include <QJsonObject>
 #include <QThread>
 #include <QTimerEvent>

@@ -120,7 +120,9 @@ public:
     FeedbackManager(AuthManager* auth, QObject* parent = nullptr);
     ~FeedbackManager();
 
+    Q_INVOKABLE void invokeNPSFeedback(int score, const QString& description);
     Q_INVOKABLE void invokeFeedback(const QJsonArray& category, const QString& description, bool needAudioDump = false);
+    Q_INVOKABLE bool needsFeedback(qint64 meetingDuration);
 
 public:
     virtual void onFeedbackStatus(int type, int status, std::string url) override;

@@ -25,8 +25,9 @@ void WhiteboardManager::initWhiteboardStatus() {
     m_whiteboardDrawEnable = false;
     m_whiteboardSharing = false;
     m_whiteboardSharerAccountId = "";
-
-    auto whiteboardController = MeetingManager::getInstance()->getWhiteboardController();
+    auto* whiteboardController = MeetingManager::getInstance()->getWhiteboardController();
+    if (!whiteboardController)
+        return;
     whiteboardController->setupWhiteboardCanvas(m_meetingWhiteboardView);
     auto userId = whiteboardController->getWhiteboardSharingUserUuid();
     if (!userId.empty()) {

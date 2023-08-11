@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include <QSharedMemory>
-#include <QtWebEngine/QtWebEngine>
+#include <QtWebEngineQuick>
 #include "meeting_app.h"
 #include "modules/auth_manager.h"
 #include "modules/client_updator.h"
@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
     MeetingApp::setAttribute(Qt::AA_EnableHighDpiScaling);
     MeetingApp::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
 
-    QtWebEngine::initialize();
+    QtWebEngineQuick::initialize();
 #else
     signal(SIGPIPE, SIG_IGN);
 #endif
@@ -60,50 +60,26 @@ int main(int argc, char* argv[]) {
     if (appRunning) {
         if (type == kRunTypeInvite || type == kRunTypeSSO) {
             appInstance.notify(arguments);
-            return 0;
         }
-    } else {
-        QUrl url(arguments);
-        QUrlQuery urlQuery(url.query());
-        YXLOG(Info) << "urlQuery: " << urlQuery.toString().toStdString() << YXLOGEnd;
-        if (urlQuery.hasQueryItem("meetingId")) {
-            inviteMeetingId = urlQuery.queryItemValue("meetingId");
-        }
+        return 0;
+    }
+
+    QUrl argumentUrl(arguments);
+    QUrlQuery urlQuery(argumentUrl.query());
+    YXLOG(Info) << "urlQuery: " << urlQuery.toString().toStdString() << YXLOGEnd;
+    if (urlQuery.hasQueryItem("meetingId")) {
+        inviteMeetingId = urlQuery.queryItemValue("meetingId");
     }
 
     appInstance.listen();
 
-    QString languageTmp = "zh-CN";
-    QString language = languageTmp;
-    language.replace("-", "_");
-    language.insert(0, "meeting-app_");
-    language.append(".qm");
-    YXLOG(Info) << "language is: " << language.toStdString() << YXLOGEnd;
-    // Load translations
     QTranslator translator;
-    QString qmPath = QGuiApplication::applicationDirPath() + "/";
+    QString translatorPath = QGuiApplication::applicationDirPath();
 #ifdef Q_OS_MACX
-    qmPath.append("../Resources/");
+    translatorPath.append("/../Resources/");
 #endif
-    if (!QFile::exists(qmPath + language)) {
-        language = languageTmp;
-        auto sysLanguageList = language.split("-");
-        if (!sysLanguageList.empty()) {
-            language = sysLanguageList.at(0);
-        }
-        language.insert(0, "meeting-app_");
-        language.append(".qm");
-        YXLOG(Info) << "language is: " << language.toStdString() << YXLOGEnd;
-    }
-
-    bool loadResult = translator.load(language, qmPath);
-    if (loadResult) {
-        loadResult = app.installTranslator(&translator);
-        if (!loadResult) {
-            YXLOG(Warn) << "installTranslator language failed." << YXLOGEnd;
-        }
-    } else {
-        YXLOG(Warn) << "translator load failed." << YXLOGEnd;
+    if (translator.load(QLocale(), QLatin1String("meeting-app"), QLatin1String("_"), translatorPath)) {
+        app.installTranslator(&translator);
     }
 
     // Set default styelsheet

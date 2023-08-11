@@ -139,7 +139,7 @@ public:
 
 class AppCheckUpdateRequest : public AppHttpRequest {
 public:
-    explicit AppCheckUpdateRequest(int versionCode, const QString& accountId);
+    explicit AppCheckUpdateRequest(int versionCode, const QString& accountId, const QString& cpuArch, const QString& framework);
 };
 
 class AppDownloadRequest : public IHttpRequest {

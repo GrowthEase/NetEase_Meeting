@@ -15,6 +15,10 @@
 #include <future>
 #include <iostream>
 
+#if defined(Q_OS_MACX)
+#include "macx_helper.h"
+#endif
+
 NEMeetingManager::NEMeetingManager(QObject* parent)
     : QObject(parent)
     , m_initialized(false)
@@ -145,6 +149,10 @@ void NEMeetingManager::initialize(const QString& strAppkey, [[maybe_unused]] int
     NEMeetingKitConfig config;
     QString displayName = QObject::tr("NetEase Meeting");
     QByteArray byteDisplayName = displayName.toUtf8();
+#if defined(Q_OS_MACX)
+    // auto appBundlePath = MacxHelper::GetBundlePath();
+    // config.getAppInfo()->SDKPath(appBundlePath);
+#endif
     config.getAppInfo()->ProductName(byteDisplayName.data());
     config.getAppInfo()->OrganizationName("NetEase");
     config.getAppInfo()->ApplicationName("MeetingSample");
@@ -674,6 +682,7 @@ void NEMeetingManager::invokeStart(const QJsonObject& object) {
     QString tag;
     QString textScene;
     QString password;
+    QString subject;
     int timeOut = 0;
     bool audio = false;
     bool video = false;
@@ -702,6 +711,7 @@ void NEMeetingManager::invokeStart(const QJsonObject& object) {
     bool customMenu = false;
     bool enableEncryption = false;
     QString encryptionKey = "";
+
     if (object.contains("meetingId")) {
         meetingId = object["meetingId"].toString();
     }
@@ -716,6 +726,9 @@ void NEMeetingManager::invokeStart(const QJsonObject& object) {
     }
     if (object.contains("password")) {
         password = object["password"].toString();
+    }
+    if (object.contains("subject")) {
+        subject = object["subject"].toString();
     }
     if (object.contains("timeOut")) {
         timeOut = object["timeOut"].toInt();
@@ -813,6 +826,7 @@ void NEMeetingManager::invokeStart(const QJsonObject& object) {
         params.tag = tag.toStdString();
         params.password = password.toStdString();
         params.extraData = extraData.toStdString();
+        params.subject = subject.toStdString();
 
         for (auto it : controls) {
             QJsonObject obj = it.toObject();
@@ -1093,7 +1107,6 @@ void NEMeetingManager::invokeJoin(const QJsonObject& object) {
                 params.encryptionConfig.key = encryptionKey.toStdString();
                 params.encryptionConfig.type = kNEEncryptionTypeGMCryptoSM4ECB;
             }
-
             NEJoinMeetingOptions options;
             options.noAudio = !audio;
             options.noVideo = !video;
@@ -1114,7 +1127,6 @@ void NEMeetingManager::invokeJoin(const QJsonObject& object) {
             if (autoOpenWhiteboard) {
                 options.defaultWindowMode = WHITEBOARD_MODE;
             }
-
             options.meetingIdDisplayOption = (NEShowMeetingIdOption)displayOption;
             options.joinTimeout = timeOut;
             options.chatroomConfig.enableFileMessage = enableFileMessage;
@@ -1724,6 +1736,20 @@ void NEMeetingManager::setVideoFramerate(const QString& framerate) {
                 qInfo() << "setMyVideoFramerate callback, error code: " << errorCode << ", error message: " << QString::fromStdString(errorMessage);
             });
     }
+}
+
+void NEMeetingManager::setSharingSidebarViewMode(int viewMode) {
+    NEMeetingKit::getInstance()->getSettingsService()->GetOtherController()->setSharingSidebarViewMode(
+        static_cast<SharingSidebarViewMode>(viewMode), [](NEErrorCode errorCode, const std::string& errorMessage) {
+            qInfo() << "setSharingSidebarViewMode callback, error code: " << errorCode << ", error message: " << QString::fromStdString(errorMessage);
+        });
+}
+
+void NEMeetingManager::getSharingSidebarViewMode() {
+    NEMeetingKit::getInstance()->getSettingsService()->GetOtherController()->getSharingSidebarViewMode(
+        [this](NEErrorCode errorCode, const std::string& errorMessage, SharingSidebarViewMode viewMode) {
+            emit sharingSidebarViewModeNotify(static_cast<int>(viewMode));
+        });
 }
 
 void NEMeetingManager::setBeauty(bool beauty) {

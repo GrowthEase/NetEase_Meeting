@@ -9,6 +9,8 @@
 #include <QtGlobal>
 #include "version.h"
 
+static const int32_t kHttpResSuccess = 200;
+
 const QByteArray kHttpAppKey = "appKey";
 const QByteArray kHttpAppGroupName = "appGroupName";
 const QByteArray kHttpAppVersionName = "appVersionName";
@@ -58,6 +60,13 @@ typedef struct tagNEMeetingResources {
     bool record = false;
     bool sip = false;
 } NEMeetingResources;
+
+typedef struct {
+    std::string requestID;
+    std::string message;
+    int32_t code;
+    int32_t cost;
+} NEMeetingResponseKeys;
 
 enum NEMeetingType { unknownType = 0, randomType = 1, personnalType = 2, schduleType = 3 };
 

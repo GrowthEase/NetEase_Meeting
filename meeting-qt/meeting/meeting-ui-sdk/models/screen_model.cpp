@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Copyright (c) 2022 NetEase, Inc. All rights reserved.
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
@@ -9,7 +9,6 @@
 #include "../manager/meeting/share_manager.h"
 
 #if defined(Q_OS_WIN32)
-#include <QtWin>
 #include "components/windows_helpers.h"
 #elif defined(Q_OS_MACX)
 #include "components/macx_helpers.h"
@@ -224,7 +223,7 @@ QImage ShareImageProvider::requestImage(const QString& idTmp, QSize* size, const
                 if (captureHelper.Capture()) {
                     bCapture = true;
                     HBITMAP hBitmap = captureHelper.GetBitmap();
-                    QPixmap pixmap = QtWin::fromHBITMAP(hBitmap);
+                    QPixmap pixmap = QPixmap::fromImage(QImage::fromHBITMAP(hBitmap));
                     if (requestedSize.isValid()) {
                         pixmap = pixmap.scaled(requestedSize);
                     }

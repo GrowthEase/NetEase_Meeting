@@ -74,7 +74,7 @@ bool DatabaseManager::addHistoryMeetingInfo(const HistoryMeetingInfo& info) {
     }
 
     QSqlQuery query(m_db);
-    QString sql = QString("replace into history values(?, ?, ?, ?, ?, ?, ?)");
+    QString sql = QString("INSERT INTO history VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT (meetingUniqueID) DO UPDATE SET meetingJoinTime=?");
     bool ret = query.prepare(sql);
     if (!ret) {
         qDebug() << "addHistoryMeetingInfo prepare failed: " << query.lastError();
@@ -88,6 +88,7 @@ bool DatabaseManager::addHistoryMeetingInfo(const HistoryMeetingInfo& info) {
     query.addBindValue(info.meetingSuject);
     query.addBindValue(info.meetingCreator);
     query.addBindValue(info.isCollect);
+    query.addBindValue(info.meetingJoinTime);
 
     ret = query.exec();
     if (!ret) {

@@ -278,7 +278,7 @@ enum NEEncryptionType {
  * @brief 会议中流加密配置
  */
 typedef struct _tagNEEncryptionConfig {
-    /// @brief 是否启用流加密
+    /// @brief 是否启用加密
     bool enable{false};
     /// @brief 加密类型 @see NEEncryptionType
     NEEncryptionType type;
@@ -621,10 +621,12 @@ public:
      */
     NEMeetingParams(const std::string& strDisplayName = "",
                     const std::string& strMeetingNum = "",
+                    const std::string& subject = "",
                     const std::string& strTag = "",
                     const std::string& strPassword = "")
         : displayName(strDisplayName)
         , meetingNum(strMeetingNum)
+        , subject(subject)
         , tag(strTag)
         , password(strPassword) {}
 
@@ -635,9 +637,10 @@ public:
      * @param strTag 用户Tag，用户自定义的一个字符串
      * @param strPassword 会议密码
      */
-    NEMeetingParams(std::string&& strDisplayName, std::string&& strMeetingNum, std::string&& strTag, std::string&& strPassword)
+    NEMeetingParams(std::string&& strDisplayName, std::string&& strMeetingNum, std::string&& subject, std::string&& strTag, std::string&& strPassword)
         : displayName(std::move(strDisplayName))
         , meetingNum(std::move(strMeetingNum))
+        , subject(std::move(subject))
         , tag(std::move(strTag))
         , password(std::move(strPassword)) {}
 
@@ -656,6 +659,11 @@ public:
      * </ul>
      */
     std::string meetingNum;
+
+    /**
+     * 会议主题
+     */
+    std::string subject;
 
     /**
      *  会议中的成员标签，自定义，最大长度50

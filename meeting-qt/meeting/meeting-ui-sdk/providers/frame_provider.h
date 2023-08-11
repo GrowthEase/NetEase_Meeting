@@ -5,12 +5,14 @@
 #ifndef VIDEO_SOURCE_H
 #define VIDEO_SOURCE_H
 
-#include <QAbstractVideoSurface>
+// TODO(Dylan)
 #include <QDebug>
 #include <QObject>
+#include <QPointer>
 #include <QSize>
 #include <QTimer>
-#include <QVideoSurfaceFormat>
+#include <QVideoFrame>
+#include <QVideoSink>
 #include <atomic>
 
 /**
@@ -18,7 +20,7 @@
  */
 class FrameProvider : public QObject {
     Q_OBJECT
-    Q_PROPERTY(QAbstractVideoSurface* videoSurface READ videoSurface WRITE setVideoSurface)
+    Q_PROPERTY(QVideoSink* videoSink READ videoSink WRITE setVideoSink NOTIFY videoSinkChanged)
     Q_PROPERTY(QString accountId READ accountId WRITE setAccountId NOTIFY accountIdChanged)
     Q_PROPERTY(bool subVideo READ subVideo WRITE setSubVideo NOTIFY subVideoChanged)
     Q_PROPERTY(QVector<float> yuv2rgbMatrix READ yuv2rgbMatrix WRITE setYuv2rgbMatrix NOTIFY yuv2rgbMatrixChanged)
@@ -28,8 +30,8 @@ public:
     explicit FrameProvider(QObject* parent = nullptr);
     ~FrameProvider();
 
-    QAbstractVideoSurface* videoSurface() const { return m_videoSurface; }
-    void setVideoSurface(QAbstractVideoSurface* videoSurface);
+    QVideoSink* videoSink() const { return m_videoSink; }
+    void setVideoSink(QVideoSink* videoSink);
 
     QString accountId() const;
     void setAccountId(const QString& accountId);
@@ -43,6 +45,7 @@ public:
     void setYuv2rgbMatrix(const QVector<float>& yuv2rgbMatrix);
 
 signals:
+    void videoSinkChanged();
     void receivedVideoFrame(const QVideoFrame& frame, const QSize& videoSize);
     void providerInvalidated();
     void accountIdChanged();
@@ -56,8 +59,7 @@ public slots:
     void statisticsStreamFps(bool bStart);
 
 private:
-    QVideoSurfaceFormat m_videoFormat;
-    QAbstractVideoSurface* m_videoSurface;
+    QPointer<QVideoSink> m_videoSink;
     QString m_accountId;
     std::atomic_int m_iStreamFps;
     int m_iLastStreamFps = -1;

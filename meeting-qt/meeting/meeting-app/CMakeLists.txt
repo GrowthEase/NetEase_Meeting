@@ -11,7 +11,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt5 COMPONENTS Core Widgets Quick QuickControls2 WebEngine Gui Sql REQUIRED)
+find_package(Qt6 COMPONENTS Core Widgets Quick QuickControls2 WebEngineQuick Gui Sql Core5Compat REQUIRED)
 
 include_directories(
     ${CMAKE_CURRENT_LIST_DIR}/third_party/neplauncher/include
@@ -122,6 +122,14 @@ if (APPLE)
         "-framework CoreVideo"
     )
 else ()
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        Qt6::Gui
+        Qt6::Widgets
+        Qt6::Quick
+        Qt6::QuickControls2
+        Qt6::Sql
+        Qt6::WebEngineQuick
+    )
     if (CMAKE_BUILD_TYPE MATCHES "Release")
         target_link_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}/third_party/neplauncher/libs/x64/Release)
         target_link_libraries(${PROJECT_NAME} PRIVATE NEPLauncher)
@@ -132,12 +140,13 @@ else ()
 endif ()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-    Qt5::Gui
-    Qt5::Widgets
-    Qt5::Quick
-    Qt5::QuickControls2
-    Qt5::Sql
-    Qt5::WebEngine
+    Qt6::Gui
+    Qt6::Widgets
+    Qt6::Quick
+    Qt6::QuickControls2
+    Qt6::Sql
+    Qt6::WebEngineQuick
+    Qt6::Core5Compat
     nem_hosting_module
     ${CONAN_LIBS_ALOG}
 )
@@ -157,11 +166,9 @@ if (APPLE)
         DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}
     )
 else ()
-    list(APPEND MACOSX_BUNDLE_RESOURCES
-        ${CMAKE_SOURCE_DIR}/meeting/bin/libcrypto-1_1-x64.dll
-        ${CMAKE_SOURCE_DIR}/meeting/bin/libssl-1_1-x64.dll
+    install(FILES ${MACOSX_BUNDLE_RESOURCES}
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}
     )
-    install(FILES ${MACOSX_BUNDLE_RESOURCES} DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
     install(FILES $<TARGET_PDB_FILE:${PROJECT_NAME}> DESTINATION pdb OPTIONAL)
 endif ()
 
@@ -191,7 +198,6 @@ if (CMAKE_BUILD_TYPE MATCHES "Release")
         find_program(QT_DEPLOY_QT NAMES windeployqt)
         add_custom_target(qtdeploy-meeting
             COMMAND ${QT_DEPLOY_QT} ${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}Client.exe -qmldir=${CMAKE_SOURCE_DIR}/meeting/meeting-ui-sdk/qml
-            COMMAND ${QT_DEPLOY_QT} ${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}.exe -qmldir=${CMAKE_SOURCE_DIR}/meeting/meeting-app/qml
             COMMENT "Deploying qt dependencies after build........."
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         )

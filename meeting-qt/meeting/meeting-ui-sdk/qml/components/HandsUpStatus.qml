@@ -3,7 +3,7 @@ import QtQuick.Window 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 
-Window{
+Window {
     id:root
     visible: false
     height: 32
@@ -14,14 +14,12 @@ Window{
     signal click()
     property string tipText: "1"
     Rectangle {
-
         anchors.fill: parent
         radius: 2
         clip:true
         color: "#337EFF"
 
-
-        ColumnLayout{
+        ColumnLayout {
             spacing: 0
             anchors.fill: parent
             anchors.centerIn: parent
@@ -33,7 +31,6 @@ Window{
                 mipmap: true
             }
             Label {
-                id:handstip
                 text: tipText
                 Layout.alignment: Qt.AlignHCenter
                 color: "#ECEDEF"

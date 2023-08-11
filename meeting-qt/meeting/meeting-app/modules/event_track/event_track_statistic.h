@@ -4,6 +4,7 @@
 
 #ifndef EVENT_TRACK_STATISTIC_H_
 #define EVENT_TRACK_STATISTIC_H_
+
 #include <QtCore>
 #include <atomic>
 #include <functional>

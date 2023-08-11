@@ -12,8 +12,6 @@
 
 FrameProvider::FrameProvider(QObject* parent)
     : QObject(parent)
-    , m_videoFormat(QSize(0, 0), QVideoFrame::Format_YUV420P)
-    , m_videoSurface(nullptr)
     , m_iStreamFps(0) {
     m_uuid = QUuid::createUuid().toString();
 
@@ -53,26 +51,16 @@ FrameProvider::FrameProvider(QObject* parent)
 }
 
 FrameProvider::~FrameProvider() {
-    YXLOG(Info) << "Frame provider invalidated: " << this << ", m_videoSurface: " << m_videoSurface << YXLOGEnd;
-    m_videoSurface = nullptr;
     disconnect(this, &FrameProvider::receivedVideoFrame, 0, 0);
     emit providerInvalidated();
 }
 
 void FrameProvider::deliverFrame(const QString& accountId, const QVideoFrame& frame, const QSize& videoSize, bool sub) {
-    if (nullptr == m_videoSurface) {
+    if (!m_videoSink)
         return;
-    }
 
     if ((accountId != m_accountId && !accountId.isEmpty()) || (sub != m_subVideo)) {
         return;
-    }
-
-    if (m_videoFormat.frameSize() != videoSize) {
-        // Video size changed
-        m_videoSurface->stop();
-        m_videoFormat.setFrameSize(videoSize);
-        m_videoSurface->start(m_videoFormat);
     }
 
     if (!m_timer.isActive() && videoSize.height() <= 720 && videoSize.width() <= 1280) {
@@ -82,7 +70,7 @@ void FrameProvider::deliverFrame(const QString& accountId, const QVideoFrame& fr
     }
 
     m_iStreamFps++;
-    m_videoSurface->present(frame);
+    m_videoSink->setVideoFrame(frame);
 }
 
 QString FrameProvider::accountId() const {
@@ -113,27 +101,14 @@ void FrameProvider::setYuv2rgbMatrix(const QVector<float>& yuv2rgbMatrix) {
     emit yuv2rgbMatrixChanged(m_yuv2rgbMatrix);
 }
 
-void FrameProvider::setVideoSurface(QAbstractVideoSurface* videoSurface) {
-    if (m_videoSurface == videoSurface)
+void FrameProvider::setVideoSink(QVideoSink* videoSink) {
+    if (m_videoSink == videoSink)
         return;
-
-    if (m_videoSurface && m_videoSurface->isActive())
-        m_videoSurface->stop();
-
-    m_videoSurface = videoSurface;
-
-    if (m_videoSurface)
-        m_videoSurface->start(m_videoFormat);
+    m_videoSink = videoSink;
+    emit videoSinkChanged();
 }
 
-void FrameProvider::restart() {
-    if (nullptr == m_videoSurface) {
-        return;
-    }
-
-    m_videoSurface->stop();
-    m_videoSurface->start(m_videoFormat);
-}
+void FrameProvider::restart() {}
 
 void FrameProvider::statisticsStreamFps(bool bStart) {
     if (bStart && m_timer.isActive() || !bStart && !m_timer.isActive())
@@ -142,9 +117,8 @@ void FrameProvider::statisticsStreamFps(bool bStart) {
     m_iStreamFps = 0;
     m_iLastStreamFps = -1;
     if (bStart) {
-        if (m_videoFormat.frameSize().height() > 720 && m_videoFormat.frameSize().width() > 1280) {
+        if (m_videoSink && m_videoSink->videoSize().height() <= 720 && m_videoSink->videoSize().width() <= 1280)
             return;
-        }
         m_timer.start(2000);
     } else {
         m_timer.stop();

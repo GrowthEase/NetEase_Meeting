@@ -58,8 +58,8 @@ CustomWindow {
                         font.pixelSize: 17
                         Layout.preferredWidth: 328
                         Layout.topMargin: 5
-//                        validator: RegExpValidator {
-//                            regExp: /\w{1,20}/
+//                        validator: RegularExpressionValidator {
+//                            regularExpression: /\w{1,20}/
 //                        }
                         onTextChanged: {
                             const currentText = textNewNickname.text

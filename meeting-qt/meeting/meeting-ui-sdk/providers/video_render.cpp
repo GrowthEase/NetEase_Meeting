@@ -96,19 +96,19 @@ void VideoFboRender::render() {
         }
     }
     auto frame = m_pVideoRender->getFrame();
-    if (frame.map(QAbstractVideoBuffer::ReadOnly)) {
-        auto pData = frame.bits();
-        auto videoW = frame.width();
-        auto videoH = frame.height();
-        if (m_pRender && !(nullptr == pData || 0 >= videoW || 0 >= videoH)) {
-            // 渲染当前帧
-            m_pRender->render(pData, videoW, videoH, m_itemWidth, m_itemHeight, m_window->width(), m_window->height());
-            if (m_window) {
-                m_window->resetOpenGLState();
-            }
-        }
-        frame.unmap();
-    }
+    // if (frame.map(QAbstractVideoBuffer::ReadOnly)) {
+    //     auto pData = frame.bits();
+    //     auto videoW = frame.width();
+    //     auto videoH = frame.height();
+    //     if (m_pRender && !(nullptr == pData || 0 >= videoW || 0 >= videoH)) {
+    //         // 渲染当前帧
+    //         m_pRender->render(pData, videoW, videoH, m_itemWidth, m_itemHeight, m_window->width(), m_window->height());
+    //         if (m_window) {
+    //             m_window->resetOpenGLState();
+    //         }
+    //     }
+    //     frame.unmap();
+    // }
 }
 
 QOpenGLFramebufferObject* VideoFboRender::createFramebufferObject(const QSize& size) {

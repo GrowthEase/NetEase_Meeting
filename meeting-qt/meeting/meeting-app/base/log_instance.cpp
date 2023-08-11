@@ -16,7 +16,7 @@
 LogInstance* LogInstance::m_instance = nullptr;
 
 LogInstance::LogInstance(char* argv[]) {
-    auto appDataDir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    auto appDataDir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
     appDataDir.append("/app/meeting");
     QDir logDir;
     if (!logDir.exists(appDataDir))

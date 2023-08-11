@@ -49,6 +49,7 @@ public:
     void getRequest(const IHttpRequest& request, const HttpRequestCallback& callback);
     void abort();
     bool checkNetWorkOnline();
+    QNetworkAccessManager* getNetworkAccessManager() const { return m_accessManager; }
 
 signals:
 

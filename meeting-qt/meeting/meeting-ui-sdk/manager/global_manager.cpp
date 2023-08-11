@@ -5,6 +5,7 @@
 #include "global_manager.h"
 #include <QFile>
 #include <QGuiApplication>
+#include <QtGlobal>
 #include "meeting/audio_manager.h"
 #include "meeting/members_manager.h"
 #include "meeting/video_manager.h"
@@ -49,7 +50,7 @@ bool GlobalManager::initialize(const QString& appKey,
             auto logPath = qApp->property("logPath").toString();
             auto logLevel = qApp->property("logLevel").toInt();
             if (logPath.isEmpty())
-                logPath = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+                logPath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
             QDir sdkLogDir;
             if (!sdkLogDir.exists(logPath))
                 sdkLogDir.mkpath(logPath);
@@ -57,21 +58,20 @@ bool GlobalManager::initialize(const QString& appKey,
             QByteArray byteLogDir = sdkLogDir.absolutePath().toUtf8();
             QByteArray byteAppKey = appKey.toUtf8();
 
+            std::string qtVersion = "Qt";
+            qtVersion.append(qVersion());
+
             NERoomKitOptions options;
             options.appKey = byteAppKey.toStdString();
             options.logPath = byteLogDir.toStdString();
             options.logLevel = (neroom::NELogLevel)ConfigManager::getInstance()->getValue("localLogLevel", logLevel).toInt();
             options.useAssetServerConfig = bPrivate;
             options.serverUrl = serverUrl.toStdString();
+            options.extras.emplace("framework", qtVersion);
             options.serverConfig.roomKitServerConfig.roomServer =
                 ConfigManager::getInstance()->getValue("localServerAddressEx", LOCAL_DEFAULT_SERVER_ADDRESS).toString().toStdString();
             m_roomkitService->initialize(options, [this, callback](int code, const std::string& msg) {
                 if (code == 0) {
-                    //            auto version = m_globalService->getSdkVersions();
-                    //            YXLOG(Info) << "version: " << version.roomKitVersion << version.imVersion << version.rtcVersion <<
-                    //            version.whiteboardVersion
-                    //            << YXLOGEnd;
-
                     auto messageService = m_roomkitService->getMessageChannelService();
                     messageService->addMessageChannelListener(m_messageListener);
                     SettingsManager::getInstance()->setAudioDeviceAutoSelectType(SettingsManager::getInstance()->audioDeviceAutoSelectType());
@@ -109,6 +109,10 @@ neroom::NESDKVersions GlobalManager::getVersions() const {
         version = m_roomkitService->getSdkVersions();
     }
     return version;
+}
+
+INERoomKit* GlobalManager::getRoomKitService() const {
+    return m_roomkitService;
 }
 
 INEAuthService* GlobalManager::getAuthService() {
@@ -170,12 +174,21 @@ INEPreviewRoomRtcController* GlobalManager::getPreviewRoomRtcController() {
     return pPreviewRoomRtcController;
 }
 
+std::shared_ptr<MeetingEventReporter> GlobalManager::getMeetingEventReporter() {
+    if (!m_eventReporter)
+        m_eventReporter = std::make_shared<MeetingEventReporter>();
+    return m_eventReporter;
+}
+
 std::shared_ptr<NEConfigController> GlobalManager::getGlobalConfig() {
     return m_configController;
 }
 
-void GlobalManager::showSettingsWnd() {
-    emit showSettingsWindow();
+void GlobalManager::showSettingsWnd(bool show /* = true*/) {
+    if (show)
+        emit showSettingsWindow();
+    else
+        emit hideSettingsWindow();
 }
 
 QString GlobalManager::globalAppKey() const {

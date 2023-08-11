@@ -77,12 +77,8 @@ public:
     }
 
     // Computations with other deltas.
-    TimeDelta operator+(TimeDelta other) const {
-        return TimeDelta(delta_ + other.delta_);
-    }
-    TimeDelta operator-(TimeDelta other) const {
-        return TimeDelta(delta_ - other.delta_);
-    }
+    TimeDelta operator+(TimeDelta other) const { return TimeDelta(delta_ + other.delta_); }
+    TimeDelta operator-(TimeDelta other) const { return TimeDelta(delta_ - other.delta_); }
 
     TimeDelta& operator+=(TimeDelta other) {
         delta_ += other.delta_;
@@ -92,18 +88,12 @@ public:
         delta_ -= other.delta_;
         return *this;
     }
-    TimeDelta operator-() const {
-        return TimeDelta(-delta_);
-    }
+    TimeDelta operator-() const { return TimeDelta(-delta_); }
 
     // Computations with ints, note that we only allow multiplicative operations
     // with ints, and additive operations with other deltas.
-    TimeDelta operator*(int64_t a) const {
-        return TimeDelta(delta_ * a);
-    }
-    TimeDelta operator/(int64_t a) const {
-        return TimeDelta(delta_ / a);
-    }
+    TimeDelta operator*(int64_t a) const { return TimeDelta(delta_ * a); }
+    TimeDelta operator/(int64_t a) const { return TimeDelta(delta_ / a); }
     TimeDelta& operator*=(int64_t a) {
         delta_ *= a;
         return *this;
@@ -112,33 +102,19 @@ public:
         delta_ /= a;
         return *this;
     }
-    int64_t operator/(TimeDelta a) const {
-        return delta_ / a.delta_;
-    }
+    int64_t operator/(TimeDelta a) const { return delta_ / a.delta_; }
 
     // Defined below because it depends on the definition of the other classes.
     Time operator+(Time t) const;
     TimeTicks operator+(TimeTicks t) const;
 
     // Comparison operators.
-    bool operator==(TimeDelta other) const {
-        return delta_ == other.delta_;
-    }
-    bool operator!=(TimeDelta other) const {
-        return delta_ != other.delta_;
-    }
-    bool operator<(TimeDelta other) const {
-        return delta_ < other.delta_;
-    }
-    bool operator<=(TimeDelta other) const {
-        return delta_ <= other.delta_;
-    }
-    bool operator>(TimeDelta other) const {
-        return delta_ > other.delta_;
-    }
-    bool operator>=(TimeDelta other) const {
-        return delta_ >= other.delta_;
-    }
+    bool operator==(TimeDelta other) const { return delta_ == other.delta_; }
+    bool operator!=(TimeDelta other) const { return delta_ != other.delta_; }
+    bool operator<(TimeDelta other) const { return delta_ < other.delta_; }
+    bool operator<=(TimeDelta other) const { return delta_ <= other.delta_; }
+    bool operator>(TimeDelta other) const { return delta_ > other.delta_; }
+    bool operator>=(TimeDelta other) const { return delta_ >= other.delta_; }
 
 private:
     friend class Time;
@@ -223,12 +199,8 @@ public:
     explicit Time(bool is_local, TimeStruct& ts);
     explicit Time(bool is_local, int year, int month, int day, int hour, int minute, int second, int millisecond = 0);
 
-    bool is_null() const {
-        return us_ == 0;
-    }
-    int64_t ToInternalValue() const {
-        return us_;
-    }
+    bool is_null() const { return us_ == 0; }
+    int64_t ToInternalValue() const { return us_; }
 
     // Returns the current time.
     static Time Now();
@@ -253,9 +225,7 @@ public:
     }
 
     // Compute the difference between two times.
-    TimeDelta operator-(Time other) const {
-        return TimeDelta(us_ - other.us_);
-    }
+    TimeDelta operator-(Time other) const { return TimeDelta(us_ - other.us_); }
 
     // Modify by some time delta.
     Time& operator+=(TimeDelta delta) {
@@ -268,32 +238,16 @@ public:
     }
 
     // Return a new time modified by some delta.
-    Time operator+(TimeDelta delta) const {
-        return Time(us_ + delta.delta_);
-    }
-    Time operator-(TimeDelta delta) const {
-        return Time(us_ - delta.delta_);
-    }
+    Time operator+(TimeDelta delta) const { return Time(us_ + delta.delta_); }
+    Time operator-(TimeDelta delta) const { return Time(us_ - delta.delta_); }
 
     // Comparison operators
-    bool operator==(Time other) const {
-        return us_ == other.us_;
-    }
-    bool operator!=(Time other) const {
-        return us_ != other.us_;
-    }
-    bool operator<(Time other) const {
-        return us_ < other.us_;
-    }
-    bool operator<=(Time other) const {
-        return us_ <= other.us_;
-    }
-    bool operator>(Time other) const {
-        return us_ > other.us_;
-    }
-    bool operator>=(Time other) const {
-        return us_ >= other.us_;
-    }
+    bool operator==(Time other) const { return us_ == other.us_; }
+    bool operator!=(Time other) const { return us_ != other.us_; }
+    bool operator<(Time other) const { return us_ < other.us_; }
+    bool operator<=(Time other) const { return us_ <= other.us_; }
+    bool operator>(Time other) const { return us_ > other.us_; }
+    bool operator>=(Time other) const { return us_ >= other.us_; }
 
 private:
     friend class TimeDelta;

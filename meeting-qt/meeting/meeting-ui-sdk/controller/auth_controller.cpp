@@ -21,9 +21,17 @@ bool NEMeeingAuthController::loginWithToken(const std::string& accountId, const 
     m_authStatus = kAuthLoginProcessing;
     m_accountInfo.accountId = accountId;
     m_accountInfo.accountToken = accountToken;
+    m_loginEvent = std::make_shared<LoginEvent>(LoginEventType::kToken);
+    auto step = std::make_shared<MeetingEventStepBase>("account_info");
     GetUserInfoRequest request;
     HttpManager::getInstance()->getRequest(request, [=](int code, const QJsonObject& response) {
-        if (200 == code) {
+        step->SetResultCode(code == kHttpResSuccess ? response["code"].toInt() : code);
+        step->SetEndTime(QDateTime::currentDateTime().toMSecsSinceEpoch());
+        step->SetStepMessage(code == kHttpResSuccess ? response["msg"].toString().toStdString() : "");
+        step->SetStepRequestID(code == kHttpResSuccess ? response["requestId"].toString().toStdString() : "");
+        step->SetServerCost(code == kHttpResSuccess ? response["cost"].toInt() : 0);
+        m_loginEvent->AddStep(step);
+        if (kHttpResSuccess == code) {
             m_accountInfo.username = response["nickname"].toString().toStdString();
             m_accountInfo.personalRoomId = response["privateMeetingNum"].toString().toStdString();
             m_accountInfo.shortRoomId = response["shortMeetingNum"].toString().toStdString();
@@ -38,6 +46,7 @@ bool NEMeeingAuthController::loginWithToken(const std::string& accountId, const 
             AuthManager::getInstance()->onAuthStatusChanged(kAuthLoginFailed, code);
             m_authStatus = kAuthIdle;
             m_settings = QJsonObject();
+            GlobalManager::getInstance()->getMeetingEventReporter()->AddEvent(m_loginEvent);
         }
     });
     return true;
@@ -51,9 +60,19 @@ bool NEMeeingAuthController::loginWithSSOToken(const std::string& ssoToken) {
 bool NEMeeingAuthController::loginWithAccount(const std::string& username, const std::string& password) {
     m_settings = QJsonObject();
     m_authStatus = kAuthLoginProcessing;
+    m_loginEvent = std::make_shared<LoginEvent>(LoginEventType::kPassword);
+    auto step = std::make_shared<MeetingEventStepBase>("account_info");
     LoginRequest request(QString::fromStdString(username), QString::fromStdString(password));
     HttpManager::getInstance()->postRequest(request, [=](int code, const QJsonObject& response) {
-        if (code == 200) {
+        if (m_loginEvent) {
+            step->SetResultCode(code == kHttpResSuccess ? response["code"].toInt() : code);
+            step->SetEndTime(QDateTime::currentDateTime().toMSecsSinceEpoch());
+            step->SetStepMessage(code == kHttpResSuccess ? response["msg"].toString().toStdString() : "");
+            step->SetStepRequestID(code == kHttpResSuccess ? response["requestId"].toString().toStdString() : "");
+            step->SetServerCost(code == kHttpResSuccess ? response["cost"].toInt() : 0);
+            m_loginEvent->AddStep(step);
+        }
+        if (code == kHttpResSuccess) {
             m_accountInfo.accountId = response["userUuid"].toString().toStdString();
             m_accountInfo.accountToken = response["userToken"].toString().toStdString();
             m_accountInfo.username = response["nickname"].toString().toStdString();
@@ -70,33 +89,52 @@ bool NEMeeingAuthController::loginWithAccount(const std::string& username, const
             AuthManager::getInstance()->onAuthStatusChanged(kAuthLoginFailed, code);
             m_authStatus = kAuthIdle;
             m_settings = QJsonObject();
+            GlobalManager::getInstance()->getMeetingEventReporter()->AddEvent(m_loginEvent);
         }
     });
     return true;
 }
 
-bool NEMeeingAuthController::anonymousLogin(const neroom::NECallback<>& callback) {
+bool NEMeeingAuthController::anonymousLogin(const neroom::NECallback<NEMeetingResponseKeys>& callback) {
     m_settings = QJsonObject();
     m_authStatus = kAuthLoginProcessing;
+    m_loginEvent = std::make_shared<LoginEvent>(LoginEventType::kAnonymous);
+    auto step = std::make_shared<MeetingEventStepBase>("account_info");
     AnonymousLoginRequest request;
     HttpManager::getInstance()->postRequest(request, [=](int code, const QJsonObject& response) {
-        if (code == 200) {
+        NEMeetingResponseKeys responseKyes;
+        responseKyes.code = code == kHttpResSuccess ? response["code"].toInt() : code;
+        responseKyes.message = code == kHttpResSuccess ? response["msg"].toString().toStdString() : "";
+        responseKyes.requestID = code == kHttpResSuccess ? response["requestId"].toString().toStdString() : "";
+        responseKyes.cost = code == kHttpResSuccess ? response["cost"].toInt() : 0;
+        if (m_loginEvent) {
+            step->SetResultCode(code == kHttpResSuccess ? response["code"].toInt() : code);
+            step->SetEndTime(QDateTime::currentDateTime().toMSecsSinceEpoch());
+            step->SetStepMessage(code == kHttpResSuccess ? response["msg"].toString().toStdString() : "");
+            step->SetStepRequestID(code == kHttpResSuccess ? response["requestId"].toString().toStdString() : "");
+            step->SetServerCost(code == kHttpResSuccess ? response["cost"].toInt() : 0);
+            m_loginEvent->AddStep(step);
+        }
+
+        if (code == kHttpResSuccess) {
             m_accountInfo.accountId = response["userUuid"].toString().toStdString();
             m_accountInfo.accountToken = response["userToken"].toString().toStdString();
             if (response.contains("settings")) {
                 m_settings = response["settings"].toObject();
             }
-            doLoginRoom(m_accountInfo.accountId, m_accountInfo.accountToken, callback);
+            doLoginRoom(m_accountInfo.accountId, m_accountInfo.accountToken,
+                        [=](int code, const std::string& msg) { callback(code, msg, responseKyes); });
         } else {
             NEAuthStatusExCode codeEx;
             codeEx.errorCode = code;
             m_authStatus = kAuthLoginFailed;
             AuthManager::getInstance()->onAuthStatusChanged(kAuthLoginFailed, code);
             if (callback) {
-                callback(code, response["msg"].toString().toStdString());
+                callback(code, response["msg"].toString().toStdString(), responseKyes);
             }
             m_authStatus = kAuthIdle;
             m_settings = QJsonObject();
+            GlobalManager::getInstance()->getMeetingEventReporter()->AddEvent(m_loginEvent);
         }
     });
     return true;
@@ -133,9 +171,8 @@ void NEMeeingAuthController::raiseExpiredCb() {}
 
 bool NEMeeingAuthController::saveAccountSettings(const QJsonObject& settings, const neroom::NECallback<>& callback) {
     SaveSettingsRequest request(settings);
-    HttpManager::getInstance()->postRequest(request, [=](int code, const QJsonObject& response) {
-
-    });
+    HttpManager::getInstance()->postRequest(
+        request, [=](int code, const QJsonObject& response) { YXLOG(Info) << "Save account settings, result code: " << code << YXLOGEnd; });
     return true;
 }
 
@@ -175,8 +212,15 @@ bool NEMeeingAuthController::doLoginRoom(const std::string& account, const std::
         }
         return false;
     }
+    auto roomkitStep = std::make_shared<MeetingEventStepBase>("roomkit_login");
     authService->login(account, token, [=](int code, const std::string& msg) {
         YXLOG(Info) << "login res, code: " << code << ", msg: " << msg << YXLOGEnd;
+        if (m_loginEvent) {
+            roomkitStep->SetEndTime(QDateTime::currentDateTime().toMSecsSinceEpoch());
+            roomkitStep->SetResultCode(code);
+            roomkitStep->SetStepMessage(msg);
+            m_loginEvent->AddStep(roomkitStep);
+        }
         if (code == 0) {
             m_authStatus = kAuthLoginSuccessed;
         } else {
@@ -187,10 +231,9 @@ bool NEMeeingAuthController::doLoginRoom(const std::string& account, const std::
             m_settings = QJsonObject();
             AuthManager::getInstance()->onAuthStatusChanged(kAuthLoginFailed, code);
         }
-
-        if (callback) {
+        if (callback)
             callback(code, msg);
-        }
+        GlobalManager::getInstance()->getMeetingEventReporter()->AddEvent(m_loginEvent);
     });
 
     return true;

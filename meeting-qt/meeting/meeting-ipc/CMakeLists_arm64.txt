@@ -6,6 +6,7 @@ ENDIF ()
 
 project(nem_ipc_module)
 
+SET(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Build architectures for Mac OS X" FORCE)
 set(CMAKE_DEBUG_POSTFIX d)
 IF (WIN32)
 	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")

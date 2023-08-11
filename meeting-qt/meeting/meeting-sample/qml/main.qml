@@ -2,13 +2,13 @@ import QtQuick 2.12
 import QtQuick.Window 2.12
 import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.12
-import QtGraphicalEffects 1.0
+import Qt5Compat.GraphicalEffects
 
 Window {
     id: mainWindow
     visible: true
-    width: 780
-    height: 600
+    width: 1024
+    height: 650
     title: qsTr("NetEase Meeting SDK Sample")
 
     Component.onCompleted: {

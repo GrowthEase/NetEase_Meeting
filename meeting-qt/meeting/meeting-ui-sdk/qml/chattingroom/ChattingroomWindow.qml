@@ -2,12 +2,12 @@
 import QtQuick.Window 2.12
 import QtQuick.Layouts 1.1
 import QtQuick.Controls 2.14
-import QtQuick.Controls.Styles 1.4
-import QtGraphicalEffects 1.0
+import Qt5Compat.GraphicalEffects
 import QtQuick.Controls.Material 2.12
 import NetEase.Meeting.MeetingStatus 1.0
 import NetEase.Meeting.MessageModel 1.0
-import QtQuick.Dialogs 1.3
+import QtQuick.Dialogs
+import QtCore
 
 import "../components"
 
@@ -316,6 +316,15 @@ Window {
                             }
 
                             messageField.focus = true
+                            atEndTimer.restart()
+                        }
+                        Timer {
+                            id: atEndTimer
+                            interval: 100
+                            repeat: false
+                            onTriggered: {
+                                chatroom.msglistView.positionViewAtEnd()
+                            }
                         }
                     }
                 }
@@ -395,11 +404,11 @@ Window {
                       "%1 (*.pdf)".arg(qsTr("pdf files")),
                       "%1 (*.txt)".arg(qsTr("text files")),
                       "%1 (*.apk *.ipa)".arg(qsTr("pack files"))]
-        folder: shortcuts.home
+        currentFolder: StandardPaths.writableLocation(StandardPaths.HomeLocation)
         onAccepted: {
-            console.log("sendFileMsg image: " + fileDialog.fileUrl)
+            console.log("sendFileMsg image: " + fileDialog.selectedFile)
             var filePath = ""
-            filePath = fileDialog.fileUrl.toString()
+            filePath = fileDialog.selectedFile.toString()
             if(Qt.platform.os === 'osx') {
                 filePath = filePath.replace("file://", "")
             } else {

@@ -86,9 +86,9 @@ MoreItemManager::MoreItemManager(QObject* parent)
                                "qrc:/qml/images/meeting/footerbar/btn_invite_normal.png"};
     m_itemsPresetMore.push_back(itemInvitation);
 
-    MoreItem itemsipInvitation = {(int)MoreItemEnum::SipInviteMenuId, QUuid::createUuid().toString(), MoreItemEnum::VisibleAlways, tr("SIP"),
-                                  "qrc:/qml/images/meeting/footerbar/btn_sip.png"};
-    m_itemsPresetMore.push_back(itemsipInvitation);
+    // MoreItem itemsipInvitation = {(int)MoreItemEnum::SipInviteMenuId, QUuid::createUuid().toString(), MoreItemEnum::VisibleAlways, tr("SIP"),
+    //                               "qrc:/qml/images/meeting/footerbar/btn_sip.png"};
+    // m_itemsPresetMore.push_back(itemsipInvitation);
 
     connect(AuthManager::getInstance(), &AuthManager::isHostAccountChanged, this, [this]() { updateItemVisible(); });
 
@@ -105,6 +105,7 @@ MoreItemManager::MoreItemManager(QObject* parent)
                     if (meetingInfo.enableLive && AuthManager::getInstance()->isHostAccount()) {
                         setLiveVisible(true);
                     }
+                    updateItemVisible();
                     emit whiteboardItemVisibleChanged();
                 }
             });

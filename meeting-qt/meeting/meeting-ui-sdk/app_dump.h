@@ -62,7 +62,7 @@ void WriteDump(EXCEPTION_POINTERS* exp, const std::wstring& path) {
 LONG WINAPI MyUnhandledExceptionFilter(EXCEPTION_POINTERS* exp) {
     auto app_dir = qApp ? qApp->property("logPath").toString() : "";
     if (app_dir.isEmpty()) {
-        app_dir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+        app_dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
     }
     app_dir.append("/app");
     QDateTime current_date_time = QDateTime::currentDateTime();

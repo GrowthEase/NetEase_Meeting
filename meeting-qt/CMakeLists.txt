@@ -32,7 +32,9 @@ if (NOT BUILD_IPC_INTERFACE_ONLY)
     endif ()
 endif ()
 
-add_custom_target(conan-install ALL
-    COMMAND conan imports ${CMAKE_CURRENT_LIST_DIR}/conanfile.py -imf ${CMAKE_INSTALL_PREFIX}
-    COMMENT "Import Conan dependencies......."
-)
+if (NOT BUILD_IPC_INTERFACE_ONLY)
+    add_custom_target(conan-install ALL
+        COMMAND conan imports ${CMAKE_CURRENT_LIST_DIR}/conanfile.py -imf ${CMAKE_INSTALL_PREFIX}
+        COMMENT "Import Conan dependencies......."
+    )
+endif ()
