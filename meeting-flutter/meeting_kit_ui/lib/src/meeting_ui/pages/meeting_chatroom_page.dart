@@ -424,12 +424,12 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
     Connectivity().checkConnectivity().then((value) async {
       if (value == ConnectivityResult.none) {
         sending = false;
-        showToast(
+        ToastUtils.showToast(context,
             NEMeetingKitLocalizations.of(context)!.networkUnavailableCheck);
       } else {
         var content = _contentController.text.trim();
         if (TextUtils.isEmpty(content)) {
-          showToast(
+          ToastUtils.showToast(context,
               NEMeetingUIKitLocalizations.of(context)!.cannotSendBlankLetter);
           sending = false;
           return;
@@ -442,8 +442,10 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
               .append(message, message.time, incUnread: false);
           _contentController.clear();
         } else {
-          showToast(result.msg ??
-              NEMeetingKit.instance.localizations.networkUnavailableCheck);
+          ToastUtils.showToast(
+              context,
+              result.msg ??
+                  NEMeetingKit.instance.localizations.networkUnavailableCheck);
         }
       }
     });
@@ -729,7 +731,10 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
   Future<bool> _hasNetworkOrToast() async {
     final value = await Connectivity().checkConnectivity();
     if (value == ConnectivityResult.none) {
-      showToast(NEMeetingKitLocalizations.of(context)!.networkUnavailableCheck);
+      if (mounted) {
+        ToastUtils.showToast(context,
+            NEMeetingKitLocalizations.of(context)!.networkUnavailableCheck);
+      }
       return false;
     }
     return true;
@@ -800,7 +805,7 @@ class _MessageItem extends StatelessWidget {
         ),
         alignment: Alignment.center,
         child: Text(
-          message.nickname.isNotEmpty ? message.nickname.characters.first : '',
+          message.nickname.isNotEmpty ? message.nickname.substring(0, 1) : '',
           style: TextStyle(fontSize: 14, color: Colors.white),
         ),
       ),

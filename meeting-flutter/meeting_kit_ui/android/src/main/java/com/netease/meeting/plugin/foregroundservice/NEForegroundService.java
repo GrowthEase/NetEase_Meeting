@@ -5,6 +5,7 @@
 package com.netease.meeting.plugin.foregroundservice;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -21,6 +22,8 @@ public class NEForegroundService extends Service {
 
   private static ForegroundServiceConfig foregroundServiceConfig;
 
+  NotificationManager notificationManager;
+
   static ForegroundServiceConfig getForegroundServiceConfig() {
     return foregroundServiceConfig;
   }
@@ -31,20 +34,12 @@ public class NEForegroundService extends Service {
       return;
     }
     foregroundServiceConfig = fsc;
-    if (NENotificationManager.getInstance().ensureNotification(context) == null) {
-      Log.i("NEForegroundService", "ensure notification fail, ignore start service.");
-      return;
-    }
-    try {
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        Log.e("NEForegroundService", "startForegroundService");
-        context.startForegroundService(new Intent(context, NEForegroundService.class));
-      } else {
-        Log.e("NEForegroundService", "startService");
-        context.startService(new Intent(context, NEForegroundService.class));
-      }
-    } catch (Throwable throwable) {
-      Log.e("NEForegroundService", "startService error", throwable);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      Log.e("NEForegroundService", "startForegroundService");
+      context.startForegroundService(new Intent(context, NEForegroundService.class));
+    } else {
+      Log.e("NEForegroundService", "startService");
+      context.startService(new Intent(context, NEForegroundService.class));
     }
   }
 
@@ -66,6 +61,8 @@ public class NEForegroundService extends Service {
   public void onCreate() {
     Log.i("NEForegroundService", "onCreate");
     super.onCreate();
+    notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+    onStartForeground();
   }
 
   @Override
@@ -77,9 +74,12 @@ public class NEForegroundService extends Service {
   }
 
   private void onStartForeground() {
-    Notification notification = NENotificationManager.getInstance().getNotification();
+    NENotificationManager.getInstance().createForegroundNotificationChannel(this);
+    // Notification ID cannot be 0.
+    Notification notification =
+        NENotificationManager.getInstance().buildForegroundNotification(this);
     if (notification == null) {
-      Log.i("NEForegroundService", "onStartForeground without notification");
+      Log.i("NEForegroundService", "without notification, ignore start foreground.");
       return;
     }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
