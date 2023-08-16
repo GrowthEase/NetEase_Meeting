@@ -42,7 +42,7 @@ dependencies {
 
     def rtc_version = rootProject.hasProperty('nertc_version')
             ? rootProject.property('nertc_version') as String
-            : '5.3.7'
+            : '5.3.8'
     println "use nertc version: $rtc_version"
     [
             'base',
