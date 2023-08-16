@@ -66,7 +66,6 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       _networkInfo;
 
   late ValueNotifier<bool> _isGalleryLayout;
-
   ValueListenable<bool> get isGalleryLayout => _isGalleryLayout;
 
   bool _isShowOpenMicroDialog = false,
@@ -117,7 +116,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
 
   int meetingEndTipMin = 0;
   bool showMeetingEndTip = false;
-  final _remainingSeconds = ValueNotifier(0);
+  int _remainingSeconds = 0;
   Stopwatch _remainingSecondsAdjustment = Stopwatch();
   final streamSubscriptions = <StreamSubscription>[];
 
@@ -180,14 +179,6 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
 
   SDKConfig? crossAppSDKConfig;
 
-  StreamSubscription<int>? _meetingEndTipEventSubscription;
-
-  /// 会议时长结束提醒次数
-  int _countForEndTip = 0;
-
-  /// 一分钟提示倒计时
-  Timer? _oneMinuteTimer;
-
   @override
   void reassemble() {
     super.reassemble();
@@ -247,7 +238,6 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       rtcLocalAudioVolumeIndication: onLocalAudioVolumeIndicationWithVad,
       rtcAudioOutputDeviceChanged: onRtcAudioOutputDeviceChanged,
       rtcVirtualBackgroundSourceEnabled: onRtcVirtualBackgroundSourceEnabled,
-      roomRemainingSecondsRenewed: onRoomDurationRenewed,
     );
     roomContext.addEventCallback(roomEventCallback);
 
@@ -395,7 +385,6 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
   }
 
   static const _updateMyPhoneState = 'UpdateMyPhoneState';
-
   void handlePhoneStateChangeEvent() {
     NEMeetingPlugin().phoneStateService.start();
     var subscription = NEMeetingPlugin()
@@ -2509,7 +2498,6 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
   }
 
   Object? audioActionToken;
-
   Future<void> _muteMyAudio(bool mute) async {
     if (mute || roomContext.canUnmuteMyAudio() || _invitingToOpenAudio) {
       _invitingToOpenAudio = false;
@@ -2571,7 +2559,6 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
   }
 
   bool modifyingAudioShareState = false;
-
   void enableAudioShare(bool enable) async {
     // 需要先申请权限
     if (enable) {
@@ -2742,7 +2729,6 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
   }
 
   Object? videoActionToken;
-
   void _muteMyVideo(bool mute) async {
     if (mute || roomContext.canUnmuteMyVideo() || _invitingToOpenVideo) {
       _trackMuteVideoEvent(mute);
@@ -2851,7 +2837,6 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
   }
 
   bool isBeautyEnabled = false;
-
   Future<dynamic> _initBeauty() async {
     if (!isBeautyFuncSupported) return;
     var result = await roomContext.rtcController.startBeauty();
@@ -3222,9 +3207,6 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       NERoomMember member, bool mute, NERoomMember? operator) {
     if (isSelf(member.uuid)) {
       arguments.audioMute = mute;
-      if (mute) {
-        rtcController.adjustRecordingSignalVolume(0);
-      }
       if (mute && !isSelf(operator?.uuid) && isHostOrCoHost(operator?.uuid)) {
         showToast(
             NEMeetingUIKitLocalizations.of(context)!.meetingHostMuteAudio);
@@ -3476,7 +3458,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       alignment: Alignment.center,
       child: Text(
         /// 修改当nick为空串的时候，截取越界问题
-        nick != null && nick.isNotEmpty ? nick.characters.first : '',
+        (nick?.isNotEmpty ?? false) ? (nick?.substring(0, 1) ?? '') : '',
         style: TextStyle(
             fontSize: 21, color: Colors.white, decoration: TextDecoration.none),
       ),
@@ -3893,10 +3875,6 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     }
   }
 
-  void onRoomDurationRenewed(int remainingSeconds) {
-    _remainingSeconds.value = remainingSeconds;
-  }
-
   void handleRoomRtcStats(NERoomRtcStats stats) {
     final screenShareUuid =
         roomContext.rtcController.getScreenSharingUserUuid();
@@ -4182,10 +4160,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
         muteDetectStarted = true;
       }
     });
-    _remainingSecondsAdjustment.stop();
-    var remain = Duration(seconds: _remainingSeconds.value) -
-        _remainingSecondsAdjustment.elapsed;
-    scheduleMeetingEndTipTask(remain);
+    scheduleMeetingEndTipTask();
   }
 
   void memberLeaveRtcChannel(List<NERoomMember> members) {
@@ -4809,12 +4784,10 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     if (!isMeetingEndTimeTiSupported()) {
       return;
     }
-
-    /// _remainingSeconds变更，刷新计时器
-    _remainingSeconds.value = roomContext.remainingSeconds;
-    _remainingSeconds.addListener(() {
-      scheduleMeetingEndTipTask(Duration(seconds: _remainingSeconds.value));
-    });
+    _remainingSeconds = (roomContext.remainingSeconds ?? 0).toInt();
+    if (_remainingSeconds > 0) {
+      _remainingSecondsAdjustment.start();
+    }
   }
 
   void debugPrintAlog(String message) {
@@ -4824,11 +4797,14 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     }());
   }
 
-  Stream<int> meetingEndTipEventStream(Duration remain, int count) async* {
+  Stream<int> meetingEndTipEventStream() async* {
     assert(() {
       debugPrintAlog('meeting end tip stream started');
       return true;
     }());
+    _remainingSecondsAdjustment.stop();
+    var remain = Duration(seconds: _remainingSeconds) -
+        _remainingSecondsAdjustment.elapsed;
     if (!remain.isNegative) {
       // 10分钟、5分钟、1分钟各提醒一次；提醒时间为 1 分钟
       final checkPoints = const [10, 5, 1];
@@ -4840,53 +4816,36 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
           if (!durationToRemind.isNegative) {
             await Future.delayed(durationToRemind);
           }
-          if (count == _countForEndTip) {
-            yield value;
-          } else {
-            break;
-          }
+          assert(() {
+            debugPrintAlog('meeting end tip $value minutes remain');
+            return true;
+          }());
+          yield value;
           remain = next;
         }
       }
     }
   }
 
-  void scheduleMeetingEndTipTask(Duration remain) {
-    streamSubscriptions.remove(_meetingEndTipEventSubscription);
-    _meetingEndTipEventSubscription?.cancel();
-
-    /// 关闭会议结束提醒
-    if (showMeetingEndTip) {
-      setState(() {
-        _oneMinuteTimer?.cancel();
-        showMeetingEndTip = false;
-      });
-    }
-    int count = ++_countForEndTip;
-    _meetingEndTipEventSubscription =
-        meetingEndTipEventStream(remain, count).listen((minutes) async {
-      assert(() {
-        debugPrintAlog('meeting end tip $minutes minutes remain');
-        return true;
-      }());
+  void scheduleMeetingEndTipTask() {
+    final meetingEndTipEventSubscription =
+        meetingEndTipEventStream().listen((minutes) async {
       if (mounted) {
-        /// 开启会议结束提醒，并在 1 分钟后关闭
         setState(() {
           meetingEndTipMin = minutes;
           showMeetingEndTip = true;
         });
         if (minutes > 1) {
-          _oneMinuteTimer = Timer(Duration(minutes: 1), () {
-            if (mounted && count == _countForEndTip) {
-              setState(() {
-                showMeetingEndTip = false;
-              });
-            }
-          });
+          await Future.delayed(const Duration(minutes: 1));
+          if (mounted) {
+            setState(() {
+              showMeetingEndTip = false;
+            });
+          }
         }
       }
     });
-    streamSubscriptions.add(_meetingEndTipEventSubscription!);
+    streamSubscriptions.add(meetingEndTipEventSubscription);
   }
 }
 

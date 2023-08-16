@@ -26,10 +26,10 @@ public class PhoneStateService extends BroadcastReceiverEventChannel {
   private static final boolean DEBUG = false;
 
   private static final String STATE_EVENT_CHANNEL_NAME =
-      "meeting_plugin.phone_state_service.states";
+          "meeting_plugin.phone_state_service.states";
 
   public PhoneStateService(
-      Context context, FlutterPlugin.FlutterPluginBinding flutterPluginBinding) {
+          Context context, FlutterPlugin.FlutterPluginBinding flutterPluginBinding) {
     super(context, flutterPluginBinding, STATE_EVENT_CHANNEL_NAME);
   }
 
@@ -61,31 +61,31 @@ public class PhoneStateService extends BroadcastReceiverEventChannel {
   // TelephonyManager.getCallState require READ_PHONE_STATE permission after API 31
   private boolean hasPhoneStatePermission() {
     return Build.VERSION.SDK_INT < 31
-        || context.checkPermission(
-                Manifest.permission.READ_PHONE_STATE, Process.myPid(), Process.myUid())
+            || context.checkPermission(
+            Manifest.permission.READ_PHONE_STATE, Process.myPid(), Process.myUid())
             == PackageManager.PERMISSION_GRANTED;
   }
 
   private final PhoneStateListener phoneStateListener =
-      new PhoneStateListener() {
-        @Override
-        public void onCallStateChanged(int state, String phoneNumber) {
-          Log.e(TAG, "onCallStateChanged: " + state + "#" + phoneNumber);
-          if (state == TelephonyManager.CALL_STATE_IDLE) {
-            if (isInCall == Boolean.TRUE && !isCalling(context)) {
-              notifyInCallState(false);
+          new PhoneStateListener() {
+            @Override
+            public void onCallStateChanged(int state, String phoneNumber) {
+              Log.e(TAG, "onCallStateChanged: " + state + "#" + phoneNumber);
+              if (state == TelephonyManager.CALL_STATE_IDLE) {
+                if (isInCall == Boolean.TRUE && !isCalling(context)) {
+                  notifyInCallState(false);
+                }
+              } else if (state == TelephonyManager.CALL_STATE_RINGING
+                      || state == TelephonyManager.CALL_STATE_OFFHOOK) {
+                notifyInCallState(true);
+              }
             }
-          } else if (state == TelephonyManager.CALL_STATE_RINGING
-              || state == TelephonyManager.CALL_STATE_OFFHOOK) {
-            notifyInCallState(true);
-          }
-        }
-      };
+          };
 
   @SuppressLint("WrongConstant")
   private static boolean isCalling(Context context) {
     TelephonyManager telephonyManager =
-        (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+            (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
     if (telephonyManager != null) {
       try {
         int callState = telephonyManager.getCallState();
@@ -96,12 +96,12 @@ public class PhoneStateService extends BroadcastReceiverEventChannel {
 
         for (int index = 0; index < 2; index++) {
           callState =
-              (int)
-                  ReflectionHelper.invokeMethod(
-                      telephonyManager,
-                      "getCallStateGemini",
-                      new Class[] {Integer.TYPE},
-                      new Object[] {index});
+                  (int)
+                          ReflectionHelper.invokeMethod(
+                                  telephonyManager,
+                                  "getCallStateGemini",
+                                  new Class[] {Integer.TYPE},
+                                  new Object[] {index});
           Log.e(TAG, "PhoneService getCallStateGemini: index=" + index + ", state=" + callState);
           if (callState != TelephonyManager.CALL_STATE_IDLE) {
             return true;
@@ -123,12 +123,12 @@ public class PhoneStateService extends BroadcastReceiverEventChannel {
 
         for (int index = 0; index < 2; index++) {
           callState =
-              (int)
-                  ReflectionHelper.invokeMethod(
-                      telephonyManager2,
-                      "getCallStateGemini",
-                      new Class[] {Integer.TYPE},
-                      new Object[] {index});
+                  (int)
+                          ReflectionHelper.invokeMethod(
+                                  telephonyManager2,
+                                  "getCallStateGemini",
+                                  new Class[] {Integer.TYPE},
+                                  new Object[] {index});
           Log.e(TAG, "Phone2Service getCallStateGemini: index=" + index + ", state=" + callState);
           if (callState != TelephonyManager.CALL_STATE_IDLE) {
             return true;
@@ -141,14 +141,14 @@ public class PhoneStateService extends BroadcastReceiverEventChannel {
 
     try {
       Object msimTelephonyManager =
-          ReflectionHelper.invokeStaticMethod(
-              "android.telephony.MSimTelephonyManager", "getDefault", null, null);
+              ReflectionHelper.invokeStaticMethod(
+                      "android.telephony.MSimTelephonyManager", "getDefault", null, null);
       if (msimTelephonyManager != null) {
         for (int index = 0; index < 2; index++) {
           int callState =
-              (int)
-                  ReflectionHelper.invokeMethod(
-                      msimTelephonyManager, "getCallState", new Object[] {index});
+                  (int)
+                          ReflectionHelper.invokeMethod(
+                                  msimTelephonyManager, "getCallState", new Object[] {index});
           Log.e(TAG, "MSimTelephonyManager getCallState: index=" + index + ", state=" + callState);
           if (callState != TelephonyManager.CALL_STATE_IDLE) {
             return true;
@@ -165,25 +165,25 @@ public class PhoneStateService extends BroadcastReceiverEventChannel {
   @SuppressLint("WrongConstant")
   private static void listen(Context context, PhoneStateListener phoneStateListener, int flag) {
     TelephonyManager telephonyManager =
-        (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+            (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
     if (telephonyManager != null) {
       try {
         ReflectionHelper.invokeMethod(
-            telephonyManager,
-            "listen",
-            new Class[] {PhoneStateListener.class, Integer.TYPE},
-            new Object[] {phoneStateListener, flag});
+                telephonyManager,
+                "listen",
+                new Class[] {PhoneStateListener.class, Integer.TYPE},
+                new Object[] {phoneStateListener, flag});
         Log.e(TAG, "listen to PhoneService succeed0");
         ReflectionHelper.invokeMethod(
-            telephonyManager,
-            "listenGemini",
-            new Class[] {Integer.TYPE, PhoneStateListener.class, Integer.TYPE},
-            new Object[] {0, phoneStateListener, flag});
+                telephonyManager,
+                "listenGemini",
+                new Class[] {Integer.TYPE, PhoneStateListener.class, Integer.TYPE},
+                new Object[] {0, phoneStateListener, flag});
         ReflectionHelper.invokeMethod(
-            telephonyManager,
-            "listenGemini",
-            new Class[] {Integer.TYPE, PhoneStateListener.class, Integer.TYPE},
-            new Object[] {1, phoneStateListener, flag});
+                telephonyManager,
+                "listenGemini",
+                new Class[] {Integer.TYPE, PhoneStateListener.class, Integer.TYPE},
+                new Object[] {1, phoneStateListener, flag});
         Log.e(TAG, "listen to PhoneService succeed1");
       } catch (Throwable unused) {
         if (DEBUG) {
@@ -204,21 +204,21 @@ public class PhoneStateService extends BroadcastReceiverEventChannel {
     if (telephonyManager2 != null) {
       try {
         ReflectionHelper.invokeMethod(
-            telephonyManager2,
-            "listen",
-            new Class[] {PhoneStateListener.class, Integer.TYPE},
-            new Object[] {phoneStateListener, flag});
+                telephonyManager2,
+                "listen",
+                new Class[] {PhoneStateListener.class, Integer.TYPE},
+                new Object[] {phoneStateListener, flag});
         Log.e(TAG, "listen to Phone2Service succeed1");
         ReflectionHelper.invokeMethod(
-            telephonyManager2,
-            "listenGemini",
-            new Class[] {Integer.TYPE, PhoneStateListener.class, Integer.TYPE},
-            new Object[] {0, phoneStateListener, flag});
+                telephonyManager2,
+                "listenGemini",
+                new Class[] {Integer.TYPE, PhoneStateListener.class, Integer.TYPE},
+                new Object[] {0, phoneStateListener, flag});
         ReflectionHelper.invokeMethod(
-            telephonyManager2,
-            "listenGemini",
-            new Class[] {Integer.TYPE, PhoneStateListener.class, Integer.TYPE},
-            new Object[] {1, phoneStateListener, flag});
+                telephonyManager2,
+                "listenGemini",
+                new Class[] {Integer.TYPE, PhoneStateListener.class, Integer.TYPE},
+                new Object[] {1, phoneStateListener, flag});
         Log.e(TAG, "listen to Phone2Service succeed2");
       } catch (Throwable unused3) {
         if (DEBUG) {
@@ -229,11 +229,11 @@ public class PhoneStateService extends BroadcastReceiverEventChannel {
 
     try {
       ReflectionHelper.invokeMethod(
-          ReflectionHelper.invokeStaticMethod(
-              "android.telephony.MSimTelephonyManager", "getDefault", null, null),
-          "listen",
-          new Class[] {PhoneStateListener.class, Integer.TYPE},
-          new Object[] {phoneStateListener, flag});
+              ReflectionHelper.invokeStaticMethod(
+                      "android.telephony.MSimTelephonyManager", "getDefault", null, null),
+              "listen",
+              new Class[] {PhoneStateListener.class, Integer.TYPE},
+              new Object[] {phoneStateListener, flag});
       Log.e(TAG, "listen to MSimTelephonyManager succeed");
     } catch (Throwable unused4) {
       if (DEBUG) {
