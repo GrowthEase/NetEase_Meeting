@@ -38,6 +38,11 @@ class NEStartMeetingParams {
   /// 设置会议成员角色
   final Map<String, NEMeetingRoleType>? roleBinds;
 
+  /// 媒体流加密类型
+  final NEEncryptionConfig? encryptionConfig;
+
+  IntervalEvent? trackingEvent;
+
   NEStartMeetingParams({
     this.subject,
     this.meetingNum,
@@ -48,6 +53,7 @@ class NEStartMeetingParams {
     this.extraData,
     this.controls,
     this.roleBinds,
+    this.encryptionConfig,
   });
 
   @override
@@ -104,12 +110,18 @@ class NEJoinMeetingParams {
 
   final String? avatar;
 
+  /// 媒体流加密类型
+  final NEEncryptionConfig? encryptionConfig;
+
+  IntervalEvent? trackingEvent;
+
   NEJoinMeetingParams({
     required this.meetingNum,
     required this.displayName,
     this.password,
     this.tag,
     this.avatar,
+    this.encryptionConfig,
   });
 
   NEJoinMeetingParams copy({String? password}) {
@@ -119,6 +131,7 @@ class NEJoinMeetingParams {
       password: password ?? this.password,
       tag: tag,
       avatar: avatar,
+      encryptionConfig: encryptionConfig,
     );
   }
 }

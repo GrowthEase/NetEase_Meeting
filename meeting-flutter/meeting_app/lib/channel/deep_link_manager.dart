@@ -324,7 +324,7 @@ class _CheckRequest {
           type == other.type;
 
   @override
-  int get hashCode => hashValues(meetingKey, needConfirm, type);
+  int get hashCode => Object.hash(meetingKey, needConfirm, type);
 }
 
 class _MeetingInfo extends StatelessWidget {

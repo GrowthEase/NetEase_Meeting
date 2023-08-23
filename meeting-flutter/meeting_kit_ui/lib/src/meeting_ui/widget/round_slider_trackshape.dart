@@ -43,6 +43,7 @@ class RoundSliderTrackShape extends SliderTrackShape {
     required SliderThemeData sliderTheme,
     required Animation<double> enableAnimation,
     required Offset thumbCenter,
+    Offset? secondaryOffset,
     bool? isEnabled,
     bool? isDiscrete,
     required TextDirection textDirection,

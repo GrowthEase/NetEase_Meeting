@@ -5,6 +5,7 @@
 library meeting_kit;
 
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
@@ -38,6 +39,13 @@ export 'package:netease_meeting_core/meeting_service.dart'
         NERoomAudioControl,
         NERoomVideoControl,
         NERoomAttendeeOffType;
+export 'package:netease_roomkit/netease_roomkit.dart'
+    show
+        NEServerConfig,
+        NERoomKitServerConfig,
+        NEIMServerConfig,
+        NERtcServerConfig,
+        NEWhiteboardServerConfig;
 
 part 'src/meeting_kit/meeting_account_service.dart';
 part 'src/meeting_kit/impl/meeting_account_service_impl.dart';
@@ -56,6 +64,7 @@ part 'src/meeting_kit/log/log_service.dart';
 part 'src/meeting_kit/utils/rtc_utils.dart';
 part 'src/meeting_kit/utils/network_task_executor.dart';
 part 'src/meeting_kit/meeting_context.dart';
+part 'src/meeting_kit/report/meeting_report.dart';
 
 class NEMeetingServerConfig {
   static const _serverUrlKey = 'serverUrl';
@@ -183,13 +192,15 @@ abstract class NEMeetingKit {
   ///
   /// * [accountId]   登录accountId
   /// * [token]     登录令牌
-  Future<NEResult<void>> loginWithToken(String accountId, String token);
+  Future<NEResult<void>> loginWithToken(String accountId, String token,
+      {int? startTime});
 
   /// 登录鉴权。在已登录状态下可以创建和加入会议，但在未登录状态下只能加入会议
   ///
   /// * [username]   登录账号
   /// * [password]   登录密码
-  Future<NEResult<void>> loginWithNEMeeting(String username, String password);
+  Future<NEResult<void>> loginWithNEMeeting(String username, String password,
+      {int? startTime});
 
   ///
   /// 匿名登录。该方法可支持在不登录正式账号的情况下，临时加入会议。
@@ -216,8 +227,15 @@ abstract class NEMeetingKit {
   NELiveMeetingService getLiveMeetingService();
 
   /// 注销当前已登录的账号
-  ///
   Future<NEResult<void>> logout();
+
+  /// 上传日志并返回日志下载地址
+  Future<NEResult<String?>> uploadLog();
+
+  ///
+  /// 埋点上报
+  ///
+  Future<dynamic> reportEvent(Event event, {String? userId});
 }
 
 /// SDK通用错误码

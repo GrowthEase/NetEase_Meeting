@@ -191,6 +191,13 @@ extension NEMeetingContext on NERoomContext {
   bool isHostOrCoHost(String? uuid) {
     return isHost(uuid) || isCoHost(uuid);
   }
+
+  void fillEventParams(IntervalEvent event) {
+    event
+      ..addParam(kEventParamMeetingId, meetingInfo.meetingId)
+      ..addParam(kEventParamMeetingNum, meetingInfo.meetingNum)
+      ..addParam(kEventParamRoomArchiveId, meetingInfo.roomArchiveId);
+  }
 }
 
 extension NEMeetingRtcController on NERoomRtcController {

@@ -43,6 +43,7 @@ class AuthManager {
     try {
       final cachedLoginInfo =
           LoginInfo.fromJson(jsonDecode(loginInfo as String) as Map);
+      cachedLoginInfo.nickname = null;
       _authInfoChanged.add(cachedLoginInfo);
       _loginInfo = cachedLoginInfo;
     } catch (e) {

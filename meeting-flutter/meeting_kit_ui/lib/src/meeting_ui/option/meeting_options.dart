@@ -57,8 +57,8 @@ class NEMeetingChatroomConfig {
 
   factory NEMeetingChatroomConfig.fromJson(Map? json) {
     return NEMeetingChatroomConfig(
-      enableFileMessage: json.getOrDefault('enableFileMessage', true),
-      enableImageMessage: json.getOrDefault('enableImageMessage', true),
+      enableFileMessage: json.getOrDefault('enableFileMessage', true) ?? true,
+      enableImageMessage: json.getOrDefault('enableImageMessage', true) ?? true,
     );
   }
 }

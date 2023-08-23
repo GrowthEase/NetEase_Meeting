@@ -97,6 +97,11 @@ class MeetingInfo {
   ///
   /// 对应 NERoom 房间ID
   ///
+  late final String? roomArchiveId;
+
+  ///
+  /// 对应 NERoom 房间ID
+  ///
   late final String roomUuid;
 
   ///
@@ -156,6 +161,7 @@ class MeetingInfo {
     meetingId = map['meetingId'] as int;
     meetingNum = map['meetingNum'] as String;
     roomUuid = map['roomUuid'] as String;
+    roomArchiveId = map['roomArchiveId'] as String?;
     type = MeetingTypeExtension.fromType(map['type'] as int);
     subject = map['subject'] as String;
     inviteUrl = map['meetingInviteUrl'] as String?;

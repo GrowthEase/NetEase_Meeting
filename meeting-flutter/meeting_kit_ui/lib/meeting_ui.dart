@@ -38,9 +38,9 @@ import 'package:netease_roomkit/netease_roomkit.dart';
 import 'package:netease_roomkit_interface/netease_roomkit_interface.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:async/async.dart';
+import 'package:path/path.dart' as path;
 
 export 'package:netease_meeting_core/meeting_kit.dart';
 export 'package:netease_meeting_ui/meeting_plugin.dart'

@@ -45,73 +45,71 @@ PODS:
     - NECoreKit
     - NIMSDK_LITE (>= 9.11.0)
     - YXAlog
-  - NECoreKit (9.6.0):
+  - NECoreKit (9.6.1):
     - YXAlog (= 1.0.7)
   - NEDyldYuv (0.0.1)
-  - NERoomKit (1.17.2):
-    - NECoreIMKit (>= 9.3.2)
-    - NECoreKit (>= 9.3.2)
-    - NERoomKit/Audio (= 1.17.2)
-    - NERoomKit/Base (= 1.17.2)
-    - NERoomKit/Beauty (= 1.17.2)
-    - NERoomKit/ScreenShare (= 1.17.2)
-    - NERoomKit/Segment (= 1.17.2)
-  - NERoomKit/Audio (1.17.2):
-    - NECoreIMKit (>= 9.3.2)
-    - NECoreKit (>= 9.3.2)
-    - NERtcSDK/AiDenoise (= 5.3.8)
-    - NERtcSDK/AiHowling (= 5.3.8)
-    - NERtcSDK/Nenn (= 5.3.8)
-  - NERoomKit/Base (1.17.2):
-    - NECoreIMKit (>= 9.3.2)
-    - NECoreKit (>= 9.3.2)
-    - NERtcSDK/RtcBasic (= 5.3.8)
+  - NERoomKit (1.19.0):
+    - NECoreIMKit (>= 9.6.1)
+    - NECoreKit (>= 9.6.1)
+    - NERoomKit/Audio (= 1.19.0)
+    - NERoomKit/Base (= 1.19.0)
+    - NERoomKit/Beauty (= 1.19.0)
+    - NERoomKit/ScreenShare (= 1.19.0)
+    - NERoomKit/Segment (= 1.19.0)
+  - NERoomKit/Audio (1.19.0):
+    - NECoreIMKit (>= 9.6.1)
+    - NECoreKit (>= 9.6.1)
+    - NERtcSDK/AiDenoise (= 5.4.3)
+    - NERtcSDK/AiHowling (= 5.4.3)
+    - NERtcSDK/Nenn (= 5.4.3)
+  - NERoomKit/Base (1.19.0):
+    - NECoreIMKit (>= 9.6.1)
+    - NECoreKit (>= 9.6.1)
+    - NERtcSDK/RtcBasic (= 5.4.3)
     - NIMSDK_LITE (= 9.12.0)
-  - NERoomKit/Beauty (1.17.2):
-    - NECoreIMKit (>= 9.3.2)
-    - NECoreKit (>= 9.3.2)
-    - NERtcSDK/Beauty (= 5.3.8)
-    - NERtcSDK/FaceDetect (= 5.3.8)
-    - NERtcSDK/Nenn (= 5.3.8)
-  - NERoomKit/ScreenShare (1.17.2):
-    - NECoreIMKit (>= 9.3.2)
-    - NECoreKit (>= 9.3.2)
-    - NERtcSDK/ScreenShare (= 5.3.8)
-  - NERoomKit/Segment (1.17.2):
-    - NECoreIMKit (>= 9.3.2)
-    - NECoreKit (>= 9.3.2)
-    - NERtcSDK/Nenn (= 5.3.8)
-    - NERtcSDK/Segment (= 5.3.8)
-  - NERtcSDK/AiDenoise (5.3.8)
-  - NERtcSDK/AiHowling (5.3.8)
-  - NERtcSDK/Beauty (5.3.8)
-  - NERtcSDK/FaceDetect (5.3.8)
-  - NERtcSDK/Nenn (5.3.8)
-  - NERtcSDK/RtcBasic (5.3.8)
-  - NERtcSDK/ScreenShare (5.3.8)
-  - NERtcSDK/Segment (5.3.8)
+  - NERoomKit/Beauty (1.19.0):
+    - NECoreIMKit (>= 9.6.1)
+    - NECoreKit (>= 9.6.1)
+    - NERtcSDK/Beauty (= 5.4.3)
+    - NERtcSDK/FaceDetect (= 5.4.3)
+    - NERtcSDK/Nenn (= 5.4.3)
+  - NERoomKit/ScreenShare (1.19.0):
+    - NECoreIMKit (>= 9.6.1)
+    - NECoreKit (>= 9.6.1)
+    - NERtcSDK/ScreenShare (= 5.4.3)
+  - NERoomKit/Segment (1.19.0):
+    - NECoreIMKit (>= 9.6.1)
+    - NECoreKit (>= 9.6.1)
+    - NERtcSDK/Nenn (= 5.4.3)
+    - NERtcSDK/Segment (= 5.4.3)
+  - NERtcSDK/AiDenoise (5.4.3)
+  - NERtcSDK/AiHowling (5.4.3)
+  - NERtcSDK/Beauty (5.4.3)
+  - NERtcSDK/FaceDetect (5.4.3)
+  - NERtcSDK/Nenn (5.4.3)
+  - NERtcSDK/RtcBasic (5.4.3)
+  - NERtcSDK/ScreenShare (5.4.3)
+  - NERtcSDK/Segment (5.4.3)
   - netease_meeting_ui (0.0.1):
     - Flutter
     - YXAlog
   - netease_roomkit (0.0.1):
     - Flutter
     - NEDyldYuv (= 0.0.1)
-    - NERoomKit (= 1.17.2)
+    - NERoomKit (= 1.19.0)
     - YXAlog
   - NIMSDK_LITE (9.12.0):
     - NIMSDK_LITE/NOS (= 9.12.0)
     - YXArtemis
   - NIMSDK_LITE/NOS (9.12.0):
     - YXArtemis
-  - nos (0.0.1):
-    - Flutter
   - open_filex (0.0.2):
     - Flutter
   - package_info (0.0.1):
     - Flutter
   - path_provider_ios (0.0.1):
     - Flutter
-  - permission_handler_apple (9.0.4):
+  - permission_handler_apple (9.1.1):
     - Flutter
   - Reachability (3.2)
   - SDWebImage (5.17.0):
@@ -141,7 +139,6 @@ DEPENDENCIES:
   - NERoomKit/ScreenShare
   - netease_meeting_ui (from `.symlinks/plugins/netease_meeting_ui/ios`)
   - netease_roomkit (from `.symlinks/plugins/netease_roomkit/ios`)
-  - nos (from `.symlinks/plugins/nos/ios`)
   - open_filex (from `.symlinks/plugins/open_filex/ios`)
   - package_info (from `.symlinks/plugins/package_info/ios`)
   - path_provider_ios (from `.symlinks/plugins/path_provider_ios/ios`)
@@ -181,8 +178,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/netease_meeting_ui/ios"
   netease_roomkit:
     :path: ".symlinks/plugins/netease_roomkit/ios"
-  nos:
-    :path: ".symlinks/plugins/nos/ios"
   open_filex:
     :path: ".symlinks/plugins/open_filex/ios"
   package_info:
@@ -208,31 +203,30 @@ SPEC CHECKSUMS:
   DKImagePickerController: b512c28220a2b8ac7419f21c491fc8534b7601ac
   DKPhotoGallery: fdfad5125a9fdda9cc57df834d49df790dbb4179
   file_picker: ce3938a0df3cc1ef404671531facef740d03f920
-  Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
+  Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
   NECoreIMKit: 194fb31c7c5e6aa35ef59b7ba493904ad4930ce4
-  NECoreKit: 130065d5172e7074e749ecee839b51355c2b1468
+  NECoreKit: c89aca832c8d0b097ef24e12bc9bfb498aa9dc3f
   NEDyldYuv: 6b47adff16186768bf2f8b165697fdee8e94d7ac
-  NERoomKit: 887cc3ab83527d542ec52d6e85f950d46ab63ce7
-  NERtcSDK: f27c9d9084c9d481682128d76e528042681a3247
+  NERoomKit: cc2537f627f3d72633dd141e926adc2db09a5ee1
+  NERtcSDK: 3ca71010128a8fcf87c0a6c4c27e42ee8f98105f
   netease_meeting_ui: 7307f3c7f1bc85bfe718be852aa25f079468000b
-  netease_roomkit: 70f00de371f8f551d1956563cc442e59ee87e389
+  netease_roomkit: 893989df7b98445f710a087b92b974c4bda211ef
   NIMSDK_LITE: f1a026f9df4f2cecab7c2ea9a9b2102a115440bf
-  nos: e45d078df0d039a6b72c7cbf975010b89954d7d5
   open_filex: 6e26e659846ec990262224a12ef1c528bb4edbe4
   package_info: 873975fc26034f0b863a300ad47e7f1ac6c7ec62
   path_provider_ios: 14f3d2fd28c4fdb42f44e0f751d12861c43cee02
-  permission_handler_apple: 44366e37eaf29454a1e7b1b7d736c2cceaeb17ce
+  permission_handler_apple: e76247795d700c14ea09e3a2d8855d41ee80a2e6
   Reachability: 33e18b67625424e47b6cde6d202dce689ad7af96
   SDWebImage: 750adf017a315a280c60fde706ab1e552a3ae4e9
   shared_preferences_ios: 548a61f8053b9b8a49ac19c1ffbc8b92c50d68ad
   SwiftyGif: 93a1cc87bf3a51916001cf8f3d63835fb64c819f
-  url_launcher_ios: ae1517e5e344f5544fb090b079e11f399dfbe4d2
+  url_launcher_ios: 08a3dfac5fb39e8759aeb0abbd5d9480f30fc8b4
   wakelock: d0fc7c864128eac40eba1617cb5264d9c940b46f
   webview_flutter_wkwebview: b7e70ef1ddded7e69c796c7390ee74180182971f
   yunxin_alog: c5532d2a6ab378baef9927fcae5ab19fe36c1103
   YXAlog: ac9bab3aff1326caa72cc25aedc358bc8d4f1b31
   YXArtemis: 1319acf00bb218406fc9ad7acc937a109c3647a2
 
-PODFILE CHECKSUM: 98ecd4315a4ef59d6cbf9c40fbc2c3fbd05a2f49
+PODFILE CHECKSUM: b1764d5de322d847dbf1dca60e8da97770b8c3b7
 
 COCOAPODS: 1.12.0

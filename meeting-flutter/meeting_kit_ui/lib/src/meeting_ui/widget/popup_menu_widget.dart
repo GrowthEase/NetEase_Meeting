@@ -53,7 +53,7 @@ class _PopupMenuWidgetState extends State<PopupMenuWidget> {
         height = context.size!.height;
       }
       button = context.findRenderObject() as RenderBox;
-      overlay = Overlay.of(context)!.context.findRenderObject() as RenderBox;
+      overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     });
   }
 
@@ -109,7 +109,7 @@ class _PopupMenuWidgetState extends State<PopupMenuWidget> {
     entry = OverlayEntry(builder: (context) {
       return menuWidget;
     });
-    Overlay.of(context)!.insert(entry!);
+    Overlay.of(context).insert(entry!);
     widget.onShow?.call();
   }
 

@@ -390,6 +390,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
       alignment: Alignment.center,
       child: TextField(
           key: MeetingUIValueKeys.inputMessageKey,
+          maxLines: null,
           focusNode: _focusNode,
           controller: _contentController,
           cursorColor: _UIColors.blue_337eff,
@@ -522,17 +523,27 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
     }
   }
 
-  void _realOpenFile(String path, String name) async {
+  void _realOpenFile(String filePath, String name) async {
     OpenResult? result;
     ResultType? resultType;
     String? error;
     try {
+      /// 如果path文件是个不带后缀名的文件，且name带文件后缀，则拼接上name的后缀名
+      final extension = path.extension(name);
+      if (path.extension(filePath).isEmpty && extension.isNotEmpty) {
+        final filePathWithExtension = '$filePath$extension';
+        if (await File(filePath).exists() &&
+            !(await File(filePathWithExtension).exists())) {
+          await File(filePath).rename(filePathWithExtension);
+        }
+        filePath = filePathWithExtension;
+      }
       String? mime;
       // cannot determine mime type from path, try to get from name
-      if (FileTypeUtils.getMimeType(path) == '*/*') {
+      if (FileTypeUtils.getMimeType(filePath) == '*/*') {
         mime = FileTypeUtils.getMimeType(name);
       }
-      result = await OpenFilex.open(path, type: mime);
+      result = await OpenFilex.open(filePath, type: mime);
     } catch (e) {
       resultType = ResultType.error;
       error = e.toString();
@@ -544,7 +555,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
     Alog.e(
       tag: _tag,
       moduleName: _moduleName,
-      content: "open file result: $path $resultType $error",
+      content: "open file result: $filePath $resultType $error",
     );
     if (!mounted) return;
     if (resultType == ResultType.noAppToOpen) {

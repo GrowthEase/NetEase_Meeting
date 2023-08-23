@@ -15,8 +15,8 @@ part of meeting_service;
 class SDKConfig {
   ///android version修改对应packages/meeting_sdk_android/gradle.properties的内容
   ///iOS version修改packages/meeting_sdk_ios/NEMeetingScript/spec/NEMeetingSDK.podspec的内容
-  static const String sdkVersionName = '3.14.0';
-  static const int sdkVersionCode = 31400;
+  static const String sdkVersionName = '3.15.0';
+  static const int sdkVersionCode = 31500;
   static const String sdkType = 'official'; //pub
 
   static const _tag = 'SDKConfig';
@@ -281,8 +281,8 @@ class MeetingChatroomServerConfig {
 
   factory MeetingChatroomServerConfig.fromJson(Map? json) {
     return MeetingChatroomServerConfig(
-      enableFileMessage: json.getOrDefault('enableFileMessage', true),
-      enableImageMessage: json.getOrDefault('enableImageMessage', true),
+      enableFileMessage: json.getOrDefault('enableFileMessage', true) ?? true,
+      enableImageMessage: json.getOrDefault('enableImageMessage', true) ?? true,
     );
   }
 }
@@ -303,7 +303,6 @@ class FunBaseConfig {
 
   BaseConfig? config;
 
-  @mustCallSuper
   FunBaseConfig.fromJson(Map<String, dynamic> json) {
     _status = json['status'] as int?;
     expireAt = json['expireAt'] as int?;

@@ -50,13 +50,16 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
         text: _arguments.live.title ?? _arguments.roomContext.roomName);
     initPassword();
     liveUidFromJson();
-    _handViewChange(updateState: false);
+    viewChange = !listEquals(_arguments.live.userUuidList,
+        _arguments.oldLiveInfo?.userUuidList ?? []);
+    _handViewChange();
     liveLayout = _arguments.live.liveLayout;
     chatRoomEnableSwitch = liveChatRoomEnable();
     liveLevelEnableSwitch = onlyEmployeesAllow();
     lifecycleListen(_arguments.roomInfoUpdatedEventStream, (_) {
       filterLiveUids();
       _handViewChange();
+      setState(() {});
     });
   }
 
@@ -104,11 +107,9 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
     return liveLayout;
   }
 
-  void _handViewChange({bool updateState = true}) {
-    viewChange = !listEquals(_arguments.live.userUuidList, liveUids);
-    if (updateState) {
-      setState(() {});
-    }
+  void _handViewChange() {
+    viewChange =
+        viewChange || !listEquals(_arguments.live.userUuidList, liveUids);
   }
 
   void initPassword() {
@@ -131,7 +132,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
         body: buildBody(),
       ),
       onWillPop: () async {
-        return false;
+        return true;
       },
     );
   }
@@ -157,7 +158,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
             ),
           ),
           onTap: () {
-            Navigator.pop(context);
+            Navigator.pop(context, false);
           },
         ));
   }
@@ -912,7 +913,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
       if (result.isSuccess()) {
         ToastUtils.showToast(
             context, NEMeetingUIKitLocalizations.of(context)!.liveStartSuccess);
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       } else {
         ToastUtils.showToast(
             context,
@@ -925,7 +926,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
       if (result.isSuccess()) {
         ToastUtils.showToast(context,
             NEMeetingUIKitLocalizations.of(context)!.liveUpdateSuccess);
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       } else {
         ToastUtils.showToast(
             context,
@@ -936,7 +937,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
       final result = await liveStreamController.stopLive();
       if (!mounted) return;
       if (result.isSuccess()) {
-        Navigator.pop(context);
+        Navigator.pop(context, true);
         ToastUtils.showToast(
             context, NEMeetingUIKitLocalizations.of(context)!.liveStopSuccess);
       } else {
