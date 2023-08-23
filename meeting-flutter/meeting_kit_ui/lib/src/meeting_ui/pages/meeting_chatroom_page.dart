@@ -390,7 +390,6 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
       alignment: Alignment.center,
       child: TextField(
           key: MeetingUIValueKeys.inputMessageKey,
-          maxLines: null,
           focusNode: _focusNode,
           controller: _contentController,
           cursorColor: _UIColors.blue_337eff,
@@ -436,6 +435,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
           return;
         }
         final message = OutTextMessage(_myNickname, content);
+        await _arguments.messageSource.ensureChatroomJoined();
         var result = await chatController.sendBroadcastTextMessage(content);
         sending = false;
         if (result.code == MeetingErrorCode.success) {
@@ -708,6 +708,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
           _arguments.messageSource.removeMessage(message);
           message = message.copy();
         }
+        await _arguments.messageSource.ensureChatroomJoined();
         if (message is OutImageMessage) {
           message.startSend(chatController.sendImageMessage(
             message.uuid,

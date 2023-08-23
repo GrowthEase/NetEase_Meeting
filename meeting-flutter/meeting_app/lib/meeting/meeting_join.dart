@@ -294,9 +294,11 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
       },
       onMeetingPageRouteWillPush: () async {
         LoadingUtil.cancelLoading();
+        if (!mounted) return;
         NavUtils.pop(context);
       },
     );
+    if (!mounted) return;
     final errorCode = result.code;
     final errorMessage = result.msg;
     LoadingUtil.cancelLoading();
@@ -324,6 +326,7 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
   @override
   void dispose() {
     _meetingIdController.dispose();
+    LoadingUtil.cancelLoading();
     super.dispose();
   }
 }

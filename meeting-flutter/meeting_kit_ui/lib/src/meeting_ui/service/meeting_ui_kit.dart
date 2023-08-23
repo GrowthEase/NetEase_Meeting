@@ -202,6 +202,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
   }) async {
     apiLogger.i('startMeetingUI');
     final event = IntervalEvent(kEventStartMeeting, startTime: startTime)
+      ..addParam(kEventParamMeetingNum, param.meetingNum ?? '')
       ..addParam(kEventParamType,
           (param.meetingNum?.isEmpty ?? true) ? 'random' : 'personal');
     param.trackingEvent = event;
@@ -271,6 +272,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
     if (param.trackingEvent == null) {
       param.trackingEvent =
           IntervalEvent(kEventJoinMeeting, startTime: startTime)
+            ..addParam(kEventParamMeetingNum, param.meetingNum)
             ..addParam(kEventParamType, 'normal');
     }
     final event = param.trackingEvent!;
@@ -308,6 +310,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
       apiLogger.i('anonymousJoinMeetingUI');
       final event = IntervalEvent(kEventJoinMeeting, startTime: startTime)
         ..addParam(kEventParamType, 'anonymous')
+        ..addParam(kEventParamMeetingNum, param.meetingNum)
         ..beginStep(kMeetingStepAnonymousLogin);
       param.trackingEvent = event;
       var loginResult = await NEMeetingKit.instance.anonymousLogin();

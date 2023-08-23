@@ -15,8 +15,8 @@ part of meeting_service;
 class SDKConfig {
   ///android version修改对应packages/meeting_sdk_android/gradle.properties的内容
   ///iOS version修改packages/meeting_sdk_ios/NEMeetingScript/spec/NEMeetingSDK.podspec的内容
-  static const String sdkVersionName = '3.15.0';
-  static const int sdkVersionCode = 31500;
+  static const String sdkVersionName = '3.15.2';
+  static const int sdkVersionCode = 31502;
   static const String sdkType = 'official'; //pub
 
   static const _tag = 'SDKConfig';

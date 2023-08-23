@@ -22,7 +22,7 @@ dependencies:
   device_info_plus: ^8.0.0
 
   yunxin_alog: ^2.0.0
-  netease_roomkit: 1.19.0
+  netease_roomkit: 1.19.2
 
 dev_dependencies:
   flutter_test:

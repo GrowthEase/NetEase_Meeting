@@ -280,6 +280,9 @@ class NEMeetingErrorCode {
   /// 会议密码错误
   static const int badPassword = NEErrorCode.badPassword;
 
+  /// 会议已回收
+  static const int meetingRecycled = MeetingErrorCode.meetingRecycled;
+
   /// 会议不存在
   static const int meetingNotExist = MeetingErrorCode.meetingNotExists;
 

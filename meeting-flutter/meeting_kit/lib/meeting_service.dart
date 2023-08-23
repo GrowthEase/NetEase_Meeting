@@ -139,6 +139,7 @@ class MeetingErrorCode {
   static const int roomNotInProgress = 2200;
   static const int notSupport = 3003;
   static const int meetingAlreadyExists = 3100;
+  static const int meetingRecycled = 3102;
   static const int meetingNotExists = 3104;
   static const int meetingWBExists = 1006;
 

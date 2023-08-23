@@ -274,5 +274,11 @@
   "switchFcusView": "Switch to Focus view",
   "switchGalleryView": "Switch to Gallery view",
   "noSupportSwitch": "iPad does not support switching modes",
-  "funcNotAvailableWhenInCallState": "Cannot use this feature while on a call"
+  "funcNotAvailableWhenInCallState": "Cannot use this feature while on a call",
+  "networkAbnormality": "Network abnormality",
+  "networkAbnormalityPleaseCheckYourNetwork": "Network abnormality, please check your network",
+  "networkReconnectionSuccessful": "Network reconnection successful",
+  "disconnectedTryingToReconnect": "Disconnected, trying to reconnect…",
+  "networkDisconnectedPleaseCheckYourNetworkStatusOrTryToRejoin": "Network disconnected, please check your network status or try to rejoin.",
+  "rejoining": "Rejoining"
 }
