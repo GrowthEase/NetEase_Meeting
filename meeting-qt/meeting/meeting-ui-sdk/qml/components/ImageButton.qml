@@ -1,21 +1,36 @@
 ﻿import QtQuick 2.15
-import QtQuick.Controls 1.4
-import QtQuick.Controls.Styles 1.4
 
-Button {
+Item {
     id: root
     property string normalImage: ""
     property string hoveredImage: ""
     property string pushedImage: ""
-    style: ButtonStyle {
-        background: Rectangle{
-            implicitHeight: root.height
-            implicitWidth:  root.width
-            color: "transparent"
-            BorderImage{
-                anchors.fill: parent
-                source: root.hovered ? (control.pressed ? pushedImage : hoveredImage) : normalImage;
+    signal clicked()
+    Image {
+        id: img
+        source: normalImage
+        anchors.fill: parent
+    }
+    MouseArea {
+        anchors.fill: parent
+        hoverEnabled: true
+        onPressed: {
+            img.source = pushedImage
+        }
+        onReleased: {
+            img.source = normalImage
+            if (containsMouse) {
+                // root.clicked()
             }
+        }
+        onEntered: {
+            img.source = hoveredImage
+        }
+        onExited: {
+            img.source = normalImage
+        }
+        onClicked: {
+            root.clicked()
         }
     }
 }

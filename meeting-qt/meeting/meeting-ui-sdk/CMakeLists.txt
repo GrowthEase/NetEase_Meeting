@@ -19,11 +19,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if (APPLE)
-    find_package(Qt5 COMPONENTS Core Quick QuickControls2 Gui Multimedia WebEngine Svg Sql MacExtras REQUIRED)
-else ()
-    find_package(Qt5 COMPONENTS Core Quick QuickControls2 Gui Multimedia WebEngine Svg Sql WinExtras REQUIRED)
-endif ()
+find_package(Qt6 COMPONENTS Core Quick QuickControls2 Gui Multimedia WebEngineQuick Sql Svg Core5Compat REQUIRED)
 
 file(GLOB_RECURSE MEETING_CLIENT_SOURCES *.cpp *.h)
 file(GLOB_RECURSE MEETING_CLIENT_MACOSX_SOURCES
@@ -135,27 +131,23 @@ if (APPLE)
         "-framework CoreVideo"
         "-framework AppKit"
         "-framework AVFoundation"
-        "-framework IOKit"
-        Qt5::MacExtras
     )
 else ()
-    target_link_libraries(${PROJECT_NAME} PRIVATE
-        Psapi
-        Qt5::WinExtras
-    )
+    target_link_libraries(${PROJECT_NAME} PRIVATE Psapi)
 endif ()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     ${CONAN_LIBS_ALOG}
     ${CONAN_LIBS_LIBYUV}
     ${CONAN_LIBS_ROOMKIT}
-    Qt5::Gui
-    Qt5::Quick
-    Qt5::Multimedia
-    Qt5::QuickControls2
-    Qt5::WebEngine
-    Qt5::Svg
-    Qt5::Sql
+    Qt6::Gui
+    Qt6::Quick
+    Qt6::Multimedia
+    Qt6::QuickControls2
+    Qt6::WebEngineQuick
+    Qt6::Sql
+    Qt6::Svg
+    Qt6::Core5Compat
     nem_hosting_module_client
 )
 

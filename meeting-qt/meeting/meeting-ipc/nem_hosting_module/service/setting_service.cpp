@@ -357,6 +357,27 @@ public:
             [this, cb]() { m_pSettingsService->SendData(SettingsCID::SettingsCID_isUnmuteBySpaceEnabled, NEMIPCProtocolEmptyBody(), cb); }));
     }
 
+    void setSharingSidebarViewMode(SharingSidebarViewMode viewMode, const NEEmptyCallback& cb) override {
+        if (!m_pSettingsService) {
+            cb(NEErrorCode::ERROR_CODE_NOT_IMPLEMENTED, "");
+            return;
+        }
+        m_pSettingsService->PostTaskToProcThread(m_pSettingsService->ToWeakCallback([this, viewMode, cb]() {
+            SettingsIntRequest request;
+            request.value_ = static_cast<int>(viewMode);
+            m_pSettingsService->SendData(SettingsCID::SettingsCID_setSharingSidebarViewMode, request, cb);
+        }));
+    }
+
+    void getSharingSidebarViewMode(const NESettingsService::NESharingSidebarViewModeCallback& cb) const override {
+        if (!m_pSettingsService) {
+            cb(NEErrorCode::ERROR_CODE_NOT_IMPLEMENTED, "", kSharingSidebarViewModeUnknown);
+            return;
+        }
+        m_pSettingsService->PostTaskToProcThread(m_pSettingsService->ToWeakCallback(
+            [this, cb]() { m_pSettingsService->SendData(SettingsCID::SettingsCID_getSharingSidebarViewMode, NEMIPCProtocolEmptyBody(), cb); }));
+    }
+
 private:
     NESettingsServiceIMP* m_pSettingsService = nullptr;
 };
@@ -613,13 +634,17 @@ NESettingsServiceIMP::NESettingsServiceIMP()
     , whiteboard_controller_(new NEWhiteboardControllerIMP(this))
     , record_controller_(new NERecordControllerIMP(this))
     , virtualBackground_controller_(new NEVirtualBackgroundControllerIMP(this)) {}
+
 NESettingsServiceIMP::~NESettingsServiceIMP() {}
+
 NEVideoController* NESettingsServiceIMP::GetVideoController() const {
     return video_controller_.get();
 }
+
 NEAudioController* NESettingsServiceIMP::GetAudioController() const {
     return audio_controller_.get();
 }
+
 NEOtherController* NESettingsServiceIMP::GetOtherController() const {
     return other_controller_.get();
 }
@@ -966,7 +991,8 @@ void NESettingsServiceIMP::OnPack(int cid, const std::string& data, const IPCAsy
             if (start_cb != nullptr)
                 start_cb(response.error_code_, response.error_msg_, response.status_);
         } break;
-        case SettingsCID::SettingsCID_setMyAudioDeviceUseLastSelected_CB: {
+        case SettingsCID::SettingsCID_setMyAudioDeviceUseLastSelected_CB:
+        case SettingsCID::SettingsCID_setSharingSidebarViewMode_CB: {
             NEMIPCProtocolErrorInfoBody response;
             if (!response.Parse(data))
                 response.error_code_ = NEErrorCode::ERROR_CODE_FAILED;
@@ -981,6 +1007,14 @@ void NESettingsServiceIMP::OnPack(int cid, const std::string& data, const IPCAsy
             NEBoolCallback start_cb = cb.GetResponseCallback<NEBoolCallback>();
             if (start_cb != nullptr)
                 start_cb(response.error_code_, response.error_msg_, response.status_);
+        } break;
+        case SettingsCID::SettingsCID_getSharingSidebarViewMode_CB: {
+            SettingsIntResponse response;
+            if (!response.Parse(data))
+                response.error_code_ = NEErrorCode::ERROR_CODE_FAILED;
+            NESharingSidebarViewModeCallback get_cb = cb.GetResponseCallback<NESharingSidebarViewModeCallback>();
+            if (get_cb != nullptr)
+                get_cb(response.error_code_, response.error_msg_, static_cast<SharingSidebarViewMode>(response.value_));
         } break;
     }
 }

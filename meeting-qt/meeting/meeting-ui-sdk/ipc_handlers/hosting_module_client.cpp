@@ -221,6 +221,8 @@ bool HostingModuleClient::InitLocalEnviroment(int port) {
                                         interface_code = MEETING_DISCONNECTING_CLOSED_BY_HOST;
                                     else if (errorCode == kNERoomEndReasonKickSelf)
                                         interface_code = MEETING_DISCONNECTING_REMOVED_BY_HOST;
+                                    //                                    else if (errorCode == kReasonAuthInfoExpired)
+                                    //                                        interface_code = MEETING_DISCONNECTING_AUTH_INFO_EXPIRED;
                                     else if (errorCode == kNERoomEndReasonUnKnown || errorCode == 30015)
                                         interface_code = MEETING_DISCONNECTING_BY_SERVER;
                                     break;

@@ -118,6 +118,7 @@ public:
     Q_PROPERTY(QString neUsername READ neUsername WRITE setNEUsername NOTIFY neUsernameChanged)
     Q_PROPERTY(bool isSupportRecord READ isSupportRecord WRITE setIsSupportRecord NOTIFY isSupportRecordChanged)
     Q_PROPERTY(bool isSupportLive READ isSupportLive WRITE setIsSupportLive NOTIFY isSupportLiveChanged)
+    Q_PROPERTY(qint64 lastMeetingDuration READ lastMeetingDuration WRITE setLastMeetingDuration NOTIFY lastMeetingDurationChanged)
 
     Q_INVOKABLE void initialize(const QString& appKey, const InitCallback& callback = nullptr);
     Q_INVOKABLE void unInitialize(const UnInitCallback& callback = nullptr);
@@ -200,6 +201,9 @@ public:
     bool isSupportLive() const;
     void setIsSupportLive(bool isSupportLive);
 
+    qint64 lastMeetingDuration() const;
+    void setLastMeetingDuration(qint64 lastMeetingDuration);
+
     void setAudioAINSEnabled(bool bAudioAINSEnabled);
 
     virtual void onKickOut() override;
@@ -231,6 +235,7 @@ signals:
     void resumeMeetingSignal(const QString& meetingId);
     void getMeetingUserListSignal(const QJsonArray& userList);
     void kickOut();
+    void lastMeetingDurationChanged();
 
 signals:
     void neAppKeyChanged();
@@ -265,6 +270,7 @@ private:
     void onSettingsChangedNotify();
     void initConfig();
     void dealwithNEPLauncher(bool bLogin);
+    std::string covertStatusToString(RunningStatus::Status status) const;
 
 private:
     QString m_switchAppKey;
@@ -273,23 +279,22 @@ private:
     AuthManager* m_pAuthManager = nullptr;
     HistoryManager* m_pHistoryManager = nullptr;
     /* ------------------------------------------- */
-
     QString m_NEUsername;
     QString m_NEAppKey;
     QString m_NEAccountId;
     QString m_NEAccountToken;
     NELoginType m_NELoginType;
-
     bool m_bUseNewAccountId = false;
-
     int m_nTryInitTimes = 0;
     int m_nCurrentMeetingStatus = 1;
-
+    qint64 m_nLastMeetingDuration = 0;
+    qint64 m_meetingDurationClock = 0;
     QString m_personalMeetingId;
     QString m_prettyMeetingId;
     QString m_shortPersonalMeetingId;
     QString m_displayName;
     bool m_bInitialized = false;
+    bool m_bConfigInitialized = false;
     bool m_bSupportRecord = true;
     bool m_bSupportLive = false;
     std::atomic_bool m_bAudioAINSEnabled;

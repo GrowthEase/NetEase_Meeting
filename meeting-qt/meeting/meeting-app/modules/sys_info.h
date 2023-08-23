@@ -14,6 +14,7 @@ public:
 
     static QString GetSystemManufacturer();
     static QString GetSystemProductName();
+    static QString GetCurrentCPUArchitecture();
 
 private:
     static QString ReadBisoValueFromReg(const QString& key);

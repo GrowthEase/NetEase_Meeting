@@ -6,12 +6,15 @@
 #include <QCryptographicHash>
 #include <QProcess>
 #include <QTimer>
+#include "sys_info.h"
+#if defined(Q_OS_MAC)
 #include "components/macxhelper.h"
+#endif
 #include "config_manager.h"
 #include "nemeeting_sdk_manager.h"
 
 #ifdef Q_OS_WIN
-#define SetUp_File QString updateFile = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/app/newSetup.exe";
+#define SetUp_File QString updateFile = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/app/newSetup.exe";
 #endif
 
 #ifdef Q_OS_LINUX
@@ -19,7 +22,7 @@
 #endif
 
 #ifdef Q_OS_MAC
-#define SetUp_File QString updateFile = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/app/newSetup.dmg";
+#define SetUp_File QString updateFile = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/app/newSetup.dmg";
 #endif
 
 QString UpdateInfoKey_latestVersionCode = "latestVersionCode";    // int 最新版本码
@@ -131,7 +134,7 @@ void ClientUpdater::lanchApp() {
     SetUp_File YXLOG(Info) << "Start installing updates." << YXLOGEnd;
     QStringList arguments;
     arguments << "/nim-update=true";
-    QProcess::startDetached(updateFile, arguments, QStandardPaths::writableLocation(QStandardPaths::DataLocation).append("/app"));
+    QProcess::startDetached(updateFile, arguments, QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).append("/app"));
 #elif defined(Q_OS_MACX)
     YXLOG(Info) << "Start lanchApp." << YXLOGEnd;
     QProcess::startDetached(qApp->applicationFilePath(), QStringList());
@@ -142,7 +145,7 @@ void ClientUpdater::checkUpdate() {
     if (ConfigManager::getInstance()->getPrivate()) {
         return;
     }
-    QString dir_path = QStandardPaths::writableLocation(QStandardPaths::DataLocation).append("/app");
+    QString dir_path = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation).append("/app");
     QDir updateInfoCatchDir(dir_path);
     if (!updateInfoCatchDir.exists()) {
         updateInfoCatchDir.mkpath(dir_path);
@@ -158,8 +161,8 @@ void ClientUpdater::checkUpdate() {
     SetUp_File if (QFile::exists(updateFile)) {
         QFile::remove(updateFile);
     }
-
-    AppCheckUpdateRequest checkUpdateRequest(getCurrentVersion(), m_pSDK != nullptr ? m_pSDK->neAccountId() : "");
+    auto cpuArch = SysInfo::GetCurrentCPUArchitecture();
+    AppCheckUpdateRequest checkUpdateRequest(getCurrentVersion(), m_pSDK != nullptr ? m_pSDK->neAccountId() : "", cpuArch, "qt");
     m_httpManager->postRequest(checkUpdateRequest, [this](int code, const QJsonObject& response) {
         ClientUpdateInfo rspUpdateInfo;
         QJsonObject clientUpdateInfo;
@@ -220,7 +223,7 @@ UpdateType ClientUpdater::doCheck(const ClientUpdateInfo& update_info) const {
 }
 
 bool ClientUpdater::update() {
-    QString updateInfoFile = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/app/update_info.cache";
+    QString updateInfoFile = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/app/update_info.cache";
     ClientUpdateInfo updateInfo;
     if (!ClientUpdateInfoSerializer::read(updateInfoFile, updateInfo)) {
         return false;
@@ -257,7 +260,7 @@ bool ClientUpdater::update() {
             }
             else if (QNetworkReply::NoError == code) {
                 do {
-                    QString updateInfoFile = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/app/update_info.cache";
+                    QString updateInfoFile = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/app/update_info.cache";
                     ClientUpdateInfo updateInfo;
                     if (!ClientUpdateInfoSerializer::read(updateInfoFile, updateInfo)) {
                         YXLOG(Error) << "Failed to open update cache file." << YXLOGEnd;

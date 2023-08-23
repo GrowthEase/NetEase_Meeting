@@ -3,13 +3,12 @@
 // found in the LICENSE file.
 
 #include "urs_jsBridge.h"
-#include "base/http_request.h"
-#include "version.h"
-
 #include <QDebug>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include "base/http_request.h"
+#include "version.h"
 
 URSJsBridge::URSJsBridge(QObject* parent)
     : QObject(parent) {}

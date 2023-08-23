@@ -136,7 +136,10 @@ void NEAuthServiceProcHandlerIMP::onLogout(bool cleanup, const NS_I_NEM_SDK::NEA
         ConfigManager::getInstance()->setValue("localNEAccountToken", "");
     }
 
-    Invoker::getInstance()->execute([=]() { AuthManager::getInstance()->doLogout(); });
+    Invoker::getInstance()->execute([=]() {
+        GlobalManager::getInstance()->showSettingsWnd(false);
+        AuthManager::getInstance()->doLogout();
+    });
 }
 
 void NEAuthServiceProcHandlerIMP::onAuthStatusChanged(NEAuthStatus status, const NEAuthStatusExCode& error) {

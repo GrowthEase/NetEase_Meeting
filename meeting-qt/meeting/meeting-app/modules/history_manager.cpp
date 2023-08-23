@@ -77,7 +77,7 @@ bool HistoryManager::cancelCollectFromHistory(int index, qint64 meetingUniqueID)
 bool HistoryManager::cancelCollectFromCollectList(int index, qint64 meetingUniqueID) {
     bool ret = DatabaseManager::getInstance()->updateHistoryCollectField(meetingUniqueID, false);
     if (ret) {
-        // m_collectMeetingList.remove(index); todo
+        m_collectMeetingList.remove(index);
         emit collectChanged(index);
     }
     return ret;

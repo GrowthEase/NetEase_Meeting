@@ -11,7 +11,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt5 COMPONENTS Core Widgets Quick QuickControls2 WebEngine Gui Sql REQUIRED)
+find_package(Qt6 COMPONENTS Core Widgets Quick QuickControls2 WebEngineQuick Gui Sql Core5Compat REQUIRED)
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/meeting
@@ -34,6 +34,7 @@ elseif (APPLE)
     add_executable(${PROJECT_NAME} MACOSX_BUNDLE
         ${MEETING_SAMPLE_SOURCES}
         ${MACOSX_BUNDLE_RESOURCES}
+        macx_helper.mm
         qml.qrc
     )
     set_source_files_properties(${MACOSX_BUNDLE_RESOURCES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
@@ -61,15 +62,25 @@ if (APPLE)
         "-framework AppKit"
         "-framework CoreVideo"
     )
+else ()
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        Qt6::Gui
+        Qt6::Widgets
+        Qt6::Quick
+        Qt6::QuickControls2
+        Qt6::Sql
+        Qt6::WebEngineQuick
+    )
 endif ()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-    Qt5::Gui
-    Qt5::Widgets
-    Qt5::Quick
-    Qt5::QuickControls2
-    Qt5::Sql
-    Qt5::WebEngine
+    Qt6::Gui
+    Qt6::Widgets
+    Qt6::Quick
+    Qt6::QuickControls2
+    Qt6::Sql
+    Qt6::WebEngineQuick
+    Qt6::Core5Compat
     nem_hosting_module
 )
 

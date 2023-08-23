@@ -5,17 +5,14 @@
 #include "http_manager.h"
 #include <QDebug>
 #include <QHostInfo>
-#include <QNetworkConfigurationManager>
 #include <QUuid>
 #include <mutex>
+#include <regex>
 
 HttpManager* HttpManager::m_instance = nullptr;
 
 HttpManager::HttpManager(QObject* parent)
-    : QObject(parent)
-    , m_accessManager(new QNetworkAccessManager(parent)) {
-    connect(m_accessManager, &QNetworkAccessManager::finished, this, &HttpManager::handleFinished);
-}
+    : QObject(parent) {}
 
 HttpManager::~HttpManager() {
     disconnect(m_accessManager, &QNetworkAccessManager::finished, this, &HttpManager::handleFinished);
@@ -80,6 +77,13 @@ void HttpManager::handleFinished(QNetworkReply* reply) {
 
             // successfully
             QJsonObject result = responseObject["data"].toObject();
+            result["requestId"] = responseObject["requestId"].toString();
+            result["msg"] = responseObject["msg"].toString();
+            auto costString = responseObject["cost"].toString().toStdString();
+            std::regex pattern("\\d+");
+            std::smatch match;
+            if (std::regex_search(costString, match, pattern))
+                result["cost"] = std::stoi(match.str());
             userCallback(code, result);
         } while (false);
     }
@@ -99,7 +103,6 @@ void HttpManager::handleFinished(QNetworkReply* reply) {
         m_listNetworkReply.erase(it);
     }
     reply->deleteLater();
-    accessManager->deleteLater();
 }
 
 void HttpManager::abort() {
@@ -115,10 +118,10 @@ void HttpManager::abort() {
 }
 
 bool HttpManager::checkNetWorkOnline() {
-    QNetworkConfigurationManager mgr;
-    if (!mgr.isOnline()) {
-        return false;
-    }
+    // QNetworkConfigurationManager mgr;
+    // if (!mgr.isOnline()) {
+    //     return false;
+    // }
 
     QEventLoop loop;
     QHostInfo::lookupHost("www.baidu.com", this, [=, &loop](QHostInfo host) {
@@ -134,23 +137,31 @@ void HttpManager::invokeRequest(const IHttpRequest& request, const Methods& meth
     QVariant callbackVariant;
     callbackVariant.setValue(callback);
 
+#if 0
+    if (m_accessManager == nullptr) {
+        m_accessManager = new QNetworkAccessManager(this);
+        connect(m_accessManager, &QNetworkAccessManager::finished, this, &HttpManager::handleFinished);
+    }
+#else
+    m_accessManager = new QNetworkAccessManager(this);
+    connect(m_accessManager, &QNetworkAccessManager::finished, this, &HttpManager::handleFinished);
+#endif
+
     auto req = request;
     req.setAttribute(QNetworkRequest::Http2AllowedAttribute, false);
     QNetworkReply* reply = nullptr;
-    auto* accessManager = new QNetworkAccessManager(this);
-    connect(accessManager, &QNetworkAccessManager::finished, this, &HttpManager::handleFinished);
     switch (method) {
         case Methods::GET:
-            reply = accessManager->get(request);
+            reply = m_accessManager->get(req);
             break;
         case Methods::POST:
-            reply = accessManager->post(request, request.getParams());
+            reply = m_accessManager->post(req, req.getParams());
             break;
         case Methods::PUT:
-            reply = accessManager->put(request, request.getParams());
+            reply = m_accessManager->put(req, req.getParams());
             break;
         case Methods::DELETE:
-            reply = accessManager->deleteResource(request);
+            reply = m_accessManager->deleteResource(req);
             break;
         default:
             break;
@@ -158,7 +169,6 @@ void HttpManager::invokeRequest(const IHttpRequest& request, const Methods& meth
     reply->setProperty("requestId", requestId);
     reply->setProperty("callback", callbackVariant);
     reply->setProperty("displayDetails", req.displayDetails());
-    //    m_listNetworkReply.push_back(reply);
 
     if (req.displayDetails()) {
         auto headers = req.rawHeaderList();

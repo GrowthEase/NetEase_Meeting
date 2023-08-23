@@ -86,6 +86,20 @@ enum AudioDeviceAutoSelectType {
 };
 
 /**
+ * @brief 屏幕共享侧边栏展示模式
+ */
+enum SharingSidebarViewMode {
+    /// @brief 未知模式
+    kSharingSidebarViewModeUnknown = -1,
+    /// @brief 最小化模式
+    kSharingSidebarViewModeMin,
+    /// @brief 只显示共享者
+    kSharingSidebarViewModeSingle,
+    /// @brief 多人显示模式
+    kSharingSidebarViewModeMultiple,
+};
+
+/**
  * @brief 自定义虚拟背景
  */
 typedef struct tagNEMeetingVirtualBackground {

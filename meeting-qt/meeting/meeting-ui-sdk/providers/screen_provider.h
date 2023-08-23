@@ -5,18 +5,19 @@
 #ifndef DESKTOPPROVIDER_H
 #define DESKTOPPROVIDER_H
 
-#include <QAbstractVideoSurface>
 #include <QDebug>
 #include <QGuiApplication>
 #include <QObject>
 #include <QPixmap>
+#include <QPointer>
 #include <QScreen>
 #include <QTimer>
-#include <QVideoSurfaceFormat>
+#include <QVideoFrame>
+#include <QVideoSink>
 
 class ScreenProvider : public QObject {
     Q_OBJECT
-    Q_PROPERTY(QAbstractVideoSurface* videoSurface READ videoSurface WRITE setVideoSurface)
+    Q_PROPERTY(QVideoSink* videoSink READ videoSink WRITE setVideoSink NOTIFY videoSinkChanged)
     Q_PROPERTY(int screenIndex READ screenIndex WRITE setScreenIndex)
     Q_PROPERTY(bool capture READ capture WRITE setCapture NOTIFY captureChanged)
 
@@ -24,8 +25,8 @@ public:
     explicit ScreenProvider(QObject* parent = nullptr);
     ~ScreenProvider();
 
-    QAbstractVideoSurface* videoSurface() const { return m_videoSurface; }
-    void setVideoSurface(QAbstractVideoSurface* videoSurface);
+    QVideoSink* videoSink() const { return m_videoSink; }
+    void setVideoSink(QVideoSink* videoSink);
 
     int screenIndex() const;
     void setScreenIndex(int screenIndex);
@@ -34,6 +35,7 @@ public:
     void setCapture(bool capture);
 
 signals:
+    void videoSinkChanged();
     void providerInvalidated();
     void captureChanged();
     void screenPictureReceived(const QVideoFrame& frame, const QSize& videoSize);
@@ -43,8 +45,7 @@ public slots:
     void deliverFrame(const QVideoFrame& frame, const QSize& videoSize);
 
 private:
-    QVideoSurfaceFormat m_videoFormat;
-    QAbstractVideoSurface* m_videoSurface;
+    QPointer<QVideoSink> m_videoSink;
     QTimer m_captureTimer;
     int m_screenIndex = 0;
     bool m_capture = false;

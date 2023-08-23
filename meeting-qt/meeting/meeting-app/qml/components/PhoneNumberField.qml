@@ -9,8 +9,8 @@ CustomTextField {
     selectByMouse: true
     font.pixelSize: 17
     leftPadding: 90
-    validator: RegExpValidator {
-        regExp: /\d{3}|\d{3}-|\d{3}-\d{4}-|\d{3}-\d{4}-\d{4}/
+    validator: RegularExpressionValidator {
+        regularExpression: /\d{3}|\d{3}-|\d{3}-\d{4}-|\d{3}-\d{4}-\d{4}/
     }
     onTextChanged: {
         if (control.length > lastLengthOfNumber) {

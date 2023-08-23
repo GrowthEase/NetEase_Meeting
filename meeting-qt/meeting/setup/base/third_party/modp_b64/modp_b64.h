@@ -43,7 +43,7 @@ extern "C" {
  *    i.e.  the result will be equal to strlen(dest) + 1
  *
  * Example
- *
+ * 
  * \code
  * char* src = ...;
  * int srclen = ...; //the length of number of bytes in src
@@ -92,7 +92,7 @@ int modp_b64_decode(char* dest, const char* src, int len);
  *
  * +1 is for any extra null.
  */
-#define modp_b64_encode_len(A) ((A + 2) / 3 * 4 + 1)
+#define modp_b64_encode_len(A) ((A+2)/3 * 4 + 1)
 
 /**
  * Given a base64 string of length len,
@@ -128,14 +128,15 @@ int modp_b64_decode(char* dest, const char* src, int len);
  * // foo is filled out now
  * \endcode
  */
-#define modp_b64_encode_strlen(A) ((A + 2) / 3 * 4)
+#define modp_b64_encode_strlen(A) ((A + 2)/ 3 * 4)
 
 #ifdef __cplusplus
 }
 
 #include <string>
 
-inline std::string& modp_b64_encode(std::string& s) {
+inline std::string& modp_b64_encode(std::string& s)
+{
     std::string x(modp_b64_encode_len(s.size()), '\0');
     int d = modp_b64_encode(&x[0], s.data(), s.size());
     x.erase(d, std::string::npos);
@@ -152,7 +153,8 @@ inline std::string& modp_b64_encode(std::string& s) {
  * \param[in,out] s the string to be decoded
  * \return a reference to the input string
  */
-inline std::string& modp_b64_decode(std::string& s) {
+inline std::string& modp_b64_decode(std::string& s)
+{
     std::string x(modp_b64_decode_len(s.size()), '\0');
     int d = modp_b64_decode(const_cast<char*>(x.data()), s.data(), s.size());
     if (d < 0) {

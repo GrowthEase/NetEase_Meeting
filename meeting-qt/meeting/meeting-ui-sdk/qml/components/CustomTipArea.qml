@@ -36,6 +36,7 @@ Rectangle {
         text: description
         width: root.width
         maximumLineCount: 2
+        color: "#333333"
         anchors.left: idWarning.right
         anchors.leftMargin: 8
         anchors.verticalCenter: parent.verticalCenter

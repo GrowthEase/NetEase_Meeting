@@ -1,3 +1,50 @@
+# v3.15.0(Aug 11, 2023)
+
+### New Features
+* 增加设置和获取屏幕共享视频侧边栏展示方式接口 `NEOtherController::setSharingSidebarViewMode`，`NEOtherController::getSharingSidebarViewMode`
+* 增加对音视频流加密支持 `NEMeetingParams::NEEncryptionConfig`
+
+### Bug Fixes
+* 修复网格视图中间有过大间隙问题
+* 修复网格视图模式下拖动窗口出现闪烁问题
+* 修复在收到取消联席主持人身份通知时没有将结束会议的弹窗关闭问题
+* 修复部分场景下加入会议会看到上一次会议打开的弹窗问题
+* 修复共享时成员管理窗口右键菜单在窗口关闭并重新打开后依然显示问题
+* 修复部分场景下未展示主持人关闭音视频通知的问题
+* 修复个别场景下在停止共享后依然可以看到共享应用的边框问题
+* 修复以管理员身份运行无法使用白板问题
+* 修复白板中无法下载文件问题
+* 修复切换账号时没有重新获取账户配置信息问题
+* 修复可以多次运行主会议应用问题
+* 修复清理会议历史后没有弹出提示问题
+* 修复重复加入历史收藏的会议时，收藏的会议被删除问题
+* 修复相同账号两端同时创建不同会议时没有回调及崩溃问题
+* 修复直播界面在共享者结束共享后默认选择的视图不正确问题
+* 修复直播设置界面 GridLayout 引起的崩溃问题
+* 修复屏幕共享失败没有提示问题
+* 修复 Windows 下窗口最小化还原出现一条白色边缘线问题
+
+### Behavior changes
+* 加入带密码会议时会在验证密码成功后先切换到 `NEMeeting::MEETING_CONNECTING` 状态
+* 调整焦点视图模式上方小窗口的宽度为总窗口宽度的 15%，跟随窗口宽度变更
+
+### Compatibility
+* Compatible with `NERoomKit` version `1.19.0`.
+
+# v3.14.0(Jul 6, 2023)
+
+### New Features
+* 增加会议生命周期管理模块用于统计创建/加入会议等场景成功率及耗时
+* 创建会议时增加 subject 参数用于自定义会议主题
+
+### Bug Fixes
+* 修复登出时未隐藏设置窗口问题
+* 修复日志中大量 `Detected anchors on an item that is managed by a layout` 错误
+* 修复因成员网络状态变更引起的崩溃
+
+### Compatibility
+* Compatible with `NERoomKit` version `1.17.0`.
+
 # v3.10.0(Mar 23, 2023)
 
 ### Bug Fixes

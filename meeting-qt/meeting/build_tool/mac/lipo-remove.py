@@ -45,9 +45,11 @@ if __name__ == '__main__':
 
     framework_path = os.path.join(os.getcwd(), args.file, 'Contents/Frameworks')
     plugin_path = os.path.join(os.getcwd(), args.file, 'Contents/PlugIns')
+    library_path = os.path.join(os.getcwd(), args.file, 'Contents/Frameworks')
 
     files = list_frameworks(framework_path, r".+\.framework$")
     files += list_libraries(plugin_path, '.dylib')
+    files += list_libraries(library_path, '.dylib')
     files.append(os.path.join(os.getcwd(), args.file, 'Contents/Frameworks/QtWebEngineCore.framework/Versions/A/Helpers/QtWebEngineProcess.app/Contents/MacOS/QtWebEngineProcess'))
     for file in files:
         archs = get_exec_arch(file)

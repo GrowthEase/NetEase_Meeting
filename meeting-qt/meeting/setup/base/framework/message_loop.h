@@ -82,13 +82,9 @@ public:
 #endif
     // UvMessageLoop* ToUvMessageLoop();
 
-    MessagePump* pump() {
-        return pump_.get();
-    }
+    MessagePump* pump() { return pump_.get(); }
 
-    Type type() const {
-        return type_;
-    }
+    Type type() const { return type_; }
 
     // 运行MessageLoop
     void Run();
@@ -143,9 +139,7 @@ public:
     // - 如果此时嵌套任务处理被启用，那么Task #2将立即被执行（不管Task #1是否已经结束），
     //   否则，Task #2将在Task #1被执行完成后再在线程的MessageLoop中执行。
     void SetNestableTasksAllowed(bool allowed);
-    bool IsNestableTasksAllowed() const {
-        return nestable_tasks_allowed_;
-    }
+    bool IsNestableTasksAllowed() const { return nestable_tasks_allowed_; }
     bool IsNested() const {
         if (state_)
             return state_->run_depth > 1;
@@ -154,9 +148,7 @@ public:
 
     // MessageLoopProxy提供跨线程安全访问MessageLoop的机制，
     // 所有非线程内的PostTask族函数必须通过MessageLoopProxy调用
-    scoped_refptr<MessageLoopProxy> message_loop_proxy() {
-        return message_loop_proxy_.get();
-    }
+    scoped_refptr<MessageLoopProxy> message_loop_proxy() { return message_loop_proxy_.get(); }
 
     // MessageLoop销毁观察者，MessageLoop销毁前将会通知这些观察者
     class BASE_EXPORT DestructionObserver {
@@ -182,12 +174,8 @@ public:
     void RemoveTaskObserver(TaskObserver* observer);
 
 #if defined(OS_WIN)
-    bool os_modal_loop() const {
-        return os_modal_loop_;
-    }
-    void set_os_modal_loop(bool os_modal_loop) {
-        os_modal_loop_ = os_modal_loop;
-    }
+    bool os_modal_loop() const { return os_modal_loop_; }
+    void set_os_modal_loop(bool os_modal_loop) { os_modal_loop_ = os_modal_loop; }
 #endif  // OS_WIN
 
 protected:
@@ -328,9 +316,7 @@ public:
 
     UIMessageLoop();
 
-    static UIMessageLoop* current() {
-        return reinterpret_cast<UIMessageLoop*>(MessageLoop::current());
-    }
+    static UIMessageLoop* current() { return reinterpret_cast<UIMessageLoop*>(MessageLoop::current()); }
 
     void AddUIObserver(UIObserver* observer);
     void RemoveUIObserver(UIObserver* observer);
@@ -357,9 +343,7 @@ public:
 
     IOMessageLoop();
 
-    static IOMessageLoop* current() {
-        return reinterpret_cast<IOMessageLoop*>(MessageLoop::current());
-    }
+    static IOMessageLoop* current() { return reinterpret_cast<IOMessageLoop*>(MessageLoop::current()); }
 
     void AddIOObserver(IOObserver* observer);
     void RemoveIOObserver(IOObserver* observer);

@@ -3,6 +3,10 @@
 // found in the LICENSE file.
 
 #include "screensaver.h"
+#if defined(Q_OS_WIN)
+#include "Windows.h"
+#endif
+
 ScreenSaver::ScreenSaver(QObject* parent)
     : QObject(parent) {
     m_pTimer = new QTimer(this);
@@ -29,7 +33,9 @@ void ScreenSaver::setScreenSaverEnabled(bool enabled) {
 }
 
 void ScreenSaver::activityTimeout() {
-#if defined(_WIN32)
+    //    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+    //    mouse_event(MOUSEEVENTF_LEFTUP,0,0,0,0);
+#if defined(Q_OS_WIN32)
     keybd_event(VK_RCONTROL, 0, 0, 0);
     keybd_event(VK_RCONTROL, 0, KEYEVENTF_KEYUP, 0);
 #endif

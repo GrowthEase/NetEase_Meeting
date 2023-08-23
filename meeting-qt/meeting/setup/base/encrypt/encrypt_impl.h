@@ -263,9 +263,7 @@ public:
         return true;
     }
 
-    bool SetPaddingMode(int padding_mode) {
-        return false;
-    }
+    bool SetPaddingMode(int padding_mode) { return false; }
 
 private:
     const EVP_CIPHER* chiper() {
@@ -753,9 +751,7 @@ public:
         key2.assign(key1);
         return true;
     }
-    bool SetPaddingMode(int padding_mode) {
-        return false;
-    }
+    bool SetPaddingMode(int padding_mode) { return false; }
 
 private:
     const EVP_CIPHER* chiper() {

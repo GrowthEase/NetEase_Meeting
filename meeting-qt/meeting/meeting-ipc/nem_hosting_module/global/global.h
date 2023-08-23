@@ -91,7 +91,7 @@ private:
     void OnIPCClientClosed();
 
 private:
-    void OnPack_InitCallback(const std::string& data, const IPCAsyncResponseCallback& cb);
+    void OnPack_InitCallback(const std::string& data, const IPCAsyncResponseCallback& cb); 
 
 private:
     std::atomic_bool inited_;

@@ -95,7 +95,7 @@ bool LiveManager::startLive(QJsonObject liveParams) {
 
     auto liveController = MeetingManager::getInstance()->getLiveController();
     if (liveController) {
-        liveController->startLive(live, [this](int code, const std::string& msg) {
+        liveController->startLive(live, [this](int code, const std::string& msg, const NERoomLiveInfo& liveInfo) {
             YXLOG(Info) << "startLive code: " << code << YXLOGEnd;
             YXLOG(Info) << "startLive msg: " << msg << YXLOGEnd;
 

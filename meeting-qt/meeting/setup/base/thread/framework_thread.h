@@ -125,25 +125,17 @@ public:
     // NOTE: You must not call this MessageLoop's Quit method directly.  Use
     // the Thread's Stop method instead.
     //
-    MessageLoop* message_loop() const {
-        return message_loop_;
-    }
+    MessageLoop* message_loop() const { return message_loop_; }
 
     // Set the name of this thread (for display in debugger too).
-    const std::string& thread_name() {
-        return name_;
-    }
+    const std::string& thread_name() { return name_; }
 
     // Returns true if the thread has been started, and not yet stopped.
     // When a thread is running, |thread_id_| is a valid id.
-    bool IsRunning() const {
-        return (Thread::thread_id() != kInvalidThreadId) ? true : false;
-    }
+    bool IsRunning() const { return (Thread::thread_id() != kInvalidThreadId) ? true : false; }
 
     // Returns true if the thread's stopping flag is set
-    bool IsStopping() const {
-        return stopping_;
-    }
+    bool IsStopping() const { return stopping_; }
 
     // Get the current thread
     // must be called in Run or in its children methods
@@ -182,14 +174,10 @@ protected:
     static void SetThreadWasQuitProperly(bool flag);
     static bool GetThreadWasQuitProperly();
 
-    void set_message_loop(MessageLoop* message_loop) {
-        message_loop_ = message_loop;
-    }
+    void set_message_loop(MessageLoop* message_loop) { message_loop_ = message_loop; }
 
 private:
-    bool thread_was_started() const {
-        return started_;
-    }
+    bool thread_was_started() const { return started_; }
     void DoStopSoon();
 
     // Whether we successfully started the thread.

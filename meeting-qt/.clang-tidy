@@ -79,15 +79,15 @@ CheckOptions:
   - key: readability-identifier-naming.FunctionCase
     value: aNy_CasE
   - key: readability-identifier-naming.LocalVariableCase
-    value: lower_case
+    value: camelBack
   - key: readability-identifier-naming.ClassMemberCase
-    value: lower_case
+    value: camelBack
   - key: readability-identifier-naming.ClassMemberSuffix
     value: _
   - key: readability-identifier-naming.PrivateMemberSuffix
     value: _
   - key: readability-identifier-naming.ConstantMemberCase
-    value: CamelCase
+    value: camelBack
   - key: readability-identifier-naming.ConstantMemberPrefix
     value: k
   - key: readability-identifier-naming.ProtectedMemberSuffix

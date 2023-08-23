@@ -98,13 +98,14 @@ void MembersManager::onUserJoined(const SharedMemberPtr& member, bool bNotify) {
             info.sharing = member->getIsSharingScreen();
             info.isWhiteboardEnable = false;
             info.isWhiteboardShareOwner = info.accountId == WhiteboardManager::getInstance()->whiteboardSharerAccountId();
+            info.createdAt = QDateTime::currentMSecsSinceEpoch();
             convertPropertiesToMember(member->getProperties(), info);
 
             if (info.accountId == AuthManager::getInstance()->authAccountId()) {
                 AudioManager::getInstance()->setLocalAudioStatus(member->getIsAudioOn() ? NEMeeting::DEVICE_ENABLED
-                                                                                        : NEMeeting::DEVICE_DISABLED_BY_DELF);
+                                                                                        : NEMeeting::DEVICE_DISABLED_BY_SELF);
                 VideoManager::getInstance()->setLocalVideoStatus(member->getIsVideoOn() ? NEMeeting::DEVICE_ENABLED
-                                                                                        : NEMeeting::DEVICE_DISABLED_BY_DELF);
+                                                                                        : NEMeeting::DEVICE_DISABLED_BY_SELF);
                 m_items.insert(0, info);
             } else {
                 m_items.append(info);
@@ -180,7 +181,7 @@ void MembersManager::onManagerChanged(const std::string& managerAccountId, bool 
             }
         } else {
             for (auto iter = m_managerList.begin(); iter != m_managerList.end(); ++iter) {
-                if (iter == qstrManagerAccountId) {
+                if (*iter == qstrManagerAccountId) {
                     m_managerList.erase(iter);
                     break;
                 }
@@ -378,6 +379,7 @@ void MembersManager::pagingFocusView(quint32 pageSize, quint32 pageNumber) {
         member[kMemberSharingStatus] = member_item.sharing;
         member[kMemberAudioHandsUpStatus] = member_item.handsupStatus;
         member[kMemberClientType] = member_item.clientType;
+        member[kMemberCreatedAt] = member_item.createdAt;
         pagedMembers.push_back(member);
     }
 
@@ -389,6 +391,7 @@ void MembersManager::pagingFocusView(quint32 pageSize, quint32 pageNumber) {
     primaryMember[kMemberSharingStatus] = primaryMemberInfo.sharing;
     primaryMember[kMemberAudioHandsUpStatus] = primaryMemberInfo.handsupStatus;
     primaryMember[kMemberClientType] = primaryMemberInfo.clientType;
+    primaryMember[kMemberCreatedAt] = primaryMemberInfo.createdAt;
 
     YXLOG(Debug) << "-------------------------------------------------" << YXLOGEnd;
     YXLOG(Debug) << "Focus view, primary member: " << primaryMemberInfo.accountId.toStdString() << YXLOGEnd;
@@ -472,17 +475,9 @@ void MembersManager::pagingGalleryView(quint32 pageSize, quint32 pageNumber) {
         member[kMemberAudioStatus] = member_item.audioStatus;
         member[kMemberVideoStatus] = member_item.videoStatus;
         member[kMemberSharingStatus] = member_item.sharing;
+        member[kMemberCreatedAt] = member_item.createdAt;
         pagedMembers.push_back(member);
     }
-
-    //        QJsonObject selfMember;
-    //        auto& firstMember = members.front();
-    //        selfMember[kMemberAccountId] = firstMember.accountId;
-    //        selfMember[kMemberNickname] = firstMember.nickname;
-    //        selfMember[kMemberAudioStatus] = firstMember.audioStatus;
-    //        selfMember[kMemberVideoStatus] = firstMember.videoStatus;
-    //        selfMember[kMemberSharingStatus] = firstMember.sharing;
-    //        pagedMembers.push_front(selfMember);
 
     YXLOG(Debug) << "-------------------------------------------------" << YXLOGEnd;
     for (int i = 0; i < pagedMembers.size(); i++) {
@@ -724,8 +719,13 @@ void MembersManager::allowRemoteMemberHandsUp(const QString& accountId, bool bAl
 }
 
 void MembersManager::handsUp(bool bHandsUp) {
-    m_membersController->raiseMyHand(
-        bHandsUp, std::bind(&MeetingManager::onError, MeetingManager::getInstance(), std::placeholders::_1, std::placeholders::_2));
+    m_membersController->raiseMyHand(bHandsUp, [this, bHandsUp](int code, const std::string& message) {
+        if (code != 0)
+            MeetingManager::getInstance()->onError(code, message);
+        else {
+            setHandsUpStatus(bHandsUp);
+        }
+    });
 }
 
 void MembersManager::muteRemoteVideoAndAudio(const QString& accountId, bool mute) {
@@ -738,21 +738,13 @@ void MembersManager::onHandsUpStatusChangedUI(const QString& accountId, NEMeetin
     YXLOG(Info) << "onHandsUpStatusChangedUI accountId: " << accountId.toStdString() << ", audio handstatus: " << status << YXLOGEnd;
     auto authInfo = AuthManager::getInstance()->getAuthInfo();
     if (authInfo.accountId == accountId.toStdString()) {
-        if (status == NEMeeting::HAND_STATUS_RAISE) {
-            m_bHandsUp = true;
-        } else {
-            m_bHandsUp = false;
-        }
+        setHandsUpStatus(status == NEMeeting::HAND_STATUS_RAISE);
     }
 
     if (status == NEMeeting::HAND_STATUS_RAISE) {
-        m_nHandsUpCount++;
+        setHandsUpCount(m_nHandsUpCount + 1);
     } else {
-        m_nHandsUpCount--;
-    }
-
-    if (authInfo.accountId == m_hostAccountId.toStdString()) {
-        emit handsUpCountChange();
+        setHandsUpCount(m_nHandsUpCount - 1);
     }
 
     emit handsupStatusChanged(accountId, status);

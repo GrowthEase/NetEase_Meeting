@@ -47,9 +47,7 @@ public:
 
     // Return the native underlying lock.  Not supported for Windows builds.
 #if !defined(OS_WIN)
-    OSLockType* os_lock() {
-        return &os_lock_;
-    }
+    OSLockType* os_lock() { return &os_lock_; }
 #endif
 
 private:

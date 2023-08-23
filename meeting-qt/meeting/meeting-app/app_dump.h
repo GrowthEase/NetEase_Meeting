@@ -60,7 +60,7 @@ void WriteDump(EXCEPTION_POINTERS* exp, const std::wstring& path) {
 }
 
 LONG WINAPI MyUnhandledExceptionFilter(EXCEPTION_POINTERS* exp) {
-    QString app_dir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    QString app_dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
     app_dir.append("/app");
     QDateTime current_date_time = QDateTime::currentDateTime();
     QString dump_dir = app_dir + "/meeting_" + current_date_time.toString("yyyyMMdd_hhmmss") + ".dmp";

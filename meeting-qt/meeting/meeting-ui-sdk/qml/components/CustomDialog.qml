@@ -13,6 +13,7 @@ Dialog {
     topInset: 0
     bottomInset: 0
     margins: 0
+    dim: false
 
     Accessible.name: text
 

@@ -19,6 +19,10 @@ public:
         std::wstring title;
         std::string app;
     };
+    typedef struct {
+        std::string findClassName;
+        std::list<HWND> hWndList;
+    } EnumWindowParam;
     typedef std::vector<CaptureTargetInfo> CaptureTargetInfoList;
 
     WindowsHelpers();
@@ -46,6 +50,7 @@ public:
     bool getActiveWindow(HWND hWnd) const;
     bool getFocusWindow(HWND hWnd) const;
     bool getDisplayRect(HWND hWnd, QRectF& rect, QRectF& availableRect, bool bPpt = false) const;
+    void adjustRectWithRatio(const QScreen* screen, const QRect& in, QRect& out) const;
 
     bool static getFileVersion(const wchar_t* file_path, WORD* major_version, WORD* minor_version, WORD* build_number, WORD* revision_number);
     int static getNTDLLVersion();
@@ -60,6 +65,12 @@ private:
     BOOL findFullScreenWindow(DWORD& dwProcessID, std::string& strProcessName, HWND& hWnd, bool& bPowerpnt);
     // 根据进程id获得进程名
     std::string getModuleNameByPid(DWORD dwPid);
+    // 根据名称获取进程 ID
+    BOOL GetProcessNameByID(DWORD dwProcessID, std::string& strProcessName);
+    // 判断指定窗口类是否存在
+    BOOL IsWindowClassExists(const std::string& strClassName, const std::string& processName, DWORD& dwProcessID, HWND& outHwnd);
+    // 获取窗口列表回调
+    static BOOL CALLBACK EnumWindowsProc(_In_ HWND hWnd, _In_ LPARAM lParam);
 
 private:
     std::wstring static m_strCurrentExe;

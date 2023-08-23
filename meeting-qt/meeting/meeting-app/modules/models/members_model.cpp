@@ -54,8 +54,9 @@ void MembersModel::initData(const QJsonArray& userList) {
     info.checkState = Checked;
     m_members.push_back(info);
     for (auto user : userList) {
-        info.accountId = user["accountId"].toString();
-        info.nickName = user["nickname"].toString();
+        auto userObj = user.toObject();
+        info.accountId = userObj["accountId"].toString();
+        info.nickName = userObj["nickname"].toString();
         info.checkState = Unchecked;
         m_members.push_back(info);
     }

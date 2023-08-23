@@ -1697,7 +1697,7 @@
     </message>
     <message>
         <location filename="qml/components/MenuEx.qml" line="158"/>
-        <source>unmute Video and Audio</source>
+        <source>Unmute Video and Audio</source>
         <translation>Audio and video ON</translation>
     </message>
     <message>
@@ -2671,7 +2671,7 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
     </message>
     <message>
         <location filename="manager/meeting/video_manager.cpp" line="189"/>
-        <source>unmute My Video failed</source>
+        <source>nmute My Video failed</source>
         <translation>Failed to turn on video</translation>
     </message>
 </context>

@@ -9,14 +9,13 @@ HistoryModel::HistoryModel(QObject* parent)
 
 int HistoryModel::rowCount(const QModelIndex& modelIndex) const {
     Q_UNUSED(modelIndex)
-    if (!m_pHistoryMgr) {
+    if (!m_pHistoryMgr)
         return 0;
-    }
-
     if (m_dataType == kDataTypeHistory) {
         auto historyMeetingList = m_pHistoryMgr->getHistoryMeetingList();
         return historyMeetingList.count();
-    } else if (m_dataType == kDataTypeCollect) {
+    }
+    if (m_dataType == kDataTypeCollect) {
         auto collectMeetingList = m_pHistoryMgr->getCollectMeetingList();
         return collectMeetingList.count();
     }
@@ -86,8 +85,10 @@ void HistoryModel::setManager(HistoryManager* pHistorymanager) {
     });
     connect(m_pHistoryMgr, &HistoryManager::collectChanged, this, [=](int index) {
         if (m_dataType == kDataTypeCollect) {
-            beginRemoveRows(QModelIndex(), index, index);
-            endRemoveRows();
+            // beginRemoveRows(QModelIndex(), index, index);
+            // endRemoveRows();
+            beginResetModel();
+            endResetModel();
         }
     });
     connect(m_pHistoryMgr, &HistoryManager::historyChanged, this, [=](int index) {

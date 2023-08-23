@@ -26,12 +26,12 @@ public:
     /**
      * @brief 构造函数
      */
-    NEObject() {}
+    NEObject() = default;
 
     /**
      * @brief 析构函数
      */
-    virtual ~NEObject(){};
+    virtual ~NEObject() = default;
 };
 
 NNEM_SDK_INTERFACE_END_DECLS
