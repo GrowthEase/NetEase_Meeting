@@ -44,9 +44,7 @@ public:
     // Releases ownership of the handle from this object.
     HANDLE Release();
 
-    operator HANDLE() const {
-        return handle_;
-    }
+    operator HANDLE() const { return handle_; }
 
 #endif
 

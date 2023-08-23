@@ -42,6 +42,8 @@ public:
     virtual void onIsMyAudioDeviceAutoSelectType(const NS_I_NEM_SDK::NESettingsService::AudioDeviceAutoSelectTypeCallback& cb) override;
     virtual void onSetMyAudioDeviceUseLastSelected(bool bOn, const NS_I_NEM_SDK::NEEmptyCallback& cb) override;
     virtual void onIsMyAudioDeviceUseLastSelected(const NS_I_NEM_SDK::NESettingsService::NEBoolCallback& cb) override;
+    void onSetSharingSidebarViewMode(const NS_I_NEM_SDK::SharingSidebarViewMode& viewMode, const NS_I_NEM_SDK::NEEmptyCallback& cb) override;
+    void onGetSharingSidebarViewMode(const NS_I_NEM_SDK::NESettingsService::NEIntCallback& cb) override;
 
     virtual void onShowMyMeetingElapseTime(bool show, const NS_I_NEM_SDK::NEEmptyCallback& cb) override;
     virtual void onIsShowMyMeetingElapseTimeEnabled(const NS_I_NEM_SDK::NESettingsService::NEBoolCallback& cb) override;

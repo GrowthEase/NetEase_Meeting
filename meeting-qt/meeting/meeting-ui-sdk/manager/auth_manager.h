@@ -9,13 +9,14 @@
 #include "client_auth_service.h"
 #include "controller/auth_controller.h"
 #include "meeting.h"
+#include "modules/http/http_manager.h"
 #include "setting_service.h"
 
 using namespace neroom;
 using namespace nem_sdk_interface;
 
-Q_DECLARE_METATYPE(NEAuthStatus)
-Q_DECLARE_METATYPE(NEAuthStatusExCode)
+// Q_DECLARE_METATYPE(NEAuthStatus)
+// Q_DECLARE_METATYPE(NEAuthStatusExCode)
 Q_DECLARE_METATYPE(NEAccountInfo)
 
 typedef struct tagAutoLoginInfo {
@@ -52,7 +53,7 @@ public:
     bool initialize();
     void release();
     bool doLogin(const QString& accountId, const QString& accountToken);
-    bool doAnonymousLogin(const neroom::NECallback<>& callback);
+    bool doAnonymousLogin(const neroom::NECallback<NEMeetingResponseKeys>& callback);
     bool doLoginWithPassword(const QString& username, const QString& password);
     bool doLoginWithSSOToken(const QString& ssoToken);
     bool doTryAutoLogin(const nem_sdk_interface::NEAuthService::NEAuthLoginCallback& cb);

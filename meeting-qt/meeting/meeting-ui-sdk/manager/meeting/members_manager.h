@@ -21,6 +21,7 @@ using namespace neroom;
 #define kMemberSharingStatus "sharingStatus"
 #define kMemberClientType "clientType"
 #define kMemberAudioHandsUpStatus "audioHandsUpStatus"
+#define kMemberCreatedAt "createdAt"
 
 /**
  * @brief 房间用户类型
@@ -42,6 +43,7 @@ typedef struct _tagMemberInfo {
     int clientType;
     NERoleType roleType;
     NEMeeting::NetWorkQualityType netWorkQualityType = NEMeeting::NETWORKQUALITY_GOOD;
+    qint64 createdAt;
 } MemberInfo;
 
 class MembersManager : public QObject {

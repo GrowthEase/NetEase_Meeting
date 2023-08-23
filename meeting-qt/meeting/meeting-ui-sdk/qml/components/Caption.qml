@@ -158,31 +158,34 @@ Rectangle {
     }
 
     ImageButton {
-        id: maxButton
+        id: restoreButton
         width: 24
         height: 24
-        visible: Qt.platform.os === 'windows'
+        visible: Qt.platform.os === 'windows' && (mainWindow.visibility === Window.Maximized || mainWindow.visibility === Window.FullScreen)
         anchors.right: closeButton.left
         anchors.rightMargin: 8
         anchors.verticalCenter: parent.verticalCenter
-        normalImage: mainWindow.visibility === Window.Maximized || mainWindow.visibility === Window.FullScreen
-                     ? "qrc:/qml/images/public/button/btn_wnd_white_restore_normal.png"
-                     : "qrc:/qml/images/public/button/btn_wnd_white_max_normal.png"
-        hoveredImage: mainWindow.visibility === Window.Maximized || mainWindow.visibility === Window.FullScreen
-                      ? "qrc:/qml/images/public/button/btn_wnd_white_restore_hovered.png"
-                      : "qrc:/qml/images/public/button/btn_wnd_white_max_hovered.png"
-        pushedImage: mainWindow.visibility === Window.Maximized || mainWindow.visibility === Window.FullScreen
-                     ? "qrc:/qml/images/public/button/btn_wnd_white_restore_pushed.png"
-                     : "qrc:/qml/images/public/button/btn_wnd_white_max_pushed.png"
+        normalImage: "qrc:/qml/images/public/button/btn_wnd_white_restore_normal.png"
+        hoveredImage: "qrc:/qml/images/public/button/btn_wnd_white_restore_hovered.png"
+        pushedImage: "qrc:/qml/images/public/button/btn_wnd_white_restore_pushed.png"
         onClicked: {
-            if (mainWindow.visibility === Window.Maximized) {
-                mainWindow.showNormal()
-                flags = Qt.Window | Qt.FramelessWindowHint
+            mainWindow.showNormal()
+        }
+    }
 
-            } else {
-                flags = Qt.Window | Qt.WindowFullscreenButtonHint | Qt.CustomizeWindowHint | Qt.WindowMinimizeButtonHint
-                visibility = Window.Maximized
-            }
+    ImageButton {
+        id: maxButton
+        width: 24
+        height: 24
+        visible: Qt.platform.os === 'windows' && mainWindow.visibility !== Window.Maximized && mainWindow.visibility !== Window.FullScreen
+        anchors.right: closeButton.left
+        anchors.rightMargin: 8
+        anchors.verticalCenter: parent.verticalCenter
+        normalImage: "qrc:/qml/images/public/button/btn_wnd_white_max_normal.png"
+        hoveredImage: "qrc:/qml/images/public/button/btn_wnd_white_max_hovered.png"
+        pushedImage: "qrc:/qml/images/public/button/btn_wnd_white_max_pushed.png"
+        onClicked: {
+            mainWindow.showMaximized()
         }
     }
 

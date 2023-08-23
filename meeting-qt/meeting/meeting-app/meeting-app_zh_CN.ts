@@ -173,7 +173,8 @@
     </message>
     <message>
         <location filename="qml/components/Caption.qml" line="148"/>
-        <source>history</source>
+        <source>History</source>
+        <oldsource>history</oldsource>
         <translation>历史会议</translation>
     </message>
 </context>
@@ -333,37 +334,37 @@
 <context>
     <name>CustomCalendarPopup</name>
     <message>
-        <location filename="qml/components/CustomCalendarPopup.qml" line="50"/>
+        <location filename="qml/components/CustomCalendarPopup.qml" line="47"/>
         <source>Sun</source>
         <translation>日</translation>
     </message>
     <message>
-        <location filename="qml/components/CustomCalendarPopup.qml" line="50"/>
+        <location filename="qml/components/CustomCalendarPopup.qml" line="47"/>
         <source>Mon</source>
         <translation>一</translation>
     </message>
     <message>
-        <location filename="qml/components/CustomCalendarPopup.qml" line="50"/>
+        <location filename="qml/components/CustomCalendarPopup.qml" line="47"/>
         <source>Tue</source>
         <translation>二</translation>
     </message>
     <message>
-        <location filename="qml/components/CustomCalendarPopup.qml" line="50"/>
+        <location filename="qml/components/CustomCalendarPopup.qml" line="47"/>
         <source>Wed</source>
         <translation>三</translation>
     </message>
     <message>
-        <location filename="qml/components/CustomCalendarPopup.qml" line="51"/>
+        <location filename="qml/components/CustomCalendarPopup.qml" line="48"/>
         <source>Thu</source>
         <translation>四</translation>
     </message>
     <message>
-        <location filename="qml/components/CustomCalendarPopup.qml" line="51"/>
+        <location filename="qml/components/CustomCalendarPopup.qml" line="48"/>
         <source>Fri</source>
         <translation>五</translation>
     </message>
     <message>
-        <location filename="qml/components/CustomCalendarPopup.qml" line="51"/>
+        <location filename="qml/components/CustomCalendarPopup.qml" line="48"/>
         <source>Sat</source>
         <translation>六</translation>
     </message>
@@ -384,9 +385,15 @@
 <context>
     <name>CustomHistoryComboBox</name>
     <message>
-        <location filename="qml/history/CustomHistoryComboBox.qml" line="129"/>
-        <source>clear history</source>
+        <location filename="qml/history/CustomHistoryComboBox.qml" line="161"/>
+        <source>Clear history</source>
+        <oldsource>clear history</oldsource>
         <translation>清空历史记录</translation>
+    </message>
+    <message>
+        <location filename="qml/history/CustomHistoryComboBox.qml" line="178"/>
+        <source>History cleared</source>
+        <translation>历史记录已清空</translation>
     </message>
 </context>
 <context>
@@ -457,19 +464,16 @@
         <translation>意外退出</translation>
     </message>
     <message>
-        <location filename="qml/profile/Feedback.qml" line="17"/>
         <source>The voice of the other party has a long time delay</source>
-        <translation>对方说话声音延时很大</translation>
+        <translation type="vanished">对方说话声音延时很大</translation>
     </message>
     <message>
-        <location filename="qml/profile/Feedback.qml" line="18"/>
         <source>Play mechanical sound</source>
-        <translation>播放机械音</translation>
+        <translation type="vanished">播放机械音</translation>
     </message>
     <message>
-        <location filename="qml/profile/Feedback.qml" line="19"/>
         <source>The other party&apos;s voice is very stuck</source>
-        <translation>对方说话声音很卡</translation>
+        <translation type="vanished">对方说话声音很卡</translation>
     </message>
     <message>
         <location filename="qml/profile/Feedback.qml" line="20"/>
@@ -483,12 +487,14 @@
     </message>
     <message>
         <location filename="qml/profile/Feedback.qml" line="22"/>
-        <source>Can&apos;t hear the other party&apos;s voice</source>
+        <source>Can&apos;t hear others</source>
+        <oldsource>Can&apos;t hear the other party&apos;s voice</oldsource>
         <translation>听不到对方声音</translation>
     </message>
     <message>
         <location filename="qml/profile/Feedback.qml" line="23"/>
-        <source>The other party can&apos;t hear me</source>
+        <source>Can&apos;t hear my voice</source>
+        <oldsource>The other party can&apos;t hear me</oldsource>
         <translation>对方听不到我的声音</translation>
     </message>
     <message>
@@ -497,14 +503,12 @@
         <translation>音量小</translation>
     </message>
     <message>
-        <location filename="qml/profile/Feedback.qml" line="25"/>
         <source>Video freezes for a long time</source>
-        <translation>视频长时间卡顿</translation>
+        <translation type="vanished">视频长时间卡顿</translation>
     </message>
     <message>
-        <location filename="qml/profile/Feedback.qml" line="26"/>
         <source>Intermittent video</source>
-        <translation>视频断断续续</translation>
+        <translation type="vanished">视频断断续续</translation>
     </message>
     <message>
         <location filename="qml/profile/Feedback.qml" line="27"/>
@@ -512,23 +516,23 @@
         <translation>画面撕裂</translation>
     </message>
     <message>
-        <location filename="qml/profile/Feedback.qml" line="28"/>
         <source>The picture is too bright</source>
-        <translation>画面过亮/过暗</translation>
+        <translation type="vanished">画面过亮/过暗</translation>
     </message>
     <message>
         <location filename="qml/profile/Feedback.qml" line="29"/>
-        <source>Blurred picture</source>
+        <source>Blurred</source>
+        <oldsource>Blurred picture</oldsource>
         <translation>画面模糊</translation>
     </message>
     <message>
-        <location filename="qml/profile/Feedback.qml" line="30"/>
         <source>The picture is noisy</source>
-        <translation>画面明显噪点</translation>
+        <translation type="vanished">画面明显噪点</translation>
     </message>
     <message>
         <location filename="qml/profile/Feedback.qml" line="31"/>
-        <source>Audio and video are out of sync</source>
+        <source>A/V out of sync</source>
+        <oldsource>Audio and video are out of sync</oldsource>
         <translation>音画不同步</translation>
     </message>
     <message>
@@ -549,15 +553,51 @@
         <translation>存在其它问题</translation>
     </message>
     <message>
-        <location filename="qml/profile/Feedback.qml" line="411"/>
-        <source>Please describe your problem 
+        <source>Please describe your problem
  When you select &quot;There are other problems&quot;, you need to fill in a specific description before submitting</source>
-        <translation>请描述您的问题。（当您选中“存在其他问题”时，需填
+        <oldsource>Please describe your problem
+ When you select &quot;There are other problems&quot;, you need to fill in a specific description before submitting</oldsource>
+        <translation type="obsolete">请描述您的问题。（当您选中“存在其他问题”时，需填
 写具体描述才可进行提交）</translation>
     </message>
     <message>
         <source>When you select &quot;There are other problems&quot;, you need to fill in a specific description before submitting</source>
         <translation type="obsolete">（当您选中“存在其他问题”时，需填写具体描述才可进行提交）</translation>
+    </message>
+    <message>
+        <location filename="qml/profile/Feedback.qml" line="17"/>
+        <source>Voice delay</source>
+        <translation>对方说话声音延迟大</translation>
+    </message>
+    <message>
+        <location filename="qml/profile/Feedback.qml" line="18"/>
+        <source>Robotic sound</source>
+        <translation>机械音</translation>
+    </message>
+    <message>
+        <location filename="qml/profile/Feedback.qml" line="19"/>
+        <source>Audio stuttering</source>
+        <translation>对方说话声音卡顿</translation>
+    </message>
+    <message>
+        <location filename="qml/profile/Feedback.qml" line="25"/>
+        <source>Stuttering</source>
+        <translation>视频长时间卡顿</translation>
+    </message>
+    <message>
+        <location filename="qml/profile/Feedback.qml" line="26"/>
+        <source>Cutting out</source>
+        <translation>视频断断续续</translation>
+    </message>
+    <message>
+        <location filename="qml/profile/Feedback.qml" line="28"/>
+        <source>Overexposed/Underexposed</source>
+        <translation>画面过亮/过暗</translation>
+    </message>
+    <message>
+        <location filename="qml/profile/Feedback.qml" line="30"/>
+        <source>Visual noise</source>
+        <translation>画面明显噪点</translation>
     </message>
     <message>
         <location filename="qml/profile/Feedback.qml" line="127"/>
@@ -595,7 +635,13 @@
         <translation>其它</translation>
     </message>
     <message>
-        <source>Please describe your problem 
+        <location filename="qml/profile/Feedback.qml" line="411"/>
+        <source>Please describe your problem.</source>
+        <translation>请描述您的问题。（当您选中“存在其他问题”时，需填
+写具体描述才可进行提交）</translation>
+    </message>
+    <message>
+        <source>Please describe your problem
 </source>
         <oldsource>Please describe your problem</oldsource>
         <translation type="vanished">请描述您的问题 \n</translation>
@@ -686,91 +732,91 @@
         <translation type="vanished">即刻会议</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="86"/>
+        <location filename="qml/FrontPage.qml" line="188"/>
         <source>Join</source>
         <translation>加入会议</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="178"/>
+        <location filename="qml/FrontPage.qml" line="130"/>
         <source>Please enter 6-digit password</source>
         <translation>请输入6位数字密码</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="344"/>
+        <location filename="qml/FrontPage.qml" line="431"/>
         <source>Failed to logout from apaas server</source>
         <translation>登录失败</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="355"/>
+        <location filename="qml/FrontPage.qml" line="325"/>
         <source>Auth information has expired, please relogin.</source>
         <translation>登录状态已过期，请重新登录。</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="369"/>
+        <location filename="qml/FrontPage.qml" line="418"/>
         <source>You have been kickout by muti client.</source>
         <translation>同时登陆设备数超过限制，已自动登出</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="385"/>
-        <location filename="qml/FrontPage.qml" line="520"/>
+        <location filename="qml/FrontPage.qml" line="475"/>
+        <location filename="qml/FrontPage.qml" line="488"/>
         <source>Join Meeting</source>
         <translation>加入会议</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="386"/>
+        <location filename="qml/FrontPage.qml" line="489"/>
         <source>The meeting is still in progress. Do you want to join directly?</source>
         <translation>这个会议还在进行中，你要直接加入吗？</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="394"/>
-        <location filename="qml/FrontPage.qml" line="398"/>
+        <location filename="qml/FrontPage.qml" line="495"/>
+        <location filename="qml/FrontPage.qml" line="497"/>
         <source>Failed to start meeting</source>
         <translation>创建会议失败</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="424"/>
-        <location filename="qml/FrontPage.qml" line="428"/>
+        <location filename="qml/FrontPage.qml" line="398"/>
+        <location filename="qml/FrontPage.qml" line="400"/>
         <source>Failed to join meeting</source>
         <oldsource>The meeting is locked</oldsource>
         <translation>加入会议失败</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="444"/>
+        <location filename="qml/FrontPage.qml" line="383"/>
         <source>you are already in the meeting</source>
         <translation>您已在会议中</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="446"/>
+        <location filename="qml/FrontPage.qml" line="385"/>
         <source>You are already in the meeting, please exit the current meeting and try again</source>
         <translation>您已在会议中，请退出当前会议后重试</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="467"/>
+        <location filename="qml/FrontPage.qml" line="453"/>
         <source>The meeting does not exist</source>
         <translation>会议不存在</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="469"/>
+        <location filename="qml/FrontPage.qml" line="455"/>
         <source>Failed to synchronize meeting information</source>
         <translation>无法同步会议信息</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="471"/>
+        <location filename="qml/FrontPage.qml" line="457"/>
         <source>The RTC module fails to be initialized</source>
         <translation>音视频模块加载初始化失败</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="473"/>
+        <location filename="qml/FrontPage.qml" line="459"/>
         <source>Failed to join the channel of RTC</source>
         <translation>无法加入音视频频道</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="475"/>
+        <location filename="qml/FrontPage.qml" line="461"/>
         <source>Meeting timeout</source>
         <translation>会议超时</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="521"/>
+        <location filename="qml/FrontPage.qml" line="476"/>
         <source>It was detected that you exited abnormally last time, do you want to resume the meeting?</source>
         <translation>检测到您上次异常退出，是否要恢复会议？</translation>
     </message>
@@ -783,7 +829,7 @@
         <translation type="vanished">该会议已达人数上限</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="458"/>
+        <location filename="qml/FrontPage.qml" line="444"/>
         <source>This meeting has been ended</source>
         <translation>主持人结束了本场会议</translation>
     </message>
@@ -792,22 +838,22 @@
         <translation type="vanished">取消会议失败</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="456"/>
+        <location filename="qml/FrontPage.qml" line="442"/>
         <source>You have been removed from meeting by host</source>
         <translation>因被主持人移出或切换至其他设备，您已退出会议</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="78"/>
+        <location filename="qml/FrontPage.qml" line="173"/>
         <source>Create</source>
         <translation>即刻会议</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="460"/>
+        <location filename="qml/FrontPage.qml" line="446"/>
         <source>You have been discconected from server</source>
         <translation>您已从会议中断开连接</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="464"/>
+        <location filename="qml/FrontPage.qml" line="450"/>
         <source>You have been kickout by other client</source>
         <translation>您的账号在其他位置登录</translation>
     </message>
@@ -819,62 +865,62 @@
         <translation type="vanished">预约会议</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="251"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="258"/>
         <source>Schedule</source>
         <translation>预约会议</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="148"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="155"/>
         <source>Create Meeting</source>
         <translation>即刻会议</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="175"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="182"/>
         <source>Join Meeting</source>
         <translation>加入会议</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="238"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="245"/>
         <source>There are no forthcoming meetings at present</source>
         <translation>当前暂无即将召开的会议</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="287"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="294"/>
         <source>Inner meeting ID:</source>
         <translation>企业内部专属ID：</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="292"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="299"/>
         <source>Can only be used inside the company</source>
         <translation>同事可以使用该对内 ID 入会 对外请使用 10 位个人会议 ID</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="315"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="322"/>
         <source>Create Now</source>
         <translation>即刻会议</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="325"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="332"/>
         <source>Join Now</source>
         <translation>加入会议</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="456"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="463"/>
         <source>Meeting password</source>
         <translation>会议密码</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="468"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="475"/>
         <source>Use Password</source>
         <translation>开启会议密码</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="476"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="483"/>
         <source>Please enter 6-digit password</source>
         <translation>请输入6位数字密码</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="486"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="493"/>
         <source>Meeting Setting</source>
         <translation>会议设置</translation>
     </message>
@@ -895,32 +941,32 @@
         <translation type="vanished">加入会议</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="344"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="351"/>
         <source>Meeting ID</source>
         <translation>请输入会议 ID</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="358"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="365"/>
         <source>Using personal ID</source>
         <translation>使用个人会议ID</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="369"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="376"/>
         <source>Using personal ID: </source>
         <translation>使用个人会议ID</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="396"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="403"/>
         <source>Short ID</source>
         <translation>个人会议短号</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="409"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="416"/>
         <source>Only Inner</source>
         <translation>内部专用</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="441"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="448"/>
         <source>Long ID</source>
         <translation>个人会议 ID</translation>
     </message>
@@ -929,12 +975,12 @@
         <translation type="vanished">(仅对内)</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="494"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="501"/>
         <source>Open camera</source>
         <translation>入会时打开摄像头</translation>
     </message>
     <message>
-        <location filename="qml/FrontPageForm.ui.qml" line="501"/>
+        <location filename="qml/FrontPageForm.ui.qml" line="508"/>
         <source>Open microphone</source>
         <translation>入会时打开麦克风</translation>
     </message>
@@ -950,85 +996,99 @@
 <context>
     <name>HistoryTableView</name>
     <message>
-        <location filename="qml/history/HistoryTableView.qml" line="60"/>
-        <source>subject</source>
+        <location filename="qml/history/HistoryTableView.qml" line="28"/>
+        <source>Subject</source>
+        <oldsource>subject</oldsource>
         <translation>会议主题</translation>
     </message>
     <message>
-        <location filename="qml/history/HistoryTableView.qml" line="61"/>
-        <source>startTime</source>
+        <location filename="qml/history/HistoryTableView.qml" line="29"/>
+        <source>Start time</source>
+        <oldsource>startTime</oldsource>
         <translation>会议时间</translation>
     </message>
     <message>
-        <location filename="qml/history/HistoryTableView.qml" line="62"/>
-        <source>meetingID</source>
+        <location filename="qml/history/HistoryTableView.qml" line="30"/>
+        <source>Meeting ID</source>
+        <oldsource>meetingID</oldsource>
         <translation>会议号</translation>
     </message>
     <message>
-        <location filename="qml/history/HistoryTableView.qml" line="63"/>
-        <source>creator</source>
+        <location filename="qml/history/HistoryTableView.qml" line="31"/>
+        <source>Creator</source>
+        <oldsource>creator</oldsource>
         <translation>创建人</translation>
     </message>
     <message>
-        <location filename="qml/history/HistoryTableView.qml" line="64"/>
         <source>opration</source>
-        <translation>操作</translation>
+        <translation type="vanished">操作</translation>
     </message>
     <message>
-        <location filename="qml/history/HistoryTableView.qml" line="164"/>
+        <location filename="qml/history/HistoryTableView.qml" line="78"/>
         <source>Meeting ID has been copied</source>
         <translation>会议ID已复制</translation>
     </message>
     <message>
-        <location filename="qml/history/HistoryTableView.qml" line="181"/>
-        <source>cancelCollect</source>
+        <location filename="qml/history/HistoryTableView.qml" line="83"/>
+        <source>Cancel</source>
+        <oldsource>cancelCollect</oldsource>
         <translation>取消收藏</translation>
     </message>
     <message>
-        <location filename="qml/history/HistoryTableView.qml" line="181"/>
-        <source>collect</source>
+        <location filename="qml/history/HistoryTableView.qml" line="32"/>
+        <source>Collection</source>
+        <oldsource>collect</oldsource>
         <translation>收藏</translation>
     </message>
     <message>
-        <location filename="qml/history/HistoryTableView.qml" line="188"/>
-        <source>collect success</source>
+        <location filename="qml/history/HistoryTableView.qml" line="83"/>
+        <source>Collect</source>
+        <translation>收藏</translation>
+    </message>
+    <message>
+        <location filename="qml/history/HistoryTableView.qml" line="91"/>
+        <source>Collect success</source>
+        <oldsource>collect success</oldsource>
         <translation>收藏成功</translation>
     </message>
     <message>
-        <location filename="qml/history/HistoryTableView.qml" line="190"/>
-        <source>collect failed</source>
+        <location filename="qml/history/HistoryTableView.qml" line="93"/>
+        <source>Collect failed</source>
+        <oldsource>collect failed</oldsource>
         <translation>收藏失败</translation>
     </message>
     <message>
-        <location filename="qml/history/HistoryTableView.qml" line="200"/>
-        <source>cancel success</source>
+        <location filename="qml/history/HistoryTableView.qml" line="102"/>
+        <source>Cancel success</source>
+        <oldsource>cancel success</oldsource>
         <translation>取消收藏成功</translation>
     </message>
     <message>
-        <location filename="qml/history/HistoryTableView.qml" line="202"/>
-        <source>cancel failed</source>
+        <location filename="qml/history/HistoryTableView.qml" line="104"/>
+        <source>Cancel failed</source>
+        <oldsource>cancel failed</oldsource>
         <translation>取消收藏失败</translation>
     </message>
 </context>
 <context>
     <name>HistoryWindow</name>
     <message>
-        <location filename="qml/history/HistoryWindow.qml" line="13"/>
+        <location filename="qml/history/HistoryWindow.qml" line="11"/>
         <source>History Meeting</source>
         <translation>历史会议</translation>
     </message>
     <message>
-        <location filename="qml/history/HistoryWindow.qml" line="60"/>
+        <location filename="qml/history/HistoryWindow.qml" line="51"/>
         <source>All meetings</source>
         <translation>全部会议</translation>
     </message>
     <message>
-        <location filename="qml/history/HistoryWindow.qml" line="61"/>
+        <location filename="qml/history/HistoryWindow.qml" line="59"/>
         <source>Collect meetings</source>
         <translation>收藏会议</translation>
     </message>
     <message>
-        <location filename="qml/history/HistoryWindow.qml" line="115"/>
+        <location filename="qml/history/HistoryWindow.qml" line="101"/>
         <source>No historical meeting</source>
         <translation>暂无历史会议</translation>
     </message>
@@ -1103,7 +1163,7 @@
 <context>
     <name>HttpManager</name>
     <message>
-        <location filename="modules/base/http_manager.cpp" line="93"/>
+        <location filename="modules/base/http_manager.cpp" line="97"/>
         <source>Failed to connect to server, please try agine.</source>
         <translation>连接服务器失败，请重试</translation>
     </message>
@@ -1437,8 +1497,8 @@
 <context>
     <name>NEMeetingSDKManager</name>
     <message>
-        <location filename="modules/nemeeting_sdk_manager.cpp" line="245"/>
-        <location filename="modules/nemeeting_sdk_manager.cpp" line="247"/>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="244"/>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="246"/>
         <source>init sdk failed.</source>
         <translation>SDK初始化失败</translation>
     </message>
@@ -1469,10 +1529,78 @@
         <translation>免费版</translation>
     </message>
     <message>
-        <location filename="modules/nemeeting_sdk_manager.cpp" line="1144"/>
-        <location filename="modules/nemeeting_sdk_manager.cpp" line="1193"/>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="1184"/>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="1233"/>
         <source>Meeting duration too long!</source>
         <translation>会议持续时间过长</translation>
+    </message>
+</context>
+<context>
+    <name>NPSWindow</name>
+    <message>
+        <location filename="qml/profile/NPSWindow.qml" line="43"/>
+        <source>What is the likelihood of you recommending NetEase Meeting to your colleagues or partners?</source>
+        <translation>您有多大的可能向同事或合作伙伴推荐网易会议？</translation>
+    </message>
+    <message>
+        <location filename="qml/profile/NPSWindow.qml" line="154"/>
+        <source>0 - Definitely not.</source>
+        <translation>0 - 肯定不会</translation>
+    </message>
+    <message>
+        <location filename="qml/profile/NPSWindow.qml" line="159"/>
+        <source>10 - Very willing.</source>
+        <translation>10 - 非常乐意</translation>
+    </message>
+    <message>
+        <location filename="qml/profile/NPSWindow.qml" line="174"/>
+        <source>Please select a score first.</source>
+        <translation>请点选评分进行评价~</translation>
+    </message>
+    <message>
+        <location filename="qml/profile/NPSWindow.qml" line="176"/>
+        <source>What are the points that make you dissatisfied or disappointed? (optional)</source>
+        <translation>让您不满意或者失望的点有哪些？（选填）</translation>
+    </message>
+    <message>
+        <location filename="qml/profile/NPSWindow.qml" line="178"/>
+        <source>What aspects do you think can be improved? (optional)</source>
+        <translation>您觉得哪些方面能做的更好？（选填）</translation>
+    </message>
+    <message>
+        <location filename="qml/profile/NPSWindow.qml" line="179"/>
+        <source>Welcome to share your best experience or feelings. (optional)</source>
+        <translation>欢迎分享您体验最好的功能或感受（选填）</translation>
+    </message>
+    <message>
+        <location filename="qml/profile/NPSWindow.qml" line="212"/>
+        <source>Submit</source>
+        <translation>提交反馈</translation>
+    </message>
+    <message>
+        <location filename="qml/profile/NPSWindow.qml" line="245"/>
+        <source>Thanks for your feedback.</source>
+        <translation>感谢反馈</translation>
+    </message>
+    <message>
+        <location filename="qml/profile/NPSWindow.qml" line="254"/>
+        <source>For more suggestions, please join the POPO group of NetEase Meeting (4781923821</source>
+        <translation>更多建议，欢迎加入网易会议popo群（4781923821</translation>
+    </message>
+    <message>
+        <location filename="qml/profile/NPSWindow.qml" line="264"/>
+        <source>POPO group ID has been copied</source>
+        <translation>已复制 POPO 群组 ID 到剪切板</translation>
+    </message>
+    <message>
+        <location filename="qml/profile/NPSWindow.qml" line="270"/>
+        <source>)</source>
+        <translation>)</translation>
+    </message>
+    <message>
+        <location filename="qml/profile/NPSWindow.qml" line="285"/>
+        <source>Failed to submit feedback, please try again later.</source>
+        <translation>提交反馈失败，网络可能开了小差，请稍后重试~</translation>
     </message>
 </context>
 <context>
@@ -1822,81 +1950,81 @@
 <context>
     <name>ScheduleDetailsWindow</name>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="70"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="166"/>
         <source>Meeting Details</source>
         <translation>会议详情</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="182"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="318"/>
         <source>Meeting Subject</source>
         <translation>会议主题</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="213"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="349"/>
         <source>Meeting ID</source>
         <translation>会议 ID</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="226"/>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="264"/>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="424"/>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="517"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="366"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="409"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="576"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="674"/>
         <source>Copy</source>
         <translation>复制</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="234"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="377"/>
         <source>Meeting link has been copied</source>
         <translation>会议 ID 已复制</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="251"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="392"/>
         <source>InviteUrl</source>
         <translation>会议邀请链接</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="272"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="420"/>
         <source>Meeting Invite Url has been copied</source>
         <translation>会议邀请链接已复制</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="288"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="434"/>
         <source>Start Time</source>
         <translation>开始时间</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="357"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="501"/>
         <source>End Time</source>
         <translation>结束时间</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="390"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="535"/>
         <source>Meeting Password</source>
         <translation>会议密码</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="398"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="545"/>
         <source>Use Password</source>
         <translation>开启会议密码</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="417"/>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="594"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="563"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="749"/>
         <source>Please enter 6-digit password</source>
         <translation>请输入6位数字密码</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="432"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="588"/>
         <source>Meeting password has been copied</source>
         <translation>会议密码已复制</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="447"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="601"/>
         <source>Meeting Setting</source>
         <translation>会议设置</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="453"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="607"/>
         <source>Automatically mute when join the meeting</source>
         <translation>参会者加入会议时自动静音</translation>
     </message>
@@ -1905,59 +2033,59 @@
         <translation type="vanished">取消会议</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="569"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="724"/>
         <source>Cancel</source>
         <translation>取消会议</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="569"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="724"/>
         <source>Do you want to cancel this meeting?</source>
         <translation>取消会议后，其他参会者将无法加入会议。</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="574"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="729"/>
         <source>Confirm</source>
         <translation>取消会议</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="574"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="729"/>
         <source>Exit</source>
         <translation>暂不取消</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="582"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="736"/>
         <source>Save</source>
         <translation>保存</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="582"/>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="587"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="736"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="742"/>
         <source>Edit Meeting</source>
         <translation>编辑会议</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="189"/>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="591"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="323"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="746"/>
         <source>Please enter meeting subject</source>
         <translation>请输入会议主题</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="466"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="620"/>
         <source>Live Settings</source>
         <translation>会议直播</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="476"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="633"/>
         <source>Enable live stream</source>
         <translation>开启会议直播</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="536"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="697"/>
         <source>Only employees of the company can watch</source>
         <translation>仅本企业员工可观看</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="489"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="645"/>
         <source>Live Url</source>
         <translation>直播链接</translation>
     </message>
@@ -1966,27 +2094,27 @@
         <translation type="vanished">参会者加入会议时打开会议录制</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="525"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="685"/>
         <source>Live Url has been copied</source>
         <translation>直播链接复制成功</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="565"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="719"/>
         <source>Cancel Meeting</source>
         <translation>取消会议</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="632"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="773"/>
         <source>Join Meeting</source>
         <translation>加入会议</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="673"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="811"/>
         <source>Cancel meeting successfully.</source>
         <translation>取消会议成功</translation>
     </message>
     <message>
-        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="686"/>
+        <location filename="qml/schedule/ScheduleDetailsWindow.qml" line="823"/>
         <source>Edit meeting successfully.</source>
         <translation>编辑会议成功</translation>
     </message>

@@ -1,7 +1,7 @@
 ﻿import QtQuick 2.15
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
-import QtGraphicalEffects 1.0
+import Qt5Compat.GraphicalEffects
 import Qt.labs.settings 1.0
 
 import "components/"
@@ -38,6 +38,7 @@ Item {
     property alias listModel: listModel
     property alias profile: profile
     property alias feedback: feedback
+    property alias npsWindow: npsWindow
     property alias appList: appList
     property alias appTipArea: idAppTipArea
     property alias checkMeetingPwd: idMeetingPwdCheck
@@ -76,6 +77,12 @@ Item {
         id: feedback
 	}
 
+    NPSWindow {
+        id: npsWindow
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2 - 20
+    }
+
     ProfileWindow {
         id: profile
         screen: mainWindow.screen
@@ -97,7 +104,7 @@ Item {
     }
 
 //    RecentHistoryPopup
-    CustomPopup{
+    CustomPopup {
         id: historyPopup
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2 - 20
@@ -474,8 +481,8 @@ Item {
                         text: ""
                         enabled: false
                         placeholderText: qsTr("Please enter 6-digit password")
-                        validator: RegExpValidator {
-                            regExp: /[0-9]{6}/
+                        validator: RegularExpressionValidator {
+                            regularExpression: /[0-9]{6}/
                         }
                         Layout.fillWidth: true
                     }

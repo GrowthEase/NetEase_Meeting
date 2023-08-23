@@ -12,7 +12,6 @@
 #include <shlobj.h>  // SHGetFolderPathW
 #include <shlwapi.h>
 #include <wingdi.h>
-#include <QtWin>
 
 #pragma comment(lib, "Version.lib")
 #pragma comment(lib, "Shlwapi.lib")
@@ -291,7 +290,7 @@ QPixmap WindowsHelpers::getWindowImage(HWND hWnd) const {
         m_pPrintCaptureHelper->Cleanup();
         m_pPrintCaptureHelper->Init(hWnd);
         HBITMAP hBitmap = m_pPrintCaptureHelper->GetBitmap();
-        return QtWin::fromHBITMAP(hBitmap);
+        return QPixmap::fromImage(QImage::fromHBITMAP(hBitmap));
     }
 
     return QPixmap();
@@ -325,7 +324,7 @@ QPixmap WindowsHelpers::getWindowIcon(HWND hWnd) const {
     ZeroMemory(&sfiTemp, sizeof(sfiTemp));
     SHGetFileInfo(strTemp.c_str(), FILE_ATTRIBUTE_NORMAL, &sfiTemp, sizeof(SHFILEINFO), SHGFI_USEFILEATTRIBUTES | SHGFI_ICON | SHGFI_LARGEICON);
     if (NULL != sfiTemp.hIcon) {
-        pixmap = QtWin::fromHICON(sfiTemp.hIcon);
+        pixmap = QPixmap::fromImage(QImage::fromHICON(sfiTemp.hIcon));
         DestroyIcon(sfiTemp.hIcon);
     }
 
@@ -380,6 +379,7 @@ void WindowsHelpers::setForegroundWindow(HWND hWnd) const {
 
 void WindowsHelpers::sharedOutsideWindow(WId wid, HWND hWnd, bool bFullScreen) {
     if (bFullScreen) {
+        /* 最大化应用和 PPT 全屏不设置边框置顶
         BOOL bRet = SetWindowPos((HWND)wid, hWnd, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
         if (TRUE != bRet) {
             YXLOG(Info) << "SetWindowPos failed. GetLastError: " << GetLastError() << YXLOGEnd;
@@ -388,7 +388,11 @@ void WindowsHelpers::sharedOutsideWindow(WId wid, HWND hWnd, bool bFullScreen) {
         if (TRUE != bRet) {
             YXLOG(Info) << "SetWindowPos failed. GetLastError: " << GetLastError() << YXLOGEnd;
         }
+        */
     } else {
+        auto currentOwner = reinterpret_cast<HWND>(::GetWindowLongPtr((HWND)wid, GWLP_HWNDPARENT));
+        if (currentOwner != GetDesktopWindow())
+            SetWindowLongPtr((HWND)wid, GWLP_HWNDPARENT, (LONG_PTR)GetDesktopWindow());
         BOOL bRet = SetWindowPos((HWND)wid, hWnd, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
         if (TRUE != bRet) {
             YXLOG(Info) << "SetWindowPos failed. GetLastError: " << GetLastError() << YXLOGEnd;
@@ -529,13 +533,95 @@ HWND WindowsHelpers::getHwndByPoint(int nX, int nY) {
     return hwnd;
 }
 
+BOOL WindowsHelpers::GetProcessNameByID(DWORD dwProcessID, std::string& strProcessName) {
+    strProcessName.clear();
+    HANDLE processHandle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_VM_READ, FALSE, dwProcessID);
+    if (processHandle != NULL) {
+        char exePath[MAX_PATH];
+        if (GetModuleFileNameExA(processHandle, NULL, exePath, MAX_PATH) > 0) {
+            strProcessName = PathFindFileNameA(exePath);
+        }
+        CloseHandle(processHandle);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+BOOL WindowsHelpers::IsWindowClassExists(const std::string& strClassName, const std::string& processName, DWORD& dwProcessID, HWND& outHwnd) {
+    auto hWnd = FindWindowA(strClassName.c_str(), NULL);
+    if (hWnd != NULL) {
+        DWORD dwInnerProcessID = 0;
+        if (GetWindowThreadProcessId(hWnd, &dwInnerProcessID) != 0) {
+            std::string innerProcessName;
+            BOOL result = GetProcessNameByID(dwInnerProcessID, innerProcessName);
+            if (result && !innerProcessName.empty()) {
+                std::string lowerProcessName;
+                std::transform(innerProcessName.begin(), innerProcessName.end(), std::back_inserter(lowerProcessName), ::tolower);
+                if (lowerProcessName == processName) {
+                    dwProcessID = dwInnerProcessID;
+                    outHwnd = hWnd;
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+BOOL WindowsHelpers::EnumWindowsProc(_In_ HWND hWnd, _In_ LPARAM lParam) {
+    auto parameter = reinterpret_cast<EnumWindowParam*>(lParam);
+    if (!parameter)
+        return FALSE;
+    BOOL bPopupWindow = (::GetWindowLong(hWnd, GWL_STYLE) & WS_POPUP) == WS_POPUP;
+    BOOL bIsToolWindow = (::GetWindowLong(hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW) == WS_EX_TOOLWINDOW;
+    if (::IsWindow(hWnd) && ::IsWindowVisible(hWnd) && bPopupWindow && !bIsToolWindow) {
+        static const uint32_t kMaxClassName = 1024;
+        char szClass[kMaxClassName] = {0};
+        ::RealGetWindowClassA(hWnd, szClass, kMaxClassName);
+        std::string strWindowClass = szClass;
+        std::string lowerWindowClass;
+        std::transform(strWindowClass.begin(), strWindowClass.end(), std::back_inserter(lowerWindowClass), ::tolower);
+        if (!lowerWindowClass.empty() && lowerWindowClass == parameter->findClassName) {
+            parameter->hWndList.push_back(hWnd);
+        }
+    }
+    return TRUE;
+}
+
 // 查找全屏的应用窗口
 BOOL WindowsHelpers::findFullScreenWindow(DWORD& dwProcessID, std::string& strProcessName, HWND& hWnd, bool& bPowerpnt) {
+    // PPT
+    if (IsWindowClassExists("screenClass", "powerpnt.exe", dwProcessID, hWnd)) {
+        OutputDebugStringA(std::string("Found full screen powerpoint process ID: ").append(std::to_string(dwProcessID)).c_str());
+        bPowerpnt = true;
+        return true;
+    }
+    // WPS
+    EnumWindowParam findParameter;
+    findParameter.findClassName = "qt5qwindowicon";
+    BOOL result = EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&findParameter));
+    if (result) {
+        for (auto& hWindowHandle : findParameter.hWndList) {
+            DWORD dwInnerProcessID = 0;
+            if (GetWindowThreadProcessId(hWindowHandle, &dwInnerProcessID) == 0)
+                continue;
+            std::string strProcessName;
+            if (!GetProcessNameByID(dwInnerProcessID, strProcessName))
+                continue;
+            std::string lowerProcessName;
+            std::transform(strProcessName.begin(), strProcessName.end(), std::back_inserter(lowerProcessName), ::tolower);
+            if (lowerProcessName == "wpp.exe") {
+                OutputDebugStringA(std::string("Found wps fullscreen window, process ID: ").append(std::to_string(dwInnerProcessID)).c_str());
+                hWnd = hWindowHandle;
+                bPowerpnt = false;
+                return true;
+            }
+        }
+    }
     bPowerpnt = false;
     // 检测显示器数量
     std::vector<RECT> vRect;
-    // 枚举所有显示器的Rect
-    EnumDisplayMonitors(NULL, NULL, MonitorEnumProc, (LPARAM)&vRect);
+    EnumDisplayMonitors(NULL, NULL, MonitorEnumProc, (LPARAM)&vRect);  // 枚举所有显示器的Rect
 
     /*
    这个函数获取屏幕4角的窗口的进程句柄，判断与激活句柄是否相等的方式来判断是否全屏程序。
@@ -665,6 +751,19 @@ bool WindowsHelpers::getDisplayRect(HWND hWnd, QRectF& rect, QRectF& availableRe
     //    rectTmp = monitorInfo.rcWork;
     //    availableRect = QRectF((qreal)rectTmp.left,  (qreal)rectTmp.right, (qreal)(rectTmp.right - rectTmp.left), (qreal)(rectTmp.bottom -
     //    rectTmp.top)); return true;
+}
+
+void WindowsHelpers::adjustRectWithRatio(const QScreen* screen, const QRect& in, QRect& out) const {
+    out = in;
+    if (screen == nullptr)
+        return;
+    auto pixelRatio = screen->devicePixelRatio();
+    if (pixelRatio == 1.0)
+        return;
+    out.setX(in.x() / pixelRatio);
+    out.setY(in.y() / pixelRatio);
+    out.setWidth(in.width() / pixelRatio);
+    out.setHeight(in.height() / pixelRatio);
 }
 
 bool WindowsHelpers::isPptPlaying(HWND& hWnd, bool& bPowerpnt) {

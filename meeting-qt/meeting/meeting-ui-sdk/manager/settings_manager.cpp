@@ -507,24 +507,40 @@ void SettingsManager::setLocalVideoFramerate(neroom::NEVideoFramerate framerate)
 }
 
 void SettingsManager::setLocalVideoResolution(VideoResolution localVideoResolution) {
-    auto rtcController = GlobalManager::getInstance()->getPreviewRoomRtcController();
-    if (rtcController) {
-        neroom::NEVideoResolution videoProfileType = neroom::kNEVideoProfileHD720P;
-        switch (localVideoResolution) {
-            case VR_480P:
-                videoProfileType = neroom::kNEVideoProfileStandard;
-                break;
-            case VR_720P:
-                videoProfileType = neroom::kNEVideoProfileHD720P;
-                break;
-            case VR_1080P:
-                videoProfileType = neroom::kNEVideoProfileHD1080P;
-                break;
-            default:
-                break;
-        }
-        rtcController->setLocalVideoResolution(videoProfileType);
+    neroom::NEVideoResolution videoProfileType = neroom::kNEVideoProfileHD720P;
+    switch (localVideoResolution) {
+        case VR_DEFAULT:
+            videoProfileType = neroom::kNEVideoProfileUsingTemplate;
+            break;
+        case VR_480P:
+            videoProfileType = neroom::kNEVideoProfileStandard;
+            break;
+        case VR_720P:
+            videoProfileType = neroom::kNEVideoProfileHD720P;
+            break;
+        case VR_1080P:
+            videoProfileType = neroom::kNEVideoProfileHD1080P;
+            break;
+        case VR_4K:
+            videoProfileType = neroom::kNEVideoProfile4KUHD;
+            break;
+        case VR_8K:
+            videoProfileType = neroom::kNEVideoProfile8KUHD;
+            break;
+        default:
+            break;
     }
+    INEPreviewRoomRtcController* rtcController = nullptr;
+    auto* roomContext = MeetingManager::getInstance()->getRoomContext();
+    if (roomContext) {
+        YXLOG(Info) << "[SettingsManager] using in room RTC controller" << YXLOGEnd;
+        rtcController = roomContext->getRtcController();
+    } else {
+        YXLOG(Info) << "[SettingsManager] using in preview RTC controller" << YXLOGEnd;
+        rtcController = GlobalManager::getInstance()->getPreviewRoomRtcController();
+    }
+    if (rtcController)
+        rtcController->setLocalVideoResolution(videoProfileType);
 
     YXLOG(Info) << "setLocalVideoResolution, resolution: " << (int)localVideoResolution << YXLOGEnd;
     if (m_localVideoResolution == localVideoResolution)
@@ -712,18 +728,22 @@ void SettingsManager::initVirtualBackground(const std::vector<VirtualBackgroundM
 #endif
 
         m_buildInVB.reserve(mapVB.size() + 15);
-        m_buildInVB.assign({VirtualBackgroundModel::VBProperty{applicationDir + "null.jpg", false, false},
-                            VirtualBackgroundModel::VBProperty{applicationDir + "pexels-pixabay.jpg", false, false},
-                            VirtualBackgroundModel::VBProperty{applicationDir + "bricks.jpg", false, false},
-                            VirtualBackgroundModel::VBProperty{applicationDir + "interior-design.jpg", false, false},
-                            VirtualBackgroundModel::VBProperty{applicationDir + "meeting-room.jpg", false, false},
-                            VirtualBackgroundModel::VBProperty{applicationDir + "pexels-katerina-holmes.jpg", false, false},
-                            VirtualBackgroundModel::VBProperty{applicationDir + "whiteboard.jpg", false, false}});
+        m_buildInVB.assign(
+            {VirtualBackgroundModel::VBProperty{applicationDir + "null.jpg", applicationDir + "null-thumbnail.jpg", false, false},
+             VirtualBackgroundModel::VBProperty{applicationDir + "pexels-pixabay.jpg", applicationDir + "pexels-pixabay-thumbnail.jpg", false, false},
+             VirtualBackgroundModel::VBProperty{applicationDir + "bricks.jpg", applicationDir + "bricks-thumbnail.jpg", false, false},
+             VirtualBackgroundModel::VBProperty{applicationDir + "interior-design.jpg", applicationDir + "interior-design-thumbnail.jpg", false,
+                                                false},
+             VirtualBackgroundModel::VBProperty{applicationDir + "meeting-room.jpg", applicationDir + "meeting-room-thumbnail.jpg", false, false},
+             VirtualBackgroundModel::VBProperty{applicationDir + "pexels-katerina-holmes.jpg",
+                                                applicationDir + "pexels-katerina-holmes-thumbnail.jpg", false, false},
+             VirtualBackgroundModel::VBProperty{applicationDir + "whiteboard.jpg", applicationDir + "whiteboard-thumbnail.jpg", false, false}});
 
         std::transform(mapVB.begin(), mapVB.end(), std::back_inserter(m_buildInVB), [](const auto& it) {
-            return VirtualBackgroundModel::VBProperty{it.second, true, false};
+            return VirtualBackgroundModel::VBProperty{it.second, it.second, true, false};
         });
-        m_buildInVB.emplace_back(VirtualBackgroundModel::VBProperty{"qrc:/qml/images/settings/vb/add.svg", false, false});
+        m_buildInVB.emplace_back(
+            VirtualBackgroundModel::VBProperty{"qrc:/qml/images/settings/vb/add.svg", "qrc:/qml/images/settings/vb/add.svg", false, false});
     } else {
         bCustom = true;
         VirtualBackgroundModel::VBProperty front = m_buildInVB.front();
@@ -825,7 +845,7 @@ neroom::NERoomRtcAudioProfileType SettingsManager::convertAudioProfile(const std
 QString SettingsManager::getLogPath() {
     QString logPathEx = qApp->property("logPath").toString();
     if (logPathEx.isEmpty())
-        logPathEx = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+        logPathEx = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
     do {
         if (logPathEx.endsWith("/")) {
             logPathEx = logPathEx.left(logPathEx.size() - 1);

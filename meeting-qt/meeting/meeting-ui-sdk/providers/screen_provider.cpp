@@ -5,9 +5,7 @@
 #include "screen_provider.h"
 
 ScreenProvider::ScreenProvider(QObject* parent)
-    : QObject(parent)
-    , m_videoFormat(QSize(0, 0), QVideoFrame::Format_ARGB32)
-    , m_videoSurface(nullptr) {
+    : QObject(parent) {
     m_captureTimer.setSingleShot(true);
     m_captureTimer.setInterval(300);
     connect(&m_captureTimer, &QTimer::timeout, this, &ScreenProvider::timeout);
@@ -20,18 +18,11 @@ ScreenProvider::~ScreenProvider() {
     emit providerInvalidated();
 }
 
-void ScreenProvider::setVideoSurface(QAbstractVideoSurface* videoSurface) {
-    if (m_videoSurface == videoSurface)
+void ScreenProvider::setVideoSink(QVideoSink* videoSink) {
+    if (m_videoSink == videoSink)
         return;
-
-    if (m_videoSurface && m_videoSurface->isActive())
-        m_videoSurface->stop();
-
-    m_videoSurface = videoSurface;
-
-    if (m_videoSurface) {
-        m_videoSurface->start(m_videoFormat);
-    }
+    m_videoSink = videoSink;
+    emit videoSinkChanged();
 }
 
 void ScreenProvider::timeout() {
@@ -48,21 +39,20 @@ void ScreenProvider::timeout() {
     QPixmap pixmap = screen->grabWindow(0, screen->geometry().x(), screen->geometry().y(), screen->geometry().width(), screen->geometry().height());
 #endif
     QImage image(pixmap.toImage().convertToFormat(QImage::Format_RGB32));
-    QVideoFrame frame(image);
-
+    // QVideoFrame frame(image);
+    QVideoFrameFormat frameFormat(image.size(), QVideoFrameFormat::pixelFormatFromImageFormat(image.format()));
+    QVideoFrame frame(frameFormat);
+    if (frame.map(QVideoFrame::WriteOnly)) {
+        std::copy(image.bits(), image.bits() + frame.mappedBytes(0), frame.bits(0));
+        frame.unmap();
+    }
     emit screenPictureReceived(frame, image.size());
     m_captureTimer.start();
 }
 
 void ScreenProvider::deliverFrame(const QVideoFrame& frame, const QSize& videoSize) {
-    if (m_videoFormat.frameSize() != videoSize) {
-        m_videoSurface->stop();
-        m_videoFormat.setFrameSize(videoSize);
-        m_videoSurface->start(m_videoFormat);
-    }
-
-    if (m_videoSurface)
-        m_videoSurface->present(frame);
+    if (m_videoSink)
+        m_videoSink->setVideoFrame(frame);
 }
 
 bool ScreenProvider::capture() const {

@@ -47,7 +47,7 @@ Button {
             height: tip.implicitHeight + 2
             radius: 6
             color: "red"
-            visible:msgTipNum !== 0
+            visible: msgTipNum !== 0
             anchors.top: parent.top
             anchors.topMargin: 10
             anchors.right: parent.right

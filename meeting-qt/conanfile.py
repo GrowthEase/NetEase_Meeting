@@ -1,5 +1,4 @@
 from conans import ConanFile, tools
-import platform
 import os
 
 
@@ -24,9 +23,9 @@ class ModuleConan(ConanFile):
             self.requires(f"nertc/{env_nertc_version}@yunxin/testing")
             print('Using nertc version from env: ', env_nertc_version)
         self.requires("alog/1.1.0@yunxin/stable")
-        self.requires("roomkit/1.16.1@yunxin/stable")
+        self.requires("roomkit/1.19.0@yunxin/stable")
         self.requires("tinyNET/0.1.1@yunxin/stable")
-        self.requires("libyuv/cci.20201106")
+        self.requires("libyuv/1854@yunxin/stable")
         self.requires("gtest/cci.20210126")
         self.requires("jsoncpp/1.9.5")
 
@@ -39,7 +38,7 @@ class ModuleConan(ConanFile):
         self.cpp_info.libs = tools.collect_libs(self)
 
     def imports(self):
-        self.copy("*.*", "lib/resource", "resource", "roomkit")
+        self.copy("*.*", "lib/resource/assets", "resource/assets", "roomkit")
         if self.settings.os == "Macos":
             self.copy("*.dylib", "lib", "lib", "nim")
             self.copy("*.dylib", "lib", "lib", "roomkit")
@@ -47,3 +46,5 @@ class ModuleConan(ConanFile):
         if self.settings.os == 'Windows':
             self.copy("*.dll", "bin", "bin", "nim")
             self.copy("*.dll", "bin", "bin", "roomkit")
+            self.copy("*.dll", "bin", "bin", "nertc")
+            self.copy("*.exe", "bin", "bin", "nertc")

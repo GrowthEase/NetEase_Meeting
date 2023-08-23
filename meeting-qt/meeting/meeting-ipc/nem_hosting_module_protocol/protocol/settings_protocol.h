@@ -133,6 +133,12 @@ enum SettingsCID {
     SettingsCID_setMyVideoFramerate = 79,
     SettingsCID_setMyVideoFramerate_CB = 80,
 
+    SettingsCID_setSharingSidebarViewMode,
+    SettingsCID_setSharingSidebarViewMode_CB,
+
+    SettingsCID_getSharingSidebarViewMode,
+    SettingsCID_getSharingSidebarViewMode_CB,
+
     SettingsCID_Notify = 100,
     SettingsCID_ChangeNotify = SettingsCID_Notify + 1,  // 设置变更通知
 };

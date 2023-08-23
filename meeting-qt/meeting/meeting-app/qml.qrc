@@ -118,6 +118,7 @@
         <file>qml/images/front/feedback/thumb-up-active@2x.svg</file>
         <file>qml/images/front/feedback/smlie-active.svg</file>
         <file>qml/images/front/feedback/smlie-active@2x.svg</file>
+        <file>qml/profile/NPSWindow.qml</file>
         <file>qml/profile/AppList.qml</file>
         <file>qml/images/front/icon-switch@2x.svg</file>
         <file>qml/images/front/icon-switch.svg</file>
@@ -145,5 +146,10 @@
         <file>qml/images/front/schedule.png</file>
         <file>qml/components/CustomImageButton.qml</file>
         <file>qml/components/GlobalToast.qml</file>
+        <file>qml/images/front/feedback/angry.svg</file>
+        <file>qml/images/front/feedback/sad.svg</file>
+        <file>qml/images/front/feedback/happy.svg</file>
+        <file>qml/images/front/feedback/stirring.svg</file>
+        <file>qml/images/front/feedback/satisfied.svg</file>
     </qresource>
 </RCC>

@@ -3,31 +3,30 @@ import QtQuick.Window 2.14
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 import NetEase.Meeting.Settings 1.0
-
 import "components/"
 
 Rectangle {
+    property bool autoJoin: false
+    property int retryTimes: 0
+
     anchors.fill: parent
+
     gradient: Gradient {
         GradientStop {
-            position: 0.0
             color: "#292933"
+            position: 0.0
         }
         GradientStop {
-            position: 1.0
             color: "#1E1E25"
+            position: 1.0
         }
     }
 
-    property int retryTimes: 0
-    property bool autoJoin: false
-
     Component.onCompleted: {
         if (mainWindow.visibility === Window.FullScreen) {
-            mainWindow.showNormal()
+            mainWindow.showNormal();
         }
-
-        viewMode = MainPanel.ViewMode.LoadingMode
+        viewMode = MainPanel.ViewMode.LoadingMode;
     }
 
     ColumnLayout {
@@ -39,22 +38,20 @@ Rectangle {
 
             Image {
                 id: backgroundImage
-                sourceSize.width: 100
-                sourceSize.height: 100
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                 mipmap: true
                 source: "qrc:/qml/images/loading/logo.png"
+                sourceSize.height: 100
+                sourceSize.width: 100
             }
-
             Label {
                 id: loadingText
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                 color: "#FFFFFF"
                 font.pixelSize: 14
                 text: qsTr("Entering the %1...").arg(Qt.application.displayName)
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
             }
         }
-
         Item {
             Layout.preferredHeight: 40
         }
@@ -88,13 +85,13 @@ Rectangle {
         }
     }
     */
-
     Connections {
         target: authManager
+
         onAuthInfoExpired: {
-            console.log("onAuthInfoExpired")
-            passwordWindow.setVisible(false)
-            mainWindow.setVisible(false)
+            console.log("onAuthInfoExpired");
+            passwordWindow.setVisible(false);
+            mainWindow.setVisible(false);
         }
     }
 }

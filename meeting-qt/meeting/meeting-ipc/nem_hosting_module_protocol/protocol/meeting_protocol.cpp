@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "nem_hosting_module_protocol/protocol/meeting_protocol.h"
+
 NNEM_SDK_HOSTING_MODULE_PROTOCOL_BEGIN_DECLS
 
 void StartRequest::OnPack(Json::Value& root) const {
@@ -11,6 +12,7 @@ void StartRequest::OnPack(Json::Value& root) const {
     root["param_"]["sceneCode"] = param_.scene.code;
     root["param_"]["tag"] = param_.tag;
     root["param_"]["password"] = param_.password;
+    root["param_"]["subject"] = param_.subject;
     root["param_"]["extraData"] = param_.extraData;
 
     Json::Value roleBinds;
@@ -42,7 +44,6 @@ void StartRequest::OnPack(Json::Value& root) const {
         root["param_"]["controls"].append(control);
     }
 
-    // stream encryption config
     root["param_"]["encryptionConfig"]["enable"] = param_.encryptionConfig.enable;
     root["param_"]["encryptionConfig"]["key"] = param_.encryptionConfig.key;
     root["param_"]["encryptionConfig"]["type"] = param_.encryptionConfig.type;
@@ -109,6 +110,7 @@ void StartRequest::OnParse(const Json::Value& root) {
     param_.meetingNum = root["param_"]["meetingId"].asString();
     param_.tag = root["param_"]["tag"].asString();
     param_.password = root["param_"]["password"].asString();
+    param_.subject = root["param_"]["subject"].asString();
     param_.extraData = root["param_"]["extraData"].asString();
     param_.scene.code = root["param_"]["sceneCode"].asString();
     param_.scene.roleTypes.clear();
@@ -137,7 +139,6 @@ void StartRequest::OnParse(const Json::Value& root) {
         param_.roleBinds[it] = static_cast<NEMeetingRoleType>(roleBindsObj[it].asInt());
     }
 
-    // stream encryption config
     param_.encryptionConfig.enable = root["param_"]["encryptionConfig"]["enable"].asBool();
     param_.encryptionConfig.key = root["param_"]["encryptionConfig"]["key"].asString();
     param_.encryptionConfig.type = static_cast<NEEncryptionType>(root["param_"]["encryptionConfig"]["type"].asInt());
@@ -204,7 +205,6 @@ void JoinRequest::OnPack(Json::Value& root) const {
     root["param_"]["meetingId"] = param_.meetingNum;
     root["param_"]["password"] = param_.password;
     root["param_"]["tag"] = param_.tag;
-    // stream encryption config
     root["param_"]["encryptionConfig"]["enable"] = param_.encryptionConfig.enable;
     root["param_"]["encryptionConfig"]["key"] = param_.encryptionConfig.key;
     root["param_"]["encryptionConfig"]["type"] = param_.encryptionConfig.type;
@@ -270,7 +270,6 @@ void JoinRequest::OnParse(const Json::Value& root) {
     param_.meetingNum = root["param_"]["meetingId"].asString();
     param_.password = root["param_"]["password"].asString();
     param_.tag = root["param_"]["tag"].asString();
-    // stream encryption config
     param_.encryptionConfig.enable = root["param_"]["encryptionConfig"]["enable"].asBool();
     param_.encryptionConfig.key = root["param_"]["encryptionConfig"]["key"].asString();
     param_.encryptionConfig.type = static_cast<NEEncryptionType>(root["param_"]["encryptionConfig"]["type"].asInt());

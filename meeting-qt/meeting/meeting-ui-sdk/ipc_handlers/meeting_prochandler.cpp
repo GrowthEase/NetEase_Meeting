@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "meeting_prochandler.h"
+#include <QSharedPointer>
 #include <QUuid>
 #include <codecvt>
 #include <locale>
@@ -17,6 +18,7 @@
 #include "manager/meeting_manager.h"
 #include "manager/more_item_manager.h"
 #include "manager/settings_manager.h"
+#include "statistics/meeting/meeting_event_base.h"
 
 #define MENU_ITEM_TITLE_LIMIT 20
 
@@ -33,8 +35,9 @@ bool NEMeetingServiceProcHandlerIMP::onStartMeeting(const NS_I_NEM_SDK::NEStartM
                     << ", enable invitation: " << !opts.noInvite << ", enable screenShare: " << !opts.noScreenShare
                     << ", enable view: " << !opts.noView << ", meeting show options: " << opts.meetingIdDisplayOption
                     << ", enable sip: " << !opts.noSip << ", enable bAudioAINSEnabled: " << opts.audioAINSEnabled
-                    << ", showMemberTag: " << opts.showMemberTag << ", extraData: " << param.extraData << ", joinTimeout: " << opts.joinTimeout
-                    << ", enable noMuteAllVideo: " << opts.noMuteAllVideo << ", full_more submenu size: " << opts.full_more_menu_items_.size()
+                    << ", showMemberTag: " << opts.showMemberTag << ", subject: " << param.subject << ", extraData: " << param.extraData
+                    << ", joinTimeout: " << opts.joinTimeout << ", enable noMuteAllVideo: " << opts.noMuteAllVideo
+                    << ", full_more submenu size: " << opts.full_more_menu_items_.size()
                     << ", full_toolbar submenu size: " << opts.full_toolbar_menu_items_.size()
                     << ", showMeetingRemainingTip: " << opts.showMeetingRemainingTip << ", detectMutedMic: " << opts.detectMutedMic
                     << ", unpubAudioOnMute: " << opts.unpubAudioOnMute << ", enableFileMessage: " << opts.chatroomConfig.enableFileMessage
@@ -240,7 +243,9 @@ bool NEMeetingServiceProcHandlerIMP::onJoinMeeting(const NS_I_NEM_SDK::NEJoinMee
                                                    const NS_I_NEM_SDK::NEJoinMeetingOptions& opts,
                                                    const NS_I_NEM_SDK::NEMeetingService::NEJoinMeetingCallback& cb) {
     YXLOG_API(Info) << "Received onJoinMeeting request." << YXLOGEnd;
-    return joinMeeting(param, opts, cb);
+    auto event = QSharedPointer<JoinMeetingEvent>::create();
+    event->join_type_ = MeetingJoinType::kNormal;
+    return joinMeeting(param, opts, cb, QVariant::fromValue(event));
 }
 
 bool NEMeetingServiceProcHandlerIMP::onAnonymousJoinMeeting(const NEJoinMeetingParams& param,
@@ -248,6 +253,8 @@ bool NEMeetingServiceProcHandlerIMP::onAnonymousJoinMeeting(const NEJoinMeetingP
                                                             const NEMeetingService::NEJoinMeetingCallback& cb) {
     YXLOG_API(Info) << "Received onAnonymousJoinMeeting request." << YXLOGEnd;
     auto meetingStatus = MeetingManager::getInstance()->getRoomStatus();
+    auto event = QSharedPointer<JoinMeetingEvent>::create();
+    event->join_type_ = MeetingJoinType::kAnonymous;
     if (NEMeeting::MEETING_IDLE != meetingStatus) {
         YXLOG(Info) << "getRoomStatus, meetingStatus: " << meetingStatus << YXLOGEnd;
         if (cb) {
@@ -257,10 +264,18 @@ bool NEMeetingServiceProcHandlerIMP::onAnonymousJoinMeeting(const NEJoinMeetingP
         return true;
     }
     Invoker::getInstance()->execute([=]() {
-        AuthManager::getInstance()->doAnonymousLogin([=](int code, const std::string& msg) {
+        auto anonStep = std::make_shared<MeetingEventStepBase>("anonymous_login");
+        anonStep->SetStartTime(QDateTime::currentDateTime().toMSecsSinceEpoch());
+        AuthManager::getInstance()->doAnonymousLogin([=](int code, const std::string& msg, NEMeetingResponseKeys response) {
+            anonStep->SetEndTime(QDateTime::currentDateTime().toMSecsSinceEpoch());
+            anonStep->SetResultCode(response.code);
+            anonStep->SetStepMessage(response.message);
+            anonStep->SetStepRequestID(response.requestID);
+            anonStep->SetServerCost(response.cost);
+            event->AddStep(anonStep);
             AuthManager::getInstance()->setAnonymousLogin(0 == code);
             if (code == 0) {
-                joinMeeting(param, opts, cb);
+                joinMeeting(param, opts, cb, QVariant::fromValue(event));
             } else {
                 if (cb) {
                     cb((nem_sdk_interface::NEErrorCode)code, msg);
@@ -635,9 +650,8 @@ void NEMeetingServiceProcHandlerIMP::onMeetingStatusChanged(NEMeeting::Status st
         return;
     }
     if (NEMeeting::MEETING_DISCONNECTED == status || NEMeeting::MEETING_ENDED == status || NEMeeting::MEETING_CONNECT_FAILED == status) {
-        if (AuthManager::getInstance()->isAnonymousLogin()) {
+        if (AuthManager::getInstance()->isAnonymousLogin())
             AuthManager::getInstance()->doLogout(false);
-        }
     }
     switch (status) {
         case NEMeeting::MEETING_IDLE:        // 初始状态
@@ -651,6 +665,7 @@ void NEMeetingServiceProcHandlerIMP::onMeetingStatusChanged(NEMeeting::Status st
             responseCode = convertExtentedCode(errorCode);
             break;
         case NEMeeting::MEETING_CONNECT_FAILED:  // 连接失败
+        case NEMeeting::MEETING_DISCONNECTED:
             responseCode = convertExtentedCode(errorCode);
             break;
         default:
@@ -705,7 +720,8 @@ bool NEMeetingServiceProcHandlerIMP::checkOptionsId(const std::vector<NS_I_NEM_S
 
 bool NEMeetingServiceProcHandlerIMP::joinMeeting(const NEJoinMeetingParams& param,
                                                  const NEJoinMeetingOptions& opts,
-                                                 const NEMeetingService::NEJoinMeetingCallback& cb) {
+                                                 const NEMeetingService::NEJoinMeetingCallback& cb,
+                                                 const QVariant& userData) {
     QString strPassword = param.password.empty() ? "null" : "not null";
     YXLOG_API(Info) << param.meetingNum << ", nickname: " << param.displayName << ", password: " << strPassword.toStdString()
                     << ", enable audio: " << !opts.noAudio << ", enable video: " << !opts.noVideo << ", enable chatroom: " << !opts.noChat
@@ -717,7 +733,7 @@ bool NEMeetingServiceProcHandlerIMP::joinMeeting(const NEJoinMeetingParams& para
                     << ", showMeetingRemainingTip: " << opts.showMeetingRemainingTip << ", detectMutedMic: " << opts.detectMutedMic
                     << ", unpubAudioOnMute: " << opts.unpubAudioOnMute << ", enableFileMessage: " << opts.chatroomConfig.enableFileMessage
                     << ", enableImageMessage: " << opts.chatroomConfig.enableImageMessage << ", defaultWindowMode: " << (int)opts.defaultWindowMode
-                    << ", noWhiteboard: " << opts.noWhiteboard << YXLOGEnd;
+                    << ", noWhiteboard: " << opts.noWhiteboard << ", encryption enabled: " << param.encryptionConfig.enable << YXLOGEnd;
 
     if (m_joinMeetingCallback != nullptr) {
         if (cb != nullptr) {
@@ -871,7 +887,7 @@ bool NEMeetingServiceProcHandlerIMP::joinMeeting(const NEJoinMeetingParams& para
                                          GlobalManager::getInstance()->getGlobalConfig()->isWhiteboardSupported() && !opts.noWhiteboard);
 
         WhiteboardManager::getInstance()->setAutoOpenWhiteboard(!option_.noAutoOpenWhiteboard);
-        MeetingManager::getInstance()->joinMeeting(param, option_);
+        MeetingManager::getInstance()->joinMeeting(param, option_, userData);
     });
 
     return true;

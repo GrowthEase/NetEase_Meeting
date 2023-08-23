@@ -2,7 +2,7 @@
 import Qt.labs.platform 1.1
 import QtQuick.Layouts 1.1
 import QtQuick.Controls 2.14
-import QtGraphicalEffects 1.0
+import Qt5Compat.GraphicalEffects
 import QtQuick.Controls.Material 2.12
 import NetEase.Meeting.GlobalChatManager 1.0
 import NetEase.Meeting.MessageModel 1.0
@@ -31,7 +31,7 @@ Rectangle {
         messageModel.clearMessage()
     }
 
-    function getShowedNickname(name){ 
+    function getShowedNickname(name){
            return name.substring(0,1)
     }
 
@@ -108,25 +108,24 @@ Rectangle {
             id: msglistView
             anchors.fill: parent
             anchors.bottomMargin: 15
-            anchors.leftMargin: 5
+            anchors.leftMargin: 10
             header: Rectangle { height: 20 }
             clip: true
             displayMarginBeginning: 40
             displayMarginEnd: 40
             verticalLayoutDirection:ListView.TopToBottom
             spacing: 6
-
             model: messageModel
             delegate: Rectangle {
                 anchors.rightMargin: 5
                 anchors.leftMargin: 5
-                width: listviewlayout.width - 10
+                width: listviewlayout.width - 20
                 height: msgUintLayout.height
 
                 ColumnLayout {
                     id:msgUintLayout
                     width: parent.width
-                    spacing:0
+                    spacing: 0
                     visible: model.type === MessageModelEnum.IMAGE ? (image.status == Image.Ready) : true //图片消息由于加载图片存在耗时，加载完成后再显示消息
                     Rectangle {
                         id:timetiper
@@ -268,6 +267,8 @@ Rectangle {
                                             Label {
                                                 text: model.fileName
                                                 elide: Qt.ElideMiddle
+                                                color: "#333333"
+                                                font.pixelSize: 14
                                                 Layout.preferredWidth: 178
                                             }
                                             Label {
@@ -453,12 +454,6 @@ Rectangle {
                                     id: image
                                     visible: model.type === MessageModelEnum.IMAGE
                                     smooth: false
-                                    Component.onCompleted: {
-                                        if (model.type === MessageModelEnum.IMAGE) {
-                                            image.source = "file:///" + model.filePath
-                                        }
-                                    }
-
                                     sourceSize.width: parent.width
                                     sourceSize.height: parent.height
                                     asynchronous: true
@@ -466,6 +461,21 @@ Rectangle {
                                     clip: true
                                     anchors.fill: parent
                                     fillMode: Image.PreserveAspectCrop
+
+                                    Component.onCompleted: {
+                                        if (model.type === MessageModelEnum.IMAGE) {
+                                            image.source = "file:///" + model.filePath
+                                        }
+                                    }
+
+                                    onStatusChanged: {
+                                        if (image.status == Image.Ready && model.index == msglistView.count - 1) {
+                                            Qt.callLater(() => {
+                                                if (!msglistView.atYEnd)
+                                                    msglistView.positionViewAtEnd()
+                                            })
+                                        }
+                                    }
 
                                     RingProgressbar {
                                         id: imageUploadProgressbar
@@ -481,6 +491,7 @@ Rectangle {
                                         anchors.fill: parent
                                         acceptedButtons: Qt.LeftButton | Qt.RightButton
                                         onDoubleClicked: {
+                                            if (mouse.button !== Qt.LeftButton) return
                                             Qt.openUrlExternally("file:///" + model.filePath)
                                         }
 
@@ -561,19 +572,6 @@ Rectangle {
                         radius: 8
                         color: model.sendFlag ? "#CCE1FF" : "#F2F3F5"
                         border.color: "white"
-
-//                        Label {
-//                            id: messageText
-//                            text: model.text
-//                            visible: model.type === MessageModelEnum.TEXT
-//                            font.pixelSize:14
-//                            anchors.fill: parent
-//                            anchors.margins: 12
-//                            anchors.topMargin: 10
-//                            anchors.bottomMargin: 10
-//                            wrapMode: Label.Wrap
-//                            color: "#222222"
-//                        }
 
                         TextArea {
                                 id: messageText
@@ -687,10 +685,3 @@ Rectangle {
     }
 
 }
-
-
-
-
-
-
-

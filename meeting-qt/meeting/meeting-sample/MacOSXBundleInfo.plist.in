@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>MeetingSample</string>
+	<key>CFBundleExecutable</key>
+	<string>MeetingSample</string>
+	<key>CFBundleIconFile</key>
+	<string>macx.icns</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.netease.nmc.MeetingSample</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>1.0</string>
+	<key>CFBundleName</key>
+	<string>NetEaseMeetingSample</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0.1</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>LSHasLocalizedDisplayName</key>
+	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>NetEase Meeting Sample</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2020 - 2022 NetEase Inc. All Rights Reserved.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>NetEase Meeting Sample</string>
+	<key>NSNetworkVolumesUsageDescription</key>
+	<string></string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string></string>
+		<string>audio</string>
+		<string>location</string>
+		<string>voip</string>
+		<string>newsstand-content</string>
+		<string>external-accessory</string>
+		<string>bluetooth-central</string>
+		<string>bluetooth-peripheral</string>
+		<string>fetch</string>
+		<string>remote-notification</string>
+		<string>processing</string>
+	</array>
+</dict>
+</plist>

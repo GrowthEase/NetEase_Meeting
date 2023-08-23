@@ -2,7 +2,7 @@
 import QtQuick.Controls 2.12
 import QtQuick.Window 2.12
 import QtQml.Models 2.14
-import QtGraphicalEffects 1.12
+import Qt5Compat.GraphicalEffects
 import NetEase.Settings.SettingsStatus 1.0
 import "../utils/dialogManager.js" as DialogManager
 import "../components"
@@ -53,7 +53,7 @@ Menu {
         visible: authManager.authAccountId === accountId && meetingManager.reName
         Label {
             id: modifyNameItem
-            text: qsTr("modifyName")
+            text: qsTr("Change Nickname")
             color: modifyName.hovered ? "#337EFF" : "#333333"
             anchors.left: parent.left
             anchors.leftMargin: 10
@@ -155,7 +155,7 @@ Menu {
         visible: membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole
         Label {
             id: muteVideoAndAudioItem
-            text: (videoStatus == 1 && audioStatus == 1) ? qsTr("mute Video and Audio") : qsTr("unmute Video and Audio")
+            text: (videoStatus == 1 && audioStatus == 1) ? qsTr("Mute Video/Audio") : qsTr("Unmute Video/Audio")
             color: muteVideoAndAudio.hovered ? "#337EFF" : "#333333"
             anchors.left: parent.left
             anchors.leftMargin: 10
@@ -171,7 +171,7 @@ Menu {
             onClicked: {
                 popupMenu.close()
                 if (accountId === authManager.authAccountId) {
-                    if (muteVideoAndAudioItem.text === qsTr("mute Video and Audio")) {
+                    if (muteVideoAndAudioItem.text === qsTr("Mute Video/Audio")) {
                         if (audioStatus === 1) {
                             audioManager.muteLocalAudio(true)
                         }
@@ -246,7 +246,7 @@ Menu {
                  && clientType != 5
         Label {
             id: transferHostItem
-            text: qsTr("TransferHost")
+            text: qsTr("Transfer Host")
             color: transferHost.hovered ? "#337EFF" : "#333333"
             anchors.left: parent.left
             anchors.leftMargin: 10
@@ -279,7 +279,7 @@ Menu {
         visible: membersManager.hostAccountId !== accountId && (membersManager.hostAccountId === authManager.authAccountId)
         Label {
             id: setManagerItem
-            text: isManagerRole ? qsTr("unsetManager") : qsTr("setManager")
+            text: isManagerRole ? qsTr("Remove Co-host") : qsTr("Set as Co-host")
             color: setManager.hovered ? "#337EFF" : "#333333"
             anchors.left: parent.left
             anchors.leftMargin: 10
@@ -299,6 +299,111 @@ Menu {
         }
         Accessible.role: Accessible.Button
         Accessible.name: setManagerItem.text
+        Accessible.onPressAction: if (enabled) clicked(Qt.LeftButton)
+    }
+
+    MenuItem {
+        id: enableWhiteboard
+        width: parent.width
+        height: visible ? 32 : 0
+        visible: (whiteboardManager.whiteboardSharing === true)
+                 && (accountId !== authManager.authAccountId)
+                 && (whiteboardManager.whiteboardSharerAccountId === authManager.authAccountId)
+        Label {
+            id: enableWhiteboardItem
+            text: isWhiteboardEnable ? qsTr("Revoke Board Access") : qsTr("Assign Board Access")
+            color: enableWhiteboard.hovered ? "#337EFF" : "#333333"
+            anchors.left: parent.left
+            anchors.leftMargin: 10
+            anchors.verticalCenter: parent.verticalCenter
+        }
+        background: Rectangle {
+            anchors.fill: parent
+            color: enableWhiteboard.hovered ? "#F2F3F5" : "#FFFFFF"
+        }
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton
+            onClicked: {
+                popupMenu.close()
+                if(isWhiteboardEnable) {
+                    whiteboardManager.disableWhiteboardDraw(accountId)
+                }else{
+                    whiteboardManager.enableWhiteboardDraw(accountId)
+                }
+            }
+        }
+        Accessible.role: Accessible.Button
+        Accessible.name: enableWhiteboardItem.text
+        Accessible.onPressAction: if (enabled) clicked(Qt.LeftButton)
+    }
+
+    MenuItem {
+        id: closeWhiteboardShare
+        width: parent.width
+        height: visible ? 32 : 0
+        visible: (whiteboardManager.whiteboardSharing === true)
+                 && (membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole)
+                 && (whiteboardManager.whiteboardSharerAccountId === accountId)
+                 && (accountId !== membersManager.hostAccountId)
+        Label {
+            id: closeWhiteboardShareItem
+            text: qsTr("End Board Collaboration")
+            color: closeWhiteboardShare.hovered ? "#337EFF" : "#333333"
+            anchors.left: parent.left
+            anchors.leftMargin: 10
+            anchors.verticalCenter: parent.verticalCenter
+        }
+        background: Rectangle {
+            anchors.fill: parent
+            color: closeWhiteboardShare.hovered ? "#F2F3F5" : "#FFFFFF"
+        }
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton
+            onClicked: {
+                popupMenu.close()
+                DialogManager.dynamicDialog(qsTr("End Board Collaboration"), qsTr("The current user is performing the whiteboard function and is sure to close its sharing ?"), function () {
+                    whiteboardManager.closeWhiteboard(accountId)
+                }, function () {}, Window.window)
+            }
+        }
+        Accessible.role: Accessible.Button
+        Accessible.name: closeWhiteboardShareItem.text
+        Accessible.onPressAction: if (enabled) clicked(Qt.LeftButton)
+    }
+
+    MenuItem {
+        id: closeScreenShare
+        width: parent.width
+        height: visible ? 32 : 0
+        visible:  (membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole)
+                  && (shareManager.shareAccountId === accountId)
+                  && (accountId !== membersManager.hostAccountId)
+        Label {
+            id: closeScreenShareItem
+            text: qsTr("End Screen Collaboration")
+            color: closeScreenShare.hovered ? "#337EFF" : "#333333"
+            anchors.left: parent.left
+            anchors.leftMargin: 10
+            anchors.verticalCenter: parent.verticalCenter
+        }
+        background: Rectangle {
+            anchors.fill: parent
+            color: closeScreenShare.hovered ? "#F2F3F5" : "#FFFFFF"
+        }
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton
+            onClicked: {
+                popupMenu.close()
+                DialogManager.dynamicDialog(qsTr("End Screen Collaboration"), qsTr("The current user is performing the Screen sharing function and is sure to close its sharing ?"), function () {
+                    shareManager.stopScreenSharing(accountId)
+                }, function () {}, Window.window)
+            }
+        }
+        Accessible.role: Accessible.Button
+        Accessible.name: closeScreenShareItem.text
         Accessible.onPressAction: if (enabled) clicked(Qt.LeftButton)
     }
 
@@ -336,111 +441,6 @@ Menu {
         }
         Accessible.role: Accessible.Button
         Accessible.name: removeMemberItem.text
-        Accessible.onPressAction: if (enabled) clicked(Qt.LeftButton)
-    }
-
-    MenuItem {
-        id: enableWhiteboard
-        width: parent.width
-        height: visible ? 32 : 0
-        visible: (whiteboardManager.whiteboardSharing === true)
-                 && (accountId !== authManager.authAccountId)
-                 && (whiteboardManager.whiteboardSharerAccountId === authManager.authAccountId)
-        Label {
-            id: enableWhiteboardItem
-            text: isWhiteboardEnable ? qsTr("disableWhiteboard") : qsTr("enableWhiteboard")
-            color: enableWhiteboard.hovered ? "#337EFF" : "#333333"
-            anchors.left: parent.left
-            anchors.leftMargin: 10
-            anchors.verticalCenter: parent.verticalCenter
-        }
-        background: Rectangle {
-            anchors.fill: parent
-            color: enableWhiteboard.hovered ? "#F2F3F5" : "#FFFFFF"
-        }
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton
-            onClicked: {
-                popupMenu.close()
-                if(isWhiteboardEnable) {
-                    whiteboardManager.disableWhiteboardDraw(accountId)
-                }else{
-                    whiteboardManager.enableWhiteboardDraw(accountId)
-                }
-            }
-        }
-        Accessible.role: Accessible.Button
-        Accessible.name: enableWhiteboardItem.text
-        Accessible.onPressAction: if (enabled) clicked(Qt.LeftButton)
-    }
-
-    MenuItem {
-        id: closeWhiteboardShare
-        width: parent.width
-        height: visible ? 32 : 0
-        visible: (whiteboardManager.whiteboardSharing === true)
-                 && (membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole)
-                 && (whiteboardManager.whiteboardSharerAccountId === accountId)
-                 && (accountId !== membersManager.hostAccountId)
-        Label {
-            id: closeWhiteboardShareItem
-            text: qsTr("closeWhiteboardShare")
-            color: closeWhiteboardShare.hovered ? "#337EFF" : "#333333"
-            anchors.left: parent.left
-            anchors.leftMargin: 10
-            anchors.verticalCenter: parent.verticalCenter
-        }
-        background: Rectangle {
-            anchors.fill: parent
-            color: closeWhiteboardShare.hovered ? "#F2F3F5" : "#FFFFFF"
-        }
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton
-            onClicked: {
-                popupMenu.close()
-                DialogManager.dynamicDialog(qsTr("close whiteboard"), qsTr("The current user is performing the whiteboard function and is sure to close its sharing ?"), function () {
-                    whiteboardManager.closeWhiteboard(accountId)
-                }, function () {}, Window.window)
-            }
-        }
-        Accessible.role: Accessible.Button
-        Accessible.name: closeWhiteboardShareItem.text
-        Accessible.onPressAction: if (enabled) clicked(Qt.LeftButton)
-    }
-
-    MenuItem {
-        id: closeScreenShare
-        width: parent.width
-        height: visible ? 32 : 0
-        visible:  (membersManager.hostAccountId === authManager.authAccountId || membersManager.isManagerRole)
-                  && (shareManager.shareAccountId === accountId)
-                  && (accountId !== membersManager.hostAccountId)
-        Label {
-            id: closeScreenShareItem
-            text: qsTr("closeScreenShare")
-            color: closeScreenShare.hovered ? "#337EFF" : "#333333"
-            anchors.left: parent.left
-            anchors.leftMargin: 10
-            anchors.verticalCenter: parent.verticalCenter
-        }
-        background: Rectangle {
-            anchors.fill: parent
-            color: closeScreenShare.hovered ? "#F2F3F5" : "#FFFFFF"
-        }
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton
-            onClicked: {
-                popupMenu.close()
-                DialogManager.dynamicDialog(qsTr("close ScreenShare"), qsTr("The current user is performing the Screen sharing function and is sure to close its sharing ?"), function () {
-                    shareManager.stopScreenSharing(accountId)
-                }, function () {}, Window.window)
-            }
-        }
-        Accessible.role: Accessible.Button
-        Accessible.name: closeScreenShareItem.text
         Accessible.onPressAction: if (enabled) clicked(Qt.LeftButton)
     }
 }

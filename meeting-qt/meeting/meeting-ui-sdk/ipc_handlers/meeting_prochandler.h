@@ -43,7 +43,8 @@ private:
     bool checkOptionsId(const std::vector<NS_I_NEM_SDK::NEMeetingMenuItem>& items, bool bInjected);
     bool joinMeeting(const NS_I_NEM_SDK::NEJoinMeetingParams& param,
                      const NS_I_NEM_SDK::NEJoinMeetingOptions& opts,
-                     const NS_I_NEM_SDK::NEMeetingService::NEJoinMeetingCallback& cb);
+                     const NS_I_NEM_SDK::NEMeetingService::NEJoinMeetingCallback& cb,
+                     const QVariant& userData = QVariant());
 
 public slots:
     void onMeetingStatusChanged(NEMeeting::Status status, int errorCode, const QString& errorMessage);

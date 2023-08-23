@@ -6,7 +6,6 @@
 #define LOGINSTANCE_H
 
 #include <mutex>
-
 class LogInstance {
 public:
     LogInstance(char* argv[]);

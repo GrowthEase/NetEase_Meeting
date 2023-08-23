@@ -103,7 +103,11 @@ if (NOT CONAN_CMAKE_SILENT_OUTPUT)
     endif ()
     execute_process(COMMAND conan config set general.revisions_enabled=True)
     include(${CMAKE_BINARY_DIR}/conan.cmake)
-    conan_add_remote(NAME yunxin URL https://gitlab.com/api/v4/projects/47777150/packages/conan VERIFY_SSL True)
+    if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+        set(CONAN_ENV_CFLAGS "CFLAGS=-fembed-bitcode -fvisibility=hidden -fvisibility-inlines-hidden -Wno-error=deprecated-declarations")
+        set(CONAN_ENV_CXXFLAGS "CXXFLAGS=-fembed-bitcode -fvisibility=hidden -fvisibility-inlines-hidden -Wno-error=deprecated-declarations")
+        set(CONAN_ENV_OBJCFLAGS "OBJCFLAGS=-fembed-bitcode -fvisibility=hidden -fvisibility-inlines-hidden -Wno-error=deprecated-declarations")
+    endif ()
     if (CONAN_PROFILE_BUILD AND CONAN_PROFILE_HOST)
         conan_cmake_install(PATH_OR_REFERENCE .. BUILD missing UPDATE
             SETTINGS_HOST build_type=${CMAKE_BUILD_TYPE}

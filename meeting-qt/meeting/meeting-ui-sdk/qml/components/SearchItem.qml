@@ -38,8 +38,8 @@ Rectangle {
             background: Rectangle {
                 height: 0
             }
-//            validator: RegExpValidator {
-//                regExp: /\w{1,10}/
+//            validator: RegularExpressionValidator {
+//                regularExpression: /\w{1,10}/
 //            }
             onTextChanged: {
                 root.textChanged(trim(text));

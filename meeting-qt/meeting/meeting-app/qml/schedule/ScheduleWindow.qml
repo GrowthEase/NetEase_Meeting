@@ -232,7 +232,7 @@ CustomWindow {
                                 text: ""
                                 enabled: false
                                 placeholderText: qsTr("Please enter 6-digit password")
-                                validator: RegExpValidator { regExp: /[0-9]{6}/ }
+                                validator: RegularExpressionValidator { regularExpression: /[0-9]{6}/ }
                                 Layout.fillWidth: true
                                 Accessible.name: "passwordInput"
                             }

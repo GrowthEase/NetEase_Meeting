@@ -6,7 +6,7 @@ import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 import "../components"
 
-Window{
+Window {
     id: root
     visible: false
     width: 240
@@ -15,7 +15,7 @@ Window{
         if (Qt.platform.os === 'windows')
             return Qt.SubWindow | Qt.FramelessWindowHint
         else
-            return Qt.Tool | Qt.FramelessWindowHint
+            return Qt.FramelessWindowHint | Qt.Popup
     }
 
     color: "transparent"
@@ -87,13 +87,13 @@ Window{
             anchors.topMargin: 13
             anchors.bottomMargin: 13
             clip: true
-            Avatar{
+            Avatar {
                 id: avatar
-                nickname: msgSender.substring(0,1)
+                nickname: msgSender.substring(0, 1)
                 Layout.alignment: Qt.AlignVCenter
             }
             ColumnLayout {
-                id:subLayout
+                id: subLayout
                 spacing: 0
                 Layout.preferredWidth: 200
                 Layout.alignment: Qt.AlignHCenter
@@ -110,8 +110,7 @@ Window{
                     Layout.maximumWidth: 180
                     font.pixelSize: 12
                     color: "white"
-                    elide: Label.ElideRight
-                    text: content.replace(/[\r\n]/g, '')
+                    text: content.trim()
                 }
             }
         }
@@ -142,4 +141,3 @@ Window{
         }
     }
 }
-

@@ -4,7 +4,37 @@
 #include "macx_helpers.h"
 // #include <qcocoaintegration.h>
 #import <AppKit/AppKit.h>
-#include <QtMac>
+// #include <QtMac>
+
+static const char* kMicrosoftPowerPointSilderKey = "powerpoint slide show";
+
+static constexpr const char* kPowerPointSlideShowTitles[] = {u8"PowerPoint-Bildschirmpräsentation",
+                                                             u8"Προβολή παρουσίασης PowerPoint",
+                                                             u8"PowerPoint スライド ショー",
+                                                             u8"PowerPoint Slide Show",
+                                                             u8"PowerPoint 幻灯片放映",
+                                                             u8"Presentación de PowerPoint",
+                                                             u8"PowerPoint-slideshow",
+                                                             u8"Presentazione di PowerPoint",
+                                                             u8"Prezentácia programu PowerPoint",
+                                                             u8"Apresentação do PowerPoint",
+                                                             u8"PowerPoint-bildspel",
+                                                             u8"Prezentace v aplikaci PowerPoint",
+                                                             u8"PowerPoint 슬라이드 쇼",
+                                                             u8"PowerPoint-lysbildefremvisning",
+                                                             u8"PowerPoint-vetítés",
+                                                             u8"PowerPoint Slayt Gösterisi",
+                                                             u8"Pokaz slajdów programu PowerPoint",
+                                                             u8"PowerPoint 投影片放映",
+                                                             u8"Демонстрация PowerPoint",
+                                                             u8"Diaporama PowerPoint",
+                                                             u8"PowerPoint-diaesitys",
+                                                             u8"Peragaan Slide PowerPoint",
+                                                             u8"PowerPoint-diavoorstelling",
+                                                             u8"การนำเสนอสไลด์ PowerPoint",
+                                                             u8"Apresentação de slides do PowerPoint",
+                                                             u8"הצגת שקופיות של PowerPoint",
+                                                             u8"عرض شرائح في PowerPoint"};
 
 bool MacXHelpers::openFolder(const QString& folder) {
     QByteArray byteFolder = folder.toUtf8();
@@ -180,7 +210,8 @@ QPixmap MacXHelpers::getCapture(uint32_t winId) const {
     CGImageRef screenshot = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow | kCGWindowListExcludeDesktopElements,
                                                     (CGWindowID)winId, kCGWindowImageBoundsIgnoreFraming);
     if (screenshot) {
-        pixmap = QtMac::fromCGImageRef(screenshot);
+        QImage picture = CGImageToQImage(screenshot);
+        pixmap.convertFromImage(picture);
         CGImageRelease(screenshot);
     }
 
@@ -233,7 +264,7 @@ bool MacXHelpers::getCaptureWindowList(MacXHelpers::CaptureTargetInfoList* windo
             if (!screenshot) {
                 continue;
             } else {
-                if (QtMac::fromCGImageRef(screenshot).size().height() < 100) {
+                if (CGImageToQImage(screenshot).size().height() < 100) {
                     CGImageRelease(screenshot);
                     continue;
                 }
@@ -293,34 +324,25 @@ bool MacXHelpers::getWindowInfo(uint32_t winId, bool& isWindow, bool& isMinimize
         for (CFIndex i = 0; i < count; ++i) {
             CFDictionaryRef window = reinterpret_cast<CFDictionaryRef>(CFArrayGetValueAtIndex(window_array, i));
             if (!window) {
-                YXLOG(Info) << "!window" << YXLOGEnd;
                 continue;
             }
-
             CFNumberRef window_id = reinterpret_cast<CFNumberRef>(CFDictionaryGetValue(window, kCGWindowNumber));
             if (!window_id) {
-                YXLOG(Info) << "!window_id" << YXLOGEnd;
                 continue;
             }
-
             NSNumber* windowId = (__bridge NSNumber*)window_id;
             uint32_t idTmp = [windowId longValue];
-            // YXLOG(Info) <<"-----------: "<< idTmp <<" " << winId << "." << YXLOGEnd;
-
             if (idTmp == winId) {
                 isWindow = true;
-                // YXLOG(Info) << "isWindow = true." << YXLOGEnd;
             } else {
                 continue;
             }
-
             CFBooleanRef on_screen = reinterpret_cast<CFBooleanRef>(CFDictionaryGetValue(window, kCGWindowIsOnscreen));
             if (on_screen) {
                 isMinimized = (FALSE == CFBooleanGetValue(on_screen));
             } else {
                 continue;
             }
-
             CFDictionaryRef bounds = reinterpret_cast<CFDictionaryRef>(CFDictionaryGetValue(window, kCGWindowBounds));
             if (bounds) {
                 CGRect rectTmp;
@@ -413,13 +435,12 @@ std::string MacXHelpers::getModuleName(uint32_t& winId) {
             break;
         }
     }
-
     CFRelease(window_array);
     return strApp;
 }
 
-bool MacXHelpers::isPptPlaying(uint32_t& winId, bool& bKeynote, const QScreen* pScreen) const {
-    bKeynote = false;
+bool MacXHelpers::isPptPlaying(uint32_t& winId, FullScreenType& fullScreenType, const QScreen* pScreen) const {
+    fullScreenType = FullScreenType::kUnknown;
     bool bRet = false;
     CFArrayRef window_array = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements, kCGNullWindowID);
     if (window_array) {
@@ -450,8 +471,9 @@ bool MacXHelpers::isPptPlaying(uint32_t& winId, bool& bKeynote, const QScreen* p
             std::string strAppTmp = [windowOwnerName UTF8String];
             std::string strApp;
             std::transform(strAppTmp.begin(), strAppTmp.end(), std::back_inserter(strApp), ::tolower);
-            // YXLOG(Info) <<"strApp: "<< strApp <<", strAppTmp: " << strAppTmp << YXLOGEnd;
-            if (0 != strApp.rfind("keynote", 0) && 0 != strApp.rfind("wps office", 0) && 0 != strApp.rfind("wpsoffice", 0)) {
+            //            YXLOG(Info) << "strApp: " << strApp << ", strAppTmp: " << strAppTmp << YXLOGEnd;
+            if (0 != strApp.rfind("keynote", 0) && 0 != strApp.rfind("wps office", 0) && 0 != strApp.rfind("wpsoffice", 0) &&
+                0 != strApp.rfind("microsoft powerpoint", 0)) {
                 continue;
             }
 
@@ -465,9 +487,33 @@ bool MacXHelpers::isPptPlaying(uint32_t& winId, bool& bKeynote, const QScreen* p
                 continue;
             }
 
-            // YXLOG(Info) <<"strApp: "<< strApp <<", layer: " << layer << YXLOGEnd;
             bool bFind = false;
-            if (0 == strApp.rfind("keynote", 0) && layer > 0) {
+            if (0 == strApp.rfind("microsoft powerpoint", 0)) {
+                CFStringRef windowNameRef = reinterpret_cast<CFStringRef>(CFDictionaryGetValue(window, kCGWindowName));
+                NSString* windowName = (__bridge NSString*)windowNameRef;
+                std::string strWindowName = [windowName UTF8String];
+                for (const char* title : kPowerPointSlideShowTitles) {
+                    if (strWindowName.find(title, 0) != std::string::npos) {
+                        fullScreenType = FullScreenType::kMicrosoftPowerPoint;
+                        bFind = true;
+                        break;
+                    }
+                }
+                CFDictionaryRef bounds = reinterpret_cast<CFDictionaryRef>(CFDictionaryGetValue(window, kCGWindowBounds));
+                if (!bFind && bounds) {
+                    CGRect rectTmp;
+                    CGRectMakeWithDictionaryRepresentation(bounds, &rectTmp);
+                    QRectF rect = QRectF::fromCGRect(rectTmp);
+                    QList<QScreen*> listScreen = qApp->screens();
+                    for (auto& screen : listScreen) {
+                        if ((pScreen != nullptr ? pScreen == screen : 1) && screen->size() == rect.size().toSize()) {
+                            fullScreenType = FullScreenType::kMicrosoftPowerPoint;
+                            bFind = true;
+                        }
+                    }
+                }
+            }
+            if (!bFind && 0 == strApp.rfind("keynote", 0) && layer > 0) {
                 CFDictionaryRef bounds = reinterpret_cast<CFDictionaryRef>(CFDictionaryGetValue(window, kCGWindowBounds));
                 if (bounds) {
                     CGRect rectTmp;
@@ -475,12 +521,8 @@ bool MacXHelpers::isPptPlaying(uint32_t& winId, bool& bKeynote, const QScreen* p
                     QRectF rect = QRectF::fromCGRect(rectTmp);
                     QList<QScreen*> listScreen = qApp->screens();
                     for (auto& screen : listScreen) {
-                        //                        qInfo() << "availableVirtualGeometry: "<<pScreen->availableVirtualGeometry() <<
-                        //                        screen->availableVirtualGeometry(); qInfo() << "virtualGeometry: "<<pScreen->virtualGeometry() <<
-                        //                        screen->virtualGeometry(); qInfo() << "name: "<<pScreen->name() << screen->name(); qInfo() <<
-                        //                        "geometry: "<<pScreen->geometry() << screen->geometry(); qInfo() << "screen: "<<pScreen << screen;
                         if ((pScreen != nullptr ? pScreen == screen : 1) && screen->size() == rect.size().toSize()) {
-                            bKeynote = true;
+                            fullScreenType = FullScreenType::kAppleKeyNote;
                             bFind = true;
                         }
                     }
@@ -495,6 +537,7 @@ bool MacXHelpers::isPptPlaying(uint32_t& winId, bool& bKeynote, const QScreen* p
                     QList<QScreen*> listScreen = qApp->screens();
                     for (auto& screen : listScreen) {
                         if (screen->size() == rect.size().toSize()) {
+                            fullScreenType = FullScreenType::kWPSPowerpoint;
                             bFind = true;
                             break;
                         }
@@ -610,4 +653,54 @@ QString MacXHelpers::getDeviceName() {
     string = [NSString stringWithCString:[string UTF8String] encoding:NSUTF8StringEncoding];
 
     return QString::fromCFString((__bridge CFStringRef)string);
+}
+
+CGBitmapInfo MacXHelpers::CGBitmapInfoForQImage(const QImage& image) const {
+    CGBitmapInfo bitmapInfo = kCGImageAlphaNone;
+    switch (image.format()) {
+        case QImage::Format_ARGB32:
+            bitmapInfo = kCGImageAlphaFirst | kCGBitmapByteOrder32Host;
+            break;
+        case QImage::Format_RGB32:
+            bitmapInfo = kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host;
+            break;
+        case QImage::Format_RGBA8888_Premultiplied:
+            bitmapInfo = kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big;
+            break;
+        case QImage::Format_RGBA8888:
+            bitmapInfo = kCGImageAlphaLast | kCGBitmapByteOrder32Big;
+            break;
+        case QImage::Format_RGBX8888:
+            bitmapInfo = kCGImageAlphaNoneSkipLast | kCGBitmapByteOrder32Big;
+            break;
+        case QImage::Format_ARGB32_Premultiplied:
+            bitmapInfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
+            break;
+        default:
+            break;
+    }
+    return bitmapInfo;
+}
+
+QImage MacXHelpers::CGImageToQImage(CGImageRef cgImage) const {
+    const size_t width = CGImageGetWidth(cgImage);
+    const size_t height = CGImageGetHeight(cgImage);
+    QImage image(width, height, QImage::Format_ARGB32_Premultiplied);
+    image.fill(Qt::transparent);
+
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+    CGContextRef context =
+        CGBitmapContextCreate((void*)image.bits(), image.width(), image.height(), 8, image.bytesPerLine(), colorSpace, CGBitmapInfoForQImage(image));
+
+    // Scale the context so that painting happens in device-independent pixels
+    const qreal devicePixelRatio = image.devicePixelRatio();
+    CGContextScaleCTM(context, devicePixelRatio, devicePixelRatio);
+
+    CGRect rect = CGRectMake(0, 0, width, height);
+    CGContextDrawImage(context, rect, cgImage);
+
+    CFRelease(colorSpace);
+    CFRelease(context);
+
+    return image;
 }

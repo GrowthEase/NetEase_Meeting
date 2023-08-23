@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include "video_manager.h"
-#include "../settings_manager.h"
+#include "manager/settings_manager.h"
 #include "providers/frame_provider.h"
 #include "providers/video_render.h"
 #include "providers/video_window.h"
@@ -17,11 +17,14 @@ VideoFrameDelegate::VideoFrameDelegate(QObject* parent)
     : QObject(parent) {}
 
 DelegatePtr VideoManager::m_videoFrameDelegate = nullptr;
+QVideoFrameFormat::ColorRange VideoManager::m_colorRange = QVideoFrameFormat::ColorRange_Video;
+QVideoFrameFormat::ColorSpace VideoManager::m_colorSpace = QVideoFrameFormat::ColorSpace::ColorSpace_AdobeRgb;
+QVideoFrameFormat::ColorTransfer VideoManager::m_colorTransfer = QVideoFrameFormat::ColorTransfer::ColorTransfer_Unknown;
+
 VideoManager::VideoManager(QObject* parent)
     : QObject(parent) {
     m_videoFrameDelegate = std::make_unique<VideoFrameDelegate>();
     m_videoController = std::make_shared<NEMeetingVideoController>();
-
     qRegisterMetaType<NEMeeting::DeviceStatus>();
 }
 
@@ -310,15 +313,17 @@ void VideoManager::setLocalVideoStatus(const int& localVideoStatus) {
 }
 
 void VideoManager::onReceivedUserVideoFrame(const std::string& accountId, const VideoFrame& frame, bool bSub) {
-    //    LOG(INFO) << "Frame info, avRoomUid: " << avRoomUid << ", bSub: " << bSub
-    //              << ", type: " << frame.type << ", count: " << frame.count
-    //              << ", width: " << frame.width << ", height: " << frame.height
-    //              << ", offset: " << frame.offset << ", stride: " << frame.stride
-    //              << ", rotation: " << frame.rotation << ", data: " << frame.data
-    //              << ", user_data: " << frame.user_data;
-
+#if 0
+    qDebug() << ", type: " << frame.type << ", count: " << frame.count
+             << ", width: " << frame.width << ", height: " << frame.height
+             << ", offset[0]: " << frame.offset[0] << ", stride[0]: " << frame.stride[0]
+             << ", offset[1]: " << frame.offset[1] << ", stride[1]: " << frame.stride[1]
+             << ", offset[2]: " << frame.offset[2] << ", stride[2]: " << frame.stride[2]
+             << ", rotation: " << frame.rotation;
+#endif
     if (nullptr == VideoManager::m_videoFrameDelegate)
         return;
+
     auto rotationWidth = frame.width;
     auto rotationHeight = frame.height;
 
@@ -341,24 +346,22 @@ void VideoManager::onReceivedUserVideoFrame(const std::string& accountId, const 
             rotationHeight = frame.width;
         } break;
     }
-
-    int frameSize = static_cast<int>(frame.width * frame.height * frame.count / 2);
-    QVideoFrame videoFrame(frameSize, QSize(static_cast<int>(rotationWidth), static_cast<int>(rotationHeight)), static_cast<int>(rotationWidth),
-                           QVideoFrame::Format_YUV420P);
-
-    if (videoFrame.map(QAbstractVideoBuffer::WriteOnly)) {
+    QVideoFrameFormat format(QSize(rotationWidth, rotationHeight), QVideoFrameFormat::Format_YUV420P);
+    format.setColorRange(VideoManager::m_colorRange);
+    format.setColorSpace(VideoManager::m_colorSpace);
+    format.setColorTransfer(VideoManager::m_colorTransfer);
+    format.setViewport(QRect(0, 0, rotationWidth, rotationHeight));
+    QVideoFrame videoFrame(format);
+    if (videoFrame.map(QVideoFrame::WriteOnly)) {
         auto src = reinterpret_cast<uint8_t*>(frame.data);
-        auto dest = reinterpret_cast<uint8_t*>(videoFrame.bits());
-
-        libyuv::I420Rotate(src + frame.offset[0], static_cast<int>(frame.stride[0]), src + frame.offset[1], static_cast<int>(frame.stride[1]),
-                           src + frame.offset[2], static_cast<int>(frame.stride[2]), dest, static_cast<int>(rotationWidth),
-                           dest + rotationWidth * rotationHeight, rotationWidth / 2,
-                           dest + rotationWidth * rotationHeight + rotationWidth * rotationHeight / 4, rotationWidth / 2,
-                           static_cast<int>(frame.width), static_cast<int>(frame.height), rotate_mode);
-
+        // If the aspect ratio of the original data is not a multiple of 16,
+        // when mappedBytes(n) is called after frame mapping, the returned size will be expanded to the nearest multiple of 16.
+        // When copying the data, bytesPerLine(n) should be used to get the actual stride that needs to be copied.
+        libyuv::I420Rotate(src + frame.offset[0], frame.stride[0], src + frame.offset[1], frame.stride[1], src + frame.offset[2], frame.stride[2],
+                           videoFrame.bits(0), videoFrame.bytesPerLine(0), videoFrame.bits(1), videoFrame.bytesPerLine(1), videoFrame.bits(2),
+                           videoFrame.bytesPerLine(2), frame.width, frame.height, rotate_mode);
         videoFrame.setStartTime(0);
         videoFrame.unmap();
-
         QSize size = QSize(static_cast<int>(rotationWidth), static_cast<int>(rotationHeight));
         emit VideoManager::m_videoFrameDelegate->receivedVideoFrame(QString::fromStdString(accountId), videoFrame, size, bSub);
     }

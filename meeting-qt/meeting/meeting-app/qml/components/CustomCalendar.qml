@@ -42,8 +42,8 @@ CustomTextFieldEx {
             idCalendarPopup.calendar.maximumDate = maximumDate
 
         currentDate = Date.fromLocaleDateString(Qt.locale(), text, "yyyy-MM-dd")
-        idCalendarPopup.calendar.visibleYear = currentDate.getFullYear()
-        idCalendarPopup.calendar.visibleMonth = currentDate.getMonth()
+        idCalendarPopup.calendar.year = currentDate.getFullYear()
+        idCalendarPopup.calendar.month = currentDate.getMonth()
         idCalendarPopup.calendar.selectedDate = currentDate
 
         idCalendarPopup.x = idRoot.x

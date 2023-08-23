@@ -39,7 +39,7 @@ public:
     NEInRoomServiceListener();
     ~NEInRoomServiceListener();
 
-    virtual void onMemberRoleChanged(const std::string& userUuid, const std::string& beforeRole, const std::string& afterRole) override;
+    virtual void onMemberRoleChanged(const std::string& userUuid, const NERoomRole& beforeRole, const NERoomRole& afterRole) override;
     virtual void onMemberJoinRoom(const std::vector<SharedMemberPtr>& members) override;
     virtual void onMemberLeaveRoom(const std::vector<SharedMemberPtr>& members) override;
     virtual void onRoomEnded(NERoomEndReason reason) override;

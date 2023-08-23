@@ -7,6 +7,9 @@
 
 #include "auth_service_interface.h"
 #include "base_type_defines.h"
+#include "modules/http/http_request.h"
+#include "statistics/meeting/meeting_event_base.h"
+
 using namespace neroom;
 
 typedef enum tagNEAuthStatus {
@@ -52,7 +55,7 @@ public:
     bool loginWithToken(const std::string& accountId, const std::string& accountToken);
     bool loginWithSSOToken(const std::string& ssoToken);
     bool loginWithAccount(const std::string& username, const std::string& password);
-    bool anonymousLogin(const neroom::NECallback<>& callback);
+    bool anonymousLogin(const neroom::NECallback<NEMeetingResponseKeys>& callback);
     bool logout();
 
     NEAuthStatus getAuthStatus();
@@ -73,6 +76,7 @@ private:
     NEAccountInfo m_accountInfo;
     NEAuthStatus m_authStatus = kAuthIdle;
     QJsonObject m_settings;
+    std::shared_ptr<LoginEvent> m_loginEvent;
 };
 
 #endif  // AUTHSERVICE_H

@@ -3,38 +3,14 @@ import QtQuick.Controls 2.12
 
 Item {
     id: root
-    property int frameCounter: 0
-    property int fps: 0;
-
     width: 50
     height: 40
 
-    Item {
-        id: idRotation
-        NumberAnimation on rotation {
-            from:0
-            to: 360
-            duration: 800
-            loops: -1
-        }
-        onRotationChanged: frameCounter++;
-    }
-
-    Label {
-        id: fpsText
-        anchors.right: parent.right
-        anchors.verticalCenter: root.verticalCenter
-        anchors.verticalCenterOffset: -10
-        color: "#ffffff"
-        font.pixelSize: 12
-        text: root.fps + " fps"
-    }
-
     Label {
         anchors.right: parent.right
-        anchors.top: fpsText.bottom
         color: "#ffffff"
         font.pixelSize: 12
+        horizontalAlignment: Qt.AlignRight
         text: {
             if (GraphicsInfo.api === GraphicsInfo.Software) {
                 width = 70;
@@ -76,16 +52,6 @@ Item {
                 width = 100;
                 return "Unknown API";
             }
-        }
-    }
-
-    Timer {
-        interval: 2000
-        repeat: true
-        running: root.visible
-        onTriggered: {
-            fps = frameCounter/2;
-            frameCounter = 0;
         }
     }
 }

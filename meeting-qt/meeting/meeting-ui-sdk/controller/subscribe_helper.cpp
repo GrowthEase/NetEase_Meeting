@@ -53,7 +53,7 @@ bool SubscribeHelper::subscribe(const std::string& userId, bool highQuality, con
         YXLOG(Info) << "Ready to subscribe, userUuid: " << userId << ", video started: " << iter->second.videoStarted
                     << ", current quality: " << iter->second.quality << ", subscribe quality: " << subscribeQuality
                     << ", timestamp: " << iter->second.timestamp << ",uuid: " << uuid.toStdString() << YXLOGEnd;
-        if (iter->second.videoStarted && (iter->second.quality != subscribeQuality || iter->second.timestamp == kSubscribeUnsubscribed)) {
+        if (iter->second.videoStarted /* && (iter->second.quality != subscribeQuality || iter->second.timestamp == kSubscribeUnsubscribed)*/) {
             auto videoController = VideoManager::getInstance()->getVideoController();
             if (videoController) {
                 videoController->subscribeRemoteVideoStream(userId, highQuality);

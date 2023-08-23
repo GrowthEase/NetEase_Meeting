@@ -9,6 +9,20 @@
 #pragma comment(lib, "Advapi32.lib")
 #endif
 
+#if defined(Q_OS_MACX)
+#include <sys/sysctl.h>
+int processIsTranslated() {
+    int ret = 0;
+    size_t size = sizeof(ret);
+    if (sysctlbyname("sysctl.proc_translated", &ret, &size, NULL, 0) == -1) {
+        if (errno == ENOENT)
+            return 0;
+        return -1;
+    }
+    return ret;
+}
+#endif
+
 SysInfo::SysInfo(QObject* parent)
     : QObject(parent) {}
 
@@ -26,6 +40,16 @@ QString SysInfo::GetSystemProductName() {
 #else
     return "";
 #endif
+}
+
+QString SysInfo::GetCurrentCPUArchitecture() {
+    QString currentArch = QSysInfo::currentCpuArchitecture();
+#if defined(Q_OS_MACX)
+    // https://developer.apple.com/documentation/apple-silicon/about-the-rosetta-translation-environment
+    if (currentArch == "x86_64" && processIsTranslated() == 1)
+        return "arm64";
+#endif
+    return currentArch;
 }
 
 QString SysInfo::ReadBisoValueFromReg(const QString& key) {

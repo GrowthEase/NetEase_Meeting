@@ -204,15 +204,9 @@ public:
 #endif
     }
 
-    Pack& push_varstr(const Varstr& vs) {
-        return push_varstr(vs.data(), vs.size());
-    }
-    Pack& push_varstr(const void* s) {
-        return push_varstr(s, strlen((const char*)s));
-    }
-    Pack& push_varstr(const std::string& s) {
-        return push_varstr(s.data(), s.size());
-    }
+    Pack& push_varstr(const Varstr& vs) { return push_varstr(vs.data(), vs.size()); }
+    Pack& push_varstr(const void* s) { return push_varstr(s, strlen((const char*)s)); }
+    Pack& push_varstr(const std::string& s) { return push_varstr(s.data(), s.size()); }
     Pack& push_varstr(const void* s, size_t len) {
         if (len > 0xFFFF)
             throw NException("push_varstr: varstr too big", kResultMemoryError);
@@ -232,9 +226,7 @@ protected:
         buffer_.replace(pos, (const char*)data, rplen);
         return pos + rplen;
     }
-    size_t replace_uint8(size_t pos, uint8_t u8) {
-        return replace(pos, &u8, 1);
-    }
+    size_t replace_uint8(size_t pos, uint8_t u8) { return replace(pos, &u8, 1); }
     size_t replace_uint16(size_t pos, uint16_t u16) {
         u16 = xhtons(u16);
         return replace(pos, &u16, 2);
@@ -407,15 +399,9 @@ public:
         return p;
     }
 
-    bool empty() const {
-        return size_ == 0;
-    }
-    const char* data() const {
-        return data_;
-    }
-    size_t size() const {
-        return size_;
-    }
+    bool empty() const { return size_ == 0; }
+    const char* data() const { return data_; }
+    size_t size() const { return size_; }
 
 private:
     mutable const char* data_;

@@ -228,15 +228,7 @@ Rectangle {
                             idScheduleDetailsWindow.liveAccess = liveAccess
                             idScheduleDetailsWindow.recordEnable = recordEnable
                             idScheduleDetailsWindow.meetingInviteUrl = meetingInviteUrl
-                            const screenTmp = mainWindow.screen
-                            idScheduleDetailsWindow.screen = screenTmp
                             idScheduleDetailsWindow.showNormal()
-                            idScheduleDetailsWindow.x
-                                    = (screenTmp.width - idScheduleDetailsWindow.width)
-                                    / 2 + screenTmp.virtualX
-                            idScheduleDetailsWindow.y
-                                    = (screenTmp.height - idScheduleDetailsWindow.height)
-                                    / 2 + screenTmp.virtualY
                         }
                     }
                 }

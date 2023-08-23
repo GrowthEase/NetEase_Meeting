@@ -6,6 +6,7 @@
 #define MEETINGMANAGER_H
 
 #include <QObject>
+#include <memory>
 #include "controller/chat_ctrl_interface.h"
 #include "controller/live_ctrl_interface.h"
 #include "controller/meeting_controller.h"
@@ -14,6 +15,7 @@
 #include "room_service_interface.h"
 
 #include "controller/subscribe_helper.h"
+#include "statistics/meeting/meeting_event_base.h"
 #include "utils/invoker.h"
 
 using namespace neroom;
@@ -54,7 +56,7 @@ public:
     enum ExtCode { EXT_DEFAULT, EXT_CODE_KICKOUTED_BY_HOST, EXT_CODE_MEETING_FINISHED, EXT_CODE_FAILED_TO_RELOGIN };
     Q_ENUM(ExtCode)
 
-    enum DeviceStatus { DEVICE_ENABLED = 1, DEVICE_DISABLED_BY_DELF, DEVICE_DISABLED_BY_HOST, DEVICE_NEEDS_TO_CONFIRM };
+    enum DeviceStatus { DEVICE_ENABLED = 1, DEVICE_DISABLED_BY_SELF, DEVICE_DISABLED_BY_HOST, DEVICE_NEEDS_TO_CONFIRM };
     Q_ENUM(DeviceStatus)
 
     enum NetWorkQualityType { NETWORKQUALITY_GOOD = 0, NETWORKQUALITY_GENERAL, NETWORKQUALITY_BAD, NETWORKQUALITY_UNKNOWN };
@@ -144,7 +146,7 @@ public:
     void onError(uint32_t errorCode, const std::string& errorMessage);
 
     bool createMeeting(const nem_sdk_interface::NEStartMeetingParams& param, const NERoomOptions& option);
-    bool joinMeeting(const nem_sdk_interface::NEJoinMeetingParams& param, const NERoomOptions& option);
+    bool joinMeeting(const nem_sdk_interface::NEJoinMeetingParams& param, const NERoomOptions& option, const QVariant& extraInfo);
     void activeMeetingWindow(bool bRaise);
     void setShowMeetingRemainingTip(bool show) { m_showMeetingRemainingTip = show; }
 
@@ -172,6 +174,9 @@ public:
 
     QString meetingUniqueId() const;
     void setMeetingUniqueId(const QString& meetingUniqueId);
+
+    QString meetingArchiveId() const;
+    void setMeetingArchiveId(const QString& meetingArchiveId);
 
     QString meetingId() const;
     void setMeetingId(const QString& meetingId);
@@ -352,6 +357,7 @@ private:
     QTimer m_remainingTipTimer;
     QString m_shortMeetingNum = "";
     QString m_meetingUniqueId;
+    QString m_meetingArchiveId;
     QString m_meetingId;
     QString m_meetingTopic;
     QString m_meetingPassword;
@@ -406,6 +412,7 @@ private:
     bool m_showMeetingRemainingTip = false;
     QString m_meetingInviteUrl;
     QJsonObject m_rtcState;
+    std::shared_ptr<EndMeetingEvent> meeting_end_event_;
 };
 
 #endif  // MEETINGMANAGER_H

@@ -17,6 +17,7 @@
 #include <Windows.h>
 #include <shellapi.h>
 #define MEETING_HOST_EXECUTOR "NetEaseMeetingClient.exe"
+#include "nem_hosting_module/base/launch_win32.h"
 #else
 #include <sys/shm.h>
 #include <algorithm>
@@ -386,33 +387,21 @@ void NEMeetingSDKIMP::OnIPCServerInit(const NEInitializeCallback& cb, bool ret, 
                 CloseHandle(lhShareMemory);
             }
             std::string sdk_path = global_config_.getAppInfo()->SDKPath();
-            if (sdk_path.empty()) {
-                CHAR strModule[2048];
-                GetModuleFileNameA(NULL, strModule, 2048);  // 得到当前模块路径
-                sdk_path = strModule;
-                sdk_path = sdk_path.substr(0, sdk_path.find_last_of('\\'));
-                sdk_path.append("\\").append(MEETING_HOST_EXECUTOR);
-            } else {
-                sdk_path.append("\\").append(MEETING_HOST_EXECUTOR);
-            }
+            char module_name[2048];
+            GetModuleFileNameA(NULL, module_name, 2048);
+            std::string str_module_name = module_name;
+            str_module_name = str_module_name.substr(0, str_module_name.find_last_of('\\'));
+            if (sdk_path.empty())
+                sdk_path = str_module_name;
+            sdk_path.append("\\").append(MEETING_HOST_EXECUTOR);
 
             std::string commond_line;  // ("--plugin");
             commond_line.append("--port=\"").append(std::to_string(port)).append("\"");
-            // auto ret = ShellExecuteA(NULL, "open", sdk_path.c_str(), commond_line.c_str(), NULL, SW_SHOWNORMAL);
-            // if((int)ret < 32)
-            //	global_callback_->OnInit(NEMError(NEMErrorCode::kError,"Load sdk error"));
-            SHELLEXECUTEINFOA ShExecInfo = {0};
-            ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFOA);
-            ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
-            ShExecInfo.hwnd = NULL;
-            ShExecInfo.lpVerb = global_config_.getRunAdmin() ? "runas" : NULL;
-            ShExecInfo.lpFile = sdk_path.c_str();
-            ShExecInfo.lpParameters = commond_line.c_str();
-            ShExecInfo.lpDirectory = global_config_.getAppInfo()->SDKPath().c_str();
-            ShExecInfo.nShow = SW_SHOW;
-            ShExecInfo.hInstApp = NULL;
-            std::cout << "ShExecInfo.lpFile: " << ShExecInfo.lpFile << std::endl;
-            if (!ShellExecuteExA(&ShExecInfo)) {
+            ProcessLauncher::LaunchParams launch_parameter;
+            launch_parameter.process_path = sdk_path;
+            launch_parameter.command_line = commond_line;
+            launch_parameter.working_dir = global_config_.getAppInfo()->SDKPath().empty() ? str_module_name : global_config_.getAppInfo()->SDKPath();
+            if (!ProcessLauncher::LaunchProcess(launch_parameter)) {
                 initting_ = false;
                 LOG_IPCSERVICE_ERROR("Launch process [" + sdk_path + "] is not successed, GetLastError() is: " + std::to_string(GetLastError()));
                 if (cb) {
@@ -468,23 +457,6 @@ void NEMeetingSDKIMP::OnIPCServerInit(const NEInitializeCallback& cb, bool ret, 
 #endif
         });
     }
-
-    /*read_init_thread_ = std::make_unique<std::thread>([this]() {
-        auto start = std::chrono::steady_clock::now();
-        int count = 3;
-        while (!read_init_ && count > 0) {
-            auto end = std::chrono::steady_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
-            if (duration > 5) {
-                OnIPCServerReady(init_callback_);
-                start = end;
-                count--;
-            } else {
-                std::this_thread::yield();
-            }
-        }
-    });
-    read_init_thread_->detach();*/
 }
 
 void NEMeetingSDKIMP::OnIPCServerReady(const NEInitializeCallback& cb) {

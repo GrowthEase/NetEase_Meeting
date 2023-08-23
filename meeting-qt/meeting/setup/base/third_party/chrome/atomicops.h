@@ -2,6 +2,7 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+
 // For atomic operations on reference counts, see atomic_refcount.h.
 // For atomic operations on sequence numbers, see atomic_sequence_num.h.
 
@@ -63,7 +64,9 @@ typedef intptr_t AtomicWord;
 // Always return the old value of "*ptr"
 //
 // This routine implies no memory barriers.
-Atomic32 NoBarrier_CompareAndSwap(volatile Atomic32* ptr, Atomic32 old_value, Atomic32 new_value);
+Atomic32 NoBarrier_CompareAndSwap(volatile Atomic32* ptr,
+                                  Atomic32 old_value,
+                                  Atomic32 new_value);
 
 // Atomically store new_value into *ptr, returning the previous value held in
 // *ptr.  This routine implies no memory barriers.
@@ -73,7 +76,8 @@ Atomic32 NoBarrier_AtomicExchange(volatile Atomic32* ptr, Atomic32 new_value);
 // *ptr with the increment applied.  This routine implies no memory barriers.
 Atomic32 NoBarrier_AtomicIncrement(volatile Atomic32* ptr, Atomic32 increment);
 
-Atomic32 Barrier_AtomicIncrement(volatile Atomic32* ptr, Atomic32 increment);
+Atomic32 Barrier_AtomicIncrement(volatile Atomic32* ptr,
+                                 Atomic32 increment);
 
 // These following lower-level operations are typically useful only to people
 // implementing higher-level synchronization operations like spinlocks,
@@ -84,8 +88,12 @@ Atomic32 Barrier_AtomicIncrement(volatile Atomic32* ptr, Atomic32 increment);
 // after the operation.  "Barrier" operations have both "Acquire" and "Release"
 // semantics.   A MemoryBarrier() has "Barrier" semantics, but does no memory
 // access.
-Atomic32 Acquire_CompareAndSwap(volatile Atomic32* ptr, Atomic32 old_value, Atomic32 new_value);
-Atomic32 Release_CompareAndSwap(volatile Atomic32* ptr, Atomic32 old_value, Atomic32 new_value);
+Atomic32 Acquire_CompareAndSwap(volatile Atomic32* ptr,
+                                Atomic32 old_value,
+                                Atomic32 new_value);
+Atomic32 Release_CompareAndSwap(volatile Atomic32* ptr,
+                                Atomic32 old_value,
+                                Atomic32 new_value);
 
 void MemoryBarrier();
 void NoBarrier_Store(volatile Atomic32* ptr, Atomic32 value);
@@ -98,13 +106,19 @@ Atomic32 Release_Load(volatile const Atomic32* ptr);
 
 // 64-bit atomic operations (only available on 64-bit processors).
 #ifdef ARCH_CPU_64_BITS
-Atomic64 NoBarrier_CompareAndSwap(volatile Atomic64* ptr, Atomic64 old_value, Atomic64 new_value);
+Atomic64 NoBarrier_CompareAndSwap(volatile Atomic64* ptr,
+                                  Atomic64 old_value,
+                                  Atomic64 new_value);
 Atomic64 NoBarrier_AtomicExchange(volatile Atomic64* ptr, Atomic64 new_value);
 Atomic64 NoBarrier_AtomicIncrement(volatile Atomic64* ptr, Atomic64 increment);
 Atomic64 Barrier_AtomicIncrement(volatile Atomic64* ptr, Atomic64 increment);
 
-Atomic64 Acquire_CompareAndSwap(volatile Atomic64* ptr, Atomic64 old_value, Atomic64 new_value);
-Atomic64 Release_CompareAndSwap(volatile Atomic64* ptr, Atomic64 old_value, Atomic64 new_value);
+Atomic64 Acquire_CompareAndSwap(volatile Atomic64* ptr,
+                                Atomic64 old_value,
+                                Atomic64 new_value);
+Atomic64 Release_CompareAndSwap(volatile Atomic64* ptr,
+                                Atomic64 old_value,
+                                Atomic64 new_value);
 void NoBarrier_Store(volatile Atomic64* ptr, Atomic64 value);
 void Acquire_Store(volatile Atomic64* ptr, Atomic64 value);
 void Release_Store(volatile Atomic64* ptr, Atomic64 value);
@@ -113,7 +127,7 @@ Atomic64 Acquire_Load(volatile const Atomic64* ptr);
 Atomic64 Release_Load(volatile const Atomic64* ptr);
 #endif  // ARCH_CPU_64_BITS
 
-}  // namespace subtle
+}  // namespace base::subtle
 }  // namespace base
 
 // Include our platform specific implementation.

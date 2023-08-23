@@ -3,7 +3,7 @@ import QtQuick.Window 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 import QtQuick.Controls.Material 2.12
-import QtGraphicalEffects 1.0
+import Qt5Compat.GraphicalEffects
 
 import '../components'
 
@@ -14,21 +14,21 @@ Window {
     property var problemsArray: []
     property int problemsCount: 0
     property bool hasOtherProblems: false
-    property var problemsTotalArray: [qsTr("The voice of the other party has a long time delay"),
-                                      qsTr("Play mechanical sound"),
-                                      qsTr("The other party's voice is very stuck"),
+    property var problemsTotalArray: [qsTr("Voice delay"),
+                                      qsTr("Robotic sound"),
+                                      qsTr("Audio stuttering"),
                                       qsTr("Murmur"),
                                       qsTr("Echo"),
-                                      qsTr("Can't hear the other party's voice"),
-                                      qsTr("The other party can't hear me"),
+                                      qsTr("Can't hear others"),
+                                      qsTr("Can't hear my voice"),
                                       qsTr("Low volume"),
-                                      qsTr("Video freezes for a long time"),
-                                      qsTr("Intermittent video"),
+                                      qsTr("Stuttering"),
+                                      qsTr("Cutting out"),
                                       qsTr("Screen tearing"),
-                                      qsTr("The picture is too bright"),
-                                      qsTr("Blurred picture"),
-                                      qsTr("The picture is noisy"),
-                                      qsTr("Audio and video are out of sync"),
+                                      qsTr("Overexposed/Underexposed"),
+                                      qsTr("Blurred"),
+                                      qsTr("Visual noise"),
+                                      qsTr("A/V out of sync"),
                                       qsTr("Quit unexpectedly")]
 
     width: Qt.platform.os === 'windows' ? mainContainer.width + 20 : mainContainer.width
@@ -66,15 +66,14 @@ Window {
             checkBox_15.checked = false
             checkBox_other.checked = false
         } else {
-            if(mainContainer.state == 'submiting') {
-                if(meetingManager.getCurrentMeetingStatus() === 4) {
+            if (mainContainer.state == 'submiting') {
+                if (meetingManager.getCurrentMeetingStatus() === 4)
                     closeTimer.restart()
-                }
             } else {
-                if (showOptions) {
+                if (showOptions)
                     authHideTimer.restart()
-                }
             }
+            console.log(`mainContainer.height when visibility changed: ${mainContainer.height}`)
         }
     }
 
@@ -110,10 +109,11 @@ Window {
 
         onHeightChanged: {
             Qt.callLater(function () {
-                feedbackWindow.x = (Screen.width - feedbackWindow.width) / 2 + Screen.virtualX
-                feedbackWindow.y = (Screen.height - feedbackWindow.height) / 2 + Screen.virtualY
                 feedbackWindow.width = Qt.platform.os === 'windows' ? mainContainer.width + 20 : mainContainer.width
                 feedbackWindow.height = Qt.platform.os === 'windows' ? mainContainer.height + 20 : mainContainer.height
+                feedbackWindow.x = (Screen.width - feedbackWindow.width) / 2 + Screen.virtualX
+                feedbackWindow.y = (Screen.height - feedbackWindow.height) / 2 + Screen.virtualY
+                console.log(`mainContainer.height when height changed: ${mainContainer.height}`)
             })
         }
 
@@ -408,7 +408,7 @@ Window {
                                     selectByMouse: true
                                     selectByKeyboard: true
                                     wrapMode: Text.WrapAnywhere
-                                    placeholderText: qsTr('Please describe your problem \n When you select "There are other problems", you need to fill in a specific description before submitting')
+                                    placeholderText: qsTr('Please describe your problem.')
                                     background: Rectangle {
                                         border.width: 1
                                         border.color: '#E1E3E6'
