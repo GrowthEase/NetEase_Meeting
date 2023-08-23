@@ -841,4 +841,24 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
 
   @override
   String get funcNotAvailableWhenInCallState => '通話中は本機能を使用できません';
+
+  @override
+  String get networkAbnormality => 'ネットワーク異常';
+
+  @override
+  String get networkAbnormalityPleaseCheckYourNetwork =>
+      'ネットワーク異常、あなたのネットワークを確認してください。';
+
+  @override
+  String get networkReconnectionSuccessful => 'ネットワーク再接続成功。';
+
+  @override
+  String get disconnectedTryingToReconnect => 'ネットワークが切断されました。再接続を試みています...';
+
+  @override
+  String get networkDisconnectedPleaseCheckYourNetworkStatusOrTryToRejoin =>
+      'ネットワークが切断されました。ネットワーク状況を確認するか、再度参加してください。';
+
+  @override
+  String get rejoining => 'さいせん';
 }

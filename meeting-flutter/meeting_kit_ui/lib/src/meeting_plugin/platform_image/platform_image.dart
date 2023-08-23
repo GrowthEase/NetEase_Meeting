@@ -118,7 +118,7 @@ class _PlatformImageKey {
   }
 
   @override
-  int get hashCode => hashValues(key, quality, configuration);
+  int get hashCode => Object.hash(key, quality, configuration);
 }
 
 /// Class to help loading of iOS platform images into Flutter.
@@ -139,7 +139,8 @@ class PlatformImage extends ImageProvider<_PlatformImageKey> {
   }
 
   @override
-  ImageStreamCompleter load(_PlatformImageKey key, DecoderCallback decode) {
+  ImageStreamCompleter loadImage(
+      _PlatformImageKey key, ImageDecoderCallback decode) {
     Future<Map?> loadInfo = _channel.invokeMethod('loadImage', {
       'module': 'ImageLoader',
       'key': key.key,
@@ -159,8 +160,8 @@ class PlatformImage extends ImageProvider<_PlatformImageKey> {
       }
     });
     return _FutureImageStreamCompleter(
-      codec: bytesCompleter.future.then((Uint8List bytes) {
-        return decode(bytes);
+      codec: bytesCompleter.future.then((Uint8List bytes) async {
+        return decode(await ui.ImmutableBuffer.fromUint8List(bytes));
       }),
       futureScale: scaleCompleter.future,
     );

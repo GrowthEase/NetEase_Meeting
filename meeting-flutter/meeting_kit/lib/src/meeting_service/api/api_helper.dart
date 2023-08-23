@@ -13,7 +13,12 @@ class _ApiHelper {
       //   _AuthManager().tokenIllegal(MeetingErrorCode.getMsg(result.msg, 'Token失效'));
       // }
       return NEResult(
-          code: result.code, msg: result.msg, data: result.data as T?);
+        code: result.code,
+        msg: result.msg,
+        data: result.data as T?,
+        requestId: result.requestId,
+        cost: result.cost,
+      );
     });
   }
 }

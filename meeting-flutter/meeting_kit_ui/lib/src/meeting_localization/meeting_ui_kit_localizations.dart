@@ -13,14 +13,14 @@ import 'meeting_ui_kit_localizations_en.dart';
 import 'meeting_ui_kit_localizations_ja.dart';
 import 'meeting_ui_kit_localizations_zh.dart';
 
-/// Callers can lookup localized strings with an instance of NEMeetingUIKitLocalizations returned
-/// by `NEMeetingUIKitLocalizations.of(context)`.
+/// Callers can lookup localized strings with an instance of NEMeetingUIKitLocalizations
+/// returned by `NEMeetingUIKitLocalizations.of(context)`.
 ///
 /// Applications need to include `NEMeetingUIKitLocalizations.delegate()` in their app's
-/// localizationDelegates list, and the locales they support in the app's
-/// supportedLocales list. For example:
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
 ///
-/// ```
+/// ```dart
 /// import 'meeting_localization/meeting_ui_kit_localizations.dart';
 ///
 /// return MaterialApp(
@@ -35,14 +35,14 @@ import 'meeting_ui_kit_localizations_zh.dart';
 /// Please make sure to update your pubspec.yaml to include the following
 /// packages:
 ///
-/// ```
+/// ```yaml
 /// dependencies:
 ///   # Internationalization support.
 ///   flutter_localizations:
 ///     sdk: flutter
 ///   intl: any # Use the pinned version from flutter_localizations
 ///
-///   # rest of dependencies
+///   # Rest of dependencies
 /// ```
 ///
 /// ## iOS Applications
@@ -1758,6 +1758,42 @@ abstract class NEMeetingUIKitLocalizations {
   /// In en, this message translates to:
   /// **'Cannot use this feature while on a call'**
   String get funcNotAvailableWhenInCallState;
+
+  /// No description provided for @networkAbnormality.
+  ///
+  /// In en, this message translates to:
+  /// **'Network abnormality'**
+  String get networkAbnormality;
+
+  /// No description provided for @networkAbnormalityPleaseCheckYourNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Network abnormality, please check your network'**
+  String get networkAbnormalityPleaseCheckYourNetwork;
+
+  /// No description provided for @networkReconnectionSuccessful.
+  ///
+  /// In en, this message translates to:
+  /// **'Network reconnection successful'**
+  String get networkReconnectionSuccessful;
+
+  /// No description provided for @disconnectedTryingToReconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected, trying to reconnect…'**
+  String get disconnectedTryingToReconnect;
+
+  /// No description provided for @networkDisconnectedPleaseCheckYourNetworkStatusOrTryToRejoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Network disconnected, please check your network status or try to rejoin.'**
+  String get networkDisconnectedPleaseCheckYourNetworkStatusOrTryToRejoin;
+
+  /// No description provided for @rejoining.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejoining'**
+  String get rejoining;
 }
 
 class _NEMeetingUIKitLocalizationsDelegate

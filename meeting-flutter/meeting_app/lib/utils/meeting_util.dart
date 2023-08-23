@@ -2,6 +2,7 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/widgets.dart';
 import 'package:netease_meeting_core/meeting_kit.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
 
@@ -14,7 +15,7 @@ class MeetingUtil {
 
   static String getCurrentNickLeading() {
     final nickName = getNickName();
-    return nickName.isNotEmpty ? nickName.substring(0, 1) : '';
+    return nickName.isNotEmpty ? nickName.characters.first : '';
   }
 
   static String getAppKey() {

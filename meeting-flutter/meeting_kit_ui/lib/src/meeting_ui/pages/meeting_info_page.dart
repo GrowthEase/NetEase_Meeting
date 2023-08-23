@@ -241,7 +241,9 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
               if (TextUtils.isEmpty(itemDetail)) return;
               var value =
                   itemDetailCopyFormatter?.call(itemDetail!) ?? itemDetail;
-              Clipboard.setData(ClipboardData(text: value));
+              if (TextUtils.isNotEmpty(value)) {
+                Clipboard.setData(ClipboardData(text: value!));
+              }
               ToastUtils.showToast(context,
                   NEMeetingUIKitLocalizations.of(context)!.copySuccess);
             },

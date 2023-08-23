@@ -47,7 +47,7 @@ class ErrorUtil {
 
     ///这里要延时加载  否则会抱The widget on which setState() or markNeedsBuild() was called was:错误
     Future.delayed(Duration(milliseconds: 0)).then((e) {
-      Overlay.of(context)?.insert(entry);
+      Overlay.of(context).insert(entry);
     });
 
     Timer(const Duration(seconds: 2), () {

@@ -157,6 +157,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
           ],
         );
       },
+      stream: null,
     );
   }
 
@@ -1028,10 +1029,10 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
   }
 
   Future<void> _hostStopScreenShare(NERoomMember user) async {
-    await lifecycleExecute(
-        roomContext.rtcController.stopMemberScreenShare(user.uuid)
-            // .stopParticipantScreenShare(user.uuid)
-            .then((NEResult? result) {
+    await lifecycleExecute(roomContext.rtcController
+        .stopMemberScreenShare(user.uuid)
+        // .stopParticipantScreenShare(user.uuid)
+        .then((NEResult? result) {
       if (!mounted || result == null) return;
       if (!result.isSuccess()) {
         ToastUtils.showToast(

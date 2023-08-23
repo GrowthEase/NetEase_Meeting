@@ -35,15 +35,23 @@ abstract class HttpApi<T> extends BaseApi {
             final map = response.data as Map;
             final code = map['code'] as int;
             final msg = map['msg'] as String?;
+            final requestId = map['requestId'] as String?;
+            final cost = map['cost'] as String?;
+            final costMillis =
+                cost == null ? 0 : int.tryParse(cost.removeSuffix('ms')) ?? 0;
             if (code == MeetingErrorCode.success) {
               var result = map['data'];
               return NEResult(
-                  code: code,
-                  msg: msg,
-                  data: result == null ? null : parseResult(result) as T?);
+                code: code,
+                msg: msg,
+                data: result == null ? null : parseResult(result) as T?,
+                requestId: requestId,
+                cost: costMillis,
+              );
             } else {
               RoomErrorRepository.httpApiError(code);
-              return NEResult(code: code, msg: msg);
+              return NEResult(
+                  code: code, msg: msg, requestId: requestId, cost: costMillis);
             }
           } catch (e, s) {
             Alog.e(

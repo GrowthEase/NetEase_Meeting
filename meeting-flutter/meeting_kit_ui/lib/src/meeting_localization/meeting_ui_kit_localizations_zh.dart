@@ -835,4 +835,23 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get funcNotAvailableWhenInCallState => '系统通话中，无法使用该功能';
+
+  @override
+  String get networkAbnormality => '网络异常';
+
+  @override
+  String get networkAbnormalityPleaseCheckYourNetwork => '网络异常，请检查您的网络';
+
+  @override
+  String get networkReconnectionSuccessful => '网络重连成功';
+
+  @override
+  String get disconnectedTryingToReconnect => '网络已断开，正在尝试重新连接…';
+
+  @override
+  String get networkDisconnectedPleaseCheckYourNetworkStatusOrTryToRejoin =>
+      '网络已断开，请检查您的网络情况，或尝试重新入会';
+
+  @override
+  String get rejoining => '重新入会';
 }

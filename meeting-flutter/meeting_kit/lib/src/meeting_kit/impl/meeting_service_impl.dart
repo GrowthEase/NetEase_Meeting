@@ -20,6 +20,7 @@ class _NEMeetingServiceImpl extends NEMeetingService
     NEStartMeetingOptions opts,
   ) async {
     apiLogger.i('startMeeting');
+    final trackingEvent = param.trackingEvent;
 
     final checkParamsResult = checkParameters(param);
     if (checkParamsResult != null) {
@@ -29,7 +30,7 @@ class _NEMeetingServiceImpl extends NEMeetingService
       return _handleMeetingResultCode(MeetingErrorCode.networkError).cast();
     }
 
-    // 如果指定了会议ID，需要检查会议ID是否为个人会议ID或个人会议短ID
+    /// 如果指定了会议ID，需要检查会议ID是否为个人会议ID或个人会议短ID
     final meetingNum = param.meetingNum;
     final accountInfo =
         NEMeetingKit.instance.getAccountService().getAccountInfo();
@@ -68,6 +69,7 @@ class _NEMeetingServiceImpl extends NEMeetingService
     }
     late MeetingInfo _meetingInfo;
     late NERoomContext _roomContext;
+    trackingEvent?.beginStep(kMeetingStepCreateRoom);
     return MeetingRepository.createMeeting(
       type: (param.meetingNum?.isNotEmpty ?? false)
           ? NEMeetingType.kPersonal
@@ -88,31 +90,32 @@ class _NEMeetingServiceImpl extends NEMeetingService
             !opts.noCloudRecord && SDKConfig.current.isCloudRecordSupported,
         enableSip: !opts.noSip && SDKConfig.current.isSipSupported,
       ),
-    ).map<NERoomContext>((meetingInfo) {
+    ).thenEndStep(trackingEvent).map<NERoomContext>((meetingInfo) {
       _meetingInfo = meetingInfo;
-      return _roomService.joinRoom(
-        NEJoinRoomParams(
-          roomUuid: meetingInfo.roomUuid,
-          userName: param.displayName,
-          role: MeetingRoles.kHost,
-          password: param.password,
-          avatar: param.avatar,
-          initialMyProperties: param.tag != null && param.tag!.isNotEmpty
-              ? {
-                  MeetingPropertyKeys.kMemberTag: param.tag!,
-                }
-              : null,
-        ),
-        NEJoinRoomOptions(
-          enableMyAudioDeviceOnJoinRtc: opts.enableMyAudioDeviceOnJoinRtc,
-        ),
-      );
+      trackingEvent?.beginStep(kMeetingStepJoinRoom);
+      return _roomService
+          .joinRoom(
+            NEJoinRoomParams(
+              roomUuid: meetingInfo.roomUuid,
+              userName: param.displayName,
+              role: MeetingRoles.kHost,
+              password: param.password,
+              avatar: param.avatar,
+              initialMyProperties: param.tag != null && param.tag!.isNotEmpty
+                  ? {
+                      MeetingPropertyKeys.kMemberTag: param.tag!,
+                    }
+                  : null,
+            ),
+            NEJoinRoomOptions(
+              enableMyAudioDeviceOnJoinRtc: opts.enableMyAudioDeviceOnJoinRtc,
+            ),
+          )
+          .thenEndStep(trackingEvent);
     }).map<void>((roomContext) async {
       _roomContext = roomContext;
       return NEResult<void>(code: NEMeetingErrorCode.success);
     }).then((result) {
-      trackPeriodicEvent(TrackEventName.meetingJoinFailed,
-          extra: {'value': result.code});
       return _handleMeetingResultCode(result.code, result.msg);
     }).map(() {
       return _roomContext..setupMeetingEnv(_meetingInfo);
@@ -125,6 +128,7 @@ class _NEMeetingServiceImpl extends NEMeetingService
     NEJoinMeetingOptions opts,
   ) async {
     apiLogger.i('joinMeeting');
+    final trackingEvent = param.trackingEvent;
 
     final checkParamsResult = checkParameters(param);
     if (checkParamsResult != null) {
@@ -134,14 +138,17 @@ class _NEMeetingServiceImpl extends NEMeetingService
       return _handleMeetingResultCode(MeetingErrorCode.networkError).cast();
     }
 
+    trackingEvent?.beginStep(kMeetingStepMeetingInfo);
     final meetingInfoResult =
         await MeetingRepository.getMeetingInfo(param.meetingNum);
+    trackingEvent?.endStepWithResult(meetingInfoResult);
     if (!meetingInfoResult.isSuccess()) {
       return _handleMeetingResultCode(
               meetingInfoResult.code, meetingInfoResult.msg)
           .cast();
     }
 
+    trackingEvent?.beginStep(kMeetingStepJoinRoom);
     final meetingInfo = meetingInfoResult.nonNullData;
     final authorization = meetingInfo.authorization;
     var joinRoomResult = await _roomService.joinRoom(
@@ -167,6 +174,7 @@ class _NEMeetingServiceImpl extends NEMeetingService
         enableMyAudioDeviceOnJoinRtc: opts.enableMyAudioDeviceOnJoinRtc,
       ),
     );
+    trackingEvent?.endStepWithResult(joinRoomResult);
     if (joinRoomResult.code == MeetingErrorCode.success &&
         joinRoomResult.data != null) {
       final roomContext = joinRoomResult.nonNullData;
@@ -218,7 +226,8 @@ class _NEMeetingServiceImpl extends NEMeetingService
 
   /// 统一参数校验
   NEResult<void>? checkParameters(Object param) {
-    if (param is NEStartMeetingParams && param.displayName.isEmpty) {
+    if ((param is NEStartMeetingParams && param.displayName.isEmpty) ||
+        (param is NEJoinMeetingParams && param.displayName.isEmpty)) {
       return NEResult<void>(
           code: NEMeetingErrorCode.paramError,
           msg: localizations.displayNameShouldNotBeEmpty);
@@ -234,12 +243,6 @@ class _NEMeetingServiceImpl extends NEMeetingService
       return NEResult<void>(
           code: NEMeetingErrorCode.paramError,
           msg: localizations.meetingPasswordNotValid);
-    }
-
-    if (param is NEJoinMeetingParams && param.displayName.isEmpty) {
-      return NEResult<void>(
-          code: NEMeetingErrorCode.paramError,
-          msg: localizations.displayNameShouldNotBeEmpty);
     }
 
     if (param is NEJoinMeetingParams && param.meetingNum.isEmpty) {

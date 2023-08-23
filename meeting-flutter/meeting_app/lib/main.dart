@@ -31,10 +31,9 @@ import 'package:netease_common/netease_common.dart';
 import 'package:archive/archive_io.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  AppStyle.setStatusBarTextBlackColor();
-
   runZonedGuarded<Future<void>>(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    AppStyle.setStatusBarTextBlackColor();
     ErrorHandler.instance().install();
     await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     await Application.ensureInitialized();

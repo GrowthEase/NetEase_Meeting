@@ -1,5 +1,5 @@
 # Uncomment this line to define a global platform for your project
-platform :ios, '10.0'
+platform :ios, '11.0'
 source 'ssh://git@g.hz.netease.com:22222/yunxin-app/specs.git'
 source 'https://github.com/CocoaPods/Specs.git'
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
@@ -31,9 +31,10 @@ flutter_ios_podfile_setup
 target 'Runner' do
   use_frameworks!
 #  use_modular_headers!
-  plugin 'cocoapods-pod-sign'
-  skip_pod_bundle_sign # 用来跳过Xcode对bundle资源的签名
+#  plugin 'cocoapods-pod-sign'
+#  skip_pod_bundle_sign # 用来跳过Xcode对bundle资源的签名
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  pod 'NECoreIMKit', '9.6.1'
 end
 
 post_install do |installer|
