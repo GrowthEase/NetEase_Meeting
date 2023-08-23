@@ -48,55 +48,55 @@ PODS:
   - NECoreKit (9.6.1):
     - YXAlog (= 1.0.7)
   - NEDyldYuv (0.0.1)
-  - NERoomKit (1.19.0):
+  - NERoomKit (1.19.2):
     - NECoreIMKit (>= 9.6.1)
     - NECoreKit (>= 9.6.1)
-    - NERoomKit/Audio (= 1.19.0)
-    - NERoomKit/Base (= 1.19.0)
-    - NERoomKit/Beauty (= 1.19.0)
-    - NERoomKit/ScreenShare (= 1.19.0)
-    - NERoomKit/Segment (= 1.19.0)
-  - NERoomKit/Audio (1.19.0):
+    - NERoomKit/Audio (= 1.19.2)
+    - NERoomKit/Base (= 1.19.2)
+    - NERoomKit/Beauty (= 1.19.2)
+    - NERoomKit/ScreenShare (= 1.19.2)
+    - NERoomKit/Segment (= 1.19.2)
+  - NERoomKit/Audio (1.19.2):
     - NECoreIMKit (>= 9.6.1)
     - NECoreKit (>= 9.6.1)
-    - NERtcSDK/AiDenoise (= 5.4.3)
-    - NERtcSDK/AiHowling (= 5.4.3)
-    - NERtcSDK/Nenn (= 5.4.3)
-  - NERoomKit/Base (1.19.0):
+    - NERtcSDK/AiDenoise (= 5.3.11)
+    - NERtcSDK/AiHowling (= 5.3.11)
+    - NERtcSDK/Nenn (= 5.3.11)
+  - NERoomKit/Base (1.19.2):
     - NECoreIMKit (>= 9.6.1)
     - NECoreKit (>= 9.6.1)
-    - NERtcSDK/RtcBasic (= 5.4.3)
+    - NERtcSDK/RtcBasic (= 5.3.11)
     - NIMSDK_LITE (= 9.12.0)
-  - NERoomKit/Beauty (1.19.0):
+  - NERoomKit/Beauty (1.19.2):
     - NECoreIMKit (>= 9.6.1)
     - NECoreKit (>= 9.6.1)
-    - NERtcSDK/Beauty (= 5.4.3)
-    - NERtcSDK/FaceDetect (= 5.4.3)
-    - NERtcSDK/Nenn (= 5.4.3)
-  - NERoomKit/ScreenShare (1.19.0):
+    - NERtcSDK/Beauty (= 5.3.11)
+    - NERtcSDK/FaceDetect (= 5.3.11)
+    - NERtcSDK/Nenn (= 5.3.11)
+  - NERoomKit/ScreenShare (1.19.2):
     - NECoreIMKit (>= 9.6.1)
     - NECoreKit (>= 9.6.1)
-    - NERtcSDK/ScreenShare (= 5.4.3)
-  - NERoomKit/Segment (1.19.0):
+    - NERtcSDK/ScreenShare (= 5.3.11)
+  - NERoomKit/Segment (1.19.2):
     - NECoreIMKit (>= 9.6.1)
     - NECoreKit (>= 9.6.1)
-    - NERtcSDK/Nenn (= 5.4.3)
-    - NERtcSDK/Segment (= 5.4.3)
-  - NERtcSDK/AiDenoise (5.4.3)
-  - NERtcSDK/AiHowling (5.4.3)
-  - NERtcSDK/Beauty (5.4.3)
-  - NERtcSDK/FaceDetect (5.4.3)
-  - NERtcSDK/Nenn (5.4.3)
-  - NERtcSDK/RtcBasic (5.4.3)
-  - NERtcSDK/ScreenShare (5.4.3)
-  - NERtcSDK/Segment (5.4.3)
+    - NERtcSDK/Nenn (= 5.3.11)
+    - NERtcSDK/Segment (= 5.3.11)
+  - NERtcSDK/AiDenoise (5.3.11)
+  - NERtcSDK/AiHowling (5.3.11)
+  - NERtcSDK/Beauty (5.3.11)
+  - NERtcSDK/FaceDetect (5.3.11)
+  - NERtcSDK/Nenn (5.3.11)
+  - NERtcSDK/RtcBasic (5.3.11)
+  - NERtcSDK/ScreenShare (5.3.11)
+  - NERtcSDK/Segment (5.3.11)
   - netease_meeting_ui (0.0.1):
     - Flutter
     - YXAlog
   - netease_roomkit (0.0.1):
     - Flutter
     - NEDyldYuv (= 0.0.1)
-    - NERoomKit (= 1.19.0)
+    - NERoomKit (= 1.19.2)
     - YXAlog
   - NIMSDK_LITE (9.12.0):
     - NIMSDK_LITE/NOS (= 9.12.0)
@@ -207,10 +207,10 @@ SPEC CHECKSUMS:
   NECoreIMKit: 194fb31c7c5e6aa35ef59b7ba493904ad4930ce4
   NECoreKit: c89aca832c8d0b097ef24e12bc9bfb498aa9dc3f
   NEDyldYuv: 6b47adff16186768bf2f8b165697fdee8e94d7ac
-  NERoomKit: cc2537f627f3d72633dd141e926adc2db09a5ee1
-  NERtcSDK: 3ca71010128a8fcf87c0a6c4c27e42ee8f98105f
+  NERoomKit: 3b42693779793b2b6be69337601523a2b7976216
+  NERtcSDK: cadc2b0ebd7de5b70d8286e5afbd07f9a74f7a0d
   netease_meeting_ui: 7307f3c7f1bc85bfe718be852aa25f079468000b
-  netease_roomkit: 893989df7b98445f710a087b92b974c4bda211ef
+  netease_roomkit: fad50a87ffb94b9f36830dd6933881b5f3b641ef
   NIMSDK_LITE: f1a026f9df4f2cecab7c2ea9a9b2102a115440bf
   open_filex: 6e26e659846ec990262224a12ef1c528bb4edbe4
   package_info: 873975fc26034f0b863a300ad47e7f1ac6c7ec62
