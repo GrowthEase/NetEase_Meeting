@@ -208,6 +208,7 @@ class _DraggablePositionedState extends State<DraggablePositioned>
 
   @override
   void dispose() {
+    _pinAnimationController.stop();
     _pinAnimationController.dispose();
     widget.paddings?.removeListener(handleViewPaddingsChanged);
     super.dispose();

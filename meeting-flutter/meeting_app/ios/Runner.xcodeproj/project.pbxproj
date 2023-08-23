@@ -3,13 +3,13 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		0709925120BD38EE5B018D70 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 80A5568473CAEA7AC1CDFDDA /* Pods_Runner.framework */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
-		36E782B8D4E80E925E9333C5 /* BuildFile in Frameworks */ = {isa = PBXBuildFile; };
+		36E782B8D4E80E925E9333C5 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		530E41932A3760A100ADE1B9 /* ReplayKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DB8EC4E2654EEAA00BB171E /* ReplayKit.framework */; };
 		530E419B2A3760A100ADE1B9 /* MeetingBroadcaster.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 530E41922A3760A100ADE1B9 /* MeetingBroadcaster.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -113,7 +113,7 @@
 				530F661C29C4597500DA53FB /* CoreTelephony.framework in Frameworks */,
 				530F661A29C4596B00DA53FB /* AVFoundation.framework in Frameworks */,
 				CA2A313725C2511800017C94 /* CoreML.framework in Frameworks */,
-				36E782B8D4E80E925E9333C5 /* BuildFile in Frameworks */,
+				36E782B8D4E80E925E9333C5 /* (null) in Frameworks */,
 				0709925120BD38EE5B018D70 /* Pods_Runner.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -330,10 +330,12 @@
 /* Begin PBXShellScriptBuildPhase section */
 		3B06AD1E1E4923F5004D2608 /* Thin Binary */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
+				"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}",
 			);
 			name = "Thin Binary";
 			outputPaths = (
@@ -388,6 +390,7 @@
 		};
 		9740EEB61CF901F6004384FC /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -433,7 +436,6 @@
 				"${BUILT_PRODUCTS_DIR}/file_picker/file_picker.framework",
 				"${BUILT_PRODUCTS_DIR}/netease_meeting_ui/netease_meeting_ui.framework",
 				"${BUILT_PRODUCTS_DIR}/netease_roomkit/netease_roomkit.framework",
-				"${BUILT_PRODUCTS_DIR}/nos/nos.framework",
 				"${BUILT_PRODUCTS_DIR}/open_filex/open_filex.framework",
 				"${BUILT_PRODUCTS_DIR}/package_info/package_info.framework",
 				"${BUILT_PRODUCTS_DIR}/path_provider_ios/path_provider_ios.framework",
@@ -471,7 +473,6 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/file_picker.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/netease_meeting_ui.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/netease_roomkit.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/nos.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/open_filex.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/package_info.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/path_provider_ios.framework",
@@ -688,8 +689,6 @@
 					"\"connectivity\"",
 					"-framework",
 					"\"device_info_plus\"",
-					"-framework",
-					"\"nos\"",
 					"-framework",
 					"\"package_info\"",
 					"-framework",
@@ -1036,8 +1035,6 @@
 					"-framework",
 					"\"device_info_plus\"",
 					"-framework",
-					"\"nos\"",
-					"-framework",
 					"\"package_info\"",
 					"-framework",
 					"\"url_launcher_ios\"",
@@ -1155,8 +1152,6 @@
 					"\"connectivity\"",
 					"-framework",
 					"\"device_info_plus\"",
-					"-framework",
-					"\"nos\"",
 					"-framework",
 					"\"package_info\"",
 					"-framework",

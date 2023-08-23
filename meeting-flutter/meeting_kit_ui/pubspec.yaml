@@ -5,7 +5,7 @@ homepage: https://yunxin.163.com/
 publish_to: none
 
 environment:
-  sdk: ">=2.12.0 <3.0.0"
+  sdk: ">=2.17.0 <3.0.0"
   flutter: ">=1.22.0"
 
 dependencies:
@@ -14,7 +14,7 @@ dependencies:
 
   flutter_localizations:
     sdk: flutter
-  intl: ^0.17.0
+  intl: ^0.18.0
   device_info_plus: ^8.0.0
 
   cupertino_icons: ^1.0.5
@@ -22,8 +22,8 @@ dependencies:
 #  netease_meeting_assets: ^0.1.0-rc.0
   netease_meeting_assets:
     path: ../meeting_kit_assets
-#  netease_common: ^0.0.1-rc.1
-  netease_common: ^0.0.3-rc.0
+#  netease_common: ^0.0.3-rc.0
+  netease_common: ^1.0.1
 
   bot_toast: ^4.0.2
   permission_handler: ^10.0.0
@@ -48,7 +48,7 @@ dependencies:
 
   netease_meeting_core:
     path: ../meeting_kit
-  netease_roomkit: 1.17.2
+  netease_roomkit: 1.19.0
 
 dev_dependencies:
   flutter_test:

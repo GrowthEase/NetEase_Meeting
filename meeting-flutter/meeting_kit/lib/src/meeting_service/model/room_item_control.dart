@@ -149,7 +149,7 @@ class NEInRoomAudioControl extends NERoomAudioControl {
     bool allowSelfOn = true;
     bool enabled = false;
     NERoomAttendeeOffType attendeeOff = NERoomAttendeeOffType.none;
-    if (json != null) {
+    if (json != null && json['value'] != null) {
       final value = json['value'] as String;
       if (value.startsWith(RegExp('${AudioControlProperty.offAllowSelfOn}'))) {
         allowSelfOn = true;
@@ -215,7 +215,7 @@ class NEInRoomVideoControl extends NERoomVideoControl {
     bool allowSelfOn = true;
     bool enabled = false;
     NERoomAttendeeOffType attendeeOff = NERoomAttendeeOffType.none;
-    if (json != null) {
+    if (json != null && json['value'] != null) {
       final value = json['value'] as String;
       if (value.startsWith(RegExp('${VideoControlProperty.offAllowSelfOn}'))) {
         allowSelfOn = true;

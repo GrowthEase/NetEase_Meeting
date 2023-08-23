@@ -121,6 +121,7 @@ class _NEMeetingKitImpl extends NEMeetingKit
               'roomKitVer': value.roomKitVersion,
               'fltRoomKitVer': value.fltRoomKitVersion,
               'meetingVer': SDKConfig.sdkVersionName,
+              'framework': 'Flutter',
             };
             HttpHeaderRegistry().addContributor(() => sdkVersionsHeaders!);
           }
@@ -164,18 +165,21 @@ class _NEMeetingKitImpl extends NEMeetingKit
   }
 
   @override
-  Future<NEResult<void>> loginWithToken(String accountId, String token) async {
+  Future<NEResult<void>> loginWithToken(String accountId, String token,
+      {int? startTime}) async {
     apiLogger.i('loginWithToken: $accountId');
-    return _loginWithAccountInfo(
-        await AuthRepository.fetchAccountInfoByToken(accountId, token));
+    return _loginWithAccountInfo(_kLoginTypeToken,
+        () => AuthRepository.fetchAccountInfoByToken(accountId, token),
+        startTime: startTime, userId: accountId);
   }
 
   @override
-  Future<NEResult<void>> loginWithNEMeeting(
-      String username, String password) async {
+  Future<NEResult<void>> loginWithNEMeeting(String username, String password,
+      {int? startTime}) async {
     apiLogger.i('loginWithNEMeeting');
-    return _loginWithAccountInfo(
-        await AuthRepository.fetchAccountInfoByPwd(username, password));
+    return _loginWithAccountInfo(_kLoginTypePassword,
+        () => AuthRepository.fetchAccountInfoByPwd(username, password),
+        startTime: startTime, userId: username);
   }
 
   @override
@@ -188,11 +192,12 @@ class _NEMeetingKitImpl extends NEMeetingKit
     //   );
     // }
     return _loginWithAccountInfo(
-        await MeetingRepository.anonymousLogin().map((p0) => NEAccountInfo(
+        _kLoginTypeAnonymous,
+        () => MeetingRepository.anonymousLogin().map((p0) => NEAccountInfo(
               userUuid: p0.userUuid,
               userToken: p0.userToken,
             )),
-        true);
+        anonymous: true);
   }
 
   NEResult<void> trackLoginResultEvent(NEResult<void> result) {
@@ -215,34 +220,46 @@ class _NEMeetingKitImpl extends NEMeetingKit
     return NEResult(code: NEMeetingErrorCode.failed, msg: 'No login cache');
   }
 
-  Future<VoidResult> _loginWithAccountInfo(
-      NEResult<NEAccountInfo> accountInfoResult,
-      [bool anonymous = false]) async {
-    var info = accountInfoResult.data;
-    if (info != null) {
-      final loginResult = await NERoomKit.instance.authService
-          .login(info.userUuid, info.userToken);
-      if (loginResult.isSuccess()) {
-        return loginResult.onSuccess(() {
-          accountService._setAccountInfo(info, anonymous);
-          if (!anonymous) {
-            SDKPreferences.setLoginInfo(
-                LoginInfo(config!.appKey, info.userUuid, info.userToken));
-          }
-          onLoginStatusMaybeChanged();
-        });
+  Future<VoidResult> _loginWithAccountInfo(String loginType,
+      Future<NEResult<NEAccountInfo>> Function() accountInfoAction,
+      {bool anonymous = false, int? startTime, String? userId}) async {
+    final event = IntervalEvent(_kEventLogin, startTime: startTime)
+      ..addParam(kEventParamType, loginType)
+      ..addParam(kEventParamUserId, userId)
+      ..beginStep(_kLoginStepAccountInfo);
+    Future<VoidResult> realLogin() async {
+      final accountInfoResult = await accountInfoAction();
+      event.endStepWithResult(accountInfoResult);
+      var info = accountInfoResult.data;
+      if (info != null) {
+        event.beginStep(_kLoginStepRoomKitLogin);
+        final loginResult = await NERoomKit.instance.authService
+            .login(info.userUuid, info.userToken);
+        event.endStepWithResult(loginResult);
+        if (loginResult.isSuccess()) {
+          return loginResult.onSuccess(() {
+            accountService._setAccountInfo(info, anonymous);
+            if (!anonymous) {
+              SDKPreferences.setLoginInfo(
+                  LoginInfo(config!.appKey, info.userUuid, info.userToken));
+            }
+            onLoginStatusMaybeChanged();
+          });
+        } else {
+          return loginResult.onFailure((code, msg) {
+            commonLogger.i('loginWithAccountInfo code:$code , msg: $msg ');
+          });
+        }
       } else {
-        return loginResult.onFailure((code, msg) {
+        return _handleMeetingResultCode(
+                accountInfoResult.code, accountInfoResult.msg)
+            .onFailure((code, msg) {
           commonLogger.i('loginWithAccountInfo code:$code , msg: $msg ');
         });
       }
-    } else {
-      return _handleMeetingResultCode(
-              accountInfoResult.code, accountInfoResult.msg)
-          .onFailure((code, msg) {
-        commonLogger.i('loginWithAccountInfo code:$code , msg: $msg ');
-      });
     }
+
+    return realLogin().thenReport(event);
   }
 
   @override
@@ -292,6 +309,27 @@ class _NEMeetingKitImpl extends NEMeetingKit
       }
     });
   }
+
+  @override
+  Future<NEResult<String?>> uploadLog() {
+    return _roomKit.uploadLog();
+  }
+
+  @override
+  Future<dynamic> reportEvent(Event event, {String? userId}) {
+    print('reportEvent: ${event.eventId}');
+    if (config?.appKey == null) return Future.value(false);
+    return _roomKit.invokeMethod('reportEvent', {
+      'appKey': config?.appKey,
+      'component': _kComponent,
+      'version': _kVersion,
+      'framework': _kFramework,
+      'userId': userId ?? accountService.getAccountInfo()?.userUuid,
+      'eventId': event.eventId,
+      'priority': event.priority.index,
+      'eventData': event.toMap(),
+    });
+  }
 }
 
 NEResult<void> _handleMeetingResultCode(int code, [String? msg]) {
@@ -323,5 +361,37 @@ NEResult<void> _handleMeetingResultCode(int code, [String? msg]) {
         msg: localizations.meetingNotExist);
   } else {
     return NEResult<void>(code: code, msg: msg);
+  }
+}
+
+extension TimeConsumingOperationExtension on TimeConsumingOperation {
+  void setResultFrom<T>(NEResult<T> result) {
+    setResult(result.code, result.msg, result.requestId, result.cost);
+  }
+}
+
+extension IntervalEventExtension on IntervalEvent {
+  IntervalEvent endStepWithResult<T>(NEResult<T> result) {
+    return endStep(result.code, result.msg, result.requestId, result.cost);
+  }
+}
+
+extension FutureResultExtension<T> on Future<NEResult<T>> {
+  Future<NEResult<T>> thenEndStep(IntervalEvent? event) {
+    return then<NEResult<T>>((value) {
+      event?.endStep(value.code, value.msg, value.requestId, value.cost);
+      return value;
+    });
+  }
+
+  Future<NEResult<T>> thenReport(IntervalEvent? event,
+      {bool onlyFailure = false, String? userId}) {
+    return then<NEResult<T>>((value) {
+      if (event != null &&
+          (!onlyFailure || onlyFailure && !value.isSuccess())) {
+        NEMeetingKit.instance.reportEvent(event, userId: userId);
+      }
+      return value;
+    });
   }
 }

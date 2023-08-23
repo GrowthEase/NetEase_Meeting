@@ -15,6 +15,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart' as http;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:netease_roomkit/netease_roomkit.dart';
 import 'package:uuid/uuid.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -82,6 +83,7 @@ part 'src/meeting_service/model/create_meeting.dart';
 part 'src/meeting_service/config/debug_options.dart';
 part 'src/meeting_service/model/meeting_item_live.dart';
 part 'src/meeting_service/meeting_constants.dart';
+part 'src/meeting_service/model/encryption_config.dart';
 
 /// https://office.netease.com/doc/?identity=3963dc2ced7a48259860289c5d8970af
 class MeetingErrorCode {

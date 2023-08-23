@@ -19,11 +19,12 @@ class _PreVirtualBackgroundPageState
   List<String> sourceList = <String>[virtualNone];
   List<String>? addExternalVirtualList;
   int currentSelected = 0;
-  static late SharedPreferences _sharedPreferences;
+  final _settingsService = NEMeetingKit.instance.getSettingsService();
   bool allowedDeleteAll = false;
   bool bCanPress = true;
   NEPreviewRoomContext? previewRoomContext;
   late final NEPreviewRoomEventCallback eventCallback;
+
   @override
   void initState() {
     super.initState();
@@ -115,15 +116,15 @@ class _PreVirtualBackgroundPageState
                       selected = await pickFiles(
                           context,
                           sourceList,
-                          _sharedPreferences,
+                          _settingsService,
                           addExternalVirtualList, (List<String>? list) {
                         addExternalVirtualList = list;
                       });
                     }
                     if (selected) {
                       currentSelected = index;
-                      _sharedPreferences.setInt(
-                          currentVirtualSelectedKey, currentSelected);
+                      _settingsService
+                          .setCurrentVirtualBackgroundSelected(currentSelected);
                       enableVirtualBackground(previewRoomRtcController,
                           index != 0, sourceList[index]);
                       setState(() {});
@@ -172,12 +173,11 @@ class _PreVirtualBackgroundPageState
                               content: '==== BuiltinVirtualBackgrounds$e ',
                             );
                           }
-                          _sharedPreferences.setInt(
-                              currentVirtualSelectedKey, 0);
+                          _settingsService
+                              .setCurrentVirtualBackgroundSelected(0);
                           currentSelected = 0;
                           if (addExternalVirtualList != null) {
-                            _sharedPreferences.setStringList(
-                                addExternalVirtualListKey,
+                            _settingsService.setExternalVirtualBackgrounds(
                                 addExternalVirtualList!);
                           }
                           enableVirtualBackground(
@@ -242,13 +242,9 @@ class _PreVirtualBackgroundPageState
     }
 
     ///默认的前6张
-    var setting = NEMeetingKit.instance.getSettingsService();
-
-    var list = await setting.getBuiltinVirtualBackgrounds();
+    var list = await _settingsService.getBuiltinVirtualBackgrounds();
     await previewRoomRtcController?.startBeauty();
     await previewRoomRtcController?.enableBeauty(true);
-
-    _sharedPreferences = await SharedPreferences.getInstance();
 
     if (list.isNotEmpty && list.length > 0) {
       for (var element in list) {
@@ -267,14 +263,15 @@ class _PreVirtualBackgroundPageState
       }
     }
     addExternalVirtualList =
-        _sharedPreferences.getStringList(addExternalVirtualListKey);
+        await _settingsService.getExternalVirtualBackgrounds();
     if (addExternalVirtualList != null && addExternalVirtualList!.length > 0) {
       addExternalVirtualList =
           replaceBundleId(cache!.path, addExternalVirtualList!);
       sourceList.addAll(addExternalVirtualList!);
     }
     sourceList.add('+');
-    currentSelected = _sharedPreferences.getInt(currentVirtualSelectedKey) ?? 0;
+    currentSelected =
+        await _settingsService.getCurrentVirtualBackgroundSelected();
     if (currentSelected != 0) {
       enableVirtualBackground(
           previewRoomRtcController, true, sourceList[currentSelected]);
@@ -367,7 +364,7 @@ void enableVirtualBackground(NERoomBaseRtcController? previewRoomRtcController,
 Future<bool> pickFiles(
     BuildContext context,
     List<String> sourceList,
-    SharedPreferences _sharedPreferences,
+    NESettingsService settingsService,
     List<String>? addExternalVirtualList,
     void Function(List<String>?) callback) async {
   bool selected = false;
@@ -409,14 +406,14 @@ Future<bool> pickFiles(
       ..writeAsBytes(contents);
     sourceList.removeLast();
     sourceList.add(path);
+
     addExternalVirtualList =
-        _sharedPreferences.getStringList(addExternalVirtualListKey);
-    if (addExternalVirtualList == null || addExternalVirtualList.length <= 0) {
+        await settingsService.getExternalVirtualBackgrounds();
+    if (addExternalVirtualList.length <= 0) {
       addExternalVirtualList = <String>[];
     }
     addExternalVirtualList.add(path);
-    _sharedPreferences.setStringList(
-        addExternalVirtualListKey, addExternalVirtualList);
+    settingsService.setExternalVirtualBackgrounds(addExternalVirtualList);
     sourceList.add('+');
     selected = true;
   } else {

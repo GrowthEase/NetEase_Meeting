@@ -104,7 +104,10 @@ class MeetingWaitingPageState extends BaseState<MeetingWaitingPage> {
       actions: <Widget>[
         CupertinoDialogAction(
           child: Text(NEMeetingUIKitLocalizations.of(context)!.cancel),
-          onPressed: cancel,
+          onPressed: () {
+            calculateWaitingElapsed();
+            cancel();
+          },
         ),
         CupertinoDialogAction(
             key: MeetingUIValueKeys.inputMeetingPasswordJoinMeeting,
@@ -186,10 +189,13 @@ class MeetingWaitingPageState extends BaseState<MeetingWaitingPage> {
   }
 
   void retryJoinMeeting() async {
+    calculateWaitingElapsed();
     final arguments = widget.waitingArguments;
+    final trackingEvent = arguments.joinParams.trackingEvent;
     final joinResult =
         await NEMeetingKit.instance.getMeetingService().joinMeeting(
-              arguments.joinParams.copy(password: _textFieldController.text),
+              arguments.joinParams.copy(password: _textFieldController.text)
+                ..trackingEvent = trackingEvent,
               arguments.joinOpts,
             );
     onRetryResult(joinResult.code, joinResult.msg, joinResult.data);
@@ -209,6 +215,16 @@ class MeetingWaitingPageState extends BaseState<MeetingWaitingPage> {
     } else {
       cancel(code!, msg);
     }
+  }
+
+  void calculateWaitingElapsed() {
+    // 这里需要修正一下时间的总耗时，因为输入密码页面的时间也算在内了
+    final arguments = widget.waitingArguments;
+    final elapsed = arguments.startStopwatch.elapsedMilliseconds;
+    arguments.joinParams.trackingEvent?.setAdjustDuration(elapsed);
+    arguments.joinParams.trackingEvent
+        ?.addParam(kEventParamInputPasswordElapsed, elapsed);
+    print('waiting page elapsed: $elapsed');
   }
 
   // @override

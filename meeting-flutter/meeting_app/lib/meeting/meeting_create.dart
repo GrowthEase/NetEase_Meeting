@@ -456,7 +456,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
     final openCamera = this.openCamera;
     final openMicrophone = this.openMicrophone;
 
-    var meetingNum = useSelfNum ? MeetingUtil.getMeetingNum() : '';
+    var meetingNum = useSelfNum ? MeetingUtil.getMeetingNum() : null;
     LoadingUtil.showLoading();
     final result = await NEMeetingUIKit().startMeetingUI(
       context,
@@ -486,7 +486,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
       switchToJoin(
         context,
         NEJoinMeetingUIParams(
-            meetingNum: meetingNum,
+            meetingNum: meetingNum!,
             displayName: nickname ?? MeetingUtil.getNickName()),
         await buildMeetingUIOptions(
           noVideo: !openCamera,

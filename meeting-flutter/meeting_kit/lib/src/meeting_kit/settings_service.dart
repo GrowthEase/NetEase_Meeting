@@ -115,11 +115,32 @@ abstract class NESettingsService extends ValueNotifier<Map> {
   /// 获取内置虚拟背景列表
   ///
   Future<List<NEMeetingVirtualBackground>> getBuiltinVirtualBackgrounds();
+
+  ///
+  /// 设置最近选择的虚拟背景下标
+  ///
+  void setCurrentVirtualBackgroundSelected(int index);
+
+  ///
+  /// 获取最近选择的虚拟背景下标
+  ///
+  Future<int> getCurrentVirtualBackgroundSelected();
+
+  ///
+  /// 设置外部虚拟背景列表
+  ///
+  void setExternalVirtualBackgrounds(List<String> virtualBackgrounds);
+
+  ///
+  /// 获取外部虚拟背景列表
+  ///
+  Future<List<String>> getExternalVirtualBackgrounds();
 }
 
 class NEMeetingVirtualBackground {
   /// 虚拟背景图片地址列表
   late String path;
+
   NEMeetingVirtualBackground(this.path);
 
   NEMeetingVirtualBackground.fromMap(Map map) {
