@@ -13,6 +13,7 @@ class VirtualBackgroundModel : public QAbstractListModel {
 public:
     struct VBProperty {
         QString strPath;
+        QString strThumbnailPath;
         bool bAllowedDelete = false;
         bool bCurrentSelected = false;
     };
@@ -23,6 +24,7 @@ public:
 
     enum {
         kVBPath = Qt::UserRole,
+        kVBThumbnailPath,
         kVBAllowedDelete,
         kVBCurrentSelected,
     };

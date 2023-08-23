@@ -40,6 +40,8 @@ public:
     virtual void onIsMyAudioDeviceAutoSelectType(const NESettingsService::AudioDeviceAutoSelectTypeCallback& cb) = 0;
     virtual void onSetMyAudioDeviceUseLastSelected(bool bOn, const NEEmptyCallback& cb) = 0;
     virtual void onIsMyAudioDeviceUseLastSelected(const NESettingsService::NEBoolCallback& cb) = 0;
+    virtual void onSetSharingSidebarViewMode(const SharingSidebarViewMode& viewMode, const NEEmptyCallback& cb) = 0;
+    virtual void onGetSharingSidebarViewMode(const NESettingsService::NEIntCallback& cb) = 0;
 
     virtual void onShowMyMeetingElapseTime(bool show, const NEEmptyCallback& cb) = 0;
     virtual void onIsShowMyMeetingElapseTimeEnabled(const NESettingsService::NEBoolCallback& cb) = 0;

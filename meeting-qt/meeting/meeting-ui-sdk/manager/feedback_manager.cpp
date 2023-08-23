@@ -61,7 +61,7 @@ void FeedbackManager::stopAudioDump() {
 void FeedbackManager::addAudioDumpToSources(const std::string& zipPath) {
     auto dumpFile = qApp->property("logPath").toString();
     if (dumpFile.isEmpty())
-        dumpFile = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+        dumpFile = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
 
     auto appkey = GlobalManager::getInstance()->globalAppKey();
     QString appkeyPath = appkey.left(6);

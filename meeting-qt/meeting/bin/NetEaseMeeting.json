@@ -14,6 +14,10 @@
   "background": "macxdmg.png",
   "contents": [
     { "x": 160, "y": 200, "type": "file", "path": "网易会议.app" },
-    { "x": 448, "y": 200, "type": "link", "path": "/Applications" }
+    { "x": 448, "y": 200, "type": "link", "path": "/Applications" },
+    { "x": 700, "y": 200, "type": "position", "path": ".background" },
+    { "x": 700, "y": 200, "type": "position", "path": ".DS_Store" },
+    { "x": 700, "y": 200, "type": "position", "path": ".Trashes" },
+    { "x": 700, "y": 200, "type": "position", "path": ".VolumeIcon.icns" }
   ]
 }

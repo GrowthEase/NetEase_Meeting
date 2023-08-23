@@ -1,216 +1,144 @@
 ﻿import QtQuick 2.15
 import QtQuick.Layouts 1.12
-import QtQuick.Controls 1.4
 import QtQuick.Controls 2.15
 import QtQuick.Controls.Material 2.12
 import NetEase.Meeting.HistoryModel 1.0
-import QtQuick.Controls.Styles 1.4
 
 import "../components"
 
 Rectangle{
     property HistoryModel dataModel: dataModel
-
+    border.color: "#e5e5e5"
+    border.width: 1
     MessageManager {
         id: idMessage
     }
-
+    Rectangle {
+        id: header
+        width: parent.width
+        height: 40
+        anchors.margins: 1
+        color: "#f8f8fa"
+        border.color: "#e5e5e5"
+        border.width: 1
+        RowLayout {
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 0
+            Rectangle { Layout.preferredWidth: 15; }
+            Label { text: qsTr('Subject'); Layout.preferredWidth: 200; color: "#333333"; font.pixelSize: 14; }
+            Label { text: qsTr('Start time'); Layout.preferredWidth: 160; color: "#333333"; font.pixelSize: 14; }
+            Label { text: qsTr('Meeting ID'); Layout.preferredWidth: 130; color: "#333333"; font.pixelSize: 14; }
+            Label { text: qsTr('Creator'); Layout.preferredWidth: 110; color: "#333333"; font.pixelSize: 14; }
+            Label { text: qsTr('Collection'); Layout.preferredWidth: 105; color: "#333333"; font.pixelSize: 14; }
+        }
+    }
     TableView {
         id: tableView
-        anchors.fill: parent
         clip: true
-        horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
-        verticalScrollBarPolicy: Qt.ScrollBarAsNeeded
-
-        style: TableViewStyle {
-            frame: Rectangle {
-                border {
-                    color: "#e5e5e5"
-                }
-                radius: 4
-            }
-
-            backgroundColor: "#ffffff"
-
-            incrementControl : Rectangle{
-                visible: false
-            }
-
-            decrementControl: Rectangle{
-                visible: false
-            }
-
-            handle: Rectangle{
-                x: -3
-                implicitWidth: 6
-                color: "#cccccc"
-                radius: 3
-            }
-
-            scrollBarBackground: Rectangle {
-                x: -3
-                color: "#f1f1f1"
-                implicitWidth: 6
-            }
-
-            scrollToClickedPosition: true
-            transientScrollBars: true
+        anchors.top: header.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.leftMargin: 15
+        anchors.topMargin: 3
+        anchors.bottomMargin: 3
+        // interactive: false
+        rowSpacing: 1
+        columnSpacing: 1
+        ScrollBar.vertical: ScrollBar {
+            width: 7
         }
-
-        TableViewColumn{ role: "subject"  ; title: qsTr("subject") ; width: 200; elideMode: Text.ElideRight; movable: false; resizable: false}
-        TableViewColumn{ role: "startTime" ; title: qsTr("startTime") ; width: 160; elideMode: Text.ElideRight; movable: false; resizable: false}
-        TableViewColumn{ role: "meetingID" ; title: qsTr("meetingID") ; width: 145; elideMode: Text.ElideRight; movable: false; resizable: false}
-        TableViewColumn{ role: "creator" ; title: qsTr("creator") ; width: 110; elideMode: Text.ElideRight; movable: false; resizable: false}
-        TableViewColumn{ role: "collect" ; title: qsTr("opration") ; width: 105; elideMode: Text.ElideRight; movable: false; resizable: false}
-
-        model: dataModel
-
-        // 设置表头的样式
-        headerDelegate: Rectangle {
-            height: 40
-            color: "#f8f8fa"
-            Label {
+        delegate: Rectangle {
+            id: cell
+            implicitWidth: 150
+            implicitHeight: 54
+            RowLayout {
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.left: parent.left
-                anchors.leftMargin: 14
-                font.pixelSize: 14
-                text: styleData.value
-                color: "#666666"
+                width: parent.width
+                spacing: 0
+                Label {
+                    id: itemText
+                    Layout.maximumWidth: 190
+                    elide: Qt.ElideRight
+                    color: "#333333"
+                    font.pixelSize: 14
+                    visible: column !== 4
+                }
+                Image {
+                    Layout.preferredHeight: 14
+                    Layout.preferredWidth: 14
+                    Layout.leftMargin: 8
+                    source: 'qrc:/qml/images/public/icons/icon_copy.png'
+                    mipmap: true
+                    visible: column === 2
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            clipboard.setText(itemText.text)
+                            idMessage.info(qsTr('Meeting ID has been copied'))
+                        }
+                    }
+                }
+                CustomStarCheckBox {
+                    text: model.collect ? qsTr("Cancel") : qsTr("Collect")
+                    checkState: model.collect ? Qt.Checked : Qt.Unchecked
+                    visible: column === 4
+                    onToggled: {
+                        var ret = false
+                        if(checked) {
+                            ret = historyManager.collect(row, model.uniqueID)
+                            if(ret) {
+                                idMessage.info(qsTr('Collect success'))
+                            } else {
+                                idMessage.info(qsTr('Collect failed'))
+                            }
+                        } else {
+                            if(dataModel.dataType == 0) {
+                                ret = historyManager.cancelCollectFromHistory(row, model.uniqueID)
+                            } else {
+                                ret = historyManager.cancelCollectFromCollectList(row, model.uniqueID)
+                            }
+                            if(ret) {
+                                idMessage.info(qsTr('Cancel success'))
+                            } else {
+                                idMessage.info(qsTr('Cancel failed'))
+                            }
+                        }
+                    }
+                }
             }
-
             Rectangle {
-                color:"#e5e5e5"
+                color: "#e5e5e5"
                 height: 1
                 width: parent.width
                 anchors.left: parent.left
-                anchors.top: parent.top
+                anchors.bottom: parent.bottom
             }
-        }
-
-        rowDelegate: Rectangle {
-            height: 54
-            color: "transparent"
-
-            Rectangle {
-                color:"#e5e5e5"
-                height: 1
-                width: 705
-                anchors.left: parent.left
-                anchors.leftMargin: 16
-                anchors.top: parent.bottom
-            }
-        }
-
-        itemDelegate: Component {
-            id: item_delegate
-            Loader {
-                id:item_loader
-                anchors.fill: parent
-                anchors.margins: 1
-                sourceComponent: {
-                    if(styleData.role === "meetingID") {
-                        return copy_delegate
-                    } else if (styleData.role === "collect"){
-                        return collect_delegate
-                    }
-                    return text_delegate
-                }
-
-                Component {
-                    id: text_delegate
-                    Rectangle {
-                        implicitHeight: 54
-                        anchors.top: item_loader.Top
-                        Label {
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.left: parent.left
-                            anchors.leftMargin: 14
-                            anchors.right: parent.right
-                            text: styleData.value
-                            color: "#333333"
-                            font.pixelSize: 14
-                            elide: Text.ElideRight
-                        }
-                    }
-                }
-
-                Component {
-                    id: copy_delegate
-                    Rectangle {
-                        implicitHeight: 54
-
-                        RowLayout {
-                            spacing: 8
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.left: parent.left
-                            anchors.leftMargin: 14
-                            Label {
-                                id: idmeetingID
-                                text: prettyConferenceId(styleData.value)
-                                color: "#333333"
-                                font.pixelSize: 14
-                            }
-
-                            Image {
-                                Layout.preferredHeight: 14
-                                Layout.preferredWidth: 14
-                                source: 'qrc:/qml/images/public/icons/icon_copy.png'
-                                mipmap: true
-                                MouseArea {
-                                    id: meetingShortIdCopyBtn
-                                    anchors.fill: parent
-                                    onClicked: {
-                                        clipboard.setText(idmeetingID.text)
-                                        idMessage.info(qsTr('Meeting ID has been copied'))
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                Component {
-                    id: collect_delegate
-                    Rectangle {
-                        implicitHeight: 54
-                        RowLayout {
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.left: parent.left
-                            anchors.leftMargin: 14
-                            CustomStarCheckBox{
-                                text: styleData.value === true ? qsTr("cancelCollect") : qsTr("collect")
-                                checkState: styleData.value === true ? Qt.Checked : Qt.Unchecked
-                                onToggled: {
-                                    var ret = false
-                                    if(checked) {
-                                        ret = historyManager.collect(model.index, model.uniqueID)
-                                        if(ret) {
-                                            idMessage.info(qsTr('collect success'))
-                                        } else {
-                                            idMessage.info(qsTr('collect failed'))
-                                        }
-                                    } else {
-                                        if(dataModel.dataType == 0) {
-                                            ret = historyManager.cancelCollectFromHistory(model.index, model.uniqueID)
-                                        } else {
-                                            ret = historyManager.cancelCollectFromCollectList(model.index, model.uniqueID)
-                                        }
-
-                                        if(ret) {
-                                            idMessage.info(qsTr('cancel success'))
-                                        } else {
-                                            idMessage.info(qsTr('cancel failed'))
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+            Component.onCompleted: {
+                switch (column) {
+                case 0:
+                    cell.implicitWidth = 200
+                    itemText.text = model.subject
+                    break
+                case 1:
+                    cell.implicitWidth = 160
+                    itemText.text = model.startTime
+                    break
+                case 2:
+                    cell.implicitWidth = 130
+                    itemText.text = prettyConferenceId(model.meetingID)
+                    break
+                case 3:
+                    cell.implicitWidth = 110
+                    itemText.text = model.creator
+                    break
+                case 4:
+                    cell.implicitWidth = 105
+                    itemText.text = model.collect
+                    break
                 }
             }
         }
+        model: dataModel
     }
 }
-
-
-

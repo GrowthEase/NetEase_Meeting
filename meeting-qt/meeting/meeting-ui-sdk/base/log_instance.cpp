@@ -19,7 +19,7 @@ LogInstance::LogInstance(char* argv[]) {
     QString logPathEx = qApp->property("logPath").toString();
     auto logLevel = qApp->property("logLevel").toInt();
     if (logPathEx.isEmpty())
-        logPathEx = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+        logPathEx = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
     auto logPath = logPathEx + "/app/ui";
     QDir logDir;
     if (!logDir.exists(logPath))

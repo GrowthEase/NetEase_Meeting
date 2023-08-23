@@ -1,7 +1,5 @@
 ﻿import QtQuick 2.15
-import QtQuick.Controls 1.4
 import QtQuick.Controls 2.15
-import QtQuick.Controls.Styles 1.4
 import QtQuick.Layouts 1.12
 import NetEase.Meeting.HistoryModel 1.0
 
@@ -15,7 +13,6 @@ CustomWindow {
     customHeight: 598
 
     Component.onCompleted: {
-        idLoader.item.initTab()
     }
 
     onVisibleChanged: {
@@ -36,65 +33,55 @@ CustomWindow {
         dataType: 1
     }
 
-    Component{
-        id: historyView;
-        HistoryTableView {
-            anchors.fill: parent
-            dataModel: historyModel
-        }
-    }
-
-    Component{
-        id: collectView;
-        HistoryTableView {
-            anchors.fill: parent
-            dataModel: collectModel
-        }
-    }
-
     Component {
         id: idComponent
         Rectangle {
             id: rect
-            function initTab() {
-                tabview.addTab(qsTr("All meetings"), historyView)
-                tabview.addTab(qsTr("Collect meetings"), collectView)
-            }
-
             function initData() {
                 historyManager.refreshHistoryMeetingList()
                 historyManager.refreshCollectMeetingList()
             }
 
-            TabView {
+            TabBar {
                 id: tabview
-                anchors.fill: parent
+                anchors.horizontalCenter: parent.horizontalCenter
                 anchors.margins: 30
                 visible: historyManager.count > 0
-                style: TabViewStyle {
-                    tabsAlignment: Qt.AlignHCenter
-                    frameOverlap: -30
-                    tab: Rectangle {
-                        color: styleData.selected ? "#337eff" :"#eef0f3"
-                        implicitWidth: 104
-                        implicitHeight: 32
-                        radius: 4
-                        Label {
-                            id: text
-                            anchors.centerIn: parent
-                            text: styleData.title
-                            font.pixelSize: 14
-                            color: styleData.selected ? "#ffffff" : "#333333"
-                        }
+                TabButton {
+                    text: qsTr("All meetings")
+                    width: implicitWidth
+                    onClicked: {
+                        historyManager.refreshHistoryMeetingList()
+                        stackLayout.currentIndex = 0
                     }
                 }
-
-                onCurrentIndexChanged: {
-                    if(currentIndex == 0) {
-                        historyManager.refreshHistoryMeetingList()
-                    } else {
+                TabButton {
+                    text: qsTr("Collect meetings")
+                    width: implicitWidth
+                    onClicked: {
                         historyManager.refreshCollectMeetingList()
+                        stackLayout.currentIndex = 1
                     }
+                }
+            }
+
+            StackLayout {
+                id: stackLayout
+                anchors.fill: parent
+                anchors.topMargin: 50
+                anchors.rightMargin: 30
+                anchors.bottomMargin: 30
+                anchors.leftMargin: 30
+                visible: historyManager.count > 0
+                HistoryTableView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    dataModel: historyModel
+                }
+                HistoryTableView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    dataModel: collectModel
                 }
             }
 
@@ -109,7 +96,6 @@ CustomWindow {
                     source: "qrc:/qml/images/front/empty.png"
                     Layout.alignment: Qt.AlignHCenter
                 }
-
                 Label {
                     font.pixelSize: 16
                     text: qsTr("No historical meeting")

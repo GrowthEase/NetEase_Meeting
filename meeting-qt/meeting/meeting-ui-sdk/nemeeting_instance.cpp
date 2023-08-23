@@ -27,16 +27,16 @@
 #include "service/ui_sdk_meeting_service.h"
 #include "service/ui_sdk_setting_service.h"
 
-std::shared_ptr<NEMeetingInstance> NEMeetingInstance::meeting_instance_ = nullptr;
+std::shared_ptr<NEMeetingInstance> NEMeetingInstance::kMeetingInstance = nullptr;
 std::recursive_mutex NEMeetingInstance::meeting_instance_mutex_;
 NEMeetingSDK* NEMeetingSDK::getInstance() {
-    if (NEMeetingInstance::meeting_instance_ == nullptr) {
+    if (NEMeetingInstance::kMeetingInstance == nullptr) {
         NEMeetingInstance::meeting_instance_mutex_.lock();
-        if (NEMeetingInstance::meeting_instance_ == nullptr)
-            NEMeetingInstance::meeting_instance_ = std::make_shared<NEMeetingInstance>();
+        if (NEMeetingInstance::kMeetingInstance == nullptr)
+            NEMeetingInstance::kMeetingInstance = std::make_shared<NEMeetingInstance>();
         NEMeetingInstance::meeting_instance_mutex_.unlock();
     }
-    return NEMeetingInstance::meeting_instance_.get();
+    return NEMeetingInstance::kMeetingInstance.get();
 }
 
 NEMeetingInstance::NEMeetingInstance()
@@ -122,7 +122,7 @@ void NEMeetingInstance::unInitialize(const NEUnInitializeCallback& cb) {
     }
     auto __this = shared_from_this();
     NEMeetingInstance::meeting_instance_mutex_.lock();
-    NEMeetingInstance::meeting_instance_.reset();
+    NEMeetingInstance::kMeetingInstance.reset();
     NEMeetingInstance::meeting_instance_mutex_.unlock();
     if (cb != nullptr) {
         cb(error_code, error_msg);

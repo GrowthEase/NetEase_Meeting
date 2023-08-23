@@ -65,6 +65,8 @@ std::list<std::wstring> GetDelFilesList() {
     ret_files.push_back(_T("qmltooling\\"));
     ret_files.push_back(_T("Qt\\*.*"));
     ret_files.push_back(_T("Qt\\"));
+    ret_files.push_back(_T("QtCore\\*.*"));
+    ret_files.push_back(_T("QtCore\\"));
     ret_files.push_back(_T("QtGraphicalEffects\\*.*"));
     ret_files.push_back(_T("QtGraphicalEffects\\"));
     ret_files.push_back(_T("QtMultimedia\\*.*"));
@@ -104,6 +106,8 @@ std::list<std::wstring> GetDelFilesList() {
     ret_files.push_back(_T("THIRD_PARTY_COPYRIGHT.txt"));
     ret_files.push_back(_T("meeting-ui-sdk_en.qm"));
     ret_files.push_back(_T("meeting-ui-sdk_ja.qm"));
+    ret_files.push_back(_T("meeting-app_en_CN.qm"));
+    ret_files.push_back(_T("meeting-app_en_US.qm"));
 
     // NEP
     ret_files.push_back(_T("NEP2.dll"));
@@ -112,6 +116,7 @@ std::list<std::wstring> GetDelFilesList() {
     // NERTC
     ret_files.push_back(_T("nertc_sdk.dll"));
     ret_files.push_back(_T("protoopp.dll"));
+    ret_files.push_back(_T("NERtcAudio3D.dll"));
     ret_files.push_back(_T("NERtcAiDenoise.dll"));
     ret_files.push_back(_T("NERtcAiHowling.dll"));
     ret_files.push_back(_T("NERtcBeauty.dll"));
@@ -122,6 +127,8 @@ std::list<std::wstring> GetDelFilesList() {
     ret_files.push_back(_T("NERtcScreenShareEnhance.dll"));
     ret_files.push_back(_T("NERtcSuperResolution.dll"));
     ret_files.push_back(_T("NERtcVideoDenoise.dll"));
+    ret_files.push_back(_T("necrashpad.dll"));
+    ret_files.push_back(_T("necrashpad_handler.exe"));
 
     // NIM
     ret_files.push_back(_T("nim_qchat.dll"));
@@ -161,37 +168,38 @@ std::list<std::wstring> GetDelFilesList() {
     ret_files.push_back(_T("NetEaseMeetingHost.exe"));
     ret_files.push_back(_T("NetEaseMeetingClient.exe"));
     ret_files.push_back(_T("opengl32sw.dll"));
-    ret_files.push_back(_T("Qt5Core.dll"));
-    ret_files.push_back(_T("Qt5Gui.dll"));
-    ret_files.push_back(_T("Qt5LabsSettings.dll"));
-    ret_files.push_back(_T("Qt5Multimedia.dll"));
-    ret_files.push_back(_T("Qt5MultimediaQuick.dll"));
-    ret_files.push_back(_T("Qt5Network.dll"));
-    ret_files.push_back(_T("Qt5OpenGL.dll"));
-    ret_files.push_back(_T("Qt5Positioning.dll"));
-    ret_files.push_back(_T("Qt5Qml.dll"));
-    ret_files.push_back(_T("Qt5QmlLocalStorage.dll"));
-    ret_files.push_back(_T("Qt5QmlModels.dll"));
-    ret_files.push_back(_T("Qt5QmlWorkerScript.dll"));
-    ret_files.push_back(_T("Qt5QmlXmlListModel.dll"));
-    ret_files.push_back(_T("Qt5Quick.dll"));
-    ret_files.push_back(_T("Qt5QuickControls2.dll"));
-    ret_files.push_back(_T("Qt5QuickControls2Impl.dll"));
-    ret_files.push_back(_T("Qt5QuickDialogs2.dll"));
-    ret_files.push_back(_T("Qt5QuickDialogs2QuickImpl.dll"));
-    ret_files.push_back(_T("Qt5QuickDialogs2Utils.dll"));
-    ret_files.push_back(_T("Qt5QuickLayouts.dll"));
-    ret_files.push_back(_T("Qt5QuickParticles.dll"));
-    ret_files.push_back(_T("Qt5QuickShapes.dll"));
-    ret_files.push_back(_T("Qt5QuickTemplates2.dll"));
-    ret_files.push_back(_T("Qt5ShaderTools.dll"));
-    ret_files.push_back(_T("Qt5Sql.dll"));
-    ret_files.push_back(_T("Qt5Svg.dll"));
-    ret_files.push_back(_T("Qt5WebChannel.dll"));
-    ret_files.push_back(_T("Qt5WebEngineCore.dll"));
-    ret_files.push_back(_T("Qt5WebEngineQuick.dll"));
-    ret_files.push_back(_T("Qt5WebEngineQuickDelegatesQml.dll"));
-    ret_files.push_back(_T("Qt5Widgets.dll"));
+    ret_files.push_back(_T("Qt6Core.dll"));
+    ret_files.push_back(_T("Qt6Gui.dll"));
+    ret_files.push_back(_T("Qt6LabsSettings.dll"));
+    ret_files.push_back(_T("Qt6Multimedia.dll"));
+    ret_files.push_back(_T("Qt6MultimediaQuick.dll"));
+    ret_files.push_back(_T("Qt6Network.dll"));
+    ret_files.push_back(_T("Qt6OpenGL.dll"));
+    ret_files.push_back(_T("Qt6Positioning.dll"));
+    ret_files.push_back(_T("Qt6Qml.dll"));
+    ret_files.push_back(_T("Qt6QmlLocalStorage.dll"));
+    ret_files.push_back(_T("Qt6QmlModels.dll"));
+    ret_files.push_back(_T("Qt6QmlWorkerScript.dll"));
+    ret_files.push_back(_T("Qt6QmlXmlListModel.dll"));
+    ret_files.push_back(_T("Qt6Quick.dll"));
+    ret_files.push_back(_T("Qt6QuickControls2.dll"));
+    ret_files.push_back(_T("Qt6QuickControls2Impl.dll"));
+    ret_files.push_back(_T("Qt6QuickDialogs2.dll"));
+    ret_files.push_back(_T("Qt6QuickDialogs2QuickImpl.dll"));
+    ret_files.push_back(_T("Qt6QuickDialogs2Utils.dll"));
+    ret_files.push_back(_T("Qt6QuickLayouts.dll"));
+    ret_files.push_back(_T("Qt6QuickParticles.dll"));
+    ret_files.push_back(_T("Qt6QuickShapes.dll"));
+    ret_files.push_back(_T("Qt6QuickTemplates2.dll"));
+    ret_files.push_back(_T("Qt6ShaderTools.dll"));
+    ret_files.push_back(_T("Qt6Sql.dll"));
+    ret_files.push_back(_T("Qt6Svg.dll"));
+    ret_files.push_back(_T("Qt6WebChannel.dll"));
+    ret_files.push_back(_T("Qt6WebEngineCore.dll"));
+    ret_files.push_back(_T("Qt6WebEngineQuick.dll"));
+    ret_files.push_back(_T("Qt6WebEngineQuickDelegatesQml.dll"));
+    ret_files.push_back(_T("Qt6QmlCore.dll"));
+    ret_files.push_back(_T("Qt6Widgets.dll"));
     ret_files.push_back(_T("video_render.fxo"));
     ret_files.push_back(_T("QtWebEngineProcess.exe"));
 

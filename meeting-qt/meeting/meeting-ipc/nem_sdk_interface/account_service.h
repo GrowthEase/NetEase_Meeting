@@ -32,8 +32,7 @@ public:
      * @param cb 回调
      * @return void
      */
-    [[deprecated("Use getPersonalMeetingNumber() instead.")]]
-    virtual void getPersonalMeetingId(const NEGetPersonalMeetingIdCallback& cb) = 0;
+    [[deprecated("Use getPersonalMeetingNumber() instead.")]] virtual void getPersonalMeetingId(const NEGetPersonalMeetingIdCallback& cb) = 0;
 
     /**
      * @brief 获取个人会议号

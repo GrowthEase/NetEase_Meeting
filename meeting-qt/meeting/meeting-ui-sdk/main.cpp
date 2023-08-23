@@ -40,7 +40,8 @@
 
 #include "base/log_instance.h"
 
-#include <QtWebEngine/QtWebEngine>
+#include <QQuickWindow>
+#include <QtWebEngineQuick>
 
 #ifdef Q_OS_WIN32
 #include "app_dump.h"
@@ -63,9 +64,15 @@ int main(int argc, char* argv[]) {
 #endif
     QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
 
-    QtWebEngine::initialize();
+    QtWebEngineQuick::initialize();
 
     QGuiApplication app(argc, argv);
+
+#if defined(Q_OS_MACX)
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Metal);
+#else
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Direct3D11);
+#endif
 
     CommandParser commandParser;
     auto runType = commandParser.parseCommandLine(app);
@@ -172,7 +179,7 @@ int main(int argc, char* argv[]) {
 
     qmlRegisterType<MembersModel>("NetEase.Meeting.MembersModel", 1, 0, "MembersModel");
     qmlRegisterType<DeviceModel>("NetEase.Meeting.DeviceModel", 1, 0, "DeviceModel");
-    qmlRegisterType<VideoRender>("NetEase.Meeting.VideoRender", 1, 0, "VideoRender");
+    // qmlRegisterType<VideoRender>("NetEase.Meeting.VideoRender", 1, 0, "VideoRender");
     qmlRegisterType<FrameProvider>("NetEase.Meeting.FrameProvider", 1, 0, "FrameProvider");
     qmlRegisterType<ScreenProvider>("NetEase.Meeting.ScreenProvider", 1, 0, "ScreenProvider");
     qmlRegisterType<ScreenModel>("NetEase.Meeting.ScreenModel", 1, 0, "ScreenModel");
@@ -259,7 +266,7 @@ int main(int argc, char* argv[]) {
             engine.rootContext()->setContextProperty("videoManager", VideoManager::getInstance());
             engine.rootContext()->setContextProperty("shareManager", ShareManager::getInstance());
             engine.rootContext()->setContextProperty("deviceManager", DeviceManager::getInstance());
-            engine.rootContext()->setContextProperty("availableStyles", QQuickStyle::availableStyles());
+            engine.rootContext()->setContextProperty("availableStyles", QQuickStyle::name());
             engine.rootContext()->setContextProperty("chatManager", ChatManager::getInstance());
             engine.rootContext()->setContextProperty("moreItemManager", MoreItemManager::getInstance());
             engine.rootContext()->setContextProperty("SettingsManager", SettingsManager::getInstance());

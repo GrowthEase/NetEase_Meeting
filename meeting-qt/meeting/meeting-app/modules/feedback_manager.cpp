@@ -4,6 +4,17 @@
 
 #include "feedback_manager.h"
 
+static const int kUploadLogResult = 200;
+#if defined(_DEBUG) || defined(DEBUG)
+static const uint32_t kFiveMinutes = 10;
+#else
+static const uint32_t kFiveMinutes = 5 * 60;
+#endif
+static const char* klocalTestMeetingDuration = "localTestMeetingDuration";
+static const char* kLastFeedbackVersion = "lastFeedbackVersion";
+static const char* kLastFeedbackDatetime = "lastFeedbackDatetime";
+static const uint32_t kAWeekDuration = 7 * 24 * 60 * 60 * 1000;
+
 FeedbackManager::FeedbackManager(AuthManager* auth, QObject* parent)
     : QObject(parent)
     , m_authsvr(auth)
@@ -15,6 +26,13 @@ FeedbackManager::FeedbackManager(AuthManager* auth, QObject* parent)
 
 FeedbackManager::~FeedbackManager() {}
 
+void FeedbackManager::invokeNPSFeedback(int score, const QString& description) {
+    m_needAudioDump = false;
+    m_feedbackCategory = QJsonArray();
+    m_feedbackDescription = QString::number(score).append("#").append(description);
+    onFeedbackStatus(0, kUploadLogResult, "");
+}
+
 void FeedbackManager::invokeFeedback(const QJsonArray& category, const QString& description, bool needAudioDump) {
     auto ipcFeedbackService = NEMeetingKit::getInstance()->getFeedbackService();
     if (ipcFeedbackService) {
@@ -23,12 +41,52 @@ void FeedbackManager::invokeFeedback(const QJsonArray& category, const QString& 
             ipcFeedbackService->addListener(this);
         }
     }
-
     m_needAudioDump = needAudioDump;
     m_feedbackCategory = category;
     m_feedbackDescription = description;
     std::thread feedbackThread([this]() { onInvokeFeedback(); });
     feedbackThread.detach();
+}
+
+bool FeedbackManager::needsFeedback(qint64 meetingDuration) {
+    // 如果会议持续时长不足 5 分钟，则无条件不弹出反馈窗口，这里为方便测试，提供本地配置缩短会议持续时长要求
+    auto localTestDuration = ConfigManager::getInstance()->getValue(klocalTestMeetingDuration, 0).toUInt();
+    if (localTestDuration != 0) {
+        if (meetingDuration < localTestDuration) {
+            YXLOG(Info) << "Meeting duration " << meetingDuration << " is less than local test duration " << localTestDuration << " seconds."
+                        << YXLOGEnd;
+            return false;
+        }
+    } else {
+        if (meetingDuration < kFiveMinutes) {
+            YXLOG(Info) << "Meeting duration " << meetingDuration << " is less than 5 minutes." << YXLOGEnd;
+            return false;
+        }
+    }
+    // 上次反馈与本次要反馈版本不一致且会议时长大于 5 分钟
+    if (ConfigManager::getInstance()->getValue(kLastFeedbackVersion) != APPLICATION_VERSION) {
+        YXLOG(Info) << "Show feedback window, last feedback version is: "
+                    << ConfigManager::getInstance()->getValue(kLastFeedbackVersion).toString().toStdString()
+                    << ", current version is: " << APPLICATION_VERSION << ", meeting ducation is: " << meetingDuration << YXLOGEnd;
+        ConfigManager::getInstance()->setValue(kLastFeedbackVersion, APPLICATION_VERSION);
+        ConfigManager::getInstance()->setValue(kLastFeedbackDatetime, QDateTime::currentDateTime().toString());
+        return true;
+    }
+    // 上次反馈与本次要反馈的时间不是同一天
+    auto lastFeedbackDateString = ConfigManager::getInstance()->getValue(kLastFeedbackDatetime).toString();
+    QDateTime lastFeedbackDatetime = QDateTime::fromString(lastFeedbackDateString);
+    QDateTime currentDatetime = QDateTime::currentDateTime();
+    if (lastFeedbackDatetime.date() != currentDatetime.date()) {
+        YXLOG(Info) << "Show feedback window, last feedback date is: " << lastFeedbackDatetime.toString().toStdString()
+                    << ", current date is: " << currentDatetime.toString().toStdString() << YXLOGEnd;
+        ConfigManager::getInstance()->setValue(kLastFeedbackDatetime, currentDatetime.toString());
+        return true;
+    }
+    YXLOG(Info) << "No need to show the feedback window, last feedback version is: "
+                << ConfigManager::getInstance()->getValue(kLastFeedbackVersion).toString().toStdString()
+                << ", current version is: " << APPLICATION_VERSION << ", last feedback date is: " << lastFeedbackDateString.toStdString()
+                << ", current date is: " << currentDatetime.toString().toStdString() << ", meeting ducation is: " << meetingDuration << YXLOGEnd;
+    return false;
 }
 
 void FeedbackManager::resetFeedback() {
@@ -69,7 +127,7 @@ void FeedbackManager::onFeedbackStatus(int type, int status, std::string url) {
 
 void FeedbackManager::onInvokeFeedback() {
     m_feedbackTimer.stop();
-    QString appDataDirectory = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    QString appDataDirectory = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
 
     FeedbackInfo info;
     QStringList files;
@@ -117,7 +175,7 @@ void FeedbackManager::onPostRequest(const HttpFeedbackRequest& request) {
 }
 
 std::string FeedbackManager::ziplog(FeedbackInfo& info) {
-    QString appDataDirectory = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    QString appDataDirectory = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
     QString backupDirectory = appDataDirectory + "/feedback/" + QUuid::createUuid().toString();
     QByteArray byteDirectory = backupDirectory.toUtf8();
     QDir backupDir(byteDirectory.data());
@@ -160,7 +218,7 @@ std::string FeedbackManager::ziplog(FeedbackInfo& info) {
 }
 
 void FeedbackManager::clean(bool cleanOldLog, bool all) {
-    QString appDataDirectory = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    QString appDataDirectory = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
     QDir feedbackDir(appDataDirectory + "/feedback/");
     feedbackDir.removeRecursively();
     YXLOG(Info) << "Remove temporary directory of feedback recursively:" << feedbackDir.path().toStdString() << YXLOGEnd;

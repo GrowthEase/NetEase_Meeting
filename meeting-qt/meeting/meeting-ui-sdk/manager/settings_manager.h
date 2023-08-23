@@ -14,12 +14,14 @@ class SettingsManager : public QObject {
     Q_OBJECT
 public:
     explicit SettingsManager(QObject* parent = nullptr);
-    enum VideoResolution { VR_480P = 0, VR_720P = 1, VR_1080P = 2 };
+    enum VideoResolution { VR_DEFAULT = 0, VR_480P = 1, VR_720P = 2, VR_1080P = 3, VR_4K = 4, VR_8K = 5 };
     Q_ENUM(VideoResolution)
     enum UILanguage { UILanguage_zh = 1, UILanguage_en = 2, UILanguage_ja = 3 };
     Q_ENUM(UILanguage)
     enum AudioScenario { UIAudioScenarioSpeech, UIAudioScenarioMusic };
     Q_ENUM(AudioScenario)
+    enum SidebarViewMode { VM_MIN = 0, VM_SINGLE = 1, VM_MULTIPLE = 2 };
+    Q_ENUM(SidebarViewMode)
 
     SINGLETONG(SettingsManager);
 
@@ -51,6 +53,7 @@ public:
     Q_PROPERTY(UILanguage uiLanguage READ uiLanguage CONSTANT)
     Q_PROPERTY(bool mirror READ mirror WRITE setMirror NOTIFY mirrorChanged)
     Q_PROPERTY(bool extendView READ extendView WRITE setExtendView NOTIFY extendViewChanged)
+    Q_PROPERTY(SidebarViewMode sidebarViewMode READ sidebarViewMode WRITE setSidebarViewMode NOTIFY sidebarViewModeChanged)
 
     Q_INVOKABLE bool enableAudioAfterJoin() const;
     Q_INVOKABLE void setEnableAudioAfterJoin(bool enableAudioAfterJoin);
@@ -133,6 +136,14 @@ public:
     bool extendView() const;
     void setExtendView(bool newExtendView);
 
+    SidebarViewMode sidebarViewMode() const { return m_sidebarViewMode; }
+    void setSidebarViewMode(SidebarViewMode newSidebarViewMode) {
+        if (m_sidebarViewMode == newSidebarViewMode)
+            return;
+        m_sidebarViewMode = newSidebarViewMode;
+        emit sidebarViewModeChanged();
+    }
+
 public slots:
     void setEnableMicVolumeAutoAdjust(bool enableMicVolumeAutoAdjust);
     void setAudioProfile(int audioProfile);
@@ -171,8 +182,8 @@ signals:
     void unpubAudioOnMuteChanged(bool unpubAudioOnMute);
     void detectMutedMicChanged(bool detectMutedMic);
     void mirrorChanged();
-
     void extendViewChanged();
+    void sidebarViewModeChanged();
 
 private:
     void updateVirtualBackground();
@@ -211,6 +222,7 @@ private:
     bool m_detectMutedMic = true;
     bool m_mirror = true;
     bool m_extendView = false;
+    SidebarViewMode m_sidebarViewMode = VM_SINGLE;
 };
 
 #endif  // SETTINGSMANAGER_H

@@ -37,8 +37,9 @@ function compareMemberInfo(memberObject, index, viewModel) {
         return -1
     }
     const member = viewModel.get(index)
-    if ( memberObject.accountId === member.accountId &&
-         memberObject.sharingStatus === member.sharingStatus) {
+    if (memberObject.accountId === member.accountId &&
+        memberObject.sharingStatus === member.sharingStatus &&
+        memberObject.createdAt === member.createdAt) {
         return 0
     }
     return 1
@@ -47,9 +48,10 @@ function compareMemberInfo(memberObject, index, viewModel) {
 function compareSpeaker(memberObject) {
     if (currentSpeaker === undefined) {
         return false
-    }     
+    }
     return  currentSpeaker.accountId === memberObject.accountId &&
-            currentSpeaker.sharingStatus === memberObject.sharingStatus
+            currentSpeaker.sharingStatus === memberObject.sharingStatus &&
+            currentSpeaker.createdAt === memberObject.createdAt
 }
 
 function setActiveSpeaker(primaryMember, primaryContainer) {
@@ -58,19 +60,13 @@ function setActiveSpeaker(primaryMember, primaryContainer) {
         currentSpeaker = undefined
     }
     console.info("Setup primary member, info: ", JSON.stringify(primaryMember))
-    //videoManager.removeVideoCanvas(primaryContainer.accountId, primaryContainer.frameProvider)
-    //primaryContainer.accountId = primaryMember.accountId
-    //primaryContainer.nickname = primaryMember.nickname
-    //primaryContainer.avRoomUid = primaryMember.avRoomUid
-    //primaryContainer.audioStatus = primaryMember.audioStatus
-    //primaryContainer.videoStatus = primaryMember.videoStatus
-    //videoManager.setupVideoCanvas(primaryContainer.accountId, primaryContainer.frameProvider, true)
     currentSpeaker = Qt.createComponent("qrc:/qml/components/VideoDelegate.qml").createObject(primaryContainer, {
         accountId: primaryMember.accountId,
         nickname: primaryMember.nickname,
         audioStatus: primaryMember.audioStatus,
         videoStatus: primaryMember.videoStatus,
         sharingStatus: primaryMember.sharingStatus,
+        createdAt: primaryMember.createdAt,
         primary: true,
         highQuality: true
     })
@@ -83,6 +79,7 @@ function arrangeGridLayout(members, page, memberCount, rootContainer, membersCon
                  "page size:", pageSize,
                  "member count:", members.length,
                  "all member count:", memberCount)
+    membersModel.clear()
     const gridLayoutInfo = resizeGridCell(members.length, rootContainer, membersContainer)
     const columnCount = gridLayoutInfo.columnCount
     const itemHeight = gridLayoutInfo.itemHeight
@@ -91,7 +88,6 @@ function arrangeGridLayout(members, page, memberCount, rootContainer, membersCon
     const lastFirst = members.length - remainder
     let highQuality = true
     if (members.length > highQualityCount) highQuality = false
-    membersModel.clear()
     for (let i = 0; i < members.length; i++) {
         let member = members[i]
         const currentRow = Math.floor(i / columnCount)
@@ -147,7 +143,8 @@ function resizeGridCell(memberCount, rootContainer, membersContainer) {
     const rowSpacing = (rowCount - 1) * membersContainer.rowSpacing
     itemWidth = (membersContainer.width - columnSpacing) / columnCount
     itemHeight = itemWidth / 16 * 9
-    membersContainer.height = rowCount * itemHeight + rowSpacing
+    // console.log(`--- Resize grid cell, row count: ${rowCount}, item height: ${itemHeight}, row spacing ${rowSpacing}, max height: ${Math.floor(rowCount * itemHeight + rowSpacing)}, root container height: ${rootContainer.height}`)
+    // membersContainer.height = Math.min(Math.floor(rowCount * itemHeight + rowSpacing), rootContainer.height)
 
     if (membersContainer.height > rootContainer.height) {
         membersContainer.height = rootContainer.height
@@ -186,4 +183,3 @@ function arrangeWhiteboardMemberLayout(members, page, memberCount, membersModel)
         }
     }
 }
-

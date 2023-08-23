@@ -5,15 +5,11 @@
 #include "http_manager.h"
 #include <QDebug>
 #include <QHostInfo>
-#include <QNetworkConfigurationManager>
 #include <QUuid>
 #include <mutex>
 
 HttpManager::HttpManager(QObject* parent)
-    : QObject(parent)
-    , m_accessManager(new QNetworkAccessManager(parent)) {
-    connect(m_accessManager, &QNetworkAccessManager::finished, this, &HttpManager::handleFinished);
-}
+    : QObject(parent) {}
 
 HttpManager::~HttpManager() {
     disconnect(m_accessManager, &QNetworkAccessManager::finished, this, &HttpManager::handleFinished);
@@ -21,8 +17,8 @@ HttpManager::~HttpManager() {
 }
 
 void HttpManager::postRequest(const IHttpRequest& request, const HttpRequestCallback& callback) {
-    if (m_accessManager->networkAccessible() != QNetworkAccessManager::Accessible)
-        m_accessManager->setNetworkAccessible(QNetworkAccessManager::Accessible);
+    // if (m_accessManager->networkAccessible() != QNetworkAccessManager::Accessible)
+    //     m_accessManager->setNetworkAccessible(QNetworkAccessManager::Accessible);
 
     invokeRequest(request, Methods::POST, callback);
 }
@@ -31,16 +27,24 @@ void HttpManager::getRequest(const IHttpRequest& request,
                              const HttpRequestCallback& callback,
                              const HttpRequestProgressCallback& proCallback,
                              bool isDownload) {
-    if (m_accessManager->networkAccessible() != QNetworkAccessManager::Accessible)
-        m_accessManager->setNetworkAccessible(QNetworkAccessManager::Accessible);
+    // if (m_accessManager->networkAccessible() != QNetworkAccessManager::Accessible)
+    //     m_accessManager->setNetworkAccessible(QNetworkAccessManager::Accessible);
 
     QString requestId = QUuid::createUuid().toString();
     QVariant callbackVariant;
     callbackVariant.setValue(callback);
 
-    auto* accessManager = new QNetworkAccessManager(this);
-    connect(accessManager, &QNetworkAccessManager::finished, this, &HttpManager::handleFinished);
-    QNetworkReply* reply = accessManager->get(request);
+#if 0
+    if (m_accessManager == nullptr) {
+        m_accessManager = new QNetworkAccessManager(this);
+        connect(m_accessManager, &QNetworkAccessManager::finished, this, &HttpManager::handleFinished);
+    }
+#else
+    m_accessManager = new QNetworkAccessManager(this);
+    connect(m_accessManager, &QNetworkAccessManager::finished, this, &HttpManager::handleFinished);
+#endif
+
+    QNetworkReply* reply = m_accessManager->get(request);
     reply->setProperty("requestId", requestId);
     reply->setProperty("callback", callbackVariant);
     reply->setProperty("displayDetails", request.displayDetails());
@@ -122,20 +126,7 @@ void HttpManager::handleFinished(QNetworkReply* reply) {
                 userCallback(code, result);
             }
         } while (false);
-    } /*else if (QNetworkAccessManager::GetOperation == reply->operation()) {
-        do {
-            QJsonObject errorResponse;
-            auto code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-            if (displayDetails) {
-                qInfo() << "[HTTP] Response\r\n\tcode -" << code << "\r\n\turl -" << reply->url().toString() << "\r\n\tuuid -" << requestId;
-            }
-
-            if (reply->error() != QNetworkReply::NoError) {
-                errorResponse["msg"] = tr("Failed to connect to server, please try agine.");
-            }
-            userCallback(reply->error(), errorResponse);
-        } while (false);
-    }*/
+    }
 
     if (reply->error() == QNetworkReply::OperationCanceledError) {
         auto it = std::find(m_listNetworkReply.begin(), m_listNetworkReply.end(), reply);
@@ -167,13 +158,13 @@ void HttpManager::abort() {
 }
 
 bool HttpManager::checkNetWorkOnline() {
-    QNetworkConfigurationManager mgr;
-    if (!mgr.isOnline()) {
-        return false;
-    }
+    // QNetworkConfigurationManager mgr;
+    // if (!mgr.isOnline()) {
+    //     return false;
+    // }
 
     QEventLoop loop;
-    QHostInfo::lookupHost("www.baidu.com", this, [=, &loop](QHostInfo host) {
+    QHostInfo::lookupHost("www.163.com", this, [=, &loop](QHostInfo host) {
         m_bOnLine = (host.error() == QHostInfo::NoError);
         loop.quit();
     });
@@ -186,23 +177,31 @@ void HttpManager::invokeRequest(const IHttpRequest& request, const Methods& meth
     QVariant callbackVariant;
     callbackVariant.setValue(callback);
 
+#if 0
+    if (m_accessManager == nullptr) {
+        m_accessManager = new QNetworkAccessManager(this);
+        connect(m_accessManager, &QNetworkAccessManager::finished, this, &HttpManager::handleFinished);
+    }
+#else
+    m_accessManager = new QNetworkAccessManager(this);
+    connect(m_accessManager, &QNetworkAccessManager::finished, this, &HttpManager::handleFinished);
+#endif
+
     auto req = request;
     req.setAttribute(QNetworkRequest::Http2AllowedAttribute, false);
     QNetworkReply* reply = nullptr;
-    auto* accessManager = new QNetworkAccessManager(this);
-    connect(accessManager, &QNetworkAccessManager::finished, this, &HttpManager::handleFinished);
     switch (method) {
         case Methods::GET:
-            reply = accessManager->get(request);
+            reply = m_accessManager->get(req);
             break;
         case Methods::POST:
-            reply = accessManager->post(request, request.getParams());
+            reply = m_accessManager->post(req, req.getParams());
             break;
         case Methods::PUT:
-            reply = accessManager->put(request, request.getParams());
+            reply = m_accessManager->put(req, req.getParams());
             break;
         case Methods::DELETE:
-            reply = accessManager->deleteResource(request);
+            reply = m_accessManager->deleteResource(req);
             break;
         default:
             break;

@@ -69,7 +69,7 @@ public slots:
 
 private:
     std::shared_ptr<NEMeetingAudioController> m_audioController = nullptr;
-    NEMeeting::DeviceStatus m_localAudioStatus = NEMeeting::DEVICE_DISABLED_BY_DELF;
+    NEMeeting::DeviceStatus m_localAudioStatus = NEMeeting::DEVICE_DISABLED_BY_SELF;
     QString m_activeSpeaker;
     QString m_activeSpeakerNickname;
 };

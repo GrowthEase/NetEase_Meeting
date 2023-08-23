@@ -18,8 +18,8 @@ TextField {
     rightPadding: 85
     placeholderText: qsTr("Auth code")
     placeholderTextColor: "#B0B6BE"
-    validator: RegExpValidator {
-        regExp: /\d+/
+    validator: RegularExpressionValidator {
+        regularExpression: /\d+/
     }
     background: Rectangle {
         y: control.height - height - control.bottomPadding + 8

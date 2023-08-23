@@ -125,7 +125,7 @@ AppHttpRequest::AppHttpRequest(const QString& requestSubUrl)
     setRawHeader(kHttpAppDeviceId, QSysInfo::machineUniqueId().data());
 }
 
-AppCheckUpdateRequest::AppCheckUpdateRequest(int versionCode, const QString& accountId)
+AppCheckUpdateRequest::AppCheckUpdateRequest(int versionCode, const QString& accountId, const QString& cpuArch, const QString& framework)
     : AppHttpRequest(APPFUN_CLINET_UPDATE) {
     setUrl(QUrl(ConfigManager::getInstance()->getValue("localUpdateServerAddressEx", LOCAL_DEFAULT_UPDATE_SERVER_ADDRESS).toString() +
                 APPFUN_CLINET_UPDATE));
@@ -134,6 +134,10 @@ AppCheckUpdateRequest::AppCheckUpdateRequest(int versionCode, const QString& acc
     json.insert("versionCode", versionCode);
     json.insert("clientAppCode", 2);
     json.insert("accountId", accountId);
+    json.insert("cpuArch", cpuArch);
+    json.insert("framework", framework);
+    json.insert("osVer", QSysInfo::productVersion());
+    json.insert("buildVersion", QSysInfo::kernelVersion());
     QByteArray byteArray = QJsonDocument(json).toJson(QJsonDocument::Compact);
     setParams(byteArray);
 }

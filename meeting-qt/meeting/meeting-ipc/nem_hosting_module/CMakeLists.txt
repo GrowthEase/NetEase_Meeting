@@ -11,15 +11,17 @@ include_directories(${CMAKE_CURRENT_LIST_DIR})
 include_directories(${CMAKE_CURRENT_LIST_DIR}/../)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/../nem_sdk_interface)
 
-aux_source_directory(${CMAKE_CURRENT_LIST_DIR}/base/ BASE_SRC)
+file(GLOB BASE_SRC_MACX ${CMAKE_CURRENT_LIST_DIR}/base/*.mm)
+file(GLOB BASE_SRC_WIN32 ${CMAKE_CURRENT_LIST_DIR}/base/*.cpp)
+
 aux_source_directory(${CMAKE_CURRENT_LIST_DIR}/global/ GLOBAL_SRC)
 aux_source_directory(${CMAKE_CURRENT_LIST_DIR}/service/ SERVICE_SRC)
 
 if (WIN32)
-    add_library(${PROJECT_NAME} SHARED ${GLOBAL_SRC} ${SERVICE_SRC} ${NEM_PUBLIC_HEADERS})
+    add_library(${PROJECT_NAME} SHARED ${BASE_SRC_WIN32} ${GLOBAL_SRC} ${SERVICE_SRC} ${NEM_PUBLIC_HEADERS})
     ne_target_codesign(${PROJECT_NAME} ${CMAKE_BINARY_DIR}/lib)
 else ()
-    add_library(${PROJECT_NAME} SHARED ${BASE_SRC} ${GLOBAL_SRC} ${SERVICE_SRC} ${NEM_PUBLIC_HEADERS})
+    add_library(${PROJECT_NAME} SHARED ${BASE_SRC_MACX} ${GLOBAL_SRC} ${SERVICE_SRC} ${NEM_PUBLIC_HEADERS})
 endif ()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${NEM_PUBLIC_HEADERS}")
@@ -43,6 +45,7 @@ if (WIN32)
         Winmm
         Crypt32
         Ws2_32
+        Userenv
     )
 else ()
     target_link_libraries(${PROJECT_NAME}

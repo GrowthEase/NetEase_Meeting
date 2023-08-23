@@ -15,6 +15,7 @@
 #include "nos_service_interface.h"
 #include "room_kit_interface.h"
 #include "room_service_interface.h"
+#include "statistics/meeting/meeting_event_manager.h"
 #include "utils/singleton.h"
 
 using namespace neroom;
@@ -32,6 +33,7 @@ public:
     bool initialize(const QString& appKey, bool bPrivate, const QString& serverUrl, const QString& deviceId, const NEConfigCallback& callback);
     void release();
 
+    INERoomKit* getRoomKitService() const;
     INEAuthService* getAuthService();
     INERoomService* getRoomService();
     INEMessageChannelService* getMessageService();
@@ -39,6 +41,7 @@ public:
     std::shared_ptr<NEConfigController> getGlobalConfig();
     INEPreviewRoomContext* getPreviewRoomContext();
     INEPreviewRoomRtcController* getPreviewRoomRtcController();
+    std::shared_ptr<MeetingEventReporter> getMeetingEventReporter();
 
 public:
     GlobalManager();
@@ -58,15 +61,17 @@ private:
 
 signals:
     void showSettingsWindow();
+    void hideSettingsWindow();
 
 public slots:
-    void showSettingsWnd();
+    void showSettingsWnd(bool show = true);
 
 private:
     NEMessageListener* m_messageListener = nullptr;
     INERoomKit* m_roomkitService = nullptr;
     neroom::INEPreviewRoomContext* m_pPreviewRoomContext = nullptr;
     std::shared_ptr<NEConfigController> m_configController = nullptr;
+    std::shared_ptr<MeetingEventReporter> m_eventReporter;
     QString m_globalAppKey;
     QString m_serverUrl;
     std::string m_language;

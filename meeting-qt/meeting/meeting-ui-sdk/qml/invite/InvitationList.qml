@@ -2,7 +2,7 @@
 import QtQuick.Window 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
-import QtGraphicalEffects 1.0
+import Qt5Compat.GraphicalEffects
 import QtQuick.Controls.Material 2.12
 import NetEase.Meeting.MeetingStatus 1.0
 import NetEase.Meeting.InviteModel 1.0
@@ -73,6 +73,7 @@ Window {
                 Layout.bottomMargin: 20
                 Layout.fillHeight: true
                 Layout.preferredHeight: 448
+                visible: false
 
                 CustomTextFieldEx {
                     id: idSipNum

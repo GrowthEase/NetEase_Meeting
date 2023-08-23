@@ -104,6 +104,7 @@ void ShareManager::addExcludeShareWindow(QQuickWindow* pShareWindow) {
         std::list<void*> excludedWindowList;
         for (auto& it : m_excludeShareWindowList) {
             excludedWindowList.push_back((void*)it->winId());
+            // qDebug() << "Add exclude window: " << GetWindowName(it->winId());
         }
         pRtc->setExcludeWindowList(excludedWindowList);
     }
@@ -168,7 +169,10 @@ void ShareManager::startScreenSharing(quint32 screenIndex) {
     for (auto& it : m_excludeShareWindowList) {
         excludedWindowList.emplace_back((void*)m_pHelper->getWindowId(it->winId()));
     }
-    m_shareController->startScreenShare(nativeDisplayId, excludedWindowList, m_smoothPriority);
+    m_shareController->startScreenShare(nativeDisplayId, excludedWindowList, m_smoothPriority, [](int code, const std::string& msg) {
+        if (code != 0)
+            MeetingManager::getInstance()->onError(code, msg);
+    });
 #endif
 }
 
@@ -217,9 +221,10 @@ void ShareManager::startAppSharing(quint32 id) {
     std::string strDst;
     // 转换成小写
     std::transform(strExe.begin(), strExe.end(), std::back_inserter(strDst), ::tolower);
-    if (0 == strDst.rfind("keynote", 0) || 0 == strDst.rfind("wps office", 0) || 0 == strDst.rfind("wpsoffice", 0)) {
+    if (0 == strDst.rfind("keynote", 0) || 0 == strDst.rfind("wps office", 0) || 0 == strDst.rfind("wpsoffice", 0) ||
+        0 == strDst.rfind("microsoft powerpoint", 0)) {
         m_bPpt = true;
-        if (0 == strDst.rfind("keynote", 0)) {
+        if (0 == strDst.rfind("keynote", 0) || 0 == strDst.rfind("microsoft powerpoint", 0)) {
             m_bPowerpnt = true;
         }
         YXLOG(Info) << "startAppShare is 'keynote', 'wps office' or 'wpsoffice'." << YXLOGEnd;
@@ -334,12 +339,14 @@ void ShareManager::resumeScreenSharing() {
 void ShareManager::startSystemAudioLoopbackCapture() {
     m_shareController->startSystemAudioLoopbackCapture();
 }
+
 void ShareManager::stopSystemAudioLoopbackCapture() {
     m_systemAudioLoopbackCapture = !m_shareController->stopSystemAudioLoopbackCapture();
 }
 
 void ShareManager::onSharingStatusChangedUI(const QString& userId, NERoomScreenShareStatus status) {
     if (status == kNERoomScreenShareStopByHost) {
+        stopScreenSharing();
         emit closeScreenShareByHost();
         if (m_shareSystemSound) {
             stopSystemAudioLoopbackCapture();
@@ -452,6 +459,11 @@ void ShareManager::setAppMinimized(bool appMinimized) {
 void ShareManager::sharedOutsideWindow(QQuickWindow* pWindow, int borderWidth) {
     m_pSharedOutsideWindow = qobject_cast<QWindow*>(pWindow);
     m_pSharedOutsideWindow->setParent(nullptr);
+#if defined(Q_OS_WIN32)
+    auto currentOwner = reinterpret_cast<HWND>(::GetWindowLongPtr((HWND)pWindow->winId(), GWLP_HWNDPARENT));
+    if (currentOwner != GetDesktopWindow())
+        SetWindowLongPtr((HWND)pWindow->winId(), GWLP_HWNDPARENT, (LONG_PTR)GetDesktopWindow());
+#endif
     m_borderWidth = borderWidth;
 }
 
@@ -477,9 +489,9 @@ void ShareManager::onAppSharingPause() {
 
                 if (!m_bPptPlay) {
                     m_bPptPlay = true;
-                    // m_pHelper->setForegroundWindow(hWnd);
                     switchAppSharing(quint32(hWnd));
-                    m_pHelper->setShowWindow((HWND)m_shareAppId, SW_MINIMIZE);
+                    m_pHelper->setForegroundWindow(hWnd);
+                    // m_pHelper->setShowWindow((HWND)m_shareAppId, SW_MINIMIZE);
                 }
                 shareAppId = quint32(hWnd);
             } else {
@@ -493,39 +505,18 @@ void ShareManager::onAppSharingPause() {
             }
         }
         bool bWindow = m_pHelper->isWindow((HWND)m_shareAppId);
+        bool bMinimized = m_pHelper->isMinimized((HWND)shareAppId) || m_pHelper->isHide((HWND)shareAppId);
 #elif defined Q_OS_MACX
+        MacXHelpers::FullScreenType fullScreenType = MacXHelpers::FullScreenType::kUnknown;
         if (m_bPpt) {
             uint32_t winId = 0;
-            bool bKeynote = false;
-            if (m_pHelper->isPptPlaying(winId, bKeynote, getMainWindow()->screen()) && m_bPowerpnt == bKeynote) {
+            if (m_pHelper->isPptPlaying(winId, fullScreenType, getMainWindow()->screen())) {
                 if (!m_bPptPlay) {
                     m_bPptPlay = true;
-                    if (m_bPowerpnt || 1) {
-                        int monitor_id = m_pHelper->getDisplayIdByWinId(winId);
-                        auto screenList = QGuiApplication::screens();
-                        int size = screenList.size();
-                        if (size > 0) {
-                            monitor_id = m_pHelper->getDisplayId(0);
-                        }
-                        //                        for (int index = 0; index < size; index++) {
-                        //                            if (screenList.at(index) == getMainWindow()->screen()) {
-                        //                                monitor_id = m_pHelper->getDisplayId(index);
-                        //                                break;
-                        //                            }
-                        //                        }
-
-                        std::list<void*> excludedWindowList;
-                        excludedWindowList.push_back((void*)m_pHelper->getWindowId(pWindow->winId()));
-                        switchMonitorShare(monitor_id, excludedWindowList);
-                    } else {
-                        switchAppSharing(winId);
-                    }
                 }
-                shareAppId = winId;
             } else {
                 if (m_bPptPlay) {
                     m_bPptPlay = false;
-                    switchAppSharing(m_shareAppId);
                 }
             }
         }
@@ -546,10 +537,7 @@ void ShareManager::onAppSharingPause() {
             stopScreenSharing(QString::fromStdString(AuthManager::getInstance()->getAuthInfo().accountId));
             break;
         }
-#ifdef Q_OS_WIN32
-        bool bMinimized = m_pHelper->isMinimized((HWND)shareAppId) || m_pHelper->isHide((HWND)shareAppId);
-#elif defined Q_OS_MACX
-#endif
+
         if (m_bMinimized && bMinimized == m_bMinimized) {
             break;
         }
@@ -558,7 +546,14 @@ void ShareManager::onAppSharingPause() {
             m_bMiniRestored = true;
         }
 
+#if defined(Q_OS_WIN32)
         if (bMinimized) {
+#else
+        // Mac 下全部切换为 SDK 自动切换，这里 PPT 或 KeyNote 全屏播放时原窗口获取到是最小化状态
+        // 上层只能接收到暂停、恢复等事件，不确定被共享应用到底有没有切换到播放模式
+        // 为避免 SDK 切换后共享被暂停，这里根据应用自己遍历到的全屏窗口进行判断，只有不存在全屏共享应用的情况下才暂停共享
+        if (bMinimized && fullScreenType == MacXHelpers::FullScreenType::kUnknown) {
+#endif
             if (pWindow && pWindow->isVisible()) {
                 pWindow->hide();
             }
@@ -566,6 +561,7 @@ void ShareManager::onAppSharingPause() {
             m_bMiniRestored = false;
             if (!m_pausedEx) {
                 m_pausedEx = true;
+                YXLOG(Info) << "pause screen sharing because window has been minimized." << YXLOGEnd;
                 pauseScreenSharing();
             }
             setAppMinimized(true);
@@ -575,21 +571,27 @@ void ShareManager::onAppSharingPause() {
         }
 
 #ifdef Q_OS_WIN32
+        // 获取被共享窗口的矩形
         QRectF rectTmp = m_pHelper->getWindowRect((HWND)shareAppId);
 #elif defined Q_OS_MACX
 #endif
+        // 如果被共享窗口上一次获取的矩形大小与本次获取的矩形大小不一致
         if (rectTmp != m_latestAppRect) {
+            // 先隐藏边框
             if (pWindow && pWindow->isVisible()) {
                 pWindow->hide();
             }
-
+            // 先暂停共享
             if (!m_pausedEx) {
                 m_pausedEx = true;
+                YXLOG(Info) << "pause screen sharing because window rectangle has been changed." << YXLOGEnd;
                 pauseScreenSharing();
             }
+            // 更新最后一次应用矩形大小
             m_latestAppRect = rectTmp;
         } else {
             m_pausedCount = kpausedCount;
+            // 如果边框窗口存在，并且暂停次数与本次暂停一致
             if (pWindow && (m_bMiniRestored || m_pausedCount >= kpausedCount)) {
 #ifdef Q_OS_WIN32
                 QRect reTmp = m_pHelper->getWindowFrameRect((HWND)shareAppId).toRect();
@@ -627,26 +629,11 @@ void ShareManager::onAppSharingPause() {
                         outsideRect.setHeight(fullRect.height());
                     else if (bMaxScreen && height > availableRect.height())
                         outsideRect.setHeight(availableRect.height());
-                    pWindow->setGeometry(outsideRect);
+                    QRect adjustRect;
+                    m_pHelper->adjustRectWithRatio(pWindow->screen(), outsideRect, adjustRect);
+                    pWindow->setGeometry(adjustRect);
                 }
                 if (bFullScreen || bMaxScreen) {
-                    if (bFullScreen && m_bPowerpnt) {
-                        m_pHelper->sharedOutsideWindow(pWindow->winId(), (HWND)shareAppId, true);
-                    } else {
-                        if (!m_bLatestFullScreen) {
-                            m_bLatestFullScreen = true;
-                            m_pHelper->sharedOutsideWindow(pWindow->winId(), (HWND)shareAppId, m_bLatestFullScreen);
-                        }
-                        if (m_pHelper->getFocusWindow((HWND)shareAppId) || m_pHelper->getActiveWindow((HWND)shareAppId) ||
-                            m_pHelper->getForegroundWindow((HWND)shareAppId)) {
-                            if (!m_bLatestForegroundWindow) {
-                                m_bLatestForegroundWindow = true;
-                                m_pHelper->sharedOutsideWindow(pWindow->winId(), (HWND)shareAppId, m_bLatestForegroundWindow);
-                            }
-                        } else {
-                            m_bLatestForegroundWindow = false;
-                        }
-                    }
                 } else {
                     m_bLatestFullScreen = false;
 #ifdef Q_OS_WIN32
@@ -654,7 +641,11 @@ void ShareManager::onAppSharingPause() {
                     bool bSharedOutsideForegroundWindow = m_pHelper->getForegroundWindow((HWND)pWindow->winId());
                     if (bShareAppIdForegroundWindow && !m_bLatestForegroundWindow) {
                         m_bLatestForegroundWindow = true;
+                        // 这里设置边框获取焦点后，被共享应用就丢失了焦点，导致 PPT 场景下无法通过键盘快捷键翻页
+                        // 目前看逻辑这里只是期望刚开始共享时激活一次边框
                         m_pHelper->setForegroundWindow((HWND)pWindow->winId());
+                        // 上面位置代码看日志只会执行一次，所以这里在边框激活了再激活一次被共享应用
+                        m_pHelper->setForegroundWindow((HWND)shareAppId);
                     } else if (bSharedOutsideForegroundWindow) {
                         m_pHelper->setForegroundWindow((HWND)shareAppId);
                     }
@@ -674,8 +665,10 @@ void ShareManager::onAppSharingPause() {
                     m_pHelper->sharedOutsideWindow(pWindow->winId(), (HWND)shareAppId, false);
                 }
 
-                if (!pWindow->isVisible())
+                if (!pWindow->isVisible() && !bFullScreen && !bMaxScreen)
                     pWindow->show();
+                if (pWindow->isVisible() && (bFullScreen || bMaxScreen))
+                    pWindow->hide();
 #elif defined Q_OS_MACX
                 QRectF fullRect, availableRect;
                 if (m_pHelper->getDisplayRect((uint32_t)shareAppId, fullRect, availableRect)) {

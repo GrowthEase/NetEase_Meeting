@@ -45,6 +45,8 @@ class NEOtherControllerIMP : public NEOtherController {
     void isShowMyMeetingElapseTimeEnabled(const NESettingsService::NEBoolCallback& cb) const {}
     void enableUnmuteBySpace(bool show, const NEEmptyCallback& cb) const {}
     void isUnmuteBySpaceEnabled(const NESettingsService::NEBoolCallback& cb) const {}
+    void setSharingSidebarViewMode(SharingSidebarViewMode viewMode, const NEEmptyCallback& cb) {}
+    void getSharingSidebarViewMode(const NESettingsService::NESharingSidebarViewModeCallback& cb) const {}
 };
 
 class NEBeautyFaceControllerIMP : public NEBeautyFaceController {
@@ -650,6 +652,31 @@ void NESettingsServiceIMP::OnPack(int cid, const std::string& data, uint64_t sn)
                         response.error_msg_ = error_msg;
                         response.status_ = bOn;
                         SendData(SettingsCID::SettingsCID_isUnmuteBySpaceEnabled_CB, response, sn);
+                    }));
+            }
+        } break;
+        case SettingsCID::SettingsCID_setSharingSidebarViewMode: {
+            SettingsIntRequest request;
+            if (request.Parse(data) && _ProcHandler()) {
+                _ProcHandler()->onSetSharingSidebarViewMode(static_cast<SharingSidebarViewMode>(request.value_),
+                                                            ToWeakCallback([this, sn](NEErrorCode error_code, const std::string& error_msg) {
+                                                                NEMIPCProtocolErrorInfoBody response;
+                                                                response.error_code_ = error_code;
+                                                                response.error_msg_ = error_msg;
+                                                                SendData(SettingsCID::SettingsCID_setMyAudioDeviceUseLastSelected_CB, response, sn);
+                                                            }));
+            }
+        } break;
+        case SettingsCID::SettingsCID_getSharingSidebarViewMode: {
+            NEMIPCProtocolEmptyBody request;
+            if (request.Parse(data) && _ProcHandler()) {
+                _ProcHandler()->onGetSharingSidebarViewMode(
+                    ToWeakCallback([this, sn](NEErrorCode error_code, const std::string& error_msg, int viewMode) {
+                        SettingsIntResponse response;
+                        response.error_code_ = error_code;
+                        response.error_msg_ = error_msg;
+                        response.value_ = viewMode;
+                        SendData(SettingsCID::SettingsCID_getSharingSidebarViewMode_CB, response, sn);
                     }));
             }
         } break;

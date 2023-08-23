@@ -3,7 +3,11 @@
 // found in the LICENSE file.
 
 #include "video_window.h"
-#include "../components/macx_helpers.h"
+#if defined(Q_OS_MAC)
+#include "components/macx_helpers.h"
+#else
+#include <Windows.h>
+#endif
 
 VideoWindow::VideoWindow(QQuickItem* parent)
     : QQuickItem(parent) {

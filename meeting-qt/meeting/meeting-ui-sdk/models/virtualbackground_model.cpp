@@ -29,6 +29,8 @@ QVariant VirtualBackgroundModel::data(const QModelIndex& index, int role) const 
     switch (role) {
         case kVBPath:
             return QVariant(vectVB.at(indexTmp).strPath);
+        case kVBThumbnailPath:
+            return QVariant(vectVB.at(indexTmp).strThumbnailPath);
         case kVBAllowedDelete:
             return QVariant(vectVB.at(indexTmp).bAllowedDelete);
         case kVBCurrentSelected:
@@ -43,6 +45,7 @@ QVariant VirtualBackgroundModel::data(const QModelIndex& index, int role) const 
 QHash<int, QByteArray> VirtualBackgroundModel::roleNames() const {
     QHash<int, QByteArray> names;
     names[kVBPath] = "vbPath";
+    names[kVBThumbnailPath] = "vbThumbnailPath";
     names[kVBAllowedDelete] = "vbAllowedDelete";
     names[kVBCurrentSelected] = "vbCurrentSelected";
 
@@ -60,7 +63,7 @@ void VirtualBackgroundModel::addVB(const QString& filePathUrl) {
     if (file.exists(filePath)) {
         QString vbPath = SettingsManager::getInstance()->getVirtualBackgroundPath();
         YXLOG(Error) << "vbPath. filePath: " << vbPath.toStdString() << YXLOGEnd;
-        newFilePath = vbPath + QString::number(QDateTime::currentDateTimeUtc().toTime_t()) + "_+_+_" + QFileInfo(filePath).fileName();
+        newFilePath = vbPath + QString::number(QDateTime::currentDateTimeUtc().toSecsSinceEpoch()) + "_+_+_" + QFileInfo(filePath).fileName();
         if (!file.copy(newFilePath)) {
             YXLOG(Error) << "addVB, copyFile error. filePath: " << filePath.toStdString() << ", error: " << file.errorString().toStdString()
                          << ", newFilePath: " << newFilePath.toStdString() << YXLOGEnd;
@@ -89,7 +92,7 @@ void VirtualBackgroundModel::addVB(const QString& filePathUrl) {
 
     int indexSelected = vectVB.size() - 1;
     emit beginInsertRows(QModelIndex(), indexSelected, indexSelected);
-    vectVB.insert(vectVB.begin() + indexSelected, VBProperty{newFilePath, true, true});
+    vectVB.insert(vectVB.begin() + indexSelected, VBProperty{newFilePath, newFilePath, true, true});
     emit endInsertRows();
 
     auto rtc = GlobalManager::getInstance()->getPreviewRoomRtcController();

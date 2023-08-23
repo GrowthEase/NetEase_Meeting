@@ -145,7 +145,7 @@ Item {
         width: 110
         height: 32
         highlighted: false
-        text: qsTr("history")
+        text: qsTr("History")
         display: AbstractButton.TextBesideIcon
         imageSource: "qrc:/qml/images/front/history.png"
         onClicked: {

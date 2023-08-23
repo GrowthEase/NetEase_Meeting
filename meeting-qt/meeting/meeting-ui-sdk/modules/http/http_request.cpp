@@ -9,6 +9,10 @@
 #include "manager/global_manager.h"
 #include "version.h"
 
+static const char* kHttpHeaderKeyLanguage = "Accept-Language";
+static const char* kHttpHeaderKeyAppKey = "AppKey";
+static const char* kHttpHeaderKeyFramework = "framework";
+
 IHttpRequest::IHttpRequest(const QString& requestSubUrl, const QString& scence /* = "scene/meeting"*/) {
     auto serverUrl = GlobalManager::getInstance()->serverUrl();
     QUrl url =
@@ -16,8 +20,9 @@ IHttpRequest::IHttpRequest(const QString& requestSubUrl, const QString& scence /
         scence + "/" + GlobalManager::getInstance()->globalAppKey() + requestSubUrl;
     setUrl(url);
     setHeader(QNetworkRequest::ContentTypeHeader, "application/json;charset=utf-8");
-    setRawHeader("Accept-Language", GlobalManager::getInstance()->language().c_str());
-    setRawHeader("AppKey", GlobalManager::getInstance()->globalAppKey().toLocal8Bit());
+    setRawHeader(kHttpHeaderKeyLanguage, GlobalManager::getInstance()->language().c_str());
+    setRawHeader(kHttpHeaderKeyAppKey, GlobalManager::getInstance()->globalAppKey().toLocal8Bit());
+    setRawHeader(kHttpHeaderKeyFramework, QString("Qt").append(qVersion()).toUtf8());
     setTransferTimeout(15000);
 }
 

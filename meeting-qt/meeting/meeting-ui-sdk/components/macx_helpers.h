@@ -1,10 +1,11 @@
-﻿// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Copyright (c) 2022 NetEase, Inc. All rights reserved.
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
 #ifndef _MACX_HELPERS_H_
 #define _MACX_HELPERS_H_
 
+#import <CoreGraphics/CoreGraphics.h>
 #include <QGuiApplication>
 #include <QQuickWindow>
 #include <QScreen>
@@ -17,8 +18,14 @@ public:
         int pid = 0;
         std::string title;
     };
+    enum class FullScreenType {
+        kUnknown,              // 未知类型
+        kMicrosoftPowerPoint,  // 微软Powerpoint
+        kWPSPowerpoint,        // WPS Powerpoint
+        kAppleKeyNote          // 苹果 Keynote
+    };
     typedef std::vector<CaptureTargetInfo> CaptureTargetInfoList;
-    MacXHelpers() {}
+    MacXHelpers() = default;
 
 public slots:
     bool openFolder(const QString& folder);
@@ -39,9 +46,13 @@ public slots:
     void setForegroundWindow(int pId) const;
     void sharedOutsideWindow(WId wid, uint32_t winId, bool bFullScreen);
     std::string getModuleName(uint32_t& winId);
-    bool isPptPlaying(uint32_t& winId, bool& bKeynote, const QScreen* pScreen) const;
+    bool isPptPlaying(uint32_t& winId, FullScreenType& fullScreenType, const QScreen* pScreen) const;
     int getDisplayIdByWinId(uint32_t winId) const;
     bool getDisplayRect(uint32_t winId, QRectF& rect, QRectF& availableRect) const;
+
+private:
+    CGBitmapInfo CGBitmapInfoForQImage(const QImage& image) const;
+    QImage CGImageToQImage(CGImageRef cgImage) const;
 };
 
 #endif  // _MACX_HELPERS_H_

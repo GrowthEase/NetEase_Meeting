@@ -91,8 +91,8 @@ Window {
             mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/LoadingPage.qml'))
             Qt.callLater(function () {
                 shareVideo.screen = shareScreen
-                shareVideo.resetPosition()
                 shareVideo.show()
+                shareVideo.resetPosition()
             })
 
             //console.log("SSToolbar, x : ", x, ", y: ", y, ", width: ", width, ", height: ", height, ",shareScreen.name: ", shareScreen.name)

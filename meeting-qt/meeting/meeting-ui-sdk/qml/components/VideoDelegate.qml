@@ -1,11 +1,10 @@
 ﻿import QtQuick 2.15
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
-import QtMultimedia 5.12
+import QtMultimedia
 import Qt.labs.settings 1.0
-import QtGraphicalEffects 1.15
+import Qt5Compat.GraphicalEffects
 import NetEase.Meeting.FrameProvider 1.0
-import NetEase.Meeting.VideoRender 1.0
 
 Rectangle {
     id: root
@@ -17,42 +16,31 @@ Rectangle {
     property bool highQuality: false
     property bool sharingStatus: false
     property alias frameProvider: frameProvider
-    
+
     property int audioVolume: 0
     property int videoWidth: 0
     property int videoHeight: 0
     property int videoFrameRate: 0
     property int videoBitRate: 0
+    property var createdAt: 0
 
     Component.onCompleted: {
         if (accountId.length !== 0)
-            if (SettingsManager.customRender) {
-                videoManager.setupVideoCanvas(accountId, videoRender, highQuality, videoRender.uuid);
-            } else {
-                videoManager.setupVideoCanvas(accountId, frameProvider, highQuality, frameProvider.uuid);
-            }
+            videoManager.setupVideoCanvas(accountId, frameProvider, highQuality, frameProvider.uuid);
+        console.log(`New video output, accound ID: ${accountId}, nickname: ${nickname}, primary: ${primary}, highQuality: ${highQuality}, videoStatus: ${videoStatus}, audioStatus: ${audioStatus}`)
     }
 
     Component.onDestruction: {
         if (accountId.length !== 0) {
-            videoManager.removeVideoCanvas(accountId, videoRender)
             if(authManager.authAccountId !== accountId) {
-                if (SettingsManager.customRender) {
-                    videoManager.unSubscribeRemoteVideoStream(accountId, videoRender.uuid)
-                } else {
-                    videoManager.unSubscribeRemoteVideoStream(accountId, frameProvider.uuid)
-                }
+                videoManager.unSubscribeRemoteVideoStream(accountId, frameProvider.uuid)
             }
         }
     }
 
     onHighQualityChanged: {
         if (accountId.length !== 0) {
-            if (SettingsManager.customRender) {
-                videoManager.subscribeRemoteVideoStream(accountId, highQuality, videoRender.uuid);
-            } else {
-                videoManager.subscribeRemoteVideoStream(accountId, highQuality, frameProvider.uuid);
-            }
+            videoManager.subscribeRemoteVideoStream(accountId, highQuality, frameProvider.uuid);
         }
     }
 
@@ -84,24 +72,11 @@ Rectangle {
         }
     }
 
-    VideoRender {
-        id: videoRender
-        anchors.fill: parent
-        visible: SettingsManager.customRender && (videoStatus === 1 || (shareManager.shareAccountId === accountId && sharingStatus))
-        accountId: root.accountId
-        subVideo: sharingStatus
-        transform: Rotation {
-            origin.x: root.width / 2
-            origin.y: root.height / 2
-            axis { x: 0; y: 1; z: 0 }
-            angle: (authManager.authAccountId === accountId && SettingsManager.mirror) ? 180 : 0
-        }
-    }
-
     FrameProvider {
         id: frameProvider
         accountId: root.accountId
         subVideo: sharingStatus
+        videoSink: videoContainer.videoSink
         onStreamFpsChanged: {
             labelStreamFps.text = istreamFps.toString()
         }
@@ -110,90 +85,13 @@ Rectangle {
     VideoOutput {
         id: videoContainer
         anchors.fill: parent
-        source: frameProvider
         fillMode: VideoOutput.PreserveAspectFit
-        visible: false
-    }
-
-    Rectangle {
-        id: idMask
-        visible: false
-        width: videoContainer.width
-        height: videoContainer.height
-    }
-
-    OpacityMask {
-        id: idRadiusMask
-        anchors.fill: parent
-        source: videoContainer
-        maskSource: idMask
-        visible: false
-    }
-
-    // 采样逆运算调整
-    ShaderEffect {
-        id: idFragmentShader
-        property string default_frame_shader: "
-                            varying highp vec2 qt_TexCoord0;
-                            uniform sampler2D source;
-                            void main(void)
-                            {
-                                highp vec4 cl = texture2D(source, qt_TexCoord0);
-                                gl_FragColor = cl;
-                            }
-                        "
-        property string frame_shader: "
-                            varying highp vec2 qt_TexCoord0;
-                            uniform sampler2D source;
-                            void main(void)
-                            {
-                                highp vec4 cl = texture2D(source, qt_TexCoord0);
-                                highp vec3 yuv;
-                                yuv.x = 0.257*cl.r + 0.504*cl.g + 0.098*cl.b;    // 逆运算至 YUV
-                                yuv.y = -0.148*cl.r - 0.291*cl.g + 0.439*cl.b;
-                                yuv.z = 0.439*cl.r - 0.368*cl.g - 0.071*cl.b;
-                                highp vec3 rgb = mat3( %1,       %2,         %3,
-                                                       %4,       %5,         %6,
-                                                       %7,       %8,         %9) * yuv;    // 新的矩阵计算出 RGB
-                                gl_FragColor = vec4(rgb, cl.a);
-                            }
-                        "
-        property variant source: ShaderEffectSource { sourceItem: idRadiusMask; hideSource: true }
-        anchors.fill: parent
-        visible: !SettingsManager.customRender && (videoStatus === 1 || (shareManager.shareAccountId === accountId && sharingStatus))
+        visible: videoStatus === 1 || (shareManager.shareAccountId === accountId && sharingStatus)
         transform: Rotation {
-            origin.x: root.width / 2
-            origin.y: root.height / 2
+            origin.x: videoContainer.width / 2
+            origin.y: videoContainer.height / 2
             axis { x: 0; y: 1; z: 0 }
             angle: (authManager.authAccountId === accountId && SettingsManager.mirror) ? 180 : 0
-        }
-        Component.onCompleted: {
-            idFragmentShader.updateFragmentShader()
-        }
-
-        Connections{
-            target: frameProvider
-            onYuv2rgbMatrixChanged:{
-                idFragmentShader.updateFragmentShader()
-            }
-        }
-        // fragmentShader 动态更新
-        function updateFragmentShader(){
-            // 取颜色系数
-            var adjust_fragment_shader
-            if(frameProvider.yuv2rgbMatrix.length === 9)
-            {
-                adjust_fragment_shader = idFragmentShader.frame_shader
-                for(var index=0; index < 9; index++){
-                    adjust_fragment_shader = adjust_fragment_shader.arg(frameProvider.yuv2rgbMatrix[index])
-                }
-                // console.info("VideoOutPut FrameShader:" + adjust_fragment_shader)
-            }
-            else{
-                console.error("yuv2rgbMatrix data invalid. data:" + frameProvider.yuv2rgbMatrix)
-                adjust_fragment_shader = idFragmentShader.default_frame_shader
-            }
-            idFragmentShader.fragmentShader = adjust_fragment_shader
         }
     }
 
@@ -220,10 +118,10 @@ Rectangle {
             anchors.verticalCenterOffset: primary ? 0 : -10
             spacing: primary ? 35 : 5
             Image {
-                anchors.centerIn: parent
-                anchors.verticalCenterOffset: primary ? -15 : -10
-                width: primary ? 52 : 35
-                height: primary ? 52 : 35
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                // anchors.verticalCenterOffset: primary ? -15 : -10
+                Layout.maximumWidth: primary ? 52 : 35
+                Layout.maximumHeight: primary ? 52 : 35
                 sourceSize: Qt.size(primary ? 52 : 35, primary ? 52 : 35)
                 mipmap: true
                 source: "qrc:/qml/images/meeting/calling.svg"
@@ -293,86 +191,42 @@ Rectangle {
         anchors.top: parent.top
         anchors.leftMargin: 3
         anchors.topMargin: 3
-        width: 300
-        height: 100
+        width: 155
+        height: 84
         radius: 2
         color: "#88000000"
         visible: videoManager.displayVideoStats
         ColumnLayout {
             anchors.fill: parent
+            anchors.leftMargin: 5
             spacing: 0
-            Row {
+            Label {
                 Layout.fillWidth: true
-                spacing: 0
-                Label {
-                    id: idlabelUid
-                    width: 100
-                    horizontalAlignment: Text.AlignRight
-                    text: "User Uuid: "; color: "#FFFFFF"; font.pixelSize: 12
-                }
-                Label {
-                    id: labelUid
-                    horizontalAlignment: Text.AlignLeft
-                    text: accountId; color: "#FFFFFF"; font.pixelSize: 12
-                }
+                horizontalAlignment: Text.AlignLeft
+                elide: Qt.ElideRight
+                text: accountId; color: "#FFFFFF"; font.pixelSize: 12
             }
-            Row {
-                Layout.fillWidth: true
-                spacing: 0
-                Label {
-                    id: idlabelPix
-                    width: idlabelUid.width
-                    horizontalAlignment: Text.AlignRight
-                    text: "Current Res: "; color: "#FFFFFF"; font.pixelSize: 12
-                }
-                Label {
-                    id: labelPix
-                    horizontalAlignment: Text.AlignLeft
-                    text: videoWidth.toString() + "x" + videoHeight.toString(); color: "#FFFFFF"; font.pixelSize: 12
-                }
+            Label {
+                horizontalAlignment: Text.AlignLeft
+                text: videoWidth.toString() + "x" + videoHeight.toString(); color: "#FFFFFF"; font.pixelSize: 12
             }
-
-            Row {
-                Layout.fillWidth: true
-                spacing: 0
-                Label {
-                    id: idlabelFrameRate
-                    width: idlabelUid.width
-                    horizontalAlignment: Text.AlignRight
-                    text: "Frame: "; color: "#FFFFFF"; font.pixelSize: 12
-                }
-                Label {
-                    id: labelFrameRate
-                    horizontalAlignment: Text.AlignLeft
-                    verticalAlignment: Text.AlignVCenter
-                    text: videoFrameRate.toString() + " fps"; color: "#FFFFFF"; font.pixelSize: 12
-                }
+            Label {
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
+                text: videoFrameRate.toString() + " fps"; color: "#FFFFFF"; font.pixelSize: 12
             }
-
-            Row {
-                Layout.fillWidth: true
-                spacing: 0
-                Label {
-                    id: idlabelBitRate
-                    width: idlabelUid.width
-                    horizontalAlignment: Text.AlignRight
-                    text: "Bit Rate: "; color: "#FFFFFF"; font.pixelSize: 12
-                }
-                Label {
-                    id: labelBitRate
-                    horizontalAlignment: Text.AlignLeft
-                    verticalAlignment: Text.AlignVCenter
-                    text: videoBitRate.toString() + " kbps"; color: "#FFFFFF"; font.pixelSize: 12
-                }
+            Label {
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignVCenter
+                text: videoBitRate.toString() + " kbps"; color: "#FFFFFF"; font.pixelSize: 12
             }
-
             Row {
                 Layout.fillWidth: true
                 spacing: 0
                 visible: false
                 Label {
                     id: idlabelStreamFps
-                    width: idlabelUid.width
+                    // width: idlabelUid.width
                     horizontalAlignment: Text.AlignRight
                     text: "Stream FPS: "; color: "#FFFFFF"; font.pixelSize: 12
                 }
@@ -424,11 +278,7 @@ Rectangle {
         onUserVideoStatusChanged: {
             if (changedAccountId === accountId && !sharingStatus){
                 videoStatus = deviceStatus
-                if (SettingsManager.customRender) {
-                    videoRender.visible = videoStatus === 1
-                } else {
-                    videoContainer.visible = videoStatus === 1
-                }
+                videoContainer.visible = videoStatus === 1
             }
         }
         onRemoteUserVideoStats: {
@@ -485,12 +335,8 @@ Rectangle {
     Connections {
         target: shareManager
         onShareAccountIdChanged: {
-            if (SettingsManager.customRender) {
-                videoRender.visible = videoStatus === 1 || (shareManager.shareAccountId === accountId && sharingStatus)
-            } else {
-                frameProvider.restart()
-                videoContainer.visible = videoStatus === 1 || (shareManager.shareAccountId === accountId && sharingStatus)
-            }
+            frameProvider.restart()
+            videoContainer.visible = videoStatus === 1 || (shareManager.shareAccountId === accountId && sharingStatus)
         }
     }
 
@@ -504,13 +350,8 @@ Rectangle {
 
         onUserReJoined: {
             if (root.accountId === accountId) {
-                if (SettingsManager.customRender) {
-                    videoManager.subscribeRemoteVideoStream(accountId, highQuality, videoRender.uuid);
-                    videoManager.setupVideoCanvas(accountId, videoRender, highQuality, videoRender.uuid);
-                } else {
-                    videoManager.subscribeRemoteVideoStream(accountId, highQuality, frameProvider.uuid);
-                    videoManager.setupVideoCanvas(accountId, frameProvider, highQuality, frameProvider.uuid);
-                }
+                videoManager.subscribeRemoteVideoStream(accountId, highQuality, frameProvider.uuid);
+                videoManager.setupVideoCanvas(accountId, frameProvider, highQuality, frameProvider.uuid);
             }
         }
 
@@ -536,4 +377,3 @@ Rectangle {
         }
     }
 }
-

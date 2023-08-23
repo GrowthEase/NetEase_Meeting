@@ -31,7 +31,7 @@ private:
     void qmlRegisterTypeStep1();
 
 private:
-    static std::shared_ptr<NEMeetingInstance> meeting_instance_;
+    static std::shared_ptr<NEMeetingInstance> kMeetingInstance;
     static std::recursive_mutex meeting_instance_mutex_;
     std::unique_ptr<NEAuthService> auth_service_;
     std::unique_ptr<NEMeetingService> meeting_service_;

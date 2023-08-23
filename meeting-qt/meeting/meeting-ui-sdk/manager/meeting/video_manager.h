@@ -19,7 +19,7 @@ typedef struct tagCanvas {
     uint64_t timestamp = 0;
 } Canvas;
 
-Q_DECLARE_METATYPE(NEMeeting::DeviceStatus)
+// Q_DECLARE_METATYPE(NEMeeting::DeviceStatus)
 
 class VideoFrameDelegate : public QObject {
     Q_OBJECT
@@ -80,6 +80,10 @@ public slots:
     void onUserVideoStatusChangedUI(const QString& changedAccountId, NEMeeting::DeviceStatus deviceStatus);
     void onFocusVideoChangedUI(const QString& focusAccountId, bool isFocus);
 
+    void setColorRange(int range) { VideoManager::m_colorRange = static_cast<QVideoFrameFormat::ColorRange>(range); }
+    void setColorSpace(int space) { VideoManager::m_colorSpace = static_cast<QVideoFrameFormat::ColorSpace>(space); }
+    void setColorTransfer(int transfer) { VideoManager::m_colorTransfer = static_cast<QVideoFrameFormat::ColorTransfer>(transfer); }
+
 signals:
     void localVideoStatusChanged();
     void displayVideoStatsChanged();
@@ -92,9 +96,14 @@ signals:
     // Binding values
     void focusAccountIdChanged(const QString& oldSpeaker, const QString& newSpeaker);
 
+public:
+    static QVideoFrameFormat::ColorRange m_colorRange;
+    static QVideoFrameFormat::ColorSpace m_colorSpace;
+    static QVideoFrameFormat::ColorTransfer m_colorTransfer;
+
 private:
     std::shared_ptr<NEMeetingVideoController> m_videoController = nullptr;
-    NEMeeting::DeviceStatus m_localVideoStatus = NEMeeting::DEVICE_DISABLED_BY_DELF;
+    NEMeeting::DeviceStatus m_localVideoStatus = NEMeeting::DEVICE_DISABLED_BY_SELF;
     static DelegatePtr m_videoFrameDelegate;
 
     QString m_focusAccountId;

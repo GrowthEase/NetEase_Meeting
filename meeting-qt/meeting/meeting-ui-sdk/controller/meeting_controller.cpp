@@ -3,12 +3,14 @@
 // found in the LICENSE file.
 
 #include "meeting_controller.h"
+#include <QSharedPointer>
 #include "controller/rtc_ctrl_interface.h"
 #include "manager/auth_manager.h"
 #include "manager/global_manager.h"
 #include "manager/meeting/share_manager.h"
 #include "modules/http/http_manager.h"
 #include "modules/http/http_request.h"
+#include "statistics/meeting/meeting_event_base.h"
 
 NEMeetingController::NEMeetingController() {
     m_pRoomListener = new NEInRoomServiceListener();
@@ -70,18 +72,28 @@ bool NEMeetingController::startRoom(const nem_sdk_interface::NEStartMeetingParam
         QString userId = QString::fromStdString(iter->first);
         NEMeetingRoleType roleType = iter->second;
         QString qstrRoleType;
-        if (roleType == normal) {
+        if (roleType == NEMeetingRoleType::normal) {
             qstrRoleType = "member";
-        } else if (roleType == host) {
+        } else if (roleType == NEMeetingRoleType::host) {
             qstrRoleType = "host";
-        } else if (roleType == cohost) {
+        } else if (roleType == NEMeetingRoleType::cohost) {
             qstrRoleType = "cohost";
         }
         roleBindsObj[userId] = qstrRoleType;
     }
 
-    CreateMeetingRequest createMeetingRequest(meetingType, "", resources, roomProperties, QString::fromStdString(param.password), roleBindsObj);
+    auto event = std::make_shared<CreateMeetingEvent>();
+    auto createStep = std::make_shared<MeetingEventStepBase>("create_room");
+    createStep->SetStartTime(QDateTime::currentDateTime().toMSecsSinceEpoch());
+    CreateMeetingRequest createMeetingRequest(meetingType, QString::fromStdString(param.subject), resources, roomProperties,
+                                              QString::fromStdString(param.password), roleBindsObj);
     HttpManager::getInstance()->putRequest(createMeetingRequest, [=](int code, const QJsonObject& response) {
+        createStep->SetEndTime(QDateTime::currentDateTime().toMSecsSinceEpoch());
+        createStep->SetResultCode(code == kHttpResSuccess ? response["code"].toInt() : code);
+        createStep->SetStepMessage(code == kHttpResSuccess ? response["msg"].toString().toStdString() : "");
+        createStep->SetStepRequestID(code == kHttpResSuccess ? response["requestId"].toString().toStdString() : "");
+        createStep->SetServerCost(code == kHttpResSuccess ? response["cost"].toInt() : 0);
+        event->AddStep(createStep);
         if (code == 200) {
             std::string roomUniqueId = std::to_string(response["meetingId"].toInt());
             std::string roomSubject = response["subject"].toString().toStdString();
@@ -96,31 +108,42 @@ bool NEMeetingController::startRoom(const nem_sdk_interface::NEStartMeetingParam
             NEMeetingType type = (NEMeetingType)response["type"].toInt();
             uint64_t scheduleTimeBegin = response["startTime"].toVariant().toULongLong();
             uint64_t scheduleTimeEnd = response["endTime"].toVariant().toULongLong();
-
+            m_roomInfo.roomId = params.roomUuid;
+            m_roomInfo.roomUniqueId = roomUniqueId;
+            m_roomInfo.roomArchiveId = response["roomArchiveId"].toString().toStdString();
             m_roomInfo.creatorUserId = response["ownerUserUuid"].toString().toStdString();
             m_roomInfo.creatorUserName = response["ownerNickname"].toString().toStdString();
+            m_roomInfo.displayName = params.userName;
+            m_roomInfo.roomUniqueId = roomUniqueId;
+            m_roomInfo.password = param.password;
+            m_roomInfo.shortRoomId = shortRoomId;
+            m_roomInfo.roomId = params.roomUuid;
+            m_roomInfo.type = type;
             if (response.contains("meetingInviteUrl")) {
                 m_roomInfo.inviteUrl = response["meetingInviteUrl"].toString().toStdString();
             }
-
             neroom::NEJoinRoomOptions options;
+            // events
             options.enableMyAudioDeviceOnJoinRtc = true;
-
+            event->meeting_number_ = m_roomInfo.roomId;
+            event->meeting_id_ = m_roomInfo.roomUniqueId;
+            event->room_archive_id_ = m_roomInfo.roomArchiveId;
+            event->create_type_ = m_roomInfo.type == NEMeetingType::personnalType ? MeetingCreateType::kPersonal : MeetingCreateType::kRandom;
+            auto joinStep = std::make_shared<MeetingEventStepBase>("join_room");
+            joinStep->SetStartTime(QDateTime::currentDateTime().toMSecsSinceEpoch());
             GlobalManager::getInstance()->getRoomService()->joinRoom(
                 params, options, [=](int code, const std::string& message, INERoomContext* roomContext) {
                     Invoker::getInstance()->execute([=]() {
+                        joinStep->SetEndTime(QDateTime::currentDateTime().toMSecsSinceEpoch());
+                        joinStep->SetResultCode(code);
+                        joinStep->SetStepMessage(message);
+                        event->AddStep(joinStep);
                         if (code == 0) {
                             if (roomContext) {
                                 m_pRoomContext = roomContext;
                                 roomContext->addRoomListener(m_pRoomListener);
                                 roomContext->addRtcStatsListener(m_pRoomListener);
-                                m_roomInfo.displayName = params.userName;
-                                m_roomInfo.roomUniqueId = roomUniqueId;
-                                m_roomInfo.password = param.password;
-                                m_roomInfo.shortRoomId = shortRoomId;
-                                m_roomInfo.roomId = params.roomUuid;
                                 m_roomInfo.startTime = roomContext->getRtcStartTime();
-                                m_roomInfo.type = type;
                                 m_roomInfo.screenSharingUserId = roomContext->getRtcController()->getScreenSharingUserUuid();
                                 if (NEMeetingType::schduleType == type) {
                                     m_roomInfo.scheduleTimeBegin = scheduleTimeBegin;
@@ -128,22 +151,34 @@ bool NEMeetingController::startRoom(const nem_sdk_interface::NEStartMeetingParam
                                 }
                                 MeetingManager::getInstance()->startJoinTimer();
                                 if (param.encryptionConfig.enable) {
-                                    auto& config = param.encryptionConfig;
+                                    const auto& config = param.encryptionConfig;
                                     roomContext->getRtcController()->enableEncryption(config.key, static_cast<neroom::NEEncryptionType>(config.type));
                                 } else {
                                     roomContext->getRtcController()->disableEncryption();
                                 }
-                                roomContext->getRtcController()->joinRtcChannel(callback);
+                                auto rtcStep = std::make_shared<MeetingEventStepBase>("join_rtc");
+                                rtcStep->SetStartTime(QDateTime::currentDateTime().toMSecsSinceEpoch());
+                                roomContext->getRtcController()->joinRtcChannel([=](int code, const std::string& message) {
+                                    Invoker::getInstance()->execute([=]() {
+                                        rtcStep->SetEndTime(QDateTime::currentDateTime().toMSecsSinceEpoch());
+                                        rtcStep->SetResultCode(code);
+                                        rtcStep->SetStepMessage(message);
+                                        event->AddStep(rtcStep);
+                                        GlobalManager::getInstance()->getMeetingEventReporter()->AddEvent(event);
+                                    });
+                                    callback(code, message);
+                                });
                             }
+                        } else {
+                            GlobalManager::getInstance()->getMeetingEventReporter()->AddEvent(event);
                         }
-
-                        if (callback) {
+                        if (callback)
                             callback(code, message);
-                        }
                     });
                 });
         } else {
             callback(code, response["msg"].toString().toStdString());
+            GlobalManager::getInstance()->getMeetingEventReporter()->AddEvent(event);
         }
     });
     return true;
@@ -151,13 +186,33 @@ bool NEMeetingController::startRoom(const nem_sdk_interface::NEStartMeetingParam
 
 bool NEMeetingController::joinRoom(const nem_sdk_interface::NEJoinMeetingParams& param,
                                    const NERoomOptions& option,
-                                   const neroom::NECallback<>& callback) {
+                                   const neroom::NECallback<>& callback,
+                                   const QVariant& extraInfo) {
     NERoomInfo roomInfo;
     m_roomInfo = roomInfo;
+    m_roomInfo.roomUniqueId = param.meetingNum;
+    m_roomInfo.displayName = param.displayName;
     m_pRoomContext = nullptr;
 
+    auto eventQPointer = extraInfo.value<QSharedPointer<JoinMeetingEvent>>();
+    std::shared_ptr<JoinMeetingEvent> event = nullptr;
+    if (eventQPointer == nullptr) {
+        event = std::make_shared<JoinMeetingEvent>();
+    } else {
+        auto rawEvent = *(eventQPointer.get());
+        event.reset(new JoinMeetingEvent(rawEvent));
+    }
+    event->meeting_number_ = param.meetingNum;
+
+    auto infoStep = std::make_shared<MeetingEventStepBase>("meeting_info");
+    infoStep->SetStartTime(QDateTime::currentDateTime().toMSecsSinceEpoch());
     GetMeetingInfoRequest getMeetingInfoRequest(QString::fromStdString(param.meetingNum));
     HttpManager::getInstance()->getRequest(getMeetingInfoRequest, [=](int code, const QJsonObject& response) {
+        infoStep->SetEndTime(QDateTime::currentDateTime().toMSecsSinceEpoch());
+        infoStep->SetResultCode(code == kHttpResSuccess ? response["code"].toInt() : code);
+        infoStep->SetStepMessage(code == kHttpResSuccess ? response["msg"].toString().toStdString() : "");
+        infoStep->SetStepRequestID(code == kHttpResSuccess ? response["requestId"].toString().toStdString() : "");
+        event->AddStep(infoStep);
         if (code == 200) {
             neroom::NEJoinRoomParams params;
             params.role = "host";
@@ -197,14 +252,21 @@ bool NEMeetingController::joinRoom(const nem_sdk_interface::NEJoinMeetingParams&
 
             m_roomInfo.creatorUserId = response["ownerUserUuid"].toString().toStdString();
             m_roomInfo.creatorUserName = response["ownerNickname"].toString().toStdString();
+            m_roomInfo.roomArchiveId = response["roomArchiveId"].toString().toStdString();
             if (response.contains("meetingInviteUrl")) {
                 m_roomInfo.inviteUrl = response["meetingInviteUrl"].toString().toStdString();
             }
 
             neroom::NEJoinRoomOptions options;
             options.enableMyAudioDeviceOnJoinRtc = true;
+            auto joinStep = std::make_shared<MeetingEventStepBase>("join_room");
+            joinStep->SetStartTime(QDateTime::currentDateTime().toMSecsSinceEpoch());
             GlobalManager::getInstance()->getRoomService()->joinRoom(
                 params, options, [=](int code, const std::string& message, INERoomContext* roomContext) {
+                    joinStep->SetEndTime(QDateTime::currentDateTime().toMSecsSinceEpoch());
+                    joinStep->SetResultCode(code);
+                    joinStep->SetStepMessage(message);
+                    event->AddStep(joinStep);
                     Invoker::getInstance()->execute([=]() {
                         if (code == 0) {
                             if (roomContext) {
@@ -213,12 +275,23 @@ bool NEMeetingController::joinRoom(const nem_sdk_interface::NEJoinMeetingParams&
                                 roomContext->addRtcStatsListener(m_pRoomListener);
                                 MeetingManager::getInstance()->startJoinTimer();
                                 if (param.encryptionConfig.enable) {
-                                    auto& config = param.encryptionConfig;
+                                    const auto& config = param.encryptionConfig;
                                     roomContext->getRtcController()->enableEncryption(config.key, static_cast<neroom::NEEncryptionType>(config.type));
                                 } else {
                                     roomContext->getRtcController()->disableEncryption();
                                 }
-                                roomContext->getRtcController()->joinRtcChannel(callback);
+                                auto rtcStep = std::make_shared<MeetingEventStepBase>("join_rtc");
+                                rtcStep->SetStartTime(QDateTime::currentDateTime().toMSecsSinceEpoch());
+                                roomContext->getRtcController()->joinRtcChannel(
+                                    [callback, this, event, rtcStep](int code, const std::string& message) {
+                                        rtcStep->SetEndTime(QDateTime::currentDateTime().toMSecsSinceEpoch());
+                                        rtcStep->SetResultCode(code);
+                                        rtcStep->SetStepMessage(message);
+                                        event->AddStep(rtcStep);
+                                        GlobalManager::getInstance()->getMeetingEventReporter()->AddEvent(event);
+                                        callback(code, message);
+                                    });
+
                                 m_roomInfo.shortRoomId = shortRoomId;
                                 m_roomInfo.roomUniqueId = roomUniqueId;
                                 m_roomInfo.displayName = params.userName;
@@ -227,11 +300,15 @@ bool NEMeetingController::joinRoom(const nem_sdk_interface::NEJoinMeetingParams&
                                 m_roomInfo.startTime = roomContext->getRtcStartTime();
                                 m_roomInfo.type = type;
                                 m_roomInfo.screenSharingUserId = roomContext->getRtcController()->getScreenSharingUserUuid();
+                                event->meeting_id_ = roomUniqueId;
+                                event->room_archive_id_ = m_roomInfo.roomArchiveId;
                                 if (NEMeetingType::schduleType == type) {
                                     m_roomInfo.scheduleTimeBegin = scheduleTimeBegin;
                                     m_roomInfo.scheduleTimeEnd = scheduleTimeEnd;
                                 }
                             }
+                        } else {
+                            GlobalManager::getInstance()->getMeetingEventReporter()->AddEvent(event);
                         }
                         if (callback) {
                             callback(code, message);
@@ -240,6 +317,7 @@ bool NEMeetingController::joinRoom(const nem_sdk_interface::NEJoinMeetingParams&
                 });
         } else {
             callback(code, response["msg"].toString().toStdString());
+            GlobalManager::getInstance()->getMeetingEventReporter()->AddEvent(event);
         }
     });
 
@@ -249,9 +327,15 @@ bool NEMeetingController::joinRoom(const nem_sdk_interface::NEJoinMeetingParams&
 bool NEMeetingController::leaveCurrentRoom(bool finish, const neroom::NECallback<>& callback) {
     if (m_pRoomContext) {
         if (finish) {
-            m_pRoomContext->endRoom(callback);
+            m_pRoomContext->endRoom([this, callback](int code, const std::string& message) {
+                if (callback)
+                    callback(code, message);
+            });
         } else {
-            m_pRoomContext->leaveRoom(callback);
+            m_pRoomContext->leaveRoom([this, callback](int code, const std::string& message) {
+                if (callback)
+                    callback(code, message);
+            });
         }
         m_pRoomContext = nullptr;
         return true;

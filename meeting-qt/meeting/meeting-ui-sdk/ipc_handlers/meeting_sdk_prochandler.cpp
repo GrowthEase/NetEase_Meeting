@@ -23,19 +23,11 @@ NEMeetingSDKProcHandlerIMP::NEMeetingSDKProcHandlerIMP(QObject* parent /* = null
 }
 
 void NEMeetingSDKProcHandlerIMP::initLanguage() {
-    QString sysLanguage = QLocale().name();
-    int npos = sysLanguage.indexOf(".");
-    if (-1 != npos) {
-        sysLanguage = sysLanguage.left(npos);
-    }
-    auto sysLanguageList = sysLanguage.split("_");
-    if (!sysLanguageList.empty()) {
+    auto languages = QLocale().uiLanguages();
+    for (auto& language : languages) {
         for (auto& it : g_languageMap) {
             auto strLanguage = QString::fromStdString(it.second);
-            bool bFind = strLanguage.contains(sysLanguageList.at(0), Qt::CaseInsensitive);
-            if (bFind && sysLanguage.size() > 1) {
-                bFind = strLanguage.contains(sysLanguageList.at(1), Qt::CaseInsensitive);
-            }
+            bool bFind = strLanguage.contains(language, Qt::CaseInsensitive);
             if (bFind) {
                 ipcClient.setLanguage(it.second);
                 return;

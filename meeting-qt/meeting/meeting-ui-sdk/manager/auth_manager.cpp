@@ -51,12 +51,12 @@ bool AuthManager::doLogin(const QString& accountId, const QString& accountToken)
     return m_authController->loginWithToken(accountId.toStdString(), accountToken.toStdString()) == kNENoError;
 }
 
-bool AuthManager::doAnonymousLogin(const neroom::NECallback<>& callback) {
+bool AuthManager::doAnonymousLogin(const neroom::NECallback<NEMeetingResponseKeys>& callback) {
     if (getAuthStatus() == kAuthLoginSuccessed) {
         YXLOG(Info) << "Logged in currently" << YXLOGEnd;
         Q_EMIT authStatusChanged(kAuthLoginSuccessed, 0);
         if (callback) {
-            callback(NS_I_NEM_SDK::ERROR_CODE_SUCCESS, "");
+            callback(NS_I_NEM_SDK::ERROR_CODE_SUCCESS, "", NEMeetingResponseKeys());
         }
         return true;
     }
@@ -64,7 +64,7 @@ bool AuthManager::doAnonymousLogin(const neroom::NECallback<>& callback) {
     if (getAuthStatus() == kAuthLoginProcessing) {
         YXLOG(Info) << "Login in progress" << YXLOGEnd;
         if (callback) {
-            callback(NS_I_NEM_SDK::ERROR_CODE_FAILED, "");
+            callback(NS_I_NEM_SDK::ERROR_CODE_FAILED, "", NEMeetingResponseKeys());
         }
         return false;
     }

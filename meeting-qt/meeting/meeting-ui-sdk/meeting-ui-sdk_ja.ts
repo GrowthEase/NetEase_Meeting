@@ -1690,7 +1690,7 @@
     </message>
     <message>
         <location filename="qml/components/MenuEx.qml" line="158"/>
-        <source>unmute Video and Audio</source>
+        <source>Unmute Video and Audio</source>
         <translation>オーディオとビデオがオン</translation>
     </message>
     <message>

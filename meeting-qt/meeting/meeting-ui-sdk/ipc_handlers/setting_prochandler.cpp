@@ -82,7 +82,7 @@ void NESettingsServiceProcHandlerIMP::onGetBeautyValue(const nem_sdk_interface::
 
 void NESettingsServiceProcHandlerIMP::onIsLiveEnabled(const nem_sdk_interface::NESettingsService::NEBoolCallback& cb) {
     YXLOG_API(Info) << "Received onIsLiveEnabled." << YXLOGEnd;
-    if (GlobalManager::getInstance()->getGlobalConfig()->isLiveStreamSupported() == false) {
+    if (!GlobalManager::getInstance()->getGlobalConfig()->isLiveStreamSupported()) {
         cb(NS_I_NEM_SDK::ERROR_CODE_FAILED, "not support live", false);
     } else {
         cb(NS_I_NEM_SDK::ERROR_CODE_SUCCESS, "", true);
@@ -327,6 +327,23 @@ void NESettingsServiceProcHandlerIMP::onIsMyAudioDeviceUseLastSelected(const NS_
         [=]() { cb(NS_I_NEM_SDK::ERROR_CODE_SUCCESS, "", SettingsManager::getInstance()->audioDeviceUseLastSelected()); });
 }
 
+void NESettingsServiceProcHandlerIMP::onSetSharingSidebarViewMode(const NS_I_NEM_SDK::SharingSidebarViewMode& viewMode,
+                                                                  const NS_I_NEM_SDK::NEEmptyCallback& cb) {
+    YXLOG_API(Info) << "Received onSetSharingSidebarViewMode, viewMode: " << static_cast<int>(viewMode) << YXLOGEnd;
+    Invoker::getInstance()->execute([=]() {
+        cb(NS_I_NEM_SDK::ERROR_CODE_SUCCESS, "");
+        SettingsManager::getInstance()->setSidebarViewMode(static_cast<SettingsManager::SidebarViewMode>(viewMode));
+    });
+}
+
+void NESettingsServiceProcHandlerIMP::onGetSharingSidebarViewMode(const NS_I_NEM_SDK::NESettingsService::NEIntCallback& cb) {
+    YXLOG_API(Info) << "Received onGetSharingSidebarViewMode" << YXLOGEnd;
+    Invoker::getInstance()->execute([=]() {
+        auto mode = SettingsManager::getInstance()->sidebarViewMode();
+        cb(NS_I_NEM_SDK::ERROR_CODE_SUCCESS, "", static_cast<int>(mode));
+    });
+}
+
 void NESettingsServiceProcHandlerIMP::onEnableVirtualBackground(bool enable, const NS_I_NEM_SDK::NEEmptyCallback& cb) {
     YXLOG_API(Info) << "Received onEnableVirtualBackground: " << enable << YXLOGEnd;
     if (!GlobalManager::getInstance()->getGlobalConfig()->isVBSupported()) {
@@ -420,7 +437,7 @@ void NESettingsServiceProcHandlerIMP::onSetBuiltinVirtualBackgrounds(const std::
 #ifdef Q_OS_WIN
                 strFilePathTmp.replace("\\", "/");
 #endif
-                return VirtualBackgroundModel::VBProperty{strFilePathTmp, false, false};
+                return VirtualBackgroundModel::VBProperty{strFilePathTmp, strFilePathTmp, false, false};
             });
 
             SettingsManager::getInstance()->initVirtualBackground(vbList);

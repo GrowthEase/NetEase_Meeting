@@ -63,6 +63,8 @@ void ChatManager::loginChatroom() {
 
 void ChatManager::onRecvMsgCallback(const std::vector<SharedChatMessagePtr>& messages) {
     for (auto& message : messages) {
+        YXLOG(Info) << "[ChatManager] Received new chatroom message, message ID: " << message->messageUuid()
+                    << ", message type: " << message->messageType() << ", message from: " << message->fromUserUuid() << YXLOGEnd;
         if (message->messageType() == kNERoomMessageTypeText) {
             auto chatTextMsg = std::dynamic_pointer_cast<INERoomChatTextMessage>(message);
             if (chatTextMsg == nullptr) {
