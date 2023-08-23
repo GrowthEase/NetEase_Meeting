@@ -1,0 +1,100 @@
+@text-primary-color: #333333;
+.nemeeting-custom-modal {
+  .nemeeting-modal-mask {
+    background: rgba(0, 0, 0, 0.1);
+  }
+  .nemeeting-modal {
+    max-width: 100%;
+  }
+  .nemeeting-modal-header {
+    height: 50px;
+    border-bottom: 1px solid #ebedf0;
+    .nemeeting-modal-title {
+      color: @text-primary-color;
+      font-size: 18px;
+      font-weight: normal;
+      text-align: center;
+      line-height: 50px;
+    }
+  }
+  .nemeeting-modal-body {
+    padding: 0 20px;
+  }
+  .nemeeting-modal-content {
+    padding: 0;
+  }
+}
+
+.nemeeting-custom-confirm-modal {
+  .nemeeting-modal-confirm {
+    width: auto !important;
+  }
+  .nemeeting-modal-content {
+    padding: 0;
+    overflow: hidden;
+    max-width: auto;
+  }
+  .nemeeting-modal-confirm-content {
+    padding: 0 10px;
+  }
+
+  .nemeeting-modal-confirm
+    .nemeeting-modal-confirm-body
+    .nemeeting-modal-confirm-title
+    + .nemeeting-modal-confirm-content {
+    text-align: center;
+    max-width: 100%;
+  }
+
+  .nemeeting-modal-confirm
+    .nemeeting-modal-confirm-body
+    .nemeeting-modal-confirm-title {
+    font-size: 16px;
+    font-weight: 500;
+    text-align: center;
+    line-height: 25px;
+    margin: 24px 0 6px 0;
+  }
+  .nemeeting-modal-confirm-btns {
+    margin-top: 20px;
+    display: flex;
+    .nemeeting-btn {
+      flex: 1;
+      margin: 0;
+      height: 50px;
+      border-radius: 0;
+      border: none;
+      border-top: 1px solid #edeef0 !important;
+      border-right: 1px solid #edeef0 !important;
+      min-width: 120px;
+      &:hover {
+        color: unset;
+      }
+      &:focus-visible {
+        outline: none;
+      }
+    }
+    .nemeeting-btn:last-child {
+      border-right: none;
+    }
+    .nemeeting-btn + .nemeeting-btn {
+      margin-inline-start: 0;
+    }
+    .nemeeting-btn-primary {
+      background-color: #fff !important;
+      color: #1677ff !important;
+      &:hover {
+        color: #1677ff !important;
+        border-color: #edeef0 !important;
+      }
+    }
+    .nemeeting-btn-dangerous {
+      color: #ff4d4f !important;
+      background-color: #fff !important;
+      &:hover {
+        color: #ff4d4f !important;
+        border-color: #edeef0 !important;
+      }
+    }
+  }
+}
