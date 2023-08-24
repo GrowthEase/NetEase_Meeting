@@ -35,7 +35,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - run: cd meeting-flutter
-      - run: cd meeting_app
+      - run: cd meeting-flutter/meeting_app
       - run: flutter pub get
       - run: flutter build ${{ matrix.target }}
