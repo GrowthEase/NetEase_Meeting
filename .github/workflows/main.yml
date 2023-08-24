@@ -10,7 +10,7 @@ permissions: read-all
 
 jobs:
   build:
-    name: Build ${{ matrix.target }}
+    name: Build CI
     runs-on: macos-latest
     strategy:
       fail-fast: false
@@ -31,11 +31,15 @@ jobs:
       - run: flutter doctor -v
       - run: flutter --version
 
-      # Checkout code and get packages.
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Build
+      - name: Build Android APK
         working-directory: ./meeting-flutter/meeting_app
-        run: flutter pub get
-        run: flutter build ${{ matrix.target }}
+        run: flutter build apk --release
+        if: success()
+
+      - name: Build iOS app
+        working-directory: ./meeting-flutter/meeting_app
+        run: flutter build ios --release --no-codesign
+        if: success()
