@@ -34,8 +34,8 @@ target 'Runner' do
   #   supports_swift_versions '>=4.0', '<5.0' # add
   use_frameworks!
 
-  plugin 'cocoapods-pod-sign'
-  skip_pod_bundle_sign # 用来跳过Xcode对bundle资源的签名
+  # plugin 'cocoapods-pod-sign'
+  # skip_pod_bundle_sign # 用来跳过Xcode对bundle资源的签名
   # pod 'NERoomKit-Private', '1.16.0.0', :subspecs => ['Special_All']
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
