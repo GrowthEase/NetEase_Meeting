@@ -12,13 +12,18 @@ class MeetingArguments extends MeetingBaseArguments {
 
   late int requestTimeStamp;
 
-  MeetingArguments(
-      {required this.roomContext,
-      required this.meetingInfo,
-      String? displayName,
-      String? password,
-      required NEMeetingUIOptions options})
-      : super(
+  final NEEncryptionConfig? encryptionConfig;
+
+  IntervalEvent? trackingEvent;
+
+  MeetingArguments({
+    required this.roomContext,
+    required this.meetingInfo,
+    String? displayName,
+    String? password,
+    required NEMeetingUIOptions options,
+    this.encryptionConfig,
+  }) : super(
             meetingNum: roomContext.roomUuid,
             displayName: displayName,
             password: password,
@@ -36,6 +41,8 @@ class MeetingArguments extends MeetingBaseArguments {
   }
 
   late final ValueNotifier<bool> _isWhiteboardTransparent;
+
   bool get isWhiteboardTransparent => _isWhiteboardTransparent.value;
+
   set isWhiteboardTransparent(value) => _isWhiteboardTransparent.value = value;
 }

@@ -26,9 +26,10 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
   List<String> sourceList = <String>['-'];
   List<String>? addExternalVirtualList;
   int currentSelected = 0;
-  static late SharedPreferences _sharedPreferences;
+  final _settingsService = NEMeetingKit.instance.getSettingsService();
   bool bCanPress = true;
   List<NEMeetingVirtualBackground> builtinVirtualBackgroundList = [];
+
   @override
   void initState() {
     super.initState();
@@ -132,15 +133,15 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
                       selected = await pickFiles(
                           context,
                           sourceList,
-                          _sharedPreferences,
+                          _settingsService,
                           addExternalVirtualList, (List<String>? list) {
                         addExternalVirtualList = list;
                       });
                     }
                     if (selected) {
                       currentSelected = index;
-                      _sharedPreferences.setInt(
-                          currentVirtualSelectedKey, currentSelected);
+                      _settingsService
+                          .setCurrentVirtualBackgroundSelected(currentSelected);
                       enableVirtualBackground(
                           rtcController, index != 0, sourceList[index]);
                       setState(() {});
@@ -180,21 +181,6 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
                               addExternalVirtualList
                                   ?.removeAt(addExternalVirtualListIndex);
                             }
-                            if (currentSelected <=
-                                    builtinVirtualBackgroundList.length &&
-                                currentSelected > 0) {
-                              builtinVirtualBackgroundList
-                                  .removeAt(currentSelected - 1);
-                              NEMeetingKit.instance
-                                  .getSettingsService()
-                                  .setBuiltinVirtualBackgrounds(
-                                      builtinVirtualBackgroundList);
-                              if (builtinVirtualBackgroundList.length == 0) {
-                                _sharedPreferences.setBool(
-                                    builtinVirtualBackgroundListAllDelKey,
-                                    true);
-                              }
-                            }
                           } catch (e) {
                             Alog.e(
                               tag: _tag,
@@ -202,12 +188,11 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
                               content: '==== BuiltinVirtualBackgrounds$e ',
                             );
                           }
-                          _sharedPreferences.setInt(
-                              currentVirtualSelectedKey, 0);
+                          _settingsService
+                              .setCurrentVirtualBackgroundSelected(0);
                           currentSelected = 0;
                           if (addExternalVirtualList != null) {
-                            _sharedPreferences.setStringList(
-                                addExternalVirtualListKey,
+                            _settingsService.setExternalVirtualBackgrounds(
                                 addExternalVirtualList!);
                           }
                         }
@@ -262,18 +247,10 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
       cache = await getApplicationDocumentsDirectory();
     }
 
-    ///默认的前6张
-    var setting = NEMeetingKit.instance.getSettingsService();
-    builtinVirtualBackgroundList = await setting.getBuiltinVirtualBackgrounds();
-    await rtcController.startBeauty();
-    await rtcController.enableBeauty(true);
-    _sharedPreferences = await SharedPreferences.getInstance();
-    bool builtinVirtualBackgroundListAllDelete =
-        _sharedPreferences.getBool(builtinVirtualBackgroundListAllDelKey) ??
-            false;
-    if (builtinVirtualBackgroundList.isNotEmpty &&
-            builtinVirtualBackgroundList.length > 0 ||
-        builtinVirtualBackgroundListAllDelete) {
+    /// 默认的前6张
+    builtinVirtualBackgroundList =
+        await _settingsService.getBuiltinVirtualBackgrounds();
+    if (builtinVirtualBackgroundList.isNotEmpty) {
       builtinVirtualBackgroundList.forEach((element) {
         sourceList.add(element.path);
       });
@@ -290,14 +267,15 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
     }
 
     addExternalVirtualList =
-        _sharedPreferences.getStringList(addExternalVirtualListKey);
+        await _settingsService.getExternalVirtualBackgrounds();
     if (addExternalVirtualList != null && addExternalVirtualList!.length > 0) {
       addExternalVirtualList =
           replaceBundleId(cache!.path, addExternalVirtualList!);
       sourceList.addAll(addExternalVirtualList!);
     }
     sourceList.add('+');
-    currentSelected = _sharedPreferences.getInt(currentVirtualSelectedKey) ?? 0;
+    currentSelected =
+        await _settingsService.getCurrentVirtualBackgroundSelected();
     if (currentSelected != 0) {
       enableVirtualBackground(rtcController, true, sourceList[currentSelected]);
     }

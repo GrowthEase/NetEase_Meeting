@@ -48,7 +48,7 @@ class DeepLinkManager with WidgetsBindingObserver {
     _handlePendingRequest();
   }
 
-  bool _isEnabled = false;
+  bool _isEnabled = true;
   set isEnabled(bool value) {
     if (_isEnabled == value) return;
     _isEnabled = value;
@@ -324,7 +324,7 @@ class _CheckRequest {
           type == other.type;
 
   @override
-  int get hashCode => hashValues(meetingKey, needConfirm, type);
+  int get hashCode => Object.hash(meetingKey, needConfirm, type);
 }
 
 class _MeetingInfo extends StatelessWidget {

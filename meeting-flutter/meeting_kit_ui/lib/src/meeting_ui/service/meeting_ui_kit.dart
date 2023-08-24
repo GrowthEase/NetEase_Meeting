@@ -198,8 +198,15 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
     NEMeetingUIOptions opts, {
     MeetingPageRouteWillPushCallback? onMeetingPageRouteWillPush,
     MeetingPageRouteDidPushCallback? onMeetingPageRouteDidPush,
+    int? startTime,
   }) async {
     apiLogger.i('startMeetingUI');
+    final event = IntervalEvent(kEventStartMeeting, startTime: startTime)
+      ..addParam(kEventParamMeetingNum, param.meetingNum ?? '')
+      ..addParam(kEventParamType,
+          (param.meetingNum?.isEmpty ?? true) ? 'random' : 'personal');
+    param.trackingEvent = event;
+
     NEMeetingUIKit().preload(context);
 
     final checkParamsResult = _checkParameters(opts);
@@ -235,7 +242,8 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
           roomContext: roomContext,
           meetingInfo: roomContext.meetingInfo,
           options: opts,
-        );
+          encryptionConfig: param.encryptionConfig,
+        )..trackingEvent = event;
         final popped = navigatorState.push(
           MaterialPageRoute(
             builder: (context) => MeetingPageProxy(meetingArguments),
@@ -248,7 +256,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
             code: NEMeetingErrorCode.failed, msg: 'push meeting page error}');
       }
       return const NEResult<void>(code: NEMeetingErrorCode.success);
-    });
+    }).thenReport(event, onlyFailure: true);
   }
 
   Future<NEResult<void>> joinMeetingUI(
@@ -258,8 +266,17 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
     PasswordPageRouteWillPushCallback? onPasswordPageRouteWillPush,
     MeetingPageRouteWillPushCallback? onMeetingPageRouteWillPush,
     MeetingPageRouteDidPushCallback? onMeetingPageRouteDidPush,
+    int? startTime,
   }) async {
     apiLogger.i('joinMeetingUI');
+    if (param.trackingEvent == null) {
+      param.trackingEvent =
+          IntervalEvent(kEventJoinMeeting, startTime: startTime)
+            ..addParam(kEventParamMeetingNum, param.meetingNum)
+            ..addParam(kEventParamType, 'normal');
+    }
+    final event = param.trackingEvent!;
+
     final joinOpts = NEJoinMeetingOptions(
       enableMyAudioDeviceOnJoinRtc: opts.detectMutedMic,
     );
@@ -276,7 +293,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
       onPasswordPageRouteWillPush: onPasswordPageRouteWillPush,
       onMeetingPageRouteWillPush: onMeetingPageRouteWillPush,
       onMeetingPageRouteDidPush: onMeetingPageRouteDidPush,
-    );
+    ).thenReport(event, onlyFailure: true);
   }
 
   Future<NEResult<void>> anonymousJoinMeetingUI(
@@ -286,23 +303,34 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
     PasswordPageRouteWillPushCallback? onPasswordPageRouteWillPush,
     MeetingPageRouteWillPushCallback? onMeetingPageRouteWillPush,
     MeetingPageRouteDidPushCallback? onMeetingPageRouteDidPush,
+    int? startTime,
   }) async {
     bool isAnonymous = false;
     if (!NEMeetingKit.instance.getAccountService().isLoggedIn) {
       apiLogger.i('anonymousJoinMeetingUI');
+      final event = IntervalEvent(kEventJoinMeeting, startTime: startTime)
+        ..addParam(kEventParamType, 'anonymous')
+        ..addParam(kEventParamMeetingNum, param.meetingNum)
+        ..beginStep(kMeetingStepAnonymousLogin);
+      param.trackingEvent = event;
       var loginResult = await NEMeetingKit.instance.anonymousLogin();
       if (loginResult.code ==
           NEMeetingErrorCode.reuseIMNotSupportAnonymousLogin) {
-        return NEResult(
+        loginResult = NEResult(
           code: loginResult.code,
           msg: NEMeetingUIKitLocalizations.of(context)!
               .reuseIMNotSupportAnonymousJoinMeeting,
         );
       } else if (!loginResult.isSuccess()) {
-        return NEResult(
+        loginResult = NEResult(
           code: loginResult.code,
           msg: loginResult.msg ?? 'anonymous login error',
         );
+      }
+      event.endStepWithResult(loginResult);
+      if (!loginResult.isSuccess()) {
+        NEMeetingKit.instance.reportEvent(event);
+        return loginResult;
       }
       isAnonymous = true;
     }
@@ -327,6 +355,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
         });
         onMeetingPageRouteDidPush?.call(f);
       },
+      startTime: startTime,
     ).onFailure((_, __) => logoutAnonymous('join error'));
   }
 
@@ -361,9 +390,11 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
         await onMeetingPageRouteWillPush();
       }
       final meetingArguments = MeetingArguments(
-          roomContext: roomContext,
-          meetingInfo: roomContext.meetingInfo,
-          options: uiOpts);
+        roomContext: roomContext,
+        meetingInfo: roomContext.meetingInfo,
+        options: uiOpts,
+        encryptionConfig: param.encryptionConfig,
+      )..trackingEvent = param.trackingEvent;
       final popped = navigatorState.push(MaterialPageRoute(
           builder: (context) => MeetingPageProxy(meetingArguments)));
       onMeetingPageRouteDidPush?.call(popped);
@@ -391,7 +422,8 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
             roomContext: value,
             meetingInfo: value.meetingInfo,
             options: uiOpts,
-          );
+            encryptionConfig: param.encryptionConfig,
+          )..trackingEvent = param.trackingEvent;
           final popped = navigatorState.push(MaterialPageRoute(
             builder: (context) => MeetingPageProxy(meetingArguments),
           ));
@@ -557,6 +589,7 @@ class NEStartMeetingUIParams extends NEStartMeetingParams {
     String? extraData,
     List<NERoomControl>? controls,
     Map<String, NEMeetingRoleType>? roleBinds,
+    NEEncryptionConfig? encryptionConfig,
   }) : super(
           displayName: displayName,
           subject: subject,
@@ -567,6 +600,7 @@ class NEStartMeetingUIParams extends NEStartMeetingParams {
           extraData: extraData,
           controls: controls,
           roleBinds: roleBinds,
+          encryptionConfig: encryptionConfig,
         );
 
   NEStartMeetingUIParams.fromMap(Map map)
@@ -587,6 +621,10 @@ class NEStartMeetingUIParams extends NEStartMeetingParams {
             var roleType = MeetingRoles.mapIntRoleToEnum(value);
             return MapEntry(key, roleType);
           }),
+          encryptionConfig: map['encryptionConfig'] == null
+              ? null
+              : NEEncryptionConfig.fromJson(
+                  Map<String, dynamic>.from(map['encryptionConfig'] as Map)),
         );
 }
 
@@ -597,12 +635,14 @@ class NEJoinMeetingUIParams extends NEJoinMeetingParams {
     String? password,
     String? tag,
     String? avatar,
+    NEEncryptionConfig? encryptionConfig,
   }) : super(
           meetingNum: meetingNum,
           displayName: displayName,
           password: password,
           tag: tag,
           avatar: avatar,
+          encryptionConfig: encryptionConfig,
         );
 
   NEJoinMeetingUIParams.fromMap(Map map)
@@ -612,6 +652,10 @@ class NEJoinMeetingUIParams extends NEJoinMeetingParams {
           password: map['password'] as String?,
           tag: map['tag'] as String?,
           avatar: map['avatar'] as String?,
+          encryptionConfig: map['encryptionConfig'] == null
+              ? null
+              : NEEncryptionConfig.fromJson(
+                  Map<String, dynamic>.from(map['encryptionConfig'] as Map)),
         );
 }
 

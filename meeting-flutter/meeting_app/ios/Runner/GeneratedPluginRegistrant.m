@@ -36,12 +36,6 @@
 @import netease_roomkit;
 #endif
 
-#if __has_include(<nos/NosPlugin.h>)
-#import <nos/NosPlugin.h>
-#else
-@import nos;
-#endif
-
 #if __has_include(<open_filex/OpenFilePlugin.h>)
 #import <open_filex/OpenFilePlugin.h>
 #else
@@ -104,7 +98,6 @@
   [FilePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FilePickerPlugin"]];
   [MeetingPlugin registerWithRegistrar:[registry registrarForPlugin:@"MeetingPlugin"]];
   [RoomKitPlugin registerWithRegistrar:[registry registrarForPlugin:@"RoomKitPlugin"]];
-  [NosPlugin registerWithRegistrar:[registry registrarForPlugin:@"NosPlugin"]];
   [OpenFilePlugin registerWithRegistrar:[registry registrarForPlugin:@"OpenFilePlugin"]];
   [FLTPackageInfoPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTPackageInfoPlugin"]];
   [FLTPathProviderPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTPathProviderPlugin"]];

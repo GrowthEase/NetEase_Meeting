@@ -876,4 +876,25 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   @override
   String get funcNotAvailableWhenInCallState =>
       'Cannot use this feature while on a call';
+
+  @override
+  String get networkAbnormality => 'Network abnormality';
+
+  @override
+  String get networkAbnormalityPleaseCheckYourNetwork =>
+      'Network abnormality, please check your network';
+
+  @override
+  String get networkReconnectionSuccessful => 'Network reconnection successful';
+
+  @override
+  String get disconnectedTryingToReconnect =>
+      'Disconnected, trying to reconnect…';
+
+  @override
+  String get networkDisconnectedPleaseCheckYourNetworkStatusOrTryToRejoin =>
+      'Network disconnected, please check your network status or try to rejoin.';
+
+  @override
+  String get rejoining => 'Rejoining';
 }

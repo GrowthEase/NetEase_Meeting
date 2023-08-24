@@ -274,5 +274,11 @@
   "switchFcusView": "切换至演讲者视图",
   "switchGalleryView": "切换至画廊视图",
   "noSupportSwitch": "iPad不支持切换模式",
-  "funcNotAvailableWhenInCallState": "系统通话中，无法使用该功能"
+  "funcNotAvailableWhenInCallState": "系统通话中，无法使用该功能",
+  "networkAbnormality": "网络异常",
+  "networkAbnormalityPleaseCheckYourNetwork": "网络异常，请检查您的网络",
+  "networkReconnectionSuccessful": "网络重连成功",
+  "disconnectedTryingToReconnect": "网络已断开，正在尝试重新连接…",
+  "networkDisconnectedPleaseCheckYourNetworkStatusOrTryToRejoin": "网络已断开，请检查您的网络情况，或尝试重新入会",
+  "rejoining": "重新入会"
 }

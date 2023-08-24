@@ -62,6 +62,14 @@ class NEMeetingStatus {
   NEMeetingStatus(this.event, {this.arg = NEMeetingCode.undefined});
 }
 
+class NEMeetingConnectState {
+  /// 会议网路链接断开
+  static const int disconnect = 0;
+
+  /// 会议重连成功
+  static const int reconnect = 1;
+}
+
 /// 会议状态事件
 class NEMeetingEvent {
   /// 创建或加入会议失败

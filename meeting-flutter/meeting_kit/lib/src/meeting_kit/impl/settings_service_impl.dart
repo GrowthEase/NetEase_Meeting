@@ -17,8 +17,10 @@ class _NESettingsServiceImpl extends NESettingsService {
   StreamSubscription? subscription;
 
   SDKConfig? _config;
-  // SDKConfig.current 会在重新初始化后被重新赋值，会指向不同的对象，不能使用字段赋值
+
+  /// SDKConfig.current 会在重新初始化后被重新赋值，会指向不同的对象，不能使用字段赋值
   SDKConfig get sdkConfig => _config ?? SDKConfig.current;
+
   set sdkConfig(value) {
     _config = value;
     subscription?.cancel();
@@ -113,6 +115,7 @@ class _NESettingsServiceImpl extends NESettingsService {
   }
 
   int? _beautyFaceValue;
+
   @override
   Future<int> getBeautyFaceValue() async {
     _beautyFaceValue ??= NEMeetingKit.instance
@@ -227,6 +230,29 @@ class _NESettingsServiceImpl extends NESettingsService {
         .toList();
     return Future.value(builtinVirtualBackgrounds ?? []);
   }
+
+  @override
+  void setCurrentVirtualBackgroundSelected(int index) {
+    _writeSettings(Keys.currentVirtualSelected, index);
+  }
+
+  @override
+  Future<int> getCurrentVirtualBackgroundSelected() {
+    return Future.value(
+        (_settingsCache[Keys.currentVirtualSelected] as int?) ?? 0);
+  }
+
+  @override
+  void setExternalVirtualBackgrounds(List<String> virtualBackgrounds) {
+    _writeSettings(Keys.addExternalVirtualList, virtualBackgrounds);
+  }
+
+  @override
+  Future<List<String>> getExternalVirtualBackgrounds() {
+    var externalVirtualBackgrounds =
+        _settingsCache[Keys.addExternalVirtualList] as List?;
+    return Future.value(externalVirtualBackgrounds?.cast<String>() ?? []);
+  }
 }
 
 class Keys {
@@ -266,4 +292,10 @@ class Keys {
 
   /// 设置虚拟背景
   static const String builtinVirtualBackgrounds = "builtinVirtualBackgrounds";
+
+  /// 最近选择的虚拟背景
+  static const String currentVirtualSelected = 'currentVirtualSelected';
+
+  /// 添加外部虚拟背景列表
+  static const String addExternalVirtualList = 'addExternalVirtualList';
 }

@@ -224,11 +224,20 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
     scheduleCallback = (List<NEMeetingItem> data, bool incremental) {
       if (incremental) {
         data.forEach((element) {
-          meetingList.removeWhere((e1) => e1.meetingId == element.meetingId);
           if (element.state == NEMeetingState.init ||
               element.state == NEMeetingState.started ||
               element.state == NEMeetingState.ended) {
-            meetingList.add(element);
+            final existIndex = meetingList
+                .firstIndexOf((e) => e.meetingId == element.meetingId);
+            if (existIndex >= 0) {
+              meetingList[existIndex] = element;
+            } else {
+              meetingList.add(element);
+            }
+          } else if (element.state.index >= NEMeetingState.cancel.index) {
+            meetingList.removeWhere((e) =>
+                e.meetingNum == element.meetingNum ||
+                e.meetingId == element.meetingId);
           }
         });
       } else {

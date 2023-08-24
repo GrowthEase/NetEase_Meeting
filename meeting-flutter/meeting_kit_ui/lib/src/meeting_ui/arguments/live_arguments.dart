@@ -7,6 +7,8 @@ part of meeting_ui;
 ///
 /// meeting live & meeting live setting use same arguments, so need dispose with meeting live
 class LiveArguments {
+  final NERoomLiveInfo? oldLiveInfo;
+
   final NERoomLiveInfo liveInfo;
 
   final Stream<Object> roomInfoUpdatedEventStream;
@@ -15,7 +17,7 @@ class LiveArguments {
 
   final String? liveAddress;
 
-  LiveArguments(this.roomContext, this.liveInfo,
+  LiveArguments(this.roomContext, this.liveInfo, this.oldLiveInfo,
       this.roomInfoUpdatedEventStream, this.liveAddress);
 
   /// not nullable

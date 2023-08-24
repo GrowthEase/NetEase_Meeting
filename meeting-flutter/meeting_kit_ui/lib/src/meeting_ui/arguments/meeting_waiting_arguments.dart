@@ -23,6 +23,8 @@ class MeetingWaitingArguments {
   final NEJoinMeetingOptions joinOpts;
 
   late _MeetingWaitingType waitingType;
+
+  final startStopwatch = Stopwatch()..start();
 }
 
 enum _MeetingWaitingType {

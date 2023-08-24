@@ -274,5 +274,11 @@
     "switchFcusView": "切り替える フォーカス表示",
     "switchGalleryView": "切り替える ギャラリービュー",
     "noSupportSwitch": "iPadはモード切り替えに対応していません",
-    "funcNotAvailableWhenInCallState": "通話中は本機能を使用できません"
+    "funcNotAvailableWhenInCallState": "通話中は本機能を使用できません",
+    "networkAbnormality": "ネットワーク異常",
+    "networkAbnormalityPleaseCheckYourNetwork": "ネットワーク異常、あなたのネットワークを確認してください。",
+    "networkReconnectionSuccessful": "ネットワーク再接続成功。",
+    "disconnectedTryingToReconnect": "ネットワークが切断されました。再接続を試みています...",
+    "networkDisconnectedPleaseCheckYourNetworkStatusOrTryToRejoin": "ネットワークが切断されました。ネットワーク状況を確認するか、再度参加してください。",
+    "rejoining": "さいせん"
 }
