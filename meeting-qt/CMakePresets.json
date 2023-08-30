@@ -18,7 +18,8 @@
       "warnings": {"dev": true, "deprecated": true},
       "cacheVariables": {
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/exports",
-        "CMAKE_PREFIX_PATH": "$env{HOME}/Qt/6.4.3/macos"
+        "CMAKE_PREFIX_PATH": "$env{HOME}/Qt/6.4.3/macos",
+        "BUILD_TESTING": "OFF"
       }
     },
     {
@@ -32,13 +33,16 @@
       }
     },
     {
-      "name": "darwin-release",
+      "name": "darwin-release-x86_64",
       "inherits": "macos",
-      "displayName": "Darwin 10.15+ (Release)",
-      "description": "NetEase meeting for macOS - Release Configuration",
+      "displayName": "Darwin x86_64 10.15+  (Release)",
+      "description": "NetEase meeting for macOS x86_64 - Release Configuration",
       "binaryDir": "${sourceDir}/build-release",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_OSX_ARCHITECTURES": "x86_64",
+        "CONAN_PROFILE_BUILD": "${sourceDir}/.profiles/darwin-x86_64",
+        "CONAN_PROFILE_HOST": "${sourceDir}/.profiles/darwin-x86_64"
       }
     },
     {
@@ -53,7 +57,8 @@
       "warnings": {"dev": true, "deprecated": true},
       "cacheVariables": {
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/exports",
-        "CMAKE_PREFIX_PATH": "D:/Qt/6.4.3/msvc2019_64"
+        "CMAKE_PREFIX_PATH": "D:/Qt/6.4.3/msvc2019_64",
+        "BUILD_TESTING": "OFF"
       }
     },
     {
@@ -67,11 +72,15 @@
       }
     },
     {
-      "name": "windows-release",
+      "name": "windows-release-x64",
       "inherits": "windows",
       "displayName": "Windows x64 (Release)",
       "description": "NetEase meeting for Windows - Release Configuration",
       "binaryDir": "${sourceDir}/build-release",
+      "architecture": {
+        "value": "x64",
+        "strategy": "set"
+      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
@@ -86,11 +95,20 @@
       "configuration": "Debug"
     },
     {
-      "name": "darwin-release",
-      "configurePreset": "darwin-release",
+      "name": "darwin-release-x86_64",
+      "configurePreset": "darwin-release-x86_64",
       "displayName": "Darwin Local Compilation (Release)",
       "description": "NetEase meeting for macOS - Release Configuration",
-      "configuration": "Release"
+      "configuration": "Release",
+      "targets": ["install"]
+    },
+    {
+      "name": "darwin-release-x86_64-deploy",
+      "configurePreset": "darwin-release-x86_64",
+      "displayName": "Darwin Local Compilation (Release)",
+      "description": "NetEase meeting for macOS - Release Configuration",
+      "configuration": "Release",
+      "targets": ["qtdeploy-meeting"]
     },
     {
       "name": "windows-debug",
@@ -100,11 +118,20 @@
       "configuration": "Debug"
     },
     {
-      "name": "windows-release",
-      "configurePreset": "windows-release",
+      "name": "windows-release-x64",
+      "configurePreset": "windows-release-x64",
       "displayName": "Darwin Local Compilation (Release)",
       "description": "NetEase meeting for Windows - Release Configuration",
-      "configuration": "Release"
+      "configuration": "Release",
+      "targets": ["install"]
+    },
+    {
+      "name": "windows-release-x64-deploy",
+      "configurePreset": "windows-release-x64",
+      "displayName": "Darwin Local Compilation (Release)",
+      "description": "NetEase meeting for Windows - Release Configuration",
+      "configuration": "Release",
+      "targets": ["qtdeploy-meeting"]
     }
   ]
 }

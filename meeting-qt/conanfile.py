@@ -23,7 +23,7 @@ class ModuleConan(ConanFile):
             self.requires(f"nertc/{env_nertc_version}@yunxin/testing")
             print('Using nertc version from env: ', env_nertc_version)
         self.requires("alog/1.1.0@yunxin/stable")
-        self.requires("roomkit/1.19.0@yunxin/stable")
+        self.requires("roomkit/1.19.3@yunxin/stable")
         self.requires("tinyNET/0.1.1@yunxin/stable")
         self.requires("libyuv/1854@yunxin/stable")
         self.requires("gtest/cci.20210126")
