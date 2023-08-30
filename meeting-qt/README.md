@@ -36,14 +36,6 @@
 
  > 安装路径 Windows 下建议您安装到 D:\Qt 目录，macOS 下建议安装到 ~/Qt 目录下。因工程下的 CMakePresets.json 内部固定这些路径，如果您不是按这些路径安装的 Qt，您可能需要修改 CMakePresets.json 才能正常进行编译。
 
-### Conan 配置
-
-Conan 安装完成后需要配置内部私有化环境，执行如下命令添加 Conan 内部私有化地址
-
-```bash
-conan remote add NetEaseConan http://yunxin-conan.netease.im:8081/artifactory/api/conan/NetEaseConan
-```
-
 ## 推荐工具
 
 因会议应用及组件是跨平台 C++ 工程，我们建议您使用 Visual Studio Code 作为开发工具使多端开发体验一致，我们在工程目录下添加了诸多适配 Visual Studio Code 工具的配置文件，目的是期望工程通过 Visual Studio Code 打开后即可无缝编译。当然您完全可以使用 CMake 生成不同平台的解决方案文件，如 Xcode、Visual Studio 解决方案。
@@ -63,6 +55,56 @@ conan remote add NetEaseConan http://yunxin-conan.netease.im:8081/artifactory/ap
 D:\Qt\6.4.3\msvc2019_64\bin\windeployqt.exe build-debug\bin\NetEaseMeetingClient.exe -qmldir=meeting\meeting-ui-sdk\qml
 D:\Qt\6.4.3\msvc2019_64\bin\windeployqt.exe build-debug\bin\NetEaseMeeting.exe -qmldir=meeting\meeting-app\qml
 ```
+
+## 编译发布
+
+CMakePresets.json 中内置了 Release 编译的流程，您可以根据平台选择不同的编译器进行编译，支持的配置可通过 `cmake --list-presets` 查看：
+
+### macOS
+
+```bash
+Available configure presets:
+
+  "darwin-debug"          - Darwin 10.15+ (Debug)
+  "darwin-release-x86_64" - Darwin x86_64 10.15+  (Release)
+```
+
+使用如下命令编译产物 macOS x86_64 产物：
+
+```bash
+# 生成 Xcode 工程
+cmake --preset=darwin-release-x86_64
+# 编译 App bundle
+cmake --build --preset=darwin-release-x86_64
+# 对 App bundle 执行 Qt deploy
+cmake --build --preset=darwin-release-x86_64-deploy
+```
+
+生成后产物将在工程根目录的 `exports` 文件夹中。
+
+### Windows
+
+当您在 Windows 下执行 `cmake --list-presets` 命令时输出如下内容为支持的生成列表：
+
+```bash
+Available configure presets:
+
+  "windows-debug"       - Windows x64 (Debug)  
+  "windows-release-x64" - Windows x64 (Release)
+```
+
+使用如下命令编译产物 macOS x86_64 产物：
+
+```bash
+# 生成 Visual Studio 工程
+cmake --preset=windows-release-x64
+# 编译 Windows 可执行文件
+cmake --build --preset=windows-release-x64
+# 对生成的可执行文件进行 Qt deploy
+cmake --build --preset=windows-release-x64-deploy
+```
+
+生成后产物将在工程根目录的 `exports` 文件夹中。
 
 ## Git 工作流
 
