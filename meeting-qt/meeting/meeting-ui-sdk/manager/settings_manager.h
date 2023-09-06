@@ -14,7 +14,7 @@ class SettingsManager : public QObject {
     Q_OBJECT
 public:
     explicit SettingsManager(QObject* parent = nullptr);
-    enum VideoResolution { VR_DEFAULT = 0, VR_480P = 1, VR_720P = 2, VR_1080P = 3, VR_4K = 4, VR_8K = 5 };
+    enum VideoResolution { VR_DEFAULT = 0, VR_720P = 1, VR_MAX = 2 };
     Q_ENUM(VideoResolution)
     enum UILanguage { UILanguage_zh = 1, UILanguage_en = 2, UILanguage_ja = 3 };
     Q_ENUM(UILanguage)

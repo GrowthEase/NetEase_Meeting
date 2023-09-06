@@ -384,6 +384,7 @@ Rectangle {
                                     meetinginfoObj["password"] = password2.text;
                                     meetinginfoObj["rename"] = autorename.checked;
                                     meetinginfoObj["sip"] = idSipEdit.checked;
+                                    meetinginfoObj["showRemainingTip"] = idShowRemainingTip.checked;
                                     meetingManager.invokeJoin(meetinginfoObj);
                                 }
                             }

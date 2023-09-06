@@ -4,130 +4,131 @@ import QtQuick.Layouts 1.12
 
 Dialog {
     id: root
-    width: 330
-    height: 160
-    modal: true
-    padding: 0
-    leftInset: 0
-    rightInset: 0
-    topInset: 0
-    bottomInset: 0
-    margins: 0
-    dim: false
+
+    property bool autoClose: true
+    property var cancelBtnText: qsTr("Cancel")
+    property var confirmBtnText: qsTr("OK")
+    property alias confirmColor: confirm.normalTextColor
+    property alias cancelColor: cancel.normalTextColor
+    property alias description: description.text
+    property bool emitCancelWhenClosed: false
+    property alias text: title.text
+
+    signal cancel
+    signal confirm
 
     Accessible.name: text
+    bottomInset: 0
+    dim: false
+    enter: null
+    exit: null
+    height: 160
+    leftInset: 0
+    margins: 0
+    modal: false
+    padding: 0
+    rightInset: 0
+    topInset: 0
+    width: 330
+    x: (parent.width - width) / 2
+    y: (parent.height - height) / 2
 
     background: Rectangle {
         radius: 8
     }
-    x: (parent.width - width) / 2
-    y: (parent.height - height) / 2
-    enter: null
-    exit: null
-
-    property alias text: title.text
-    property alias description: description.text
-    property var   cancelBtnText : qsTr("Cancel")
-    property var   confirmBtnText : qsTr("OK")
-    property bool  emitCancelWhenClosed : false
-    property bool  autoClose : true
-    signal confirm
-    signal cancel
 
     onClosed: {
-        if(emitCancelWhenClosed && autoClose) {
-            root.cancel()
+        if (emitCancelWhenClosed && autoClose) {
+            root.cancel();
         }
-        autoClose = true
+        autoClose = true;
         // When created dynamically, is called when the dialog is closed only but the parent object is not destroyed
         //root.destroy()
     }
 
     Label {
         id: title
-        width: parent.width
         color: "#222222"
         font.pixelSize: 18
-        wrapMode: Text.WrapAnywhere
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
+        width: parent.width
+        wrapMode: Text.WrapAnywhere
     }
-
     Label {
         id: description
-        color: "#222222"
         anchors.left: parent.left
         anchors.leftMargin: 20
         anchors.right: parent.right
         anchors.rightMargin: 20
-        height: 30
         anchors.top: title.bottom
         anchors.topMargin: 15
+        color: "#222222"
         font.pixelSize: 14
-        wrapMode: Text.WrapAnywhere
+        height: 30
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
+        wrapMode: Text.WrapAnywhere
     }
-
     CustomToolSeparator {
-        width: parent.width
-        anchors.left: parent.left
         anchors.bottom: confirm.top
+        anchors.left: parent.left
+        width: parent.width
     }
-
     ToolSeparator {
-        anchors.top: confirm.top
         anchors.left: confirm.right
         anchors.leftMargin: 1
+        anchors.top: confirm.top
+        bottomInset: 0
+        horizontalPadding: 0
+        leftInset: 0
         orientation: Qt.Vertical
         padding: 0
-        bottomInset: 0
-        topInset: 0
-        leftInset: 0
         rightInset: 0
         spacing: 0
+        topInset: 0
         verticalPadding: 0
-        horizontalPadding: 0
+
         contentItem: Rectangle {
-            implicitWidth: 1
-            implicitHeight: confirm.height
             color: "#EBEDF0"
+            implicitHeight: confirm.height
+            implicitWidth: 1
         }
     }
-
     CustomButton {
         id: confirm
-        anchors.left: parent.left
         anchors.bottom: parent.bottom
-        width: parent.width / 2 - 1
-        height: 48
-        text: qsTr(confirmBtnText)
-        buttonRadius: 8
+        anchors.left: parent.left
         borderColor: "#FFFFFF"
-        normalTextColor: "#337EFF"
         borderSize: 0
+        buttonRadius: 8
+        height: 48
+        normalTextColor: "#337EFF"
+        text: qsTr(confirmBtnText)
+        width: parent.width / 2 - 1
+
         onClicked: {
-            autoClose = false
-            root.confirm()
-            root.close()
+            autoClose = false;
+            root.confirm();
+            root.close();
         }
     }
-
     CustomButton {
         id: cancel
-        anchors.right: parent.right
         anchors.bottom: parent.bottom
-        width: parent.width / 2 - 1
-        height: 48
-        text: qsTr(cancelBtnText)
-        buttonRadius: 8
+        anchors.right: parent.right
         borderColor: "#FFFFFF"
-        normalTextColor: "#333333"
         borderSize: 0
+        buttonRadius: 8
+        height: 48
+        normalTextColor: "#333333"
+        text: qsTr(cancelBtnText)
+        width: parent.width / 2 - 1
+
         onClicked: {
-            autoClose = false
-            root.cancel()
-            root.close()
+            autoClose = false;
+            root.cancel();
+            root.close();
         }
     }
 }

@@ -190,7 +190,7 @@ if (CMAKE_BUILD_TYPE MATCHES "Release")
             COMMAND cp -R ${MEETING_LIBS_DIR}/NE*.framework ${MEETING_CLIENT_FRAMEWORKS}
             COMMAND python3 ${CMAKE_SOURCE_DIR}/meeting/build_tool/mac/lipo-remove.py ${MEETING_BINARY_DIR}/${MEETING_CLIENT} ${CMAKE_OSX_ARCHITECTURES}
             COMMAND cp -R ${MEETING_BINARY_DIR}/${MEETING_CLIENT} ${MEETING_APP_FRAMEWORKS}
-            COMMAND codesign --entitlements=${CMAKE_SOURCE_DIR}/meeting/bin/NetEaseMeeting.entitlements --timestamp --options=runtime -f -s "06C66D0DDF51A99C6A5C0F65BF9B2ABB5FD409B4" -v ${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}.app --deep
+            COMMAND codesign --entitlements=${CMAKE_SOURCE_DIR}/meeting/bin/NetEaseMeeting.entitlements --timestamp --options=runtime -f -s "77F66C69101C6A8ACC6AB3290EE7083E49500A64" -v ${CMAKE_INSTALL_PREFIX}/bin/${PROJECT_NAME}.app --deep
             COMMENT "Deploying qt dependencies after build..."
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         )

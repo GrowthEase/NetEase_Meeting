@@ -53,6 +53,7 @@ private:
     NS_I_NEM_SDK::NEMeetingService::NEStartMeetingCallback m_startMeetingCallback = nullptr;
     NS_I_NEM_SDK::NEMeetingService::NEJoinMeetingCallback m_joinMeetingCallback = nullptr;
     NS_I_NEM_SDK::NEMeetingService::NELeaveMeetingCallback m_leaveMeetingCallback = nullptr;
+    bool m_bFinsheMeeting{false};
 };
 
 #endif  // NEM_SDK_INTERFACE_APP_PROCHANDLER_MEETING_PROCHANDLER_H_

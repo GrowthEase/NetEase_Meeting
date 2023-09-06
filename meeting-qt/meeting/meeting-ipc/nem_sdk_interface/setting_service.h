@@ -144,6 +144,7 @@ public:
      * @param cb 回调
      * @return void
      */
+    MEETING_KIT_DEPRECATED("The interface will be removed in future versions.")
     virtual void setRemoteVideoResolution(RemoteVideoResolution enumRemoteVideoResolution, const NEEmptyCallback& cb) const = 0;
 
     /**
@@ -151,6 +152,7 @@ public:
      * @param cb 回调
      * @return void
      */
+    MEETING_KIT_DEPRECATED("The interface will be removed in future versions.")
     virtual void getRemoteVideoResolution(const NESettingsService::NERemoteVideoResolutionCallback& cb) const = 0;
 
     /**

@@ -22,4 +22,23 @@
  */
 #define NS_I_NEM_SDK nem_sdk_interface
 
+#ifdef __clang__
+#if __has_extension(attribute_deprecated_with_message)
+#define MEETING_KIT_DEPRECATED(message) __attribute__((deprecated(message)))
+#endif
+#elif defined(__GNUC__)  // not clang (gcc comes later since clang emulates gcc)
+#if (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
+#define MEETING_KIT_DEPRECATED(message) __attribute__((deprecated(message)))
+#elif (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
+#define MEETING_KIT_DEPRECATED(message) __attribute__((__deprecated__))
+#endif                   // GNUC version
+#elif defined(_MSC_VER)  // MSVC (after clang because clang on Windows emulates
+                         // MSVC)
+#define MEETING_KIT_DEPRECATED(message) __declspec(deprecated(message))
+#endif  // __clang__ || __GNUC__ || _MSC_VER
+
+#if !defined(MEETING_KIT_DEPRECATED)
+#define MEETING_KIT_DEPRECATED(message)
+#endif  // if !defined(MEETING_KIT_DEPRECATED)
+
 #endif  // NEM_SDK_INTERFACE_BUILD_CONFIG_H_

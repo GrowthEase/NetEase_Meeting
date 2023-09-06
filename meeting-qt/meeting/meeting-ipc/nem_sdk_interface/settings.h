@@ -59,7 +59,6 @@ enum RemoteVideoResolution {
  * @brief 配置本端视频分辨率
  */
 enum LocalVideoResolution {
-    LocalVideoResolution_480P = 0,  /**< 480P */
     LocalVideoResolution_720P = 1,  /**< 720P */
     LocalVideoResolution_1080P = 2, /**< 1080P */
 };

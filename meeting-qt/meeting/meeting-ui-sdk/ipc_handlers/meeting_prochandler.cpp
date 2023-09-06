@@ -297,6 +297,7 @@ bool NEMeetingServiceProcHandlerIMP::onLeaveMeeting(bool finish, const nem_sdk_i
     }
 
     m_leaveMeetingCallback = cb;
+    m_bFinsheMeeting = finish;
     Invoker::getInstance()->execute([=]() {
         if (finish) {
             if (kAuthLoginSuccessed != AuthManager::getInstance()->getAuthStatus()) {
@@ -603,6 +604,9 @@ NS_I_NEM_SDK::NEErrorCode NEMeetingServiceProcHandlerIMP::convertExtentedCode(in
         case 200:
             resultCode = NS_I_NEM_SDK::ERROR_CODE_SUCCESS;
             break;
+        case 3:
+            resultCode = m_bFinsheMeeting ? NS_I_NEM_SDK::ERROR_CODE_SUCCESS : (NS_I_NEM_SDK::NEErrorCode)extentedCode;
+            break;
         case 3100:
             resultCode = NS_I_NEM_SDK::MEETING_ERROR_FAILED_ALREADY_IN_MEETING;
             break;
@@ -613,9 +617,8 @@ NS_I_NEM_SDK::NEErrorCode NEMeetingServiceProcHandlerIMP::convertExtentedCode(in
 }
 
 void NEMeetingServiceProcHandlerIMP::onMeetingStatusChanged(NEMeeting::Status status, int errorCode, const QString& errorMessage) {
-    YXLOG_API(Info) << "Meeting process handler, meeting status changed: " << status << ", errorCode: " << errorCode
-                    << ", errorMessage: " << errorMessage.toStdString() << YXLOGEnd;
-
+    // YXLOG_API(Info) << "Meeting process handler, meeting status changed: " << status << ", errorCode: " << errorCode
+    //                 << ", errorMessage: " << errorMessage.toStdString() << YXLOGEnd;
     NS_I_NEM_SDK::NEErrorCode responseCode = NS_I_NEM_SDK::ERROR_CODE_FAILED;
     if (NEMeeting::MEETING_CONNECT_FAILED == status &&
         ("joinTimeoutTimer" == errorMessage || "kReasonRoomNotExist" == errorMessage || "kReasonSyncDataError" == errorMessage ||
@@ -688,6 +691,7 @@ void NEMeetingServiceProcHandlerIMP::onMeetingStatusChanged(NEMeeting::Status st
         YXLOG(Info) << "Invoke leave meeting callback, error code: " << errorCode << ", error message: " << errorMessage.toStdString() << YXLOGEnd;
         m_leaveMeetingCallback(responseCode, errorMessage.toStdString());
         m_leaveMeetingCallback = nullptr;
+        m_bFinsheMeeting = false;
         if (AuthManager::getInstance()->isAnonymousLogin()) {
             AuthManager::getInstance()->doLogout(false);
         }

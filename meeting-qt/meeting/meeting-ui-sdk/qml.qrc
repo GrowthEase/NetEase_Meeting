@@ -106,6 +106,7 @@
         <file>qml/images/loading/hangup_hovered.png</file>
         <file>qml/images/loading/hangup_normal.png</file>
         <file>qml/images/loading/hangup_pushed.png</file>
+        <file>qml/images/loading/loading-ring-medium.gif</file>
         <file>qml/images/loading/logo.png</file>
         <file>qml/share/Members.qml</file>
         <file>qml/MainPanel.qml</file>

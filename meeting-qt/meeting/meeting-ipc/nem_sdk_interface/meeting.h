@@ -139,6 +139,11 @@ enum MeetingDisconnectCode {
     MEETING_DISCONNECTING_BY_TIMEOUT = 11,
 
     /**
+     * 当前正在从会议中断开，原因为会议时长到达上限
+     */
+    MEETING_DISCONNECTING_BY_END_OF_LIFE = 12,
+
+    /**
      * 正在等待验证会议密码
      * @since 1.2.1
      */

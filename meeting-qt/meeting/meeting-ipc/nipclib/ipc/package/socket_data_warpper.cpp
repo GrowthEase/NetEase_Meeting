@@ -15,8 +15,8 @@ bool SocketDataWarpper::OnReceiveData(const char* sdata, size_t ssize) {
     char* data = (char*)sdata;
     char* offset = nullptr;
     while (data_it->ReceiveData(data, ssize, offset)) {
-        if ((offset - (char*)data) < ssize)  // 数据还没有解完
-        {
+        if ((offset - (char*)data) != 0 && (offset - (char*)data) <= ssize) {
+            // 数据还没有解完
             ssize -= (offset - (char*)data);
             data = offset;
             data_item_list_.emplace_back(ReceiveDataItem());
@@ -28,20 +28,19 @@ bool SocketDataWarpper::OnReceiveData(const char* sdata, size_t ssize) {
     return data_item_list_.begin()->IsCompleted();
 }
 bool SocketDataWarpper::GetReceivedPack(std::string& data) {
-    bool ret = false;
+    bool is_completed = false;
     data.clear();
     if (!data_item_list_.empty()) {
         auto it = data_item_list_.begin();
         if (it->IsCompleted()) {
             it->GetData(data);
             it = data_item_list_.erase(it);
-            if (it != data_item_list_.end())
-                ret = it->IsCompleted();
+            is_completed = true;
         }
     }
     if (data_item_list_.empty())
         data_item_list_.emplace_back(ReceiveDataItem());
-    return ret;
+    return is_completed;
 }
 size_t SocketDataWarpper::PackSendData(const std::string& raw_data, std::string& data) {
     PackBuffer pack_buffer;

@@ -74,10 +74,10 @@ SettingsManager::SettingsManager(QObject* parent)
     }
 
     if (ConfigManager::getInstance()->contains("localAudioProfileType") && ConfigManager::getInstance()->contains("localAudioScenarioType")) {
-        m_audioProfileType =
-            (neroom::NERoomRtcAudioProfileType)ConfigManager::getInstance()->getValue("localAudioProfileType", (int)m_audioProfileType).toInt();
-        m_audioScenarioType =
-            (neroom::NERoomRtcAudioScenarioType)ConfigManager::getInstance()->getValue("localAudioScenarioType", (int)m_audioScenarioType).toInt();
+        m_audioProfileType = static_cast<neroom::NERoomRtcAudioProfileType>(
+            ConfigManager::getInstance()->getValue("localAudioProfileType", static_cast<int>(m_audioProfileType)).toInt());
+        m_audioScenarioType = static_cast<neroom::NERoomRtcAudioScenarioType>(
+            ConfigManager::getInstance()->getValue("localAudioScenarioType", static_cast<int>(m_audioScenarioType)).toInt());
         emit audioProfileChanged(audioProfile());
         emit enableAudioStereoChanged(enableAudioStereo());
     }
@@ -89,19 +89,20 @@ SettingsManager::SettingsManager(QObject* parent)
     }
 
     if (ConfigManager::getInstance()->contains("localVideoResolution")) {
-        m_localVideoResolution = (VideoResolution)ConfigManager::getInstance()->getValue("localVideoResolution", (int)m_localVideoResolution).toInt();
-        emit localVideoResolutionChanged(m_localVideoResolution);
-    }
-
-    if (ConfigManager::getInstance()->contains("remoteVideoResolution")) {
-        m_remoteVideoResolution = ConfigManager::getInstance()->getValue("remoteVideoResolution", m_remoteVideoResolution).toBool();
-        emit remoteVideoResolutionChanged(m_remoteVideoResolution);
+        auto cacheResolution = ConfigManager::getInstance()->getValue("localVideoResolution", (int)m_localVideoResolution).toInt();
+        VideoResolution presetResolution = VR_DEFAULT;
+        if (cacheResolution >= VR_MAX)
+            presetResolution = VR_MAX;
+        else if (cacheResolution == VR_720P)
+            presetResolution = VR_720P;
+        else
+            presetResolution = VR_DEFAULT;
+        setLocalVideoResolution(presetResolution);
     }
 
     if (ConfigManager::getInstance()->contains("audioDeviceAutoSelectType")) {
-        m_audioDeviceAutoSelectType = (neroom::NEAudioDeviceAutoSelectType)ConfigManager::getInstance()
-                                          ->getValue("audioDeviceAutoSelectType", (int)m_audioDeviceAutoSelectType)
-                                          .toInt();
+        m_audioDeviceAutoSelectType = static_cast<neroom::NEAudioDeviceAutoSelectType>(
+            ConfigManager::getInstance()->getValue("audioDeviceAutoSelectType", static_cast<int>(m_audioDeviceAutoSelectType)).toInt());
     }
 
     if (ConfigManager::getInstance()->contains("showSpeaker")) {
@@ -512,20 +513,11 @@ void SettingsManager::setLocalVideoResolution(VideoResolution localVideoResoluti
         case VR_DEFAULT:
             videoProfileType = neroom::kNEVideoProfileUsingTemplate;
             break;
-        case VR_480P:
-            videoProfileType = neroom::kNEVideoProfileStandard;
-            break;
         case VR_720P:
             videoProfileType = neroom::kNEVideoProfileHD720P;
             break;
-        case VR_1080P:
-            videoProfileType = neroom::kNEVideoProfileHD1080P;
-            break;
-        case VR_4K:
-            videoProfileType = neroom::kNEVideoProfile4KUHD;
-            break;
-        case VR_8K:
-            videoProfileType = neroom::kNEVideoProfile8KUHD;
+        case VR_MAX:
+            videoProfileType = neroom::kNEVideoProfileMAX;
             break;
         default:
             break;
@@ -565,8 +557,9 @@ void SettingsManager::setRemoteVideoResolution(bool remoteVideoResolution) {
     if (m_remoteVideoResolution == remoteVideoResolution)
         return;
 
-    YXLOG(Info) << "setRemoteVideoResolution, HD: " << remoteVideoResolution << YXLOGEnd;
-    m_remoteVideoResolution = remoteVideoResolution;
+    YXLOG(Info) << "setRemoteVideoResolution, HD: false" << YXLOGEnd;
+    // feat: YYTX-31701 always use auto mode
+    m_remoteVideoResolution = false;  // remoteVideoResolution;
 
     auto* client = dynamic_cast<NS_I_NEM_SDK::NEMeetingSDKIPCClient*>(NS_I_NEM_SDK::NEMeetingSDKIPCClient::getInstance());
     if (client == nullptr)

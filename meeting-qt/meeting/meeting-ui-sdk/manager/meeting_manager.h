@@ -122,10 +122,13 @@ public:
     Q_PROPERTY(bool enableImageMessage READ enableImageMessage WRITE setEnableImageMessage NOTIFY enableImageMessageChanged)
     Q_PROPERTY(QString meetingInviteUrl READ meetingInviteUrl WRITE setMeetingInviteUrl NOTIFY meetingInviteUrlChanged)
     Q_PROPERTY(QJsonObject rtcState READ rtcState WRITE setRtcState NOTIFY rtcStateChanged)
+    Q_PROPERTY(bool reconnecting READ reconnecting WRITE setReconnecting NOTIFY reconnectingChanged)
+    Q_PROPERTY(bool reconnectTimes READ reconnectTimes WRITE setReconnectTimes NOTIFY reconnectTimesChanged)
 
     Q_INVOKABLE bool autoStartMeeting();
     // 输入密码入会
     Q_INVOKABLE void joinMeeting(const QString& strPassword);
+    Q_INVOKABLE void rejoinMeeting();
     Q_INVOKABLE void cancelJoinMeeting();
     Q_INVOKABLE NEMeeting::Status getRoomStatus() const;
     Q_INVOKABLE void modifyNicknameInMeeting(const QString& newnickname, const QString& meetingID);
@@ -164,6 +167,7 @@ public:
     void setStartMeetingInfo(bool isCreate, const QString& meetingId, const QString& nickname, bool audio, bool video, bool hideInvitation);
 
     void onRoomLockStatusChanged(bool isLock);
+    void onRoomRemainingSecondsRenewed(quint64 remainingSeconds);
     void onRoomMuteStatusChanged(bool muted);
     void onRoomMuteAllVideoStatusChanged(bool muted);
     void onRoomMuteNeedHandsUpChanged(bool bNeedHandsUp);
@@ -287,6 +291,12 @@ public:
     const QJsonObject& rtcState() const;
     void setRtcState(const QJsonObject& newRtcState);
 
+    bool reconnecting() const { return m_reconnecting; }
+    void setReconnecting(bool reconnecting);
+
+    int reconnectTimes() const { return m_reconnectTimes; }
+    void setReconnectTimes(int reconnectTimes);
+
 signals:
     void error(int errorCode, const QString& errorMessage);
     void activeWindow(bool bRaise);
@@ -313,6 +323,7 @@ signals:
     void showMemberTagChanged();
     void meetingDurationChanged();
     void remainingSecondsChanged();
+    void remainingSecondsRenewed();
     void nicknameChanged();
     void autoStartModeChanged();
     void hideInvitationChanged();
@@ -332,16 +343,14 @@ signals:
     void lockStatusNotify(bool locked);
     void muteStatusNotify(bool muted, bool audio = true);
     void hostChangedNotify(const QString& changedAccountId);
-
     void modifyNicknameResult(bool success);
     void roomStatusChanged(NEMeeting::Status roomStatus);
-
     void enableFileMessageChanged();
     void enableImageMessageChanged();
-
     void meetingInviteUrlChanged();
-
     void rtcStateChanged();
+    void reconnectingChanged();
+    void reconnectTimesChanged();
 
 public slots:
     void lockMeeting(bool lock);
@@ -384,6 +393,7 @@ private:
     bool m_hideMuteAllAudio = false;   // 是否显示"全体静音"按钮
     bool m_enableFileMessage = true;   // 是否支持"聊天室文件消息"
     bool m_enableImageMessage = true;  // 是否支持"聊天室图片消息"
+    bool m_reconnecting = false;       // 当前是否在走断网重新加入房间流程
     QString m_prettyMeetingId;
     QString m_userNickname = "";
     Invoker m_invoker;
@@ -392,6 +402,7 @@ private:
     NEMeeting::MeetingIdDisplayOptions m_meetingIdDisplayOption = NEMeeting::DISPLAY_ALL;
 
     int m_meetingMuteCount = 0;
+    int m_reconnectTimes = 0;
 
     // 需要密码时缓存一下登录信息
     nem_sdk_interface::NEJoinMeetingParams m_joinRoomParams;

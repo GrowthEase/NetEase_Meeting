@@ -427,6 +427,11 @@ void NEInRoomServiceListener::onRoomLockStateChanged(bool locked) {
     MeetingManager::getInstance()->onRoomLockStatusChanged(locked);
 }
 
+void NEInRoomServiceListener::onRoomRemainingSecondsRenewed(uint64_t seconds) {
+    YXLOG(Info) << "[NEInRoomServiceListener] Room remaining seconds renewed, seconds: " << seconds << YXLOGEnd;
+    MeetingManager::getInstance()->onRoomRemainingSecondsRenewed(seconds);
+}
+
 void NEInRoomServiceListener::onRtcVirtualBackgroundSourceEnabled(bool enabled, NERoomVirtualBackgroundSourceStateReason reason) {
     YXLOG(Info) << "[NEInRoomServiceListener] RTC virtual background source enabled, enabled: " << enabled << ", reason: " << reason << YXLOGEnd;
     Invoker::getInstance()->execute([=]() {
@@ -621,8 +626,12 @@ void NEInRoomServiceListener::onRtcRemoteAudioVolumeIndication(std::list<NEMembe
 
 void NEInRoomServiceListener::onRtcDisconnect() {
     YXLOG(Info) << "[NEInRoomServiceListener] RTC disconnect" << YXLOGEnd;
+    /*
     Invoker::getInstance()->execute([=]() {
         MeetingManager::getInstance()->leaveMeeting(
-            false, [](int code, const std::string& msg) { MeetingManager::getInstance()->onDisconnected(kNERoomEndReasonLeaveBySelf); });
+            false, [](int code, const std::string& msg) {
+                MeetingManager::getInstance()->onDisconnected(kNERoomEndReasonLeaveBySelf);
+            });
     });
+    */
 }

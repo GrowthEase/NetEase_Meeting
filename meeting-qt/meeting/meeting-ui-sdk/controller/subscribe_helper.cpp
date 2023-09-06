@@ -41,7 +41,7 @@ void SubscribeHelper::reset() {
 }
 
 void SubscribeHelper::init() {
-    m_checkTimer.setInterval(1000 * 10);
+    m_checkTimer.setInterval(1000);
     m_checkTimer.start();
 }
 

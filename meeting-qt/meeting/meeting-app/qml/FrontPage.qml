@@ -438,6 +438,11 @@ FrontPageForm {
                 // mainWindow.hide()
                 break;
             case RunningStatus.MEETING_STATUS_DISCONNECTING:
+                createButton.enabled = true;
+                joinButton.enabled = true;
+                mainWindow.showNormal();
+                showFeedbackTimer.start();
+                console.log(`meeting disconnected from server, status: ${meetingStatus}, extension code: ${extCode}`);
                 if (extCode === RunningStatus.MEETING_DISCONNECTING_REMOVED_BY_HOST)
                     toast.show(qsTr('You have been removed from meeting by host'));
                 else if (extCode === RunningStatus.MEETING_DISCONNECTING_CLOSED_BY_HOST)
@@ -451,6 +456,8 @@ FrontPageForm {
                     authManager.logout();
                 } else if (extCode === RunningStatus.MEETING_DISCONNECTING_BY_ROOMNOTEXIST)
                     toast.show(qsTr('The meeting does not exist'));
+                else if (extCode === RunningStatus.MEETING_DISCONNECTING_BY_END_OF_LIFE)
+                    toast.show(qsTr('Meeting is closed because the meeting duration reached the upper limit.'));
                 else if (extCode === RunningStatus.MEETING_DISCONNECTING_BY_SYNCDATAERROR)
                     toast.show(qsTr('Failed to synchronize meeting information'));
                 else if (extCode === RunningStatus.MEETING_DISCONNECTING_BY_RTCINITERROR)
@@ -459,10 +466,6 @@ FrontPageForm {
                     toast.show(qsTr('Failed to join the channel of RTC'));
                 else if (extCode === RunningStatus.MEETING_DISCONNECTING_BY_TIMEOUT)
                     toast.show(qsTr('Meeting timeout'));
-                createButton.enabled = true;
-                joinButton.enabled = true;
-                showMainWindowTimer.start();
-                showFeedbackTimer.start();
                 break;
             case RunningStatus.MEETING_STATUS_WAITING:
                 if (extCode === RunningStatus.MEETING_WAITING_VERIFY_PASSWORD) {

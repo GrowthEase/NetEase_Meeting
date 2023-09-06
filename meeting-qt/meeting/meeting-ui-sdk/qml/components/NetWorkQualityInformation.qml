@@ -5,135 +5,137 @@ import NetEase.Meeting.MeetingStatus 1.0
 
 Popup {
     id: idNetWorkQualityInfo
-    width: 200
+    function startClose() {
+        idInfomationClose.start();
+    }
+    function stopClose() {
+        idInfomationClose.stop();
+    }
+
     height: netWorkQualityInfoContainer.height + 50 // incldue top and bottom padding
     padding: 25
+    width: 200
+
     background: Rectangle {
         radius: 10
     }
 
     Component.onCompleted: {
     }
-
-    function startClose() {
-        idInfomationClose.start()
-    }
-
-    function stopClose() {
-        idInfomationClose.stop()
-    }
-
     onClosed: {
-        idNetWorkQualityInfo.closePolicy = Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        idNetWorkQualityInfo.closePolicy = Popup.CloseOnEscape | Popup.CloseOnPressOutside;
     }
 
     MouseArea {
         id: idInfomation
         anchors.centerIn: parent
-        width: parent.width + 50
         height: parent.height + 50
         hoverEnabled: true
+        width: parent.width + 50
+
         onExited: {
-            idInfomationClose.stop()
-            close()
+            idInfomationClose.stop();
+            close();
         }
     }
-
     Timer {
         id: idInfomationClose
-        repeat: false
         interval: 1000
+        repeat: false
+
         onTriggered: {
             if (!idInfomation.containsMouse) {
-                close()
+                close();
             }
         }
     }
-
     Connections {
         target: meetingManager
+
         onRtcStateChanged: {
-            const rtcState = meetingManager.rtcState
-            delay.text = rtcState["downRtt"] + "ms"
-            upPacketLoss.text = rtcState["txPacketLossRate"] + "%"
-            downPacketLoss.text = rtcState["rxPacketLossRate"] + "%"
+            const rtcState = meetingManager.rtcState;
+            delay.text = rtcState["downRtt"] + "ms";
+            upPacketLoss.text = rtcState["txPacketLossRate"] + "%";
+            downPacketLoss.text = rtcState["rxPacketLossRate"] + "%";
         }
     }
-
     ColumnLayout {
         id: netWorkQualityInfoContainer
         height: childrenRect.height
-        width: parent.width
         spacing: 15
+        width: parent.width
+
         Label {
+            Layout.fillWidth: true
+            Layout.maximumWidth: 320
+            color: '#333333'
+            font.pixelSize: 20
             text: {
-                const netWorkQualityType = membersManager.netWorkQualityType
-                if (MeetingStatus.NETWORKQUALITY_GOOD === netWorkQualityType) {
-                    return qsTr("The network connection is good")
-                } else if (MeetingStatus.NETWORKQUALITY_GENERAL === netWorkQualityType) {
-                    return qsTr("The network connection is general")
-                } else if (MeetingStatus.NETWORKQUALITY_BAD === netWorkQualityType) {
-                    return qsTr("The network connection is poor")
-                } else {
-                    return qsTr("The network connection is unknown")
+                const netWorkQualityType = membersManager.netWorkQualityType;
+                switch (netWorkQualityType) {
+                case MeetingStatus.NETWORKQUALITY_GOOD:
+                    return qsTr("The network connection is good");
+                case MeetingStatus.NETWORKQUALITY_GENERAL:
+                    return qsTr("The network connection is general");
+                case MeetingStatus.NETWORKQUALITY_BAD:
+                    return qsTr("The network connection is poor");
+                default:
+                    return qsTr("The network connection is good");
                 }
             }
-            font.pixelSize: 20
-            color: '#333333'
             wrapMode: Text.WrapAnywhere
-            Layout.maximumWidth: 320
-            Layout.fillWidth: true
         }
         RowLayout {
             Label {
-                text: qsTr('Delay:')
-                font.pixelSize: 12
-                color: '#94979A'
                 Layout.preferredWidth: 100
+                color: '#94979A'
+                font.pixelSize: 12
+                text: qsTr('Delay:')
             }
             Label {
                 id: delay
-                text: "0ms"
-                font.pixelSize: 12
                 color: '#94979A'
+                font.pixelSize: 12
+                text: "0ms"
             }
         }
         RowLayout {
             Label {
-                text: qsTr('Packet Loss:')
                 Layout.alignment: Qt.AlignTop
-                font.pixelSize: 12
-                color: '#94979A'
                 Layout.preferredWidth: 100
+                color: '#94979A'
+                font.pixelSize: 12
+                text: qsTr('Packet Loss:')
             }
             ColumnLayout {
                 RowLayout {
                     spacing: 5
+
                     Label {
-                        text: "↑"
-                        font.pixelSize: 12
                         color: '#2972F6'
+                        font.pixelSize: 12
+                        text: "↑"
                     }
                     Label {
                         id: upPacketLoss
-                        text: "0%"
-                        font.pixelSize: 12
                         color: '#94979A'
+                        font.pixelSize: 12
+                        text: "0%"
                     }
                 }
-
                 RowLayout {
                     spacing: 5
+
                     Label {
-                        text: "↓"
-                        font.pixelSize: 12
                         color: '#5CC871'
+                        font.pixelSize: 12
+                        text: "↓"
                     }
                     Label {
                         id: downPacketLoss
-                        text: "0%"
-                        font.pixelSize: 12
                         color: '#94979A'
+                        font.pixelSize: 12
+                        text: "0%"
                     }
                 }
             }

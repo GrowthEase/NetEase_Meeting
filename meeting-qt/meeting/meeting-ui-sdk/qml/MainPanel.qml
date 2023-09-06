@@ -20,7 +20,6 @@ import "live"
 
 Rectangle {
     id: root
-    color: "#000000"
     enum AudioVolumeLevel {
         Level_1 = 1,
         Level_2,
@@ -52,6 +51,7 @@ Rectangle {
     property var tempDynamicDialogEx: undefined
     property bool temporarilyUnmute: false
     property int viewMode: MainPanel.ViewMode.FocusViewMode
+    property int networkQualityBadTimes: 0
 
     signal newMsgNotity(int msgCount, string sender, string text)
 
@@ -62,6 +62,9 @@ Rectangle {
             return obj;
     }
     function closeAllDialog() {
+        if (footerBar.tempDynamicDialogEx !== undefined && footerBar.tempDynamicDialogEx !== null) {
+            footerBar.tempDynamicDialogEx.close();
+        }
         if (membersWindow.visible === true) {
             membersWindow.hide();
         }
@@ -86,11 +89,11 @@ Rectangle {
         shareSelector.close();
         requestPermission.close();
         customDialog.close();
-        if (tempDynamicDialogEx !== undefined)
+        if (tempDynamicDialogEx !== undefined && tempDynamicDialogEx !== null)
             tempDynamicDialogEx.close();
-        if (microphoneDynamicDialog !== undefined)
+        if (microphoneDynamicDialog !== undefined && microphoneDynamicDialog !== null)
             microphoneDynamicDialog.close();
-        if (cameraDynamicDialog !== undefined)
+        if (cameraDynamicDialog !== undefined && cameraDynamicDialog !== null)
             cameraDynamicDialog.close();
     }
     function disableLocalVideo() {
@@ -157,6 +160,7 @@ Rectangle {
     }
 
     anchors.fill: parent
+    color: "#000000"
 
     Component.onCompleted: {
         mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/LoadingPage.qml'));
@@ -430,9 +434,9 @@ Rectangle {
             id: loaderLayout
             anchors.left: parent.left
             anchors.top: parent.top
+            color: "black"
             height: parent.height
             width: parent.width - (extensions.visible ? extensions.width : 0)
-            color: "black"
 
             Loader {
                 id: mainLoader
@@ -526,14 +530,15 @@ Rectangle {
                             opacity: 1.0
                             source: {
                                 const netWorkQualityType = membersManager.netWorkQualityType;
-                                if (MeetingStatus.NETWORKQUALITY_GOOD === netWorkQualityType) {
+                                switch (netWorkQualityType) {
+                                case MeetingStatus.NETWORKQUALITY_GOOD:
                                     return "qrc:/qml/images/public/icons/networkquality_good.svg";
-                                } else if (MeetingStatus.NETWORKQUALITY_GENERAL === netWorkQualityType) {
+                                case MeetingStatus.NETWORKQUALITY_GENERAL:
                                     return "qrc:/qml/images/public/icons/networkquality_general.svg";
-                                } else if (MeetingStatus.NETWORKQUALITY_BAD === netWorkQualityType) {
+                                case MeetingStatus.NETWORKQUALITY_BAD:
                                     return "qrc:/qml/images/public/icons/networkquality_bad.svg";
-                                } else {
-                                    return "qrc:/qml/images/public/icons/networkquality_unknown.svg";
+                                default:
+                                    return "qrc:/qml/images/public/icons/networkquality_good.svg";
                                 }
                             }
                             width: 13
@@ -1165,10 +1170,10 @@ Rectangle {
                                                 chatManager.sendMsg(3, formattedText.substring(pos + startImage.length, pos2));
                                                 formattedText = formattedText.substr(pos2).replace(endImage, "");
                                             }
-                                            messageField.text = "";
                                         } else {
                                             chatManager.sendTextMsg(messageField.text);
                                         }
+                                        messageField.text = "";
                                         messageField.focus = true;
                                         atEndTimer.restart();
                                     }
@@ -1291,6 +1296,8 @@ Rectangle {
                                         visible: meetingManager.enableImageMessage
 
                                         onClicked: {
+                                            console.log(fileDialog.selectedFile)
+                                            fileDialog.selectedFile = 'file:///';
                                             fileDialog.imageType = true;
                                             fileDialog.open();
                                         }
@@ -1305,6 +1312,8 @@ Rectangle {
                                         visible: meetingManager.enableFileMessage
 
                                         onClicked: {
+                                            console.log(fileDialog.selectedFile)
+                                            fileDialog.selectedFile = 'file:///';
                                             fileDialog.imageType = false;
                                             fileDialog.open();
                                         }
@@ -1320,21 +1329,37 @@ Rectangle {
     Rectangle {
         id: busyContainer
         anchors.fill: mainLayoutEx
-        color: "#99000000"
+        color: "transparent"
         visible: false
 
-        ColumnLayout {
+        Rectangle {
             anchors.centerIn: parent
+            color: "#FFFFFF"
+            height: 80
+            radius: 8
+            width: 360
 
-            BusyIndicator {
-                Layout.alignment: Qt.AlignHCenter
-                Layout.preferredHeight: 50
-                Layout.preferredWidth: 50
-                running: true
-            }
-            Label {
-                color: "#FFFFFF"
-                text: qsTr('Network has been disconnected, trying to reconnect.')
+            RowLayout {
+                anchors.centerIn: parent
+                height: 50
+                spacing: 5
+                width: children.width
+
+                AnimatedImage {
+                    Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                    Layout.preferredHeight: 24
+                    Layout.preferredWidth: 24
+                    antialiasing: true
+                    mipmap: true
+                    playing: busyContainer.visible
+                    smooth: true
+                    source: "qrc:/qml/images/loading/loading-ring-medium.gif"
+                }
+                Label {
+                    color: "#337EFF"
+                    font.pixelSize: 14
+                    text: qsTr('Disconnected, trying to reconnect.')
+                }
             }
         }
         MouseArea {
@@ -1573,6 +1598,10 @@ Rectangle {
                     GlobalToast.displayText(qsTr('Meeting has been finished'), mainWindow.screen);
                     quitTimer.start();
                 }
+                if (meetingManager.reconnecting) {
+                    console.info('Reconnecting... skip next steps.');
+                    break;
+                }
                 console.log("mainWindow visibility(MEETING_IDLE): " + mainWindow.visibility);
                 if (Qt.platform.os === 'osx' && !hideWindow.preparerun && !mainWindow.visible) {
                     console.log("mainWindow hideWindow.preparerun: " + hideWindow.preparerun, mainWindow.visible);
@@ -1659,12 +1688,23 @@ Rectangle {
                 //                }
                 break;
             case MeetingStatus.MEETING_RECONNECTED:
+                toast.show(qsTr('Network reconnected.'));
                 busyContainer.visible = false;
                 break;
             case MeetingStatus.MEETING_CONNECT_FAILED:
                 if (meetingManager.autoStartMode) {
                     GlobalToast.displayText(qsTr('Failed to join meeting'), mainWindow.screen);
                     quitTimer.start();
+                }
+                if (meetingManager.reconnecting) {
+                    DialogManager.dynamicDialog2(qsTr('Bad network'), qsTr('Network has been disconnected, check your network and rejoin please.'), function () {
+                            meetingManager.leaveMeeting(true);
+                        }, function () {
+                            meetingManager.rejoinMeeting();
+                        }, qsTr("Leave"), qsTr("Rejoin"), mainWindow, false, "#FE3B30", "#337EFF", Popup.NoAutoClose);
+                    toast.show(errorMessage);
+                    console.info('Reconnecting... skip next steps.');
+                    break;
                 }
                 passwordWindow.setVisible(false);
                 mainWindow.setVisible(false);
@@ -1676,16 +1716,6 @@ Rectangle {
             case MeetingStatus.MEETING_ENDED:
                 handsStatus.visible = false;
                 handstip.text = qsTr("HandsUp");
-                console.log("mainWindow visibility: " + mainWindow.visibility);
-                if (Qt.platform.os === 'osx' && (mainWindow.visibility === Window.FullScreen || mainWindow.visibility === Window.Maximized)) {
-                    console.log("mainWindow visibility is FullScreen or Maximized.");
-                    mainWindow.showNormal();
-                    hideWindow.preparerun = true;
-                    hideWindow.start();
-                } else {
-                    mainWindow.setVisible(false);
-                    mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/LoadingPage.qml'));
-                }
                 muteConfirmDialog.close();
                 popupMeetingInfo.close();
                 popupNetWorkQualityInfo.close();
@@ -1703,6 +1733,26 @@ Rectangle {
                 remainingTip.visible = false;
                 temporarilyUnmute = false;
                 showRemainingTipTimer.stop();
+                busyContainer.visible = false;
+                console.log("mainWindow visibility: " + mainWindow.visibility);
+                if (errorCode === 9) {
+                    mainWindow.showNormal();
+                    DialogManager.dynamicDialog2(qsTr('Bad network'), qsTr('Network has been disconnected, check your network and rejoin please.'), function () {
+                            meetingManager.leaveMeeting(true);
+                        }, function () {
+                            meetingManager.rejoinMeeting()
+                        }, qsTr("Leave"), qsTr("Rejoin"), mainWindow, false, "#FE3B30", "#337EFF", Popup.NoAutoClose);
+                } else {
+                    if (Qt.platform.os === 'osx' && (mainWindow.visibility === Window.FullScreen || mainWindow.visibility === Window.Maximized)) {
+                        console.log("mainWindow visibility is FullScreen or Maximized.");
+                        mainWindow.showNormal();
+                        hideWindow.preparerun = true;
+                        hideWindow.start();
+                    } else {
+                        mainWindow.setVisible(false);
+                        mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/LoadingPage.qml'));
+                    }
+                }
                 break;
             case MeetingStatus.MEETING_CMD_CHANNEL_DISCONNECTED:
                 busyContainer.visible = true;
@@ -1714,6 +1764,8 @@ Rectangle {
                 }
                 break;
             default:
+                if (meetingManager.reconnecting)
+                    break;
                 mainWindow.setVisible(false);
                 mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/LoadingPage.qml'));
                 break;
@@ -1761,9 +1813,16 @@ Rectangle {
                     hasShowRemainingTip = true;
                     remainingTip.visible = true;
                     var minNum = meetingManager.remainingSeconds / 60;
-                    remainingTip.description = qsTr('The meeting will close in "[%1]" minutes').arg(minNum);
+                    remainingTip.description = qsTr('Meeting will close in %1 min.').arg(minNum);
                     showRemainingTipTimer.restart();
                 }
+            }
+        }
+        onRemainingSecondsRenewed: {
+            if (showRemainingTipTimer.running) {
+                showRemainingTipTimer.stop();
+                hasShowRemainingTip = false;
+                remainingTip.visible = false;
             }
         }
     }
@@ -1945,6 +2004,20 @@ Rectangle {
     Connections {
         target: membersManager
 
+        onNetWorkQualityTypeChanged: {
+            // 连续三次是 MeetingStatus.NETWORKQUALITY_BAD 的情况下打印日志
+            // console.log(`Network quality changed, current quality: ${netWorkQualityType}`)
+            if (netWorkQualityType === MeetingStatus.NETWORKQUALITY_BAD) {
+                networkQualityBadTimes += 1;
+                if (networkQualityBadTimes === 3) {
+                    networkQualityBadTimes = 0;
+                    if (!busyContainer.visible)
+                        toast.show(qsTr("Network abnormality, please check your network."));
+                }
+            } else {
+                networkQualityBadTimes = 0;
+            }
+        }
         onHandsupStatusChanged: {
             switch (status) {
             case MeetingStatus.HAND_STATUS_RAISE:
@@ -2233,7 +2306,7 @@ Rectangle {
                         meetingManager.leaveMeeting(false);
                     }, function () {
                         meetingManager.leaveMeeting(true);
-                    });
+                    }, function () {});
             } else {
                 customDialog.confirmBtnText = qsTr("OK");
                 customDialog.cancelBtnText = qsTr("Cancel");
@@ -2267,7 +2340,7 @@ Rectangle {
                         meetingManager.leaveMeeting(false);
                     }, function () {
                         meetingManager.leaveMeeting(true);
-                    });
+                    }, function () {});
             } else {
                 customDialog.confirmBtnText = qsTr("OK");
                 customDialog.cancelBtnText = qsTr("Cancel");
@@ -2389,7 +2462,7 @@ Rectangle {
         }
         onMsgSendSignal: {
             chatroom.msglistView.positionViewAtEnd();
-            messageField.text = "";
+            // messageField.text = "";
         }
         onMsgTipSignal: {
             ++msgCount;

@@ -310,11 +310,10 @@ Window {
                                     chatManager.sendMsg(3, formattedText.substring(pos + startImage.length, pos2))
                                     formattedText = formattedText.substr(pos2).replace(endImage, "")
                                 }
-                                messageField.text = ""
                             } else {
                                 chatManager.sendTextMsg(messageField.text)
                             }
-
+                            messageField.text = ""
                             messageField.focus = true
                             atEndTimer.restart()
                         }
@@ -352,6 +351,7 @@ Window {
                             hoveredImage: 'qrc:/qml/images/chatroom/image.svg'
                             pushedImage: 'qrc:/qml/images/chatroom/image.svg'
                             onClicked: {
+                                fileDialog.selectedFile = 'file:///'
                                 fileDialog.imageType = true
                                 fileDialog.open()
                             }
@@ -366,6 +366,7 @@ Window {
                             hoveredImage: 'qrc:/qml/images/chatroom/file.svg'
                             pushedImage: 'qrc:/qml/images/chatroom/file.svg'
                             onClicked: {
+                                fileDialog.selectedFile = 'file:///'
                                 fileDialog.imageType = false
                                 fileDialog.open()
                             }
@@ -457,7 +458,7 @@ Window {
 
         onMsgSendSignal: {
             chatroom.msglistView.positionViewAtEnd()
-            messageField.text = ""
+            // messageField.text = ""
             GlobalChatManager.noNewMsgNotity()
         }
 

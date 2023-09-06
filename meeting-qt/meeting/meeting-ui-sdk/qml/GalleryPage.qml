@@ -77,7 +77,8 @@ Rectangle {
                 x: itemX,
                 y: itemY,
                 width: itemSize.width,
-                height: itemSize.height
+                height: itemSize.height,
+                highQuality: members.length <= 4
             });
             listModel.append(member);
         }
@@ -158,7 +159,7 @@ Rectangle {
                     anchors.fill: parent
                     audioStatus: model.audioStatus
                     createdAt: model.createdAt
-                    highQuality: !SettingsManager.remoteVideoResolution ? (model.index > 3 ? false : true) : true
+                    highQuality: model.highQuality
                     nickname: model.nickname
                     videoStatus: model.videoStatus
                 }

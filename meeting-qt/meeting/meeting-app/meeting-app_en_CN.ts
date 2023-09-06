@@ -514,19 +514,19 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="475"/>
-        <location filename="qml/FrontPage.qml" line="488"/>
+        <location filename="qml/FrontPage.qml" line="478"/>
+        <location filename="qml/FrontPage.qml" line="491"/>
         <source>Join Meeting</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="489"/>
+        <location filename="qml/FrontPage.qml" line="492"/>
         <source>The meeting is still in progress. Do you want to join directly?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="495"/>
-        <location filename="qml/FrontPage.qml" line="497"/>
+        <location filename="qml/FrontPage.qml" line="498"/>
+        <location filename="qml/FrontPage.qml" line="500"/>
         <source>Failed to start meeting</source>
         <translation type="unfinished"></translation>
     </message>
@@ -547,52 +547,57 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="442"/>
+        <location filename="qml/FrontPage.qml" line="447"/>
         <source>You have been removed from meeting by host</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="444"/>
+        <location filename="qml/FrontPage.qml" line="449"/>
         <source>This meeting has been ended</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="446"/>
+        <location filename="qml/FrontPage.qml" line="451"/>
         <source>You have been discconected from server</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="450"/>
+        <location filename="qml/FrontPage.qml" line="455"/>
         <source>You have been kickout by other client</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="453"/>
+        <location filename="qml/FrontPage.qml" line="458"/>
         <source>The meeting does not exist</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="455"/>
+        <location filename="qml/FrontPage.qml" line="460"/>
+        <source>Meeting is closed because the meeting duration reached the upper limit.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="qml/FrontPage.qml" line="462"/>
         <source>Failed to synchronize meeting information</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="457"/>
+        <location filename="qml/FrontPage.qml" line="464"/>
         <source>The RTC module fails to be initialized</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="459"/>
+        <location filename="qml/FrontPage.qml" line="466"/>
         <source>Failed to join the channel of RTC</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="461"/>
+        <location filename="qml/FrontPage.qml" line="468"/>
         <source>Meeting timeout</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="476"/>
+        <location filename="qml/FrontPage.qml" line="479"/>
         <source>It was detected that you exited abnormally last time, do you want to resume the meeting?</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1072,29 +1077,34 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modules/nemeeting_sdk_manager.cpp" line="571"/>
-        <location filename="modules/nemeeting_sdk_manager.cpp" line="683"/>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="566"/>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="678"/>
         <source>Feedback</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modules/nemeeting_sdk_manager.cpp" line="600"/>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="595"/>
         <source>Failed to connect to server, please try agine.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modules/nemeeting_sdk_manager.cpp" line="761"/>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="756"/>
         <source>Enterprise Edition</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modules/nemeeting_sdk_manager.cpp" line="762"/>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="757"/>
         <source>Free Edition</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="modules/nemeeting_sdk_manager.cpp" line="1184"/>
-        <location filename="modules/nemeeting_sdk_manager.cpp" line="1233"/>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="1002"/>
+        <source>Failed to initialize meeting SDK.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="1181"/>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="1230"/>
         <source>Meeting duration too long!</source>
         <translation type="unfinished"></translation>
     </message>

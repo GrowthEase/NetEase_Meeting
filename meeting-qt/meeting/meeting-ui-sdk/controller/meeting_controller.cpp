@@ -340,6 +340,7 @@ bool NEMeetingController::leaveCurrentRoom(bool finish, const neroom::NECallback
         m_pRoomContext = nullptr;
         return true;
     }
+    MeetingManager::getInstance()->onDisconnected(kNERoomEndReasonLeaveBySelf);
     return false;
 }
 
