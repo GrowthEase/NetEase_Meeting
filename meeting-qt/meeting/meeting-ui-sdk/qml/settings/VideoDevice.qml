@@ -142,155 +142,17 @@ Rectangle {
                         SettingsManager.mirror = checkEnableMirror.checked;
                     }
                 }
-            }
-        }
-        RowLayout {
-            Layout.topMargin: 15
-            spacing: 5
-
-            Label {
-                Layout.alignment: Qt.AlignTop
-                Layout.topMargin: 12
-                font.pixelSize: 16
-                font.weight: Font.Medium
-                text: qsTr("Remote resolution")
-            }
-            ColumnLayout {
-                spacing: 0
-
-                RadioButton {
-                    id: autoMode
-                    checked: !SettingsManager.remoteVideoResolution
+                CustomCheckBox {
+                    checked: SettingsStatus.VR_MAX === SettingsManager.localVideoResolution
                     enabled: selectEnable
                     font.weight: Font.Light
-                    text: qsTr("Auto Mode")
+                    text: qsTr("HD mode")
 
                     onClicked: {
-                        selectEnable = false;
-                        hdMode.checked = false;
-                        SettingsManager.setRemoteVideoResolution(false);
-                        clickTimer.restart();
-                    }
-                }
-                ColumnLayout {
-                    spacing: 0
-
-                    RadioButton {
-                        id: hdMode
-                        checked: SettingsManager.remoteVideoResolution
-                        enabled: selectEnable
-                        font.weight: Font.Light
-                        text: qsTr("HD Mode")
-
-                        onClicked: {
-                            selectEnable = false;
-                            autoMode.checked = false;
-                            SettingsManager.setRemoteVideoResolution(true);
-                            clickTimer.restart();
-                        }
-                    }
-                    Text {
-                        Layout.fillWidth: true
-                        Layout.leftMargin: 35
-                        Layout.topMargin: -10
-                        font.pixelSize: 12
-                        text: qsTr("You can enable this option in professional scenarios that have high requirements on picture quality")
-                        wrapMode: Text.WordWrap
-                    }
-                }
-            }
-        }
-        RowLayout {
-            Layout.topMargin: 15
-            spacing: 5
-
-            Label {
-                Layout.alignment: Qt.AlignTop
-                Layout.topMargin: 12
-                font.pixelSize: 16
-                font.weight: Font.Medium
-                text: qsTr("Local resolution")
-            }
-            ColumnLayout {
-                spacing: 0
-                RadioButton {
-                    id: idDefault
-                    checked: SettingsStatus.VR_DEFAULT === SettingsManager.localVideoResolution
-                    enabled: selectEnable
-                    font.weight: Font.Light
-                    text: qsTr("Auto Mode")
-
-                    onClicked: {
-                        selectEnable = false;
-                        SettingsManager.setLocalVideoResolution(SettingsStatus.VR_DEFAULT);
-                        clickTimer.restart();
-                    }
-                }
-                RadioButton {
-                    id: id480P
-                    checked: SettingsStatus.VR_480P === SettingsManager.localVideoResolution
-                    enabled: selectEnable
-                    font.weight: Font.Light
-                    text: qsTr("480P")
-
-                    onClicked: {
-                        selectEnable = false;
-                        SettingsManager.setLocalVideoResolution(SettingsStatus.VR_480P);
-                        clickTimer.restart();
-                    }
-                }
-                RadioButton {
-                    id: id720P
-                    checked: SettingsStatus.VR_720P === SettingsManager.localVideoResolution
-                    enabled: selectEnable
-                    font.weight: Font.Light
-                    text: qsTr("720P")
-
-                    onClicked: {
-                        selectEnable = false;
-                        SettingsManager.setLocalVideoResolution(SettingsStatus.VR_720P);
-                        clickTimer.restart();
-                    }
-                }
-                RadioButton {
-                    id: id1080P
-                    checked: SettingsStatus.VR_1080P === SettingsManager.localVideoResolution
-                    enabled: selectEnable
-                    font.weight: Font.Light
-                    text: qsTr("1080P")
-
-                    onClicked: {
-                        selectEnable = false;
-                        SettingsManager.setLocalVideoResolution(SettingsStatus.VR_1080P);
-                        clickTimer.restart();
-                    }
-                }
-                RadioButton {
-                    id: id4K
-                    checked: SettingsStatus.VR_4K === SettingsManager.localVideoResolution
-                    enabled: selectEnable
-                    font.weight: Font.Light
-                    text: qsTr("4K")
-                    visible: false
-
-                    onClicked: {
-                        selectEnable = false;
-                        SettingsManager.setLocalVideoResolution(SettingsStatus.VR_4K);
-                        clickTimer.restart();
-                    }
-                }
-                RadioButton {
-                    id: id8K
-                    checked: SettingsStatus.VR_8K === SettingsManager.localVideoResolution
-                    enabled: selectEnable
-                    font.weight: Font.Light
-                    text: qsTr("8K")
-                    visible: false
-
-                    onClicked: {
-                        selectEnable = false;
-                        SettingsManager.setLocalVideoResolution(SettingsStatus.VR_8K);
-                        clickTimer.restart();
+                        if (checked)
+                            SettingsManager.setLocalVideoResolution(SettingsStatus.VR_MAX);
+                        else
+                            SettingsManager.setLocalVideoResolution(SettingsStatus.VR_DEFAULT);
                     }
                 }
             }

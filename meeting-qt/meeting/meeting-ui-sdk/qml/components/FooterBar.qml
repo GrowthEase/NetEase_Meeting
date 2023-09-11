@@ -188,7 +188,7 @@ Rectangle {
                 }, function () {
                     mainWindow.width = defaultWindowWidth;
                     meetingManager.leaveMeeting(true);
-                });
+                }, function () {});
         }
     }
     Connections {

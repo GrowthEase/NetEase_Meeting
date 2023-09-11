@@ -276,8 +276,8 @@
         <translation type="vanished">消息发送失败</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="479"/>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="508"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="480"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="509"/>
         <source>Connection is disconnect!</source>
         <translation>聊天室断开</translation>
     </message>
@@ -302,48 +302,48 @@
         <translation>无法发送空消息</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="397"/>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="402"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="398"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="403"/>
         <source>image files</source>
         <translation>图片文件</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="398"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="399"/>
         <source>all files</source>
         <translation>文件</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="399"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="400"/>
         <source>audio files</source>
         <translation>音频文件</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="400"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="401"/>
         <source>video files</source>
         <translation>视频文件</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="401"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="402"/>
         <source>office files</source>
         <translation>office文件</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="403"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="404"/>
         <source>zip files</source>
         <translation>压缩文件</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="404"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="405"/>
         <source>pdf files</source>
         <translation>PDF文件</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="405"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="406"/>
         <source>text files</source>
         <translation>文本文件</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="406"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="407"/>
         <source>pack files</source>
         <translation>安装包文件</translation>
     </message>
@@ -359,12 +359,12 @@
 <context>
     <name>CustomDialog</name>
     <message>
-        <location filename="qml/components/CustomDialog.qml" line="31"/>
+        <location filename="qml/components/CustomDialog.qml" line="10"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
     <message>
-        <location filename="qml/components/CustomDialog.qml" line="30"/>
+        <location filename="qml/components/CustomDialog.qml" line="9"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
@@ -377,12 +377,12 @@
         <translation>结束会议</translation>
     </message>
     <message>
-        <location filename="qml/components/CustomDialogEx.qml" line="112"/>
+        <location filename="qml/components/CustomDialogEx.qml" line="114"/>
         <source>Leave</source>
         <translation>离开会议</translation>
     </message>
     <message>
-        <location filename="qml/components/CustomDialogEx.qml" line="138"/>
+        <location filename="qml/components/CustomDialogEx.qml" line="143"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
@@ -642,12 +642,12 @@
 <context>
     <name>GalleryPage</name>
     <message>
-        <location filename="qml/GalleryPage.qml" line="242"/>
+        <location filename="qml/GalleryPage.qml" line="243"/>
         <source>Screen Record Permission</source>
         <translation>开启屏幕录制权限</translation>
     </message>
     <message>
-        <location filename="qml/GalleryPage.qml" line="243"/>
+        <location filename="qml/GalleryPage.qml" line="244"/>
         <source>Due to the security control of MacOS system, it is necessary to turn on the system screen recording permission before starting to share the screen%1Open System Preferences &gt; Security and privacy grant access</source>
         <translation>由于 macOS 系统安全控制，开始共享屏幕之前需要先开启系统屏幕录制权限%1打开 系统偏好设置 &gt; 安全性与隐私 授予访问权限</translation>
     </message>
@@ -1152,44 +1152,43 @@
 <context>
     <name>MainPanel</name>
     <message>
-        <location filename="qml/MainPanel.qml" line="690"/>
+        <location filename="qml/MainPanel.qml" line="695"/>
         <source>Speaking: </source>
         <translation>正在讲话：</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="839"/>
+        <location filename="qml/MainPanel.qml" line="844"/>
         <source>Cancel HandsUp</source>
         <translation>取消举手</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="840"/>
+        <location filename="qml/MainPanel.qml" line="845"/>
         <source>are you sure to cancel hands up</source>
         <translation>是否确定取消举手</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1038"/>
+        <location filename="qml/MainPanel.qml" line="1043"/>
         <source>chatroom</source>
         <translation>聊天</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1087"/>
+        <location filename="qml/MainPanel.qml" line="1092"/>
         <source>new message</source>
         <translation>新消息</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1180"/>
+        <location filename="qml/MainPanel.qml" line="1185"/>
         <source>Input a message and press Enter to send it...</source>
         <translation>请输入消息，并按enter键发送...</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1138"/>
+        <location filename="qml/MainPanel.qml" line="1143"/>
         <source>can not send empty message</source>
         <translation>无法发送空消息</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1337"/>
         <source>Network has been disconnected, trying to reconnect.</source>
-        <translation>网络已断开，正在尝试重新连接...</translation>
+        <translation type="vanished">网络已断开，正在尝试重新连接...</translation>
     </message>
     <message>
         <source>Meeting has been more than 24 hours.</source>
@@ -1204,17 +1203,17 @@
         <translation type="vanished">当前扬声器设备：[%1]</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1733"/>
+        <location filename="qml/MainPanel.qml" line="1785"/>
         <source>You have turned on all mute</source>
         <translation>您已经开启了全体静音</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1735"/>
+        <location filename="qml/MainPanel.qml" line="1787"/>
         <source>You have turned off all mute</source>
         <translation>您已经取消了全体静音</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1738"/>
+        <location filename="qml/MainPanel.qml" line="1790"/>
         <source>This meeting has been turned on all mute by host</source>
         <translation>主持人设置了全体静音</translation>
     </message>
@@ -1223,12 +1222,12 @@
         <translation type="vanished">主持人取消了全体静音</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1557"/>
+        <location filename="qml/MainPanel.qml" line="1582"/>
         <source>You have been locked this meeting</source>
         <translation>会议已锁定，新参会者将无法加入会议</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1559"/>
+        <location filename="qml/MainPanel.qml" line="1584"/>
         <source>You have been unlocked this meeting</source>
         <translation>会议已解锁，新参会者将可以加入会议</translation>
     </message>
@@ -1241,22 +1240,22 @@
         <translation type="vanished">会议已解锁，新参会者将可以加入会议</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1490"/>
+        <location filename="qml/MainPanel.qml" line="1515"/>
         <source>Current record device &quot;[%1]&quot;</source>
         <translation>当前麦克风设备是 &quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1486"/>
+        <location filename="qml/MainPanel.qml" line="1511"/>
         <source>Current playout device &quot;[%1]&quot;</source>
         <translation>当前扬声器设备是 &quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1573"/>
+        <location filename="qml/MainPanel.qml" line="1598"/>
         <source>Meeting has been finished</source>
         <translation>会议已经结束</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1666"/>
+        <location filename="qml/MainPanel.qml" line="1696"/>
         <source>Failed to join meeting</source>
         <translation>加入会议失败</translation>
     </message>
@@ -1265,74 +1264,74 @@
         <translation type="vanished">聊天室断开</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="218"/>
-        <location filename="qml/MainPanel.qml" line="837"/>
-        <location filename="qml/MainPanel.qml" line="855"/>
-        <location filename="qml/MainPanel.qml" line="1498"/>
-        <location filename="qml/MainPanel.qml" line="1851"/>
-        <location filename="qml/MainPanel.qml" line="1937"/>
-        <location filename="qml/MainPanel.qml" line="2239"/>
-        <location filename="qml/MainPanel.qml" line="2273"/>
+        <location filename="qml/MainPanel.qml" line="222"/>
+        <location filename="qml/MainPanel.qml" line="842"/>
+        <location filename="qml/MainPanel.qml" line="860"/>
+        <location filename="qml/MainPanel.qml" line="1523"/>
+        <location filename="qml/MainPanel.qml" line="1910"/>
+        <location filename="qml/MainPanel.qml" line="1996"/>
+        <location filename="qml/MainPanel.qml" line="2312"/>
+        <location filename="qml/MainPanel.qml" line="2346"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="823"/>
-        <location filename="qml/MainPanel.qml" line="859"/>
-        <location filename="qml/MainPanel.qml" line="1395"/>
-        <location filename="qml/MainPanel.qml" line="1678"/>
-        <location filename="qml/MainPanel.qml" line="1962"/>
-        <location filename="qml/MainPanel.qml" line="1986"/>
-        <location filename="qml/MainPanel.qml" line="2000"/>
-        <location filename="qml/MainPanel.qml" line="2012"/>
-        <location filename="qml/MainPanel.qml" line="2016"/>
-        <location filename="qml/MainPanel.qml" line="2028"/>
-        <location filename="qml/MainPanel.qml" line="2074"/>
+        <location filename="qml/MainPanel.qml" line="828"/>
+        <location filename="qml/MainPanel.qml" line="864"/>
+        <location filename="qml/MainPanel.qml" line="1420"/>
+        <location filename="qml/MainPanel.qml" line="1718"/>
+        <location filename="qml/MainPanel.qml" line="2035"/>
+        <location filename="qml/MainPanel.qml" line="2059"/>
+        <location filename="qml/MainPanel.qml" line="2073"/>
+        <location filename="qml/MainPanel.qml" line="2085"/>
+        <location filename="qml/MainPanel.qml" line="2089"/>
+        <location filename="qml/MainPanel.qml" line="2101"/>
+        <location filename="qml/MainPanel.qml" line="2147"/>
         <source>HandsUp</source>
         <translation>举手中</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="221"/>
-        <location filename="qml/MainPanel.qml" line="1845"/>
-        <location filename="qml/MainPanel.qml" line="1930"/>
+        <location filename="qml/MainPanel.qml" line="225"/>
+        <location filename="qml/MainPanel.qml" line="1904"/>
+        <location filename="qml/MainPanel.qml" line="1989"/>
         <source>Mute all</source>
         <translation>全体静音</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="219"/>
+        <location filename="qml/MainPanel.qml" line="223"/>
         <source>HandsUpRaise</source>
         <oldsource>HandsUping</oldsource>
         <translation>申请举手</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="220"/>
+        <location filename="qml/MainPanel.qml" line="224"/>
         <source>This meeting has been turned on all mute by host,you can hands up to speak</source>
         <translation>主持人已将全体静音，您可以举手申请发言</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="333"/>
+        <location filename="qml/MainPanel.qml" line="337"/>
         <source>Please enter password</source>
         <oldsource>Please enter 6-digit password</oldsource>
         <translation>请输入密码</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="347"/>
+        <location filename="qml/MainPanel.qml" line="351"/>
         <source>Password Error</source>
         <translation>会议密码错误</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="364"/>
+        <location filename="qml/MainPanel.qml" line="368"/>
         <source>Meeting Password</source>
         <oldsource>Meetiing Password</oldsource>
         <translation>会议密码</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="363"/>
+        <location filename="qml/MainPanel.qml" line="367"/>
         <source>Join Meeting</source>
         <translation>加入会议</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="614"/>
+        <location filename="qml/MainPanel.qml" line="619"/>
         <source>recording</source>
         <translation>录制中</translation>
     </message>
@@ -1341,68 +1340,68 @@
         <translation type="vanished">会议录制中</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1724"/>
+        <location filename="qml/MainPanel.qml" line="1776"/>
         <source>modify nickname success</source>
         <translation>昵称修改成功</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1726"/>
+        <location filename="qml/MainPanel.qml" line="1778"/>
         <source>modify nickname fail</source>
         <translation>昵称修改失败</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1823"/>
+        <location filename="qml/MainPanel.qml" line="1882"/>
         <source>You have been muted by host</source>
         <translation>您已被静音</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="838"/>
-        <location filename="qml/MainPanel.qml" line="1497"/>
-        <location filename="qml/MainPanel.qml" line="1851"/>
-        <location filename="qml/MainPanel.qml" line="1937"/>
-        <location filename="qml/MainPanel.qml" line="2238"/>
-        <location filename="qml/MainPanel.qml" line="2272"/>
+        <location filename="qml/MainPanel.qml" line="843"/>
+        <location filename="qml/MainPanel.qml" line="1522"/>
+        <location filename="qml/MainPanel.qml" line="1910"/>
+        <location filename="qml/MainPanel.qml" line="1996"/>
+        <location filename="qml/MainPanel.qml" line="2311"/>
+        <location filename="qml/MainPanel.qml" line="2345"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="589"/>
+        <location filename="qml/MainPanel.qml" line="594"/>
         <source>living</source>
         <translation>直播中</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1493"/>
+        <location filename="qml/MainPanel.qml" line="1518"/>
         <source>It is detected that you are speaking, if you need to speak,
  please click the &quot;Unmute&quot; button and speak again</source>
         <translation>检测到您正在讲话，如需发言，请点击“解除静音”按钮后再次发言</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1499"/>
+        <location filename="qml/MainPanel.qml" line="1524"/>
         <source>Select the audio output device</source>
         <translation>选择音频输出设备</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1500"/>
+        <location filename="qml/MainPanel.qml" line="1525"/>
         <source>The screen is being cast. Do you want to output audio through the large screen?</source>
         <translation>检测到您可能在投屏，需要切换音频输出到投屏设备吗？</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1748"/>
+        <location filename="qml/MainPanel.qml" line="1800"/>
         <source>You have turned on all mute video</source>
         <translation>你已经开启了全体关闭视频</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1750"/>
+        <location filename="qml/MainPanel.qml" line="1802"/>
         <source>You have turned off all mute video</source>
         <translation>您已经取消了全体关闭视频</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1753"/>
+        <location filename="qml/MainPanel.qml" line="1805"/>
         <source>This meeting has been turned on all mute video by host</source>
         <translation>主持人设置了全体关闭视频</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1927"/>
+        <location filename="qml/MainPanel.qml" line="1986"/>
         <source>Mute all Video</source>
         <translation>关闭全体视频</translation>
     </message>
@@ -1411,17 +1410,17 @@
         <translation type="vanished">主持人已将全体关闭视频，您可以举手申请打开视频</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1851"/>
+        <location filename="qml/MainPanel.qml" line="1910"/>
         <source>Open your microphone</source>
         <translation>打开麦克风</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1851"/>
+        <location filename="qml/MainPanel.qml" line="1910"/>
         <source>The host applies to open your microphone, do you agree.</source>
         <translation>主持人请求重新打开您的麦克风，请确认是否打开？</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1953"/>
+        <location filename="qml/MainPanel.qml" line="2026"/>
         <source>Hands raised up, please wait host handle.</source>
         <translation>举手成功，等待主持人处理</translation>
     </message>
@@ -1438,154 +1437,193 @@
         <translation type="vanished">(%1)</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1998"/>
+        <location filename="qml/MainPanel.qml" line="2071"/>
         <source>the host have refused your handsup request</source>
         <translation>主持人已将您的手放下</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1862"/>
+        <location filename="qml/MainPanel.qml" line="1921"/>
         <source>you have been ummute bt most,you can speak freely.</source>
         <translation>主持人已将您解除静音，你可以自由发言</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="923"/>
+        <location filename="qml/MainPanel.qml" line="928"/>
         <source>unmute</source>
         <translation>暂时取消静音</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1450"/>
+        <location filename="qml/MainPanel.qml" line="1361"/>
+        <source>Disconnected, trying to reconnect.</source>
+        <translation>网络已断开，正在尝试重新连接...</translation>
+    </message>
+    <message>
+        <location filename="qml/MainPanel.qml" line="1475"/>
         <source>image files</source>
         <translation>图片文件</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1450"/>
+        <location filename="qml/MainPanel.qml" line="1475"/>
         <source>all files</source>
         <translation>文件</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1450"/>
+        <location filename="qml/MainPanel.qml" line="1475"/>
         <source>audio files</source>
         <translation>音频文件</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1450"/>
+        <location filename="qml/MainPanel.qml" line="1475"/>
         <source>video files</source>
         <translation>视频文件</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1450"/>
+        <location filename="qml/MainPanel.qml" line="1475"/>
         <source>office files</source>
         <translation>office文件</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1450"/>
+        <location filename="qml/MainPanel.qml" line="1475"/>
         <source>zip files</source>
         <translation>压缩文件</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1450"/>
+        <location filename="qml/MainPanel.qml" line="1475"/>
         <source>pdf files</source>
         <translation>PDF文件</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1450"/>
+        <location filename="qml/MainPanel.qml" line="1475"/>
         <source>text files</source>
         <translation>文本文件</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1450"/>
+        <location filename="qml/MainPanel.qml" line="1475"/>
         <source>pack files</source>
         <translation>安装包文件</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1764"/>
-        <source>The meeting will close in &quot;[%1]&quot; minutes</source>
-        <translation>距离会议关闭仅剩%1分钟！</translation>
+        <location filename="qml/MainPanel.qml" line="1700"/>
+        <location filename="qml/MainPanel.qml" line="1740"/>
+        <source>Bad network</source>
+        <translation>网络异常</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1812"/>
+        <location filename="qml/MainPanel.qml" line="1700"/>
+        <location filename="qml/MainPanel.qml" line="1740"/>
+        <source>Network has been disconnected, check your network and rejoin please.</source>
+        <translation>网络已断开，请检查您的网络情况，或尝试重新入会</translation>
+    </message>
+    <message>
+        <location filename="qml/MainPanel.qml" line="1704"/>
+        <location filename="qml/MainPanel.qml" line="1744"/>
+        <source>Leave</source>
+        <translation>离开会议</translation>
+    </message>
+    <message>
+        <location filename="qml/MainPanel.qml" line="1704"/>
+        <location filename="qml/MainPanel.qml" line="1744"/>
+        <source>Rejoin</source>
+        <translation>重新入会</translation>
+    </message>
+    <message>
+        <location filename="qml/MainPanel.qml" line="1816"/>
+        <source>Meeting will close in %1 min.</source>
+        <translation>距离会议关闭仅剩 %1 分钟！</translation>
+    </message>
+    <message>
+        <location filename="qml/MainPanel.qml" line="1871"/>
         <source>Microphone Permission</source>
         <translation>开启麦克风权限</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1813"/>
+        <location filename="qml/MainPanel.qml" line="1872"/>
         <source>Due to the security control of MacOS system, it is necessary to turn on the system Microphone permission before open Microphone%1Open System Preferences &gt; Security and privacy grant access</source>
         <translation>由于 macOS 系统安全控制，开启麦克风之前需要先开启系统麦克风权限%1打开 系统偏好设置 &gt; 安全性与隐私 授予访问权限</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1908"/>
+        <location filename="qml/MainPanel.qml" line="1967"/>
         <source>Your camera has been disabled by the host</source>
         <translation>您已被停止视频</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1937"/>
+        <location filename="qml/MainPanel.qml" line="1996"/>
         <source>Open your camera</source>
         <translation>打开摄像头</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1937"/>
+        <location filename="qml/MainPanel.qml" line="1996"/>
         <source>The host applies to open your video, do you agree.</source>
         <translation>主持人请求重新打开您的摄像头，请确认是否打开？</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1881"/>
+        <location filename="qml/MainPanel.qml" line="1940"/>
         <source>You have been set as active speaker.</source>
         <translation>您被设置为焦点视频</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1883"/>
+        <location filename="qml/MainPanel.qml" line="1942"/>
         <source>You have been unset of active speaker.</source>
         <translation>您已被取消焦点视频</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1895"/>
+        <location filename="qml/MainPanel.qml" line="1954"/>
         <source>Camera Permission</source>
         <translation>开启摄像头权限</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1896"/>
+        <location filename="qml/MainPanel.qml" line="1955"/>
         <source>Due to the security control of MacOS system, it is necessary to turn on the system Camera permission before open Camera%1Open System Preferences &gt; Security and privacy grant access</source>
         <translation>由于 macOS 系统安全控制，开启摄像头之前需要先开启系统摄像头权限%1打开 系统偏好设置 &gt; 安全性与隐私 授予访问权限</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2123"/>
+        <location filename="qml/MainPanel.qml" line="2015"/>
+        <source>Network abnormality, please check your network.</source>
+        <translation>网络异常，请检查您的网络.</translation>
+    </message>
+    <message>
+        <location filename="qml/MainPanel.qml" line="2196"/>
         <source>%1 joined the meeting</source>
         <translation>%1 加入会议</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2127"/>
+        <location filename="qml/MainPanel.qml" line="2200"/>
         <source>%1 left from the meeting</source>
         <translation>%1 离开会议</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2052"/>
+        <location filename="qml/MainPanel.qml" line="2125"/>
         <source>You have been set as host</source>
         <translation>您已成为主持人</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2080"/>
+        <location filename="qml/MainPanel.qml" line="2153"/>
         <source>You have been set as manager</source>
         <translation>您已被设为联席主持人</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2100"/>
+        <location filename="qml/MainPanel.qml" line="2173"/>
         <source>You have been unset as manager</source>
         <translation>您已被取消设为联席主持人</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2110"/>
+        <location filename="qml/MainPanel.qml" line="2183"/>
         <source>has been set as manager</source>
         <translatorcomment>已被取消联席主持人</translatorcomment>
         <translation>已设为联席主持人</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2112"/>
+        <location filename="qml/MainPanel.qml" line="2185"/>
         <source>has been unset as manager</source>
         <translation>已被取消联席主持人</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2232"/>
-        <location filename="qml/MainPanel.qml" line="2266"/>
+        <location filename="qml/MainPanel.qml" line="1691"/>
+        <source>Network reconnected.</source>
+        <translation>网络重连成功</translation>
+    </message>
+    <message>
+        <location filename="qml/MainPanel.qml" line="2305"/>
+        <location filename="qml/MainPanel.qml" line="2339"/>
         <source>End Meeting</source>
         <translation>结束会议</translation>
     </message>
@@ -1594,16 +1632,16 @@
         <translation type="vanished">如果您不想中断会议，请在离开前指定一名主持人。</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2240"/>
-        <location filename="qml/MainPanel.qml" line="2274"/>
+        <location filename="qml/MainPanel.qml" line="2313"/>
+        <location filename="qml/MainPanel.qml" line="2347"/>
         <source>Exit</source>
         <translation>离开会议</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2232"/>
-        <location filename="qml/MainPanel.qml" line="2241"/>
-        <location filename="qml/MainPanel.qml" line="2266"/>
-        <location filename="qml/MainPanel.qml" line="2275"/>
+        <location filename="qml/MainPanel.qml" line="2305"/>
+        <location filename="qml/MainPanel.qml" line="2314"/>
+        <location filename="qml/MainPanel.qml" line="2339"/>
+        <location filename="qml/MainPanel.qml" line="2348"/>
         <source>Do you want to quit this meeting?</source>
         <translation>你确定要离开这个会议吗？</translation>
     </message>
@@ -1612,18 +1650,18 @@
         <translation type="vanished">消息发送失败</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2366"/>
+        <location filename="qml/MainPanel.qml" line="2439"/>
         <source>trying to connect chatroom</source>
         <translation>正在尝试重新连接聊天室</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2371"/>
+        <location filename="qml/MainPanel.qml" line="2444"/>
         <source>trying to relogin chatroom</source>
         <translation>正在尝试重新登录聊天室</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2150"/>
-        <location filename="qml/MainPanel.qml" line="2414"/>
+        <location filename="qml/MainPanel.qml" line="2223"/>
+        <location filename="qml/MainPanel.qml" line="2487"/>
         <source>The host has terminated your sharing</source>
         <translation>主持人已终止了您的共享</translation>
     </message>
@@ -1639,18 +1677,15 @@
 <context>
     <name>MeetingManager</name>
     <message>
-        <location filename="manager/meeting_manager.cpp" line="101"/>
-        <location filename="manager/meeting_manager.cpp" line="139"/>
-        <source>Failed to connect to server, please try agine.</source>
-        <translation>连接服务器失败，请重试</translation>
-    </message>
-    <message>
-        <location filename="manager/meeting_manager.cpp" line="548"/>
+        <location filename="manager/meeting_manager.cpp" line="111"/>
+        <location filename="manager/meeting_manager.cpp" line="155"/>
+        <location filename="manager/meeting_manager.cpp" line="590"/>
         <source>Failed to connect to server, please try again.</source>
+        <oldsource>Failed to connect to server, please try agine.</oldsource>
         <translation>连接服务器失败，请重试</translation>
     </message>
     <message>
-        <location filename="manager/meeting_manager.cpp" line="551"/>
+        <location filename="manager/meeting_manager.cpp" line="593"/>
         <source>The number of people using this function has exceeded the limit.</source>
         <translation>该功能允许的同时使用人数达到上限</translation>
     </message>
@@ -1758,7 +1793,7 @@
 <context>
     <name>MembersManager</name>
     <message>
-        <location filename="manager/meeting/members_manager.cpp" line="285"/>
+        <location filename="manager/meeting/members_manager.cpp" line="288"/>
         <source>The assigned role exceeds the number limit</source>
         <translation>分配角色超过人数限制</translation>
     </message>
@@ -2092,15 +2127,15 @@
     <name>NEMeetingServiceProcHandlerIMP</name>
     <message>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="70"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="766"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="751"/>
         <source>the %1 of the %2 and the %3 cannot be duplicated</source>
         <translation>%2和%3中的%1不能重复</translation>
     </message>
     <message>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="73"/>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="92"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="769"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="788"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="754"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="773"/>
         <source>%1 cannot exceed %2 items</source>
         <translation>%1的菜单不能超过%2个</translation>
     </message>
@@ -2111,37 +2146,37 @@
     </message>
     <message>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="79"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="775"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="760"/>
         <source>%1 can not add %2, %3, %4, %5</source>
         <translation>%1中不能添加%2，%3，%4，%5</translation>
     </message>
     <message>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="58"/>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="293"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="754"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="739"/>
         <source>Frequent operation, please try again later</source>
         <translation>操作过于频繁，请稍后重试</translation>
     </message>
     <message>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="76"/>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="95"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="772"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="791"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="757"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="776"/>
         <source>%1 in %2 cannot be less than %3</source>
         <translation>%2中的%1不能小于%3</translation>
     </message>
     <message>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="83"/>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="98"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="764"/>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="779"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="794"/>
         <source>%1 or %2 in %3 is invalid</source>
         <oldsource>title or image in %1 is invalid</oldsource>
         <translation>%3中的%1或者%2无效</translation>
     </message>
     <message>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="88"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="784"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="769"/>
         <source>%1 in %2 cannot be duplicated</source>
         <translation>%2中的%1不能重复</translation>
     </message>
@@ -2153,14 +2188,14 @@
     </message>
     <message>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="116"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="801"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="786"/>
         <source>Invalid params:</source>
         <translation>无效参数：</translation>
     </message>
     <message>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="134"/>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="261"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="818"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="803"/>
         <source>The last meeting is not end yet.</source>
         <translation>上一次会议还在进行中</translation>
     </message>
@@ -2176,27 +2211,27 @@
         <translation>当前未在会议中</translation>
     </message>
     <message>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="625"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="624"/>
         <source>joinTimeoutTimer</source>
         <translation>Join room timeout</translation>
     </message>
     <message>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="627"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="626"/>
         <source>kReasonRoomNotExist</source>
         <translation>Room not exists</translation>
     </message>
     <message>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="629"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="628"/>
         <source>kReasonSyncDataError</source>
         <translation>Failed to sync data</translation>
     </message>
     <message>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="631"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="630"/>
         <source>kReasonRtcInitError</source>
         <translation>Failed to init SDK</translation>
     </message>
     <message>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="633"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="632"/>
         <source>kReasonJoinChannelError</source>
         <translation>Failed to join channel</translation>
     </message>
@@ -2267,32 +2302,32 @@
 <context>
     <name>NetWorkQualityInformation</name>
     <message>
-        <location filename="qml/components/NetWorkQualityInformation.qml" line="72"/>
+        <location filename="qml/components/NetWorkQualityInformation.qml" line="77"/>
+        <location filename="qml/components/NetWorkQualityInformation.qml" line="83"/>
         <source>The network connection is good</source>
         <translation>网络连接良好</translation>
     </message>
     <message>
-        <location filename="qml/components/NetWorkQualityInformation.qml" line="74"/>
+        <location filename="qml/components/NetWorkQualityInformation.qml" line="79"/>
         <source>The network connection is general</source>
         <translation>网络连接一般</translation>
     </message>
     <message>
-        <location filename="qml/components/NetWorkQualityInformation.qml" line="76"/>
+        <location filename="qml/components/NetWorkQualityInformation.qml" line="81"/>
         <source>The network connection is poor</source>
         <translation>网络连接较差</translation>
     </message>
     <message>
-        <location filename="qml/components/NetWorkQualityInformation.qml" line="78"/>
         <source>The network connection is unknown</source>
-        <translation>网络连接未知</translation>
+        <translation type="vanished">网络连接未知</translation>
     </message>
     <message>
-        <location filename="qml/components/NetWorkQualityInformation.qml" line="89"/>
+        <location filename="qml/components/NetWorkQualityInformation.qml" line="93"/>
         <source>Delay:</source>
         <translation>延迟：</translation>
     </message>
     <message>
-        <location filename="qml/components/NetWorkQualityInformation.qml" line="103"/>
+        <location filename="qml/components/NetWorkQualityInformation.qml" line="108"/>
         <source>Packet Loss:</source>
         <translation>丢包率：</translation>
     </message>
@@ -2300,22 +2335,22 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="listeners/meeting_service_listener.cpp" line="436"/>
+        <location filename="listeners/meeting_service_listener.cpp" line="441"/>
         <source>Background image not exist.</source>
         <translation>自定义背景图片不存在</translation>
     </message>
     <message>
-        <location filename="listeners/meeting_service_listener.cpp" line="439"/>
+        <location filename="listeners/meeting_service_listener.cpp" line="444"/>
         <source>Background image format not supported.</source>
         <translation>自定义背景图片的图片格式无效</translation>
     </message>
     <message>
-        <location filename="listeners/meeting_service_listener.cpp" line="442"/>
+        <location filename="listeners/meeting_service_listener.cpp" line="447"/>
         <source>Background color format not supported.</source>
         <translation>自定义背景颜色的颜色格式无效</translation>
     </message>
     <message>
-        <location filename="listeners/meeting_service_listener.cpp" line="445"/>
+        <location filename="listeners/meeting_service_listener.cpp" line="450"/>
         <source>Device not supported.</source>
         <translation>该设备不支持使用虚拟背景</translation>
     </message>
@@ -2399,22 +2434,22 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
 <context>
     <name>SSToolbar</name>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="210"/>
+        <location filename="qml/share/SSToolbar.qml" line="262"/>
         <source>The share has been suspended, please restore the window</source>
         <translation>共享已暂停，请将窗口置于最上方</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="210"/>
+        <location filename="qml/share/SSToolbar.qml" line="262"/>
         <source>The share has been suspended</source>
         <translation>共享已暂停</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="306"/>
+        <location filename="qml/share/SSToolbar.qml" line="354"/>
         <source>Meeting ID: </source>
         <translation>会议 ID：</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="386"/>
+        <location filename="qml/share/SSToolbar.qml" line="430"/>
         <source>Meeting ID</source>
         <translation>会议 ID：</translation>
     </message>
@@ -2455,8 +2490,8 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
         <translation type="vanished">聊天</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="437"/>
-        <location filename="qml/share/SSToolbar.qml" line="463"/>
+        <location filename="qml/share/SSToolbar.qml" line="477"/>
+        <location filename="qml/share/SSToolbar.qml" line="505"/>
         <source>End</source>
         <translation>结束共享</translation>
     </message>
@@ -2465,12 +2500,12 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
         <translation type="vanished">取消</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="681"/>
+        <location filename="qml/share/SSToolbar.qml" line="787"/>
         <source>%1 joined the meeting</source>
         <translation>%1 加入会议</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="688"/>
+        <location filename="qml/share/SSToolbar.qml" line="792"/>
         <source>%1 left from the meeting</source>
         <translation>%1 离开会议</translation>
     </message>
@@ -2480,87 +2515,87 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
         <translation type="vanished">(%1)</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="716"/>
+        <location filename="qml/share/SSToolbar.qml" line="754"/>
         <source>You have been set as host</source>
         <translation>您已成为主持人</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="725"/>
+        <location filename="qml/share/SSToolbar.qml" line="762"/>
         <source>You have been set as Manager</source>
         <translation>您已被设为联席主持人</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="745"/>
+        <location filename="qml/share/SSToolbar.qml" line="780"/>
         <source>You have been unset as manager</source>
         <translation>您已被取消设为联席主持人</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="800"/>
+        <location filename="qml/share/SSToolbar.qml" line="808"/>
         <source>Current record device &quot;[%1]&quot;</source>
         <translation>当前麦克风设备是 &quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="807"/>
+        <location filename="qml/share/SSToolbar.qml" line="804"/>
         <source>Current playout device &quot;[%1]&quot;</source>
         <translation>当前扬声器设备是 &quot;%1&quot;</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="816"/>
+        <location filename="qml/share/SSToolbar.qml" line="812"/>
         <source>Select the audio output device</source>
         <translation>选择音频输出设备</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="816"/>
+        <location filename="qml/share/SSToolbar.qml" line="812"/>
         <source>The screen is being cast. Do you want to output audio through the large screen?</source>
         <translation>检测到您可能在投屏，需要切换音频输出到投屏设备吗？</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="879"/>
+        <location filename="qml/share/SSToolbar.qml" line="878"/>
         <source>You have been muted by host</source>
         <translation>您已被静音</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="887"/>
+        <location filename="qml/share/SSToolbar.qml" line="882"/>
         <source>Open your microphone</source>
         <translation>打开麦克风</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="887"/>
+        <location filename="qml/share/SSToolbar.qml" line="882"/>
         <source>The host applies to open your microphone, do you agree.</source>
         <translation>主持人请求重新打开您的麦克风，请确认是否打开？</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="905"/>
+        <location filename="qml/share/SSToolbar.qml" line="863"/>
         <source>Microphone Permission</source>
         <translation>开启麦克风权限</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="906"/>
+        <location filename="qml/share/SSToolbar.qml" line="864"/>
         <source>Due to the security control of MacOS system, it is necessary to turn on the system Microphone permission before open Microphone%1Open System Preferences &gt; Security and privacy grant access</source>
         <translation>由于 macOS 系统安全控制，开启麦克风之前需要先开启系统麦克风权限%1打开 系统偏好设置 &gt; 安全性与隐私 授予访问权限</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="928"/>
+        <location filename="qml/share/SSToolbar.qml" line="916"/>
         <source>Your camera has been disabled by the host</source>
         <translation>您已被停止视频</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="935"/>
+        <location filename="qml/share/SSToolbar.qml" line="920"/>
         <source>Open your camera</source>
         <translation>打开摄像头</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="935"/>
+        <location filename="qml/share/SSToolbar.qml" line="920"/>
         <source>The host applies to open your video, do you agree.</source>
         <translation>主持人请求重新打开您的摄像头，请确认是否打开？</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="953"/>
+        <location filename="qml/share/SSToolbar.qml" line="901"/>
         <source>Camera Permission</source>
         <translation>开启摄像头权限</translation>
     </message>
     <message>
-        <location filename="qml/share/SSToolbar.qml" line="954"/>
+        <location filename="qml/share/SSToolbar.qml" line="902"/>
         <source>Due to the security control of MacOS system, it is necessary to turn on the system Camera permission before open Camera%1Open System Preferences &gt; Security and privacy grant access</source>
         <translation>由于 macOS 系统安全控制，开启摄像头之前需要先开启系统摄像头权限%1打开 系统偏好设置 &gt; 安全性与隐私 授予访问权限</translation>
     </message>
@@ -2623,8 +2658,8 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
 <context>
     <name>ShareVideo</name>
     <message>
-        <location filename="qml/share/ShareVideo.qml" line="369"/>
-        <location filename="qml/share/ShareVideo.qml" line="376"/>
+        <location filename="qml/share/ShareVideo.qml" line="371"/>
+        <location filename="qml/share/ShareVideo.qml" line="378"/>
         <source>Speaking: </source>
         <translation>正在讲话：</translation>
     </message>
@@ -2766,45 +2801,41 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
         <translation>视频镜像</translation>
     </message>
     <message>
-        <location filename="qml/settings/VideoDevice.qml" line="156"/>
         <source>Remote resolution</source>
-        <translation>远端分辨率</translation>
+        <translation type="vanished">远端分辨率</translation>
     </message>
     <message>
-        <location filename="qml/settings/VideoDevice.qml" line="166"/>
-        <location filename="qml/settings/VideoDevice.qml" line="221"/>
         <source>Auto Mode</source>
-        <translation>自适应模式</translation>
+        <translation type="vanished">自适应模式</translation>
     </message>
     <message>
-        <location filename="qml/settings/VideoDevice.qml" line="183"/>
         <source>HD Mode</source>
+        <translation type="vanished">高清模式</translation>
+    </message>
+    <message>
+        <source>You can enable this option in professional scenarios that have high requirements on picture quality</source>
+        <translation type="vanished">在对于画质有较高要求的专业场景中，可以启用此选项</translation>
+    </message>
+    <message>
+        <source>Local resolution</source>
+        <translation type="vanished">本端分辨率</translation>
+    </message>
+    <message>
+        <location filename="qml/settings/VideoDevice.qml" line="149"/>
+        <source>HD mode</source>
         <translation>高清模式</translation>
     </message>
     <message>
-        <location filename="qml/settings/VideoDevice.qml" line="197"/>
-        <source>You can enable this option in professional scenarios that have high requirements on picture quality</source>
-        <translation>在对于画质有较高要求的专业场景中，可以启用此选项</translation>
-    </message>
-    <message>
-        <location filename="qml/settings/VideoDevice.qml" line="212"/>
-        <source>Local resolution</source>
-        <translation>本端分辨率</translation>
-    </message>
-    <message>
-        <location filename="qml/settings/VideoDevice.qml" line="234"/>
         <source>480P</source>
-        <translation>480P</translation>
+        <translation type="vanished">480P</translation>
     </message>
     <message>
-        <location filename="qml/settings/VideoDevice.qml" line="273"/>
         <source>4K</source>
-        <translation>4K</translation>
+        <translation type="vanished">4K</translation>
     </message>
     <message>
-        <location filename="qml/settings/VideoDevice.qml" line="287"/>
         <source>8K</source>
-        <translation>8K</translation>
+        <translation type="vanished">8K</translation>
     </message>
     <message>
         <source>The setting takes effect after the video is restarted</source>
@@ -2819,14 +2850,12 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
         <translation type="vanished">本次设置重新打开视频后生效</translation>
     </message>
     <message>
-        <location filename="qml/settings/VideoDevice.qml" line="247"/>
         <source>720P</source>
-        <translation>720P</translation>
+        <translation type="vanished">720P</translation>
     </message>
     <message>
-        <location filename="qml/settings/VideoDevice.qml" line="260"/>
         <source>1080P</source>
-        <translation>1080P</translation>
+        <translation type="vanished">1080P</translation>
     </message>
 </context>
 <context>
@@ -2891,12 +2920,12 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
 <context>
     <name>dialogManager</name>
     <message>
-        <location filename="qml/utils/dialogManager.js" line="26"/>
+        <location filename="qml/utils/dialogManager.js" line="28"/>
         <source>OK</source>
         <translation>确定</translation>
     </message>
     <message>
-        <location filename="qml/utils/dialogManager.js" line="26"/>
+        <location filename="qml/utils/dialogManager.js" line="28"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>

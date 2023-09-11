@@ -269,10 +269,17 @@ void NEMeetingSDKIMP::InvokeInit(const NEInitializeCallback& cb) {
     if (!initting_)
         initting_ = true;
 
-    if (ipc_server_ == nullptr) {
-        ipc_server_ = std::make_shared<NS_NIPCLIB::IPCServer>();
+    if (ipc_server_) {
+        ipc_server_->AttachInit(nullptr);
+        ipc_server_->AttachReady(nullptr);
+        ipc_server_->AttachReceiveData(nullptr);
+        ipc_server_->AttachClientClose(nullptr);
+        ipc_server_->AttachClose(nullptr);
+        ipc_server_->Close();
+        ipc_server_->Stop();
+        ipc_server_ = nullptr;
     }
-
+    ipc_server_ = std::make_shared<NS_NIPCLIB::IPCServer>();
     init_callback_ = std::move(cb);
     ipc_server_->AttachInit(
         NS_NIPCLIB::Bind(&NEMeetingSDKIMP::OnIPCServerInit, this, cb, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
@@ -571,6 +578,7 @@ void NEMeetingSDKIMP::OnIPCClosed() {
 void NEMeetingSDKIMP::OnIPCClientClosed() {
     if (exception_handler_ != nullptr) {
         if (notify_exception_ || initting_) {
+            initting_ = false;
             exception_handler_(NEException(NEExceptionCode::kUISDKDisconnect, "UI SDK disconnected, maybe the UI SDK crashed"));
         }
     }

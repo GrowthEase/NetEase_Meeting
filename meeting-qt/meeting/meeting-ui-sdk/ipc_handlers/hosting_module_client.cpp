@@ -196,6 +196,15 @@ bool HostingModuleClient::InitLocalEnviroment(int port) {
                     [](NEMeeting::Status status, int errorCode, const QString& errorMessage) {
                         YXLOG(Info) << "Connection meeting status changed, status: " << status << ", ext code: " << errorCode
                                     << ", error message: " << errorMessage.toStdString() << YXLOGEnd;
+                        if ((status == NEMeeting::MEETING_ENDED || status == NEMeeting::MEETING_DISCONNECTED) &&
+                            errorCode == kNERoomEndReasonDisconnectedFromRTC) {
+                            YXLOG(Info) << "[HostingModuleClient] Ignore meeting status changed notify, reason is RTC disconnected." << YXLOGEnd;
+                            return;
+                        }
+                        if (MeetingManager::getInstance()->reconnecting()) {
+                            YXLOG(Info) << "[HostingModuleClient] Ignore meeting status changed notify, reconnecting currently." << YXLOGEnd;
+                            return;
+                        }
                         if (status == NEMeeting::MEETING_DISCONNECTED || status == NEMeeting::MEETING_IDLE ||
                             status == NEMeeting::MEETING_CONNECTED || status == NEMeeting::MEETING_ENDED ||
                             status == NEMeeting::MEETING_MULTI_SPOT_LOGIN || status == NEMeeting::MEETING_CONNECTING ||
@@ -217,14 +226,16 @@ bool HostingModuleClient::InitLocalEnviroment(int port) {
                                     interface_status = MEETING_STATUS_DISCONNECTING;
                                     if (errorCode == kNERoomEndReasonKickOut)
                                         interface_code = MEETING_DISCONNECTING_REMOVED_BY_HOST;
-                                    else if (errorCode == kNERoomEndReasonCloseByMember)
+                                    else if (errorCode == kNERoomEndReasonCloseByMember || errorCode == kHttpResMeetingEnded)
                                         interface_code = MEETING_DISCONNECTING_CLOSED_BY_HOST;
                                     else if (errorCode == kNERoomEndReasonKickSelf)
                                         interface_code = MEETING_DISCONNECTING_REMOVED_BY_HOST;
-                                    //                                    else if (errorCode == kReasonAuthInfoExpired)
-                                    //                                        interface_code = MEETING_DISCONNECTING_AUTH_INFO_EXPIRED;
                                     else if (errorCode == kNERoomEndReasonUnKnown || errorCode == 30015)
                                         interface_code = MEETING_DISCONNECTING_BY_SERVER;
+                                    else if (errorCode == kHttpResNotExists)
+                                        interface_code = MEETING_DISCONNECTING_BY_MEETINGNOTEXIST;
+                                    else if (errorCode == kNERoomEndReasonEndOfLife)
+                                        interface_code = MEETING_DISCONNECTING_BY_END_OF_LIFE;
                                     break;
                                 case NEMeeting::MEETING_ENDED:
                                     interface_status = MEETING_STATUS_DISCONNECTING;

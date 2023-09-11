@@ -208,17 +208,20 @@ Rectangle {
             }
             Label {
                 horizontalAlignment: Text.AlignLeft
-                text: videoWidth.toString() + "x" + videoHeight.toString(); color: "#FFFFFF"; font.pixelSize: 12
+                text: videoWidth.toString() + "x" + videoHeight.toString() + (highQuality || authManager.authAccountId === accountId ? " - High Quality" : " - Low Quality");
+                color: "#FFFFFF"; font.pixelSize: 12
             }
             Label {
                 horizontalAlignment: Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter
-                text: videoFrameRate.toString() + " fps"; color: "#FFFFFF"; font.pixelSize: 12
+                text: videoFrameRate.toString() + " fps";
+                color: "#FFFFFF"; font.pixelSize: 12
             }
             Label {
                 horizontalAlignment: Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter
-                text: videoBitRate.toString() + " kbps"; color: "#FFFFFF"; font.pixelSize: 12
+                text: videoBitRate.toString() + " kbps";
+                color: "#FFFFFF"; font.pixelSize: 12
             }
             Row {
                 Layout.fillWidth: true

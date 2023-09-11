@@ -139,6 +139,7 @@ public slots:
 
 private:
     void pagingFocusView(quint32 pageSize, quint32 pageNumber);
+    void pagingSharingView(quint32 pageSize, quint32 pageNumber);
     void pagingWhiteboardView(quint32 pageSize, quint32 pageNumber);
     void pagingGalleryView(quint32 pageSize, quint32 pageNumber);
     void convertPropertiesToMember(const std::map<std::string, std::string>& properties, MemberInfo& info);

@@ -9,7 +9,7 @@
 	<key>CFBundleIconFile</key>
 	<string>macx.icns</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.netease.nmc.Meeting</string>
+	<string>com.netease.nmc.MeetingRoom</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>1.0</string>
 	<key>CFBundleName</key>

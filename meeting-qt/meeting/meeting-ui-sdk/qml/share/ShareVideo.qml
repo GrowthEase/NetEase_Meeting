@@ -303,7 +303,8 @@ Window {
                 id: prePageRect
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: videoList.top
-                color: Qt.rgba(255, 255, 255, 0.3)
+                color: "#000000"
+                opacity: 0.8
                 height: 14
                 visible: prePage && vidoeMouseArea.containsMouse
                 width: 50
@@ -328,7 +329,8 @@ Window {
                 id: nextPageRect
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
-                color: Qt.rgba(255, 255, 255, 0.3)
+                color: "#000000"
+                opacity: 0.8
                 height: 14
                 visible: nextPage && vidoeMouseArea.containsMouse
                 width: 50

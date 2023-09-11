@@ -543,14 +543,9 @@ void NEMeetingSDKManager::invokeStart(const QString& meetingId,
         options.noAudio = !audio;
         options.noVideo = !video;
         options.noCloudRecord = !enableRecord;
-        //        options.noWhiteboard = true;
-        //        options.noRename = true;
         options.meetingIdDisplayOption = kDisplayAll;
         options.audioAINSEnabled = m_bAudioAINSEnabled;
         options.noMuteAllVideo = false;
-        //        if(m_pAuthManager && m_pAuthManager->phoneNumber().isEmpty()) {
-        //            options.noSip = false;
-        //        }
         options.noSip = false;
         options.showMeetingRemainingTip = true;
 
@@ -999,11 +994,13 @@ void NEMeetingSDKManager::onMeetingStatusChangedUI(int status, int code) {
 }
 
 void NEMeetingSDKManager::onException(const NEException& exception) {
-    // if (m_bInitialized) {
-    YXLOG(Error) << "Received exception, error code: " << exception.ExceptionCode() << ", error message: " << exception.ExceptionMessage()
-                 << YXLOGEnd;
-    qApp->exit(0);
-    // }
+    if (m_bInitialized) {
+        YXLOG(Error) << "Received exception, error code: " << exception.ExceptionCode() << ", error message: " << exception.ExceptionMessage()
+                     << YXLOGEnd;
+        qApp->exit(0);
+    } else {
+        emit initializeSignal(-1, tr("Failed to initialize meeting SDK."));
+    }
 }
 
 QString NEMeetingSDKManager::neUsername() const {

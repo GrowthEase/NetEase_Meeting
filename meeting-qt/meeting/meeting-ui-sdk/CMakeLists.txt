@@ -48,11 +48,15 @@ endif ()
 
 list(REMOVE_ITEM MEETING_CLIENT_SOURCES ${MEETING_INVALID_SOURCES})
 
+find_program(QT_LUPDATE NAMES lupdate)
+find_program(QT_LRELEASE NAMES lrelease)
 if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/meeting-ui-sdk_zh_CN.qm)
-    find_program(QT_LUPDATE NAMES lupdate)
-    find_program(QT_LRELEASE NAMES lrelease)
     execute_process(COMMAND ${QT_LUPDATE} ${CMAKE_CURRENT_LIST_DIR} -ts meeting-ui-sdk_zh_CN.ts WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
     execute_process(COMMAND ${QT_LRELEASE} meeting-ui-sdk_zh_CN.ts WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
+endif ()
+if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/meeting-ui-sdk_ja_JP.qm)
+    execute_process(COMMAND ${QT_LUPDATE} ${CMAKE_CURRENT_LIST_DIR} -ts meeting-ui-sdk_ja_JP.ts WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
+    execute_process(COMMAND ${QT_LRELEASE} meeting-ui-sdk_ja_JP.ts WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
 endif ()
 
 file(GLOB_RECURSE MEETING_CLIENT_ASSETS ${CMAKE_BINARY_DIR}/lib/resource/*.*)
@@ -60,6 +64,7 @@ file(GLOB_RECURSE MEETING_CLIENT_CONFIG ${CMAKE_SOURCE_DIR}/meeting/bin/config/*
 file(GLOB_RECURSE MEETING_CLIENT_IMAGES ${CMAKE_SOURCE_DIR}/meeting/bin/image/*.*)
 file(GLOB MEETING_CLIENT_RESOURCES
     ${CMAKE_CURRENT_LIST_DIR}/meeting-ui-sdk_zh_CN.qm
+    ${CMAKE_CURRENT_LIST_DIR}/meeting-ui-sdk_ja_JP.qm
     ${CMAKE_SOURCE_DIR}/meeting/bin/rain.mp3
 )
 

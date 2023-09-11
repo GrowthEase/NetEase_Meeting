@@ -261,7 +261,10 @@ void MembersManager::getMembersPaging(quint32 pageSize, quint32 pageNumber) {
     } else if (isGalleryView()) {
         pagingGalleryView(pageSize, pageNumber);
     } else {
-        pagingFocusView(pageSize, pageNumber);
+        if (ShareManager::getInstance()->shareAccountId() == AuthManager::getInstance()->authAccountId())
+            pagingSharingView(pageSize, pageNumber);
+        else
+            pagingFocusView(pageSize, pageNumber);
     }
 }
 
@@ -380,6 +383,78 @@ void MembersManager::pagingFocusView(quint32 pageSize, quint32 pageNumber) {
         member[kMemberAudioHandsUpStatus] = member_item.handsupStatus;
         member[kMemberClientType] = member_item.clientType;
         member[kMemberCreatedAt] = member_item.createdAt;
+        pagedMembers.push_back(member);
+    }
+
+    QJsonObject primaryMember;
+    primaryMember[kMemberAccountId] = primaryMemberInfo.accountId;
+    primaryMember[kMemberNickname] = primaryMemberInfo.nickname;
+    primaryMember[kMemberAudioStatus] = primaryMemberInfo.audioStatus;
+    primaryMember[kMemberVideoStatus] = primaryMemberInfo.videoStatus;
+    primaryMember[kMemberSharingStatus] = primaryMemberInfo.sharing;
+    primaryMember[kMemberAudioHandsUpStatus] = primaryMemberInfo.handsupStatus;
+    primaryMember[kMemberClientType] = primaryMemberInfo.clientType;
+    primaryMember[kMemberCreatedAt] = primaryMemberInfo.createdAt;
+
+    YXLOG(Debug) << "-------------------------------------------------" << YXLOGEnd;
+    YXLOG(Debug) << "Focus view, primary member: " << primaryMemberInfo.accountId.toStdString() << YXLOGEnd;
+    for (int i = 0; i < pagedMembers.size(); i++) {
+        const QJsonObject& member = pagedMembers.at(i).toObject();
+        YXLOG(Debug) << "Secondary members: " << i << ", member info: " << member[kMemberAccountId].toString().toStdString() << YXLOGEnd;
+    }
+    YXLOG(Debug) << "-------------------------------------------------" << YXLOGEnd;
+
+    emit membersChanged(primaryMember, pagedMembers, m_currentPage, secondaryMembers.size());
+}
+
+void MembersManager::pagingSharingView(quint32 pageSize, quint32 pageNumber) {
+    QVector<MemberInfo> members = getMembersByRoleType();
+    if (members.count() == 0)
+        return;
+
+    MemberInfo primaryMemberInfo;
+    if (!getPrimaryMember(primaryMemberInfo)) {
+        return;
+    }
+
+    QVector<MemberInfo> secondaryMembers;
+    auto meetingInfo = MeetingManager::getInstance()->getMeetingInfo();
+    std::string strSharingAccountId = meetingInfo.screenSharingUserId;
+    auto authInfo = AuthManager::getInstance()->getAuthInfo();
+    secondaryMembers.push_back(primaryMemberInfo);
+    for (auto& member : members) {
+        if (member.accountId == primaryMemberInfo.accountId)
+            continue;
+        secondaryMembers.push_back(member);
+    }
+
+    uint32_t pageCount = (uint32_t)secondaryMembers.size() <= pageSize
+                             ? 1
+                             : (uint32_t)secondaryMembers.size() / pageSize + ((uint32_t)secondaryMembers.size() % pageSize == 0 ? 0 : 1);
+    m_currentPage = std::max(1, (int)(pageNumber > pageCount ? pageCount : pageNumber));
+    m_pageSize = pageSize;
+
+    QJsonArray pagedMembers;
+    quint32 begin = (m_currentPage - 1) * pageSize;
+    quint32 end = begin + pageSize > secondaryMembers.size() ? secondaryMembers.size() : begin + pageSize;
+    // 如果不是第一页，且当前页不足 pageSize，则取最后 pageSize 的成员
+    if (begin + pageSize > secondaryMembers.size() && m_currentPage > 1) {
+        begin = static_cast<quint32>(secondaryMembers.size()) - pageSize;
+        end = secondaryMembers.size();
+    }
+    YXLOG(Info) << "Get members from cache list: " << begin << " to " << end << ", current page: " << m_currentPage << ", page count: " << pageCount
+                << ", page size: " << m_pageSize << YXLOGEnd;
+    for (quint32 i = begin; i < end; i++) {
+        auto memberItem = secondaryMembers[i];
+        QJsonObject member;
+        member[kMemberAccountId] = memberItem.accountId;
+        member[kMemberNickname] = memberItem.nickname;
+        member[kMemberAudioStatus] = memberItem.audioStatus;
+        member[kMemberVideoStatus] = memberItem.videoStatus;
+        member[kMemberSharingStatus] = memberItem.sharing;
+        member[kMemberAudioHandsUpStatus] = memberItem.handsupStatus;
+        member[kMemberClientType] = memberItem.clientType;
+        member[kMemberCreatedAt] = memberItem.createdAt;
         pagedMembers.push_back(member);
     }
 
@@ -784,7 +859,7 @@ int MembersManager::handsUpCount() const {
 }
 
 void MembersManager::setHandsUpCount(int count) {
-    m_nHandsUpCount = count;
+    m_nHandsUpCount = count < 0 ? 0 : count;
     emit handsUpCountChange();
 }
 
@@ -831,19 +906,15 @@ void MembersManager::setHandsUpType(NEMeeting::HandsUpType type) {
 
 void MembersManager::onNetworkQuality(const std::string& accountId, NERoomRtcNetWorkQuality up, NERoomRtcNetWorkQuality down) {
     // 只通知当前登录的用户网络状况
-    if (AuthManager::getInstance()->authAccountId().toStdString() != accountId || kNERoomRtcNetworkQualityUnknown == up ||
-        kNERoomRtcNetworkQualityUnknown == down) {
+    if (AuthManager::getInstance()->authAccountId().toStdString() != accountId)
         return;
-    }
-
-    // YXLOG(Info) << "onNetworkQuality, accountId: " << accountId << ", up: " << (int)up << ", down: " << (int)down << YXLOGEnd;
+    if (up >= kNERoomRtcNetworkQualityBad || down >= kNERoomRtcNetworkQualityBad)
+        YXLOG(Info) << "Bad network quality, " << accountId << ", up: " << static_cast<int>(up) << ", down: " << static_cast<int>(down) << YXLOGEnd;
     auto nwt = netWorkQualityType(up, down);
     auto localMember = std::find_if(m_items.begin(), m_items.end(),
                                     [](const MemberInfo& it) { return it.accountId == AuthManager::getInstance()->authAccountId(); });
-    if (localMember != m_items.end()) {
+    if (localMember != m_items.end())
         localMember->netWorkQualityType = nwt;
-    }
-
     emit netWorkQualityTypeChanged(nwt);
 }
 

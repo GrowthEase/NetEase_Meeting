@@ -92,13 +92,23 @@ bool MeetingManager::createMeeting(const NS_I_NEM_SDK::NEStartMeetingParams& par
     m_noVideo = option.noVideo;
     m_noAudio = option.noAudio;
 
+    m_joinRoomParams.displayName = param.displayName;
+    m_joinRoomParams.meetingNum = param.meetingNum;
+    m_joinRoomParams.subject = param.subject;
+    m_joinRoomParams.tag = param.tag;
+    m_joinRoomParams.roleType = param.roleType;
+    m_joinRoomParams.password = param.password;
+    m_joinRoomParams.encryptionConfig = param.encryptionConfig;
+
+    m_joinRoomOptions = option;
+
     onConnecting();
     m_meetingController->startRoom(param, option, [=](int errorCode, const std::string& errorMessage) {
         if (errorCode == 0) {
         } else {
             QString qstrErrorMessage = QString::fromStdString(errorMessage);
             if (errorMessage == "kFailed_connect_server") {
-                qstrErrorMessage = tr("Failed to connect to server, please try agine.");
+                qstrErrorMessage = tr("Failed to connect to server, please try again.");
             }
             emit meetingStatusChanged(NEMeeting::MEETING_CONNECT_FAILED, errorCode, qstrErrorMessage);
             m_meetingStatus = NEMeeting::MEETING_IDLE;
@@ -121,6 +131,12 @@ void MeetingManager::joinMeeting(const QString& strPassword) {
     joinMeeting(m_joinRoomParams, m_joinRoomOptions, QVariant());
 }
 
+void MeetingManager::rejoinMeeting() {
+    setReconnecting(true);
+    setReconnectTimes(m_reconnectTimes + 1);
+    joinMeeting(m_joinRoomParams, m_joinRoomOptions, QVariant());
+}
+
 bool MeetingManager::joinMeeting(const nem_sdk_interface::NEJoinMeetingParams& param, const NERoomOptions& option, const QVariant& extraInfo) {
     m_joinRoomParams = param;
     m_joinRoomOptions = option;
@@ -128,7 +144,7 @@ bool MeetingManager::joinMeeting(const nem_sdk_interface::NEJoinMeetingParams& p
     m_noVideo = option.noVideo;
     m_noAudio = option.noAudio;
 
-    if (m_meetingStatus == NEMeeting::MEETING_IDLE) {
+    if (m_meetingStatus == NEMeeting::MEETING_IDLE || m_meetingStatus == NEMeeting::MEETING_DISCONNECTED) {
         onConnecting();
     }
     m_meetingController->joinRoom(
@@ -136,7 +152,17 @@ bool MeetingManager::joinMeeting(const nem_sdk_interface::NEJoinMeetingParams& p
         [=](int errorCode, const std::string& errorMessage) {
             QString qstrErrorMessage = QString::fromStdString(errorMessage);
             if (errorMessage == "kFailed_connect_server") {
-                qstrErrorMessage = tr("Failed to connect to server, please try agine.");
+                qstrErrorMessage = tr("Failed to connect to server, please try again.");
+            }
+            if (reconnectTimes() >= 4 || errorCode == kHttpBusinessResSuccess || errorCode == kHttpResNotExists ||
+                errorCode == kHttpResMeetingEnded) {
+                if (reconnecting()) {
+                    bool reconnectTimesExceed = reconnectTimes() >= 4;
+                    setReconnecting(false);
+                    setReconnectTimes(0);
+                    if ((errorCode == kHttpResNotExists || errorCode == kHttpResMeetingEnded) || reconnectTimesExceed)
+                        emit meetingStatusChanged(NEMeeting::MEETING_DISCONNECTED, errorCode, qstrErrorMessage);
+                }
             }
             if (errorCode == 1020) {
                 if (m_joinTimeoutTimer.isActive())
@@ -214,10 +240,10 @@ void MeetingManager::onDisconnected(int reason) {
         GlobalManager::getInstance()->getMeetingEventReporter()->AddEvent(meeting_end_event_);
     }
     if (reason == kNERoomEndReasonLeaveBySelf) {
-        onRoomStatusChanged(NEMeeting::MEETING_ENDED, 0);
+        onRoomStatusChanged(NEMeeting::MEETING_ENDED, reason);
     } else if (reason == kNERoomEndReasonCloseByMember) {
         if (MembersManager::getInstance()->hostAccountId() == AuthManager::getInstance()->authAccountId()) {
-            onRoomStatusChanged(NEMeeting::MEETING_ENDED, 0);
+            onRoomStatusChanged(NEMeeting::MEETING_ENDED, reason);
         } else {
             onRoomStatusChanged(NEMeeting::MEETING_DISCONNECTED, reason);
         }
@@ -239,6 +265,7 @@ void MeetingManager::onReConnected() {
 }
 
 void MeetingManager::onReConnectFail() {
+    emit MembersManager::getInstance()->netWorkQualityTypeChanged(NEMeeting::NETWORKQUALITY_BAD);
     onRoomStatusChanged(NEMeeting::MEETING_RECONNECT_FAILED);
 }
 
@@ -448,8 +475,10 @@ void MeetingManager::onRoomStatusChanged(NEMeeting::Status status, int errorCode
             m_meetingController->resetRoomContext();
             bEnd = true;
             m_meetingStatus = status;
+
             emit meetingStatusChanged(m_meetingStatus, errorCode, "");
             emit roomStatusChanged(m_meetingStatus);
+
             m_nMaxCount = -1;
             setMeetingUniqueId("");
             setMeetingId("");
@@ -486,9 +515,15 @@ void MeetingManager::onRoomStatusChanged(NEMeeting::Status status, int errorCode
             if (FeedbackManager::getInstance()->isAudioDumping()) {
                 FeedbackManager::getInstance()->stopAudioDump();
             }
-            auto previewRoomContext = GlobalManager::getInstance()->getPreviewRoomContext();
-            if (previewRoomContext && getMeetingController()) {
+            auto* previewRoomContext = GlobalManager::getInstance()->getPreviewRoomContext();
+            if ((previewRoomContext != nullptr) && getMeetingController()) {
                 previewRoomContext->addPreviewRoomListener(getMeetingController()->getRoomServiceListener());
+            }
+
+            if ((status == NEMeeting::MEETING_ENDED || status == NEMeeting::MEETING_DISCONNECTED) &&
+                errorCode == kNERoomEndReasonDisconnectedFromRTC) {
+                YXLOG(Info) << "[MeetingManager] Ignore meeting status changed notify, reason is RTC disconnected." << YXLOGEnd;
+                return;
             }
         }
 
@@ -513,6 +548,13 @@ void MeetingManager::onRoomLockStatusChanged(bool isLock) {
     m_invoker.execute([=]() {
         setMeetingLocked(isLock);
         lockStatusNotify(isLock);
+    });
+}
+
+void MeetingManager::onRoomRemainingSecondsRenewed(quint64 remainingSeconds) {
+    m_invoker.execute([=]() {
+        setRemainingSeconds(remainingSeconds);
+        Q_EMIT remainingSecondsRenewed();
     });
 }
 
@@ -960,6 +1002,20 @@ void MeetingManager::setRtcState(const QJsonObject& newRtcState) {
         return;
     m_rtcState = newRtcState;
     emit rtcStateChanged();
+}
+
+void MeetingManager::setReconnecting(bool reconnecting) {
+    if (m_reconnecting != reconnecting) {
+        m_reconnecting = reconnecting;
+        emit reconnectingChanged();
+    }
+}
+
+void MeetingManager::setReconnectTimes(int reconnectTimes) {
+    if (m_reconnectTimes != reconnectTimes) {
+        m_reconnectTimes = reconnectTimes;
+        emit reconnectTimesChanged();
+    }
 }
 
 QString MeetingManager::meetingArchiveId() const {

@@ -757,19 +757,19 @@
         <translation>同时登陆设备数超过限制，已自动登出</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="475"/>
-        <location filename="qml/FrontPage.qml" line="488"/>
+        <location filename="qml/FrontPage.qml" line="478"/>
+        <location filename="qml/FrontPage.qml" line="491"/>
         <source>Join Meeting</source>
         <translation>加入会议</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="489"/>
+        <location filename="qml/FrontPage.qml" line="492"/>
         <source>The meeting is still in progress. Do you want to join directly?</source>
         <translation>这个会议还在进行中，你要直接加入吗？</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="495"/>
-        <location filename="qml/FrontPage.qml" line="497"/>
+        <location filename="qml/FrontPage.qml" line="498"/>
+        <location filename="qml/FrontPage.qml" line="500"/>
         <source>Failed to start meeting</source>
         <translation>创建会议失败</translation>
     </message>
@@ -791,32 +791,37 @@
         <translation>您已在会议中，请退出当前会议后重试</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="453"/>
+        <location filename="qml/FrontPage.qml" line="458"/>
         <source>The meeting does not exist</source>
         <translation>会议不存在</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="455"/>
+        <location filename="qml/FrontPage.qml" line="460"/>
+        <source>Meeting is closed because the meeting duration reached the upper limit.</source>
+        <translation>会议时长已达上限，会议关闭</translation>
+    </message>
+    <message>
+        <location filename="qml/FrontPage.qml" line="462"/>
         <source>Failed to synchronize meeting information</source>
         <translation>无法同步会议信息</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="457"/>
+        <location filename="qml/FrontPage.qml" line="464"/>
         <source>The RTC module fails to be initialized</source>
         <translation>音视频模块加载初始化失败</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="459"/>
+        <location filename="qml/FrontPage.qml" line="466"/>
         <source>Failed to join the channel of RTC</source>
         <translation>无法加入音视频频道</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="461"/>
+        <location filename="qml/FrontPage.qml" line="468"/>
         <source>Meeting timeout</source>
         <translation>会议超时</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="476"/>
+        <location filename="qml/FrontPage.qml" line="479"/>
         <source>It was detected that you exited abnormally last time, do you want to resume the meeting?</source>
         <translation>检测到您上次异常退出，是否要恢复会议？</translation>
     </message>
@@ -829,7 +834,7 @@
         <translation type="vanished">该会议已达人数上限</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="444"/>
+        <location filename="qml/FrontPage.qml" line="449"/>
         <source>This meeting has been ended</source>
         <translation>主持人结束了本场会议</translation>
     </message>
@@ -838,7 +843,7 @@
         <translation type="vanished">取消会议失败</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="442"/>
+        <location filename="qml/FrontPage.qml" line="447"/>
         <source>You have been removed from meeting by host</source>
         <translation>因被主持人移出或切换至其他设备，您已退出会议</translation>
     </message>
@@ -848,12 +853,12 @@
         <translation>即刻会议</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="446"/>
+        <location filename="qml/FrontPage.qml" line="451"/>
         <source>You have been discconected from server</source>
         <translation>您已从会议中断开连接</translation>
     </message>
     <message>
-        <location filename="qml/FrontPage.qml" line="450"/>
+        <location filename="qml/FrontPage.qml" line="455"/>
         <source>You have been kickout by other client</source>
         <translation>您的账号在其他位置登录</translation>
     </message>
@@ -1507,30 +1512,35 @@
         <translation type="vanished">请先登录网易会议</translation>
     </message>
     <message>
-        <location filename="modules/nemeeting_sdk_manager.cpp" line="571"/>
-        <location filename="modules/nemeeting_sdk_manager.cpp" line="683"/>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="566"/>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="678"/>
         <source>Feedback</source>
         <translation>意见反馈</translation>
     </message>
     <message>
-        <location filename="modules/nemeeting_sdk_manager.cpp" line="600"/>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="595"/>
         <source>Failed to connect to server, please try agine.</source>
         <oldsource>The network connection is abnormal, please try again later</oldsource>
         <translation>网络连接异常，请稍后重试</translation>
     </message>
     <message>
-        <location filename="modules/nemeeting_sdk_manager.cpp" line="761"/>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="756"/>
         <source>Enterprise Edition</source>
         <translation>企业版</translation>
     </message>
     <message>
-        <location filename="modules/nemeeting_sdk_manager.cpp" line="762"/>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="757"/>
         <source>Free Edition</source>
         <translation>免费版</translation>
     </message>
     <message>
-        <location filename="modules/nemeeting_sdk_manager.cpp" line="1184"/>
-        <location filename="modules/nemeeting_sdk_manager.cpp" line="1233"/>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="1002"/>
+        <source>Failed to initialize meeting SDK.</source>
+        <translation>初始化失败，请检查网络</translation>
+    </message>
+    <message>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="1181"/>
+        <location filename="modules/nemeeting_sdk_manager.cpp" line="1230"/>
         <source>Meeting duration too long!</source>
         <translation>会议持续时间过长</translation>
     </message>

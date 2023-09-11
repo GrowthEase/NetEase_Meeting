@@ -9,7 +9,10 @@
 #include <QtGlobal>
 #include "version.h"
 
+static const int32_t kHttpBusinessResSuccess = 0;
 static const int32_t kHttpResSuccess = 200;
+static const int32_t kHttpResNotExists = 404;
+static const int32_t kHttpResMeetingEnded = 3102;
 
 const QByteArray kHttpAppKey = "appKey";
 const QByteArray kHttpAppGroupName = "appGroupName";

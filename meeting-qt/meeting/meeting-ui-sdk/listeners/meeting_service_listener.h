@@ -39,58 +39,59 @@ public:
     NEInRoomServiceListener();
     ~NEInRoomServiceListener();
 
-    virtual void onMemberRoleChanged(const std::string& userUuid, const NERoomRole& beforeRole, const NERoomRole& afterRole) override;
-    virtual void onMemberJoinRoom(const std::vector<SharedMemberPtr>& members) override;
-    virtual void onMemberLeaveRoom(const std::vector<SharedMemberPtr>& members) override;
-    virtual void onRoomEnded(NERoomEndReason reason) override;
-    virtual void onMemberJoinRtcChannel(const std::vector<SharedMemberPtr>& members) override;
-    virtual void onMemberLeaveRtcChannel(const std::vector<SharedMemberPtr>& members) override;
-    virtual void onMemberJoinChatroom(const std::vector<SharedMemberPtr>& members) override;
-    virtual void onMemberLeaveChatroom(const std::vector<SharedMemberPtr>& members) override;
-    virtual void onMemberAudioMuteChanged(const SharedMemberPtr& member, bool mute, const SharedMemberPtr& trigger) override;
-    virtual void onMemberVideoMuteChanged(const SharedMemberPtr& member, bool mute, const SharedMemberPtr& trigger) override;
-    virtual void onMemberScreenShareStateChanged(const SharedMemberPtr& member, bool isSharing, const SharedMemberPtr& trigger) override;
-    virtual void onMemberWhiteboardStateChanged(const SharedMemberPtr& member, bool isSharing, const SharedMemberPtr& trigger) override;
-    virtual void onReceiveChatroomMessages(const std::vector<SharedChatMessagePtr>& messages) override;
-    virtual void onChatroomMessageAttachmentProgress(const std::string& messageUuid, int64_t transferred, int64_t total) override;
-    virtual void onRtcChannelError(int code, const std::string& msg) override;
-    virtual void onMemberPropertiesChanged(const std::string& userUuid, const std::map<std::string, std::string>& properties) override;
-    virtual void onMemberPropertiesDeleted(const std::string& userUuid, const std::map<std::string, std::string>& properties) override;
-    virtual void onRoomPropertiesChanged(const std::map<std::string, std::string>& properties) override;
-    virtual void onRoomPropertiesDeleted(const std::map<std::string, std::string>& properties) override;
-    virtual void onVideoFrameData(const std::string& userUuid,
-                                  bool bSubVideo,
-                                  void* data,
-                                  uint32_t type,
-                                  uint32_t width,
-                                  uint32_t height,
-                                  uint32_t count,
-                                  uint32_t offset[4],
-                                  uint32_t stride[4],
-                                  uint32_t rotation) override;
-    virtual void onRoomLiveStateChanged(NERoomLiveState state) override;
-    virtual void onMemberNameChanged(const SharedMemberPtr& member, const std::string& name) override;
-    virtual void onRoomLockStateChanged(bool locked) override;
-    virtual void onRtcVirtualBackgroundSourceEnabled(bool enabled, NERoomVirtualBackgroundSourceStateReason reason) override;
+    void onMemberRoleChanged(const std::string& userUuid, const NERoomRole& beforeRole, const NERoomRole& afterRole) override;
+    void onMemberJoinRoom(const std::vector<SharedMemberPtr>& members) override;
+    void onMemberLeaveRoom(const std::vector<SharedMemberPtr>& members) override;
+    void onRoomEnded(NERoomEndReason reason) override;
+    void onMemberJoinRtcChannel(const std::vector<SharedMemberPtr>& members) override;
+    void onMemberLeaveRtcChannel(const std::vector<SharedMemberPtr>& members) override;
+    void onMemberJoinChatroom(const std::vector<SharedMemberPtr>& members) override;
+    void onMemberLeaveChatroom(const std::vector<SharedMemberPtr>& members) override;
+    void onMemberAudioMuteChanged(const SharedMemberPtr& member, bool mute, const SharedMemberPtr& trigger) override;
+    void onMemberVideoMuteChanged(const SharedMemberPtr& member, bool mute, const SharedMemberPtr& trigger) override;
+    void onMemberScreenShareStateChanged(const SharedMemberPtr& member, bool isSharing, const SharedMemberPtr& trigger) override;
+    void onMemberWhiteboardStateChanged(const SharedMemberPtr& member, bool isSharing, const SharedMemberPtr& trigger) override;
+    void onReceiveChatroomMessages(const std::vector<SharedChatMessagePtr>& messages) override;
+    void onChatroomMessageAttachmentProgress(const std::string& messageUuid, int64_t transferred, int64_t total) override;
+    void onRtcChannelError(int code, const std::string& msg) override;
+    void onMemberPropertiesChanged(const std::string& userUuid, const std::map<std::string, std::string>& properties) override;
+    void onMemberPropertiesDeleted(const std::string& userUuid, const std::map<std::string, std::string>& properties) override;
+    void onRoomPropertiesChanged(const std::map<std::string, std::string>& properties) override;
+    void onRoomPropertiesDeleted(const std::map<std::string, std::string>& properties) override;
+    void onVideoFrameData(const std::string& userUuid,
+                          bool bSubVideo,
+                          void* data,
+                          uint32_t type,
+                          uint32_t width,
+                          uint32_t height,
+                          uint32_t count,
+                          uint32_t offset[4],
+                          uint32_t stride[4],
+                          uint32_t rotation) override;
+    void onRoomLiveStateChanged(NERoomLiveState state) override;
+    void onMemberNameChanged(const SharedMemberPtr& member, const std::string& name) override;
+    void onRoomLockStateChanged(bool locked) override;
+    void onRoomRemainingSecondsRenewed(uint64_t seconds) override;
+    void onRtcVirtualBackgroundSourceEnabled(bool enabled, NERoomVirtualBackgroundSourceStateReason reason) override;
 
-    virtual void onLocalAudioStats(const std::vector<NERoomRtcAudioSendStats>& stats) override;
-    virtual void onRemoteAudioStats(const std::map<std::string, std::vector<NERoomRtcAudioRecvStats>>& stats) override;
-    virtual void onRtcVideoStats(const std::vector<NEVideoStats>& stats) override;
-    virtual void onRtcStats(const NERoomRtcStats& stats) override;
-    virtual void onNetworkQuality(const std::vector<NERoomRtcNetworkQualityInfo>& quality) override;
-    virtual void onRtcUserVideoStart(const std::string& userUuid) override;
-    virtual void onRtcUserVideoStop(const std::string& userUuid) override;
+    void onLocalAudioStats(const std::vector<NERoomRtcAudioSendStats>& stats) override;
+    void onRemoteAudioStats(const std::map<std::string, std::vector<NERoomRtcAudioRecvStats>>& stats) override;
+    void onRtcVideoStats(const std::vector<NEVideoStats>& stats) override;
+    void onRtcStats(const NERoomRtcStats& stats) override;
+    void onNetworkQuality(const std::vector<NERoomRtcNetworkQualityInfo>& quality) override;
+    void onRtcUserVideoStart(const std::string& userUuid) override;
+    void onRtcUserVideoStop(const std::string& userUuid) override;
 
-    virtual void onCameraDeviceChanged(const std::string& deviceId, bool bAdd) override;
-    virtual void onPlayoutDeviceChanged(const std::string& deviceId, bool bAdd) override;
-    virtual void onRecordDeviceChanged(const std::string& deviceId, bool bAdd) override;
-    virtual void onDefaultPlayoutDeviceChanged(const std::string& deviceId) override;
-    virtual void onDefaultRecordDeviceChanged(const std::string& deviceId) override;
-    virtual void onRoomConnectStateChanged(NEConnectState state) override;
+    void onCameraDeviceChanged(const std::string& deviceId, bool bAdd) override;
+    void onPlayoutDeviceChanged(const std::string& deviceId, bool bAdd) override;
+    void onRecordDeviceChanged(const std::string& deviceId, bool bAdd) override;
+    void onDefaultPlayoutDeviceChanged(const std::string& deviceId) override;
+    void onDefaultRecordDeviceChanged(const std::string& deviceId) override;
+    void onRoomConnectStateChanged(NEConnectState state) override;
 
-    virtual void onLocalAudioVolumeIndication(int volume) override;
-    virtual void onRtcRemoteAudioVolumeIndication(std::list<NEMemberVolumeInfo> volumeList, int totalVolume) override;
-    virtual void onRtcDisconnect() override;
+    void onLocalAudioVolumeIndication(int volume) override;
+    void onRtcRemoteAudioVolumeIndication(std::list<NEMemberVolumeInfo> volumeList, int totalVolume) override;
+    void onRtcDisconnect() override;
 
 private:
     void activeSpeakerVideoUser(const std::vector<NEAudioStats>& stats);

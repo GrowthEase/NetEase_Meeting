@@ -32,6 +32,8 @@
 	<string>NetEase Meeting</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSRequiresAquaSystemAppearance</key>
+	<true/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string></string>
