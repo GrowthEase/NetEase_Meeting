@@ -6,6 +6,7 @@ import QtMultimedia 5.12
 import WhiteboardJsBridge 1.0
 import NetEase.Meeting.MembersModel 1.0
 import NetEase.Meeting.GlobalChatManager 1.0
+import NetEase.Members.Status 1.0
 import "components"
 import "share"
 import "utils/dialogManager.js" as DialogManager
@@ -50,7 +51,7 @@ Rectangle {
                         anchors.fill: parent
                         direction: CustomToolButton.Direction.Left
 
-                        onClicked: membersManager.getMembersPaging(pageSize, currentPage - 1)
+                        onClicked: membersManager.getMembersPaging(pageSize, currentPage - 1, MembersStatus.VIEW_MODE_WHITEBOARD)
                     }
                 }
                 ListView {
@@ -86,7 +87,7 @@ Rectangle {
                         anchors.fill: parent
                         direction: CustomToolButton.Direction.Right
 
-                        onClicked: membersManager.getMembersPaging(pageSize, currentPage + 1)
+                        onClicked: membersManager.getMembersPaging(pageSize, currentPage + 1, MembersStatus.VIEW_MODE_WHITEBOARD)
                     }
                 }
             }
@@ -134,7 +135,7 @@ Rectangle {
                 }
                 onWebLoadFinished: {
                     whiteboardManager.login();
-                    membersManager.getMembersPaging(pageSize, currentPage);
+                    membersManager.getMembersPaging(pageSize, currentPage, MembersStatus.VIEW_MODE_WHITEBOARD);
                 }
                 onWhiteboardGetAuth: {
                     console.log("onWhiteboardGetAuth");

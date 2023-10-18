@@ -133,7 +133,7 @@ Window {
             smallToolbar.visible = false;
             fullToolbar.visible = true;
             timer.start();
-            mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/LoadingPage.qml'));
+            // mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/LoadingPage.qml'));
             Qt.callLater(function () {
                     shareVideo.screen = shareScreen;
                     shareVideo.show();

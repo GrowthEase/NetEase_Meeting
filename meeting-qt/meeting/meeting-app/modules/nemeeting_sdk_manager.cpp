@@ -974,6 +974,9 @@ void NEMeetingSDKManager::onMeetingStatusChangedUI(int status, int code) {
     YXLOG(Info) << "Meeting status changed UI, status: " << covertStatusToString(static_cast<RunningStatus::Status>(status)) << ", code: " << code
                 << YXLOGEnd;
     m_nCurrentMeetingStatus = status;
+    qint64 timestamp = QDateTime::currentDateTime().toSecsSinceEpoch();
+    ConfigManager::getInstance()->setValue("lastExceptionTime", timestamp);
+    ConfigManager::getInstance()->setValue("lastMeetingStatus", m_nCurrentMeetingStatus);
     if (m_nCurrentMeetingStatus == RunningStatus::Status::MEETING_STATUS_INMEETING) {
         setLastMeetingDuration(0);
         m_meetingDurationClock = QDateTime::currentSecsSinceEpoch();

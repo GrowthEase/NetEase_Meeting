@@ -4,140 +4,140 @@ import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 import "../components"
 
-Window{
+Window {
     id: root
-    visible: false
-    width: 240
-    height: 60
-    flags: {
-        if (Qt.platform.os === 'windows')
-            return Qt.SubWindow | Qt.FramelessWindowHint
-        else
-            return Qt.Tool | Qt.FramelessWindowHint
+
+    property string content: ""
+    readonly property real defaultTime: 5000
+    readonly property real fadeTime: 300
+    property var msgSender: ""
+    property bool shareScreen: false
+    property real time: defaultTime
+
+    signal messageBubbleClick
+
+    function toastChatMessage(sender, text, bshareScreen = false) {
+        msgSender = sender;
+        content = text;
+        shareScreen = bshareScreen;
+        root.show();
+        anim.restart();
     }
 
     color: "transparent"
-
-    property var msgSender: ""
-    property string content: ""
-    property bool shareScreen: false
-    property real time: defaultTime
-    readonly property real defaultTime: 5000
-    readonly property real fadeTime: 300
-
-    signal messageBubbleClick()
-
-    Component.onCompleted: {
-
+    flags: {
+        if (Qt.platform.os === 'windows')
+            return Qt.SubWindow | Qt.FramelessWindowHint;
+        else
+            return Qt.Tool | Qt.FramelessWindowHint;
     }
+    height: 60
+    visible: false
+    width: 240
 
-    onVisibleChanged: {
-        if (Qt.platform.os === 'windows') {
-            visible ? shareManager.addExcludeShareWindow(root) : shareManager.removeExcludeShareWindow(root)
+    SequentialAnimation on opacity  {
+        id: anim
+        running: false
+
+        onRunningChanged: {
+            if (!running) {
+                root.hide();
+            } else {
+                root.show();
+            }
+        }
+
+        NumberAnimation {
+            duration: fadeTime
+            to: 1
+        }
+        PauseAnimation {
+            duration: time - 2 * fadeTime
+        }
+        NumberAnimation {
+            duration: fadeTime
+            to: 0
         }
     }
 
-    function toastChatMessage(sender, text, bshareScreen = false) {
-        msgSender = sender
-        content = text
-        shareScreen = bshareScreen
-        root.show()
-        anim.restart()
+    Component.onCompleted: {
+    }
+    onVisibleChanged: {
+        if (Qt.platform.os === 'windows') {
+            visible ? shareManager.addExcludeShareWindow(root) : shareManager.removeExcludeShareWindow(root);
+        }
     }
 
     Rectangle {
         id: msgBubble
         anchors.fill: parent
+        clip: true
         radius: 8
-        clip:true
+
         gradient: Gradient {
             GradientStop {
-                position: 0.0
                 color: "#292933"
+                position: 0.0
             }
             GradientStop {
-                position: 1.0
                 color: "#212129"
+                position: 1.0
             }
         }
 
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
+
             onClicked: {
-                root.hide()
-                messageBubbleClick()
+                root.hide();
+                messageBubbleClick();
             }
         }
-
         Label {
             id: measure
-            visible: false
             text: content
+            visible: false
         }
-
         RowLayout {
-            id:mainLayout
-            spacing: 8
+            id: mainLayout
+            anchors.bottomMargin: 13
             anchors.fill: parent
             anchors.leftMargin: 5
             anchors.rightMargin: 16
             anchors.topMargin: 13
-            anchors.bottomMargin: 13
             clip: true
-            Avatar{
+            spacing: 8
+
+            Avatar {
                 id: avatar
-                nickname: msgSender.substring(0,1)
                 Layout.alignment: Qt.AlignVCenter
+                nickname: msgSender.substring(0, 1)
             }
             ColumnLayout {
-                id:subLayout
-                spacing: 0
-                Layout.preferredWidth: 200
+                id: subLayout
                 Layout.alignment: Qt.AlignHCenter
                 Layout.maximumHeight: parent.height
+                Layout.preferredWidth: 200
+                spacing: 0
+
                 Label {
                     id: nicknamesay
                     Layout.maximumWidth: 200
-                    font.pixelSize: 12
                     color: "white"
+                    elide: Text.ElideRight
+                    font.pixelSize: 12
                     text: msgSender + qsTr(" say:")
                 }
                 Label {
                     id: currentMsg
                     Layout.maximumWidth: 180
-                    font.pixelSize: 12
                     color: "white"
                     elide: Label.ElideRight
+                    font.pixelSize: 12
                     text: content.replace(/[\r\n]/g, '')
                 }
             }
         }
     }
-
-    SequentialAnimation on opacity {
-        id: anim
-        running: false
-
-        NumberAnimation {
-            to: 1
-            duration: fadeTime
-        }
-        PauseAnimation {
-            duration: time - 2 * fadeTime
-        }
-        NumberAnimation {
-            to: 0
-            duration: fadeTime
-        }
-        onRunningChanged: {
-            if (!running) {
-                root.hide();
-            }
-            else {
-                root.show();
-            }
-        }
-    }
 }
-

@@ -60,6 +60,7 @@ MoreItemManager::MoreItemManager(QObject* parent)
                                  "qrc:/qml/images/meeting/footerbar/btn_members_normal.png"};
     m_vPresetItems.push_back(itemMangeMembers);
 
+    /** remove menu at version 3.16.x
     MoreItem itemView = {kViewMenuId,
                          QUuid::createUuid().toString(),
                          MoreItemEnum::VisibleAlways,
@@ -68,6 +69,7 @@ MoreItemManager::MoreItemManager(QObject* parent)
                          tr("View"),
                          "qrc:/qml/images/meeting/footerbar/btn_focus_view_normal.png"};
     m_vPresetItems.push_back(itemView);
+    */
 
     MoreItem itemChat = {kChatMenuId, QUuid::createUuid().toString(), MoreItemEnum::VisibleAlways, tr("Chat"),
                          "qrc:/qml/images/meeting/footerbar/btn_chat_normal.png"};

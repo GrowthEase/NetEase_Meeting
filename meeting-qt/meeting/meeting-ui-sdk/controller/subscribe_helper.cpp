@@ -8,85 +8,69 @@
 
 using namespace std::chrono;
 
-SubscribeHelper::SubscribeHelper() {
-    QObject::connect(&m_checkTimer, &QTimer::timeout, [this]() {
-        std::lock_guard<std::recursive_mutex> locker(m_subscribeLock);
-        for (auto& subscribe : m_subscribeList) {
-            if (subscribe.second.timestamp == kSubscribeWaitForUnsub && subscribe.second.quality != None) {
-                subscribe.second.timestamp = kSubscribeUnsubscribed;
-                subscribe.second.quality = None;
-                YXLOG(Info) << "Unsubscribe user video data, userUuid: " << subscribe.first << ", quality: " << subscribe.second.quality
-                            << ", timestamp: " << subscribe.second.timestamp << YXLOGEnd;
-                auto videoController = VideoManager::getInstance()->getVideoController();
-                if (videoController) {
-                    videoController->unsubscribeRemoteVideoStream(subscribe.first);
-                }
-            }
-        }
-    });
-}
+SubscribeHelper::SubscribeHelper() {}
 
-SubscribeHelper::~SubscribeHelper() {
-    if (m_checkTimer.isActive()) {
-        m_checkTimer.stop();
-    }
-}
+SubscribeHelper::~SubscribeHelper() {}
 
 void SubscribeHelper::reset() {
-    if (m_checkTimer.isActive()) {
-        m_checkTimer.stop();
-    }
     std::lock_guard<std::recursive_mutex> locker(m_subscribeLock);
     m_subscribeList.clear();
 }
 
-void SubscribeHelper::init() {
-    m_checkTimer.setInterval(1000);
-    m_checkTimer.start();
-}
+void SubscribeHelper::init() {}
 
-bool SubscribeHelper::subscribe(const std::string& userId, bool highQuality, const QString& uuid) {
+bool SubscribeHelper::subscribe(const std::string& userId, Quality streamType, const QString& uuid) {
     std::lock_guard<std::recursive_mutex> locker(m_subscribeLock);
     auto iter = m_subscribeList.find(userId);
     if (iter != m_subscribeList.end()) {
-        auto subscribeQuality = highQuality ? High : Low;
         YXLOG(Info) << "Ready to subscribe, userUuid: " << userId << ", video started: " << iter->second.videoStarted
-                    << ", current quality: " << iter->second.quality << ", subscribe quality: " << subscribeQuality
+                    << ", current quality: " << stringifyQualities(iter->second.qualities) << ", subscribe type: " << streamType
                     << ", timestamp: " << iter->second.timestamp << ",uuid: " << uuid.toStdString() << YXLOGEnd;
+        iter->second.timestamp = time_point_cast<milliseconds>(system_clock::now()).time_since_epoch().count();
+        iter->second.qualities[uuid] = streamType;
         if (iter->second.videoStarted /* && (iter->second.quality != subscribeQuality || iter->second.timestamp == kSubscribeUnsubscribed)*/) {
+            auto subscribeQuality = getSubscribeQuality(userId);
             auto videoController = VideoManager::getInstance()->getVideoController();
             if (videoController) {
-                videoController->subscribeRemoteVideoStream(userId, highQuality);
+                videoController->subscribeRemoteVideoStream(userId, subscribeQuality == High);
             }
-            YXLOG(Info) << "Subscribe remote user video data, userUuid: " << iter->first << ", quality: " << (highQuality ? High : Low)
+            YXLOG(Info) << "Subscribe remote user video data, userUuid: " << iter->first << ", quality: " << subscribeQuality
                         << ", timestamp: " << iter->second.timestamp << YXLOGEnd;
         }
-        iter->second.timestamp = time_point_cast<milliseconds>(system_clock::now()).time_since_epoch().count();
-        iter->second.quality = subscribeQuality;
-        iter->second.uuid = uuid;
     } else {
+        YXLOG(Info) << "Ready to subscribe, userUuid: " << userId << ", video started: false"
+                    << ", current quality: None, subscribe type: " << streamType << ", timestamp: " << kSubscribeUnsubscribed
+                    << ", uuid: " << uuid.toStdString() << YXLOGEnd;
         SubscribeInfo info;
-        info.quality = highQuality ? High : Low;
-        info.uuid = uuid;
+        info.qualities[uuid] = streamType;
         m_subscribeList[userId] = info;
     }
 
     return true;
 }
 
-void SubscribeHelper::unsubscribe(const std::string& userId, const QString& uuid) {
-    YXLOG(Info) << "unsubscribe userId: " << userId << ", uuid: " << uuid.toStdString() << YXLOGEnd;
+void SubscribeHelper::unsubscribe(const std::string& userId, Quality streamType, const QString& uuid) {
+    YXLOG(Info) << "unsubscribe userId: " << userId << ", subscribe stream type: " << streamType << ", uuid: " << uuid.toStdString() << YXLOGEnd;
     std::lock_guard<std::recursive_mutex> locker(m_subscribeLock);
     auto iter = m_subscribeList.find(userId);
     if (iter != m_subscribeList.end()) {
-        if (uuid != iter->second.uuid) {
-            YXLOG(Info) << "Unsubscribe return" << YXLOGEnd;
+        auto qualityIter = iter->second.qualities.find(uuid);
+        if (qualityIter != iter->second.qualities.end())
+            iter->second.qualities.erase(qualityIter);
+        auto videoController = VideoManager::getInstance()->getVideoController();
+        if (!videoController)
             return;
-        }
-
-        if (iter->second.timestamp > kSubscribeWaitForUnsub) {
-            iter->second.timestamp = kSubscribeWaitForUnsub;
-            YXLOG(Info) << "Unsubscribe restore user info, userUuid: " << userId << ", quality: " << iter->second.quality << YXLOGEnd;
+        if (iter->second.qualities.empty()) {
+            // 订阅列表为空了，直接取消订阅
+            YXLOG(Info) << "Unsubscribe remote user video data because qualities map is empty, userUuid: " << userId
+                        << ", stream type: " << streamType << YXLOGEnd;
+            videoController->unsubscribeRemoteVideoStream(userId);
+        } else {
+            // 当前被取消订阅的是高清视频，并且列表不为空，证明只剩下低清视频，需要重新订阅低清视频
+            auto subscribeQuality = getSubscribeQuality(userId);
+            YXLOG(Info) << "Resubscribe remote user video data, userUuid: " << userId << ", quality: " << subscribeQuality
+                        << ", stream type: " << streamType << YXLOGEnd;
+            videoController->subscribeRemoteVideoStream(userId, subscribeQuality == High);
         }
     }
 }
@@ -108,14 +92,15 @@ void SubscribeHelper::updateVideoState(const std::string& userId, bool started) 
         if (iter != m_subscribeList.end()) {
             iter->second.videoStarted = true;
             YXLOG(Info) << "Ready to subscribe, userUuid: " << userId << ", video started: " << iter->second.videoStarted
-                        << ", current quality: " << iter->second.quality << ", timestamp: " << iter->second.timestamp << YXLOGEnd;
-            if (iter->second.quality != None || iter->second.timestamp == kSubscribeUnsubscribed) {
-                YXLOG(Info) << "Subscribe remote user video data, userUuid: " << iter->first << ", quality: " << iter->second.quality
-                            << ", timestamp: " << iter->second.timestamp << YXLOGEnd;
+                        << ", current quality: " << stringifyQualities(iter->second.qualities) << ", timestamp: " << iter->second.timestamp
+                        << YXLOGEnd;
+            if (!iter->second.qualities.empty() || iter->second.timestamp == kSubscribeUnsubscribed) {
+                YXLOG(Info) << "Subscribe remote user video data, userUuid: " << iter->first
+                            << ", quality: " << stringifyQualities(iter->second.qualities) << ", timestamp: " << iter->second.timestamp << YXLOGEnd;
+                auto subscribeQuality = getSubscribeQuality(userId);
                 auto videoController = VideoManager::getInstance()->getVideoController();
-                if (videoController) {
-                    videoController->subscribeRemoteVideoStream(userId, iter->second.quality == High);
-                }
+                if (videoController)
+                    videoController->subscribeRemoteVideoStream(userId, subscribeQuality == High);
             }
             iter->second.timestamp = time_point_cast<milliseconds>(system_clock::now()).time_since_epoch().count();
         } else {
@@ -126,9 +111,9 @@ void SubscribeHelper::updateVideoState(const std::string& userId, bool started) 
     } else {
         if (iter != m_subscribeList.end()) {
             iter->second.videoStarted = false;
-            if (iter->second.quality != None && iter->second.timestamp > kSubscribeWaitForUnsub) {
-                YXLOG(Info) << "Unsubscribe remote user video data, userUuid: " << userId << ", subscribed quality: " << iter->second.quality
-                            << YXLOGEnd;
+            if (!iter->second.qualities.empty() && iter->second.timestamp > kSubscribeWaitForUnsub) {
+                YXLOG(Info) << "Unsubscribe remote user video data, userUuid: " << userId
+                            << ", subscribed quality: " << stringifyQualities(iter->second.qualities) << YXLOGEnd;
                 auto videoController = VideoManager::getInstance()->getVideoController();
                 if (videoController) {
                     videoController->unsubscribeRemoteVideoStream(userId);
@@ -137,4 +122,32 @@ void SubscribeHelper::updateVideoState(const std::string& userId, bool started) 
             }
         }
     }
+}
+
+std::string SubscribeHelper::stringifyQualities(const std::map<QString, Quality>& qualities) const {
+    std::string result;
+    for (auto& quality : qualities) {
+        if (!result.empty()) {
+            result += ",";
+        }
+        result += quality.first.toStdString() + "-";
+        result += quality.second == High ? "High" : "Low";
+    }
+    return result;
+}
+
+Quality SubscribeHelper::getSubscribeQuality(const std::string& userId) {
+    std::lock_guard<std::recursive_mutex> locker(m_subscribeLock);
+    Quality subscribeQuality = Low;
+    auto userIter = m_subscribeList.find(userId);
+    if (userIter == m_subscribeList.end())
+        return subscribeQuality;
+    for (const auto& quality : userIter->second.qualities) {
+        // 如果找到高清就直接订阅高清，高清的优先级最高
+        if (quality.second == High) {
+            subscribeQuality = High;
+            break;
+        }
+    }
+    return subscribeQuality;
 }

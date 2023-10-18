@@ -17,9 +17,13 @@
         <file>qml/images/public/button/btn_wnd_white_restore_pushed.png</file>
         <file>qml/FocusPage.qml</file>
         <file>qml/GalleryPage.qml</file>
+        <file>qml/SplitPage.qml</file>
         <file>qml/components/CustomToolButton.qml</file>
+        <file>qml/images/public/button/btn_down_white.svg</file>
         <file>qml/images/public/button/btn_left_white.svg</file>
         <file>qml/images/public/button/btn_right_white.svg</file>
+        <file>qml/images/public/button/btn_up_white.svg</file>
+        <file>qml/images/public/button/btn_separator.svg</file>
         <file>qml/components/VideoDelegate.qml</file>
         <file>qml/images/public/icons/screen_sharing.png</file>
         <file>qml/images/public/icons/video_off.png</file>
@@ -43,6 +47,14 @@
         <file>qml/images/meeting/invite_memeber_hovered.png</file>
         <file>qml/images/meeting/invite_memeber_normal.png</file>
         <file>qml/images/meeting/invite_memeber_pushed.png</file>
+        <file>qml/images/meeting/layout_focus_left_to_right_disabled.svg</file>
+        <file>qml/images/meeting/layout_focus_left_to_right_highlight.svg</file>
+        <file>qml/images/meeting/layout_focus_left_to_right_white.svg</file>
+        <file>qml/images/meeting/layout_focus_top_to_bottom_highlight.svg</file>
+        <file>qml/images/meeting/layout_focus_top_to_bottom_white.svg</file>
+        <file>qml/images/meeting/layout_gallery_disabled.svg</file>
+        <file>qml/images/meeting/layout_gallery_highlight.svg</file>
+        <file>qml/images/meeting/layout_gallery_white.svg</file>
         <file>qml/images/meeting/members_hovered.png</file>
         <file>qml/images/meeting/members_manager_hovered.png</file>
         <file>qml/images/meeting/members_manager_normal.png</file>
@@ -67,6 +79,7 @@
         <file>qml/components/CustomDialogEx.qml</file>
         <file>qml/components/CustomToolSeparator.qml</file>
         <file>qml/utils/dialogManager.js</file>
+        <file>qml/utils/galleryUtilities.js</file>
         <file>qml/utils/meetingHelpers.js</file>
         <file>qml/components/DeviceSelector.qml</file>
         <file>qml/settings/AudioDevice.qml</file>
@@ -138,6 +151,9 @@
         <file>qml/images/public/icons/networkquality_general.svg</file>
         <file>qml/images/public/icons/networkquality_good.svg</file>
         <file>qml/images/public/icons/networkquality_unknown.svg</file>
+        <file>qml/images/public/icons/icon_option_checked.svg</file>
+        <file>qml/images/public/icons/icon_option_unchecked_disabled.svg</file>
+        <file>qml/images/public/icons/icon_option_unchecked.svg</file>
         <file>qml/toast/MessageBubble.qml</file>
         <file>qml/components/ChatListView.qml</file>
         <file>qml/images/chatroom/icon_close.svg</file>
@@ -152,6 +168,7 @@
         <file>qml/images/public/button/btn_clear.svg</file>
         <file>qml/images/public/icons/calendar.svg</file>
         <file>qml/images/public/icons/triangle.svg</file>
+        <file>qml/meeting/LayoutChooser.qml</file>
         <file>qml/msgbox/MsgBox.qml</file>
         <file>qml/components/SearchItem.qml</file>
         <file>qml/images/public/icons/search.svg</file>

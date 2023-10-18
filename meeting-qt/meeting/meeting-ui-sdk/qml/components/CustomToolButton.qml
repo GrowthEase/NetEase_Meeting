@@ -4,7 +4,9 @@ import QtQuick.Controls 2.12
 ToolButton {
     enum Direction {
         Left,
-        Right
+        Right,
+        Up,
+        Down
     }
 
     property int direction
@@ -30,8 +32,17 @@ ToolButton {
         height: 14
         anchors.centerIn: parent
         mipmap: true
-        source: direction === CustomToolButton.Direction.Left
-                ? "qrc:/qml/images/public/button/btn_left_white.svg"
-                : "qrc:/qml/images/public/button/btn_right_white.svg"
+        source: {
+            switch (root.direction) {
+            case CustomToolButton.Direction.Left:
+                return "qrc:/qml/images/public/button/btn_left_white.svg"
+            case CustomToolButton.Direction.Right:
+                return "qrc:/qml/images/public/button/btn_right_white.svg"
+            case CustomToolButton.Direction.Up:
+                return "qrc:/qml/images/public/button/btn_up_white.svg"
+            case CustomToolButton.Direction.Down:
+                return "qrc:/qml/images/public/button/btn_down_white.svg"
+            }
+        }
     }
 }

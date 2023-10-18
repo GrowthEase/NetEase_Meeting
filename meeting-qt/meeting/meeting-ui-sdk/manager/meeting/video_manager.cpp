@@ -55,7 +55,7 @@ void VideoManager::onFocusVideoChanged(const std::string& accountId, bool isFocu
 bool VideoManager::subscribeRemoteVideoStream(const QString& accountId, bool highQuality, const QString& uuid) {
     auto subscribeHelper = MeetingManager::getInstance()->getSubscribeHelper();
     if (subscribeHelper) {
-        return subscribeHelper->subscribe(accountId.toStdString(), highQuality, uuid);
+        return subscribeHelper->subscribe(accountId.toStdString(), highQuality ? High : Low, uuid);
     }
     return false;
 }
@@ -63,7 +63,16 @@ bool VideoManager::subscribeRemoteVideoStream(const QString& accountId, bool hig
 bool VideoManager::unSubscribeRemoteVideoStream(const QString& accountId, const QString& uuid) {
     auto subscribeHelper = MeetingManager::getInstance()->getSubscribeHelper();
     if (subscribeHelper) {
-        subscribeHelper->unsubscribe(accountId.toStdString(), uuid);
+        subscribeHelper->unsubscribe(accountId.toStdString(), High, uuid);
+        return true;
+    }
+    return false;
+}
+
+bool VideoManager::unSubscribeRemoteVideoStream(const QString& accountId, bool hightQuality, const QString& uuid) {
+    auto subscribeHelper = MeetingManager::getInstance()->getSubscribeHelper();
+    if (subscribeHelper) {
+        subscribeHelper->unsubscribe(accountId.toStdString(), hightQuality ? High : Low, uuid);
         return true;
     }
     return false;
@@ -111,22 +120,25 @@ bool VideoManager::setupVideoCanvas(const QString& accountId, QObject* view, boo
         m_videoController->setupVideoCanvas(userId, userData, window);
         if (0 == ret && !((accountId.toStdString() == authInfo.accountId) || accountId.isEmpty())) {
             if (userData != nullptr || window != nullptr) {
-                if (subscribeHelper) {
-                    subscribeHelper->subscribe(userId, highQuality, uuid);
-                }
+                if (subscribeHelper)
+                    subscribeHelper->subscribe(userId, highQuality ? High : Low, uuid);
             } else {
-                if (subscribeHelper) {
-                    subscribeHelper->unsubscribe(userId, uuid);
-                }
+                if (subscribeHelper)
+                    subscribeHelper->unsubscribe(userId, highQuality ? High : Low, uuid);
             }
         }
     } else {
         ret = m_videoController->setupSubVideoCanvas(userId, userData, window);
         if (0 == ret) {
-            if (userData != nullptr || window != nullptr)
+            if (userData != nullptr || window != nullptr) {
+                if (subscribeHelper)
+                    subscribeHelper->subscribe(userId, SubStream, uuid);
                 ret = m_videoController->subscribeRemoteVideoSubStream(userId);
-            else
+            } else {
+                if (subscribeHelper)
+                    subscribeHelper->unsubscribe(userId, SubStream, uuid);
                 ret = m_videoController->unsubscribeRemoteVideoSubStream(userId);
+            }
         }
     }
 

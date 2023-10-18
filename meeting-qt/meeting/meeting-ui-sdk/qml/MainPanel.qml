@@ -9,6 +9,7 @@ import NetEase.Meeting.GlobalChatManager 1.0
 import NetEase.Meeting.ScreenSaver 1.0
 import NetEase.Meeting.MessageBubble 1.0
 import NetEase.Settings.SettingsStatus 1.0
+import NetEase.Members.Status 1.0
 import QtQuick.Dialogs
 import QtCore 6.4
 import "utils/dialogManager.js" as DialogManager
@@ -17,6 +18,7 @@ import "share"
 import "chattingroom"
 import "invite"
 import "live"
+import "meeting"
 
 Rectangle {
     id: root
@@ -29,9 +31,9 @@ Rectangle {
     }
     enum ViewMode {
         FocusViewMode,
+        FocusViewLeftToRightMode,
         GridViewMode,
         WhiteboardMode,
-        ShareMode,
         LoadingMode
     }
 
@@ -39,19 +41,27 @@ Rectangle {
     property int currentPage: 1
     property string defaultDuration: '00:00:00'
     property bool hasShowRemainingTip: false
+    property bool isNewMeetingLayout: true
     property var lastPoint: '0,0'
     property int latestMeetingStatus: -1
     property var microphoneDynamicDialog: undefined
     property int msgCount: 0
     property string myNickname: ''
+    property int networkQualityBadTimes: 0
     property int pageSize: 4
+    property bool showRightList: true
+    property bool showTopList: true
     property bool spacePressed: false
+    property int splitViewCurrentViewMode: SplitPage.ViewMode.FocusView
+    property var splitViewDefaultState: undefined
+    property int splitViewLastViewMode: SplitPage.ViewMode.FocusView
+    property var splitViewState: undefined
     property var staticPoint: '0,0'
     property var tempDynamicDialog: undefined
     property var tempDynamicDialogEx: undefined
     property bool temporarilyUnmute: false
+    property int videoLayout: layoutChooser.current
     property int viewMode: MainPanel.ViewMode.FocusViewMode
-    property int networkQualityBadTimes: 0
 
     signal newMsgNotity(int msgCount, string sender, string text)
 
@@ -247,6 +257,33 @@ Rectangle {
         meetingSIPChannelId: meetingManager.meetingSIPChannelId
         meetingTopic: meetingManager.meetingTopic
         meetingshortId: meetingManager.shortMeetingNum
+    }
+    LayoutChooser {
+        id: layoutChooser
+        enableFocusLeftToRight: {
+            if (membersManager.count === 1)
+                return false;
+            return true;
+        }
+        enableGallery: {
+            if (shareManager.shareAccountId.length !== 0)
+                return false;
+            if (membersManager.count === 1)
+                return false;
+            return true;
+        }
+
+        onCurrentChanged: {
+            if (current === LayoutChooser.VideoLayout.Gallery && mainLoader.source !== 'qrc:/qml/GalleryPage.qml') {
+                mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/GalleryPage.qml'));
+            }
+            if (current === LayoutChooser.VideoLayout.FocusTopToBottom && mainLoader.source !== 'qrc:/qml/FocusPage.qml') {
+                mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/FocusPage.qml'));
+            }
+            if (current === LayoutChooser.VideoLayout.FocusLeftToRight && mainLoader.source !== 'qrc:/qml/FocusPage.qml') {
+                mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/SplitPage.qml'));
+            }
+        }
     }
     NetWorkQualityInformation {
         id: popupNetWorkQualityInfo
@@ -452,6 +489,15 @@ Rectangle {
                             mainWindow.y = (Screen.height - mainWindow.height) / 2 + Screen.virtualY;
                         }
                     }
+                    if (source == 'qrc:/qml/FocusPage.qml') {
+                        layoutChooser.current = LayoutChooser.VideoLayout.FocusTopToBottom;
+                    }
+                    if (source == 'qrc:/qml/SplitPage.qml') {
+                        layoutChooser.current = LayoutChooser.VideoLayout.FocusLeftToRight;
+                    }
+                    if (source == 'qrc:/qml/GalleryPage.qml') {
+                        layoutChooser.current = LayoutChooser.VideoLayout.Gallery;
+                    }
                 }
             }
             ColumnLayout {
@@ -646,6 +692,75 @@ Rectangle {
                         }
                     }
                     Rectangle {
+                        id: layoutChooserContainer
+                        Layout.preferredHeight: 21
+                        Layout.preferredWidth: chooserContainer.width + 8
+                        color: "#CC313138"
+                        radius: 2
+                        visible: membersManager.count > 1
+
+                        Accessible.onPressAction: if (enabled)
+                            layoutChooserArea.clicked(Qt.LeftButton)
+                        onVisibleChanged: {
+                            layoutChooserArea.hoverEnabled = visible;
+                            if (!visible)
+                                layoutChooser.close();
+                        }
+
+                        RowLayout {
+                            id: chooserContainer
+                            anchors.centerIn: parent
+                            spacing: 4
+
+                            Image {
+                                Layout.preferredHeight: 11
+                                Layout.preferredWidth: 13
+                                mipmap: true
+                                source: {
+                                    if (videoLayout === LayoutChooser.VideoLayout.FocusTopToBottom) {
+                                        return "qrc:/qml/images/meeting/layout_focus_top_to_bottom_white.svg";
+                                    }
+                                    if (videoLayout === LayoutChooser.VideoLayout.FocusLeftToRight) {
+                                        return "qrc:/qml/images/meeting/layout_focus_left_to_right_white.svg";
+                                    }
+                                    if (videoLayout === LayoutChooser.VideoLayout.Gallery) {
+                                        return "qrc:/qml/images/meeting/layout_gallery_white.svg";
+                                    }
+                                    return "qrc:/qml/images/meeting/layout_focus_top_to_bottom_white.svg";
+                                }
+                            }
+                            Label {
+                                color: "#FFFFFF"
+                                font.pixelSize: 12
+                                text: qsTr("View")
+                            }
+                            Image {
+                                Layout.preferredHeight: 12
+                                Layout.preferredWidth: 12
+                                mipmap: true
+                                source: layoutChooser.visible ? "qrc:/qml/images/public/button/btn_up_white.svg" : "qrc:/qml/images/public/button/btn_down_white.svg"
+                            }
+                        }
+                        MouseArea {
+                            id: layoutChooserArea
+                            anchors.fill: parent
+                            hoverEnabled: false
+
+                            onEntered: {
+                                layoutChooser.stopClose();
+                                const popupPosition = layoutChooserContainer.mapToItem(pageLoader, -layoutChooser.width + layoutChooserContainer.width, layoutChooserContainer.height + 5);
+                                layoutChooser.x = popupPosition.x;
+                                layoutChooser.y = popupPosition.y;
+                                layoutChooser.closePolicy = Popup.CloseOnEscape;
+                                layoutChooser.open();
+                            }
+                            onExited: {
+                                if (footerBar.height !== 0)
+                                    layoutChooser.startClose();
+                            }
+                        }
+                    }
+                    Rectangle {
                         Layout.preferredHeight: 21
                         Layout.preferredWidth: screenToolButton.width + 8
                         color: "#CC313138"
@@ -678,13 +793,13 @@ Rectangle {
 
                     Rectangle {
                         Layout.preferredHeight: 21
-                        Layout.preferredWidth: childrenRect.width + 4
+                        Layout.preferredWidth: speakersContainer.childrenRect.width + 4
                         color: "#CC313138"
                         radius: 2
 
                         RowLayout {
-                            Layout.preferredHeight: 21
-                            Layout.preferredWidth: childrenRect.width
+                            id: speakersContainer
+                            height: 21
                             spacing: 0
 
                             Label {
@@ -710,20 +825,21 @@ Rectangle {
 
                     Rectangle {
                         id: speaker
+                        Layout.maximumWidth: 260
                         Layout.preferredHeight: 21
-                        Layout.preferredWidth: childrenRect.width + 4
+                        Layout.preferredWidth: childrenRect.width
                         color: "#CC313138"
                         radius: 2
 
                         RowLayout {
+                            Layout.maximumWidth: 254
                             anchors.left: parent.left
                             anchors.leftMargin: 0
                             anchors.verticalCenter: parent.verticalCenter
-                            spacing: 0
+                            spacing: 4
 
                             Image {
                                 id: microphoneImg
-                                Layout.leftMargin: 2
                                 height: 14
                                 mipmap: true
                                 source: "qrc:/qml/images/meeting/microphone.svg"
@@ -753,10 +869,14 @@ Rectangle {
                                 }
                             }
                             Label {
+                                Layout.alignment: Qt.AlignVCenter
+                                color: "#FFFFFF"
+                                font.pixelSize: 12
+                                text: qsTr("Speaking: ")
+                            }
+                            Label {
                                 id: speakersNickname
-                                Layout.fillWidth: true
-                                Layout.leftMargin: 4
-                                Layout.preferredWidth: 152
+                                Layout.maximumWidth: 160
                                 Layout.rightMargin: 4
                                 ToolTip.text: speakersNickname.text
                                 ToolTip.visible: ma.containsMouse ? speakersNickname.text.length !== 0 && speakersNickname.truncated : false
@@ -1296,7 +1416,7 @@ Rectangle {
                                         visible: meetingManager.enableImageMessage
 
                                         onClicked: {
-                                            console.log(fileDialog.selectedFile)
+                                            console.log(fileDialog.selectedFile);
                                             fileDialog.selectedFile = 'file:///';
                                             fileDialog.imageType = true;
                                             fileDialog.open();
@@ -1312,7 +1432,7 @@ Rectangle {
                                         visible: meetingManager.enableFileMessage
 
                                         onClicked: {
-                                            console.log(fileDialog.selectedFile)
+                                            console.log(fileDialog.selectedFile);
                                             fileDialog.selectedFile = 'file:///';
                                             fileDialog.imageType = false;
                                             fileDialog.open();
@@ -1343,7 +1463,7 @@ Rectangle {
                 anchors.centerIn: parent
                 height: 50
                 spacing: 5
-                width: children.width
+                width: childrenRect.width
 
                 AnimatedImage {
                     Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
@@ -1734,13 +1854,18 @@ Rectangle {
                 temporarilyUnmute = false;
                 showRemainingTipTimer.stop();
                 busyContainer.visible = false;
+                isNewMeetingLayout = true;
+                showTopList = true;
+                showRightList = true;
+                splitViewCurrentViewMode = SplitPage.ViewMode.FocusView;
+                splitViewLastViewMode = SplitPage.ViewMode.FocusView;
                 console.log("mainWindow visibility: " + mainWindow.visibility);
                 if (errorCode === 9) {
                     mainWindow.showNormal();
                     DialogManager.dynamicDialog2(qsTr('Bad network'), qsTr('Network has been disconnected, check your network and rejoin please.'), function () {
                             meetingManager.leaveMeeting(true);
                         }, function () {
-                            meetingManager.rejoinMeeting()
+                            meetingManager.rejoinMeeting();
                         }, qsTr("Leave"), qsTr("Rejoin"), mainWindow, false, "#FE3B30", "#337EFF", Popup.NoAutoClose);
                 } else {
                     if (Qt.platform.os === 'osx' && (mainWindow.visibility === Window.FullScreen || mainWindow.visibility === Window.Maximized)) {
@@ -1843,8 +1968,10 @@ Rectangle {
         target: audioManager
 
         onActiveSpeakerChanged: {
-            if (videoManager.focusAccountId.length === 0 && shareManager.shareAccountId.length === 0 && viewMode === MainPanel.ViewMode.FocusViewMode) {
-                membersManager.getMembersPaging(pageSize, currentPage);
+            if (videoManager.focusAccountId.length === 0 && shareManager.shareAccountId.length === 0) {
+                if (viewMode !== MainPanel.ViewMode.FocusViewMode && viewMode !== MainPanel.ViewMode.FocusViewLeftToRightMode)
+                    return;
+                membersManager.getMembersPaging(pageSize, currentPage, MembersStatus.VIEW_MODE_AUTO);
             }
         }
         onActiveSpeakerNicknameChanged: {
@@ -1941,7 +2068,7 @@ Rectangle {
             if (oldSpeaker !== newSpeaker && oldSpeaker === authManager.authAccountId)
                 toast.show(qsTr('You have been unset of active speaker.'));
             if (oldSpeaker !== newSpeaker) {
-                membersManager.getMembersPaging(pageSize, currentPage);
+                membersManager.getMembersPaging(pageSize, currentPage, MembersStatus.VIEW_MODE_AUTO);
             }
         }
         onShowPermissionWnd: {
@@ -2004,20 +2131,6 @@ Rectangle {
     Connections {
         target: membersManager
 
-        onNetWorkQualityTypeChanged: {
-            // 连续三次是 MeetingStatus.NETWORKQUALITY_BAD 的情况下打印日志
-            // console.log(`Network quality changed, current quality: ${netWorkQualityType}`)
-            if (netWorkQualityType === MeetingStatus.NETWORKQUALITY_BAD) {
-                networkQualityBadTimes += 1;
-                if (networkQualityBadTimes === 3) {
-                    networkQualityBadTimes = 0;
-                    if (!busyContainer.visible)
-                        toast.show(qsTr("Network abnormality, please check your network."));
-                }
-            } else {
-                networkQualityBadTimes = 0;
-            }
-        }
         onHandsupStatusChanged: {
             switch (status) {
             case MeetingStatus.HAND_STATUS_RAISE:
@@ -2185,6 +2298,20 @@ Rectangle {
                 toast.show(nickname + qsTr('has been unset as manager'));
             }
         }
+        onNetWorkQualityTypeChanged: {
+            // 连续三次是 MeetingStatus.NETWORKQUALITY_BAD 的情况下打印日志
+            // console.log(`Network quality changed, current quality: ${netWorkQualityType}`)
+            if (netWorkQualityType === MeetingStatus.NETWORKQUALITY_BAD) {
+                networkQualityBadTimes += 1;
+                if (networkQualityBadTimes === 3) {
+                    networkQualityBadTimes = 0;
+                    if (!busyContainer.visible)
+                        toast.show(qsTr("Network abnormality, please check your network."));
+                }
+            } else {
+                networkQualityBadTimes = 0;
+            }
+        }
         onNicknameChanged: {
             if (authManager.authAccountId === accountId) {
                 globalSettings.setValue("localLastNickname", nickname);
@@ -2228,6 +2355,8 @@ Rectangle {
         onShareAccountIdChanged: {
             console.info("Screen sharing status changed:", shareManager.shareAccountId);
             if (shareManager.shareAccountId.length !== 0) {
+                if (viewMode === MainPanel.ViewMode.GridViewMode)
+                    mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/FocusPage.qml'));
                 if (shareManager.shareAccountId === authManager.authAccountId) {
                     if (Qt.platform.os === "windows") {
                         shareSelector.close();
@@ -2253,9 +2382,7 @@ Rectangle {
                             membersManager.handsUp(false);
                     }
                 } else {
-                    if (viewMode !== MainPanel.ViewMode.FocusViewMode && viewMode !== MainPanel.ViewMode.WhiteboardMode)
-                        mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/FocusPage.qml'));
-                    membersManager.getMembersPaging(pageSize, currentPage);
+                    membersManager.getMembersPaging(pageSize, currentPage, MembersStatus.VIEW_MODE_AUTO);
                 }
                 if (microphoneDynamicDialog != undefined && microphoneDynamicDialog.visible) {
                     microphoneDynamicDialog.close();
@@ -2285,9 +2412,7 @@ Rectangle {
                     sharedWnd.hide();
                     mainWindow.raise();
                 }
-                if (viewMode !== MainPanel.ViewMode.FocusViewMode && viewMode !== MainPanel.ViewMode.WhiteboardMode)
-                    mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/FocusPage.qml'));
-                membersManager.getMembersPaging(pageSize, currentPage);
+                membersManager.getMembersPaging(pageSize, currentPage, MembersStatus.VIEW_MODE_AUTO);
             }
         }
     }

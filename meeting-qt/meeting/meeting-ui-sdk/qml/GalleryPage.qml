@@ -2,108 +2,16 @@
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 import QtQuick.Window 2.12
+import NetEase.Members.Status 1.0
 import "components/"
 import "utils/dialogManager.js" as DialogManager
 import "utils/meetingHelpers.js" as MeetingHelpers
+import "utils/galleryUtilities.js" as GalleryUtilities
 
 Rectangle {
     id: root
 
     property int gridSpacing: 8
-    function calcContainerSize(itemSize, spacing, columnCount, rowCount) {
-        const columnSpacing = (columnCount - 1) * spacing;
-        const rowSpacing = (rowCount - 1) * spacing;
-        const containerWidth = itemSize.width * columnCount + columnSpacing;
-        const containerHeight = itemSize.height * rowCount + rowSpacing;
-        return {
-            "width": containerWidth,
-            "height": containerHeight
-        };
-    }
-    function calcGridLayout(memberCount) {
-        let columnCount = 1;
-        if (memberCount >= 10) {
-            columnCount = 4;
-        } else if (memberCount >= 5) {
-            columnCount = 3;
-        } else if (memberCount >= 2) {
-            columnCount = 2;
-        } else {
-            columnCount = 1;
-        }
-        const rowCount = Math.ceil(memberCount / columnCount);
-        return {
-            "columnCount": columnCount,
-            "rowCount": rowCount
-        };
-    }
-    function calcItemSize(outsider, columnCount, memberCount, spacing) {
-        let itemWidth = 0;
-        let itemHeight = 0;
-        const rowCount = Math.ceil(memberCount / columnCount);
-        const columnSpacing = (columnCount - 1) * spacing;
-        const rowSpacing = (rowCount - 1) * spacing;
-        itemWidth = (outsider.width - columnSpacing) / columnCount;
-        itemHeight = itemWidth / 16 * 9;
-
-        // 当高度超出了 containerSize.height 时，需要重新计算 itemWidth 和 itemHeight
-        // 计算方式为先计算高度，然后根据高度计算宽度，宽高比例为 16/9
-        if (itemHeight * rowCount + rowSpacing > outsider.height) {
-            itemHeight = (outsider.height - rowSpacing) / rowCount;
-            itemWidth = itemHeight / 9 * 16;
-        }
-        return {
-            "width": itemWidth,
-            "height": itemHeight
-        };
-    }
-    function calcItemsPosition(members, itemSize, spacing, gridLayout, listModel) {
-        listModel.clear();
-        let currentRow = 0;
-        for (let index = 0; index < members.length; index++) {
-            if (index % gridLayout.columnCount === 0)
-                currentRow++;
-            let itemX = (index % gridLayout.columnCount) * (itemSize.width + spacing);
-            let itemY = (currentRow - 1) * (itemSize.height + spacing);
-            let member = members[index];
-            // 如果是最后一行，居中显示
-            const lastRowItemCount = members.length % gridLayout.columnCount;
-            if (currentRow === gridLayout.rowCount && lastRowItemCount > 0) {
-                const lastRowX = (gridLayout.columnCount - lastRowItemCount) / 2 * (itemSize.width + spacing);
-                itemX = lastRowX + (index % gridLayout.columnCount) * (itemSize.width + spacing);
-                itemY = (currentRow - 1) * (itemSize.height + spacing);
-            }
-            Object.assign(member, {
-                x: itemX,
-                y: itemY,
-                width: itemSize.width,
-                height: itemSize.height,
-                highQuality: members.length <= 4
-            });
-            listModel.append(member);
-        }
-    }
-    function updateItemsPosition(itemSize, spacing, gridLayout, listModel) {
-        let currentRow = 0;
-        for (let index = 0; index < listModel.count; index++) {
-            if (index % gridLayout.columnCount === 0)
-                currentRow++;
-            let itemX = (index % gridLayout.columnCount) * (itemSize.width + spacing);
-            let itemY = (currentRow - 1) * (itemSize.height + spacing);
-            let member = listModel.get(index);
-            // 如果是最后一行，居中显示
-            const lastRowItemCount = listModel.count % gridLayout.columnCount;
-            if (currentRow === gridLayout.rowCount && lastRowItemCount > 0) {
-                const lastRowX = (gridLayout.columnCount - lastRowItemCount) / 2 * (itemSize.width + spacing);
-                itemX = lastRowX + (index % gridLayout.columnCount) * (itemSize.width + spacing);
-                itemY = (currentRow - 1) * (itemSize.height + spacing);
-            }
-            member.x = itemX
-            member.y = itemY
-            member.width = itemSize.width
-            member.height = itemSize.height
-        }
-    }
 
     anchors.fill: parent
     anchors.margins: 8
@@ -115,27 +23,17 @@ Rectangle {
         membersManager.isWhiteboardView = false;
         currentPage = 1;
         pageSize = membersManager.galleryViewPageSize;
-        membersManager.getMembersPaging(pageSize, currentPage);
+        membersManager.getMembersPaging(pageSize, currentPage, MembersStatus.VIEW_MODE_GALLERY);
     }
     onWidthChanged: {
-        const grid = calcGridLayout(gridModel.count);
-        const itemSize = calcItemSize(root, grid.columnCount, gridModel.count, gridSpacing);
-        const containerSize = calcContainerSize(itemSize, gridSpacing, grid.columnCount, grid.rowCount);
+        const grid = GalleryUtilities.calcGridLayout(gridModel.count);
+        const itemSize = GalleryUtilities.calcItemSize(root, grid.columnCount, gridModel.count, gridSpacing);
+        const containerSize = GalleryUtilities.calcContainerSize(itemSize, gridSpacing, grid.columnCount, grid.rowCount);
         rootContainer.width = containerSize.width;
         rootContainer.height = containerSize.height;
-        updateItemsPosition(itemSize, gridSpacing, grid, gridModel);
+        GalleryUtilities.updateItemsPosition(itemSize, gridSpacing, grid, gridModel);
     }
 
-    Timer {
-        id: fetchMemberTimer
-        interval: 10
-        repeat: false
-        running: false
-
-        onTriggered: {
-            membersManager.getMembersPaging(pageSize, currentPage);
-        }
-    }
     Rectangle {
         id: rootContainer
         anchors.horizontalCenter: parent.horizontalCenter
@@ -174,7 +72,7 @@ Rectangle {
             height: 60
             width: 60
 
-            onClicked: membersManager.getMembersPaging(pageSize, currentPage - 1)
+            onClicked: membersManager.getMembersPaging(pageSize, currentPage - 1, MembersStatus.VIEW_MODE_GALLERY)
         }
         CustomToolButton {
             id: nextPage
@@ -185,7 +83,7 @@ Rectangle {
             height: 60
             width: 60
 
-            onClicked: membersManager.getMembersPaging(pageSize, currentPage + 1)
+            onClicked: membersManager.getMembersPaging(pageSize, currentPage + 1, MembersStatus.VIEW_MODE_GALLERY)
         }
         Rectangle {
             id: pageSign
@@ -270,12 +168,12 @@ Rectangle {
                 mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/FocusPage.qml'));
                 return;
             }
-            const grid = calcGridLayout(secondaryMembers.length);
-            const itemSize = calcItemSize(root, grid.columnCount, secondaryMembers.length, gridSpacing);
-            const containerSize = calcContainerSize(itemSize, gridSpacing, grid.columnCount, grid.rowCount);
+            const grid = GalleryUtilities.calcGridLayout(secondaryMembers.length);
+            const itemSize = GalleryUtilities.calcItemSize(root, grid.columnCount, secondaryMembers.length, gridSpacing);
+            const containerSize = GalleryUtilities.calcContainerSize(itemSize, gridSpacing, grid.columnCount, grid.rowCount);
             rootContainer.width = containerSize.width;
             rootContainer.height = containerSize.height;
-            calcItemsPosition(secondaryMembers, itemSize, gridSpacing, grid, gridModel);
+            GalleryUtilities.calcItemsPosition(secondaryMembers, itemSize, gridSpacing, grid, gridModel);
             previousPage.visible = currentPage > 1;
             nextPage.visible = currentPage * pageSize < (realCount); // Except myself
             labelPageCount.text = (Math.ceil((realCount) / pageSize)).toString();

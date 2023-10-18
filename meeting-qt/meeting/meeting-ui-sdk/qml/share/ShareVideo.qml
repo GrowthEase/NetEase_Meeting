@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.12
 import QtQuick.Controls.Material 2.12
 import Qt5Compat.GraphicalEffects
 import NetEase.Settings.SettingsStatus 1.0
+import NetEase.Members.Status 1.0
 import "../components"
 import "../utils/meetingHelpers.js" as MeetingHelpers
 import "../"
@@ -15,18 +16,20 @@ Window {
     property bool nextPage: membersManager.count > 4
     property bool prePage: false
     property bool scrollEnable: true
+    property int videoPageSize: 1
+    property int videoCurrentPage: 1
 
     function goPage(page) {
-        currentPage -= page;
-        if (currentPage <= 0) {
-            currentPage = 1;
+        videoCurrentPage -= page;
+        if (videoCurrentPage <= 0) {
+            videoCurrentPage = 1;
         } else {
-            var pages = (0 === membersManager.count % pageSize) ? membersManager.count / pageSize : (membersManager.count / pageSize + 1);
+            const pages = (0 === membersManager.count % videoPageSize) ? membersManager.count / videoPageSize : (membersManager.count / videoPageSize + 1);
             if (currentPage > pages) {
-                currentPage = pages;
+                videoCurrentPage = pages;
             }
         }
-        membersManager.getMembersPaging(pageSize, currentPage);
+        membersManager.getMembersPaging(videoPageSize, videoCurrentPage, MembersStatus.VIEW_MODE_FOCUS_WITH_SELF);
     }
     function resetPosition() {
         // console.log("11111", screen.virtualX, screen.virtualY, screen.width, screen.height)
@@ -42,23 +45,21 @@ Window {
             multVideoModel.clear();
             break;
         case SettingsStatus.VM_SINGLE:
-            viewMode = MainPanel.ViewMode.ShareMode;
             membersManager.isGalleryView = false;
             membersManager.isWhiteboardView = false;
-            currentPage = 1;
-            pageSize = 1;
-            membersManager.getMembersPaging(pageSize, currentPage);
+            videoCurrentPage = 1;
+            videoPageSize = 1;
+            membersManager.getMembersPaging(videoPageSize, videoCurrentPage, MembersStatus.VIEW_MODE_FOCUS_WITH_SELF);
             height = Qt.binding(function () {
                     return idTitle.height + videoList.height;
                 });
             break;
         case SettingsStatus.VM_MULTIPLE:
-            viewMode = MainPanel.ViewMode.ShareMode;
             membersManager.isGalleryView = false;
             membersManager.isWhiteboardView = false;
-            currentPage = 1;
-            pageSize = 4;
-            membersManager.getMembersPaging(pageSize, currentPage);
+            videoCurrentPage = 1;
+            videoPageSize = 4;
+            membersManager.getMembersPaging(videoPageSize, videoCurrentPage, MembersStatus.VIEW_MODE_FOCUS_WITH_SELF);
             height = Qt.binding(function () {
                     return idTitle.height + videoList.height;
                 });
@@ -74,6 +75,7 @@ Window {
     width: 216
 
     onVisibleChanged: {
+        membersManager.includeSelf = visible;
         if (visible) {
             switchModel();
         }
@@ -389,14 +391,14 @@ Window {
                 return;
             }
             console.info('Members info changed:', JSON.stringify(primaryMember), JSON.stringify(secondaryMembers), realPage, realCount);
-            if (currentPage !== realPage) {
+            if (videoCurrentPage !== realPage) {
                 multVideoModel.clear();
-                currentPage = realPage;
+                videoCurrentPage = realPage;
             }
             MeetingHelpers.arrangeSpeakerLayout(primaryMember, secondaryMembers, realPage, realCount, null, multVideoModel);
             console.info('Secondary members count: ', multVideoModel.count);
-            nextPage = currentPage * pageSize < realCount;
-            prePage = currentPage > 1;
+            nextPage = videoCurrentPage * videoPageSize < realCount;
+            prePage = videoCurrentPage > 1;
             scrollEnable = true;
         }
         function onNicknameChanged(accountId, nickname) {

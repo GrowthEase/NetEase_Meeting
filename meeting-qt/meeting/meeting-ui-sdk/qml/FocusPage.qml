@@ -6,6 +6,7 @@ import QtMultimedia 5.12
 import NetEase.Meeting.MembersModel 1.0
 import NetEase.Meeting.GlobalChatManager 1.0
 import NetEase.Settings.SettingsStatus 1.0
+import NetEase.Members.Status 1.0
 import "components"
 import "share"
 import "utils/dialogManager.js" as DialogManager
@@ -16,19 +17,20 @@ Rectangle {
 
     property var currentSpeaker: undefined
     property var currentprimaryMember: undefined
-    property int elementWidth: root.width * 0.15
     property int elementHeight: elementWidth * 9 / 16
+    property int elementWidth: root.width * 0.15
     property point mousePoint: "0,0"
 
     anchors.fill: parent
 
     Component.onCompleted: {
+        membersManager.includeSelf = false;
         viewMode = MainPanel.ViewMode.FocusViewMode;
         membersManager.isGalleryView = false;
         membersManager.isWhiteboardView = false;
         currentPage = 1;
         pageSize = 4;
-        membersManager.getMembersPaging(pageSize, currentPage);
+        membersManager.getMembersPaging(pageSize, currentPage, MembersStatus.VIEW_MODE_FOCUS);
     }
 
     ColumnLayout {
@@ -40,7 +42,7 @@ Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: secondaryView.height + 8
             color: "#18181F"
-            visible: secondaryView.count > 0
+            visible: secondaryView.count > 0 && showTopList
 
             RowLayout {
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -57,7 +59,7 @@ Rectangle {
                         anchors.fill: parent
                         direction: CustomToolButton.Direction.Left
 
-                        onClicked: membersManager.getMembersPaging(pageSize, currentPage - 1)
+                        onClicked: membersManager.getMembersPaging(pageSize, currentPage - 1, MembersStatus.VIEW_MODE_FOCUS)
                     }
                 }
                 ListView {
@@ -93,7 +95,7 @@ Rectangle {
                         anchors.fill: parent
                         direction: CustomToolButton.Direction.Right
 
-                        onClicked: membersManager.getMembersPaging(pageSize, currentPage + 1)
+                        onClicked: membersManager.getMembersPaging(pageSize, currentPage + 1, MembersStatus.VIEW_MODE_FOCUS)
                     }
                 }
             }
@@ -109,24 +111,45 @@ Rectangle {
                 anchors.leftMargin: 8
                 anchors.top: parent.top
                 anchors.topMargin: 4
-                spacing: 10
+                spacing: 4
+                width: childrenRect.width
                 z: 1
 
                 Rectangle {
-                    color: "#771E1E1E"
-                    height: 22
-                    visible: (authManager.authAccountId === membersManager.hostAccountId || membersManager.isManagerRole) && videoManager.focusAccountId.length !== 0 && shareManager.shareAccountId.length === 0
-                    width: {
-                        if (SettingsStatus.UILanguage_en === SettingsManager.uiLanguage) {
-                            return 150;
-                        } else if (SettingsStatus.UILanguage_ja === SettingsManager.uiLanguage) {
-                            return 180;
-                        } else {
-                            return 90;
+                    id: extendView
+                    color: "#CC313138"
+                    height: 21
+                    radius: 2
+                    visible: showTopList
+                    width: 21
+
+                    Image {
+                        anchors.fill: parent
+                        height: 21
+                        mipmap: true
+                        source: showTopList ? "qrc:/qml/images/meeting/shrink.svg" : "qrc:/qml/images/meeting/extend.svg"
+                        width: 21
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+
+                        onClicked: {
+                            showTopList = !showTopList;
+                            // idSecondaryView.visible = !idSecondaryView.visible;
+                            SettingsManager.extendView = showTopList;
                         }
                     }
+                }
+                Rectangle {
+                    color: "#CC313138"
+                    height: 21
+                    radius: 2
+                    visible: (authManager.authAccountId === membersManager.hostAccountId || membersManager.isManagerRole) && videoManager.focusAccountId.length !== 0 && shareManager.shareAccountId.length === 0
+                    width: focusLabel.width + 8
 
                     Label {
+                        id: focusLabel
                         anchors.centerIn: parent
                         color: "#FFFFFF"
                         font.pixelSize: 12
@@ -135,35 +158,15 @@ Rectangle {
                     MouseArea {
                         id: unsetFocus
                         anchors.fill: parent
-                        cursorShape: Qt.ClosedHandCursor
+                        cursorShape: Qt.PointingHandCursor
 
                         onClicked: membersManager.setAsFocus(videoManager.focusAccountId, false)
                     }
                 }
-                Rectangle {
-                    color: "#CC313138"
-                    height: 21
-                    radius: 2
-                    visible: authManager.authAccountId !== shareManager.shareAccountId && shareManager.shareAccountId.length !== 0
-                    width: 21
-
-                    Image {
-                        anchors.fill: parent
-                        height: 21
-                        mipmap: true
-                        source: idSecondaryView.visible ? "qrc:/qml/images/meeting/shrink.svg" : "qrc:/qml/images/meeting/extend.svg"
-                        width: 21
-                    }
-                    MouseArea {
-                        id: extendView
-                        anchors.fill: parent
-                        cursorShape: Qt.ClosedHandCursor
-
-                        onClicked: {
-                            idSecondaryView.visible = !idSecondaryView.visible;
-                            SettingsManager.extendView = !idSecondaryView.visible;
-                        }
-                    }
+            }
+            HoverHandler {
+                onHoveredChanged: {
+                    extendView.visible = hovered && membersManager.count > 1;
                 }
             }
         }
@@ -202,8 +205,9 @@ Rectangle {
                 toast.show(qsTr("Someone is whiteboard sharing currently, you can't switch the view mode"));
                 return;
             }
-            if (secondaryModel.count !== 0)
-                mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/GalleryPage.qml'));
+            // if (secondaryModel.count !== 0)
+            mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/SplitPage.qml'));
+            // mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/GalleryPage.qml'));
         }
     }
     Connections {
@@ -254,10 +258,11 @@ Rectangle {
         target: shareManager
 
         onShareAccountIdChanged: {
-            if (shareManager.shareAccountId.length === 0) {
-                idSecondaryView.visible = Qt.binding(function () {
-                        return secondaryView.count > 0;
-                    });
+            if (shareManager.shareAccountId.length === 0)
+            // idSecondaryView.visible = Qt.binding(function () {
+            //         return secondaryView.count > 0;
+            //     });
+            {
             } else {
                 if (SettingsManager.extendView) {
                     extendView.clicked(Qt.LeftButton);
