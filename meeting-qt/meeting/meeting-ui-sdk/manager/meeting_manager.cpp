@@ -160,8 +160,13 @@ bool MeetingManager::joinMeeting(const nem_sdk_interface::NEJoinMeetingParams& p
                     bool reconnectTimesExceed = reconnectTimes() >= 4;
                     setReconnecting(false);
                     setReconnectTimes(0);
-                    if ((errorCode == kHttpResNotExists || errorCode == kHttpResMeetingEnded) || reconnectTimesExceed)
-                        emit meetingStatusChanged(NEMeeting::MEETING_DISCONNECTED, errorCode, qstrErrorMessage);
+                    if ((errorCode == kHttpResNotExists || errorCode == kHttpResMeetingEnded) || reconnectTimesExceed) {
+                        auto notifyCode = errorCode;
+                        // 重试大于等于 4 次则返回正常失败状态
+                        if (reconnectTimesExceed)
+                            notifyCode = kHttpBusinessResSuccess;
+                        emit meetingStatusChanged(NEMeeting::MEETING_DISCONNECTED, notifyCode, qstrErrorMessage);
+                    }
                 }
             }
             if (errorCode == 1020) {
@@ -203,13 +208,6 @@ void MeetingManager::modifyNicknameInMeeting(const QString& newnickname, const Q
             });
         });
     }
-}
-
-void MeetingManager::activeMainWindow() const {
-#if defined(Q_OS_MACX)
-    MacXHelpers helpers;
-    helpers.activeWindow(ShareManager::getInstance()->getMainWindow());
-#endif
 }
 
 void MeetingManager::onIdle() {
@@ -424,9 +422,7 @@ void MeetingManager::onRoomStatusChanged(NEMeeting::Status status, int errorCode
             setMeetingLocked(meetingInfo.lock);
             ChatManager::getInstance()->setChatRoomOpen(meetingInfo.isOpenChatroom);
             VideoManager::getInstance()->setFocusAccountId(QString::fromStdString(meetingInfo.focusAccountId));
-            ShareManager::getInstance()->setPaused(false);
             ShareManager::getInstance()->setShareSystemSound(false);
-            ShareManager::getInstance()->setSmoothPriority(false);
             WhiteboardManager::getInstance()->initWhiteboardStatus();
             setMaxCount(QString::fromStdString(meetingInfo.extraData));
             DeviceManager::getInstance()->startVolumeIndication();
@@ -498,7 +494,6 @@ void MeetingManager::onRoomStatusChanged(NEMeeting::Status status, int errorCode
             MembersManager::getInstance()->setHostAccountId("");
             VideoManager::getInstance()->setFocusAccountId("");
             ShareManager::getInstance()->setShareAccountId("");
-            ShareManager::getInstance()->setPaused(false);
             ShareManager::getInstance()->stopScreenSharing();
             MembersManager::getInstance()->setHandsUpStatus(false);
             MembersManager::getInstance()->setHandsUpCount(0);

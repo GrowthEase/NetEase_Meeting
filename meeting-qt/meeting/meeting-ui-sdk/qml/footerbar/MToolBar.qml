@@ -1,7 +1,7 @@
-﻿import QtQuick 2.15
+﻿import QtQuick
 import QtQml 2.14
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
+import QtQuick.Controls
+import QtQuick.Layouts
 import NetEase.Meeting.ToolbarItemModel 1.0
 import NetEase.Meeting.MoreItemEnum 1.0
 import NetEase.Meeting.GlobalChatManager 1.0
@@ -169,7 +169,7 @@ Item {
             modelIndex[i] = idToolbarModel.index(i, 0)
             var itemIndex = idToolbarModel.data(modelIndex[i], MToolBar.DataRole.ItemIndex)
             if (MoreItemEnum.MicMenuId === itemIndex || MoreItemEnum.CameraMenuId === itemIndex) {
-                var rowLayout = Qt.createQmlObject('import QtQuick 2.15; import QtQuick.Layouts 1.12; RowLayout { spacing: 0 }', mainItem)
+                var rowLayout = Qt.createQmlObject('import QtQuick; import QtQuick.Layouts; RowLayout { spacing: 0 }', mainItem)
                 footerItemArr.push(rowLayout)
                 rowLayout.Layout.preferredWidth = 72
                 rowLayout.Layout.preferredHeight = 68
@@ -232,7 +232,7 @@ Item {
                     break
                 case MoreItemEnum.ParticipantsMenuId:
                     var btnTmp2 = btnTmp
-                    var tips = Qt.createQmlObject('import QtQuick 2.15; import QtQuick.Controls 2.12; Label { anchors.topMargin: 8; anchors.rightMargin: 10; font.pixelSize: 11; font.bold: true; color: "#FFFFFF" }', btnTmp2)
+                    var tips = Qt.createQmlObject('import QtQuick; import QtQuick.Controls; Label { anchors.topMargin: 8; anchors.rightMargin: 10; font.pixelSize: 11; font.bold: true; color: "#FFFFFF" }', btnTmp2)
                     tips.text = Qt.binding(function(){ return membersManager.count })
                     tips.anchors.top = Qt.binding(function(){ return btnTmp2.top })
                     tips.anchors.right = Qt.binding(function(){ return btnTmp2.right })
@@ -246,7 +246,7 @@ Item {
                     break
                 case MoreItemEnum.MangeParticipantsMenuId:
                     var btnTmp3 = btnTmp
-                    var tips2 = Qt.createQmlObject('import QtQuick 2.15; import QtQuick.Controls 2.12; Label { anchors.topMargin: 8; anchors.rightMargin: 10; font.pixelSize: 11; font.bold: true; color: "#FFFFFF" }', btnTmp3)
+                    var tips2 = Qt.createQmlObject('import QtQuick; import QtQuick.Controls; Label { anchors.topMargin: 8; anchors.rightMargin: 10; font.pixelSize: 11; font.bold: true; color: "#FFFFFF" }', btnTmp3)
                     tips2.text = Qt.binding(function(){ return membersManager.count })
                     tips2.anchors.top = Qt.binding(function(){ return btnTmp3.top })
                     tips2.anchors.right = Qt.binding(function(){ return btnTmp3.right })
@@ -385,4 +385,3 @@ Item {
         }
     }
 }
-

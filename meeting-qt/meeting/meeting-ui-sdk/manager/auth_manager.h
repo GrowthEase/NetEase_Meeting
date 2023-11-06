@@ -94,7 +94,7 @@ public:
     void setAnonymousLogin(bool isAnonymousLogin) { m_anonymousLogin = isAnonymousLogin; }
 
 signals:
-    void login(NEAuthStatus authStatus, const NEAccountInfo& authAccountInfo);
+    void login(int authStatus);
     void logout();
     void authInfoExpired();
     void error(uint32_t errorCode, const QString& errorMessage);
@@ -105,7 +105,7 @@ signals:
     void authNickNameChanged();
 
 public slots:
-    void onLoginUI(NEAuthStatus authStatus, const NEAccountInfo& authAccountInfo);
+    void onLoginUI(int authStatus);
     void onLogoutUI();
     void onAuthInfoExpiredUI();
 

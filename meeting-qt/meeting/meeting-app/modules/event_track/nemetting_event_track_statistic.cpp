@@ -12,7 +12,7 @@
 #include "string_converter.h"
 #include "version.h"
 
-Q_DECLARE_METATYPE(__EventTrackStatistic::EventTrackStatisticClosure)
+// Q_DECLARE_METATYPE(__EventTrackStatistic::EventTrackStatisticClosure)
 const std::string NEMeetinEventTrackDataBase::kEVENTTAG = "event";
 std::once_flag NEMeetinEventTrackDataBase::static_data_once_flag_;
 NEMeetinEventTrackDataStaticData NEMeetinEventTrackDataBase::static_data_;

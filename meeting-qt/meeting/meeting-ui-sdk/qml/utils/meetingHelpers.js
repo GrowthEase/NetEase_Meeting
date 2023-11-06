@@ -32,6 +32,28 @@ function arrangeSpeakerLayout(primaryMember, secondaryMembers, realPage, realCou
     }
 }
 
+function arrangeSplitLayout(secondaryMembers, realPage, realCount, primaryContainer, secondaryContainer) {
+    for (let i = 0; i < secondaryMembers.length; i++) {
+        const member = secondaryMembers[i]
+        const result = compareMemberInfo(member, i, secondaryContainer)
+        if (-1 === result) {
+            // user not exist in listview
+            secondaryContainer.append(member)
+        } else if (1 === result) {
+            // needs to replace
+            secondaryContainer.remove(i)
+            secondaryContainer.insert(i, member)
+        }
+    }
+
+    // Remove invalid users when the number of lists exceeds the actual number
+    if (secondaryContainer.count > secondaryMembers.length) {
+        for (let j = secondaryMembers.length; j < secondaryContainer.count; /* Do not ++ */) {
+            secondaryContainer.remove(j)
+        }
+    }
+}
+
 function compareMemberInfo(memberObject, index, viewModel) {
     if (index > viewModel.count - 1) {
         return -1
@@ -55,6 +77,8 @@ function compareSpeaker(memberObject) {
 }
 
 function setActiveSpeaker(primaryMember, primaryContainer) {
+    if (null === primaryContainer || compareSpeaker(primaryMember))
+        return
     if (currentSpeaker !== undefined) {
         currentSpeaker.destroy(0)
         currentSpeaker = undefined
@@ -181,5 +205,15 @@ function arrangeWhiteboardMemberLayout(members, page, memberCount, membersModel)
         for (let j = members.length; j < membersModel.count; /* Do not ++ */) {
             membersModel.remove(j)
         }
+    }
+}
+
+const debounce = (func, wait = 50) => {
+    let timer = 0
+    return function(...args) {
+        if (timer) clearTimeout(timer)
+        timer = setTimeout(() => {
+            func.apply(this, args)
+        }, wait)
     }
 }

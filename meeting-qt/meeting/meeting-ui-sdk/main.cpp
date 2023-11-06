@@ -23,7 +23,7 @@
 #include "models/members_model.h"
 #include "models/message_model.h"
 #include "models/more_item_model.h"
-#include "models/screen_model.h"
+#include "models/screen_capture_source_model.h"
 #include "models/virtualbackground_model.h"
 
 #include "components/clipboard.h"
@@ -56,18 +56,12 @@ int main(int argc, char* argv[]) {
 #ifdef WIN32
     ::SetUnhandledExceptionFilter(MyUnhandledExceptionFilter);
     HostingModuleClient::setBugList(argv[0]);
-    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-    QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
 #else
     signal(SIGPIPE, SIG_IGN);
     QGuiApplication::setQuitOnLastWindowClosed(false);
 #endif
-    QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
-
     QtWebEngineQuick::initialize();
-
     QGuiApplication app(argc, argv);
-
 #if defined(Q_OS_MACX)
     QQuickWindow::setGraphicsApi(QSGRendererInterface::Metal);
 #else
@@ -182,7 +176,7 @@ int main(int argc, char* argv[]) {
     // qmlRegisterType<VideoRender>("NetEase.Meeting.VideoRender", 1, 0, "VideoRender");
     qmlRegisterType<FrameProvider>("NetEase.Meeting.FrameProvider", 1, 0, "FrameProvider");
     qmlRegisterType<ScreenProvider>("NetEase.Meeting.ScreenProvider", 1, 0, "ScreenProvider");
-    qmlRegisterType<ScreenModel>("NetEase.Meeting.ScreenModel", 1, 0, "ScreenModel");
+    qmlRegisterType<ScreenCaptureSourceModel>("NetEase.Meeting.ScreenCaptureSourceModel", 1, 0, "ScreenCaptureSourceModel");
     qmlRegisterType<VirtualBackgroundModel>("NetEase.Meeting.VirtualBackgroundModel", 1, 0, "VirtualBackgroundModel");
     qmlRegisterType<MoreItemModel>("NetEase.Meeting.MoreItemModel", 1, 0, "MoreItemModel");
     qmlRegisterType<ToolbarItemModel>("NetEase.Meeting.ToolbarItemModel", 1, 0, "ToolbarItemModel");
@@ -228,13 +222,6 @@ int main(int argc, char* argv[]) {
                 if (command.accountId.isEmpty() || command.accountToken.isEmpty()) {
                     MoreItemManager::getInstance()->restoreMore();
                     MoreItemManager::getInstance()->restoreToolbar();
-                    //            NEJoinRoomParams params;
-                    //            NEJoinRoomOptions options;
-                    //            params.roomId = command.meetingId.toStdString();
-                    //            params.displayName = command.nickname.toStdString();
-                    //            options.noAudio = !command.audio;
-                    //            options.noVideo = !command.video;
-                    //            MeetingManager::getInstance()->joinMeeting(params, options);
                 } else {
                     AuthManager::getInstance()->setAutoLoginInfo(command.accountId, command.accountToken);
                     MeetingManager::getInstance()->setStartMeetingInfo(command.create, command.meetingId, command.nickname, command.audio,
@@ -254,9 +241,6 @@ int main(int argc, char* argv[]) {
                              &MembersManager::handleShareAccountIdChanged);
             QObject::connect(DeviceManager::getInstance(), &DeviceManager::userAudioVolumeIndication, MembersManager::getInstance(),
                              &MembersManager::handleAudioVolumeIndication);
-
-            engine.addImageProvider(QLatin1String("shareScreen"), new ShareImageProvider(ScreenModel::kScreenType_Screen));
-            engine.addImageProvider(QLatin1String("shareApp"), new ShareImageProvider(ScreenModel::kScreenType_App));
             engine.addImageProvider(QLatin1String("localImage"), new localImageProvider());
             engine.rootContext()->setContextProperty("globalManager", GlobalManager::getInstance());
             engine.rootContext()->setContextProperty("authManager", AuthManager::getInstance());
@@ -285,16 +269,6 @@ int main(int argc, char* argv[]) {
             YXLOG(Info) << "engine.load start." << YXLOGEnd;
             engine.load(url);
             YXLOG(Info) << "engine.load end." << YXLOGEnd;
-
-            if (!engine.rootObjects().isEmpty()) {
-                QObject* pObj = engine.rootObjects().first();
-                if (pObj) {
-                    QWindow* pWindow = qobject_cast<QWindow*>(pObj);
-                    if (pWindow) {
-                        ShareManager::getInstance()->setMainWindow(pWindow);
-                    }
-                }
-            }
         });
 
     int result = app.exec();

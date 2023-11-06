@@ -11,9 +11,11 @@
 #include "version.h"
 
 extern HostingModuleClient ipcClient;
-std::unordered_map<NEMeetingLanguage, std::string> g_languageMap = {{NEMeetingLanguage::kNEChinese, "zh-CN"},
-                                                                    {NEMeetingLanguage::kNEEnglish, "en-US"},
-                                                                    {NEMeetingLanguage::kNEJapanese, "ja-JP"}};
+std::unordered_map<std::string, NEMeetingLanguage> g_languageMap = {{"zh-CN", NEMeetingLanguage::kNEChinese},
+                                                                    {"en-US", NEMeetingLanguage::kNEEnglish},
+                                                                    {"en-CN", NEMeetingLanguage::kNEEnglish},
+                                                                    {"ja-JP", NEMeetingLanguage::kNEJapanese},
+                                                                    {"ja-CN", NEMeetingLanguage::kNEJapanese}};
 
 NEMeetingSDKProcHandlerIMP::NEMeetingSDKProcHandlerIMP(QObject* parent /* = nullptr*/)
     : QObject(parent)
@@ -25,16 +27,19 @@ NEMeetingSDKProcHandlerIMP::NEMeetingSDKProcHandlerIMP(QObject* parent /* = null
 void NEMeetingSDKProcHandlerIMP::initLanguage() {
     auto languages = QLocale().uiLanguages();
     for (auto& language : languages) {
+        YXLOG(Info) << "Found language: " << language.toStdString() << YXLOGEnd;
         for (auto& it : g_languageMap) {
-            auto strLanguage = QString::fromStdString(it.second);
+            auto strLanguage = QString::fromStdString(it.first);
             bool bFind = strLanguage.contains(language, Qt::CaseInsensitive);
+            YXLOG(Info) << "---- " << strLanguage.toStdString() << ", --- " << language.toStdString() << YXLOGEnd;
             if (bFind) {
-                ipcClient.setLanguage(it.second);
+                YXLOG(Info) << "Use language: " << it.first << YXLOGEnd;
+                ipcClient.setLanguage(it.first);
                 return;
             }
         }
     }
-    ipcClient.setLanguage(g_languageMap[NEMeetingLanguage::kNEEnglish]);
+    ipcClient.setLanguage("en-US");
 }
 
 void NEMeetingSDKProcHandlerIMP::onInitialize(const NS_I_NEM_SDK::NEMeetingKitConfig& config,
@@ -124,12 +129,16 @@ void NEMeetingSDKProcHandlerIMP::onSwitchLanguage(NS_I_NEM_SDK::NEMeetingLanguag
     switch (language) {
         case NEMeetingLanguage::kNEAutomatic:
             initLanguage();
-            return;
+            break;
         case NEMeetingLanguage::kNEChinese:
+            ipcClient.setLanguage("zh-CN");
+            break;
         case NEMeetingLanguage::kNEEnglish:
+            ipcClient.setLanguage("en-US");
+            break;
         case NEMeetingLanguage::kNEJapanese:
-            ipcClient.setLanguage(g_languageMap[language]);
-            return;
+            ipcClient.setLanguage("jp-JP");
+            break;
         default:
             break;
     }

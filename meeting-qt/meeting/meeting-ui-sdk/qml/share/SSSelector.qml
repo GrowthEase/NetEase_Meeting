@@ -1,327 +1,304 @@
-﻿import QtQuick 2.15
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
+﻿import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import QtMultimedia 5.12
 import QtQuick.Window 2.14
 import Qt5Compat.GraphicalEffects
-import NetEase.Meeting.ScreenModel 1.0
+import NetEase.Meeting.ScreenCaptureSourceModel 1.0
 import NetEase.Meeting.MessageBubble 1.0
-
 import "../components"
 
 Popup {
     id: root
+
+    property string randImage: ''
+    property int screenIndex: 0
+    property int currentSelectType: 0
+    property var currentSelectSourceID: undefined
+
+    function initializeCaptureSources() {
+        busyIndicator.visible = true;
+        Qt.callLater(function() {
+            screenListModel.startEnumCaptureSources(320, 192);
+        });
+    }
+
+    Accessible.name: idDragArea.title
     anchors.centerIn: parent
-    width: 800
-    height: 570
-    padding: 0
     bottomInset: 0
+    closePolicy: Popup.NoAutoClose
+    dim: false
+    focus: true
+    height: 570
     leftInset: 0
-    topInset: 0
-    rightInset: 0
     margins: 0
     modal: false
-    dim: false
-    Accessible.name: idDragArea.title
-    focus: true
-    closePolicy: Popup.NoAutoClose
+    padding: 0
+    rightInset: 0
+    topInset: 0
+    width: 800
 
     background: Rectangle {
         id: backgroundRect
-        radius: Qt.platform.os === 'windows' ? 0 : 10
-        border.width: 1
         border.color: "#EBEDF0"
+        border.width: 1
         layer.enabled: true
+        radius: Qt.platform.os === 'windows' ? 0 : 10
+
         layer.effect: DropShadow {
-            width: backgroundRect.width
+            color: "#1917171a"
             height: backgroundRect.height
-            x: backgroundRect.x - 2
-            y: backgroundRect.y - 2
-            visible: backgroundRect.visible
-            source: backgroundRect
             horizontalOffset: 0
-            verticalOffset: 0
             radius: 16
             samples: 33
-            color: "#1917171a"
+            source: backgroundRect
+            verticalOffset: 0
+            visible: backgroundRect.visible
+            width: backgroundRect.width
+            x: backgroundRect.x - 2
+            y: backgroundRect.y - 2
         }
     }
 
-    property int screenIndex: 0
-    property string randImage: ''
+    Component.onCompleted: {
+        initializeCaptureSources();
+    }
+
+    onVisibleChanged: {
+        if (visible) {
+            initializeCaptureSources();
+        }
+    }
 
     ToastManager {
         id: toast
     }
 
-    Timer {
-        id: idImageTimer
-        repeat: false
-        running: false
-        interval: 100
-        onTriggered: {
-            randImage = '_' + ('000000' + Math.floor(Math.random() * 999999)).slice(-6)
-            //idImageTimer.start()
-        }
-    }
-
     ColumnLayout {
-        spacing: 0
-        height: parent.height
-        width: parent.width
         anchors.horizontalCenter: parent.horizontalCenter
+        height: parent.height
+        spacing: 0
+        width: parent.width
 
         DragArea {
             id: idDragArea
-            title: qsTr("Select screen")
-            windowMode: false
-            titleFontSize: 18
             Layout.fillWidth: true
             Layout.preferredHeight: 50
+            title: qsTr("Select screen")
+            titleFontSize: 18
+            windowMode: false
+
             onCloseClicked: {
-                root.close()
+                root.close();
             }
         }
-
         Item {
-            Layout.preferredHeight: 20
             Layout.fillWidth: true
+            Layout.preferredHeight: 20
         }
-
         GridView {
             id: screenGridView
-            Layout.preferredHeight: 444
-            Layout.preferredWidth: 760
             Layout.alignment: Qt.AlignTop
             Layout.leftMargin: 25
-            cellWidth: 180 + 10
-            cellHeight: 135 + 10
-            clip: true
+            Layout.preferredHeight: 444
+            Layout.preferredWidth: 760
             cacheBuffer: screenListModel.rowCount() * cellHeight
-            model: ScreenModel {
-                id: screenListModel
-                onModelReset: {
-                    screenIndex = 0
-                    screenGridView.currentIndex = screenIndex
-                }
+            cellHeight: 135 + 10
+            cellWidth: 180 + 10
+            clip: true
+
+            ScrollBar.vertical: ScrollBar {
+                id: idScrollBar
+                width: 7
             }
             delegate: Rectangle {
+                height: screenGridView.cellHeight - 10
                 width: screenGridView.cellWidth - 10
-                height: screenGridView.cellHeight -10
+
                 Rectangle {
-                    anchors.top: parent.top
+                    Accessible.name: idCellText.text
+                    Accessible.role: Accessible.Button
                     anchors.left: parent.left
-                    width: screenGridView.cellWidth - 10
-                    height: screenGridView.cellHeight -10
-                    color: "#FFFFFF"
-                    radius: 4
-                    border.width: 1
+                    anchors.top: parent.top
                     border.color: screenGridView.currentIndex === model.index || ma.containsMouse ? "#337EFF" : "#E1E3E6"
+                    border.width: 1
+                    color: "#FFFFFF"
+                    height: screenGridView.cellHeight - 10
+                    radius: 4
+                    visible: -1 !== model.type
+                    width: screenGridView.cellWidth - 10
+
+                    Accessible.onPressAction: {
+                        if (enabled)
+                            ma.clicked(Qt.LeftButton);
+                    }
                     Component.onCompleted: {
                         if (model.index === 0) {
-                            screenGridView.currentIndex = model.index
-                            screenIndex = model.index
+                            screenGridView.currentIndex = model.index;
+                            screenIndex = model.index;
+                            currentSelectType = model.type;
+                            currentSelectSourceID = model.id;
                         }
                     }
-                    visible: -1 !== model.screenType
 
                     Rectangle {
                         id: idCell
-                        width: 160
-                        height: 96
-                        anchors.top: parent.top
-                        anchors.topMargin: 10
                         anchors.left: parent.left
                         anchors.leftMargin: 10
                         anchors.right: parent.right
                         anchors.rightMargin: 10
+                        anchors.top: parent.top
+                        anchors.topMargin: 10
                         color: "#F2F3F5"
+                        height: 96
+                        width: 160
+
                         Image {
                             id: idImag
-                            anchors.top: parent.top
                             anchors.left: parent.left
-                            width: parent.width
-                            height: parent.height
-                            sourceSize.width: width
-                            sourceSize.height: height
+                            anchors.top: parent.top
                             asynchronous: true
-                            fillMode: model.screenAppWinMinimized ? Image.Pad : Image.PreserveAspectFit
+                            fillMode: Image.PreserveAspectFit
+                            height: parent.height
                             mipmap: true
-                            source: {
-                                if (0 === model.screenType) {
-                                    return "image://shareScreen/" + model.index + randImage
-                                } else if (1 === model.screenType) {
-                                    return "image://shareApp/" + model.screenAppWinId + randImage
-                                }
-                                return ""
-                            }
+                            source: `data:image/png;base64,${model.thumbnail}`
+                            sourceSize.height: height
+                            sourceSize.width: width
+                            width: parent.width
                         }
                     }
                     Label {
                         id: idCellText
+                        ToolTip.text: idCellText.text
+                        ToolTip.delay: 1000
+                        ToolTip.visible: ma.containsMouse ? idCellText.text.length !== 0 && idCellText.truncated : false
+                        anchors.horizontalCenter: parent.horizontalCenter
                         anchors.top: idCell.bottom
                         anchors.topMargin: 6
-                        width: parent.width
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        horizontalAlignment: Text.AlignHCenter
                         color: screenGridView.currentIndex === model.index || ma.containsMouse ? "#337EFF" : "#222222"
-                        font.pixelSize: 12
                         elide: Text.ElideRight
-                        text: {
-                            if (0 === model.screenType) {
-                                return qsTr("Screen") + (model.index + 1).toString()
-                            } else if (1 === model.screenType) {
-                                return model.screenName.toString()
-                            }
-                            return ""
-                        }
-                        ToolTip.text: idCellText.text
-                        ToolTip.visible: ma.containsMouse ? idCellText.text.length !== 0 && idCellText.truncated : false
-                        //                        MouseArea {
-                        //                            id: maLabel
-                        //                            anchors.fill: idCellText
-                        //                            hoverEnabled: true
-                        //                        }
+                        font.pixelSize: 12
+                        horizontalAlignment: Text.AlignHCenter
+                        text: model.title
+                        width: parent.width - 20
                     }
                     MouseArea {
                         id: ma
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         hoverEnabled: true
+
                         onClicked: {
-                            screenGridView.currentIndex = model.index
-                            if (0 === model.screenType) {
-                                screenIndex = model.index
-                            } else if (1 === model.screenType) {
-                                screenIndex = model.screenAppWinId
-                            }
+                            currentSelectType = model.type;
+                            currentSelectSourceID = model.id;
+                            screenGridView.currentIndex = model.index;
                         }
                     }
-                    Accessible.role: Accessible.Button
-                    Accessible.name: idCellText.text
-                    Accessible.onPressAction: if (enabled) ma.clicked(Qt.LeftButton)
                 }
             }
-            ScrollBar.vertical: ScrollBar {
-                id: idScrollBar
-                width: 7
+            model: ScreenCaptureSourceModel {
+                id: screenListModel
+                onModelReset: {
+                    busyIndicator.visible = false;
+                    screenGridView.currentIndex = 0;
+                }
             }
         }
     }
 
     Rectangle {
         id: screenFooterBar
-        width: parent.width
-        height: 52
         anchors.bottom: parent.bottom
+        height: 52
         radius: 10
+        width: parent.width
+
         CustomToolSeparator {
-            width: parent.width
             anchors.top: parent.top
+            width: parent.width
         }
         CustomCheckBox {
             id: checkShareAudio
-            visible: Qt.platform.os === "windows"
             anchors.left: parent.left
             anchors.leftMargin: 25
             anchors.verticalCenter: parent.verticalCenter
+            checked: shareManager.shareSystemSound
             font.pixelSize: 14
             font.weight: Font.Light
             text: qsTr("Shared computer sound")
-            checked: shareManager.shareSystemSound
+            visible: Qt.platform.os === "windows"
+
             onClicked: {
                 shareManager.setShareSystemSound(checkShareAudio.checked);
             }
         }
-        CustomCheckBox {
-            id: checkSmooth
-            anchors.left: Qt.platform.os === "windows" ? checkShareAudio.right : parent.left
-            anchors.leftMargin: Qt.platform.os === "windows" ? 10 : 25
-            anchors.verticalCenter: parent.verticalCenter
-            font.pixelSize: 14
-            font.weight: Font.Light
-            text: qsTr("Smooth priority")
-            checked: shareManager.smoothPriority
-            onClicked: {
-                shareManager.setSmoothPriority(checkSmooth.checked);
-            }
-        }
         CustomButton {
             anchors.centerIn: parent
-            width: 120
             height: 36
             highlighted: true
             text: qsTr("Start")
+            width: 120
+
             onClicked: {
-                if(whiteboardManager.whiteboardSharing){
-                    toast.show(qsTr("Whiteboard sharing does not currently support screen share"))
+                if (whiteboardManager.whiteboardSharing) {
+                    toast.show(qsTr("Whiteboard sharing does not currently support screen share"));
                     return;
                 }
-
                 if (!shareManager.hasRecordPermission()) {
-                    toast.show(qsTr('You have no permission to sharing screen.'))
+                    toast.show(qsTr('You have no permission to sharing screen.'));
+                    return;
+                }
+                if (shareManager.shareAccountId.length !== 0) {
+                    toast.show(qsTr("Someone is currently sharing a screen"));
                     return;
                 }
 
-                if (shareManager.shareAccountId.length !== 0) {
-                    toast.show(qsTr("Someone is currently sharing a screen"))
-                } else {
-                    if (MessageBubble.visible){
-                        MessageBubble.hide();
-                    }
-
-                    if (sharedWnd !== undefined){
-                        sharedWnd.destroy()
-                        sharedWnd = undefined
-                    }
-                    shareManager.clearExcludeShareWindow()
-                    const screens = Qt.application.screens;
-                    var screen = mainWindow.screen
-                    if (shareSelector.screenIndex <= screens.length - 1)
-                    {
-                        screen = screens[shareSelector.screenIndex]
-                    }
-                    sharedWnd = Qt.createComponent("qrc:/qml/share/SSToolbar.qml").createObject(mainWindow)
-                    sharedWnd.shareScreen = screen
-                    sharedWnd.screen = screen
-
-                    console.log("screenIndex: ", shareSelector.screenIndex)
-                    if (Qt.platform.os === 'osx') {
-                        shareManager.addExcludeShareWindow(MessageBubble)
-                    }
-                    if (shareSelector.screenIndex <= screens.length - 1)
-                    {
-                        close();
-                        shareManager.startScreenSharing(shareSelector.screenIndex)
-                    } else{
-                        if (!screenListModel.windowExist(shareSelector.screenIndex)) {
-                            toast.show(qsTr('The share failed because the window was closed'))
-                            Qt.callLater(function(){
-                                screenListModel.startEnumTopWindow()
-                                //randImage = '_' + ('000000' + Math.floor(Math.random() * 999999)).slice(-6)
-                            })
-                            return;
-                        }
-                        close();
-                        shareManager.startAppSharing(shareSelector.screenIndex)
-                    }
+                if (MessageBubble.visible) {
+                    MessageBubble.hide();
                 }
+                shareManager.clearExcludeShareWindow();
+                const screens = Qt.application.screens;
+                let screen = mainWindow.screen;
+                if (screenGridView.currentIndex <= screens.length - 1) {
+                    screen = screens[screenGridView.currentIndex];
+                }
+                sharedWnd = Qt.createComponent("qrc:/qml/share/SSToolbar.qml").createObject(mainWindow);
+                sharedWnd.shareScreen = screen;
+                sharedWnd.screen = screen;
+                if (Qt.platform.os === 'osx')
+                    shareManager.addExcludeShareWindow(MessageBubble);
+                console.log(`Start screen capture: source ID: ${currentSelectSourceID}, type: ${currentSelectType}`);
+                shareManager.startSharingWithSourceID(currentSelectSourceID, currentSelectType);
+                close();
             }
         }
     }
 
-    onVisibleChanged: {
-        if (visible) {
-            Qt.callLater(function(){
-                screenListModel.startEnumTopWindow()
-                //randImage = '_' + ('000000' + Math.floor(Math.random() * 999999)).slice(-6)
-            })
+    Rectangle {
+        id: busyIndicator
+        anchors.fill: parent
+        color: "transparent"
+        width: parent.width
 
-            //idImageTimer.start()
+        BusyIndicator {
+            anchors.centerIn: parent
+            height: 40
+            width: 40
         }
-        else {
-            //idImageTimer.stop()
-            //randImage = '_' + ('000000' + Math.floor(Math.random() * 999999)).slice(-6)
+
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+        }
+    }
+
+    Connections {
+        target: shareManager
+        onScreenAdded: {
+            initializeCaptureSources();
+        }
+        onScreenRemoved: {
+            initializeCaptureSources();
         }
     }
 }

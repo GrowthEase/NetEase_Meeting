@@ -7,18 +7,17 @@
 
 #include <QObject>
 #include <QTimer>
+#include <map>
 
-typedef enum { High = 0, Low = 1, None = 2 } Quality;
+enum Quality { Unknown = -1, High = 0, Low = 1, SubStream = 2 };
 
 enum SubscribeTimestamp { kSubscribeUnsubscribed = -1, kSubscribeWaitForUnsub };
 
 typedef struct tagSubscribeInfo {
     tagSubscribeInfo()
-        : quality(None)
-        , videoStarted(false)
+        : videoStarted(false)
         , timestamp(kSubscribeUnsubscribed) {}
-    Quality quality;
-    QString uuid;
+    std::map<QString, Quality> qualities;
     bool videoStarted;
     int64_t timestamp;
 } SubscribeInfo;
@@ -30,10 +29,14 @@ public:
 
     void reset();
     void init();
-    bool subscribe(const std::string& userId, bool highQuality, const QString& uuid);
-    void unsubscribe(const std::string& userId, const QString& uuid);
+    bool subscribe(const std::string& userId, Quality streamType, const QString& uuid);
+    void unsubscribe(const std::string& userId, Quality streamType, const QString& uuid);
     bool removeVideoState(const std::string& userId);
     void updateVideoState(const std::string& userId, bool started);
+
+private:
+    std::string stringifyQualities(const std::map<QString, Quality>& qualities) const;
+    Quality getSubscribeQuality(const std::string& userId);
 
 private:
     std::recursive_mutex m_subscribeLock;

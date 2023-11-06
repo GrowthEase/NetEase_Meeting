@@ -38,7 +38,7 @@ public:
     std::string GetEventUUID() const override { return OnGetEventUUID(); }
     time_t GetStartTime() const override { return OnGetStartTime(); }
     time_t GetEndTime() const override { return OnGetEndTime(); }
-    uint32_t GetDuration() const override { return OnGetEndTime() - OnGetStartTime(); }
+    uint32_t GetDuration() const override { return static_cast<uint32_t>(OnGetEndTime() - OnGetStartTime()); }
     bool IsSucceed() const override { return OnGetSucceed(); }
     int32_t GetResultCode() const override { return OnGetResultCode(); }
     std::string GetParameters() const override { return OnGetParameters(); }

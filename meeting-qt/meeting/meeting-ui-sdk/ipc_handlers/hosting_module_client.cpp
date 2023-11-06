@@ -276,11 +276,7 @@ bool HostingModuleClient::InitLocalEnviroment(int port) {
                             if (meeting_service != nullptr) {
                                 YXLOG(Info) << "onMeetingStatusChanged status chagned, interface_status: " << interface_status
                                             << ", interface_code: " << interface_code << YXLOGEnd;
-                                QTimer::singleShot(100, [meeting_service, interface_status, interface_code] {
-                                    YXLOG(Info) << "onMeetingStatusChanged status chagned, interface_status: " << interface_status
-                                                << ", interface_code: " << interface_code << YXLOGEnd;
-                                    meeting_service->onMeetingStatusChanged(interface_status, interface_code);
-                                });
+                                meeting_service->onMeetingStatusChanged(interface_status, interface_code);
                             }
                         }
                     });

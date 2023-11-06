@@ -55,7 +55,7 @@ void VideoManager::onFocusVideoChanged(const std::string& accountId, bool isFocu
 bool VideoManager::subscribeRemoteVideoStream(const QString& accountId, bool highQuality, const QString& uuid) {
     auto subscribeHelper = MeetingManager::getInstance()->getSubscribeHelper();
     if (subscribeHelper) {
-        return subscribeHelper->subscribe(accountId.toStdString(), highQuality, uuid);
+        return subscribeHelper->subscribe(accountId.toStdString(), highQuality ? High : Low, uuid);
     }
     return false;
 }
@@ -63,7 +63,16 @@ bool VideoManager::subscribeRemoteVideoStream(const QString& accountId, bool hig
 bool VideoManager::unSubscribeRemoteVideoStream(const QString& accountId, const QString& uuid) {
     auto subscribeHelper = MeetingManager::getInstance()->getSubscribeHelper();
     if (subscribeHelper) {
-        subscribeHelper->unsubscribe(accountId.toStdString(), uuid);
+        subscribeHelper->unsubscribe(accountId.toStdString(), High, uuid);
+        return true;
+    }
+    return false;
+}
+
+bool VideoManager::unSubscribeRemoteVideoStream(const QString& accountId, bool hightQuality, const QString& uuid) {
+    auto subscribeHelper = MeetingManager::getInstance()->getSubscribeHelper();
+    if (subscribeHelper) {
+        subscribeHelper->unsubscribe(accountId.toStdString(), hightQuality ? High : Low, uuid);
         return true;
     }
     return false;
@@ -111,22 +120,25 @@ bool VideoManager::setupVideoCanvas(const QString& accountId, QObject* view, boo
         m_videoController->setupVideoCanvas(userId, userData, window);
         if (0 == ret && !((accountId.toStdString() == authInfo.accountId) || accountId.isEmpty())) {
             if (userData != nullptr || window != nullptr) {
-                if (subscribeHelper) {
-                    subscribeHelper->subscribe(userId, highQuality, uuid);
-                }
+                if (subscribeHelper)
+                    subscribeHelper->subscribe(userId, highQuality ? High : Low, uuid);
             } else {
-                if (subscribeHelper) {
-                    subscribeHelper->unsubscribe(userId, uuid);
-                }
+                if (subscribeHelper)
+                    subscribeHelper->unsubscribe(userId, highQuality ? High : Low, uuid);
             }
         }
     } else {
         ret = m_videoController->setupSubVideoCanvas(userId, userData, window);
         if (0 == ret) {
-            if (userData != nullptr || window != nullptr)
+            if (userData != nullptr || window != nullptr) {
+                if (subscribeHelper)
+                    subscribeHelper->subscribe(userId, SubStream, uuid);
                 ret = m_videoController->subscribeRemoteVideoSubStream(userId);
-            else
+            } else {
+                if (subscribeHelper)
+                    subscribeHelper->unsubscribe(userId, SubStream, uuid);
                 ret = m_videoController->unsubscribeRemoteVideoSubStream(userId);
+            }
         }
     }
 
@@ -351,19 +363,22 @@ void VideoManager::onReceivedUserVideoFrame(const std::string& accountId, const 
     format.setColorSpace(VideoManager::m_colorSpace);
     format.setColorTransfer(VideoManager::m_colorTransfer);
     format.setViewport(QRect(0, 0, rotationWidth, rotationHeight));
-    QVideoFrame videoFrame(format);
-    if (videoFrame.map(QVideoFrame::WriteOnly)) {
-        auto src = reinterpret_cast<uint8_t*>(frame.data);
-        // If the aspect ratio of the original data is not a multiple of 16,
-        // when mappedBytes(n) is called after frame mapping, the returned size will be expanded to the nearest multiple of 16.
-        // When copying the data, bytesPerLine(n) should be used to get the actual stride that needs to be copied.
-        libyuv::I420Rotate(src + frame.offset[0], frame.stride[0], src + frame.offset[1], frame.stride[1], src + frame.offset[2], frame.stride[2],
-                           videoFrame.bits(0), videoFrame.bytesPerLine(0), videoFrame.bits(1), videoFrame.bytesPerLine(1), videoFrame.bits(2),
-                           videoFrame.bytesPerLine(2), frame.width, frame.height, rotate_mode);
-        videoFrame.setStartTime(0);
-        videoFrame.unmap();
-        QSize size = QSize(static_cast<int>(rotationWidth), static_cast<int>(rotationHeight));
-        emit VideoManager::m_videoFrameDelegate->receivedVideoFrame(QString::fromStdString(accountId), videoFrame, size, bSub);
+    try {
+        QVideoFrame videoFrame(format);
+        if (videoFrame.map(QVideoFrame::WriteOnly)) {
+            auto src = reinterpret_cast<uint8_t*>(frame.data);
+            libyuv::I420Rotate(src + frame.offset[0], frame.stride[0], src + frame.offset[1], frame.stride[1], src + frame.offset[2], frame.stride[2],
+                               videoFrame.bits(0), videoFrame.bytesPerLine(0), videoFrame.bits(1), videoFrame.bytesPerLine(1), videoFrame.bits(2),
+                               videoFrame.bytesPerLine(2), frame.width, frame.height, rotate_mode);
+            videoFrame.setStartTime(0);
+            videoFrame.unmap();
+            QSize size = QSize(static_cast<int>(rotationWidth), static_cast<int>(rotationHeight));
+            emit VideoManager::m_videoFrameDelegate->receivedVideoFrame(QString::fromStdString(accountId), videoFrame, size, bSub);
+        }
+    } catch (const std::bad_alloc& e) {
+        YXLOG(Error) << "[VideoManager] Caught exception bad_alloc: " << e.what() << YXLOGEnd;
+    } catch (const std::exception& e) {
+        YXLOG(Error) << "[VideoManager] Caught exception exception: " << e.what() << YXLOGEnd;
     }
 }
 

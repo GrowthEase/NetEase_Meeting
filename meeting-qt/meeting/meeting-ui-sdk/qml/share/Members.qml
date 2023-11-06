@@ -1,13 +1,16 @@
-﻿import QtQuick 2.15
+﻿import QtQuick
 import QtQuick.Window 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
+import QtQuick.Controls
+import QtQuick.Layouts
 import QtQuick.Controls.Material 2.12
 import Qt5Compat.GraphicalEffects
 import "../components"
 
 Window {
     id: membersWindow
+
+    property var tempDynamicDialogEx: undefined
+
     Material.theme: Material.Light
     color: 'transparent'
     flags: Qt.Window | Qt.FramelessWindowHint
@@ -17,6 +20,8 @@ Window {
     onVisibleChanged: {
         if (!visible) {
             sidebar.closePopupMenu();
+            if (tempDynamicDialogEx !== undefined && tempDynamicDialogEx !== null)
+                tempDynamicDialogEx.close();
         }
     }
 
@@ -38,12 +43,15 @@ Window {
     }
     ToastManager {
         id: toast
+
     }
     MuteConfirmDialog {
         id: muteConfirmDialog
+
     }
     Rectangle {
         id: mainLayout
+
         anchors.fill: parent
         anchors.margins: 10
         border.color: '#FFFFFF'
@@ -56,6 +64,7 @@ Window {
 
             DragArea {
                 id: idDragArea
+
                 Layout.fillWidth: true
                 Layout.preferredHeight: 54
                 title: qsTr('Members')
@@ -64,6 +73,7 @@ Window {
             }
             Sidebar {
                 id: sidebar
+
                 Layout.fillHeight: true
                 Layout.fillWidth: true
                 radius: 10

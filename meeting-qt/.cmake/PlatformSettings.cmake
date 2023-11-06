@@ -62,7 +62,7 @@ endif ()
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     # target system is Darwin
     message(STATUS "NetEase: Configure for [Apple] like")
-    set(CMAKE_OSX_DEPLOYMENT_TARGET 10.14 CACHE STRING "Minimum OS X deployment version" FORCE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET 10.15 CACHE STRING "Minimum OS X deployment version" FORCE)
 endif ()
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     # target system is UNIX like

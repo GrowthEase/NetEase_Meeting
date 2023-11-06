@@ -132,7 +132,6 @@ public:
     Q_INVOKABLE void cancelJoinMeeting();
     Q_INVOKABLE NEMeeting::Status getRoomStatus() const;
     Q_INVOKABLE void modifyNicknameInMeeting(const QString& newnickname, const QString& meetingID);
-    Q_INVOKABLE void activeMainWindow() const;
 
     void onIdle();
     void onConnecting();

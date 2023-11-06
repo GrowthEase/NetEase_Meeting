@@ -23,8 +23,8 @@ class ModuleConan(ConanFile):
             self.requires(f"nertc/{env_nertc_version}@yunxin/testing")
             print('Using nertc version from env: ', env_nertc_version)
         self.requires("alog/1.1.0@yunxin/stable")
-        self.requires("roomkit/1.20.0@yunxin/stable")
-        self.requires("tinyNET/0.1.1@yunxin/stable")
+        self.requires("roomkit/1.21.0@yunxin/stable")
+        self.requires("tinynet/0.1.3@yunxin/stable")
         self.requires("libyuv/1854@yunxin/stable")
         self.requires("gtest/cci.20210126")
         self.requires("jsoncpp/1.9.5")
@@ -47,5 +47,6 @@ class ModuleConan(ConanFile):
         if self.settings.os == 'Windows':
             self.copy("*.dll", "bin", "bin", "nim")
             self.copy("*.dll", "bin", "bin", "roomkit")
+            self.copy("*.pdb", "pdb", "pdb", "roomkit")
             self.copy("*.dll", "bin", "bin", "nertc")
             self.copy("*.exe", "bin", "bin", "nertc")

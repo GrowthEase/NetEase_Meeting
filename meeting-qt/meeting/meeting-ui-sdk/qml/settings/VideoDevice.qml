@@ -1,7 +1,7 @@
-﻿import QtQuick 2.15
+﻿import QtQuick
 import QtQuick.Window 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
+import QtQuick.Controls
+import QtQuick.Layouts
 import QtMultimedia 5.12
 import NetEase.Meeting.DeviceModel 1.0
 import NetEase.Meeting.MeetingStatus 1.0

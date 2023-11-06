@@ -12,6 +12,7 @@
 MembersManager::MembersManager(QObject* parent)
     : QObject(parent) {
     qRegisterMetaType<NEMeeting::HandsUpStatus>();
+    qmlRegisterUncreatableType<MembersManager>("NetEase.Members.Status", 1, 0, "MembersStatus", "");
     m_membersController = std::make_shared<NEMeetingUserController>();
 
     auto globalConfig = GlobalManager::getInstance()->getGlobalConfig();
@@ -21,7 +22,7 @@ MembersManager::MembersManager(QObject* parent)
     connect(this, &MembersManager::afterUserJoined, this, &MembersManager::onAfterUserJoinedUI);
     connect(this, &MembersManager::afterUserLeft, this, &MembersManager::onAfterUserLeftUI);
 
-    connect(&m_refreshTime, &QTimer::timeout, this, [this]() { getMembersPaging(m_pageSize, m_currentPage); });
+    connect(&m_refreshTime, &QTimer::timeout, this, [this]() { getMembersPaging(m_pageSize, m_currentPage, m_lastViewMode); });
     m_refreshTime.setSingleShot(true);
 }
 
@@ -219,7 +220,9 @@ bool MembersManager::getPrimaryMember(MemberInfo& memberInfo) {
         if (!meetingInfo.focusAccountId.empty()) {
             primary = meetingInfo.focusAccountId;
             YXLOG(Info) << "Select focus member as primary member: " << primary << YXLOGEnd;
-            break;
+            if (getMemberByAccountId(QString::fromStdString(primary), memberInfo))
+                break;
+            YXLOG(Warn) << "Failed to get primary user info by account ID: " << primary << YXLOGEnd;
         }
         if (!meetingInfo.speakerUserId.empty() && membersCount > 2 && meetingInfo.speakerUserId != authInfo.accountId) {
             primary = meetingInfo.speakerUserId;
@@ -255,17 +258,47 @@ void MembersManager::setHandsUpStatus(bool handsUp) {
     m_bHandsUp = handsUp;
 }
 
+void MembersManager::getMembersPaging(quint32 pageSize, quint32 pageNumber, ViewMode viewMode) {
+    YXLOG(Warn) << "[MembersManager] Fetch members with view mode: " << viewMode << YXLOGEnd;
+    auto tmpViewMode = viewMode;
+    if (viewMode == VIEW_MODE_AUTO)
+        tmpViewMode = m_lastViewMode;
+    switch (tmpViewMode) {
+        case VIEW_MODE_FOCUS:
+            pagingFocusView(pageSize, pageNumber);
+            break;
+        case VIEW_MODE_FOCUS_WITH_SELF:
+            pagingSharingView(pageSize, pageNumber);
+            break;
+        case VIEW_MODE_GALLERY:
+            pagingGalleryView(pageSize, pageNumber);
+            break;
+        case VIEW_MODE_WHITEBOARD:
+            pagingWhiteboardView(pageSize, pageNumber);
+            break;
+        default:
+            YXLOG(Warn) << "[MembersManager] Fetch members with invalid view mode: " << viewMode << YXLOGEnd;
+            break;
+    }
+    if (viewMode != VIEW_MODE_AUTO)
+        setViewMode(viewMode);
+}
+
 void MembersManager::getMembersPaging(quint32 pageSize, quint32 pageNumber) {
     if (isWhiteboardView()) {
         pagingWhiteboardView(pageSize, pageNumber);
     } else if (isGalleryView()) {
         pagingGalleryView(pageSize, pageNumber);
     } else {
-        if (ShareManager::getInstance()->shareAccountId() == AuthManager::getInstance()->authAccountId())
+        if (includeSelf())
             pagingSharingView(pageSize, pageNumber);
         else
             pagingFocusView(pageSize, pageNumber);
     }
+}
+
+void MembersManager::getGalleryViewPaging(quint32 pageSize, quint32 pageNumber) {
+    pagingGalleryView(pageSize, pageNumber);
 }
 
 void MembersManager::setAsHost(const QString& accountId) {
@@ -374,27 +407,8 @@ void MembersManager::pagingFocusView(quint32 pageSize, quint32 pageNumber) {
                 << ", page size: " << m_pageSize << YXLOGEnd;
     for (int i = begin; i < end; i++) {
         auto member_item = secondaryMembers[i];
-        QJsonObject member;
-        member[kMemberAccountId] = member_item.accountId;
-        member[kMemberNickname] = member_item.nickname;
-        member[kMemberAudioStatus] = member_item.audioStatus;
-        member[kMemberVideoStatus] = member_item.videoStatus;
-        member[kMemberSharingStatus] = member_item.sharing;
-        member[kMemberAudioHandsUpStatus] = member_item.handsupStatus;
-        member[kMemberClientType] = member_item.clientType;
-        member[kMemberCreatedAt] = member_item.createdAt;
-        pagedMembers.push_back(member);
+        pagedMembers.push_back(memberToJsonObject(member_item));
     }
-
-    QJsonObject primaryMember;
-    primaryMember[kMemberAccountId] = primaryMemberInfo.accountId;
-    primaryMember[kMemberNickname] = primaryMemberInfo.nickname;
-    primaryMember[kMemberAudioStatus] = primaryMemberInfo.audioStatus;
-    primaryMember[kMemberVideoStatus] = primaryMemberInfo.videoStatus;
-    primaryMember[kMemberSharingStatus] = primaryMemberInfo.sharing;
-    primaryMember[kMemberAudioHandsUpStatus] = primaryMemberInfo.handsupStatus;
-    primaryMember[kMemberClientType] = primaryMemberInfo.clientType;
-    primaryMember[kMemberCreatedAt] = primaryMemberInfo.createdAt;
 
     YXLOG(Debug) << "-------------------------------------------------" << YXLOGEnd;
     YXLOG(Debug) << "Focus view, primary member: " << primaryMemberInfo.accountId.toStdString() << YXLOGEnd;
@@ -404,7 +418,7 @@ void MembersManager::pagingFocusView(quint32 pageSize, quint32 pageNumber) {
     }
     YXLOG(Debug) << "-------------------------------------------------" << YXLOGEnd;
 
-    emit membersChanged(primaryMember, pagedMembers, m_currentPage, secondaryMembers.size());
+    emit membersChanged(memberToJsonObject(primaryMemberInfo), pagedMembers, m_currentPage, secondaryMembers.size(), VIEW_MODE_FOCUS);
 }
 
 void MembersManager::pagingSharingView(quint32 pageSize, quint32 pageNumber) {
@@ -425,7 +439,10 @@ void MembersManager::pagingSharingView(quint32 pageSize, quint32 pageNumber) {
     for (auto& member : members) {
         if (member.accountId == primaryMemberInfo.accountId)
             continue;
-        secondaryMembers.push_back(member);
+        if (QString::fromStdString(authInfo.accountId) == member.accountId && !primaryMemberInfo.sharing)
+            secondaryMembers.push_front(member);
+        else
+            secondaryMembers.push_back(member);
     }
 
     uint32_t pageCount = (uint32_t)secondaryMembers.size() <= pageSize
@@ -446,27 +463,8 @@ void MembersManager::pagingSharingView(quint32 pageSize, quint32 pageNumber) {
                 << ", page size: " << m_pageSize << YXLOGEnd;
     for (quint32 i = begin; i < end; i++) {
         auto memberItem = secondaryMembers[i];
-        QJsonObject member;
-        member[kMemberAccountId] = memberItem.accountId;
-        member[kMemberNickname] = memberItem.nickname;
-        member[kMemberAudioStatus] = memberItem.audioStatus;
-        member[kMemberVideoStatus] = memberItem.videoStatus;
-        member[kMemberSharingStatus] = memberItem.sharing;
-        member[kMemberAudioHandsUpStatus] = memberItem.handsupStatus;
-        member[kMemberClientType] = memberItem.clientType;
-        member[kMemberCreatedAt] = memberItem.createdAt;
-        pagedMembers.push_back(member);
+        pagedMembers.push_back(memberToJsonObject(memberItem));
     }
-
-    QJsonObject primaryMember;
-    primaryMember[kMemberAccountId] = primaryMemberInfo.accountId;
-    primaryMember[kMemberNickname] = primaryMemberInfo.nickname;
-    primaryMember[kMemberAudioStatus] = primaryMemberInfo.audioStatus;
-    primaryMember[kMemberVideoStatus] = primaryMemberInfo.videoStatus;
-    primaryMember[kMemberSharingStatus] = primaryMemberInfo.sharing;
-    primaryMember[kMemberAudioHandsUpStatus] = primaryMemberInfo.handsupStatus;
-    primaryMember[kMemberClientType] = primaryMemberInfo.clientType;
-    primaryMember[kMemberCreatedAt] = primaryMemberInfo.createdAt;
 
     YXLOG(Debug) << "-------------------------------------------------" << YXLOGEnd;
     YXLOG(Debug) << "Focus view, primary member: " << primaryMemberInfo.accountId.toStdString() << YXLOGEnd;
@@ -476,7 +474,7 @@ void MembersManager::pagingSharingView(quint32 pageSize, quint32 pageNumber) {
     }
     YXLOG(Debug) << "-------------------------------------------------" << YXLOGEnd;
 
-    emit membersChanged(primaryMember, pagedMembers, m_currentPage, secondaryMembers.size());
+    emit membersChanged(memberToJsonObject(primaryMemberInfo), pagedMembers, m_currentPage, secondaryMembers.size(), VIEW_MODE_FOCUS_WITH_SELF);
 }
 
 void MembersManager::pagingWhiteboardView(quint32 pageSize, quint32 pageNumber) {
@@ -518,12 +516,16 @@ void MembersManager::pagingWhiteboardView(quint32 pageSize, quint32 pageNumber) 
         pagedMembers.push_back(member);
     }
 
-    emit membersChanged(QJsonObject(), pagedMembers, m_currentPage, members.size());
+    emit membersChanged(QJsonObject(), pagedMembers, m_currentPage, members.size(), VIEW_MODE_WHITEBOARD);
 }
 
 void MembersManager::pagingGalleryView(quint32 pageSize, quint32 pageNumber) {
     QVector<MemberInfo> members = getMembersByRoleType();
     if (members.count() == 0)
+        return;
+
+    MemberInfo primaryMemberInfo;
+    if (!getPrimaryMember(primaryMemberInfo))
         return;
 
     QVector<MemberInfo> secondaryMembers;
@@ -544,14 +546,7 @@ void MembersManager::pagingGalleryView(quint32 pageSize, quint32 pageNumber) {
                 << ", page size: " << m_pageSize << YXLOGEnd;
     for (int i = begin; i < end; i++) {
         auto member_item = secondaryMembers[i];
-        QJsonObject member;
-        member[kMemberAccountId] = member_item.accountId;
-        member[kMemberNickname] = member_item.nickname;
-        member[kMemberAudioStatus] = member_item.audioStatus;
-        member[kMemberVideoStatus] = member_item.videoStatus;
-        member[kMemberSharingStatus] = member_item.sharing;
-        member[kMemberCreatedAt] = member_item.createdAt;
-        pagedMembers.push_back(member);
+        pagedMembers.push_back(memberToJsonObject(member_item));
     }
 
     YXLOG(Debug) << "-------------------------------------------------" << YXLOGEnd;
@@ -561,7 +556,20 @@ void MembersManager::pagingGalleryView(quint32 pageSize, quint32 pageNumber) {
     }
     YXLOG(Debug) << "-------------------------------------------------" << YXLOGEnd;
 
-    emit membersChanged(QJsonObject(), pagedMembers, m_currentPage, members.size());
+    emit membersChanged(memberToJsonObject(primaryMemberInfo), pagedMembers, m_currentPage, members.size(), VIEW_MODE_GALLERY);
+}
+
+QJsonObject MembersManager::memberToJsonObject(const MemberInfo& member) const {
+    QJsonObject memberObj;
+    memberObj[kMemberAccountId] = member.accountId;
+    memberObj[kMemberNickname] = member.nickname;
+    memberObj[kMemberAudioStatus] = member.audioStatus;
+    memberObj[kMemberVideoStatus] = member.videoStatus;
+    memberObj[kMemberSharingStatus] = member.sharing;
+    memberObj[kMemberAudioHandsUpStatus] = member.handsupStatus;
+    memberObj[kMemberClientType] = member.clientType;
+    memberObj[kMemberCreatedAt] = member.createdAt;
+    return memberObj;
 }
 
 void MembersManager::convertPropertiesToMember(const std::map<std::string, std::string>& properties, MemberInfo& info) {
@@ -1030,6 +1038,8 @@ NERoleType MembersManager::getRoleType(const std::string& strRoleType) {
         return kRoleManager;
     } else if ("member" == strRoleType) {
         return kRoleMember;
+    } else if ("screen_sharer" == strRoleType) {
+        return kRoleSharer;
     } else {
         return kRoleInvaild;
     }
@@ -1056,4 +1066,22 @@ bool MembersManager::getPhoneStatus(const QString& accountId) {
     }
 
     return false;
+}
+
+bool MembersManager::includeSelf() const {
+    return m_bIncludeSelf;
+}
+
+void MembersManager::setIncludeSelf(bool includeSelf) {
+    if (m_bIncludeSelf == includeSelf)
+        return;
+    m_bIncludeSelf = includeSelf;
+    emit includeSelfChanged();
+}
+
+void MembersManager::setViewMode(ViewMode viewMode) {
+    if (m_lastViewMode == viewMode)
+        return;
+    m_lastViewMode = viewMode;
+    emit viewModeChanged();
 }

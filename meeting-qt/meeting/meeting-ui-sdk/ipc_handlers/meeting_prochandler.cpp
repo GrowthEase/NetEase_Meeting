@@ -608,6 +608,7 @@ NS_I_NEM_SDK::NEErrorCode NEMeetingServiceProcHandlerIMP::convertExtentedCode(in
             resultCode = m_bFinsheMeeting ? NS_I_NEM_SDK::ERROR_CODE_SUCCESS : (NS_I_NEM_SDK::NEErrorCode)extentedCode;
             break;
         case 3100:
+        case 3105:
             resultCode = NS_I_NEM_SDK::MEETING_ERROR_FAILED_ALREADY_IN_MEETING;
             break;
         default:

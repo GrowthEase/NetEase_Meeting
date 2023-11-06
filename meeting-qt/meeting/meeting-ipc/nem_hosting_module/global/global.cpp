@@ -578,6 +578,8 @@ void NEMeetingSDKIMP::OnIPCClosed() {
 void NEMeetingSDKIMP::OnIPCClientClosed() {
     if (exception_handler_ != nullptr) {
         if (notify_exception_ || initting_) {
+            if (initting_ && init_callback_)
+                init_callback_(NEErrorCode::ERROR_CODE_FAILED, "UI SDK abnormal exit event received during initialization process.");
             initting_ = false;
             exception_handler_(NEException(NEExceptionCode::kUISDKDisconnect, "UI SDK disconnected, maybe the UI SDK crashed"));
         }

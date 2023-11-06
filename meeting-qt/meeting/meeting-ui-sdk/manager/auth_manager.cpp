@@ -155,7 +155,7 @@ NEAuthStatus AuthManager::getAuthStatus() {
 
 void AuthManager::onAuthStatusChanged(NEAuthStatus authStatus, const NEAuthStatusExCode& result) {
     auto authAccountInfo = getAuthInfo();
-    emit login(authStatus, authAccountInfo);
+    emit login(authStatus);
     if (authStatus == kAuthLoginSuccessed) {
         setAuthNickName(QString::fromStdString(authAccountInfo.displayName));
         setAuthAccountId(QString::fromStdString(authAccountInfo.accountId));
@@ -229,14 +229,7 @@ void AuthManager::setAutoLoginInfo(const QString& accountId, const QString& acco
     setAutoLoginMode(true);
 }
 
-void AuthManager::onLoginUI(NEAuthStatus authStatus, const NEAccountInfo& /*authAccountInfo*/) {
-    // YXLOG(Info) << "On login UI callback, status: " << authStatus << YXLOGEnd;
-    //    if (authStatus == kAuthLoginSuccessed) {
-    //        DeviceManager::getInstance()->getRecordDevices();
-    //        DeviceManager::getInstance()->getPlayoutDevices();
-    //        DeviceManager::getInstance()->getCaptureDevices();
-    //    }
-}
+void AuthManager::onLoginUI(int authStatus) {}
 
 void AuthManager::onLogoutUI() {
     DeviceManager::getInstance()->resetDevicesInfo();

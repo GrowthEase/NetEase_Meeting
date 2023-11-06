@@ -72,13 +72,12 @@ int MacXHelpers::getDisplayId(int screenIndex) {
     return nativeDisplayId;
 }
 
-int MacXHelpers::getWindowId(WId wid) {
+uintptr_t MacXHelpers::getWindowId(WId wid) {
     NSView* nativeView = reinterpret_cast<NSView*>(wid);
     NSWindow* nativeWindow = nativeView.window;
     if (nativeWindow) {
         return nativeWindow.windowNumber;
     }
-
     return 0;
 }
 

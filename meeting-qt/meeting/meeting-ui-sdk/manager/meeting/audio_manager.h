@@ -61,7 +61,7 @@ signals:
     void userSpeakerChanged(const QString& nickName);
 
 public slots:
-    void muteLocalAudio(bool mute);
+    void muteLocalAudio(bool mute, bool force = false);
     void muteRemoteAudio(const QString& accountId, bool mute, bool bAllowOpenByself = true);
     void onUserAudioStatusChangedUI(const QString& changedAccountId, NEMeeting::DeviceStatus deviceStatus);
     void onActiveSpeakerChangedUI(const QString& accountId, const QString& nickname);

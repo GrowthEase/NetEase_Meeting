@@ -41,6 +41,9 @@ public:
     Q_INVOKABLE void addVB(const QString& filePathUrl);
     Q_INVOKABLE void removeVB(const QString& filePath);
     Q_INVOKABLE void setSelectedVB(const QString& filePath);
+
+signals:
+    void virtualBackgroundResult(int code, const QString& message);
 };
 
 #endif  // VIRTUALBACKGROUNDMODEL_H

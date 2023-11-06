@@ -173,31 +173,36 @@ void NEMeetingSDKManager::initialize(const QString& appKey, const InitCallback& 
     pMeetingSDK->setExceptionHandler(std::bind(&NEMeetingSDKManager::onException, this, std::placeholders::_1));
     pMeetingSDK->initialize(config, [this, callback](NEErrorCode errorCode, const std::string& errorMessage) {
         YXLOG(Info) << "Initialize callback, error code: " << errorCode << ", error message: " << errorMessage << YXLOGEnd;
-        auto pMeetingSDK = NEMeetingKit::getInstance();
-        auto ipcAuthService = pMeetingSDK->getAuthService();
-        if (ipcAuthService)
-            ipcAuthService->addAuthListener(this);
+        if (ERROR_CODE_SUCCESS == errorCode) {
+            auto pMeetingSDK = NEMeetingKit::getInstance();
+            auto ipcAuthService = pMeetingSDK->getAuthService();
+            if (ipcAuthService)
+                ipcAuthService->addAuthListener(this);
 
-        auto ipcMeetingService = pMeetingSDK->getMeetingService();
-        if (ipcMeetingService) {
-            ipcMeetingService->addMeetingStatusListener(this);
-            ipcMeetingService->setOnInjectedMenuItemClickListener(this);
+            auto ipcMeetingService = pMeetingSDK->getMeetingService();
+            if (ipcMeetingService) {
+                ipcMeetingService->addMeetingStatusListener(this);
+                ipcMeetingService->setOnInjectedMenuItemClickListener(this);
+            }
+
+            auto ipcPreMeetingService = pMeetingSDK->getPremeetingService();
+            if (ipcPreMeetingService)
+                ipcPreMeetingService->registerScheduleMeetingStatusListener(this);
+
+            auto ipcSettingsService = NEMeetingKit::getInstance()->getSettingsService();
+            if (ipcSettingsService)
+                ipcSettingsService->setNESettingsChangeNotifyHandler(m_pSettingsEventHandler.get());
+
+            m_bInitialized = true;
+            Invoker::getInstance()->execute([=]() { onInitMeetingSettings(); });
         }
-
-        auto ipcPreMeetingService = pMeetingSDK->getPremeetingService();
-        if (ipcPreMeetingService)
-            ipcPreMeetingService->registerScheduleMeetingStatusListener(this);
-
-        auto ipcSettingsService = NEMeetingKit::getInstance()->getSettingsService();
-        if (ipcSettingsService)
-            ipcSettingsService->setNESettingsChangeNotifyHandler(m_pSettingsEventHandler.get());
-
-        m_bInitialized = true;
-        emit initializeSignal(errorCode, QString::fromStdString(errorMessage));
+        QString copiedMessage = QString::fromStdString(errorMessage);
+        if (errorCode == ERROR_CODE_FAILED && errorMessage == "UI SDK abnormal exit event received during initialization process.") {
+            copiedMessage = tr("UI SDK abnormal exit event received during initialization process.");
+        }
+        emit initializeSignal(errorCode, copiedMessage);
         if (callback)
             callback(errorCode, QString::fromStdString(errorMessage));
-
-        Invoker::getInstance()->execute([=]() { onInitMeetingSettings(); });
         // QMetaObject::invokeMethod(this, "onInitMeetingSettings", Qt::AutoConnection);
     });
 
@@ -974,6 +979,9 @@ void NEMeetingSDKManager::onMeetingStatusChangedUI(int status, int code) {
     YXLOG(Info) << "Meeting status changed UI, status: " << covertStatusToString(static_cast<RunningStatus::Status>(status)) << ", code: " << code
                 << YXLOGEnd;
     m_nCurrentMeetingStatus = status;
+    qint64 timestamp = QDateTime::currentDateTime().toSecsSinceEpoch();
+    ConfigManager::getInstance()->setValue("lastExceptionTime", timestamp);
+    ConfigManager::getInstance()->setValue("lastMeetingStatus", m_nCurrentMeetingStatus);
     if (m_nCurrentMeetingStatus == RunningStatus::Status::MEETING_STATUS_INMEETING) {
         setLastMeetingDuration(0);
         m_meetingDurationClock = QDateTime::currentSecsSinceEpoch();
@@ -998,8 +1006,6 @@ void NEMeetingSDKManager::onException(const NEException& exception) {
         YXLOG(Error) << "Received exception, error code: " << exception.ExceptionCode() << ", error message: " << exception.ExceptionMessage()
                      << YXLOGEnd;
         qApp->exit(0);
-    } else {
-        emit initializeSignal(-1, tr("Failed to initialize meeting SDK."));
     }
 }
 

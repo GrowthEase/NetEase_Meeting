@@ -1,9 +1,8 @@
-﻿import QtQuick 2.15
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
+﻿import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 import Qt.labs.settings 1.0
-
 import "components/"
 import "schedule/"
 import "history/"
@@ -11,172 +10,182 @@ import "profile/"
 
 Item {
     id: frontPage
-    anchors.fill: parent
-
-    property int lastLengthOfMeetingId: 0
-    property var popupMode: FrontPage.CreateMode
-    property alias createButton: createButton
-    property alias joinButton: joinButton
-    property alias popupWindow: popupWindow
-    property alias tooltips: tooltips
-    property alias infoImage: infoImage
-    property alias infoArea: infoArea
-    property alias textMeetingId: textMeetingId
-    property alias personalMeetingId: personalMeetingId
-    property alias checkUsePersonalId: checkUsePersonalId
-    property alias checkOpenCamera: checkOpenCamera
-    property alias checkOpenMicrophone: checkOpenMicrophone
-    property alias buttonSubmit: buttonSubmit
-    property alias btnPopupClose: btnPopupClose
-    property alias btnJoinPopupClose: btnJoinPopupClose
-    property alias customDialog: customDialog
-    property alias idScheduleMeeting: idScheduleMeeting
-    property alias idHistoryMeeting: idHistoryMeeting
-    property alias idScheduleDetailsWindow: idScheduleDetailsWindow
-    property alias btnScheduleMeeting: btnScheduleMeeting
-    property alias scheduleList: scheduleList
-    property alias listModel: listModel
-    property alias profile: profile
-    property alias feedback: feedback
-    property alias npsWindow: npsWindow
-    property alias appList: appList
-    property alias appTipArea: idAppTipArea
-    property alias checkMeetingPwd: idMeetingPwdCheck
-    property alias inputMeetingPwd: idMeetingPwdText
-    property alias messageTip: idMessage
-    property alias historyPopup: historyPopup
-
 
     enum PopupMode {
         CreateMode,
         JoinMode
     }
 
+    property alias appList: appList
+    property alias appTipArea: idAppTipArea
+    property alias btnJoinPopupClose: btnJoinPopupClose
+    property alias btnPopupClose: btnPopupClose
+    property alias btnScheduleMeeting: btnScheduleMeeting
+    property alias buttonSubmit: buttonSubmit
+    property alias checkMeetingPwd: idMeetingPwdCheck
+    property alias checkOpenCamera: checkOpenCamera
+    property alias checkOpenMicrophone: checkOpenMicrophone
+    property alias checkUsePersonalId: checkUsePersonalId
+    property alias createButton: createButton
+    property alias customDialog: customDialog
+    property alias feedback: feedback
+    property alias historyPopup: historyPopup
+    property alias idHistoryMeeting: idHistoryMeeting
+    property alias idScheduleDetailsWindow: idScheduleDetailsWindow
+    property alias idScheduleMeeting: idScheduleMeeting
+    property alias infoArea: infoArea
+    property alias infoImage: infoImage
+    property alias inputMeetingPwd: idMeetingPwdText
+    property alias joinButton: joinButton
+    property int lastLengthOfMeetingId: 0
+    property alias listModel: listModel
+    property alias messageTip: idMessage
+    property alias npsWindow: npsWindow
+    property alias personalMeetingId: personalMeetingId
+    property var popupMode: FrontPage.CreateMode
+    property alias popupWindow: popupWindow
+    property alias profile: profile
+    property alias scheduleList: scheduleList
+    property alias textMeetingId: textMeetingId
+    property alias tooltips: tooltips
+
+    anchors.fill: parent
+
     Settings {
         property alias localCameraStatusEx: checkOpenCamera.checked
         property alias localMicStatusEx: checkOpenMicrophone.checked
     }
-
     ScheduleWindow {
         id: idScheduleMeeting
-    }
 
+    }
     HistoryWindow {
         id: idHistoryMeeting
-    }
 
+    }
     ScheduleDetailsWindow {
         id: idScheduleDetailsWindow
-    }
 
+    }
     CustomDialog {
         id: customDialog
-    }
 
+    }
     Feedback {
         id: feedback
-	}
 
+    }
     NPSWindow {
         id: npsWindow
+
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2 - 20
     }
-
     ProfileWindow {
         id: profile
+
         screen: mainWindow.screen
     }
-
     AppList {
         id: appList
+
         anchors.centerIn: parent
     }
-
     CustomTipArea {
         id: idAppTipArea
-        visible: false
-        width: 655
+
+        anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: frontPage.top
         anchors.topMargin: 0
-        anchors.horizontalCenter: parent.horizontalCenter
+        visible: false
+        width: 655
         z: 2
     }
 
-//    RecentHistoryPopup
+    //    RecentHistoryPopup
     CustomPopup {
         id: historyPopup
+
+        height: 600
+        width: 400
         x: (parent.width - width) / 2
         y: (parent.height - height) / 2 - 20
-        width: 400
-        height: 600
     }
-
     GridLayout {
-        anchors.margins: 50
         anchors.centerIn: parent
+        anchors.margins: 50
         columnSpacing: 20
         columns: 2
 
         Rectangle {
-            Layout.preferredWidth: 400
             Layout.preferredHeight: 400
+            Layout.preferredWidth: 400
 
             RowLayout {
+                anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
                 anchors.topMargin: 125
-                anchors.horizontalCenter: parent.horizontalCenter
                 spacing: 50
 
                 ColumnLayout {
                     spacing: 0
+
                     Image {
                         id: createImage
-                        Layout.preferredWidth: 117
-                        Layout.preferredHeight: 117
+
+                        Accessible.name: createmeetingLabel.text
+                        Accessible.role: Accessible.Button
                         Layout.alignment: Qt.AlignHCenter
-                        source: "qrc:/qml/images/front/create_meeting.png"
+                        Layout.preferredHeight: 117
+                        Layout.preferredWidth: 117
                         mipmap: true
+                        source: "qrc:/qml/images/front/create_meeting.png"
+
+                        Accessible.onPressAction: if (createButton.enabled)
+                            createButton.clicked(Qt.LeftButton)
+
                         MouseArea {
                             id: createButton
-                            hoverEnabled: true
+
                             anchors.fill: parent
+                            hoverEnabled: true
                         }
-                        Accessible.role: Accessible.Button
-                        Accessible.name: createmeetingLabel.text
-                        Accessible.onPressAction: if (createButton.enabled)
-                                                      createButton.clicked(
-                                                                  Qt.LeftButton)
                     }
                     Label {
                         id: createmeetingLabel
+
                         Layout.alignment: Qt.AlignHCenter
                         font.pixelSize: 16
                         text: qsTr("Create Meeting")
                     }
                 }
-
                 ColumnLayout {
                     spacing: 0
+
                     Image {
                         id: joinImage
-                        Layout.preferredWidth: 117
-                        Layout.preferredHeight: 117
+
+                        Accessible.name: joinmeetingLabel.text
+                        Accessible.role: Accessible.Button
                         Layout.alignment: Qt.AlignHCenter
-                        source: "qrc:/qml/images/front/join_meeting.png"
+                        Layout.preferredHeight: 117
+                        Layout.preferredWidth: 117
                         mipmap: true
+                        source: "qrc:/qml/images/front/join_meeting.png"
+
+                        Accessible.onPressAction: if (joinButton.enabled)
+                            joinButton.clicked(Qt.LeftButton)
+
                         MouseArea {
                             id: joinButton
-                            hoverEnabled: true
+
                             anchors.fill: parent
+                            hoverEnabled: true
                         }
-                        Accessible.role: Accessible.Button
-                        Accessible.name: joinmeetingLabel.text
-                        Accessible.onPressAction: if (joinButton.enabled)
-                                                      joinButton.clicked(Qt.LeftButton)
                     }
                     Label {
                         id: joinmeetingLabel
+
                         Layout.alignment: Qt.AlignHCenter
                         font.pixelSize: 16
                         text: qsTr("Join Meeting")
@@ -184,348 +193,353 @@ Item {
                 }
             }
         }
-
         Rectangle {
-            Layout.topMargin: 20
-            Layout.preferredWidth: 400
             Layout.preferredHeight: 400
+            Layout.preferredWidth: 400
+            Layout.topMargin: 20
 
             ListView {
                 id: scheduleList
-                height: childrenRect.height > parent.height ? parent.height : childrenRect.height
-                width: parent.width
+
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 clip: true
+                height: childrenRect.height > parent.height ? parent.height : childrenRect.height
                 spacing: 10
-                model: ListModel {
-                    id: listModel
-                }
-                delegate: ScheduleItem {
-                    width: 380
-                    height: model.showDatetime ? 115 : 72
-                    uniqueMeetingId: model.uniqueMeetingId
-                    meetingId: model.meetingId
-                    meetingPassword: model.password
-                    meetingTopic: model.topic
-                    meetingStatus: model.status
-                    startTime: model.startTime
-                    endTime: model.endTime
-                    showDatetime: model.showDatetime
-                    enableLive: model.enableLive
-                    liveUrl: model.liveUrl
-                    liveAccess: model.liveAccess
-                    recordEnable: model.recordEnable
-                    meetingInviteUrl: model.inviteUrl
-                }
+                width: parent.width
+
                 ScrollBar.vertical: ScrollBar {
                     width: 7
                 }
-            }
+                delegate: ScheduleItem {
+                    enableLive: model.enableLive
+                    endTime: model.endTime
+                    height: model.showDatetime ? 115 : 72
+                    liveAccess: model.liveAccess
+                    liveUrl: model.liveUrl
+                    meetingId: model.meetingId
+                    meetingInviteUrl: model.inviteUrl
+                    meetingPassword: model.password
+                    meetingStatus: model.status
+                    meetingTopic: model.topic
+                    recordEnable: model.recordEnable
+                    showDatetime: model.showDatetime
+                    startTime: model.startTime
+                    uniqueMeetingId: model.uniqueMeetingId
+                    width: 380
+                }
+                model: ListModel {
+                    id: listModel
 
+                }
+            }
             ColumnLayout {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
                 anchors.topMargin: 60
                 spacing: 0
                 visible: scheduleList.count === 0
-                Image {
-                    Layout.preferredWidth: 180
-                    Layout.preferredHeight: 180
-                    Layout.alignment: Qt.AlignHCenter
-                    source: "qrc:/qml/images/front/meeting_list.png"
-                    mipmap: true
-                }
 
+                Image {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.preferredHeight: 180
+                    Layout.preferredWidth: 180
+                    mipmap: true
+                    source: "qrc:/qml/images/front/meeting_list.png"
+                }
                 Label {
                     id: idMeetingTip
+
                     Layout.alignment: Qt.AlignHCenter
                     font.pixelSize: 14
                     text: qsTr("There are no forthcoming meetings at present")
                 }
-
                 Item {
                     Layout.preferredHeight: 20
                 }
-
                 CustomButton {
                     id: btnScheduleMeeting
-                    Layout.preferredWidth: 120
-                    Layout.preferredHeight: 36
+
                     Layout.alignment: Qt.AlignHCenter
+                    Layout.preferredHeight: 36
+                    Layout.preferredWidth: 120
                     highlighted: true
                     text: qsTr("Schedule")
                 }
             }
         }
     }
-
     CustomPopup {
         id: popupWindow
-        width: 400
+
+        bottomInset: 0
+        bottomMargin: 10
+        bottomPadding: 0
         // height: popupMode === FrontPage.JoinMode ? 297 : 329
         height: popupLayout.height
-        x: (parent.width - width) / 2
-        y: (parent.height - height) / 2 - 20
-        bottomMargin: 10
-        topPadding: 0
-        bottomPadding: 0
+        leftInset: 0
         leftPadding: 0
+        rightInset: 0
         rightPadding: 0
         topInset: 0
-        bottomInset: 0
-        leftInset: 0
-        rightInset: 0
+        topPadding: 0
+        width: 400
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2 - 20
 
         MessageManager {
             id: idMessage
-        }
 
+        }
         CustomPopup {
             id: tooltips
-            width: 180
+
             height: 82
             padding: 10
+            width: 180
+
             ColumnLayout {
                 anchors.fill: parent
                 spacing: 0
+
                 Label {
-                    text: qsTr('Inner meeting ID:')
-                    font.pixelSize: 12
                     color: '#333333'
+                    font.pixelSize: 12
+                    text: qsTr('Inner meeting ID:')
                 }
                 TextArea {
-                    text: qsTr('Can only be used inside the company')
-                    font.pixelSize: 12
-                    color: '#333333'
                     Layout.preferredWidth: parent.width
-                    wrapMode: Text.WrapAnywhere
                     background: null
+                    color: '#333333'
+                    font.pixelSize: 12
+                    text: qsTr('Can only be used inside the company')
+                    wrapMode: Text.WrapAnywhere
                 }
             }
         }
-
         ColumnLayout {
             id: popupLayout
-            width: parent.width
+
             spacing: 0
+            width: parent.width
 
             Rectangle {
                 Layout.fillHeight: true
                 Layout.fillWidth: true
                 color: '#2c2c2c'
             }
-
             DragArea {
                 id: btnPopupClose
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: 50
                 title: qsTr('Create Now')
+                titleFontSize: 18
                 visible: popupMode === FrontPage.CreateMode
                 windowMode: false
-                titleFontSize: 18
-                Layout.fillWidth: true
-                Layout.preferredHeight: 50
             }
-
             DragArea {
                 id: btnJoinPopupClose
-                title: qsTr('Join Now')
-                visible: popupMode === FrontPage.JoinMode
-                windowMode: false
-                titleFontSize: 18
+
                 Layout.fillWidth: true
                 Layout.preferredHeight: 50
+                title: qsTr('Join Now')
+                titleFontSize: 18
+                visible: popupMode === FrontPage.JoinMode
+                windowMode: false
             }
-
             ColumnLayout {
+                Layout.bottomMargin: 36
                 Layout.fillHeight: true
                 Layout.fillWidth: true
-                Layout.topMargin: 30
-                Layout.bottomMargin: 36
                 Layout.leftMargin: 36
                 Layout.rightMargin: 36
+                Layout.topMargin: 30
                 spacing: 0
 
                 CustomHistoryComboBox {
                     id: textMeetingId
+
+                    Layout.bottomMargin: 0
+                    Layout.preferredHeight: 34
+                    Layout.preferredWidth: 328
+                    Layout.topMargin: 10
+                    font.pixelSize: 14
                     placeholderText: qsTr("Meeting ID")
                     visible: popupMode === FrontPage.JoinMode
-//                    visibleComboBox: true
-//                    acceptToolClickOnly: true
-                    font.pixelSize: 14
-                    focus: true
-                    Layout.topMargin: 10
-                    Layout.preferredWidth: 328
-                    Layout.preferredHeight: 34
-                    Layout.bottomMargin: 0
                 }
-
                 Label {
-                    visible: popupMode === FrontPage.CreateMode
-                    text: qsTr('Using personal ID')
-                    font.pixelSize: 16
                     color: '#222222'
+                    font.pixelSize: 16
+                    text: qsTr('Using personal ID')
+                    visible: popupMode === FrontPage.CreateMode
                 }
-
                 RowLayout {
                     Layout.topMargin: 10
                     visible: popupMode === FrontPage.CreateMode
+
                     CustomCheckBox {
                         id: checkUsePersonalId
+
                         font.weight: Font.Light
                         text: qsTr("Using personal ID: ")
                     }
                     Label {
-                        text: authManager.personalShortMeetingNum
-                              === '' ? authManager.prettyMeetingId : ''
                         font.weight: Font.Light
+                        text: authManager.personalShortMeetingNum === '' ? authManager.prettyMeetingId : ''
+
                         MouseArea {
-                            anchors.fill: parent
                             id: personalMeetingId
+
+                            anchors.fill: parent
                         }
                     }
                 }
-
                 ColumnLayout {
-                    spacing: 10
-                    visible: popupMode === FrontPage.CreateMode
-                             && authManager.personalShortMeetingNum !== ''
-                    Layout.topMargin: 15
-                    Layout.leftMargin: 24
                     Layout.fillHeight: true
                     Layout.fillWidth: true
+                    Layout.leftMargin: 24
+                    Layout.topMargin: 15
+                    spacing: 10
+                    visible: popupMode === FrontPage.CreateMode && authManager.personalShortMeetingNum !== ''
 
                     RowLayout {
-                        visible: authManager.personalShortMeetingNum.length > 0
                         Layout.fillHeight: true
                         Layout.preferredWidth: 300
+                        visible: authManager.personalShortMeetingNum.length > 0
+
                         Label {
-                            text: qsTr('Short ID')
-                            font.pixelSize: 14
                             color: '#999999'
+                            font.pixelSize: 14
+                            text: qsTr('Short ID')
                         }
                         Rectangle {
-                            Layout.preferredWidth: 64
-                            Layout.preferredHeight: 20
                             Layout.alignment: Qt.AlignVCenter
-                            border.width: 1
+                            Layout.preferredHeight: 20
+                            Layout.preferredWidth: 64
                             border.color: '#33337EFF'
+                            border.width: 1
                             color: '#19337EFF'
+
                             Label {
                                 anchors.centerIn: parent
-                                text: qsTr('Only Inner')
-                                font.pixelSize: 12
                                 color: '#337EFF'
+                                font.pixelSize: 12
+                                text: qsTr('Only Inner')
                             }
                         }
                         Item {
                             Layout.fillWidth: true
                         }
                         Label {
-                            text: authManager.personalShortMeetingNum
-                            font.pixelSize: 14
                             color: '#999999'
+                            font.pixelSize: 14
+                            text: authManager.personalShortMeetingNum
                         }
                         Image {
                             id: infoImage
+
+                            Layout.alignment: Qt.AlignVCenter
                             Layout.preferredHeight: 16
                             Layout.preferredWidth: 16
-                            Layout.alignment: Qt.AlignVCenter
-                            source: 'qrc:/qml/images/front/short_id_info.svg'
                             mipmap: true
+                            source: 'qrc:/qml/images/front/short_id_info.svg'
+
                             MouseArea {
                                 id: infoArea
+
                                 anchors.fill: parent
                                 hoverEnabled: true
                             }
                         }
                     }
-
                     RowLayout {
                         Layout.fillHeight: true
                         Layout.preferredWidth: 300
+
                         Label {
-                            text: qsTr('Long ID')
-                            font.pixelSize: 14
                             color: '#999999'
+                            font.pixelSize: 14
+                            text: qsTr('Long ID')
                         }
                         Label {
-                            text: meetingManager.prettyMeetingId
-                            font.pixelSize: 14
-                            color: '#999999'
                             Layout.alignment: Qt.AlignRight
+                            color: '#999999'
+                            font.pixelSize: 14
+                            text: meetingManager.prettyMeetingId
                         }
                     }
                 }
-
                 Label {
-                    visible: popupMode === FrontPage.CreateMode
-                    text: qsTr('Meeting password')
-                    font.pixelSize: 16
-                    color: '#222222'
                     Layout.topMargin: 26
-                }
-
-                RowLayout {
-                    spacing: 10
-                    Layout.topMargin: 14
+                    color: '#222222'
+                    font.pixelSize: 16
+                    text: qsTr('Meeting password')
                     visible: popupMode === FrontPage.CreateMode
+                }
+                RowLayout {
+                    Layout.topMargin: 14
+                    spacing: 10
+                    visible: popupMode === FrontPage.CreateMode
+
                     CustomCheckBox {
                         id: idMeetingPwdCheck
-                        text: qsTr("Use Password")
-                        font.weight: Font.Light
+
                         font.pixelSize: 14
+                        font.weight: Font.Light
+                        text: qsTr("Use Password")
                     }
                     CustomTextFieldEx {
                         id: idMeetingPwdText
-                        text: ""
+
+                        Layout.fillWidth: true
                         enabled: false
                         placeholderText: qsTr("Please enter 6-digit password")
+                        text: ""
+
                         validator: RegularExpressionValidator {
                             regularExpression: /[0-9]{6}/
                         }
-                        Layout.fillWidth: true
                     }
                 }
-
                 Label {
-                    visible: popupMode === FrontPage.CreateMode
-                    text: qsTr('Meeting Setting')
-                    font.pixelSize: 16
-                    color: '#222222'
                     Layout.topMargin: 26
+                    color: '#222222'
+                    font.pixelSize: 16
+                    text: qsTr('Meeting Setting')
+                    visible: popupMode === FrontPage.CreateMode
                 }
-
                 CustomCheckBox {
                     id: checkOpenCamera
-                    text: qsTr("Open camera")
-                    font.weight: Font.Light
-                    Layout.topMargin: 14
-                }
 
+                    Layout.topMargin: 14
+                    font.weight: Font.Light
+                    text: qsTr("Open camera")
+                }
                 CustomCheckBox {
                     id: checkOpenMicrophone
-                    text: qsTr("Open microphone")
-                    font.weight: Font.Light
+
                     Layout.topMargin: 15
+                    font.weight: Font.Light
+                    text: qsTr("Open microphone")
                 }
             }
-
             Rectangle {
-                Layout.preferredHeight: 1
                 Layout.fillWidth: true
+                Layout.preferredHeight: 1
                 color: "#EBEDF0"
             }
-
             CustomButton {
                 id: buttonSubmit
+
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                Layout.bottomMargin: 10
                 Layout.preferredHeight: 36
                 Layout.preferredWidth: 120
                 Layout.topMargin: 10
-                Layout.bottomMargin: 10
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                highlighted: true
                 enabled: popupMode === FrontPage.JoinMode ? textMeetingId.length >= 1 : true
+                highlighted: true
             }
         }
     }

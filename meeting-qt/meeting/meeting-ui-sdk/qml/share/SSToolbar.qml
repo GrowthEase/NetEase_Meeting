@@ -1,7 +1,7 @@
-﻿import QtQuick 2.15
+﻿import QtQuick
 import QtQuick.Window 2.12
-import QtQuick.Layouts 1.12
-import QtQuick.Controls 2.12
+import QtQuick.Layouts
+import QtQuick.Controls
 import NetEase.Meeting.ToastHelper 1.0
 import NetEase.Meeting.MeetingStatus 1.0
 import MouseEventSpy 1.0
@@ -28,7 +28,7 @@ Window {
     signal toast(string content)
 
     function getTimer() {
-        return Qt.createQmlObject("import QtQuick 2.15; Timer {}", rootWindow);
+        return Qt.createQmlObject("import QtQuick; Timer {}", rootWindow);
     }
     function messageToastProc(msgCount, sender, content) {
         if (undefined === idMeetingToolBar.btnChat) {
@@ -133,7 +133,7 @@ Window {
             smallToolbar.visible = false;
             fullToolbar.visible = true;
             timer.start();
-            mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/LoadingPage.qml'));
+            // mainLoader.setSource(Qt.resolvedUrl('qrc:/qml/LoadingPage.qml'));
             Qt.callLater(function () {
                     shareVideo.screen = shareScreen;
                     shareVideo.show();
@@ -259,7 +259,7 @@ Window {
                     color: "#FFFFFF"
                     font.pixelSize: 12
                     horizontalAlignment: Text.AlignHCenter
-                    text: shareManager.appMinimized ? qsTr("The share has been suspended, please restore the window") : qsTr("The share has been suspended")
+                    text: qsTr("The share has been suspended")
                     verticalAlignment: Text.AlignVCenter
                 }
             }

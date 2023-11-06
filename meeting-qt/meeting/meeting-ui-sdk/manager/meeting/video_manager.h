@@ -77,6 +77,7 @@ public slots:
 
     bool subscribeRemoteVideoStream(const QString& accountId, bool highQuality, const QString& uuid);
     bool unSubscribeRemoteVideoStream(const QString& accountId, const QString& uuid);
+    bool unSubscribeRemoteVideoStream(const QString& accountId, bool hightQuality, const QString& uuid);
     void onUserVideoStatusChangedUI(const QString& changedAccountId, NEMeeting::DeviceStatus deviceStatus);
     void onFocusVideoChangedUI(const QString& focusAccountId, bool isFocus);
 

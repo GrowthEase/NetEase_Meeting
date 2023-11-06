@@ -27,7 +27,6 @@ bool checkAuthRecordScreen() {
             if (windowName || kCGWindowSharingNone != sharingType.intValue) {
                 numberOfWindowsWithName++;
             } else {
-                // no kCGWindowName detected -> not enabled
                 break;  // breaking early, numberOfWindowsWithName not increased
             }
         }

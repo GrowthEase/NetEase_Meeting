@@ -31,7 +31,7 @@ public slots:
     bool openFolder(const QString& folder);
     int getDisplayId(int screenIndex);
     QString getDeviceName();
-    int getWindowId(WId wid);
+    uintptr_t getWindowId(WId wid);
     void hideTitleBar(QQuickWindow* window);
     static void setAppPolicy();
     void activeWindow(QWindow* window) const;

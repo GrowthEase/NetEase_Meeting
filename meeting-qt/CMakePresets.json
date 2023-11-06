@@ -46,6 +46,19 @@
       }
     },
     {
+      "name": "darwin-release-arm64",
+      "inherits": "macos",
+      "displayName": "Darwin arm64 10.15+  (Release)",
+      "description": "NetEase meeting for macOS arm64 - Release Configuration",
+      "binaryDir": "${sourceDir}/build-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "CONAN_PROFILE_BUILD": "${sourceDir}/.profiles/darwin-x86_64",
+        "CONAN_PROFILE_HOST": "${sourceDir}/.profiles/darwin-arm64"
+      }
+    },
+    {
       "name": "windows",
       "hidden": true,
       "condition": {
@@ -105,6 +118,22 @@
     {
       "name": "darwin-release-x86_64-deploy",
       "configurePreset": "darwin-release-x86_64",
+      "displayName": "Darwin Local Compilation (Release)",
+      "description": "NetEase meeting for macOS - Release Configuration",
+      "configuration": "Release",
+      "targets": ["qtdeploy-meeting"]
+    },
+    {
+      "name": "darwin-release-arm64",
+      "configurePreset": "darwin-release-arm64",
+      "displayName": "Darwin Local Compilation (Release)",
+      "description": "NetEase meeting for macOS - Release Configuration",
+      "configuration": "Release",
+      "targets": ["install"]
+    },
+    {
+      "name": "darwin-release-arm64-deploy",
+      "configurePreset": "darwin-release-arm64",
       "displayName": "Darwin Local Compilation (Release)",
       "description": "NetEase meeting for macOS - Release Configuration",
       "configuration": "Release",

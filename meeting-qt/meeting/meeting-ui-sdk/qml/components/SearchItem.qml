@@ -1,12 +1,18 @@
-﻿import QtQuick 2.15
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
-import QtQuick.Controls.Material 2.12
+﻿import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQuick.Controls.Material
 
 Rectangle {
     id: root
-
     signal textChanged(string text)
+
+    function resetSearchBar() {
+        searchBar.text = '';
+    }
+    function trim(str) {
+        return str.replace(/^\s+|\s+$/gm, '');
+    }
 
     RowLayout {
         anchors.fill: parent
@@ -14,45 +20,33 @@ Rectangle {
 
         Image {
             id: searchLogo
+            Layout.leftMargin: 10
             Layout.preferredHeight: 16
             Layout.preferredWidth: 16
-            visible: true
-            source: "qrc:/qml/images/public/icons/search.svg"
-            mipmap: true
-            Layout.leftMargin: 10
             Layout.topMargin: -10
+            mipmap: true
+            source: "qrc:/qml/images/public/icons/search.svg"
+            visible: true
         }
-
         TextField {
             id: searchBar
-//          maximumLength: 10
-            font.pixelSize: 15
-            placeholderTextColor: "#A8ACB3"
-            placeholderText: qsTr("Search member")
-            selectByMouse: true
             Layout.alignment: Qt.AlignVCenter
-            Layout.topMargin: -3
-            Layout.rightMargin: 10
             Layout.fillWidth: true
+            Layout.rightMargin: 10
+            Layout.topMargin: -3
             color: "#333333"
+            font.pixelSize: 15
+            placeholderText: qsTr("Search member")
+            placeholderTextColor: "#A8ACB3"
+            selectByMouse: true
+
             background: Rectangle {
                 height: 0
             }
-//            validator: RegularExpressionValidator {
-//                regularExpression: /\w{1,10}/
-//            }
+
             onTextChanged: {
                 root.textChanged(trim(text));
             }
         }
     }
-
-    function resetSearchBar() {
-        searchBar.text = ''
-    }
-
-    function trim(str){
-        return str.replace(/^\s+|\s+$/gm,'')
-    }
 }
-

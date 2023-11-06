@@ -1,11 +1,12 @@
-import QtQuick 2.15
+import QtQuick
 import QtQuick.Window 2.14
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
+import QtQuick.Controls
+import QtQuick.Layouts
 import QtMultimedia 5.12
 import WhiteboardJsBridge 1.0
 import NetEase.Meeting.MembersModel 1.0
 import NetEase.Meeting.GlobalChatManager 1.0
+import NetEase.Members.Status 1.0
 import "components"
 import "share"
 import "utils/dialogManager.js" as DialogManager
@@ -50,7 +51,7 @@ Rectangle {
                         anchors.fill: parent
                         direction: CustomToolButton.Direction.Left
 
-                        onClicked: membersManager.getMembersPaging(pageSize, currentPage - 1)
+                        onClicked: membersManager.getMembersPaging(pageSize, currentPage - 1, MembersStatus.VIEW_MODE_WHITEBOARD)
                     }
                 }
                 ListView {
@@ -86,7 +87,7 @@ Rectangle {
                         anchors.fill: parent
                         direction: CustomToolButton.Direction.Right
 
-                        onClicked: membersManager.getMembersPaging(pageSize, currentPage + 1)
+                        onClicked: membersManager.getMembersPaging(pageSize, currentPage + 1, MembersStatus.VIEW_MODE_WHITEBOARD)
                     }
                 }
             }
@@ -109,8 +110,8 @@ Rectangle {
                 }
                 onJoinWriteBoardFailed: {
                     console.log("onJoinWriteBoardFailed errorCode: " + errorCode + " errorMessage: " + errorMessage);
-                    if (errorCode == 403) {
-                        //白板内部错误自动退出
+                    if (errorCode === 403) {
+                        // 白板内部错误自动退出
                         if (whiteboardManager.whiteboardSharing && (whiteboardManager.whiteboardSharerAccountId === authManager.authAccountId)) {
                             whiteboardManager.closeWhiteboard(authManager.authAccountId);
                         }
@@ -134,7 +135,7 @@ Rectangle {
                 }
                 onWebLoadFinished: {
                     whiteboardManager.login();
-                    membersManager.getMembersPaging(pageSize, currentPage);
+                    membersManager.getMembersPaging(pageSize, currentPage, MembersStatus.VIEW_MODE_WHITEBOARD);
                 }
                 onWhiteboardGetAuth: {
                     console.log("onWhiteboardGetAuth");

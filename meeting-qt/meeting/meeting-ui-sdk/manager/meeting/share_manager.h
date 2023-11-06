@@ -21,119 +21,89 @@ using namespace neroom;
 /**
  * @brief 屏幕共享状态
  */
-enum NERoomScreenShareStatus { kNERoomScreenShareStatusStart = 0, kNERoomScreenShareStatusEnd, kNERoomScreenShareStopByHost };
+enum NERoomScreenShareStatus {
+    kNERoomScreenShareStatusStart = 0,
+    kNERoomScreenShareStatusEnd,
+    kNERoomScreenShareStopByHost,
+    kNERoomScreenShareStatusAborted
+};
 Q_DECLARE_METATYPE(NERoomScreenShareStatus)
+
+enum NEMeetingSourceType { kNEMeetingSourceTypeApp, kNEMeetingSourceTypeScreen };
+Q_DECLARE_METATYPE(NEMeetingSourceType)
 
 class ShareManager : public QObject {
     Q_OBJECT
+private:
+    explicit ShareManager(QObject* parent = nullptr);
+
 public:
+    enum ScreenCaptureStatus {
+        SCREEN_CAPTURE_STATUS_STARTED = 1,
+        SCREEN_CAPTURE_STATUS_PAUSED,
+        SCREEN_CAPTURE_STATUS_RESUME,
+        SCREEN_CAPTURE_STATUS_STOPPED,
+        SCREEN_CAPTURE_STATUS_COVERED,
+        SCREEN_CAPTURE_STATUS_ABORTED,
+    };
     SINGLETONG(ShareManager)
     ~ShareManager();
 
     Q_PROPERTY(QString shareAccountId READ shareAccountId WRITE setShareAccountId NOTIFY shareAccountIdChanged)
-    Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
-    Q_PROPERTY(bool ownerSharing READ ownerSharing WRITE setOwnerSharing NOTIFY ownerSharingChanged)
-    Q_PROPERTY(bool appMinimized READ appMinimized WRITE setAppMinimized NOTIFY appMinimizedChanged)
     Q_PROPERTY(bool shareSystemSound READ shareSystemSound WRITE setShareSystemSound NOTIFY shareSystemSoundChanged)
-    Q_PROPERTY(bool smoothPriority READ smoothPriority WRITE setSmoothPriority NOTIFY smoothPriorityChanged)
+    Q_PROPERTY(bool ownerSharing READ ownerSharing WRITE setOwnerSharing NOTIFY ownerSharingChanged)
+    Q_PROPERTY(bool paused READ paused NOTIFY pausedChanged)
 
+    Q_INVOKABLE void requestRecordPermission();
     Q_INVOKABLE bool hasRecordPermission();
     Q_INVOKABLE void openSystemSettings();
-    Q_INVOKABLE void sharedOutsideWindow(QQuickWindow* pWindow, int borderWidth);
     Q_INVOKABLE bool isExistScreen(const QString& name) const;
 
     void onRoomUserScreenShareStatusChanged(const std::string& usdrId, NERoomScreenShareStatus status);
     void onError(uint32_t errorCode, const std::string& errorMessage);
 
-    void setMainWindow(QWindow* pWindow) { m_pMainWindow = pWindow; }
-    QWindow* getMainWindow() const { return m_pMainWindow; }
-
     QString shareAccountId() const;
     void setShareAccountId(const QString& shareAccountId);
-    bool paused() const;
     bool ownerSharing() const;
-    bool appMinimized() const;
     bool shareSystemSound() const;
-    bool smoothPriority() const;
-    bool isAppShared() const;
+    bool paused() const;
 
 signals:
     void error(int errorCode, const QString& errorMessage);
+    void screenCaptureStatusChanged(ScreenCaptureStatus status);
     void sharingStatusChaged(const QString& sharingAccountId, bool isSharing);
+    void shareAccountIdChanged();
+    void ownerSharingChanged(bool ownerSharing);
+    void closeScreenShareByHost();
+    void screenShareAborted();
+    void shareSystemSoundChanged();
+    void pausedChanged();
     void screenAdded(const QString& addedScreen);
     void screenRemoved(const QString& removedScreen);
     void screenSizeChanged();
-
-    // Binding values
-    void shareAccountIdChanged();
-    void pausedChanged(bool paused);
-    void ownerSharingChanged(bool ownerSharing);
-    void appMinimizedChanged(bool appMinimized);
-
-    void closeScreenShareByHost();
-
-    void shareSystemSoundChanged();
-    void smoothPriorityChanged();
-
-private:
-    explicit ShareManager(QObject* parent = nullptr);
-    QWindow* getSharedOutsideWindow();
-    void dealwithPause(const QString& sharingAccountId, bool isSharing, bool isPause);
-    void switchAppSharing(quint32 id);
-    void switchMonitorShare(const uint32_t& monitor_id, const std::list<void*>& excludedWindowList = std::list<void*>());
 
 public slots:
     void addExcludeShareWindow(QQuickWindow* pShareWindow);
     void removeExcludeShareWindow(QQuickWindow* pShareWindow);
     void clearExcludeShareWindow();
-    void startScreenSharing(quint32 screenIndex);
-    void startAppSharing(quint32 id);
+    void startSharingWithSourceID(quint64 sourceID, NEMeetingSourceType type);
     void stopScreenSharing(const QString& accountId);
     void stopScreenSharing();
-    void pauseScreenSharing();
-    void resumeScreenSharing();
     void startSystemAudioLoopbackCapture();
     void stopSystemAudioLoopbackCapture();
     void onSharingStatusChangedUI(const QString& userId, NERoomScreenShareStatus status);
-    void setPaused(bool paused);
     void setOwnerSharing(bool ownerSharing);
-    void setAppMinimized(bool appMinimized);
     void setShareSystemSound(bool shareSystemSound);
-    void setSmoothPriority(bool smoothPriority);
     void switchSystemSound(bool shareSystemSound);
-
-public slots:
-    void onAppSharingPause();
+    void onScreenCaptureStatusChanged(ScreenCaptureStatus status);
 
 private:
     std::shared_ptr<NEMeetingScreenShareController> m_shareController = nullptr;
     QString m_shareAccountId;
-    bool m_paused = false;         // sdk的暂停状态
-    bool m_pausedEx = false;       // 是否是是UI的暂停，不是sdk的状态
-    bool m_bMiniRestored = false;  // 是否是最小化恢复
-    bool m_ownerSharing = false;   // 是否是自己发起的共享
-    quint32 m_shareAppId = 0;
     std::list<QQuickWindow*> m_excludeShareWindowList;
-    QTimer m_timer;
-    QRectF m_latestAppRect;
-    QRectF m_latestOutsideRect;
-    bool m_bMinimized = false;
-    QWindow* m_pMainWindow = nullptr;
-    QWindow* m_pSharedOutsideWindow = nullptr;
-    int m_borderWidth = 0;
-    int m_pausedCount = 0;
-#ifdef Q_OS_WIN32
-    std::unique_ptr<WindowsHelpers> m_pHelper = nullptr;
-#elif defined Q_OS_MACX
-    std::unique_ptr<MacXHelpers> m_pHelper = nullptr;
-#endif
-    bool m_bPpt = false;
-    bool m_bPptPlay = false;
-    bool m_bPowerpnt = false;
-    bool m_bLatestFullScreen = false;
-    bool m_bLatestForegroundWindow = false;
+    ScreenCaptureStatus m_currentStatus = SCREEN_CAPTURE_STATUS_STOPPED;
+    bool m_ownerSharing = false;
     bool m_shareSystemSound = false;
-    bool m_smoothPriority = false;
     bool m_systemAudioLoopbackCapture = false;
 };
 

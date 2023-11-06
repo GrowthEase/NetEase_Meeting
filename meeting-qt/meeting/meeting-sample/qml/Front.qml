@@ -1,6 +1,6 @@
 ﻿import QtQuick 2.0
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
+import QtQuick.Controls
+import QtQuick.Layouts
 import NetEase.Meeting.RunningStatus 1.0
 import NetEase.Meeting.MeetingStatus 1.0
 

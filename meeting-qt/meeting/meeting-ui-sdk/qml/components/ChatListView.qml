@@ -1,687 +1,710 @@
-﻿import QtQuick 2.15
+﻿import QtQuick
 import Qt.labs.platform 1.1
-import QtQuick.Layouts 1.1
-import QtQuick.Controls 2.14
+import QtQuick.Layouts
+import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
-import QtQuick.Controls.Material 2.12
+import QtQuick.Controls.Material
 import NetEase.Meeting.GlobalChatManager 1.0
 import NetEase.Meeting.MessageModel 1.0
 import NetEase.Meeting.MessageModelEnum 1.0
-
 import "../components"
 
 Rectangle {
+    id: root
+
+    property int avatarSize: 24
+    property var listBarPos: 0.0
+    property int maxMsgUintWidth: 302
     property MessageModel messageModel
-    property alias  msglistView : msglistView
-    property int    maxMsgUintWidth: 302
-    property int    avatarSize: 24
-    property alias  verScrollBar :verScrollBar
-    property var    listBarPos: 0.0
-    id:root
-    width: parent.width
-    height:parent.height
-    color: "#00000000"
-
-    Component.onCompleted: {
-        messageModel.clearMessage()
-        msglistView.positionViewAtEnd()
-    }
-
-    Component.onDestruction:{
-        messageModel.clearMessage()
-    }
-
-    function getShowedNickname(name){
-           return name.substring(0,1)
-    }
+    property alias msglistView: msglistView
+    property alias verScrollBar: verScrollBar
 
     function getFileImageSource(ext) {
-        if(ext === "mp3" || ext === "aac" || ext === "wav" || ext === "pcm") {
-            return "qrc:/qml/images/chatroom/file/audio.svg"
-        } else if(ext === "flv" || ext === "mov" || ext === "mp4") {
-            return "qrc:/qml/images/chatroom/file/video.svg"
-        } else if(ext === "doc" || ext === "docx") {
-            return "qrc:/qml/images/chatroom/file/doc.svg"
-        } else if(ext === "xls" || ext === "xlsx") {
-            return "qrc:/qml/images/chatroom/file/excel.svg"
-        } else if(ext === "ppt" || ext === "pptx") {
-            return "qrc:/qml/images/chatroom/file/ppt.svg"
-        } else if(ext === "pdf") {
-            return "qrc:/qml/images/chatroom/file/pdf.svg"
-        } else if(ext === "txt") {
-            return "qrc:/qml/images/chatroom/file/text.svg"
-        } else if(ext === "zip" || ext === "7z" || ext === "biz" || ext === "tar") {
-            return "qrc:/qml/images/chatroom/file/rar.svg"
-        } else if(ext === "jpg" || ext === "png" || ext === "jpeg" || ext === "bmp"){
-            return "qrc:/qml/images/chatroom/file/image.svg"
+        if (ext === "mp3" || ext === "aac" || ext === "wav" || ext === "pcm") {
+            return "qrc:/qml/images/chatroom/file/audio.svg";
+        } else if (ext === "flv" || ext === "mov" || ext === "mp4") {
+            return "qrc:/qml/images/chatroom/file/video.svg";
+        } else if (ext === "doc" || ext === "docx") {
+            return "qrc:/qml/images/chatroom/file/doc.svg";
+        } else if (ext === "xls" || ext === "xlsx") {
+            return "qrc:/qml/images/chatroom/file/excel.svg";
+        } else if (ext === "ppt" || ext === "pptx") {
+            return "qrc:/qml/images/chatroom/file/ppt.svg";
+        } else if (ext === "pdf") {
+            return "qrc:/qml/images/chatroom/file/pdf.svg";
+        } else if (ext === "txt") {
+            return "qrc:/qml/images/chatroom/file/text.svg";
+        } else if (ext === "zip" || ext === "7z" || ext === "biz" || ext === "tar") {
+            return "qrc:/qml/images/chatroom/file/rar.svg";
+        } else if (ext === "jpg" || ext === "png" || ext === "jpeg" || ext === "bmp") {
+            return "qrc:/qml/images/chatroom/file/image.svg";
         } else {
-            return "qrc:/qml/images/chatroom/file/unknow.svg"
+            return "qrc:/qml/images/chatroom/file/unknow.svg";
         }
     }
-
     function getFileSize(fileSize) {
-        if(fileSize < 1024 * 1024) {
-            return (fileSize / 1024).toFixed(2) + " KB"
-        } else if(fileSize < 1024 * 1024 * 1024 && fileSize >= 1024 * 1024) {
-            return (fileSize / (1024 * 1024)).toFixed(2) + " MB"
+        if (fileSize < 1024 * 1024) {
+            return (fileSize / 1024).toFixed(2) + " KB";
+        } else if (fileSize < 1024 * 1024 * 1024 && fileSize >= 1024 * 1024) {
+            return (fileSize / (1024 * 1024)).toFixed(2) + " MB";
         }
-        return ""
+        return "";
+    }
+    function getShowedNickname(name) {
+        return name.substring(0, 1);
     }
 
+    color: "#00000000"
+    height: parent.height
+    width: parent.width
+
+    Component.onCompleted: {
+        messageModel.clearMessage();
+        msglistView.positionViewAtEnd();
+    }
+    Component.onDestruction: {
+        messageModel.clearMessage();
+    }
     onHeightChanged: {
-        verScrollBar.setPosition(listBarPos)
+        verScrollBar.setPosition(listBarPos);
     }
 
     FileDialog {
         id: dialog_save
-        property var uuid: ""
-        property var fileUrl: ""
+
         property var fileName: ""
-        property var oldFilePath: ""
+        property var fileUrl: ""
         property var imageType: false
-        currentFile: "file:///" + fileName
+        property var oldFilePath: ""
+        property var uuid: ""
+
+        currentFile: "file:" + fileName
+        fileMode: FileDialog.SaveFile
         title: qsTr("Save as")
-        fileMode:FileDialog.SaveFile
+
         onAccepted: {
-            var filePath = dialog_save.file.toString()
-
-            if(Qt.platform.os === 'osx') {
-                filePath = filePath.replace("file://", "")
+            var filePath = dialog_save.file.toString();
+            if (Qt.platform.os === 'osx') {
+                filePath = filePath.replace("file://", "");
             } else {
-                filePath = filePath.replace("file:///", "")
+                filePath = filePath.replace("file:///", "");
             }
-
-            if(imageType) {
-                chatManager.saveImageAs(uuid, oldFilePath, filePath)
+            if (imageType) {
+                chatManager.saveImageAs(uuid, oldFilePath, filePath);
             } else {
-                chatManager.saveFileAs(uuid, fileUrl, filePath)
+                chatManager.saveFileAs(uuid, fileUrl, filePath);
             }
         }
     }
-
     Rectangle {
-        id:listviewlayout
+        id: listviewlayout
+
         anchors.fill: parent
+
         ListView {
-            property bool msgTimeTip : false
-            property bool appendByme : false
             id: msglistView
-            anchors.fill: parent
+
+            property bool appendByme: false
+            property bool msgTimeTip: false
+
             anchors.bottomMargin: 15
+            anchors.fill: parent
             anchors.leftMargin: 10
-            header: Rectangle { height: 20 }
             clip: true
             displayMarginBeginning: 40
             displayMarginEnd: 40
-            verticalLayoutDirection:ListView.TopToBottom
-            spacing: 6
             model: messageModel
+            spacing: 6
+            verticalLayoutDirection: ListView.TopToBottom
+
+            ScrollBar.vertical: ScrollBar {
+                id: verScrollBar
+
+                width: 5
+
+                onPositionChanged: {
+                    listBarPos = verScrollBar.position;
+                    if (msglistView.atYEnd) {
+                        listBarPos = 1.0;
+                    }
+                }
+            }
             delegate: Rectangle {
-                anchors.rightMargin: 5
                 anchors.leftMargin: 5
-                width: listviewlayout.width - 20
+                anchors.rightMargin: 5
                 height: msgUintLayout.height
+                width: listviewlayout.width - 20
 
                 ColumnLayout {
-                    id:msgUintLayout
-                    width: parent.width
+                    id: msgUintLayout
+
                     spacing: 0
-                    visible: model.type === MessageModelEnum.IMAGE ? (image.status == Image.Ready) : true //图片消息由于加载图片存在耗时，加载完成后再显示消息
-                    Rectangle {
-                        id:timetiper
-                        Layout.fillWidth: true
-                        Layout.preferredWidth: msgTip.width + 24
-                        Layout.preferredHeight: msgTip.implicitHeight + 8
-                        Layout.alignment: Qt.Horizontal
-                        visible: model.type === MessageModelEnum.TIME
-                        color: "transparent"
-                        border.color:"transparent"
-                        Label {
-                            id: msgTip
-                            color: "#999999"
-                            text: qsTr(model.text)
-                            font.pixelSize:12
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-                    }
+                    visible: model.type === MessageModelEnum.IMAGE ? (image.status == Image.Ready) : true // 图片消息由于加载图片存在耗时，加载完成后再显示消息
+                    width: parent.width
 
                     Rectangle {
-                        id: userInfo
-                        Layout.preferredHeight: 32
+                        id: timetiper
+
+                        Layout.alignment: Qt.Horizontal
                         Layout.fillWidth: true
+                        Layout.preferredHeight: msgTip.implicitHeight + 8
+                        Layout.preferredWidth: msgTip.width + 24
+                        border.color: "transparent"
+                        color: "transparent"
+                        visible: model.type === MessageModelEnum.TIME
+
+                        Label {
+                            id: msgTip
+
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: "#999999"
+                            font.pixelSize: 12
+                            text: qsTr(model.text)
+                        }
+                    }
+                    Rectangle {
+                        id: userInfo
+
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 32
 
                         Avatar {
                             id: avatarLeft
-                            height: avatarSize
-                            width: height
-                            visible: !model.sendFlag && model.type !== MessageModelEnum.TIME
-                            nickname:  qsTr(getShowedNickname(model.nickname))
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
 
+                            anchors.verticalCenter: parent.verticalCenter
+                            height: avatarSize
+                            nickname: qsTr(getShowedNickname(model.nickname))
+                            visible: !model.sendFlag && model.type !== MessageModelEnum.TIME
+                            width: height
+                        }
                         Label {
                             id: leftnickname
-                            visible: avatarLeft.visible
-                            font.pixelSize:12
-                            color: "#333333"
+
+                            anchors.left: avatarLeft.right
+                            anchors.leftMargin: 5
                             anchors.top: parent.top
                             anchors.topMargin: 4
-                            anchors.leftMargin: 5
-                            anchors.left: avatarLeft.right
+                            color: "#333333"
+                            font.pixelSize: 12
                             text: qsTr(model.nickname)
+                            visible: avatarLeft.visible
                         }
-
                         Label {
                             id: rightnickname
-                            visible: model.sendFlag
-                            font.pixelSize: 12
-                            color: "#333333"
+
+                            anchors.leftMargin: 5
+                            anchors.right: avatarRight.left
+                            anchors.rightMargin: 5
                             anchors.top: parent.top
                             anchors.topMargin: 4
+                            color: "#333333"
+                            font.pixelSize: 12
                             text: qsTr(model.nickname)
-                            anchors.right: avatarRight.left
-                            anchors.leftMargin: 5
-                            anchors.rightMargin: 5
+                            visible: model.sendFlag
                         }
-
                         Avatar {
                             id: avatarRight
-                            height: avatarSize
-                            width: height
-                            visible: model.sendFlag && model.type !== MessageModelEnum.TIME
-                            nickname:  qsTr(getShowedNickname(model.nickname))
-                            anchors.verticalCenter: parent.verticalCenter
+
                             anchors.right: model.sendFlag ? parent.right : undefined
+                            anchors.verticalCenter: parent.verticalCenter
+                            height: avatarSize
+                            nickname: qsTr(getShowedNickname(model.nickname))
+                            visible: model.sendFlag && model.type !== MessageModelEnum.TIME
+                            width: height
                         }
                     }
-
-                    Rectangle{
+                    Rectangle {
                         id: fileRec
+
+                        Layout.alignment: model.sendFlag ? Qt.AlignRight : Qt.AlignLeft
                         Layout.leftMargin: (!model.sendFlag && model.fileStatus !== MessageModelEnum.FAILED) ? avatarLeft.width + 3 : 0
+                        Layout.preferredHeight: row.height
+                        Layout.preferredWidth: row.width
                         Layout.rightMargin: model.sendFlag ? avatarRight.width + 3 : 0
                         Layout.topMargin: 0
-                        Layout.alignment: model.sendFlag ? Qt.AlignRight : Qt.AlignLeft
-                        Layout.preferredWidth: row.width
-                        Layout.preferredHeight: row.height
+
                         RowLayout {
                             id: row
-                            anchors.right: model.sendFlag ? parent.right : undefined
+
                             anchors.left: model.sendFlag ? undefined : parent.left
                             anchors.leftMargin: (error.visible && !model.sendFlag) ? 6 : 0
+                            anchors.right: model.sendFlag ? parent.right : undefined
                             spacing: 4
+
                             Image {
                                 id: error
-                                source: "qrc:/qml/images/chatroom/error.svg"
-                                Layout.preferredWidth: 16
+
                                 Layout.preferredHeight: 16
+                                Layout.preferredWidth: 16
                                 mipmap: true
+                                source: "qrc:/qml/images/chatroom/error.svg"
                                 visible: model.fileStatus === MessageModelEnum.FAILED
 
                                 MouseArea {
                                     anchors.fill: parent
+
                                     onClicked: {
-                                        if(model.sendFlag) {
-                                            if(!chatManager.isFileExists(model.filePath)){
-                                                operator.show(qsTr("file not exist"))
-                                                return
+                                        if (model.sendFlag) {
+                                            if (!chatManager.isFileExists(model.filePath)) {
+                                                operator.show(qsTr("file not exist"));
+                                                return;
                                             }
-                                            chatManager.resendFileMsg(model.type, model.filePath, model.uuid)
+                                            chatManager.resendFileMsg(model.type, model.filePath, model.uuid);
                                         } else {
-                                            chatManager.saveFile(model.uuid, model.fileUrl, model.fileName)
+                                            chatManager.saveFile(model.uuid, model.fileUrl, model.fileName);
                                         }
                                     }
                                 }
                             }
-
                             Rectangle {
                                 id: fileMessageinfo
-                                visible: model.type === 2
-                                Layout.preferredWidth: 250
-                                Layout.preferredHeight: 96
+
                                 Layout.alignment: model.sendFlag ? Qt.AlignRight : Qt.AlignLeft
-                                border.width: 1
+                                Layout.preferredHeight: 96
+                                Layout.preferredWidth: 250
                                 border.color: "#dee0e2"
+                                border.width: 1
                                 radius: 8
+                                visible: model.type === 2
 
                                 ColumnLayout {
                                     spacing: 0
+
                                     RowLayout {
-                                        spacing: 14
-                                        Layout.leftMargin: 14
-                                        Layout.rightMargin: 14
-                                        Layout.preferredHeight: 55
                                         Layout.alignment: Qt.AlignVCenter
+                                        Layout.leftMargin: 14
+                                        Layout.preferredHeight: 55
+                                        Layout.rightMargin: 14
+                                        spacing: 14
+
                                         Image {
                                             id: fileImage
+
                                             Layout.alignment: Qt.AlignVCenter
-                                            source: getFileImageSource(model.fileExt)
-                                            mipmap: true
                                             Layout.preferredHeight: 32
                                             Layout.preferredWidth: 32
+                                            mipmap: true
+                                            source: getFileImageSource(model.fileExt)
                                         }
-
                                         ColumnLayout {
-                                            spacing: model.fileStatus === MessageModelEnum.START ? 12 : 4
                                             Layout.rightMargin: 14
+                                            spacing: model.fileStatus === MessageModelEnum.START ? 12 : 4
+
                                             Label {
-                                                text: model.fileName
-                                                elide: Qt.ElideMiddle
-                                                color: "#333333"
-                                                font.pixelSize: 14
                                                 Layout.preferredWidth: 178
+                                                color: "#333333"
+                                                elide: Qt.ElideMiddle
+                                                font.pixelSize: 14
+                                                text: model.fileName
                                             }
                                             Label {
-                                                text: getFileSize(model.fileSize)
-                                                visible: model.fileStatus !== 1
                                                 color: "#999999"
                                                 font.pixelSize: 10
+                                                text: getFileSize(model.fileSize)
+                                                visible: model.fileStatus !== 1
                                             }
-
                                             ProgressBar {
                                                 id: progress
-                                                visible: model.fileStatus === MessageModelEnum.START
-                                                value: model.progress
-                                                Layout.preferredWidth: 178
+
                                                 Layout.preferredHeight: 4
+                                                Layout.preferredWidth: 178
+                                                value: model.progress
+                                                visible: model.fileStatus === MessageModelEnum.START
+
                                                 background: Rectangle {
-                                                    radius: 2
                                                     color: "#e5e5e5"
+                                                    radius: 2
                                                 }
                                                 contentItem: Item {
-                                                    implicitWidth: progress.background.implicitWidth
                                                     implicitHeight: progress.background.implicitHeight
+                                                    implicitWidth: progress.background.implicitWidth
 
                                                     Rectangle {
+                                                        color: "#337eff"
+                                                        height: parent.height
                                                         radius: 2
                                                         width: progress.visualPosition * parent.width
-                                                        height: parent.height
-                                                        color: "#337eff"
                                                     }
                                                 }
                                             }
-
                                         }
                                     }
-
                                     Rectangle {
                                         Layout.preferredHeight: 1
                                         Layout.preferredWidth: fileMessageinfo.width
                                         color: "#dee0ef"
                                         visible: true
                                     }
-
                                     RowLayout {
-                                        spacing: 24
                                         Layout.leftMargin: 14
                                         Layout.preferredHeight: 40
+                                        spacing: 24
                                         visible: true
+
                                         Label {
-                                            visible: model.sendFlag === false && (model.fileStatus === MessageModelEnum.IDLE || model.fileStatus === MessageModelEnum.FAILED)
+                                            Layout.alignment: Qt.AlignVCenter
+                                            color: "#337EFF"
+                                            font.pixelSize: 14
                                             text: model.fileStatus === MessageModelEnum.IDLE ? qsTr("download") : qsTr("download again")
-                                            font.pixelSize: 14
-                                            color: "#337EFF"
-                                            Layout.alignment: Qt.AlignVCenter
+                                            visible: model.sendFlag === false && (model.fileStatus === MessageModelEnum.IDLE || model.fileStatus === MessageModelEnum.FAILED)
+
                                             MouseArea {
                                                 anchors.fill: parent
+
                                                 onClicked: {
-                                                    var path = ""
-                                                    if(model.fileStatus === MessageModelEnum.FAILED) {
-                                                        path = model.filePath
+                                                    var path = "";
+                                                    if (model.fileStatus === MessageModelEnum.FAILED) {
+                                                        path = model.filePath;
                                                     }
-                                                    chatManager.saveFile(model.uuid, model.fileUrl, model.fileName, path)
+                                                    chatManager.saveFile(model.uuid, model.fileUrl, model.fileName, path);
                                                 }
                                             }
                                         }
-
                                         Label {
-                                            visible: model.sendFlag === false && model.fileStatus === MessageModelEnum.START
+                                            Layout.alignment: Qt.AlignVCenter
+                                            color: "#337EFF"
+                                            font.pixelSize: 14
                                             text: qsTr("cancel download")
-                                            font.pixelSize: 14
-                                            color: "#337EFF"
-                                            Layout.alignment: Qt.AlignVCenter
+                                            visible: model.sendFlag === false && model.fileStatus === MessageModelEnum.START
+
                                             MouseArea {
                                                 anchors.fill: parent
+
                                                 onClicked: {
-                                                    chatManager.stopDownloadFile(model.uuid)
+                                                    chatManager.stopDownloadFile(model.uuid);
                                                 }
                                             }
                                         }
-
                                         Label {
-                                            visible: model.sendFlag === true && model.fileStatus === MessageModelEnum.START
-                                            text: qsTr("cancel upload")
-                                            font.pixelSize: 14
-                                            color: "#337EFF"
                                             Layout.alignment: Qt.AlignVCenter
+                                            color: "#337EFF"
+                                            font.pixelSize: 14
+                                            text: qsTr("cancel upload")
+                                            visible: model.sendFlag === true && model.fileStatus === MessageModelEnum.START
+
                                             MouseArea {
                                                 anchors.fill: parent
+
                                                 onClicked: {
                                                     chatManager.stopFileMsg(model.uuid);
                                                 }
                                             }
                                         }
-
                                         Label {
-                                            visible: (model.sendFlag === true && model.fileStatus !== MessageModelEnum.START) ||
-                                                     (model.sendFlag === false && model.fileStatus === MessageModelEnum.SUCCESS)
+                                            Layout.alignment: Qt.AlignVCenter
+                                            color: "#337EFF"
+                                            font.pixelSize: 14
                                             text: qsTr("open file")
-                                            font.pixelSize: 14
-                                            color: "#337EFF"
-                                            Layout.alignment: Qt.AlignVCenter
+                                            visible: (model.sendFlag === true && model.fileStatus !== MessageModelEnum.START) || (model.sendFlag === false && model.fileStatus === MessageModelEnum.SUCCESS)
+
                                             MouseArea {
                                                 anchors.fill: parent
+
                                                 onClicked: {
-                                                    if(chatManager.isFileExists(model.filePath)) {
-                                                        if(!Qt.openUrlExternally("file:///" + model.filePath)) {
-                                                            operator.show(qsTr("file open failed"))
+                                                    if (chatManager.isFileExists(model.filePath)) {
+                                                        if (!Qt.openUrlExternally("file:" + model.filePath)) {
+                                                            operator.show(qsTr("file open failed"));
                                                         }
-                                                        return
+                                                        return;
                                                     }
-
-                                                    if(model.sendFlag) {
-                                                        operator.show(qsTr("file not exist"))
+                                                    if (model.sendFlag) {
+                                                        operator.show(qsTr("file not exist"));
                                                     } else {
-                                                        operator.show(qsTr("file not exist, please download again"))
-                                                        chatManager.updateFileStatus(model.uuid, MessageModelEnum.IDLE)
+                                                        operator.show(qsTr("file not exist, please download again"));
+                                                        chatManager.updateFileStatus(model.uuid, MessageModelEnum.IDLE);
                                                     }
                                                 }
                                             }
                                         }
-
                                         Label {
-                                            visible: (model.sendFlag === true && model.fileStatus !== MessageModelEnum.START) ||
-                                                     (model.sendFlag === false && model.fileStatus === MessageModelEnum.SUCCESS)
+                                            Layout.alignment: Qt.AlignVCenter
+                                            color: "#337EFF"
+                                            font.pixelSize: 14
                                             text: qsTr("open dir")
-                                            font.pixelSize: 14
-                                            color: "#337EFF"
-                                            Layout.alignment: Qt.AlignVCenter
+                                            visible: (model.sendFlag === true && model.fileStatus !== MessageModelEnum.START) || (model.sendFlag === false && model.fileStatus === MessageModelEnum.SUCCESS)
+
                                             MouseArea {
                                                 anchors.fill: parent
+
                                                 onClicked: {
-                                                    if(chatManager.isFileExists(model.filePath)) {
-                                                        chatManager.showFileInFolder(model.filePath)
-                                                        return
+                                                    if (chatManager.isFileExists(model.filePath)) {
+                                                        chatManager.showFileInFolder(model.filePath);
+                                                        return;
                                                     }
-
-                                                    if(chatManager.isDirExists(model.fileDir)) {
-                                                        Qt.openUrlExternally("file:///" + model.fileDir)
-                                                        return
+                                                    if (chatManager.isDirExists(model.fileDir)) {
+                                                        Qt.openUrlExternally("file:" + model.fileDir);
+                                                        return;
                                                     }
-
-                                                    if(model.sendFlag) {
-                                                        operator.show(qsTr("file not exist"))
+                                                    if (model.sendFlag) {
+                                                        operator.show(qsTr("file not exist"));
                                                     } else {
-                                                        operator.show(qsTr("file not exist, please download again"))
-                                                        chatManager.updateFileStatus(model.uuid, MessageModelEnum.IDLE)
+                                                        operator.show(qsTr("file not exist, please download again"));
+                                                        chatManager.updateFileStatus(model.uuid, MessageModelEnum.IDLE);
                                                     }
                                                 }
                                             }
                                         }
-
                                         Label {
-                                            visible: model.sendFlag === false &&
-                                                     (model.fileStatus === MessageModelEnum.IDLE)
-                                            text: qsTr("save as")
-                                            font.pixelSize: 14
-                                            color: "#337EFF"
                                             Layout.alignment: Qt.AlignVCenter
+                                            color: "#337EFF"
+                                            font.pixelSize: 14
+                                            text: qsTr("save as")
+                                            visible: model.sendFlag === false && (model.fileStatus === MessageModelEnum.IDLE)
+
                                             MouseArea {
                                                 anchors.fill: parent
+
                                                 onClicked: {
-                                                    dialog_save.imageType = false
-                                                    dialog_save.uuid = model.uuid
-                                                    dialog_save.fileUrl = model.fileUrl
-                                                    dialog_save.fileName = model.fileName
-                                                    dialog_save.open()
+                                                    dialog_save.imageType = false;
+                                                    dialog_save.uuid = model.uuid;
+                                                    dialog_save.fileUrl = model.fileUrl;
+                                                    dialog_save.fileName = model.fileName;
+                                                    dialog_save.open();
                                                 }
                                             }
                                         }
                                     }
                                 }
                             }
-
                             Rectangle {
                                 id: imageMessageinfo
-                                visible: model.type === MessageModelEnum.IMAGE
-                                Layout.preferredWidth: (model.imageWidth > root.width / 2) ? root.width / 2 : model.imageWidth
-                                Layout.preferredHeight: imageMessageinfo.width * (model.imageHeight / model.imageWidth)
+
                                 Layout.alignment: model.sendFlag ? Qt.AlignRight : Qt.AlignLeft
-                                radius: 8
+                                Layout.preferredHeight: imageMessageinfo.width * (model.imageHeight / model.imageWidth)
+                                Layout.preferredWidth: (model.imageWidth > root.width / 2) ? root.width / 2 : model.imageWidth
                                 color: "transparent"
+                                radius: 8
+                                visible: model.type === MessageModelEnum.IMAGE
 
                                 Image {
                                     id: image
-                                    visible: model.type === MessageModelEnum.IMAGE
-                                    smooth: false
-                                    sourceSize.width: parent.width
-                                    sourceSize.height: parent.height
-                                    asynchronous: true
-                                    mipmap: true
-                                    clip: true
+
                                     anchors.fill: parent
+                                    asynchronous: true
+                                    clip: true
                                     fillMode: Image.PreserveAspectCrop
+                                    mipmap: true
+                                    smooth: false
+                                    sourceSize.height: parent.height
+                                    sourceSize.width: parent.width
+                                    visible: model.type === MessageModelEnum.IMAGE
 
                                     Component.onCompleted: {
                                         if (model.type === MessageModelEnum.IMAGE) {
-                                            image.source = "file:///" + model.filePath
+                                            image.source = "file:" + model.filePath;
                                         }
                                     }
-
                                     onStatusChanged: {
                                         if (image.status == Image.Ready && model.index == msglistView.count - 1) {
                                             Qt.callLater(() => {
-                                                if (!msglistView.atYEnd)
-                                                    msglistView.positionViewAtEnd()
-                                            })
+                                                    if (!msglistView.atYEnd)
+                                                        msglistView.positionViewAtEnd();
+                                                });
                                         }
                                     }
 
                                     RingProgressbar {
                                         id: imageUploadProgressbar
-                                        visible:  model.sendFlag && model.type === MessageModelEnum.IMAGE &&
-                                                  image.status == Image.Ready && model.fileStatus === MessageModelEnum.START
-                                        anchors.centerIn: parent
-                                        percent:  {
-                                            return model.progress
-                                        }
-                                    }
 
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        acceptedButtons: Qt.LeftButton | Qt.RightButton
-                                        onDoubleClicked: {
-                                            if (mouse.button !== Qt.LeftButton) return
-                                            Qt.openUrlExternally("file:///" + model.filePath)
+                                        anchors.centerIn: parent
+                                        percent: {
+                                            return model.progress;
                                         }
+                                        visible: model.sendFlag && model.type === MessageModelEnum.IMAGE && image.status == Image.Ready && model.fileStatus === MessageModelEnum.START
+                                    }
+                                    MouseArea {
+                                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                        anchors.fill: parent
 
                                         onClicked: {
-                                            if (mouse.button == Qt.RightButton) { // right menu
-                                                const point = parent.mapToItem(imageMessageinfo, mouse.x, mouse.y)
+                                            if (mouse.button == Qt.RightButton) {
+                                                // right menu
+                                                const point = parent.mapToItem(imageMessageinfo, mouse.x, mouse.y);
                                                 var delta = imageMessageinfo.width - point.x + 30;
-
-                                                if(delta > imageMenu.width){
-                                                    imageMenu.x = mouse.x
-                                                    imageMenu.y = mouse.y
+                                                if (delta > imageMenu.width) {
+                                                    imageMenu.x = mouse.x;
+                                                    imageMenu.y = mouse.y;
+                                                } else {
+                                                    imageMenu.x = mouse.x - imageMenu.width;
+                                                    imageMenu.y = mouse.y;
                                                 }
-                                                else{
-                                                    imageMenu.x = mouse.x - imageMenu.width
-                                                    imageMenu.y = mouse.y
-                                                }
-
-                                                imageMenu.open()
+                                                imageMenu.open();
                                             }
+                                        }
+                                        onDoubleClicked: {
+                                            if (mouse.button !== Qt.LeftButton)
+                                                return;
+                                            Qt.openUrlExternally("file:" + model.filePath);
                                         }
                                     }
                                 }
-
                                 Menu {
                                     id: imageMenu
-                                    implicitWidth:80
-                                    implicitHeight: 50
 
-                                    Connections{
+                                    implicitHeight: 50
+                                    implicitWidth: 80
+
+                                    Connections {
                                         target: msglistView
+
                                         onCountChanged: {
-                                           if(imageMenu.visible === true){
-                                               imageMenu.close()
-                                           }
+                                            if (imageMenu.visible === true) {
+                                                imageMenu.close();
+                                            }
                                         }
                                     }
-
-                                    MenuItem{
+                                    MenuItem {
                                         id: saveItem
-                                        width: parent.width
-                                        height: visible ? 32 : 0
 
-                                        Label {
-                                            text: qsTr("Save as")
-                                            color: saveItem.hovered ? "#337EFF" : "#333333"
-                                            anchors.left: parent.left
-                                            anchors.leftMargin: 10
-                                            anchors.verticalCenter: parent.verticalCenter
-                                        }
+                                        height: visible ? 32 : 0
+                                        width: parent.width
+
                                         background: Rectangle {
                                             anchors.fill: parent
                                             color: saveItem.hovered ? "#F2F3F5" : "#FFFFFF"
                                         }
+
                                         onClicked: {
-                                            dialog_save.imageType = true
-                                            dialog_save.oldFilePath = model.filePath
-                                            dialog_save.uuid = model.uuid
-                                            dialog_save.fileName = model.fileName
-                                            dialog_save.open()
+                                            dialog_save.imageType = true;
+                                            dialog_save.oldFilePath = model.filePath;
+                                            dialog_save.uuid = model.uuid;
+                                            dialog_save.fileName = model.fileName;
+                                            dialog_save.open();
+                                        }
+
+                                        Label {
+                                            anchors.left: parent.left
+                                            anchors.leftMargin: 10
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            color: saveItem.hovered ? "#337EFF" : "#333333"
+                                            text: qsTr("Save as")
                                         }
                                     }
                                 }
                             }
-
-
                         }
                     }
-
                     Rectangle {
                         id: textMessageInfo
-                        visible: model.type === MessageModelEnum.TEXT
-                        Layout.leftMargin: avatarLeft.width + 3
-                        Layout.rightMargin: avatarRight.width + 3
-                        Layout.topMargin: -7
-                        Layout.preferredWidth: Math.min(messageText.implicitWidth+24, maxMsgUintWidth)
-                        Layout.preferredHeight: messageText.implicitHeight
+
                         Layout.alignment: model.sendFlag ? Qt.AlignRight : Qt.AlignLeft
-                        radius: 8
-                        color: model.sendFlag ? "#CCE1FF" : "#F2F3F5"
+                        Layout.leftMargin: avatarLeft.width + 3
+                        Layout.preferredHeight: messageText.implicitHeight + 20
+                        Layout.preferredWidth: Math.min(messageText.implicitWidth + 8, maxMsgUintWidth)
+                        Layout.rightMargin: avatarRight.width + 3
                         border.color: "white"
+                        color: model.sendFlag ? "#CCE1FF" : "#F2F3F5"
+                        radius: 8
+                        visible: model.type === MessageModelEnum.TEXT
 
                         TextArea {
-                                id: messageText
-                                visible: model.type === MessageModelEnum.TEXT
-                                anchors.fill: parent
-                                anchors.leftMargin: 12
-                                anchors.rightMargin: 12
-                                anchors.topMargin: 2
-                                anchors.bottomMargin: 0
-                                verticalAlignment: TextArea.AlignVCenter
-                                readOnly: true
-                                color: "#222222"
-                                font.pixelSize: 14
-                                wrapMode: Text.Wrap
-                                background: Rectangle {
-                                    height: 0
-                                }
-                                selectByMouse: true
-                                selectByKeyboard: true
-                                text: model.text
-                        }
+                            id: messageText
 
+                            anchors.bottomMargin: 0
+                            anchors.fill: parent
+                            anchors.verticalCenter: parent.verticalCenter
+                            background: null
+                            bottomPadding: 0
+                            color: "#222222"
+                            font.pixelSize: 14
+                            leftPadding: 12
+                            readOnly: true
+                            rightPadding: 12
+                            selectByKeyboard: true
+                            selectByMouse: true
+                            text: model.text
+                            topPadding: 0
+                            verticalAlignment: TextArea.AlignVCenter
+                            visible: model.type === MessageModelEnum.TEXT
+                            wrapMode: Text.Wrap
+                        }
                         MouseArea {
+                            acceptedButtons: Qt.RightButton
                             anchors.fill: parent
                             hoverEnabled: true
-                            acceptedButtons: Qt.RightButton
-                            onClicked: {
-                                if (mouse.button == Qt.RightButton) { // right menu
-                                    const point = parent.mapToItem(textMessageInfo, mouse.x, mouse.y)
-                                    var delta = textMessageInfo.width - point.x + 30;
 
-                                    if(delta > contentMenu.width){
-                                        contentMenu.x = mouse.x
-                                        contentMenu.y = mouse.y
-                                    }
-                                    else{
-                                        contentMenu.x = mouse.x - contentMenu.width
-                                        contentMenu.y = mouse.y
+                            onClicked: {
+                                if (mouse.button == Qt.RightButton) {
+                                    // right menu
+                                    const point = parent.mapToItem(textMessageInfo, mouse.x, mouse.y);
+                                    var delta = textMessageInfo.width - point.x + 30;
+                                    if (delta > contentMenu.width) {
+                                        contentMenu.x = mouse.x;
+                                        contentMenu.y = mouse.y;
+                                    } else {
+                                        contentMenu.x = mouse.x - contentMenu.width;
+                                        contentMenu.y = mouse.y;
                                     }
                                     if (messageText.selectedText === "") {
-                                        messageText.selectAll()
+                                        messageText.selectAll();
                                     }
-                                    contentMenu.focus = false
-                                    contentMenu.open()
+                                    contentMenu.focus = false;
+                                    contentMenu.open();
                                 }
                             }
                         }
-
                         Menu {
                             id: contentMenu
-                            implicitWidth:80
+
                             implicitHeight: 50
-                            Connections{
+                            implicitWidth: 80
+
+                            Connections {
                                 target: msglistView
+
                                 onCountChanged: {
-                                   if(contentMenu.visible === true){
-                                       contentMenu.close()
-                                   }
+                                    if (contentMenu.visible === true) {
+                                        contentMenu.close();
+                                    }
                                 }
                             }
-
-                            MenuItem{
+                            MenuItem {
                                 id: copyItem
-                                width: parent.width
+
+                                Accessible.name: copyText.text
+                                Accessible.role: Accessible.Button
                                 height: visible ? 32 : 0
                                 hoverEnabled: false
-                                Label {
-                                    id: copyText
-                                    text: qsTr("Copy")
-                                    color: ma.containsMouse ? "#337EFF" : "#333333"
-                                    anchors.left: parent.left
-                                    anchors.leftMargin: 10
-                                    anchors.verticalCenter: parent.verticalCenter
-                                }
+                                width: parent.width
+
                                 background: Rectangle {
                                     anchors.fill: parent
                                     color: ma.containsMouse ? "#F2F3F5" : "#FFFFFF"
                                 }
-                                Accessible.role: Accessible.Button
-                                Accessible.name: copyText.text
-                                Accessible.onPressAction: if (enabled) clicked(Qt.LeftButton)
+
+                                Accessible.onPressAction: if (enabled)
+                                    clicked(Qt.LeftButton)
+
+                                Label {
+                                    id: copyText
+
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 10
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    color: ma.containsMouse ? "#337EFF" : "#333333"
+                                    text: qsTr("Copy")
+                                }
                             }
                             MouseArea {
                                 id: ma
+
+                                acceptedButtons: Qt.LeftButton
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                acceptedButtons: Qt.LeftButton
+
                                 onClicked: {
-                                    messageText.copy()
-                                    contentMenu.close()
+                                    messageText.copy();
+                                    contentMenu.close();
                                 }
                             }
                         }
                     }
-
                 }
             }
-
-            ScrollBar.vertical: ScrollBar {
-                id: verScrollBar
-                width: 5
-                onPositionChanged: {
-                    listBarPos = verScrollBar.position
-                    if (msglistView.atYEnd){
-                        listBarPos = 1.0
-                    }
-                }
+            header: Rectangle {
+                height: 20
             }
-
         }
     }
-
 }
