@@ -8,6 +8,8 @@ enum ConfirmAction { cancel, accept }
 class PermissionHelper {
   static const tag = '#permissionHelper';
 
+  static Completer? _ongoing;
+
   static Future<bool> enableLocalVideoAndCheckPermission(
       BuildContext context, bool on, String title) async {
     var result = true;
@@ -63,10 +65,10 @@ class PermissionHelper {
         },
       );
       if (action == ConfirmAction.accept) {
-        granted = await requestSingle(permission);
+        granted = await _requestSingle(permission);
       }
     } else {
-      granted = await requestSingle(permission);
+      granted = await _requestSingle(permission);
     }
     return granted;
   }
@@ -95,13 +97,21 @@ class PermissionHelper {
     );
   }
 
-  static Future<bool> requestSingle(Permission request) async {
+  static Future<bool> _requestSingle(Permission request) async {
+    if (_ongoing == null || _ongoing?.isCompleted == true) {
+      _ongoing = Completer();
+    } else {
+      await _ongoing?.future;
+    }
     PermissionStatus status = await request.request();
     Alog.i(
         tag: tag,
         moduleName: _moduleName,
         content:
             "request single permission: $status ${status.isPermanentlyDenied}");
+    if (_ongoing?.isCompleted == false) {
+      _ongoing?.complete();
+    }
     if (status.isPermanentlyDenied) {
       openAppSettings();
     }

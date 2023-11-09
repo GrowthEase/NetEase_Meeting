@@ -23,10 +23,12 @@ class MeetingArguments extends MeetingBaseArguments {
     String? password,
     required NEMeetingUIOptions options,
     this.encryptionConfig,
+    Widget? backgroundWidget,
   }) : super(
             meetingNum: roomContext.roomUuid,
             displayName: displayName,
             password: password,
+            backgroundWidget: backgroundWidget,
             options: options) {
     requestTimeStamp = DateTime.now().millisecondsSinceEpoch;
     _isWhiteboardTransparent =

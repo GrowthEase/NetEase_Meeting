@@ -53,6 +53,7 @@ part 'src/meeting_service/remote/http/create_meeting_api.dart';
 part 'src/meeting_service/remote/http/delete_meeting_api.dart';
 part 'src/meeting_service/remote/http/edit_meeting_api.dart';
 part 'src/meeting_service/remote/http/get_config_api.dart';
+part 'src/meeting_service/remote/http/get_meeting_by_sharing_code_api.dart';
 part 'src/meeting_service/remote/http/get_meeting_item_by_id_api.dart';
 part 'src/meeting_service/remote/http/get_meeting_list_by_status_api.dart';
 part 'src/meeting_service/remote/http/login_by_pwd_api.dart';
@@ -139,6 +140,7 @@ class MeetingErrorCode {
   static const int roomNotInProgress = 2200;
   static const int notSupport = 3003;
   static const int meetingAlreadyExists = 3100;
+  static const int meetingRecycled = 3102;
   static const int meetingNotExists = 3104;
   static const int meetingWBExists = 1006;
 

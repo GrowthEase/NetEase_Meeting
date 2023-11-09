@@ -35,7 +35,7 @@ class _MeetingSettingState extends MeetingBaseState<MeetingSetting> {
           buildSwitchItem(
             MeetingValueKey.audioAINS,
             Strings.audioAINS,
-            false,
+            true,
             NEMeetingKit.instance.getSettingsService().isAudioAINSEnabled(),
             (value) => NEMeetingKit.instance
                 .getSettingsService()

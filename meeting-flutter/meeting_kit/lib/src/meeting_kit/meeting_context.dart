@@ -22,10 +22,10 @@ extension NEMeetingContext on NERoomContext {
 
   MeetingInfo get meetingInfo => _state.meetingInfo;
 
-  NECrossAppAuthorization? get crossAppAuthorization {
+  NEInjectedAuthorization? get crossAppAuthorization {
     final authorization = meetingInfo.authorization;
     return authorization != null
-        ? NECrossAppAuthorization(
+        ? NEInjectedAuthorization(
             appKey: authorization.appKey,
             user: authorization.user,
             token: authorization.token)
@@ -213,7 +213,7 @@ extension NEMeetingRtcController on NERoomRtcController {
       MeetingControlMessenger.commandId,
       MeetingControlMessenger.buildControlMessage(
           MeetingControlMessenger.inviteToOpenAudioVideo),
-      crossAppAuthorization: _ctx.crossAppAuthorization,
+      injectedAuthorization: _ctx.crossAppAuthorization,
     );
   }
 
@@ -227,7 +227,7 @@ extension NEMeetingRtcController on NERoomRtcController {
       MeetingControlMessenger.commandId,
       MeetingControlMessenger.buildControlMessage(
           MeetingControlMessenger.inviteToOpenAudio),
-      crossAppAuthorization: _ctx.crossAppAuthorization,
+      injectedAuthorization: _ctx.crossAppAuthorization,
     );
   }
 
@@ -241,7 +241,7 @@ extension NEMeetingRtcController on NERoomRtcController {
       MeetingControlMessenger.commandId,
       MeetingControlMessenger.buildControlMessage(
           MeetingControlMessenger.inviteToOpenVideo),
-      crossAppAuthorization: _ctx.crossAppAuthorization,
+      injectedAuthorization: _ctx.crossAppAuthorization,
     );
   }
 
@@ -398,7 +398,7 @@ extension NEMeetingMember on NERoomMember {
     if (notifier is ValueNotifier<bool>) {
       return notifier;
     }
-    notifier = ValueNotifier(false);
+    notifier = ValueNotifier(isInCall);
     addAttachment(_isInCallListenableKey, notifier);
     return notifier;
   }

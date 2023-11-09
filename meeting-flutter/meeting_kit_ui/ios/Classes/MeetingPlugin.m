@@ -5,7 +5,7 @@
 #import "MeetingPlugin.h"
 #import "FLTImageUtil.h"
 #import "MeetingUILog.h"
-
+#import "NEPIPServer.h"
 #if __has_include(<netease_meeting_ui/netease_meeting_ui-Swift.h>)
 #import <netease_meeting_ui/netease_meeting_ui-Swift.h>
 #else
@@ -15,6 +15,7 @@
 @interface MeetingPlugin ()
 @property(nonatomic, strong) TelephoneServer *phoneServer;
 @property(nonatomic, strong) LifecycleServer *lifecycleServer;
+@property(nonatomic, strong) NEPIPServer *pipServer;
 @end
 
 @implementation MeetingPlugin
@@ -29,6 +30,12 @@
     _lifecycleServer = [LifecycleServer new];
   }
   return _lifecycleServer;
+}
+- (NEPIPServer *)pipServer {
+  if (!_pipServer) {
+    _pipServer = [NEPIPServer new];
+  }
+  return _pipServer;
 }
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
   FlutterMethodChannel *channel =
@@ -64,9 +71,6 @@
     return;
   }
   // 转发
-#ifdef DEBUG
-  NSLog(@"[iOS] Call Model:%@ Menthod:%@ argument:%@", modelName, call.method, call.arguments);
-#endif
   if ([modelName isEqualToString:@"NEAssetService"] &&
       [call.method isEqualToString:@"loadAssetAsString"]) {
     NSString *fileName = [arguments objectForKey:@"fileName"];
@@ -110,6 +114,12 @@
   } else if ([modelName isEqualToString:@"NEIPadCheckDetector"]) {
     CheckIpadServer *iPadSaver = [CheckIpadServer new];
     [iPadSaver handle:call result:result];
+  } else if ([modelName isEqualToString:@"NEFloatingService"]) {
+    if (@available(iOS 15.0, *)) {
+      [self.pipServer pipAction:call result:result];
+    } else {
+      result(nil);
+    }
   } else {
     result(FlutterMethodNotImplemented);
   }

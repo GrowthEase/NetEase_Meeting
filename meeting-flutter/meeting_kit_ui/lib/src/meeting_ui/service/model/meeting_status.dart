@@ -49,6 +49,9 @@ class NEMeetingCode {
   /// @since 1.2.1
   ///
   static const int verifyPassword = 20;
+
+  /// 会中有人屏幕共享
+  static const int screenShare = 22;
 }
 
 /// 描述会议状态变更事件
@@ -60,6 +63,14 @@ class NEMeetingStatus {
   final int arg;
 
   NEMeetingStatus(this.event, {this.arg = NEMeetingCode.undefined});
+}
+
+class NEMeetingConnectState {
+  /// 会议网路链接断开
+  static const int disconnect = 0;
+
+  /// 会议重连成功
+  static const int reconnect = 1;
 }
 
 /// 会议状态事件
@@ -78,6 +89,8 @@ class NEMeetingEvent {
   static const int connecting = 2;
 
   /// 当前处于会议中
+  ///  [NEMeetingStatus.arg] 描述，可能有以下情况：
+  ///  [NEMeetingCode.screenShare]
   static const int inMeeting = 3;
 
   /// 当前处于最小化会议

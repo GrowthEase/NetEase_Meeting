@@ -50,6 +50,8 @@ static NSString *const broadcastExtensionAppGroup = @"group.com.netease.yunxin.m
         if ([call.method isEqualToString:@"initialLink"]) {
           result(wSelf.url);
           wSelf.url = @"";
+        } else if ([call.method isEqualToString:@"notifyMeetingStatusChanged"]) {
+          result(@"");
         } else {
           result(FlutterMethodNotImplemented);
         }

@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nemeeting/base/util/text_util.dart';
+import 'package:nemeeting/utils/nav_register.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../utils/router_name.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -48,12 +49,17 @@ class NavUtils {
     await SystemChannels.platform.invokeMethod('SystemNavigator.pop');
   }
 
+  ///pageRoute:true 浮窗路由
   static Future<T?> pushNamed<T>(
     BuildContext context,
     String routeName, {
     Object? arguments,
+    bool pageRoute = false,
   }) {
-    return Navigator.of(context).pushNamed(routeName, arguments: arguments);
+    return pageRoute
+        ? Navigator.push(context,
+            RoutesRegister.getPageRoute(routeName, context) as Route<T>)
+        : Navigator.of(context).pushNamed(routeName, arguments: arguments);
   }
 
   static Future<void> pushNamedAndRemoveUntil(

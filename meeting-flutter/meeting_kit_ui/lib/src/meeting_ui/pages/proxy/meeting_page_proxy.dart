@@ -22,7 +22,9 @@ class MeetingPageProxy extends StatelessWidget {
             final arg = settings.arguments ?? arguments;
             if (arg is MeetingArguments) {
               return LoggingMaterialPageRoute(
-                  builder: (context) => MeetingPage(arg));
+                builder: (context) => MeetingPage(arg),
+                settings: RouteSettings(name: MeetingPage.routeName),
+              );
             } else if (arg is MeetingWaitingArguments) {
               return MaterialPageRoute(
                   builder: (context) => MeetingWaitingPage(arg));

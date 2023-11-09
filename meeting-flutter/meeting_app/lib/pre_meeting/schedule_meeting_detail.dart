@@ -7,6 +7,7 @@ import 'package:nemeeting/base/util/timeutil.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nemeeting/routes/home_page.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 import 'package:nemeeting/pre_meeting/schedule_meeting_edit.dart';
 import 'package:nemeeting/utils/const_config.dart';
@@ -350,6 +351,7 @@ class _ScheduleMeetingDetailRouteState
         LoadingUtil.cancelLoading();
         NavUtils.pop(context);
       },
+      backgroundWidget: HomePageRoute(),
     );
     final errorCode = result.code;
     final errorMessage = result.msg;
@@ -363,7 +365,9 @@ class _ScheduleMeetingDetailRouteState
       AuthManager().logout();
       NavUtils.pushNamedAndRemoveUntil(context, RouterName.entrance);
     } else if (errorCode == NEMeetingErrorCode.alreadyInMeeting) {
-      //不作处理
+      ToastUtils.showToast(context, Strings.miniTipAlreadyInRightMeeting);
+    } else if (errorCode == NEMeetingErrorCode.cancelled) {
+      /// 暂不处理
     } else {
       var errorTips = HttpCode.getMsg(errorMessage, Strings.joinMeetingFail);
       ToastUtils.showToast(context, errorTips);

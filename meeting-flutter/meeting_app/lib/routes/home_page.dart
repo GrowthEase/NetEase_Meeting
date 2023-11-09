@@ -5,13 +5,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:nemeeting/base/util/global_preferences.dart';
 import 'package:nemeeting/base/util/stringutil.dart';
 import 'package:nemeeting/channel/deep_link_manager.dart';
+import 'package:nemeeting/service/config/app_config.dart';
+import 'package:nemeeting/setting/personal_setting.dart';
 import 'package:nemeeting/utils/const_config.dart';
 import 'package:nemeeting/utils/dialog_utils.dart';
 import 'package:nemeeting/widget/length_text_input_formatter.dart';
@@ -43,6 +44,8 @@ import 'package:nemeeting/uikit/values/fonts.dart';
 import 'package:nemeeting/uikit/values/strings.dart';
 import 'package:lottie/lottie.dart';
 
+import '../channel/ne_platform_channel.dart';
+
 ///会议中心
 class HomePageRoute extends StatefulWidget {
   @override
@@ -72,14 +75,26 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
   bool vCanPress = true; //虚拟背景防暴击
 
   late ValueNotifier<int> _evaluationIndex;
+
   ValueListenable<int> get evaluationSelectedIndex => _evaluationIndex;
   late ValueNotifier<int> _evaluationInputLength;
+
   ValueListenable<int> get evaluationInputStringLength =>
       _evaluationInputLength;
   final FocusNode _focusNode = FocusNode();
   String _evaluationContent = "";
   DateTime meetingStartDate = DateTime.now();
-  late NEMeetingInfo? _evaluateMeetingInfo;
+  NEMeetingInfo? _evaluateMeetingInfo;
+
+  ///默认是idle状态，会中内存会记录缓存中。当会议最小化是需要根据版本，不能放入SP，因为会被杀进程。会议需要重新进入。
+  int meetingStatus = NEMeetingEvent.idle;
+
+  /// NPS弹框是否展示
+  static bool isShowNPS = false;
+
+  /// 是否已经展示结束会议的dialog
+  static bool isShowEndDialog = false;
+
   @override
   void initState() {
     super.initState();
@@ -127,7 +142,12 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
       }
     });
     GlobalPreferences().meetingInfo.then((meetingInfo) {
-      if (TextUtil.isEmpty(meetingInfo)) return;
+      if (TextUtil.isEmpty(meetingInfo) ||
+          (NEMeetingUIKit().getCurrentMeetingInfo() != null &&
+              (NEMeetingUIKit().getMeetingStatus().event ==
+                      NEMeetingEvent.inMeetingMinimized ||
+                  NEMeetingUIKit().getMeetingStatus().event ==
+                      NEMeetingEvent.inMeeting))) return;
       var info = jsonDecode(meetingInfo!) as Map?;
       if (info == null) return;
       var meetingNum = info['meetingNum'] as String?;
@@ -144,9 +164,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
       }
     });
 
-    DeepLinkManager()
-      ..privacyAgreed = true
-      ..attach(context);
+    DeepLinkManager().attach(context);
 
     _evaluationIndex = ValueNotifier(-1);
     _evaluationInputLength = ValueNotifier(0);
@@ -155,7 +173,10 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
 
   void handleMeetingSdk() {
     _meetingStatusListener = (status) {
-      switch (status.event) {
+      meetingStatus = status.event;
+      NEPlatformChannel().notifyMeetingStatusChanged(meetingStatus);
+      setState(() {});
+      switch (meetingStatus) {
         case NEMeetingEvent.disconnecting:
           meetingEvaluationAction(meetingStartDate, DateTime.now());
           switch (status.arg) {
@@ -267,6 +288,10 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
   }
 
   void showCloseDialog() {
+    if (isShowEndDialog) {
+      return;
+    }
+    isShowEndDialog = true;
     showCupertinoDialog(
         context: context,
         builder: (BuildContext context) {
@@ -278,6 +303,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
                   child: Text(Strings.sure),
                   onPressed: () {
                     Navigator.of(context).pop();
+                    isShowEndDialog = false;
                   })
             ],
           );
@@ -292,10 +318,15 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
       NavUtils.closeCurrentState('ok');
       LoadingUtil.showLoading();
       final result = await NEMeetingUIKit().joinMeetingUI(
-          context,
-          NEJoinMeetingUIParams(
-              meetingNum: meetingNum, displayName: MeetingUtil.getNickName()),
-          await buildMeetingUIOptions());
+        context,
+        NEJoinMeetingUIParams(
+            meetingNum: meetingNum, displayName: MeetingUtil.getNickName()),
+        await buildMeetingUIOptions(),
+        onPasswordPageRouteWillPush: () async {
+          LoadingUtil.cancelLoading();
+        },
+        backgroundWidget: HomePageRoute(),
+      );
       LoadingUtil.cancelLoading();
       if (!result.isSuccess()) {
         GlobalPreferences().setMeetingInfo('');
@@ -341,6 +372,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
         }
       });
     }
+    if (!mounted) return;
     setState(() {});
   }
 
@@ -474,24 +506,27 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
 
   void _onCreateMeeting() {
     // InMeetingMoreMenuUtil.showInMeetingDialog(NavUtils.navigatorKey.currentState!.context);
-    NavUtils.pushNamed(context, RouterName.meetCreate);
+    pushPage(RouterName.meetCreate);
   }
 
   void _onJoinMeeting() {
-    NavUtils.pushNamed(context, RouterName.meetJoin);
+    pushPage(RouterName.meetJoin);
   }
 
   void _onHistoryMeeting() {
-    NavUtils.pushNamed(context, RouterName.historyMeet);
+    pushPage(RouterName.historyMeet);
   }
 
   void _onSchedule() {
-    NavUtils.pushNamed(context, RouterName.scheduleMeeting).then((value) {
-      if (value == null) return;
-      meetingList
-          .removeWhere((element) => element.meetingId == value.meetingId);
-      meetingList.add(value as NEMeetingItem);
-      sortAndGroupData();
+    NavUtils.pushNamed(context, RouterName.scheduleMeeting,
+            pageRoute: NEMeetingUIKit().getCurrentMeetingInfo() != null)
+        .then((value) {
+      if (value is NEMeetingItem) {
+        meetingList
+            .removeWhere((element) => element.meetingId == value.meetingId);
+        meetingList.add(value);
+        sortAndGroupData();
+      }
     });
   }
 
@@ -738,7 +773,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
               Visibility(
                   visible: MeetingUtil.hasShortMeetingNum(), child: line()),
               buildSettingItem(Strings.meetingSetting,
-                  () => NavUtils.pushNamed(context, RouterName.meetingSetting)),
+                  () => pushPage(RouterName.meetingSetting)),
               line(),
               StreamBuilder(
                 stream: NEMeetingKit.instance
@@ -761,6 +796,13 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
                                 visible: isBeautyFaceEnabled,
                                 child:
                                     buildSettingItem(Strings.beautySetting, () {
+                                  if (NEMeetingUIKit()
+                                          .getCurrentMeetingInfo() !=
+                                      null) {
+                                    ToastUtils.showToast(context,
+                                        Strings.miniTipAlreadyInRightMeeting);
+                                    return;
+                                  }
                                   if (bCanPress) {
                                     bCanPress = false;
                                     NEMeetingUIKit().openBeautyUI(context);
@@ -779,6 +821,11 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
               Visibility(
                   visible: isVirtualBackgroundEnabled,
                   child: buildSettingItem(Strings.virtualBackgroundSetting, () {
+                    if (NEMeetingUIKit().getCurrentMeetingInfo() != null) {
+                      ToastUtils.showToast(
+                          context, Strings.miniTipAlreadyInRightMeeting);
+                      return;
+                    }
                     if (vCanPress) {
                       vCanPress = false;
                       NEMeetingUIKit().openVirtualBackgroundBeautyUI(context);
@@ -804,8 +851,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
               //   });
               // }),
               buildSettingItemPadding(),
-              buildSettingItem(Strings.about,
-                  () => NavUtils.pushNamed(context, RouterName.about)),
+              buildSettingItem(Strings.about, () => pushPage(RouterName.about)),
               Container(
                 height: 22,
                 color: AppColors.globalBg,
@@ -835,49 +881,54 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
   GestureDetector buildUserInfo(
       {required String nick, required String company}) {
     return GestureDetector(
-      child: Container(
-        key: MeetingValueKey.personalSetting,
-        height: 88,
-        color: Colors.white,
-        padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
-        child: Row(
-          children: <Widget>[
-            buildAvatar(),
-            Padding(padding: EdgeInsets.only(left: 12)),
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: <
-                Widget>[
+        child: Container(
+          key: MeetingValueKey.personalSetting,
+          height: 88,
+          color: Colors.white,
+          padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
+          child: Row(
+            children: <Widget>[
+              buildAvatar(),
+              Padding(padding: EdgeInsets.only(left: 12)),
+              Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Spacer(),
+                    Container(
+                        alignment: Alignment.centerLeft,
+                        padding: EdgeInsets.only(bottom: 2),
+                        child: Text(
+                          nick,
+                          style: TextStyle(
+                              fontSize: 20, color: AppColors.black_222222),
+                          textAlign: TextAlign.center,
+                          textDirection: TextDirection.ltr,
+                          key: MeetingValueKey.nickName,
+                        )),
+                    Container(
+                      width: MediaQuery.of(context).size.width * 2 / 3,
+                      child: Text(
+                        company,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            fontSize: 13, color: AppColors.color_999999),
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                    Spacer(),
+                  ]),
               Spacer(),
-              Container(
-                  alignment: Alignment.centerLeft,
-                  padding: EdgeInsets.only(bottom: 2),
-                  child: Text(
-                    nick,
-                    style:
-                        TextStyle(fontSize: 20, color: AppColors.black_222222),
-                    textAlign: TextAlign.center,
-                    textDirection: TextDirection.ltr,
-                    key: MeetingValueKey.nickName,
-                  )),
-              Container(
-                width: MediaQuery.of(context).size.width * 2 / 3,
-                child: Text(
-                  company,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 13, color: AppColors.color_999999),
-                  textAlign: TextAlign.left,
-                ),
-              ),
-              Spacer(),
-            ]),
-            Spacer(),
-            Icon(IconFont.iconyx_allowx, size: 14, color: AppColors.greyCCCCCC)
-          ],
+              Icon(IconFont.iconyx_allowx,
+                  size: 14, color: AppColors.greyCCCCCC)
+            ],
+          ),
         ),
-      ),
-      onTap: () => NavUtils.pushNamed(context, RouterName.personalSetting,
-          arguments: _accountAppInfo?.appName ?? Strings.defaultCompanyName),
-    );
+        onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => PersonalSetting(
+                    _accountAppInfo?.appName ?? Strings.defaultCompanyName))));
   }
 
   Widget buildAvatar() {
@@ -1166,6 +1217,8 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
   }
 
   void buildEvaluationView() {
+    if (isShowNPS) return;
+    isShowNPS = true;
     showModalBottomSheet(
         backgroundColor: Colors.transparent,
         context: context,
@@ -1240,11 +1293,13 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
               height: 16,
               padding: EdgeInsets.only(right: 20),
               child: GestureDetector(
+                  key: MeetingValueKey.evaluationCloseBtn,
                   child: Image(
                       image: AssetImage(AssetName.iconEvaluationCloseSheet)),
                   onTap: () {
                     _setGlobalMeetingEvaluation(DateTime.now());
                     Navigator.pop(context);
+                    isShowNPS = false;
                   }))
         ]);
   }
@@ -1444,6 +1499,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
                                     AssetName.iconEvaluationCloseSheet)),
                             onTap: () {
                               Navigator.pop(context);
+                              isShowNPS = false;
                             }),
                       )
                     ],
@@ -1480,6 +1536,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
                     ),
                     onTap: () {
                       Navigator.pop(context);
+                      isShowNPS = false;
                     },
                   )
                 ],
@@ -1492,5 +1549,16 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
       _focusNode.unfocus();
       FocusScope.of(context).requestFocus(FocusNode());
     }
+  }
+
+  void pushPage(
+    String routeName, {
+    Object? arguments,
+  }) {
+    NavUtils.pushNamed(context, routeName,
+        pageRoute: NEMeetingUIKit().getMeetingStatus().event ==
+                NEMeetingEvent.inMeetingMinimized ||
+            NEMeetingUIKit().getMeetingStatus().event ==
+                NEMeetingEvent.inMeeting);
   }
 }

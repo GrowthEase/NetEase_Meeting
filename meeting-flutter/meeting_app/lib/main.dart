@@ -19,7 +19,6 @@ import '../uikit/utils/nav_utils.dart';
 import '../uikit/utils/router_name.dart';
 import '../service/auth/auth_manager.dart';
 import 'package:yunxin_alog/yunxin_alog.dart';
-import '../service/config/app_config.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 import 'package:nemeeting/webview/webview_page.dart';
 
@@ -31,10 +30,9 @@ import 'package:netease_common/netease_common.dart';
 import 'package:archive/archive_io.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  AppStyle.setStatusBarTextBlackColor();
-
   runZonedGuarded<Future<void>>(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    AppStyle.setStatusBarTextBlackColor();
     ErrorHandler.instance().install();
     await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     await Application.ensureInitialized();

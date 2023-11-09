@@ -9,15 +9,19 @@
 /* Begin PBXBuildFile section */
 		0709925120BD38EE5B018D70 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 80A5568473CAEA7AC1CDFDDA /* Pods_Runner.framework */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
-		36E782B8D4E80E925E9333C5 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
+		26EBE31926C12FFE001B4A68 /* key_public.dat in Resources */ = {isa = PBXBuildFile; fileRef = 26EBE31726C12FFD001B4A68 /* key_public.dat */; };
+		26EBE31A26C12FFE001B4A68 /* key_private.dat in Resources */ = {isa = PBXBuildFile; fileRef = 26EBE31826C12FFD001B4A68 /* key_private.dat */; };
+		36E782B8D4E80E925E9333C5 /* BuildFile in Frameworks */ = {isa = PBXBuildFile; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		530E41932A3760A100ADE1B9 /* ReplayKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DB8EC4E2654EEAA00BB171E /* ReplayKit.framework */; };
 		530E419B2A3760A100ADE1B9 /* MeetingBroadcaster.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 530E41922A3760A100ADE1B9 /* MeetingBroadcaster.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		530E41A92A3763A400ADE1B9 /* SampleHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 530E41A72A3763A400ADE1B9 /* SampleHandler.m */; };
+		530F661629C441A100DA53FB /* HTProtector.m in Sources */ = {isa = PBXBuildFile; fileRef = 530F661529C441A100DA53FB /* HTProtector.m */; };
 		530F661A29C4596B00DA53FB /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 530F661929C4596B00DA53FB /* AVFoundation.framework */; };
 		530F661C29C4597500DA53FB /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 530F661B29C4597500DA53FB /* CoreTelephony.framework */; };
 		530F661E29C4597D00DA53FB /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 530F661D29C4597D00DA53FB /* SystemConfiguration.framework */; };
 		530F662029C4598A00DA53FB /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 530F661F29C4598A00DA53FB /* libc++.tbd */; };
+		53100BFA29CAFD1700F13844 /* RiskPerception.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 53100BF929CAFD1700F13844 /* RiskPerception.framework */; };
 		978B8F6F1D3862AE00F588F7 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 7AFFD8EE1D35381100E5BB4D /* AppDelegate.m */; };
 		97C146F31CF9000F007C117D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 97C146F21CF9000F007C117D /* main.m */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
@@ -58,16 +62,21 @@
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
 		21A79E48F9CA0484F1A5BF5F /* Pods-Runner-MeetingBroadcaster.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner-MeetingBroadcaster.release.xcconfig"; path = "Target Support Files/Pods-Runner-MeetingBroadcaster/Pods-Runner-MeetingBroadcaster.release.xcconfig"; sourceTree = "<group>"; };
+		26EBE31726C12FFD001B4A68 /* key_public.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = key_public.dat; sourceTree = "<group>"; };
+		26EBE31826C12FFD001B4A68 /* key_private.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = key_private.dat; sourceTree = "<group>"; };
 		2DB8EC4E2654EEAA00BB171E /* ReplayKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ReplayKit.framework; path = System/Library/Frameworks/ReplayKit.framework; sourceTree = SDKROOT; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
 		530E41922A3760A100ADE1B9 /* MeetingBroadcaster.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MeetingBroadcaster.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		530E41A52A3763A400ADE1B9 /* SampleHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SampleHandler.h; sourceTree = "<group>"; };
 		530E41A62A3763A400ADE1B9 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		530E41A72A3763A400ADE1B9 /* SampleHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SampleHandler.m; sourceTree = "<group>"; };
+		530F661429C441A100DA53FB /* HTProtector.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HTProtector.h; sourceTree = "<group>"; };
+		530F661529C441A100DA53FB /* HTProtector.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HTProtector.m; sourceTree = "<group>"; };
 		530F661929C4596B00DA53FB /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		530F661B29C4597500DA53FB /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = System/Library/Frameworks/CoreTelephony.framework; sourceTree = SDKROOT; };
 		530F661D29C4597D00DA53FB /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		530F661F29C4598A00DA53FB /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
+		53100BF929CAFD1700F13844 /* RiskPerception.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = RiskPerception.framework; sourceTree = "<group>"; };
 		532836642A42A38A00FA65F1 /* MeetingBroadcaster.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MeetingBroadcaster.entitlements; sourceTree = "<group>"; };
 		5640ED818C20B15ABD841176 /* Pods-MeetingBroadcaster.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MeetingBroadcaster.debug.xcconfig"; path = "Target Support Files/Pods-MeetingBroadcaster/Pods-MeetingBroadcaster.debug.xcconfig"; sourceTree = "<group>"; };
 		64A4E1B0C91E804CDA48AFA7 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
@@ -113,7 +122,8 @@
 				530F661C29C4597500DA53FB /* CoreTelephony.framework in Frameworks */,
 				530F661A29C4596B00DA53FB /* AVFoundation.framework in Frameworks */,
 				CA2A313725C2511800017C94 /* CoreML.framework in Frameworks */,
-				36E782B8D4E80E925E9333C5 /* (null) in Frameworks */,
+				36E782B8D4E80E925E9333C5 /* BuildFile in Frameworks */,
+				53100BFA29CAFD1700F13844 /* RiskPerception.framework in Frameworks */,
 				0709925120BD38EE5B018D70 /* Pods_Runner.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -130,6 +140,14 @@
 				530E41A72A3763A400ADE1B9 /* SampleHandler.m */,
 			);
 			path = MeetingBroadcaster;
+			sourceTree = "<group>";
+		};
+		53100BF829CAF4EB00F13844 /* third_party */ = {
+			isa = PBXGroup;
+			children = (
+				53100BF929CAFD1700F13844 /* RiskPerception.framework */,
+			);
+			path = third_party;
 			sourceTree = "<group>";
 		};
 		9740EEB11CF90186004384FC /* Flutter */ = {
@@ -166,12 +184,17 @@
 		97C146F01CF9000F007C117D /* Runner */ = {
 			isa = PBXGroup;
 			children = (
+				53100BF829CAF4EB00F13844 /* third_party */,
+				26EBE31826C12FFD001B4A68 /* key_private.dat */,
+				26EBE31726C12FFD001B4A68 /* key_public.dat */,
 				CA3E726023E7EEB400B775BB /* RunnerRelease.entitlements */,
 				CA3E725F23E7EE7E00B775BB /* RunnerDebug.entitlements */,
 				CA3E725D23E7E2F600B775BB /* NTESLinkStreamHandler.m */,
 				CA3E725C23E7E2E600B775BB /* NTESLinkStreamHandler.h */,
 				7AFFD8ED1D35381100E5BB4D /* AppDelegate.h */,
 				7AFFD8EE1D35381100E5BB4D /* AppDelegate.m */,
+				530F661429C441A100DA53FB /* HTProtector.h */,
+				530F661529C441A100DA53FB /* HTProtector.m */,
 				97C146FA1CF9000F007C117D /* Main.storyboard */,
 				97C146FD1CF9000F007C117D /* Assets.xcassets */,
 				97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */,
@@ -277,13 +300,9 @@
 				TargetAttributes = {
 					530E41912A3760A100ADE1B9 = {
 						CreatedOnToolsVersion = 14.2;
-						DevelopmentTeam = 569GNZ5392;
-						ProvisioningStyle = Automatic;
 					};
 					97C146ED1CF9000F007C117D = {
 						CreatedOnToolsVersion = 7.3.1;
-						DevelopmentTeam = 569GNZ5392;
-						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -318,6 +337,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				26EBE31926C12FFE001B4A68 /* key_public.dat in Resources */,
+				26EBE31A26C12FFE001B4A68 /* key_private.dat in Resources */,
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
@@ -416,14 +437,18 @@
 				"${PODS_ROOT}/NECoreKit/NECoreKit.framework",
 				"${BUILT_PRODUCTS_DIR}/NEDyldYuv/NEDyldYuv.framework",
 				"${PODS_ROOT}/NERoomKit/NERoomKit.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcAiDenoise.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcAiHowling.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcBeauty.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcFaceDetect.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcnn.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcSDK.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcReplayKit.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcPersonSegment.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcAiDenoise.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcAiHowling.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcBeauty.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcFaceDetect.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcFaceEnhance.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcnn.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcSDK.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcReplayKit.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcPersonSegment.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcAudio3D.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcSuperResolution.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcVideoDenoise.framework",
 				"${PODS_ROOT}/NIMSDK_LITE/NIMSDK/NIMSDK.framework",
 				"${PODS_ROOT}/NIMSDK_LITE/NIMSDK/NIMNOS.framework",
 				"${BUILT_PRODUCTS_DIR}/Reachability/Reachability.framework",
@@ -457,10 +482,14 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcAiHowling.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcBeauty.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcFaceDetect.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcFaceEnhance.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcnn.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcSDK.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcReplayKit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcPersonSegment.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcAudio3D.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcSuperResolution.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcVideoDenoise.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIMSDK.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIMNOS.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Reachability.framework",
@@ -505,6 +534,7 @@
 				CA3E725E23E7E2F600B775BB /* NTESLinkStreamHandler.m in Sources */,
 				978B8F6F1D3862AE00F588F7 /* AppDelegate.m in Sources */,
 				97C146F31CF9000F007C117D /* main.m in Sources */,
+				530F661629C441A100DA53FB /* HTProtector.m in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -601,11 +631,13 @@
 				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CODE_SIGN_ENTITLEMENTS = Runner/RunnerDebug.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 31401;
+				CURRENT_PROJECT_VERSION = 31700;
 				DEPLOYMENT_POSTPROCESSING = YES;
-				DEVELOPMENT_TEAM = 569GNZ5392;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 569GNZ5392;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -633,7 +665,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 3.14.1;
+				MARKETING_VERSION = 3.17.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -672,6 +704,8 @@
 					"-framework",
 					"\"QuartzCore\"",
 					"-framework",
+					"\"Reachability\"",
+					"-framework",
 					"\"ReplayKit\"",
 					"-framework",
 					"\"Security\"",
@@ -690,6 +724,10 @@
 					"-framework",
 					"\"device_info_plus\"",
 					"-framework",
+					"\"device_information\"",
+					"-framework",
+					"\"integration_test\"",
+					"-framework",
 					"\"package_info\"",
 					"-framework",
 					"\"url_launcher_ios\"",
@@ -706,6 +744,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = nim_flutter_meeting_dis;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
@@ -723,9 +762,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_ENTITLEMENTS = MeetingBroadcaster/MeetingBroadcaster.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 31401;
-				DEVELOPMENT_TEAM = 569GNZ5392;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 31700;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 569GNZ5392;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -740,11 +781,13 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 3.14.1;
+				MARKETING_VERSION = 3.17.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.MeetingBroadcaster;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = meetingBroadcasterUniversalDistribution;
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -762,10 +805,10 @@
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_ENTITLEMENTS = MeetingBroadcaster/MeetingBroadcaster.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 31401;
+				CURRENT_PROJECT_VERSION = 31700;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 569GNZ5392;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -778,7 +821,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 3.14.1;
+				MARKETING_VERSION = 3.17.0;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.MeetingBroadcaster;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -802,9 +845,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_ENTITLEMENTS = MeetingBroadcaster/MeetingBroadcaster.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 31401;
-				DEVELOPMENT_TEAM = 569GNZ5392;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 31700;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 569GNZ5392;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MeetingBroadcaster/Info.plist;
@@ -815,10 +860,12 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 3.14.1;
+				MARKETING_VERSION = 3.17.0;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.MeetingBroadcaster;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = meetingBroadcasterUniversalDistribution;
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -946,11 +993,13 @@
 				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CODE_SIGN_ENTITLEMENTS = Runner/RunnerDebug.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 31401;
+				CURRENT_PROJECT_VERSION = 31700;
 				DEPLOYMENT_POSTPROCESSING = YES;
-				DEVELOPMENT_TEAM = 569GNZ5392;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 569GNZ5392;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -978,7 +1027,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 3.14.1;
+				MARKETING_VERSION = 3.17.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -1017,6 +1066,8 @@
 					"-framework",
 					"\"QuartzCore\"",
 					"-framework",
+					"\"Reachability\"",
+					"-framework",
 					"\"ReplayKit\"",
 					"-framework",
 					"\"Security\"",
@@ -1034,6 +1085,10 @@
 					"\"connectivity\"",
 					"-framework",
 					"\"device_info_plus\"",
+					"-framework",
+					"\"device_information\"",
+					"-framework",
+					"\"integration_test\"",
 					"-framework",
 					"\"package_info\"",
 					"-framework",
@@ -1051,6 +1106,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = nim_flutter_meeting_dis;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
@@ -1063,12 +1119,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CODE_SIGN_ENTITLEMENTS = Runner/RunnerRelease.entitlements;
-				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 31401;
+				CURRENT_PROJECT_VERSION = 31700;
 				DEPLOYMENT_POSTPROCESSING = YES;
-				DEVELOPMENT_TEAM = 569GNZ5392;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 569GNZ5392;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1096,7 +1154,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 3.14.1;
+				MARKETING_VERSION = 3.17.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -1135,6 +1193,8 @@
 					"-framework",
 					"\"QuartzCore\"",
 					"-framework",
+					"\"Reachability\"",
+					"-framework",
 					"\"ReplayKit\"",
 					"-framework",
 					"\"Security\"",
@@ -1153,6 +1213,10 @@
 					"-framework",
 					"\"device_info_plus\"",
 					"-framework",
+					"\"device_information\"",
+					"-framework",
+					"\"integration_test\"",
+					"-framework",
 					"\"package_info\"",
 					"-framework",
 					"\"url_launcher_ios\"",
@@ -1168,7 +1232,8 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = nim_flutter_meeting_dis;
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = nim_flutter_meeting_dis;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				VERSIONING_SYSTEM = "apple-generic";
 			};

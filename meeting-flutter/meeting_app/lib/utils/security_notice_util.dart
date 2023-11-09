@@ -6,7 +6,10 @@ import 'dart:async';
 
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/widgets.dart';
+import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/model/security_notice_info.dart';
+
+import 'package:nemeeting/service/repo/user_repo.dart';
 
 class AppNotificationManager {
   static const _tag = 'AppNotificationManager';
@@ -14,6 +17,14 @@ class AppNotificationManager {
   static final _singleton = AppNotificationManager._internal();
 
   factory AppNotificationManager() => _singleton;
+
+  static const _stateInitial = 0;
+  static const _stateFetching = 1;
+  static const _stateDone = 2;
+
+  int _state = _stateInitial;
+
+  AppNotification? _currentNotification;
 
   final _appNotificationStream = StreamController<AppNotification?>.broadcast();
 
@@ -36,6 +47,7 @@ class AppNotificationManager {
 
   void hideNotification() {
     debugPrint('$_tag: hide');
+    _currentNotification = null;
     _appNotificationStream.add(null);
   }
 

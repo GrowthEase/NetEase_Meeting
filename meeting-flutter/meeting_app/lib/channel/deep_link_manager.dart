@@ -5,7 +5,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nemeeting/base/util/global_preferences.dart';
 import 'package:nemeeting/channel/ne_platform_channel.dart';
+import 'package:nemeeting/routes/home_page.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/uikit/utils/nav_utils.dart';
@@ -27,6 +29,9 @@ class DeepLinkManager with WidgetsBindingObserver {
   DeepLinkManager._internal() {
     NEPlatformChannel().listen(_handleDeepLinkUri);
     WidgetsBinding.instance.addObserver(this);
+    GlobalPreferences().ensurePrivacyAgree().then((value) {
+      privacyAgreed = true;
+    });
   }
 
   static const _TAG = "DeepLinkManager";
@@ -286,6 +291,7 @@ class DeepLinkManager with WidgetsBindingObserver {
       onMeetingPageRouteWillPush: () async {
         LoadingUtil.cancelLoading();
       },
+      backgroundWidget: HomePageRoute(),
     );
     final errorCode = result.code;
     final errorMessage = result.msg;
@@ -297,9 +303,10 @@ class DeepLinkManager with WidgetsBindingObserver {
       ToastUtils.showToast(context, Strings.loginOnOtherDevice);
       AuthManager().logout();
       NavUtils.pushNamedAndRemoveUntil(context, RouterName.entrance);
-    } else if (errorCode == NEMeetingErrorCode.alreadyInMeeting ||
-        errorCode == NEMeetingErrorCode.cancelled) {
-      //不作处理
+    } else if (errorCode == NEMeetingErrorCode.alreadyInMeeting) {
+      ToastUtils.showToast(context, Strings.miniTipAlreadyInRightMeeting);
+    } else if (errorCode == NEMeetingErrorCode.cancelled) {
+      /// 暂不处理
     } else {
       var errorTips = HttpCode.getMsg(errorMessage, Strings.joinMeetingFail);
       ToastUtils.showToast(context, errorTips);

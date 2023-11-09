@@ -6,21 +6,23 @@ part of meeting_ui;
 
 class MeetingChatRoomPage extends StatefulWidget {
   final ChatRoomArguments _arguments;
+  final bool _isMinimized;
 
-  MeetingChatRoomPage(this._arguments);
+  MeetingChatRoomPage(this._arguments, this._isMinimized);
 
   @override
   State<StatefulWidget> createState() {
-    return MeetingChatRoomState(_arguments);
+    return MeetingChatRoomState(_arguments, _isMinimized);
   }
 }
 
 class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
   final ChatRoomArguments _arguments;
+  final bool _isMinimized;
 
   late TextEditingController _contentController;
 
-  MeetingChatRoomState(this._arguments);
+  MeetingChatRoomState(this._arguments, this._isMinimized);
 
   late final int _initialScrollIndex;
   final ItemScrollController itemScrollController = ItemScrollController();
@@ -390,7 +392,6 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
       alignment: Alignment.center,
       child: TextField(
           key: MeetingUIValueKeys.inputMessageKey,
-          maxLines: null,
           focusNode: _focusNode,
           controller: _contentController,
           cursorColor: _UIColors.blue_337eff,
@@ -416,38 +417,21 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
   }
 
   /// send message
-  void onSendMessage() {
+  void onSendMessage() async {
     if (sending) {
       // avoid duplicate send may be show loading
       return;
     }
     sending = true;
-    Connectivity().checkConnectivity().then((value) async {
-      if (value == ConnectivityResult.none) {
-        sending = false;
-        showToast(
-            NEMeetingKitLocalizations.of(context)!.networkUnavailableCheck);
-      } else {
-        var content = _contentController.text.trim();
-        if (TextUtils.isEmpty(content)) {
-          showToast(
-              NEMeetingUIKitLocalizations.of(context)!.cannotSendBlankLetter);
-          sending = false;
-          return;
-        }
-        final message = OutTextMessage(_myNickname, content);
-        var result = await chatController.sendBroadcastTextMessage(content);
-        sending = false;
-        if (result.code == MeetingErrorCode.success) {
-          _arguments.messageSource
-              .append(message, message.time, incUnread: false);
-          _contentController.clear();
-        } else {
-          showToast(result.msg ??
-              NEMeetingKit.instance.localizations.networkUnavailableCheck);
-        }
-      }
-    });
+    final content = _contentController.text;
+    if (content.isBlank) {
+      showToastWithMini(
+          NEMeetingUIKitLocalizations.of(context)!.cannotSendBlankLetter,
+          _isMinimized);
+    } else if (await _realSendMessage(OutTextMessage(_myNickname, content))) {
+      _contentController.clear();
+    }
+    sending = false;
   }
 
   Widget? buildMessageItem(Object? message) {
@@ -559,16 +543,20 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
     );
     if (!mounted) return;
     if (resultType == ResultType.noAppToOpen) {
-      showToast(
-          NEMeetingUIKitLocalizations.of(context)!.openFileFailAppNotFound);
+      showToastWithMini(
+          NEMeetingUIKitLocalizations.of(context)!.openFileFailAppNotFound,
+          _isMinimized);
     } else if (resultType == ResultType.fileNotFound) {
-      showToast(
-          NEMeetingUIKitLocalizations.of(context)!.openFileFailFileNotFound);
+      showToastWithMini(
+          NEMeetingUIKitLocalizations.of(context)!.openFileFailFileNotFound,
+          _isMinimized);
     } else if (resultType == ResultType.permissionDenied) {
-      showToast(
-          NEMeetingUIKitLocalizations.of(context)!.openFileFailNoPermission);
+      showToastWithMini(
+          NEMeetingUIKitLocalizations.of(context)!.openFileFailNoPermission,
+          _isMinimized);
     } else if (resultType == ResultType.error) {
-      showToast(NEMeetingUIKitLocalizations.of(context)!.openFileFail);
+      showToastWithMini(
+          NEMeetingUIKitLocalizations.of(context)!.openFileFail, _isMinimized);
     }
   }
 
@@ -593,8 +581,6 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
       constraints: BoxConstraints(
         maxWidth: MediaQuery.of(context).size.width * 0.75,
       ),
-      margin: EdgeInsets.only(
-          top: 4, left: isRight ? 24 : 0, right: isRight ? 0 : 24),
       child: PopupMenuWidget(
         onValueChanged: (int value) {
           if (value == 0) {
@@ -626,11 +612,17 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
   void _onSelectImage() {
     _selectFile(SelectType.image, _kSupportedImageFileExtensions,
         _kSupportedImageFileMaxSize);
+    if (_focusNode.hasFocus) {
+      _focusNode.unfocus();
+    }
   }
 
   void _onSelectFile() {
     _selectFile(SelectType.file, _kSupportedRawFileExtensions,
         _kSupportedRawFileMaxSize);
+    if (_focusNode.hasFocus) {
+      _focusNode.unfocus();
+    }
   }
 
   void _selectFile(
@@ -682,7 +674,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
         } else if (size > maxFileSize) {
           errorMsg = sizeExceedErrorMsg;
         }
-        if (errorMsg != null) {
+        if (errorMsg != null && !_isMinimized) {
           ToastUtils.showToast(context, errorMsg);
           file.delete();
           return;
@@ -708,6 +700,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
           _arguments.messageSource.removeMessage(message);
           message = message.copy();
         }
+        await _arguments.messageSource.ensureChatroomJoined();
         if (message is OutImageMessage) {
           message.startSend(chatController.sendImageMessage(
             message.uuid,
@@ -719,6 +712,10 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
             message.uuid,
             message.path,
             null,
+          ));
+        } else if (message is OutTextMessage) {
+          message.startSend(chatController.sendBroadcastTextMessage(
+            message.text,
           ));
         }
         _arguments.messageSource
@@ -740,7 +737,9 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage> {
   Future<bool> _hasNetworkOrToast() async {
     final value = await Connectivity().checkConnectivity();
     if (value == ConnectivityResult.none) {
-      showToast(NEMeetingKitLocalizations.of(context)!.networkUnavailableCheck);
+      showToastWithMini(
+          NEMeetingKitLocalizations.of(context)!.networkUnavailableCheck,
+          _isMinimized);
       return false;
     }
     return true;

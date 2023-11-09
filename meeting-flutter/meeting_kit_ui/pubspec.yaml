@@ -23,7 +23,7 @@ dependencies:
   netease_meeting_assets:
     path: ../meeting_kit_assets
 #  netease_common: ^0.0.3-rc.0
-  netease_common: ^1.0.1
+  netease_common: ^1.0.3
 
   bot_toast: ^4.0.2
   permission_handler: ^10.0.0
@@ -48,7 +48,7 @@ dependencies:
 
   netease_meeting_core:
     path: ../meeting_kit
-  netease_roomkit: 1.19.0
+  netease_roomkit: 1.21.1
 
 dev_dependencies:
   flutter_test:

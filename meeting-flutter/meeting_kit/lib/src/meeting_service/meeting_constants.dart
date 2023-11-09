@@ -84,6 +84,9 @@ class MeetingRoles {
   /// 联系主持人
   static const kCohost = 'cohost';
 
+  /// 投屏端，默认在startShare时使用该角色
+  static const kScreenSharer = 'screen_sharer';
+
   /// 传空，服务端会自动分配角色
   static const kUndefined = '';
 

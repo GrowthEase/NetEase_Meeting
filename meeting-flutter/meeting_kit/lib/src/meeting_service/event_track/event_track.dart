@@ -200,12 +200,10 @@ abstract class EventTrackMixin {
   void trackPeriodicEvent(String name,
       {String module = _TrackModuleName.meeting,
       String? category,
-      Map? extra}) {
-  }
+      Map? extra}) {}
 
   void trackImmediateEvent(String name,
       {String module = _TrackModuleName.meeting,
       String? category,
-      Map? extra}) {
-  }
+      Map? extra}) {}
 }

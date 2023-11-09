@@ -158,8 +158,8 @@ class _NEMeetingServiceImpl extends NEMeetingService
         role: MeetingRoles.kUndefined,
         password: param.password,
         avatar: param.avatar,
-        crossAppAuthorization: authorization != null
-            ? NECrossAppAuthorization(
+        injectedAuthorization: authorization != null
+            ? NEInjectedAuthorization(
                 appKey: authorization.appKey,
                 user: authorization.user,
                 token: authorization.token)
@@ -226,7 +226,8 @@ class _NEMeetingServiceImpl extends NEMeetingService
 
   /// 统一参数校验
   NEResult<void>? checkParameters(Object param) {
-    if (param is NEStartMeetingParams && param.displayName.isEmpty) {
+    if ((param is NEStartMeetingParams && param.displayName.isEmpty) ||
+        (param is NEJoinMeetingParams && param.displayName.isEmpty)) {
       return NEResult<void>(
           code: NEMeetingErrorCode.paramError,
           msg: localizations.displayNameShouldNotBeEmpty);
@@ -242,12 +243,6 @@ class _NEMeetingServiceImpl extends NEMeetingService
       return NEResult<void>(
           code: NEMeetingErrorCode.paramError,
           msg: localizations.meetingPasswordNotValid);
-    }
-
-    if (param is NEJoinMeetingParams && param.displayName.isEmpty) {
-      return NEResult<void>(
-          code: NEMeetingErrorCode.paramError,
-          msg: localizations.displayNameShouldNotBeEmpty);
     }
 
     if (param is NEJoinMeetingParams && param.meetingNum.isEmpty) {

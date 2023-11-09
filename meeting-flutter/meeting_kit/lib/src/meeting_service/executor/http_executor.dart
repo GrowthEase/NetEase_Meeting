@@ -18,7 +18,6 @@ class _HttpExecutor {
 
   _HttpExecutor._internal() {
     var options = http.BaseOptions(
-        baseUrl: _serversConfig.baseUrl,
         connectTimeout: _serversConfig.connectTimeout,
         receiveTimeout: _serversConfig.receiveTimeout);
 
@@ -53,7 +52,7 @@ class _HttpExecutor {
           content:
               'MeetingSDK, HttpExecutor: req path=$path params=${data?.toString()}');
       final requestOptions = options.compose(
-        dio.options,
+        dio.options..baseUrl = _serversConfig.baseUrl,
         path,
         data: data,
       );

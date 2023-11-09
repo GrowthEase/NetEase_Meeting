@@ -74,8 +74,8 @@ class _NESettingsServiceImpl extends NESettingsService {
       .then((settings) => (settings[Keys.keyCameraOpen] ?? false) as bool);
 
   @override
-  Future<bool> isAudioAINSEnabled() => _ensureSettings().then(
-      (settings) => (settings[Keys.keyAudioAINSEnabled] ?? false) as bool);
+  Future<bool> isAudioAINSEnabled() => _ensureSettings()
+      .then((settings) => (settings[Keys.keyAudioAINSEnabled] ?? true) as bool);
 
   @override
   void enableAudioAINS(bool enable) {

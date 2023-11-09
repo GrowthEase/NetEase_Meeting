@@ -6,4 +6,5 @@ part of meeting_ui;
 
 class NEMeetingUIEvents {
   static const String flutterPageDisposed = 'flutterPageDisposed';
+  static const String flutterFrameChanged = 'flutterFrameChanged';
 }

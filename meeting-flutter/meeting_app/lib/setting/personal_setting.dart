@@ -2,13 +2,15 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+import 'package:nemeeting/arguments/webview_arguments.dart';
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:netease_meeting_core/meeting_kit.dart';
+import 'package:nemeeting/service/config/servers.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
 import 'package:nemeeting/service/config/app_config.dart';
 import 'package:nemeeting/service/config/login_type.dart';
+import 'package:netease_meeting_ui/meeting_ui.dart';
 import '../uikit/state/meeting_base_state.dart';
 import '../uikit/utils/nav_utils.dart';
 import '../uikit/utils/router_name.dart';
@@ -55,10 +57,21 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
             isShowArrow: canModifyNick(),
             onTap: () {
               if (canModifyNick()) {
-                NavUtils.pushNamed(context, RouterName.nickSetting);
+                NavUtils.pushNamed(context, RouterName.nickSetting,
+                    pageRoute: NEMeetingUIKit().getMeetingStatus().event ==
+                        NEMeetingEvent.inMeetingMinimized);
               }
             }),
         _buildSplit(),
+        buildPersonItem(
+            title: Strings.company,
+            arrowTip: widget.companyName,
+            isShowArrow: canSwitchCompany(),
+            onTap: () {
+              if (canSwitchCompany()) {
+                NavUtils.pushNamed(context, RouterName.companySetting);
+              }
+            }),
         if (!TextUtil.isEmpty(MeetingUtil.getMobilePhone()) || canModifyPwd())
           Container(
             color: AppColors.globalBg,
@@ -322,6 +335,10 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
   }
 
   void showLogoutActionSheet() {
+    if (NEMeetingUIKit().getCurrentMeetingInfo() != null) {
+      ToastUtils.showToast(context, Strings.miniTipAlreadyInRightMeeting);
+      return;
+    }
     showCupertinoModalPopup<String>(
         context: context,
         builder: (BuildContext context) => CupertinoActionSheet(

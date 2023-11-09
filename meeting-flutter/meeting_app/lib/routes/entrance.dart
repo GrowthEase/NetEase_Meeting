@@ -20,6 +20,7 @@ import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/service/config/app_config.dart';
 import 'package:nemeeting/service/config/scene_type.dart';
 import 'package:nemeeting/service/repo/auth_repo.dart';
+import 'package:nemeeting/utils/security_notice_util.dart';
 import '../uikit/utils/nav_utils.dart';
 import '../uikit/utils/router_name.dart';
 import '../uikit/values/borders.dart';
@@ -52,7 +53,6 @@ class _EntranceRouteState extends LifecycleBaseState {
       if (value != true) {
         showPrivacyDialog(context);
       }
-      DeepLinkManager().privacyAgreed = value;
     });
 
     DeepLinkManager().attach(context);
@@ -64,6 +64,7 @@ class _EntranceRouteState extends LifecycleBaseState {
         color: Colors.white,
         child: SafeArea(
           child: Stack(children: <Widget>[
+            // SecurityNoticeUtil.buildSecurityNoticeTips(context, 20),
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -80,6 +81,7 @@ class _EntranceRouteState extends LifecycleBaseState {
                         SizedBox(
                           height: 15,
                         ),
+                        if (AppConfig().isPublicFlavor) buildRegisterAndSSO(),
                       ],
                     ),
                   ),
@@ -115,6 +117,13 @@ class _EntranceRouteState extends LifecycleBaseState {
         decoration: TextDecoration.none);
   }
 
+  Widget buildRegisterAndSSO() {
+    return Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+      // buildRegister(),
+      buildSSO(),
+    ]);
+  }
+
   GestureDetector buildRegister() {
     return GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -138,6 +147,67 @@ class _EntranceRouteState extends LifecycleBaseState {
         });
   }
 
+  GestureDetector buildSSO() {
+    return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: EdgeInsets.only(left: 50, top: 6, right: 50, bottom: 6),
+          child: Text(
+            Strings.loginBySSO,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+                color: AppColors.blue_337eff,
+                fontWeight: FontWeight.w400,
+                fontSize: 12,
+                decoration: TextDecoration.none),
+          ),
+        ),
+        onTap: () {
+          if (!PrivacyUtil.privateAgreementChecked) {
+            ToastUtils.showToast(context, Strings.privacyCheckedTips);
+            return;
+          }
+          var authModel = AuthArguments();
+          NavUtils.pushNamed(context, RouterName.ssoLogin,
+              arguments: authModel);
+        });
+  }
+
+  GestureDetector buildLogin() {
+    return GestureDetector(
+      child: Container(
+        height: 50,
+        decoration: BoxDecoration(
+          border: Border.fromBorderSide(Borders.secondaryBorder),
+          borderRadius: BorderRadius.all(Radius.circular(25.0)),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          AppConfig().isPublicFlavor ? Strings.login : Strings.mailLogin,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+              color: AppColors.blue_337eff,
+              fontWeight: FontWeight.w400,
+              fontSize: 16,
+              decoration: TextDecoration.none),
+        ),
+      ),
+      onTap: () {
+        if (!PrivacyUtil.privateAgreementChecked) {
+          ToastUtils.showToast(context, Strings.privacyCheckedTips);
+          return;
+        }
+        if (AppConfig().isPublicFlavor) {
+          var authModel = AuthArguments();
+          authModel.sceneType = SceneType.login;
+          NavUtils.pushNamed(context, RouterName.login, arguments: authModel);
+        } else {
+          NavUtils.pushNamed(context, RouterName.mailLogin);
+        }
+      },
+    );
+  }
+
   GestureDetector buildRegisterAndLogin() {
     return GestureDetector(
       child: Container(
@@ -148,7 +218,7 @@ class _EntranceRouteState extends LifecycleBaseState {
         ),
         alignment: Alignment.center,
         child: Text(
-          Strings.login,
+          Strings.registerAndLogin,
           textAlign: TextAlign.center,
           style: TextStyle(
               color: AppColors.secondaryText,
@@ -195,12 +265,6 @@ class _EntranceRouteState extends LifecycleBaseState {
         }
       },
     );
-  }
-
-  void openAnonyMeetJoin() {
-    var authModel = AuthArguments();
-    authModel.sceneType = SceneType.login;
-    NavUtils.pushNamed(context, RouterName.anonyMeetJoin, arguments: authModel);
   }
 
   Future<void> ssoLogin(String uuid, String ssoToken, String appKey) async {
@@ -319,7 +383,6 @@ class _EntranceRouteState extends LifecycleBaseState {
       if (value == false) {
         exit(0);
       } else if (value == true) {
-        DeepLinkManager().privacyAgreed = true;
         GlobalPreferences().setPrivacyDialogShowed(true);
       }
     });

@@ -12,7 +12,7 @@ publish_to: none
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 3.15.0+31500
+version: 3.17.0+31700
 
 environment:
   sdk: '>=2.17.0  <4.0.0'
@@ -73,16 +73,9 @@ flutter:
     - assets/config.properties
     - assets/virtual_background_images/images.zip
     - assets/lottie/
-    #  - xkit_server.config
-    #  - images/a_dot_ham.jpeg
 
   fonts:
     - family: iconfont
       fonts:
         - asset: assets/fonts/iconfont.ttf
 
-#dependency_overrides:
-#  netease_common:
-#    path: ../../common/common
-#  netease_roomkit:
-#    path: ../../roomkit/roomkit

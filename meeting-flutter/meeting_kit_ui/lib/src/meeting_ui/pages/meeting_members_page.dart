@@ -7,20 +7,22 @@ part of meeting_ui;
 /// 参会者界面
 class MeetMemberPage extends StatefulWidget {
   final MembersArguments arguments;
+  final bool isMinimized;
 
-  MeetMemberPage(this.arguments);
+  MeetMemberPage(this.arguments, this.isMinimized);
 
   @override
   State<StatefulWidget> createState() {
-    return MeetMemberPageState(arguments);
+    return MeetMemberPageState(arguments, isMinimized);
   }
 }
 
 class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     with EventTrackMixin {
-  MeetMemberPageState(this.arguments);
+  MeetMemberPageState(this.arguments, this.isMinimized);
 
   final MembersArguments arguments;
+  final bool isMinimized;
 
   static const _radius = Radius.circular(8);
 
@@ -391,23 +393,22 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
   /// 锁定状态， 失败回退
   void updateLockState(bool lock) {
     isLock = lock;
+    final localizations = NEMeetingUIKitLocalizations.of(context)!;
     lifecycleExecute(lock ? roomContext.lockRoom() : roomContext.unlockRoom())
         .then((result) {
       if (!mounted) return;
       if (result?.isSuccess() ?? false) {
-        ToastUtils.showToast(
-            context,
+        showToastWithMini(
             lock
-                ? NEMeetingUIKitLocalizations.of(context)!.lockMeetingByHost
-                : NEMeetingUIKitLocalizations.of(context)!.unLockMeetingByHost);
+                ? localizations.lockMeetingByHost
+                : localizations.unLockMeetingByHost,
+            isMinimized);
       } else {
-        ToastUtils.showToast(
-          context,
-          lock
-              ? NEMeetingUIKitLocalizations.of(context)!.lockMeetingByHostFail
-              : NEMeetingUIKitLocalizations.of(context)!
-                  .unLockMeetingByHostFail,
-        );
+        showToastWithMini(
+            lock
+                ? localizations.lockMeetingByHostFail
+                : localizations.unLockMeetingByHostFail,
+            isMinimized);
       }
     });
   }
@@ -557,13 +558,14 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
         .then((result) {
       if (!mounted || result == null) return;
       if (result.isSuccess()) {
-        ToastUtils.showToast(context,
-            NEMeetingUIKitLocalizations.of(context)!.muteAllAudioSuccess);
+        showToastWithMini(
+            NEMeetingUIKitLocalizations.of(context)!.muteAllAudioSuccess,
+            isMinimized);
       } else {
-        ToastUtils.showToast(
-            context,
+        showToastWithMini(
             result.msg ??
-                NEMeetingUIKitLocalizations.of(context)!.muteAllAudioFail);
+                NEMeetingUIKitLocalizations.of(context)!.muteAllAudioFail,
+            isMinimized);
       }
     });
   }
@@ -574,13 +576,14 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     lifecycleExecute(rtcController.unmuteAllParticipantsAudio()).then((result) {
       if (!mounted || result == null) return;
       if (result.isSuccess()) {
-        ToastUtils.showToast(context,
-            NEMeetingUIKitLocalizations.of(context)!.unMuteAllAudioSuccess);
+        showToastWithMini(
+            NEMeetingUIKitLocalizations.of(context)!.unMuteAllAudioSuccess,
+            isMinimized);
       } else {
-        ToastUtils.showToast(
-            context,
+        showToastWithMini(
             result.msg ??
-                NEMeetingUIKitLocalizations.of(context)!.unMuteAllAudioFail);
+                NEMeetingUIKitLocalizations.of(context)!.unMuteAllAudioFail,
+            isMinimized);
       }
     });
   }
@@ -653,13 +656,14 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
         .then((result) {
       if (!mounted || result == null) return;
       if (result.isSuccess()) {
-        ToastUtils.showToast(context,
-            NEMeetingUIKitLocalizations.of(context)!.muteAllVideoSuccess);
+        showToastWithMini(
+            NEMeetingUIKitLocalizations.of(context)!.muteAllVideoSuccess,
+            isMinimized);
       } else {
-        ToastUtils.showToast(
-            context,
+        showToastWithMini(
             result.msg ??
-                NEMeetingUIKitLocalizations.of(context)!.muteAllVideoFail);
+                NEMeetingUIKitLocalizations.of(context)!.muteAllVideoFail,
+            isMinimized);
       }
     });
   }
@@ -670,13 +674,14 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     lifecycleExecute(rtcController.unmuteAllParticipantsVideo()).then((result) {
       if (!mounted || result == null) return;
       if (result.isSuccess()) {
-        ToastUtils.showToast(context,
-            NEMeetingUIKitLocalizations.of(context)!.unMuteAllVideoSuccess);
+        showToastWithMini(
+            NEMeetingUIKitLocalizations.of(context)!.unMuteAllVideoSuccess,
+            isMinimized);
       } else {
-        ToastUtils.showToast(
-            context,
+        showToastWithMini(
             result.msg ??
-                NEMeetingUIKitLocalizations.of(context)!.unMuteAllVideoFail);
+                NEMeetingUIKitLocalizations.of(context)!.unMuteAllVideoFail,
+            isMinimized);
       }
     });
   }
@@ -983,13 +988,15 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
       case MemberActionType.makeCoHost:
         roomContext.makeCoHost(user.uuid).then((result) {
           if (result.isSuccess()) {
-            ToastUtils.showToast(context,
-                '${roomContext.getMember(user.uuid)?.name}${NEMeetingUIKitLocalizations.of(context)!.userHasBeenAssignCoHostRole}');
+            showToastWithMini(
+                '${roomContext.getMember(user.uuid)?.name}${NEMeetingUIKitLocalizations.of(context)!.userHasBeenAssignCoHostRole}',
+                isMinimized);
           } else {
             if (result.code == NEErrorCode.overRoleLimitCount) {
               /// 达到分配角色的上限
-              showToast(
-                  NEMeetingUIKitLocalizations.of(context)!.overRoleLimitCount);
+              showToastWithMini(
+                  NEMeetingUIKitLocalizations.of(context)!.overRoleLimitCount,
+                  isMinimized);
             }
             Alog.i(
                 tag: _tag,
@@ -1002,8 +1009,9 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
       case MemberActionType.cancelCoHost:
         roomContext.cancelCoHost(user.uuid).then((result) {
           if (result.isSuccess()) {
-            ToastUtils.showToast(context,
-                '${roomContext.getMember(user.uuid)?.name}${NEMeetingUIKitLocalizations.of(context)!.userHasBeenRevokeCoHostRole}');
+            showToastWithMini(
+                '${roomContext.getMember(user.uuid)?.name}${NEMeetingUIKitLocalizations.of(context)!.userHasBeenRevokeCoHostRole}',
+                isMinimized);
           } else {
             Alog.i(
                 tag: _tag,
@@ -1021,10 +1029,10 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     var result =
         await whiteboardController.stopMemberWhiteboardShare(member.uuid);
     if (!result.isSuccess() && mounted) {
-      ToastUtils.showToast(
-          context,
+      showToastWithMini(
           result.msg ??
-              NEMeetingUIKitLocalizations.of(context)!.whiteBoardShareStopFail);
+              NEMeetingUIKitLocalizations.of(context)!.whiteBoardShareStopFail,
+          isMinimized);
     }
   }
 
@@ -1035,10 +1043,10 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
         .then((NEResult? result) {
       if (!mounted || result == null) return;
       if (!result.isSuccess()) {
-        ToastUtils.showToast(
-            context,
+        showToastWithMini(
             result.msg ??
-                NEMeetingUIKitLocalizations.of(context)!.screenShareStopFail);
+                NEMeetingUIKitLocalizations.of(context)!.screenShareStopFail,
+            isMinimized);
       }
     }));
   }
@@ -1046,21 +1054,21 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
   Future<void> _awardedWhiteboardInteraction(NERoomMember user) async {
     var result = await whiteboardController.grantPermission(user.uuid);
     if (!result.isSuccess() && mounted) {
-      ToastUtils.showToast(
-          context,
+      showToastWithMini(
           result.msg ??
-              NEMeetingUIKitLocalizations.of(context)!.whiteBoardInteractFail);
+              NEMeetingUIKitLocalizations.of(context)!.whiteBoardInteractFail,
+          isMinimized);
     }
   }
 
   Future<void> _undoWhiteboardInteraction(NERoomMember user) async {
     var result = await whiteboardController.revokePermission(user.uuid);
     if (!result.isSuccess() && mounted) {
-      ToastUtils.showToast(
-          context,
+      showToastWithMini(
           result.msg ??
               NEMeetingUIKitLocalizations.of(context)!
-                  .undoWhiteBoardInteractFail);
+                  .undoWhiteBoardInteractFail,
+          isMinimized);
     }
   }
 
@@ -1070,10 +1078,10 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     lifecycleExecute(roomContext.lowerUserHand(user.uuid))
         .then((NEResult? result) {
       if (mounted && result != null && !result.isSuccess()) {
-        ToastUtils.showToast(
-            context,
+        showToastWithMini(
             result.msg ??
-                NEMeetingUIKitLocalizations.of(context)!.handsUpDownFail);
+                NEMeetingUIKitLocalizations.of(context)!.handsUpDownFail,
+            isMinimized);
       }
     });
   }
@@ -1082,8 +1090,9 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     trackPeriodicEvent(TrackEventName.removeMember,
         extra: {'member_uid': user.uuid, 'meeting_num': roomId});
     if (roomContext.isMySelf(user.uuid)) {
-      ToastUtils.showToast(
-          context, NEMeetingUIKitLocalizations.of(context)!.cannotRemoveSelf);
+      showToastWithMini(
+          NEMeetingUIKitLocalizations.of(context)!.cannotRemoveSelf,
+          isMinimized);
       return;
     }
     showDialog(
@@ -1120,10 +1129,10 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     lifecycleExecute(roomContext.kickMemberOut(user.uuid))
         .then((NEResult? result) {
       if (mounted && result != null && !result.isSuccess()) {
-        ToastUtils.showToast(
-            context,
+        showToastWithMini(
             result.msg ??
-                NEMeetingUIKitLocalizations.of(context)!.removeMemberFail);
+                NEMeetingUIKitLocalizations.of(context)!.removeMemberFail,
+            isMinimized);
       }
     });
   }
@@ -1146,13 +1155,12 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
         : roomContext.rtcController.inviteParticipantTurnOnAudio(user.uuid);
     lifecycleExecute(future).then((NEResult? result) {
       if (result != null && mounted && !result.isSuccess()) {
-        ToastUtils.showToast(
-            context,
+        showToastWithMini(
             result.msg ??
                 (mute
                     ? NEMeetingUIKitLocalizations.of(context)!.muteAudioFail
-                    : NEMeetingUIKitLocalizations.of(context)!
-                        .unMuteAudioFail));
+                    : NEMeetingUIKitLocalizations.of(context)!.unMuteAudioFail),
+            isMinimized);
       }
     });
   }
@@ -1175,13 +1183,12 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
         : roomContext.rtcController.inviteParticipantTurnOnVideo(user.uuid);
     lifecycleExecute(result).then((NEResult? result) {
       if (mounted && result != null && !result.isSuccess()) {
-        ToastUtils.showToast(
-            context,
+        showToastWithMini(
             result.msg ??
                 (mute
                     ? NEMeetingUIKitLocalizations.of(context)!.muteVideoFail
-                    : NEMeetingUIKitLocalizations.of(context)!
-                        .unMuteVideoFail));
+                    : NEMeetingUIKitLocalizations.of(context)!.unMuteVideoFail),
+            isMinimized);
       }
     });
   }
@@ -1211,10 +1218,10 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
           rtcController.inviteParticipantTurnOnAudioAndVideo(user.uuid);
       lifecycleExecute(result).then((NEResult? result) {
         if (mounted && result != null && !result.isSuccess()) {
-          ToastUtils.showToast(
-              context,
+          showToastWithMini(
               result.msg ??
-                  '${(mute ? NEMeetingUIKitLocalizations.of(context)!.muteAudioAndVideo : NEMeetingUIKitLocalizations.of(context)!.unmuteAudioAndVideo)}${NEMeetingUIKitLocalizations.of(context)!.fail}');
+                  '${(mute ? NEMeetingUIKitLocalizations.of(context)!.muteAudioAndVideo : NEMeetingUIKitLocalizations.of(context)!.unmuteAudioAndVideo)}${NEMeetingUIKitLocalizations.of(context)!.fail}',
+              isMinimized);
         }
       });
     }
@@ -1229,13 +1236,13 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     lifecycleExecute(rtcController.pinVideo(user.uuid, focus))
         .then((NEResult? result) {
       if (mounted && result != null && !result.isSuccess()) {
-        ToastUtils.showToast(
-            context,
+        showToastWithMini(
             result.msg ??
                 (focus
                     ? NEMeetingUIKitLocalizations.of(context)!.focusVideoFail
                     : NEMeetingUIKitLocalizations.of(context)!
-                        .unFocusVideoFail));
+                        .unFocusVideoFail),
+            isMinimized);
       }
     });
   }
@@ -1277,17 +1284,17 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
   void changeHost2Server(NERoomMember user) {
     if (roomContext.getMember(user.uuid) == null) {
       /// 执行移交主持人时，check 用户是否还在会议中，不在的话直接提示 移交主持人失败
-      ToastUtils.showToast(
-          context, NEMeetingUIKitLocalizations.of(context)!.changeHostFail);
+      showToastWithMini(
+          NEMeetingUIKitLocalizations.of(context)!.changeHostFail, isMinimized);
       return;
     }
     lifecycleExecute(roomContext.handOverHost(user.uuid))
         .then((NEResult? result) {
       if (mounted && result != null && !result.isSuccess()) {
-        ToastUtils.showToast(
-            context,
+        showToastWithMini(
             result.msg ??
-                NEMeetingUIKitLocalizations.of(context)!.changeHostFail);
+                NEMeetingUIKitLocalizations.of(context)!.changeHostFail,
+            isMinimized);
       }
     });
   }
@@ -1361,6 +1368,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
         TextPosition(offset: _textFieldController.text.length));
     showCupertinoDialog(
       context: context,
+      useRootNavigator: false,
       builder: (context) {
         return StatefulBuilder(
           builder: (_, setState) =>
@@ -1428,16 +1436,22 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
         .then((NEResult? result) {
       if (mounted && result != null) {
         if (result.isSuccess()) {
-          ToastUtils.showToast(
-              context, NEMeetingUIKitLocalizations.of(context)!.renameSuccess);
+          showToastWithMini(
+              NEMeetingUIKitLocalizations.of(context)!.renameSuccess,
+              isMinimized);
         } else {
-          ToastUtils.showToast(
-              context,
-              result.msg ??
-                  NEMeetingUIKitLocalizations.of(context)!.renameFail);
+          showToastWithMini(
+              result.msg ?? NEMeetingUIKitLocalizations.of(context)!.renameFail,
+              isMinimized);
         }
       }
     });
+  }
+
+  void showToastWithMini(String message, bool mini) {
+    if (mounted && !mini) {
+      ToastUtils.showToast(context, message);
+    }
   }
 }
 

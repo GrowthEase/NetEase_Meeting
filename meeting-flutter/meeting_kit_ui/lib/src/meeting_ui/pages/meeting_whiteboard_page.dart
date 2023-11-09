@@ -11,6 +11,7 @@ class WhiteBoardWebPage extends StatefulWidget {
   final ValueNotifier<bool> valueNotifier;
   final NERoomContext roomContext;
   final Color? backgroundColor;
+  final bool? isMinimized;
 
   WhiteBoardWebPage({
     Key? key,
@@ -18,6 +19,7 @@ class WhiteBoardWebPage extends StatefulWidget {
     required this.valueNotifier,
     required this.roomContext,
     this.backgroundColor,
+    this.isMinimized,
   }) : super(key: key);
 
   @override
@@ -49,7 +51,7 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
     });
     callback = NERoomEventCallback(
       whiteboardError: (code, msg) {
-        if (code == MeetingErrorCode.forbidden) {
+        if (code == MeetingErrorCode.forbidden && widget.isMinimized != true) {
           showLogoutDialog();
         }
       },
@@ -94,7 +96,7 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
           ),
           Positioned(
             right: 10,
-            bottom: 110,
+            bottom: 150,
             width: 80,
             child: Padding(
                 padding: const EdgeInsets.all(10),

@@ -35,7 +35,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
   NEMeetingOnInjectedMenuItemClickListener? _onInjectedMenuItemClickListener;
 
   bool _preload = false;
-  NEMeetingUIKitConfig? _config;
+  NEMeetingUIKitConfig? uiConfig;
 
   NEMeetingUIKit._() {
     MeetingCore().meetingStatusStream.listen((status) {
@@ -164,7 +164,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
     }
     final result = await NEMeetingKit.instance.initialize(config);
     if (result.isSuccess()) {
-      _config = config;
+      uiConfig = config;
       MeetingCore().foregroundConfig = config.foregroundServiceConfig;
     }
     return result;
@@ -199,9 +199,11 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
     MeetingPageRouteWillPushCallback? onMeetingPageRouteWillPush,
     MeetingPageRouteDidPushCallback? onMeetingPageRouteDidPush,
     int? startTime,
+    Widget? backgroundWidget,
   }) async {
     apiLogger.i('startMeetingUI');
     final event = IntervalEvent(kEventStartMeeting, startTime: startTime)
+      ..addParam(kEventParamMeetingNum, param.meetingNum ?? '')
       ..addParam(kEventParamType,
           (param.meetingNum?.isEmpty ?? true) ? 'random' : 'personal');
     param.trackingEvent = event;
@@ -242,6 +244,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
           meetingInfo: roomContext.meetingInfo,
           options: opts,
           encryptionConfig: param.encryptionConfig,
+          backgroundWidget: backgroundWidget,
         )..trackingEvent = event;
         final popped = navigatorState.push(
           MaterialPageRoute(
@@ -266,11 +269,13 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
     MeetingPageRouteWillPushCallback? onMeetingPageRouteWillPush,
     MeetingPageRouteDidPushCallback? onMeetingPageRouteDidPush,
     int? startTime,
+    Widget? backgroundWidget,
   }) async {
     apiLogger.i('joinMeetingUI');
     if (param.trackingEvent == null) {
       param.trackingEvent =
           IntervalEvent(kEventJoinMeeting, startTime: startTime)
+            ..addParam(kEventParamMeetingNum, param.meetingNum)
             ..addParam(kEventParamType, 'normal');
     }
     final event = param.trackingEvent!;
@@ -291,6 +296,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
       onPasswordPageRouteWillPush: onPasswordPageRouteWillPush,
       onMeetingPageRouteWillPush: onMeetingPageRouteWillPush,
       onMeetingPageRouteDidPush: onMeetingPageRouteDidPush,
+      backgroundWidget: backgroundWidget,
     ).thenReport(event, onlyFailure: true);
   }
 
@@ -308,6 +314,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
       apiLogger.i('anonymousJoinMeetingUI');
       final event = IntervalEvent(kEventJoinMeeting, startTime: startTime)
         ..addParam(kEventParamType, 'anonymous')
+        ..addParam(kEventParamMeetingNum, param.meetingNum)
         ..beginStep(kMeetingStepAnonymousLogin);
       param.trackingEvent = event;
       var loginResult = await NEMeetingKit.instance.anonymousLogin();
@@ -365,9 +372,9 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
     PasswordPageRouteWillPushCallback? onPasswordPageRouteWillPush,
     MeetingPageRouteWillPushCallback? onMeetingPageRouteWillPush,
     MeetingPageRouteDidPushCallback? onMeetingPageRouteDidPush,
+    Widget? backgroundWidget,
   }) async {
     NEMeetingUIKit().preload(context);
-
     final checkParamsResult = _checkParameters(uiOpts);
     if (checkParamsResult != null) {
       return checkParamsResult;
@@ -376,9 +383,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
     if (checkIdleResult != null) {
       return checkIdleResult;
     }
-
     final navigatorState = Navigator.of(context, rootNavigator: true);
-
     var joinResult = await joinAction();
     if (joinResult.code == NEMeetingErrorCode.success &&
         joinResult.data != null) {
@@ -391,6 +396,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
         meetingInfo: roomContext.meetingInfo,
         options: uiOpts,
         encryptionConfig: param.encryptionConfig,
+        backgroundWidget: backgroundWidget,
       )..trackingEvent = param.trackingEvent;
       final popped = navigatorState.push(MaterialPageRoute(
           builder: (context) => MeetingPageProxy(meetingArguments)));
@@ -420,6 +426,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
             meetingInfo: value.meetingInfo,
             options: uiOpts,
             encryptionConfig: param.encryptionConfig,
+            backgroundWidget: backgroundWidget,
           )..trackingEvent = param.trackingEvent;
           final popped = navigatorState.push(MaterialPageRoute(
             builder: (context) => MeetingPageProxy(meetingArguments),
@@ -444,6 +451,14 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
   Future<NEResult<void>> leaveCurrentMeeting(bool closeIfHost) async {
     apiLogger.i('leaveCurrentMeeting: $closeIfHost');
     return InMeetingService().leaveCurrentMeeting(closeIfHost);
+  }
+
+  Future<NEResult<void>> fullCurrentMeeting() {
+    if (InMeetingService().minimizeDelegate == null) {
+      return Future.value(const NEResult(
+          code: NEMeetingErrorCode.failed, msg: 'meeting not exists.'));
+    }
+    return InMeetingService().minimizeDelegate!.fullCurrentMeeting();
   }
 
   Future<NEResult<void>> minimizeCurrentMeeting() {

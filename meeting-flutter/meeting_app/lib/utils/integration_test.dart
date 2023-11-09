@@ -114,6 +114,9 @@ class MeetingValueKey {
 
   static const feedbackInput = ValueKey("feedbackInput");
 
+  /// 评价关闭按钮
+  static const evaluationCloseBtn = ValueKey("evaluationCloseBtn");
+
   /// 非product的版本，则显示。switchButton 默认 valueKey的后缀是value = false  -1; value = true 0，
   static Widget addTextWidgetTest(
       {required bool value, required ValueKey<String> valueKey}) {

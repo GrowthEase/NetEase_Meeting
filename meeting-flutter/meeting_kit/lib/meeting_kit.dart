@@ -5,7 +5,6 @@
 library meeting_kit;
 
 import 'dart:async';
-import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
@@ -48,6 +47,7 @@ export 'package:netease_roomkit/netease_roomkit.dart'
         NEWhiteboardServerConfig;
 
 part 'src/meeting_kit/meeting_account_service.dart';
+part 'src/meeting_kit/impl/screen_sharing_service_impl.dart';
 part 'src/meeting_kit/impl/meeting_account_service_impl.dart';
 part 'src/meeting_kit/impl/meeting_kit_impl.dart';
 part 'src/meeting_kit/impl/meeting_service_impl.dart';
@@ -65,6 +65,7 @@ part 'src/meeting_kit/utils/rtc_utils.dart';
 part 'src/meeting_kit/utils/network_task_executor.dart';
 part 'src/meeting_kit/meeting_context.dart';
 part 'src/meeting_kit/report/meeting_report.dart';
+part 'src/meeting_kit/screen_sharing_service.dart';
 
 class NEMeetingServerConfig {
   static const _serverUrlKey = 'serverUrl';
@@ -214,6 +215,9 @@ abstract class NEMeetingKit {
   /// 获取用于创建或加入会议的会议服务。
   NEMeetingService getMeetingService();
 
+  /// 获取用于屏幕共享的会议服务。
+  NEScreenSharingService getScreenSharingService();
+
   /// 获取用于查询账号信息的账号服务
   NEMeetingAccountService getAccountService();
 
@@ -279,6 +283,9 @@ class NEMeetingErrorCode {
 
   /// 会议密码错误
   static const int badPassword = NEErrorCode.badPassword;
+
+  /// 会议已回收
+  static const int meetingRecycled = MeetingErrorCode.meetingRecycled;
 
   /// 会议不存在
   static const int meetingNotExist = MeetingErrorCode.meetingNotExists;

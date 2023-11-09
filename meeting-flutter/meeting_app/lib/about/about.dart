@@ -5,6 +5,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:netease_meeting_ui/meeting_ui.dart';
 import 'package:nemeeting/service/config/app_config.dart';
 import 'package:nemeeting/service/config/servers.dart';
 
@@ -17,6 +18,8 @@ import '../uikit/values/dimem.dart';
 import '../uikit/values/fonts.dart';
 import '../uikit/values/strings.dart';
 import 'package:nemeeting/arguments/webview_arguments.dart';
+
+import '../webview/webview_page.dart';
 
 class About extends StatefulWidget {
   @override
@@ -89,14 +92,19 @@ class _AboutState extends MeetingBaseState<About> {
   Widget buildPrivacy() {
     return buildItem(
         Strings.privacy,
-        () => NavUtils.pushNamed(context, RouterName.webview,
-            arguments: WebViewArguments(servers.privacy, Strings.privacy)));
+        () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => WebViewPage(
+                    WebViewArguments(servers.privacy, Strings.privacy)))));
+    // NavUtils.pushNamed(context, RouterName.webview,
+    // arguments: WebViewArguments(servers.privacy, Strings.privacy)));
   }
 
-  Widget buildPlayer() {
-    return buildItem(Strings.livePlayer,
-        () => NavUtils.pushNamed(context, RouterName.playerConfig));
-  }
+  // Widget buildPlayer() {
+  //   return buildItem(Strings.livePlayer,
+  //       () => NavUtils.pushNamed(context, RouterName.playerConfig));
+  // }
 
   Container buildSplit() {
     return Container(

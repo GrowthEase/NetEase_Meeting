@@ -4,19 +4,22 @@
 
 package com.netease.meeting.plugin;
 
+import android.app.Activity;
 import android.content.Context;
 import android.text.TextUtils;
-import android.util.Log;
 import androidx.annotation.NonNull;
 import com.netease.meeting.plugin.base.Handler;
 import com.netease.meeting.plugin.base.asset.AssetService;
 import com.netease.meeting.plugin.base.notification.NotificationService;
 import com.netease.meeting.plugin.bluetooth.BluetoothService;
+import com.netease.meeting.plugin.floating.FloatingService;
 import com.netease.meeting.plugin.images.ImageGallerySaver;
 import com.netease.meeting.plugin.images.ImageLoader;
 import com.netease.meeting.plugin.lifecycle.AppLifecycleDetector;
 import com.netease.meeting.plugin.phonestate.PhoneStateService;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
@@ -25,7 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /** MeetingPlugin */
-public class MeetingPlugin implements FlutterPlugin, MethodCallHandler {
+public class MeetingPlugin implements FlutterPlugin, MethodCallHandler, ActivityAware {
 
   public static final String TAG = "MeetingPlugin";
 
@@ -41,6 +44,7 @@ public class MeetingPlugin implements FlutterPlugin, MethodCallHandler {
   private PhoneStateService phoneStateService;
 
   private AppLifecycleDetector appLifecycleDetector;
+  private FloatingService floatingService;
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -75,6 +79,9 @@ public class MeetingPlugin implements FlutterPlugin, MethodCallHandler {
 
     appLifecycleDetector.dispose();
     appLifecycleDetector = null;
+
+    floatingService.dispose();
+    floatingService = null;
   }
 
   void initService() {
@@ -89,7 +96,7 @@ public class MeetingPlugin implements FlutterPlugin, MethodCallHandler {
   public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
     String moduleName = call.argument("module");
     String methodName = call.method;
-    Log.i(TAG, "moduleName=" + moduleName + " methodName=" + methodName);
+    //    Log.i(TAG, "moduleName=" + moduleName + " methodName=" + methodName);
     if (!TextUtils.isEmpty(moduleName)) {
       Handler handler = handlerMap.get(moduleName);
       if (handler != null) {
@@ -99,6 +106,35 @@ public class MeetingPlugin implements FlutterPlugin, MethodCallHandler {
       }
     } else {
       result.notImplemented();
+    }
+  }
+
+  @Override
+  public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
+    useBinding(binding);
+  }
+
+  @Override
+  public void onDetachedFromActivityForConfigChanges() {}
+
+  @Override
+  public void onReattachedToActivityForConfigChanges(@NonNull ActivityPluginBinding binding) {
+    useBinding(binding);
+  }
+
+  @Override
+  public void onDetachedFromActivity() {
+    if (floatingService != null) {
+      floatingService.dispose();
+      floatingService = null;
+    }
+  }
+
+  private void useBinding(ActivityPluginBinding binding) {
+    Activity activity = binding.getActivity();
+    if (floatingService == null) {
+      floatingService = new FloatingService(channel, context, activity);
+      floatingService.register(handlerMap);
     }
   }
 }
