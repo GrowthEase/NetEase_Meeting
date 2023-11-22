@@ -159,10 +159,10 @@ class _MeetingImageMessageViewerState extends State<MeetingImageMessageViewer> {
 
   void saveToGallery() async {
     final path = await _imageFilePathCompleter.future;
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.storage,
-    ].request();
-    if (statuses[Permission.storage] == PermissionStatus.granted) {
+    bool result = await PermissionHelper.requestPermissionSingle(
+        context, Permission.storage, '', '',
+        useDialog: false);
+    if (result) {
       final result = await NEMeetingPlugin().imageGallerySaver.saveFile(
             path,
             extension: widget.message.extension,

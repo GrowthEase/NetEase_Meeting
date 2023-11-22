@@ -8,6 +8,7 @@ class _NEMeetingKitImpl extends NEMeetingKit
     with EventTrackMixin, WidgetsBindingObserver, _AloggerMixin {
   NEMeetingKitConfig? _lastConfig;
   NEMeetingService meetingService = _NEMeetingServiceImpl();
+  NEScreenSharingService screenSharingService = _NEScreenSharingServiceImpl();
   _NEMeetingAccountServiceImpl accountService = _NEMeetingAccountServiceImpl();
   _NESettingsServiceImpl settingsService = _NESettingsServiceImpl();
   NEPreMeetingService preMeetingService = _NEPreMeetingServiceImpl();
@@ -229,9 +230,10 @@ class _NEMeetingKitImpl extends NEMeetingKit
       ..beginStep(_kLoginStepAccountInfo);
     Future<VoidResult> realLogin() async {
       final accountInfoResult = await accountInfoAction();
-      event.endStepWithResult(accountInfoResult);
+      print('accountInfoResult: ${accountInfoResult.requestId}');
       var info = accountInfoResult.data;
       if (info != null) {
+        event.endStepWithResult(accountInfoResult);
         event.beginStep(_kLoginStepRoomKitLogin);
         final loginResult = await NERoomKit.instance.authService
             .login(info.userUuid, info.userToken);
@@ -251,19 +253,24 @@ class _NEMeetingKitImpl extends NEMeetingKit
           });
         }
       } else {
-        return _handleMeetingResultCode(
+        final convertedResult = _handleMeetingResultCode(
                 accountInfoResult.code, accountInfoResult.msg)
             .onFailure((code, msg) {
           commonLogger.i('loginWithAccountInfo code:$code , msg: $msg ');
         });
+        event.endStepWithResult(convertedResult);
+        return convertedResult;
       }
     }
 
-    return realLogin().thenReport(event);
+    return realLogin().thenReport(event, userId: userId);
   }
 
   @override
   NEMeetingService getMeetingService() => meetingService;
+
+  @override
+  NEScreenSharingService getScreenSharingService() => screenSharingService;
 
   @override
   NEMeetingAccountService getAccountService() => accountService;
@@ -316,10 +323,9 @@ class _NEMeetingKitImpl extends NEMeetingKit
   }
 
   @override
-  Future<dynamic> reportEvent(Event event, {String? userId}) {
-    print('reportEvent: ${event.eventId}');
+  Future<bool> reportEvent(Event event, {String? userId}) {
     if (config?.appKey == null) return Future.value(false);
-    return _roomKit.invokeMethod('reportEvent', {
+    return _roomKit.reportEvent({
       'appKey': config?.appKey,
       'component': _kComponent,
       'version': _kVersion,
@@ -361,37 +367,5 @@ NEResult<void> _handleMeetingResultCode(int code, [String? msg]) {
         msg: localizations.meetingNotExist);
   } else {
     return NEResult<void>(code: code, msg: msg);
-  }
-}
-
-extension TimeConsumingOperationExtension on TimeConsumingOperation {
-  void setResultFrom<T>(NEResult<T> result) {
-    setResult(result.code, result.msg, result.requestId, result.cost);
-  }
-}
-
-extension IntervalEventExtension on IntervalEvent {
-  IntervalEvent endStepWithResult<T>(NEResult<T> result) {
-    return endStep(result.code, result.msg, result.requestId, result.cost);
-  }
-}
-
-extension FutureResultExtension<T> on Future<NEResult<T>> {
-  Future<NEResult<T>> thenEndStep(IntervalEvent? event) {
-    return then<NEResult<T>>((value) {
-      event?.endStep(value.code, value.msg, value.requestId, value.cost);
-      return value;
-    });
-  }
-
-  Future<NEResult<T>> thenReport(IntervalEvent? event,
-      {bool onlyFailure = false, String? userId}) {
-    return then<NEResult<T>>((value) {
-      if (event != null &&
-          (!onlyFailure || onlyFailure && !value.isSuccess())) {
-        NEMeetingKit.instance.reportEvent(event, userId: userId);
-      }
-      return value;
-    });
   }
 }

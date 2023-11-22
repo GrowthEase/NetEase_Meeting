@@ -34,8 +34,7 @@ target 'Runner' do
 #  plugin 'cocoapods-pod-sign'
 #  skip_pod_bundle_sign # 用来跳过Xcode对bundle资源的签名
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
-  # pod 'NECoreIMKit', '9.3.2'
-  pod 'NECoreIMKit-Private'
+  # pod 'NECoreIMKit', '9.6.1'
 end
 
 post_install do |installer|

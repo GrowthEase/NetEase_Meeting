@@ -113,6 +113,11 @@ part 'src/meeting_ui/uikit/permission/permission_helper.dart';
 part 'src/meeting_ui/uikit/helpers.dart';
 
 part 'src/meeting_ui/utils/image_size_getter.dart';
+part 'src/meeting_ui/widget/floating/native_pip_switcher.dart';
+part 'src/meeting_ui/widget/floating/pip_view.dart';
+part 'src/meeting_ui/widget/floating/raw_pip_view.dart';
+part 'src/meeting_ui/widget/floating/gesture_zoombox.dart';
+part 'src/meeting_ui/utils/utils.dart';
 
 class MeetingCore {
   static MeetingCore? _instance;

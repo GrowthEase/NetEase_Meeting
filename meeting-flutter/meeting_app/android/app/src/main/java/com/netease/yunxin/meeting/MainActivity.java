@@ -4,6 +4,7 @@
 
 package com.netease.yunxin.meeting;
 
+import android.app.PictureInPictureParams;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -11,15 +12,19 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Rational;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import com.netease.yunxin.meeting.util.FileProviderUtil;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.embedding.engine.dart.DartExecutor;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodChannel;
 import java.io.BufferedInputStream;
@@ -52,6 +57,7 @@ public class MainActivity extends FlutterActivity {
   private BroadcastReceiver linksReceiver;
 
   private String startString;
+  private int meetingStatus = 0;
 
   @Nullable
   @Override
@@ -77,6 +83,8 @@ public class MainActivity extends FlutterActivity {
               } else if (call.method.equals("apkDownloadOk")) {
                 String filePath = call.argument("filePath");
                 installApk(filePath, result);
+              } else if (call.method.equals("notifyMeetingStatusChanged")) {
+                meetingStatus = call.argument("meetingStatus");
               }
             });
     if (data != null) {
@@ -279,6 +287,29 @@ public class MainActivity extends FlutterActivity {
       }
     } catch (Throwable e) {
       e.printStackTrace();
+    }
+  }
+  // 实现点击 Home 键进入 PiP
+  @RequiresApi(Build.VERSION_CODES.O)
+  public void onUserLeaveHint() {
+    super.onUserLeaveHint();
+    //    FloatingService.enablePip(null, this);
+    pip();
+  }
+
+  @Override
+  public void onBackPressed() {
+    super.onBackPressed();
+    //    pip();
+  }
+
+  private void pip() {
+    if (meetingStatus != 4) return;
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      PictureInPictureParams.Builder builder =
+          new PictureInPictureParams.Builder().setAspectRatio(new Rational(9, 16));
+
+      enterPictureInPictureMode(builder.build());
     }
   }
 }

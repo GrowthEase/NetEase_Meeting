@@ -178,7 +178,9 @@ class MeetingWaitingPageState extends BaseState<MeetingWaitingPage> {
     final network = await Connectivity().checkConnectivity();
     if (!mounted) return;
     if (network == ConnectivityResult.none) {
-      showToast(NEMeetingKitLocalizations.of(context)!.networkUnavailableCheck);
+      showToastWithMini(
+          NEMeetingKitLocalizations.of(context)!.networkUnavailableCheck,
+          false);
       return;
     }
 

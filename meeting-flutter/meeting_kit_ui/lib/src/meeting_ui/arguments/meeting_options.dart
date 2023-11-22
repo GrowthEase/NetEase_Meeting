@@ -41,6 +41,9 @@ class NEMeetingUIOptions {
   /// 配置是否开启最小化会议页面入口
   late final bool noMinimize;
 
+  /// 配置退后台是否开启画中画
+  late final bool enablePictureInPicture;
+
   /// 配置是否开启画廊入口
   late final bool noGallery;
 
@@ -151,6 +154,7 @@ class NEMeetingUIOptions {
     noInvite = (json['noInvite'] ?? false) as bool;
     noSip = (json['noSip'] ?? false) as bool;
     noMinimize = (json['noMinimize'] ?? true) as bool;
+    enablePictureInPicture = (json['enablePictureInPicture'] ?? false) as bool;
     noGallery = (json['noGallery'] ?? false) as bool;
     noSwitchCamera = (json['noSwitchCamera'] ?? false) as bool;
     noSwitchAudioMode = (json['noSwitchAudioMode'] ?? false) as bool;
@@ -202,6 +206,7 @@ class NEMeetingUIOptions {
     this.noInvite = false,
     this.noSip = false,
     this.noMinimize = true,
+    this.enablePictureInPicture = false,
     this.noGallery = false,
     this.noSwitchAudioMode = false,
     this.noSwitchCamera = false,

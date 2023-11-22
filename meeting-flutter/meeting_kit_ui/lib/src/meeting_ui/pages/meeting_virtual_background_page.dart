@@ -144,6 +144,7 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
                           .setCurrentVirtualBackgroundSelected(currentSelected);
                       enableVirtualBackground(
                           rtcController, index != 0, sourceList[index]);
+                      if (!mounted) return;
                       setState(() {});
                     }
                   },

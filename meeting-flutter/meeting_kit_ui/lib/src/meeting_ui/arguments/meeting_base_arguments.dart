@@ -17,6 +17,9 @@ class MeetingBaseArguments {
   /// 会议密码
   String? password;
 
+  /// 会议最小化背景 widget
+  Widget? backgroundWidget;
+
   /// show Meeting time
   bool get showMeetingTime => options.showMeetingTime;
 
@@ -47,13 +50,16 @@ class MeetingBaseArguments {
   /// 最小化
   bool get noMinimize => options.noMinimize;
 
+  /// 后台画中画
+  bool get enablePictureInPicture => options.enablePictureInPicture;
+
   /// 会议标题
   String get meetingTitle {
     var title = options.title;
     if (title != null && title.isNotEmpty) {
       return title;
     }
-    title = NEMeetingUIKit()._config?.appName;
+    title = NEMeetingUIKit().uiConfig?.appName;
     if (title != null && title.isNotEmpty) {
       return title;
     }
@@ -61,7 +67,7 @@ class MeetingBaseArguments {
   }
 
   String? get iosBroadcastAppGroup =>
-      NEMeetingUIKit()._config?.iosBroadcastAppGroup;
+      NEMeetingUIKit().uiConfig?.iosBroadcastAppGroup;
 
   /// 本地配置
   bool get videoMute => _videoMuteListenable.value;
@@ -125,5 +131,6 @@ class MeetingBaseArguments {
     this.tag,
     this.password,
     required this.options,
+    this.backgroundWidget,
   });
 }

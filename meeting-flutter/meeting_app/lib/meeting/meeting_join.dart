@@ -5,10 +5,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nemeeting/routes/home_page.dart';
 import 'package:nemeeting/utils/const_config.dart';
 import 'package:nemeeting/utils/integration_test.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
-import 'package:nemeeting/service/event/track_app_event.dart';
 import 'package:nemeeting/uikit/const/consts.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/client/http_code.dart';
@@ -294,9 +294,12 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
       },
       onMeetingPageRouteWillPush: () async {
         LoadingUtil.cancelLoading();
+        if (!mounted) return;
         NavUtils.pop(context);
       },
+      backgroundWidget: HomePageRoute(),
     );
+    if (!mounted) return;
     final errorCode = result.code;
     final errorMessage = result.msg;
     LoadingUtil.cancelLoading();
@@ -307,9 +310,10 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
       ToastUtils.showToast(context, Strings.loginOnOtherDevice);
       AuthManager().logout();
       NavUtils.pushNamedAndRemoveUntil(context, RouterName.entrance);
-    } else if (errorCode == NEMeetingErrorCode.alreadyInMeeting ||
-        errorCode == NEMeetingErrorCode.cancelled) {
-      //不作处理
+    } else if (errorCode == NEMeetingErrorCode.alreadyInMeeting) {
+      ToastUtils.showToast(context, Strings.miniTipAlreadyInRightMeeting);
+    } else if (errorCode == NEMeetingErrorCode.cancelled) {
+      /// 暂不处理
     } else {
       var errorTips = HttpCode.getMsg(errorMessage, Strings.joinMeetingFail);
       ToastUtils.showToast(context, errorTips);
@@ -324,6 +328,7 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
   @override
   void dispose() {
     _meetingIdController.dispose();
+    LoadingUtil.cancelLoading();
     super.dispose();
   }
 }

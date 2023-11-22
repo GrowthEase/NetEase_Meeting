@@ -35,6 +35,13 @@ class MeetingRepository {
     return HttpApiHelper.execute(_GetMeetingInfoApi(meetingId));
   }
 
+  static Future<NEResult<MeetingInfo>> getMeetingInfoBySharingCode(
+      String sharingCode) async {
+    LoginInfo? logInfo = await SDKPreferences.getLoginInfo();
+    return HttpApiHelper.execute(
+        _GetMeetingBySharingCodeApi(sharingCode, logInfo));
+  }
+
   static Future<NEResult<MeetingInfo>> getMeetingInfoEx(
       {String? meetingId, String? meetingCode}) async {
     if (meetingId != null && meetingId.isNotEmpty) {

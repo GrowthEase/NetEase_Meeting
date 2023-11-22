@@ -9,12 +9,16 @@ class DialogUtils {
       String content, VoidCallback cancelCallback, VoidCallback acceptCallback,
       {String? cancelText,
       String? acceptText,
+      Color? cancelTextColor,
+      Color? acceptTextColor,
       bool canBack = true,
-      bool isContentCenter = true}) {
+      bool isContentCenter = true,
+      ValueNotifier<BuildContext?>? contextNotifier}) {
     return showDialog(
         context: context,
         useRootNavigator: false,
-        builder: (BuildContext _) {
+        builder: (BuildContext buildContext) {
+          contextNotifier?.value = buildContext;
           return NEMeetingUIKitLocalizationsScope(
               builder: (BuildContext context) {
             return WillPopScope(
@@ -28,13 +32,15 @@ class DialogUtils {
                     child: Text(cancelText ??
                         NEMeetingUIKitLocalizations.of(context)!.cancel),
                     onPressed: cancelCallback,
-                    textStyle: TextStyle(color: _UIColors.color_666666),
+                    textStyle: TextStyle(
+                        color: cancelTextColor ?? _UIColors.color_666666),
                   ),
                   CupertinoDialogAction(
                     child: Text(acceptText ??
                         NEMeetingUIKitLocalizations.of(context)!.sure),
                     onPressed: acceptCallback,
-                    textStyle: TextStyle(color: _UIColors.color_337eff),
+                    textStyle: TextStyle(
+                        color: acceptTextColor ?? _UIColors.color_337eff),
                   ),
                 ],
               ),
@@ -43,7 +49,7 @@ class DialogUtils {
               },
             );
           });
-        });
+        }).whenComplete(() => contextNotifier?.value = null);
   }
 
   static Future showOneButtonCommonDialog(
@@ -103,6 +109,24 @@ class DialogUtils {
     );
   }
 
+  static void showNetworkAbnormalityAlertDialog(
+      {required BuildContext context,
+      required VoidCallback onLeaveMeetingCallback,
+      required VoidCallback onRejoinMeetingCallback}) {
+    showCommonDialog(
+      context,
+      NEMeetingUIKitLocalizations.of(context)!.networkAbnormality,
+      NEMeetingUIKitLocalizations.of(context)!
+          .networkDisconnectedPleaseCheckYourNetworkStatusOrTryToRejoin,
+      onLeaveMeetingCallback,
+      onRejoinMeetingCallback,
+      cancelText: NEMeetingUIKitLocalizations.of(context)!.leaveMeeting,
+      acceptText: NEMeetingUIKitLocalizations.of(context)!.rejoining,
+      cancelTextColor: _UIColors.colorFE3B30,
+      canBack: false,
+    );
+  }
+
   static Future showOpenAudioDialog(
       BuildContext context,
       String title,
@@ -129,8 +153,12 @@ class DialogUtils {
         canBack: false);
   }
 
-  static void showShareScreenDialog(BuildContext context, String title,
-      String content, VoidCallback acceptCallback) {
+  static void showShareScreenDialog(
+      BuildContext context,
+      String title,
+      String content,
+      VoidCallback acceptCallback,
+      bool isShowOpenScreenShareDialog) {
     showDialog(
         context: context,
         useRootNavigator: false,
@@ -155,7 +183,7 @@ class DialogUtils {
               );
             },
           );
-        });
+        }).then((value) => isShowOpenScreenShareDialog = value != null);
   }
 
   static Future<T?> showChildNavigatorDialog<T extends Object>(

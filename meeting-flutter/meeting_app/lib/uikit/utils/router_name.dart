@@ -4,6 +4,7 @@
 
 class RouterName {
   static const String login = 'login';
+  static const String ssoLogin = 'ssoLogin';
   static const String entrance = 'entrance';
   static const String homePage = 'homePage';
   static const String meetCreate = 'meetCreate';
@@ -31,6 +32,9 @@ class RouterName {
   static const String playerConfig = 'playerConfig';
   static const String webview = 'webview';
   static const String about = 'about';
+  static const String mailLogin = 'mailLogin';
   static const String scheduleMeeting = 'scheduleMeeting';
   static const String scheduleMeetingDetail = 'scheduleMeetingDetail';
+  static const String controlAbout = 'controlabout';
+  static const String controlSetting = 'controlsetting';
 }

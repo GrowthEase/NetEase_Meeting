@@ -42,7 +42,7 @@ dependencies {
 
     def rtc_version = rootProject.hasProperty('nertc_version')
             ? rootProject.property('nertc_version') as String
-            : '5.4.3'
+            : '5.5.203-SNAPSHOT'
     println "use nertc version: $rtc_version"
     [
             'base',
@@ -55,6 +55,7 @@ dependencies {
             'videodenoise',
             'faceenhance',
             'superresolution',
+            'audio3d',
     ].forEach { name ->
         implementation("com.netease.yunxin:nertc-$name:$rtc_version") {
             changing = rtc_version.endsWith('SNAPSHOT')

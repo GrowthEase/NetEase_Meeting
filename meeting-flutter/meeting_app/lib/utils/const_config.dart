@@ -20,7 +20,11 @@ const kNoMuteAllVideo = false;
 const bool kNoCloudRecord = false;
 
 ///
-const kNoSip = true;
+const kNoSip = false;
+
+const kNoMinimize = false;
+
+const kEnablePictureInPicture = true;
 
 /// 使用默认的短信验证码：081166
 const kUseFakeCheckCode = false;
@@ -69,6 +73,8 @@ Future<NEMeetingUIOptions> buildMeetingUIOptions({
     showScreenShareUserVideo: showShareUserVideo,
     showWhiteboardShareUserVideo: showShareUserVideo,
     showMeetingTime: showMeetingTime,
+    noMinimize: kNoMinimize,
+    enablePictureInPicture: kEnablePictureInPicture,
     // audioAINSEnabled: audioAINSEnabled,
     enableTransparentWhiteboard: enableTransparentWhiteboard,
     enableFrontCameraMirror: enableFrontCameraMirror,

@@ -17,7 +17,6 @@ class AccountAppInfo {
         appName = json['appName'] as String,
         createTime = json['createTime'] as int? ?? 0;
   // edition = Edition.fromJson(json['edition'] as Map);
-
 }
 
 /// type : 1
@@ -72,7 +71,6 @@ class Edition {
   //   map['extra'] = _extra;
   //   return map;
   // }
-
 }
 
 /// code : "maxRoomDuration"
@@ -116,5 +114,4 @@ class Feature {
   //   map['status'] = _status;
   //   return map;
   // }
-
 }

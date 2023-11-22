@@ -10,6 +10,7 @@ mixin InMeetingDataServiceCallback {
 
 abstract class MinimizeMeetingManager {
   Future<NEResult<void>> minimizeCurrentMeeting();
+  Future<NEResult<void>> fullCurrentMeeting();
 }
 
 abstract class AudioManager {
@@ -50,7 +51,7 @@ class InMeetingService with _AloggerMixin {
       StreamController.broadcast();
 
   InMeetingDataServiceCallback? _serviceCallback;
-
+  InMeetingDataServiceCallback? get serviceCallback => _serviceCallback;
   AudioManager? _audioDelegate;
 
   AudioManager? get audioManager => _audioDelegate;

@@ -48,6 +48,17 @@ class ChatRoomMessageSource {
 
   ChatRoomMessageSource(this.sdkConfig, this._chatroomConfig);
 
+  final _joinChatroomCompleter = Completer<bool>();
+  void setJoinChatroomResult(bool result) {
+    if (!_joinChatroomCompleter.isCompleted) {
+      _joinChatroomCompleter.complete(result);
+    }
+  }
+
+  Future ensureChatroomJoined() {
+    return _joinChatroomCompleter.future;
+  }
+
   bool get isFileMessageEnabled {
     return sdkConfig.meetingChatroomConfig.enableFileMessage &&
         _chatroomConfig.enableFileMessage;

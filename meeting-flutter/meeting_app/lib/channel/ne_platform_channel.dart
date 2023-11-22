@@ -92,4 +92,17 @@ class NEPlatformChannel extends BaseChannel {
       return -1;
     }
   }
+
+  Future<String> notifyMeetingStatusChanged(int meetingStatus) async {
+    try {
+      return await platform.invokeMethod('notifyMeetingStatusChanged', {
+        'meetingStatus': meetingStatus,
+      }) as String;
+    } on PlatformException catch (e) {
+      Alog.e(
+          tag: _tag,
+          content: 'notifyMeetingStatusChanged exception: ${e.message}');
+      return '';
+    }
+  }
 }

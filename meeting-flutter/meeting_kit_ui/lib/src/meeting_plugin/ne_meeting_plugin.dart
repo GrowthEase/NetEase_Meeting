@@ -23,6 +23,8 @@ class NEMeetingPlugin {
     _methodChannel.setMethodCallHandler(_handler);
   }
 
+  static NEFloatingService? _floatingService;
+
   static NENotificationService? _notificationService;
 
   static NEAssetService? _assetService;
@@ -36,6 +38,18 @@ class NEMeetingPlugin {
   static NEAppLifecycleDetector? _appLifecycleDetector;
 
   static NEIpadCheckDetector? _ipadCheckDetector;
+  static NEPipController? _pipController;
+
+  NEPipController getPipController() {
+    return _pipController ??
+        (_pipController = NEPipController(_methodChannel, handlerMap));
+  }
+
+  /// notification service
+  NEFloatingService getFloatingServiceService() {
+    return _floatingService ??
+        (_floatingService = NEFloatingService(_methodChannel, handlerMap));
+  }
 
   /// notification service
   NENotificationService getNotificationService() {

@@ -19,6 +19,7 @@ import 'package:nemeeting/service/response/result.dart';
 import 'package:nemeeting/service/values/strings.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 
+import '../config/servers.dart';
 import '../module_name.dart' as module;
 
 class AuthManager {
@@ -38,7 +39,7 @@ class AuthManager {
   final NEMeetingKit _neMeetingKit = NEMeetingKit.instance;
 
   Future<void> _init() async {
-    var loginInfo = await GlobalPreferences().loginInfo;
+    final loginInfo = await GlobalPreferences().loginInfo;
     if (TextUtil.isEmpty(loginInfo)) return;
     try {
       final cachedLoginInfo =
@@ -123,7 +124,9 @@ class AuthManager {
       NEMeetingUIKitConfig(
         appKey: appKey,
         appName: Strings.appName,
+        // useAssetServerConfig: AppConfig().isPrivateEnv,
         iosBroadcastAppGroup: iosBroadcastExtensionAppGroup,
+        serverUrl: Servers().baseUrl,
         extras: AppConfig.isInDebugMode
             ? {
                 'debugMode': 1,
@@ -191,6 +194,7 @@ class AuthManager {
     AppProfile.clear();
     _loginInfo = null;
     GlobalPreferences().setLoginInfo('{}');
+    GlobalPreferences().setMeetingInfo('');
     _authInfoChanged.add(_loginInfo);
   }
 

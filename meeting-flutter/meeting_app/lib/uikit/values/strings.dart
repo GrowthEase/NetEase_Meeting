@@ -376,4 +376,6 @@ class Strings {
   static const String thursday = '周四';
   static const String friday = '周五';
   static const String saturday = '周六';
+
+  static const String miniTipAlreadyInRightMeeting = '会议中暂不支持该操作';
 }

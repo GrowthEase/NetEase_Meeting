@@ -8,12 +8,12 @@ import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nemeeting/routes/home_page.dart';
 import 'package:nemeeting/utils/const_config.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/service/config/app_config.dart';
-import 'package:nemeeting/service/event/track_app_event.dart';
 import '../uikit/utils/nav_utils.dart';
 import '../uikit/utils/router_name.dart';
 import '../uikit/values/dimem.dart';
@@ -472,10 +472,14 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
       ),
       onMeetingPageRouteWillPush: () async {
         LoadingUtil.cancelLoading();
-        NavUtils.pop(context);
+        if (mounted) {
+          NavUtils.pop(context);
+        }
       },
+      backgroundWidget: HomePageRoute(),
     );
     LoadingUtil.cancelLoading();
+    if (!mounted) return;
     final errorCode = result.code;
     final errorMessage = result.msg;
     if (errorCode == NEMeetingErrorCode.success) {
@@ -500,7 +504,9 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
       AuthManager().logout();
       NavUtils.pushNamedAndRemoveUntil(context, RouterName.entrance);
     } else if (errorCode == NEMeetingErrorCode.alreadyInMeeting) {
-      //不作处理
+      ToastUtils.showToast(context, Strings.miniTipAlreadyInRightMeeting);
+    } else if (errorCode == NEMeetingErrorCode.cancelled) {
+      /// 暂不处理
     } else {
       var errorTips = HttpCode.getMsg(errorMessage, Strings.createMeetingFail);
       ToastUtils.showToast(context, errorTips);
@@ -526,6 +532,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
                 onPressed: () {
                   Navigator.of(dialogContext).pop();
                   NEMeetingUIKit().joinMeetingUI(context, param, opts,
+                      backgroundWidget: HomePageRoute(),
                       onMeetingPageRouteWillPush: () async {
                     NavUtils.pop(context);
                   }).then((value) {

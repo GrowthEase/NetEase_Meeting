@@ -2,10 +2,10 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+import Flutter
 import Foundation
 import Photos
 import UIKit
-import Flutter
 
 @objcMembers
 public class ImageGallerySaver: NSObject {
