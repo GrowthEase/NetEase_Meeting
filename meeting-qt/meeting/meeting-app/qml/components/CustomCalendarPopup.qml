@@ -1,4 +1,4 @@
-﻿import QtQuick 2.15
+﻿import QtQuick
 import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
 import QtQuick.Layouts
@@ -179,7 +179,7 @@ Popup {
                     anchors.centerIn: parent
                     font.pixelSize: 12
                     color: model.date.valueOf() == idCalendar.selectedDate.valueOf()
-                        ? "#FFFFFF" 
+                        ? "#FFFFFF"
                         : (model.date.valueOf() > idCalendar.currentDate.valueOf()
                             ? "#222222"
                             : "#CCCCCC")

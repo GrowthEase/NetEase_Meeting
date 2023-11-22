@@ -4,87 +4,89 @@ import QtQuick.Controls.Material 2.12
 
 TextField {
     id: control
+
     property bool visibleCalendar: false
     property bool visibleComboBox: false
     property bool visibleComboBoxOpen: false
 
-    rightPadding: 35
-    leftPadding: !visibleCalendar ? 12 : idCalendarImage.width + idCalendarImage.anchors.leftMargin + 8
-    selectByMouse: true
-    placeholderTextColor: "#B0B6BE"
-    color: "#333333"
-    topPadding: 0
     bottomPadding: 0
-    background: Rectangle {
-        implicitHeight: 32
-        color: control.enabled ? "transparent" : "#F2F2F5"
-        border.width: 1
-        border.color: (control.enabled && control.hovered) ? control.Material.accentColor : "#DCDFE5"
-        radius: 2
-    }
+    color: "#333333"
+    leftPadding: !visibleCalendar ? 12 : idCalendarImage.width + idCalendarImage.anchors.leftMargin + 8
+    placeholderTextColor: "#B0B6BE"
+    rightPadding: 35
+    selectByMouse: true
+    topPadding: 0
 
-    QtObject {
-        id: idQtObject
-        property string strPlaceholderText: ""
+    background: Rectangle {
+        border.color: (control.enabled && control.hovered) ? control.Material.accentColor : "#DCDFE5"
+        border.width: 1
+        color: control.enabled ? "transparent" : "#F2F2F5"
+        implicitHeight: 32
+        radius: 2
     }
 
     onEnabledChanged: {
         if (!control.enabled) {
-            idQtObject.strPlaceholderText = control.placeholderText
-            control.placeholderText = ""
+            idQtObject.strPlaceholderText = control.placeholderText;
+            control.placeholderText = "";
         } else {
-            control.placeholderText = idQtObject.strPlaceholderText
-            idQtObject.strPlaceholderText = ""
+            control.placeholderText = idQtObject.strPlaceholderText;
+            idQtObject.strPlaceholderText = "";
         }
     }
 
+    QtObject {
+        id: idQtObject
+
+        property string strPlaceholderText: ""
+    }
     ToolButton {
         id: idClearBtn
-        width: 32
-        height: 32
         anchors.right: control.right
         anchors.rightMargin: 0
         anchors.verticalCenter: control.verticalCenter
+        height: 32
         visible: control.length && control.enabled && control.hovered && !control.readOnly
+        width: 32
+
         onClicked: {
-            control.clear()
+            control.clear();
         }
+
         Image {
-            anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
             mipmap: true
             source: "qrc:/qml/images/public/button/btn_clear.svg"
         }
     }
-
     Image {
         id: idCalendarImage
-        width: 12
-        height: 12
-        visible: visibleCalendar
         anchors.left: control.left
         anchors.leftMargin: 12
         anchors.verticalCenter: parent.verticalCenter
+        height: 12
         mipmap: true
         source: "qrc:/qml/images/public/icons/calendar.svg"
+        visible: visibleCalendar
+        width: 12
     }
-
     Image {
         id: idComboBoxOpenImage
-        width: 8
-        height: 8
         anchors.right: control.right
         anchors.rightMargin: 12
         anchors.verticalCenter: control.verticalCenter
-        visible: visibleComboBox
+        height: 8
         mipmap: true
         source: "qrc:/qml/images/public/icons/triangle.svg"
+        visible: visibleComboBox
+        width: 8
 
         transform: Rotation {
             id: idRotation
+            angle: visibleComboBoxOpen ? 180 : 0
             origin.x: 4
             origin.y: 4
-            angle: visibleComboBoxOpen ? 180 : 0
         }
     }
 }

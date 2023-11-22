@@ -88,7 +88,7 @@ public:
     void onDefaultPlayoutDeviceChanged(const std::string& deviceId) override;
     void onDefaultRecordDeviceChanged(const std::string& deviceId) override;
     void onRoomConnectStateChanged(NEConnectState state) override;
-
+    void onRtcScreenCaptureStatus(NERoomScreenCaptureStatus status) override;
     void onLocalAudioVolumeIndication(int volume) override;
     void onRtcRemoteAudioVolumeIndication(std::list<NEMemberVolumeInfo> volumeList, int totalVolume) override;
     void onRtcDisconnect() override;

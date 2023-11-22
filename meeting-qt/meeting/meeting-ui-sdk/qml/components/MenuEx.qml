@@ -1,5 +1,5 @@
-﻿import QtQuick 2.15
-import QtQuick.Controls 2.12
+﻿import QtQuick
+import QtQuick.Controls
 import QtQuick.Window 2.12
 import QtQml.Models 2.14
 import Qt5Compat.GraphicalEffects
@@ -261,7 +261,7 @@ Menu {
             acceptedButtons: Qt.LeftButton
             onClicked: {
                 popupMenu.close()
-                DialogManager.dynamicDialog(qsTr("Transfer Host"), qsTr("Do you want to transfer host to %1 ?").arg(nickname), function () {
+                tempDynamicDialogEx = DialogManager.dynamicDialog(qsTr("Transfer Host"), qsTr("Do you want to transfer host to %1 ?").arg(nickname), function () {
                     membersManager.setAsHost(accountId)
                 }, function () {}, Window.window)
             }

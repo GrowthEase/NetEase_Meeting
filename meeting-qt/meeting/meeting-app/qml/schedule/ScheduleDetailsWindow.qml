@@ -1,9 +1,9 @@
-﻿import QtQuick 2.15
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
+﻿import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import QtQuick.Window 2.12
 import Qt5Compat.GraphicalEffects
-import QtQuick.Controls.Material 2.12
+import QtQuick.Controls.Material
 import "../components"
 import "../utils/dialogManager.js" as DialogManager
 

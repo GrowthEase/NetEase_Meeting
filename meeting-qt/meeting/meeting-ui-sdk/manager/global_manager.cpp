@@ -14,7 +14,7 @@
 #include "settings_manager.h"
 #include "utils/invoker.h"
 
-extern std::unordered_map<NEMeetingLanguage, std::string> g_languageMap;
+extern std::unordered_map<std::string, NEMeetingLanguage> g_languageMap;
 
 GlobalManager::GlobalManager() {}
 
@@ -33,8 +33,8 @@ bool GlobalManager::initialize(const QString& appKey,
     }
 
     for (auto& it : g_languageMap) {
-        if (it.second == m_language) {
-            m_roomkitService->switchLanguage((NERoomLanguage)it.first);
+        if (it.first == m_language) {
+            m_roomkitService->switchLanguage((NERoomLanguage)it.second);
         }
     }
 

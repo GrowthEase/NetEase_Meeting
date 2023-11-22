@@ -68,13 +68,13 @@ void AudioManager::onError(uint32_t errorCode, const std::string& errorMessage) 
     emit error(errorCode, QString::fromStdString(errorMessage));
 }
 
-void AudioManager::muteLocalAudio(bool mute) {
+void AudioManager::muteLocalAudio(bool mute, bool force /* = false*/) {
     if (!mute && !hasMicrophonePermission()) {
         emit showPermissionWnd();
         return;
     }
 
-    if (mute && m_localAudioStatus != NEMeeting::DEVICE_ENABLED) {
+    if (mute && m_localAudioStatus != NEMeeting::DEVICE_ENABLED && !force) {
         return;
     }
 

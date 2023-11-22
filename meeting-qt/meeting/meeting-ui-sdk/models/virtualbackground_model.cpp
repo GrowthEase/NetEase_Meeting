@@ -60,6 +60,10 @@ void VirtualBackgroundModel::addVB(const QString& filePathUrl) {
     QString newFilePath;
     QString filePath = QUrl(filePathUrl).toLocalFile();
     QFile file(filePath);
+    if (file.size() > 5 * 1024 * 1024) {
+        emit virtualBackgroundResult(-1, tr("File size must be less than 5MB"));
+        return;
+    }
     if (file.exists(filePath)) {
         QString vbPath = SettingsManager::getInstance()->getVirtualBackgroundPath();
         YXLOG(Error) << "vbPath. filePath: " << vbPath.toStdString() << YXLOGEnd;

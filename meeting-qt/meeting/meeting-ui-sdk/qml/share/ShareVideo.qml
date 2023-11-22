@@ -1,10 +1,11 @@
-﻿import QtQuick 2.15
+﻿import QtQuick
 import QtQuick.Window 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
+import QtQuick.Controls
+import QtQuick.Layouts
 import QtQuick.Controls.Material 2.12
 import Qt5Compat.GraphicalEffects
 import NetEase.Settings.SettingsStatus 1.0
+import NetEase.Members.Status 1.0
 import "../components"
 import "../utils/meetingHelpers.js" as MeetingHelpers
 import "../"
@@ -15,50 +16,58 @@ Window {
     property bool nextPage: membersManager.count > 4
     property bool prePage: false
     property bool scrollEnable: true
+    property int videoCurrentPage: 1
+    property int videoPageSize: 1
 
     function goPage(page) {
-        currentPage -= page;
-        if (currentPage <= 0) {
-            currentPage = 1;
+        videoCurrentPage -= page;
+        if (videoCurrentPage <= 0) {
+            videoCurrentPage = 1;
         } else {
-            var pages = (0 === membersManager.count % pageSize) ? membersManager.count / pageSize : (membersManager.count / pageSize + 1);
+            const pages = (0 === membersManager.count % videoPageSize) ? membersManager.count / videoPageSize : (membersManager.count / videoPageSize + 1);
             if (currentPage > pages) {
-                currentPage = pages;
+                videoCurrentPage = pages;
             }
         }
-        membersManager.getMembersPaging(pageSize, currentPage);
+        membersManager.getMembersPaging(videoPageSize, videoCurrentPage, MembersStatus.VIEW_MODE_FOCUS_WITH_SELF);
     }
     function resetPosition() {
-        // console.log("11111", screen.virtualX, screen.virtualY, screen.width, screen.height)
+        width = 216
         x = screen.virtualX + screen.width - width - 16;
         y = screen.virtualY + 16;
+    }
+    function resizeWindow() {
+        if (SettingsManager.sidebarViewMode === SettingsStatus.VM_MIN) {
+            height = idTitle.height + speaker.height;
+        } else {
+            height = idTitle.height + videoList.height;
+        }
+        width = 216;
     }
     function switchModel() {
         switch (SettingsManager.sidebarViewMode) {
         case SettingsStatus.VM_MIN:
+            multVideoModel.clear();
             height = Qt.binding(function () {
                     return idTitle.height + speaker.height;
                 });
-            multVideoModel.clear();
             break;
         case SettingsStatus.VM_SINGLE:
-            viewMode = MainPanel.ViewMode.ShareMode;
             membersManager.isGalleryView = false;
             membersManager.isWhiteboardView = false;
-            currentPage = 1;
-            pageSize = 1;
-            membersManager.getMembersPaging(pageSize, currentPage);
+            videoCurrentPage = 1;
+            videoPageSize = 1;
+            membersManager.getMembersPaging(videoPageSize, videoCurrentPage, MembersStatus.VIEW_MODE_FOCUS_WITH_SELF);
             height = Qt.binding(function () {
                     return idTitle.height + videoList.height;
                 });
             break;
         case SettingsStatus.VM_MULTIPLE:
-            viewMode = MainPanel.ViewMode.ShareMode;
             membersManager.isGalleryView = false;
             membersManager.isWhiteboardView = false;
-            currentPage = 1;
-            pageSize = 4;
-            membersManager.getMembersPaging(pageSize, currentPage);
+            videoCurrentPage = 1;
+            videoPageSize = 4;
+            membersManager.getMembersPaging(videoPageSize, videoCurrentPage, MembersStatus.VIEW_MODE_FOCUS_WITH_SELF);
             height = Qt.binding(function () {
                     return idTitle.height + videoList.height;
                 });
@@ -66,14 +75,17 @@ Window {
         default:
             return idTitle.height;
         }
+        width = 216;
     }
 
     Material.theme: Material.Light
     color: 'transparent'
     flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
+    minimumWidth: 216
     width: 216
 
     onVisibleChanged: {
+        membersManager.includeSelf = visible;
         if (visible) {
             switchModel();
         }
@@ -81,11 +93,13 @@ Window {
 
     Rectangle {
         id: mainLayout
+
         anchors.fill: parent
         color: 'transparent' //"#18181F"
 
         Rectangle {
             id: idTitle
+
             anchors.top: parent.top
             color: "#1D1D27"
             implicitHeight: 30
@@ -102,6 +116,7 @@ Window {
                     const delta = Qt.point(mouse.x - movePos.x, mouse.y - movePos.y);
                     Window.window.x = Window.window.x + delta.x;
                     Window.window.y = Window.window.y + delta.y;
+                    resizeWindow();
                 }
                 onPressed: {
                     movePos = Qt.point(mouse.x, mouse.y);
@@ -122,6 +137,7 @@ Window {
 
                 ImageButton {
                     id: btnMin
+
                     Layout.preferredHeight: 14
                     Layout.preferredWidth: 14
                     hoveredImage: 'qrc:/qml/images/meeting/model_min_hover.svg'
@@ -131,11 +147,12 @@ Window {
 
                     onClicked: {
                         console.log('switch to min view mode');
-                        SettingsManager.sidebarViewMode = SettingsStatus.VM_MIN
+                        SettingsManager.sidebarViewMode = SettingsStatus.VM_MIN;
                     }
                 }
                 ImageButton {
                     id: btnMinSelected
+
                     Layout.preferredHeight: 14
                     Layout.preferredWidth: 14
                     hoveredImage: 'qrc:/qml/images/meeting/model_min_hover.svg'
@@ -147,6 +164,7 @@ Window {
                 }
                 ImageButton {
                     id: btnShare
+
                     Layout.preferredHeight: 14
                     Layout.preferredWidth: 14
                     hoveredImage: 'qrc:/qml/images/meeting/model_share_hover.svg'
@@ -156,11 +174,12 @@ Window {
 
                     onClicked: {
                         console.log('switch to single view mode');
-                        SettingsManager.sidebarViewMode = SettingsStatus.VM_SINGLE
+                        SettingsManager.sidebarViewMode = SettingsStatus.VM_SINGLE;
                     }
                 }
                 ImageButton {
                     id: btnShareSelected
+
                     Layout.preferredHeight: 14
                     Layout.preferredWidth: 14
                     hoveredImage: 'qrc:/qml/images/meeting/model_share_hover.svg'
@@ -172,6 +191,7 @@ Window {
                 }
                 ImageButton {
                     id: btnAll
+
                     Layout.preferredHeight: 14
                     Layout.preferredWidth: 14
                     hoveredImage: 'qrc:/qml/images/meeting/model_all_hover.svg'
@@ -181,11 +201,12 @@ Window {
 
                     onClicked: {
                         console.log('switch to multiple view mode');
-                        SettingsManager.sidebarViewMode = SettingsStatus.VM_MULTIPLE
+                        SettingsManager.sidebarViewMode = SettingsStatus.VM_MULTIPLE;
                     }
                 }
                 ImageButton {
                     id: btnAllSelected
+
                     Layout.preferredHeight: 14
                     Layout.preferredWidth: 14
                     hoveredImage: 'qrc:/qml/images/meeting/model_all_hover.svg'
@@ -199,6 +220,7 @@ Window {
         }
         Rectangle {
             id: speaker
+
             anchors.top: idTitle.bottom
             implicitHeight: 34
             visible: SettingsManager.sidebarViewMode === SettingsStatus.VM_MIN
@@ -228,6 +250,7 @@ Window {
                 }
                 ToolSeparator {
                     id: helloline
+
                     Layout.leftMargin: 0
                     opacity: 0.8
 
@@ -249,6 +272,7 @@ Window {
                 }
                 Label {
                     id: speakerNickname
+
                     Layout.fillWidth: true
                     Layout.leftMargin: 0
                     Layout.preferredWidth: 152
@@ -262,6 +286,7 @@ Window {
         }
         ListView {
             id: videoList
+
             anchors.top: idTitle.bottom
             boundsBehavior: Flickable.StopAtBounds
             clip: true
@@ -282,10 +307,12 @@ Window {
             }
             model: ListModel {
                 id: multVideoModel
+
             }
 
             MouseArea {
                 id: vidoeMouseArea
+
                 anchors.fill: parent
                 enabled: SettingsManager.sidebarViewMode === SettingsStatus.VM_MULTIPLE
                 hoverEnabled: true
@@ -301,11 +328,12 @@ Window {
             }
             Rectangle {
                 id: prePageRect
+
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: videoList.top
                 color: "#000000"
-                opacity: 0.8
                 height: 14
+                opacity: 0.8
                 visible: prePage && vidoeMouseArea.containsMouse
                 width: 50
 
@@ -327,11 +355,12 @@ Window {
             }
             Rectangle {
                 id: nextPageRect
+
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
                 color: "#000000"
-                opacity: 0.8
                 height: 14
+                opacity: 0.8
                 visible: nextPage && vidoeMouseArea.containsMouse
                 width: 50
 
@@ -389,14 +418,14 @@ Window {
                 return;
             }
             console.info('Members info changed:', JSON.stringify(primaryMember), JSON.stringify(secondaryMembers), realPage, realCount);
-            if (currentPage !== realPage) {
+            if (videoCurrentPage !== realPage) {
                 multVideoModel.clear();
-                currentPage = realPage;
+                videoCurrentPage = realPage;
             }
             MeetingHelpers.arrangeSpeakerLayout(primaryMember, secondaryMembers, realPage, realCount, null, multVideoModel);
             console.info('Secondary members count: ', multVideoModel.count);
-            nextPage = currentPage * pageSize < realCount;
-            prePage = currentPage > 1;
+            nextPage = videoCurrentPage * videoPageSize < realCount;
+            prePage = videoCurrentPage > 1;
             scrollEnable = true;
         }
         function onNicknameChanged(accountId, nickname) {
@@ -413,9 +442,10 @@ Window {
 
         target: membersManager
     }
-
     Connections {
         function onSidebarViewModeChanged() {
+            if (shareManager.shareAccountId.length === 0)
+                return;
             console.log(`sidebar view mode changed, ${SettingsManager.sidebarViewMode}`);
             switchModel();
         }

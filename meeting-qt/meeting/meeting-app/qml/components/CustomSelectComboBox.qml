@@ -1,7 +1,7 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.12
+import QtQuick
+import QtQuick.Controls
 import QtQuick.Window 2.12
-import QtQuick.Layouts 1.12
+import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 
 CustomTextFieldEx {
@@ -156,5 +156,3 @@ CustomTextFieldEx {
     Accessible.name: aliasName
     Accessible.onPressAction: if (enabled) pressed(Qt.LeftButton)
 }
-
-

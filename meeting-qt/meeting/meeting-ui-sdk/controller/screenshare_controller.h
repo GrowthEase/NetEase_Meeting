@@ -16,17 +16,14 @@ public:
     NEMeetingScreenShareController();
     ~NEMeetingScreenShareController();
 
-    bool startAppShare(void* hwnd, bool preferMotion = false, const NEShareCallback& callback = NEShareCallback());
-    bool startScreenShare(const uint32_t& monitor_id,
+    bool startAppShare(void* hwnd, const NEShareCallback& callback = NEShareCallback());
+    bool startScreenShare(const uint64_t& monitor_id,
                           const std::list<void*>& excludedWindowList = std::list<void*>(),
-                          bool preferMotion = false,
                           const NEShareCallback& callback = NEShareCallback());
     bool startRectShare(const NERectangle& sourceRectangle,
                         const NERectangle& regionRectangle,
                         const std::list<void*>& excludedWindowList = std::list<void*>(),
-                        bool preferMotion = false,
                         const NEShareCallback& callback = NEShareCallback());
-
     bool stopScreenShare(const NEShareCallback& callback = NEShareCallback());
     bool stopParticipantScreenShare(const std::string& accountId, const NEShareCallback& callback = NEShareCallback());
     bool pauseShare();

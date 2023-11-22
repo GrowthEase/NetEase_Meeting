@@ -104,7 +104,7 @@ Available configure presets:
   "windows-release-x64" - Windows x64 (Release)
 ```
 
-使用如下命令编译产物 macOS x86_64 产物：
+使用如下命令编译产物 Windows x86_64 产物：
 
 ```bash
 # 生成 Visual Studio 工程

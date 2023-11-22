@@ -1,6 +1,6 @@
-import QtQuick 2.15
+import QtQuick
 import QtQuick.Window 2.2
-import QtQuick.Controls 2.12
+import QtQuick.Controls
 import QtWebChannel 1.0
 import QtWebEngine 1.10
 import URSJsBridge 1.0

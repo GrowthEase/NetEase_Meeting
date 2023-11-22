@@ -1,6 +1,6 @@
-﻿import QtQuick 2.15
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
+﻿import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import QtQuick.Window 2.14
 
 import "../components"
@@ -105,7 +105,7 @@ Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredWidth: 220
                     RowLayout {
-                        spacing: 10
+                        spacing: 8
                         Label {
                             id: itemTime
                             font.pixelSize: 12

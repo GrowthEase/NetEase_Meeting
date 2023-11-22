@@ -1,140 +1,137 @@
-﻿import QtQuick 2.15
-import QtQuick.Controls 2.12
-import QtQuick.Controls.Material 2.12
+﻿import QtQuick
+import QtQuick.Controls
+import QtQuick.Controls.Material
 
 TextField {
-    property int timerSeconds: 60
-    property var resend: false
-    property bool enableSendButton: false
-
-    onEnableSendButtonChanged: {
-        buttonSendMsg.enabled = enableSendButton
-    }
-
     id: control
-    selectByMouse: true
+
+    property bool enableSendButton: false
+    property var resend: false
+    property int timerSeconds: 60
+
+    signal getAuthCode
+
     font.pixelSize: 17
     maximumLength: 6
-    rightPadding: 85
     placeholderText: qsTr("Auth code")
     placeholderTextColor: "#B0B6BE"
+    rightPadding: 0
+    leftPadding: 0
+    selectByMouse: true
+
+    background: Rectangle {
+    }
     validator: RegularExpressionValidator {
         regularExpression: /\d+/
     }
-    background: Rectangle {
-        y: control.height - height - control.bottomPadding + 8
-        implicitWidth: 120
-        height: control.activeFocus || 1
-        color: control.activeFocus ? control.Material.accentColor : "#DCDFE5"
+
+    onEnableSendButtonChanged: {
+        buttonSendMsg.enabled = enableSendButton;
     }
     onFocusChanged: {
-        focus ? color = "#337EFF" : color = "#333333"
+        focus ? color = "#337EFF" : color = "#333333";
     }
 
-    signal getAuthCode()
-
+    Rectangle {
+        color: control.activeFocus ? control.Material.accentColor : "#DCDFE5"
+        height: 1
+        width: control.width
+        y: control.height - height - control.bottomPadding + 8
+    }
     ToolButton {
-        width: 40
-        height: 40
+        anchors.verticalCenter: control.verticalCenter
         anchors.right: labelTimer.visible ? labelTimer.left : buttonSendMsg.left
         anchors.rightMargin: 0
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 7
+        height: 40
         visible: control.length && control.hovered
+        width: 40
+
         onClicked: {
-            control.clear()
+            control.clear();
         }
 
         Image {
-            anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
-            source: "qrc:/qml/images/public/button/btn_clear.svg"
+            anchors.verticalCenter: parent.verticalCenter
             mipmap: true
+            source: "qrc:/qml/images/public/button/btn_clear.svg"
         }
     }
-
     LabelButton {
         id: buttonSendMsg
         anchors.right: control.right
-        anchors.rightMargin: 4
-        anchors.bottom: control.bottom
-        anchors.bottomMargin: 10
+        anchors.verticalCenter: control.verticalCenter
         enabled: enableSendButton
         font.pixelSize: 14
-        height: 35
-        text: resend ? qsTr("Reacquire")
-                     : qsTr("Get code")
+        height: control.height
+        text: resend ? qsTr("Reacquire") : qsTr("Get code")
+
         onClicked: {
-            enabled = false
-            visible = false
-            getAuthCode()
+            enabled = false;
+            visible = false;
+            getAuthCode();
         }
     }
-
     Label {
         id: labelTimer
+
+        anchors.verticalCenter: control.verticalCenter
         anchors.right: staticLabel.left
         anchors.rightMargin: 3
-        anchors.bottom: control.bottom
-        anchors.bottomMargin: 17
-        text: timerSeconds + qsTr("s")
         color: "#337EFF"
-        visible: false
         font.pixelSize: 14
+        text: timerSeconds + qsTr("s")
+        visible: false
     }
-
     Label {
         id: staticLabel
+
+        anchors.verticalCenter: control.verticalCenter
         anchors.right: control.right
-        anchors.bottom: control.bottom
-        anchors.bottomMargin: 17
+        font.pixelSize: 14
         text: qsTr("to resend")
         visible: false
-        font.pixelSize: 14
     }
-
     Timer {
         id: messageTimer
+
         interval: 1000
         repeat: true
+
         onTriggered: {
             if (timerSeconds === 0) {
-                messageTimer.stop()
-                labelTimer.visible = false
-                staticLabel.visible = false
-                buttonSendMsg.visible = true
-                buttonSendMsg.enabled = enableSendButton
-                timerSeconds = 60
+                messageTimer.stop();
+                labelTimer.visible = false;
+                staticLabel.visible = false;
+                buttonSendMsg.visible = true;
+                buttonSendMsg.enabled = enableSendButton;
+                timerSeconds = 60;
             } else {
-                timerSeconds -= 1
-                buttonSendMsg.visible = false
-                buttonSendMsg.enabled = false
+                timerSeconds -= 1;
+                buttonSendMsg.visible = false;
+                buttonSendMsg.enabled = false;
                 if (timerSeconds > 0)
-                    labelTimer.text = timerSeconds + qsTr("s")
+                    labelTimer.text = timerSeconds + qsTr("s");
             }
         }
     }
-
     Connections {
         target: authManager
-        onGotAuthCode: {
-            timerSeconds = 60
-            labelTimer.text = timerSeconds + qsTr("s")
-            labelTimer.visible = true
-            staticLabel.visible = true
-            buttonSendMsg.visible = false
-            buttonSendMsg.enabled = false
-            messageTimer.start()
-        }
+
         onError: {
             if (resCode === 203) {
-                buttonSendMsg.visible = true
-                buttonSendMsg.enabled = enableSendButton
+                buttonSendMsg.visible = true;
+                buttonSendMsg.enabled = enableSendButton;
             }
+        }
+        onGotAuthCode: {
+            timerSeconds = 60;
+            labelTimer.text = timerSeconds + qsTr("s");
+            labelTimer.visible = true;
+            staticLabel.visible = true;
+            buttonSendMsg.visible = false;
+            buttonSendMsg.enabled = false;
+            messageTimer.start();
         }
     }
 }
-
-
-
-

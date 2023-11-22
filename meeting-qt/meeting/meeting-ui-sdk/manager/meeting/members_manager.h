@@ -26,7 +26,7 @@ using namespace neroom;
 /**
  * @brief 房间用户类型
  */
-enum NERoleType { kRoleInvaild = 0, kRoleMember, kRoleHost, kRoleManager, kRoleHiding };
+enum NERoleType { kRoleInvaild = 0, kRoleMember, kRoleHost, kRoleManager, kRoleSharer, kRoleHiding };
 
 typedef struct _tagMemberInfo {
     QString accountId;
@@ -54,6 +54,19 @@ private:
     ~MembersManager();
 
 public:
+    enum ViewMode {
+        /// @brief 自动模式
+        VIEW_MODE_AUTO = -1,
+        /// @brief 演讲者视图
+        VIEW_MODE_FOCUS,
+        /// @brief 演讲者视图，子列表包含自己
+        VIEW_MODE_FOCUS_WITH_SELF,
+        /// @brief 画廊视图
+        VIEW_MODE_GALLERY,
+        /// @brief 白板视图
+        VIEW_MODE_WHITEBOARD
+    };
+    Q_ENUM(ViewMode)
     SINGLETONG(MembersManager)
 
     Q_PROPERTY(bool isGalleryView READ isGalleryView WRITE setIsGalleryView NOTIFY isGalleryViewChanged)
@@ -66,6 +79,8 @@ public:
     Q_PROPERTY(NEMeeting::HandsUpType handsUpType READ handsUpType WRITE setHandsUpType)
     Q_PROPERTY(bool handsUpStatus READ handsUpStatus WRITE setHandsUpStatus)
     Q_PROPERTY(bool isManagerRole READ isManagerRole WRITE setIsManagerRole NOTIFY isManagerRoleChanged)
+    Q_PROPERTY(bool includeSelf READ includeSelf WRITE setIncludeSelf NOTIFY includeSelfChanged)
+    Q_PROPERTY(ViewMode viewMode READ viewMode NOTIFY viewModeChanged)
 
     Q_INVOKABLE QString getNicknameByAccountId(const QString& accountId);
     Q_INVOKABLE bool getMyHandsupStatus();
@@ -88,7 +103,8 @@ public:
     QVector<MemberInfo> items() const;
     bool getPrimaryMember(MemberInfo& memberInfo);
     bool getMemberByAccountId(const QString& accountId, MemberInfo& memberInfo);
-    QVector<MemberInfo> getMembersByRoleType(const QVector<NERoleType>& roleType = QVector<NERoleType>{kRoleMember, kRoleHost, kRoleManager});
+    QVector<MemberInfo> getMembersByRoleType(const QVector<NERoleType>& roleType = QVector<NERoleType>{kRoleMember, kRoleHost, kRoleManager,
+                                                                                                       kRoleSharer});
 
     bool isGalleryView() const;
     void setIsGalleryView(bool isGalleryView);
@@ -128,8 +144,16 @@ public:
 
     bool isOpenRemoteVideo() const;
 
+    bool includeSelf() const;
+    void setIncludeSelf(bool includeSelf);
+
+    ViewMode viewMode() const { return m_lastViewMode; }
+    void setViewMode(ViewMode viewMode);
+
 public slots:
+    void getMembersPaging(quint32 pageSize, quint32 pageNumber, ViewMode viewMode);
     void getMembersPaging(quint32 pageSize, quint32 pageNumber);
+    void getGalleryViewPaging(quint32 pageSize, quint32 pageNumber);
     void setAsHost(const QString& accountId);
     void setAsManager(const QString& accountId, const QString& nickname);
     void setAsMember(const QString& accountId, const QString& nickname);
@@ -142,6 +166,7 @@ private:
     void pagingSharingView(quint32 pageSize, quint32 pageNumber);
     void pagingWhiteboardView(quint32 pageSize, quint32 pageNumber);
     void pagingGalleryView(quint32 pageSize, quint32 pageNumber);
+    QJsonObject memberToJsonObject(const MemberInfo& member) const;
     void convertPropertiesToMember(const std::map<std::string, std::string>& properties, MemberInfo& info);
     // getUsersByRoleType
     NEMeeting::NetWorkQualityType netWorkQualityType(NERoomRtcNetWorkQuality up, NERoomRtcNetWorkQuality down) const;
@@ -157,7 +182,7 @@ signals:
     void afterUserLeft(const QString& accountId, const QString& nickname);
     void userJoinNotify(const QString& nickname);
     void userLeftNotify(const QString& nickname);
-    void membersChanged(const QJsonObject& primaryMember, const QJsonArray& secondaryMembers, quint32 realPage, quint32 realCount);
+    void membersChanged(const QJsonObject& primaryMember, const QJsonArray& secondaryMembers, quint32 realPage, quint32 realCount, ViewMode viewMode);
     void netWorkQualityTypeChanged(int netWorkQualityType);
     void nicknameChanged(const QString& accountId, const QString& nickname);
     // binding values
@@ -174,6 +199,8 @@ signals:
     void userReJoined(const QString& accountId);
     void isManagerRoleChanged();
     void managerUpdateSuccess(const QString& nickname, bool set);
+    void includeSelfChanged();
+    void viewModeChanged();
 
 public slots:
     void onAfterUserJoinedUI(const QString& accountId, const QString& nickname, bool bNotify = true);
@@ -213,7 +240,10 @@ private:
     QVector<MemberInfo> m_items;
     NEMeeting::HandsUpType m_handsUpType = NEMeeting::HAND_TYPE_DEFAULT;  // 本地举手类型
     bool m_bHandsUp = false;
+    // 拉取成员信息时是否包含自己
+    bool m_bIncludeSelf = false;
     QList<QString> m_openRemoteVideoitems;
+    ViewMode m_lastViewMode = VIEW_MODE_FOCUS;
 };
 
 Q_DECLARE_METATYPE(NEMeeting::HandsUpStatus)

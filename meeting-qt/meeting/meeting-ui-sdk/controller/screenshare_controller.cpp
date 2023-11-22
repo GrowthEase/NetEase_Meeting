@@ -11,22 +11,21 @@ NEMeetingScreenShareController::NEMeetingScreenShareController() {}
 
 NEMeetingScreenShareController::~NEMeetingScreenShareController() {}
 
-bool NEMeetingScreenShareController::startAppShare(void* hwnd, bool preferMotion, const NEMeetingScreenShareController::NEShareCallback& callback) {
+bool NEMeetingScreenShareController::startAppShare(void* hwnd, const NEMeetingScreenShareController::NEShareCallback& callback) {
     auto rtcControl = MeetingManager::getInstance()->getInRoomRtcController();
     if (rtcControl) {
         auto videoControl = VideoManager::getInstance()->getVideoController();
         if (videoControl) {
             videoControl->setupSubVideoCanvas(AuthManager::getInstance()->authAccountId().toStdString(), this, nullptr);
         }
-        rtcControl->startAppShare(hwnd, preferMotion, callback);
+        rtcControl->startAppShare(hwnd, neroom::NERoomScreenSharingOption(), callback);
         return true;
     }
     return false;
 }
 
-bool NEMeetingScreenShareController::startScreenShare(const uint32_t& monitor_id,
+bool NEMeetingScreenShareController::startScreenShare(const uint64_t& monitor_id,
                                                       const std::list<void*>& excludedWindowList,
-                                                      bool preferMotion,
                                                       const NEMeetingScreenShareController::NEShareCallback& callback) {
     auto rtcControl = MeetingManager::getInstance()->getInRoomRtcController();
     if (rtcControl) {
@@ -34,7 +33,8 @@ bool NEMeetingScreenShareController::startScreenShare(const uint32_t& monitor_id
         if (videoControl) {
             videoControl->setupSubVideoCanvas(AuthManager::getInstance()->authAccountId().toStdString(), this, nullptr);
         }
-        rtcControl->startScreenShare(monitor_id, excludedWindowList, preferMotion, callback);
+        rtcControl->startScreenShare(reinterpret_cast<neroom::NERoomSourceID>(monitor_id), neroom::NERoomScreenSharingOption(), excludedWindowList,
+                                     callback);
         return true;
     }
     return false;
@@ -43,7 +43,6 @@ bool NEMeetingScreenShareController::startScreenShare(const uint32_t& monitor_id
 bool NEMeetingScreenShareController::startRectShare(const NERectangle& sourceRectangle,
                                                     const NERectangle& regionRectangle,
                                                     const std::list<void*>& excludedWindowList,
-                                                    bool preferMotion,
                                                     const NEMeetingScreenShareController::NEShareCallback& callback) {
     auto rtcControl = MeetingManager::getInstance()->getInRoomRtcController();
     if (rtcControl) {
@@ -51,7 +50,7 @@ bool NEMeetingScreenShareController::startRectShare(const NERectangle& sourceRec
         if (videoControl) {
             videoControl->setupSubVideoCanvas(AuthManager::getInstance()->authAccountId().toStdString(), this, nullptr);
         }
-        rtcControl->startRectShare(sourceRectangle, regionRectangle, excludedWindowList, preferMotion, callback);
+        rtcControl->startRectShare(sourceRectangle, regionRectangle, neroom::NERoomScreenSharingOption(), excludedWindowList, callback);
         return true;
     }
     return false;

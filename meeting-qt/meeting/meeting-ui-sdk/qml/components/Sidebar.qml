@@ -1,6 +1,6 @@
-﻿import QtQuick 2.15
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
+﻿import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 import NetEase.Meeting.MembersModel 1.0
 import NetEase.Meeting.FilterProxyModel 1.0
@@ -160,7 +160,7 @@ Rectangle {
                 color: "#EBEDF0"
                 opacity: .6
             }
-            //Create filter model
+            // Create filter model
             FilterProxyModel {
                 id: filterModel
             }

@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 
 import 'components'
 
@@ -30,7 +30,6 @@ Item {
             id: textCode
             placeholderText: qsTr("Code of your company")
             font.pixelSize: 17
-            focus: true
             Layout.preferredWidth: 300
             Layout.topMargin: 40
             Layout.alignment: Qt.AlignHCenter

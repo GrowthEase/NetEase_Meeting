@@ -1,4 +1,4 @@
-﻿import QtQuick 2.15
+﻿import QtQuick
 import QtQuick.Window 2.14
 import NetEase.Meeting.MeetingStatus 1.0
 import NetEase.Meeting.RunningStatus 1.0
@@ -440,7 +440,7 @@ FrontPageForm {
             case RunningStatus.MEETING_STATUS_DISCONNECTING:
                 createButton.enabled = true;
                 joinButton.enabled = true;
-                mainWindow.showNormal();
+                showMainWindowTimer.start();
                 showFeedbackTimer.start();
                 console.log(`meeting disconnected from server, status: ${meetingStatus}, extension code: ${extCode}`);
                 if (extCode === RunningStatus.MEETING_DISCONNECTING_REMOVED_BY_HOST)

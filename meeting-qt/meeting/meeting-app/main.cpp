@@ -4,6 +4,7 @@
 
 #include <QSharedMemory>
 #include <QtWebEngineQuick>
+#include <QQuickWindow>
 #include "meeting_app.h"
 #include "modules/auth_manager.h"
 #include "modules/client_updator.h"
@@ -30,6 +31,12 @@ int main(int argc, char* argv[]) {
     QtWebEngineQuick::initialize();
 #else
     signal(SIGPIPE, SIG_IGN);
+#endif
+
+#if defined(Q_OS_MACX)
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Metal);
+#else
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Direct3D11);
 #endif
 
     MeetingApp::setOrganizationName("NetEase");

@@ -143,7 +143,7 @@
 <context>
     <name>ChatListView</name>
     <message>
-        <location filename="qml/components/ChatListView.qml" line="321"/>
+        <location filename="qml/components/ChatListView.qml" line="349"/>
         <source>download</source>
         <translation>ダウンロード</translation>
     </message>
@@ -152,62 +152,62 @@
         <translation type="vanished">ミーティングIDがコピーされました</translation>
     </message>
     <message>
-        <location filename="qml/components/ChatListView.qml" line="321"/>
+        <location filename="qml/components/ChatListView.qml" line="349"/>
         <source>download again</source>
         <translation>再度ダウンロードする</translation>
     </message>
     <message>
-        <location filename="qml/components/ChatListView.qml" line="339"/>
+        <location filename="qml/components/ChatListView.qml" line="368"/>
         <source>cancel download</source>
         <translation>ダウンロードのキャンセル</translation>
     </message>
     <message>
-        <location filename="qml/components/ChatListView.qml" line="353"/>
+        <location filename="qml/components/ChatListView.qml" line="383"/>
         <source>cancel upload</source>
         <translation>送信をキャンセルする</translation>
     </message>
     <message>
-        <location filename="qml/components/ChatListView.qml" line="368"/>
+        <location filename="qml/components/ChatListView.qml" line="398"/>
         <source>open file</source>
         <translation>ファイルを開く</translation>
     </message>
     <message>
-        <location filename="qml/components/ChatListView.qml" line="226"/>
-        <location filename="qml/components/ChatListView.qml" line="383"/>
-        <location filename="qml/components/ChatListView.qml" line="413"/>
+        <location filename="qml/components/ChatListView.qml" line="250"/>
+        <location filename="qml/components/ChatListView.qml" line="412"/>
+        <location filename="qml/components/ChatListView.qml" line="440"/>
         <source>file not exist</source>
         <oldsource>open failed, file not exist</oldsource>
         <translation>ファイルが存在しません</translation>
     </message>
     <message>
-        <location filename="qml/components/ChatListView.qml" line="377"/>
+        <location filename="qml/components/ChatListView.qml" line="407"/>
         <source>file open failed</source>
         <translation>ファイルを開くことができません</translation>
     </message>
     <message>
-        <location filename="qml/components/ChatListView.qml" line="385"/>
-        <location filename="qml/components/ChatListView.qml" line="415"/>
+        <location filename="qml/components/ChatListView.qml" line="414"/>
+        <location filename="qml/components/ChatListView.qml" line="442"/>
         <source>file not exist, please download again</source>
         <translation>ファイルが存在しません。もう一度ダウンロードしてください。</translation>
     </message>
     <message>
-        <location filename="qml/components/ChatListView.qml" line="395"/>
+        <location filename="qml/components/ChatListView.qml" line="424"/>
         <source>open dir</source>
         <translation>フォルダを開く</translation>
     </message>
     <message>
-        <location filename="qml/components/ChatListView.qml" line="425"/>
+        <location filename="qml/components/ChatListView.qml" line="452"/>
         <source>save as</source>
         <translation>別存して</translation>
     </message>
     <message>
         <location filename="qml/components/ChatListView.qml" line="83"/>
-        <location filename="qml/components/ChatListView.qml" line="538"/>
+        <location filename="qml/components/ChatListView.qml" line="581"/>
         <source>Save as</source>
         <translation>別存して</translation>
     </message>
     <message>
-        <location filename="qml/components/ChatListView.qml" line="643"/>
+        <location filename="qml/components/ChatListView.qml" line="686"/>
         <source>Copy</source>
         <translation>コピー</translation>
     </message>
@@ -255,7 +255,7 @@
 <context>
     <name>ChattingroomWindow</name>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="22"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="37"/>
         <source>chatroom</source>
         <translation>チャット</translation>
     </message>
@@ -264,74 +264,73 @@
         <translation type="vanished">メッセージの配信に失敗しました</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="480"/>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="509"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="471"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="526"/>
         <source>Connection is disconnect!</source>
         <translation>チャットルームが切断された</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="105"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="115"/>
         <source>Chatroom</source>
         <translation>チャット</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="152"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="171"/>
         <source>new message</source>
         <translation>新着メッセージ</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="202"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="265"/>
         <source>Input a message and press Enter to send it...</source>
         <translation>メッセージを入力し、Enterキーを押して送信する...</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="281"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="223"/>
         <source>can not send empty message</source>
         <translation>空のメッセージを送信できない</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="398"/>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="403"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="428"/>
         <source>image files</source>
         <translation>画像ファイル</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="399"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="428"/>
         <source>all files</source>
         <translation>ファイル</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="400"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="428"/>
         <source>audio files</source>
         <translation>音声ファイル</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="401"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="428"/>
         <source>video files</source>
         <translation>ビデオファイル</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="402"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="428"/>
         <source>office files</source>
         <translation>オフィスファイル</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="404"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="428"/>
         <source>zip files</source>
         <translation>圧縮ファイル</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="405"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="428"/>
         <source>pdf files</source>
         <translation>PDFファイル</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="406"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="428"/>
         <source>text files</source>
         <translation>テキストファイル</translation>
     </message>
     <message>
-        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="407"/>
+        <location filename="qml/chattingroom/ChattingroomWindow.qml" line="428"/>
         <source>pack files</source>
         <translation>インストールファイル</translation>
     </message>
@@ -449,27 +448,27 @@
 <context>
     <name>FocusPage</name>
     <message>
-        <location filename="qml/FocusPage.qml" line="133"/>
+        <location filename="qml/FocusPage.qml" line="156"/>
         <source>Unset Focus</source>
         <translation>フォーカス動画をキャンセルする</translation>
     </message>
     <message>
-        <location filename="qml/FocusPage.qml" line="185"/>
+        <location filename="qml/FocusPage.qml" line="188"/>
         <source>Screen Record Permission</source>
         <translation>画面の録画権を有効にする</translation>
     </message>
     <message>
-        <location filename="qml/FocusPage.qml" line="186"/>
+        <location filename="qml/FocusPage.qml" line="189"/>
         <source>Due to the security control of MacOS system, it is necessary to turn on the system screen recording permission before starting to share the screen%1Open System Preferences &gt; Security and privacy grant access</source>
         <translation>macOS のセキュリティ制御により、画面共有を開始する前にシステムの画面録画を有効にする必要があります %1システム環境設定 &gt; セキュリティとプライバシーを開き、アクセスを許可します。</translation>
     </message>
     <message>
-        <location filename="qml/FocusPage.qml" line="198"/>
+        <location filename="qml/FocusPage.qml" line="201"/>
         <source>Someone is screen sharing currently, you can&apos;t switch the view mode</source>
         <translation>画面共有中は表示モードを切り替えられない</translation>
     </message>
     <message>
-        <location filename="qml/FocusPage.qml" line="202"/>
+        <location filename="qml/FocusPage.qml" line="205"/>
         <source>Someone is whiteboard sharing currently, you can&apos;t switch the view mode</source>
         <translation>ホワイトボード共有中は表示モードを切り替えられません</translation>
     </message>
@@ -610,12 +609,12 @@
 <context>
     <name>GalleryPage</name>
     <message>
-        <location filename="qml/GalleryPage.qml" line="243"/>
+        <location filename="qml/GalleryPage.qml" line="141"/>
         <source>Screen Record Permission</source>
         <translation>画面の録画権を有効にする</translation>
     </message>
     <message>
-        <location filename="qml/GalleryPage.qml" line="244"/>
+        <location filename="qml/GalleryPage.qml" line="142"/>
         <source>Due to the security control of MacOS system, it is necessary to turn on the system screen recording permission before starting to share the screen%1Open System Preferences &gt; Security and privacy grant access</source>
         <translation>macOS のセキュリティ制御により、画面共有を開始する前にシステムの画面録画を有効にする必要があります %1システム環境設定 &gt; セキュリティとプライバシーを開き、アクセスを許可します。</translation>
     </message>
@@ -623,7 +622,7 @@
 <context>
     <name>GlobalToast</name>
     <message>
-        <location filename="qml/toast/GlobalToast.qml" line="15"/>
+        <location filename="qml/toast/GlobalToast.qml" line="38"/>
         <source>NetEase Meeting Global Toast</source>
         <translation>ネットイース・ミーティング乾杯</translation>
     </message>
@@ -842,6 +841,34 @@
         <location filename="qml/invite/InvitationList.qml" line="164"/>
         <source>add sucessfull</source>
         <translation>追加完成</translation>
+    </message>
+</context>
+<context>
+    <name>LayoutChooser</name>
+    <message>
+        <location filename="qml/meeting/LayoutChooser.qml" line="87"/>
+        <source>Gallery view</source>
+        <translation>ギャラリービュー</translation>
+    </message>
+    <message>
+        <location filename="qml/meeting/LayoutChooser.qml" line="120"/>
+        <source>Gallery</source>
+        <translation>ギャラリー</translation>
+    </message>
+    <message>
+        <location filename="qml/meeting/LayoutChooser.qml" line="141"/>
+        <source>Focus view</source>
+        <translation>フォーカス表示</translation>
+    </message>
+    <message>
+        <location filename="qml/meeting/LayoutChooser.qml" line="175"/>
+        <source>Top list</source>
+        <translation>上面図</translation>
+    </message>
+    <message>
+        <location filename="qml/meeting/LayoutChooser.qml" line="226"/>
+        <source>Right list</source>
+        <translation>右側面図</translation>
     </message>
 </context>
 <context>
@@ -1089,37 +1116,38 @@
 <context>
     <name>MainPanel</name>
     <message>
-        <location filename="qml/MainPanel.qml" line="695"/>
+        <location filename="qml/MainPanel.qml" line="804"/>
+        <location filename="qml/MainPanel.qml" line="869"/>
         <source>Speaking: </source>
         <translation>スピーキング </translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="844"/>
+        <location filename="qml/MainPanel.qml" line="958"/>
         <source>Cancel HandsUp</source>
         <translation>ハンドアップキャンセル</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="845"/>
+        <location filename="qml/MainPanel.qml" line="959"/>
         <source>are you sure to cancel hands up</source>
         <translation>ハンド・レイズをアンミュートするかどうかを決定する</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1043"/>
+        <location filename="qml/MainPanel.qml" line="1157"/>
         <source>chatroom</source>
         <translation>チャット</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1092"/>
+        <location filename="qml/MainPanel.qml" line="1206"/>
         <source>new message</source>
         <translation>新着メッセージ</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1185"/>
+        <location filename="qml/MainPanel.qml" line="1301"/>
         <source>Input a message and press Enter to send it...</source>
         <translation>メッセージを入力し、Enterキーを押して送信する...</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1143"/>
+        <location filename="qml/MainPanel.qml" line="1257"/>
         <source>can not send empty message</source>
         <translation>空のメッセージを送信できない</translation>
     </message>
@@ -1132,27 +1160,27 @@
         <translation type="vanished">当面のマイク・デバイス：[%1]。</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1785"/>
+        <location filename="qml/MainPanel.qml" line="1904"/>
         <source>You have turned on all mute</source>
         <translation>全員ミュートをオンにしている</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1787"/>
+        <location filename="qml/MainPanel.qml" line="1906"/>
         <source>You have turned off all mute</source>
         <translation>全員ミュートを解除した</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1790"/>
+        <location filename="qml/MainPanel.qml" line="1909"/>
         <source>This meeting has been turned on all mute by host</source>
         <translation>この会議はすべてミュートされています</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1582"/>
+        <location filename="qml/MainPanel.qml" line="1696"/>
         <source>You have been locked this meeting</source>
         <translation>セッションがロックされ、新しい参加者はセッションに参加できなくなります</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1584"/>
+        <location filename="qml/MainPanel.qml" line="1698"/>
         <source>You have been unlocked this meeting</source>
         <translation>セッションのロックが解除され、新しい参加者がセッションに参加できるようになりました</translation>
     </message>
@@ -1161,22 +1189,22 @@
         <translation type="vanished">会議のロックが解除され、新しい参加者が会議に参加できるようになります</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1515"/>
+        <location filename="qml/MainPanel.qml" line="1629"/>
         <source>Current record device &quot;[%1]&quot;</source>
         <translation>当面のマイク・デバイスは &quot;%1&quot; である。</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1511"/>
+        <location filename="qml/MainPanel.qml" line="1625"/>
         <source>Current playout device &quot;[%1]&quot;</source>
         <translation>当面のスピーカー・デバイスは&quot;%1 &quot;である。</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1598"/>
+        <location filename="qml/MainPanel.qml" line="1712"/>
         <source>Meeting has been finished</source>
         <translation>ミーティング終了</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1696"/>
+        <location filename="qml/MainPanel.qml" line="1810"/>
         <source>Failed to join meeting</source>
         <translation>会議参加失敗</translation>
     </message>
@@ -1185,74 +1213,74 @@
         <translation type="vanished">チャットルームが切断された</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="222"/>
-        <location filename="qml/MainPanel.qml" line="842"/>
-        <location filename="qml/MainPanel.qml" line="860"/>
-        <location filename="qml/MainPanel.qml" line="1523"/>
-        <location filename="qml/MainPanel.qml" line="1910"/>
-        <location filename="qml/MainPanel.qml" line="1996"/>
-        <location filename="qml/MainPanel.qml" line="2312"/>
-        <location filename="qml/MainPanel.qml" line="2346"/>
+        <location filename="qml/MainPanel.qml" line="234"/>
+        <location filename="qml/MainPanel.qml" line="956"/>
+        <location filename="qml/MainPanel.qml" line="974"/>
+        <location filename="qml/MainPanel.qml" line="1637"/>
+        <location filename="qml/MainPanel.qml" line="2031"/>
+        <location filename="qml/MainPanel.qml" line="2117"/>
+        <location filename="qml/MainPanel.qml" line="2435"/>
+        <location filename="qml/MainPanel.qml" line="2469"/>
         <source>Cancel</source>
         <translation>キャンセル</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="828"/>
-        <location filename="qml/MainPanel.qml" line="864"/>
-        <location filename="qml/MainPanel.qml" line="1420"/>
-        <location filename="qml/MainPanel.qml" line="1718"/>
-        <location filename="qml/MainPanel.qml" line="2035"/>
-        <location filename="qml/MainPanel.qml" line="2059"/>
-        <location filename="qml/MainPanel.qml" line="2073"/>
-        <location filename="qml/MainPanel.qml" line="2085"/>
-        <location filename="qml/MainPanel.qml" line="2089"/>
-        <location filename="qml/MainPanel.qml" line="2101"/>
-        <location filename="qml/MainPanel.qml" line="2147"/>
+        <location filename="qml/MainPanel.qml" line="942"/>
+        <location filename="qml/MainPanel.qml" line="978"/>
+        <location filename="qml/MainPanel.qml" line="1534"/>
+        <location filename="qml/MainPanel.qml" line="1832"/>
+        <location filename="qml/MainPanel.qml" line="2142"/>
+        <location filename="qml/MainPanel.qml" line="2166"/>
+        <location filename="qml/MainPanel.qml" line="2180"/>
+        <location filename="qml/MainPanel.qml" line="2192"/>
+        <location filename="qml/MainPanel.qml" line="2196"/>
+        <location filename="qml/MainPanel.qml" line="2208"/>
+        <location filename="qml/MainPanel.qml" line="2254"/>
         <source>HandsUp</source>
         <translation>挙手</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="225"/>
-        <location filename="qml/MainPanel.qml" line="1904"/>
-        <location filename="qml/MainPanel.qml" line="1989"/>
+        <location filename="qml/MainPanel.qml" line="237"/>
+        <location filename="qml/MainPanel.qml" line="2025"/>
+        <location filename="qml/MainPanel.qml" line="2110"/>
         <source>Mute all</source>
         <translation>ミュートオール</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="223"/>
+        <location filename="qml/MainPanel.qml" line="235"/>
         <source>HandsUpRaise</source>
         <oldsource>HandsUping</oldsource>
         <translation>挙手のお願い</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="224"/>
+        <location filename="qml/MainPanel.qml" line="236"/>
         <source>This meeting has been turned on all mute by host,you can hands up to speak</source>
         <translation>トークン・ホルダーが全員をミュートした後、手を上げて発言を要求することができます。</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="337"/>
+        <location filename="qml/MainPanel.qml" line="368"/>
         <source>Please enter password</source>
         <oldsource>Please enter 6-digit password</oldsource>
         <translation>パスワードを入力してください</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="351"/>
+        <location filename="qml/MainPanel.qml" line="382"/>
         <source>Password Error</source>
         <translation>会議のパスワードが違う</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="368"/>
+        <location filename="qml/MainPanel.qml" line="399"/>
         <source>Meeting Password</source>
         <oldsource>Meetiing Password</oldsource>
         <translation>ミーティングパスワード</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="367"/>
+        <location filename="qml/MainPanel.qml" line="398"/>
         <source>Join Meeting</source>
         <translation>ミーティングに参加する</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="619"/>
+        <location filename="qml/MainPanel.qml" line="659"/>
         <source>recording</source>
         <translation>記録</translation>
     </message>
@@ -1261,32 +1289,32 @@
         <translation type="vanished">会議録画中</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1776"/>
+        <location filename="qml/MainPanel.qml" line="1895"/>
         <source>modify nickname success</source>
         <translation>ニックネームの変更に成功</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1778"/>
+        <location filename="qml/MainPanel.qml" line="1897"/>
         <source>modify nickname fail</source>
         <translation>ニックネームの変更に失敗</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1882"/>
+        <location filename="qml/MainPanel.qml" line="2003"/>
         <source>You have been muted by host</source>
         <translation>ミュートされている</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="843"/>
-        <location filename="qml/MainPanel.qml" line="1522"/>
-        <location filename="qml/MainPanel.qml" line="1910"/>
-        <location filename="qml/MainPanel.qml" line="1996"/>
-        <location filename="qml/MainPanel.qml" line="2311"/>
-        <location filename="qml/MainPanel.qml" line="2345"/>
+        <location filename="qml/MainPanel.qml" line="957"/>
+        <location filename="qml/MainPanel.qml" line="1636"/>
+        <location filename="qml/MainPanel.qml" line="2031"/>
+        <location filename="qml/MainPanel.qml" line="2117"/>
+        <location filename="qml/MainPanel.qml" line="2434"/>
+        <location filename="qml/MainPanel.qml" line="2468"/>
         <source>OK</source>
         <translation>確定</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="594"/>
+        <location filename="qml/MainPanel.qml" line="634"/>
         <source>living</source>
         <translation>ライブストリーミング</translation>
     </message>
@@ -1296,47 +1324,47 @@
         <translation type="vanished">あなたの発言が検知されました。 発言したい場合は、「ミュート解除」ボタンをクリックし、再度発言してください。</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1524"/>
+        <location filename="qml/MainPanel.qml" line="1638"/>
         <source>Select the audio output device</source>
         <translation>音声出力デバイスの選択</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1525"/>
+        <location filename="qml/MainPanel.qml" line="1639"/>
         <source>The screen is being cast. Do you want to output audio through the large screen?</source>
         <translation>キャスティングしている可能性があることを検知し、音声出力をキャスティングデバイスに切り替える必要がありますか？</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1800"/>
+        <location filename="qml/MainPanel.qml" line="1919"/>
         <source>You have turned on all mute video</source>
         <translation>全員ビデオオフのことをオンにしている</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1802"/>
+        <location filename="qml/MainPanel.qml" line="1921"/>
         <source>You have turned off all mute video</source>
         <translation>すべてのビデオオフをキャンセルしました</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1805"/>
+        <location filename="qml/MainPanel.qml" line="1924"/>
         <source>This meeting has been turned on all mute video by host</source>
         <translation>司会者は、すべてビデオをオフにするように設定しました。</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1986"/>
+        <location filename="qml/MainPanel.qml" line="2107"/>
         <source>Mute all Video</source>
         <translation>すべてのビデオを閉じる</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1910"/>
+        <location filename="qml/MainPanel.qml" line="2031"/>
         <source>Open your microphone</source>
         <translation>マイクをオンにする</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1910"/>
+        <location filename="qml/MainPanel.qml" line="2031"/>
         <source>The host applies to open your microphone, do you agree.</source>
         <translation>トークン・ホルダーがマイクをオンにするように要求していますが、オンになっているかどうか確認してください。</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2026"/>
+        <location filename="qml/MainPanel.qml" line="2133"/>
         <source>Hands raised up, please wait host handle.</source>
         <translation>手を上げて、返事を待っているところです。</translation>
     </message>
@@ -1353,198 +1381,208 @@
         <translation type="obsolete">(%1)</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2071"/>
+        <location filename="qml/MainPanel.qml" line="2178"/>
         <source>the host have refused your handsup request</source>
         <translation>司会者が手を降ろしました</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1921"/>
+        <location filename="qml/MainPanel.qml" line="2042"/>
         <source>you have been ummute bt most,you can speak freely.</source>
         <translation>ミュートが解除され、発言できるようになりました。</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="928"/>
+        <location filename="qml/MainPanel.qml" line="729"/>
+        <source>View</source>
+        <translation>レイアウト</translation>
+    </message>
+    <message>
+        <location filename="qml/MainPanel.qml" line="1042"/>
         <source>unmute</source>
         <translation>ミュートオフ解除</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1361"/>
+        <location filename="qml/MainPanel.qml" line="1475"/>
         <source>Disconnected, trying to reconnect.</source>
         <translation>ネットワークが切断されました。再接続を試みています。</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1475"/>
+        <location filename="qml/MainPanel.qml" line="1589"/>
         <source>image files</source>
         <translation>画像ファイル</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1475"/>
+        <location filename="qml/MainPanel.qml" line="1589"/>
         <source>all files</source>
         <translation>ファイル</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1475"/>
+        <location filename="qml/MainPanel.qml" line="1589"/>
         <source>audio files</source>
         <translation>音声ファイル</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1475"/>
+        <location filename="qml/MainPanel.qml" line="1589"/>
         <source>video files</source>
         <translation>ビデオファイル</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1475"/>
+        <location filename="qml/MainPanel.qml" line="1589"/>
         <source>office files</source>
         <translation>オフィスファイル</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1475"/>
+        <location filename="qml/MainPanel.qml" line="1589"/>
         <source>zip files</source>
         <translation>圧縮ファイル</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1475"/>
+        <location filename="qml/MainPanel.qml" line="1589"/>
         <source>pdf files</source>
         <translation>PDFファイル</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1475"/>
+        <location filename="qml/MainPanel.qml" line="1589"/>
         <source>text files</source>
         <translation>テキストファイル</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1475"/>
+        <location filename="qml/MainPanel.qml" line="1589"/>
         <source>pack files</source>
         <translation>インストールファイル</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1518"/>
+        <location filename="qml/MainPanel.qml" line="1632"/>
         <source>It is detected that you are speaking, if you need to speak,
  please click the &quot;Unmute&quot; button and speak again</source>
         <translation>あなたの発言が検知されました。 発言したい場合は、「ミュート解除」ボタンをクリックし、再度発言してください。</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1700"/>
-        <location filename="qml/MainPanel.qml" line="1740"/>
+        <location filename="qml/MainPanel.qml" line="1814"/>
+        <location filename="qml/MainPanel.qml" line="1859"/>
         <source>Bad network</source>
         <translation>ネットワーク異常</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1700"/>
-        <location filename="qml/MainPanel.qml" line="1740"/>
+        <location filename="qml/MainPanel.qml" line="1814"/>
+        <location filename="qml/MainPanel.qml" line="1859"/>
         <source>Network has been disconnected, check your network and rejoin please.</source>
         <translation>ネットワークが切断されました。ネットワーク状況を確認するか、再度参加してください。</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1704"/>
-        <location filename="qml/MainPanel.qml" line="1744"/>
+        <location filename="qml/MainPanel.qml" line="1818"/>
+        <location filename="qml/MainPanel.qml" line="1863"/>
         <source>Leave</source>
         <translation>退室</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1704"/>
-        <location filename="qml/MainPanel.qml" line="1744"/>
+        <location filename="qml/MainPanel.qml" line="1818"/>
+        <location filename="qml/MainPanel.qml" line="1863"/>
         <source>Rejoin</source>
         <translation>さいせん</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1816"/>
+        <location filename="qml/MainPanel.qml" line="1935"/>
         <source>Meeting will close in %1 min.</source>
         <translation>会議終了まであと %1 分!</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1871"/>
+        <location filename="qml/MainPanel.qml" line="1992"/>
         <source>Microphone Permission</source>
         <translation>マイクの使用許可</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1872"/>
+        <location filename="qml/MainPanel.qml" line="1993"/>
         <source>Due to the security control of MacOS system, it is necessary to turn on the system Microphone permission before open Microphone%1Open System Preferences &gt; Security and privacy grant access</source>
         <translation>macOS システムのセキュリティ制御により、マイクをオンにする前にシステムのマイク権限を有効にする必要があります %1 システム環境設定 &gt; セキュリティとプライバシーを開き、アクセスを許可します。</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1967"/>
+        <location filename="qml/MainPanel.qml" line="2088"/>
         <source>Your camera has been disabled by the host</source>
         <translation>動画はオフになれています</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1996"/>
+        <location filename="qml/MainPanel.qml" line="2117"/>
         <source>Open your camera</source>
         <translation>カメラオン</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1996"/>
+        <location filename="qml/MainPanel.qml" line="2117"/>
         <source>The host applies to open your video, do you agree.</source>
         <translation>トークン・ホルダーがカメラの電源を入れるように要求していますが、電源が入っているかどうか確認してください。</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1940"/>
+        <location filename="qml/MainPanel.qml" line="2061"/>
         <source>You have been set as active speaker.</source>
         <translation>フォーカス映像に設定されていますね</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1942"/>
+        <location filename="qml/MainPanel.qml" line="2063"/>
         <source>You have been unset of active speaker.</source>
         <translation>フォーカス映像から削除されました</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1954"/>
+        <location filename="qml/MainPanel.qml" line="2075"/>
         <source>Camera Permission</source>
         <translation>カメラ使用許可</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1955"/>
+        <location filename="qml/MainPanel.qml" line="2076"/>
         <source>Due to the security control of MacOS system, it is necessary to turn on the system Camera permission before open Camera%1Open System Preferences &gt; Security and privacy grant access</source>
         <translation>macOS システムのセキュリティ制御により、カメラをオンにする前にシステムのカメラ権限を有効にする必要があります %1 システム環境設定 &gt; セキュリティとプライバシー アクセスを許可します。</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2015"/>
+        <location filename="qml/MainPanel.qml" line="2303"/>
         <source>Network abnormality, please check your network.</source>
         <translation>ネットワーク異常、確認してください</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2196"/>
+        <location filename="qml/MainPanel.qml" line="2317"/>
         <source>%1 joined the meeting</source>
         <translation>%1 は会議に参加しました。</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2200"/>
+        <location filename="qml/MainPanel.qml" line="2321"/>
         <source>%1 left from the meeting</source>
         <translation>%1 退室</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2125"/>
+        <location filename="qml/MainPanel.qml" line="2232"/>
         <source>You have been set as host</source>
         <translation>ホストに設定されている</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2153"/>
+        <location filename="qml/MainPanel.qml" line="2260"/>
         <source>You have been set as manager</source>
         <translation>共同ホストが設定されています</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2173"/>
+        <location filename="qml/MainPanel.qml" line="2280"/>
         <source>You have been unset as manager</source>
         <translation>共同主催者としての活動を停止されました。</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2183"/>
+        <location filename="qml/MainPanel.qml" line="2290"/>
         <source>has been set as manager</source>
         <translation>共同司会者が設置されました</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2185"/>
+        <location filename="qml/MainPanel.qml" line="2292"/>
         <source>has been unset as manager</source>
         <translation>共同司会者が削除されました</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="1691"/>
+        <location filename="qml/MainPanel.qml" line="1805"/>
         <source>Network reconnected.</source>
         <translation>ネットワーク再接続成功。</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2305"/>
-        <location filename="qml/MainPanel.qml" line="2339"/>
+        <location filename="qml/MainPanel.qml" line="2347"/>
+        <source>Screen sharing has terminated. It may be that the app has exited or the window cannot be shared.</source>
+        <translation>画面共有が終了しました</translation>
+    </message>
+    <message>
+        <location filename="qml/MainPanel.qml" line="2428"/>
+        <location filename="qml/MainPanel.qml" line="2462"/>
         <source>End Meeting</source>
         <translation>会議終了</translation>
     </message>
@@ -1553,16 +1591,16 @@
         <translation type="vanished">会議を中断したくない場合は、事前に一人の司会者を指名してください。</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2313"/>
-        <location filename="qml/MainPanel.qml" line="2347"/>
+        <location filename="qml/MainPanel.qml" line="2436"/>
+        <location filename="qml/MainPanel.qml" line="2470"/>
         <source>Exit</source>
         <translation>退室</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2305"/>
-        <location filename="qml/MainPanel.qml" line="2314"/>
-        <location filename="qml/MainPanel.qml" line="2339"/>
-        <location filename="qml/MainPanel.qml" line="2348"/>
+        <location filename="qml/MainPanel.qml" line="2428"/>
+        <location filename="qml/MainPanel.qml" line="2437"/>
+        <location filename="qml/MainPanel.qml" line="2462"/>
+        <location filename="qml/MainPanel.qml" line="2471"/>
         <source>Do you want to quit this meeting?</source>
         <translation>本当にこのミーティングを離れますか？</translation>
     </message>
@@ -1571,18 +1609,18 @@
         <translation type="vanished">メッセージの配信に失敗しました</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2439"/>
+        <location filename="qml/MainPanel.qml" line="2562"/>
         <source>trying to connect chatroom</source>
         <translation>チャットルームに再接続しようとしています</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2444"/>
+        <location filename="qml/MainPanel.qml" line="2567"/>
         <source>trying to relogin chatroom</source>
         <translation>チャットルームに再ログインしようとしている</translation>
     </message>
     <message>
-        <location filename="qml/MainPanel.qml" line="2223"/>
-        <location filename="qml/MainPanel.qml" line="2487"/>
+        <location filename="qml/MainPanel.qml" line="2344"/>
+        <location filename="qml/MainPanel.qml" line="2610"/>
         <source>The host has terminated your sharing</source>
         <translation>ホストは画面共有を終了しました。</translation>
     </message>
@@ -1600,13 +1638,13 @@
     <message>
         <location filename="manager/meeting_manager.cpp" line="111"/>
         <location filename="manager/meeting_manager.cpp" line="155"/>
-        <location filename="manager/meeting_manager.cpp" line="590"/>
+        <location filename="manager/meeting_manager.cpp" line="585"/>
         <source>Failed to connect to server, please try again.</source>
         <oldsource>Failed to connect to server, please try agine.</oldsource>
         <translation>サーバーへの接続に失敗しました、もう一度やり直してください</translation>
     </message>
     <message>
-        <location filename="manager/meeting_manager.cpp" line="593"/>
+        <location filename="manager/meeting_manager.cpp" line="588"/>
         <source>The number of people using this function has exceeded the limit.</source>
         <translation>この機能を使用している人数が制限を超えています。</translation>
     </message>
@@ -1652,57 +1690,57 @@
 <context>
     <name>Members</name>
     <message>
-        <location filename="qml/share/Members.qml" line="61"/>
+        <location filename="qml/share/Members.qml" line="70"/>
         <source>Members</source>
         <translation>参加者</translation>
     </message>
     <message>
-        <location filename="qml/share/Members.qml" line="89"/>
+        <location filename="qml/share/Members.qml" line="99"/>
         <source>You have turned on all mute</source>
         <translation>全員ミュートをオンにしている</translation>
     </message>
     <message>
-        <location filename="qml/share/Members.qml" line="91"/>
+        <location filename="qml/share/Members.qml" line="101"/>
         <source>You have turned off all mute</source>
         <translation>全員ミュートを解除した</translation>
     </message>
     <message>
-        <location filename="qml/share/Members.qml" line="94"/>
+        <location filename="qml/share/Members.qml" line="104"/>
         <source>This meeting has been turned on all mute by host</source>
         <translation>この会議はすべてミュートされています</translation>
     </message>
     <message>
-        <location filename="qml/share/Members.qml" line="100"/>
+        <location filename="qml/share/Members.qml" line="110"/>
         <source>You have turned on all mute video</source>
         <translation>全員ビデオオフのことをオンにしている</translation>
     </message>
     <message>
-        <location filename="qml/share/Members.qml" line="102"/>
+        <location filename="qml/share/Members.qml" line="112"/>
         <source>You have turned off all mute video</source>
         <translation>すべてのビデオオフをキャンセルしました</translation>
     </message>
     <message>
-        <location filename="qml/share/Members.qml" line="105"/>
+        <location filename="qml/share/Members.qml" line="115"/>
         <source>This meeting has been turned on all mute video by host</source>
         <translation>司会者は、すべてビデオをオフにするように設定しました。</translation>
     </message>
     <message>
-        <location filename="qml/share/Members.qml" line="80"/>
+        <location filename="qml/share/Members.qml" line="90"/>
         <source>You have been locked this meeting</source>
         <translation>セッションがロックされ、新しい参加者はセッションに参加できなくなります</translation>
     </message>
     <message>
-        <location filename="qml/share/Members.qml" line="82"/>
+        <location filename="qml/share/Members.qml" line="92"/>
         <source>You have been unlocked this meeting</source>
         <translation>セッションのロックが解除され、新しい参加者がセッションに参加できるようになりました</translation>
     </message>
     <message>
-        <location filename="qml/share/Members.qml" line="116"/>
+        <location filename="qml/share/Members.qml" line="126"/>
         <source>has been set as manager</source>
         <translation>共同司会者が設置されました</translation>
     </message>
     <message>
-        <location filename="qml/share/Members.qml" line="118"/>
+        <location filename="qml/share/Members.qml" line="128"/>
         <source>has been unset as manager</source>
         <translation>共同司会者が削除されました</translation>
     </message>
@@ -1710,7 +1748,7 @@
 <context>
     <name>MembersManager</name>
     <message>
-        <location filename="manager/meeting/members_manager.cpp" line="288"/>
+        <location filename="manager/meeting/members_manager.cpp" line="321"/>
         <source>The assigned role exceeds the number limit</source>
         <translation>割り当てられたロールが制限数を超えている</translation>
     </message>
@@ -1878,7 +1916,7 @@
 <context>
     <name>MessageBubble</name>
     <message>
-        <location filename="qml/toast/MessageBubble.qml" line="106"/>
+        <location filename="qml/toast/MessageBubble.qml" line="131"/>
         <source> say:</source>
         <translation>話す</translation>
     </message>
@@ -1886,7 +1924,7 @@
 <context>
     <name>MessageBubbleEx</name>
     <message>
-        <location filename="qml/toast/MessageBubbleEx.qml" line="104"/>
+        <location filename="qml/toast/MessageBubbleEx.qml" line="130"/>
         <source> say:</source>
         <translation>話す</translation>
     </message>
@@ -1894,23 +1932,23 @@
 <context>
     <name>ModifyNickname</name>
     <message>
-        <location filename="qml/components/ModifyNickname.qml" line="28"/>
+        <location filename="qml/components/ModifyNickname.qml" line="45"/>
         <source>ModifyNickname</source>
         <oldsource>Modify Nickname</oldsource>
         <translation>名称変更</translation>
     </message>
     <message>
-        <location filename="qml/components/ModifyNickname.qml" line="48"/>
+        <location filename="qml/components/ModifyNickname.qml" line="66"/>
         <source>New nickname</source>
         <translation>新しいニックネームを入力してください。</translation>
     </message>
     <message>
-        <location filename="qml/components/ModifyNickname.qml" line="78"/>
+        <location filename="qml/components/ModifyNickname.qml" line="86"/>
         <source>10 Chinese characters, or 20 alphanumeric characters</source>
         <translation>漢字10文字以内、英数字・記号20文字以内</translation>
     </message>
     <message>
-        <location filename="qml/components/ModifyNickname.qml" line="93"/>
+        <location filename="qml/components/ModifyNickname.qml" line="103"/>
         <source>Finished</source>
         <translation>完了</translation>
     </message>
@@ -1957,7 +1995,7 @@
         <translation>ホワイトボード</translation>
     </message>
     <message>
-        <location filename="manager/more_item_manager.cpp" line="85"/>
+        <location filename="manager/more_item_manager.cpp" line="87"/>
         <source>Invitation</source>
         <translation>招待</translation>
     </message>
@@ -1972,23 +2010,21 @@
         <translation>参加者の管理</translation>
     </message>
     <message>
-        <location filename="manager/more_item_manager.cpp" line="66"/>
-        <location filename="manager/more_item_manager.cpp" line="68"/>
         <source>View</source>
-        <translation>レイアウト</translation>
+        <translation type="vanished">レイアウト</translation>
     </message>
     <message>
-        <location filename="manager/more_item_manager.cpp" line="72"/>
+        <location filename="manager/more_item_manager.cpp" line="74"/>
         <source>Chat</source>
         <translation>チャット</translation>
     </message>
     <message>
-        <location filename="manager/more_item_manager.cpp" line="81"/>
+        <location filename="manager/more_item_manager.cpp" line="83"/>
         <source>Live</source>
         <translation>ライブ</translation>
     </message>
     <message>
-        <location filename="manager/more_item_manager.cpp" line="77"/>
+        <location filename="manager/more_item_manager.cpp" line="79"/>
         <source>Beauty</source>
         <translation>美顔</translation>
     </message>
@@ -2025,12 +2061,12 @@
 <context>
     <name>NEMeetingSDKProcHandlerIMP</name>
     <message>
-        <location filename="ipc_handlers/meeting_sdk_prochandler.cpp" line="64"/>
+        <location filename="ipc_handlers/meeting_sdk_prochandler.cpp" line="69"/>
         <source>Parameter error, LoggerPath invalid or no create permission</source>
         <translation>パラメータが正しくない、ログパスが不正、または作成権限がない</translation>
     </message>
     <message>
-        <location filename="ipc_handlers/meeting_sdk_prochandler.cpp" line="84"/>
+        <location filename="ipc_handlers/meeting_sdk_prochandler.cpp" line="89"/>
         <source>NetEase Meeting</source>
         <translation>NetEase Meeting</translation>
     </message>
@@ -2039,15 +2075,15 @@
     <name>NEMeetingServiceProcHandlerIMP</name>
     <message>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="70"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="751"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="757"/>
         <source>the %1 of the %2 and the %3 cannot be duplicated</source>
         <translation>%2 と %3 の中の %1 は繰り返せません。</translation>
     </message>
     <message>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="73"/>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="92"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="754"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="773"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="760"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="779"/>
         <source>%1 cannot exceed %2 items</source>
         <translation>%1のメニュー は、%2 を超えることはできません。</translation>
     </message>
@@ -2058,37 +2094,37 @@
     </message>
     <message>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="79"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="760"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="766"/>
         <source>%1 can not add %2, %3, %4, %5</source>
         <translation>%1、%3、%4、%5 は、%1 に追加できません。</translation>
     </message>
     <message>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="58"/>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="293"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="739"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="745"/>
         <source>Frequent operation, please try again later</source>
         <translation>操作が多すぎるため、後で再試行してください</translation>
     </message>
     <message>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="76"/>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="95"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="757"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="776"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="763"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="782"/>
         <source>%1 in %2 cannot be less than %3</source>
         <translation>%2 の中の %1 は %3 より小さくすることはできません。</translation>
     </message>
     <message>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="83"/>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="98"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="764"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="779"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="770"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="785"/>
         <source>%1 or %2 in %3 is invalid</source>
         <oldsource>title or image in %1 is invalid</oldsource>
         <translation>%3 の中の %1 または %2 は無効です。</translation>
     </message>
     <message>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="88"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="769"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="775"/>
         <source>%1 in %2 cannot be duplicated</source>
         <translation>%2 の 中の%1 は重複させることはできません。</translation>
     </message>
@@ -2100,14 +2136,14 @@
     </message>
     <message>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="116"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="786"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="792"/>
         <source>Invalid params:</source>
         <translation>無効なパラメータです:</translation>
     </message>
     <message>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="134"/>
         <location filename="ipc_handlers/meeting_prochandler.cpp" line="261"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="803"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="809"/>
         <source>The last meeting is not end yet.</source>
         <translation>前回のミーティングはまだ継続中です。</translation>
     </message>
@@ -2117,43 +2153,43 @@
         <translation>個人用会議番号のみ</translation>
     </message>
     <message>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="310"/>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="325"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="311"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="326"/>
         <source>The meeting has not yet started.</source>
         <translation>現在、セッション中ではない</translation>
     </message>
     <message>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="624"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="629"/>
         <source>joinTimeoutTimer</source>
         <translation>joinTimeoutTimer</translation>
     </message>
     <message>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="626"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="631"/>
         <source>kReasonRoomNotExist</source>
         <translation>kReasonRoomNotExist</translation>
     </message>
     <message>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="628"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="633"/>
         <source>kReasonSyncDataError</source>
         <translation>kReasonSyncDataError</translation>
     </message>
     <message>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="630"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="635"/>
         <source>kReasonRtcInitError</source>
         <translation>kReasonRtcInitError</translation>
     </message>
     <message>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="632"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="637"/>
         <source>kReasonJoinChannelError</source>
         <translation>kReasonJoinChannelError</translation>
     </message>
     <message>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="303"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="304"/>
         <source>Did not logged in.</source>
         <translation>会議を終了する権限がない</translation>
     </message>
     <message>
-        <location filename="ipc_handlers/meeting_prochandler.cpp" line="316"/>
+        <location filename="ipc_handlers/meeting_prochandler.cpp" line="317"/>
         <source>You have no permission</source>
         <translation>セッションの終了の権限は無効です</translation>
     </message>
@@ -2274,62 +2310,55 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
 <context>
     <name>SSSelector</name>
     <message>
-        <location filename="qml/share/SSSelector.qml" line="76"/>
+        <location filename="qml/share/SSSelector.qml" line="87"/>
         <source>Select screen</source>
         <translation>共有するものを選択する</translation>
     </message>
     <message>
-        <location filename="qml/share/SSSelector.qml" line="172"/>
         <source>Screen</source>
-        <translation>デスクトップ</translation>
+        <translation type="vanished">デスクトップ</translation>
     </message>
     <message>
-        <location filename="qml/share/SSSelector.qml" line="230"/>
+        <location filename="qml/share/SSSelector.qml" line="228"/>
         <source>Shared computer sound</source>
         <translation>システムサウンドの共有</translation>
     </message>
     <message>
-        <location filename="qml/share/SSSelector.qml" line="243"/>
         <source>Smooth priority</source>
-        <translation>ストリーミング優先</translation>
+        <translation type="vanished">ストリーミング優先</translation>
     </message>
     <message>
-        <location filename="qml/share/SSSelector.qml" line="254"/>
+        <location filename="qml/share/SSSelector.qml" line="239"/>
         <source>Start</source>
         <translation>共有開始</translation>
     </message>
     <message>
-        <location filename="qml/share/SSSelector.qml" line="257"/>
+        <location filename="qml/share/SSSelector.qml" line="244"/>
         <source>Whiteboard sharing does not currently support screen share</source>
         <translation>ホワイトボード共有時に画面共有ができない</translation>
     </message>
     <message>
-        <location filename="qml/share/SSSelector.qml" line="262"/>
+        <location filename="qml/share/SSSelector.qml" line="248"/>
         <source>You have no permission to sharing screen.</source>
         <translation>画面共有の前に録画許可を有効にする必要があります</translation>
     </message>
     <message>
-        <location filename="qml/share/SSSelector.qml" line="267"/>
+        <location filename="qml/share/SSSelector.qml" line="252"/>
         <source>Someone is currently sharing a screen</source>
         <translation>誰かが画面を共有しています。自分の画面を共有することはできません</translation>
     </message>
     <message>
-        <location filename="qml/share/SSSelector.qml" line="298"/>
         <source>The share failed because the window was closed</source>
-        <translation>アプリが終了したため、画面共有に失敗しました</translation>
+        <translation type="vanished">アプリが終了したため、画面共有に失敗しました</translation>
     </message>
 </context>
 <context>
     <name>SSToolbar</name>
     <message>
         <location filename="qml/share/SSToolbar.qml" line="262"/>
-        <source>The share has been suspended, please restore the window</source>
-        <translation>共有が一時停止している場合は、ウィンドウを上部に置いてください。</translation>
-    </message>
-    <message>
-        <location filename="qml/share/SSToolbar.qml" line="262"/>
         <source>The share has been suspended</source>
-        <translation>共有が一時停止されました</translation>
+        <oldsource>The share has been suspended, please restore the window</oldsource>
+        <translation>共有が一時停止している場合は、ウィンドウを上部に置いてください。</translation>
     </message>
     <message>
         <location filename="qml/share/SSToolbar.qml" line="354"/>
@@ -2477,9 +2506,17 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
     </message>
 </context>
 <context>
+    <name>ScreenCaptureSourceModel</name>
+    <message>
+        <location filename="models/screen_capture_source_model.cpp" line="144"/>
+        <source>Screen </source>
+        <translation>デスクトップ </translation>
+    </message>
+</context>
+<context>
     <name>SearchItem</name>
     <message>
-        <location filename="qml/components/SearchItem.qml" line="31"/>
+        <location filename="qml/components/SearchItem.qml" line="39"/>
         <source>Search member</source>
         <translation>メンバー検索</translation>
     </message>
@@ -2487,34 +2524,34 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
 <context>
     <name>SettingsWindow</name>
     <message>
-        <location filename="qml/settings/SettingsWindow.qml" line="87"/>
+        <location filename="qml/settings/SettingsWindow.qml" line="32"/>
         <source>General</source>
         <translation>一般的な</translation>
     </message>
     <message>
-        <location filename="qml/settings/SettingsWindow.qml" line="93"/>
+        <location filename="qml/settings/SettingsWindow.qml" line="38"/>
         <source>Videos</source>
         <translation>カメラ選択</translation>
     </message>
     <message>
-        <location filename="qml/settings/SettingsWindow.qml" line="99"/>
+        <location filename="qml/settings/SettingsWindow.qml" line="44"/>
         <source>Audios</source>
         <translation>トーン</translation>
     </message>
     <message>
-        <location filename="qml/settings/SettingsWindow.qml" line="115"/>
+        <location filename="qml/settings/SettingsWindow.qml" line="60"/>
         <source>VirtualBackground</source>
         <translation>背景</translation>
     </message>
     <message>
-        <location filename="qml/settings/SettingsWindow.qml" line="70"/>
-        <location filename="qml/settings/SettingsWindow.qml" line="106"/>
+        <location filename="qml/settings/SettingsWindow.qml" line="51"/>
+        <location filename="qml/settings/SettingsWindow.qml" line="117"/>
         <source>Beauty</source>
         <translation>美顔</translation>
     </message>
     <message>
-        <location filename="qml/settings/SettingsWindow.qml" line="18"/>
-        <location filename="qml/settings/SettingsWindow.qml" line="144"/>
+        <location filename="qml/settings/SettingsWindow.qml" line="76"/>
+        <location filename="qml/settings/SettingsWindow.qml" line="150"/>
         <source>Settings</source>
         <translation>セット</translation>
     </message>
@@ -2522,8 +2559,8 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
 <context>
     <name>ShareVideo</name>
     <message>
-        <location filename="qml/share/ShareVideo.qml" line="371"/>
-        <location filename="qml/share/ShareVideo.qml" line="378"/>
+        <location filename="qml/share/ShareVideo.qml" line="400"/>
+        <location filename="qml/share/ShareVideo.qml" line="407"/>
         <source>Speaking: </source>
         <translation>スピーキング </translation>
     </message>
@@ -2609,6 +2646,34 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
     </message>
 </context>
 <context>
+    <name>SplitPage</name>
+    <message>
+        <location filename="qml/SplitPage.qml" line="146"/>
+        <source>Unset Focus</source>
+        <translation>フォーカス動画をキャンセルする</translation>
+    </message>
+    <message>
+        <location filename="qml/SplitPage.qml" line="382"/>
+        <source>Screen Record Permission</source>
+        <translation>画面の録画権を有効にする</translation>
+    </message>
+    <message>
+        <location filename="qml/SplitPage.qml" line="383"/>
+        <source>Due to the security control of MacOS system, it is necessary to turn on the system screen recording permission before starting to share the screen%1Open System Preferences &gt; Security and privacy grant access</source>
+        <translation>macOS のセキュリティ制御により、画面共有を開始する前にシステムの画面録画を有効にする必要があります %1システム環境設定 &gt; セキュリティとプライバシーを開き、アクセスを許可します。</translation>
+    </message>
+    <message>
+        <location filename="qml/SplitPage.qml" line="395"/>
+        <source>Someone is screen sharing currently, you can&apos;t switch the view mode</source>
+        <translation>画面共有中は表示モードを切り替えられない</translation>
+    </message>
+    <message>
+        <location filename="qml/SplitPage.qml" line="399"/>
+        <source>Someone is whiteboard sharing currently, you can&apos;t switch the view mode</source>
+        <translation>ホワイトボード共有中は表示モードを切り替えられません</translation>
+    </message>
+</context>
+<context>
     <name>TestPage</name>
     <message>
         <source>Login</source>
@@ -2638,12 +2703,12 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
 <context>
     <name>VideoDelegate</name>
     <message>
-        <location filename="qml/components/VideoDelegate.qml" line="131"/>
+        <location filename="qml/components/VideoDelegate.qml" line="141"/>
         <source>Answering the system call</source>
         <translation>現在電話対応中</translation>
     </message>
     <message>
-        <location filename="qml/components/VideoDelegate.qml" line="172"/>
+        <location filename="qml/components/VideoDelegate.qml" line="182"/>
         <source> is screen sharing currently</source>
         <translation>共有画面</translation>
     </message>
@@ -2709,12 +2774,12 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
 <context>
     <name>VideoManager</name>
     <message>
-        <location filename="manager/meeting/video_manager.cpp" line="192"/>
+        <location filename="manager/meeting/video_manager.cpp" line="204"/>
         <source>mute My Video failed</source>
         <translation>ビデオの停止に失敗しました</translation>
     </message>
     <message>
-        <location filename="manager/meeting/video_manager.cpp" line="192"/>
+        <location filename="manager/meeting/video_manager.cpp" line="204"/>
         <source>unmute My Video failed</source>
         <translation>ビデオを開くのに失敗しました</translation>
     </message>
@@ -2722,12 +2787,12 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
 <context>
     <name>VirtualBackground</name>
     <message>
-        <location filename="qml/settings/VirtualBackground.qml" line="177"/>
+        <location filename="qml/settings/VirtualBackground.qml" line="180"/>
         <source>add local image</source>
         <translation>ローカル画像の追加</translation>
     </message>
     <message>
-        <location filename="qml/settings/VirtualBackground.qml" line="177"/>
+        <location filename="qml/settings/VirtualBackground.qml" line="180"/>
         <source>nothing</source>
         <translation>なし</translation>
     </message>
@@ -2735,7 +2800,12 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
 <context>
     <name>VirtualBackgroundModel</name>
     <message>
-        <location filename="models/virtualbackground_model.cpp" line="70"/>
+        <location filename="models/virtualbackground_model.cpp" line="64"/>
+        <source>File size must be less than 5MB</source>
+        <translation>ファイルは5MBを超えることはできません</translation>
+    </message>
+    <message>
+        <location filename="models/virtualbackground_model.cpp" line="74"/>
         <source>add failed</source>
         <translation>追加失敗</translation>
     </message>
@@ -2743,17 +2813,17 @@ Open System Preferences &gt; Security and privacy grant access</oldsource>
 <context>
     <name>WhiteboardPage</name>
     <message>
-        <location filename="qml/WhiteboardPage.qml" line="117"/>
+        <location filename="qml/WhiteboardPage.qml" line="118"/>
         <source>Whiteboard permission has not yet been activated, please contact sales for activation</source>
         <translation>ホワイトボードの開設をご希望の方は、営業までご連絡ください。</translation>
     </message>
     <message>
-        <location filename="qml/WhiteboardPage.qml" line="166"/>
+        <location filename="qml/WhiteboardPage.qml" line="167"/>
         <source>You have been granted permission to interact with the whiteboard</source>
         <translation>ホワイトボードへのインタラクティブアクセスが許可されました。</translation>
     </message>
     <message>
-        <location filename="qml/WhiteboardPage.qml" line="168"/>
+        <location filename="qml/WhiteboardPage.qml" line="169"/>
         <source>You have been reclaimed the whiteboard interactive permission</source>
         <translation>ホワイトボード権限が剥奪された</translation>
     </message>

@@ -1,6 +1,6 @@
-﻿import QtQuick 2.15
-import QtQuick.Controls 2.12
-import QtQuick.Layouts 1.12
+﻿import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import NetEase.Meeting.GlobalChatManager 1.0
 
 Button {

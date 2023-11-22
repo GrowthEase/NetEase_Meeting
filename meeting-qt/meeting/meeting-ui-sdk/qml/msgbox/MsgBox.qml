@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import QtQuick.Window 2.12
 
 import '../utils/dialogManager.js' as DialogManager

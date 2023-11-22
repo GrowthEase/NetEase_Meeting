@@ -578,6 +578,10 @@ void NEInRoomServiceListener::onRoomConnectStateChanged(NEConnectState state) {
     }
 }
 
+void NEInRoomServiceListener::onRtcScreenCaptureStatus(NERoomScreenCaptureStatus status) {
+    Q_EMIT ShareManager::getInstance()->screenCaptureStatusChanged(static_cast<ShareManager::ScreenCaptureStatus>(status));
+}
+
 void NEInRoomServiceListener::activeSpeakerVideoUser(const std::vector<NEAudioStats>& stats) {
     auto timestamp = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now());
     auto difference = timestamp.time_since_epoch().count() - m_nActiveSwitchTimestamp;

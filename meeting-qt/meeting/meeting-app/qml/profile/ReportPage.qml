@@ -1,10 +1,10 @@
-﻿import QtQuick 2.15
+﻿import QtQuick
 import QtQuick.Window 2.12
-import QtQuick.Layouts 1.1
-import QtQuick.Controls 2.14
+import QtQuick.Layouts
+import QtQuick.Controls
 // import QtQuick.Controls.Styles 1.4
 import Qt5Compat.GraphicalEffects
-import QtQuick.Controls.Material 2.12
+import QtQuick.Controls.Material
 
 import "../components"
 
@@ -373,4 +373,3 @@ Window{
         listModel.append({ selectable: true, level: 1, text: qsTr("Other") })
     }
 }
-
