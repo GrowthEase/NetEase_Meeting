@@ -9,290 +9,455 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   NEMeetingUIKitLocalizationsJa([String locale = 'ja']) : super(locale);
 
   @override
-  String get joinMeeting => 'ミーティングに参加';
+  String get globalAppName => '網易会議';
 
   @override
-  String get cancel => 'キャンセル';
+  String get globalDelete => '消去';
 
   @override
-  String get add => '追加';
+  String get globalNothing => 'なし';
 
   @override
-  String get beauty => '美顔';
+  String get globalCancel => 'キャンセル';
 
   @override
-  String get beautyLevel => '美容レベル';
+  String get globalAdd => '追加';
 
   @override
-  String get joiningTips => '会議に参加しています...';
+  String get globalClose => 'close';
 
   @override
-  String get leaveMeeting => '退室';
+  String get globalOpen => 'open';
 
   @override
-  String get quitMeeting => '会議終了';
+  String get globalFail => '失敗';
 
   @override
-  String get defaultMeetingTitle => 'ビデオ会議';
+  String get globalYes => 'yes';
 
   @override
-  String get close => 'close';
+  String get globalNo => 'no';
 
   @override
-  String get open => 'open';
+  String get globalSave => '保存';
 
   @override
-  String get fail => '失敗';
+  String get globalDone => '完成';
 
   @override
-  String get networkNotStable => '現在のネットワーク状態は良くありません';
+  String get globalNotify => 'お知らせ';
 
   @override
-  String get memberlistTitle => '参加者';
+  String get globalSure => 'OK';
 
   @override
-  String get joinMeetingFail => 'ミーティングに参加できませんでした';
+  String get globalIKnow => '知っています';
 
   @override
-  String get yourChangeHost => 'ホストになりました';
+  String get globalCopy => 'コピー';
 
   @override
-  String get yourChangeCoHost => '共同ホストに設定されました';
+  String get globalCopySuccess => 'コピー成功';
 
   @override
-  String get yourChangeCancelCoHost => '共同主催者としてキャンセルされました';
+  String get globalEdit => '編定';
 
   @override
-  String get localUserAssignedActiveSpeaker => 'フォーカス映像に設定されていますね';
+  String get globalGotIt => 'わかりました';
 
   @override
-  String get localUserUnAssignedActiveSpeaker => 'フォーカス映像から削除されました';
+  String get globalMin => '分';
 
   @override
-  String get muteAudioAll => '全員ミュート';
+  String globalNotWork(Object permissionName) {
+    return '$permissionNameが使えません。';
+  }
 
   @override
-  String get muteAudioAllDialogTips => '全員と新しいメンバーがミュートされます';
+  String globalNeedPermissionTips(Object permissionName, Object title) {
+    return 'この機能には$permissionNameが必要です。$titleがあなたの$permissionName権限にアクセスすることを許可してください';
+  }
 
   @override
-  String get muteVideoAllDialogTips => '全員と新しいメンバーはカメラをオフにします';
+  String get globalToSetUp => '設置に';
 
   @override
-  String get unMuteAudioAll => '全員ミュート解除';
+  String get globalNoPermission => 'パーミッションは許可されていません';
 
   @override
-  String get muteAudio => 'ミュート';
+  String get globalDays => '日';
 
   @override
-  String get unMuteAudio => 'ミュート解除';
+  String get globalHours => '時間';
 
   @override
-  String get muteAllVideo => 'すべてのビデオをオフ';
+  String get globalMinutes => '分';
 
   @override
-  String get unmuteAllVideo => 'すべての動画のミュート解除';
+  String get globalViewMessage => '観メッセージ';
 
   @override
-  String get muteVideo => 'ビデオをオフ';
+  String get globalNoLongerRemind => '注意しません';
 
   @override
-  String get unMuteVideo => 'ビデオを開く';
+  String get globalOperationFail => '操作に失敗しました';
 
   @override
-  String get muteAudioAndVideo => 'オーディオとビデオをオフにする';
+  String get meetingBeauty => '美顔';
 
   @override
-  String get unmuteAudioAndVideo => 'オーディオとビデオを開く';
+  String get meetingBeautyLevel => '美容レベル';
+
+  @override
+  String get meetingJoinTips => '会議に参加しています...';
+
+  @override
+  String get meetingQuit => '会議終了';
+
+  @override
+  String get meetingDefalutTitle => 'ビデオ会議';
+
+  @override
+  String get meetingJoinFail => 'ミーティングに参加できませんでした';
+
+  @override
+  String get meetingHostKickedYou =>
+      'ホストから削除されたか、別のデバイスに切り替えられたため、ミーティングを退出しました';
+
+  @override
+  String get meetingMicphoneNotWorksDialogTitle => 'マイクを使用できません';
+
+  @override
+  String get meetingMicphoneNotWorksDialogMessage =>
+      '話していることが検出されました。話す必要がある場合は、「ミュート解除」ボタンをクリックしてもう一度話してください';
+
+  @override
+  String get meetingFinish => '終了';
+
+  @override
+  String get meetingLeave => '退室';
+
+  @override
+  String get meetingLeaveFull => '退室';
+
+  @override
+  String get meetingSpeakingPrefix => 'Speaking:';
+
+  @override
+  String get meetingLockMeetingByHost => '会議はロックされています。新しい参加者は会議に参加できません';
+
+  @override
+  String get meetingLockMeetingByHostFail => '会議のロックに失敗しました';
+
+  @override
+  String get meetingUnLockMeetingByHost =>
+      'ミーティングのロックが解除されました。新しい参加者はミーティングに参加できます';
+
+  @override
+  String get meetingUnLockMeetingByHostFail => 'ミーティングのロック解除に失敗しました';
+
+  @override
+  String get meetingLock => 'ミーティングをロック';
+
+  @override
+  String get meetingMore => '更に多く';
+
+  @override
+  String get meetingPassword => '会議パスワード';
+
+  @override
+  String get meetingEnterPassword => 'ミーティングパスワードを入力してください';
+
+  @override
+  String get meetingWrongPassword => 'パスワード間違い';
+
+  @override
+  String get meetingNum => '会議ID';
+
+  @override
+  String get meetingShortNum => '会議の短縮番号';
+
+  @override
+  String get meetingInfoDesc => '会議は暗号化保護されています';
+
+  @override
+  String get meetingAlreadyHandsUpTips => '手を上げました。ホストが対応するまでお待ちください';
+
+  @override
+  String get meetingHandsUpApply => '挙手のお願い';
+
+  @override
+  String get meetingCancelHandsUp => '挙手キャンセル';
+
+  @override
+  String get meetingCancelHandsUpConfirm => 'ハンドアップをキャンセルしてよろしいですか?';
+
+  @override
+  String get meetingHandsUpDown => 'ハンズダウン';
+
+  @override
+  String get meetingInHandsUp => '挙手';
+
+  @override
+  String get meetingHandsUpFail => '挙手できませんでした';
+
+  @override
+  String get meetingHandsUpSuccess => 'ハンドアップに成功しました。ホストの処理を待っています';
+
+  @override
+  String get meetingCancelHandsUpFail => '挙手失敗を取り消す';
+
+  @override
+  String get meetingHostRejectAudioHandsUp => 'ホストがあなたの手を下ろしました';
+
+  @override
+  String get meetingSip => 'SIP';
+
+  @override
+  String get meetingInviteUrl => '参加リンク';
+
+  @override
+  String get meetingInvitePageTitle => '参加者を追加';
+
+  @override
+  String get meetingSipNumber => 'SIP 電話';
+
+  @override
+  String get meetingSipHost => 'SIP アドレス';
+
+  @override
+  String get meetingInvite => '招待';
+
+  @override
+  String get meetingInviteListTitle => '招待リスト';
+
+  @override
+  String get meetingInvitationSendSuccess => '招待を発起した';
+
+  @override
+  String get meetingInvitationSendFail => '招待に失敗しました';
+
+  @override
+  String get meetingRemovedByHost => '主催者によってミーティングから削除されました';
+
+  @override
+  String get meetingCloseByHost => '会議は終了しました';
+
+  @override
+  String get meetingWasInterrupted => '会議は中断しました';
+
+  @override
+  String get meetingSyncDataError => 'ルーム情報の合わせる失敗しました';
+
+  @override
+  String get meetingLeaveMeetingBySelf => 'ミーティングを退出する';
+
+  @override
+  String get meetingClosed => '会議は終了された';
+
+  @override
+  String get meetingConnectFail => '接続に失敗しました';
+
+  @override
+  String get meetingJoinTimeout => '会議への参加がタイムアウトしました。もう一度やり直してください';
+
+  @override
+  String get meetingEndOfLife => '会議時間が上限に達したため、会議は終了しました';
+
+  @override
+  String get meetingEndTip => '会議が終了するまであと 1 つだけです';
+
+  @override
+  String get meetingReuseIMNotSupportAnonymousJoinMeeting =>
+      'IM の再利用は匿名で会議への参加をサポートしていません';
+
+  @override
+  String get meetingInviteDialogTitle => '会議への招待';
+
+  @override
+  String get meetingInviteContentCopySuccess => '会議出席依頼のコンテンツがコピーされました';
+
+  @override
+  String get meetingInviteTitle => '会議に招待します';
+
+  @override
+  String get meetingSubject => '会議の件名';
+
+  @override
+  String get meetingTime => '会議時間';
+
+  @override
+  String get meetingInvitationUrl => '参加リンク';
+
+  @override
+  String get meetingCopyInvite => '招待をコピー';
+
+  @override
+  String get meetingInternalSpecial => '内部のみ';
+
+  @override
+  String get loginOnOtherDevice => '別のデバイスに切り替えました';
+
+  @override
+  String get authInfoExpired => '認可が期限切れです。もう一度ログインしてください';
+
+  @override
+  String get meetingCamera => 'カメラ';
+
+  @override
+  String get meetingMicrophone => 'マイク';
+
+  @override
+  String get meetingBluetooth => 'ブルートゥース';
+
+  @override
+  String get meetingPhoneState => '電話';
+
+  @override
+  String meetingNeedRationaleAudioPermission(Object permission) {
+    return 'オーディオ会議では、オーディオ通信を行うために$permission権限を申請する必要があります。';
+  }
+
+  @override
+  String meetingNeedRationaleVideoPermission(Object permission) {
+    return '音声ビデオ会議では、ビデオ通信を行うために$permission権限を申請する必要があります。';
+  }
+
+  @override
+  String get meetingNeedRationalePhotoPermission =>
+      '会議での仮想背景(背景画像の追加・変更)機能のために、写真権限の申請が必要です。';
+
+  @override
+  String get meetingDisconnectAudio => 'オーディオの切断';
+
+  @override
+  String get meetingReconnectAudio => 'オーディオ';
+
+  @override
+  String get meetingDisconnectAudioTips =>
+      '会議の音声をオフにするには、より多くの「オーディオの切断」をクリックします。';
+
+  @override
+  String get meetingNotificationContentTitle => 'ビデオ会議';
+
+  @override
+  String get meetingNotificationContentText => 'ビデオ会議が進行中';
+
+  @override
+  String get meetingNotificationContentTicker => 'ビデオ会議';
+
+  @override
+  String get meetingNotificationChannelId => 'ne_meeting_channel';
+
+  @override
+  String get meetingNotificationChannelName => 'ビデオ会議通知';
+
+  @override
+  String get meetingNotificationChannelDesc => 'ビデオ会議通知';
+
+  @override
+  String meetingUserJoin(Object userName) {
+    return '$userNameは会議に参加した。';
+  }
+
+  @override
+  String meetingUserLeave(Object userName) {
+    return '$userName会議を離れました。';
+  }
+
+  @override
+  String get meetingStartAudioShare => '共有音声をオンにする';
+
+  @override
+  String get meetingStopAudioShare => '音声の共有をやめる';
+
+  @override
+  String get meetingSwitchFcusView => '切り替える フォーカス表示';
+
+  @override
+  String get meetingSwitchGalleryView => '切り替える ギャラリービュー';
+
+  @override
+  String get meetingNoSupportSwitch => 'iPadはモード切り替えに対応していません';
+
+  @override
+  String get meetingFuncNotAvailableWhenInCallState => '通話中は本機能を使用できません';
+
+  @override
+  String get meetingRejoining => 'さいせん';
+
+  @override
+  String get meetingSecurity => '安全';
+
+  @override
+  String get meetingManagement => '会議管理';
+
+  @override
+  String get meetingWatermark => '会議の透かし';
+
+  @override
+  String get meetingBeKickedOutByHost => '司会者があなたを会議から外しました';
+
+  @override
+  String get meetingBeKickedOut => '会議からはずされる';
+
+  @override
+  String get meetingClickOkToClose => '「ok」をクリックすると自動的にページが閉じます';
+
+  @override
+  String get meetingLeaveConfirm => '会議を離れることは確実ですか?';
+
+  @override
+  String get meetingWatermarkEnabled => '透かしが開きました';
+
+  @override
+  String get meetingWatermarkDisabled => '透かしは閉じました';
+
+  @override
+  String get meetingInfo => '会議情報';
+
+  @override
+  String get meetingNickname => '名前';
+
+  @override
+  String get meetingHostChangeYourMeetingName => 'ホストが君の名前を変えた';
+
+  @override
+  String get meetingIsInCall => '現在電話対応中';
 
   @override
   String get screenShare => '画面共有';
 
   @override
-  String get hostStopShare => 'ホストが共有を終了しました';
+  String get screenShareStop => '共有の終了';
 
   @override
-  String get hostStopWhiteboard => 'ホストがホワイトボードの共有を終了しました';
+  String get screenShareOverLimit => '誰かが既に共有しているため、共有できません';
 
   @override
-  String get unScreenShare => '共有の終了';
+  String get screenShareNoPermission => '画面共有権限なし';
 
   @override
-  String get focusVideo => 'フォーカス ビデオとして設定';
-
-  @override
-  String get unFocusVideo => 'ビデオのフォーカスを外す';
-
-  @override
-  String get changeHost => 'ホストに引き渡す';
-
-  @override
-  String get changeHostTips => 'ホストの引継ぎを確認';
-
-  @override
-  String get remove => '除去';
-
-  @override
-  String get rename => '名称変更';
-
-  @override
-  String get makeCoHost => '共同ホストを設定';
-
-  @override
-  String get cancelCoHost => '共同ホストをキャンセル';
-
-  @override
-  String get renameTips => '新しいニックネームを入力してください';
-
-  @override
-  String get renameSuccess => '名前が変更成功';
-
-  @override
-  String get renameFail => '名前が変更失敗';
-
-  @override
-  String get removeTips => '削除の確認';
-
-  @override
-  String get yes => 'yes';
-
-  @override
-  String get no => 'no';
-
-  @override
-  String get cannotRemoveSelf => '自分自身を削除できません';
-
-  @override
-  String get muteAudioFail => 'ミュート失敗';
-
-  @override
-  String get unMuteAudioFail => 'ミュート解除失敗';
-
-  @override
-  String get muteVideoFail => 'ビデオの停止に失敗しました';
-
-  @override
-  String get unMuteVideoFail => 'ビデオオンが失敗';
-
-  @override
-  String get focusVideoFail => 'フォーカス ビデオの設定に失敗しました';
-
-  @override
-  String get unFocusVideoFail => 'ビデオのフォーカス解除に失敗しました';
-
-  @override
-  String get handsUpDownFail => 'メンバーの挙手を下ろすのに失敗しました';
-
-  @override
-  String get changeHostFail => 'ホストの引き渡すことが失敗しました';
-
-  @override
-  String get removeMemberFail => '削除に失敗しました';
-
-  @override
-  String get save => '保存';
-
-  @override
-  String get done => '完成';
-
-  @override
-  String get notify => 'お知らせ';
-
-  @override
-  String get hostKickedYou => 'ホストから削除されたか、別のデバイスに切り替えられたため、ミーティングを退出しました';
-
-  @override
-  String get sure => 'OK';
-
-  @override
-  String get openCamera => 'カメラを開く';
-
-  @override
-  String get openMicro => 'マイクを開く';
-
-  @override
-  String get micphoneNotWorksDialogTitle => 'マイクを使用できません';
-
-  @override
-  String get micphoneNotWorksDialogMessage =>
-      '話していることが検出されました。話す必要がある場合は、\n「ミュート解除」ボタンをクリックしてもう一度話してください';
-
-  @override
-  String get hostOpenCameraTips => 'ホストがカメラを再開しました。確認しますか? ';
-
-  @override
-  String get hostOpenMicroTips => 'ホストがマイクを再開しました。確認しますか? ';
-
-  @override
-  String get finish => '終了';
-
-  @override
-  String get leave => '退室';
-
-  @override
-  String get muteAllAudioTip => '参加者が自分自身をミュート解除できるようにする';
-
-  @override
-  String get muteAllVideoTip => '参加者がビデオを開くことを許可';
-
-  @override
-  String get muteAllAudioSuccess => 'すべてのオーディオをミュートしました';
-
-  @override
-  String get muteAllAudioFail => 'すべてのミュートに失敗しました';
-
-  @override
-  String get muteAllVideoSuccess => 'すべての動画を閉じました';
-
-  @override
-  String get muteAllVideoFail => 'すべてのビデオを閉じることができませんでした';
-
-  @override
-  String get unMuteAllAudioSuccess => 'すべてのミュート解除をリクエストしました';
-
-  @override
-  String get unMuteAllAudioFail => '全員ミュート解除 に失敗しました';
-
-  @override
-  String get unMuteAllVideoSuccess => '全員ビデオを開くように要求しました';
-
-  @override
-  String get unMuteAllVideoFail => 'すべてのビデオを開くことができませんでした';
-
-  @override
-  String get meetingHostMuteVideo => 'ビデオから停止されました';
-
-  @override
-  String get meetingHostMuteAudio => 'ミュートされました';
-
-  @override
-  String get meetingHostMuteAllAudio => '主催者が全員をミュートに設定しました';
-
-  @override
-  String get meetingHostMuteAllVideo => '主催者はすべてのビデオをオフに設定しました';
-
-  @override
-  String get muteAudioHandsUpOnTips => '主催者があなたのミュートを解除しました。あなたは自由に話すことができます';
-
-  @override
-  String get shareOverLimit => '誰かが既に共有しているため、共有できません';
-
-  @override
-  String get noShareScreenPermission => '画面共有権限なし';
-
-  @override
-  String get hasWhiteBoardShare => 'ホワイトボード共有場合は画面共有をサポートしていません';
-
-  @override
-  String get overRoleLimitCount => '割り当てられた役割が制限数を超えています';
-
-  @override
-  String get hasScreenShareShare => '画面共有中のホワイトボード共有はサポートされていません';
-
-  @override
-  String get screenShareTips => '画面に表示されているすべてのスクリーンショットの撮影を開始します。 ';
+  String get screenShareTips => '画面に表示されているすべてのスクリーンショットの撮影を開始します。';
 
   @override
   String get screenShareStopFail => '画面共有の停止に失敗しました';
+
+  @override
+  String get screenShareStartFail => '共有画面の開始に失敗しました';
+
+  @override
+  String screenShareLocalTips(Object userName) {
+    return '$userNameは画面を共有しています';
+  }
+
+  @override
+  String screenShareUser(Object userName) {
+    return '$userNameの共有画面';
+  }
+
+  @override
+  String get screenShareInteractionTip => '2 本の指を離すと画面が拡大されます';
 
   @override
   String get whiteBoardShareStopFail => 'ホワイトボードの共有を停止できませんでした';
@@ -301,34 +466,35 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get whiteBoardShareStartFail => 'ホワイトボード共有の開始に失敗しました';
 
   @override
-  String get screenShareStartFail => '共有画面の開始に失敗しました';
+  String get whiteboardShare => 'ホワイトボード';
 
   @override
-  String get screenShareLocalTips => '画面の共有';
-
-  @override
-  String get screenShareSuffix => '共有画面';
-
-  @override
-  String get screenShareInteractionTip => '2 本の指を離すと画面が拡大されます';
+  String get whiteBoardClose => 'ホワイトボードを終了';
 
   @override
   String get whiteBoardInteractionTip => 'ホワイトボード操作権限が付与されました';
 
   @override
-  String get undoWhiteBoardInteractionTip => 'ホワイトボード操作権限が取り消されました';
+  String get whiteBoardUndoInteractionTip => 'ホワイトボード操作権限が取り消されました';
 
   @override
-  String get speakingPrefix => 'Speaking: ';
+  String get whiteBoardNoAuthority =>
+      'ホワイトボード オーソリティはまだ有効化されていません。有効化するには営業担当者に連絡してください';
 
   @override
-  String get iKnow => '知っています';
+  String get whiteBoardPackUp => 'やめる';
 
   @override
-  String get me => 'わたし';
+  String get meetingHasScreenShareShare => '画面共有中のホワイトボード共有はサポートされていません';
 
   @override
-  String get live => '生放送';
+  String get meetingHasWhiteBoardShare => 'ホワイトボード共有場合は画面共有をサポートしていません';
+
+  @override
+  String get meetingStopSharing => '共有を停止する';
+
+  @override
+  String get meetingStopSharingConfirm => '進行中の共有を停止しますか？';
 
   @override
   String get virtualBackground => '背景';
@@ -350,201 +516,25 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get virtualBackgroundImageMax => 'カスタム背景画像が最大数を超えています';
 
   @override
-  String get closeWhiteBoard => 'ホワイトボードを終了';
+  String get virtualBackgroundSelectTip => '画像選択時に有効';
 
   @override
-  String get lockMeetingByHost => '会議はロックされています。新しい参加者は会議に参加できません';
+  String get live => '生放送';
 
   @override
-  String get lockMeetingByHostFail => '会議のロックに失敗しました';
+  String get liveMeeting => '会議の生放送';
 
   @override
-  String get unLockMeetingByHost => 'ミーティングのロックが解除されました。新しい参加者はミーティングに参加できます';
+  String get liveMeetingTitle => '生放送のテーマ';
 
   @override
-  String get unLockMeetingByHostFail => 'ミーティングのロック解除に失敗しました';
+  String get liveMeetingUrl => '生放送のURL';
 
   @override
-  String get lockMeeting => 'ミーティングをロック';
+  String get liveEnterLivePassword => 'ライブのパスワードを入力します';
 
   @override
-  String get inputMessageHint => '入力メッセージ...';
-
-  @override
-  String get cannotSendBlankLetter => '空のメッセージの送信はサポートされていません';
-
-  @override
-  String get chat => 'チャート';
-
-  @override
-  String get more => '更に多く';
-
-  @override
-  String get searchMember => '検索メンバー';
-
-  @override
-  String get enterChatRoomFail => 'チャット ルームへのエントリに失敗しました!';
-
-  @override
-  String get newMessage => '新しいメッセージ';
-
-  @override
-  String get unsupportedFileExtension => 'このタイプのファイルは現在サポートされていません';
-
-  @override
-  String get fileSizeExceedTheLimit => 'ファイル サイズは 200MB を超えることはできません';
-
-  @override
-  String get imageSizeExceedTheLimit => '画像サイズは 20MB を超えることはできません';
-
-  @override
-  String get imageMessageTip => '[画像]';
-
-  @override
-  String get fileMessageTip => '[ファイル]';
-
-  @override
-  String get saveToGallerySuccess => 'システム アルバムに保存しました';
-
-  @override
-  String get saveToGalleryFail => '操作に失敗しました';
-
-  @override
-  String get saveToGalleryFailNoPermission => '操作権限なし';
-
-  @override
-  String get openFileFail => 'ファイルを開くことができませんでした';
-
-  @override
-  String get openFileFailNoPermission => 'ファイルを開くことができませんでした: 権限がありません';
-
-  @override
-  String get openFileFailFileNotFound => 'ファイルを開くことができませんでした: ファイルが存在しません';
-
-  @override
-  String get openFileFailAppNotFound =>
-      'ファイルを開けませんでした: このファイルを開くアプリケーションが見つかりません';
-
-  @override
-  String get meetingPassword => '会議パスワード';
-
-  @override
-  String get inputMeetingPassword => 'ミーティングパスワードを入力してください';
-
-  @override
-  String get wrongPassword => 'パスワード間違い';
-
-  @override
-  String get headsetState => 'イヤホンを使用しています';
-
-  @override
-  String get copy => 'コピー';
-
-  @override
-  String get copySuccess => 'コピー成功';
-
-  @override
-  String get disableLiveAuthLevel => 'ライブ配信中は、ライブ配信の視聴権限を変更できません';
-
-  @override
-  String get host => 'ホスト';
-
-  @override
-  String get coHost => '共同ホスト';
-
-  @override
-  String get meetingInfoDesc => '会議は暗号化保護されています';
-
-  @override
-  String get networkUnavailableCloseFail => 'ネットワーク異常、ミーティングを終了できませんでした';
-
-  @override
-  String get muteAllHandsUpTips => '主催者が全員をミュートしました。手を挙げてスピーチを申し込むことができます';
-
-  @override
-  String get muteAllVideoHandsUpTips =>
-      'ホストがすべてのビデオをオフにしました。ビデオを開くために手を挙げて適用できます';
-
-  @override
-  String get alreadyHandsUpTips => '手を上げました。ホストが対応するまでお待ちください';
-
-  @override
-  String get handsUpApply => '挙手のお願い';
-
-  @override
-  String get cancelHandsUp => '挙手キャンセル';
-
-  @override
-  String get cancelHandsUpTips => 'ハンドアップをキャンセルしてよろしいですか? ';
-
-  @override
-  String get handsUpDown => 'ハンズダウン';
-
-  @override
-  String get whiteBoardInteract => 'ホワイトボード操作権限が付与されました';
-
-  @override
-  String get whiteBoardInteractFail => 'ホワイトボード操作権限が付与のは失敗しました';
-
-  @override
-  String get undoWhiteBoardInteract => 'ホワイトボード操作権限が撤回しました';
-
-  @override
-  String get undoWhiteBoardInteractFail => 'ホワイトボード操作の取り消しに失敗しました';
-
-  @override
-  String get inHandsUp => '挙手';
-
-  @override
-  String get handsUpFail => '挙手できませんでした';
-
-  @override
-  String get handsUpSuccess => 'ハンドアップに成功しました。ホストの処理を待っています';
-
-  @override
-  String get cancelHandsUpFail => '挙手失敗を取り消す';
-
-  @override
-  String get hostRejectAudioHandsUp => 'ホストがあなたの手を下ろしました';
-
-  @override
-  String get sipTip => 'SIP';
-
-  @override
-  String get meetingInviteUrl => '参加リンク';
-
-  @override
-  String get meetingInvitePageTitle => '参加者を追加';
-
-  @override
-  String get sipNumber => 'SIP 電話';
-
-  @override
-  String get sipHost => 'SIP アドレス';
-
-  @override
-  String get inviteListTitle => '招待リスト';
-
-  @override
-  String get invitationSendSuccess => '招待を発起した';
-
-  @override
-  String get invitationSendFail => '招待に失敗しました';
-
-  @override
-  String get meetingLive => 'ミーティングライブ';
-
-  @override
-  String get meetingLiveTitle => 'ミーティング ライブ タイトル';
-
-  @override
-  String get meetingLiveUrl => 'ライブ アドレス';
-
-  @override
-  String get pleaseInputLivePassword => 'ライブ パスワードを入力してください';
-
-  @override
-  String get pleaseInputLivePasswordHint => '6桁のパスワードを入力してください';
+  String get liveEnterLiveSixDigitPassword => '6桁のパスワードを入力してください';
 
   @override
   String get liveInteraction => 'ライブ インタラクション';
@@ -601,10 +591,9 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get liveStartSuccess => 'ライブが正常に開始されました';
 
   @override
-  String get livePickerCount => '選択した';
-
-  @override
-  String get livePickerCountPrefix => '人';
+  String livePickerCount(Object length) {
+    return '選択$length人';
+  }
 
   @override
   String get liveUpdateFail => 'ライブ更新に失敗しました。後でもう一度試してください';
@@ -622,192 +611,472 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get livePassword => 'ライブ パスワード';
 
   @override
-  String get editWhiteBoard => '編定';
+  String get liveDisableAuthLevel => 'ライブ配信中は、ライブ配信の視聴権限を変更できません';
 
   @override
-  String get packUpWhiteBoard => 'PackUp';
+  String get liveStreaming => '生放送';
 
   @override
-  String get noAuthorityWhiteBoard =>
-      'ホワイトボード オーソリティはまだ有効化されていません。有効化するには営業担当者に連絡してください';
+  String get participants => '参加者';
 
   @override
-  String get ok => 'わかりました';
+  String get participantsManager => '参加者の管理';
 
   @override
-  String get removedByHost => '主催者によってミーティングから削除されました';
+  String get participantAssignedHost => 'ホストになりました';
 
   @override
-  String get closeByHost => '会議は終了しました';
+  String get participantAssignedCoHost => '共同ホストに設定されました';
 
   @override
-  String get loginOnOtherDevice => '別のデバイスに切り替えました';
+  String get participantUnassignedCoHost => '共同主催者としてキャンセルされました';
 
   @override
-  String get authInfoExpired => 'ネットワークエラーです。ネットワーク接続を確認してから、再度ミーティングに参加してください';
+  String get participantAssignedActiveSpeaker => 'フォーカス映像に設定されていますね';
 
   @override
-  String get syncDataError => 'ルーム情報の合わせる失敗しました';
+  String get participantUnassignedActiveSpeaker => 'フォーカス映像から削除されました';
 
   @override
-  String get leaveMeetingBySelf => 'ミーティングを退出する';
+  String get participantMuteAudioAll => '全員ミュート';
 
   @override
-  String get meetingClosed => '会議は終了された';
+  String get participantMuteAudioAllDialogTips => '全員と新しいメンバーがミュートされます';
 
   @override
-  String get connectFail => '接続に失敗しました';
+  String get participantMuteVideoAllDialogTips => '全員と新しいメンバーはカメラをオフにします';
 
   @override
-  String get joinTimeout => '会議への参加がタイムアウトしました。もう一度やり直してください';
+  String get participantUnmuteAll => '全員ミュート解除';
 
   @override
-  String get endOfLife => '会議時間が上限に達したため、会議は終了しました';
+  String get participantMute => 'ミュート';
 
   @override
-  String get endMeetingTip => '会議が終了するまであと 1 つだけです';
+  String get participantUnmute => 'ミュート解除';
 
   @override
-  String get min => '分';
+  String get participantTurnOffVideos => '全員ビデオ閉じ';
 
   @override
-  String get reuseIMNotSupportAnonymousJoinMeeting =>
-      'IM の再利用は匿名で会議への参加をサポートしていません';
+  String get participantTurnOnVideos => '全員ビデオを開く';
 
   @override
-  String get inviteDialogTitle => '会議への招待';
+  String get participantStopVideo => 'カメラ';
 
   @override
-  String get inviteContentCopySuccess => '会議出席依頼のコンテンツがコピーされました';
+  String get participantStartVideo => 'カメラ';
 
   @override
-  String get inviteTitle => '会議に招待します\n\n';
+  String get participantTurnOffAudioAndVideo => 'オーディオとビデオをオフにする';
 
   @override
-  String get meetingSubject => '会議の件名:';
+  String get participantTurnOnAudioAndVideo => 'オーディオとビデオを開く';
 
   @override
-  String get meetingTime => '会議時間:';
+  String get participantHostStoppedShare => 'ホストが共有を終了しました';
 
   @override
-  String get meetingNum => 'ミーティング ID:';
+  String get participantHostStopWhiteboard => 'ホストがホワイトボードの共有を終了しました';
 
   @override
-  String get shortMeetingNum => '会議の短縮番号:';
+  String get participantAssignActiveSpeaker => 'フォーカス ビデオとして設定';
 
   @override
-  String get invitationUrl => '参加リンク:';
+  String get participantUnassignActiveSpeaker => 'ビデオのフォーカスを外す';
 
   @override
-  String get meetingPwd => '会議パスワード:';
+  String get participantTransferHost => 'ホストに引き渡す';
 
   @override
-  String get copyInvite => '招待をコピー';
+  String participantTransferHostConfirm(Object userName) {
+    return '司会者の権限を$userNameに移譲しますか？';
+  }
 
   @override
-  String get internalSpecial => '内部のみ';
+  String get participantRemove => '除去';
 
   @override
-  String get notWork => '使用できません';
+  String get participantRename => '名称変更';
 
   @override
-  String get needPermissionTipsFirst => '許可してください';
+  String get participantRenameDialogTitle => '名称変更';
 
   @override
-  String get needPermissionTipsTail => 'あなたにアクセス';
+  String get participantAssignCoHost => '共同ホストを設定';
 
   @override
-  String get funcNeed => '当功能は必要です';
+  String get participantUnassignCoHost => '共同ホストをキャンセル';
 
   @override
-  String get toSetUp => '設置に';
+  String get participantRenameTips => '新しいニックネームを入力してください';
 
   @override
-  String get permissionTips => '権限';
+  String get participantRenameSuccess => '名前が変更成功';
 
   @override
-  String get cameraPermission => 'カメラ';
+  String get participantRenameFail => '名前が変更失敗';
 
   @override
-  String get microphonePermission => 'マイク';
+  String get participantRemoveConfirm => '削除の確認';
 
   @override
-  String get bluetoothPermission => 'ブルートゥース';
+  String get participantCannotRemoveSelf => '自分自身を削除できません';
 
   @override
-  String get phoneStatePermission => '電話';
+  String get participantMuteAudioFail => 'ミュート失敗';
 
   @override
-  String get noPermission => 'パーミッションは許可されていません';
+  String get participantUnMuteAudioFail => 'ミュート解除失敗';
 
   @override
-  String get permissionRationalePrefix => '音声およびビデオ会議は申し込み必要があります';
+  String get participantMuteVideoFail => 'ビデオの停止に失敗しました';
 
   @override
-  String get permissionRationaleSuffixAudio => '権限、会議での音声通信に使用';
+  String get participantUnMuteVideoFail => 'ビデオオンが失敗';
 
   @override
-  String get permissionRationaleSuffixVideo => '権限、会議でのビデオ通信に使用';
+  String get participantFailedToAssignActiveSpeaker => 'フォーカス ビデオの設定に失敗しました';
 
   @override
-  String get menuTitleParticipants => '参加者';
+  String get participantFailedToUnassignActiveSpeaker => 'ビデオのフォーカス解除に失敗しました';
 
   @override
-  String get menuTitleManagerParticipants => '参加者の管理';
+  String get participantFailedToLowerHand => 'メンバーの挙手を下ろすのに失敗しました';
 
   @override
-  String get menuTitleInvite => '招待';
+  String get participantFailedToTransferHost => 'ホストの引き渡すことが失敗しました';
 
   @override
-  String get menuTitleChatroom => 'チャット';
+  String get participantFailedToRemove => '削除に失敗しました';
 
   @override
-  String get menuTitleShareWhiteboard => 'ホワイトボード';
+  String get participantOpenCamera => 'カメラを開く';
 
   @override
-  String get menuTitleCloseWhiteboard => 'ストップ';
+  String get participantOpenMicrophone => 'マイクを開く';
 
   @override
-  String get notificationContentTitle => 'ビデオ会議';
+  String get participantHostOpenCameraTips => 'ホストがカメラを再開しました。確認しますか?';
 
   @override
-  String get notificationContentText => 'ビデオ会議が進行中';
+  String get participantHostOpenMicroTips => 'ホストがマイクを再開しました。確認しますか?';
 
   @override
-  String get notificationContentTicker => 'ビデオ会議';
+  String get participantMuteAllAudioTip => '参加者が自分自身をミュート解除できるようにする';
 
   @override
-  String get notificationChannelId => 'ne_meeting_channel';
+  String get participantMuteAllVideoTip => '参加者がビデオを開くことを許可';
 
   @override
-  String get notificationChannelName => 'ビデオ会議通知';
+  String get participantMuteAllAudioSuccess => 'すべてのオーディオをミュートしました';
 
   @override
-  String get notificationChannelDesc => 'ビデオ会議通知';
+  String get participantMuteAllAudioFail => 'すべてのミュートに失敗しました';
 
   @override
-  String get delete => '消去';
+  String get participantMuteAllVideoSuccess => 'すべての動画を閉じました';
 
   @override
-  String get nothing => 'なし';
+  String get participantMuteAllVideoFail => 'すべてのビデオを閉じることができませんでした';
 
   @override
-  String get virtualBackgroundSelectTip => '画像選択時に有効';
+  String get participantUnMuteAllAudioSuccess => 'すべてのミュート解除をリクエストしました';
 
   @override
-  String get onUserJoinMeeting => 'さんが参加しました';
+  String get participantUnMuteAllAudioFail => '全員ミュート解除 に失敗しました';
 
   @override
-  String get onUserLeaveMeeting => ' 退室';
+  String get participantUnMuteAllVideoSuccess => '全員ビデオを開くように要求しました';
 
   @override
-  String get userHasBeenAssignCoHostRole => '共同ホストとして設定されています';
+  String get participantUnMuteAllVideoFail => 'すべてのビデオを開くことができませんでした';
 
   @override
-  String get userHasBeenRevokeCoHostRole => '共同主催者としての活動を停止されました';
+  String get participantHostMuteVideo => 'ビデオから停止されました';
 
   @override
-  String get isInCall => '現在電話対応中';
+  String get participantHostMuteAudio => 'ミュートされました';
+
+  @override
+  String get participantHostMuteAllAudio => '主催者が全員をミュートに設定しました';
+
+  @override
+  String get participantHostMuteAllVideo => '主催者はすべてのビデオをオフに設定しました';
+
+  @override
+  String get participantMuteAudioHandsUpOnTips =>
+      '主催者があなたのミュートを解除しました。あなたは自由に話すことができます';
+
+  @override
+  String get participantOverRoleLimitCount => '割り当てられた役割が制限数を超えています';
+
+  @override
+  String get participantMe => 'わたし';
+
+  @override
+  String get participantSearchMember => '検索メンバー';
+
+  @override
+  String get participantHost => 'ホスト';
+
+  @override
+  String get participantCoHost => '共同ホスト';
+
+  @override
+  String get participantMuteAllHandsUpTips =>
+      '主催者が全員をミュートしました。手を挙げてスピーチを申し込むことができます';
+
+  @override
+  String get participantTurnOffAllVideoHandsUpTips =>
+      'ホストがすべてのビデオをオフにしました。ビデオを開くために手を挙げて適用できます';
+
+  @override
+  String get participantWhiteBoardInteract => 'ホワイトボード操作権限が付与されました';
+
+  @override
+  String get participantWhiteBoardInteractFail => 'ホワイトボード操作権限が付与のは失敗しました';
+
+  @override
+  String get participantUndoWhiteBoardInteract => 'ホワイトボード操作権限が撤回しました';
+
+  @override
+  String get participantUndoWhiteBoardInteractFail => 'ホワイトボード操作の取り消しに失敗しました';
+
+  @override
+  String get participantUserHasBeenAssignCoHostRole => '共同ホストとして設定されています';
+
+  @override
+  String get participantUserHasBeenRevokeCoHostRole => '共同主催者としての活動を停止されました';
+
+  @override
+  String get participantInMeeting => '会議中';
+
+  @override
+  String get participantNotJoined => '未入会';
+
+  @override
+  String get participantAttendees => '参加者';
+
+  @override
+  String get participantAdmit => '許可します';
+
+  @override
+  String get participantWaitingTimePrefix => '待ちました';
+
+  @override
+  String get participantPutInWaitingRoom => '待合室に移動';
+
+  @override
+  String get participantExpelWaitingMemberDialogTitle => '待合室メンバーの除去';
+
+  @override
+  String get participantDisallowMemberRejoinMeeting =>
+      'ユーザーが会議に再参加することは許可されていません';
+
+  @override
+  String get cloudRecordingEnabledTitle => 'クラウド録画を有効にするかどうか';
+
+  @override
+  String get cloudRecordingEnabledMessage =>
+      'オンにすると、会議中の音声ビデオと共有画面のコンテンツをクラウドに録画し、参加メンバー全員に通知します';
+
+  @override
+  String get cloudRecordingEnabledMessageWithoutNotice =>
+      '録画が開始されると、会議の音声、ビデオ、共有画面がクラウドに記録されます';
+
+  @override
+  String get cloudRecordingTitle => '会議は録画中です';
+
+  @override
+  String get cloudRecordingMessage =>
+      '司会者は会議クラウドの録画を開始し、会議の作成者はクラウドの録画ファイルを見ることができ、会議が終わったら会議の作成者に連絡して閲覧リンクを得ることができます。';
+
+  @override
+  String get cloudRecordingAgree => '会議に残っていれば、録画に同意することを示します';
+
+  @override
+  String get cloudRecordingWhetherEndedTitle => 'クラウド記録を終了するかどうか';
+
+  @override
+  String get cloudRecordingEndedMessage =>
+      'クラウド録画ファイルを終了するかどうかは、会議の終了後に履歴会議-会議の詳細に同期されます。クラウド録画ファイルを終了するかどうかは、会議の終了後に履歴会議-会議の詳細に同期されます。';
+
+  @override
+  String get cloudRecordingEndedTitle => 'クラウドレコーディングが終了しました';
+
+  @override
+  String get cloudRecordingEndedAndGetUrl =>
+      '会議終了後に会議作成者に連絡して閲覧リンクを取得することができます';
+
+  @override
+  String get cloudRecordingStart => 'クラウドレコーディング';
+
+  @override
+  String get cloudRecordingStop => '記録の停止';
+
+  @override
+  String get cloudRecording => '録画中';
+
+  @override
+  String get cloudRecordingStartFail => 'クラウド録画に失敗しました';
+
+  @override
+  String get cloudRecordingStopFail => 'クラウド録画の停止に失敗しました';
+
+  @override
+  String get cloudRecordingStarting => '録画を開始する...';
+
+  @override
+  String get chat => 'チャート';
+
+  @override
+  String get chatInputMessageHint => '入力メッセージ...';
+
+  @override
+  String get chatCannotSendBlankLetter => '空のメッセージの送信はサポートされていません';
+
+  @override
+  String get chatJoinFail => 'チャット ルームへのエントリに失敗しました!';
+
+  @override
+  String get chatNewMessage => '新しいメッセージ';
+
+  @override
+  String get chatUnsupportedFileExtension => 'このタイプのファイルは現在サポートされていません';
+
+  @override
+  String get chatFileSizeExceedTheLimit => 'ファイル サイズは 200MB を超えることはできません';
+
+  @override
+  String get chatImageSizeExceedTheLimit => '画像サイズは 20MB を超えることはできません';
+
+  @override
+  String get chatImageMessageTip => '[画像]';
+
+  @override
+  String get chatFileMessageTip => '[ファイル]';
+
+  @override
+  String get chatSaveToGallerySuccess => 'システム アルバムに保存しました';
+
+  @override
+  String get chatOperationFailNoPermission => '操作権限なし';
+
+  @override
+  String get chatOpenFileFail => 'ファイルを開くことができませんでした';
+
+  @override
+  String get chatOpenFileFailNoPermission => 'ファイルを開くことができませんでした: 権限がありません';
+
+  @override
+  String get chatOpenFileFailFileNotFound => 'ファイルを開くことができませんでした: ファイルが存在しません';
+
+  @override
+  String get chatOpenFileFailAppNotFound =>
+      'ファイルを開けませんでした: このファイルを開くアプリケーションが見つかりません';
+
+  @override
+  String get chatRecall => '撤回';
+
+  @override
+  String get chatAboveIsHistoryMessage => '以上が履歴チャットメッセージです';
+
+  @override
+  String get chatYou => 'あなた';
+
+  @override
+  String get chatRecallAMessage => 'はメッセージを撤回した';
+
+  @override
+  String get chatMessageRecalled => 'メッセージは撤回されました';
+
+  @override
+  String get chatMessage => 'メッセージです';
+
+  @override
+  String get chatSendTo => '発送します';
+
+  @override
+  String get chatAllMembersInMeeting => '会議の全員です';
+
+  @override
+  String get chatAllMembersInWaitingRoom => '待合室の全員です';
+
+  @override
+  String get chatHistory => 'チャット履歴';
+
+  @override
+  String get chatMessageSendToWaitingRoom => '待合室に送る';
+
+  @override
+  String get chatNoChatHistory => 'チャット記録はありません';
+
+  @override
+  String get waitingRoomJoinMeeting => 'ミーティングに参加';
+
+  @override
+  String get waitingRoom => '待合室';
+
+  @override
+  String get waitingRoomJoinMeetingOption => '入会オプションです';
+
+  @override
+  String get waitingRoomWaitHostToInviteJoinMeeting =>
+      'お待ちください,司会者が会議にご案内しますので';
+
+  @override
+  String get waitingRoomWaitMeetingToStart => 'ちょっと待ってくださいね。まもなく会議が始まります';
+
+  @override
+  String get waitingRoomTurnOnMicrophone => 'マイクをオンにします';
+
+  @override
+  String get waitingRoomTurnOnVideo => 'カメラを起動します';
+
+  @override
+  String get waitingRoomEnabledOnEntry => '待合室を有効にしています';
+
+  @override
+  String get waitingRoomDisabledOnEntry => '待合室は閉鎖しました';
+
+  @override
+  String get waitingRoomDisableDialogTitle => '待合室を閉める';
+
+  @override
+  String get waitingRoomDisableDialogMessage => '待合室が閉鎖された後、新入会員が直接会議に参加します';
+
+  @override
+  String get waitingRoomDisableDialogAdmitAll => '待合室のすべてのメンバーが会議に入ることを許可します';
+
+  @override
+  String get waitingRoomCloseRightNow => '閉じる';
+
+  @override
+  String waitingRoomCount(Object count) {
+    return '待合室に$count名お待ちしております';
+  }
+
+  @override
+  String get movedToWaitingRoom => 'ホストがあなたを待合室に移動させました';
+
+  @override
+  String get deviceSpeaker => 'スピーカー';
+
+  @override
+  String get deviceReceiver => 'レシーバー';
+
+  @override
+  String get deviceBluetooth => 'Bluetooth';
+
+  @override
+  String get deviceHeadphones => 'ヘッドホン';
+
+  @override
+  String get deviceOutput => 'オーディオ機器';
+
+  @override
+  String get deviceHeadsetState => 'イヤホンを使用しています';
 
   @override
   String get networkConnectionGood => '良好なインターネット回線';
@@ -819,46 +1088,35 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get networkConnectionPoor => 'インターネット接続環境の悪さ';
 
   @override
-  String get localLatency => '遅延';
+  String get nan => 'インターネット接続不可';
 
   @override
-  String get packetLossRate => 'パケット損失率';
+  String get networkLocalLatency => '遅延';
 
   @override
-  String get startAudioShare => '共有音声をオンにする';
+  String get networkPacketLossRate => 'パケット損失率';
 
   @override
-  String get stopAudioShare => '音声の共有をやめる';
-
-  @override
-  String get switchFcusView => '切り替える フォーカス表示';
-
-  @override
-  String get switchGalleryView => '切り替える ギャラリービュー';
-
-  @override
-  String get noSupportSwitch => 'iPadはモード切り替えに対応していません';
-
-  @override
-  String get funcNotAvailableWhenInCallState => '通話中は本機能を使用できません';
-
-  @override
-  String get networkAbnormality => 'ネットワーク異常';
+  String get networkReconnectionSuccessful => 'ネットワーク再接続成功。';
 
   @override
   String get networkAbnormalityPleaseCheckYourNetwork =>
       'ネットワーク異常、あなたのネットワークを確認してください。';
 
   @override
-  String get networkReconnectionSuccessful => 'ネットワーク再接続成功。';
-
-  @override
-  String get disconnectedTryingToReconnect => 'ネットワークが切断されました。再接続を試みています...';
+  String get networkAbnormality => 'ネットワーク異常。';
 
   @override
   String get networkDisconnectedPleaseCheckYourNetworkStatusOrTryToRejoin =>
       'ネットワークが切断されました。ネットワーク状況を確認するか、再度参加してください。';
 
   @override
-  String get rejoining => 'さいせん';
+  String get networkNotStable => '現在のネットワーク状態は良くありません';
+
+  @override
+  String get networkUnavailableCloseFail => 'ネットワーク異常、ミーティングを終了できませんでした';
+
+  @override
+  String get networkDisconnectedTryingToReconnect =>
+      'ネットワークが切断されました。再接続を試みています...';
 }

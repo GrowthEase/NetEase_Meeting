@@ -70,10 +70,11 @@ class _MeetingInvitePageState extends State<MeetingInvitePage> {
             ),
             SizedBox(height: 25),
             buildInput(
-                NEMeetingUIKitLocalizations.of(context)!.sipNumber, sipNumber),
+                NEMeetingUIKitLocalizations.of(context)!.meetingSipNumber,
+                sipNumber),
             SizedBox(height: 20),
-            buildInput(
-                NEMeetingUIKitLocalizations.of(context)!.sipHost, sipHost),
+            buildInput(NEMeetingUIKitLocalizations.of(context)!.meetingSipHost,
+                sipHost),
             buildInviteButton(),
             Expanded(
               child: inviteList(),
@@ -110,7 +111,7 @@ class _MeetingInvitePageState extends State<MeetingInvitePage> {
       child: Theme(
         data: ThemeData(hintColor: _UIColors.greyDCDFE5),
         child: TextField(
-          key: hint == NEMeetingUIKitLocalizations.of(context)!.sipNumber
+          key: hint == NEMeetingUIKitLocalizations.of(context)!.meetingSipNumber
               ? MeetingUIValueKeys.sipNumber
               : MeetingUIValueKeys.sipHost,
           autofocus: true,
@@ -172,7 +173,7 @@ class _MeetingInvitePageState extends State<MeetingInvitePage> {
                 borderRadius: BorderRadius.all(Radius.circular(25))))),
         onPressed: inviteEnable ? invite : null,
         child: Text(
-          NEMeetingUIKitLocalizations.of(context)!.add,
+          NEMeetingUIKitLocalizations.of(context)!.globalAdd,
           style: TextStyle(color: Colors.white, fontSize: 16),
           textAlign: TextAlign.center,
         ),
@@ -194,7 +195,7 @@ class _MeetingInvitePageState extends State<MeetingInvitePage> {
             height: 50,
             alignment: Alignment.centerLeft,
             child: Text(
-              NEMeetingUIKitLocalizations.of(context)!.inviteListTitle,
+              NEMeetingUIKitLocalizations.of(context)!.meetingInviteListTitle,
               style: TextStyle(
                 color: _UIColors.color_999999,
                 fontSize: 16,
@@ -258,9 +259,11 @@ class _MeetingInvitePageState extends State<MeetingInvitePage> {
       ToastUtils.showToast(
           context,
           result.isSuccess()
-              ? NEMeetingUIKitLocalizations.of(context)!.invitationSendSuccess
+              ? NEMeetingUIKitLocalizations.of(context)!
+                  .meetingInvitationSendSuccess
               : (result.msg ??
-                  NEMeetingUIKitLocalizations.of(context)!.invitationSendFail));
+                  NEMeetingUIKitLocalizations.of(context)!
+                      .meetingInvitationSendFail));
     });
   }
 }

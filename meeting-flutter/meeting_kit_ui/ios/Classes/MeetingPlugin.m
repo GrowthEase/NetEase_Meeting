@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #import "MeetingPlugin.h"
+#import <AVFoundation/AVFoundation.h>
 #import "FLTImageUtil.h"
 #import "MeetingUILog.h"
 #import "NEPIPServer.h"
@@ -16,6 +17,8 @@
 @property(nonatomic, strong) TelephoneServer *phoneServer;
 @property(nonatomic, strong) LifecycleServer *lifecycleServer;
 @property(nonatomic, strong) NEPIPServer *pipServer;
+@property(nonatomic, strong) NEMeetingAudioManager *audioManager;
+@property(nonatomic, strong) NEVolumeListener *volumeListener;
 @end
 
 @implementation MeetingPlugin
@@ -37,6 +40,18 @@
   }
   return _pipServer;
 }
+- (NEMeetingAudioManager *)audioManager {
+  if (!_audioManager) {
+    _audioManager = [NEMeetingAudioManager new];
+  }
+  return _audioManager;
+}
+- (NEVolumeListener *)volumeListener {
+  if (!_volumeListener) {
+    _volumeListener = [NEVolumeListener new];
+  }
+  return _volumeListener;
+}
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
   FlutterMethodChannel *channel =
       [FlutterMethodChannel methodChannelWithName:@"meeting_plugin"
@@ -57,6 +72,11 @@
         [FlutterEventChannel eventChannelWithName:@"meeting_plugin.app_lifecycle_service.states"
                                   binaryMessenger:messenger];
     [lifecycleChannel setStreamHandler:self.lifecycleServer];
+
+    FlutterEventChannel *volumeChannel =
+        [FlutterEventChannel eventChannelWithName:@"meeting_plugin.volume_listener_event.states"
+                                  binaryMessenger:messenger];
+    [volumeChannel setStreamHandler:self.volumeListener];
   }
   return self;
 }
@@ -111,13 +131,29 @@
   } else if ([modelName isEqualToString:@"NEImageGallerySaver"]) {
     ImageGallerySaver *saver = [[ImageGallerySaver alloc] init];
     [saver handle:call result:result];
-  } else if ([modelName isEqualToString:@"NEIPadCheckDetector"]) {
+  } else if ([modelName isEqualToString:@"NEPadCheckDetector"]) {
     CheckIpadServer *iPadSaver = [CheckIpadServer new];
     [iPadSaver handle:call result:result];
   } else if ([modelName isEqualToString:@"NEFloatingService"]) {
     if (@available(iOS 15.0, *)) {
       [self.pipServer pipAction:call result:result];
     } else {
+      result(nil);
+    }
+  } else if ([modelName isEqualToString:@"NEAudioService"]) {
+    if ([call.method isEqualToString:@"enumAudioDevices"]) {
+      NSArray *array = [self.audioManager enumAudioDevices];
+      NSMutableArray *ret = [NSMutableArray arrayWithCapacity:array.count];
+      for (AVAudioSessionPortDescription *d in array) {
+        [ret addObject:[NSNumber numberWithInt:[self getOutputRoutingTypeFromPort:d.portType]]];
+      }
+      result(ret);
+    } else if ([call.method isEqualToString:@"getSelectedAudioDevice"]) {
+      int device =
+          [self getOutputRoutingTypeFromPort:[self.audioManager getSelectedAudioDevice].portType];
+      result([NSNumber numberWithInt:device]);
+    } else if ([call.method isEqualToString:@"showAudioDevicePicker"]) {
+      [self.audioManager showAudioDevicePicker];
       result(nil);
     }
   } else {
@@ -139,6 +175,41 @@
     return nil;
   }
   return obj;
+}
+
+- (int)getOutputRoutingTypeFromPort:(AVAudioSessionPort)port {
+  //  /// 扬声器
+  //  kSpeakerPhone = 0,
+  //  /// 有线耳机
+  //  kWiredHeadset = 1,
+  //  /// 听筒
+  //  kEarpiece = 2,
+  //  /// 蓝牙耳机
+  //  kBluetoothHeadset = 3,
+  int routing = 0;
+  if (!port) {
+    return routing;
+  }
+
+  if ([port isEqualToString:AVAudioSessionPortBuiltInSpeaker]) {
+    routing = 0;
+  } else if ([port isEqualToString:AVAudioSessionPortBuiltInReceiver]) {
+    routing = 2;
+  } else if ([port isEqualToString:AVAudioSessionPortHeadphones]) {
+    routing = 1;
+  } else if ([port isEqualToString:AVAudioSessionPortBluetoothA2DP] ||
+             [port isEqualToString:AVAudioSessionPortBluetoothLE] ||
+             [port isEqualToString:AVAudioSessionPortBluetoothHFP]) {
+    routing = 3;
+  }
+  // 不需要对外暴露
+  //  else if ([port isEqualToString:AVAudioSessionPortUSBAudio]) {
+  //    routing = kRtcAudioOutputRoutingUSBAudio;
+  //  }else if ([port isEqualToString:AVAudioSessionPortAirPlay]) {
+  //    routing = kRtcAudioOutputRoutingAirPlay;
+  //  }
+
+  return routing;
 }
 
 @end

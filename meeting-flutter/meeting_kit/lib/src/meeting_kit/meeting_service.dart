@@ -79,6 +79,12 @@ class NEStartMeetingOptions {
   final bool noSip;
 
   ///
+  /// 配置会议是否默认开启等候室。如果初始设置为不开启，管理员也可以后续在会中手动开启/关闭等候室。
+  /// 开启等候室后，参会者需要管理员同意后才能加入会议。
+  ///
+  final bool enableWaitingRoom;
+
+  ///
   /// 配置在加入Rtc频道成功后是否打开本地音频设备，默认打开。
   /// 该选项若配置为打开，则SDK会提前初始化音频设备，但不会对外发送本地音频流。
   ///
@@ -88,6 +94,7 @@ class NEStartMeetingOptions {
     this.noChat = false,
     this.noCloudRecord = true,
     this.noSip = false,
+    this.enableWaitingRoom = false,
     this.enableMyAudioDeviceOnJoinRtc = true,
   });
 }
@@ -182,6 +189,20 @@ abstract class NEMeetingService {
     NEJoinMeetingParams param,
     NEJoinMeetingOptions opts,
   );
+
+  ///  获取云录制文件信息，房间结束后，服务端转码生成
+  ///
+  ///   * [roomArchiveId] 房间归档id
+  Future<NEResult<List<NERoomRecord>>> getRoomCloudRecordList(
+      String roomArchiveId);
+
+  Future<NEResult<List<NERoomChatMessage>>> fetchChatroomHistoryMessages(
+      String roomArchiveId, NEChatroomHistoryMessageSearchOption option);
+
+  ///  获取消息附件
+  ///
+  ///   * [messageUuid] 消息id
+  Future<NEResult<void>> downloadAttachment(String messageUuid);
 }
 
 /// 会议信息
@@ -225,6 +246,9 @@ class NEMeetingInfo {
   /// 当前会议是否被锁定
   final bool isLocked;
 
+  /// 当前是否处于等候室
+  final bool isInWaitingRoom;
+
   /// 当前主持人id
   final String hostUserId;
 
@@ -258,6 +282,7 @@ class NEMeetingInfo {
     required this.duration,
     required this.isHost,
     required this.isLocked,
+    this.isInWaitingRoom = false,
     required this.hostUserId,
     required this.userList,
     this.extraData,
@@ -271,6 +296,7 @@ class NEMeetingInfo {
         'type': type,
         'isLocked': isLocked,
         'isHost': isHost,
+        'isInWaitingRoom': isInWaitingRoom,
         if (password != null) 'password': password,
         'subject': subject,
         'startTime': startTime,

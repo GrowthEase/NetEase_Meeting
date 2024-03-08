@@ -6,6 +6,7 @@
 #import <AVKit/AVKit.h>
 @import NERoomKit;
 #import "MeetingUILog.h"
+#import "NEPIPMaskDisplayView.h"
 #import "NEPIPRenderer.h"
 #import "NESampleBufferDisplayView.h"
 #import "NEScreenShareDisplayView.h"
@@ -46,11 +47,14 @@
 static NSString *kEndPIPNotificationName = @"com.netease.yunxin.kit.pip.notification.ended";
 static NSString *kPIPServerClassName = @"NEPIPServer";
 API_AVAILABLE(ios(15.0))
-@interface NEPIPServer () <AVPictureInPictureControllerDelegate, NERoomListener>
+@interface NEPIPServer () <AVPictureInPictureControllerDelegate,
+                           NERoomListener,
+                           NEWaitingRoomListener>
 @property(nonatomic, strong) AVPictureInPictureVideoCallViewController *videoCallViewController;
 @property(nonatomic, strong) AVPictureInPictureController *pipController;
 @property(nonatomic, strong) NESampleBufferDisplayView *displayView;
 @property(nonatomic, strong) NEScreenShareDisplayView *shareDisplayView;
+@property(nonatomic, strong) NEPIPMaskDisplayView *maskView;
 @property(nonatomic, strong) NEPIPRenderer *shareRenderer;
 @property(nonatomic, copy) NSString *currentUuid;
 @property(nonatomic, copy) NSString *shareUuid;
@@ -58,6 +62,13 @@ API_AVAILABLE(ios(15.0))
 @property(nonatomic, strong) NSMutableDictionary<NSString *, NEPIPRenderer *> *renderers;
 // 停止后，2s恢复
 @property(nonatomic, assign) BOOL isStopPIP;
+
+// 等候室提示语
+@property(nonatomic, copy) NSString *waitingTips;
+// 会议中断提示语
+@property(nonatomic, copy) NSString *interruptedTips;
+// 是否已经退出房间
+@property(nonatomic, assign) BOOL roomEnded;
 @end
 
 @implementation NEPIPServer
@@ -76,6 +87,8 @@ API_AVAILABLE(ios(15.0))
   } else if ([method isEqualToString:@"memberAudioChange"]) {
     [self memberAudioChange:call result:result];
   } else if ([method isEqualToString:@"pipAvailable"]) {
+    [self isPIPActive:result];
+  } else if ([method isEqualToString:@"inPipAlready"]) {
     [self isPIPActive:result];
   } else if ([method isEqualToString:@"memberInCall"]) {
     [self memberInCall:call result:result];
@@ -108,6 +121,9 @@ API_AVAILABLE(ios(15.0))
     return;
   }
   self.roomContext = context;
+  [self.roomContext.waitingRoomController addListenerWithListener:self];
+  [self.roomContext addRoomListenerWithListener:self];
+  self.roomEnded = NO;
 
   AVPictureInPictureVideoCallViewController *videoCallVC =
       [[AVPictureInPictureVideoCallViewController alloc] init];
@@ -127,6 +143,15 @@ API_AVAILABLE(ios(15.0))
   shareView.hidden = YES;
   [videoCallVC.view meeting_addConstrainedSubView:shareView];
   self.shareDisplayView = shareView;
+
+  NEPIPMaskDisplayView *maskView = [[NEPIPMaskDisplayView alloc] initWithFrame:CGRectZero];
+  maskView.backgroundColor = UIColor.blackColor;
+  maskView.hidden = YES;
+  [videoCallVC.view meeting_addConstrainedSubView:maskView];
+  self.maskView = maskView;
+
+  self.waitingTips = arguments[@"waitingTips"];
+  self.interruptedTips = arguments[@"interruptedTips"];
 
   self.videoCallViewController = videoCallVC;
   AVPictureInPictureControllerContentSource *contentSource =
@@ -240,6 +265,8 @@ API_AVAILABLE(ios(15.0))
     [self.roomContext.rtcController setupRemoteVideoCanvasWithVideoView:nil
                                                                userUuid:self.currentUuid];
   }
+  [self.roomContext.waitingRoomController removeListenerWithListener:self];
+  [self.roomContext removeRoomListenerWithListener:self];
   self.currentUuid = nil;
   self.shareUuid = nil;
   self.shareRenderer = nil;
@@ -355,6 +382,47 @@ API_AVAILABLE(ios(15.0))
     }
   }
   result([NEPIPResult code:0 desc:@"Successfully member incall."]);
+}
+
+- (void)onMyWaitingRoomStatusChangedWithStatus:(enum NEWaitingRoomMemberStatus)status
+                                        reason:(enum NEWaitingRoomReason)reason {
+  if (status == NEWaitingRoomMemberStatusWaiting || status == NEWaitingRoomMemberStatusAdmitted) {
+    // 在等候室
+    _maskView.hidden = NO;
+    _maskView.name = _roomContext.localMember.name;
+    _maskView.content = self.waitingTips;
+  } else if (!_roomEnded) {
+    // 已离开等候室
+    _maskView.hidden = YES;
+  }
+}
+
+- (void)onRoomEndedWithReason:(enum NERoomEndReason)reason {
+  _roomEnded = YES;
+  _maskView.hidden = NO;
+  _maskView.name = _roomContext.localMember.name;
+  _maskView.content = self.interruptedTips;
+}
+
+- (void)onMemberNameChangedWithMember:(id)member
+                                 name:(NSString *)name
+                            operateBy:(NERoomMember *)operateBy {
+  NERoomMember *roomMember;
+  // 等候室跟房间里回调的名字相同，但是参数类型不同
+  // 房间里的是NERoomMember类型，等候室的是NSString类型
+  if ([member isKindOfClass:[NERoomMember class]]) {
+    roomMember = (NERoomMember *)member;
+  } else if ([member isKindOfClass:[NSString class]]) {
+    roomMember = [_roomContext getMemberWithUuid:(NSString *)member];
+  }
+  if (roomMember != nil) {
+    if ([roomMember.uuid isEqualToString:_roomContext.localMember.uuid]) {
+      [self.displayView updateStateWithMember:roomMember isSelf:YES];
+      self.maskView.name = name;
+    } else {
+      [self.displayView updateStateWithMember:roomMember isSelf:NO];
+    }
+  }
 }
 
 - (void)onVideoFrame:(NSString *)userUuid

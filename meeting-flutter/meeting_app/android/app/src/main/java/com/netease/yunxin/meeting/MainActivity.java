@@ -19,12 +19,14 @@ import android.util.Rational;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.core.splashscreen.SplashScreen;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import com.netease.yunxin.meeting.util.FileProviderUtil;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.embedding.engine.dart.DartExecutor;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
-import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodChannel;
 import java.io.BufferedInputStream;
@@ -58,6 +60,9 @@ public class MainActivity extends FlutterActivity {
 
   private String startString;
   private int meetingStatus = 0;
+
+  // 最小化状态
+  private final int inMeetingMinimized = 4;
 
   @Nullable
   @Override
@@ -258,8 +263,34 @@ public class MainActivity extends FlutterActivity {
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
+    SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
     super.onCreate(savedInstanceState);
     Log.i(TAG, "onCreate@" + hashCode());
+    WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+    WindowInsetsControllerCompat insetsController =
+        WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+    if (insetsController != null) {
+      insetsController.setAppearanceLightNavigationBars(true);
+      insetsController.setAppearanceLightStatusBars(true);
+    }
+    getWindow().setStatusBarColor(getResources().getColor(android.R.color.transparent));
+    getWindow().setNavigationBarColor(getResources().getColor(android.R.color.transparent));
+    splashScreen.setKeepOnScreenCondition(() -> !isFlutterUIReady);
+  }
+
+  private static volatile boolean isFlutterUIReady = false;
+
+  @Override
+  public void onFlutterUiDisplayed() {
+    Log.i(TAG, "onFlutterUiDisplayed");
+    super.onFlutterUiDisplayed();
+    isFlutterUIReady = true;
+  }
+
+  @Override
+  public void onFlutterUiNoLongerDisplayed() {
+    Log.i(TAG, "onFlutterUiNoLongerDisplayed");
+    super.onFlutterUiNoLongerDisplayed();
   }
 
   @Override
@@ -304,7 +335,7 @@ public class MainActivity extends FlutterActivity {
   }
 
   private void pip() {
-    if (meetingStatus != 4) return;
+    if (meetingStatus != inMeetingMinimized) return;
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       PictureInPictureParams.Builder builder =
           new PictureInPictureParams.Builder().setAspectRatio(new Rational(9, 16));

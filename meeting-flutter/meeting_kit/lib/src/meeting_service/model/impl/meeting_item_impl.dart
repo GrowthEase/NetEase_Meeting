@@ -7,6 +7,8 @@ part of meeting_service;
 class _MeetingItemImpl extends NEMeetingItem {
   _MeetingItemImpl() : super._();
 
+  String? ownerUserUuid;
+
   String? _roomUuid;
 
   int? _roomConfigId;
@@ -151,6 +153,13 @@ class _MeetingItemImpl extends NEMeetingItem {
     _inviteUrl = value;
   }
 
+  bool _waitingRoomEnabled = false;
+  void setWaitingRoomEnabled(bool enabled) {
+    _waitingRoomEnabled = enabled;
+  }
+
+  bool get isWaitingRoomEnabled => _waitingRoomEnabled;
+
   Map handleRoomProperties() {
     var roomProperties = {}; // 参考 创建会议 ，从seeting里获取controls就可以了
     if (settings.controls?.isEmpty ?? true) {
@@ -219,20 +228,23 @@ class _MeetingItemImpl extends NEMeetingItem {
         'live': live?.toJson(),
         'roleBinds':
             _roleBinds?.map((key, value) => MapEntry(key, value.index)),
-        'noSip': !_noSip
+        'noSip': !_noSip,
+        'waitingRoomEnabled': _waitingRoomEnabled,
       };
 
   @override
   Map request() {
     Map map = {
       'subject': _subject,
-      'startTime': _startTime,
-      'endTime': _endTime,
+      if (_startTime != 0) 'startTime': _startTime,
+      if (_endTime != 0) 'endTime': _endTime,
       'password': _password,
       'roomConfigId': _roomConfigId ?? kMeetingTemplateId,
       'roomProperties': handleRoomProperties(),
+      'openWaitingRoom': _waitingRoomEnabled,
       'roomConfig': {
         'resource': {
+          // 'waitingRoom': _waitingRoomEnabled,
           'live': live?.enable,
           'record': settings.cloudRecordOn,
           'sip': !_noSip
@@ -257,6 +269,7 @@ class _MeetingItemImpl extends NEMeetingItem {
     impl.startTime = (map['startTime'] ?? 0) as int;
     impl.endTime = (map['endTime'] ?? 0) as int;
     impl.noSip = (map['noSip'] ?? true) as bool;
+    impl.setWaitingRoomEnabled((map['waitingRoomEnabled'] ?? false) as bool);
     impl.state = _MeetingStateExtension.fromState(map['state'] as int);
     impl.password = map['password'] as String?;
     impl.roleBinds =
@@ -276,6 +289,7 @@ class _MeetingItemImpl extends NEMeetingItem {
       return _MeetingItemImpl();
     }
     var impl = _MeetingItemImpl();
+    impl.ownerUserUuid = map['ownerUserUuid'] as String?;
     impl.roomUuid = map['roomUuid'] as String?;
     impl.subject = map['subject'] as String?;
     impl.meetingType = map['type'] as int?;
@@ -285,13 +299,46 @@ class _MeetingItemImpl extends NEMeetingItem {
     impl.startTime = (map['startTime'] ?? 0) as int;
     impl.endTime = (map['endTime'] ?? 0) as int;
     impl.state = _MeetingStateExtension.fromState(map['state'] as int);
-    var settings = NEMeetingItemSettings.fromJson(map['settings'] as Map?);
-    impl.settings = settings;
-    impl.live = settings.live;
-    impl.password = settings.password;
-    impl.extraData = settings.extraData;
-    impl.roleBinds = settings.roleBinds;
-    impl.noSip = settings.noSip;
+
+    final settings = map['settings'] as Map?;
+    final roomInfo = settings?['roomInfo'] as Map?;
+    final roomProperties = roomInfo?['roomProperties'];
+    final roomConfig = roomInfo?['roomConfig'];
+    final resource = roomConfig?['resource'];
+    impl.password = roomInfo?['password'] as String?;
+    impl.roleBinds =
+        (roomInfo?['roleBinds'] as Map<String, dynamic>?)?.map((key, value) {
+      var roleType = MeetingRoles.mapStringRoleToEnum(value);
+      return MapEntry(key, roleType);
+    });
+    impl.noSip = (resource?['sip'] ?? true) as bool;
+    impl.setWaitingRoomEnabled((roomInfo?['openWaitingRoom'] ?? false) as bool);
+    Map? extraDataMap = roomProperties?['extraData'] as Map?;
+    impl.extraData = extraDataMap?['value'] as String?;
+    final audioOffMap = roomProperties?[AudioControlProperty.key] as Map?;
+    final videoOffMap = roomProperties?[VideoControlProperty.key] as Map?;
+    final controls = [
+      if (audioOffMap != null) NEInRoomAudioControl.fromJson(audioOffMap),
+      if (videoOffMap != null) NEInRoomVideoControl.fromJson(videoOffMap),
+    ];
+    impl.settings = NEMeetingItemSettings()
+      ..cloudRecordOn = (resource?['record'] ?? false) as bool
+      ..controls = controls.isNotEmpty ? controls : null;
+
+    var liveSettings = NEMeetingItemLive();
+    liveSettings.liveUrl = settings?['liveConfig']?['liveAddress'] as String?;
+    liveSettings.enable = (resource?['live'] ?? false) as bool;
+    Map? liveProperties = roomProperties?['live'] as Map?;
+    var liveExtensionConfig = liveProperties?['extensionConfig'] as String?;
+    if (liveExtensionConfig != null) {
+      var map = jsonDecode(liveExtensionConfig);
+      bool onlyEmployeesAllow = (map['onlyEmployeesAllow'] ?? false) as bool;
+      liveSettings.liveWebAccessControlLevel = onlyEmployeesAllow
+          ? NELiveAuthLevel.appToken.index
+          : NELiveAuthLevel.normal.index;
+    }
+    impl.live = liveSettings;
+
     impl.inviteUrl = map['meetingInviteUrl'] as String?;
     return impl;
   }

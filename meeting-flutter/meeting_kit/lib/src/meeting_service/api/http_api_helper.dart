@@ -34,7 +34,8 @@ class HttpApiHelper {
       execute(_AnonymousLoginApi());
 
   /// 获取全局配置
-  static Future<NEResult<_SDKGlobalConfig>> _getSDKGlobalConfig(String appKey) {
+  static Future<NEResult<_SDKGlobalConfig>> _getSDKGlobalConfig(
+      String appKey) async {
     return execute(_GetConfigApi(appKey));
   }
 

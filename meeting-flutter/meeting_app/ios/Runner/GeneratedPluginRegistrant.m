@@ -18,10 +18,34 @@
 @import device_info_plus;
 #endif
 
+#if __has_include(<device_information/DeviceInformationPlugin.h>)
+#import <device_information/DeviceInformationPlugin.h>
+#else
+@import device_information;
+#endif
+
 #if __has_include(<file_picker/FilePickerPlugin.h>)
 #import <file_picker/FilePickerPlugin.h>
 #else
 @import file_picker;
+#endif
+
+#if __has_include(<hawk/HawkPlugin.h>)
+#import <hawk/HawkPlugin.h>
+#else
+@import hawk;
+#endif
+
+#if __has_include(<integration_test/IntegrationTestPlugin.h>)
+#import <integration_test/IntegrationTestPlugin.h>
+#else
+@import integration_test;
+#endif
+
+#if __has_include(<marvelflutter/MarvelflutterPlugin.h>)
+#import <marvelflutter/MarvelflutterPlugin.h>
+#else
+@import marvelflutter;
 #endif
 
 #if __has_include(<netease_meeting_ui/MeetingPlugin.h>)
@@ -66,8 +90,14 @@
 @import shared_preferences_ios;
 #endif
 
-#if __has_include(<url_launcher_ios/FLTURLLauncherPlugin.h>)
-#import <url_launcher_ios/FLTURLLauncherPlugin.h>
+#if __has_include(<sqflite/SqflitePlugin.h>)
+#import <sqflite/SqflitePlugin.h>
+#else
+@import sqflite;
+#endif
+
+#if __has_include(<url_launcher_ios/URLLauncherPlugin.h>)
+#import <url_launcher_ios/URLLauncherPlugin.h>
 #else
 @import url_launcher_ios;
 #endif
@@ -95,7 +125,11 @@
 + (void)registerWithRegistry:(NSObject<FlutterPluginRegistry>*)registry {
   [FLTConnectivityPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTConnectivityPlugin"]];
   [FLTDeviceInfoPlusPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTDeviceInfoPlusPlugin"]];
+  [DeviceInformationPlugin registerWithRegistrar:[registry registrarForPlugin:@"DeviceInformationPlugin"]];
   [FilePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FilePickerPlugin"]];
+  [HawkPlugin registerWithRegistrar:[registry registrarForPlugin:@"HawkPlugin"]];
+  [IntegrationTestPlugin registerWithRegistrar:[registry registrarForPlugin:@"IntegrationTestPlugin"]];
+  [MarvelflutterPlugin registerWithRegistrar:[registry registrarForPlugin:@"MarvelflutterPlugin"]];
   [MeetingPlugin registerWithRegistrar:[registry registrarForPlugin:@"MeetingPlugin"]];
   [RoomKitPlugin registerWithRegistrar:[registry registrarForPlugin:@"RoomKitPlugin"]];
   [OpenFilePlugin registerWithRegistrar:[registry registrarForPlugin:@"OpenFilePlugin"]];
@@ -103,7 +137,8 @@
   [FLTPathProviderPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTPathProviderPlugin"]];
   [PermissionHandlerPlugin registerWithRegistrar:[registry registrarForPlugin:@"PermissionHandlerPlugin"]];
   [FLTSharedPreferencesPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTSharedPreferencesPlugin"]];
-  [FLTURLLauncherPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTURLLauncherPlugin"]];
+  [SqflitePlugin registerWithRegistrar:[registry registrarForPlugin:@"SqflitePlugin"]];
+  [URLLauncherPlugin registerWithRegistrar:[registry registrarForPlugin:@"URLLauncherPlugin"]];
   [WakelockPlugin registerWithRegistrar:[registry registrarForPlugin:@"WakelockPlugin"]];
   [FLTWebViewFlutterPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTWebViewFlutterPlugin"]];
   [FlutterAlogPlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterAlogPlugin"]];

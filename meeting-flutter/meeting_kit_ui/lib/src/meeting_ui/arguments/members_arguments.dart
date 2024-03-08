@@ -10,11 +10,16 @@ class MembersArguments {
   final Map<String, StreamController<int>> audioVolumeStreams;
   final NERoomContext roomContext;
   final String meetingTitle;
+  final WaitingRoomManager waitingRoomManager;
+  final ValueListenable<bool> isMySelfManagerListenable;
 
-  MembersArguments(
-      {required this.options,
-      required this.roomInfoUpdatedEventStream,
-      required this.audioVolumeStreams,
-      required this.roomContext,
-      required this.meetingTitle});
+  MembersArguments({
+    required this.options,
+    required this.roomInfoUpdatedEventStream,
+    required this.audioVolumeStreams,
+    required this.roomContext,
+    required this.meetingTitle,
+    required this.waitingRoomManager,
+    required this.isMySelfManagerListenable,
+  });
 }

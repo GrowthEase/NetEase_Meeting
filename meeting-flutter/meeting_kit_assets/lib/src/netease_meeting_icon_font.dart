@@ -89,4 +89,30 @@ class NEMeetingIconFont {
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_device_audio = IconData(0xe6db,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_cloud_record_start = IconData(0xe6fb,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_cloud_record_stop = IconData(0xe6fd,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_cloud_recording = IconData(0xe6fc,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_security = IconData(0xe700,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_meeting_info_time = IconData(0xe73d,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_meeting_info_title = IconData(0xe615,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_history_message = IconData(0xe701,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_nickname = IconData(0xe705,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_bluetooth = IconData(0xe6c7,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_check_line = IconData(0xe7d3,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_disconnect = IconData(0xe6cc,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_reconnect = IconData(0xe6cd,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_asterisk = IconData(0xe6cb,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
 }

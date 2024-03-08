@@ -76,6 +76,12 @@ class NEMeetingUIOptions {
   /// 会议中的"会议号"显示规则
   late final int meetingIdDisplayOption;
 
+  /// 配置是否展示云录制菜单按钮, SDKConfig支持云录制时有效
+  late final bool showCloudRecordMenuItem;
+
+  /// 配置是否展示云录制过程中的UI提示
+  late final bool showCloudRecordingUI;
+
   /// "Toolbar"自定义菜单
   late final List<NEMeetingMenuItem> injectedToolbarMenuItems;
 
@@ -142,6 +148,12 @@ class NEMeetingUIOptions {
   ///
   late final bool enableAudioShare;
 
+  ///
+  /// 配置会议是否默认开启等候室。如果初始设置为不开启，管理员也可以后续在会中手动开启/关闭等候室。
+  /// 开启等候室后，参会者需要管理员同意后才能加入会议。
+  ///
+  late final bool enableWaitingRoom;
+
   NEMeetingUIOptions.fromJson(Map<String, dynamic> json) {
     title = json['title'] as String?;
     noVideo = (json['noVideo'] ?? true) as bool;
@@ -193,6 +205,9 @@ class NEMeetingUIOptions {
         (json['enableTransparentWhiteboard'] ?? false) as bool;
     enableFrontCameraMirror = (json['enableFrontCameraMirror'] ?? true) as bool;
     enableAudioShare = (json['enableAudioShare'] ?? false) as bool;
+    showCloudRecordMenuItem = (json['showCloudRecordMenuItem'] ?? true) as bool;
+    showCloudRecordingUI = (json['showCloudRecordingUI'] ?? true) as bool;
+    enableWaitingRoom = (json['enableWaitingRoom'] ?? false) as bool;
   }
 
   NEMeetingUIOptions({
@@ -231,6 +246,9 @@ class NEMeetingUIOptions {
     this.extras = const <String, dynamic>{},
     this.chatroomConfig,
     this.audioProfile,
+    this.showCloudRecordMenuItem = true,
+    this.showCloudRecordingUI = true,
+    this.enableWaitingRoom = false,
     List<NEMeetingMenuItem>? injectedToolbarMenuItems,
     List<NEMeetingMenuItem>? injectedMoreMenuItems,
   }) {

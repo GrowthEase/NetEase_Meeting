@@ -16,7 +16,6 @@ import 'package:dio/dio.dart' as http;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:netease_roomkit/netease_roomkit.dart';
-import 'package:uuid/uuid.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 export 'package:netease_common/netease_common.dart' show NEResult, VoidResult;
@@ -63,13 +62,12 @@ part 'src/meeting_service/remote/http/save_settings_api.dart';
 part 'src/meeting_service/remote/http/room_invitation.dart';
 part 'src/meeting_service/remote/http_api.dart';
 part 'src/meeting_service/repository/auth_repository.dart';
-part 'src/meeting_service/repository/global_error_repository.dart';
 part 'src/meeting_service/repository/in_room_repository.dart';
 part 'src/meeting_service/repository/meeting_repository.dart';
 part 'src/meeting_service/repository/pre_room_repository.dart';
 part 'src/meeting_service/repository/service_repository.dart';
 part 'src/meeting_service/repository/settings_repository.dart';
-part 'src/meeting_service/strings.dart';
+part 'src/meeting_service/repository/http_error_repository.dart';
 part 'src/meeting_service/model/hands_up.dart';
 part 'src/meeting_service/model/whiteboard_status.dart';
 part 'src/meeting_service/model/room_item_live_status.dart';
@@ -85,6 +83,7 @@ part 'src/meeting_service/config/debug_options.dart';
 part 'src/meeting_service/model/meeting_item_live.dart';
 part 'src/meeting_service/meeting_constants.dart';
 part 'src/meeting_service/model/encryption_config.dart';
+part 'src/meeting_service/model/meeting_watermark.dart';
 
 /// https://office.netease.com/doc/?identity=3963dc2ced7a48259860289c5d8970af
 class MeetingErrorCode {

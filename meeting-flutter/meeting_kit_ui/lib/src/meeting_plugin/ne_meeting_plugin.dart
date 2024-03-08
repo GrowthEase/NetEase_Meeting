@@ -35,10 +35,14 @@ class NEMeetingPlugin {
 
   static NEPhoneStateService? _phoneStateService;
 
+  static NEAudioService? _audioService;
+
   static NEAppLifecycleDetector? _appLifecycleDetector;
 
-  static NEIpadCheckDetector? _ipadCheckDetector;
+  static NEPadCheckDetector? _padCheckDetector;
   static NEPipController? _pipController;
+
+  static NEVolumeController? _volumeController;
 
   NEPipController getPipController() {
     return _pipController ??
@@ -46,7 +50,7 @@ class NEMeetingPlugin {
   }
 
   /// notification service
-  NEFloatingService getFloatingServiceService() {
+  NEFloatingService getFloatingService() {
     return _floatingService ??
         (_floatingService = NEFloatingService(_methodChannel, handlerMap));
   }
@@ -69,9 +73,19 @@ class NEMeetingPlugin {
     return _imageGallerySaver!;
   }
 
-  NEIpadCheckDetector get ipadCheckDetector {
-    _ipadCheckDetector ??= NEIpadCheckDetector(_methodChannel, handlerMap);
-    return _ipadCheckDetector!;
+  NEAudioService get audioService {
+    _audioService ??= NEAudioService(_methodChannel, handlerMap);
+    return _audioService!;
+  }
+
+  NEPadCheckDetector get padCheckDetector {
+    _padCheckDetector ??= NEPadCheckDetector(_methodChannel, handlerMap);
+    return _padCheckDetector!;
+  }
+
+  NEVolumeController get volumeController {
+    _volumeController ??= NEVolumeController(_methodChannel, handlerMap);
+    return _volumeController!;
   }
 
   NEBluetoothService get bluetoothService {

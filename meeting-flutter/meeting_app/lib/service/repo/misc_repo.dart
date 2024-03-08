@@ -16,6 +16,12 @@ class MiscRepo extends IRepo {
 
   factory MiscRepo() => _singleton;
 
+  Future<Result<UpgradeInfo>> getClientUpdateInfo(String? accountId,
+      String versionName, int versionCode, int clientAppCode) async {
+    return appService.getClientUpdateInfo(
+        accountId, versionName, versionCode, clientAppCode);
+  }
+
   Future<Result<void>> downloadFile(
       String url, File file, void Function(int count, int total) progress) {
     return appService.downloadFile(url, file, progress);

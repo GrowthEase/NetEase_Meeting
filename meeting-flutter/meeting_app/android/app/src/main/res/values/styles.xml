@@ -3,10 +3,27 @@
 <!-- Use of this source code is governed by a MIT license that can be -->
 <!-- found in the LICENSE file. -->
 
-<resources>
-    <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="NormalTheme" parent="android:Theme.Light.NoTitleBar">
         <!-- Show a splash screen on the activity. Automatically removed when
              Flutter draws its first frame -->
         <item name="android:windowBackground">@drawable/launch_background</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="23">true</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
+        <item name="android:enforceStatusBarContrast" tools:targetApi="29">false</item>
+        <item name="android:enforceNavigationBarContrast" tools:targetApi="29">false</item>
+    </style>
+
+    <style name="LaunchTheme" parent="Theme.SplashScreen">
+        <!-- Customize your theme here. -->
+        <item name="android:windowBackground">@drawable/launch_background</item>
+        <item name="windowSplashScreenBackground">@android:color/white</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/launch_background</item>
+        <item name="postSplashScreenTheme">@style/NormalTheme</item>
     </style>
 </resources>

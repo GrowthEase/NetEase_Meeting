@@ -41,15 +41,22 @@ import 'package:file_picker/file_picker.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:async/async.dart';
 import 'package:path/path.dart' as path;
+import 'package:crypto/crypto.dart' show md5;
+import 'package:convert/convert.dart' as meetingHex show hex;
+import 'package:cached_network_image/cached_network_image.dart'
+    as MeetingCachedNetworkImage show CachedNetworkImage;
 
 export 'package:netease_meeting_core/meeting_kit.dart';
 export 'package:netease_meeting_ui/meeting_plugin.dart'
     show NEForegroundServiceConfig;
 export 'package:netease_meeting_ui/meeting_localization.dart';
+export 'dart:math' show max, min;
+export 'package:flutter/services.dart';
 
 part 'src/meeting_ui/arguments/meeting_arguments.dart';
 part 'src/meeting_ui/arguments/meeting_options.dart';
 part 'src/meeting_ui/arguments/members_arguments.dart';
+part 'src/meeting_ui/arguments/security_arguments.dart';
 part 'src/meeting_ui/arguments/chatroom_arguments.dart';
 part 'src/meeting_ui/option/meeting_options.dart';
 part 'src/meeting_ui/pages/proxy/meeting_page_proxy.dart';
@@ -57,11 +64,15 @@ part 'src/meeting_ui/pages/proxy/beauty_page_proxy.dart';
 part 'src/meeting_ui/pages/proxy/virtual_background_page_proxy.dart';
 part 'src/meeting_ui/pages/meeting_members_page.dart';
 part 'src/meeting_ui/pages/meeting_page.dart';
+part 'src/meeting_ui/pages/meeting_security_page.dart';
 part 'src/meeting_ui/pages/meeting_chatroom_page.dart';
 part 'src/meeting_ui/pages/meeting_info_page.dart';
 part 'src/meeting_ui/pages/meeting_invite_page.dart';
+part 'src/meeting_ui/manager/waiting_room_manager.dart';
+part 'src/meeting_ui/manager/active_speaker_manager.dart';
 part 'src/meeting_ui/state/meeting_state.dart';
 part 'src/meeting_ui/values/colors.dart';
+part 'src/meeting_ui/widget/text_watermark.dart';
 part 'src/meeting_ui/widget/meeting_duration.dart';
 part 'src/meeting_ui/widget/slider_widget.dart';
 part 'src/meeting_ui/widget/round_slider_trackshape.dart';
@@ -69,6 +80,7 @@ part 'src/meeting_ui/widget/dots_indicator.dart';
 part 'src/meeting_ui/widget/pointer_event_aware.dart';
 part 'src/meeting_ui/service/meeting_ui_kit.dart';
 part 'src/meeting_ui/pages/meeting_waiting_page.dart';
+part 'src/meeting_ui/pages/meeting_waiting_room_page.dart';
 part 'src/meeting_ui/arguments/meeting_waiting_arguments.dart';
 part 'src/meeting_ui/arguments/meeting_base_arguments.dart';
 part 'src/meeting_ui/const/consts.dart';
@@ -82,9 +94,12 @@ part 'src/meeting_ui/arguments/live_arguments.dart';
 part 'src/meeting_ui/menu/meeting_menus.dart';
 part 'src/meeting_ui/menu/base_widgets.dart';
 part 'src/meeting_ui/widget/popup_menu_widget.dart';
+part 'src/meeting_ui/widget/chat_menu_widget.dart';
 part 'src/meeting_ui/widget/triangle_painter.dart';
 part 'src/meeting_ui/widget/localizations.dart';
 part 'src/meeting_ui/widget/draggable_positioned.dart';
+part 'src/meeting_ui/widget/meeting_kit_config.dart';
+part 'src/meeting_ui/widget/meeting_avatar.dart';
 part 'src/meeting_ui/module_name.dart';
 part 'src/meeting_ui/option/window_mode.dart';
 part 'src/meeting_ui/pages/meeting_whiteboard_page.dart';
@@ -106,11 +121,13 @@ part 'src/meeting_ui/uikit/dialog_utils.dart';
 part 'src/meeting_ui/uikit/mask_text_input.dart';
 part 'src/meeting_ui/uikit/clear_icon_button.dart';
 part 'src/meeting_ui/uikit/toast_utils.dart';
+part 'src/meeting_ui/uikit/bottom_sheet_utils.dart';
 part 'src/meeting_ui/uikit/invite_dialog.dart';
 part 'src/meeting_ui/values/event_name.dart';
 part 'src/meeting_ui/uikit/style/app_style_util.dart';
 part 'src/meeting_ui/uikit/permission/permission_helper.dart';
 part 'src/meeting_ui/uikit/helpers.dart';
+part 'src/meeting_ui/uikit/timer_button.dart';
 
 part 'src/meeting_ui/utils/image_size_getter.dart';
 part 'src/meeting_ui/widget/floating/native_pip_switcher.dart';
@@ -118,6 +135,13 @@ part 'src/meeting_ui/widget/floating/pip_view.dart';
 part 'src/meeting_ui/widget/floating/raw_pip_view.dart';
 part 'src/meeting_ui/widget/floating/gesture_zoombox.dart';
 part 'src/meeting_ui/utils/utils.dart';
+part 'src/meeting_ui/utils/meeting_string_util.dart';
+part 'src/meeting_ui/utils/length_text_input_formatter.dart';
+part 'src/meeting_ui/widget/auto_pop_scope.dart';
+part 'src/meeting_ui/widget/auto_hide_keyboard.dart';
+
+part 'src/meeting_ui/router/meeting_ui_state.dart';
+part 'src/meeting_ui/router/meeting_ui_router.dart';
 
 class MeetingCore {
   static MeetingCore? _instance;
@@ -144,16 +168,20 @@ class MeetingCore {
       // // Android Q以上屏幕共享需要一个前台Service
       if (sdkInt >= 29) {
         return NEForegroundServiceConfig(
-          contentTitle:
-              NEMeetingUIKit().ofLocalizations().notificationContentTitle,
+          contentTitle: NEMeetingUIKit()
+              .ofLocalizations()
+              .meetingNotificationContentTitle,
           contentText:
-              NEMeetingUIKit().ofLocalizations().notificationContentText,
-          ticker: NEMeetingUIKit().ofLocalizations().notificationContentTicker,
-          channelId: NEMeetingUIKit().ofLocalizations().notificationChannelId,
+              NEMeetingUIKit().ofLocalizations().meetingNotificationContentText,
+          ticker: NEMeetingUIKit()
+              .ofLocalizations()
+              .meetingNotificationContentTicker,
+          channelId:
+              NEMeetingUIKit().ofLocalizations().meetingNotificationChannelId,
           channelName:
-              NEMeetingUIKit().ofLocalizations().notificationChannelName,
+              NEMeetingUIKit().ofLocalizations().meetingNotificationChannelName,
           channelDesc:
-              NEMeetingUIKit().ofLocalizations().notificationChannelDesc,
+              NEMeetingUIKit().ofLocalizations().meetingNotificationChannelDesc,
         );
       }
     }

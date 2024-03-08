@@ -12,6 +12,8 @@ class MeetingValueKey {
 
   /// 昵称
   static const nickName = ValueKey('nickName');
+  static const editNickName = ValueKey('editNickName');
+  static const clearEdit = ValueKey('clearEdit');
 
   ///匿名会页面 [AnonyMeetJoinRoute.dart]
   static const anonymousMeetJoin = ValueKey('anonymousMeetJoin');
@@ -41,6 +43,7 @@ class MeetingValueKey {
   ///手机验证码登录 [LoginByMobileWidget]
   ///获取验证码
   static const getCheckCode = ValueKey('getCheckCode');
+  static const pinInput = ValueKey('pinInput');
 
   ///修改密码 [PasswordVerifyRoute]
   static const hintNewPassword = ValueKey('hintNewPassword');
@@ -66,6 +69,7 @@ class MeetingValueKey {
   static const enableTransparentWhiteboard =
       ValueKey('enableTransparentWhiteboard');
   static const enableFrontCameraMirror = ValueKey('enableFrontCameraMirror');
+  static const enableAudioDeviceSwitch = ValueKey('enableAudioDeviceSwitch');
 
   ///会议创建模板[MeetCreateRoute]
   static const userSelfMeetingNumCreateMeeting =
@@ -100,7 +104,12 @@ class MeetingValueKey {
   static const scheduleEndTime = ValueKey('scheduleEndTime');
   static const schedulePwdSwitch = ValueKey('schedulePwdSwitch');
   static const schedulePwdInput = ValueKey('schedulePwdInput');
+  static const scheduleWaitingRoom = ValueKey('waitingRoom');
   static const scheduleAttendeeAudio = ValueKey('scheduleAttendeeAudio');
+  static const scheduleAttendeeAudioAllow =
+      ValueKey('scheduleAttendeeAudioAllow');
+  static const scheduleAttendeeAudioNotAllow =
+      ValueKey('scheduleAttendeeAudioNotAllow');
   static const scheduleBtn = ValueKey('scheduleBtn');
   static const scheduleCancel = ValueKey('scheduleCancel');
   static const scheduleJoin = ValueKey('scheduleJoin');
@@ -108,18 +117,24 @@ class MeetingValueKey {
   static const scheduleCopyPwd = ValueKey('scheduleCopyPwd');
   static const scheduleCopyInviteUrl = ValueKey('scheduleCopyInviteUrl');
   static const scheduleLiveSwitch = ValueKey('scheduleLiveSwitch');
+  static const scheduleLiveLevel = ValueKey('scheduleLiveLevel');
   static const scheduleCopyLiveUrl = ValueKey('scheduleCopyLiveUrl');
+  static const scheduleFavorite = ValueKey('scheduleFavorite');
+  static const scheduleMeetingIdCopy = ValueKey('scheduleMeetingIdCopy');
 
   static const logoutByDialog = ValueKey('logoutByDialog');
 
   static const feedbackInput = ValueKey("feedbackInput");
 
+  static const copy = ValueKey('copy');
+
   /// 评价关闭按钮
   static const evaluationCloseBtn = ValueKey("evaluationCloseBtn");
+  static const evaluationTextFieldInput = ValueKey("evaluationTextFieldInput");
 
   /// 非product的版本，则显示。switchButton 默认 valueKey的后缀是value = false  -1; value = true 0，
   static Widget addTextWidgetTest(
-      {required bool value, required ValueKey<String> valueKey}) {
+      {required bool value, required ValueKey<dynamic> valueKey}) {
     return !inProduction
         ? Container(
             width: 60,

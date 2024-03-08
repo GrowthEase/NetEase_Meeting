@@ -22,7 +22,6 @@ class _FutureImageStreamCompleter extends ImageStreamCompleter {
         informationCollector: informationCollector,
         silent: true,
       );
-      throw error;
     });
   }
 
@@ -39,7 +38,6 @@ class _FutureImageStreamCompleter extends ImageStreamCompleter {
         informationCollector: this.informationCollector,
         silent: true,
       );
-      throw exception;
     }
   }
 }

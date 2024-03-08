@@ -95,7 +95,7 @@ abstract class MenuStateController<T> extends ValueNotifier<T> {
 
   void didStateTransition(Future<bool>? transitionController) {
     if (transitionController != null) {
-      final ver = ++_transitionVersion;
+      final ver = generateTransitionVersion();
       transitionController.then((bool didTransition) {
         if (didTransition && ver == _transitionVersion) {
           moveState();
@@ -104,7 +104,13 @@ abstract class MenuStateController<T> extends ValueNotifier<T> {
     }
   }
 
+  int generateTransitionVersion() {
+    return ++_transitionVersion;
+  }
+
   void moveState();
+
+  void moveStateTo(T state);
 }
 
 class CyclicStateListController extends MenuStateController<NEMenuItemState> {
@@ -129,8 +135,19 @@ class CyclicStateListController extends MenuStateController<NEMenuItemState> {
 
   @override
   void moveState() {
+    generateTransitionVersion();
     _currentIndex = (_currentIndex + 1) % stateList.length;
     value = stateList[_currentIndex];
+  }
+
+  @override
+  void moveStateTo(NEMenuItemState state) {
+    final index = stateList.indexOf(state);
+    if (index >= 0) {
+      generateTransitionVersion();
+      _currentIndex = index;
+      value = state;
+    }
   }
 }
 
@@ -198,6 +215,22 @@ final _builtinMenuItemIcons = <int, Map<int, Icon>>{
     _noneState: const Icon(NEMeetingIconFont.icon_virtual_background,
         color: _UIColors.colorECEDEF),
   },
+  NEMenuIDs.cloudRecord: {
+    _uncheckState: const Icon(NEMeetingIconFont.icon_cloud_record_start,
+        color: _UIColors.colorECEDEF),
+    _checkState: const Icon(NEMeetingIconFont.icon_cloud_record_stop,
+        color: _UIColors.colorFE3B30),
+  },
+  NEMenuIDs.security: {
+    _noneState: const Icon(NEMeetingIconFont.icon_security,
+        color: _UIColors.colorECEDEF),
+  },
+  NEMenuIDs.disconnectAudio: {
+    _uncheckState: const Icon(NEMeetingIconFont.icon_disconnect,
+        color: _UIColors.colorECEDEF),
+    _checkState: const Icon(NEMeetingIconFont.icon_reconnect,
+        color: _UIColors.colorFE3B30),
+  },
 };
 
 Icon? _useBuiltinIconById(int id, int state) {
@@ -213,6 +246,7 @@ class SingleStateMenuItem extends StatelessWidget {
   final MenuItemClickCallback callback;
   final MenuItemTipBuilder? tipBuilder;
   final MenuItemIconBuilder? iconBuilder;
+  final bool isMoreMenuItem;
 
   SingleStateMenuItem({
     Key? key,
@@ -220,6 +254,7 @@ class SingleStateMenuItem extends StatelessWidget {
     this.tipBuilder,
     required this.callback,
     this.iconBuilder,
+    required this.isMoreMenuItem,
   }) : super(key: key ?? ValueKey(menuItem.itemId));
 
   @override
@@ -233,6 +268,7 @@ class SingleStateMenuItem extends StatelessWidget {
         itemState: NEMenuItemState.none,
         tipBuilder: tipBuilder,
         iconBuilder: iconBuilder,
+        isMoreMenuItem: isMoreMenuItem,
       ),
     );
   }
@@ -244,6 +280,7 @@ class CheckableMenuItem extends StatelessWidget {
   final CyclicStateListController controller;
   final MenuItemTipBuilder? tipBuilder;
   final MenuItemIconBuilder? iconBuilder;
+  final bool isMoreMenuItem;
 
   CheckableMenuItem({
     Key? key,
@@ -252,6 +289,7 @@ class CheckableMenuItem extends StatelessWidget {
     this.callback,
     this.tipBuilder,
     this.iconBuilder,
+    required this.isMoreMenuItem,
   }) : super(key: key ?? ValueKey(menuItem.itemId));
 
   @override
@@ -273,6 +311,7 @@ class CheckableMenuItem extends StatelessWidget {
             itemState: state,
             tipBuilder: tipBuilder,
             iconBuilder: iconBuilder,
+            isMoreMenuItem: isMoreMenuItem,
           );
         },
       ),
@@ -286,11 +325,13 @@ class MenuItemInfo extends StatelessWidget {
   final NEMenuItemState itemState;
   final MenuItemTipBuilder? tipBuilder;
   final MenuItemIconBuilder? iconBuilder;
+  final bool isMoreMenuItem;
 
   MenuItemInfo({
     required this.itemId,
     required this.itemInfo,
     required this.itemState,
+    required this.isMoreMenuItem,
     this.tipBuilder,
     this.iconBuilder,
   });
@@ -318,25 +359,36 @@ class MenuItemInfo extends StatelessWidget {
       height: 24,
       child: icon,
     );
-    return Column(
+    final menuWidget = Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         tipBuilder?.call(context, icon) ?? icon,
-        SizedBox(height: 2),
+        SizedBox(height: isMoreMenuItem ? 6 : 2),
         Text(
           _getMenuTitle(context, itemInfo, itemState),
           maxLines: 1,
           softWrap: false,
           overflow: TextOverflow.fade,
           style: TextStyle(
-            color: _UIColors.colorECEDEF,
-            fontSize: 9,
+            color: _UIColors.white,
+            fontSize: 10,
             decoration: TextDecoration.none,
             fontWeight: FontWeight.w400,
           ),
         )
       ],
     );
+    return isMoreMenuItem
+        ? Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: _UIColors.color33333E,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            alignment: Alignment.center,
+            child: menuWidget,
+          )
+        : menuWidget;
   }
 
   ImageProvider getImage(NEMenuItemInfo itemInfo) {
@@ -365,33 +417,47 @@ String? _getDefaultMenuTitle(
   final bool checked = itemState == NEMenuItemState.checked;
   switch (itemId) {
     case NEMenuIDs.microphone:
-      return checked ? localizations!.unMuteAudio : localizations!.muteAudio;
+      return checked
+          ? localizations!.participantUnmute
+          : localizations!.participantMute;
     case NEMenuIDs.camera:
-      return checked ? localizations!.unMuteVideo : localizations!.muteVideo;
+      return checked
+          ? localizations!.participantStartVideo
+          : localizations!.participantStopVideo;
     case NEMenuIDs.screenShare:
       return checked
-          ? localizations!.unScreenShare
+          ? localizations!.screenShareStop
           : localizations!.screenShare;
     case NEMenuIDs.participants:
-      return localizations!.menuTitleParticipants;
+      return localizations!.participants;
     case NEMenuIDs.managerParticipants:
-      return localizations!.menuTitleManagerParticipants;
+      return localizations!.participantsManager;
     case NEMenuIDs.invitation:
-      return localizations!.menuTitleInvite;
+      return localizations!.meetingInvite;
     case NEMenuIDs.chatroom:
-      return localizations!.menuTitleChatroom;
+      return localizations!.chat;
     case NEMenuIDs.whiteBoard:
       return checked
-          ? localizations!.menuTitleCloseWhiteboard
-          : localizations!.menuTitleShareWhiteboard;
+          ? localizations!.whiteBoardClose
+          : localizations!.whiteboardShare;
+    case NEMenuIDs.cloudRecord:
+      return checked
+          ? localizations!.cloudRecordingStop
+          : localizations!.cloudRecordingStart;
+    case NEMenuIDs.security:
+      return localizations!.meetingSecurity;
     case InternalMenuIDs.more:
-      return localizations!.more;
+      return localizations!.meetingMore;
     case InternalMenuIDs.beauty:
-      return localizations!.beauty;
+      return localizations!.meetingBeauty;
     case InternalMenuIDs.live:
       return localizations!.live;
     case InternalMenuIDs.virtualBackground:
       return localizations!.virtualBackground;
+    case NEMenuIDs.disconnectAudio:
+      return checked
+          ? localizations!.meetingReconnectAudio
+          : localizations!.meetingDisconnectAudio;
   }
   return null;
 }

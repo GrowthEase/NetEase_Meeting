@@ -35,9 +35,8 @@ class HttpHeaderRegistry {
 
 class _Executors {
   Map<String, dynamic> get baseHeaders => {
-        'deviceId': DeviceInfo.deviceId,
         'versionCode': SDKConfig.sdkVersionCode,
-        'clientType': 'android',
+        'clientType': Platform.isAndroid ? 'android' : 'ios',
         ...HttpHeaderRegistry()._collectHeaders(),
       };
 

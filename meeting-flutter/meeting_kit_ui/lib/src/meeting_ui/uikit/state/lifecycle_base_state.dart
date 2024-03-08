@@ -54,7 +54,9 @@ abstract class LifecycleBaseState<T extends StatefulWidget>
             microseconds: microseconds),
         callback);
   }
+}
 
+extension PostOnFrameExtension on State {
   void postOnFrame(VoidCallback callback) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       callback();

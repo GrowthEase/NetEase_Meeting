@@ -2,10 +2,6 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
-/// appKey : "092dcd94d2c2566d1ed66061891cdf15"
-/// appName : "meeting-qa"
-/// edition : {"type":1,"name":"免费版","functionList":[{"code":"maxRoomDuration","description":"单次会议最大时长：1440.0分钟","value":"1440.0","status":1},{"code":"maxRoomMemberCount","description":"会议最多容纳：10000人","value":"10000","status":1},{"code":"maxConcurrency","description":"全局最大并发：10000","value":"10000","status":1},{"code":"beauty","description":"美颜：不支持","status":2},{"code":"meetingLive","description":"会议直播：不支持","status":2},{"code":"personalShortId","description":"个人会议短号：不支持","status":2},{"code":"sso","description":"SSO：不支持","status":2},{"code":"sdk","description":"组件调用：不支持","status":2},{"code":"organization","description":"组织架构托管：不支持","status":2}],"expireAt":-1,"extra":"2020年12月15日之前免费版用户可限时享受单场最大参会人数100人、最长24小时会议权益。"}
-
 class AccountAppInfo {
   final String appKey;
   final String appName;

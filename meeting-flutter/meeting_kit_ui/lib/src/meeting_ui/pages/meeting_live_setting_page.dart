@@ -95,7 +95,7 @@ class MeetingLiveSettingState
         systemOverlayStyle: SystemUiOverlayStyle.dark,
         actions: [
           TextButton(
-              child: Text(NEMeetingUIKitLocalizations.of(context)!.save,
+              child: Text(NEMeetingUIKitLocalizations.of(context)!.globalSave,
                   style:
                       TextStyle(color: _UIColors.color_337eff, fontSize: 16.0)),
               onPressed: () {
@@ -116,7 +116,7 @@ class MeetingLiveSettingState
           child: Container(
               alignment: Alignment.center,
               key: MeetingUIValueKeys.liveLayoutClose,
-              child: Text(NEMeetingUIKitLocalizations.of(context)!.close,
+              child: Text(NEMeetingUIKitLocalizations.of(context)!.globalClose,
                   style: TextStyle(color: _UIColors.blue_337eff, fontSize: 16),
                   textAlign: TextAlign.center)),
           onTap: () {

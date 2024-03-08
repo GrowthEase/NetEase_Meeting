@@ -4,58 +4,54 @@
 
 import 'package:nemeeting/base/util/error.dart';
 import 'package:nemeeting/base/util/text_util.dart';
+import 'package:nemeeting/routes/auth/verify_mobile_check_code.dart';
 import 'package:nemeeting/service/client/http_code.dart';
-import 'package:nemeeting/service/config/scene_type.dart';
+import 'package:nemeeting/service/config/app_config.dart';
 import 'package:nemeeting/service/repo/auth_repo.dart';
-import 'package:nemeeting/utils/const_config.dart';
 import 'package:yunxin_alog/yunxin_alog.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:nemeeting/utils/integration_test.dart';
 import 'package:nemeeting/uikit/const/consts.dart';
 import 'package:nemeeting/uikit/utils/nav_utils.dart';
 import 'package:nemeeting/uikit/utils/router_name.dart';
-import 'package:nemeeting/uikit/values/strings.dart';
-import 'package:nemeeting/arguments/auth_arguments.dart';
-import 'package:nemeeting/routes/auth/login.dart';
 import 'package:nemeeting/constants.dart';
 import 'package:nemeeting/uikit/values/colors.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 
-class LoginByMobileWidget extends StatefulWidget {
-  final String mobile;
+import '../language/localizations.dart';
 
-  LoginByMobileWidget(this.mobile);
+class LoginByMobileWidget extends StatefulWidget {
+  final String? mobile;
+
+  LoginByMobileWidget([this.mobile]);
 
   @override
-  State<StatefulWidget> createState() {
-    return LoginByMobileState(mobile);
+  State<LoginByMobileWidget> createState() {
+    return LoginByMobileState();
   }
 }
 
-class LoginByMobileState extends LifecycleBaseState {
-  final String mobile;
+class LoginByMobileState extends LifecycleBaseState<LoginByMobileWidget>
+    with MeetingAppLocalizationsMixin {
+  late final appKey = AppConfig().appKey;
+  late String mobile;
   late TextEditingController _mobileController;
   final FocusNode _focusNode = FocusNode();
   bool _mobileFocus = false;
-  AuthArguments? authModel;
   bool _btnEnable = false;
 
-  LoginByMobileState(this.mobile);
+  LoginByMobileState();
 
   @override
   void initState() {
     super.initState();
+    mobile = widget.mobile ?? '';
     _mobileController =
         MaskedTextController(text: mobile, mask: '000 0000 0000');
     _focusNode.addListener(() {
       setState(() {
         _mobileFocus = _focusNode.hasFocus;
       });
-    });
-    _mobileController.addListener(() {
-      var mobile = TextUtil.replaceAllBlank(_mobileController.text);
-      eventBus.fire(MobileEvent(mobile));
     });
     _btnEnable = _mobileController.text.length >= mobileLength;
   }
@@ -68,17 +64,7 @@ class LoginByMobileState extends LifecycleBaseState {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    var object = ModalRoute.of(context)?.settings.arguments;
-    authModel = object is AuthArguments ? object : null;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    // ignore: unnecessary_statements
-    // LoginModelProvider.of(context).loginByMobile;
     return GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () {
@@ -93,7 +79,7 @@ class LoginByMobileState extends LifecycleBaseState {
                 child: Container(
                   margin: EdgeInsets.only(left: 30, top: 16),
                   child: Text(
-                    Strings.loginByMobile,
+                    meetingAppLocalizations.authLoginByMobile,
                     textAlign: TextAlign.left,
                     style: TextStyle(
                       color: AppColors.black_222222,
@@ -144,7 +130,8 @@ class LoginByMobileState extends LifecycleBaseState {
                                     mobileLength), //限制输入长度不超过13位
                               ],
                               decoration: InputDecoration(
-                                  hintText: Strings.hintMobile,
+                                  hintText:
+                                      meetingAppLocalizations.authEnterMobile,
                                   floatingLabelBehavior:
                                       FloatingLabelBehavior.auto,
                                   border: InputBorder.none,
@@ -209,7 +196,7 @@ class LoginByMobileState extends LifecycleBaseState {
                               BorderRadius.all(Radius.circular(25))))),
                   onPressed: _btnEnable ? getCheckCodeServer : null,
                   child: Text(
-                    Strings.getCheckCode,
+                    meetingAppLocalizations.authGetCheckCode,
                     style: TextStyle(color: Colors.white, fontSize: 16),
                     textAlign: TextAlign.center,
                   ),
@@ -223,38 +210,20 @@ class LoginByMobileState extends LifecycleBaseState {
   void getCheckCodeServer() {
     final mobile = TextUtil.replaceAllBlank(_mobileController.text);
 
-    if (kUseFakeCheckCode) {
-      authModel?.sceneType = SceneType.login;
-      authModel?.mobile = mobile;
-      NavUtils.pushNamed(context, RouterName.checkMobile, arguments: authModel);
-      return;
-    }
-
     Alog.d(
         moduleName: Constants.moduleName,
         tag: toString(),
-        content:
-            'getAuthCode mobile = $mobile sceneType = login, authModel = ${authModel?.toString()}');
-    var authRepo = AuthRepo();
-    var loginResult = authRepo.getAuthCode(mobile, SceneType.login);
+        content: 'Get check code: mobile = $mobile');
+    var loginResult = AuthRepo().getMobileCheckCode(appKey, mobile);
     lifecycleExecuteUI(loginResult).then((result) {
       if (result == null) return;
-      authModel?.sceneType = SceneType.login;
-      authModel?.mobile = mobile;
       if (result.code == HttpCode.success) {
-        NavUtils.pushNamed(context, RouterName.checkMobile,
-            arguments: authModel);
+        NavUtils.pushNamed(context, RouterName.verifyMobileCheckCode,
+            arguments: VerifyMobileCheckCodeArguments(appKey, mobile));
+      } else if (result.code == HttpCode.phoneErrorTip) {
+        ErrorUtil.showError(context, meetingAppLocalizations.authPhoneErrorTip);
       } else {
-        if (result.code == HttpCode.phoneNotRegister) {
-          authModel = authModel ?? AuthArguments();
-          authModel!.sceneType = SceneType.register;
-          NavUtils.popAndPushNamed(context, RouterName.getMobileCheckCode,
-              arguments: authModel);
-        } else if (result.code == HttpCode.phoneErrorTip) {
-          ErrorUtil.showError(context, Strings.phoneErrorTip);
-        } else {
-          ErrorUtil.showError(context, HttpCode.getMsg(result.msg));
-        }
+        ErrorUtil.showError(context, HttpCode.getMsg(result.msg));
       }
     });
   }

@@ -5,9 +5,6 @@
 part of meeting_plugin;
 
 class NEFloatingService extends _Service {
-  static const _STATES_EVENT_CHANNEL_NAME =
-      "meeting_plugin.floating_service.states";
-
   NEFloatingService(
       MethodChannel _methodChannel, Map<String, _Handler> handlerMap)
       : super(_methodChannel, handlerMap);
@@ -18,44 +15,7 @@ class NEFloatingService extends _Service {
   Stream<PiPStatus>? _stream;
 
   final alog = Alogger.normal('NEFloatingService', 'meeting_ui');
-
-  final _statesEventChannel = EventChannel(_STATES_EVENT_CHANNEL_NAME);
-
-  bool? _isEnabled;
-  Stream<bool>? _sourceStream;
   static bool _isPIPSetupDone = false;
-
-  Future<bool> get isEnabled async {
-    if (_isEnabled == null) {
-      _ensureEnableStateSourceStream();
-      return _sourceStream!.first;
-    }
-    return _isEnabled!;
-  }
-
-  Stream<bool> get enableStateChanged {
-    _ensureEnableStateSourceStream();
-    final controller = StreamController<bool>();
-    if (_isEnabled != null) {
-      controller.add(_isEnabled!);
-    }
-    controller.addStream(_sourceStream!);
-    controller.onCancel = () {
-      controller.close();
-    };
-    return controller.stream;
-  }
-
-  void _ensureEnableStateSourceStream() {
-    if (_sourceStream == null) {
-      _sourceStream = _statesEventChannel.receiveBroadcastStream().map((event) {
-        assert(event is Map);
-        _isEnabled = event['enabled'] as bool;
-        return _isEnabled!;
-      }).distinct();
-      _sourceStream!.listen((event) {});
-    }
-  }
 
   @override
   String _getModule() => 'NEFloatingService';
@@ -64,6 +24,12 @@ class NEFloatingService extends _Service {
   Future<dynamic> _handlerMethod(
       String method, int code, Map arg, dynamic callback) {
     return Future<dynamic>.value();
+  }
+
+  Future<bool> isInPipMode() async {
+    if (Platform.isAndroid) return await pipStatus == PiPStatus.enabled;
+    if (Platform.isIOS) return await isActive();
+    return false;
   }
 
   /// Checks current app PiP status.
@@ -162,11 +128,15 @@ class NEFloatingService extends _Service {
     return supportsPip ?? false;
   }
 
-  Future<void> setup(String roomUuid, {bool autoEnterPIP = false}) async {
+  Future<void> setup(
+      String roomUuid, String waitingTips, String interruptedTips,
+      {bool autoEnterPIP = false}) async {
     if (_isPIPSetupDone) return;
     Map map = buildArguments();
     map['roomUuid'] = roomUuid;
     map['auto_enter_pip'] = autoEnterPIP;
+    map['waitingTips'] = waitingTips;
+    map['interruptedTips'] = interruptedTips;
     final result = await _methodChannel.invokeMethod('setupPIP', map);
     if (result == null) {
       alog.i("PIP -> setup pip. roomUuid: $roomUuid. result: null");

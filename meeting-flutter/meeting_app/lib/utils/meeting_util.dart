@@ -7,6 +7,12 @@ import 'package:netease_meeting_core/meeting_kit.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
 
 class MeetingUtil {
+  static String getUuid() {
+    return AuthManager().accountId ??
+        NEMeetingKit.instance.getAccountService().getAccountInfo()?.userUuid ??
+        '';
+  }
+
   static String getNickName() {
     return AuthManager().nickName ??
         NEMeetingKit.instance.getAccountService().getAccountInfo()?.nickname ??

@@ -4,6 +4,8 @@ PODS:
     - Reachability
   - device_info_plus (0.0.1):
     - Flutter
+  - device_information (0.0.1):
+    - Flutter
   - DKImagePickerController/Core (4.3.4):
     - DKImagePickerController/ImageDataManager
     - DKImagePickerController/Resource
@@ -39,83 +41,85 @@ PODS:
     - DKImagePickerController/PhotoGallery
     - Flutter
   - Flutter (1.0.0)
-  - NECoreIMKit (9.6.1):
-    - NECoreIMKit/NOS (= 9.6.1)
-  - NECoreIMKit/NOS (9.6.1):
-    - NECoreKit
-    - NIMSDK_LITE (>= 9.11.0)
-    - YXAlog
-  - NECoreKit (9.6.3):
+  - hawk (0.0.1):
+    - Flutter
+  - integration_test (0.0.1):
+    - Flutter
+  - Marvel (1.0.6.7)
+  - marvelflutter (0.0.1):
+    - Flutter
+    - Marvel
+  - NECoreIMKit (9.6.7):
+    - NECoreIMKit/NOS (= 9.6.7)
+  - NECoreIMKit/NOS (9.6.7):
+    - NECoreKit (= 9.6.6)
+    - NIMSDK_LITE (= 9.14.2)
+    - YXAlog (= 1.0.7)
+  - NECoreKit (9.6.6):
     - YXAlog (= 1.0.7)
   - NEDyldYuv (0.0.1)
-  - NERoomKit (1.21.1):
-    - NECoreIMKit (>= 9.6.1)
-    - NECoreKit (>= 9.6.3)
-    - NERoomKit/Audio (= 1.21.1)
-    - NERoomKit/Base (= 1.21.1)
-    - NERoomKit/Beauty (= 1.21.1)
-    - NERoomKit/ScreenShare (= 1.21.1)
-    - NERoomKit/Segment (= 1.21.1)
-    - NERoomKit/Video (= 1.21.1)
-  - NERoomKit/Audio (1.21.1):
-    - NECoreIMKit (>= 9.6.1)
-    - NECoreKit (>= 9.6.3)
-    - NERtcSDK_Special/AiDenoise (= 5.5.203)
-    - NERtcSDK_Special/AiHowling (= 5.5.203)
-    - NERtcSDK_Special/Nenn (= 5.5.203)
-    - NERtcSDK_Special/SpatialSound (= 5.5.203)
-  - NERoomKit/Base (1.21.1):
-    - NECoreIMKit (>= 9.6.1)
-    - NECoreKit (>= 9.6.3)
-    - NERtcSDK_Special/RtcBasic (= 5.5.203)
-    - NIMSDK_LITE (= 9.12.0)
-  - NERoomKit/Beauty (1.21.1):
-    - NECoreIMKit (>= 9.6.1)
-    - NECoreKit (>= 9.6.3)
-    - NERtcSDK_Special/Beauty (= 5.5.203)
-    - NERtcSDK_Special/FaceDetect (= 5.5.203)
-    - NERtcSDK_Special/FaceEnhance (= 5.5.203)
-    - NERtcSDK_Special/Nenn (= 5.5.203)
-  - NERoomKit/ScreenShare (1.21.1):
-    - NECoreIMKit (>= 9.6.1)
-    - NECoreKit (>= 9.6.3)
-    - NERtcSDK_Special/ScreenShare (= 5.5.203)
-  - NERoomKit/Segment (1.21.1):
-    - NECoreIMKit (>= 9.6.1)
-    - NECoreKit (>= 9.6.3)
-    - NERtcSDK_Special/Nenn (= 5.5.203)
-    - NERtcSDK_Special/Segment (= 5.5.203)
-  - NERoomKit/Video (1.21.1):
-    - NECoreIMKit (>= 9.6.1)
-    - NECoreKit (>= 9.6.3)
-    - NERtcSDK_Special/SuperResolution (= 5.5.203)
-    - NERtcSDK_Special/VideoDenoise (= 5.5.203)
-  - NERtcSDK_Special/AiDenoise (5.5.203)
-  - NERtcSDK_Special/AiHowling (5.5.203)
-  - NERtcSDK_Special/Beauty (5.5.203)
-  - NERtcSDK_Special/FaceDetect (5.5.203)
-  - NERtcSDK_Special/FaceEnhance (5.5.203)
-  - NERtcSDK_Special/Nenn (5.5.203)
-  - NERtcSDK_Special/RtcBasic (5.5.203)
-  - NERtcSDK_Special/ScreenShare (5.5.203)
-  - NERtcSDK_Special/Segment (5.5.203)
-  - NERtcSDK_Special/SpatialSound (5.5.203)
-  - NERtcSDK_Special/SuperResolution (5.5.203)
-  - NERtcSDK_Special/VideoDenoise (5.5.203)
+  - NERoomKit (1.26.0):
+    - NECoreKit (>= 9.6.6)
+    - NERoomKit/Audio (= 1.26.0)
+    - NERoomKit/Base (= 1.26.0)
+    - NERoomKit/Beauty (= 1.26.0)
+    - NERoomKit/ScreenShare (= 1.26.0)
+    - NERoomKit/Segment (= 1.26.0)
+    - NERoomKit/Video (= 1.26.0)
+  - NERoomKit/Audio (1.26.0):
+    - NECoreKit (>= 9.6.6)
+    - NERtcSDK/AiDenoise (= 5.5.23)
+    - NERtcSDK/AiHowling (= 5.5.23)
+    - NERtcSDK/Nenn (= 5.5.23)
+    - NERtcSDK/SpatialSound (= 5.5.23)
+  - NERoomKit/Base (1.26.0):
+    - NECoreIMKit (= 9.6.7)
+    - NECoreKit (>= 9.6.6)
+    - NERtcSDK/RtcBasic (= 5.5.23)
+    - NIMSDK_LITE (= 9.14.2)
+  - NERoomKit/Beauty (1.26.0):
+    - NECoreKit (>= 9.6.6)
+    - NERtcSDK/Beauty (= 5.5.23)
+    - NERtcSDK/FaceDetect (= 5.5.23)
+    - NERtcSDK/FaceEnhance (= 5.5.23)
+    - NERtcSDK/Nenn (= 5.5.23)
+  - NERoomKit/ScreenShare (1.26.0):
+    - NECoreKit (>= 9.6.6)
+    - NERtcSDK/ScreenShare (= 5.5.23)
+  - NERoomKit/Segment (1.26.0):
+    - NECoreKit (>= 9.6.6)
+    - NERtcSDK/Nenn (= 5.5.23)
+    - NERtcSDK/Segment (= 5.5.23)
+  - NERoomKit/Video (1.26.0):
+    - NECoreKit (>= 9.6.6)
+    - NERtcSDK/SuperResolution (= 5.5.23)
+    - NERtcSDK/VideoDenoise (= 5.5.23)
+  - NERtcSDK/AiDenoise (5.5.23)
+  - NERtcSDK/AiHowling (5.5.23)
+  - NERtcSDK/Beauty (5.5.23)
+  - NERtcSDK/FaceDetect (5.5.23)
+  - NERtcSDK/FaceEnhance (5.5.23)
+  - NERtcSDK/Nenn (5.5.23)
+  - NERtcSDK/RtcBasic (5.5.23)
+  - NERtcSDK/ScreenShare (5.5.23)
+  - NERtcSDK/Segment (5.5.23)
+  - NERtcSDK/SpatialSound (5.5.23)
+  - NERtcSDK/SuperResolution (5.5.23)
+  - NERtcSDK/VideoDenoise (5.5.23)
   - netease_meeting_ui (0.0.1):
     - Flutter
     - NEDyldYuv
-    - NERoomKit (= 1.21.1)
+    - NERoomKit (= 1.26.0)
     - YXAlog
   - netease_roomkit (0.0.1):
     - Flutter
     - NEDyldYuv (= 0.0.1)
-    - NERoomKit (= 1.21.1)
+    - NERoomKit (= 1.26.0)
     - YXAlog
-  - NIMSDK_LITE (9.12.0):
-    - NIMSDK_LITE/NOS (= 9.12.0)
+  - NIMSDK_LITE (9.14.2):
+    - NIMSDK_LITE/NOS (= 9.14.2)
     - YXArtemis
-  - NIMSDK_LITE/NOS (9.12.0):
+  - NIMSDK_LITE/NOS (9.14.2):
     - YXArtemis
   - open_filex (0.0.2):
     - Flutter
@@ -123,14 +127,17 @@ PODS:
     - Flutter
   - path_provider_ios (0.0.1):
     - Flutter
-  - permission_handler_apple (9.0.4):
+  - permission_handler_apple (9.1.1):
     - Flutter
   - Reachability (3.2)
-  - SDWebImage (5.17.0):
-    - SDWebImage/Core (= 5.17.0)
-  - SDWebImage/Core (5.17.0)
+  - SDWebImage (5.19.0):
+    - SDWebImage/Core (= 5.19.0)
+  - SDWebImage/Core (5.19.0)
   - shared_preferences_ios (0.0.1):
     - Flutter
+  - sqflite (0.0.3):
+    - Flutter
+    - FlutterMacOS
   - SwiftyGif (5.4.4)
   - url_launcher_ios (0.0.1):
     - Flutter
@@ -142,13 +149,18 @@ PODS:
     - Flutter
     - YXAlog (~> 1.0.7)
   - YXAlog (1.0.7)
-  - YXArtemis (1.1.0)
+  - YXArtemis (1.1.3)
 
 DEPENDENCIES:
   - connectivity (from `.symlinks/plugins/connectivity/ios`)
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
+  - device_information (from `.symlinks/plugins/device_information/ios`)
   - file_picker (from `.symlinks/plugins/file_picker/ios`)
   - Flutter (from `Flutter`)
+  - hawk (from `.symlinks/plugins/hawk/ios`)
+  - integration_test (from `.symlinks/plugins/integration_test/ios`)
+  - Marvel (= 1.0.6.7)
+  - marvelflutter (from `.symlinks/plugins/marvelflutter/ios`)
   - NEDyldYuv
   - NERoomKit/ScreenShare
   - netease_meeting_ui (from `.symlinks/plugins/netease_meeting_ui/ios`)
@@ -158,6 +170,7 @@ DEPENDENCIES:
   - path_provider_ios (from `.symlinks/plugins/path_provider_ios/ios`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - shared_preferences_ios (from `.symlinks/plugins/shared_preferences_ios/ios`)
+  - sqflite (from `.symlinks/plugins/sqflite/darwin`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
   - wakelock (from `.symlinks/plugins/wakelock/ios`)
   - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/ios`)
@@ -167,11 +180,12 @@ SPEC REPOS:
   https://github.com/CocoaPods/Specs.git:
     - DKImagePickerController
     - DKPhotoGallery
+    - Marvel
     - NECoreIMKit
     - NECoreKit
     - NEDyldYuv
     - NERoomKit
-    - NERtcSDK_Special
+    - NERtcSDK
     - NIMSDK_LITE
     - Reachability
     - SDWebImage
@@ -184,10 +198,18 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/connectivity/ios"
   device_info_plus:
     :path: ".symlinks/plugins/device_info_plus/ios"
+  device_information:
+    :path: ".symlinks/plugins/device_information/ios"
   file_picker:
     :path: ".symlinks/plugins/file_picker/ios"
   Flutter:
     :path: Flutter
+  hawk:
+    :path: ".symlinks/plugins/hawk/ios"
+  integration_test:
+    :path: ".symlinks/plugins/integration_test/ios"
+  marvelflutter:
+    :path: ".symlinks/plugins/marvelflutter/ios"
   netease_meeting_ui:
     :path: ".symlinks/plugins/netease_meeting_ui/ios"
   netease_roomkit:
@@ -202,6 +224,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/permission_handler_apple/ios"
   shared_preferences_ios:
     :path: ".symlinks/plugins/shared_preferences_ios/ios"
+  sqflite:
+    :path: ".symlinks/plugins/sqflite/darwin"
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
   wakelock:
@@ -214,33 +238,39 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   connectivity: c4130b2985d4ef6fd26f9702e886bd5260681467
   device_info_plus: e5c5da33f982a436e103237c0c85f9031142abed
+  device_information: d652f6dcea86bdc5300ffd495486de1d5047bf4f
   DKImagePickerController: b512c28220a2b8ac7419f21c491fc8534b7601ac
   DKPhotoGallery: fdfad5125a9fdda9cc57df834d49df790dbb4179
   file_picker: ce3938a0df3cc1ef404671531facef740d03f920
-  Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
-  NECoreIMKit: 194fb31c7c5e6aa35ef59b7ba493904ad4930ce4
-  NECoreKit: a7eb26db57d6e5b3d6317da26f65f8a6804891e9
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  hawk: 9840ed916a37dce8fc3f9c6729d57de4d708e482
+  integration_test: 13825b8a9334a850581300559b8839134b124670
+  Marvel: 6f03d24239e824aeebdcfb41c05721bb4e89fce7
+  marvelflutter: 6c4c672375360c2086de023217c3db61999ea511
+  NECoreIMKit: 7adf5a0471ae02855238be06a3b35c69c0c9f733
+  NECoreKit: 735337b345ebba581581ae4b6cbd54f27008554b
   NEDyldYuv: 6b47adff16186768bf2f8b165697fdee8e94d7ac
-  NERoomKit: da89317e05b2fbd15b077e9055258d686ac0ce1f
-  NERtcSDK_Special: 1865e8184d970937bf5c56e7f32bcb095aea2dbd
-  netease_meeting_ui: 8576ea1e0471b441f6d2feeba7375553e4d9d8a0
-  netease_roomkit: 587c5f0917a0bcf49f96c9402012706d4efab3db
-  NIMSDK_LITE: f1a026f9df4f2cecab7c2ea9a9b2102a115440bf
+  NERoomKit: ad8c963d85e2fb40d6096caad20ce7ffa9558269
+  NERtcSDK: df551f6172f9a50daa0167d0920de3371573ce14
+  netease_meeting_ui: 446ce89f346924506f72d7092dd21064b2311126
+  netease_roomkit: e888866b0b3056cf7bb69388cbe556e3e4c99398
+  NIMSDK_LITE: ccc20e8fdc7436fa75c7030a50cb81169ecc7493
   open_filex: 6e26e659846ec990262224a12ef1c528bb4edbe4
   package_info: 873975fc26034f0b863a300ad47e7f1ac6c7ec62
   path_provider_ios: 14f3d2fd28c4fdb42f44e0f751d12861c43cee02
-  permission_handler_apple: 44366e37eaf29454a1e7b1b7d736c2cceaeb17ce
+  permission_handler_apple: e76247795d700c14ea09e3a2d8855d41ee80a2e6
   Reachability: 33e18b67625424e47b6cde6d202dce689ad7af96
-  SDWebImage: 750adf017a315a280c60fde706ab1e552a3ae4e9
+  SDWebImage: 981fd7e860af070920f249fd092420006014c3eb
   shared_preferences_ios: 548a61f8053b9b8a49ac19c1ffbc8b92c50d68ad
+  sqflite: 673a0e54cc04b7d6dba8d24fb8095b31c3a99eec
   SwiftyGif: 93a1cc87bf3a51916001cf8f3d63835fb64c819f
-  url_launcher_ios: ae1517e5e344f5544fb090b079e11f399dfbe4d2
+  url_launcher_ios: 6116280ddcfe98ab8820085d8d76ae7449447586
   wakelock: d0fc7c864128eac40eba1617cb5264d9c940b46f
   webview_flutter_wkwebview: b7e70ef1ddded7e69c796c7390ee74180182971f
   yunxin_alog: c5532d2a6ab378baef9927fcae5ab19fe36c1103
   YXAlog: ac9bab3aff1326caa72cc25aedc358bc8d4f1b31
-  YXArtemis: e9cedfafd67faff267c24f245063bac78c113e1c
+  YXArtemis: 2771e9ac5e5e01867914835aedb03429d135043e
 
-PODFILE CHECKSUM: b1764d5de322d847dbf1dca60e8da97770b8c3b7
+PODFILE CHECKSUM: 8423423018ef57c55ab648012374aa10e8b62627
 
-COCOAPODS: 1.11.3
+COCOAPODS: 1.14.3

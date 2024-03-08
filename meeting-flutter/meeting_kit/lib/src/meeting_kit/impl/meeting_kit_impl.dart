@@ -36,15 +36,24 @@ class _NEMeetingKitImpl extends NEMeetingKit
         if (languageTag != 'und') 'Accept-Language': languageTag,
       };
     });
+    NERoomKit.instance.deviceId.then((value) {
+      HttpHeaderRegistry().addContributor(() => {
+            'deviceId': value,
+          });
+    });
     NERoomKit.instance.authService.onAuthEvent.listen((event) {
       if (event == NEAuthEvent.kKickOut) {
         _authListenerSet.toList().forEach((listener) => listener.onKickOut());
-      } else if (event == NEAuthEvent.kTokenExpired) {
-        _authListenerSet
-            .toList()
-            .forEach((listener) => listener.onAuthInfoExpired());
+      } else if ({NEAuthEvent.kTokenExpired, NEAuthEvent.kIncorrectToken}
+          .contains(event)) {
+        notifyAuthInfoExpired();
       }
     });
+    HttpErrorRepository()
+        .onError
+        .where((httpError) => httpError.code == NEMeetingErrorCode.authExpired)
+        .listen((httpError) => notifyAuthInfoExpired());
+
     NERoomKit.instance.messageChannelService.addMessageChannelCallback(
         NEMessageChannelCallback(onReceiveCustomMessage: (message) {
       if (message.commandId == 98 && message.roomUuid == null) {
@@ -52,14 +61,19 @@ class _NEMeetingKitImpl extends NEMeetingKit
           final data = jsonDecode(message.data);
           if (data['type'] == 200 && data['reason'] != null) {
             commonLogger.i('receive auth message: ${message.data}');
-            _authListenerSet
-                .toList()
-                .forEach((listener) => listener.onAuthInfoExpired());
+            notifyAuthInfoExpired();
           }
         } catch (e) {}
       }
     }));
     WidgetsBinding.instance.addObserver(this);
+  }
+
+  void notifyAuthInfoExpired() {
+    _authListenerSet
+        .toList()
+        .forEach((listener) => listener.onAuthInfoExpired());
+    logout();
   }
 
   @override
@@ -81,17 +95,16 @@ class _NEMeetingKitImpl extends NEMeetingKit
       return NEResult.success();
     }
     await NERoomLogService().init(loggerConfig: config.aLoggerConfig);
-    // final serverUrlInExtras = config.extras?[_serverUrlExtraKey] as String?;
+    // 如果外部没有设置域名，则切换使用默认的域名
+    final serverUrl = (config.serverUrl == null || config.serverUrl.isEmpty) &&
+            config.serverConfig == null
+        ? ServersConfig().defaultServerUrl
+        : config.serverUrl;
     final initResult = await _roomKit.initialize(
       NERoomKitOptions(
         appKey: config.appKey,
-        serverUrl: config.serverUrl,
+        serverUrl: serverUrl,
         serverConfig: config.serverConfig?.roomKitServerConfig,
-        // extras: serverUrlInExtras.isNotEmpty
-        //     ? {
-        //         _serverUrlExtraKey: serverUrlInExtras as String,
-        //       }
-        //     : null,
         extras: config.extras == null
             ? null
             : Map.fromEntries(config.extras!.entries
@@ -313,6 +326,9 @@ class _NEMeetingKitImpl extends NEMeetingKit
       _loginStatusChangeNotifier.value = now;
       if (old != now) {
         settingsService._ensureSettings();
+
+        /// 登录变更后，传递用户信息重新获取应用配置
+        SDKConfig.current.doFetchConfig();
       }
     });
   }
@@ -321,6 +337,9 @@ class _NEMeetingKitImpl extends NEMeetingKit
   Future<NEResult<String?>> uploadLog() {
     return _roomKit.uploadLog();
   }
+
+  @override
+  Future<String> get deviceId => NERoomKit.instance.deviceId;
 
   @override
   Future<bool> reportEvent(Event event, {String? userId}) {

@@ -2,24 +2,21 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
-import 'package:nemeeting/arguments/webview_arguments.dart';
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:nemeeting/service/config/servers.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
 import 'package:nemeeting/service/config/app_config.dart';
 import 'package:nemeeting/service/config/login_type.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
+import '../language/localizations.dart';
 import '../uikit/state/meeting_base_state.dart';
 import '../uikit/utils/nav_utils.dart';
 import '../uikit/utils/router_name.dart';
 import '../uikit/values/colors.dart';
 import '../uikit/values/dimem.dart';
 import '../uikit/values/fonts.dart';
-import '../uikit/values/strings.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
-import 'package:nemeeting/arguments/auth_arguments.dart';
 
 import '../utils/integration_test.dart';
 
@@ -32,7 +29,8 @@ class PersonalSetting extends StatefulWidget {
   }
 }
 
-class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
+class _PersonalSettingState extends MeetingBaseState<PersonalSetting>
+    with MeetingAppLocalizationsMixin {
   @override
   void initState() {
     super.initState();
@@ -52,7 +50,7 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
         buildHead(),
         _buildSplit(),
         buildPersonItem(
-            title: Strings.nick,
+            title: meetingAppLocalizations.settingNick,
             arrowTip: MeetingUtil.getNickName(),
             isShowArrow: canModifyNick(),
             onTap: () {
@@ -62,23 +60,6 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
                         NEMeetingEvent.inMeetingMinimized);
               }
             }),
-        _buildSplit(),
-        buildPersonItem(
-            title: Strings.company,
-            arrowTip: widget.companyName,
-            isShowArrow: canSwitchCompany(),
-            onTap: () {
-              if (canSwitchCompany()) {
-                NavUtils.pushNamed(context, RouterName.companySetting);
-              }
-            }),
-        if (!TextUtil.isEmpty(MeetingUtil.getMobilePhone()) || canModifyPwd())
-          Container(
-            color: AppColors.globalBg,
-            height: Dimen.globalPadding,
-          ),
-        if (!TextUtil.isEmpty(MeetingUtil.getMobilePhone())) ...buildMobile(),
-        if (canModifyPwd()) buildModifyPwd(),
         Container(
           color: AppColors.globalBg,
           height: Dimen.globalPadding,
@@ -90,8 +71,18 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
           color: AppColors.globalBg,
           height: Dimen.globalPadding,
         ),
+        buildPersonItem(
+            title: meetingAppLocalizations.settingAccountAndSafety,
+            arrowTip: '',
+            isShowArrow: true,
+            onTap: () {
+              NavUtils.pushNamed(context, RouterName.accountAndSafety);
+            }),
+        Container(
+          color: AppColors.globalBg,
+          height: Dimen.globalPadding,
+        ),
         buildLogout(),
-        Spacer(),
       ],
     );
   }
@@ -104,7 +95,7 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
       child: Row(
         children: <Widget>[
           Text(
-            Strings.email,
+            meetingAppLocalizations.settingEmail,
             style: TextStyle(fontSize: 16, color: AppColors.black_222222),
           ),
           Spacer(),
@@ -125,7 +116,7 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
         padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
         alignment: Alignment.center,
         child: Text(
-          Strings.logout,
+          meetingAppLocalizations.settingLogout,
           style: TextStyle(fontSize: 17, color: AppColors.colorFE3B30),
         ),
       ),
@@ -141,24 +132,19 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
       child: Row(
         children: <Widget>[
           Text(
-            Strings.personalMeetingNum,
+            meetingAppLocalizations.meetingPersonalMeetingID,
             style: TextStyle(fontSize: 16, color: AppColors.black_222222),
           ),
           Spacer(),
-          GestureDetector(
-            child: Text(
-              TextUtil.applyMask(
-                  NEMeetingKit.instance
-                          .getAccountService()
-                          .getAccountInfo()
-                          ?.privateMeetingNum ??
-                      '',
-                  '000-000-0000'),
-              style: TextStyle(fontSize: 14, color: AppColors.color_999999),
-            ),
-            onTap: () {
-              NavUtils.toDeveloper(context);
-            },
+          Text(
+            TextUtil.applyMask(
+                NEMeetingKit.instance
+                        .getAccountService()
+                        .getAccountInfo()
+                        ?.privateMeetingNum ??
+                    '',
+                '000-000-0000'),
+            style: TextStyle(fontSize: 14, color: AppColors.color_999999),
           ),
         ],
       ),
@@ -174,7 +160,7 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
         child: Row(
           children: <Widget>[
             Text(
-              Strings.personalShortMeetingNum,
+              meetingAppLocalizations.meetingPersonalShortMeetingID,
               style: TextStyle(fontSize: 16, color: AppColors.black_222222),
             ),
             Container(
@@ -185,68 +171,13 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
                   color: AppColors.color_1a337eff,
                   border: Border.all(color: AppColors.color_33337eff)),
               child: Text(
-                Strings.internalSpecial,
+                meetingAppLocalizations.settingInternalDedicated,
                 style: TextStyle(fontSize: 12, color: AppColors.color_337eff),
               ),
             ),
             Spacer(),
-            GestureDetector(
-              child: Text(
-                MeetingUtil.getShortMeetingNum(),
-                style: TextStyle(fontSize: 14, color: AppColors.color_999999),
-              ),
-              onTap: () {
-                NavUtils.toDeveloper(context);
-              },
-            ),
-          ],
-        ),
-      ),
-      _buildSplit(),
-    ];
-  }
-
-  GestureDetector buildModifyPwd() {
-    return GestureDetector(
-      child: Container(
-        height: Dimen.primaryItemHeight,
-        color: Colors.white,
-        padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
-        child: Row(
-          children: <Widget>[
             Text(
-              Strings.modifyPassword,
-              style: TextStyle(fontSize: 16, color: AppColors.black_222222),
-            ),
-            Spacer(),
-            Icon(
-              IconFont.iconyx_allowx,
-              size: 14,
-              color: AppColors.greyCCCCCC,
-            )
-          ],
-        ),
-      ),
-      onTap: () => NavUtils.pushNamed(context, RouterName.passwordVerify,
-          arguments: AuthArguments()),
-    );
-  }
-
-  List<Widget> buildMobile() {
-    return [
-      Container(
-        height: Dimen.primaryItemHeight,
-        color: Colors.white,
-        padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
-        child: Row(
-          children: <Widget>[
-            Text(
-              Strings.mobile,
-              style: TextStyle(fontSize: 16, color: AppColors.black_222222),
-            ),
-            Spacer(),
-            Text(
-              AuthManager().mobilePhone ?? '',
+              MeetingUtil.getShortMeetingNum(),
               style: TextStyle(fontSize: 14, color: AppColors.color_999999),
             ),
           ],
@@ -308,27 +239,21 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
       child: Row(
         children: <Widget>[
           Text(
-            Strings.head,
+            meetingAppLocalizations.settingHead,
             style: TextStyle(fontSize: 16, color: AppColors.black_222222),
           ),
           Spacer(),
-          ClipOval(
-              child: Container(
-            height: 32,
-            width: 32,
-            decoration: ShapeDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: <Color>[AppColors.blue_5996FF, AppColors.blue_2575FF],
-                ),
-                shape: Border()),
-            alignment: Alignment.center,
-            child: Text(
-              MeetingUtil.getCurrentNickLeading(),
-              style: TextStyle(fontSize: 21, color: Colors.white),
-            ),
-          )),
+          ListenableBuilder(
+            listenable: NEMeetingKit.instance.getAccountService(),
+            builder: (context, child) {
+              final accountInfo =
+                  NEMeetingKit.instance.getAccountService().getAccountInfo();
+              return NEMeetingAvatar.medium(
+                name: accountInfo?.nickname,
+                url: accountInfo?.avatar,
+              );
+            },
+          ),
         ],
       ),
     );
@@ -336,19 +261,20 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
 
   void showLogoutActionSheet() {
     if (NEMeetingUIKit().getCurrentMeetingInfo() != null) {
-      ToastUtils.showToast(context, Strings.miniTipAlreadyInRightMeeting);
+      ToastUtils.showToast(context,
+          meetingAppLocalizations.meetingOperationNotSupportedInMeeting);
       return;
     }
     showCupertinoModalPopup<String>(
         context: context,
         builder: (BuildContext context) => CupertinoActionSheet(
               title: Text(
-                Strings.confirmLogout,
+                meetingAppLocalizations.settingLogoutConfirm,
                 style: TextStyle(color: AppColors.grey_8F8F8F, fontSize: 13),
               ),
               actions: <Widget>[
                 CupertinoActionSheetAction(
-                    child: Text(Strings.logout,
+                    child: Text(meetingAppLocalizations.settingLogout,
                         key: MeetingValueKey.logoutByDialog,
                         style: TextStyle(color: AppColors.colorFE3B30)),
                     onPressed: () {
@@ -359,10 +285,10 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
               ],
               cancelButton: CupertinoActionSheetAction(
                 isDefaultAction: true,
-                child: Text(Strings.cancel,
+                child: Text(meetingAppLocalizations.globalCancel,
                     style: TextStyle(color: AppColors.color_007AFF)),
                 onPressed: () {
-                  Navigator.pop(context, Strings.cancel);
+                  Navigator.pop(context, meetingAppLocalizations.globalCancel);
                 },
               ),
             ));
@@ -373,17 +299,17 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
         context: context,
         builder: (BuildContext context) {
           return CupertinoAlertDialog(
-            title: Text(Strings.confirmLogout),
-//            content: Text(Strings.confirmLogout),
+            title: Text(meetingAppLocalizations.settingLogoutConfirm),
+//            content: Text(meetingAppLocalizations.confirmLogout),
             actions: <Widget>[
               CupertinoDialogAction(
-                child: Text(Strings.cancel),
+                child: Text(meetingAppLocalizations.globalCancel),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               CupertinoDialogAction(
-                child: Text(Strings.logout),
+                child: Text(meetingAppLocalizations.settingLogout),
                 onPressed: () {
                   AuthManager().logout();
                   NavUtils.pushNamedAndRemoveUntil(
@@ -406,23 +332,11 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting> {
 
   @override
   String getTitle() {
-    return Strings.personalCenter;
+    return meetingAppLocalizations.settingPersonalCenter;
   }
 
   bool canModifyNick() {
     return AppConfig().isPublicFlavor &&
         (AuthManager().loginType != LoginType.sso.index);
-  }
-
-  bool canModifyPwd() {
-    // return AppConfig().isPublicFlavor &&
-    //     (AuthManager().loginType != LoginType.sso.index);
-    return false;
-  }
-
-  bool canSwitchCompany() {
-    return false;
-    // return AppConfig().isPublicFlavor &&
-    //     (AuthManager().loginType != LoginType.sso.index);
   }
 }

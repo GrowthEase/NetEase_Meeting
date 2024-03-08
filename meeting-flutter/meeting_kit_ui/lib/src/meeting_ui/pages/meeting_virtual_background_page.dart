@@ -29,6 +29,7 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
   final _settingsService = NEMeetingKit.instance.getSettingsService();
   bool bCanPress = true;
   List<NEMeetingVirtualBackground> builtinVirtualBackgroundList = [];
+  int _builtInVirtualBackgroundPicSize = 0;
 
   @override
   void initState() {
@@ -101,6 +102,7 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
               itemCount: sourceList.length,
               itemBuilder: (BuildContext context, int index) {
                 return GestureDetector(
+                  key: MeetingUIValueKeys.virtualBackgroundItem,
                   child: Container(
                       width: 68,
                       height: 68,
@@ -156,14 +158,15 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
           alignment: Alignment.bottomCenter,
           child: Row(children: <Widget>[
             Opacity(
-              opacity: currentSelected > virtualListMax &&
+              opacity: currentSelected > _builtInVirtualBackgroundPicSize &&
                       currentSelected < sourceList.length - 1
                   ? 1.0
                   : 0.0,
               child: GestureDetector(
                   child: Padding(
                     padding: EdgeInsets.only(left: 16),
-                    child: Text(NEMeetingUIKitLocalizations.of(context)!.delete,
+                    child: Text(
+                        NEMeetingUIKitLocalizations.of(context)!.globalDelete,
                         style: TextStyle(color: Colors.grey)),
                   ),
                   onTap: () async {
@@ -171,11 +174,13 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
                       bCanPress = false;
                       Future.delayed(Duration(milliseconds: 200), () {
                         bCanPress = true;
-                        if (currentSelected > virtualListMax) {
+                        if (currentSelected >
+                            _builtInVirtualBackgroundPicSize) {
                           try {
                             sourceList.removeAt(currentSelected);
-                            int addExternalVirtualListIndex =
-                                currentSelected - virtualListMax - 1;
+                            int addExternalVirtualListIndex = currentSelected -
+                                _builtInVirtualBackgroundPicSize -
+                                1;
                             if (addExternalVirtualListIndex <
                                     (addExternalVirtualList?.length ?? 0) &&
                                 addExternalVirtualListIndex >= 0) {
@@ -215,7 +220,7 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
               child: Padding(
                 padding: EdgeInsets.only(right: 16),
                 child: Text(
-                  NEMeetingUIKitLocalizations.of(context)!.sure,
+                  NEMeetingUIKitLocalizations.of(context)!.globalSure,
                   style: TextStyle(color: Colors.blue),
                 ),
               ),
@@ -234,8 +239,9 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
           context,
           Permission.camera,
           '',
-          NEMeetingUIKitLocalizations.of(context)!.cameraPermission);
-      if (!granted) UINavUtils.pop(context);
+          NEMeetingUIKitLocalizations.of(context)!.meetingCamera);
+      if (!granted && ModalRoute.of(context)?.isActive == true)
+        UINavUtils.pop(context);
     }
     return granted;
   }
@@ -248,21 +254,22 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
       cache = await getApplicationDocumentsDirectory();
     }
 
-    /// 默认的前6张
     builtinVirtualBackgroundList =
         await _settingsService.getBuiltinVirtualBackgrounds();
     if (builtinVirtualBackgroundList.isNotEmpty) {
+      _builtInVirtualBackgroundPicSize = builtinVirtualBackgroundList.length;
       builtinVirtualBackgroundList.forEach((element) {
         sourceList.add(element.path);
       });
       sourceList = replaceBundleId(cache!.path, sourceList);
     } else {
-      for (var i = 1; i <= 6; ++i) {
+      for (var i = 1; i <= 9; ++i) {
         String filePath = '${cache?.path}/virtual/$i.png';
         File file = File(filePath);
         var exist = await file.exists();
         if (exist) {
           sourceList.add(filePath);
+          _builtInVirtualBackgroundPicSize++;
         }
       }
     }

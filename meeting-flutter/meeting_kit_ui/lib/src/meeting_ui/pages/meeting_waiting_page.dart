@@ -5,6 +5,8 @@
 part of meeting_ui;
 
 class MeetingWaitingPage extends StatefulWidget {
+  static const routeName = 'MeetingWaitingPage';
+
   final MeetingWaitingArguments waitingArguments;
 
   MeetingWaitingPage(this.waitingArguments);
@@ -82,13 +84,13 @@ class MeetingWaitingPageState extends BaseState<MeetingWaitingPage> {
                   autofocus: true,
                   controller: _textFieldController,
                   placeholder: NEMeetingUIKitLocalizations.of(context)!
-                      .inputMeetingPassword,
+                      .meetingEnterPassword,
                   placeholderStyle: const TextStyle(
                     fontSize: 13,
                     color: CupertinoColors.placeholderText,
                   ),
                   keyboardType: TextInputType.visiblePassword,
-                  obscureText: true,
+                  // obscureText: true,
                   onChanged: _onTextChanged,
                   onEditingComplete: canRetryJoining() ? _verifyPassword : null,
                   textInputAction: TextInputAction.go,
@@ -103,7 +105,7 @@ class MeetingWaitingPageState extends BaseState<MeetingWaitingPage> {
           )),
       actions: <Widget>[
         CupertinoDialogAction(
-          child: Text(NEMeetingUIKitLocalizations.of(context)!.cancel),
+          child: Text(NEMeetingUIKitLocalizations.of(context)!.globalCancel),
           onPressed: () {
             calculateWaitingElapsed();
             cancel();
@@ -111,7 +113,8 @@ class MeetingWaitingPageState extends BaseState<MeetingWaitingPage> {
         ),
         CupertinoDialogAction(
             key: MeetingUIValueKeys.inputMeetingPasswordJoinMeeting,
-            child: Text(NEMeetingUIKitLocalizations.of(context)!.joinMeeting),
+            child: Text(NEMeetingUIKitLocalizations.of(context)!
+                .waitingRoomJoinMeeting),
             onPressed: canRetryJoining() ? _verifyPassword : null),
       ],
     );
@@ -129,7 +132,7 @@ class MeetingWaitingPageState extends BaseState<MeetingWaitingPage> {
               )));
     } else {
       final error = errorCode == NEErrorCode.badPassword
-          ? NEMeetingUIKitLocalizations.of(context)!.wrongPassword
+          ? NEMeetingUIKitLocalizations.of(context)!.meetingWrongPassword
           : '';
       return error.isNotEmpty
           ? Padding(
@@ -178,9 +181,8 @@ class MeetingWaitingPageState extends BaseState<MeetingWaitingPage> {
     final network = await Connectivity().checkConnectivity();
     if (!mounted) return;
     if (network == ConnectivityResult.none) {
-      showToastWithMini(
-          NEMeetingKitLocalizations.of(context)!.networkUnavailableCheck,
-          false);
+      ToastUtils.showToast(context,
+          NEMeetingKitLocalizations.of(context)!.networkUnavailableCheck);
       return;
     }
 

@@ -196,7 +196,7 @@ class _TrackModuleName {
   static const String meeting = 'meeting';
 }
 
-abstract class EventTrackMixin {
+mixin class EventTrackMixin {
   void trackPeriodicEvent(String name,
       {String module = _TrackModuleName.meeting,
       String? category,

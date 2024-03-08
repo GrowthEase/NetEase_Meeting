@@ -5,8 +5,8 @@ homepage: https://yunxin.163.com/
 publish_to: none
 
 environment:
-  sdk: '>=2.17.0  <4.0.0'
-  flutter: ">=1.22.0"
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.10.0"
 
 dependencies:
   flutter:
@@ -18,11 +18,11 @@ dependencies:
   dio: ^4.0.6
 
   path_provider: 2.0.11
-  uuid: ^3.0.6
+  uuid: ^4.3.3
   device_info_plus: ^8.0.0
 
   yunxin_alog: ^2.0.0
-  netease_roomkit: 1.21.1
+  netease_roomkit: 1.26.0
 
 dev_dependencies:
   flutter_test:

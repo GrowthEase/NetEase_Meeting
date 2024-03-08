@@ -7,6 +7,7 @@ library meeting_kit;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/foundation.dart';
@@ -33,10 +34,12 @@ export 'package:netease_meeting_core/meeting_service.dart'
         NELiveAuthLevel,
         NERoomItemLiveState,
         NEMeetingRoleConfiguration,
+        NEWatermarkConfig,
         NERoomInvitation,
         NERoomControl,
         NERoomAudioControl,
         NERoomVideoControl,
+        NEAccountInfo,
         NERoomAttendeeOffType;
 export 'package:netease_roomkit/netease_roomkit.dart'
     show
@@ -44,7 +47,10 @@ export 'package:netease_roomkit/netease_roomkit.dart'
         NERoomKitServerConfig,
         NEIMServerConfig,
         NERtcServerConfig,
-        NEWhiteboardServerConfig;
+        NEWhiteboardServerConfig,
+        NEChatroomType,
+        NEChatroomMessageSearchOrder,
+        NEChatroomHistoryMessageSearchOption;
 
 part 'src/meeting_kit/meeting_account_service.dart';
 part 'src/meeting_kit/impl/screen_sharing_service_impl.dart';
@@ -237,6 +243,11 @@ abstract class NEMeetingKit {
   Future<NEResult<String?>> uploadLog();
 
   ///
+  /// 获取设备Id
+  ///
+  Future<String> get deviceId;
+
+  ///
   /// 埋点上报
   ///
   Future<dynamic> reportEvent(Event event, {String? userId});
@@ -291,7 +302,10 @@ class NEMeetingErrorCode {
   static const int meetingNotExist = MeetingErrorCode.meetingNotExists;
 
   /// room 不存在
-  static const int meetingNotInProgress = NEErrorCode.roomNotExit;
+  static const int meetingNotInProgress = NEErrorCode.roomNotExist;
+
+  /// 鉴权过期，如密码重置
+  static const int authExpired = NEErrorCode.authExpired;
 }
 
 /// 房间登陆状态回调

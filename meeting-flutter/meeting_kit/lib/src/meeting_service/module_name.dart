@@ -5,3 +5,21 @@
 part of meeting_service;
 
 const _moduleName = 'meeting_service';
+
+mixin _AloggerMixin {
+  Alogger? _apiLogger, _commonLogger;
+
+  Alogger get apiLogger {
+    _apiLogger ??= Alogger.api(logTag, _moduleName);
+    return _apiLogger!;
+  }
+
+  Alogger get commonLogger {
+    _commonLogger ??= Alogger.normal(logTag, _moduleName);
+    return _commonLogger!;
+  }
+
+  String get logTag {
+    return runtimeType.toString();
+  }
+}

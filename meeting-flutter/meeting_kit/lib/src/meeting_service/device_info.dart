@@ -5,7 +5,6 @@
 part of meeting_service;
 
 class DeviceInfo {
-  static late String _deviceId;
   static late String _model;
   static late String _osVer;
   static int sdkInt = 0;
@@ -19,13 +18,6 @@ class DeviceInfo {
 
   static Future<void> initialize() async {
     if (!_initialized) {
-      var deviceId = await SDKPreferences.getDeviceId();
-      if (TextUtils.isEmpty(deviceId)) {
-        _deviceId = Uuid().v4();
-        await SDKPreferences.setDeviceId(_deviceId);
-      } else {
-        _deviceId = deviceId!;
-      }
       var plat = DeviceInfoPlugin();
       if (Platform.isAndroid) {
         _platform = 'Android';
@@ -50,8 +42,6 @@ class DeviceInfo {
       _initialized = true;
     }
   }
-
-  static String get deviceId => _deviceId;
 
   static int get clientType => _clientType;
 

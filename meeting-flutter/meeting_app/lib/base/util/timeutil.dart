@@ -15,6 +15,7 @@ class TimeFormat {
   static const dateFormatReadable = "dd MM yyyy hh:mm:ss a";
   static const dateFormatSimple = "kk:mm:ss";
   static const timeFormatWithMinute = "yyyy-MM-dd HH:mm";
+  static const timeFormatWithMinute2 = "yyyy.MM.dd HH:mm";
   static const timeFormatHourMinute = "kk:mm";
 }
 
@@ -50,6 +51,10 @@ class TimeUtil {
 
   static String timeFormatWithMinute(DateTime time) {
     return DateFormat(TimeFormat.timeFormatWithMinute).format(time);
+  }
+
+  static String timeFormatWithMinute2(DateTime time) {
+    return DateFormat(TimeFormat.timeFormatWithMinute2).format(time);
   }
 
   static String timeFormatHourMinute(DateTime time) {

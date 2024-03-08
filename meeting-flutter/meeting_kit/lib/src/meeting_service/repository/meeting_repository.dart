@@ -13,6 +13,7 @@ class MeetingRepository {
     required int roomConfigId,
     Map? roomProperties,
     Map? roleBinds,
+    bool enableWaitingRoom = false,
     NEMeetingFeatureConfig featureConfig = const NEMeetingFeatureConfig(),
   }) {
     return HttpApiHelper.execute(
@@ -21,6 +22,7 @@ class MeetingRepository {
         _CreateMeetingRequest(
           subject: subject,
           password: password,
+          enableWaitingRoom: enableWaitingRoom,
           roomConfigId: roomConfigId,
           roomProperties:
               roomProperties?.map((k, v) => MapEntry(k, {'value': v})),

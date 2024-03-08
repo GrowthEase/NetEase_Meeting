@@ -8,41 +8,51 @@ import 'package:nemeeting/meeting/history_meeting.dart';
 import 'package:nemeeting/meeting/meeting_create.dart';
 import 'package:nemeeting/meeting/meeting_join.dart';
 import 'package:nemeeting/pre_meeting/schedule_meeting.dart';
-import 'package:nemeeting/routes/auth/check_mobile.dart';
-import 'package:nemeeting/routes/auth/get_mobile_check_code.dart';
-import 'package:nemeeting/routes/auth/password_verify.dart';
-import 'package:nemeeting/routes/backdoor.dart';
+import 'package:nemeeting/routes/auth/login_corp_account.dart';
+import 'package:nemeeting/routes/auth/login_sso.dart';
+import 'package:nemeeting/routes/auth/modify_password.dart';
+import 'package:nemeeting/routes/auth/verify_mobile_check_code.dart';
 import 'package:nemeeting/routes/entrance.dart';
 import 'package:nemeeting/routes/home_page.dart';
-// import 'package:nemeeting/setting/company_setting.dart';
-import '../routes/auth/login.dart';
+import 'package:nemeeting/routes/auth/login_mobile.dart';
+import 'package:nemeeting/routes/network_not_available_page.dart';
+import 'package:nemeeting/setting/account_and_safety_setting.dart';
+import 'package:nemeeting/uikit/utils/nav_utils.dart';
+import 'package:netease_meeting_ui/meeting_ui.dart';
+import '../routes/auth/reset_initial_password.dart';
+import '../language/localizations.dart';
 import '../uikit/utils/router_name.dart';
-import 'package:nemeeting/routes/auth/register_user_info.dart';
 import 'package:nemeeting/setting/meeting_setting.dart';
 import 'package:nemeeting/setting/nick_setting.dart';
 
+import '../webview/webview_page.dart';
+
 class RoutesRegister {
-  static var routes = {
-    RouterName.login: (context) => LoginRoute(),
-    RouterName.getMobileCheckCode: (context) => GetMobileCheckCodeRoute(),
-    RouterName.checkMobile: (context) => CheckMobileRoute(),
-    RouterName.registerUserInfo: (context) => RegisterUserInfoRoute(),
-    RouterName.passwordVerify: (context) => PasswordVerifyRoute(),
-    //RouterName.oldPasswordVerify: (context) => OldPasswordVerifyRoute(),
-    // RouterName.anonyMeetJoin: (context) => AnonyMeetJoinRoute(),
+  static var _routes = {
+    RouterName.mobileLogin: (context) => LoginMobileRoute(),
+    RouterName.corpAccountLogin: (context) => LoginCorpAccountRoute(),
+    RouterName.resetInitialPassword: (context) => ResetInitialPasswordRoute(),
+    RouterName.ssoLogin: (context) => LoginSSORoute(),
+    RouterName.verifyMobileCheckCode: (context) => VerifyMobileCheckCodeRoute(),
     RouterName.entrance: (context) => EntranceRoute(),
-    RouterName.homePage: (context) => HomePageRoute(),
+    RouterName.homePage: (context) => HomePageRoute(isPipMode: false),
     RouterName.meetCreate: (context) => MeetCreateRoute(),
     RouterName.meetJoin: (context) => MeetJoinRoute(),
     RouterName.historyMeet: (context) => HistoryMeetingRoute(),
     RouterName.meetingSetting: (context) => MeetingSetting(),
-    // RouterName.personalSetting: (context) => PersonalSetting(),
-    // RouterName.companySetting: (context) => CompanySetting(),
     RouterName.nickSetting: (context) => NickSetting(),
-    RouterName.backdoor: (context) => BackdoorRoute(),
     RouterName.about: (context) => About(),
     RouterName.scheduleMeeting: (context) => ScheduleMeetingRoute(),
+    RouterName.networkNotAvailable: (context) => NetworkNotAvailableRoute(),
+    RouterName.accountAndSafety: (context) => AccountAndSafetySettingRoute(),
+    RouterName.modifyPassword: (context) => ModifyPasswordRoute(),
+    RouterName.webview: (context) => WebViewPage(),
   };
+
+  static Map<String, Widget Function(dynamic)> get routes {
+    return _routes.map((key, value) => MapEntry(
+        key, (context) => MeetingAppLocalizationsScope(builder: value)));
+  }
 
   static MaterialPageRoute getPageRoute(
       String routeName, BuildContext context) {
@@ -51,5 +61,28 @@ class RoutesRegister {
       throw Exception('Invalid route name: $routeName');
     }
     return MaterialPageRoute(builder: (context) => builder(context));
+  }
+
+  static void pushPage(
+    BuildContext context,
+    String routeName, {
+    Object? arguments,
+  }) {
+    NavUtils.pushNamed(context, routeName,
+        arguments: arguments,
+        pageRoute: NEMeetingUIKit().getMeetingStatus().event ==
+                NEMeetingEvent.inMeetingMinimized ||
+            NEMeetingUIKit().getMeetingStatus().event ==
+                NEMeetingEvent.inMeeting);
+  }
+
+  static void pushNamedAndRemoveUntil(
+    BuildContext context,
+    String routeName, {
+    String? utilRouteName,
+    Object? arguments,
+  }) {
+    NavUtils.pushNamedAndRemoveUntil(context, routeName,
+        utilRouteName: utilRouteName, arguments: arguments);
   }
 }

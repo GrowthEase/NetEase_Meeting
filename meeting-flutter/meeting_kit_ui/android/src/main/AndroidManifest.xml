@@ -11,6 +11,7 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <application>
 
         <!-- 解决高版本SDK(31以上)中不能访问系统SO库的问题：部分机型虚拟背景不生效 -->

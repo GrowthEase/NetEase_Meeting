@@ -71,7 +71,8 @@ class _SliderDemo extends State<SliderWidget> {
                       child: Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            NEMeetingUIKitLocalizations.of(context)!.beauty,
+                            NEMeetingUIKitLocalizations.of(context)!
+                                .meetingBeauty,
                             style: TextStyle(
                                 color: _UIColors.black_333333,
                                 fontSize: 16,
@@ -114,7 +115,7 @@ class _SliderDemo extends State<SliderWidget> {
                           ),
                           Text(
                             NEMeetingUIKitLocalizations.of(context)!
-                                .beautyLevel,
+                                .meetingBeautyLevel,
                             style: TextStyle(
                                 color: _UIColors.black_222222,
                                 fontSize: 14,

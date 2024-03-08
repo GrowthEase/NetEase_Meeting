@@ -31,6 +31,9 @@ class NEMenuIDs {
     invitation,
     chatroom,
     whiteBoard,
+    cloudRecord,
+    security,
+    disconnectAudio,
   };
 
   /// 内置"音频"菜单ID，使用该ID的菜单可添加至Toolbar菜单列表中的任意位置。
@@ -61,10 +64,20 @@ class NEMenuIDs {
 
   /// 内置"白板"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
   static const int whiteBoard = 22;
+
+  /// 内置"云录制"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
+  static const int cloudRecord = 23;
+
+  /// 内置"安全"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
+  static const int security = 24;
+
+  /// 内置"断开音频"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
+  static const int disconnectAudio = 25;
 }
 
 class NEMenuItems {
   static List<NEMeetingMenuItem> get defaultToolbarMenuItems => [
+        disconnectAudio,
         microphone,
         camera,
         screenShare,
@@ -76,6 +89,9 @@ class NEMenuItems {
         invitation,
         chatroom,
         whiteBoard,
+        cloudRecord,
+        security,
+        disconnectAudio,
       ];
 
   static final NEMeetingMenuItem microphone = NECheckableMenuItem(
@@ -131,6 +147,29 @@ class NEMenuItems {
   /// 白板菜单
   static final whiteBoard = NECheckableMenuItem(
     itemId: NEMenuIDs.whiteBoard,
+    visibility: NEMenuVisibility.visibleAlways,
+    uncheckStateItem: NEMenuItemInfo.undefine,
+    checkedStateItem: NEMenuItemInfo.undefine,
+  );
+
+  /// 云录制菜单
+  static final cloudRecord = NECheckableMenuItem(
+    itemId: NEMenuIDs.cloudRecord,
+    visibility: NEMenuVisibility.visibleToHostOnly,
+    uncheckStateItem: NEMenuItemInfo.undefine,
+    checkedStateItem: NEMenuItemInfo.undefine,
+  );
+
+  /// 安全菜单
+  static final security = NESingleStateMenuItem(
+    itemId: NEMenuIDs.security,
+    visibility: NEMenuVisibility.visibleToHostOnly,
+    singleStateItem: NEMenuItemInfo.undefine,
+  );
+
+  /// 断开音频
+  static final disconnectAudio = NECheckableMenuItem(
+    itemId: NEMenuIDs.disconnectAudio,
     visibility: NEMenuVisibility.visibleAlways,
     uncheckStateItem: NEMenuItemInfo.undefine,
     checkedStateItem: NEMenuItemInfo.undefine,

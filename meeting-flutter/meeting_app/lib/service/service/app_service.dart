@@ -6,16 +6,19 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
-import 'package:nemeeting/service/config/scene_type.dart';
 import 'package:nemeeting/service/model/account_app_info.dart';
 import 'package:nemeeting/service/model/account_apps.dart';
+import 'package:nemeeting/service/model/chatroom_info.dart';
+import 'package:nemeeting/service/model/client_upgrade_info.dart';
 import 'package:nemeeting/service/model/history_meeting.dart';
 import 'package:nemeeting/service/model/login_info.dart';
 import 'package:nemeeting/service/model/parse_sso_token.dart';
 import 'package:nemeeting/service/proto/app_http_proto/auth_code_proto.dart';
+import 'package:nemeeting/service/proto/app_http_proto/client_update_proto.dart';
 import 'package:nemeeting/service/proto/app_http_proto/download_file_proto.dart';
 import 'package:nemeeting/service/proto/app_http_proto/get_account_appinfo_proto.dart';
 import 'package:nemeeting/service/proto/app_http_proto/get_account_apps_proto.dart';
+import 'package:nemeeting/service/proto/app_http_proto/history_meeting_details_proto.dart';
 import 'package:nemeeting/service/proto/app_http_proto/history_meeting_proto.dart';
 import 'package:nemeeting/service/proto/app_http_proto/favourited_meeting_proto.dart';
 import 'package:nemeeting/service/proto/app_http_proto/login_proto.dart';
@@ -26,9 +29,11 @@ import 'package:nemeeting/service/proto/app_http_proto/password_modify_proto.dar
 import 'package:nemeeting/service/proto/app_http_proto/password_reset_by_exchange_code_proto.dart';
 import 'package:nemeeting/service/proto/app_http_proto/password_reset_proto.dart';
 import 'package:nemeeting/service/proto/app_http_proto/register_proto.dart';
+import 'package:nemeeting/service/proto/app_http_proto/report_yidun_token.dart';
 import 'package:nemeeting/service/proto/app_http_proto/switch_app_proto.dart';
 import 'package:nemeeting/service/proto/app_http_proto/update_nickname_proto.dart';
-import 'package:nemeeting/service/proto/app_http_proto/verify_auth_code_proto.dart';
+import 'package:nemeeting/service/proto/app_http_proto/security_notice_proto.dart';
+import 'package:nemeeting/service/model/security_notice_info.dart';
 import 'package:nemeeting/service/response/result.dart';
 import 'package:nemeeting/service/service/base_service.dart';
 
@@ -40,15 +45,15 @@ class AppService extends BaseService {
 
   factory AppService() => _singleton;
 
-  /// 请求发送短信验证码
-  Future<Result<void>> getAuthCode(String mobile, SceneType scene) {
-    return execute(AuthCodeProto(mobile, scene));
+  /// 安全提示接口
+  Future<Result<AppNotifications>> getSecurityNoticeConfigs(
+      String appKey, String time) {
+    return execute(SecurityNoticeProto(appKey, time));
   }
 
-  /// 验证验证码
-  Future<Result<String>> verifyAuthCode(
-      String mobile, String authCode, SceneType scene) {
-    return execute(VerifyAuthCodeProto(mobile, authCode, scene));
+  /// 请求发送短信验证码
+  Future<Result<void>> getMobileCheckCode(String appKey, String mobile) {
+    return execute(GetMobileCheckCodeProto(appKey, mobile));
   }
 
   /// 注册
@@ -90,6 +95,13 @@ class AppService extends BaseService {
     return execute(UpdateNicknameProto(nickName));
   }
 
+  /// 客户端升级
+  Future<Result<UpgradeInfo>> getClientUpdateInfo(String? accountId,
+      String versionName, int versionCode, int clientAppCode) async {
+    return execute(
+        ClientUpdateProto(accountId, versionName, versionCode, clientAppCode));
+  }
+
   /// 下载文件进度
   Future<Result<void>> downloadFile(
       String url, File file, ProgressCallback progress) {
@@ -111,6 +123,15 @@ class AppService extends BaseService {
     return execute(SwitchAppProto());
   }
 
+  Future<Result<void>> reportYiDunToken(String token) async {
+    final appKey = AuthManager().appKey;
+    final user = AuthManager().accountId;
+    if (appKey != null && user != null && token.isNotEmpty) {
+      return execute(ReportYiDunTokenProto(appKey, user, token));
+    }
+    return Result(code: -1, msg: 'Empty appKey or userId');
+  }
+
   // 获取所有历史会议信息
   Future<Result<List<HistoryMeeting>>> getAllHistoryMeetings(
       [int? startId, int limit = 20]) async {
@@ -122,7 +143,7 @@ class AppService extends BaseService {
   }
 
   // 获取会议收藏列表
-  Future<Result<List<FavoriteMeeting>>> getFavoriteMeetings(
+  Future<Result<List<HistoryMeeting>>> getFavoriteMeetings(
       [int? startId, int limit = 20]) async {
     final appKey = AuthManager().appKey;
     if (appKey != null) {
@@ -155,6 +176,16 @@ class AppService extends BaseService {
     final appKey = AuthManager().appKey;
     if (appKey != null) {
       return execute(CancelFavoriteByFavoriteIdProto(appKey, favoriteId));
+    }
+    return Result(code: -1, msg: 'Empty appKey or userId');
+  }
+
+  // 获取历史会议详细信息、聊天室信息
+  Future<Result<ChatroomInfo>> getHistoryMeetingDetails(
+      int roomArchiveId) async {
+    final appKey = AuthManager().appKey;
+    if (appKey != null) {
+      return execute(HistoryMeetingDetailsProto(appKey, roomArchiveId));
     }
     return Result(code: -1, msg: 'Empty appKey or userId');
   }

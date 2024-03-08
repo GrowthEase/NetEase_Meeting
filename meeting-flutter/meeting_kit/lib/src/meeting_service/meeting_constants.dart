@@ -72,6 +72,13 @@ class VideoControlProperty {
   static const offNotAllowSelfOn = "offNotAllowSelfOn";
 }
 
+///
+/// 水印房间属性Key
+///
+class WatermarkProperty {
+  static const key = 'watermark';
+}
+
 class MeetingRoles {
   MeetingRoles._();
 

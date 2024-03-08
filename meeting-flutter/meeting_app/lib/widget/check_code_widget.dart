@@ -5,9 +5,8 @@
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
+import 'package:nemeeting/language/localizations.dart';
 import '../service/repo/auth_repo.dart';
-import '../uikit/values/strings.dart';
-import 'package:nemeeting/arguments/auth_arguments.dart';
 import '../uikit/values/colors.dart';
 import 'package:yunxin_alog/yunxin_alog.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
@@ -17,18 +16,23 @@ var countDownTime = 60;
 
 ///倒计时组建
 class CheckCodeWidget extends StatefulWidget {
+  final String appKey;
+  final String mobile;
+
+  CheckCodeWidget(this.appKey, this.mobile);
+
   @override
   State<StatefulWidget> createState() {
     return _CheckCodeState();
   }
 }
 
-class _CheckCodeState extends LifecycleBaseState<CheckCodeWidget> {
+class _CheckCodeState extends LifecycleBaseState<CheckCodeWidget>
+    with MeetingAppLocalizationsMixin {
   static const _tag = 'CheckCodeWidget';
   Timer? _countDownTimer;
   String _countDownText = countDownTime.toString();
   bool _showCountDown = true;
-  late AuthArguments authModel;
 
   @override
   void initState() {
@@ -38,23 +42,27 @@ class _CheckCodeState extends LifecycleBaseState<CheckCodeWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final reSendSuf = meetingAppLocalizations.authResendCode('##time##');
+    final resendTextList = reSendSuf.split('##');
     return Center(
         child: _showCountDown
             ? Text.rich(TextSpan(children: [
-                TextSpan(
-                  text: _countDownText,
-                  style: TextStyle(color: AppColors.color_2953ff),
-                ),
-                TextSpan(
-                  text: Strings.reSendSuf,
-                  style: TextStyle(
-                    color: AppColors.black_333333,
-                  ),
-                ),
+                for (int i = 0; i < resendTextList.length; i++)
+                  resendTextList[i] == 'time'
+                      ? TextSpan(
+                          text: _countDownText,
+                          style: TextStyle(color: AppColors.color_2953ff),
+                        )
+                      : TextSpan(
+                          text: resendTextList[i],
+                          style: TextStyle(
+                            color: AppColors.black_333333,
+                          ),
+                        ),
               ]))
             : GestureDetector(
                 child: Text(
-                  Strings.reSend,
+                  meetingAppLocalizations.authResend,
                   style: TextStyle(color: AppColors.blue),
                 ),
                 onTap: () {
@@ -64,26 +72,14 @@ class _CheckCodeState extends LifecycleBaseState<CheckCodeWidget> {
               ));
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    //var object = ModalRoute.of(context)?.settings.arguments;
-    authModel = ModalRoute.of(context)?.settings.arguments as AuthArguments;
-  }
-
   void _getAuthCode() {
+    final mobile = widget.mobile;
     Alog.d(
         moduleName: Constants.moduleName,
         tag: toString(),
-        content:
-            'getAuthCode mobile = ${authModel.mobile}, sceneType = ${authModel.sceneType?.toString()}');
-    if (authModel.mobile != null && authModel.sceneType != null) {
-      var authRepo = AuthRepo();
-      lifecycleExecuteUI(
-          authRepo.getAuthCode(authModel.mobile!, authModel.sceneType!));
-      _countDown();
-    }
+        content: 'Get check code mobile = $mobile');
+    lifecycleExecuteUI(AuthRepo().getMobileCheckCode(widget.appKey, mobile));
+    _countDown();
   }
 
   void _countDown() {
@@ -94,7 +90,7 @@ class _CheckCodeState extends LifecycleBaseState<CheckCodeWidget> {
           _countDownText = '${countDownTime - t.tick}s';
           _showCountDown = true;
         } else {
-          _countDownText = Strings.getCheckCode;
+          _countDownText = meetingAppLocalizations.authGetCheckCode;
           _countDownTimer?.cancel();
           _countDownTimer = null;
           _showCountDown = false;

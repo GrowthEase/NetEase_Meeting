@@ -7,9 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:nemeeting/service/util/user_preferences.dart';
 import 'package:netease_meeting_core/meeting_kit.dart';
 import 'package:nemeeting/utils/integration_test.dart';
+import '../language/localizations.dart';
 import '../uikit/state/meeting_base_state.dart';
 import '../uikit/values/colors.dart';
-import '../uikit/values/strings.dart';
 
 class MeetingSetting extends StatefulWidget {
   @override
@@ -18,7 +18,9 @@ class MeetingSetting extends StatefulWidget {
   }
 }
 
-class _MeetingSettingState extends MeetingBaseState<MeetingSetting> {
+class _MeetingSettingState extends MeetingBaseState<MeetingSetting>
+    with MeetingAppLocalizationsMixin {
+  final settings = NEMeetingKit.instance.getSettingsService();
   @override
   Widget buildBody() {
     return Column(
@@ -26,15 +28,15 @@ class _MeetingSettingState extends MeetingBaseState<MeetingSetting> {
         children: <Widget>[
           SizedBox(height: 20),
           buildSplit(),
-          buildCameraItem(),
-          buildSplit(),
           buildMicrophoneItem(),
+          buildSplit(),
+          buildCameraItem(),
           buildSplit(),
           buildMeetTimeItem(),
           buildSplit(),
           buildSwitchItem(
             MeetingValueKey.audioAINS,
-            Strings.audioAINS,
+            meetingAppLocalizations.settingAudioAINS,
             true,
             NEMeetingKit.instance.getSettingsService().isAudioAINSEnabled(),
             (value) => NEMeetingKit.instance
@@ -44,7 +46,7 @@ class _MeetingSettingState extends MeetingBaseState<MeetingSetting> {
           buildSplit(),
           buildSwitchItem(
             MeetingValueKey.showShareUserVideo,
-            Strings.showShareUserVideo,
+            meetingAppLocalizations.settingShowShareUserVideo,
             true,
             UserPreferences().getShowShareUserVideo(),
             (value) => UserPreferences().setShowShareUserVideo(value),
@@ -52,7 +54,7 @@ class _MeetingSettingState extends MeetingBaseState<MeetingSetting> {
           buildSplit(),
           buildSwitchItem(
             MeetingValueKey.enableTransparentWhiteboard,
-            Strings.enableTransparentWhiteboard,
+            meetingAppLocalizations.settingEnableTransparentWhiteboard,
             false,
             UserPreferences().isTransparentWhiteboardEnabled(),
             UserPreferences().setTransparentWhiteboardEnabled,
@@ -60,16 +62,24 @@ class _MeetingSettingState extends MeetingBaseState<MeetingSetting> {
           buildSplit(),
           buildSwitchItem(
               MeetingValueKey.enableFrontCameraMirror,
-              Strings.enableFrontCameraMirror,
+              meetingAppLocalizations.settingEnableFrontCameraMirror,
               true,
               UserPreferences().isFrontCameraMirrorEnabled(),
-              UserPreferences().setFrontCameraMirrorEnabled)
+              UserPreferences().setFrontCameraMirrorEnabled),
+          buildSplit(),
+          buildSwitchItem(
+              MeetingValueKey.enableAudioDeviceSwitch,
+              meetingAppLocalizations.settingEnableAudioDeviceSwitch,
+              false,
+              settings.isAudioDeviceSwitchEnabled(), (value) {
+            settings.enableAudioDeviceSwitch(value);
+          }),
         ]);
   }
 
   @override
   String getTitle() {
-    return Strings.meetingSetting;
+    return meetingAppLocalizations.settingMeeting;
   }
 
   Container buildSplit() {
@@ -135,10 +145,9 @@ class _MeetingSettingState extends MeetingBaseState<MeetingSetting> {
   }
 
   Widget buildCameraItem() {
-    final settings = NEMeetingKit.instance.getSettingsService();
     return buildSwitchItem(
       MeetingValueKey.openCameraMeeting,
-      Strings.openCameraMeeting,
+      meetingAppLocalizations.settingOpenCameraMeeting,
       false,
       settings.isTurnOnMyVideoWhenJoinMeetingEnabled(),
       (value) => settings.setTurnOnMyVideoWhenJoinMeeting(value),
@@ -146,10 +155,9 @@ class _MeetingSettingState extends MeetingBaseState<MeetingSetting> {
   }
 
   Widget buildMicrophoneItem() {
-    final settings = NEMeetingKit.instance.getSettingsService();
     return buildSwitchItem(
       MeetingValueKey.openMicrophone,
-      Strings.openMicroMeeting,
+      meetingAppLocalizations.settingOpenMicroMeeting,
       false,
       settings.isTurnOnMyAudioWhenJoinMeetingEnabled(),
       (value) => settings.setTurnOnMyAudioWhenJoinMeeting(value),
@@ -157,10 +165,9 @@ class _MeetingSettingState extends MeetingBaseState<MeetingSetting> {
   }
 
   Widget buildMeetTimeItem() {
-    final settings = NEMeetingKit.instance.getSettingsService();
     return buildSwitchItem(
       MeetingValueKey.openShowMeetTime,
-      Strings.showMeetTime,
+      meetingAppLocalizations.settingShowMeetDuration,
       false,
       settings.isShowMyMeetingElapseTimeEnabled(),
       (value) => settings.enableShowMyMeetingElapseTime(value),

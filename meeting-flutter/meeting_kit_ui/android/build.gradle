@@ -35,15 +35,17 @@ android {
     lintOptions {
         disable 'InvalidPackage'
     }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/audioManagerKit'
+    }
 }
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
-    def rtc_version = rootProject.hasProperty('nertc_version')
-            ? rootProject.property('nertc_version') as String
-            : '5.5.203-SNAPSHOT'
-    println "use nertc version: $rtc_version"
+    def rtcVersion = project.ext.rtcVersion
+    println "use nertc version: $rtcVersion"
     [
             'base',
             'beauty',
@@ -57,8 +59,8 @@ dependencies {
             'superresolution',
             'audio3d',
     ].forEach { name ->
-        implementation("com.netease.yunxin:nertc-$name:$rtc_version") {
-            changing = rtc_version.endsWith('SNAPSHOT')
+        implementation("com.netease.yunxin:nertc-$name:$rtcVersion") {
+            changing = rtcVersion.endsWith('SNAPSHOT')
         }
     }
     def lifecycle_version = "2.5.1"

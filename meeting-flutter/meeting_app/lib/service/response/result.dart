@@ -30,6 +30,8 @@ class Result<T> {
     }
   }
 
+  bool isSuccess() => code == 0 || code == 200;
+
 // static Result<T> asFailed<T>(String msg) {
   //   return Result(msg: msg);
   // }

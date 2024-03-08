@@ -9,7 +9,6 @@ import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/auth/auth_state.dart';
 import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/service/config/login_type.dart';
-import 'package:nemeeting/service/config/scene_type.dart';
 import 'package:nemeeting/service/model/login_info.dart';
 import 'package:nemeeting/service/model/parse_sso_token.dart';
 import 'package:nemeeting/service/proto/app_http_proto/login_proto.dart';
@@ -25,42 +24,8 @@ class AuthRepo extends IRepo {
   factory AuthRepo() => _singleton;
 
   /// 请求验证码
-  Future<Result<void>> getAuthCode(String mobile, SceneType scene) async {
-    return appService.getAuthCode(mobile, scene);
-  }
-
-  /// 验证验证码
-  Future<Result<String>> verifyAuthCode(
-      String mobile, String authCode, SceneType scene) {
-    return appService.verifyAuthCode(mobile, authCode, scene);
-  }
-
-  /// 注册账号
-  /// TODO:
-  Future<Result<LoginInfo>> register(String mobile, String verifyExchangeCode,
-      String nickName, String passWord) {
-    return appService
-        .register(mobile, verifyExchangeCode, nickName, passWord)
-        .then((result) async {
-      if (result.code == HttpCode.success) {
-        AuthState().updateState(state: AuthState.authed);
-        var sdkLoginResult = await AuthManager().loginMeetingKitWithToken(
-            LoginType.password, result.data as LoginInfo);
-        return result.copy(
-            code: sdkLoginResult.code == NEMeetingErrorCode.success
-                ? HttpCode.success
-                : HttpCode.meetingSDKLoginError);
-      } else if (result.code == HttpCode.verifyError ||
-          result.code == HttpCode.tokenError ||
-          result.code == HttpCode.passwordError ||
-          result.code == HttpCode.loginPasswordError) {
-        AuthState().updateState(state: AuthState.init);
-
-        /// reset
-        AuthManager().logout();
-      }
-      return result;
-    });
+  Future<Result<void>> getMobileCheckCode(String appKey, String mobile) async {
+    return appService.getMobileCheckCode(appKey, mobile);
   }
 
   /// 登录
@@ -90,50 +55,19 @@ class AuthRepo extends IRepo {
     });
   }
 
-  ///通过URS登录成功后，
-  Future<Result<LoginInfo>> loginByInfo(Map resultMap) async {
-    if (resultMap.isEmpty) {
-      return Future.value(Result(code: HttpCode.netWorkError));
-    } else {
-      var loginInfo = resultMap['param'] as Map;
-
-      //todo code修改
-      var result = Result(
-          code: resultMap['code'] as int, data: LoginInfo.fromJson(loginInfo));
-      if (result.code == HttpCode.success) {
-        AuthState().updateState(state: AuthState.authed);
-        var sdkLoginResult = await AuthManager().loginMeetingKitWithToken(
-            LoginType.token, result.data as LoginInfo);
-        return result.copy(
-            code: sdkLoginResult.code == HttpCode.success
-                ? HttpCode.success
-                : HttpCode.meetingSDKLoginError);
-      } else if (result.code == HttpCode.verifyError ||
-          result.code == HttpCode.tokenError ||
-          result.code == HttpCode.passwordError ||
-          result.code == HttpCode.accountNotExist ||
-          result.code == HttpCode.loginPasswordError) {
-        AuthState().updateState(state: AuthState.init);
-
-        /// reset
-        AuthManager().logout();
-      }
-    }
-    return Future.value(Result(code: HttpCode.cancel));
-  }
-
   /// 密码登录
-  Future<Result<LoginInfo>> loginByPwd(String mobile, String password) {
-    return login(PasswordLoginProto(mobile, password));
+  Future<Result<LoginInfo>> loginByPwd(
+      String appKey, String username, String password) {
+    return login(PasswordLoginProto(appKey, username, password));
   }
 
   /// 自动登录
-  Future<Result<void>> loginByToken(
-      String accountId, String accountToken, String appKey) {
+  Future<Result<void>> loginByToken(LoginType loginType, String accountId,
+      String accountToken, String appKey) {
     var loginInfo = LoginInfo(
         accountId: accountId, accountToken: accountToken, appKey: appKey);
     return AuthManager()
-        .loginMeetingKitWithToken(LoginType.sso, loginInfo)
+        .loginMeetingKitWithToken(loginType, loginInfo)
         .then((sdkLoginResult) {
       if (sdkLoginResult.code == HttpCode.success) {
         AuthState().updateState(state: AuthState.authed);
@@ -146,8 +80,9 @@ class AuthRepo extends IRepo {
   }
 
   /// 验证码登录
-  Future<Result<LoginInfo>> loginByVerify(String mobile, String verifyCode) {
-    return login(VerifyCodeLoginProto(mobile, verifyCode));
+  Future<Result<LoginInfo>> loginByMobileCheckCode(
+      String appKey, String mobile, String checkCode) {
+    return login(MobileCheckCodeLoginProto(appKey, mobile, checkCode));
   }
 
   /// 验证码登录

@@ -2,17 +2,25 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+import 'package:nemeeting/uikit/values/colors.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:yunxin_alog/yunxin_alog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import '../uikit/state/meeting_base_state.dart';
-import 'package:nemeeting/arguments/webview_arguments.dart';
+
+class WebViewArguments {
+  final String url;
+
+  final String title;
+
+  WebViewArguments(this.url, this.title);
+}
 
 class WebViewPage extends StatefulWidget {
-  final WebViewArguments arguments;
+  final WebViewArguments? arguments;
 
-  WebViewPage(this.arguments);
+  WebViewPage([this.arguments]);
 
   @override
   State<StatefulWidget> createState() {
@@ -22,10 +30,21 @@ class WebViewPage extends StatefulWidget {
 
 class _WebViewState extends MeetingBaseState<WebViewPage> {
   static const _tag = 'WebViewPage';
+
+  WebViewArguments? _arguments;
+  WebViewArguments get arguments {
+    _arguments ??= (widget.arguments ??
+        ModalRoute.of(context)!.settings.arguments as WebViewArguments);
+    return _arguments!;
+  }
+
+  @override
+  Color get backgroundColor => AppColors.white;
+
   @override
   Widget buildBody() {
     return WebView(
-      initialUrl: widget.arguments.url,
+      initialUrl: arguments.url,
       javascriptMode: JavascriptMode.unrestricted,
       onPageStarted: (url) {
         Alog.d(tag: _tag, content: 'onPageStarted $url');
@@ -38,6 +57,6 @@ class _WebViewState extends MeetingBaseState<WebViewPage> {
 
   @override
   String getTitle() {
-    return widget.arguments.title;
+    return arguments.title;
   }
 }

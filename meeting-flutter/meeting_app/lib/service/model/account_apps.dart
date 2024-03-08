@@ -2,9 +2,6 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
-/// accountId : "1159739755524187"
-/// apps : [{"appKey":"092dcd94d2c2566d1ed66061891cdf15","appName":"meeting-qa"}]
-
 class AccountApps {
   late final String _accountId;
   late final List<Apps> _apps;
@@ -37,9 +34,6 @@ class AccountApps {
     return map;
   }
 }
-
-/// appKey : "092dcd94d2c2566d1ed66061891cdf15"
-/// appName : "meeting-qa"
 
 class Apps {
   final String _appKey;

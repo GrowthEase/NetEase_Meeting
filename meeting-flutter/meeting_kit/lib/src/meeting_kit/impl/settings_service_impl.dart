@@ -118,14 +118,16 @@ class _NESettingsServiceImpl extends NESettingsService {
 
   @override
   Future<int> getBeautyFaceValue() async {
-    _beautyFaceValue ??= NEMeetingKit.instance
-            .getAccountService()
-            .getAccountInfo()
-            ?.settings
-            ?.beauty
-            ?.beauty
-            .level ??
-        0;
+    _beautyFaceValue ??= max(
+        NEMeetingKit.instance
+                .getAccountService()
+                .getAccountInfo()
+                ?.settings
+                ?.beauty
+                ?.beauty
+                .level ??
+            0,
+        0);
     return _beautyFaceValue!;
   }
 
@@ -153,6 +155,10 @@ class _NESettingsServiceImpl extends NESettingsService {
   @override
   Future<bool> isMeetingLiveEnabled() =>
       Future.value(sdkConfig.isLiveSupported);
+
+  @override
+  Future<bool> isWaitingRoomEnabled() =>
+      Future.value(sdkConfig.isWaitingRoomSupported);
 
   /// update global config
   Future updateTransientStates() async {
@@ -253,6 +259,17 @@ class _NESettingsServiceImpl extends NESettingsService {
         _settingsCache[Keys.addExternalVirtualList] as List?;
     return Future.value(externalVirtualBackgrounds?.cast<String>() ?? []);
   }
+
+  @override
+  void enableAudioDeviceSwitch(bool enable) {
+    _writeSettings(Keys.enableAudioDeviceSwitch, enable);
+  }
+
+  @override
+  Future<bool> isAudioDeviceSwitchEnabled() {
+    return Future.value(_settingsCache[Keys.enableAudioDeviceSwitch] as bool? ??
+        SDKConfig.current.isAudioDeviceSwitchEnabled);
+  }
 }
 
 class Keys {
@@ -298,4 +315,7 @@ class Keys {
 
   /// 添加外部虚拟背景列表
   static const String addExternalVirtualList = 'addExternalVirtualList';
+
+  /// 是否允许切换音频设备
+  static const String enableAudioDeviceSwitch = 'enableAudioDeviceSwitch';
 }

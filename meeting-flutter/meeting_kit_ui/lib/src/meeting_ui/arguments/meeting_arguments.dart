@@ -14,6 +14,8 @@ class MeetingArguments extends MeetingBaseArguments {
 
   final NEEncryptionConfig? encryptionConfig;
 
+  final NEWatermarkConfig? watermarkConfig;
+
   IntervalEvent? trackingEvent;
 
   MeetingArguments({
@@ -24,15 +26,45 @@ class MeetingArguments extends MeetingBaseArguments {
     required NEMeetingUIOptions options,
     this.encryptionConfig,
     Widget? backgroundWidget,
+    bool? initialAudioMute,
+    bool? initialVideoMute,
+    bool? initialIsInPIPView,
+    this.watermarkConfig,
   }) : super(
-            meetingNum: roomContext.roomUuid,
-            displayName: displayName,
-            password: password,
-            backgroundWidget: backgroundWidget,
-            options: options) {
+          meetingNum: roomContext.roomUuid,
+          displayName: displayName,
+          password: password,
+          backgroundWidget: backgroundWidget,
+          options: options,
+          initialAudioMute: initialAudioMute ?? options.noAudio,
+          initialVideoMute: initialVideoMute ?? options.noVideo,
+          initialIsInPIPView: initialIsInPIPView ?? false,
+        ) {
     requestTimeStamp = DateTime.now().millisecondsSinceEpoch;
     _isWhiteboardTransparent =
         ValueNotifier(options.enableTransparentWhiteboard);
+  }
+
+  MeetingArguments copyWith({
+    bool? initialAudioMute,
+    bool? initialVideoMute,
+    NERoomContext? roomContext,
+    bool? initialIsInPIPView,
+    MeetingInfo? meetingInfo,
+  }) {
+    return MeetingArguments(
+      roomContext: roomContext ?? this.roomContext,
+      meetingInfo: meetingInfo ?? roomContext?.meetingInfo ?? this.meetingInfo,
+      displayName: displayName,
+      password: password,
+      options: options,
+      encryptionConfig: this.encryptionConfig,
+      watermarkConfig: this.watermarkConfig,
+      backgroundWidget: this.backgroundWidget,
+      initialAudioMute: initialAudioMute ?? this.initialAudioMute,
+      initialVideoMute: initialVideoMute ?? this.initialVideoMute,
+      initialIsInPIPView: initialIsInPIPView ?? this.initialIsInPIPView,
+    );
   }
 
   @override

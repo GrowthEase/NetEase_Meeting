@@ -18,6 +18,21 @@ class _NEMeetingAccountServiceImpl extends NEMeetingAccountService {
               }) ??
           const {};
     });
+    NERoomKit.instance.messageChannelService.addMessageChannelCallback(
+        NEMessageChannelCallback(onReceiveCustomMessage: (message) {
+      /// 账号信息变更通知
+      if (message.commandId == 211 && message.roomUuid == null) {
+        try {
+          final data = jsonDecode(message.data);
+          final accountInfo = NEAccountInfo.fromMap(
+            data['meetingAccountInfo'] as Map,
+            userUuid: _accountInfo?.userUuid,
+            userToken: _accountInfo?.userToken,
+          );
+          _setAccountInfo(accountInfo);
+        } catch (e) {}
+      }
+    }));
   }
 
   NEAccountInfo? _accountInfo;
@@ -32,6 +47,7 @@ class _NEMeetingAccountServiceImpl extends NEMeetingAccountService {
   _setAccountInfo(NEAccountInfo? accountInfo, [bool anonymous = false]) {
     this._accountInfo = accountInfo;
     this._anonymous = accountInfo == null ? false : anonymous;
+    notifyListeners();
   }
 
   @override

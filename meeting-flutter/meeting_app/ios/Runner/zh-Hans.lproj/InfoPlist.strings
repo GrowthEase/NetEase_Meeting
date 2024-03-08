@@ -1,0 +1,4 @@
+"NSCameraUsageDescription" = "音视频会议需要申请相机权限，用于会议中的视频交流";
+"NSMicrophoneUsageDescription" = "音视频会议需要申请麦克风权限，用于会议中的音频交流";
+"NSPhotoUsageDescription" = "音视频会议需要申请照片权限，用于会议中的虚拟背景（添加、更换背景图片）功能";
+"CFBundleDisplayName" = "网易会议";

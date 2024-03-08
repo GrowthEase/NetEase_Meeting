@@ -43,6 +43,8 @@ class AppNotificationManager {
 
   void reset() {
     debugPrint('$_tag: reset');
+    _state = _stateInitial;
+    _currentNotification = null;
   }
 
   void hideNotification() {
@@ -52,6 +54,27 @@ class AppNotificationManager {
   }
 
   void _doFetch() async {
-    debugPrint('$_tag: doFetch');
+    debugPrint('$_tag: doFetch, state=$_state');
+    final appKey = AuthManager().appKey;
+    if (_state == _stateInitial && appKey != null && appKey.length > 0) {
+      _state = _stateFetching;
+      final result = await UserRepo().getSecurityNoticeConfigs(
+          appKey, DateTime.now().millisecondsSinceEpoch.toString());
+      if (result.code == 0) {
+        _state = _stateDone;
+        final appNotifications = result.data;
+        if (appNotifications != null &&
+            appNotifications.notifications.isNotEmpty) {
+          _currentNotification = appNotifications.notifications.first;
+        }
+      } else {
+        _state = _stateInitial;
+      }
+    }
+    if (_currentNotification != null) {
+      Timer.run(() {
+        _appNotificationStream.add(_currentNotification);
+      });
+    }
   }
 }

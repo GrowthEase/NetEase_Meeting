@@ -108,7 +108,6 @@ class _NEScreenSharingServiceImpl extends NEScreenSharingService
             } else {
               if (_enableAudioShare) {
                 _roomContext.rtcController.enableLoopbackRecording(true);
-                _roomContext.rtcController.adjustRecordingSignalVolume(0);
               }
             }
           });

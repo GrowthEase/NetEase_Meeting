@@ -1,0 +1,8 @@
+arb-dir: lib/language/l10n
+output-dir: lib/language/meeting_localization
+template-arb-file: strings_zh.arb
+output-localization-file: meeting_app_localizations.dart
+output-class: MeetingAppLocalizations
+header-file: header.txt
+synthetic-package: false
+untranslated-messages-file: untranslated.txt

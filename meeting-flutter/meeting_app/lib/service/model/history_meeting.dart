@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 class HistoryMeeting {
   /// 参会记录id
-  final int attendeeId;
+  final int? attendeeId;
 
   /// 房间归档id/唯一id
   final int roomArchiveId;
@@ -49,22 +49,9 @@ class HistoryMeeting {
       this.favoriteId);
   HistoryMeeting.group(int entryTime)
       : this(0, 0, "", "", 0, entryTime, 0, "", "", null, null);
-  // HistoryMeeting(
-  //   this.attendeeId,
-  //   this.roomArchiveId,
-  //   this.meetingNum,
-  //   this.subject,
-  //   this.type,
-  //   this.roomEntryTime,
-  //   this.roomStartTime,
-  //   this.ownerUserUuid,
-  //   this.ownerNickname,
-  //   this.isFavorite,
-  //   this.favoriteId
-  // )
 
   HistoryMeeting.fromJson(Map json)
-      : attendeeId = json["attendeeId"] as int,
+      : attendeeId = json["attendeeId"] as int?,
         roomArchiveId = json["roomArchiveId"] as int,
         meetingNum = json["meetingNum"] as String,
         subject = json["subject"] as String,
@@ -76,54 +63,17 @@ class HistoryMeeting {
         isFavorite = json["isFavorite"] as bool?,
         favoriteId = json["favoriteId"] as int?;
 
-  Map<String, dynamic> toJson() {
-    var map = <String, dynamic>{};
-    map['attendeeId'] = attendeeId;
-    map["roomArchiveId"] = roomArchiveId;
-    map["meetingNum"] = meetingNum;
-    map["subject"] = subject;
-    map["type"] = type;
-    map["roomEntryTime"] = roomEntryTime;
-    map["roomStartTime"] = roomStartTime;
-    map["ownerUserUuid"] = ownerUserUuid;
-    map["ownerNickname"] = ownerNickname;
-    map["isFavorite"] = isFavorite;
-    map["favoriteId"] = favoriteId;
-    return map;
-  }
-}
-
-class FavoriteMeeting {
-  int favoriteId;
-  int roomArchiveId;
-  String meetingNum;
-  String subject;
-  int type;
-  int roomEntryTime;
-  int roomStartTime;
-  String ownerUserUuid;
-  String ownerNickname;
-  FavoriteMeeting(
-      this.favoriteId,
-      this.roomArchiveId,
-      this.meetingNum,
-      this.subject,
-      this.type,
-      this.roomEntryTime,
-      this.roomStartTime,
-      this.ownerUserUuid,
-      this.ownerNickname);
-  FavoriteMeeting.group(int entryTime)
-      : this(0, 0, "", "", 0, entryTime, 0, "", "");
-
-  FavoriteMeeting.fromJson(Map json)
-      : favoriteId = json["favoriteId"] as int,
-        roomArchiveId = json["roomArchiveId"] as int,
-        meetingNum = json["meetingNum"] as String,
-        subject = json["subject"] as String,
-        type = json["type"] as int,
-        roomEntryTime = json["roomEntryTime"] as int,
-        roomStartTime = json["roomStartTime"] as int,
-        ownerUserUuid = json["ownerUserUuid"] as String,
-        ownerNickname = json["ownerNickname"] as String;
+  Map<String, dynamic> toJson() => {
+        "attendeeId": attendeeId,
+        "roomArchiveId": roomArchiveId,
+        "meetingNum": meetingNum,
+        "subject": subject,
+        "type": type,
+        "roomEntryTime": roomEntryTime,
+        "roomStartTime": roomStartTime,
+        "ownerUserUuid": ownerUserUuid,
+        "ownerNickname": ownerNickname,
+        "isFavorite": isFavorite,
+        "favoriteId": favoriteId
+      };
 }

@@ -2,11 +2,11 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
-import 'package:nemeeting/base/util/stringutil.dart';
-import 'package:nemeeting/service/config/app_config.dart';
+import 'package:nemeeting/service/auth/password_utils.dart';
 import 'package:nemeeting/service/config/login_type.dart';
 import 'package:nemeeting/service/config/servers.dart';
 import 'package:nemeeting/service/model/login_info.dart';
+import 'package:netease_meeting_ui/meeting_ui.dart';
 
 import '../app_http_proto.dart';
 
@@ -56,34 +56,7 @@ class LoginProto extends AppHttpProto<LoginInfo> {
     return {
       'loginType': loginType.index,
     };
-    // switch(loginType){
-    //   case LoginType.token:
-    //     return {'accountId': accountId, 'loginType': loginType.index, 'accountToken': getAuthValue(loginType)};
-    //   case LoginType.third:
-    //     return {'username': account, 'loginType': loginType.index, 'authValue': getAuthValue(loginType)};
-    //   case LoginType.password:
-    //     return {'username': mobile, 'loginType': loginType.index, 'password': getAuthValue(loginType)};
-    //   case LoginType.verify:
-    //     return {'mobile': mobile, 'verifyCode': verifyCode};
-    //   default:
-    //     return {'mobilePhone': mobile, 'loginType': loginType.index, 'authValue': getAuthValue(loginType)};
-    // }
   }
-
-  // String getAuthValue(LoginType loginType) {
-  //   switch (loginType) {
-  //     case LoginType.token:
-  //       return token;
-  //     case LoginType.verify:
-  //       return verifyCode;
-  //     case LoginType.password:
-  //       return StringUtil.pwdMD5(passWord);
-  //     case LoginType.third:
-  //       return StringUtil.dartMD5(passWord);
-  //     default:
-  //       return '';
-  //   }
-  // }
 
   @override
   bool checkLoginState() {
@@ -91,31 +64,14 @@ class LoginProto extends AppHttpProto<LoginInfo> {
   }
 }
 
-class TokenLoginProto extends LoginProto {
-  /// accountId
-  final String accountId;
-
-  final String accountToken;
-
-  TokenLoginProto(this.accountId, this.accountToken)
-      : super(loginType: LoginType.token);
-
-  @override
-  Map data() => {
-        ...super.data(),
-        'accountId': accountId,
-        'accountToken': accountToken,
-      };
-}
-
 class PasswordLoginProto extends LoginProto {
-  final String appKey = AppConfig().appKey;
+  final String appKey;
 
   final String username;
 
   final String password;
 
-  PasswordLoginProto(this.username, this.password)
+  PasswordLoginProto(this.appKey, this.username, this.password)
       : super(loginType: LoginType.password);
 
   @override
@@ -124,7 +80,7 @@ class PasswordLoginProto extends LoginProto {
 
   @override
   Map data() => {
-        'password': StringUtil.dartMD5('$password@yiyong.im'),
+        'password': PasswordUtils.hash(password),
       };
 
   @override
@@ -134,14 +90,14 @@ class PasswordLoginProto extends LoginProto {
   }
 }
 
-class VerifyCodeLoginProto extends LoginProto {
-  final String appKey = AppConfig().appKey;
+class MobileCheckCodeLoginProto extends LoginProto {
+  final String appKey;
 
   final String mobile;
 
   final String verifyCode;
 
-  VerifyCodeLoginProto(this.mobile, this.verifyCode)
+  MobileCheckCodeLoginProto(this.appKey, this.mobile, this.verifyCode)
       : super(loginType: LoginType.verify);
 
   @override

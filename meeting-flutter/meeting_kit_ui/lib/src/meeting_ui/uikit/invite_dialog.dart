@@ -72,7 +72,8 @@ class _InviteDialog extends Dialog {
                             bottomRight: Radius.circular(14))),
                     constraints: const BoxConstraints(minHeight: 43),
                     child: Text(
-                      NEMeetingUIKitLocalizations.of(context)!.copyInvite,
+                      NEMeetingUIKitLocalizations.of(context)!
+                          .meetingCopyInvite,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           color: _UIColors.blue_337eff,

@@ -15,9 +15,10 @@ class PermissionHelper {
     var result = true;
     if (on) {
       result = await requestPermissionSingle(context, Permission.camera, title,
-          NEMeetingUIKitLocalizations.of(context)!.cameraPermission,
-          message:
-              '${NEMeetingUIKitLocalizations.of(context)!.permissionRationalePrefix}${NEMeetingUIKitLocalizations.of(context)!.cameraPermission}${NEMeetingUIKitLocalizations.of(context)!.permissionRationaleSuffixVideo}',
+          NEMeetingUIKitLocalizations.of(context)!.meetingCamera,
+          message: NEMeetingUIKitLocalizations.of(context)!
+              .meetingNeedRationaleVideoPermission(
+                  NEMeetingUIKitLocalizations.of(context)!.meetingCamera),
           useDialog: Platform.isAndroid);
     }
     return result;
@@ -31,9 +32,10 @@ class PermissionHelper {
           context,
           Permission.microphone,
           title,
-          NEMeetingUIKitLocalizations.of(context)!.microphonePermission,
-          message:
-              '${NEMeetingUIKitLocalizations.of(context)!.permissionRationalePrefix}${NEMeetingUIKitLocalizations.of(context)!.microphonePermission}${NEMeetingUIKitLocalizations.of(context)!.permissionRationaleSuffixAudio}',
+          NEMeetingUIKitLocalizations.of(context)!.meetingMicrophone,
+          message: NEMeetingUIKitLocalizations.of(context)!
+              .meetingNeedRationaleAudioPermission(
+                  NEMeetingUIKitLocalizations.of(context)!.meetingMicrophone),
           useDialog: Platform.isAndroid);
     }
     return result;
@@ -76,19 +78,20 @@ class PermissionHelper {
   static Widget _buildPermissionDialog(BuildContext context, String title,
       String permissionName, String? message) {
     return CupertinoAlertDialog(
-      title: Text(
-          '${NEMeetingUIKitLocalizations.of(context)!.notWork}$permissionName'),
+      title: Text(NEMeetingUIKitLocalizations.of(context)!
+          .globalNotWork(permissionName)),
       content: Text(message ??
-          '${NEMeetingUIKitLocalizations.of(context)!.funcNeed}$permissionName,${NEMeetingUIKitLocalizations.of(context)!.needPermissionTipsFirst}$title${NEMeetingUIKitLocalizations.of(context)!.needPermissionTipsTail}$permissionName${NEMeetingUIKitLocalizations.of(context)!.permissionTips}？'),
+          NEMeetingUIKitLocalizations.of(context)!
+              .globalNeedPermissionTips(permissionName, title)),
       actions: <Widget>[
         CupertinoDialogAction(
-          child: Text(NEMeetingUIKitLocalizations.of(context)!.cancel),
+          child: Text(NEMeetingUIKitLocalizations.of(context)!.globalCancel),
           onPressed: () {
             Navigator.of(context).pop(ConfirmAction.cancel);
           },
         ),
         CupertinoDialogAction(
-          child: Text(NEMeetingUIKitLocalizations.of(context)!.toSetUp),
+          child: Text(NEMeetingUIKitLocalizations.of(context)!.globalToSetUp),
           onPressed: () {
             Navigator.of(context).pop(ConfirmAction.accept);
           },

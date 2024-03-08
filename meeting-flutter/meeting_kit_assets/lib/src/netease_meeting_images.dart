@@ -29,6 +29,8 @@ class NEMeetingImages {
   static const String pdfFile = "assets/images/icon_pdf.png";
   static const String pptFile = "assets/images/icon_ppt.png";
   static const String wordFile = "assets/images/icon_word.png";
+  static const String waitingRoomBackground =
+      "assets/images/waiting_room_background.png";
 
   static const String bricksBackGround = "assets/images/sticker/bricks.jpg";
   static const String interiorDesignBackGround =
@@ -55,9 +57,13 @@ class NEMeetingImages {
   static const String fileTypeUnknown =
       'assets/images/icon_file_type_unknown.png';
   static const String arrow = 'assets/images/arrow.png';
+  static const String noMessageHistory = 'assets/images/no_message_history.png';
 
   static Image assetImage(String image) =>
       Image.asset(image, package: meetingAssetsPackageName);
+
+  static AssetImage assetImageAssets(String image) =>
+      AssetImage(image, package: meetingAssetsPackageName);
 }
 
 const List<String> backGroundList = [

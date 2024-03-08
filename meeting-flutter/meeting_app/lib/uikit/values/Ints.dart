@@ -2,27 +2,29 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
-import 'strings.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:nemeeting/language/meeting_localization/meeting_app_localizations.dart';
 
 extension StringWeekday on int {
-  String toWeekday() {
+  String toWeekday(BuildContext context) {
+    final meetingAppLocalizations = MeetingAppLocalizations.of(context)!;
     switch (this) {
       case 0:
-        return Strings.sunday;
+        return meetingAppLocalizations.globalSunday;
       case 1:
-        return Strings.monday;
+        return meetingAppLocalizations.globalMonday;
       case 2:
-        return Strings.tuesday;
+        return meetingAppLocalizations.globalTuesday;
       case 3:
-        return Strings.wednesday;
+        return meetingAppLocalizations.globalWednesday;
       case 4:
-        return Strings.thursday;
+        return meetingAppLocalizations.globalThursday;
       case 5:
-        return Strings.friday;
+        return meetingAppLocalizations.globalFriday;
       case 6:
-        return Strings.saturday;
+        return meetingAppLocalizations.globalSaturday;
       default:
-        return Strings.sunday;
+        return meetingAppLocalizations.globalSunday;
     }
   }
 }

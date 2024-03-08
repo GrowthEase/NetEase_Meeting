@@ -7,7 +7,7 @@ import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:nemeeting/language/localizations.dart';
 import 'package:nemeeting/routes/home_page.dart';
 import 'package:nemeeting/utils/const_config.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
@@ -18,7 +18,6 @@ import '../uikit/utils/nav_utils.dart';
 import '../uikit/utils/router_name.dart';
 import '../uikit/values/dimem.dart';
 import '../uikit/values/fonts.dart';
-import '../uikit/values/strings.dart';
 import '../uikit/values/colors.dart';
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
@@ -32,7 +31,8 @@ class MeetCreateRoute extends StatefulWidget {
   }
 }
 
-class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
+class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute>
+    with MeetingAppLocalizationsMixin {
   bool userSelfMeetingNum = false;
 
   bool openCamera = true;
@@ -49,11 +49,13 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
 
   var _createEnable = true;
 
+  final NESettingsService settingsService =
+      NEMeetingKit.instance.getSettingsService();
+
   @override
   void initState() {
     super.initState();
     AppConfig().init();
-    var settingsService = NEMeetingKit.instance.getSettingsService();
     Future.wait([
       settingsService.isTurnOnMyVideoWhenJoinMeetingEnabled(),
       settingsService.isTurnOnMyAudioWhenJoinMeetingEnabled(),
@@ -98,7 +100,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
           elevation: 0,
           centerTitle: true,
           backgroundColor: Colors.white,
-          title: Text(Strings.createMeeting,
+          title: Text(meetingAppLocalizations.meetingCreate,
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.black_222222, fontSize: 17)),
           // systemOverlayStyle: SystemUiOverlayStyle.dark,
@@ -122,9 +124,9 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
               color: AppColors.globalBg,
               height: Dimen.globalPadding,
             ),
-            buildCameraItem(),
-            buildSplit(),
             buildMicrophoneItem(),
+            buildSplit(),
+            buildCameraItem(),
             if (showMeetingRecord) buildRecordItem(),
             buildCreate()
           ],
@@ -152,7 +154,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
           Expanded(
             flex: 1,
             child: Text(
-              Strings.usePersonalMeetId,
+              meetingAppLocalizations.meetingUsePersonalMeetId,
               style: TextStyle(color: AppColors.black_222222, fontSize: 17),
             ),
           ),
@@ -183,7 +185,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
         child: Row(
           children: <Widget>[
             Text(
-              Strings.personalShortMeetingNum,
+              meetingAppLocalizations.meetingPersonalShortMeetingID,
               style: TextStyle(fontSize: 16, color: AppColors.black_222222),
             ),
             Container(
@@ -194,7 +196,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
                   color: AppColors.color_1a337eff,
                   border: Border.all(color: AppColors.color_33337eff)),
               child: Text(
-                Strings.internalSpecial,
+                meetingAppLocalizations.settingInternalDedicated,
                 style: TextStyle(fontSize: 12, color: AppColors.color_337eff),
               ),
             ),
@@ -219,7 +221,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
         child: Row(
           children: <Widget>[
             Text(
-              Strings.personalMeetingNum,
+              meetingAppLocalizations.meetingPersonalMeetingID,
               style: TextStyle(fontSize: 16, color: AppColors.black_222222),
             ),
             Spacer(),
@@ -244,7 +246,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
           Expanded(
             flex: 1,
             child: Text(
-              Strings.meetingPassword,
+              meetingAppLocalizations.meetingPassword,
               style: TextStyle(color: AppColors.black_222222, fontSize: 16),
             ),
           ),
@@ -293,7 +295,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
           });
         },
         decoration: InputDecoration(
-            hintText: '${Strings.pleaseInputMeetingPasswordHint}',
+            hintText: '${meetingAppLocalizations.meetingEnterPassword}',
             hintStyle: TextStyle(fontSize: 14, color: AppColors.color_999999),
             border: InputBorder.none,
             suffixIcon: TextUtil.isEmpty(_meetingPasswordController.text)
@@ -325,7 +327,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
           Expanded(
             flex: 1,
             child: Text(
-              Strings.openCameraEnterMeeting,
+              meetingAppLocalizations.meetingJoinCameraOn,
               style: TextStyle(color: AppColors.black_222222, fontSize: 16),
             ),
           ),
@@ -338,6 +340,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
               onChanged: (bool value) {
                 setState(() {
                   openCamera = value;
+                  settingsService.setTurnOnMyVideoWhenJoinMeeting(value);
                 });
               },
               activeColor: AppColors.blue_337eff)
@@ -356,7 +359,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
           Expanded(
             flex: 1,
             child: Text(
-              Strings.openRecordEnterMeeting,
+              meetingAppLocalizations.meetingJoinCloudRecordOn,
               style: TextStyle(color: AppColors.black_222222, fontSize: 16),
             ),
           ),
@@ -387,7 +390,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
           Expanded(
             flex: 1,
             child: Text(
-              Strings.openMicroEnterMeeting,
+              meetingAppLocalizations.meetingJoinMicrophoneOn,
               style: TextStyle(color: AppColors.black_222222, fontSize: 16),
             ),
           ),
@@ -400,6 +403,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
               onChanged: (bool value) {
                 setState(() {
                   openMicrophone = value;
+                  settingsService.setTurnOnMyAudioWhenJoinMeeting(value);
                 });
               },
               activeColor: AppColors.blue_337eff)
@@ -427,7 +431,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
                 borderRadius: BorderRadius.all(Radius.circular(25))))),
         onPressed: _createEnable ? createMeeting : null,
         child: Text(
-          Strings.createMeeting,
+          meetingAppLocalizations.meetingCreate,
           style: TextStyle(color: Colors.white, fontSize: 16),
           textAlign: TextAlign.center,
         ),
@@ -464,11 +468,13 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
         meetingNum: meetingNum,
         password: meetingPwdSwitch ? _meetingPasswordController.text : null,
         displayName: nickname ?? MeetingUtil.getNickName(),
+        watermarkConfig: NEWatermarkConfig(name: MeetingUtil.getNickName()),
       ),
       await buildMeetingUIOptions(
         noVideo: !openCamera,
         noAudio: !openMicrophone,
         noCloudRecord: !openRecord,
+        context: context,
       ),
       onMeetingPageRouteWillPush: () async {
         LoadingUtil.cancelLoading();
@@ -476,7 +482,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
           NavUtils.pop(context);
         }
       },
-      backgroundWidget: HomePageRoute(),
+      backgroundWidget: MeetingAppLocalizationsScope(child: HomePageRoute()),
     );
     LoadingUtil.cancelLoading();
     if (!mounted) return;
@@ -490,25 +496,33 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
       switchToJoin(
         context,
         NEJoinMeetingUIParams(
-            meetingNum: meetingNum!,
-            displayName: nickname ?? MeetingUtil.getNickName()),
+          meetingNum: meetingNum!,
+          displayName: nickname ?? MeetingUtil.getNickName(),
+          watermarkConfig: NEWatermarkConfig(
+            name: MeetingUtil.getNickName(),
+          ),
+        ),
         await buildMeetingUIOptions(
           noVideo: !openCamera,
           noAudio: !openMicrophone,
+          context: context,
         ),
       );
     } else if (errorCode == NEMeetingErrorCode.noNetwork) {
-      ToastUtils.showToast(context, Strings.networkUnavailableCheck);
+      ToastUtils.showToast(
+          context, meetingAppLocalizations.globalNetworkUnavailableCheck);
     } else if (errorCode == NEMeetingErrorCode.noAuth) {
-      ToastUtils.showToast(context, Strings.noAuth);
+      ToastUtils.showToast(context, meetingAppLocalizations.authNoAuth);
       AuthManager().logout();
       NavUtils.pushNamedAndRemoveUntil(context, RouterName.entrance);
     } else if (errorCode == NEMeetingErrorCode.alreadyInMeeting) {
-      ToastUtils.showToast(context, Strings.miniTipAlreadyInRightMeeting);
+      ToastUtils.showToast(context,
+          meetingAppLocalizations.meetingOperationNotSupportedInMeeting);
     } else if (errorCode == NEMeetingErrorCode.cancelled) {
       /// 暂不处理
     } else {
-      var errorTips = HttpCode.getMsg(errorMessage, Strings.createMeetingFail);
+      var errorTips = HttpCode.getMsg(
+          errorMessage, meetingAppLocalizations.meetingCreateFail);
       ToastUtils.showToast(context, errorTips);
     }
   }
@@ -519,26 +533,27 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute> {
         context: context,
         builder: (BuildContext dialogContext) {
           return CupertinoAlertDialog(
-            content: Text(Strings.createAlreadyInMeetingTip),
+            content: Text(meetingAppLocalizations.meetingCreateAlreadyInTip),
             actions: <Widget>[
               CupertinoDialogAction(
-                child: Text(Strings.no),
+                child: Text(meetingAppLocalizations.globalNo),
                 onPressed: () {
                   Navigator.of(dialogContext).pop();
                 },
               ),
               CupertinoDialogAction(
-                child: Text(Strings.yes),
+                child: Text(meetingAppLocalizations.globalYes),
                 onPressed: () {
                   Navigator.of(dialogContext).pop();
                   NEMeetingUIKit().joinMeetingUI(context, param, opts,
-                      backgroundWidget: HomePageRoute(),
+                      backgroundWidget:
+                          MeetingAppLocalizationsScope(child: HomePageRoute()),
                       onMeetingPageRouteWillPush: () async {
                     NavUtils.pop(context);
                   }).then((value) {
                     if (!value.isSuccess()) {
-                      var errorTips =
-                          HttpCode.getMsg(value.msg, Strings.joinMeetingFail);
+                      var errorTips = HttpCode.getMsg(
+                          value.msg, meetingAppLocalizations.meetingJoinFail);
                       ToastUtils.showToast(context, errorTips);
                     }
                   });

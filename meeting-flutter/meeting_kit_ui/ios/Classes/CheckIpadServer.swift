@@ -8,7 +8,7 @@ import Foundation
 @objcMembers
 public class CheckIpadServer: NSObject {
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-    if call.method == "isIPad" {
+    if call.method == "isPad" {
       result(UIDevice.current.userInterfaceIdiom == .pad)
     } else {
       result(FlutterMethodNotImplemented)

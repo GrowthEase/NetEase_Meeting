@@ -4,7 +4,6 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:nemeeting/routes/home_page.dart';
 import 'package:nemeeting/utils/const_config.dart';
 import 'package:nemeeting/utils/integration_test.dart';
@@ -13,10 +12,10 @@ import 'package:nemeeting/uikit/const/consts.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/service/profile/app_profile.dart';
+import '../language/localizations.dart';
 import '../uikit/utils/nav_utils.dart';
 import '../uikit/utils/router_name.dart';
 import '../uikit/values/colors.dart';
-import '../uikit/values/strings.dart';
 import '../uikit/values/fonts.dart';
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
@@ -28,7 +27,8 @@ class MeetJoinRoute extends StatefulWidget {
   }
 }
 
-class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
+class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute>
+    with MeetingAppLocalizationsMixin {
   bool openCamera = true;
 
   bool openMicrophone = true;
@@ -39,6 +39,9 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
 
   bool joinEnable = false;
 
+  final NESettingsService settingsService =
+      NEMeetingKit.instance.getSettingsService();
+
   @override
   void initState() {
     super.initState();
@@ -47,7 +50,6 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
     _meetingIdController = TextEditingController(text: meetingId);
     _onMeetingIdChanged();
 
-    var settingsService = NEMeetingKit.instance.getSettingsService();
     Future.wait([
       settingsService.isTurnOnMyVideoWhenJoinMeetingEnabled(),
       settingsService.isTurnOnMyAudioWhenJoinMeetingEnabled(),
@@ -63,6 +65,7 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: AppColors.white,
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           leading: Builder(
             builder: (BuildContext context) {
@@ -98,8 +101,8 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
               SizedBox(
                 height: 12,
               ),
-              buildCameraItem(),
               buildMicrophoneItem(),
+              buildCameraItem(),
               buildJoin()
             ],
           ),
@@ -110,7 +113,7 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
     return Container(
       padding: EdgeInsets.only(left: 30),
       child: Text(
-        Strings.joinMeeting,
+        meetingAppLocalizations.meetingJoin,
         style: TextStyle(
             fontSize: 28,
             color: AppColors.black_222222,
@@ -125,7 +128,7 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
       child: Theme(
         data: ThemeData(hintColor: AppColors.greyDCDFE5),
         child: TextField(
-          autofocus: true,
+          autofocus: _meetingIdController.text.isEmpty,
           style: TextStyle(color: AppColors.color_333333, fontSize: 17),
           inputFormatters: [
             LengthLimitingTextInputFormatter(maxIdLength),
@@ -143,7 +146,7 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
               filled: true,
               fillColor: Colors.white,
               contentPadding: EdgeInsets.only(top: 11, bottom: 11),
-              hintText: Strings.inputMeetingId,
+              hintText: meetingAppLocalizations.meetingEnterId,
               hintStyle: TextStyle(fontSize: 17, color: AppColors.greyB0B6BE),
               focusedBorder: UnderlineInputBorder(
                 borderSide: BorderSide(
@@ -175,7 +178,7 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
           Expanded(
             flex: 1,
             child: Text(
-              Strings.openCameraEnterMeeting,
+              meetingAppLocalizations.meetingJoinCameraOn,
               style: TextStyle(color: AppColors.black_222222, fontSize: 14),
             ),
           ),
@@ -188,6 +191,7 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
             onChanged: (bool value) {
               setState(() {
                 openCamera = value;
+                settingsService.setTurnOnMyVideoWhenJoinMeeting(value);
               });
             },
             activeColor: AppColors.blue_337eff,
@@ -207,7 +211,7 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
           Expanded(
             flex: 1,
             child: Text(
-              Strings.openMicroEnterMeeting,
+              meetingAppLocalizations.meetingJoinMicrophoneOn,
               style: TextStyle(color: AppColors.black_222222, fontSize: 14),
             ),
           ),
@@ -220,6 +224,7 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
               onChanged: (bool value) {
                 setState(() {
                   openMicrophone = value;
+                  settingsService.setTurnOnMyAudioWhenJoinMeeting(value);
                 });
               },
               activeColor: AppColors.blue_337eff)
@@ -251,7 +256,7 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
                 borderRadius: BorderRadius.all(Radius.circular(25))))),
         onPressed: joinEnable ? joinMeeting : null,
         child: Text(
-          Strings.joinMeeting,
+          meetingAppLocalizations.meetingJoin,
           style: TextStyle(color: Colors.white, fontSize: 16),
           textAlign: TextAlign.center,
         ),
@@ -283,11 +288,16 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
     final result = await NEMeetingUIKit().joinMeetingUI(
       context,
       NEJoinMeetingUIParams(
-          meetingNum: targetMeetingNum,
-          displayName: nickname ?? MeetingUtil.getNickName()),
+        meetingNum: targetMeetingNum,
+        displayName: nickname ?? MeetingUtil.getNickName(),
+        watermarkConfig: NEWatermarkConfig(
+          name: MeetingUtil.getNickName(),
+        ),
+      ),
       await buildMeetingUIOptions(
         noVideo: !openCamera,
         noAudio: !openMicrophone,
+        context: context,
       ),
       onPasswordPageRouteWillPush: () async {
         LoadingUtil.cancelLoading();
@@ -297,7 +307,7 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
         if (!mounted) return;
         NavUtils.pop(context);
       },
-      backgroundWidget: HomePageRoute(),
+      backgroundWidget: MeetingAppLocalizationsScope(child: HomePageRoute()),
     );
     if (!mounted) return;
     final errorCode = result.code;
@@ -305,17 +315,21 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute> {
     LoadingUtil.cancelLoading();
     if (errorCode == NEMeetingErrorCode.success) {
     } else if (errorCode == NEMeetingErrorCode.noNetwork) {
-      ToastUtils.showToast(context, Strings.networkUnavailableCheck);
+      ToastUtils.showToast(
+          context, meetingAppLocalizations.globalNetworkUnavailableCheck);
     } else if (errorCode == NEMeetingErrorCode.noAuth) {
-      ToastUtils.showToast(context, Strings.loginOnOtherDevice);
+      ToastUtils.showToast(
+          context, meetingAppLocalizations.authLoginOnOtherDevice);
       AuthManager().logout();
       NavUtils.pushNamedAndRemoveUntil(context, RouterName.entrance);
     } else if (errorCode == NEMeetingErrorCode.alreadyInMeeting) {
-      ToastUtils.showToast(context, Strings.miniTipAlreadyInRightMeeting);
+      ToastUtils.showToast(context,
+          meetingAppLocalizations.meetingOperationNotSupportedInMeeting);
     } else if (errorCode == NEMeetingErrorCode.cancelled) {
       /// 暂不处理
     } else {
-      var errorTips = HttpCode.getMsg(errorMessage, Strings.joinMeetingFail);
+      var errorTips = HttpCode.getMsg(
+          errorMessage, meetingAppLocalizations.meetingJoinFail);
       ToastUtils.showToast(context, errorTips);
     }
   }

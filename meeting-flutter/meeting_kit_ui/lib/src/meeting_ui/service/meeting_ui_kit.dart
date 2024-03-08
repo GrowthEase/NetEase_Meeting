@@ -60,6 +60,11 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
               package: NEMeetingImages.package),
           context,
         );
+        precacheImage(
+          const AssetImage(NEMeetingImages.waitingRoomBackground,
+              package: NEMeetingImages.package),
+          context,
+        );
       } catch (e) {
         // Nothing to do
       }
@@ -69,24 +74,16 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
   ///
   /// 开启音频dump
   ///
-  Future<NEResult<void>> startAudioDump() {
-    if (InMeetingService().audioManager == null) {
-      return Future.value(
-          const NEResult(code: NEMeetingErrorCode.failed, msg: '会议不在进行中'));
-    }
-    return InMeetingService().audioManager!.startAudioDump();
-  }
+  Future<NEResult<void>> startAudioDump() =>
+      checkInMeeting(InMeetingService().audioManager) ??
+      InMeetingService().audioManager!.startAudioDump();
 
   ///
   /// 关闭音频dump
   ///
-  Future<NEResult<void>> stopAudioDump() {
-    if (InMeetingService().audioManager == null) {
-      return Future.value(
-          const NEResult(code: NEMeetingErrorCode.failed, msg: '会议不在进行中'));
-    }
-    return InMeetingService().audioManager!.stopAudioDump();
-  }
+  Future<NEResult<void>> stopAudioDump() =>
+      checkInMeeting(InMeetingService().audioManager) ??
+      InMeetingService().audioManager!.stopAudioDump();
 
   ///
   /// 设置菜单项点击事件回调
@@ -108,7 +105,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
   /// 获取当前会议详情。如果当前无正在进行中的会议，则回调数据对象为空
   ///
   NEMeetingInfo? getCurrentMeetingInfo() {
-    return InMeetingService().currentMeetingInfo;
+    return InMeetingService().currentMeetingInfo();
   }
 
   ///
@@ -231,6 +228,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
             noChat: opts.noChat,
             noCloudRecord: opts.noCloudRecord,
             noSip: opts.noSip,
+            enableWaitingRoom: opts.enableWaitingRoom,
             enableMyAudioDeviceOnJoinRtc: opts.detectMutedMic,
           ),
         )
@@ -245,12 +243,10 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
           options: opts,
           encryptionConfig: param.encryptionConfig,
           backgroundWidget: backgroundWidget,
+          watermarkConfig: param.watermarkConfig,
         )..trackingEvent = event;
-        final popped = navigatorState.push(
-          MaterialPageRoute(
-            builder: (context) => MeetingPageProxy(meetingArguments),
-          ),
-        );
+        final popped =
+            navigatorToMeetingUI(navigatorState, roomContext, meetingArguments);
         onMeetingPageRouteDidPush?.call(popped);
       } catch (e) {
         commonLogger.e('push meeting page error: $e');
@@ -323,7 +319,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
         loginResult = NEResult(
           code: loginResult.code,
           msg: NEMeetingUIKitLocalizations.of(context)!
-              .reuseIMNotSupportAnonymousJoinMeeting,
+              .meetingReuseIMNotSupportAnonymousJoinMeeting,
         );
       } else if (!loginResult.isSuccess()) {
         loginResult = NEResult(
@@ -397,9 +393,10 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
         options: uiOpts,
         encryptionConfig: param.encryptionConfig,
         backgroundWidget: backgroundWidget,
+        watermarkConfig: param.watermarkConfig,
       )..trackingEvent = param.trackingEvent;
-      final popped = navigatorState.push(MaterialPageRoute(
-          builder: (context) => MeetingPageProxy(meetingArguments)));
+      final popped =
+          navigatorToMeetingUI(navigatorState, roomContext, meetingArguments);
       onMeetingPageRouteDidPush?.call(popped);
       return joinResult.cast();
     } else if (joinResult.code == NEErrorCode.badPassword) {
@@ -427,10 +424,10 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
             options: uiOpts,
             encryptionConfig: param.encryptionConfig,
             backgroundWidget: backgroundWidget,
+            watermarkConfig: param.watermarkConfig,
           )..trackingEvent = param.trackingEvent;
-          final popped = navigatorState.push(MaterialPageRoute(
-            builder: (context) => MeetingPageProxy(meetingArguments),
-          ));
+          final popped =
+              navigatorToMeetingUI(navigatorState, value, meetingArguments);
           onMeetingPageRouteDidPush?.call(popped);
           return const NEResult(code: NEMeetingErrorCode.success);
         } else {
@@ -445,6 +442,15 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
     }
   }
 
+  Future<Object?> navigatorToMeetingUI(NavigatorState navigatorState,
+          NERoomContext roomContext, MeetingArguments meetingArguments) =>
+      navigatorState.push(MaterialPageRoute(
+        builder: (context) => MeetingUIRouter(
+          roomContext: roomContext,
+          arguments: meetingArguments,
+        ),
+      ));
+
   ///
   /// 离开当前会议
   ///
@@ -453,20 +459,33 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
     return InMeetingService().leaveCurrentMeeting(closeIfHost);
   }
 
-  Future<NEResult<void>> fullCurrentMeeting() {
-    if (InMeetingService().minimizeDelegate == null) {
+  Future<NEResult<void>> fullCurrentMeeting() =>
+      checkInMeeting(InMeetingService().minimizeDelegate) ??
+      InMeetingService().minimizeDelegate!.fullCurrentMeeting();
+
+  Future<NEResult<void>> minimizeCurrentMeeting() =>
+      checkInMeeting(InMeetingService().minimizeDelegate) ??
+      InMeetingService().minimizeDelegate!.minimizeCurrentMeeting();
+
+  Future<NEResult<void>> updateInjectedMenuItem(NEMeetingMenuItem? item) {
+    if (item == null) {
       return Future.value(const NEResult(
-          code: NEMeetingErrorCode.failed, msg: 'meeting not exists.'));
+          code: NEMeetingErrorCode.paramError, msg: 'item is null'));
     }
-    return InMeetingService().minimizeDelegate!.fullCurrentMeeting();
+    if (item.isBuiltInMenuItem) {
+      return Future.value(const NEResult(
+          code: NEMeetingErrorCode.paramError, msg: 'item is built-in item'));
+    }
+    return checkInMeeting(InMeetingService().menuItemDelegate) ??
+        InMeetingService().menuItemDelegate!.updateInjectedMenuItem(item);
   }
 
-  Future<NEResult<void>> minimizeCurrentMeeting() {
-    if (InMeetingService().minimizeDelegate == null) {
+  Future<NEResult<void>>? checkInMeeting(dynamic manager) {
+    if (manager == null) {
       return Future.value(const NEResult(
           code: NEMeetingErrorCode.failed, msg: 'meeting not exists.'));
     }
-    return InMeetingService().minimizeDelegate!.minimizeCurrentMeeting();
+    return null;
   }
 
   Future<NEResult<void>> openBeautyUI(BuildContext context) async {
@@ -518,7 +537,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
             code: NEMeetingErrorCode.paramError,
             msg: '不允许添加非预置或非自定义的菜单项: id=${element.itemId}');
       }
-      if (!ids.add(element.itemId)) {
+      if (!ids.add(element.itemId) && element.itemId >= firstInjectableMenuId) {
         return NEResult<void>(
             code: NEMeetingErrorCode.paramError,
             msg: '不允许添加相同Id的菜单项: id=${element.itemId}');
@@ -548,7 +567,8 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
   NEResult<void>? _isMeetingStatusIdle() {
     final status = MeetingCore().meetingStatus.event;
     if (status == NEMeetingEvent.inMeetingMinimized ||
-        status == NEMeetingEvent.inMeeting) {
+        status == NEMeetingEvent.inMeeting ||
+        status == NEMeetingEvent.inWaitingRoom) {
       return const NEResult(
         code: NEMeetingErrorCode.alreadyInMeeting,
         msg: 'already in meeting',
@@ -591,6 +611,8 @@ class NEMeetingUIKitConfig extends NEMeetingKitConfig {
 }
 
 class NEStartMeetingUIParams extends NEStartMeetingParams {
+  NEWatermarkConfig? watermarkConfig;
+
   NEStartMeetingUIParams({
     required String displayName,
     String? subject,
@@ -602,6 +624,7 @@ class NEStartMeetingUIParams extends NEStartMeetingParams {
     List<NERoomControl>? controls,
     Map<String, NEMeetingRoleType>? roleBinds,
     NEEncryptionConfig? encryptionConfig,
+    this.watermarkConfig,
   }) : super(
           displayName: displayName,
           subject: subject,
@@ -637,10 +660,16 @@ class NEStartMeetingUIParams extends NEStartMeetingParams {
               ? null
               : NEEncryptionConfig.fromJson(
                   Map<String, dynamic>.from(map['encryptionConfig'] as Map)),
+          watermarkConfig: map['watermarkConfig'] == null
+              ? null
+              : NEWatermarkConfig.fromJson(
+                  Map<String, dynamic>.from(map['watermarkConfig'] as Map)),
         );
 }
 
 class NEJoinMeetingUIParams extends NEJoinMeetingParams {
+  NEWatermarkConfig? watermarkConfig;
+
   NEJoinMeetingUIParams({
     required String meetingNum,
     required String displayName,
@@ -648,6 +677,7 @@ class NEJoinMeetingUIParams extends NEJoinMeetingParams {
     String? tag,
     String? avatar,
     NEEncryptionConfig? encryptionConfig,
+    this.watermarkConfig,
   }) : super(
           meetingNum: meetingNum,
           displayName: displayName,
@@ -659,7 +689,7 @@ class NEJoinMeetingUIParams extends NEJoinMeetingParams {
 
   NEJoinMeetingUIParams.fromMap(Map map)
       : this(
-          meetingNum: map['meetingNum'] as String,
+          meetingNum: map['meetingNum'] as String? ?? '',
           displayName: (map['displayName'] ?? '') as String,
           password: map['password'] as String?,
           tag: map['tag'] as String?,
@@ -668,6 +698,10 @@ class NEJoinMeetingUIParams extends NEJoinMeetingParams {
               ? null
               : NEEncryptionConfig.fromJson(
                   Map<String, dynamic>.from(map['encryptionConfig'] as Map)),
+          watermarkConfig: map['watermarkConfig'] == null
+              ? null
+              : NEWatermarkConfig.fromJson(
+                  Map<String, dynamic>.from(map['watermarkConfig'] as Map)),
         );
 }
 

@@ -43,6 +43,7 @@ class _HttpExecutor {
       String method, String path, Map<String, dynamic>? headers, data) async {
     http.Response? response;
     try {
+      final isGet = method == 'GET';
       var options = http.Options();
       options.method = method;
       options.headers = headers;
@@ -54,7 +55,8 @@ class _HttpExecutor {
       final requestOptions = options.compose(
         dio.options..baseUrl = _serversConfig.baseUrl,
         path,
-        data: data,
+        data: isGet ? null : data,
+        queryParameters: isGet && data is Map ? Map.from(data) : null,
       );
       response = await dio.fetch(requestOptions);
     } on http.DioError catch (e) {

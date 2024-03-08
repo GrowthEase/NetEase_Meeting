@@ -34,6 +34,23 @@ extension NEMeetingContext on NERoomContext {
 
   bool get isCrossAppJoining => meetingInfo.authorization != null;
 
+  NEMeetingWatermark get watermark {
+    final value = roomProperties[WatermarkProperty.key];
+    if (value == null || value.isEmpty) {
+      return NEMeetingWatermark.fromMap(null);
+    }
+    final map = jsonDecode(value) as Map?;
+    return NEMeetingWatermark.fromMap(map);
+  }
+
+  Future<NEResult<void>> enableConfidentialWatermark(bool enable) {
+    final newWatermark = watermark..videoStrategy = enable ? 1 : 0;
+    return updateRoomProperty(
+      WatermarkProperty.key,
+      jsonEncode(newWatermark.toMap()),
+    );
+  }
+
   void setupMeetingEnv(MeetingInfo meetingInfo) {
     _stateHolder[this] = _MeetingStates(meetingInfo);
 
