@@ -1,0 +1,54 @@
+.screenSharingWrapper {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  height: 400px;
+  width: 900px;
+  background: rgba(0, 0, 0, 0.7);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  .screenSharingClose {
+    position: absolute;
+    right: 24px;
+    top: 24px;
+    cursor: pointer;
+    font-size: 24px;
+    color: rgba(255, 255, 255, 0.6);
+  }
+  .screenSharingTitle {
+    font-size: 32px;
+    color: rgba(255, 255, 255, 0.6);
+  }
+  .screenSharingCode {
+    font-weight: 500;
+    font-size: 56px;
+    color: #fff;
+    margin: 36px 0;
+    letter-spacing: 0.3em;
+    margin-right: -0.3em;
+  }
+  .screenSharingSubTitle {
+    font-size: 24px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 24px;
+  }
+  .screenSharingSteps {
+    font-size: 24px;
+    color: rgba(255, 255, 255, 0.6);
+    display: flex;
+    align-items: center;
+    .screenSharingStepTag {
+      border-radius: 50%;
+    }
+    img {
+      width: 21px;
+      margin: 0 16px;
+    }
+  }
+}

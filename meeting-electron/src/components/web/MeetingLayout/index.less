@@ -1,0 +1,97 @@
+@import '../../../styles/variables.less';
+
+.nemeeting-layout-button {
+  cursor: pointer;
+  height: 21px;
+  line-height: 21px;
+  color: #fff;
+  font-weight: 500;
+  font-size: 12px;
+  padding: 0px 6px;
+  background-color: rgba(49, 49, 56, 0.8);
+  border-radius: 2px;
+  box-sizing: border-box;
+  .nemeeting-layout-button-text {
+    margin: 0 4px;
+  }
+  .nemeeting-layout-button-allow {
+    transform: rotate(90deg);
+  }
+}
+
+.nemeeting-layout-list-popover {
+  .nemeeting-popover-inner,
+  .nemeeting-popover-arrow::before {
+    background-image: @black-theme-background-image;
+  }
+  .nemeeting-layout-list-content {
+    color: @black-theme-color;
+  }
+}
+
+.light-theme {
+  .nemeeting-layout-list-popover {
+    .nemeeting-popover-inner,
+    .nemeeting-popover-arrow::before {
+      background-image: @light-theme-background-image;
+      color: @light-theme-color;
+    }
+    .nemeeting-layout-list-content {
+      color: #dceafd;
+      .nemeeting-layout-group-item-text {
+        color: @light-theme-color;
+      }
+    }
+  }
+}
+
+.nemeeting-layout-list-popover {
+  .nemeeting-popover-inner {
+    text-align: center;
+    padding: 0;
+    background-color: transparent;
+    border-radius: 2px;
+  }
+  .nemeeting-layout-list-content {
+    padding: 20px;
+    display: flex;
+    .nemeeting-layout-group-title {
+      white-space: nowrap;
+      color: #666;
+    }
+    .nemeeting-layout-group-content {
+      display: flex;
+    }
+    .nemeeting-layout-group-line {
+      background: #666;
+      height: 80px;
+      margin-top: 18px;
+    }
+    .nemeeting-layout-group-item {
+      cursor: pointer;
+      margin: 0 8px;
+    }
+    .nemeeting-layout-group-item-icon {
+      font-size: 80px;
+    }
+    .nemeeting-layout-group-item-text {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    }
+    .nemeeting-layout-group-item-radio {
+      font-size: 20px;
+    }
+    .nemeeting-layout-group-item.nemeeting-layout-group-item-active {
+      color: #337eff;
+      .nemeeting-layout-group-item-text {
+        color: #337eff;
+      }
+    }
+    .nemeeting-layout-group-item.nemeeting-layout-group-item-disable {
+      color: #8c8c91;
+      cursor: not-allowed;
+    }
+  }
+}

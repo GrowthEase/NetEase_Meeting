@@ -1,0 +1,130 @@
+.meeting-controller {
+  font-size: 10px;
+  background-image: linear-gradient(180deg, #33333f, #292933);
+  z-index: 10;
+  height: 56px;
+  padding-top: 6px;
+  color: #fff;
+  bottom: 0;
+  div.controller-item {
+    flex: 1;
+    min-width: 60px;
+    text-align: center;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    .custom-icon, .icon-tool {
+      width: 24px;
+      height: 24px;
+      margin: 0 auto 2px;
+    }
+    .custom-text {
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: pre;
+      max-width: 80px;
+      user-select: none;
+      font-size: 12px;
+      transform: scale(0.83); /* 10 ÷ 12 = 0.833 */
+    }
+  }
+  .member-count {
+    left: 62%;
+    top: -2px;
+  }
+  .icon-tool {
+    line-height: 1;
+    font-size: 24px;
+    margin: 0 auto 2px;
+  }
+  .icon-blue {
+    color: #337eff;
+  }
+
+  .unread-count {
+    background-color: #fe3b30;
+    border-radius: 50%;
+    min-width: 18px;
+    height: 18px;
+    line-height: 18px;
+    font-size: 10px;
+    color: #fff;
+    position: absolute;
+    padding: 0 3px;
+    text-align: center;
+    vertical-align: middle;
+    top: 0;
+    left: 50%;
+    transform: translateX(5px);
+    box-sizing: border-box;
+  }
+  .hands-up-tip {
+    position: absolute;
+    left: 50%;
+    top: -48px;
+    width: 48px;
+    border-radius: 5px;
+    transform: translateX(-50%) scale(0.75);
+    background: #337eff;
+    padding-bottom: 2px;
+  }
+  .hands-arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-bottom: 8px solid transparent;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid #337eff;
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .hands-arrow-text {
+    display: inline-block;
+  }
+  .hands-icon {
+    color: #fff;
+    width: 24px;
+    height: 24px;
+    display: block;
+    margin: 3px auto 0;
+    font-size: 20px;
+  }
+}
+
+.meeting-controller {
+  .adm-popover.adm-popover-dark {
+    z-index: 10;
+    .adm-popover-inner {
+      background-image: linear-gradient(180deg, #33333f, #292933);
+    }
+    .adm-popover-arrow {
+      color: #292933;
+    }
+    .adm-popover-item {
+      background-image: linear-gradient(180deg, #33333f, #292933);
+    }
+  }
+}
+.more-controller {
+  display: flex;
+  flex-wrap: wrap;
+  border-top: 0;
+  padding-top: 0;
+  height: auto;
+  max-width: 192px; // 一行最多放三个的宽度
+  div.controller-item {
+    margin: 5px 6px 5px 0;
+    flex: 0;
+    .unread-count {
+      transform: scale(0.92); /* 10 ÷ 12 = 0.833 */
+      top: -6px;
+    }
+  }
+  div.controller-item:nth-child(3n) {
+    margin-right: 0;
+  }
+}

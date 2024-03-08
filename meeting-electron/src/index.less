@@ -1,0 +1,212 @@
+/* @tailwind base; */
+//@tailwind components;
+//@tailwind utilities;
+
+.icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
+  fill: currentColor;
+  overflow: hidden;
+}
+.input-ele {
+  border-radius: 16px;
+  height: 36px;
+  padding: 0 16px;
+  background-color: rgb(243, 244, 246);
+  width: 90%;
+  border: 0;
+  outline: none;
+}
+div.dialog-com {
+  .nemeeting-password-join-cancel,
+  .nemeeting-password-join {
+    color: #007aff;
+  }
+}
+.nemeeting-password-join {
+  border: none;
+}
+.nemeeting-password-join-disabled {
+  opacity: 0.5;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+.h-full {
+  height: 100%;
+}
+.w-full {
+  width: 100%;
+}
+.flex {
+  display: flex;
+}
+.absolute {
+  position: absolute;
+}
+.relative {
+  position: relative;
+}
+.justify-around {
+  justify-content: space-around;
+}
+.justify-center {
+  justify-content: center;
+}
+.flex-wrap {
+  flex-wrap: wrap;
+}
+.text-white {
+  color: #fff;
+}
+.text-xl {
+  line-height: 28px;
+  font-size: 20px;
+}
+.text-xs {
+  line-height: 16px;
+  font-size: 12px;
+}
+.text-sm {
+  font-size: 14px;
+  line-height: 20px;
+}
+.text-base {
+  font-size: 16px;
+  line-height: 24px;
+}
+.text-lg {
+  font-size: 18px;
+  line-height: 28px;
+}
+.w-1\/2 {
+  width: 50%;
+}
+.h-1\/2 {
+  height: 50%;
+}
+.text-left {
+  text-align: left;
+}
+.text-center {
+  align-items: center;
+}
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fixed {
+  position: fixed;
+}
+.flex-col {
+  flex-direction: column;
+}
+
+.nemeeting-modal-content {
+  .nemeeting-modal-close-x {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.nemeeting-time-tip-wrap {
+  position: absolute;
+  top: 100px;
+  left: 50%;
+  min-width: 250px;
+  z-index: 30;
+  transform: translateX(-50%);
+}
+
+.nemeeting-time-tip-wrap-share {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  min-width: 250px;
+  z-index: 30;
+  transform: translateX(-50%);
+}
+
+.nemeeting-video-view-canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.nemeeing-waiting-room-notify {
+  overflow: visible!important;
+  .nemeeting-waiting-room-member-manager {
+    width: 24px;
+    height: 24px;
+    background: #317CFF;
+    color: #fff;
+    font-size: 17px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+  }
+  &:hover {
+    .waiting-room-notify-btn {
+      visibility: visible;
+      text-align: right;
+    }
+    .waiting-room-notify-close {
+      visibility: visible;
+    }
+  }
+  .waiting-room-notify-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #666;
+  }
+  .waiting-room-notify-close {
+    width: 28px;
+    height: 28px;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    color: #666;
+    border-radius: 50%;
+    display: flex;
+    box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+    visibility: hidden;
+    transition: all 0.2s;
+  }
+  .waiting-room-notify-btn {
+    visibility: hidden;
+    text-align: right;
+  }
+  .close-checkbox-tip {
+    color: #666;
+    margin-top: 6px;
+  }
+  .nemeeting-notification-notice {
+    padding: 16px;
+    overflow: visible!important;
+  }
+  .nemeeting-notification-notice-message {
+    padding-right: 0!important;
+  }
+  .nemeeting-notification-notice-description {
+    margin-left: 0!important;
+  }
+  .nemeeting-notification-notice-close {
+    width: 28px!important;
+    height: 28px!important;
+    top: -12px!important;
+    left: -12px!important;
+    border-radius: 50%!important;
+  }
+  .notify-description {
+    font-size: 14px;
+    color: #333;
+  }
+}
+
