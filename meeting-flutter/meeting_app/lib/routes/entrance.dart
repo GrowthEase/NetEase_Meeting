@@ -2,34 +2,33 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
-import 'package:nemeeting/arguments/webview_arguments.dart';
-import 'package:nemeeting/base/util/error.dart';
-import 'package:nemeeting/base/util/global_preferences.dart';
-import 'package:nemeeting/base/util/text_util.dart';
-import 'package:nemeeting/base/util/url_util.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nemeeting/base/util/global_preferences.dart';
 import 'package:nemeeting/channel/deep_link_manager.dart';
 import 'package:nemeeting/service/config/servers.dart';
+import 'package:nemeeting/service/repo/corp_repo.dart';
 import 'package:nemeeting/utils/privacy_util.dart';
-import 'package:nemeeting/service/client/http_code.dart';
-import 'package:nemeeting/service/config/app_config.dart';
-import 'package:nemeeting/service/config/scene_type.dart';
-import 'package:nemeeting/service/repo/auth_repo.dart';
 import 'package:nemeeting/utils/security_notice_util.dart';
+import 'package:nemeeting/utils/state_utils.dart';
+import 'package:nemeeting/webview/webview_page.dart';
+import 'package:nemeeting/widget/meeting_text_field.dart';
+import 'package:netease_meeting_ui/meeting_ui.dart';
+
+import '../language/localizations.dart';
 import '../uikit/utils/nav_utils.dart';
 import '../uikit/utils/router_name.dart';
-import '../uikit/values/borders.dart';
-import '../uikit/values/colors.dart';
-import '../uikit/values/strings.dart';
-import 'package:nemeeting/arguments/auth_arguments.dart';
 import '../uikit/values/asset_name.dart';
-import 'package:nemeeting/channel/ne_platform_channel.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import '../uikit/values/colors.dart';
+
+enum _Edition {
+  corp,
+  trial,
+}
 
 class EntranceRoute extends StatefulWidget {
   @override
@@ -38,8 +37,10 @@ class EntranceRoute extends StatefulWidget {
   }
 }
 
-class _EntranceRouteState extends LifecycleBaseState {
-  late NEMeetingChannelCallback _callback;
+class _EntranceRouteState extends LifecycleBaseState
+    with MeetingAppLocalizationsMixin {
+  var _edition = _Edition.corp;
+  final _corpCodeController = TextEditingController();
 
   @override
   void initState() {
@@ -47,8 +48,7 @@ class _EntranceRouteState extends LifecycleBaseState {
 
     ///需求默认加载未登录
     PrivacyUtil.privateAgreementChecked = false;
-    _callback = (String uri) => deepLink(uri);
-    NEPlatformChannel().listen(_callback);
+    AppNotificationManager().reset();
     GlobalPreferences().hasPrivacyDialogShowed.then((value) {
       if (value != true) {
         showPrivacyDialog(context);
@@ -60,52 +60,94 @@ class _EntranceRouteState extends LifecycleBaseState {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        color: Colors.white,
-        child: SafeArea(
-          child: Stack(children: <Widget>[
-            // SecurityNoticeUtil.buildSecurityNoticeTips(context, 20),
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  buildIcon(),
-                  Container(
-                    height: 148,
-                    margin: EdgeInsets.only(left: 30, right: 30),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        buildRegisterAndLogin(),
-                        SizedBox(
-                          height: 15,
-                        ),
-                        if (AppConfig().isPublicFlavor) buildRegisterAndSSO(),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+    final child = Scaffold(
+      backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: false,
+      body: SafeArea(
+        child: Column(
+          children: <Widget>[
+            SizedBox(
+              height: 73.h,
             ),
-            buildPowerBy(),
-            Column(
-                children: <Widget>[Spacer(), PrivacyUtil.protocolTips(context)])
-          ]),
-        ));
-  }
-
-  Align buildPowerBy() {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Container(
-        padding: const EdgeInsets.all(8.0),
-        child: Image.asset(
-          AssetName.provider,
-          //package: AssetName.package,
-          fit: BoxFit.none,
+            buildIcon(),
+            if (_edition == _Edition.corp) ...[
+              SizedBox(
+                height: 54.h,
+              ),
+              SizedBox(
+                height: 44.h,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 30.w),
+                  child: MeetingTextField(
+                    controller: _corpCodeController,
+                    hintText: meetingAppLocalizations.authEnterCorpCode,
+                    textInputAction: TextInputAction.next,
+                    onSubmitted: (_) => launchCorpLogin,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(
+                    left: 33.w, right: 33.w, top: 16.h, bottom: 20.h),
+                child: buildCorpLoginSubActions(),
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 30.w),
+                child: ListenableBuilder(
+                  listenable: _corpCodeController,
+                  builder: (context, child) {
+                    return MeetingActionButton(
+                      text: meetingAppLocalizations.authNextStep,
+                      onTap: _corpCodeController.text.trim().isNotEmpty
+                          ? launchCorpLogin
+                          : null,
+                    );
+                  },
+                ),
+              ),
+              SizedBox(
+                height: 16.h,
+              ),
+              buildSSO(),
+            ],
+            if (_edition == _Edition.trial) ...[
+              SizedBox(
+                height: 113.h,
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 30.w),
+                child: MeetingActionButton(
+                  text: meetingAppLocalizations.authRegisterAndLogin,
+                  onTap: launchTrialLogin,
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 33.w, right: 33.w, top: 16.h),
+                child: buildTrialLoginSubActions(),
+              ),
+            ],
+            Spacer(),
+            Padding(
+              padding: EdgeInsets.only(left: 33.w, right: 33.w),
+              child: PrivacyUtil.protocolTips(),
+            ),
+            SizedBox(
+              height: 16.h,
+            ),
+            Image.asset(
+              AssetName.provider,
+              fit: BoxFit.none,
+            ),
+            SizedBox(
+              height: 10.h,
+            ),
+          ],
         ),
       ),
+      // ]),
+    );
+    return AutoHideKeyboard(
+      child: child,
     );
   }
 
@@ -117,215 +159,137 @@ class _EntranceRouteState extends LifecycleBaseState {
         decoration: TextDecoration.none);
   }
 
-  Widget buildRegisterAndSSO() {
-    return Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-      // buildRegister(),
-      buildSSO(),
-    ]);
-  }
-
-  GestureDetector buildRegister() {
-    return GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        child: Padding(
-          padding: EdgeInsets.only(left: 50, top: 6, right: 50, bottom: 6),
-          child: Text(
-            Strings.immediatelyRegister,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-                color: AppColors.blue_337eff,
-                fontWeight: FontWeight.w400,
-                fontSize: 12,
-                decoration: TextDecoration.none),
+  Widget buildCorpLoginSubActions() {
+    return Row(
+      children: <Widget>[
+        Text(
+          meetingAppLocalizations.authNoCorpCode +
+              meetingAppLocalizations.authCreateAccountByPC,
+          style: TextStyle(
+            color: AppColors.color_666666,
+            fontSize: 12.sp,
           ),
         ),
-        onTap: () {
-          var authModel = AuthArguments();
-          authModel.sceneType = SceneType.register;
-          NavUtils.pushNamed(context, RouterName.getMobileCheckCode,
-              arguments: authModel);
-        });
+        Spacer(),
+        GestureDetector(
+          child: Text(
+            meetingAppLocalizations.authLoginToTrialEdition,
+            style: TextStyle(
+              color: AppColors.blue_337eff,
+              fontSize: 14.sp,
+            ),
+          ),
+          onTap: () {
+            setState(() {
+              _edition = _Edition.trial;
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget buildTrialLoginSubActions() {
+    return Row(
+      children: <Widget>[
+        Text(
+          meetingAppLocalizations.authHasCorpCode,
+          style: TextStyle(
+            color: AppColors.color_666666,
+            fontSize: 14.sp,
+          ),
+        ),
+        GestureDetector(
+          child: Text(
+            meetingAppLocalizations.authLoginToCorpEdition,
+            style: TextStyle(
+              color: AppColors.blue_337eff,
+              fontSize: 14.sp,
+            ),
+          ),
+          onTap: () {
+            setState(() {
+              _corpCodeController.clear();
+              _edition = _Edition.corp;
+            });
+          },
+        ),
+        Spacer(),
+        buildSSO(),
+      ],
+    );
   }
 
   GestureDetector buildSSO() {
     return GestureDetector(
         behavior: HitTestBehavior.opaque,
-        child: Padding(
-          padding: EdgeInsets.only(left: 50, top: 6, right: 50, bottom: 6),
-          child: Text(
-            Strings.loginBySSO,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-                color: AppColors.blue_337eff,
-                fontWeight: FontWeight.w400,
-                fontSize: 12,
-                decoration: TextDecoration.none),
+        child: Text(
+          meetingAppLocalizations.authLoginBySSO,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: AppColors.blue_337eff,
+            fontSize: 14.sp,
           ),
         ),
-        onTap: () {
-          if (!PrivacyUtil.privateAgreementChecked) {
-            ToastUtils.showToast(context, Strings.privacyCheckedTips);
-            return;
-          }
-          var authModel = AuthArguments();
+        onTap: () async {
+          if (!await ensurePrivacyAgree()) return;
           NavUtils.pushNamed(context, RouterName.ssoLogin,
-              arguments: authModel);
+              arguments: _corpCodeController.text.trim());
         });
   }
 
-  GestureDetector buildLogin() {
-    return GestureDetector(
-      child: Container(
-        height: 50,
-        decoration: BoxDecoration(
-          border: Border.fromBorderSide(Borders.secondaryBorder),
-          borderRadius: BorderRadius.all(Radius.circular(25.0)),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          AppConfig().isPublicFlavor ? Strings.login : Strings.mailLogin,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-              color: AppColors.blue_337eff,
-              fontWeight: FontWeight.w400,
-              fontSize: 16,
-              decoration: TextDecoration.none),
-        ),
-      ),
-      onTap: () {
-        if (!PrivacyUtil.privateAgreementChecked) {
-          ToastUtils.showToast(context, Strings.privacyCheckedTips);
-          return;
-        }
-        if (AppConfig().isPublicFlavor) {
-          var authModel = AuthArguments();
-          authModel.sceneType = SceneType.login;
-          NavUtils.pushNamed(context, RouterName.login, arguments: authModel);
-        } else {
-          NavUtils.pushNamed(context, RouterName.mailLogin);
-        }
-      },
-    );
-  }
-
-  GestureDetector buildRegisterAndLogin() {
-    return GestureDetector(
-      child: Container(
-        height: 50,
-        decoration: BoxDecoration(
-          color: AppColors.accentElement,
-          borderRadius: BorderRadius.all(Radius.circular(25.0)),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          Strings.registerAndLogin,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-              color: AppColors.secondaryText,
-              fontWeight: FontWeight.w400,
-              fontSize: 16,
-              decoration: TextDecoration.none),
-        ),
-      ),
-      onTap: () {
-        if (!PrivacyUtil.privateAgreementChecked) {
-          ToastUtils.showToast(context, Strings.privacyCheckedTips);
-          return;
-        }
-        launchLogin();
-      },
-    );
-  }
-
-  int _tapCount = 0;
-  int _tapTime = 0;
-
   Widget buildIcon() {
-    return GestureDetector(
-      child: Container(
-        width: 166,
-        height: 159,
-        child: Image.asset(
-          AssetName.meet,
-          //package: AssetName.package,
-          fit: BoxFit.none,
-        ),
+    return Container(
+      width: 166.w,
+      height: 159.h,
+      child: Image.asset(
+        AssetName.meet,
+        //package: AssetName.package,
+        fit: BoxFit.contain,
       ),
-      onTap: () {
-        final now = DateTime.now().millisecondsSinceEpoch;
-        if (now - _tapTime > 200) {
-          _tapCount = 1;
-        } else {
-          _tapCount++;
-        }
-        _tapTime = now;
-        if (_tapCount >= 20) {
-          _tapCount = 0;
-          NavUtils.pushNamed(context, RouterName.backdoor);
-        }
-      },
     );
-  }
-
-  Future<void> ssoLogin(String uuid, String ssoToken, String appKey) async {
-    await AuthRepo().loginByToken(uuid, ssoToken, appKey).then((result) {
-      if (!mounted) return;
-      if (result.code == HttpCode.success) {
-        NavUtils.pushNamedAndRemoveUntil(context, RouterName.homePage);
-      } else {
-        ErrorUtil.showError(context, HttpCode.getMsg(result.msg));
-      }
-    });
   }
 
   @override
   void dispose() {
     PrivacyUtil.dispose();
-    NEPlatformChannel().unListen(_callback);
     DeepLinkManager().detach(context);
+    _corpCodeController.dispose();
     super.dispose();
   }
 
-  void deepLink(String uri) {
-    var appKey = UrlUtil.getParamValue(uri, UrlUtil.paramAppId);
-    var ssoToken = UrlUtil.getParamValue(uri, UrlUtil.paramUserToken);
-    var userUuid = UrlUtil.getParamValue(uri, UrlUtil.paramUserUuid);
-    if (!TextUtil.isEmpty(userUuid) && !TextUtil.isEmpty(ssoToken)) {
-      ssoLogin(userUuid!, ssoToken!, appKey!);
+  Future<bool> ensurePrivacyAgree() async {
+    if (!PrivacyUtil.privateAgreementChecked) {
+      return showPrivacyDialog(context, exitIfNotOk: false);
     }
+    return true;
   }
 
-  //发起URS登录
-  void launchLogin() {
-    // var authRepo = AuthRepo();
-    // authRepo.loginByURS();
-    var authModel = AuthArguments();
-    authModel.sceneType = SceneType.login;
-    NavUtils.pushNamed(context, RouterName.login, arguments: authModel);
-  }
-
-  //处理URS登录的信息
-  void handlerLoginInfo(String result) {
-    var authRepo = AuthRepo();
-    var resultMap = (jsonDecode(result) as Map);
-    var type = resultMap['type']
-        as int; // 0 init  1 login  2 login result  3 logout 4 server config
-    print("flutter login parse : " + result);
-    if (type != 2) {
-      //只需处理 login result 结果
-      return;
-    }
-    var loginResult = authRepo.loginByInfo(resultMap);
-    lifecycleExecuteUI(loginResult).then((result) {
-      if (result?.code == HttpCode.success) {
-        NavUtils.pushNamedAndRemoveUntil(context, RouterName.homePage);
-      } else {
-        ErrorUtil.showError(context, HttpCode.getMsg(result?.msg));
+  void launchCorpLogin() async {
+    if (!await ensurePrivacyAgree()) return;
+    doIfNetworkAvailable(() async {
+      final corpCode = _corpCodeController.text.trim();
+      LoadingUtil.showLoading();
+      final result = await CorpRepo.getCorpInfo(corpCode: corpCode);
+      LoadingUtil.cancelLoading();
+      final corpInfo = result.data;
+      if (corpInfo == null) {
+        ToastUtils.showToast(context, meetingAppLocalizations.authCorpNotFound);
+        return;
       }
+      NavUtils.pushNamed(context, RouterName.corpAccountLogin,
+          arguments: corpInfo);
     });
   }
 
-  void showPrivacyDialog(BuildContext context) async {
+  //发起URS登录
+  void launchTrialLogin() async {
+    if (!await ensurePrivacyAgree()) return;
+    NavUtils.pushNamed(context, RouterName.mobileLogin);
+  }
+
+  Future<bool> showPrivacyDialog(BuildContext context,
+      {bool exitIfNotOk = true}) async {
     TextSpan buildTextSpan(String text, WebViewArguments? arguments) {
       return TextSpan(
         text: text,
@@ -342,37 +306,46 @@ class _EntranceRouteState extends LifecycleBaseState {
       );
     }
 
-    final userArguments =
-        WebViewArguments(servers.userProtocol, Strings.user_protocol);
-    final privacyArguments = WebViewArguments(servers.privacy, Strings.privacy);
-
-    showCupertinoDialog(
+    final userArguments = WebViewArguments(
+        Servers.userProtocol, meetingAppLocalizations.authServiceAgreement);
+    final privacyArguments =
+        WebViewArguments(Servers.privacy, meetingAppLocalizations.authPrivacy);
+    final message = meetingAppLocalizations.authPrivacyDialogMessage(
+        '##neteasePrivacy##', '##neteaseUserProtocol##');
+    final messageList = message.split('##');
+    return showCupertinoDialog(
         context: context,
         builder: (context) {
           return CupertinoAlertDialog(
-            title: Text(Strings.privacyDialogTitle),
+            title: Text(meetingAppLocalizations.authPrivacyDialogTitle),
             content: Text.rich(
               TextSpan(
                 children: [
-                  buildTextSpan(Strings.privacyDialogMessagePart1, null),
-                  buildTextSpan(
-                      Strings.privacyDialogMessagePart2, userArguments),
-                  buildTextSpan(Strings.privacyDialogMessagePart3, null),
-                  buildTextSpan(
-                      Strings.privacyDialogMessagePart4, privacyArguments),
-                  buildTextSpan(Strings.privacyDialogMessagePart5, null),
+                  for (var item in messageList)
+                    item == 'neteasePrivacy'
+                        ? buildTextSpan(
+                            meetingAppLocalizations.authNeteasePrivacy,
+                            privacyArguments)
+                        : item == 'neteaseUserProtocol'
+                            ? buildTextSpan(
+                                meetingAppLocalizations
+                                    .authNetEaseServiceAgreement,
+                                userArguments)
+                            : buildTextSpan(item, null),
                 ],
               ),
             ),
             actions: <Widget>[
               CupertinoDialogAction(
-                child: const Text(Strings.privacyDialogActionQuit),
+                child: Text(exitIfNotOk
+                    ? meetingAppLocalizations.globalQuit
+                    : meetingAppLocalizations.globalCancel),
                 onPressed: () {
                   Navigator.of(context).pop(false);
                 },
               ),
               CupertinoDialogAction(
-                child: const Text(Strings.privacyDialogActionAgree),
+                child: Text(meetingAppLocalizations.globalAgree),
                 onPressed: () {
                   Navigator.of(context).pop(true);
                 },
@@ -380,11 +353,14 @@ class _EntranceRouteState extends LifecycleBaseState {
             ],
           );
         }).then((value) {
-      if (value == false) {
+      if (value != true && exitIfNotOk) {
         exit(0);
-      } else if (value == true) {
-        GlobalPreferences().setPrivacyDialogShowed(true);
       }
+      if (value == true) {
+        GlobalPreferences().setPrivacyDialogShowed(true);
+        PrivacyUtil.privateAgreementChecked = true;
+      }
+      return value ?? false;
     });
   }
 }

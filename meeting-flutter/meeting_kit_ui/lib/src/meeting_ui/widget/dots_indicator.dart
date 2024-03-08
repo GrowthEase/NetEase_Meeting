@@ -114,20 +114,25 @@ class _DotsIndicatorState extends State<DotsIndicator> {
         constraints: BoxConstraints(
           maxWidth: _kMaxWidth,
         ),
-        child: ListView.separated(
-          controller: controller,
-          physics: const NeverScrollableScrollPhysics(),
-          scrollDirection: Axis.horizontal,
-          itemCount: widget.itemCount,
-          shrinkWrap: true,
-          itemBuilder: (BuildContext context, int index) {
-            return _buildDot(index);
-          },
-          separatorBuilder: (context, index) {
-            return SizedBox(
-              width: _kPaddingValue,
-            );
-          },
+        child: MediaQuery.removePadding(
+          removeLeft: true,
+          removeRight: true,
+          context: context,
+          child: ListView.separated(
+            controller: controller,
+            physics: const NeverScrollableScrollPhysics(),
+            scrollDirection: Axis.horizontal,
+            itemCount: widget.itemCount,
+            shrinkWrap: true,
+            itemBuilder: (BuildContext context, int index) {
+              return _buildDot(index);
+            },
+            separatorBuilder: (context, index) {
+              return SizedBox(
+                width: _kPaddingValue,
+              );
+            },
+          ),
         ),
       ),
     );

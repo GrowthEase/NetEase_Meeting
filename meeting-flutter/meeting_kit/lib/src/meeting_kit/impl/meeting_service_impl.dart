@@ -11,6 +11,7 @@ class _NEMeetingServiceImpl extends NEMeetingService
   factory _NEMeetingServiceImpl() => _instance;
 
   final _roomService = NERoomKit.instance.roomService;
+  late final _accountService = NEMeetingKit.instance.getAccountService();
 
   _NEMeetingServiceImpl._();
 
@@ -76,6 +77,7 @@ class _NEMeetingServiceImpl extends NEMeetingService
           : NEMeetingType.kRandom,
       subject: param.subject,
       password: param.password,
+      enableWaitingRoom: opts.enableWaitingRoom,
       roomConfigId: kMeetingTemplateId,
       roomProperties: roomProperties,
       roleBinds: param.roleBinds?.map((key, value) {
@@ -100,7 +102,7 @@ class _NEMeetingServiceImpl extends NEMeetingService
               userName: param.displayName,
               role: MeetingRoles.kHost,
               password: param.password,
-              avatar: param.avatar,
+              avatar: param.avatar ?? _accountService.getAccountInfo()?.avatar,
               initialMyProperties: param.tag != null && param.tag!.isNotEmpty
                   ? {
                       MeetingPropertyKeys.kMemberTag: param.tag!,
@@ -157,7 +159,7 @@ class _NEMeetingServiceImpl extends NEMeetingService
         userName: param.displayName,
         role: MeetingRoles.kUndefined,
         password: param.password,
-        avatar: param.avatar,
+        avatar: param.avatar ?? _accountService.getAccountInfo()?.avatar,
         injectedAuthorization: authorization != null
             ? NEInjectedAuthorization(
                 appKey: authorization.appKey,
@@ -252,5 +254,23 @@ class _NEMeetingServiceImpl extends NEMeetingService
     }
 
     return null;
+  }
+
+  @override
+  Future<NEResult<List<NERoomRecord>>> getRoomCloudRecordList(
+      String roomArchiveId) {
+    return NERoomKit.instance.roomService.getRoomCloudRecordList(roomArchiveId);
+  }
+
+  @override
+  Future<NEResult<List<NERoomChatMessage>>> fetchChatroomHistoryMessages(
+      String roomArchiveId, NEChatroomHistoryMessageSearchOption option) {
+    return NERoomKit.instance.roomService
+        .fetchChatroomHistoryMessages(roomArchiveId, option);
+  }
+
+  @override
+  Future<NEResult<VoidResult>> downloadAttachment(String messageUuid) {
+    return NERoomKit.instance.roomService.downloadAttachment(messageUuid);
   }
 }

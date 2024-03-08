@@ -6,7 +6,7 @@ import 'package:nemeeting/service/proto/app_http_proto.dart';
 
 import '../../model/history_meeting.dart';
 
-class FavoriteMeetingProto extends AppHttpProto<List<FavoriteMeeting>> {
+class FavoriteMeetingProto extends AppHttpProto<List<HistoryMeeting>> {
   final String appKey;
   final int? startId;
   final int limit;
@@ -29,11 +29,11 @@ class FavoriteMeetingProto extends AppHttpProto<List<FavoriteMeeting>> {
   }
 
   @override
-  List<FavoriteMeeting>? result(Map? map) {
+  List<HistoryMeeting>? result(Map? map) {
     if (map == null || map.isEmpty) return null;
     var links = map['favoriteList'] as List;
     var list = links
-        .map<FavoriteMeeting>((e) => FavoriteMeeting.fromJson(e as Map))
+        .map<HistoryMeeting>((e) => HistoryMeeting.fromJson(e as Map))
         .toList();
     return list;
   }

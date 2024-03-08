@@ -61,6 +61,10 @@ class RawPIPViewState extends State<RawPIPView> with TickerProviderStateMixin {
       vsync: this,
     );
     _ratio.value = pipDefaultRatio;
+    if (widget.topWidget != null && widget.bottomWidget != null) {
+      _isFloating = true;
+      _toggleFloatingAnimationController.forward();
+    }
   }
 
   @override

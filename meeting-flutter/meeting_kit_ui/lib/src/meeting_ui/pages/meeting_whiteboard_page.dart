@@ -124,9 +124,9 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
                       child: Text(
                         isEditing
                             ? NEMeetingUIKitLocalizations.of(context)!
-                                .packUpWhiteBoard
+                                .whiteBoardPackUp
                             : NEMeetingUIKitLocalizations.of(context)!
-                                .editWhiteBoard,
+                                .globalEdit,
                         style: TextStyle(color: Colors.white, fontSize: 14),
                         textAlign: TextAlign.center,
                       ),
@@ -166,10 +166,11 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
             builder: (context) {
               return CupertinoAlertDialog(
                 content: Text(NEMeetingUIKitLocalizations.of(context)!
-                    .noAuthorityWhiteBoard),
+                    .whiteBoardNoAuthority),
                 actions: <Widget>[
                   CupertinoDialogAction(
-                    child: Text(NEMeetingUIKitLocalizations.of(context)!.ok),
+                    child: Text(
+                        NEMeetingUIKitLocalizations.of(context)!.globalGotIt),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },

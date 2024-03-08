@@ -21,6 +21,15 @@ class MeetingPageProxy extends StatelessWidget {
           onGenerateRoute: (RouteSettings settings) {
             final arg = settings.arguments ?? arguments;
             if (arg is MeetingArguments) {
+              if (settings.name != MeetingPage.routeName &&
+                  (arg.roomContext.isInWaitingRoom() ||
+                      settings.name == MeetingWaitingRoomPage.routeName)) {
+                return MaterialPageRoute(
+                  settings:
+                      RouteSettings(name: MeetingWaitingRoomPage.routeName),
+                  builder: (context) => MeetingWaitingRoomPage(arg),
+                );
+              }
               return LoggingMaterialPageRoute(
                 builder: (context) => MeetingPage(arg),
                 settings: RouteSettings(name: MeetingPage.routeName),

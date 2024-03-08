@@ -6,7 +6,7 @@ part of meeting_ui;
 const _tag = 'MeetingPage';
 
 class MeetingPage extends StatefulWidget {
-  static const routeName = '/MeetingPage';
+  static const routeName = 'MeetingPage';
   final MeetingArguments arguments;
 
   MeetingPage(this.arguments) {
@@ -26,12 +26,17 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     with
         TickerProviderStateMixin,
         EventTrackMixin,
-        NERoomUserVideoViewListener,
+        NEWaitingRoomListener,
+        _AloggerMixin,
+        MeetingUIStateScope
+    implements
         AudioManager,
         MinimizeMeetingManager,
-        _AloggerMixin,
-        InMeetingDataServiceCallback {
+        MeetingMenuItemManager,
+        NERoomUserVideoViewListener {
   MeetingBusinessUiState(this.arguments);
+
+  static const _moreMenuRouteName = '/moreMenuRoute';
 
   @override
   String get logTag => _tag;
@@ -40,7 +45,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
 
   MeetingArguments arguments;
 
-  int _currentExitCode = 0;
+  int? _currentExitCode;
   String? _currentReason;
 
   bool _isEverConnected = false;
@@ -70,6 +75,8 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
   late ValueNotifier<bool> _isGalleryLayout;
 
   ValueListenable<bool> get isGalleryLayout => _isGalleryLayout;
+  late ValueNotifier<bool> _isLiveStreaming;
+  ValueListenable<bool> get isLiveStreaming => _isLiveStreaming;
 
   late bool _isShowOpenMicroDialog,
       _isShowOpenVideoDialog,
@@ -81,12 +88,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       _invitingToOpenVideo;
 
   PageController? _galleryModePageController;
-  double? aspectRatio = 9 / 16,
-      pipViewAspectRatio = 9 / 16,
-      vPaddingTop,
-      vPaddingLR,
-      hPaddingTop,
-      hPaddingLR;
+  double? pipViewAspectRatio = 9 / 16;
   Map<String, double> _userAspectRatioMap = {};
   WindowMode _windowMode = WindowMode.gallery;
 
@@ -97,23 +99,44 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
 
   late Animation<Offset> bottomAnim, topBarAnim, meetingEndTipAnim;
 
-  late Animation<double> localAudioVolumeIndicatorAnim;
+  late Animation<double> localAudioVolumeIndicatorAnim, cloudRecordAnim;
 
   late int meetingBeginTime;
 
-  bool _isAlreadyCancel = false,
-      _isMinimized = false,
-      _hasRequestEngineToDetach = false,
-      _isAlreadyMeetingDisposeInMinimized = false,
-      _isPortrait = true;
+  bool _isAlreadyCancel = false, _isAlreadyMeetingDisposeInMinimized = false;
 
-  bool _isIpad = false;
+  var gridLayoutMode = _GridLayoutMode.audio;
+  bool get isAudioGridLayoutMode =>
+      gridLayoutMode == _GridLayoutMode.audio &&
+      !isWhiteBoardSharing() &&
+      !isScreenSharing();
+  void updateGridLayoutMode() {
+    gridLayoutMode = userList.any((user) => user.isVideoOn)
+        ? _GridLayoutMode.video
+        : _GridLayoutMode.audio;
+  }
+
+  MeetingGridLayout get currentGridLayout =>
+      isAudioGridLayoutMode ? audioGridLayout : videoGridLayout;
+  late final audioGridLayout = MeetingAudioGridLayout();
+  late final videoGridLayout = MeetingVideoGridLayout();
+
+  bool get _isMinimized => currentMeetingUIState!.isMinimized;
+  set _isMinimized(bool value) {
+    currentMeetingUIState!.isMinimized = value;
+  }
+
+  bool _isPad = false;
   final localMirrorState = ValueNotifier(true);
   final alwaysUnMirrorState = ValueNotifier(false);
 
   OverlayEntry? _overlayEntry;
 
   final _audioDeviceSelected = ValueNotifier(NEAudioOutputDevice.kSpeakerPhone);
+  final _audioDeviceChanged =
+      StreamController<AudioDeviceChangedEvent>.broadcast();
+  Stream<AudioDeviceChangedEvent> get audioDeviceChangedStream =>
+      _audioDeviceChanged.stream;
 
   late int beautyLevel;
 
@@ -124,6 +147,8 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
   final streamSubscriptions = <StreamSubscription>[];
 
   final StreamController<Object> roomInfoUpdatedEventStream =
+      StreamController.broadcast();
+  final StreamController<Object> moreMenuItemUpdatedEventStream =
       StreamController.broadcast();
   late NERoomWhiteboardController whiteboardController;
   late NERoomChatController chatController;
@@ -159,15 +184,12 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
   var volumeInfo = <int>[];
   var vadInfo = <bool>[];
 
-  /// 上次提醒时间
-  var lastRemindTimestamp = DateTime.utc(2020);
-
   var focusSwitchInterval = Duration(seconds: 2);
 
   /// 上次焦点视频切换时间
   var lastFocusSwitchTimestamp = DateTime.utc(2020);
-  late bool openMicphoneTipDialogShowing;
   final audioVolumeStreams = <String, StreamController<int>>{};
+  ActiveSpeakerManager? activeSpeakerManager;
   late NERoomContext roomContext;
   late NERoomUserVideoStreamSubscriber userVideoStreamSubscriber;
   late bool isPreviewVirtualBackground;
@@ -177,7 +199,8 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
   final pageViewCurrentIndex = ValueNotifier(0);
 
   final networkTaskExecutor = NetworkTaskExecutor();
-  final floating = NEMeetingPlugin().getFloatingServiceService();
+  final floating = NEMeetingPlugin().getFloatingService();
+  final settings = NEMeetingKit.instance.getSettingsService();
 
   /// iOS是否画中画模式中
   bool pictureInPictureState = false;
@@ -199,10 +222,13 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
   late BuildContext pipContext;
   DialogRoute? dialogRoute;
   MaterialMeetingPageRoute? meetingPageRoute;
-  Object? popupRoute;
 
   /// 会议已断开，是否恢复断网弹窗
   bool isShowNetworkAbnormalityAlertDialog = false;
+
+  /// 是否已经展示过断开音频的弹窗，一次通话只展示一次
+  bool hasShowAudioDisconnectTips = false;
+  double currentVolume = 0.0;
 
   /// 进入画中画模式后，展示过的userUuid
   final Set<String> pipUsers = {};
@@ -232,6 +258,59 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
 
   ValueNotifier<bool>? _whiteBoardShareListenable;
 
+  /// 云录制中
+  ValueNotifier<bool>? _cloudRecordListenable;
+
+  /// 云录制弹窗上下文，用于云录制开始和结束弹窗的关闭
+  DismissCallback? _cloudRecordStartedOverlayCallback;
+  DismissCallback? _cloudRecordStoppedOverlayCallback;
+
+  late final isMySelfManagerListenable = ValueNotifier(isSelfHostOrCoHost());
+
+  /// 云录制左上角的提示，未开启云录制\正在开启云录制\云录制中
+  ValueNotifier<_CloudRecordState>? _cloudRecordStateListenable;
+
+  /// 音频是否断开
+  ValueNotifier<bool>? _audioConnectStateListenable;
+
+  /// 是否刚入会或重新入会
+  bool _isFirstJoinOrRejoinMeeting = true;
+
+  /// 是否需要展示云录制弹窗，小窗的时候如果有云录制弹窗设置为true，小窗回来时展示
+  bool _needToShowCloudRecordChange = false;
+
+  WaitingRoomManager? _waitingRoomManager;
+  WaitingRoomManager get waitingRoomManager {
+    _waitingRoomManager ??= WaitingRoomManager(roomContext,
+        waitingRoomMemberJoinHandler: handleWaitingRoomMemberJoin);
+    return _waitingRoomManager!;
+  }
+
+  /// 等候室等待Tip显示
+  ValueNotifier<_WaitingRoomCountTip> _waitingRoomCountTipListenable =
+      ValueNotifier(_WaitingRoomCountTip.hide);
+
+  ValueNotifier<int>? _memberTotalCountNotify;
+  ValueListenable<int> get memberTotalCountListenable {
+    if (_memberTotalCountNotify == null) {
+      _memberTotalCountNotify = ValueNotifier(0);
+      _updateMemberTotalCount();
+      waitingRoomManager.waitingRoomMemberCountListenable
+          .addListener(_updateMemberTotalCount);
+      meetingMemberCountListenable.addListener(_updateMemberTotalCount);
+    }
+    return _memberTotalCountNotify!;
+  }
+
+  /// 更新底部管理参会者右上角人数角标，主持人和联席主持人为会议内+等候室总人数
+  void _updateMemberTotalCount() {
+    var count = meetingMemberCountListenable.value;
+    if (isSelfHostOrCoHost()) {
+      count += waitingRoomManager.currentMemberCount;
+    }
+    _memberTotalCountNotify?.value = count;
+  }
+
   @override
   void reassemble() {
     super.reassemble();
@@ -246,7 +325,12 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       // debugRepaintTextRainbowEnabled = debugRepaintRainbowEnabled = true;
       return true;
     }());
-    // _isIpad = await NEMeetingPlugin().ipadCheckDetector.isIpad();
+    NEMeetingPlugin().padCheckDetector.isPad().then((value) {
+      if (_isPad != value && mounted) {
+        _isPad = value;
+        setState(() {});
+      }
+    });
     _initData(arguments.roomContext);
   }
 
@@ -254,6 +338,8 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     /// 重新初始化会中属性
     roomContext = updateRoomContext;
     _meetingState = MeetingState.init;
+    _isFirstJoinOrRejoinMeeting = true;
+    _needToShowCloudRecordChange = false;
     whiteBoardInteractionStatusNotifier.value = false;
     whiteBoardEditingState.value = false;
     _isShowOpenMicroDialog = false;
@@ -267,7 +353,6 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     _audioDeviceSelected.value = NEAudioOutputDevice.kSpeakerPhone;
     beautyLevel = 0;
     showMeetingEndTip = false;
-    openMicphoneTipDialogShowing = false;
     isPreviewVirtualBackground = false;
     modifyingAudioShareState = false;
     audioSharingListenable.value = false;
@@ -276,20 +361,37 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     _liveInfo = null;
     _screenShareListenable = null;
     _whiteBoardShareListenable = null;
+    _audioConnectStateListenable = null;
     whiteboardController = roomContext.whiteboardController;
     chatController = roomContext.chatController;
     rtcController = roomContext.rtcController;
+    _waitingRoomManager?.dispose();
+    _waitingRoomManager = null;
     _isMeetingReconnecting.value = false;
     userVideoStreamSubscriber = NERoomUserVideoStreamSubscriber(roomContext);
     _meetingMemberCount = ValueNotifier(userCount);
+    _memberTotalCountNotify = null;
     _networkStats = ValueNotifier(_NetworkStatus.good);
     _isGalleryLayout = ValueNotifier(false);
+    _isLiveStreaming = ValueNotifier(false);
+    _moreMenuItemUnreadCountNotifier = null;
+    hasShowAudioDisconnectTips = false;
+    _updateMemberTotalCount();
+    roomContext.liveController.getLiveInfo().then((value) {
+      if (value.isSuccess()) {
+        NERoomLiveInfo? liveInfo = value.data;
+        if (liveInfo != null) {
+          _isLiveStreaming.value = (liveInfo.state == NERoomLiveState.started);
+        }
+      }
+    });
     _networkInfo = ValueNotifier(NetWorkRttInfo(0, 0, 0));
-    _messageSource = ChatRoomMessageSource(sdkConfig,
-        arguments.options.chatroomConfig ?? NEMeetingChatroomConfig());
+    _messageSource = ChatRoomMessageSource(
+        sdkConfig: sdkConfig,
+        chatroomConfig:
+            arguments.options.chatroomConfig ?? NEMeetingChatroomConfig());
     SystemChrome.setPreferredOrientations([]);
     meetingBeginTime = DateTime.now().millisecondsSinceEpoch;
-    Wakelock.enable();
     _galleryModePageController = PageController(initialPage: 0);
     _galleryModePageController?.addListener(_handleGalleryModePageChange);
     _initAnimationController();
@@ -314,14 +416,15 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       memberPropertiesChanged: handleMemberPropertiesEvent,
       memberPropertiesDeleted: handleMemberPropertiesEvent,
       liveStateChanged: liveStateChanged,
-      roomEnd: onRoomDisconnected,
       rtcChannelError: onRtcChannelError,
-      rtcRemoteAudioVolumeIndication: onRtcAudioVolumeIndication,
+      rtcRemoteAudioVolumeIndication: onRemoteAudioVolumeIndication,
       rtcLocalAudioVolumeIndication: onLocalAudioVolumeIndicationWithVad,
       rtcAudioOutputDeviceChanged: onRtcAudioOutputDeviceChanged,
       rtcVirtualBackgroundSourceEnabled: onRtcVirtualBackgroundSourceEnabled,
       roomRemainingSecondsRenewed: onRoomDurationRenewed,
       roomConnectStateChanged: onRoomConnectStateChanged,
+      roomCloudRecordStateChanged: onRoomCloudRecordStateChanged,
+      memberAudioConnectStateChanged: onMemberAudioConnectStateChanged,
     );
     roomContext.addEventCallback(roomEventCallback);
 
@@ -336,6 +439,22 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     );
     NERoomKit.instance.messageChannelService
         .addMessageChannelCallback(messageCallback);
+
+    NEMeetingPlugin().volumeController.removeListener();
+    NEMeetingPlugin().volumeController.listener((volume) {
+      debugPrint('volume controller: $volume');
+
+      /// 低于阈值时提示断开音频
+      if (currentVolume > 0.1 &&
+          volume < 0.1 &&
+          !hasShowAudioDisconnectTips &&
+          roomContext.localMember.isAudioConnected) {
+        showToast(NEMeetingUIKitLocalizations.of(context)!
+            .meetingDisconnectAudioTips);
+        hasShowAudioDisconnectTips = true;
+      }
+      currentVolume = volume;
+    });
 
     MeetingCore()
         .notifyStatusChange(NEMeetingStatus(NEMeetingEvent.connecting));
@@ -356,6 +475,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
             encryptionKey: encryptionConfig.encryptKey,
             encryptionMode: encryptionConfig.encryptionMode);
       }
+      await _setupAudioDeviceState();
       arguments.trackingEvent?.beginStep(kMeetingStepJoinRtc);
       roomContext.rtcController.joinRtcChannel().then((value) {
         if (!value.isSuccess()) {
@@ -375,6 +495,45 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     localMirrorState.value = arguments.options.enableFrontCameraMirror;
   }
 
+  bool? _isAudioDeviceSwitchEnabled;
+  Future<bool> get isAudioDeviceSwitchEnabled async {
+    _isAudioDeviceSwitchEnabled ??= await settings.isAudioDeviceSwitchEnabled();
+    return _isAudioDeviceSwitchEnabled ?? false;
+  }
+
+  /// 初始化设备选择状态
+  /// 开启音频设备切换时，Android需要关闭RTC内部的音频自动路由
+  Future<void> _setupAudioDeviceState() async {
+    final enable = await isAudioDeviceSwitchEnabled;
+    if (enable) {
+      if (Platform.isIOS) {
+        /// iOS通过这两个参数让设备选择列表支持扬声器
+        roomContext.rtcController.setParameters({
+          'KNERtcKeyDisableOverrideSpeakerOnReceiver': 1,
+          'kNERtcKeySupportCallkit': 1
+        });
+      }
+      NEMeetingPlugin().audioService.getSelectedAudioDevice().then((device) {
+        commonLogger.i('AudioDevice selected: $device');
+        _audioDeviceSelected.value = device;
+      });
+    }
+  }
+
+  void _onAudioDeviceChanged(AudioDeviceChangedEvent event) async {
+    commonLogger.i(
+        '_onAudioDeviceChanged changed: ${event.$1} ${event.$2} ${event.$3}');
+    if (!await isAudioDeviceSwitchEnabled) return;
+    _audioDeviceSelected.value = event.$1;
+    _audioDeviceChanged.add((event.$1, event.$2, event.$3));
+
+    /// 蓝牙设备移除时，关闭设备选择弹窗
+    if (!event.$2.contains(NEAudioOutputDevice.kBluetoothHeadset)) {
+      if (!mounted) return;
+      _audioDevicePickerDismissCallback?.call();
+    }
+  }
+
   Future<bool> requestPhoneStatePermission() async {
     if (Platform.isAndroid) {
       final androidInfo = await DeviceInfoPlugin().androidInfo;
@@ -383,7 +542,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
               context,
               Permission.phone,
               arguments.meetingTitle,
-              NEMeetingUIKit().ofLocalizations().phoneStatePermission,
+              NEMeetingUIKit().ofLocalizations().meetingPhoneState,
               useDialog: true && !_isMinimized,
             )
           : true;
@@ -553,17 +712,17 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       if (isInCall) {
         if (isSelfScreenSharing()) rtcController.stopScreenShare();
         if (audioSharingListenable.value) enableAudioShare(false);
-        rtcController
+        // 通话中，中断音频，停止摄像头采集
+        roomContext.rtcController
+          ..adjustPlaybackSignalVolume(0)
           ..adjustRecordingSignalVolume(0)
-          ..pauseLocalVideoCapture()
-          ..adjustPlaybackSignalVolume(0);
+          ..pauseLocalVideoCapture();
       } else {
-        if (roomContext.localMember.isAudioOn) {
-          rtcController.adjustRecordingSignalVolume(100);
-        }
-        rtcController
-          ..resumeLocalVideoCapture()
-          ..adjustPlaybackSignalVolume(100);
+        // 通话结束，恢复音频，恢复摄像头采集
+        roomContext.rtcController
+          ..adjustPlaybackSignalVolume(100)
+          ..adjustRecordingSignalVolume(100)
+          ..resumeLocalVideoCapture();
       }
     });
     streamSubscriptions.add(subscription);
@@ -574,9 +733,10 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       context,
       Permission.bluetoothConnect,
       arguments.meetingTitle,
-      NEMeetingUIKitLocalizations.of(context)!.bluetoothPermission,
-      message:
-          '${NEMeetingUIKitLocalizations.of(context)!.permissionRationalePrefix}${NEMeetingUIKitLocalizations.of(context)!.bluetoothPermission}${NEMeetingUIKitLocalizations.of(context)!.permissionRationaleSuffixAudio}',
+      NEMeetingUIKitLocalizations.of(context)!.meetingBluetooth,
+      message: NEMeetingUIKitLocalizations.of(context)!
+          .meetingNeedRationaleAudioPermission(
+              NEMeetingUIKitLocalizations.of(context)!.meetingBluetooth),
       useDialog: true && !_isMinimized,
     ).then((value) {
       commonLogger.i(
@@ -586,10 +746,40 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     });
   }
 
+  StreamSubscription? _roomEndStreamSubscription;
+  StreamSubscription? _waitingRoomStatusSubscription;
+  StreamSubscription? _audioDeviceChangedSubscription;
+
+  void _listenStreams() {
+    _roomEndStreamSubscription ??=
+        currentMeetingUIState!.roomEndStream.listen(onRoomDisconnected);
+    _waitingRoomStatusSubscription ??= currentMeetingUIState!
+        .onPuttedInWaitingRoom
+        .listen((_) => navigateToWaitingRoom());
+    if (Platform.isAndroid) {
+      _audioDeviceChangedSubscription ??= NEMeetingPlugin()
+          .audioService
+          .audioDeviceChanged
+          .listen(_onAudioDeviceChanged);
+    }
+  }
+
+  void _unlistenStreams() {
+    _roomEndStreamSubscription?.cancel();
+    _roomEndStreamSubscription = null;
+    _waitingRoomStatusSubscription?.cancel();
+    _waitingRoomStatusSubscription = null;
+    _audioDeviceChangedSubscription?.cancel();
+    _audioDeviceChangedSubscription = null;
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    commonLogger.i('didChangeDependencies');
     refreshSmallVideoViewPaddings();
+    _listenStreams();
+    updateGridLayoutParams();
   }
 
   void refreshSmallVideoViewPaddings() {
@@ -605,14 +795,15 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
 
   @override
   void onAppLifecycleState(AppLifecycleState state) {
-    if (!Platform.isIOS) {
+    if (!Platform.isIOS && mounted) {
       _checkResumeFromMinimized(state);
     }
   }
 
   Future<void> _checkResumeFromMinimized(AppLifecycleState state) async {
     commonLogger.i('resume from minimized state :${state.name}');
-    PiPStatus pipStatus = await updatePIPAspectRatio();
+    PiPStatus pipStatus = await updatePIPAspectRatio(canPopToMeetingPage: true);
+    if (!mounted) return;
     if (arguments.backgroundWidget != null) {
       if (_isMinimized == (pipStatus == PiPStatus.enabled)) return;
       SchedulerBinding.instance.scheduleFrameCallback((_) {
@@ -648,8 +839,10 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
         CurvedAnimation(parent: appBarAnimController, curve: Curves.easeOut));
     topBarAnim = Tween(begin: Offset(0, 0), end: Offset(0, -1)).animate(
         CurvedAnimation(parent: appBarAnimController, curve: Curves.easeOut));
+    cloudRecordAnim = Tween(begin: appBarHeight, end: 0.0).animate(
+        CurvedAnimation(parent: appBarAnimController, curve: Curves.easeOut));
     localAudioVolumeIndicatorAnim =
-        Tween(begin: -50.0, end: bottomBarHeight + 71.0).animate(
+        Tween(begin: -50.0, end: bottomBarHeight + 30.0).animate(
             CurvedAnimation(
                 parent: appBarAnimController, curve: Curves.easeOut));
     meetingEndTipAnim = Tween(begin: Offset(0, 0), end: Offset(0, 0)).animate(
@@ -663,7 +856,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     if (_meetingState == MeetingState.init) {
       _meetingState = MeetingState.joining;
       final joinTimeoutTips =
-          NEMeetingUIKitLocalizations.of(context)?.joinTimeout;
+          NEMeetingUIKitLocalizations.of(context)?.meetingJoinTimeout;
       joinTimeOut = Timer(Duration(milliseconds: arguments.joinTimeout), () {
         if (_meetingState.index <= MeetingState.joining.index) {
           commonLogger.i(
@@ -689,8 +882,14 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       /// 离开会议默认退出，当会议被踢出时，不退出，进行弹窗
       checkMeetingEnd(false);
     }
-    Widget buildWidget = AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle.light, child: buildChild(context));
+
+    /// 入会或重新入会以及小窗模式回来，判断是否需要展示云录制弹窗
+    determineToShowMeetingCloudRecordDialog();
+
+    /// 获取水印信息并更新UI
+    _updateWatermarkInfo();
+
+    Widget? buildWidget;
     if (Platform.isAndroid) {
       if (SchedulerBinding.instance.lifecycleState ==
               AppLifecycleState.resumed &&
@@ -703,7 +902,37 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
         buildWidget = buildPIPView();
       }
     }
-    return buildWidget;
+    return buildWidget ??
+        AnnotatedRegion<SystemUiOverlayStyle>(
+          value: AppStyle.systemUiOverlayStyleLight,
+          child: buildChild(context),
+        );
+  }
+
+  /// 画中画模式下，目前不支持自动恢复到全屏，因此展示相应提示
+  /// 用户点击后，退出画中画模式，并提示
+  Widget buildMeetingWasInterrupted() {
+    return Container(
+      color: _UIColors.grey_292933,
+      child: Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8),
+          child: FittedBox(
+            child: Text(
+              NEMeetingUIKitLocalizations.of(context)!.meetingWasInterrupted,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                decoration: TextDecoration.none,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget buildChild(BuildContext context) {
@@ -715,7 +944,6 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     final height = appBarHeight + data.viewPadding.top;
     return WillPopScope(
       child: OrientationBuilder(builder: (_, orientation) {
-        _isPortrait = orientation == Orientation.portrait;
         return Stack(
           children: <Widget>[
             GestureDetector(
@@ -746,11 +974,32 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
                   child: SlideTransition(
                       position: topBarAnim, child: buildAppBar(data, height)),
                 )),
+            Visibility(
+                visible: !_isMinimized,
+                child: AnimatedBuilder(
+                  animation: cloudRecordAnim,
+                  builder: (context, child) => Positioned(
+                      top: cloudRecordAnim.value + data.viewPadding.top,
+                      left: 0,
+                      child: ValueListenableBuilder<_CloudRecordState>(
+                        valueListenable: cloudRecordStateListenable,
+                        builder: (context, value, child) {
+                          return Visibility(
+                              visible: value != _CloudRecordState.notStarted &&
+                                  arguments.options.showCloudRecordingUI,
+                              child: buildCloudRecordState(value));
+                        },
+                      )),
+                ))
           ],
         );
       }),
       onWillPop: () {
-        if (!_hideMorePopupMenu()) finishPage();
+        if (_cloudRecordStartedOverlayCallback?.call() == true ||
+            _cloudRecordStoppedOverlayCallback?.call() == true) {
+          return Future.value(false);
+        }
+        finishPage();
         return Future.value(false);
       },
     );
@@ -789,7 +1038,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
                         Flexible(
                             child: Text(
                                 NEMeetingUIKitLocalizations.of(context)!
-                                    .disconnectedTryingToReconnect,
+                                    .networkDisconnectedTryingToReconnect,
                                 softWrap: true,
                                 style: TextStyle(
                                     fontSize: 16,
@@ -800,8 +1049,6 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
                     ),
                   )));
             }),
-        // if(arguments.joinmeetingInfo.attendeeRecordOn && SettingsRepository.isMeetingCloudRecordEnabled())
-        // _buildRecord(),
       ],
     );
   }
@@ -814,6 +1061,55 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
 
   bool isEarpiece() {
     return _audioDeviceSelected.value == NEAudioOutputDevice.kEarpiece;
+  }
+
+  Widget buildCloudRecordState(_CloudRecordState state) {
+    final text = state == _CloudRecordState.starting
+        ? NEMeetingUIKitLocalizations.of(context)!.cloudRecordingStarting
+        : NEMeetingUIKitLocalizations.of(context)!.cloudRecording;
+    return GestureDetector(
+      onTap: () {
+        if (isSelfHostOrCoHost() && state == _CloudRecordState.started) {
+          stopCloudRecord();
+        }
+      },
+      child: Container(
+          height: 32,
+          padding: EdgeInsets.symmetric(horizontal: 12),
+          margin: EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: _UIColors.color2A2A31,
+            borderRadius: BorderRadius.circular(4),
+            boxShadow: [
+              BoxShadow(
+                color: _UIColors.black.withOpacity(0.25),
+                offset: Offset(0, 4),
+                blurRadius: 6,
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                NEMeetingIconFont.icon_cloud_recording,
+                color: _UIColors.colorFF4D4F,
+                size: 14,
+              ),
+              SizedBox(width: 4),
+              Text(
+                text,
+                style: TextStyle(
+                    decoration: TextDecoration.none,
+                    fontSize: 14,
+                    color: state == _CloudRecordState.starting
+                        ? _UIColors.white.withOpacity(0.6)
+                        : _UIColors.white,
+                    fontWeight: FontWeight.w400),
+              ),
+            ],
+          )),
+    );
   }
 
   Widget buildAppBar(data, height) {
@@ -833,7 +1129,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (!isSelfScreenSharing()) buildMinimize(),
-                    buildAudioMode(),
+                    buildSwitchAudioMode(),
                     buildCameraMode(),
                     buildSwitchMode()
                   ],
@@ -877,28 +1173,13 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     }
   }
 
-  Widget buildSwitchMode() {
-    return FutureBuilder<bool>(
-        future: checkIpad(),
-        builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-          if (snapshot.hasData && snapshot.data! && userCount > 1) {
-            return buildSwitchLayoutBtn();
-          }
-          return Container();
-        });
-  }
-
-  Future<bool> checkIpad() async {
-    if (Platform.isIOS) {
-      return await NEMeetingPlugin().ipadCheckDetector.isIpad();
-    }
-    return false;
-  }
+  Widget buildSwitchMode() =>
+      _isPad && userCount > 1 ? buildSwitchLayoutBtn() : SizedBox();
 
   String getGalleryLayoutDes(bool isGallery) {
     return isGallery
-        ? NEMeetingUIKitLocalizations.of(context)!.switchFcusView
-        : NEMeetingUIKitLocalizations.of(context)!.switchGalleryView;
+        ? NEMeetingUIKitLocalizations.of(context)!.meetingSwitchFcusView
+        : NEMeetingUIKitLocalizations.of(context)!.meetingSwitchGalleryView;
   }
 
   Widget buildSwitchLayoutBtn() {
@@ -980,8 +1261,8 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
               borderRadius: BorderRadius.all(Radius.circular(13))),
           child: Text(
               isSelfHostOrCoHost()
-                  ? NEMeetingUIKitLocalizations.of(context)!.finish
-                  : NEMeetingUIKitLocalizations.of(context)!.leave,
+                  ? NEMeetingUIKitLocalizations.of(context)!.meetingFinish
+                  : NEMeetingUIKitLocalizations.of(context)!.meetingLeave,
               textAlign: TextAlign.center,
               style: TextStyle(
                   color: _UIColors.white,
@@ -1009,42 +1290,94 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     }
     return SizedBox.expand(
       child: Container(
+        // color: Colors.red,
         margin: EdgeInsets.symmetric(horizontal: max(marginLeft, marginRight)),
         child: GestureDetector(
+          key: MeetingUIValueKeys.showMeetingInfo,
           behavior: HitTestBehavior.opaque,
           onTap: _onMeetingInfo,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Flexible(
-                    child: Text(
-                      ' ${arguments.meetingTitle} ',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        decoration: TextDecoration.none,
-                        fontWeight: FontWeight.w400,
+          child: Stack(
+            children: [
+              Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Flexible(
+                      child: Text(
+                        ' ${arguments.meetingTitle} ',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          decoration: TextDecoration.none,
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
                     ),
-                  ),
-                  Icon(
-                    Icons.keyboard_arrow_down,
-                    color: Colors.white,
-                    size: 15,
-                  ),
-                ],
-              ),
-              if (arguments.showMeetingTime)
-                MeetingDuration(
-                  DateTime.now().millisecondsSinceEpoch -
-                      roomContext.rtcStartTime,
+                    Icon(
+                      Icons.keyboard_arrow_down,
+                      color: Colors.white,
+                      size: 15,
+                    ),
+                  ],
                 ),
+              ),
+              Positioned(
+                  bottom: 2,
+                  left: 0,
+                  right: 0,
+                  child: ValueListenableBuilder<bool>(
+                      valueListenable: isLiveStreaming,
+                      builder: (context, show, _) {
+                        return (show || arguments.showMeetingTime)
+                            ? Container(
+                                height: 17,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    if (arguments.showMeetingTime)
+                                      MeetingDuration(
+                                        DateTime.now().millisecondsSinceEpoch -
+                                            roomContext.rtcStartTime,
+                                      ),
+                                    if (show && arguments.showMeetingTime)
+                                      SizedBox(width: 12),
+                                    if (show)
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 6,
+                                            height: 6,
+                                            decoration: BoxDecoration(
+                                                color: _UIColors.colorD93D35,
+                                                borderRadius: BorderRadius.all(
+                                                    Radius.circular(3))),
+                                          ),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            NEMeetingUIKitLocalizations.of(
+                                                    context)!
+                                                .liveStreaming,
+                                            style: TextStyle(
+                                                color: _UIColors.colorD93D35,
+                                                fontSize: 10,
+                                                decoration: TextDecoration.none,
+                                                fontWeight: FontWeight.w400),
+                                            textAlign: TextAlign.center,
+                                          )
+                                        ],
+                                      )
+                                  ],
+                                ))
+                            : Container();
+                      }))
             ],
           ),
         ),
@@ -1056,7 +1389,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     trackPeriodicEvent(TrackEventName.meetingInfoClick,
         extra: {'meeting_num': arguments.meetingNum});
     if (!_isMinimized) {
-      popupRoute = await DialogUtils.showChildNavigatorPopup(
+      await DialogUtils.showChildNavigatorPopup(
         context,
         (context) => MeetingInfoPage(
           roomContext,
@@ -1064,6 +1397,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
           arguments.options,
           roomInfoUpdatedEventStream.stream,
         ),
+        routeSettings: RouteSettings(name: 'MeetingInfo'),
       );
     }
   }
@@ -1104,12 +1438,11 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     );
   }
 
-  Widget buildAudioMode() {
-    if (arguments.noSwitchAudioMode) {
+  Widget buildSwitchAudioMode() {
+    if (arguments.noSwitchAudioMode ||
+        !roomContext.localMember.isAudioConnected) {
       return const SizedBox.shrink();
     }
-    bool _isIpad = false;
-    checkIpad().then((value) => _isIpad = value);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: _audioModeSwitch,
@@ -1118,16 +1451,8 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
         child: ValueListenableBuilder<NEAudioOutputDevice>(
           valueListenable: _audioDeviceSelected,
           builder: (context, value, child) {
-            return Icon(
-              _isIpad
-                  ? (isHeadset()
-                      ? NEMeetingIconFont.icon_headset1x
-                      : NEMeetingIconFont.icon_amplify)
-                  : (isHeadset()
-                      ? NEMeetingIconFont.icon_headset1x
-                      : (isEarpiece()
-                          ? NEMeetingIconFont.icon_earpiece1x
-                          : NEMeetingIconFont.icon_amplify)),
+            return _buildAudioDeviceIcon(
+              device: value,
               key: MeetingUIValueKeys.switchLoudspeaker,
               size: 21,
               color: _UIColors.white,
@@ -1138,16 +1463,177 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     );
   }
 
-  void _audioModeSwitch() {
-    checkIpad().then((value) => {
-          if (value)
-            {
-              showToast(
-                  NEMeetingUIKitLocalizations.of(context)!.noSupportSwitch)
-            }
-        });
+  DismissCallback? _audioDevicePickerDismissCallback;
+  void showAudioDevicePicker(Set<NEAudioOutputDevice> devices) {
+    if (Platform.isAndroid) {
+      _audioDevicePickerDismissCallback?.call();
+      _audioDevicePickerDismissCallback = BottomSheetUtils.showModalBottomSheet(
+          context: context,
+          backgroundColor: Colors.transparent,
+          builder: (context) {
+            return SafeArea(
+                child: SingleChildScrollView(
+                    child: StreamBuilder<AudioDeviceChangedEvent>(
+                        initialData: (
+                  _audioDeviceSelected.value,
+                  devices,
+                  true
+                ),
+                        stream: audioDeviceChangedStream,
+                        builder: (context, snapshot) {
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildBottomSheetTitle(
+                                  NEMeetingUIKitLocalizations.of(context)!
+                                      .deviceOutput),
+                              if (snapshot.data != null)
+                                for (var e in snapshot.data!.$2) ...[
+                                  Container(
+                                      height: 1, color: _UIColors.globalBg),
+                                  _buildAudioDeviceItem(
+                                      e, e == snapshot.data!.$1),
+                                ]
+                            ],
+                          );
+                        })));
+          });
+    } else if (Platform.isIOS) {
+      NEMeetingPlugin().audioService.showAudioDevicePicker();
+    }
+  }
+
+  Widget _buildAudioDeviceItem(NEAudioOutputDevice device, bool isSelected) {
+    final color = isSelected ? _UIColors.color_337eff : _UIColors.color_333333;
+    return GestureDetector(
+      onTap: () {
+        _audioDevicePickerDismissCallback?.call();
+        commonLogger.i('selectAudioDevice: $device');
+        NEMeetingPlugin().audioService.selectAudioDevice(device);
+      },
+      child: Container(
+        height: 48,
+        color: _UIColors.white,
+        padding: EdgeInsets.only(top: 12, bottom: 12, left: 20, right: 16),
+        child: Row(
+          children: [
+            _buildAudioDeviceIcon(device: device, size: 24, color: color),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                _getAudioDeviceTitle(device),
+                style: TextStyle(
+                  fontSize: 16,
+                  decoration: TextDecoration.none,
+                  fontWeight: FontWeight.w400,
+                  color: color,
+                ),
+              ),
+            ),
+            if (isSelected)
+              Icon(
+                NEMeetingIconFont.icon_check_line,
+                size: 24,
+                color: color,
+              )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAudioDeviceIcon(
+      {required NEAudioOutputDevice device,
+      Key? key,
+      double? size,
+      Color? color}) {
+    IconData? data;
+    switch (device) {
+      case NEAudioOutputDevice.kBluetoothHeadset:
+        data = NEMeetingIconFont.icon_bluetooth;
+        break;
+      case NEAudioOutputDevice.kWiredHeadset:
+        data = NEMeetingIconFont.icon_headset1x;
+        break;
+      case NEAudioOutputDevice.kEarpiece:
+        data = NEMeetingIconFont.icon_earpiece1x;
+        break;
+      case NEAudioOutputDevice.kSpeakerPhone:
+        data = NEMeetingIconFont.icon_amplify;
+        break;
+    }
+    return Icon(
+      data,
+      key: key,
+      size: size,
+      color: color,
+    );
+  }
+
+  String _getAudioDeviceTitle(NEAudioOutputDevice device) {
+    switch (device) {
+      case NEAudioOutputDevice.kBluetoothHeadset:
+        return NEMeetingUIKitLocalizations.of(context)!.meetingBluetooth;
+      case NEAudioOutputDevice.kWiredHeadset:
+        return NEMeetingUIKitLocalizations.of(context)!.deviceHeadphones;
+      case NEAudioOutputDevice.kEarpiece:
+        return NEMeetingUIKitLocalizations.of(context)!.deviceReceiver;
+      case NEAudioOutputDevice.kSpeakerPhone:
+        return NEMeetingUIKitLocalizations.of(context)!.deviceSpeaker;
+    }
+  }
+
+  Widget _buildBottomSheetTitle(String title) {
+    final radius = Radius.circular(8);
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+          color: _UIColors.white,
+          borderRadius: BorderRadius.only(topLeft: radius, topRight: radius)),
+      child: Stack(
+        children: <Widget>[
+          Center(
+            child: Text(
+              title,
+              style: TextStyle(
+                  color: _UIColors.black_333333,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 16.0,
+                  decoration: TextDecoration.none),
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+                padding: EdgeInsets.only(right: 16),
+                child: GestureDetector(
+                  child: Icon(
+                    NEMeetingIconFont.icon_yx_tv_duankaix,
+                    color: _UIColors.color_666666,
+                    size: 14,
+                    key: MeetingUIValueKeys.close,
+                  ),
+                  onTap: () => _audioDevicePickerDismissCallback?.call(),
+                )),
+          )
+        ],
+      ),
+    );
+  }
+
+  void _audioModeSwitch() async {
+    if (await isAudioDeviceSwitchEnabled) {
+      final devices = await NEMeetingPlugin().audioService.enumAudioDevices();
+      if (devices.contains(NEAudioOutputDevice.kBluetoothHeadset)) {
+        showAudioDevicePicker(devices);
+        return;
+      }
+    }
     if (isHeadset()) {
-      showToast(NEMeetingUIKitLocalizations.of(context)!.headsetState);
+      showToast(NEMeetingUIKitLocalizations.of(context)!.deviceHeadsetState);
+    } else if (_isPad) {
+      showToast(
+          NEMeetingUIKitLocalizations.of(context)!.meetingNoSupportSwitch);
     } else {
       _onSwitchLoudspeaker();
     }
@@ -1164,96 +1650,101 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     if (!_willToolbarMenuShow()) {
       return Container(height: bottomBarHeight);
     }
+    EdgeInsets padding = MediaQuery.viewPaddingOf(context);
+
     return Container(
-        decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [
-          Colors.transparent,
-          Colors.transparent,
-          Colors.transparent,
-          _UIColors.color_212129,
-          _UIColors.color_212129
-        ], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
-        child: SafeArea(
-            left: false,
-            right: false,
-            child: Container(
-                height: 106,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
-                      color: Colors.transparent,
-                      height: 46,
-                      margin: EdgeInsets.only(bottom: 6),
-                      child: Row(
-                        children: [
-                          ...arguments.injectedToolbarMenuItems
-                              .where(shouldShowMenu)
-                              .map((menu) {
-                            if (menu.itemId == NEMenuIDs.participants &&
-                                roomContext.localMember.isRaisingHand) {
-                              return Expanded(
-                                child: buildHandsUp(
-                                  NEMeetingUIKitLocalizations.of(context)!
-                                      .inHandsUp,
-                                  () => _lowerMyHand(),
-                                ),
-                              );
-                            }
-                            if (menu.itemId == NEMenuIDs.managerParticipants &&
-                                hasHandsUp() &&
-                                isSelfHostOrCoHost()) {
-                              return Expanded(
-                                child: buildHandsUp(
-                                    handsUpCount().toString(), _onMember),
-                              );
-                            }
-                            return Spacer();
-                          }).toList(growable: false),
-                          if (_willMoreMenuShow()) Spacer()
-                        ],
-                      ),
+        height: 106 + padding.bottom,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Container(
+              color: Colors.transparent,
+              height: 46,
+              margin: EdgeInsets.only(bottom: 6),
+              padding:
+                  EdgeInsets.only(left: padding.left, right: padding.right),
+              child: Row(
+                children: [
+                  ...arguments.injectedToolbarMenuItems
+                      .where(shouldShowMenu)
+                      .map((menu) {
+                    if (menu.itemId == NEMenuIDs.disconnectAudio) {
+                      return Container();
+                    }
+                    if (menu.itemId == NEMenuIDs.participants &&
+                        roomContext.localMember.isRaisingHand) {
+                      return Expanded(
+                        child: buildHandsUp(
+                          NEMeetingUIKitLocalizations.of(context)!
+                              .meetingInHandsUp,
+                          () => _lowerMyHand(),
+                        ),
+                      );
+                    }
+                    if (menu.itemId == NEMenuIDs.managerParticipants &&
+                        hasHandsUp() &&
+                        isSelfHostOrCoHost()) {
+                      return Expanded(
+                        child:
+                            buildHandsUp(handsUpCount().toString(), _onMember),
+                      );
+                    }
+                    return Spacer();
+                  }).toList(growable: false),
+                  if (_willMoreMenuShow()) Spacer()
+                ],
+              ),
+            ),
+            Expanded(
+                child: Container(
+              padding: EdgeInsets.only(
+                  bottom: padding.bottom,
+                  left: padding.left,
+                  right: padding.right),
+              child: Row(
+                children: <Widget>[
+                  ...arguments.injectedToolbarMenuItems
+                      .where(shouldShowMenu)
+                      .map(menuItem2Widget)
+                      .whereType<Widget>()
+                      .map((widget) => Expanded(child: widget))
+                      .toList(growable: false),
+                  if (_willMoreMenuShow())
+                    Expanded(
+                      child: SingleStateMenuItem(
+                          isMoreMenuItem: false,
+                          menuItem: InternalMenuItems.more,
+                          callback: handleMenuItemClick,
+                          tipBuilder:
+                              getMenuItemTipBuilder(InternalMenuIDs.more)),
                     ),
-                    Container(
-                      height: bottomBarHeight,
-                      child: Row(
-                        children: <Widget>[
-                          ...arguments.injectedToolbarMenuItems
-                              .where(shouldShowMenu)
-                              .map(menuItem2Widget)
-                              .whereType<Widget>()
-                              .map((widget) => Expanded(child: widget))
-                              .toList(growable: false),
-                          if (_willMoreMenuShow())
-                            Expanded(
-                              child: SingleStateMenuItem(
-                                  menuItem: InternalMenuItems.more,
-                                  callback: handleMenuItemClick,
-                                  tipBuilder: getMenuItemTipBuilder(
-                                      InternalMenuIDs.more)),
-                            ),
-                        ],
-                      ),
-                      decoration: BoxDecoration(
-                          border: Border(
-                              top: BorderSide(
-                                  color: _UIColors.color_33FFFFFF, width: 0.5)),
-                          gradient: LinearGradient(
-                              colors: [
-                                _UIColors.color_292933,
-                                _UIColors.color_212129
-                              ],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter)),
-                    )
-                  ],
-                ))));
+                ],
+              ),
+              decoration: BoxDecoration(
+                  border: Border(
+                      top: BorderSide(
+                          color: _UIColors.color_33FFFFFF, width: 0.5)),
+                  gradient: LinearGradient(
+                      colors: [_UIColors.color_292933, _UIColors.color_212129],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter)),
+            ))
+          ],
+        ));
   }
 
-  bool shouldShowMenu(NEMeetingMenuItem item) {
+  bool shouldShowMenu(NEMeetingMenuItem item, {bool isMoreMenuItem = false}) {
     if (!roomContext.localMember.isVisible) return false;
     final id = item.itemId;
     if (!item.isValid) return false;
+
+    /// 根据自己的isAudioConnected选择展示连接音频按钮或者静音按钮
+    if (item.itemId == NEMenuIDs.disconnectAudio &&
+        !isMoreMenuItem &&
+        roomContext.localMember.isAudioConnected) return false;
+    if (item.itemId == NEMenuIDs.microphone &&
+        !roomContext.localMember.isAudioConnected) return false;
+
     if (id == NEMenuIDs.screenShare && !_isScreenShareSupported()) return false;
     if (id == NEMenuIDs.chatroom && (arguments.noChat || !isChatroomEnabled()))
       return false;
@@ -1277,6 +1768,11 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
         (arguments.noWhiteBoard || !whiteboardController.isSupported)) {
       return false;
     }
+    if (id == NEMenuIDs.cloudRecord &&
+        (!arguments.options.showCloudRecordMenuItem ||
+            !sdkConfig.isCloudRecordSupported)) {
+      return false;
+    }
     switch (item.visibility) {
       case NEMenuVisibility.visibleToHostOnly:
         return isSelfHostOrCoHost();
@@ -1298,7 +1794,8 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
   final Map<int, NEMeetingMenuItem> menuId2Item = {};
   final Map<int, CyclicStateListController> menuId2Controller = {};
 
-  Widget? menuItem2Widget(NEMeetingMenuItem item) {
+  Widget? menuItem2Widget(NEMeetingMenuItem item,
+      {bool isMoreMenuItem = false}) {
     menuId2Item.putIfAbsent(item.itemId, () => item);
     final tipBuilder = getMenuItemTipBuilder(item.itemId);
     final iconBuilder = getMenuItemIconBuilder(item.itemId);
@@ -1308,19 +1805,30 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
         callback: handleMenuItemClick,
         tipBuilder: tipBuilder,
         iconBuilder: iconBuilder,
+        isMoreMenuItem: isMoreMenuItem,
       );
     } else if (item is NECheckableMenuItem) {
-      final controller = menuId2Controller.putIfAbsent(
-          item.itemId, () => getMenuItemStateController(item.itemId));
+      final controller = menuId2Controller.putIfAbsent(item.itemId,
+          () => getMenuItemStateController(item.itemId, item.checked));
       return CheckableMenuItem(
         menuItem: item,
         controller: controller,
         callback: handleMenuItemClick,
         tipBuilder: tipBuilder,
         iconBuilder: iconBuilder,
+        isMoreMenuItem: isMoreMenuItem,
       );
     }
     return null;
+  }
+
+  void updateMenuItemState(NEMeetingMenuItem item) {
+    if (item is NECheckableMenuItem) {
+      menuId2Controller[item.itemId]?.moveStateTo(
+          item.checked ? NEMenuItemState.checked : NEMenuItemState.uncheck);
+      commonLogger.i(
+          'updateMenuItemState ${item.itemId} ${menuId2Controller[item.itemId]?.value}');
+    }
   }
 
   MenuItemTipBuilder? getMenuItemTipBuilder(int menuId) {
@@ -1352,8 +1860,10 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     return null;
   }
 
-  CyclicStateListController getMenuItemStateController(int menuId) {
-    var initialState = NEMenuItemState.uncheck;
+  CyclicStateListController getMenuItemStateController(
+      int menuId, bool checked) {
+    var initialState =
+        checked ? NEMenuItemState.checked : NEMenuItemState.uncheck;
     ValueListenable? listenTo;
     switch (menuId) {
       case NEMenuIDs.microphone:
@@ -1380,6 +1890,16 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
             ? NEMenuItemState.checked
             : NEMenuItemState.uncheck;
         break;
+      case NEMenuIDs.cloudRecord:
+        listenTo = cloudRecordListenable;
+        initialState = roomContext.isCloudRecording
+            ? NEMenuItemState.checked
+            : NEMenuItemState.uncheck;
+        break;
+      case NEMenuIDs.disconnectAudio:
+        listenTo = audioConnectListenable;
+        initialState = NEMenuItemState.uncheck;
+        break;
     }
     return CyclicStateListController(
       stateList: [NEMenuItemState.uncheck, NEMenuItemState.checked],
@@ -1390,11 +1910,10 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
 
   Widget _meetingMemberCountBuilder(BuildContext context, Widget anchor) {
     return SafeValueListenableBuilder(
-      valueListenable: meetingMemberCountListenable,
-      builder: (BuildContext context, int value, _) {
+      valueListenable: memberTotalCountListenable,
+      builder: (context, count, _) {
         return Container(
           height: 24,
-          padding: const EdgeInsets.only(left: 5),
           child: Stack(
             children: <Widget>[
               Center(
@@ -1403,15 +1922,31 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
               Align(
                 alignment: Alignment.topCenter,
                 child: Container(
-                  alignment: Alignment.topCenter,
                   padding: EdgeInsets.only(left: 36),
-                  child: Text(
-                    '$value',
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        decoration: TextDecoration.none,
-                        fontWeight: FontWeight.w400),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('$count',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              decoration: TextDecoration.none,
+                              fontWeight: FontWeight.w400)),
+                      SafeValueListenableBuilder<int>(
+                          valueListenable:
+                              waitingRoomManager.unreadMemberCountListenable,
+                          builder: (context, unreadMemberCount, _) =>
+                              Visibility(
+                                visible: unreadMemberCount > 0,
+                                child: ClipOval(
+                                    child: Container(
+                                        height: 6,
+                                        width: 6,
+                                        decoration: BoxDecoration(
+                                            color: _UIColors.colorFE3B30))),
+                              )),
+                    ],
                   ),
                 ),
               ),
@@ -1460,11 +1995,11 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
   }
 
   /// 按钮事件回调
-  void handleMenuItemClick(NEMenuClickInfo clickInfo) {
+  void handleMenuItemClick(NEMenuClickInfo clickInfo) async {
     final itemId = clickInfo.itemId;
     commonLogger.i('handleMenuItemClick $itemId');
     if (_fullMoreMenuItemList.any((element) => element.itemId == itemId)) {
-      _hideMorePopupMenu();
+      await _hideMorePopupMenu();
     }
     switch (itemId) {
       case NEMenuIDs.microphone:
@@ -1515,12 +2050,51 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       case InternalMenuIDs.virtualBackground:
         _onVirtualBackground();
         return;
+      case NEMenuIDs.cloudRecord:
+        _onCloudRecord();
+        return;
+      case NEMenuIDs.security:
+        _onSecurity();
+        return;
+      case NEMenuIDs.disconnectAudio:
+        _onDisconnectAudio();
+        return;
     }
     if (itemId >= firstInjectableMenuId) {
       final transitionFuture =
           NEMeetingUIKit()._notifyOnInjectedMenuItemClick(context, clickInfo);
       menuId2Controller[itemId]?.didStateTransition(transitionFuture);
     }
+  }
+
+  /// 更新自定义菜单项的状态
+  Future<NEResult<void>> updateInjectedMenuItem(NEMeetingMenuItem item) {
+    commonLogger.i('updateInjectedMenuItem $item');
+    final updateToolbar =
+        _updateMenuItem(arguments.injectedToolbarMenuItems, item);
+    final updateMore = _updateMenuItem(arguments.injectedMoreMenuItems, item);
+
+    var result =
+        NEResult(code: NEErrorCode.failure, msg: 'Cannot find the menu item');
+    if (updateMore || updateToolbar) {
+      updateMenuItemState(item);
+      result = NEResult.success();
+    }
+    if (updateToolbar) {
+      setState(() {});
+    }
+    if (updateMore) {
+      moreMenuItemUpdatedEventStream.add(Object());
+    }
+    return Future.value(result);
+  }
+
+  bool _updateMenuItem(
+      List<NEMeetingMenuItem> menuItemList, NEMeetingMenuItem newItem) {
+    final index = menuItemList.firstIndexOf((e) => e == newItem);
+    if (index == -1) return false;
+    menuItemList[index] = newItem;
+    return true;
   }
 
   bool hasHandsUp() {
@@ -1536,39 +2110,43 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
         behavior: HitTestBehavior.opaque,
         onTap: callback,
         child: Container(
-          height: 46,
           child: Stack(
             children: [
               Align(
-                  alignment: Alignment.topCenter,
-                  child: Container(
-                    width: 36,
-                    height: 40,
-                    decoration: BoxDecoration(
-                        color: _UIColors.color_337eff,
-                        border: Border.all(color: Colors.transparent, width: 2),
-                        borderRadius: BorderRadius.all(Radius.circular(2))),
-                  )),
+                alignment: Alignment.topCenter,
+                child: Container(
+                  height: 40,
+                  padding: EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                      color: _UIColors.color_337eff,
+                      border: Border.all(color: Colors.transparent, width: 2),
+                      borderRadius: BorderRadius.all(Radius.circular(2))),
+                  child: IntrinsicWidth(
+                    child: Column(
+                      children: [
+                        Icon(NEMeetingIconFont.icon_raisehands,
+                            key: MeetingUIValueKeys.raiseHands,
+                            size: 20,
+                            color: Colors.white),
+                        Expanded(
+                            child: Center(
+                          child: Text(desc,
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 8,
+                                  decoration: TextDecoration.none,
+                                  fontWeight: FontWeight.w400)),
+                        ))
+                      ],
+                    ),
+                  ),
+                ),
+              ),
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Icon(NEMeetingIconFont.icon_triangle_down,
                     size: 7, color: _UIColors.color_337eff),
               ),
-              Align(
-                alignment: Alignment(0.0, -0.8),
-                child: Icon(NEMeetingIconFont.icon_raisehands,
-                    key: MeetingUIValueKeys.raiseHands,
-                    size: 20,
-                    color: Colors.white),
-              ),
-              Align(
-                  alignment: Alignment(0.0, 0.5),
-                  child: Text(desc,
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 8,
-                          decoration: TextDecoration.none,
-                          fontWeight: FontWeight.w400)))
             ],
           ),
         ));
@@ -1586,160 +2164,147 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
 
   bool _willMoreMenuShow() => _fullMoreMenuItemList.any(shouldShowMenu);
 
-  AnimationController? _morePopupMenuAnimation;
-  late AnimationStatusListener _morePopupMenuAnimationListener;
-  Animation<Offset>? _morePopupMenuOffset;
-  OverlayEntry? _morePopupMenuEntry;
+  bool _isMoreMenuOpen = false;
+  final _moreMenuState = ValueNotifier(false);
   ValueNotifierAdapter<int, int>? _moreMenuItemUnreadCountNotifier;
 
   ValueListenable<int>? get moreMenuItemTipListenable {
     _moreMenuItemUnreadCountNotifier ??= ValueNotifierAdapter<int, int>(
       source: _messageSource.unreadMessageListenable,
-      mapper: (value) =>
-          _morePopupMenuAnimation?.status == AnimationStatus.completed
-              ? 0
-              : value,
+      mapper: (value) => value,
     );
     return _moreMenuItemUnreadCountNotifier;
   }
 
-  void _setupMorePopupMenuAnimation() {
-    //timeDilation = 1;
-    _morePopupMenuAnimation ??= AnimationController(
-      duration: const Duration(milliseconds: 250),
-      vsync: this,
-    );
-    _morePopupMenuAnimationListener = (status) {
-      commonLogger.i('_morePopupMenuAnimationListener status:$status');
-      if (status == AnimationStatus.dismissed) {
-        _morePopupMenuEntry?.remove();
-        _morePopupMenuEntry = null;
-        commonLogger.i('_morePopupMenuEntry remove');
-      }
-      _moreMenuItemUnreadCountNotifier?.refresh();
-    };
-    _morePopupMenuAnimation!.addStatusListener(_morePopupMenuAnimationListener);
-    _morePopupMenuOffset ??= _morePopupMenuAnimation!.drive(
-      Tween(
-        begin: const Offset(0, 1),
-        end: const Offset(0, 0),
-      ).chain(
-        CurveTween(
-          curve: Curves.easeOut,
-        ),
-      ),
-    );
+  void _updateMorePopupMenuState() {
+    _moreMenuState.value = !_moreMenuState.value;
   }
 
   void _showMorePopupMenu() {
-    commonLogger.i('_showMorePopupMenu ${_morePopupMenuEntry != null}');
-    if (_morePopupMenuEntry != null) {
-      _hideMorePopupMenu();
-      return;
-    }
-    _setupMorePopupMenuAnimation();
-    _morePopupMenuEntry = OverlayEntry(builder: (context) {
-      return SafeArea(
-        child: Stack(
-          children: [
-            Listener(
-              behavior: HitTestBehavior.opaque,
-              onPointerDown: (_) {
-                commonLogger.i(
-                    'Listener onPointerDown ${_morePopupMenuAnimation!.status == AnimationStatus.completed}');
-                if (_morePopupMenuAnimation!.status ==
-                    AnimationStatus.completed) {
-                  _hideMorePopupMenu();
-                }
-              },
-            ),
-            Container(
-              margin: EdgeInsets.only(
-                bottom: bottomBarHeight + 4,
-                right: 4,
-              ),
-              alignment: Alignment.bottomRight,
-              child: SlideTransition(
-                position: _morePopupMenuOffset!,
-                child: FadeTransition(
-                  opacity: _morePopupMenuAnimation!,
-                  child: Container(
-                    constraints: BoxConstraints(maxWidth: 188.0),
-                    decoration: ShapeDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: <Color>[
-                          _UIColors.color_33333f,
-                          _UIColors.grey_292933,
-                        ],
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    padding: EdgeInsets.all(4),
-                    child: StreamBuilder(
-                      stream: sdkConfig.onConfigUpdated,
-                      builder: (context, value) {
-                        return Wrap(
-                          children: [
-                            ..._fullMoreMenuItemList
-                                .where(shouldShowMenu)
-                                .map(menuItem2Widget)
-                                .whereType<Widget>()
-                                .map((widget) => Container(
-                                      width: 60,
-                                      height: 68,
-                                      alignment: Alignment.center,
-                                      child: widget,
-                                    ))
-                                .toList(growable: false),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    });
-    Overlay.of(context).insert(_morePopupMenuEntry!);
-    _morePopupMenuAnimation!.forward();
+    /// 打开更多弹窗时，关闭聊天消息气泡
+    cancelInComingTips();
+    commonLogger.i('_showMorePopupMenu');
+    _isMoreMenuOpen = true;
+    showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        routeSettings: RouteSettings(name: _moreMenuRouteName),
+        isScrollControlled: true,
+        builder: (context) {
+          bool isLandscape =
+              MediaQuery.orientationOf(context) == Orientation.landscape;
+          return SingleChildScrollView(
+              child: ValueListenableBuilder<bool>(
+                  valueListenable: _moreMenuState,
+                  builder: (context, value, _) {
+                    return Container(
+                        padding: EdgeInsets.only(
+                            top: 20,
+                            left: isLandscape ? 76 : 28,
+                            right: isLandscape ? 76 : 28,
+                            bottom: 50),
+                        decoration: BoxDecoration(
+                          color: _UIColors.color23232C,
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(16),
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: _divideGroupBySize(
+                              size: isLandscape ? 6 : 4,
+                              space: isLandscape ? 30 : 16),
+                        ));
+                  }));
+        }).whenComplete(() => _isMoreMenuOpen = false);
   }
 
-  bool _hideMorePopupMenu() {
-    commonLogger.i('_hideMorePopupMenu before');
-    if (_morePopupMenuEntry != null) {
-      _morePopupMenuAnimation!.reverse();
-      commonLogger.i('_hideMorePopupMenu in if');
-      return true;
+  List<Widget> _divideGroupBySize({required int size, double? space}) {
+    final widgets = _fullMoreMenuItemList
+        .where((e) => shouldShowMenu(e, isMoreMenuItem: true))
+        .map((e) => menuItem2Widget(e, isMoreMenuItem: true))
+        .whereType<Widget>()
+        .toList(growable: false);
+    final result = <Widget>[];
+    for (var i = 0; i < widgets.length; i += size) {
+      final children = widgets
+          .sublist(i, min(i + size, widgets.length))
+          .map((e) => SizedBox(child: e, width: 60, height: 68))
+          .toList();
+
+      /// 不能整除则补齐
+      if (children.length < size) {
+        children.addAll(List.generate(size - children.length,
+            (index) => SizedBox(width: 60, height: 68)));
+      }
+      result.add(Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: children,
+      ));
+      if (i + size < widgets.length) {
+        result.add(SizedBox(height: space));
+      }
     }
-    commonLogger.i('_hideMorePopupMenu after');
-    return false;
+    return result;
+  }
+
+  Stream get fullMoreMenuChangedStream => StreamGroup.merge([
+        roomInfoUpdatedEventStream.stream,
+        sdkConfig.onConfigUpdated,
+        moreMenuItemUpdatedEventStream.stream,
+      ]);
+
+  Future<bool> _hideMorePopupMenu() {
+    commonLogger.i('_hideMorePopupMenu _isMoreMenuOpen: $_isMoreMenuOpen');
+    if (!_isMoreMenuOpen) return Future.value(true);
+    return Navigator.of(context)
+        .maybePop(ModalRoute.withName(_moreMenuRouteName));
   }
 
   void onChat() {
     cancelInComingTips();
-    Navigator.of(context).push(MaterialMeetingPageRoute(builder: (context) {
-      return MeetingChatRoomPage(
-        ChatRoomArguments(
-          roomContext,
-          _messageSource,
-        ),
-        _isMinimized,
-      );
-    }));
+    Navigator.of(context).push(MaterialMeetingPageRoute(
+        settings: RouteSettings(name: MeetingChatRoomPage.routeName),
+        builder: (context) {
+          return wrapWithWatermark(
+              child: MeetingChatRoomPage(
+            arguments: ChatRoomArguments(
+              roomContext: roomContext,
+              messageSource: _messageSource,
+              waitingRoomManager: waitingRoomManager,
+            ),
+            isMinimized: _isMinimized,
+          ));
+        }));
+  }
+
+  void _onSecurity() {
+    Navigator.of(context).push(MaterialMeetingPageRoute(
+        settings: RouteSettings(name: MeetingSecurityPage.routeName),
+        builder: (context) {
+          return MeetingSecurityPage(
+            SecurityArguments(
+              roomContext,
+              waitingRoomManager,
+              isMySelfManagerListenable,
+            ),
+          );
+        }));
+  }
+
+  void _onDisconnectAudio() {
+    if (roomContext.localMember.isAudioConnected) {
+      roomContext.rtcController.disconnectMyAudio();
+    } else {
+      roomContext.rtcController.reconnectMyAudio();
+    }
   }
 
   void _showCompatibleMoreMenu() {
     showCupertinoModalPopup<int>(
         context: context,
         builder: (BuildContext context) => CupertinoActionSheet(
-              title: Text(NEMeetingUIKitLocalizations.of(context)!.more,
+              title: Text(NEMeetingUIKitLocalizations.of(context)!.meetingMore,
                   style: TextStyle(color: _UIColors.grey_8F8F8F, fontSize: 13)),
               actions: _fullMoreMenuItemList
                   .where(shouldShowMenu)
@@ -1764,7 +2329,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
               cancelButton: buildActionSheetItem(
                   context,
                   true,
-                  NEMeetingUIKitLocalizations.of(context)!.cancel,
+                  NEMeetingUIKitLocalizations.of(context)!.globalCancel,
                   InternalMenuIDs.cancel),
             )).then((itemId) {
       if (itemId != null) {
@@ -1803,7 +2368,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
             Image.asset(NEMeetingImages.meetingJoin,
                 package: NEMeetingImages.package),
             SizedBox(height: 16),
-            Text(NEMeetingUIKitLocalizations.of(context)!.joiningTips,
+            Text(NEMeetingUIKitLocalizations.of(context)!.meetingJoinTips,
                 style: TextStyle(
                     color: Colors.white,
                     fontSize: 14,
@@ -1815,35 +2380,35 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
   }
 
   void finishPage() {
-    // buildEvaluationView();
-    // return;
     commonLogger.i(
       'finishPage isHost:${isHost()}, isCoHost:${isSelfCoHost()} tap leave.',
     );
     if (_isMinimized) return;
     DialogUtils.showChildNavigatorPopup<int>(
-        context,
-        (context) => CupertinoActionSheet(
-              actions: <Widget>[
-                buildActionSheetItem(
-                    context,
-                    false,
-                    NEMeetingUIKitLocalizations.of(context)!.leaveMeeting,
-                    InternalMenuIDs.leaveMeeting),
-                if (isSelfHostOrCoHost())
-                  buildActionSheetItem(
-                      context,
-                      false,
-                      NEMeetingUIKitLocalizations.of(context)!.quitMeeting,
-                      InternalMenuIDs.closeMeeting,
-                      textColor: _UIColors.colorFE3B30),
-              ],
-              cancelButton: buildActionSheetItem(
-                  context,
-                  true,
-                  NEMeetingUIKitLocalizations.of(context)!.cancel,
-                  InternalMenuIDs.cancel),
-            )).then<void>((int? itemId) async {
+      context,
+      (context) => CupertinoActionSheet(
+        actions: <Widget>[
+          buildActionSheetItem(
+              context,
+              false,
+              NEMeetingUIKitLocalizations.of(context)!.meetingLeaveFull,
+              InternalMenuIDs.leaveMeeting),
+          if (isSelfHostOrCoHost())
+            buildActionSheetItem(
+                context,
+                false,
+                NEMeetingUIKitLocalizations.of(context)!.meetingQuit,
+                InternalMenuIDs.closeMeeting,
+                textColor: _UIColors.colorFE3B30),
+        ],
+        cancelButton: buildActionSheetItem(
+            context,
+            true,
+            NEMeetingUIKitLocalizations.of(context)!.globalCancel,
+            InternalMenuIDs.cancel),
+      ),
+      routeSettings: RouteSettings(name: 'ExitPopup'),
+    ).then<void>((int? itemId) async {
       if (itemId != null && itemId != InternalMenuIDs.cancel) {
         _meetingState = MeetingState.closing;
         final requestClose = itemId == InternalMenuIDs.closeMeeting;
@@ -1855,7 +2420,8 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
           roomContext.leaveRoom();
           result = VoidResult.success();
         }
-        if (mounted && requestClose && !result.isSuccess()) {
+        if (!mounted) return;
+        if (requestClose && !result.isSuccess()) {
           roomContext.leaveRoom();
           showToast(NEMeetingUIKitLocalizations.of(context)!
               .networkUnavailableCloseFail);
@@ -1865,7 +2431,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
             reportMeetingEndEvent(NERoomEndReason.kLeaveBySelf);
             _onCancel(
                 reason:
-                    NEMeetingUIKitLocalizations.of(context)!.leaveMeetingBySelf,
+                    NEMeetingUIKitLocalizations.of(context)!.meetingLeaveFull,
                 exitCode: NEMeetingCode.self);
             break;
           case InternalMenuIDs.closeMeeting:
@@ -1919,6 +2485,10 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     return whiteboardController.getWhiteboardSharingUserUuid() != null;
   }
 
+  bool isScreenSharing() {
+    return rtcController.getScreenSharingUserUuid() != null;
+  }
+
   bool isOtherWhiteBoardSharing() {
     final uuid = whiteboardController.getWhiteboardSharingUserUuid();
     return uuid != null && !roomContext.isMySelf(uuid);
@@ -1929,8 +2499,95 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
         (isWhiteBoardSharing() && isSelfHostOrCoHost());
   }
 
+  Widget buildAudioModeUserItem(NERoomMember user) {
+    return ValueListenableBuilder(
+        valueListenable: user.isInCallListenable,
+        builder: (context, isInCall, _) {
+          return Container(
+            padding: EdgeInsets.symmetric(horizontal: 2),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                SizedBox(height: 16),
+                Stack(
+                  children: [
+                    NEMeetingAvatar.xxlarge(
+                      name: user.name,
+                      url: user.avatar,
+                    ),
+                    if (isInCall)
+                      CircleAvatar(
+                        backgroundColor: Colors.black54,
+                        radius: 32,
+                        child: Icon(
+                          Icons.phone,
+                          size: 32,
+                          color: Colors.white,
+                        ),
+                      ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                if (!_isMinimized)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          user.name,
+                          maxLines: 1,
+                          textWidthBasis: TextWidthBasis.longestLine,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: _UIColors.white,
+                            fontSize: 14,
+                            decoration: TextDecoration.none,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                      if (user.isAudioConnected) ...[
+                        SizedBox(width: 4),
+                        CircleAvatar(
+                          radius: 10,
+                          backgroundColor: _UIColors.color54575D,
+                          child: buildRoomUserVolumeIndicator(
+                            user.uuid,
+                            size: 14,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                Visibility.maintain(
+                  visible: isInCall,
+                  child: Text(
+                    NEMeetingUIKitLocalizations.of(context)!.meetingIsInCall,
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _UIColors.color_999999,
+                      decoration: TextDecoration.none,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        });
+  }
+
   /// 主讲人视觉，
   Widget buildHostUI() {
+    // 小窗口模式下，会议结束，展示文本提示
+    if (_isAlreadyMeetingDisposeInMinimized) {
+      return buildMeetingWasInterrupted();
+    }
+
     if (isSelfScreenSharing()) {
       return buildScreenShareUI();
     }
@@ -1941,40 +2598,39 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       return buildWhiteBoardShareUI();
     }
     final bigViewUser = bigUid != null ? roomContext.getMember(bigUid!) : null;
+    if (bigViewUser == null) return Container();
     Widget hostUI = Stack(
       children: <Widget>[
-        buildBigVideoView(bigViewUser),
-        if (_isMinimized)
-          buildNameView(
-            bigUid!,
-            Alignment.bottomLeft,
-          ),
-        if ((bigViewUser?.canRenderVideo ?? false) && !_isMinimized)
-          buildNameView(bigUid!, Alignment.topLeft),
-        if (smallUid != null && !_isMinimized)
-          buildDraggableSmallVideoView(buildSmallView(smallUid!)),
-        // if (_sessionInfo.debug) buildDebugView(),
+        if (!isAudioGridLayoutMode || _isMinimized) ...[
+          buildBigVideoView(bigViewUser),
+          if (bigViewUser.canRenderVideo || _isMinimized)
+            buildCornerTipView(
+              bigViewUser,
+              useSafeArea: !_isMinimized,
+              extraMargin: _isMinimized ? 4 : 12,
+            ),
+          if (smallUid != null && !_isMinimized)
+            buildDraggableSmallVideoView(buildSmallView(smallUid!)),
+        ],
+        if (!_isMinimized) ...[
+          if (isAudioGridLayoutMode) buildGrid(0),
+          _buildWaitingRoomCountTip(),
+        ],
       ],
     );
     return hostUI;
   }
 
   Widget buildDraggableSmallVideoView(Widget child) {
-    return FutureBuilder<bool>(
-        future: checkIpad(),
-        builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-          return DraggablePositioned(
-              size: (snapshot.hasData && snapshot.data!)
-                  ? kIPadSmallVideoViewSize
-                  : kSmallVideoViewSize,
-              initialAlignment: smallVideoViewAlignment,
-              paddings: smallVideoViewPaddings,
-              pinAnimationDuration: const Duration(milliseconds: 500),
-              pinAnimationCurve: Curves.easeOut,
-              builder: (context) => child,
-              onPinStart: (alignment) {
-                smallVideoViewAlignment = alignment;
-              });
+    return DraggablePositioned(
+        size: _isPad ? kIPadSmallVideoViewSize : kSmallVideoViewSize,
+        initialAlignment: smallVideoViewAlignment,
+        paddings: smallVideoViewPaddings,
+        pinAnimationDuration: const Duration(milliseconds: 500),
+        pinAnimationCurve: Curves.easeOut,
+        builder: (context) => child,
+        onPinStart: (alignment) {
+          smallVideoViewAlignment = alignment;
         });
   }
 
@@ -2053,7 +2709,8 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
               ),
               SizedBox(height: 12),
               Text(
-                '${roomContext.localMember.name}${NEMeetingUIKitLocalizations.of(context)!.screenShareLocalTips}',
+                NEMeetingUIKitLocalizations.of(context)!
+                    .screenShareLocalTips(roomContext.localMember.name),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,
@@ -2093,9 +2750,9 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
                       label: Text(
                         audioSharing
                             ? NEMeetingUIKitLocalizations.of(context)!
-                                .stopAudioShare
+                                .meetingStopAudioShare
                             : NEMeetingUIKitLocalizations.of(context)!
-                                .startAudioShare,
+                                .meetingStartAudioShare,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -2121,6 +2778,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     return !isWhiteBoardSharing() &&
         !isSelfScreenSharing() &&
         !isOtherScreenSharing() &&
+        roomContext.localMember.isAudioConnected &&
         roomContext.localMember.isVisible &&
         arguments.options.showFloatingMicrophone;
   }
@@ -2142,10 +2800,11 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
 
   Widget buildRemoteScreenShare() {
     _showScreenShareInteractionTip();
-    var roomUid = getScreenShareUserId();
+    final roomUid = getScreenShareUserId();
+    final user = roomContext.getMember(roomUid);
     return Stack(
       children: <Widget>[
-        if (roomUid == null)
+        if (user == null)
           Container(color: _UIColors.color_181820)
         else ...[
           Align(
@@ -2153,12 +2812,34 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
               maxScale: 4.0,
               minScale: 1.0,
               transformationController: _getScreenShareController(),
-              child: !shareUserIsPIP(roomUid)
-                  ? NERoomUserVideoView.subStream(
-                      roomUid,
-                      // keepAlive: true,
-                      debugName: roomContext.getMember(roomUid)?.name,
-                      listener: this,
+              child: !shareUserIsPIP(roomUid!)
+                  ? ListenableBuilder(
+                      listenable: enableVideoPreviewPageIndex,
+                      builder: (context, _) {
+                        return enableVideoPreviewForUser(user, 0)
+                            ? NERoomUserVideoView.subStream(
+                                roomUid,
+                                // keepAlive: true,
+                                debugName: roomContext.getMember(roomUid)?.name,
+                                listener: this,
+                              )
+                            : Padding(
+                                padding: const EdgeInsets.all(20.0),
+                                child: Text(
+                                  NEMeetingUIKitLocalizations.of(context)!
+                                      .screenShareUser(user.name),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    decoration: TextDecoration.none,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              );
+                      },
                     )
                   : Container(),
             ),
@@ -2169,79 +2850,91 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
               !_isMinimized)
             buildDraggableSmallVideoView(buildSmallView(smallUid!)),
           if (!_isMinimized)
-            buildNameView(roomUid, Alignment.topLeft,
-                suffix:
-                    NEMeetingUIKitLocalizations.of(context)!.screenShareSuffix),
+            buildCornerTipView(
+              user,
+              label: NEMeetingUIKitLocalizations.of(context)!
+                  .screenShareUser(user.name),
+              extraMargin: 12,
+            ),
         ],
-        if (speakingUid != null && !_isMinimized)
-          buildNameView(speakingUid!, Alignment.topRight,
-              prefix: NEMeetingUIKitLocalizations.of(context)!.speakingPrefix),
+        if (!_isMinimized)
+          [roomContext.getMember(speakingUid)].map((user) {
+            return user != null
+                ? buildCornerTipView(
+                    user,
+                    label: NEMeetingUIKitLocalizations.of(context)!
+                            .meetingSpeakingPrefix +
+                        user.name,
+                    alignment: Alignment.topRight,
+                    useSafeArea: true,
+                  )
+                : SizedBox.shrink();
+          }).first,
       ],
     );
   }
 
   /// 画廊模式
   Widget buildGalleyUI() {
-    return FutureBuilder<bool>(
-        future: checkIpad(),
-        builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
-          if (snapshot.hasData) {
-            _isIpad = snapshot.data!;
-          }
-          determineBigSmallUser();
-          var pageSize = calculatePageSize();
-          if (!_isMinimized) {
-            var curPage = _galleryModePageController?.hasClients == true
-                ? _galleryModePageController?.page?.round() ?? 0
-                : 0;
-            if (curPage >= pageSize) {
-              curPage = pageSize - 1;
-              _galleryModePageController?.animateToPage(curPage,
-                  duration: Duration(milliseconds: 50),
-                  curve: Curves.easeInOut);
-            }
-          }
-          // var _ratio = _userAspectRatioMap[getScreenShareUserId() != null
-          //     ? getScreenShareUserId()
-          //     : bigUid!];
-          return _isMinimized
-              ? buildHostUI()
-              : Stack(
-                  children: <Widget>[
-                    PageView.builder(
-                      itemBuilder: (BuildContext context, int index) {
-                        if (index > 0) {
-                          return buildGrid(index);
-                        }
-                        return buildHostUI();
-                      },
-                      physics: PageScrollPhysics(),
-                      controller: _galleryModePageController,
-                      allowImplicitScrolling: false,
-                      itemCount: pageSize,
-                      onPageChanged: (index) {
-                        pageViewCurrentIndex.value = index;
-                      },
-                    ),
-                    if (pageSize > 1)
-                      Padding(
-                        padding: EdgeInsets.only(bottom: bottomBarHeight + 8),
-                        child: PointerEventAware(
-                          key: ValueKey(pageSize),
-                          child: Align(
-                            alignment: Alignment.bottomCenter,
-                            child: DotsIndicator(
-                              itemCount: pageSize,
-                              selectedIndex: pageViewCurrentIndex,
-                            ),
-                          ),
-                        ),
+    updateGridLayoutMode();
+    determineBigSmallUser();
+    var pageSize = calculatePageSize();
+    if (!_isMinimized) {
+      var curPage = _galleryModePageController?.hasClients == true
+          ? _galleryModePageController?.page?.round() ?? 0
+          : 0;
+      if (curPage >= pageSize) {
+        curPage = pageSize - 1;
+        _galleryModePageController?.animateToPage(curPage,
+            duration: Duration(milliseconds: 50), curve: Curves.easeInOut);
+      }
+    }
+    // var _ratio = _userAspectRatioMap[getScreenShareUserId() != null
+    //     ? getScreenShareUserId()
+    //     : bigUid!];
+    return _isMinimized
+        ? wrapWithWatermark(
+            child: buildHostUI(),
+          )
+        : Stack(
+            children: <Widget>[
+              wrapWithWatermark(
+                  child: NotificationListener<ScrollNotification>(
+                onNotification: handlePageViewScrollNotification,
+                child: PageView.builder(
+                  itemBuilder: (BuildContext context, int index) {
+                    if (index > 0) {
+                      return buildGrid(
+                          isAudioGridLayoutMode ? index : index - 1);
+                    }
+                    return buildHostUI();
+                  },
+                  physics: PageScrollPhysics(),
+                  controller: _galleryModePageController,
+                  allowImplicitScrolling: false,
+                  itemCount: pageSize,
+                  onPageChanged: (index) {
+                    pageViewCurrentIndex.value = index;
+                  },
+                ),
+              )),
+              if (pageSize > 1)
+                Padding(
+                  padding: EdgeInsets.only(bottom: bottomBarHeight + 8),
+                  child: PointerEventAware(
+                    key: ValueKey(pageSize),
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: DotsIndicator(
+                        itemCount: pageSize,
+                        selectedIndex: pageViewCurrentIndex,
                       ),
-                    if (shouldShowFloatingMicrophone())
-                      buildSelfVolumeIndicator(),
-                  ],
-                );
-        });
+                    ),
+                  ),
+                ),
+              if (shouldShowFloatingMicrophone()) buildSelfVolumeIndicator(),
+            ],
+          );
   }
 
   LinearGradient buildGradient(List<Color> colors) {
@@ -2252,209 +2945,94 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
         colors: colors);
   }
 
-  /// 2*2
-  void calAspectRatio() {
-    final data = MediaQuery.of(context);
-    var count = MeetingConfig.defaultGridSide;
-    var spaceSize = (space * (count - 1));
-    if (_isPortrait) {
-      if (vPaddingLR == null) {
-        var _itemW = (data.size.width - spaceSize) / count;
-        var _itemH = _itemW / aspectRatio!;
-
-        /// 修正竖屏高度比较小的情况
-        var revise = data.size.height -
-            data.viewPadding.top -
-            spaceSize -
-            _itemH * count;
-        if (revise < 0) {
-          _itemH =
-              (data.size.height - spaceSize - data.viewPadding.top) / count;
-          _itemW = _itemH * aspectRatio!;
-          vPaddingTop = 0;
-          vPaddingLR = (data.size.width - spaceSize - _itemW * count) / 2;
-        } else {
-          vPaddingTop = revise / 2;
-          vPaddingLR = 0;
-        }
-
-        Alog.d(
-            tag: _tag,
-            moduleName: _moduleName,
-            content: '$tag, _portrait  _itemH = $_itemH , _itemW= $_itemW');
-      }
-    } else {
-      if (hPaddingLR == null) {
-        var _itemH =
-            (data.size.height - spaceSize - data.viewPadding.top) / count;
-        var _itemW = _itemH / aspectRatio!;
-
-        /// 修正横屏高度比较小的情况
-        var revise = data.size.width - _itemW * count - spaceSize;
-        if (revise < 0) {
-          _itemW = (data.size.width - spaceSize) / count;
-          _itemH = _itemW * aspectRatio!;
-          hPaddingLR = 0;
-          hPaddingTop = (data.size.height -
-                  _itemH * count -
-                  spaceSize -
-                  data.viewPadding.top) /
-              2;
-        } else {
-          hPaddingLR = revise / 2;
-          hPaddingTop = 0;
-        }
-
-        Alog.d(
-            tag: _tag,
-            moduleName: _moduleName,
-            content: '$tag, _landScape  _itemH = $_itemH , _itemW= $_itemW');
-      }
-    }
+  void updateGridLayoutParams() {
+    final size = MediaQuery.sizeOf(context);
+    final paddings = MediaQuery.paddingOf(context);
+    [
+      audioGridLayout,
+      videoGridLayout,
+    ].forEach((layout) {
+      layout
+        ..ensureLayoutParams(size, paddings)
+        ..portrait = MediaQuery.orientationOf(context) == Orientation.portrait;
+    });
   }
 
   /// build
   Widget buildGrid(int page) {
-    calAspectRatio();
-    return Container(
-        padding: EdgeInsets.only(
-            top: _isPortrait ? vPaddingTop! : hPaddingTop!,
-            left: _isPortrait ? vPaddingLR! : hPaddingLR!,
-            right: _isPortrait ? vPaddingLR! : hPaddingLR!),
-        color: Colors.black,
-        child: Center(
-            child: GridView.count(
-          physics: NeverScrollableScrollPhysics(),
-          mainAxisSpacing: space,
-          crossAxisSpacing: space,
-          childAspectRatio: _isPortrait ? aspectRatio! : 1 / aspectRatio!,
-          crossAxisCount: MeetingConfig.defaultGridSide,
-          children: buildGridItems(page),
-        )));
-  }
+    final gridLayout = currentGridLayout;
+    List<NERoomMember?> pageUsers = List.of(getUserListByPage(page));
 
-  List<Widget> buildGridItems(int page) {
-    var list = <Widget>[];
-    getUidListByPage(page).forEach((roomUid) {
-      final user = roomContext.getMember(roomUid);
-      final child = user == null
-          ? Container()
-          : ValueListenableBuilder<bool>(
-              valueListenable: user.isInCallListenable,
-              builder: (context, isInCall, child) {
-                if (isInCall)
-                  return buildIsInSystemCall(
-                    background: _UIColors.color_292933,
-                    fontSize: 14.0,
-                  );
-                return buildUserVideoView(
-                  user,
-                  // 如果是大画面，需要订阅大流，否则画廊模式会订阅小流，大流会被覆盖，导致大画面变糊；
-                  streamType: NEVideoStreamType.kLow,
-                  ifVideoOff: buildSmallNameView(user.name),
-                );
-              },
-            );
-      list.add(
-          buildGridItem(child, roomUid, user?.name, user?.isAudioOn ?? false));
-    });
-    return list;
-  }
-
-  Widget buildIsInSystemCall({
-    Color background = Colors.transparent,
-    double? containerSize = 52.0,
-    double? iconSize,
-    double fontSize = 17.0,
-    double gap = 20.0,
-    bool showText = true,
-  }) {
-    return Container(
-      alignment: Alignment.center,
-      color: background,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Container(
-            width: containerSize,
-            height: containerSize,
-            decoration: ShapeDecoration(
-              shape: const CircleBorder(
-                side: const BorderSide(
-                  color: Colors.white,
+    /// 如果是视频模式，为了复用布局的代码，需要确保每页都是填满布局行和列，不足则填充假的数据
+    if (!isAudioGridLayoutMode) {
+      final size = gridLayout.pageSize - pageUsers.length;
+      for (var i = 0; i < size; i++) {
+        pageUsers.add(null);
+      }
+    }
+    final users = pageUsers.map((user) {
+      final child = user != null
+          ? (isAudioGridLayoutMode
+              ? buildAudioModeUserItem(user)
+              : buildVideoModeUserItem(user, page + 1))
+          : SizedBox.shrink();
+      return Container(
+        width: gridLayout.itemW,
+        height: gridLayout.itemH,
+        alignment: Alignment.center,
+        foregroundDecoration: isHighLight(user?.uuid)
+            ? BoxDecoration(
+                border: Border.all(
+                  color: _UIColors.color_59F20C,
+                  width: 2,
                 ),
-              ),
-            ),
-            child: Icon(
-              Icons.phone,
-              size: iconSize,
-              color: Colors.white,
-            ),
-          ),
-          if (showText) SizedBox(height: gap),
-          if (showText)
-            Text(
-              NEMeetingUIKitLocalizations.of(context)!.isInCall,
-              maxLines: 1,
-              style: TextStyle(
-                fontSize: fontSize,
-                color: Colors.white,
-                decoration: TextDecoration.none,
-              ),
-            ),
-        ],
+              )
+            : null,
+        child: child,
+      );
+    }).toList();
+    return Container(
+      color: isAudioGridLayoutMode ? _UIColors.color_292933 : Colors.black,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: Iterable.generate(gridLayout.rows).map((index) {
+            int start = index * gridLayout.columns;
+            if (start >= users.length) return SizedBox.shrink();
+            int end = min(users.length, start + gridLayout.columns);
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: users.getRange(start, end).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
 
-  Widget buildGridItem(
-      Widget view, String roomUid, String? name, bool muteAudio) {
+  Widget buildVideoModeUserItem(NERoomMember user, int page) {
+    final child = ValueListenableBuilder<bool>(
+      valueListenable: user.isInCallListenable,
+      builder: (context, isInCall, child) {
+        final child = buildSmallNameView(user, isInCall);
+        return isInCall
+            ? child
+            : buildUserVideoView(
+                user,
+                streamType: NEVideoStreamType.kLow,
+                ifVideoOff: child,
+                page: page,
+              );
+      },
+    );
     return Stack(
       children: <Widget>[
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(
-              color:
-                  isHighLight(roomUid) ? _UIColors.color_59F20C : Colors.black,
-              width: 2,
-            ),
-          ),
-          child: view,
+        Padding(
+          padding: EdgeInsets.all(2),
+          child: child,
         ),
-        buildGalleyNameView(roomUid, truncate(name ?? ''), muteAudio),
+        buildCornerTipView(user),
       ],
-    );
-  }
-
-  Widget buildGalleyNameView(String userId, String? name, bool muteAudio) {
-    return Align(
-      alignment: Alignment.bottomLeft,
-      child: Container(
-        height: 21,
-        margin: EdgeInsets.only(left: 4, bottom: 4),
-        padding: EdgeInsets.symmetric(horizontal: 4),
-        decoration: BoxDecoration(
-            color: Colors.black54,
-            border: Border.all(color: Colors.transparent, width: 2),
-            borderRadius: BorderRadius.all(Radius.circular(2))),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            buildRoomUserVolumeIndicator(userId, size: 12),
-            Text(
-              name ?? '',
-              softWrap: false,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  decoration: TextDecoration.none,
-                  fontWeight: FontWeight.w400),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -2466,13 +3044,19 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     //return roomUid == (switchBigAndSmall ? smallUid : bigUid);
   }
 
-  Align buildBottomLeftName(NERoomMember user) {
-    return Align(
-      alignment: Alignment.bottomLeft,
+  Widget buildCornerTipView(
+    NERoomMember user, {
+    String? label,
+    Alignment alignment = Alignment.bottomLeft,
+    double size = 12,
+    double extraMargin = 0,
+    bool useSafeArea = false,
+  }) {
+    Widget child = Align(
+      alignment: alignment,
       child: Container(
-        height: 13,
-        margin: EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-        padding: EdgeInsets.symmetric(horizontal: 1, vertical: 1),
+        margin: EdgeInsets.all(4 + extraMargin),
+        padding: EdgeInsets.all(4),
         decoration: BoxDecoration(
             color: Colors.black54,
             borderRadius: BorderRadius.all(Radius.circular(2))),
@@ -2481,40 +3065,28 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
           children: [
             buildRoomUserVolumeIndicator(
               user.uuid,
-              size: 12,
+              size: size,
             ),
-            Text(
-              truncate(user.name),
-              softWrap: false,
-              maxLines: 1,
-              textAlign: TextAlign.start,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 8,
-                decoration: TextDecoration.none,
-                fontWeight: FontWeight.w400,
+            Flexible(
+              child: Text(
+                label ?? StringUtil.truncate(user.name),
+                softWrap: false,
+                maxLines: 1,
+                textAlign: TextAlign.start,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: size,
+                  decoration: TextDecoration.none,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
             ),
           ],
         ),
       ),
     );
-  }
-
-  Align buildAudioIcon(bool muteAudio) {
-    return Align(
-        alignment: Alignment.topLeft,
-        child: Container(
-          padding: EdgeInsets.all(2),
-          child: muteAudio
-              ? SizedBox(
-                  height: 12,
-                  width: 12,
-                  child: Icon(NEMeetingIconFont.icon_yx_tv_voice_offx,
-                      size: 9, color: _UIColors.colorFE3B30))
-              : Container(),
-        ));
+    return useSafeArea ? SafeArea(child: child) : child;
   }
 
   Iterable<NERoomMember> get userList => roomContext.getAllUsers();
@@ -2538,7 +3110,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     // 虽然只有两个人，但小画面是被共享者占用了，所以本端自己的小画面只能放到第二页去显示
     if (!screenSharing &&
         !whiteboardSharing &&
-        (_isIpad ? memberSize <= 1 : memberSize <= 2)) {
+        (_isPad ? memberSize <= 1 : memberSize <= 2)) {
       return 1;
     }
     // 如果是其他人在屏幕共享，需要调整memberSize
@@ -2546,7 +3118,8 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     // if (otherMemberScreenSharing && shouldShowScreenShareUserVideo(rtcController.getScreenSharingUserUuid())) {
     //   memberSize = memberSize - 1;
     // }
-    return (memberSize / galleryItemSize).ceil() + 1;
+    final pages = (memberSize / currentGridLayout.pageSize).ceil();
+    return isAudioGridLayoutMode ? pages : pages + 1;
   }
 
   Widget buildBigVideoView(NERoomMember? bigViewUser,
@@ -2556,47 +3129,21 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     if (isWhiteboardTransparent) {
       lockWhiteboardCameraContent(
           bigViewUser.uuid,
-          MediaQuery.of(context).size.width.toInt(),
-          MediaQuery.of(context).size.height.toInt());
+          MediaQuery.sizeOf(context).width.toInt(),
+          MediaQuery.sizeOf(context).height.toInt());
     }
     return ValueListenableBuilder<bool>(
       valueListenable: bigViewUser.isInCallListenable,
       builder: (context, isInCall, child) {
-        if (isInCall) {
-          return Stack(
-            children: [
-              buildBigNameView(bigViewUser),
-              buildIsInSystemCall(
-                background: _UIColors.color_181820.withAlpha(76),
-                showText: false,
-              ),
-              Align(
-                alignment: Alignment.center,
-                child: Container(
-                  // icon_container_size + gap_size * 2 + line_height * 2
-                  height: 52.0 + 20.0 * 2 + 17.0 * 2,
-                  alignment: Alignment.bottomCenter,
-                  child: Text(
-                    NEMeetingUIKitLocalizations.of(context)!.isInCall,
-                    maxLines: 1,
-                    style: TextStyle(
-                      fontSize: 17.0,
-                      color: Colors.white,
-                      decoration: TextDecoration.none,
-                      fontWeight: FontWeight.normal,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        }
-        return buildUserVideoView(
-          bigViewUser,
-          streamType: NEVideoStreamType.kHigh,
-          ifVideoOff: buildBigNameView(bigViewUser),
-          videoViewListener: videoViewListener,
-        );
+        final child = buildBigNameView(bigViewUser);
+        return isInCall
+            ? child
+            : buildUserVideoView(
+                bigViewUser,
+                streamType: NEVideoStreamType.kHigh,
+                ifVideoOff: child,
+                videoViewListener: videoViewListener,
+              );
       },
     );
   }
@@ -2607,80 +3154,36 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     Widget? ifVideoOff,
     Color? backgroundColor,
     NERoomUserVideoViewListener? videoViewListener,
+    int page = 0,
   }) {
-    return user.canRenderVideo &&
-            (Platform.isIOS ? !userIsPIP(user.uuid) : true)
-        ? ValueListenableBuilder<bool>(
-            valueListenable:
-                isSelf(user.uuid) ? localMirrorState : alwaysUnMirrorState,
-            builder: (context, mirror, child) {
-              return NERoomUserVideoView(
-                user.uuid,
-                debugName: user.name,
-                backgroundColor: backgroundColor,
-                streamType: streamType,
-                mirror: mirror,
-                listener: videoViewListener ?? this,
-                isPIPActive: pictureInPictureState,
-              );
-            },
-          )
-        : (ifVideoOff ?? Container());
-  }
-
-  Widget buildSmallVideoView(NERoomMember user) {
-    return buildUserVideoView(user, ifVideoOff: buildSmallNameView(user.name));
-  }
-
-  bool get appMinimized => arguments.backgroundWidget != null && _isMinimized;
-
-  Widget buildNameView(String userId, AlignmentGeometry alignment,
-      {String? prefix, String? suffix}) {
-    final user = roomContext.getMember(userId);
-    String content =
-        '${prefix ?? ''}${truncate(user?.name ?? '')}${suffix ?? ''}';
-    return Align(
-      alignment: alignment,
-      child: Container(
-        height: 21,
-        margin: EdgeInsets.only(
-            left: _isMinimized ? 0 : 4,
-            right: 4,
-            top: 4 + MediaQuery.of(context).viewPadding.top),
-        padding: EdgeInsets.symmetric(horizontal: 4),
-        decoration: BoxDecoration(
-            color: Colors.black54,
-            border: Border.all(color: Colors.transparent, width: 2),
-            borderRadius: BorderRadius.all(Radius.circular(2))),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            if (user != null)
-              buildRoomUserVolumeIndicator(
-                user.uuid,
-                size: 12,
-              ),
-            if ((user?.name ?? '').isNotEmpty)
-              Flexible(child: _buildNickName(content)),
-          ],
-        ),
-      ),
+    return ListenableBuilder(
+      listenable: enableVideoPreviewPageIndex,
+      builder: (context, child) {
+        final enableVideoPreview = enableVideoPreviewForUser(user, page);
+        return user.canRenderVideo &&
+                enableVideoPreview &&
+                (Platform.isIOS ? !userIsPIP(user.uuid) : true)
+            ? ValueListenableBuilder<bool>(
+                valueListenable:
+                    isSelf(user.uuid) ? localMirrorState : alwaysUnMirrorState,
+                builder: (context, mirror, child) {
+                  return NERoomUserVideoView(
+                    user.uuid,
+                    debugName: user.name,
+                    backgroundColor: backgroundColor,
+                    streamType: streamType,
+                    mirror: mirror,
+                    listener: videoViewListener ?? this,
+                    isPIPActive: pictureInPictureState,
+                  );
+                },
+              )
+            : (ifVideoOff ?? Container());
+      },
     );
   }
 
-  Widget _buildNickName(String content) {
-    return Container(
-        child: Text(content,
-            softWrap: false,
-            maxLines: 1,
-            overflow: TextOverflow.fade,
-            key: MeetingUIValueKeys.nickName,
-            style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                decoration: TextDecoration.none,
-                fontWeight: FontWeight.w400)));
-  }
+  bool get appMinimized => arguments.backgroundWidget != null && _isMinimized;
 
   Widget buildItemTab(VoidCallback callback, bool state, IconData enableIcon,
       IconData disableIcon, String enableStr, String disableStr,
@@ -2724,15 +3227,12 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
         builder: (context, isInCall, child) {
           return Stack(
             children: <Widget>[
-              if (!isInCall) buildSmallVideoView(user),
-              if (isInCall)
-                buildIsInSystemCall(
-                  background: const Color(0xFF292933),
-                  containerSize: 32.0,
-                  fontSize: 8,
-                  gap: 10,
-                ),
-              buildBottomLeftName(user),
+              buildUserVideoView(
+                user,
+                ifVideoOff:
+                    buildSmallNameView(user, isInCall, showInCallTip: false),
+              ),
+              buildCornerTipView(user, size: 10),
             ],
           );
         },
@@ -2755,8 +3255,9 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     if (roomContext.localMember.isRaisingHand) {
       final cancel = await DialogUtils.showCommonDialog(
           context,
-          NEMeetingUIKitLocalizations.of(context)!.cancelHandsUp,
-          NEMeetingUIKitLocalizations.of(context)!.cancelHandsUpTips, () {
+          NEMeetingUIKitLocalizations.of(context)!.meetingCancelHandsUp,
+          NEMeetingUIKitLocalizations.of(context)!.meetingCancelHandsUpConfirm,
+          () {
         Navigator.of(context).pop();
       }, () {
         Navigator.of(context).pop(true);
@@ -2768,14 +3269,14 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       final result = await roomContext.lowerMyHand();
       if (!result.isSuccess()) {
         showToast(result.msg ??
-            NEMeetingUIKitLocalizations.of(context)!.cancelHandsUpFail);
+            NEMeetingUIKitLocalizations.of(context)!.meetingCancelHandsUpFail);
       }
     }
   }
 
   bool get enableMediaPubOnAudioMute {
-    final shouldUnpub = arguments.options.unpubAudioOnMute &&
-        NEMeetingKit.instance.getSettingsService().shouldUnpubOnAudioMute();
+    final shouldUnpub =
+        arguments.options.unpubAudioOnMute && settings.shouldUnpubOnAudioMute();
     return !shouldUnpub;
   }
 
@@ -2790,40 +3291,44 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       final token = Object();
       audioActionToken = token;
       if (mute) {
-        rtcController.muteMyAudioAndAdjustVolume().onSuccess(() {
+        rtcController.muteMyAudio().onSuccess(() {
           muteDetectStartedTimer = Timer(muteMyAudioDelay, () {
             muteDetectStarted = true;
           });
         }).onFailure((code, msg) {
           if (!mounted || audioActionToken != token) return;
-          showToast(
-              msg ?? NEMeetingUIKitLocalizations.of(context)!.muteAudioFail);
+          showToast(msg ??
+              NEMeetingUIKitLocalizations.of(context)!
+                  .participantMuteAudioFail);
         });
       } else {
         rtcController
             .unmuteMyAudioWithCheckPermission(context, arguments.meetingTitle)
             .onFailure((code, msg) {
           if (!mounted || audioActionToken != token) return;
-          showToast(
-              msg ?? NEMeetingUIKitLocalizations.of(context)!.unMuteAudioFail);
+          showToast(msg ??
+              NEMeetingUIKitLocalizations.of(context)!
+                  .participantUnMuteAudioFail);
         });
       }
     } else {
       if (roomContext.localMember.isRaisingHand) {
-        showToast(NEMeetingUIKitLocalizations.of(context)!.alreadyHandsUpTips);
+        showToast(
+            NEMeetingUIKitLocalizations.of(context)!.meetingAlreadyHandsUpTips);
         return;
       }
       final willRaise = await DialogUtils.showCommonDialog(
         context,
-        NEMeetingUIKitLocalizations.of(context)!.muteAudioAll,
-        NEMeetingUIKitLocalizations.of(context)!.muteAllHandsUpTips,
+        NEMeetingUIKitLocalizations.of(context)!.participantMuteAudioAll,
+        NEMeetingUIKitLocalizations.of(context)!.participantMuteAllHandsUpTips,
         () {
           Navigator.of(context).pop();
         },
         () {
           Navigator.of(context).pop(true);
         },
-        acceptText: NEMeetingUIKitLocalizations.of(context)!.handsUpApply,
+        acceptText:
+            NEMeetingUIKitLocalizations.of(context)!.meetingHandsUpApply,
         contextNotifier: raiseAudioContextNotifier,
       );
       if (!mounted || _isAlreadyCancel) return;
@@ -2839,9 +3344,9 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       });
       final result = await roomContext.raiseMyHand();
       showToast(result.isSuccess()
-          ? NEMeetingUIKitLocalizations.of(context)!.handsUpSuccess
+          ? NEMeetingUIKitLocalizations.of(context)!.meetingHandsUpSuccess
           : (result.msg ??
-              NEMeetingUIKitLocalizations.of(context)!.handsUpFail));
+              NEMeetingUIKitLocalizations.of(context)!.meetingHandsUpFail));
     }
   }
 
@@ -2851,7 +3356,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       final isInCall = await NEMeetingPlugin().phoneStateService.isInCall;
       if (isInCall) {
         showToast(NEMeetingUIKitLocalizations.of(context)!
-            .funcNotAvailableWhenInCallState);
+            .meetingFuncNotAvailableWhenInCallState);
         return;
       }
 
@@ -2870,9 +3375,6 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       commonLogger.i('enableLoopbackRecording($enable) $value');
       modifyingAudioShareState = false;
       if (value.isSuccess()) {
-        if (!roomContext.localMember.isAudioOn) {
-          rtcController.adjustRecordingSignalVolume(0);
-        }
         audioSharingListenable.value = enable;
       }
     });
@@ -2909,11 +3411,12 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
 
   Future<bool> ifScreenShareAvailable() async {
     if (isWhiteBoardSharing()) {
-      showToast(NEMeetingUIKitLocalizations.of(context)!.hasWhiteBoardShare);
+      showToast(
+          NEMeetingUIKitLocalizations.of(context)!.meetingHasWhiteBoardShare);
       return false;
     }
     if (isOtherScreenSharing()) {
-      showToast(NEMeetingUIKitLocalizations.of(context)!.shareOverLimit);
+      showToast(NEMeetingUIKitLocalizations.of(context)!.screenShareOverLimit);
       return false;
     }
     // if (await NEMeetingPlugin().phoneStateService.isInCall) {
@@ -2966,11 +3469,12 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
         commonLogger
             .i('engine startScreenCapture error: ${result.code} ${result.msg}');
         if (result.code == NEErrorCode.screenSharingLimitError) {
-          showToast(NEMeetingUIKitLocalizations.of(context)!.shareOverLimit);
+          showToast(
+              NEMeetingUIKitLocalizations.of(context)!.screenShareOverLimit);
           return;
         } else if (result.code == NEErrorCode.noScreenSharingPermission) {
           showToast(
-              NEMeetingUIKitLocalizations.of(context)!.noShareScreenPermission);
+              NEMeetingUIKitLocalizations.of(context)!.screenShareNoPermission);
           return;
         }
         showToast(result.msg ??
@@ -2989,12 +3493,13 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
 
     /// 屏幕共享时暂不支持白板共享
     if (rtcController.getScreenSharingUserUuid() != null) {
-      showToast(NEMeetingUIKitLocalizations.of(context)!.hasScreenShareShare);
+      showToast(
+          NEMeetingUIKitLocalizations.of(context)!.meetingHasScreenShareShare);
       return;
     }
 
     if (isOtherWhiteBoardSharing()) {
-      showToast(NEMeetingUIKitLocalizations.of(context)!.shareOverLimit);
+      showToast(NEMeetingUIKitLocalizations.of(context)!.screenShareOverLimit);
       return;
     }
 
@@ -3007,7 +3512,8 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       var result = await whiteboardController.startWhiteboardShare();
       if (result.code != MeetingErrorCode.success && mounted) {
         if (result.code == MeetingErrorCode.meetingWBExists) {
-          showToast(NEMeetingUIKitLocalizations.of(context)!.shareOverLimit);
+          showToast(
+              NEMeetingUIKitLocalizations.of(context)!.screenShareOverLimit);
           return;
         }
         showToast(result.msg ??
@@ -3043,34 +3549,39 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       if (mute) {
         rtcController.muteMyVideo().onFailure((code, msg) {
           if (!mounted || videoActionToken != token) return;
-          showToast(
-              msg ?? NEMeetingUIKitLocalizations.of(context)!.muteVideoFail);
+          showToast(msg ??
+              NEMeetingUIKitLocalizations.of(context)!
+                  .participantMuteVideoFail);
         });
       } else {
         rtcController
             .unmuteMyVideoWithCheckPermission(context, arguments.meetingTitle)
             .onFailure((code, msg) {
           if (!mounted || videoActionToken != token) return;
-          showToast(
-              msg ?? NEMeetingUIKitLocalizations.of(context)!.unMuteVideoFail);
+          showToast(msg ??
+              NEMeetingUIKitLocalizations.of(context)!
+                  .participantUnMuteVideoFail);
         });
       }
     } else {
       if (roomContext.localMember.isRaisingHand) {
-        showToast(NEMeetingUIKitLocalizations.of(context)!.alreadyHandsUpTips);
+        showToast(
+            NEMeetingUIKitLocalizations.of(context)!.meetingAlreadyHandsUpTips);
         return;
       }
       final willRaise = await DialogUtils.showCommonDialog(
         context,
-        NEMeetingUIKitLocalizations.of(context)!.muteAllVideo,
-        NEMeetingUIKitLocalizations.of(context)!.muteAllVideoHandsUpTips,
+        NEMeetingUIKitLocalizations.of(context)!.participantTurnOffVideos,
+        NEMeetingUIKitLocalizations.of(context)!
+            .participantTurnOffAllVideoHandsUpTips,
         () {
           Navigator.of(context).pop();
         },
         () {
           Navigator.of(context).pop(true);
         },
-        acceptText: NEMeetingUIKitLocalizations.of(context)!.handsUpApply,
+        acceptText:
+            NEMeetingUIKitLocalizations.of(context)!.meetingHandsUpApply,
         contextNotifier: raiseVideoContextNotifier,
       );
       if (!mounted || _isAlreadyCancel) return;
@@ -3086,28 +3597,34 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       });
       final result = await roomContext.raiseMyHand();
       showToast(result.isSuccess()
-          ? NEMeetingUIKitLocalizations.of(context)!.handsUpSuccess
+          ? NEMeetingUIKitLocalizations.of(context)!.meetingHandsUpSuccess
           : (result.msg ??
-              NEMeetingUIKitLocalizations.of(context)!.handsUpFail));
+              NEMeetingUIKitLocalizations.of(context)!.meetingHandsUpFail));
     }
   }
 
   /// 从下往上显示
-  void _onMember() {
+  void _onMember({_MembersPageType? pageType}) {
     if (_isMinimized) return;
     trackPeriodicEvent(TrackEventName.manageMember,
         extra: {'meeting_num': arguments.meetingNum});
     DialogUtils.showChildNavigatorPopup(
       context,
-      (context) => MeetMemberPage(
-        MembersArguments(
+      (context) => wrapWithWatermark(
+        child: MeetMemberPage(
+          MembersArguments(
             options: arguments.options,
             roomInfoUpdatedEventStream: roomInfoUpdatedEventStream.stream,
             audioVolumeStreams: audioVolumeStreams,
             roomContext: roomContext,
-            meetingTitle: arguments.meetingTitle),
-        _isMinimized,
+            meetingTitle: arguments.meetingTitle,
+            waitingRoomManager: waitingRoomManager,
+            isMySelfManagerListenable: isMySelfManagerListenable,
+          ),
+          initialPageType: pageType,
+        ),
       ),
+      routeSettings: RouteSettings(name: 'MeetMemberPage'),
     );
   }
 
@@ -3152,8 +3669,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     var result = await roomContext.rtcController.startBeauty();
     if (result.isSuccess()) {
       isBeautyEnabled = true;
-      beautyLevel =
-          await NEMeetingKit.instance.getSettingsService().getBeautyFaceValue();
+      beautyLevel = await settings.getBeautyFaceValue();
       await setBeautyEffect(beautyLevel);
     } else {
       commonLogger.i('start beauty fail: ${result.msg}');
@@ -3166,8 +3682,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
 
   Future<dynamic> _initVirtualBackground() async {
     if (!isVirtualBackgroundEnabled) return;
-    var setting = NEMeetingKit.instance.getSettingsService();
-    var currentSelected = await setting.getCurrentVirtualBackgroundSelected();
+    var currentSelected = await settings.getCurrentVirtualBackgroundSelected();
     if (currentSelected != 0) {
       Directory? cache;
       if (Platform.isAndroid) {
@@ -3175,8 +3690,8 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       } else {
         cache = await getApplicationDocumentsDirectory();
       }
-      var virtualList = await setting.getExternalVirtualBackgrounds();
-      var list = await setting.getBuiltinVirtualBackgrounds();
+      var virtualList = await settings.getExternalVirtualBackgrounds();
+      var list = await settings.getBuiltinVirtualBackgrounds();
       String source = '';
       //组件传入
       if (list.isNotEmpty) {
@@ -3244,43 +3759,43 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
   }
 
   String _buildInviteInfo(BuildContext context) {
-    var info = '${NEMeetingUIKitLocalizations.of(context)!.inviteTitle}';
+    var info = '${NEMeetingUIKitLocalizations.of(context)!.meetingInviteTitle}';
 
     final meetingInfo = arguments.meetingInfo;
     info +=
-        '${NEMeetingUIKitLocalizations.of(context)!.meetingSubject}${meetingInfo.subject}\n';
+        '${NEMeetingUIKitLocalizations.of(context)!.meetingSubject} ${meetingInfo.subject}\n';
     if (meetingInfo.type == NEMeetingType.kReservation) {
       info +=
-          '${NEMeetingUIKitLocalizations.of(context)!.meetingTime}${meetingInfo.startTime.formatToTimeString('yyyy/MM/dd HH:mm')} - ${meetingInfo.endTime.formatToTimeString('yyyy/MM/dd HH:mm')}\n';
+          '${NEMeetingUIKitLocalizations.of(context)!.meetingTime} ${meetingInfo.startTime.formatToTimeString('yyyy/MM/dd HH:mm')} - ${meetingInfo.endTime.formatToTimeString('yyyy/MM/dd HH:mm')}\n';
     }
 
     info += '\n';
     if (!arguments.options.isShortMeetingIdEnabled ||
         TextUtils.isEmpty(meetingInfo.shortMeetingNum)) {
       info +=
-          '${NEMeetingUIKitLocalizations.of(context)!.meetingNum}${meetingInfo.meetingNum.toMeetingNumFormat()}\n';
+          '${NEMeetingUIKitLocalizations.of(context)!.meetingNum} ${meetingInfo.meetingNum.toMeetingNumFormat()}\n';
     } else if (!arguments.options.isLongMeetingIdEnabled) {
       info +=
-          '${NEMeetingUIKitLocalizations.of(context)!.meetingNum}${meetingInfo.shortMeetingNum}\n';
+          '${NEMeetingUIKitLocalizations.of(context)!.meetingNum} ${meetingInfo.shortMeetingNum}\n';
     } else {
       info +=
-          '${NEMeetingUIKitLocalizations.of(context)!.shortMeetingNum}${meetingInfo.shortMeetingNum}(${NEMeetingUIKitLocalizations.of(context)!.internalSpecial})\n';
+          '${NEMeetingUIKitLocalizations.of(context)!.meetingShortNum} ${meetingInfo.shortMeetingNum}(${NEMeetingUIKitLocalizations.of(context)!.meetingInternalSpecial})\n';
       info +=
-          '${NEMeetingUIKitLocalizations.of(context)!.meetingNum}${meetingInfo.meetingNum.toMeetingNumFormat()}\n';
+          '${NEMeetingUIKitLocalizations.of(context)!.meetingNum} ${meetingInfo.meetingNum.toMeetingNumFormat()}\n';
     }
     if (!TextUtils.isEmpty(roomContext.password)) {
       info +=
-          '${NEMeetingUIKitLocalizations.of(context)!.meetingPwd}${roomContext.password}\n';
+          '${NEMeetingUIKitLocalizations.of(context)!.meetingPassword} ${roomContext.password}\n';
     }
     if (!TextUtils.isEmpty(roomContext.sipCid)) {
       info += '\n';
       info +=
-          '${NEMeetingUIKitLocalizations.of(context)!.sipNumber}: ${roomContext.sipCid}\n';
+          '${NEMeetingUIKitLocalizations.of(context)!.meetingSipNumber} ${roomContext.sipCid}\n';
     }
     if (!TextUtils.isEmpty(meetingInfo.inviteUrl)) {
       info += '\n';
       info +=
-          '${NEMeetingUIKitLocalizations.of(context)!.invitationUrl}${meetingInfo.inviteUrl}\n';
+          '${NEMeetingUIKitLocalizations.of(context)!.meetingInviteUrl} ${meetingInfo.inviteUrl}\n';
     }
     return info;
   }
@@ -3289,61 +3804,76 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     return Container(
       color: _UIColors.grey_292933,
       child: Center(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (!isSelf(user.uuid) && !_isMinimized)
-              buildRoomUserVolumeIndicator(user.uuid, size: 20),
-            Flexible(
-              child: Text(
-                user.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  decoration: TextDecoration.none,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
+        child: SizedBox(
+          width: 100,
+          child: buildAudioModeUserItem(user),
         ),
       ),
     );
   }
 
-  Widget buildSmallNameView(String? name) {
+  Widget buildSmallNameView(NERoomMember user, bool isInCall,
+      {bool showInCallTip = true}) {
     return Container(
-        color: _UIColors.color_292933,
-        alignment: Alignment.center,
-        child: Text(
-          name ?? '',
-          style: TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              decoration: TextDecoration.none,
-              fontWeight: FontWeight.w500),
-        ));
+      color: _UIColors.color_292933,
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            children: [
+              NEMeetingAvatar.xlarge(
+                name: user.name,
+                url: user.avatar,
+              ),
+              if (isInCall)
+                CircleAvatar(
+                  backgroundColor: Colors.black54,
+                  radius: 24,
+                  child: Icon(
+                    Icons.phone,
+                    size: 24,
+                    color: Colors.white,
+                  ),
+                ),
+            ],
+          ),
+          if (showInCallTip) ...[
+            SizedBox(
+              height: 4,
+            ),
+            Visibility.maintain(
+              visible: isInCall,
+              child: Text(
+                NEMeetingUIKitLocalizations.of(context)!.meetingIsInCall,
+                maxLines: 1,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: _UIColors.color_999999,
+                  decoration: TextDecoration.none,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
-  List<String> getUidListByPage(int page) {
+  List<NERoomMember> getUserListByPage(int page) {
+    assert(page >= 0);
     // 这里需要过滤掉共享者的画面
-    assert(page > 0);
-    var temp = userList.map((user) => user.uuid).toList()
-      ..remove(roomContext.localMember.uuid)
-      ..insert(0, roomContext.localMember.uuid);
+    var temp = userList.toList()
+      ..remove(roomContext.localMember)
+      ..insert(0, roomContext.localMember);
 
-    // final screenShareUser = getScreenShareUserId();
-    // if (shouldShowScreenShareUserVideo(screenShareUser)) {
-    //   temp.remove(screenShareUser);
-    // }
-
-    var start = galleryItemSize * (page - 1);
+    final pageSize = currentGridLayout.pageSize;
+    int start = pageSize * page;
     if (start >= temp.length) {
       return [];
     }
-    return temp.sublist(start, min(start + galleryItemSize, temp.length));
+    return temp.sublist(start, min(start + pageSize, temp.length));
   }
 
   bool isHost() {
@@ -3370,31 +3900,65 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     return roomContext.isHostOrCoHost(uuid);
   }
 
-  void _onCancel({int exitCode = 0, String? reason = ''}) {
-    if (_isMinimized) {
-      _isAlreadyMeetingDisposeInMinimized = true;
+  void handleWaitingRoomMemberJoin(NEWaitingRoomMember member, int reason) {
+    commonLogger.i(
+      'handleWaitingRoomMemberJoin: member=$member, reason=$reason',
+    );
+    _updateWaitingRoomCountTip(_WaitingRoomCountTip.show);
+  }
+
+  Future<void> navigateToWaitingRoom({NERoomContext? roomContext}) async {
+    /// 清理当前界面不在meeting_page.dart的情况
+    Navigator.popUntil(context, ModalRoute.withName(_RouterName.inMeeting));
+    _cloudRecordStartedOverlayCallback?.call();
+    _cloudRecordStoppedOverlayCallback?.call();
+
+    /// 重置扬声器选择状态为开启
+    rtcController.setSpeakerphoneOn(true);
+
+    /// 路由到等候室页面
+    final floating = NEMeetingPlugin().getFloatingService();
+    final _initialIsInPIPView =
+        Platform.isIOS && _isMinimized && arguments.backgroundWidget == null ||
+            await floating.pipStatus == PiPStatus.enabled;
+    currentMeetingUIState!.navigateToWaitingRoomFromInMeeting(
+      arguments: arguments.copyWith(
+        roomContext: roomContext,
+        initialAudioMute: arguments.audioMute,
+        initialVideoMute: arguments.videoMute,
+        initialIsInPIPView: _initialIsInPIPView,
+      ),
+    );
+  }
+
+  void _onCancel({int exitCode = 0, String? reason = ''}) async {
+    if (_isAlreadyCancel) return;
+    _currentExitCode = exitCode;
+    _currentReason = reason;
+    if (_isMinimized &&
+        (arguments.backgroundWidget == null || await floating.isInPipMode())) {
+      setState(() {
+        _isAlreadyMeetingDisposeInMinimized = true;
+      });
       return;
     }
-    if (!_isAlreadyCancel) {
-      commonLogger.i(
-        '_onCancel exitCode=$exitCode ,reason=$reason',
-      );
-      if (_meetingState.index < MeetingState.joined.index) {
-        showToast(NEMeetingUIKitLocalizations.of(context)!.joinMeetingFail);
-      }
-      _currentExitCode = exitCode;
-      _currentReason = reason;
-      _meetingState = MeetingState.closed;
-      _dispose();
-      _isAlreadyCancel = true;
-      Navigator.of(context).popUntil((route) => false);
+    commonLogger.i(
+      '_onCancel exitCode=$exitCode ,reason=$reason',
+    );
+    if (_meetingState.index < MeetingState.joined.index) {
+      showToast(NEMeetingUIKitLocalizations.of(context)!.meetingJoinFail);
     }
+    _meetingState = MeetingState.closed;
+    _dispose();
+    _isAlreadyCancel = true;
+    MeetingUIRouter.pop(context, disconnectingCode: _currentExitCode);
   }
 
   void _dispose() {
     if (_isAlreadyCancel) {
       return;
     }
+    NEMeetingPlugin().volumeController.removeListener();
     iOSDisposePIP();
     networkTaskExecutor.dispose();
     NERoomKit.instance.messageChannelService
@@ -3406,43 +3970,29 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     _galleryModePageController = null;
     userVideoStreamSubscriber.dispose();
     roomInfoUpdatedEventStream.close();
+    _waitingRoomManager?.dispose();
     restorePreferredOrientations();
     InMeetingService()
-      ..clearRoomContext()
       .._updateHistoryMeetingItem(historyMeetingItem)
-      .._serviceCallback = null
       .._minimizeDelegate = null
-      .._audioDelegate = null;
+      .._audioDelegate = null
+      .._menuItemDelegate = null;
     joinTimeOut?.cancel();
     muteDetectStartedTimer?.cancel();
     streamSubscriptions.forEach((subscription) {
       subscription.cancel();
     });
+    _unlistenStreams();
     cancelInComingTips();
-    Wakelock.disable().catchError((e) {
-      commonLogger.i('Wakelock error $e');
-    });
     if (Platform.isAndroid) {
       NEMeetingPlugin().getNotificationService().stopForegroundService();
-    }
-    // 在后台的时候由于各种原因从会议中退出，需要对应的销毁Activity
-    // 且下次不能再次发送销毁的消息
-    if (SchedulerBinding.instance.lifecycleState != AppLifecycleState.resumed) {
-      EventBus().emit(NEMeetingUIEvents.flutterPageDisposed);
-      _hasRequestEngineToDetach = true;
-      commonLogger.i('MeetingPage request detach from engine');
+      NEMeetingPlugin().audioService.stop();
     }
     if (!_appBarAnimControllerDisposed) {
       appBarAnimController.dispose();
       _appBarAnimControllerDisposed = true;
     }
-    _morePopupMenuAnimation?.dispose();
-    MeetingCore().notifyStatusChange(
-        NEMeetingStatus(NEMeetingEvent.disconnecting, arg: _currentExitCode));
-    MeetingCore().notifyStatusChange(NEMeetingStatus(NEMeetingEvent.idle));
-    trackPeriodicEvent(TrackEventName.meetingFinish, extra: {
-      'meeting_time': DateTime.now().millisecondsSinceEpoch - meetingBeginTime
-    });
+    activeSpeakerManager?.dispose();
     audioVolumeStreams.forEach((key, value) {
       value.close();
     });
@@ -3493,15 +4043,44 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     return _whiteBoardShareListenable!;
   }
 
-  void memberNameChanged(NERoomMember member, String name) {
+  ValueNotifier<bool> get cloudRecordListenable {
+    _cloudRecordListenable ??= ValueNotifier(roomContext.isCloudRecording);
+    return _cloudRecordListenable!;
+  }
+
+  ValueNotifier<_CloudRecordState> get cloudRecordStateListenable {
+    _cloudRecordStateListenable ??= ValueNotifier(roomContext.isCloudRecording
+        ? _CloudRecordState.started
+        : _CloudRecordState.notStarted);
+    return _cloudRecordStateListenable!;
+  }
+
+  ValueNotifier<bool> get audioConnectListenable {
+    _audioConnectStateListenable ??=
+        ValueNotifier(roomContext.localMember.isAudioConnected);
+    return _audioConnectStateListenable!;
+  }
+
+  void memberNameChanged(
+      NERoomMember member, String name, NERoomMember? operateBy) {
     if (isSelf(member.uuid)) {
       historyMeetingItem?.nickname = name;
+      InMeetingService()._updateHistoryMeetingItem(historyMeetingItem);
+      if (mounted && operateBy?.uuid != roomContext.localMember.uuid) {
+        showToast(NEMeetingUIKitLocalizations.of(context)!
+            .meetingHostChangeYourMeetingName);
+      }
     }
     _onRoomInfoChanged();
   }
 
-  /// 此处只处理了txt 样式的消息
   void chatroomMessagesReceived(List<NERoomChatMessage> message) {
+    /// 普通观众过滤等候室消息
+    if (!isSelfHostOrCoHost()) {
+      message = message.where((element) {
+        return element.chatroomType != NEChatroomType.waitingRoom;
+      }).toList();
+    }
     message.forEach((msg) {
       if (_messageSource.handleReceivedMessage(msg)) {
         if (ModalRoute.of(context)!.isCurrent) {
@@ -3516,20 +4095,25 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
 
   void memberAudioMuteChanged(
       NERoomMember member, bool mute, NERoomMember? operator) {
+    if (roomContext.isInWaitingRoom()) return;
     if (isSelf(member.uuid)) {
       arguments.audioMute = mute;
-      if (mute) {
-        rtcController.adjustRecordingSignalVolume(0);
-      }
-      if (mute && !isSelf(operator?.uuid) && isHostOrCoHost(operator?.uuid)) {
-        showToast(
-            NEMeetingUIKitLocalizations.of(context)!.meetingHostMuteAudio);
-      }
-      if (!mute && member.isRaisingHand && roomContext.isAllAudioMuted) {
-        /// roomContext.isAllAudioMuted 增加这个判断是为了 如果视频开启全体关闭 用户举手，而此时用户自行打开音频的时候，手会放下的异常
-        roomContext.lowerMyHand();
-        showToast(
-            NEMeetingUIKitLocalizations.of(context)!.muteAudioHandsUpOnTips);
+
+      /// 老版本会对成员直接进行mute的操作，新版本不会
+      if (!member.isAudioConnected) {
+        /// 音频断开的情况下要记录静音状态，以便在音频恢复时恢复
+        _shouldUnmuteAfterAudioConnect = !mute;
+      } else {
+        if (mute && !isSelf(operator?.uuid) && isHostOrCoHost(operator?.uuid)) {
+          showToast(NEMeetingUIKitLocalizations.of(context)!
+              .participantHostMuteAudio);
+        }
+        if (!mute && member.isRaisingHand && roomContext.isAllAudioMuted) {
+          /// roomContext.isAllAudioMuted 增加这个判断是为了 如果视频开启全体关闭 用户举手，而此时用户自行打开音频的时候，手会放下的异常
+          roomContext.lowerMyHand();
+          showToast(NEMeetingUIKitLocalizations.of(context)!
+              .participantMuteAudioHandsUpOnTips);
+        }
       }
     }
     if (speakingUid == member.uuid && mute) {
@@ -3545,8 +4129,9 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       _isShowOpenMicroDialog = true;
       final agree = await DialogUtils.showOpenAudioDialog(
           context,
-          NEMeetingUIKitLocalizations.of(context)!.openMicro,
-          NEMeetingUIKitLocalizations.of(context)!.hostOpenMicroTips, () {
+          NEMeetingUIKitLocalizations.of(context)!.participantOpenMicrophone,
+          NEMeetingUIKitLocalizations.of(context)!.participantHostOpenMicroTips,
+          () {
         Navigator.of(context).pop();
       }, () {
         Navigator.of(context).pop(true);
@@ -3565,8 +4150,9 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       _isShowOpenVideoDialog = true;
       final agree = await DialogUtils.showOpenVideoDialog(
           context,
-          NEMeetingUIKitLocalizations.of(context)!.openCamera,
-          NEMeetingUIKitLocalizations.of(context)!.hostOpenCameraTips, () {
+          NEMeetingUIKitLocalizations.of(context)!.participantOpenCamera,
+          NEMeetingUIKitLocalizations.of(context)!
+              .participantHostOpenCameraTips, () {
         Navigator.of(context).pop(false);
       }, () {
         Navigator.of(context).pop(true);
@@ -3581,14 +4167,11 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
 
   void memberVideoMuteChanged(
       NERoomMember member, bool mute, NERoomMember? operator) async {
-    trackPeriodicEvent(
-      !mute ? TrackEventName.memberVideoStart : TrackEventName.memberVideoStop,
-      extra: {'member_uid': member.uuid, 'meeting_num': arguments.meetingNum},
-    );
+    if (roomContext.isInWaitingRoom()) return;
     if (roomContext.isMySelf(member.uuid)) {
       if (mute && !isSelf(operator?.uuid) && isHostOrCoHost(operator?.uuid)) {
         showToast(
-            NEMeetingUIKitLocalizations.of(context)!.meetingHostMuteVideo);
+            NEMeetingUIKitLocalizations.of(context)!.participantHostMuteVideo);
       }
       if (!mute && member.isRaisingHand && roomContext.isAllVideoMuted) {
         ///  roomContext.isAllVideoMuted 增加这个判断是为了 如果音频开启全体静音 用户举手，而此时用户自行打开视频的时候，手会放下的异常
@@ -3603,24 +4186,35 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
   void memberRoleChanged(
       NERoomMember member, NERoomRole before, NERoomRole after) {
     if (isSelf(member.uuid)) {
+      isMySelfManagerListenable.value = isSelfHostOrCoHost();
+
       /// 角色变更的用户是自己
+      waitingRoomManager.reset();
+      _updateMorePopupMenuState();
+      _updateMemberTotalCount();
       if (isHost()) {
         /// 被设置为主持人
         if (member.isRaisingHand) {
           roomContext.lowerMyHand();
         }
-        showToast(NEMeetingUIKitLocalizations.of(context)!.yourChangeHost);
+        showToast(
+            NEMeetingUIKitLocalizations.of(context)!.participantAssignedHost);
       } else if (isSelfCoHost()) {
         /// 被设置为联席主持人
         if (member.isRaisingHand) {
           roomContext.lowerMyHand();
         }
-        showToast(NEMeetingUIKitLocalizations.of(context)!.yourChangeCoHost);
+        showToast(
+            NEMeetingUIKitLocalizations.of(context)!.participantAssignedCoHost);
       } else if (before.name == MeetingRoles.kCohost &&
           after.name == MeetingRoles.kMember) {
         /// 被取消联席主持人
-        showToast(
-            NEMeetingUIKitLocalizations.of(context)!.yourChangeCancelCoHost);
+        showToast(NEMeetingUIKitLocalizations.of(context)!
+            .participantUnassignedCoHost);
+        _updateWaitingRoomCountTip(_WaitingRoomCountTip.hide);
+      } else if (before.name == MeetingRoles.kHost &&
+          after.name == MeetingRoles.kMember) {
+        _updateWaitingRoomCountTip(_WaitingRoomCountTip.hide);
       }
     }
     _onRoomInfoChanged();
@@ -3635,11 +4229,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       return true;
     }());
     _dispose();
-    if (!_hasRequestEngineToDetach) {
-      // iOS组件 小窗模式下，需要销毁
-      EventBus().emit(NEMeetingUIEvents.flutterPageDisposed);
-    }
-    AppStyle.setStatusBarTextBlackColor();
+    _isAlreadyCancel = true;
     PaintingBinding.instance.imageCache.clear();
     //FilePicker.platform.clearTemporaryFiles();
     super.dispose();
@@ -3647,62 +4237,83 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
 
   /// 被踢出, 没有操作3秒自动退出
   void onKicked() {
-    var countDown = Timer(Duration(seconds: _isMinimized ? 0 : 3), () {
-      if (!mounted) return;
-      _currentExitCode = NEMeetingCode.removedByHost;
-      _onCancel(
-          reason: NEMeetingUIKitLocalizations.of(context)?.removedByHost,
-          exitCode: NEMeetingCode.removedByHost);
-    });
-    if (_isMinimized) return;
-    showKickedDialog(context, countDown);
-  }
-
-  void showKickedDialog(BuildContext context, Timer countDown) {
-    DialogUtils.showChildNavigatorDialog(
-        context,
-        (context) => CupertinoAlertDialog(
-              title: Text(NEMeetingUIKitLocalizations.of(context)!.notify),
-              content:
-                  Text(NEMeetingUIKitLocalizations.of(context)!.hostKickedYou),
-              actions: <Widget>[
-                CupertinoDialogAction(
-                    child: Text(
-                      NEMeetingUIKitLocalizations.of(context)!.sure,
-                      key: MeetingUIValueKeys.closeMeetingNotification,
-                    ),
-                    onPressed: () {
-                      countDown.cancel();
-                      _onCancel(
-                          reason: NEMeetingUIKitLocalizations.of(context)!
-                              .removedByHost,
-                          exitCode: NEMeetingCode.removedByHost);
-                    })
-              ],
-            ));
-  }
-
-  void setupChatRoom() async {
-    if (_isMenuItemShowing(NEMenuIDs.chatroom)) {
-      late VoidResult joinResult;
-      // 重试加入聊天室
-      for (var index = 1; index <= 3; index++) {
-        joinResult = await chatController.joinChatroom();
-        if (!mounted || joinResult.isSuccess()) break;
-        // 异常Case：Android端在IM重连过程中，会导致聊天室加入失败，返回 1000 错误码
-        // 需要重试，等待 IM 重连成功后在执行加入聊天室的操作
-        await Future.delayed(Duration(seconds: pow(2, index).toInt()));
-        if (!mounted) break;
-      }
-      _messageSource.setJoinChatroomResult(joinResult.isSuccess());
-      if (mounted && !joinResult.isSuccess()) {
-        /// 聊天室进入失败
-        showToast(NEMeetingUIKitLocalizations.of(context)!.enterChatRoomFail);
-      }
-      commonLogger.i(
-        'join chatroom result: ${joinResult.toString()}',
-      );
+    commonLogger.i('onKicked');
+    _currentExitCode = NEMeetingCode.removedByHost;
+    _currentReason =
+        NEMeetingUIKitLocalizations.of(context)?.meetingRemovedByHost;
+    if (_isMinimized) {
+      setState(() {
+        _isAlreadyMeetingDisposeInMinimized = true;
+      });
+      return;
     }
+    showKickedDialog(context);
+  }
+
+  void showKickedDialog(BuildContext context) {
+    VoidCallback onTimeout = () {
+      if (!mounted) return;
+      _onCancel(
+          reason: NEMeetingUIKitLocalizations.of(context)?.meetingRemovedByHost,
+          exitCode: NEMeetingCode.removedByHost);
+    };
+    final countDown = Timer(const Duration(seconds: 3), onTimeout);
+    DialogUtils.showChildNavigatorDialog(
+      context,
+      (context) => CupertinoAlertDialog(
+        title:
+            Text(NEMeetingUIKitLocalizations.of(context)!.meetingBeKickedOut),
+        content: Text(
+            NEMeetingUIKitLocalizations.of(context)!.meetingBeKickedOutByHost),
+        actions: <Widget>[
+          CupertinoDialogAction(
+              child: Text(
+                NEMeetingUIKitLocalizations.of(context)!.globalClose,
+                key: MeetingUIValueKeys.closeMeetingNotification,
+              ),
+              onPressed: () {
+                countDown.cancel();
+                onTimeout();
+              })
+        ],
+      ),
+      routeSettings: RouteSettings(name: 'KickedOutDialog'),
+    );
+  }
+
+  void initChatRoom() async {
+    if (_isMenuItemShowing(NEMenuIDs.chatroom)) {
+      final result = await Future.wait([
+        setupChatRoom(NEChatroomType.common),
+        if (roomContext.waitingRoomController.isSupported)
+          setupChatRoom(NEChatroomType.waitingRoom)
+        else
+          Future.value(true)
+      ]);
+      _messageSource.setJoinChatroomResult(result[0] && result[1]);
+    }
+  }
+
+  Future<bool> setupChatRoom(NEChatroomType chatroomType) async {
+    late VoidResult joinResult;
+    // 重试加入聊天室
+    for (var index = 1; index <= 3; index++) {
+      joinResult =
+          await chatController.joinChatroom(chatroomType: chatroomType);
+      if (!mounted || joinResult.isSuccess()) break;
+      // 异常Case：Android端在IM重连过程中，会导致聊天室加入失败，返回 1000 错误码
+      // 需要重试，等待 IM 重连成功后在执行加入聊天室的操作
+      await Future.delayed(Duration(seconds: pow(2, index).toInt()));
+      if (!mounted) break;
+    }
+    if (mounted && !joinResult.isSuccess()) {
+      /// 聊天室进入失败
+      showToast(NEMeetingUIKitLocalizations.of(context)!.chatJoinFail);
+    }
+    commonLogger.i(
+      'join chatroom $chatroomType result: ${joinResult.toString()}',
+    );
+    return joinResult.isSuccess();
   }
 
   /// 提示聊天室接受消息
@@ -3717,9 +4328,9 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     if (chatRoomMessage is NERoomChatTextMessage) {
       content = chatRoomMessage.text;
     } else if (chatRoomMessage is NERoomChatImageMessage) {
-      content = NEMeetingUIKitLocalizations.of(context)!.imageMessageTip;
+      content = NEMeetingUIKitLocalizations.of(context)!.chatImageMessageTip;
     } else if (chatRoomMessage is NERoomChatFileMessage) {
-      content = NEMeetingUIKitLocalizations.of(context)!.fileMessageTip;
+      content = NEMeetingUIKitLocalizations.of(context)!.chatFileMessageTip;
     }
     if (content == null) {
       return;
@@ -3731,28 +4342,29 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
         top: false,
         child: Align(
           alignment: Alignment.bottomRight,
-          child: Container(
-              margin: EdgeInsets.only(bottom: bottomBarHeight + 12, right: 12),
-              padding: EdgeInsets.all(12),
-              decoration: ShapeDecoration(
-                  gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: <Color>[
-                        _UIColors.grey_292933,
-                        _UIColors.color_212129
-                      ]),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8))),
-              width: 240,
-              height: 60,
-              child: GestureDetector(
-                  onTap: () {
-                    _hideMorePopupMenu();
-                    onChat();
-                  },
+          child: GestureDetector(
+              onTap: onChat,
+              child: Container(
+                  margin:
+                      EdgeInsets.only(bottom: bottomBarHeight + 12, right: 12),
+                  padding: EdgeInsets.all(12),
+                  decoration: ShapeDecoration(
+                      gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: <Color>[
+                            _UIColors.grey_292933,
+                            _UIColors.color_212129
+                          ]),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8))),
+                  width: 240,
+                  height: 60,
                   child: Row(children: <Widget>[
-                    buildHead(chatRoomMessage.fromNick),
+                    NEMeetingAvatar.large(
+                      name: chatRoomMessage.fromNick,
+                      url: chatRoomMessage.fromAvatar,
+                    ),
                     SizedBox(width: 8),
                     Expanded(
                         child: Column(
@@ -3779,37 +4391,17 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     _overlayEntry = null;
   }
 
-  Widget buildHead(String? nick) {
-    return ClipOval(
-        child: Container(
-      height: 36,
-      width: 36,
-      decoration: ShapeDecoration(
-          gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: <Color>[_UIColors.blue_5996FF, _UIColors.blue_2575FF]),
-          shape: Border()),
-      alignment: Alignment.center,
-      child: Text(
-        /// 修改当nick为空串的时候，截取越界问题
-        nick != null && nick.isNotEmpty ? nick.characters.first : '',
-        style: TextStyle(
-            fontSize: 21, color: Colors.white, decoration: TextDecoration.none),
-      ),
-    ));
-  }
-
   Widget buildName(String nick) {
     return Text(
       nick,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
-          color: _UIColors.greyCCCCCC,
-          fontSize: 12,
-          fontWeight: FontWeight.w400,
-          decoration: TextDecoration.none),
+        color: _UIColors.greyCCCCCC,
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        decoration: TextDecoration.none,
+      ),
     );
   }
 
@@ -3826,20 +4418,17 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     );
   }
 
-  void _onSwitchLoudspeaker() {
-    final curDevice = _audioDeviceSelected.value;
+  void _onSwitchLoudspeaker() async {
     final targetDevice = isEarpiece()
         ? NEAudioOutputDevice.kSpeakerPhone
         : NEAudioOutputDevice.kEarpiece;
-    rtcController
-        .setSpeakerphoneOn(targetDevice == NEAudioOutputDevice.kSpeakerPhone)
-        .then((result) {
-      if (mounted && result.isSuccess()) {
-        if (_audioDeviceSelected.value == curDevice) {
-          _audioDeviceSelected.value = targetDevice;
-        }
-      }
-    });
+    if (Platform.isAndroid && await isAudioDeviceSwitchEnabled) {
+      commonLogger.i('selectAudioDevice: $targetDevice');
+      NEMeetingPlugin().audioService.selectAudioDevice(targetDevice);
+    } else {
+      rtcController
+          .setSpeakerphoneOn(targetDevice == NEAudioOutputDevice.kSpeakerPhone);
+    }
   }
 
   void _onSwitchCamera() async {
@@ -3857,6 +4446,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       child: Scaffold(
           backgroundColor: Colors.transparent,
           body: Container(
+            alignment: Alignment.topRight,
             margin: EdgeInsets.only(top: appBarHeight - 12, right: 50),
             child: SafeArea(
               child: getNetworkInfoBuilder(context),
@@ -3912,11 +4502,11 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
   Widget showNetworkInfo(BuildContext context, NetWorkRttInfo value) {
     double position = 34;
     return Container(
-        // margin: EdgeInsets.only(right: 12),
-        child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
+        child: IntrinsicWidth(
+            child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
           Align(
             alignment: Alignment.topRight,
             child: Container(
@@ -3928,6 +4518,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
               alignment: Alignment.centerRight,
               child: Container(
                   padding: EdgeInsets.all(12),
+                  constraints: BoxConstraints(minWidth: 140),
                   decoration: ShapeDecoration(
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20)),
@@ -3936,22 +4527,20 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Row(mainAxisSize: MainAxisSize.min, children: [
-                        Text(getNetworkStatusDesc(_networkStats.value),
-                            textAlign: TextAlign.left,
-                            style: TextStyle(
-                                fontSize: 16,
-                                decoration: TextDecoration.none,
-                                fontWeight: FontWeight.bold,
-                                color: _UIColors.black)),
-                      ]),
+                      Text(getNetworkStatusDesc(_networkStats.value),
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                              fontSize: 16,
+                              decoration: TextDecoration.none,
+                              fontWeight: FontWeight.bold,
+                              color: _UIColors.black)),
                       SizedBox(height: 12),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                               NEMeetingUIKitLocalizations.of(context)!
-                                      .localLatency +
+                                      .networkLocalLatency +
                                   ":",
                               textAlign: TextAlign.left,
                               style: TextStyle(
@@ -3959,7 +4548,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
                                   decoration: TextDecoration.none,
                                   fontWeight: FontWeight.w400,
                                   color: _UIColors.black)),
-                          SizedBox(width: 58),
+                          Expanded(child: SizedBox()),
                           Text(value.networkDownRtt.toString() + "ms",
                               textAlign: TextAlign.right,
                               style: TextStyle(
@@ -3976,7 +4565,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
                           children: <Widget>[
                             Text(
                                 NEMeetingUIKitLocalizations.of(context)!
-                                        .packetLossRate +
+                                        .networkPacketLossRate +
                                     ":",
                                 textAlign: TextAlign.left,
                                 style: TextStyle(
@@ -3984,7 +4573,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
                                     decoration: TextDecoration.none,
                                     fontWeight: FontWeight.w400,
                                     color: _UIColors.black)),
-                            SizedBox(width: 36),
+                            Expanded(child: SizedBox()),
                             Container(
                               padding: EdgeInsets.only(top: 2),
                               child: Column(
@@ -4021,15 +4610,15 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
                           ]),
                     ],
                   ))),
-        ]));
+        ])));
   }
 
   //成员进入房间 跟[onRoomUserJoin]逻辑保持一致
   void memberJoinRoom(List<NERoomMember> userList) {
     for (var user in userList) {
       if (isSelfHostOrCoHost() && user.isVisible) {
-        showToast(
-            '${(user.name)}${NEMeetingUIKitLocalizations.of(context)!.onUserJoinMeeting}');
+        showToast(NEMeetingUIKitLocalizations.of(context)!
+            .meetingUserJoin(user.name));
       }
       // if (isVisible && autoSubscribeAudio) {
       //   inRoomService.getInRoomAudioController().subscribeRemoteAudioStream(user.userId);
@@ -4038,10 +4627,6 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
           user.uuid, () => StreamController<int>.broadcast());
     }
     onMemberInOrOut();
-  }
-
-  String truncate(String str) {
-    return '${str.substring(0, min(str.length, 10))}${((str.length) > 10 ? "..." : "")}';
   }
 
   // 成员离开房间 与[onRoomUserLeave] 一致
@@ -4053,10 +4638,9 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       });
       commonLogger.i('onUserLeave ${user.name}');
       if (isSelfHostOrCoHost() && user.isVisible) {
-        showToast(
-            '${user.name}${NEMeetingUIKitLocalizations.of(context)!.onUserLeaveMeeting}');
+        showToast(NEMeetingUIKitLocalizations.of(context)!
+            .meetingUserLeave(user.name));
       }
-      volumeList?.removeWhere((element) => element.userUuid == user.uuid);
       if (activeUid == user.uuid) {
         activeUid = null;
       }
@@ -4070,36 +4654,10 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     }
   }
 
-  void _determineActiveUser([bool forceUpdate = false]) {
-    final now = DateTime.now();
-    if (!forceUpdate &&
-        now.difference(lastFocusSwitchTimestamp) < focusSwitchInterval) {
-      return;
-    }
-    lastFocusSwitchTimestamp = now;
-
-    var oldSpeakingUid = speakingUid;
-    // speakingUid = null;
-    var oldActiveUserId = activeUid;
-    // activeUid = null;
-    var maxVolume = -1;
-    String? maxVolumeUserId;
-    (volumeList ?? []).where((item) {
-      final member = roomContext.getMember(item.userUuid);
-      return member != null && member.isAudioOn;
-    }).forEach((item) {
-      final curVolume = item.volume;
-      audioVolumeStreams[item.userUuid]?.add(curVolume);
-      if (curVolume > MeetingConfig.volumeLowThreshold &&
-          curVolume > maxVolume) {
-        maxVolume = curVolume;
-        maxVolumeUserId = item.userUuid;
-      }
-    });
-    if (maxVolumeUserId != null) {
-      activeUid = maxVolumeUserId;
-      speakingUid = maxVolumeUserId;
-    }
+  void handleActiveSpeakerListChanged(List<String> activeSpeakers) {
+    final oldSpeakingUid = speakingUid;
+    final oldActiveUserId = activeUid;
+    speakingUid = activeUid = activeSpeakers.firstOrNull;
     if (oldActiveUserId != activeUid || oldSpeakingUid != speakingUid) {
       setState(() {});
       iOSUpdatePIPVideo(focusUid != null ? focusUid! : (activeUid ?? ''));
@@ -4111,10 +4669,10 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     if (!roomInfoUpdatedEventStream.isClosed) {
       roomInfoUpdatedEventStream.add(const Object());
     }
-    setState(() {});
     if (_isAppInBackground && Platform.isIOS) {
       determineBigSmallUser();
     }
+    setState(() {});
   }
 
   void swapBigSmallUid() {
@@ -4203,8 +4761,9 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     return userId!;
   }
 
-  void onRtcAudioOutputDeviceChanged(NEAudioOutputDevice selected) {
-    commonLogger.i('onAudioDeviceChanged selected=$selected');
+  void onRtcAudioOutputDeviceChanged(NEAudioOutputDevice selected) async {
+    commonLogger.i('onRtcAudioOutputDeviceChanged selected=$selected');
+    if (Platform.isAndroid && await isAudioDeviceSwitchEnabled) return;
     _audioDeviceSelected.value = selected;
   }
 
@@ -4242,6 +4801,55 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       showToast(NEMeetingUIKitLocalizations.of(context)!
           .networkReconnectionSuccessful);
     }
+  }
+
+  void onRoomCloudRecordStateChanged(
+      NERoomCloudRecordState state, NERoomMember? operateBy) {
+    final isCloudRecordStart = state == NERoomCloudRecordState.recordingStart;
+    cloudRecordListenable.value = isCloudRecordStart;
+    cloudRecordStateListenable.value = isCloudRecordStart
+        ? _CloudRecordState.started
+        : _CloudRecordState.notStarted;
+    final showCloudRecordingUI = arguments.options.showCloudRecordingUI;
+    final isMySelf = isSelf(operateBy?.uuid);
+
+    /// 非自己开始或结束录制，提示弹窗
+    if (!isMySelf && showCloudRecordingUI) {
+      showCloudRecordingStateChangeDialog();
+    }
+  }
+
+  /// 记录自己在断开音频的时候的静音状态
+  var _isAudioOnBeforeAudioDisconnect = false;
+
+  /// 断开音频后经过主持人操作之后的最终静音状态，用于在连接音频后进行恢复
+  var _shouldUnmuteAfterAudioConnect = false;
+
+  void onMemberAudioConnectStateChanged(
+      NERoomMember? member, bool isAudioConnected) {
+    if (isSelf(member?.uuid)) {
+      audioConnectListenable.value = isAudioConnected;
+      if (!isAudioConnected) {
+        /// 音频断开，记录当前的静音状态
+        _isAudioOnBeforeAudioDisconnect = roomContext.localMember.isAudioOn;
+        _shouldUnmuteAfterAudioConnect = roomContext.localMember.isAudioOn;
+      } else {
+        /// 如果断开音频前非静音状态，但是连接音频的时候已经是静音状态，则进行Toast提示
+        if (_isAudioOnBeforeAudioDisconnect &&
+            !_shouldUnmuteAfterAudioConnect) {
+          showToast(NEMeetingUIKitLocalizations.of(context)!
+              .participantHostMuteAudio);
+        }
+
+        /// 音频连接，根据记录的静音状态去恢复
+        if (_shouldUnmuteAfterAudioConnect) {
+          roomContext.rtcController.unmuteMyAudio();
+        } else {
+          roomContext.rtcController.muteMyAudio();
+        }
+      }
+    }
+    _onRoomInfoChanged();
   }
 
   void handleRoomRtcStats(NERoomRtcStats stats) {
@@ -4405,6 +5013,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
                       : Rational.vertical())
               .then((value) {
             if (value != PiPStatus.enabled) {
+              // 不支持画中画，使用常规最小化方式(直接销毁原生容器)
               EventBus().emit(NEMeetingUIEvents.flutterPageDisposed);
             }
           });
@@ -4481,35 +5090,6 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     }
   }
 
-  @override
-  NEMeetingInfo? getCurrentMeetingInfo() {
-    final meetingInfo = arguments.meetingInfo;
-    return NEMeetingInfo(
-      meetingId: meetingInfo.meetingId,
-      meetingNum: meetingInfo.meetingNum,
-      shortMeetingNum: meetingInfo.shortMeetingNum,
-      sipCid: roomContext.sipCid,
-      type: meetingInfo.type.type,
-      subject: meetingInfo.subject,
-      password: roomContext.password,
-      inviteCode: meetingInfo.inviteCode,
-      inviteUrl: meetingInfo.inviteUrl,
-      startTime: roomContext.rtcStartTime,
-      duration:
-          DateTime.now().millisecondsSinceEpoch - roomContext.rtcStartTime,
-      scheduleStartTime: meetingInfo.startTime,
-      scheduleEndTime: meetingInfo.endTime,
-      isHost: isHost(),
-      isLocked: roomContext.isRoomLocked,
-      hostUserId: roomContext.getHostUuid() ?? '',
-      extraData: roomContext.extraData,
-      userList: userList
-          .map((e) => NEInMeetingUserInfo(
-              e.uuid, e.name, e.tag, e.role.name, isSelf(e.uuid)))
-          .toList(growable: false),
-    );
-  }
-
   void memberJoinRtcChannel(List<NERoomMember> members) {
     for (var user in members) {
       audioVolumeStreams.putIfAbsent(
@@ -4533,18 +5113,24 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     _meetingState = MeetingState.joined;
     joinTimeOut?.cancel();
     InMeetingService()
-      .._serviceCallback = this
       .._audioDelegate = this
       .._minimizeDelegate = this
-      ..rememberRoomContext(roomContext);
+      .._menuItemDelegate = this;
     createHistoryMeetingItem();
     MeetingCore().notifyStatusChange(NEMeetingStatus(NEMeetingEvent.inMeeting));
     handleAppLifecycleChangeEvent();
     setupAudioAndVideo();
     _initWithSDKConfig();
+    waitingRoomManager.reset();
 
-    // rtcController.enableAudioVolumeIndication(true, 200);
-    rtcController.enableAudioVolumeIndication(true, 500, true);
+    activeSpeakerManager?.dispose();
+    activeSpeakerManager = ActiveSpeakerManager(
+      roomContext: roomContext,
+      config: ActiveSpeakerConfig.fromJson(
+          sdkConfig.getConfig('activeSpeakerConfig') as Map?),
+      onActiveSpeakerActiveChanged: handleActiveSpeakerActiveChanged,
+      onActiveSpeakerListChanged: handleActiveSpeakerListChanged,
+    );
     audioVolumeStreams[roomContext.localMember.uuid] =
         StreamController<int>.broadcast();
 
@@ -4559,7 +5145,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       });
     }
 
-    setupChatRoom();
+    initChatRoom();
     if (arguments.defaultWindowMode == WindowMode.whiteBoard.value &&
         _isMenuItemShowing(NEMenuIDs.whiteBoard) &&
         !whiteboardController.isSharingWhiteboard()) {
@@ -4577,7 +5163,8 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       setState(() {});
     }
     if (roomContext.isMySelfCoHost()) {
-      showToast(NEMeetingUIKitLocalizations.of(context)!.yourChangeCoHost);
+      showToast(
+          NEMeetingUIKitLocalizations.of(context)!.participantAssignedCoHost);
     }
     Timer(muteDetectDelay, () {
       if (muteDetectStarted == null) {
@@ -4597,7 +5184,6 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
 
   void onMemberInOrOut() {
     focusUid = roomContext.getFocusUuid();
-    _determineActiveUser(true);
     _onRoomInfoChanged();
   }
 
@@ -4615,24 +5201,24 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       case NERoomEndReason.kCloseByBackend:
         _onCancel(
             exitCode: NEMeetingCode.closeByHost,
-            reason: NEMeetingUIKitLocalizations.of(context)!.closeByHost);
+            reason:
+                NEMeetingUIKitLocalizations.of(context)!.meetingCloseByHost);
         break;
       case NERoomEndReason.kCloseByMember:
-        _currentExitCode = isSelfHostOrCoHost()
-            ? NEMeetingCode.closeBySelfAsHost
-            : NEMeetingCode.closeByHost;
-        _currentReason = NEMeetingUIKitLocalizations.of(context)!.meetingClosed;
-        _onCancel(exitCode: _currentExitCode, reason: _currentReason);
+        _onCancel(
+            exitCode: isSelfHostOrCoHost()
+                ? NEMeetingCode.closeBySelfAsHost
+                : NEMeetingCode.closeByHost,
+            reason: NEMeetingUIKitLocalizations.of(context)!.meetingClosed);
         break;
       case NERoomEndReason.kKickOut:
         onKicked();
         break;
       case NERoomEndReason.kKickBySelf:
-        _currentExitCode = NEMeetingCode.loginOnOtherDevice;
-        _currentReason =
-            NEMeetingUIKitLocalizations.of(context)!.loginOnOtherDevice;
         _onCancel(
-            exitCode: NEMeetingCode.loginOnOtherDevice, reason: _currentReason);
+            exitCode: NEMeetingCode.loginOnOtherDevice,
+            reason:
+                NEMeetingUIKitLocalizations.of(context)!.loginOnOtherDevice);
         break;
       case NERoomEndReason.kLoginStateError:
         _onCancel(
@@ -4642,13 +5228,12 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       case NERoomEndReason.kLeaveBySelf:
         _onCancel(
             exitCode: NEMeetingCode.self,
-            reason:
-                NEMeetingUIKitLocalizations.of(context)!.leaveMeetingBySelf);
+            reason: NEMeetingUIKitLocalizations.of(context)!.meetingLeaveFull);
         break;
       case NERoomEndReason.kEndOfLife:
         _onCancel(
             exitCode: NEMeetingCode.endOfLife,
-            reason: NEMeetingUIKitLocalizations.of(context)!.endOfLife);
+            reason: NEMeetingUIKitLocalizations.of(context)!.meetingEndOfLife);
         break;
       case NERoomEndReason.kSyncDataError:
       case NERoomEndReason.kEndOfRtc:
@@ -4689,6 +5274,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     }
     if (isExistRejoinDialog) return;
     isExistRejoinDialog = true;
+    NEMeetingPlugin().audioService.stop();
     DialogUtils.showNetworkAbnormalityAlertDialog(
         context: context,
         onLeaveMeetingCallback: () {
@@ -4715,8 +5301,18 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
                         arguments.options.detectMutedMic,
                   ))
               .onSuccess((data) async {
+            if (!mounted) return;
+            currentMeetingUIState!.updateRoomContext(data);
+            if (data.isInWaitingRoom()) {
+              navigateToWaitingRoom(roomContext: data);
+              return;
+            }
+
             isShowNetworkAbnormalityAlertDialog = false;
             _isMeetingReconnecting.value = false;
+
+            _unlistenStreams();
+            _listenStreams();
 
             /// 重置会议房间上下文信息
             roomContext = data;
@@ -4726,6 +5322,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
               options: arguments.options,
               encryptionConfig: arguments.encryptionConfig,
               backgroundWidget: arguments.backgroundWidget,
+              watermarkConfig: arguments.watermarkConfig,
             )..trackingEvent = trackingEvent;
 
             arguments = meetingArguments;
@@ -4787,11 +5384,13 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     }
 
     if (isSelf(member.uuid)) {
+      _updateWatermarkInfo();
       if (!isSharing &&
           !isSelf(operator?.uuid) &&
           isHostOrCoHost(operator?.uuid) &&
           !_isMinimized) {
-        showToast(NEMeetingUIKitLocalizations.of(context)!.hostStopShare);
+        showToast(NEMeetingUIKitLocalizations.of(context)!
+            .participantHostStoppedShare);
       }
       // 被停止共享，音频共享也要停止
       if (!isSharing && audioSharingListenable.value) {
@@ -4837,7 +5436,8 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
         !isSelf(operator?.uuid) &&
         isHostOrCoHost(operator?.uuid)) {
       // 被操作的是自己，操作人是非自己，isSharing false 时认为是被主持人或者管理者停止了共享
-      showToast(NEMeetingUIKitLocalizations.of(context)!.hostStopWhiteboard);
+      showToast(NEMeetingUIKitLocalizations.of(context)!
+          .participantHostStopWhiteboard);
     }
     whiteBoardShareListenable.value = isSelfWhiteBoardSharing();
     if (!isSharing) {
@@ -4850,6 +5450,8 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     if (whiteboardController.isDrawWhiteboardEnabled() && !isSharing) {
       whiteboardController.revokePermission(roomContext.myUuid);
     }
+    whiteBoardEditingState.value = isSelfWhiteBoardSharing();
+    whiteBoardInteractionStatusNotifier.value = isSelfWhiteBoardSharing();
   }
 
   void handleRoomPropertiesEvent(
@@ -4858,6 +5460,9 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     updated = updateAllMuteState(properties, isDelete) || updated;
     if (updated) {
       _onRoomInfoChanged();
+    }
+    if (properties.containsKey(WatermarkProperty.key)) {
+      _updateWatermarkInfo();
     }
   }
 
@@ -4870,12 +5475,12 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       );
       if (isSelf(oldFocus)) {
         showToast(NEMeetingUIKitLocalizations.of(context)!
-            .localUserUnAssignedActiveSpeaker);
+            .participantUnassignedActiveSpeaker);
       }
       if (isSelf(newFocus)) {
         // 联席主持人，主持人都有可被其他人设置为焦点视频，去掉 非主持人才提示的判断
         showToast(NEMeetingUIKitLocalizations.of(context)!
-            .localUserAssignedActiveSpeaker);
+            .participantAssignedActiveSpeaker);
       }
       focusUid = newFocus;
       return true;
@@ -4888,25 +5493,34 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     _invitingToOpenVideo = false;
     var updated = false;
     if (properties.containsKey(AudioControlProperty.key)) {
-      if (!isSelfHostOrCoHost() &&
-          roomContext.isAllAudioMuted &&
-          roomContext.localMember.isAudioOn) {
-        showToast(
-            NEMeetingUIKitLocalizations.of(context)!.meetingHostMuteAllAudio);
-        rtcController.muteMyAudioAndAdjustVolume();
-      }
-      if (!isSelfHostOrCoHost() &&
-          !roomContext.isAllAudioMuted &&
-          !roomContext.localMember.isAudioOn) {
-        /// 解除全体静音时，如果当前用户处于举手状态不需要弹出dialog，直接打开音频
-        /// 如果没有举手 就弹出dialog
-        if (roomContext.localMember.isRaisingHand) {
-          _muteMyAudio(false);
-        } else {
-          if (raiseAudioContextNotifier?.value != null) {
-            Navigator.of(raiseAudioContextNotifier!.value!).pop();
+      if (!isSelfHostOrCoHost() && roomContext.isAllAudioMuted) {
+        if (roomContext.localMember.isAudioConnected) {
+          if (roomContext.localMember.isAudioOn) {
+            showToast(NEMeetingUIKitLocalizations.of(context)!
+                .participantHostMuteAllAudio);
+            rtcController.muteMyAudio();
           }
-          showOpenMicDialog();
+        } else {
+          _shouldUnmuteAfterAudioConnect = false;
+        }
+      }
+      if (!isSelfHostOrCoHost() && !roomContext.isAllAudioMuted) {
+        if (roomContext.localMember.isAudioConnected) {
+          if (!roomContext.localMember.isAudioOn) {
+            /// 解除全体静音时，如果当前用户处于举手状态不需要弹出dialog，直接打开音频
+            /// 如果没有举手 就弹出dialog
+            if (roomContext.localMember.isRaisingHand) {
+              _muteMyAudio(false);
+            } else {
+              if (raiseAudioContextNotifier?.value != null) {
+                Navigator.of(raiseAudioContextNotifier!.value!).pop();
+              }
+              showOpenMicDialog();
+            }
+          }
+        } else if (_isAudioOnBeforeAudioDisconnect) {
+          /// 如果断开音频前自己是非静音状态，那么收到开麦请求时直接处理为要打开即可
+          _shouldUnmuteAfterAudioConnect = true;
         }
       }
       updated = true;
@@ -4919,8 +5533,8 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       if (!isSelfHostOrCoHost() &&
           roomContext.isAllVideoMuted &&
           roomContext.localMember.isVideoOn) {
-        showToast(
-            NEMeetingUIKitLocalizations.of(context)!.meetingHostMuteAllVideo);
+        showToast(NEMeetingUIKitLocalizations.of(context)!
+            .participantHostMuteAllVideo);
         rtcController.muteMyVideo();
       }
       if (!isSelfHostOrCoHost() &&
@@ -4968,7 +5582,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       showToast(isDrawEnabled
           ? NEMeetingUIKitLocalizations.of(context)!.whiteBoardInteractionTip
           : NEMeetingUIKitLocalizations.of(context)!
-              .undoWhiteBoardInteractionTip);
+              .whiteBoardUndoInteractionTip);
     }
     return true;
   }
@@ -4977,7 +5591,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     if (!properties.containsKey(HandsUpProperty.key)) return false;
     if (isSelf(userId) && roomContext.localMember.isHandDownByHost) {
       showToast(NEMeetingUIKitLocalizations.of(context)!
-          .hostRejectAudioHandsUp); // Strings.hostAgreeAudioHandsUp
+          .meetingHostRejectAudioHandsUp); // Strings.hostAgreeAudioHandsUp
     }
     return isSelfHostOrCoHost() || isSelf(userId);
   }
@@ -4986,6 +5600,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     commonLogger.i(
       'liveStateChanged:state ${state.name}',
     );
+    _isLiveStreaming.value = state == NERoomLiveState.started;
   }
 
   void handlePassThroughMessage(NECustomMessage message) {
@@ -4998,7 +5613,13 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     final controlAction = MeetingControlMessenger.parseMessage(message.data);
     if (controlAction == MeetingControlMessenger.inviteToOpenAudio ||
         controlAction == MeetingControlMessenger.inviteToOpenAudioVideo) {
-      if (roomContext.localMember.isRaisingHand || isSelfHostOrCoHost()) {
+      if (!roomContext.localMember.isAudioConnected) {
+        if (_isAudioOnBeforeAudioDisconnect) {
+          /// 如果断开音频前自己是非静音状态，那么收到开麦请求时直接处理为要打开即可
+          _shouldUnmuteAfterAudioConnect = true;
+        }
+      } else if (roomContext.localMember.isRaisingHand ||
+          isSelfHostOrCoHost()) {
         if (!roomContext.localMember.isAudioOn) {
           rtcController.unmuteMyAudioWithCheckPermission(
               context, arguments.meetingTitle);
@@ -5021,22 +5642,36 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     }
   }
 
-  List<NEMemberVolumeInfo>? volumeList;
+  bool get isInActiveSpeakerView => pageViewCurrentIndex.value == 0;
+  void handleActiveSpeakerActiveChanged(String user, bool active) {
+    /// 未开启“视频提前订阅”
+    if (activeSpeakerManager?.config.enableVideoPreSubscribe != true) return;
 
-  void onRtcAudioVolumeIndication(
+    /// 成员不存在
+    final member = roomContext.getMember(user);
+    if (member == null) return;
+
+    /// 处于“演讲者模式”，无焦点视频，成员加入“正在讲话”列表，且视频打开，则提前订阅该用户的视频大流
+    if (active &&
+        focusUid == null &&
+        isInActiveSpeakerView &&
+        member.isVideoOn) {
+      userVideoStreamSubscriber.preSubscribeVideoStream(
+          user, NEVideoStreamType.kHigh);
+    }
+
+    /// 成员离开“正在讲话”列表，则取消订阅用户视频大流
+    if (!active) {
+      userVideoStreamSubscriber.preUnsubscribeVideoStream(user);
+    }
+  }
+
+  void onRemoteAudioVolumeIndication(
       List<NEMemberVolumeInfo> volumeList, int totalVolume) {
     if (_isAlreadyCancel) return;
-    // final isLocalVolumeChanged = volumeList.length == 1 &&
-    //     volumeList.single.userUuid == roomContext.myUuid;
-    // if (isLocalVolumeChanged) {
-    //   onLocalAudioVolumeIndication(totalVolume, false);
-    // } else {
-    this.volumeList = volumeList;
     volumeList.forEach((item) {
       audioVolumeStreams[item.userUuid]?.add(item.volume);
     });
-    _determineActiveUser();
-    // }
   }
 
   void onLocalAudioVolumeIndicationWithVad(int volume, bool enableVad) {
@@ -5057,10 +5692,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     if (muteDetectStarted == true) {
       res = detectContinueSpeak(volume, enableVad);
       if (res) {
-        // 小窗模式下，不展示静音检测提示
-        if (!_isMinimized) {
-          showTurnOnMicphoneTipDialog();
-        }
+        _showTurnOnMicPhoneTipDialog();
         muteDetectStarted = false;
         return;
       }
@@ -5077,48 +5709,45 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     bool res = false;
     volumeInfo.add(volume);
     vadInfo.add(enableVad);
-    if (volumeInfo.length == 7) {
-      for (int i = 0; i < 7; i++) {
+    final wndSize =
+        activeSpeakerManager?.config.volumeIndicationWindowSize ?? 15;
+    if (volumeInfo.length == wndSize) {
+      for (int i = 0; i < wndSize; i++) {
         if ((volumeInfo[i] > 40) && vadInfo[i]) {
           count++;
         }
       }
-      if (count >= 4) {
-        res = true;
-      }
+      res = count >= wndSize / 2;
       resetMuteDetectInfo();
     }
     return res;
   }
 
   /// “打开扬声器”提醒弹窗
-  void showTurnOnMicphoneTipDialog() {
+  void _showTurnOnMicPhoneTipDialog() {
+    // 小窗模式下，不展示静音检测提示
     if (_isMinimized) return;
-    lastRemindTimestamp = DateTime.now();
     commonLogger.i(
       'showTurnOnMicphoneTipDialog',
     );
-    DialogUtils.showOneButtonCommonDialog(
+    Timer? cancelTimer;
+    final dismissCallback = DialogUtils.showOneButtonDialogWithDismissCallback(
       context,
-      NEMeetingUIKitLocalizations.of(context)!.micphoneNotWorksDialogTitle,
-      NEMeetingUIKitLocalizations.of(context)!.micphoneNotWorksDialogMessage,
+      NEMeetingUIKitLocalizations.of(context)!
+          .meetingMicphoneNotWorksDialogTitle,
+      NEMeetingUIKitLocalizations.of(context)!
+          .meetingMicphoneNotWorksDialogMessage,
       () {
-        openMicphoneTipDialogShowing = false;
-        commonLogger.i(
-          'dismissTurnOnMicphoneTipDialog',
-        );
+        commonLogger.i('dismissTurnOnMicPhoneTipDialog');
+        if (cancelTimer?.isActive == true) {
+          cancelTimer?.cancel();
+        }
         Navigator.of(context).pop();
       },
-      canBack: false,
     );
-    openMicphoneTipDialogShowing = true;
-    Timer(Duration(seconds: 3), () {
-      if (openMicphoneTipDialogShowing && mounted) {
-        commonLogger.i(
-          'dismissTurnOnMicphoneTipDialog',
-        );
-        Navigator.of(context).pop();
-      }
+    cancelTimer = Timer(Duration(seconds: 3), () {
+      commonLogger.i('dismissTurnOnMicPhoneTipDialog');
+      dismissCallback.call();
     });
   }
 
@@ -5129,13 +5758,23 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     if (userSetAudioProfile != null) {
       if (userSetAudioProfile.profile >= 0 &&
           userSetAudioProfile.scenario >= 0) {
-        roomContext.rtcController.setAudioProfile(
+        _setAudioProfile(
             userSetAudioProfile.profile, userSetAudioProfile.scenario);
       }
     }
     final enableAudioAINs =
         userSetAudioProfile?.enableAINS ?? settingsAudioAINs;
     roomContext.rtcController.enableAudioAINS(enableAudioAINs);
+  }
+
+  /// Android设备且允许音频设备切换时，调用NEMeetingPlugin里的接口
+  /// NEMeetingPlugin里会同步一些状态
+  Future<void> _setAudioProfile(int profile, int scenario) async {
+    if (Platform.isAndroid && await isAudioDeviceSwitchEnabled) {
+      NEMeetingPlugin().audioService.setAudioProfile(profile, scenario);
+    } else {
+      roomContext.rtcController.setAudioProfile(profile, scenario);
+    }
   }
 
   Future<void> setupAudioAndVideo() async {
@@ -5145,8 +5784,8 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     if (!arguments.initialAudioMute) {
       if (roomContext.isAllAudioMuted && !isSelfHostOrCoHost()) {
         /// 设置了全体静音，并且自己不是主持人时 提示主持人设置全体静音
-        showToast(
-            NEMeetingUIKitLocalizations.of(context)!.meetingHostMuteAllAudio);
+        showToast(NEMeetingUIKitLocalizations.of(context)!
+            .participantHostMuteAllAudio);
       } else if (!isInCall) {
         willOpenAudio = true;
       }
@@ -5155,8 +5794,8 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     if (!arguments.initialVideoMute) {
       if (roomContext.isAllVideoMuted && !isSelfHostOrCoHost()) {
         /// 设置了全体关闭视频，并且自己不是主持人时 提示主持人设置全体关闭视频
-        showToast(
-            NEMeetingUIKitLocalizations.of(context)!.meetingHostMuteAllVideo);
+        showToast(NEMeetingUIKitLocalizations.of(context)!
+            .participantHostMuteAllVideo);
       } else if (!isInCall) {
         willOpenVideo = true;
       }
@@ -5211,8 +5850,8 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
   Widget buildRoomUserVolumeIndicator(String userId,
       {double? size, double? opacity}) {
     final user = roomContext.getMember(userId);
-    if (user == null) {
-      return Container();
+    if (user == null || !user.isAudioConnected) {
+      return SizedBox.shrink();
     }
     if (!user.isAudioOn) {
       return Icon(
@@ -5271,6 +5910,14 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     });
   }
 
+  void _onCloudRecord() {
+    if (roomContext.isCloudRecording) {
+      stopCloudRecord();
+    } else {
+      startCloudRecord();
+    }
+  }
+
   Widget buildMeetingEndTip(height) {
     return Row(
       // mainAxisSize: MainAxisSize.min,
@@ -5296,7 +5943,7 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
               Container(
                   alignment: Alignment.center,
                   child: Text(
-                      '${NEMeetingUIKitLocalizations.of(context)!.endMeetingTip}$meetingEndTipMin${NEMeetingUIKitLocalizations.of(context)!.min}',
+                      '${NEMeetingUIKitLocalizations.of(context)!.meetingEndTip}$meetingEndTipMin${NEMeetingUIKitLocalizations.of(context)!.globalMin}',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           color: _UIColors.black,
@@ -5448,7 +6095,11 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
   void iOSSetupPIP(String roomUuid, {bool autoEnterPIP = false}) async {
     if (!Platform.isIOS) return;
     if (!arguments.enablePictureInPicture && !_isMinimized) return;
-    floating.setup(roomUuid, autoEnterPIP: autoEnterPIP);
+    floating.setup(
+        roomUuid,
+        NEMeetingUIKitLocalizations.of(context)!.movedToWaitingRoom,
+        NEMeetingUIKitLocalizations.of(context)!.meetingWasInterrupted,
+        autoEnterPIP: autoEnterPIP);
   }
 
   /// TODO 需要和[updatePIPAspectRatio]合并
@@ -5511,32 +6162,31 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     return await floating.disposePIP();
   }
 
-  void showToast(String message) {
-    showToastWithMini(message, _isMinimized);
-  }
-
-  Future<PiPStatus> updatePIPAspectRatio() async {
+  Future<PiPStatus> updatePIPAspectRatio(
+      {bool canPopToMeetingPage = false}) async {
     PiPStatus pipStatus = PiPStatus.disabled;
     if (Platform.isAndroid) {
       pipStatus = await floating.pipStatus;
     }
+    if (!mounted) return pipStatus;
     if (pipStatus == PiPStatus.enabled &&
         Platform.isAndroid &&
         arguments.backgroundWidget != null) {
-      SchedulerBinding.instance.scheduleFrameCallback((_) {
-        if (!mounted) return;
+      if (!_isMinimized) {
         setState(() {
           _isMinimized = true;
-          if (_morePopupMenuEntry != null) {
-            _morePopupMenuAnimation?.reverse();
-            commonLogger.i('_hideMorePopupMenu in if');
-          }
+        });
+      }
+      if (canPopToMeetingPage) {
+        SchedulerBinding.instance.scheduleFrameCallback((_) {
+          if (!mounted) return;
 
           /// 需要放置的此处而不是resumed，因为Android的退后监听的是onUserLeaveHint
+          /// 小窗模式下，需要处理隐藏弹窗逻辑，目前是回到inMeeting界面，waitingRoom界面没有最小化
           Navigator.popUntil(
-              context, ModalRoute.withName(MeetingPage.routeName));
+              context, ModalRoute.withName(_RouterName.inMeeting));
         });
-      });
+      }
     }
     if (getScreenShareUserId() != null) {
       var _ratio = _userAspectRatioMap[getScreenShareUserId()];
@@ -5594,6 +6244,21 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
     return pipStatus;
   }
 
+  void determineToShowMeetingCloudRecordDialog() {
+    /// 普通参会成员 入会或者重新入会的时候，如果会议开启了云录制，就弹出云录制提示框
+    if (_isFirstJoinOrRejoinMeeting &&
+        roomContext.isCloudRecording &&
+        !isSelfHostOrCoHost()) {
+      showCloudRecordingStateChangeDialog();
+    }
+
+    /// 如果从小窗模式回来，且小窗期间有云录制开启/停止，则弹出云录制提示框
+    else if (_needToShowCloudRecordChange) {
+      showCloudRecordingStateChangeDialog();
+    }
+    _isFirstJoinOrRejoinMeeting = false;
+  }
+
   void checkMeetingEnd(bool isFloating) {
     _isMinimized = isFloating;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -5606,9 +6271,9 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
           !isFloating) {
         onKicked();
       } else if (_isAlreadyMeetingDisposeInMinimized &&
-          (_currentExitCode == NEMeetingCode.closeByHost ||
-              _currentExitCode == NEMeetingCode.loginOnOtherDevice)) {
-        _onCancel(exitCode: _currentExitCode, reason: _currentReason);
+          _currentExitCode != null &&
+          !isFloating) {
+        _onCancel(exitCode: _currentExitCode!, reason: _currentReason);
       }
     });
   }
@@ -5618,27 +6283,423 @@ class MeetingBusinessUiState extends LifecycleBaseState<MeetingPage>
       builder: (context, isFloating) {
         _isMinimized = isFloating;
         return Scaffold(
-            resizeToAvoidBottomInset: !isFloating,
-            body: AnnotatedRegion<SystemUiOverlayStyle>(
-              value: SystemUiOverlayStyle.dark,
-              child: buildChild(context),
-            ));
+          resizeToAvoidBottomInset: !isFloating,
+          body: AnnotatedRegion<SystemUiOverlayStyle>(
+            value: isFloating
+                ? AppStyle.systemUiOverlayStyleDark
+                : AppStyle.systemUiOverlayStyleLight,
+            child: buildChild(context),
+          ),
+        );
       },
       backgroundWidget: arguments.backgroundWidget,
       onFloating: (isFloating) {
         checkMeetingEnd(isFloating);
+        SystemChrome.setPreferredOrientations(
+            !isFloating ? [] : [DeviceOrientation.portraitUp]);
         MeetingCore().notifyStatusChange(NEMeetingStatus(!isFloating
             ? NEMeetingEvent.inMeeting
             : NEMeetingEvent.inMeetingMinimized));
       },
     );
   }
+
+  Future<bool> checkNetworkAndToast() async {
+    final value = await Connectivity().checkConnectivity();
+    if (value == ConnectivityResult.none) {
+      showToast(NEMeetingUIKitLocalizations.of(context)!
+          .networkAbnormalityPleaseCheckYourNetwork);
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> startCloudRecord() async {
+    final localizations = NEMeetingUIKitLocalizations.of(context)!;
+    final result = await DialogUtils.showCommonDialog(
+        context,
+        localizations.cloudRecordingEnabledTitle,
+        arguments.options.showCloudRecordingUI
+            ? localizations.cloudRecordingEnabledMessage
+            : localizations.cloudRecordingEnabledMessageWithoutNotice, () {
+      Navigator.of(context).pop();
+    }, () {
+      Navigator.of(context).pop(true);
+    });
+    if (result == true) {
+      if (!await checkNetworkAndToast()) {
+        return;
+      }
+      if (cloudRecordStateListenable.value == _CloudRecordState.notStarted) {
+        cloudRecordStateListenable.value = _CloudRecordState.starting;
+      }
+      final startResult = await roomContext.startCloudRecord();
+      cloudRecordStateListenable.value = roomContext.isCloudRecording
+          ? _CloudRecordState.started
+          : _CloudRecordState.notStarted;
+      if (!startResult.isSuccess()) {
+        showToast(localizations.cloudRecordingStartFail);
+      }
+    }
+  }
+
+  Future<void> stopCloudRecord() async {
+    final result = await DialogUtils.showCommonDialog(
+        context,
+        NEMeetingUIKitLocalizations.of(context)!
+            .cloudRecordingWhetherEndedTitle,
+        NEMeetingUIKitLocalizations.of(context)!.cloudRecordingEndedMessage,
+        () {
+      Navigator.of(context).pop();
+    }, () {
+      Navigator.of(context).pop(true);
+    });
+    if (result == true) {
+      if (!await checkNetworkAndToast()) {
+        return;
+      }
+      final stopResult = await roomContext.stopCloudRecord();
+      if (!stopResult.isSuccess()) {
+        showToast(
+            NEMeetingUIKitLocalizations.of(context)!.cloudRecordingStopFail);
+      }
+    }
+  }
+
+  /// 显示云录制开启/停止后的弹窗提示，如果showCloudRecordingUI为false，则不展示
+  void showCloudRecordingStateChangeDialog() {
+    if (!arguments.options.showCloudRecordingUI) {
+      return;
+    }
+    if (_isMinimized) {
+      _needToShowCloudRecordChange = true;
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (roomContext.isCloudRecording) {
+        showCloudRecordingStartedDialog();
+      } else {
+        showCloudRecordingStoppedDialog();
+      }
+    });
+  }
+
+  void showCloudRecordingStartedDialog() {
+    commonLogger.i(
+      'showCloudRecordingStartedDialog',
+    );
+    _cloudRecordStoppedOverlayCallback?.call();
+    _cloudRecordStartedOverlayCallback = DialogUtils.showCustomContentOverlay(
+      context,
+      NEMeetingUIKitLocalizations.of(context)!.cloudRecordingTitle,
+      NEMeetingUIKitLocalizations.of(context)!.cloudRecordingMessage,
+      () async {
+        _cloudRecordStartedOverlayCallback?.call();
+        await _hideMorePopupMenu();
+        finishPage();
+      },
+      () => _cloudRecordStartedOverlayCallback?.call(),
+      cancelText: NEMeetingUIKitLocalizations.of(context)!.meetingLeave,
+      acceptText: NEMeetingUIKitLocalizations.of(context)!.globalGotIt,
+      contentWidget: Column(
+        children: [
+          Text(NEMeetingUIKitLocalizations.of(context)!.cloudRecordingMessage,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: _UIColors.color_333333,
+                  fontSize: 14,
+                  decoration: TextDecoration.none,
+                  fontWeight: FontWeight.w400)),
+          SizedBox(
+            height: 10,
+          ),
+          Text(NEMeetingUIKitLocalizations.of(context)!.cloudRecordingAgree,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: _UIColors.color_333333,
+                  fontSize: 14,
+                  decoration: TextDecoration.none,
+                  fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+
+  void showCloudRecordingStoppedDialog() {
+    commonLogger.i(
+      'showCloudRecordingStoppedDialog',
+    );
+
+    _cloudRecordStartedOverlayCallback?.call();
+    _cloudRecordStoppedOverlayCallback = DialogUtils.showOneTimerButtonOverlay(
+      context,
+      NEMeetingUIKitLocalizations.of(context)!.cloudRecordingEndedTitle,
+      NEMeetingUIKitLocalizations.of(context)!.cloudRecordingEndedAndGetUrl,
+      () => _cloudRecordStoppedOverlayCallback?.call(),
+      acceptText: NEMeetingUIKitLocalizations.of(context)!.globalIKnow,
+    );
+  }
+
+  final watermarkConfiguration =
+      ValueNotifier<TextWatermarkConfiguration?>(null);
+
+  Widget wrapWithWatermark({required Widget child, bool onForeground = true}) {
+    return ValueListenableBuilder<TextWatermarkConfiguration?>(
+      valueListenable: watermarkConfiguration,
+      builder: (context, configuration, child) {
+        return TextWaterMark(
+          child: child!,
+          onForeground: onForeground,
+          configuration: configuration,
+        );
+      },
+      child: child,
+    );
+  }
+
+  TextWatermarkConfiguration? textWatermarkConfiguration;
+  void _updateWatermarkInfo() {
+    if (!isSelfScreenSharing() && roomContext.watermark.isEnable()) {
+      final watermark = roomContext.watermark;
+      final paddingTop = MediaQuery.of(context).padding.top;
+      textWatermarkConfiguration ??= TextWatermarkConfiguration(
+        offset: Offset(0, paddingTop),
+        singleRow: watermark.isSingleRow(),
+        text: watermark.replaceFormatText(arguments.watermarkConfig),
+        maxWidth: watermark.isSingleRow() ? 184 : 138,
+      );
+      watermarkConfiguration.value = textWatermarkConfiguration;
+    } else {
+      watermarkConfiguration.value = null;
+    }
+  }
+
+  Timer? _updateWaitingRoomCountTimer;
+  void _updateWaitingRoomCountTip(_WaitingRoomCountTip tip) {
+    if (_waitingRoomCountTipListenable.value !=
+        _WaitingRoomCountTip.noLongerRemind) {
+      if (isSelfHostOrCoHost() || tip != _WaitingRoomCountTip.show) {
+        _waitingRoomCountTipListenable.value = tip;
+      }
+
+      if (tip == _WaitingRoomCountTip.show) {
+        _updateWaitingRoomCountTimer?.cancel();
+        _updateWaitingRoomCountTimer = Timer(Duration(seconds: 5), () {
+          _updateWaitingRoomCountTip(_WaitingRoomCountTip.hide);
+        });
+      }
+    }
+  }
+
+  /// 展示等候室等待人数提示
+  Widget _buildWaitingRoomCountTip() {
+    final localizations = NEMeetingUIKitLocalizations.of(context)!;
+    final greyTextStyle = const TextStyle(
+        color: _UIColors.color_666666,
+        fontSize: 12,
+        decoration: TextDecoration.none,
+        fontWeight: FontWeight.w400);
+    final contentTextStyle = const TextStyle(
+        color: _UIColors.black_333333,
+        fontSize: 14,
+        decoration: TextDecoration.none,
+        fontWeight: FontWeight.w500);
+    final boxDecoration = const BoxDecoration(
+      color: _UIColors.color_337eff,
+      borderRadius: BorderRadius.all(Radius.circular(4)),
+    );
+    return ValueListenableBuilder(
+        valueListenable: _waitingRoomCountTipListenable,
+        builder: (context, value, child) {
+          return ValueListenableBuilder<int>(
+              valueListenable:
+                  waitingRoomManager.waitingRoomMemberCountListenable,
+              builder: (context, count, child) {
+                return Visibility(
+                    visible: value == _WaitingRoomCountTip.show && count != 0,
+                    child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Container(
+                            padding: EdgeInsets.all(16),
+                            margin: EdgeInsets.only(
+                              left: 16,
+                              right: 16,
+                              bottom:
+                                  94 + MediaQuery.of(context).padding.bottom,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _UIColors.white,
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(8)),
+                            ),
+                            constraints: BoxConstraints(maxWidth: 344),
+                            child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(children: [
+                                    Container(
+                                        width: 24,
+                                        height: 24,
+                                        padding: EdgeInsets.all(4),
+                                        decoration: boxDecoration,
+                                        child: Icon(
+                                          NEMeetingIconFont
+                                              .icon_yx_tv_attendeex,
+                                          color: _UIColors.white,
+                                          size: 16,
+                                        )),
+                                    SizedBox(width: 8),
+                                    Text(
+                                        NEMeetingUIKitLocalizations.of(context)!
+                                            .participantAttendees,
+                                        style: greyTextStyle),
+                                    Spacer(),
+                                    Container(
+                                        height: 24,
+                                        alignment: Alignment.topRight,
+                                        child: GestureDetector(
+                                            key: MeetingUIValueKeys
+                                                .waitingRoomCountTipClose,
+                                            onTap: () =>
+                                                _updateWaitingRoomCountTip(
+                                                    _WaitingRoomCountTip.hide),
+                                            child: Icon(
+                                              NEMeetingIconFont
+                                                  .icon_yx_tv_duankaix,
+                                              color: _UIColors.color_666666,
+                                              size: 14,
+                                            )))
+                                  ]),
+                                  SizedBox(height: 6),
+                                  RichText(
+                                      textAlign: TextAlign.start,
+                                      text: TextSpan(children: <TextSpan>[
+                                        TextSpan(
+                                            text: localizations
+                                                .waitingRoomCount(count)
+                                                .split('$count')
+                                                .first,
+                                            style: contentTextStyle),
+                                        TextSpan(
+                                          text: ' $count ',
+                                          style: TextStyle(
+                                              color: _UIColors.color_337eff,
+                                              fontSize: 14,
+                                              decoration: TextDecoration.none,
+                                              fontWeight: FontWeight.w500),
+                                        ),
+                                        TextSpan(
+                                            text: localizations
+                                                .waitingRoomCount('$count')
+                                                .split('$count')
+                                                .last,
+                                            style: contentTextStyle)
+                                      ])),
+                                  SizedBox(height: 6),
+                                  Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        GestureDetector(
+                                          child: Text(
+                                            localizations.globalNoLongerRemind,
+                                            style: greyTextStyle,
+                                          ),
+                                          onTap: () =>
+                                              _updateWaitingRoomCountTip(
+                                                  _WaitingRoomCountTip
+                                                      .noLongerRemind),
+                                        ),
+                                        SizedBox(width: 16),
+                                        GestureDetector(
+                                          child: Container(
+                                              decoration: boxDecoration,
+                                              padding: EdgeInsets.symmetric(
+                                                  vertical: 4, horizontal: 12),
+                                              child: Text(
+                                                localizations.globalViewMessage,
+                                                style: TextStyle(
+                                                    color: _UIColors.white,
+                                                    fontSize: 12,
+                                                    decoration:
+                                                        TextDecoration.none,
+                                                    fontWeight:
+                                                        FontWeight.w400),
+                                              )),
+                                          onTap: () {
+                                            _updateWaitingRoomCountTip(
+                                                _WaitingRoomCountTip.hide);
+                                            _onMember(
+                                                pageType: _MembersPageType
+                                                    .waitingRoom);
+                                          },
+                                        )
+                                      ])
+                                ]))));
+              });
+        });
+  }
+
+  // final pageViewScrolling = ValueNotifier(false);
+  // 滑动时是否展示视频，ios 默认展示视频预览，android 默认不展示
+  // Android 在滑动时会出现闪屏：https://github.com/flutter/flutter/issues/144532
+  static late final enableVideoPreviewOnScrolling = Platform.isIOS;
+  // 允许打开视频预览的页面下标
+  final enableVideoPreviewPageIndex = ValueNotifier(0);
+
+  bool enableVideoPreviewForUser(NERoomMember user, int page) {
+    final enableVideoPreview = Platform.isIOS // ios 默认开启
+        ||
+        enableVideoPreviewPageIndex.value == page // 用户属于当前页
+        ||
+        (user.uuid == roomContext.localMember.uuid &&
+            smallUid == user.uuid); // 本地小画面
+    debugPrint(
+        'enableVideoPreviewPageIndex: ${user.name}, $page, $enableVideoPreview');
+    return enableVideoPreview;
+  }
+
+  /// 当 PageView 左右滑动时，超出滑动页面 2 / 3 时，开启下一页的视频预览
+  bool handlePageViewScrollNotification(ScrollNotification notification) {
+    if (Platform.isAndroid && notification.depth == 0) {
+      if (notification is ScrollStartNotification ||
+          notification is ScrollEndNotification) {
+        enableVideoPreviewPageIndex.value = pageViewCurrentIndex.value;
+      } else if (notification
+          case ScrollUpdateNotification(
+            metrics: PageMetrics(
+              :var pixels,
+              :var viewportDimension,
+            )
+          )) {
+        final oldIndex = enableVideoPreviewPageIndex.value;
+        final newIndex = pageViewCurrentIndex.value;
+        if (oldIndex != newIndex) {
+          final moveRight = newIndex > oldIndex;
+          final pixel = _galleryModePageController!.position.pixels;
+          const ratio = 2.0 / 3;
+          final nextPage60Extent = moveRight
+              ? (oldIndex + ratio) * viewportDimension
+              : (oldIndex - ratio) * viewportDimension;
+          print(
+              'ScrollUpdateNotification: $viewportDimension, $moveRight, $pixels, $nextPage60Extent');
+          if (moveRight && pixel > nextPage60Extent) {
+            enableVideoPreviewPageIndex.value = newIndex;
+          } else if (!moveRight && pixel < nextPage60Extent) {
+            enableVideoPreviewPageIndex.value = newIndex;
+          }
+        }
+      }
+    }
+    return false;
+  }
 }
 
-extension ToastExtension on State {
-  void showToastWithMini(String message, bool mini) {
-    if (mounted && !mini) {
-      ToastUtils.showToast(context, message);
+extension MeetingToastExtension on MeetingUIStateScope {
+  void showToast(String message, {bool isError = false}) {
+    if (mounted && currentMeetingUIState?.isMinimized != true) {
+      ToastUtils.showToast(context, message, isError: isError);
     }
   }
 }
@@ -5666,6 +6727,12 @@ enum _NetworkStatus {
   normal,
   poor,
   unknown,
+}
+
+enum _CloudRecordState {
+  notStarted,
+  starting,
+  started,
 }
 
 bool _isScreenShareSupported() {
@@ -5722,4 +6789,15 @@ extension _NERoomEndReasonStringify on NERoomEndReason {
         return "unknown";
     }
   }
+}
+
+enum _WaitingRoomCountTip {
+  show,
+  hide,
+  noLongerRemind,
+}
+
+enum _GridLayoutMode {
+  audio,
+  video,
 }

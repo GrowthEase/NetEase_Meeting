@@ -167,13 +167,15 @@ class NESingleStateMenuItem extends NEMeetingMenuItem {
 class NECheckableMenuItem extends NEMeetingMenuItem {
   final NEMenuItemInfo uncheckStateItem;
   final NEMenuItemInfo checkedStateItem;
+  final bool checked;
 
-  const NECheckableMenuItem(
-      {required int itemId,
-      required NEMenuVisibility visibility,
-      required this.uncheckStateItem,
-      required this.checkedStateItem})
-      : super(itemId: itemId, visibility: visibility);
+  const NECheckableMenuItem({
+    required int itemId,
+    required NEMenuVisibility visibility,
+    required this.uncheckStateItem,
+    required this.checkedStateItem,
+    this.checked = false,
+  }) : super(itemId: itemId, visibility: visibility);
 
   @override
   bool get isValid =>
@@ -182,7 +184,7 @@ class NECheckableMenuItem extends NEMeetingMenuItem {
 
   @override
   String toString() {
-    return 'NECheckableMenuItem{uncheckStateItem: $uncheckStateItem, checkedStateItem: $checkedStateItem}';
+    return 'NECheckableMenuItem{uncheckStateItem: $uncheckStateItem, checkedStateItem: $checkedStateItem, checked: $checked}';
   }
 }
 

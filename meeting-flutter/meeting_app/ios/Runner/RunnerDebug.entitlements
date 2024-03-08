@@ -8,7 +8,7 @@
 	</array>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.netease.yunxin.meeting</string>
+		<string>group.com.netease.yunxin.meeting.debug</string>
 	</array>
 </dict>
 </plist>

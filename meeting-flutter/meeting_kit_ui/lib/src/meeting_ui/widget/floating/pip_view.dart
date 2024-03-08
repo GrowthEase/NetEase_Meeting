@@ -61,11 +61,11 @@ class PIPViewState extends State<PIPView> with TickerProviderStateMixin {
   void updatePipViewAspectRatio({double? ratio}) {
     // dismissKeyboard(context);
     // WidgetsBinding.instance.addPostFrameCallback((_) {
-    setState(() {
-      if (ratio != null) {
+    if (ratio != null && ratio != _ratio) {
+      setState(() {
         _ratio = ratio;
-      }
-    });
+      });
+    }
   }
 
   void stopFloating() {

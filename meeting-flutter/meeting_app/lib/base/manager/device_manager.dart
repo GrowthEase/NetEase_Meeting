@@ -5,10 +5,9 @@
 import 'dart:io';
 
 import 'package:nemeeting/constants.dart';
+import 'package:netease_meeting_ui/meeting_ui.dart';
 
 import '../util/global_preferences.dart';
-import '../util/text_util.dart';
-import '../util/uuid.dart';
 import '../client_type.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:netease_common/netease_common.dart';
@@ -33,13 +32,7 @@ class DeviceManager {
   DeviceManager._internal();
 
   Future<void> init() async {
-    String? deviceId = await GlobalPreferences().deviceId;
-    if (TextUtil.isEmpty(deviceId)) {
-      _deviceId = UUID().genUUID();
-      GlobalPreferences().setDeviceId(_deviceId);
-    } else {
-      _deviceId = deviceId!;
-    }
+    _deviceId = await NEMeetingKit.instance.deviceId;
 
     if (Platform.isAndroid) {
       _platform = 'Android';

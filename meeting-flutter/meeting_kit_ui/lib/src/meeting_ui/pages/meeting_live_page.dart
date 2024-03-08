@@ -140,7 +140,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
   AppBar buildAppBar(BuildContext context) {
     return AppBar(
         title: Text(
-          NEMeetingUIKitLocalizations.of(context)!.meetingLive,
+          NEMeetingUIKitLocalizations.of(context)!.liveMeeting,
           style: TextStyle(color: _UIColors.color_222222, fontSize: 17),
         ),
         centerTitle: true,
@@ -152,7 +152,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
             alignment: Alignment.center,
             key: MeetingUIValueKeys.chatRoomClose,
             child: Text(
-              NEMeetingUIKitLocalizations.of(context)!.close,
+              NEMeetingUIKitLocalizations.of(context)!.globalClose,
               style: TextStyle(color: _UIColors.blue_337eff, fontSize: 16),
               textAlign: TextAlign.center,
             ),
@@ -261,7 +261,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
         },
         decoration: InputDecoration(
             hintText:
-                '${NEMeetingUIKitLocalizations.of(context)!.meetingLiveTitle}',
+                '${NEMeetingUIKitLocalizations.of(context)!.liveMeetingTitle}',
             hintStyle: TextStyle(fontSize: 16, color: _UIColors.color_999999),
             border: InputBorder.none,
             suffixIcon: _focusNode.hasFocus &&
@@ -281,7 +281,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
   Widget buildLiveUrl() {
     return buildCopyItem(
         MeetingUIValueKeys.copyLiveUrl,
-        NEMeetingUIKitLocalizations.of(context)!.meetingLiveUrl,
+        NEMeetingUIKitLocalizations.of(context)!.liveMeetingUrl,
         _arguments.liveAddress ?? '');
   }
 
@@ -310,12 +310,12 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
                   overflow: TextOverflow.fade)),
           GestureDetector(
             key: key,
-            child: Text(NEMeetingUIKitLocalizations.of(context)!.copy,
+            child: Text(NEMeetingUIKitLocalizations.of(context)!.globalCopy,
                 style: TextStyle(fontSize: 14, color: _UIColors.blue_337eff)),
             onTap: () {
               Clipboard.setData(ClipboardData(text: itemDetail));
               ToastUtils.showToast(context,
-                  NEMeetingUIKitLocalizations.of(context)!.copySuccess);
+                  NEMeetingUIKitLocalizations.of(context)!.globalCopySuccess);
             },
           ),
         ],
@@ -401,7 +401,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
         },
         decoration: InputDecoration(
             hintText:
-                '${NEMeetingUIKitLocalizations.of(context)!.pleaseInputLivePasswordHint}',
+                '${NEMeetingUIKitLocalizations.of(context)!.liveEnterLiveSixDigitPassword}',
             hintStyle: TextStyle(fontSize: 14, color: _UIColors.color_999999),
             border: InputBorder.none,
             suffixIcon: TextUtils.isEmpty(_livePasswordController.text)
@@ -495,7 +495,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
                   ToastUtils.showToast(
                       context,
                       NEMeetingUIKitLocalizations.of(context)!
-                          .disableLiveAuthLevel);
+                          .liveDisableAuthLevel);
                 }
               },
               activeColor: _UIColors.blue_337eff)
@@ -560,7 +560,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
     if (_arguments.live.state == NERoomLiveState.init) {
       return Text(
           liveUids.isNotEmpty
-              ? '${NEMeetingUIKitLocalizations.of(context)!.livePickerCount}${liveUids.length}${NEMeetingUIKitLocalizations.of(context)!.livePickerCountPrefix}'
+              ? '${NEMeetingUIKitLocalizations.of(context)!.livePickerCount(liveUids.length)}}'
               : '',
           style: TextStyle(fontSize: 14, color: _UIColors.color_999999));
     } else if (viewChange && _arguments.live.state != NERoomLiveState.ended) {
@@ -864,13 +864,13 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
       if (livePwdSwitch == true) {
         if (TextUtils.isEmpty(livePassword)) {
           ToastUtils.showToast(context,
-              NEMeetingUIKitLocalizations.of(context)!.pleaseInputLivePassword);
+              NEMeetingUIKitLocalizations.of(context)!.liveEnterLivePassword);
           return;
         } else if (livePassword!.length != 6) {
           ToastUtils.showToast(
               context,
               NEMeetingUIKitLocalizations.of(context)!
-                  .pleaseInputLivePasswordHint);
+                  .liveEnterLiveSixDigitPassword);
           return;
         }
       }

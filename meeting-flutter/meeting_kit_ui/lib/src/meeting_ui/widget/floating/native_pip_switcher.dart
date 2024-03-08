@@ -34,7 +34,7 @@ class PiPSwitcher extends StatefulWidget {
 
 class _PipAwareState extends State<PiPSwitcher> {
   late final NEFloatingService _floating =
-      widget.floating ?? NEMeetingPlugin().getFloatingServiceService();
+      widget.floating ?? NEMeetingPlugin().getFloatingService();
 
   @override
   void dispose() {

@@ -8,89 +8,115 @@ typedef TextToastBuilder = Widget Function(
     BuildContext context, String text, Key? key);
 
 class ToastUtils {
-  static var style = const TextStyle(
-    color: Colors.white,
-    fontSize: 14.0,
-    decoration: TextDecoration.none,
-    fontWeight: FontWeight.w400,
-  );
-
-  static var decoration = const ShapeDecoration(
-    color: Color(0xBF1E1E1E),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.all(Radius.circular(4)),
-    ),
-  );
-
-  static var edgeInsets =
-      const EdgeInsets.symmetric(vertical: 8.0, horizontal: 20.0);
-
-  static Widget _textToastBuilder(BuildContext context, String text, Key? key) {
-    return Center(
-      child: Container(
-        margin: EdgeInsets.all(20.0),
-        padding: edgeInsets,
-        decoration: decoration,
-        child: Text(
-          text,
-          key: key,
-          style: style,
-        ),
-      ),
-    );
-  }
-
-  static var defaultTextToastBuilder = _textToastBuilder;
-
-  static final _requests = ListQueue<_ToastRequest>();
-  static bool _scheduled = false;
+  static final _root = ToastManager();
 
   static void showToast(
     BuildContext context,
     String? text, {
-    Duration duration = const Duration(seconds: 2),
-    bool dismissOthers = false,
-    bool atFrontOfQueue = false,
+    Duration? duration,
+    bool? dismissOthers,
+    bool? atFrontOfQueue,
     Key? key,
+    bool? isError,
+    VoidCallback? onDismiss,
   }) {
-    if (text == null) return;
-
-    _showToastInner(
+    if (text == null || text.isEmpty) return;
+    _root.showText(
       context,
       text,
-      duration,
-      dismissOthers,
-      atFrontOfQueue,
-      key,
+      duration: duration,
+      dismissOthers: dismissOthers,
+      atFrontOfQueue: atFrontOfQueue,
+      textKey: key,
+      isError: isError,
+      onDismiss: onDismiss,
     );
   }
 
   static void showToast2(
     BuildContext context,
     WidgetBuilder builder, {
-    Duration duration = const Duration(seconds: 2),
-    bool dismissOthers = false,
-    bool atFrontOfQueue = false,
+    Duration? duration,
+    bool? dismissOthers = false,
+    bool? atFrontOfQueue = false,
+    VoidCallback? onDismiss,
   }) {
-    _showToastInner(
-        context, builder, duration, dismissOthers, atFrontOfQueue, null);
+    _root.showToast(
+      context,
+      builder: builder,
+      duration: duration,
+      dismissOthers: dismissOthers,
+      atFrontOfQueue: atFrontOfQueue,
+      onDismiss: onDismiss,
+    );
+  }
+}
+
+class ToastManager {
+  final bool rootOverlay;
+  final _requests = ListQueue<_ToastRequest>();
+  final _textSet = <String>{};
+  bool _scheduled = false;
+
+  ToastManager({this.rootOverlay = true});
+
+  void dispose() {
+    _requests.clear();
   }
 
-  static void _showToastInner(
+  void showText(
     BuildContext context,
-    Object arg,
-    Duration duration,
-    bool dismissOthers,
-    bool atFrontOfQueue,
-    Key? key,
-  ) {
+    String text, {
+    Key? textKey,
+    Duration? duration,
+    bool? dismissOthers,
+    bool? atFrontOfQueue,
+    bool? isError,
+    VoidCallback? onDismiss,
+  }) {
+    if (_textSet.contains(text)) {
+      return;
+    }
+    _textSet.add(text);
+    showToast(
+      context,
+      builder: (context) {
+        return textToastBuilder(text, textKey: textKey, isError: isError);
+      },
+      duration: duration,
+      dismissOthers: dismissOthers,
+      atFrontOfQueue: atFrontOfQueue,
+      onDismiss: () {
+        _textSet.remove(text);
+        onDismiss?.call();
+      },
+    );
+  }
+
+  void showToast(
+    BuildContext context, {
+    required WidgetBuilder builder,
+    Duration? duration,
+    bool? dismissOthers,
+    bool? atFrontOfQueue,
+    VoidCallback? onDismiss,
+  }) {
+    duration ??= const Duration(seconds: 2);
+    dismissOthers ??= false;
+    atFrontOfQueue ??= false;
+
     if (dismissOthers) {
+      _requests.forEach((element) {
+        element.onDismiss?.call();
+      });
       _requests.clear();
     }
+    final request =
+        _ToastRequest(context, builder, duration, onDismiss: onDismiss);
     if (atFrontOfQueue) {
-      _requests.addFirst(_ToastRequest(key, context, arg, duration));
+      _requests.addFirst(request);
     } else {
-      _requests.addLast(_ToastRequest(key, context, arg, duration));
+      _requests.addLast(request);
     }
 
     if (!_scheduled) {
@@ -102,54 +128,80 @@ class ToastUtils {
     }
   }
 
-  static void _showNextToast() {
+  void _showNextToast() {
     if (_requests.isEmpty) {
       _scheduled = false;
       return;
     }
     final request = _requests.removeFirst();
-    final key = request.key;
     final context = request.context;
-    final arg = request.arg;
+    final builder = request.builder;
     final duration = request.duration;
-    _showToast(key, context, arg, duration);
+    final onDismiss = request.onDismiss;
+    _showToastImpl(context, builder, duration, onDismiss);
   }
 
-  static void _showToast(
-      Key? key, BuildContext context, Object arg, Duration duration) async {
+  void _showToastImpl(BuildContext context, WidgetBuilder builder,
+      Duration duration, VoidCallback? onDismiss) async {
     OverlayState? overlayState;
     try {
-      overlayState = Overlay.of(context, rootOverlay: true);
+      overlayState = Overlay.of(context, rootOverlay: rootOverlay);
     } catch (e) {
       overlayState = null;
     }
+    assert(overlayState != null, 'OverlayState is null');
     if (overlayState != null && overlayState.mounted) {
-      final entry = OverlayEntry(builder: (context) {
-        if (arg is WidgetBuilder) {
-          return arg(context);
-        } else {
-          return defaultTextToastBuilder(context, arg.toString(), key);
-        }
-      });
+      final entry = OverlayEntry(builder: builder);
       overlayState.insert(entry);
       await Future.delayed(duration);
       entry.remove();
+      onDismiss?.call();
     }
     SchedulerBinding.instance.addPostFrameCallback((_) {
       _showNextToast();
     });
     SchedulerBinding.instance.ensureVisualUpdate();
   }
+
+  static Widget textToastBuilder(
+    String text, {
+    Key? textKey,
+    bool? isError,
+  }) {
+    isError ??= false;
+    return Center(
+      child: Container(
+        margin: EdgeInsets.all(20.0),
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 20.0),
+        decoration: ShapeDecoration(
+          color: isError ? Colors.white : Color(0xBF1E1E1E),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(4)),
+          ),
+        ),
+        child: Text(
+          text,
+          key: textKey,
+          style: TextStyle(
+            color: isError ? Color(0xffFF4742) : Colors.white,
+            fontSize: 14.0,
+            decoration: TextDecoration.none,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _ToastRequest {
-  Key? key;
+  final BuildContext context;
 
-  BuildContext context;
-
-  final Object arg;
+  final WidgetBuilder builder;
 
   final Duration duration;
 
-  _ToastRequest(this.key, this.context, this.arg, this.duration);
+  final VoidCallback? onDismiss;
+
+  _ToastRequest(this.context, this.builder, this.duration, {this.onDismiss});
 }

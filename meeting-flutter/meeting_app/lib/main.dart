@@ -4,39 +4,38 @@
 
 import 'dart:async';
 import 'dart:io';
+
+import 'package:archive/archive_io.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nemeeting/error_handler/error_handler.dart';
-import 'package:nemeeting/uikit/values/strings.dart';
+import 'package:nemeeting/uikit/values/colors.dart';
+import 'package:netease_common/netease_common.dart';
+import 'package:netease_meeting_ui/meeting_ui.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:nemeeting/arguments/webview_arguments.dart';
-import 'package:nemeeting/setting/package_setting.dart';
-import 'package:nemeeting/setting/personal_setting.dart';
+import 'package:yunxin_alog/yunxin_alog.dart';
+
+import '../service/auth/auth_manager.dart';
 import '../service/auth/auth_state.dart';
-import '../service/model/account_app_info.dart';
 import '../uikit/utils/nav_utils.dart';
 import '../uikit/utils/router_name.dart';
-import '../service/auth/auth_manager.dart';
-import 'package:yunxin_alog/yunxin_alog.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
-import 'package:nemeeting/webview/webview_page.dart';
-
 import 'application.dart';
-import 'arguments/entrance_arguments.dart';
+import 'language/localizations.dart';
+import 'language/meeting_localization/meeting_app_localizations.dart';
 import 'utils/nav_register.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:netease_common/netease_common.dart';
-import 'package:archive/archive_io.dart';
 
 void main() {
   runZonedGuarded<Future<void>>(() async {
+    debugPrint('AppStartUp: main');
     WidgetsFlutterBinding.ensureInitialized();
-    AppStyle.setStatusBarTextBlackColor();
+    AppStyle.setSystemUIOverlayStyleDark();
     ErrorHandler.instance().install();
     await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     await Application.ensureInitialized();
-    runApp(MeetingApp());
+    runApp(MeetingAppLocalizationsScope(child: MeetingApp()));
     copyBeautyRes();
   }, (Object error, StackTrace stack) {
     Alog.e(
@@ -77,16 +76,27 @@ Future<void> copyBeautyRes() async {
   }
 }
 
-class MeetingApp extends StatelessWidget {
-  MeetingApp() {
+class MeetingApp extends StatefulWidget {
+  MeetingApp();
+
+  @override
+  State<MeetingApp> createState() => _MeetingAppState();
+}
+
+class _MeetingAppState extends State<MeetingApp> {
+  @override
+  void initState() {
+    super.initState();
+    // 延迟首帧，待自动登录成功/失败后才展示
+    WidgetsBinding.instance.deferFirstFrame();
     AuthState().authState().listen((event) {
       Alog.d(tag: 'AuthState', content: 'authState:$event');
       if (event.state == AuthState.tokenIllegal) {
-        ToastUtils.showToast(
-            NavUtils.navigatorKey.currentState!.context, event.errorTip);
+        ToastUtils.showToast(context, event.errorTip);
         NavUtils.navigatorKey.currentState!.pushNamedAndRemoveUntil(
-            'entrance', ModalRoute.withName('/'),
-            arguments: EntranceArguments(event.state, event.errorTip));
+          'entrance',
+          ModalRoute.withName('/'),
+        );
       }
     });
   }
@@ -94,46 +104,38 @@ class MeetingApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Application.context = context;
-    return MaterialApp(
-        builder: BotToastInit(),
-        color: Colors.white,
-        title: Strings.appName,
-        theme: ThemeData(
-            brightness: Brightness.light,
-            appBarTheme: AppBarTheme(
-              systemOverlayStyle: SystemUiOverlayStyle.dark,
-            )),
-        themeMode: ThemeMode.light,
-        navigatorKey: NavUtils.navigatorKey,
-        home: WelcomePage(),
-        navigatorObservers: [BotToastNavigatorObserver()],
-        // 注册路由表
-        routes: RoutesRegister.routes,
-        onGenerateRoute: (settings) {
-          return MaterialPageRoute(
-              builder: (context) {
-                switch (settings.name) {
-                  case RouterName.webview:
-                    return WebViewPage(settings.arguments as WebViewArguments);
-                  case RouterName.packageVersionSetting:
-                    return PackageVersionSetting(settings.arguments as Edition);
-                  case RouterName.personalSetting:
-                    return PersonalSetting(settings.arguments as String);
-                  default:
-                    return Container();
-                }
-              },
-              settings: settings);
-        },
-        localizationsDelegates: [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: [
-          const Locale('en', 'US'), // 美国英语
-          const Locale('zh', 'CN'),
-        ]);
+    final meetingAppLocalizations = MeetingAppLocalizations.of(context)!;
+    final app = MaterialApp(
+      builder: BotToastInit(),
+      color: Colors.white,
+      title: meetingAppLocalizations.globalAppName,
+      theme: ThemeData(
+          useMaterial3: false,
+          brightness: Brightness.light,
+          appBarTheme: AppBarTheme(
+            systemOverlayStyle: AppStyle.systemUiOverlayStyleDark,
+          )),
+      themeMode: ThemeMode.light,
+      navigatorKey: NavUtils.navigatorKey,
+      home: WelcomePage(),
+      navigatorObservers: [BotToastNavigatorObserver()],
+      // 注册路由表
+      routes: RoutesRegister.routes,
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale('en', 'US'), // 美国英语
+        const Locale('zh', 'CN'),
+        const Locale('ja', 'JP'),
+      ],
+    );
+    return ScreenUtilInit(
+      designSize: const Size(375, 812),
+      child: app,
+    );
   }
 }
 
@@ -146,25 +148,46 @@ class _WelcomePageState extends BaseState<WelcomePage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      loadLoginInfo();
-    });
+    loadLoginInfo();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(color: Colors.white);
+    return Container(
+      color: Colors.white,
+      child: Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation(AppColors.color_337eff),
+          ),
+        ),
+      ),
+    );
   }
 
   void loadLoginInfo() {
-    AuthManager().autoLogin().then((value) {
-      if (value == true) {
-        // 自动登录成功
-        NavUtils.pushNamedAndRemoveUntil(context, RouterName.homePage);
-      } else {
-        // 自动登录失败
-        NavUtils.pushNamedAndRemoveUntil(context, RouterName.entrance);
-      }
-    });
+    debugPrint("AppStartUp: loadLoginInfo start");
+    Connectivity()
+        .checkConnectivity()
+        .then((value) {
+          return value != ConnectivityResult.none;
+        })
+        .then((connected) =>
+            connected ? AuthManager().autoLogin() : Future.value(false))
+        .then((success) {
+          NavUtils.pushNamedAndRemoveUntil(
+              context, success ? RouterName.homePage : RouterName.entrance);
+        })
+        .timeout(Duration(seconds: 5))
+        .catchError((error, stack) {
+          Alog.d(tag: 'WelcomePage', content: 'auto login error: $error');
+          return null;
+        })
+        .whenComplete(() {
+          debugPrint("AppStartUp: loadLoginInfo end");
+          WidgetsBinding.instance.allowFirstFrame();
+        });
   }
 }

@@ -5,7 +5,7 @@
 part of meeting_service;
 
 class ServersConfig {
-  static final String _serverUrl = 'https://roomkit.netease.im/';
+  static final String _serverUrl = 'https://meeting.yunxinroom.com/';
 
   int get connectTimeout => 30000;
 
@@ -39,4 +39,6 @@ class ServersConfig {
         : _serverUrl;
     return baseUrl!;
   }
+
+  String get defaultServerUrl => _serverUrl;
 }

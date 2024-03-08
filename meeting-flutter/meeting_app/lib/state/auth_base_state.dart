@@ -6,19 +6,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/utils/privacy_util.dart';
 import '../uikit/state/meeting_base_state.dart';
-import 'package:nemeeting/arguments/auth_arguments.dart';
 import '../uikit/values/colors.dart';
 
 abstract class AuthBaseState<T extends StatefulWidget>
     extends MeetingBaseState<T> {
-  late AuthArguments authModel;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    authModel = ModalRoute.of(context)?.settings.arguments as AuthArguments;
-  }
-
   @override
   Widget buildBody() {
     return GestureDetector(
@@ -48,7 +39,6 @@ abstract class AuthBaseState<T extends StatefulWidget>
                 ),
                 getSubject(),
                 Spacer(),
-                if (getShowPrivate()) PrivacyUtil.protocolTips(context),
               ]),
         ));
   }
@@ -61,9 +51,4 @@ abstract class AuthBaseState<T extends StatefulWidget>
   String getSubTitle();
 
   Widget getSubject();
-
-  /// 默认子类页面隐藏私有协议，需要显示的设置
-  bool getShowPrivate() {
-    return false;
-  }
 }

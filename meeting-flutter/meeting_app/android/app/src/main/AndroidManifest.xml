@@ -43,6 +43,7 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:requestLegacyExternalStorage="true"
         android:supportsPictureInPicture="true"
+        android:localeConfig="@xml/locales_config"
         android:label="@string/app_name">
 
         <provider
@@ -77,6 +78,9 @@
                 <data
                     android:host="meeting.netease.im"
                     android:scheme="nemeeting" />
+                <data
+                        android:host="meeting.yunxinroom.com"
+                        android:scheme="nemeeting" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

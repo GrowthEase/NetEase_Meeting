@@ -70,6 +70,11 @@ abstract class NESettingsService extends ValueNotifier<Map> {
   Future<bool> isMeetingLiveEnabled();
 
   ///
+  /// 查询应用是否支持等候室
+  ///
+  Future<bool> isWaitingRoomEnabled();
+
+  ///
   /// 更新历史会议列表
   ///
   void updateHistoryMeetingItem(NEHistoryMeetingItem? item);
@@ -113,6 +118,7 @@ abstract class NESettingsService extends ValueNotifier<Map> {
 
   ///
   /// 获取内置虚拟背景列表
+  /// 默认内置虚拟背景 @link[virtualListMax]
   ///
   Future<List<NEMeetingVirtualBackground>> getBuiltinVirtualBackgrounds();
 
@@ -135,6 +141,16 @@ abstract class NESettingsService extends ValueNotifier<Map> {
   /// 获取外部虚拟背景列表
   ///
   Future<List<String>> getExternalVirtualBackgrounds();
+
+  ///
+  /// 设置是否允许音频设备切换
+  ///
+  void enableAudioDeviceSwitch(bool enable);
+
+  ///
+  /// 获取是否允许音频设备切换
+  ///
+  Future<bool> isAudioDeviceSwitchEnabled();
 }
 
 class NEMeetingVirtualBackground {

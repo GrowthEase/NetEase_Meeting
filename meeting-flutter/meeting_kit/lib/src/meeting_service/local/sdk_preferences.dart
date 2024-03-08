@@ -12,19 +12,10 @@ class LoginInfo {
 }
 
 class SDKPreferences {
-  static const String _keyDeviceId = 'meeting_sdk_deviceId';
   static const String _keyLoginInfo = 'meeting_sdk_login_info';
   static const String _keyAccountId = 'account';
   static const String _keyAccountToken = 'token';
   static const String _keyAppKey = 'appkey';
-
-  static Future<void> setDeviceId(String deviceId) async {
-    await _setString(_keyDeviceId, deviceId);
-  }
-
-  static Future<String?> getDeviceId() {
-    return _getString(_keyDeviceId, '');
-  }
 
   static Future<void> setLoginInfo(LoginInfo? loginInfo) async {
     if (loginInfo == null) {

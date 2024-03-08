@@ -39,9 +39,10 @@ abstract class HttpApi<T> extends BaseApi {
             final cost = map['cost'] as String?;
             final costMillis =
                 cost == null ? 0 : int.tryParse(cost.removeSuffix('ms')) ?? 0;
+            final NEResult<T> ret;
             if (code == MeetingErrorCode.success) {
               var result = map['data'];
-              return NEResult(
+              ret = NEResult(
                 code: code,
                 msg: msg,
                 data: result == null ? null : parseResult(result) as T?,
@@ -49,10 +50,11 @@ abstract class HttpApi<T> extends BaseApi {
                 cost: costMillis,
               );
             } else {
-              RoomErrorRepository.httpApiError(code);
-              return NEResult(
+              ret = NEResult(
                   code: code, msg: msg, requestId: requestId, cost: costMillis);
             }
+            HttpErrorRepository().reportResult(ret);
+            return ret;
           } catch (e, s) {
             Alog.e(
                 tag: _tag,
@@ -68,7 +70,6 @@ abstract class HttpApi<T> extends BaseApi {
             moduleName: _moduleName,
             content: 'HttpApi: path=$path code${response.statusCode}');
         final resultCode = response.statusCode ?? MeetingErrorCode.failed;
-        RoomErrorRepository.httpApiError(resultCode);
         return NEResult(code: resultCode, msg: response.statusMessage);
       }
     }

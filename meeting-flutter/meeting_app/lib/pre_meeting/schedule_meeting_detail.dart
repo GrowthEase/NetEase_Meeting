@@ -6,8 +6,8 @@ import 'package:nemeeting/base/util/text_util.dart';
 import 'package:nemeeting/base/util/timeutil.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:nemeeting/routes/home_page.dart';
+import 'package:nemeeting/widget/switch_item.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 import 'package:nemeeting/pre_meeting/schedule_meeting_edit.dart';
 import 'package:nemeeting/utils/const_config.dart';
@@ -15,13 +15,13 @@ import 'package:nemeeting/utils/integration_test.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
 import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
+import '../language/localizations.dart';
 import '../uikit/state/meeting_base_state.dart';
 import '../uikit/utils/nav_utils.dart';
 import '../uikit/utils/router_name.dart';
 import '../uikit/values/borders.dart';
 import '../uikit/values/colors.dart';
 import '../uikit/values/dimem.dart';
-import '../uikit/values/strings.dart';
 
 class ScheduleMeetingDetailRoute extends StatefulWidget {
   final NEMeetingItem item;
@@ -35,12 +35,15 @@ class ScheduleMeetingDetailRoute extends StatefulWidget {
 }
 
 class _ScheduleMeetingDetailRouteState
-    extends MeetingBaseState<ScheduleMeetingDetailRoute> {
+    extends MeetingBaseState<ScheduleMeetingDetailRoute>
+    with MeetingAppLocalizationsMixin {
   NEMeetingItem item;
 
   _ScheduleMeetingDetailRouteState(this.item);
 
   late ScheduleCallback<List<NEMeetingItem>> scheduleCallback;
+
+  bool cancelByMySelf = false;
 
   @override
   void initState() {
@@ -48,9 +51,20 @@ class _ScheduleMeetingDetailRouteState
     scheduleCallback = (List<NEMeetingItem> data, bool incremental) {
       data.forEach((element) {
         if (element.meetingId == item.meetingId) {
-          setState(() {
-            item = element;
-          });
+          /// 会议被其他端销毁，会议取消，会议无效时，返回首页
+          if (mounted &&
+              !cancelByMySelf &&
+              (element.state == NEMeetingState.invalid ||
+                  element.state == NEMeetingState.cancel ||
+                  element.state == NEMeetingState.recycled)) {
+            ToastUtils.showToast(
+                context, meetingAppLocalizations.meetingHasBeenCanceled);
+            Navigator.pop(context);
+          } else {
+            setState(() {
+              item = element;
+            });
+          }
         }
       });
     };
@@ -61,7 +75,7 @@ class _ScheduleMeetingDetailRouteState
 
   @override
   String getTitle() {
-    return Strings.meetingDetail;
+    return meetingAppLocalizations.meetingDetail;
   }
 
   @override
@@ -70,14 +84,15 @@ class _ScheduleMeetingDetailRouteState
       if (item.state == NEMeetingState.init)
         TextButton(
           child: Text(
-            Strings.edit,
+            meetingAppLocalizations.globalEdit,
             style: TextStyle(
               color: AppColors.color_337eff,
               fontSize: 16.0,
             ),
           ),
           onPressed: () {
-            Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+            Navigator.of(context)
+                .push(MaterialMeetingAppPageRoute(builder: (context) {
               return ScheduleMeetingEditRoute(item);
             }));
           },
@@ -103,6 +118,42 @@ class _ScheduleMeetingDetailRouteState
           buildEndTime(),
           if (!TextUtil.isEmpty(item.password)) buildSpace(),
           if (!TextUtil.isEmpty(item.password)) buildPwd(),
+          if (item.isWaitingRoomEnabled) ...[
+            buildSpace(),
+            SwitchItem(
+              key: MeetingValueKey.scheduleWaitingRoom,
+              value: true,
+              title: meetingAppLocalizations.meetingEnableWaitingRoom,
+              summary: meetingAppLocalizations.meetingWaitingRoomHint,
+              onChange: null,
+            ),
+          ],
+          if (item.settings.isAudioOffAllowSelfOn ||
+              item.settings.isAudioOffNotAllowSelfOn) ...[
+            buildSpace(),
+            SwitchItem(
+              key: MeetingValueKey.scheduleAttendeeAudio,
+              value: true,
+              title: meetingAppLocalizations.meetingAttendeeAudioOff,
+              onChange: null,
+            ),
+            _buildSplit(),
+            buildRadio(
+              value: item.settings.isAudioOffAllowSelfOn,
+              padding:
+                  EdgeInsets.only(left: 20, right: 16, top: 17, bottom: 12),
+              title: meetingAppLocalizations.meetingAttendeeAudioOffAllowOn,
+              groupValue: true,
+              onChanged: null,
+            ),
+            buildRadio(
+              value: item.settings.isAudioOffNotAllowSelfOn,
+              padding: EdgeInsets.only(left: 20, right: 16, bottom: 17),
+              title: meetingAppLocalizations.meetingAttendeeAudioOffNotAllowOn,
+              groupValue: true,
+              onChanged: null,
+            ),
+          ],
           buildSpace(),
           if (item.live?.liveUrl != null && item.live?.enable == true)
             buildLiveUrl(),
@@ -132,7 +183,7 @@ class _ScheduleMeetingDetailRouteState
   }
 
   Widget buildMeetingNum() {
-    return buildCopyItem(MeetingValueKey.scheduleCopyPwd, Strings.meetingNum,
+    return buildCopyItem(meetingAppLocalizations.meetingNum,
         TextUtil.applyMask(item.meetingNum!, '000-000-0000'));
   }
 
@@ -142,20 +193,20 @@ class _ScheduleMeetingDetailRouteState
       return Container();
     }
     return buildCopyItem(
-      MeetingValueKey.scheduleCopyInviteUrl,
-      Strings.meetingInviteUrl,
+      meetingAppLocalizations.meetingInviteUrl,
       inviteUrl,
       transform: false,
     );
   }
 
   Widget buildLiveUrl() {
-    return buildCopyItem(MeetingValueKey.scheduleCopyLiveUrl, Strings.liveUrl,
-        item.live?.liveUrl ?? '');
+    return buildCopyItem(
+        meetingAppLocalizations.meetingLiveUrl, item.live?.liveUrl ?? '');
   }
 
   Widget buildLiveAuthLevel() {
-    return _buildLiveAuthLevel(Strings.liveLevel, Strings.liveLevelTip);
+    return _buildLiveAuthLevel(meetingAppLocalizations.meetingLiveLevel,
+        meetingAppLocalizations.meetingLiveLevelTip);
   }
 
   Widget _buildLiveAuthLevel(String itemTitle, String des) {
@@ -175,7 +226,7 @@ class _ScheduleMeetingDetailRouteState
     );
   }
 
-  Widget buildCopyItem(Key key, String? itemTitle, String? itemDetail,
+  Widget buildCopyItem(String? itemTitle, String? itemDetail,
       {bool transform = true}) {
     return Container(
       height: Dimen.primaryItemHeight,
@@ -200,8 +251,8 @@ class _ScheduleMeetingDetailRouteState
                   softWrap: false,
                   overflow: TextOverflow.fade)),
           GestureDetector(
-            key: key,
-            child: Text(' ${Strings.copy}',
+            key: MeetingValueKey.copy,
+            child: Text(' ${meetingAppLocalizations.globalCopy}',
                 style: TextStyle(fontSize: 14, color: AppColors.blue_337eff)),
             onTap: () {
               if (itemDetail == null) return;
@@ -209,7 +260,8 @@ class _ScheduleMeetingDetailRouteState
                   ? TextUtil.replace(itemDetail, RegExp(r'-'), '')
                   : itemDetail;
               Clipboard.setData(ClipboardData(text: value));
-              ToastUtils.showToast(context, Strings.copySuccess);
+              ToastUtils.showToast(
+                  context, meetingAppLocalizations.globalCopySuccess);
             },
           ),
         ],
@@ -218,12 +270,12 @@ class _ScheduleMeetingDetailRouteState
   }
 
   Widget buildStartTime() {
-    return buildTime(Strings.meetingStartTime,
+    return buildTime(meetingAppLocalizations.meetingStartTime,
         DateTime.fromMillisecondsSinceEpoch(item.startTime));
   }
 
   Widget buildEndTime() {
-    return buildTime(Strings.meetingEndTime,
+    return buildTime(meetingAppLocalizations.meetingEndTime,
         DateTime.fromMillisecondsSinceEpoch(item.endTime));
   }
 
@@ -246,7 +298,7 @@ class _ScheduleMeetingDetailRouteState
 
   Widget buildPwd() {
     return buildCopyItem(
-        MeetingValueKey.scheduleCopyID, Strings.meetingPassword, item.password);
+        meetingAppLocalizations.meetingPassword, item.password);
   }
 
   Widget buildBtn() {
@@ -282,7 +334,7 @@ class _ScheduleMeetingDetailRouteState
           borderRadius: BorderRadius.all(Radius.circular(25.0)),
         ),
         alignment: Alignment.center,
-        child: Text(Strings.joinMeeting,
+        child: Text(meetingAppLocalizations.meetingJoin,
             textAlign: TextAlign.center,
             style: TextStyle(
                 color: AppColors.secondaryText,
@@ -311,7 +363,7 @@ class _ScheduleMeetingDetailRouteState
         ),
         alignment: Alignment.center,
         child: Text(
-          Strings.cancelMeeting,
+          meetingAppLocalizations.meetingCancel,
           textAlign: TextAlign.center,
           style: TextStyle(
               color: AppColors.blue_337eff,
@@ -344,14 +396,18 @@ class _ScheduleMeetingDetailRouteState
     final result = await NEMeetingUIKit().joinMeetingUI(
       context,
       NEJoinMeetingUIParams(
-          meetingNum: item.meetingNum!,
-          displayName: nickname ?? MeetingUtil.getNickName()),
-      await buildMeetingUIOptions(),
+        meetingNum: item.meetingNum!,
+        displayName: nickname ?? MeetingUtil.getNickName(),
+        watermarkConfig: NEWatermarkConfig(
+          name: MeetingUtil.getNickName(),
+        ),
+      ),
+      await buildMeetingUIOptions(context: context),
       onMeetingPageRouteWillPush: () async {
         LoadingUtil.cancelLoading();
         NavUtils.pop(context);
       },
-      backgroundWidget: HomePageRoute(),
+      backgroundWidget: MeetingAppLocalizationsScope(child: HomePageRoute()),
     );
     final errorCode = result.code;
     final errorMessage = result.msg;
@@ -359,17 +415,21 @@ class _ScheduleMeetingDetailRouteState
     if (errorCode == NEMeetingErrorCode.success) {
       // do nothing
     } else if (errorCode == NEMeetingErrorCode.noNetwork) {
-      ToastUtils.showToast(context, Strings.networkUnavailableCheck);
+      ToastUtils.showToast(
+          context, meetingAppLocalizations.globalNetworkUnavailableCheck);
     } else if (errorCode == NEMeetingErrorCode.noAuth) {
-      ToastUtils.showToast(context, Strings.loginOnOtherDevice);
+      ToastUtils.showToast(
+          context, meetingAppLocalizations.authLoginOnOtherDevice);
       AuthManager().logout();
       NavUtils.pushNamedAndRemoveUntil(context, RouterName.entrance);
     } else if (errorCode == NEMeetingErrorCode.alreadyInMeeting) {
-      ToastUtils.showToast(context, Strings.miniTipAlreadyInRightMeeting);
+      ToastUtils.showToast(context,
+          meetingAppLocalizations.meetingOperationNotSupportedInMeeting);
     } else if (errorCode == NEMeetingErrorCode.cancelled) {
       /// 暂不处理
     } else {
-      var errorTips = HttpCode.getMsg(errorMessage, Strings.joinMeetingFail);
+      var errorTips = HttpCode.getMsg(
+          errorMessage, meetingAppLocalizations.meetingJoinFail);
       ToastUtils.showToast(context, errorTips);
     }
   }
@@ -379,12 +439,12 @@ class _ScheduleMeetingDetailRouteState
         context: context,
         builder: (BuildContext context) => CupertinoActionSheet(
               title: Text(
-                Strings.confirmCancelMeeting,
+                meetingAppLocalizations.meetingCancelConfirm,
                 style: TextStyle(color: AppColors.grey_8F8F8F, fontSize: 13),
               ),
               actions: <Widget>[
                 CupertinoActionSheetAction(
-                    child: Text(Strings.cancelMeeting,
+                    child: Text(meetingAppLocalizations.meetingCancel,
                         style: TextStyle(color: AppColors.colorFE3B30)),
                     onPressed: () {
                       Navigator.pop(context);
@@ -393,7 +453,7 @@ class _ScheduleMeetingDetailRouteState
               ],
               cancelButton: CupertinoActionSheetAction(
                 isDefaultAction: true,
-                child: Text(Strings.notCancel,
+                child: Text(meetingAppLocalizations.meetingNotCancel,
                     style: TextStyle(color: AppColors.color_007AFF)),
                 onPressed: () {
                   Navigator.pop(context);
@@ -404,6 +464,7 @@ class _ScheduleMeetingDetailRouteState
 
   void _onCancel() {
     LoadingUtil.showLoading();
+    cancelByMySelf = true;
     NEMeetingKit.instance
         .getPreMeetingService()
         .cancelMeeting(item.meetingId!)
@@ -412,6 +473,7 @@ class _ScheduleMeetingDetailRouteState
       if (result.code == HttpCode.success) {
         Navigator.pop(context);
       } else {
+        cancelByMySelf = false;
         var errorMsg = result.msg;
         errorMsg = HttpCode.getMsg(errorMsg);
         ToastUtils.showToast(context, errorMsg);
@@ -432,6 +494,51 @@ class _ScheduleMeetingDetailRouteState
       padding: EdgeInsets.only(left: 20),
       height: 1,
       child: Divider(height: 1),
+    );
+  }
+
+  Widget buildRadio({
+    required String title,
+    required bool value,
+    required bool groupValue,
+    required Function(bool?)? onChanged,
+    EdgeInsetsGeometry? padding,
+  }) {
+    return GestureDetector(
+      child: Container(
+        padding: padding,
+        color: Colors.white,
+        child: Row(
+          children: [
+            Container(
+              width: 16,
+              height: 16,
+              child: Radio<bool>(
+                value: value,
+                groupValue: groupValue,
+                onChanged: onChanged,
+                fillColor: MaterialStateProperty.resolveWith((states) {
+                  if (states.contains(MaterialState.selected)) {
+                    return AppColors.blue_337eff.withOpacity(
+                      states.contains(MaterialState.disabled) ? 0.5 : 1.0,
+                    );
+                  }
+                  return null;
+                }),
+              ),
+            ),
+            SizedBox(width: 8),
+            Expanded(
+                child: Text(title,
+                    style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.black_333333,
+                        fontWeight: FontWeight.w400,
+                        decoration: TextDecoration.none))),
+          ],
+        ),
+      ),
+      onTap: () => onChanged?.call(value),
     );
   }
 

@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
+import com.netease.meeting.plugin.audio.service.NEAudioService;
 import com.netease.meeting.plugin.base.Handler;
 import com.netease.meeting.plugin.base.asset.AssetService;
 import com.netease.meeting.plugin.base.notification.NotificationService;
@@ -16,7 +17,9 @@ import com.netease.meeting.plugin.floating.FloatingService;
 import com.netease.meeting.plugin.images.ImageGallerySaver;
 import com.netease.meeting.plugin.images.ImageLoader;
 import com.netease.meeting.plugin.lifecycle.AppLifecycleDetector;
+import com.netease.meeting.plugin.padCheckDetector.PadCheckDetector;
 import com.netease.meeting.plugin.phonestate.PhoneStateService;
+import com.netease.meeting.plugin.volumecontroller.VolumeController;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
@@ -42,9 +45,11 @@ public class MeetingPlugin implements FlutterPlugin, MethodCallHandler, Activity
 
   private BluetoothService bluetoothService;
   private PhoneStateService phoneStateService;
-
+  private NEAudioService audioService;
   private AppLifecycleDetector appLifecycleDetector;
   private FloatingService floatingService;
+
+  private VolumeController volumeController;
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -52,9 +57,12 @@ public class MeetingPlugin implements FlutterPlugin, MethodCallHandler, Activity
     channel.setMethodCallHandler(this);
     context = flutterPluginBinding.getApplicationContext();
     initService();
+    audioService = new NEAudioService(channel, flutterPluginBinding, context);
+    audioService.getAudioHandler().register(handlerMap);
     bluetoothService = new BluetoothService(context, flutterPluginBinding);
     phoneStateService = new PhoneStateService(context, flutterPluginBinding);
     appLifecycleDetector = new AppLifecycleDetector(context, flutterPluginBinding);
+    volumeController = new VolumeController(context, flutterPluginBinding);
   }
 
   @Override
@@ -82,6 +90,11 @@ public class MeetingPlugin implements FlutterPlugin, MethodCallHandler, Activity
 
     floatingService.dispose();
     floatingService = null;
+
+    volumeController.dispose();
+    volumeController = null;
+
+    audioService = null;
   }
 
   void initService() {
@@ -90,6 +103,7 @@ public class MeetingPlugin implements FlutterPlugin, MethodCallHandler, Activity
     new AssetService(channel, context).register(handlerMap);
     new ImageLoader(channel, context).register(handlerMap);
     new ImageGallerySaver(channel, context).register(handlerMap);
+    new PadCheckDetector(channel, context).register(handlerMap);
   }
 
   @Override

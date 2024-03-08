@@ -31,6 +31,8 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
 
   final NERoomContext roomContext;
 
+  final titleWidth = 100.0;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -82,7 +84,6 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
   Widget _buildSplit() {
     return Container(
       color: _UIColors.white,
-      padding: EdgeInsets.only(left: 20, right: 20),
       height: 1,
       child: Divider(height: 1),
     );
@@ -90,7 +91,6 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
 
   Widget _title() {
     return Container(
-      padding: EdgeInsets.only(left: 20, right: 20),
       child: Text(
         roomContext.roomName,
         style: TextStyle(
@@ -104,7 +104,7 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
 
   Widget _desc() {
     return Container(
-        padding: EdgeInsets.only(top: 2, left: 20, right: 20, bottom: 16),
+        padding: EdgeInsets.only(top: 6, bottom: 16),
         child: Text.rich(TextSpan(children: [
           WidgetSpan(
               child: Icon(
@@ -152,10 +152,10 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
     } else {
       //show both
       return [
-        buildCopyItem(NEMeetingUIKitLocalizations.of(context)!.shortMeetingNum,
+        buildCopyItem(NEMeetingUIKitLocalizations.of(context)!.meetingShortNum,
             shortMeetingNum,
-            itemLabel:
-                NEMeetingUIKitLocalizations.of(context)!.internalSpecial),
+            itemLabel: NEMeetingUIKitLocalizations.of(context)!
+                .meetingInternalSpecial),
         buildCopyItem(NEMeetingUIKitLocalizations.of(context)!.meetingNum,
             meetingNum.toMeetingNumFormat(),
             itemDetailCopyFormatter: meetingIdCopyFormatter),
@@ -165,7 +165,8 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
 
   Widget _buildSip() {
     return buildCopyItem(
-        NEMeetingUIKitLocalizations.of(context)!.sipNumber, roomContext.sipCid);
+        NEMeetingUIKitLocalizations.of(context)!.meetingSipNumber,
+        roomContext.sipCid);
   }
 
   Widget _buildPwd() {
@@ -179,13 +180,12 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
     return Container(
       height: 32,
       color: Colors.white,
-      padding: EdgeInsets.symmetric(horizontal: 20),
       alignment: Alignment.center,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           Container(
-            width: 130,
+            width: titleWidth,
             child: Text(itemTitle,
                 style: TextStyle(
                     fontSize: 14,
@@ -196,7 +196,7 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
           Flexible(
             child: Text(
               '${itemDetail ?? ""}',
-              overflow: TextOverflow.fade,
+              overflow: TextOverflow.ellipsis,
               softWrap: false,
               maxLines: 1,
               style: TextStyle(
@@ -227,15 +227,14 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
                         fontWeight: FontWeight.w200)),
               ),
             ),
+          SizedBox(width: 3),
           GestureDetector(
             key: MeetingUIValueKeys.copy,
             behavior: HitTestBehavior.translucent, // 点击区域设置到container大小
             child: Container(
-              width: 40,
-              height: 32,
               alignment: Alignment.center,
               child: Icon(NEMeetingIconFont.icon_copy1x,
-                  color: _UIColors.blue_337eff, size: 12),
+                  color: _UIColors.blue_337eff, size: 16),
             ),
             onTap: () {
               if (TextUtils.isEmpty(itemDetail)) return;
@@ -245,7 +244,7 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
                 Clipboard.setData(ClipboardData(text: value!));
               }
               ToastUtils.showToast(context,
-                  NEMeetingUIKitLocalizations.of(context)!.copySuccess);
+                  NEMeetingUIKitLocalizations.of(context)!.globalCopySuccess);
             },
           ),
         ],
@@ -257,14 +256,14 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
     return Container(
       height: 32,
       color: Colors.white,
-      padding: EdgeInsets.symmetric(horizontal: 20),
       alignment: Alignment.center,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           Container(
-              width: 130,
-              child: Text(NEMeetingUIKitLocalizations.of(context)!.host,
+              width: titleWidth,
+              child: Text(
+                  NEMeetingUIKitLocalizations.of(context)!.participantHost,
                   style: TextStyle(
                       fontSize: 14,
                       color: _UIColors.color_94979A,

@@ -7,21 +7,16 @@ import 'dart:async';
 import '../util/sp_util.dart';
 
 class GlobalPreferences extends Preferences {
-  static const String keyLoginInfo = "loginInfo";
-  static const String keyDeviceId = "deviceId";
-  static const String keyAnonyNick = "anonyNick";
-  static const String keyAnonyCameraOpen = "anonyCameraOpen";
-  static const String keyAnonyMicrophoneOpen = "anonyMicrophoneOpen";
-  static const String keyMeetingDebug = "meetingDebug";
-  static const String keyMeetingEnv = "meetingEnv";
-  static const String keyNERtcLogLevel = "nertcLogLevel";
-  static const String keyUserProtocolPrivacy = "userProtocolPrivacy";
-  static const String keySecurityNotice = "securityNotice";
-  static const String keyIsShowSecurityNotice = "isShowSecurityNotice";
-  static const String keyMeetingInfo = "meetingInfo";
-  static const String keyEnablePasswordLogin = 'enablePwdLogin';
-  static const String keyPrivacyDialogShowed = 'privacyDialogShowed';
-  static const String keyMeetingEvaluation = 'meetingEvaluation';
+  static const String _keyLoginInfo = "loginInfo";
+  static const String _keyMeetingDebug = "meetingDebug";
+  static const String _keyMeetingEnv = "meetingEnv";
+  static const String _keyNERtcLogLevel = "nertcLogLevel";
+  static const String _keyUserProtocolPrivacy = "userProtocolPrivacy";
+  static const String _keySecurityNotice = "securityNotice";
+  static const String _keyMeetingInfo = "meetingInfo";
+  static const String _keyPrivacyDialogShowed = 'privacyDialogShowed';
+  static const String _keyMeetingEvaluation = 'meetingEvaluation';
+  static const String _keyCorpCode = 'corpCode';
 
   GlobalPreferences._internal();
 
@@ -29,53 +24,21 @@ class GlobalPreferences extends Preferences {
 
   factory GlobalPreferences() => _singleton;
 
-  Future<void> setDeviceId(String deviceId) async {
-    setSp(keyDeviceId, deviceId);
-  }
-
-  Future<String?> get deviceId async {
-    return getSp(keyDeviceId);
-  }
-
   /// save
   Future<void> setLoginInfo(String value) async {
-    setSp(keyLoginInfo, value);
+    setSp(_keyLoginInfo, value);
   }
 
   Future<String?> get loginInfo async {
-    return getSp(keyLoginInfo);
-  }
-
-  Future<String?> get anonyNick async {
-    return getSp(keyAnonyNick);
-  }
-
-  Future<void> setAnonyNick(String anonyNick) async {
-    setSp(keyAnonyNick, anonyNick);
-  }
-
-  Future<bool?> get anonyCameraOpen async {
-    return getBoolSp(keyAnonyCameraOpen);
-  }
-
-  Future<void> setAnonyCameraOpen(bool open) async {
-    setBoolSp(keyAnonyCameraOpen, open);
-  }
-
-  Future<bool?> get anonyMicrophoneOpen async {
-    return getBoolSp(keyAnonyMicrophoneOpen);
-  }
-
-  Future<void> setAnonyMicrophoneOpen(bool open) async {
-    setBoolSp(keyAnonyMicrophoneOpen, open);
+    return getSp(_keyLoginInfo);
   }
 
   Future<bool?> get meetingDebug async {
-    return getBoolSp(keyMeetingDebug);
+    return getBoolSp(_keyMeetingDebug);
   }
 
   Future<void> setMeetingDebug(bool meetingDebug) async {
-    setBoolSp(keyMeetingDebug, meetingDebug);
+    setBoolSp(_keyMeetingDebug, meetingDebug);
   }
 
   final _privacyAgreeCompleter = Completer();
@@ -91,80 +54,73 @@ class GlobalPreferences extends Preferences {
   }
 
   Future<bool> get hasPrivacyDialogShowed async {
-    return await getBoolSp(keyPrivacyDialogShowed) ?? false;
+    return await getBoolSp(_keyPrivacyDialogShowed) ?? false;
   }
 
   Future<bool> setPrivacyDialogShowed(bool enabled) async {
     if (enabled && !_privacyAgreeCompleter.isCompleted) {
       _privacyAgreeCompleter.complete();
     }
-    return setBoolSp(keyPrivacyDialogShowed, enabled);
-  }
-
-  Future<bool> get isPasswordLoginEnabled async {
-    return await getBoolSp(keyEnablePasswordLogin) ?? false;
-  }
-
-  Future<bool> setPasswordLoginEnabled(bool enabled) async {
-    return setBoolSp(keyEnablePasswordLogin, enabled);
+    return setBoolSp(_keyPrivacyDialogShowed, enabled);
   }
 
   Future<String?> get meetingEnv async {
-    return getSp(keyMeetingEnv);
+    return getSp(_keyMeetingEnv);
   }
 
   Future<bool> setMeetingEnv(String? env) async {
     if (env == null || env.isEmpty) {
-      return remove(keyMeetingEnv);
+      return remove(_keyMeetingEnv);
     } else {
-      return setSp(keyMeetingEnv, env);
+      return setSp(_keyMeetingEnv, env);
     }
   }
 
   Future<String?> get nertcLogLevel async {
-    return getSp(keyNERtcLogLevel);
+    return getSp(_keyNERtcLogLevel);
   }
 
   Future<void> setNertcLogLevel(String level) async {
-    setSp(keyNERtcLogLevel, level);
+    setSp(_keyNERtcLogLevel, level);
   }
 
   Future<bool?> get userProtocolAndPrivacy async {
-    return getBoolSp(keyUserProtocolPrivacy);
+    return getBoolSp(_keyUserProtocolPrivacy);
   }
 
   Future<void> setUserProtocolAndPrivacy(bool isShow) async {
-    setBoolSp(keyUserProtocolPrivacy, isShow);
+    setBoolSp(_keyUserProtocolPrivacy, isShow);
   }
 
   Future<String?> get securityNotice async {
-    return getSp(keySecurityNotice);
+    return getSp(_keySecurityNotice);
   }
 
   Future<void> setSecurityNotice(String notice) async {
-    setSp(keySecurityNotice, notice);
+    setSp(_keySecurityNotice, notice);
   }
 
   Future<void> setMeetingInfo(String value) async {
-    setSp(keyMeetingInfo, value);
+    setSp(_keyMeetingInfo, value);
   }
 
   Future<String?> get meetingInfo async {
-    return getSp(keyMeetingInfo);
+    return getSp(_keyMeetingInfo);
   }
 
   Future<void> setMeetingEvaluation(String value) async {
-    setSp(keyMeetingEvaluation, value);
+    setSp(_keyMeetingEvaluation, value);
   }
 
   Future<String?> get meetingEvaluation async {
-    return getSp(keyMeetingEvaluation);
+    return getSp(_keyMeetingEvaluation);
   }
-  // Future<bool?> get isShowSecurityNotice async {
-  //   return getBoolSp(keyIsShowSecurityNotice);
-  // }
-  //
-  // Future<void> setIsShowSecurityNotice(bool isShow) async {
-  //   setBoolSp(keyIsShowSecurityNotice, isShow);
-  // }
+
+  Future<String?> get savedCorpCode async {
+    return getSp(_keyCorpCode);
+  }
+
+  void saveCorpCode(String? value) {
+    value != null ? setSp(_keyCorpCode, value) : remove(_keyCorpCode);
+  }
 }

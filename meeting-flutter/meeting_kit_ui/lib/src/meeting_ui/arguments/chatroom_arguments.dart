@@ -4,11 +4,21 @@
 
 part of meeting_ui;
 
+class ChatRecallMessage {
+  final String messageId;
+  final String operateBy;
+  final bool fileCancelDownload;
+  ChatRecallMessage(this.messageId, this.operateBy,
+      {this.fileCancelDownload = false});
+}
+
 class ChatRoomArguments {
   ChatRoomMessageSource messageSource;
-  final NERoomContext roomContext;
+  final NERoomContext? roomContext;
+  final WaitingRoomManager? waitingRoomManager;
 
-  ChatRoomArguments(this.roomContext, this.messageSource);
+  ChatRoomArguments(
+      {this.roomContext, required this.messageSource, this.waitingRoomManager});
 
   Object? getMessage(int index) {
     if (index < 0 || index >= msgSize) {
@@ -43,11 +53,14 @@ class ChatRoomMessageSource {
 
   StreamController<int> unreadNotify = StreamController.broadcast();
 
-  final SDKConfig sdkConfig;
-  final NEMeetingChatroomConfig _chatroomConfig;
+  final SDKConfig? sdkConfig;
+  final NEMeetingChatroomConfig? chatroomConfig;
 
-  ChatRoomMessageSource(this.sdkConfig, this._chatroomConfig);
+  ChatRoomMessageSource({this.sdkConfig, this.chatroomConfig});
+  bool isFirstFetchHistory = true;
 
+  /// 从前面插入的消息
+  bool isInsertMessage = false;
   final _joinChatroomCompleter = Completer<bool>();
   void setJoinChatroomResult(bool result) {
     if (!_joinChatroomCompleter.isCompleted) {
@@ -60,13 +73,13 @@ class ChatRoomMessageSource {
   }
 
   bool get isFileMessageEnabled {
-    return sdkConfig.meetingChatroomConfig.enableFileMessage &&
-        _chatroomConfig.enableFileMessage;
+    return (sdkConfig?.meetingChatroomConfig.enableFileMessage ?? true) &&
+        (chatroomConfig?.enableFileMessage ?? true);
   }
 
   bool get isImageMessageEnabled {
-    return sdkConfig.meetingChatroomConfig.enableImageMessage &&
-        _chatroomConfig.enableImageMessage;
+    return (sdkConfig?.meetingChatroomConfig.enableImageMessage ?? true) &&
+        (chatroomConfig?.enableImageMessage ?? true);
   }
 
   Stream get messageStream => messageNotify.stream;
@@ -88,15 +101,22 @@ class ChatRoomMessageSource {
   double _initialScrollOffset = 0;
 
   int lastTime = 0;
-
+  int firstTime = 0;
   static const int showTimeInterval = 5 * 60 * 1000;
 
   bool handleReceivedMessage(NERoomChatMessage msg) {
     var valid = false;
     InMessageState? message;
     if (msg is NERoomChatTextMessage && msg.text.isNotEmpty) {
-      message =
-          InTextMessage(msg.messageUuid, msg.time, msg.fromNick, msg.text);
+      message = InTextMessage(
+        msg.messageUuid,
+        msg.time,
+        msg.fromNick,
+        msg.fromAvatar,
+        msg.text,
+        msg.messageUuid,
+        msg.chatroomType,
+      );
     } else if (msg is NERoomChatImageMessage) {
       valid = isImageMessageEnabled &&
           msg.path.isNotEmpty &&
@@ -108,12 +128,16 @@ class ChatRoomMessageSource {
           msg.messageUuid,
           msg.time,
           msg.fromNick,
+          msg.fromAvatar,
           msg.thumbPath as String,
           msg.path as String,
           msg.extension,
           msg.size,
           msg.width,
           msg.height,
+          msg.messageUuid,
+          msg.url,
+          msg.chatroomType,
         );
       }
     } else if (msg is NERoomChatFileMessage) {
@@ -126,12 +150,33 @@ class ChatRoomMessageSource {
           msg.messageUuid,
           msg.time,
           msg.fromNick,
+          msg.fromAvatar,
           msg.displayName as String,
           msg.path as String,
           msg.size,
           msg.extension,
+          msg.messageUuid,
+          msg.chatroomType,
         );
       }
+    } else if (msg is NERoomChatNotificationMessage) {
+      var recalledMessageId = msg.recalledMessageId;
+      if (recalledMessageId == null) return false;
+      final sourceMessage = lookupMessage(recalledMessageId);
+      if (sourceMessage == null) return false;
+
+      /// 如果是文件消息，且正在下载，则取消下载
+      bool fileCancelDownload = false;
+      if (sourceMessage is InFileMessage &&
+          sourceMessage.isAttachmentDownloading) {
+        sourceMessage.resetAttachmentDownloadProgress();
+        fileCancelDownload = true;
+      }
+      EventBus().emit(
+          RecallMessageNotify,
+          ChatRecallMessage(recalledMessageId, msg.operateBy ?? "",
+              fileCancelDownload: fileCancelDownload));
+      replaceToRecallMessage(msg);
     }
     if (message != null) {
       append(message, message.time);
@@ -139,14 +184,45 @@ class ChatRoomMessageSource {
     return message != null;
   }
 
+  void replaceToRecallMessage(NERoomChatNotificationMessage msg) {
+    List<Object> messageList = messages.toList();
+    for (int i = 0; i < messageList.length; i++) {
+      var element = messageList[i];
+      // 检查是否需要替换该元素
+      if (((element is OutMessageState) &&
+              (element.msgId == msg.recalledMessageId)) ||
+          ((element is InMessageState) &&
+              (element.uuid == msg.recalledMessageId))) {
+        messageList[i] = InNotificationMessage(
+          (element as MessageState).nickname,
+          element.avatar,
+          msg.messageUuid,
+          msg.time,
+          msg.eventType,
+          msg.operateBy,
+          msg.recalledMessageId,
+          msg.chatroomType,
+        );
+      }
+    }
+    // 将替换后的列表转换回队列
+    messages = Queue.from(messageList);
+    messageNotify.add(this);
+  }
+
+  MessageState? lookupMessage(String msgId) {
+    return messages
+        .whereType<MessageState>()
+        .toList()
+        .where((element) => element.msgId == msgId)
+        .firstOrNull;
+  }
+
   bool removeMessage(Object message) {
     return messages.remove(message);
   }
 
   void append(Object message, int time, {bool incUnread = true}) {
-    if (Platform.isIOS) {
-      time *= 1000;
-    }
     if (time - lastTime > showTimeInterval) {
       messages.add(TimeMessage(time));
       lastTime = time;
@@ -164,7 +240,65 @@ class ChatRoomMessageSource {
     } else {
       unread = 0;
     }
+    isInsertMessage = false;
     unreadNotify.add(unread);
+    messageNotify.add(this);
+  }
+
+  void insert(List<MessageState> inMessages, int lastTime,
+      {bool isFirstInsert = false}) {
+    if (inMessages.length == 0) return;
+    if (isFirstInsert) {
+      firstTime = lastTime;
+      messages.addFirst(const HistorySegment());
+      if (messages.length >= maxCacheMessageCount || inMessages.length == 0) {
+        messages.removeFirst();
+        return;
+      }
+    }
+
+    inMessages.asMap().forEach((index, element) {
+      int time = element.time;
+      if (index == 0 &&
+          !isFirstInsert &&
+          (messages.firstOrNull is TimeMessage)) {
+        messages.removeFirst();
+
+        /// 当前消息时间
+        if (firstTime - time > showTimeInterval) {
+          isInsertMessage = true;
+          messages.addFirst(TimeMessage(time));
+          firstTime = time;
+        }
+      }
+      messages.addFirst(const AnchorMessage());
+      if (messages.length >= maxCacheMessageCount) {
+        messages.removeFirst();
+        return;
+      }
+
+      messages.addFirst(element);
+      if (firstTime - time > showTimeInterval) {
+        isInsertMessage = true;
+        messages.addFirst(TimeMessage(time));
+        firstTime = time;
+      }
+      if (messages.length >= maxCacheMessageCount) {
+        if (!(messages.firstOrNull is TimeMessage)) {
+          isInsertMessage = true;
+          messages.addFirst(TimeMessage(time));
+        }
+        messageNotify.add(this);
+        return;
+      }
+
+      /// 最后一个
+      if (index == inMessages.length - 1 &&
+          !(messages.firstOrNull is TimeMessage)) {
+        isInsertMessage = true;
+        messages.addFirst(TimeMessage(firstTime - showTimeInterval));
+      }
+    });
     messageNotify.add(this);
   }
 
@@ -197,15 +331,21 @@ class TimeMessage {
 
 mixin MessageState {
   String get uuid;
-
+  String? get msgId;
   int get time;
 
   String get nickname;
 
+  String? get avatar;
+
   bool get isSend;
+
+  NEChatroomType get chatroomType;
 
   ValueNotifier<bool> failStatusListenable = ValueNotifier(false);
   bool get isFailed => failStatusListenable.value;
+
+  bool get isHistory;
 
   void updateProgress(int transferred, int total) {
     // do nothing
@@ -214,16 +354,14 @@ mixin MessageState {
 
 mixin OutMessageState on MessageState {
   final String uuid = Uuid().v4().replaceAll(RegExp(r'-'), '');
-
-  final int time = Platform.isIOS
-      ? (DateTime.now().millisecondsSinceEpoch / 1000).floor()
-      : DateTime.now().millisecondsSinceEpoch;
-
+  bool isHistory = false;
+  int time = DateTime.now().millisecondsSinceEpoch;
+  String? msgId;
   final bool isSend = true;
 
   ValueNotifier<double> attachmentUploadProgressListenable = ValueNotifier(0.0);
 
-  void startSend(Future<VoidResult>? job) {
+  void startSend(Future<NEResult<NERoomChatMessage>>? job) {
     if (job != null) {
       failStatusListenable.value = false;
       attachmentUploadProgressListenable.value = 0.0;
@@ -231,6 +369,8 @@ mixin OutMessageState on MessageState {
         if (value.isSuccess()) {
           attachmentUploadProgressListenable.value = 1.0;
           failStatusListenable.value = false;
+          msgId = value.data!.messageUuid;
+          time = value.data!.time;
         } else {
           attachmentUploadProgressListenable.value = 0.0;
           failStatusListenable.value = true;
@@ -252,11 +392,12 @@ mixin OutMessageState on MessageState {
 }
 
 mixin InMessageState on MessageState {
-  final bool isSend = false;
+  bool isSend = false;
 
   bool get isSuccess => true;
 
   String? get attachmentPath;
+  bool isHistory = false;
 
   ValueNotifier<double> attachmentDownloadProgress = ValueNotifier(0.0);
 
@@ -279,6 +420,7 @@ mixin InMessageState on MessageState {
     if (job != null && !isAttachmentDownloaded) {
       failStatusListenable.value = false;
       attachmentDownloadProgress.value = 0.01; // update ui
+
       job.then((value) {
         Alog.i(
           tag: 'MeetingChatMessage',
@@ -322,12 +464,14 @@ mixin TextMessageState on MessageState {
 
 class OutTextMessage with MessageState, TextMessageState, OutMessageState {
   final String nickname;
+  final String? avatar;
   final String text;
+  final NEChatroomType chatroomType;
 
-  OutTextMessage(this.nickname, this.text);
+  OutTextMessage(this.nickname, this.avatar, this.text, this.chatroomType);
 
   OutTextMessage copy() {
-    return OutTextMessage(nickname, text);
+    return OutTextMessage(nickname, avatar, text, chatroomType);
   }
 }
 
@@ -335,9 +479,13 @@ class InTextMessage with MessageState, TextMessageState, InMessageState {
   final String uuid;
   final int time;
   final String nickname;
+  final String? avatar;
   final String text;
+  final String msgId;
+  final NEChatroomType chatroomType;
 
-  InTextMessage(this.uuid, this.time, this.nickname, this.text);
+  InTextMessage(this.uuid, this.time, this.nickname, this.avatar, this.text,
+      this.msgId, this.chatroomType);
 
   @override
   String? get attachmentPath => null;
@@ -348,6 +496,7 @@ mixin ImageMessageState on MessageState {
 
   @protected
   ValueNotifier<double> thumbDownloadProgress = ValueNotifier(0.0);
+  ValueNotifier<double> originDownloadProgress = ValueNotifier(0.0);
 
   String get originPath;
 
@@ -356,8 +505,37 @@ mixin ImageMessageState on MessageState {
   int get size;
 
   int? width, height;
+  String? url;
 
   Completer<_ImageInfo>? _thumbImageInfo;
+  Completer<_ImageInfo>? _originImageInfo;
+
+  Future<_ImageInfo> get originImageInfo {
+    if (_originImageInfo == null) {
+      _originImageInfo = Completer();
+      final path = originPath;
+      final existsSync = File(path).existsSync();
+      assert(() {
+        print('thumbImageInfo: $uuid, $path, $existsSync');
+        return true;
+      }());
+      if (existsSync) {
+        _getSizeAsync(path, isThumb: false);
+      } else {
+        originDownloadProgress.addListener(() {
+          final existsSync = File(path).existsSync();
+          assert(() {
+            print('thumbImageInfo2: $uuid, $path, $existsSync');
+            return true;
+          }());
+          if (existsSync) {
+            _getSizeAsync(path, isThumb: false);
+          }
+        });
+      }
+    }
+    return _originImageInfo!.future;
+  }
 
   Future<_ImageInfo> get thumbImageInfo {
     if (_thumbImageInfo == null) {
@@ -386,7 +564,7 @@ mixin ImageMessageState on MessageState {
     return _thumbImageInfo!.future;
   }
 
-  void _getSizeAsync(String path) async {
+  void _getSizeAsync(String path, {bool isThumb = true}) async {
     if (width == null || height == null) {
       final size = await ImageSizeGetter.getSizeAsync(path);
       width = size[0];
@@ -396,18 +574,25 @@ mixin ImageMessageState on MessageState {
         return true;
       }());
     }
-    _thumbImageInfo!.complete(_ImageInfo(path, width!, height!));
+    if (isThumb) {
+      _thumbImageInfo!.complete(_ImageInfo(path, width!, height!));
+    } else {
+      _originImageInfo!.complete(_ImageInfo(path, width!, height!));
+    }
   }
 }
 
 class OutImageMessage with MessageState, ImageMessageState, OutMessageState {
   final String nickname;
+  final String? avatar;
   final String thumbPath;
   final String originPath;
   final String path;
   final int size;
+  final NEChatroomType chatroomType;
 
-  OutImageMessage(this.nickname, this.path, this.size,
+  OutImageMessage(
+      this.nickname, this.avatar, this.path, this.size, this.chatroomType,
       [int? width, int? height])
       : thumbPath = path,
         originPath = path {
@@ -416,7 +601,8 @@ class OutImageMessage with MessageState, ImageMessageState, OutMessageState {
   }
 
   OutImageMessage copy() {
-    return OutImageMessage(nickname, path, size, width, height);
+    return OutImageMessage(
+        nickname, avatar, path, size, chatroomType, width, height);
   }
 }
 
@@ -424,22 +610,30 @@ class InImageMessage with MessageState, ImageMessageState, InMessageState {
   final String uuid;
   final int time;
   final String nickname;
+  final String? avatar;
   final String thumbPath;
   final String originPath;
   final int size;
   final int? width, height;
+  final String? url;
   final String? extension;
+  final String msgId;
+  final NEChatroomType chatroomType;
 
   InImageMessage(
     this.uuid,
     this.time,
     this.nickname,
+    this.avatar,
     this.thumbPath,
     this.originPath,
     this.extension,
     this.size,
     this.width,
     this.height,
+    this.msgId,
+    this.url,
+    this.chatroomType,
   );
 
   @override
@@ -457,6 +651,7 @@ class InImageMessage with MessageState, ImageMessageState, InMessageState {
     await Future.delayed(Duration(milliseconds: 20));
     if (await File(originPath).exists()) {
       attachmentDownloadProgress.value = 1.0;
+      originDownloadProgress.value = 1.0;
     }
     if (await File(thumbPath).exists()) {
       thumbDownloadProgress.value = 1.0;
@@ -493,18 +688,48 @@ mixin FileMessageState on MessageState {
   }
 }
 
+mixin NotificationMessageState on MessageState {
+  int get eventType;
+  String? get operator;
+  String? get recalledMessageId;
+}
+
+class InNotificationMessage
+    with MessageState, NotificationMessageState, InMessageState {
+  final String uuid;
+  final int time;
+  final int eventType;
+  final String? operator;
+  final String? recalledMessageId;
+  final NEChatroomType chatroomType;
+  final String nickname;
+  final String? avatar;
+
+  InNotificationMessage(this.nickname, this.avatar, this.uuid, this.time,
+      this.eventType, this.operator, this.recalledMessageId, this.chatroomType);
+
+  @override
+  String? get attachmentPath => null;
+
+  @override
+  String? get msgId => null;
+}
+
 class OutFileMessage with MessageState, FileMessageState, OutMessageState {
   final String nickname;
+  final String? avatar;
   final String name;
   final String path;
   final int size;
   final String? extension;
+  final NEChatroomType chatroomType;
 
-  OutFileMessage(
-      this.nickname, this.name, this.path, this.size, this.extension);
+  OutFileMessage(this.nickname, this.avatar, this.name, this.path, this.size,
+      this.extension, this.chatroomType);
 
   OutFileMessage copy() {
-    return OutFileMessage(nickname, name, path, size, extension);
+    return OutFileMessage(
+        nickname, avatar, name, path, size, extension, chatroomType);
   }
 }
 
@@ -512,13 +737,16 @@ class InFileMessage with MessageState, FileMessageState, InMessageState {
   final String uuid;
   final int time;
   final String nickname;
+  final String? avatar;
   final String name;
   final String path;
   final int size;
   final String? extension;
+  final String msgId;
+  final NEChatroomType chatroomType;
 
-  InFileMessage(this.uuid, this.time, this.nickname, this.name, this.path,
-      this.size, this.extension);
+  InFileMessage(this.uuid, this.time, this.nickname, this.avatar, this.name,
+      this.path, this.size, this.extension, this.msgId, this.chatroomType);
 
   @override
   String? get attachmentPath => path;
@@ -526,4 +754,8 @@ class InFileMessage with MessageState, FileMessageState, InMessageState {
 
 class AnchorMessage {
   const AnchorMessage();
+}
+
+class HistorySegment {
+  const HistorySegment();
 }

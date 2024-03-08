@@ -12,6 +12,8 @@ abstract class NEMeetingItem {
 
   NEMeetingItem._();
 
+  String? get ownerUserUuid;
+
   ///[NEMeetingType]
   int? get meetingType;
 
@@ -29,7 +31,7 @@ abstract class NEMeetingItem {
   /// 预定成功后会议号
   String? get roomUuid;
 
-  /// h会议id,取消会议，编辑会议使用
+  /// 会议id,取消会议，编辑会议使用
   int? get meetingId;
 
   /// 设置会议主题
@@ -38,13 +40,13 @@ abstract class NEMeetingItem {
   /// 获取会议主题
   String? get subject;
 
-  /// 设置会议开始时间， 毫秒
+  /// 设置会议开始时间，单位毫秒。在编辑预约会议时，如果设置为0，则不调整会议开始时间
   set startTime(int start);
 
   /// 获取会议开始时间
   int get startTime;
 
-  /// 设置会议结束时间， 毫秒
+  /// 设置会议结束时间，单位毫秒。在编辑预约会议时，如果设置为0，则不调整会议结束时间
   set endTime(int end);
 
   /// 获取会议结束时间
@@ -85,6 +87,16 @@ abstract class NEMeetingItem {
   bool get noSip;
 
   String? get inviteUrl;
+
+  ///
+  /// 开启/关闭等候室
+  ///
+  void setWaitingRoomEnabled(bool enabled);
+
+  ///
+  /// 等候室是否开启
+  ///
+  bool get isWaitingRoomEnabled;
 
   Map toJson();
 

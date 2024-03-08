@@ -16,9 +16,9 @@ import 'dart:convert';
 import 'package:nemeeting/service/profile/app_profile.dart';
 import 'package:nemeeting/base/util/global_preferences.dart';
 import 'package:nemeeting/service/response/result.dart';
-import 'package:nemeeting/service/values/strings.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 
+import '../../language/localizations.dart';
 import '../config/servers.dart';
 import '../module_name.dart' as module;
 
@@ -58,11 +58,11 @@ class AuthManager {
 
   String? get accountId => _loginInfo?.accountId;
 
-  String? get nickName =>
-      _loginInfo?.nickname ??
-      _neMeetingKit.getAccountService().getAccountInfo()?.nickname;
+  String? get nickName => _loginInfo?.nickname ?? accountInfo?.nickname;
 
-  String? get mobilePhone => _loginInfo?.mobile;
+  String? get mobilePhone => accountInfo?.phoneNumber;
+
+  String? get email => accountInfo?.email;
 
   String? get accountToken => _loginInfo?.accountToken;
 
@@ -71,6 +71,9 @@ class AuthManager {
   int? get loginType => _loginInfo?.loginType;
 
   bool? get autoRegistered => _autoRegistered;
+
+  NEAccountInfo? get accountInfo =>
+      _neMeetingKit.getAccountService().getAccountInfo();
 
   Future<bool> autoLogin() async {
     AuthState().updateState(state: AuthState.init);
@@ -81,6 +84,11 @@ class AuthManager {
 
   Future<Result<void>> loginMeetingKitWithToken(
       LoginType loginType, LoginInfo loginInfo) async {
+    Alog.i(
+      moduleName: module.moduleName,
+      tag: _tag,
+      content: 'loginMeetingKitWithToken loginType = $loginType',
+    );
     loginInfo.loginType = loginType.index;
     _loginInfo = loginInfo;
     _autoRegistered = loginInfo.autoRegistered;
@@ -92,6 +100,11 @@ class AuthManager {
   }
 
   Future<Result<void>> _autoLoginMeetingKit() async {
+    Alog.i(
+      moduleName: module.moduleName,
+      tag: _tag,
+      content: '_autoLoginMeetingKit loginType = $loginType',
+    );
     final id = accountId;
     final token = accountToken;
     if (id == null || token == null || id.isEmpty || token.isEmpty) {
@@ -107,23 +120,29 @@ class AuthManager {
     String? appKey,
     Future<NEResult<void>> Function() loginAction,
   ) async {
+    print("========_loginInfo = $_loginInfo");
+    try {
+      throw Error(); // 抛出一个错误以获取调用栈信息
+    } catch (error, stackTrace) {
+      print('========StackTrace: $stackTrace');
+    }
     if (appKey == null || appKey.isEmpty) {
       return Result(code: NEMeetingErrorCode.failed, msg: 'appKey is empty');
     }
     await Application.ensureInitialized();
+    final meetingAppLocalizations = getAppLocalizations();
     final foregroundServiceConfig = NEForegroundServiceConfig(
-      contentTitle: Strings.appName,
-      contentText: Strings.foregroundContentText,
-      ticker: Strings.appName,
+      contentTitle: meetingAppLocalizations.globalAppName,
+      contentText: meetingAppLocalizations.meetingForegroundContentText,
+      ticker: meetingAppLocalizations.globalAppName,
       channelId: 'netease_meeting_channel',
-      channelName: Strings.appName,
-      channelDesc: Strings.appName,
+      channelName: meetingAppLocalizations.globalAppName,
+      channelDesc: meetingAppLocalizations.globalAppName,
     );
-    await NEMeetingUIKit().switchLanguage(NEMeetingLanguage.chinese);
     final initializeResult = await NEMeetingUIKit().initialize(
       NEMeetingUIKitConfig(
         appKey: appKey,
-        appName: Strings.appName,
+        appName: meetingAppLocalizations.globalAppName,
         // useAssetServerConfig: AppConfig().isPrivateEnv,
         iosBroadcastAppGroup: iosBroadcastExtensionAppGroup,
         serverUrl: Servers().baseUrl,

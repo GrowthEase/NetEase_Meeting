@@ -9,10 +9,15 @@ import 'package:yunxin_alog/yunxin_alog.dart';
 class Servers {
   static const _serverUrl = 'https://roomkit.netease.im/';
 
-  final privacy =
+  static const privacy =
       'https://meeting.163.com/privacy/agreement_mobile_ysbh_wap.shtml';
 
-  final userProtocol = 'https://netease.im/meeting/clauses?serviceType=0';
+  static const userProtocol =
+      'https://netease.im/meeting/clauses?serviceType=0';
+  static const deleteAccountWebServiceUrl =
+      'https://meeting.163.com/invite/logout';
+  static const appRegistryDetailUrl =
+      'https://beian.miit.gov.cn/?app_lang=zh-cn#/Integrated/index';
 
   final connectTimeout = 30000;
   final receiveTimeout = 15000;

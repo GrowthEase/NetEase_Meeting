@@ -103,1697 +103,2141 @@ abstract class NEMeetingUIKitLocalizations {
     Locale('zh')
   ];
 
-  /// No description provided for @joinMeeting.
+  /// No description provided for @globalAppName.
   ///
-  /// In en, this message translates to:
-  /// **'Join'**
-  String get joinMeeting;
+  /// In zh, this message translates to:
+  /// **'网易会议'**
+  String get globalAppName;
 
-  /// No description provided for @cancel.
+  /// No description provided for @globalDelete.
   ///
-  /// In en, this message translates to:
-  /// **'Cancel'**
-  String get cancel;
+  /// In zh, this message translates to:
+  /// **'删除'**
+  String get globalDelete;
 
-  /// No description provided for @add.
+  /// No description provided for @globalNothing.
   ///
-  /// In en, this message translates to:
-  /// **'Add'**
-  String get add;
+  /// In zh, this message translates to:
+  /// **'无'**
+  String get globalNothing;
 
-  /// No description provided for @beauty.
+  /// No description provided for @globalCancel.
   ///
-  /// In en, this message translates to:
-  /// **'Beauty '**
-  String get beauty;
+  /// In zh, this message translates to:
+  /// **'取消'**
+  String get globalCancel;
 
-  /// No description provided for @beautyLevel.
+  /// No description provided for @globalAdd.
   ///
-  /// In en, this message translates to:
-  /// **'Level'**
-  String get beautyLevel;
+  /// In zh, this message translates to:
+  /// **'添加'**
+  String get globalAdd;
 
-  /// No description provided for @joiningTips.
+  /// No description provided for @globalClose.
   ///
-  /// In en, this message translates to:
-  /// **'Joining...'**
-  String get joiningTips;
+  /// In zh, this message translates to:
+  /// **'关闭'**
+  String get globalClose;
 
-  /// No description provided for @leaveMeeting.
+  /// No description provided for @globalOpen.
   ///
-  /// In en, this message translates to:
-  /// **'Leave'**
-  String get leaveMeeting;
+  /// In zh, this message translates to:
+  /// **'打开'**
+  String get globalOpen;
 
-  /// No description provided for @quitMeeting.
+  /// No description provided for @globalFail.
   ///
-  /// In en, this message translates to:
-  /// **'End'**
-  String get quitMeeting;
+  /// In zh, this message translates to:
+  /// **'失败'**
+  String get globalFail;
 
-  /// No description provided for @defaultMeetingTitle.
+  /// No description provided for @globalYes.
   ///
-  /// In en, this message translates to:
-  /// **'Video Meeting'**
-  String get defaultMeetingTitle;
+  /// In zh, this message translates to:
+  /// **'是'**
+  String get globalYes;
 
-  /// No description provided for @close.
+  /// No description provided for @globalNo.
   ///
-  /// In en, this message translates to:
-  /// **'Close'**
-  String get close;
+  /// In zh, this message translates to:
+  /// **'否'**
+  String get globalNo;
 
-  /// No description provided for @open.
+  /// No description provided for @globalSave.
   ///
-  /// In en, this message translates to:
-  /// **'Open'**
-  String get open;
+  /// In zh, this message translates to:
+  /// **'保存'**
+  String get globalSave;
 
-  /// No description provided for @fail.
+  /// No description provided for @globalDone.
   ///
-  /// In en, this message translates to:
-  /// **'Fail'**
-  String get fail;
+  /// In zh, this message translates to:
+  /// **'完成'**
+  String get globalDone;
 
-  /// No description provided for @networkNotStable.
+  /// No description provided for @globalNotify.
   ///
-  /// In en, this message translates to:
-  /// **'Unstable network'**
-  String get networkNotStable;
+  /// In zh, this message translates to:
+  /// **'通知'**
+  String get globalNotify;
 
-  /// No description provided for @memberlistTitle.
+  /// No description provided for @globalSure.
   ///
-  /// In en, this message translates to:
-  /// **'Participants'**
-  String get memberlistTitle;
+  /// In zh, this message translates to:
+  /// **'确定'**
+  String get globalSure;
 
-  /// No description provided for @joinMeetingFail.
+  /// No description provided for @globalIKnow.
   ///
-  /// In en, this message translates to:
-  /// **'Failed to join the meeting'**
-  String get joinMeetingFail;
+  /// In zh, this message translates to:
+  /// **'我知道了'**
+  String get globalIKnow;
 
-  /// No description provided for @yourChangeHost.
+  /// No description provided for @globalCopy.
   ///
-  /// In en, this message translates to:
-  /// **'You are assigned HOST'**
-  String get yourChangeHost;
+  /// In zh, this message translates to:
+  /// **'复制'**
+  String get globalCopy;
 
-  /// No description provided for @yourChangeCoHost.
+  /// No description provided for @globalCopySuccess.
   ///
-  /// In en, this message translates to:
-  /// **'You are assigned CO-HOST'**
-  String get yourChangeCoHost;
+  /// In zh, this message translates to:
+  /// **'复制成功'**
+  String get globalCopySuccess;
 
-  /// No description provided for @yourChangeCancelCoHost.
+  /// No description provided for @globalEdit.
   ///
-  /// In en, this message translates to:
-  /// **'You are unassigned CO-HOST'**
-  String get yourChangeCancelCoHost;
+  /// In zh, this message translates to:
+  /// **'编辑'**
+  String get globalEdit;
 
-  /// No description provided for @localUserAssignedActiveSpeaker.
+  /// No description provided for @globalGotIt.
   ///
-  /// In en, this message translates to:
-  /// **'You are assigned active speaker'**
-  String get localUserAssignedActiveSpeaker;
+  /// In zh, this message translates to:
+  /// **'知道了'**
+  String get globalGotIt;
 
-  /// No description provided for @localUserUnAssignedActiveSpeaker.
+  /// No description provided for @globalMin.
   ///
-  /// In en, this message translates to:
-  /// **'You are unassigned active speaker'**
-  String get localUserUnAssignedActiveSpeaker;
+  /// In zh, this message translates to:
+  /// **'分钟'**
+  String get globalMin;
 
-  /// No description provided for @muteAudioAll.
+  /// No description provided for @globalNotWork.
   ///
-  /// In en, this message translates to:
-  /// **'Mute All'**
-  String get muteAudioAll;
+  /// In zh, this message translates to:
+  /// **'无法使用{permissionName}'**
+  String globalNotWork(Object permissionName);
 
-  /// No description provided for @muteAudioAllDialogTips.
+  /// No description provided for @globalNeedPermissionTips.
   ///
-  /// In en, this message translates to:
-  /// **'All and new participants are muted'**
-  String get muteAudioAllDialogTips;
+  /// In zh, this message translates to:
+  /// **'该功能需要{permissionName},请允许{title}访问您的{permissionName}权限'**
+  String globalNeedPermissionTips(Object permissionName, Object title);
 
-  /// No description provided for @muteVideoAllDialogTips.
+  /// No description provided for @globalToSetUp.
   ///
-  /// In en, this message translates to:
-  /// **'All and new participants have video turned off'**
-  String get muteVideoAllDialogTips;
+  /// In zh, this message translates to:
+  /// **'前往设置'**
+  String get globalToSetUp;
 
-  /// No description provided for @unMuteAudioAll.
+  /// No description provided for @globalNoPermission.
   ///
-  /// In en, this message translates to:
-  /// **'Unmute All'**
-  String get unMuteAudioAll;
+  /// In zh, this message translates to:
+  /// **'权限未授权'**
+  String get globalNoPermission;
 
-  /// No description provided for @muteAudio.
+  /// No description provided for @globalDays.
   ///
-  /// In en, this message translates to:
-  /// **'Mute'**
-  String get muteAudio;
+  /// In zh, this message translates to:
+  /// **'天'**
+  String get globalDays;
 
-  /// No description provided for @unMuteAudio.
+  /// No description provided for @globalHours.
   ///
-  /// In en, this message translates to:
-  /// **'Unmute'**
-  String get unMuteAudio;
+  /// In zh, this message translates to:
+  /// **'小时'**
+  String get globalHours;
 
-  /// No description provided for @muteAllVideo.
+  /// No description provided for @globalMinutes.
   ///
-  /// In en, this message translates to:
-  /// **'Turn off videos'**
-  String get muteAllVideo;
+  /// In zh, this message translates to:
+  /// **'分钟'**
+  String get globalMinutes;
 
-  /// No description provided for @unmuteAllVideo.
+  /// No description provided for @globalViewMessage.
   ///
-  /// In en, this message translates to:
-  /// **'Turn on videos'**
-  String get unmuteAllVideo;
+  /// In zh, this message translates to:
+  /// **'查看消息'**
+  String get globalViewMessage;
 
-  /// No description provided for @muteVideo.
+  /// No description provided for @globalNoLongerRemind.
   ///
-  /// In en, this message translates to:
-  /// **'Stop Video'**
-  String get muteVideo;
+  /// In zh, this message translates to:
+  /// **'不再提醒'**
+  String get globalNoLongerRemind;
 
-  /// No description provided for @unMuteVideo.
+  /// No description provided for @globalOperationFail.
   ///
-  /// In en, this message translates to:
-  /// **'Start Video'**
-  String get unMuteVideo;
+  /// In zh, this message translates to:
+  /// **'操作失败'**
+  String get globalOperationFail;
 
-  /// No description provided for @muteAudioAndVideo.
+  /// No description provided for @meetingBeauty.
   ///
-  /// In en, this message translates to:
-  /// **'Turn off audio and video'**
-  String get muteAudioAndVideo;
+  /// In zh, this message translates to:
+  /// **'美颜'**
+  String get meetingBeauty;
 
-  /// No description provided for @unmuteAudioAndVideo.
+  /// No description provided for @meetingBeautyLevel.
   ///
-  /// In en, this message translates to:
-  /// **'Turn on audio and video'**
-  String get unmuteAudioAndVideo;
+  /// In zh, this message translates to:
+  /// **'美颜等级'**
+  String get meetingBeautyLevel;
 
-  /// No description provided for @screenShare.
+  /// No description provided for @meetingJoinTips.
   ///
-  /// In en, this message translates to:
-  /// **'Share Screen'**
-  String get screenShare;
+  /// In zh, this message translates to:
+  /// **'正在进入会议...'**
+  String get meetingJoinTips;
 
-  /// No description provided for @hostStopShare.
+  /// No description provided for @meetingQuit.
   ///
-  /// In en, this message translates to:
-  /// **'Host stopped your screen sharing'**
-  String get hostStopShare;
+  /// In zh, this message translates to:
+  /// **'结束会议'**
+  String get meetingQuit;
 
-  /// No description provided for @hostStopWhiteboard.
+  /// No description provided for @meetingDefalutTitle.
   ///
-  /// In en, this message translates to:
-  /// **'Host stopped your whiteboard sharing'**
-  String get hostStopWhiteboard;
+  /// In zh, this message translates to:
+  /// **'视频会议'**
+  String get meetingDefalutTitle;
 
-  /// No description provided for @unScreenShare.
+  /// No description provided for @meetingJoinFail.
   ///
-  /// In en, this message translates to:
-  /// **'Stop Share'**
-  String get unScreenShare;
+  /// In zh, this message translates to:
+  /// **'加入会议失败'**
+  String get meetingJoinFail;
 
-  /// No description provided for @focusVideo.
+  /// No description provided for @meetingHostKickedYou.
   ///
-  /// In en, this message translates to:
-  /// **'Assign active speaker'**
-  String get focusVideo;
+  /// In zh, this message translates to:
+  /// **'因被主持人移出或切换至其他设备，您已退出会议'**
+  String get meetingHostKickedYou;
 
-  /// No description provided for @unFocusVideo.
+  /// No description provided for @meetingMicphoneNotWorksDialogTitle.
   ///
-  /// In en, this message translates to:
-  /// **'Unassign active speaker'**
-  String get unFocusVideo;
+  /// In zh, this message translates to:
+  /// **'无法使用麦克风'**
+  String get meetingMicphoneNotWorksDialogTitle;
 
-  /// No description provided for @changeHost.
+  /// No description provided for @meetingMicphoneNotWorksDialogMessage.
   ///
-  /// In en, this message translates to:
-  /// **'Transfer HOST'**
-  String get changeHost;
+  /// In zh, this message translates to:
+  /// **'您已静音，请点击\"解除静音\"开启麦克风'**
+  String get meetingMicphoneNotWorksDialogMessage;
 
-  /// No description provided for @changeHostTips.
+  /// No description provided for @meetingFinish.
   ///
-  /// In en, this message translates to:
-  /// **'Transfer HOST to '**
-  String get changeHostTips;
+  /// In zh, this message translates to:
+  /// **'结束'**
+  String get meetingFinish;
 
-  /// No description provided for @remove.
+  /// No description provided for @meetingLeave.
   ///
-  /// In en, this message translates to:
-  /// **'Remove'**
-  String get remove;
+  /// In zh, this message translates to:
+  /// **'离开'**
+  String get meetingLeave;
 
-  /// No description provided for @rename.
+  /// No description provided for @meetingLeaveFull.
   ///
-  /// In en, this message translates to:
-  /// **'Rename'**
-  String get rename;
+  /// In zh, this message translates to:
+  /// **'离开会议'**
+  String get meetingLeaveFull;
 
-  /// No description provided for @makeCoHost.
+  /// No description provided for @meetingSpeakingPrefix.
   ///
-  /// In en, this message translates to:
-  /// **'Assign CO-HOST'**
-  String get makeCoHost;
+  /// In zh, this message translates to:
+  /// **'正在讲话:'**
+  String get meetingSpeakingPrefix;
 
-  /// No description provided for @cancelCoHost.
+  /// No description provided for @meetingLockMeetingByHost.
   ///
-  /// In en, this message translates to:
-  /// **'Unassign CO_HOST'**
-  String get cancelCoHost;
+  /// In zh, this message translates to:
+  /// **'会议已锁定，新参会者将无法加入会议'**
+  String get meetingLockMeetingByHost;
 
-  /// No description provided for @renameTips.
+  /// No description provided for @meetingLockMeetingByHostFail.
   ///
-  /// In en, this message translates to:
-  /// **'Enter a new nickname'**
-  String get renameTips;
+  /// In zh, this message translates to:
+  /// **'会议锁定失败'**
+  String get meetingLockMeetingByHostFail;
 
-  /// No description provided for @renameSuccess.
+  /// No description provided for @meetingUnLockMeetingByHost.
   ///
-  /// In en, this message translates to:
-  /// **'Nickname edited'**
-  String get renameSuccess;
+  /// In zh, this message translates to:
+  /// **'会议已解锁，新参会者将可以加入会议'**
+  String get meetingUnLockMeetingByHost;
 
-  /// No description provided for @renameFail.
+  /// No description provided for @meetingUnLockMeetingByHostFail.
   ///
-  /// In en, this message translates to:
-  /// **'Renaming failed'**
-  String get renameFail;
+  /// In zh, this message translates to:
+  /// **'会议解锁失败'**
+  String get meetingUnLockMeetingByHostFail;
 
-  /// No description provided for @removeTips.
+  /// No description provided for @meetingLock.
   ///
-  /// In en, this message translates to:
-  /// **'Remove '**
-  String get removeTips;
+  /// In zh, this message translates to:
+  /// **'锁定会议'**
+  String get meetingLock;
 
-  /// No description provided for @yes.
+  /// No description provided for @meetingMore.
   ///
-  /// In en, this message translates to:
-  /// **'Yes'**
-  String get yes;
-
-  /// No description provided for @no.
-  ///
-  /// In en, this message translates to:
-  /// **'No'**
-  String get no;
-
-  /// No description provided for @cannotRemoveSelf.
-  ///
-  /// In en, this message translates to:
-  /// **'You cannot remove yourself'**
-  String get cannotRemoveSelf;
-
-  /// No description provided for @muteAudioFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Muting failed'**
-  String get muteAudioFail;
-
-  /// No description provided for @unMuteAudioFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Unmuting failed'**
-  String get unMuteAudioFail;
-
-  /// No description provided for @muteVideoFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to turn off camera'**
-  String get muteVideoFail;
-
-  /// No description provided for @unMuteVideoFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to turn on camera'**
-  String get unMuteVideoFail;
-
-  /// No description provided for @focusVideoFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to assign active speaker'**
-  String get focusVideoFail;
-
-  /// No description provided for @unFocusVideoFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to unassign active speaker'**
-  String get unFocusVideoFail;
-
-  /// No description provided for @handsUpDownFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to lower hand'**
-  String get handsUpDownFail;
-
-  /// No description provided for @changeHostFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to transfer HOST'**
-  String get changeHostFail;
-
-  /// No description provided for @removeMemberFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to remove the participant'**
-  String get removeMemberFail;
-
-  /// No description provided for @save.
-  ///
-  /// In en, this message translates to:
-  /// **'Save'**
-  String get save;
-
-  /// No description provided for @done.
-  ///
-  /// In en, this message translates to:
-  /// **'Complete'**
-  String get done;
-
-  /// No description provided for @notify.
-  ///
-  /// In en, this message translates to:
-  /// **'Notification'**
-  String get notify;
-
-  /// No description provided for @hostKickedYou.
-  ///
-  /// In en, this message translates to:
-  /// **'You are removed by HOST or switched to another device, you have left the meeting'**
-  String get hostKickedYou;
-
-  /// No description provided for @sure.
-  ///
-  /// In en, this message translates to:
-  /// **'OK'**
-  String get sure;
-
-  /// No description provided for @openCamera.
-  ///
-  /// In en, this message translates to:
-  /// **'Cam On'**
-  String get openCamera;
-
-  /// No description provided for @openMicro.
-  ///
-  /// In en, this message translates to:
-  /// **'Mic On'**
-  String get openMicro;
-
-  /// No description provided for @micphoneNotWorksDialogTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Microphone unavailable'**
-  String get micphoneNotWorksDialogTitle;
-
-  /// No description provided for @micphoneNotWorksDialogMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'You are using the microphone. To speak, \n click Unmute and speak'**
-  String get micphoneNotWorksDialogMessage;
-
-  /// No description provided for @hostOpenCameraTips.
-  ///
-  /// In en, this message translates to:
-  /// **'Host requests to turn on your camera. Turn on the camera？'**
-  String get hostOpenCameraTips;
-
-  /// No description provided for @hostOpenMicroTips.
-  ///
-  /// In en, this message translates to:
-  /// **'Host requests to unmute your microphone. Unmute the microphone？'**
-  String get hostOpenMicroTips;
-
-  /// No description provided for @finish.
-  ///
-  /// In en, this message translates to:
-  /// **'End'**
-  String get finish;
-
-  /// No description provided for @leave.
-  ///
-  /// In en, this message translates to:
-  /// **'Leave'**
-  String get leave;
-
-  /// No description provided for @muteAllAudioTip.
-  ///
-  /// In en, this message translates to:
-  /// **'Allow participants to unmute'**
-  String get muteAllAudioTip;
-
-  /// No description provided for @muteAllVideoTip.
-  ///
-  /// In en, this message translates to:
-  /// **'Allow participants to turn on videos'**
-  String get muteAllVideoTip;
-
-  /// No description provided for @muteAllAudioSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'All participants are muted'**
-  String get muteAllAudioSuccess;
-
-  /// No description provided for @muteAllAudioFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to mute all participants'**
-  String get muteAllAudioFail;
-
-  /// No description provided for @muteAllVideoSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'All participants have video turned off'**
-  String get muteAllVideoSuccess;
-
-  /// No description provided for @muteAllVideoFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to turn off videos of all participants'**
-  String get muteAllVideoFail;
-
-  /// No description provided for @unMuteAllAudioSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'All participants are unmuted'**
-  String get unMuteAllAudioSuccess;
-
-  /// No description provided for @unMuteAllAudioFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to unmute all participants'**
-  String get unMuteAllAudioFail;
-
-  /// No description provided for @unMuteAllVideoSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'All participants have video turned on'**
-  String get unMuteAllVideoSuccess;
-
-  /// No description provided for @unMuteAllVideoFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to turn on videos of all participants'**
-  String get unMuteAllVideoFail;
-
-  /// No description provided for @meetingHostMuteVideo.
-  ///
-  /// In en, this message translates to:
-  /// **'Your video is turned off'**
-  String get meetingHostMuteVideo;
-
-  /// No description provided for @meetingHostMuteAudio.
-  ///
-  /// In en, this message translates to:
-  /// **'You are muted'**
-  String get meetingHostMuteAudio;
-
-  /// No description provided for @meetingHostMuteAllAudio.
-  ///
-  /// In en, this message translates to:
-  /// **'Host muted all participants'**
-  String get meetingHostMuteAllAudio;
-
-  /// No description provided for @meetingHostMuteAllVideo.
-  ///
-  /// In en, this message translates to:
-  /// **'Host turned off videos of all participants'**
-  String get meetingHostMuteAllVideo;
-
-  /// No description provided for @muteAudioHandsUpOnTips.
-  ///
-  /// In en, this message translates to:
-  /// **'You are unmuted and can speak now'**
-  String get muteAudioHandsUpOnTips;
-
-  /// No description provided for @shareOverLimit.
-  ///
-  /// In en, this message translates to:
-  /// **'Someone is sharing screen, you can not share your screen'**
-  String get shareOverLimit;
-
-  /// No description provided for @noShareScreenPermission.
-  ///
-  /// In en, this message translates to:
-  /// **'No screen sharing permission'**
-  String get noShareScreenPermission;
-
-  /// No description provided for @hasWhiteBoardShare.
-  ///
-  /// In en, this message translates to:
-  /// **'Screen cannot be shared while whiteboard is being shared'**
-  String get hasWhiteBoardShare;
-
-  /// No description provided for @overRoleLimitCount.
-  ///
-  /// In en, this message translates to:
-  /// **'The number of assigned roles exceeds the upper limit'**
-  String get overRoleLimitCount;
-
-  /// No description provided for @hasScreenShareShare.
-  ///
-  /// In en, this message translates to:
-  /// **'Whiteboard cannot be shared while screen is being shared'**
-  String get hasScreenShareShare;
-
-  /// No description provided for @screenShareTips.
-  ///
-  /// In en, this message translates to:
-  /// **'All content on your screen will be captured.'**
-  String get screenShareTips;
-
-  /// No description provided for @screenShareStopFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to stop screen sharing'**
-  String get screenShareStopFail;
-
-  /// No description provided for @whiteBoardShareStopFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to stop whiteboard sharing'**
-  String get whiteBoardShareStopFail;
-
-  /// No description provided for @whiteBoardShareStartFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to start whiteboard sharing'**
-  String get whiteBoardShareStartFail;
-
-  /// No description provided for @screenShareStartFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to start screen sharing'**
-  String get screenShareStartFail;
-
-  /// No description provided for @screenShareLocalTips.
-  ///
-  /// In en, this message translates to:
-  /// **' is Sharing screen'**
-  String get screenShareLocalTips;
-
-  /// No description provided for @screenShareSuffix.
-  ///
-  /// In en, this message translates to:
-  /// **' screen'**
-  String get screenShareSuffix;
-
-  /// No description provided for @screenShareInteractionTip.
-  ///
-  /// In en, this message translates to:
-  /// **'Pinch with 2 fingers to adjust zoom'**
-  String get screenShareInteractionTip;
-
-  /// No description provided for @whiteBoardInteractionTip.
-  ///
-  /// In en, this message translates to:
-  /// **'You are granted the whiteboard permission'**
-  String get whiteBoardInteractionTip;
-
-  /// No description provided for @undoWhiteBoardInteractionTip.
-  ///
-  /// In en, this message translates to:
-  /// **'You are revoked the whiteboard permission'**
-  String get undoWhiteBoardInteractionTip;
-
-  /// No description provided for @speakingPrefix.
-  ///
-  /// In en, this message translates to:
-  /// **'Speaking: '**
-  String get speakingPrefix;
-
-  /// No description provided for @iKnow.
-  ///
-  /// In en, this message translates to:
-  /// **'Got it'**
-  String get iKnow;
-
-  /// No description provided for @me.
-  ///
-  /// In en, this message translates to:
-  /// **'me'**
-  String get me;
-
-  /// No description provided for @live.
-  ///
-  /// In en, this message translates to:
-  /// **'Live'**
-  String get live;
-
-  /// No description provided for @virtualBackground.
-  ///
-  /// In en, this message translates to:
-  /// **'Background'**
-  String get virtualBackground;
-
-  /// No description provided for @virtualBackgroundImageNotExist.
-  ///
-  /// In en, this message translates to:
-  /// **'Custom background image does not exist'**
-  String get virtualBackgroundImageNotExist;
-
-  /// No description provided for @virtualBackgroundImageFormatNotSupported.
-  ///
-  /// In en, this message translates to:
-  /// **'Invalid background image format'**
-  String get virtualBackgroundImageFormatNotSupported;
-
-  /// No description provided for @virtualBackgroundImageDeviceNotSupported.
-  ///
-  /// In en, this message translates to:
-  /// **'The device is not supported'**
-  String get virtualBackgroundImageDeviceNotSupported;
-
-  /// No description provided for @virtualBackgroundImageLarge.
-  ///
-  /// In en, this message translates to:
-  /// **'The custom background image exceeds 5MB in size'**
-  String get virtualBackgroundImageLarge;
-
-  /// No description provided for @virtualBackgroundImageMax.
-  ///
-  /// In en, this message translates to:
-  /// **'The custom background images exceed the maximum number'**
-  String get virtualBackgroundImageMax;
-
-  /// No description provided for @closeWhiteBoard.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop Whiteboard'**
-  String get closeWhiteBoard;
-
-  /// No description provided for @lockMeetingByHost.
-  ///
-  /// In en, this message translates to:
-  /// **'The meeting is locked. New participants cannot join the meeting'**
-  String get lockMeetingByHost;
-
-  /// No description provided for @lockMeetingByHostFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to lock the meeting'**
-  String get lockMeetingByHostFail;
-
-  /// No description provided for @unLockMeetingByHost.
-  ///
-  /// In en, this message translates to:
-  /// **'The meeting is unlocked. New participants can join the meeting'**
-  String get unLockMeetingByHost;
-
-  /// No description provided for @unLockMeetingByHostFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to unlock the meeting'**
-  String get unLockMeetingByHostFail;
-
-  /// No description provided for @lockMeeting.
-  ///
-  /// In en, this message translates to:
-  /// **'Lock'**
-  String get lockMeeting;
-
-  /// No description provided for @inputMessageHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Entering...'**
-  String get inputMessageHint;
-
-  /// No description provided for @cannotSendBlankLetter.
-  ///
-  /// In en, this message translates to:
-  /// **'Unable to send empty messages'**
-  String get cannotSendBlankLetter;
-
-  /// No description provided for @chat.
-  ///
-  /// In en, this message translates to:
-  /// **'Chat'**
-  String get chat;
-
-  /// No description provided for @more.
-  ///
-  /// In en, this message translates to:
-  /// **'More'**
-  String get more;
-
-  /// No description provided for @searchMember.
-  ///
-  /// In en, this message translates to:
-  /// **'Search'**
-  String get searchMember;
-
-  /// No description provided for @enterChatRoomFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to join the chat room'**
-  String get enterChatRoomFail;
-
-  /// No description provided for @newMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'New message'**
-  String get newMessage;
-
-  /// No description provided for @unsupportedFileExtension.
-  ///
-  /// In en, this message translates to:
-  /// **'Unsupported file'**
-  String get unsupportedFileExtension;
-
-  /// No description provided for @fileSizeExceedTheLimit.
-  ///
-  /// In en, this message translates to:
-  /// **'File size cannot exceed 200MB'**
-  String get fileSizeExceedTheLimit;
-
-  /// No description provided for @imageSizeExceedTheLimit.
-  ///
-  /// In en, this message translates to:
-  /// **'Image size cannot exceed 20MB'**
-  String get imageSizeExceedTheLimit;
-
-  /// No description provided for @imageMessageTip.
-  ///
-  /// In en, this message translates to:
-  /// **'[Image]'**
-  String get imageMessageTip;
-
-  /// No description provided for @fileMessageTip.
-  ///
-  /// In en, this message translates to:
-  /// **'[File]'**
-  String get fileMessageTip;
-
-  /// No description provided for @saveToGallerySuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Saved to Album'**
-  String get saveToGallerySuccess;
-
-  /// No description provided for @saveToGalleryFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Operation failed'**
-  String get saveToGalleryFail;
-
-  /// No description provided for @saveToGalleryFailNoPermission.
-  ///
-  /// In en, this message translates to:
-  /// **'No permission'**
-  String get saveToGalleryFailNoPermission;
-
-  /// No description provided for @openFileFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Opening file failed'**
-  String get openFileFail;
-
-  /// No description provided for @openFileFailNoPermission.
-  ///
-  /// In en, this message translates to:
-  /// **'Opening file failed: no permission'**
-  String get openFileFailNoPermission;
-
-  /// No description provided for @openFileFailFileNotFound.
-  ///
-  /// In en, this message translates to:
-  /// **'Opening file failed: no file exists'**
-  String get openFileFailFileNotFound;
-
-  /// No description provided for @openFileFailAppNotFound.
-  ///
-  /// In en, this message translates to:
-  /// **'Opening file failed: no app installed to open the file'**
-  String get openFileFailAppNotFound;
+  /// In zh, this message translates to:
+  /// **'更多'**
+  String get meetingMore;
 
   /// No description provided for @meetingPassword.
   ///
-  /// In en, this message translates to:
-  /// **'Meeting Password'**
+  /// In zh, this message translates to:
+  /// **'会议密码'**
   String get meetingPassword;
 
-  /// No description provided for @inputMeetingPassword.
+  /// No description provided for @meetingEnterPassword.
   ///
-  /// In en, this message translates to:
-  /// **'Enter the meeting password'**
-  String get inputMeetingPassword;
+  /// In zh, this message translates to:
+  /// **'请输入会议密码'**
+  String get meetingEnterPassword;
 
-  /// No description provided for @wrongPassword.
+  /// No description provided for @meetingWrongPassword.
   ///
-  /// In en, this message translates to:
-  /// **'Incorrect code'**
-  String get wrongPassword;
+  /// In zh, this message translates to:
+  /// **'密码错误'**
+  String get meetingWrongPassword;
 
-  /// No description provided for @headsetState.
+  /// No description provided for @meetingNum.
   ///
-  /// In en, this message translates to:
-  /// **'You are using the earphone'**
-  String get headsetState;
+  /// In zh, this message translates to:
+  /// **'会议号'**
+  String get meetingNum;
 
-  /// No description provided for @copy.
+  /// No description provided for @meetingShortNum.
   ///
-  /// In en, this message translates to:
-  /// **'Copy'**
-  String get copy;
-
-  /// No description provided for @copySuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy succeeded'**
-  String get copySuccess;
-
-  /// No description provided for @disableLiveAuthLevel.
-  ///
-  /// In en, this message translates to:
-  /// **'Editing live streaming permission is not allowed during streaming'**
-  String get disableLiveAuthLevel;
-
-  /// No description provided for @host.
-  ///
-  /// In en, this message translates to:
-  /// **'HOST'**
-  String get host;
-
-  /// No description provided for @coHost.
-  ///
-  /// In en, this message translates to:
-  /// **'CO_HOST'**
-  String get coHost;
+  /// In zh, this message translates to:
+  /// **'会议短号'**
+  String get meetingShortNum;
 
   /// No description provided for @meetingInfoDesc.
   ///
-  /// In en, this message translates to:
-  /// **'The meeting is being encrypted and protected'**
+  /// In zh, this message translates to:
+  /// **'会议正在加密保护中'**
   String get meetingInfoDesc;
 
-  /// No description provided for @networkUnavailableCloseFail.
+  /// No description provided for @meetingAlreadyHandsUpTips.
   ///
-  /// In en, this message translates to:
-  /// **'Ending meeting failed due to the network error'**
-  String get networkUnavailableCloseFail;
+  /// In zh, this message translates to:
+  /// **'您已举手，请等待主持人处理'**
+  String get meetingAlreadyHandsUpTips;
 
-  /// No description provided for @muteAllHandsUpTips.
+  /// No description provided for @meetingHandsUpApply.
   ///
-  /// In en, this message translates to:
-  /// **'The host has muted all participants. You can raise your hand'**
-  String get muteAllHandsUpTips;
+  /// In zh, this message translates to:
+  /// **'举手申请'**
+  String get meetingHandsUpApply;
 
-  /// No description provided for @muteAllVideoHandsUpTips.
+  /// No description provided for @meetingCancelHandsUp.
   ///
-  /// In en, this message translates to:
-  /// **'The host has turned off all videos. You can raise your hand'**
-  String get muteAllVideoHandsUpTips;
+  /// In zh, this message translates to:
+  /// **'取消举手'**
+  String get meetingCancelHandsUp;
 
-  /// No description provided for @alreadyHandsUpTips.
+  /// No description provided for @meetingCancelHandsUpConfirm.
   ///
-  /// In en, this message translates to:
-  /// **'You are raising hand, waiting for response'**
-  String get alreadyHandsUpTips;
+  /// In zh, this message translates to:
+  /// **'是否确定取消举手？'**
+  String get meetingCancelHandsUpConfirm;
 
-  /// No description provided for @handsUpApply.
+  /// No description provided for @meetingHandsUpDown.
   ///
-  /// In en, this message translates to:
-  /// **'Raise hand'**
-  String get handsUpApply;
+  /// In zh, this message translates to:
+  /// **'手放下'**
+  String get meetingHandsUpDown;
 
-  /// No description provided for @cancelHandsUp.
+  /// No description provided for @meetingInHandsUp.
   ///
-  /// In en, this message translates to:
-  /// **'Lower hand'**
-  String get cancelHandsUp;
+  /// In zh, this message translates to:
+  /// **'举手中'**
+  String get meetingInHandsUp;
 
-  /// No description provided for @cancelHandsUpTips.
+  /// No description provided for @meetingHandsUpFail.
   ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to lower hand?'**
-  String get cancelHandsUpTips;
+  /// In zh, this message translates to:
+  /// **'举手失败'**
+  String get meetingHandsUpFail;
 
-  /// No description provided for @handsUpDown.
+  /// No description provided for @meetingHandsUpSuccess.
   ///
-  /// In en, this message translates to:
-  /// **'Lower hand'**
-  String get handsUpDown;
+  /// In zh, this message translates to:
+  /// **'举手成功，等待主持人处理'**
+  String get meetingHandsUpSuccess;
 
-  /// No description provided for @whiteBoardInteract.
+  /// No description provided for @meetingCancelHandsUpFail.
   ///
-  /// In en, this message translates to:
-  /// **'Grant the whiteboard permission'**
-  String get whiteBoardInteract;
+  /// In zh, this message translates to:
+  /// **'取消举手失败'**
+  String get meetingCancelHandsUpFail;
 
-  /// No description provided for @whiteBoardInteractFail.
+  /// No description provided for @meetingHostRejectAudioHandsUp.
   ///
-  /// In en, this message translates to:
-  /// **'Failed to grant the whiteboard permission'**
-  String get whiteBoardInteractFail;
+  /// In zh, this message translates to:
+  /// **'主持人已将您的手放下'**
+  String get meetingHostRejectAudioHandsUp;
 
-  /// No description provided for @undoWhiteBoardInteract.
+  /// No description provided for @meetingSip.
   ///
-  /// In en, this message translates to:
-  /// **'Revoke the whiteboard permission'**
-  String get undoWhiteBoardInteract;
-
-  /// No description provided for @undoWhiteBoardInteractFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to revoke the whiteboard permission'**
-  String get undoWhiteBoardInteractFail;
-
-  /// No description provided for @inHandsUp.
-  ///
-  /// In en, this message translates to:
-  /// **'Raising'**
-  String get inHandsUp;
-
-  /// No description provided for @handsUpFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to raise hand'**
-  String get handsUpFail;
-
-  /// No description provided for @handsUpSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'You are raising hand, waiting for response'**
-  String get handsUpSuccess;
-
-  /// No description provided for @cancelHandsUpFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to lower hand'**
-  String get cancelHandsUpFail;
-
-  /// No description provided for @hostRejectAudioHandsUp.
-  ///
-  /// In en, this message translates to:
-  /// **'The host rejected your request'**
-  String get hostRejectAudioHandsUp;
-
-  /// No description provided for @sipTip.
-  ///
-  /// In en, this message translates to:
+  /// In zh, this message translates to:
   /// **'SIP'**
-  String get sipTip;
+  String get meetingSip;
 
   /// No description provided for @meetingInviteUrl.
   ///
-  /// In en, this message translates to:
-  /// **'Meeting URL'**
+  /// In zh, this message translates to:
+  /// **'入会链接'**
   String get meetingInviteUrl;
 
   /// No description provided for @meetingInvitePageTitle.
   ///
-  /// In en, this message translates to:
-  /// **'Add Participants'**
+  /// In zh, this message translates to:
+  /// **'添加与会者'**
   String get meetingInvitePageTitle;
 
-  /// No description provided for @sipNumber.
+  /// No description provided for @meetingSipNumber.
   ///
-  /// In en, this message translates to:
-  /// **'SIP Call'**
-  String get sipNumber;
+  /// In zh, this message translates to:
+  /// **'SIP电话/终端'**
+  String get meetingSipNumber;
 
-  /// No description provided for @sipHost.
+  /// No description provided for @meetingSipHost.
   ///
-  /// In en, this message translates to:
-  /// **'SIP Address'**
-  String get sipHost;
+  /// In zh, this message translates to:
+  /// **'SIP地址'**
+  String get meetingSipHost;
 
-  /// No description provided for @inviteListTitle.
+  /// No description provided for @meetingInvite.
   ///
-  /// In en, this message translates to:
-  /// **'Invitation List'**
-  String get inviteListTitle;
+  /// In zh, this message translates to:
+  /// **'邀请'**
+  String get meetingInvite;
 
-  /// No description provided for @invitationSendSuccess.
+  /// No description provided for @meetingInviteListTitle.
   ///
-  /// In en, this message translates to:
-  /// **'Invitation sent'**
-  String get invitationSendSuccess;
+  /// In zh, this message translates to:
+  /// **'邀请列表'**
+  String get meetingInviteListTitle;
 
-  /// No description provided for @invitationSendFail.
+  /// No description provided for @meetingInvitationSendSuccess.
   ///
-  /// In en, this message translates to:
-  /// **'Invitation failed'**
-  String get invitationSendFail;
+  /// In zh, this message translates to:
+  /// **'已发起邀请'**
+  String get meetingInvitationSendSuccess;
 
-  /// No description provided for @meetingLive.
+  /// No description provided for @meetingInvitationSendFail.
   ///
-  /// In en, this message translates to:
-  /// **'Live Meeting'**
-  String get meetingLive;
+  /// In zh, this message translates to:
+  /// **'邀请失败'**
+  String get meetingInvitationSendFail;
 
-  /// No description provided for @meetingLiveTitle.
+  /// No description provided for @meetingRemovedByHost.
   ///
-  /// In en, this message translates to:
-  /// **'Title'**
-  String get meetingLiveTitle;
+  /// In zh, this message translates to:
+  /// **'您已被主持人移除会议'**
+  String get meetingRemovedByHost;
 
-  /// No description provided for @meetingLiveUrl.
+  /// No description provided for @meetingCloseByHost.
   ///
-  /// In en, this message translates to:
-  /// **'Live URL'**
-  String get meetingLiveUrl;
+  /// In zh, this message translates to:
+  /// **'会议已结束'**
+  String get meetingCloseByHost;
 
-  /// No description provided for @pleaseInputLivePassword.
+  /// No description provided for @meetingWasInterrupted.
   ///
-  /// In en, this message translates to:
-  /// **'Enter the live code'**
-  String get pleaseInputLivePassword;
+  /// In zh, this message translates to:
+  /// **'会议已中断'**
+  String get meetingWasInterrupted;
 
-  /// No description provided for @pleaseInputLivePasswordHint.
+  /// No description provided for @meetingSyncDataError.
   ///
-  /// In en, this message translates to:
-  /// **'Enter a 6-digit code'**
-  String get pleaseInputLivePasswordHint;
+  /// In zh, this message translates to:
+  /// **'房间信息同步失败'**
+  String get meetingSyncDataError;
 
-  /// No description provided for @liveInteraction.
+  /// No description provided for @meetingLeaveMeetingBySelf.
   ///
-  /// In en, this message translates to:
-  /// **'Interaction'**
-  String get liveInteraction;
-
-  /// No description provided for @liveInteractionTips.
-  ///
-  /// In en, this message translates to:
-  /// **'If enabled, messaging in the meeting room and live room is visible'**
-  String get liveInteractionTips;
-
-  /// No description provided for @liveLevel.
-  ///
-  /// In en, this message translates to:
-  /// **'Only staff participants can view'**
-  String get liveLevel;
-
-  /// No description provided for @liveLevelTip.
-  ///
-  /// In en, this message translates to:
-  /// **'Non-staff participants are unable to view the live if enabled'**
-  String get liveLevelTip;
-
-  /// No description provided for @liveViewSetting.
-  ///
-  /// In en, this message translates to:
-  /// **'View Settings'**
-  String get liveViewSetting;
-
-  /// No description provided for @liveViewSettingChange.
-  ///
-  /// In en, this message translates to:
-  /// **'The view is changed'**
-  String get liveViewSettingChange;
-
-  /// No description provided for @liveViewPreviewTips.
-  ///
-  /// In en, this message translates to:
-  /// **'Live streaming preview'**
-  String get liveViewPreviewTips;
-
-  /// No description provided for @liveViewPreviewDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Configure the view settings'**
-  String get liveViewPreviewDesc;
-
-  /// No description provided for @liveStart.
-  ///
-  /// In en, this message translates to:
-  /// **'Start'**
-  String get liveStart;
-
-  /// No description provided for @liveUpdate.
-  ///
-  /// In en, this message translates to:
-  /// **'Update'**
-  String get liveUpdate;
-
-  /// No description provided for @liveStop.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop'**
-  String get liveStop;
-
-  /// No description provided for @liveGalleryView.
-  ///
-  /// In en, this message translates to:
-  /// **'Gallery'**
-  String get liveGalleryView;
-
-  /// No description provided for @liveFocusView.
-  ///
-  /// In en, this message translates to:
-  /// **'Focus'**
-  String get liveFocusView;
-
-  /// No description provided for @liveScreenShareView.
-  ///
-  /// In en, this message translates to:
-  /// **'Screen Sharing'**
-  String get liveScreenShareView;
-
-  /// No description provided for @liveChooseView.
-  ///
-  /// In en, this message translates to:
-  /// **'View Mode'**
-  String get liveChooseView;
-
-  /// No description provided for @liveChooseCountTips.
-  ///
-  /// In en, this message translates to:
-  /// **'Select up to 4 participants'**
-  String get liveChooseCountTips;
-
-  /// No description provided for @liveStartFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to start live streaming, try again later'**
-  String get liveStartFail;
-
-  /// No description provided for @liveStartSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Live streaming started'**
-  String get liveStartSuccess;
-
-  /// No description provided for @livePickerCount.
-  ///
-  /// In en, this message translates to:
-  /// **'Selected'**
-  String get livePickerCount;
-
-  /// No description provided for @livePickerCountPrefix.
-  ///
-  /// In en, this message translates to:
-  /// **'people'**
-  String get livePickerCountPrefix;
-
-  /// No description provided for @liveUpdateFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to update the live streaming, try again later'**
-  String get liveUpdateFail;
-
-  /// No description provided for @liveUpdateSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Live streaming updated'**
-  String get liveUpdateSuccess;
-
-  /// No description provided for @liveStopFail.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to stop the live streaming, try again later'**
-  String get liveStopFail;
-
-  /// No description provided for @liveStopSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Live streaming stopped'**
-  String get liveStopSuccess;
-
-  /// No description provided for @livePassword.
-  ///
-  /// In en, this message translates to:
-  /// **'Live code'**
-  String get livePassword;
-
-  /// No description provided for @editWhiteBoard.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit'**
-  String get editWhiteBoard;
-
-  /// No description provided for @packUpWhiteBoard.
-  ///
-  /// In en, this message translates to:
-  /// **'Hide'**
-  String get packUpWhiteBoard;
-
-  /// No description provided for @noAuthorityWhiteBoard.
-  ///
-  /// In en, this message translates to:
-  /// **'Whiteboard is unactivated. contact sales for activating the service'**
-  String get noAuthorityWhiteBoard;
-
-  /// No description provided for @ok.
-  ///
-  /// In en, this message translates to:
-  /// **'Got it'**
-  String get ok;
-
-  /// No description provided for @removedByHost.
-  ///
-  /// In en, this message translates to:
-  /// **'You are removed'**
-  String get removedByHost;
-
-  /// No description provided for @closeByHost.
-  ///
-  /// In en, this message translates to:
-  /// **'Meeting ended'**
-  String get closeByHost;
-
-  /// No description provided for @loginOnOtherDevice.
-  ///
-  /// In en, this message translates to:
-  /// **'Switched to another device'**
-  String get loginOnOtherDevice;
-
-  /// No description provided for @authInfoExpired.
-  ///
-  /// In en, this message translates to:
-  /// **'Network error, please check your network connection and rejoin the meeting'**
-  String get authInfoExpired;
-
-  /// No description provided for @syncDataError.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to sync the room information'**
-  String get syncDataError;
-
-  /// No description provided for @leaveMeetingBySelf.
-  ///
-  /// In en, this message translates to:
-  /// **'Leave'**
-  String get leaveMeetingBySelf;
+  /// In zh, this message translates to:
+  /// **'离开会议'**
+  String get meetingLeaveMeetingBySelf;
 
   /// No description provided for @meetingClosed.
   ///
-  /// In en, this message translates to:
-  /// **'Meeting is closed'**
+  /// In zh, this message translates to:
+  /// **'会议被关闭'**
   String get meetingClosed;
 
-  /// No description provided for @connectFail.
+  /// No description provided for @meetingConnectFail.
   ///
-  /// In en, this message translates to:
-  /// **'Connection failed'**
-  String get connectFail;
+  /// In zh, this message translates to:
+  /// **'连接失败'**
+  String get meetingConnectFail;
 
-  /// No description provided for @joinTimeout.
+  /// No description provided for @meetingJoinTimeout.
   ///
-  /// In en, this message translates to:
-  /// **'Joining meeting timeout, try again later'**
-  String get joinTimeout;
+  /// In zh, this message translates to:
+  /// **'加入会议超时，请重试'**
+  String get meetingJoinTimeout;
 
-  /// No description provided for @endOfLife.
+  /// No description provided for @meetingEndOfLife.
   ///
-  /// In en, this message translates to:
-  /// **'Meeting is closed because the meeting duration reached the upper limit. '**
-  String get endOfLife;
+  /// In zh, this message translates to:
+  /// **'会议时长已达上限，会议关闭'**
+  String get meetingEndOfLife;
 
-  /// No description provided for @endMeetingTip.
+  /// No description provided for @meetingEndTip.
   ///
-  /// In en, this message translates to:
-  /// **'Remaining '**
-  String get endMeetingTip;
+  /// In zh, this message translates to:
+  /// **'距离会议关闭仅剩'**
+  String get meetingEndTip;
 
-  /// No description provided for @min.
+  /// No description provided for @meetingReuseIMNotSupportAnonymousJoinMeeting.
   ///
-  /// In en, this message translates to:
-  /// **'minutes'**
-  String get min;
+  /// In zh, this message translates to:
+  /// **'IM复用不支持匿名入会'**
+  String get meetingReuseIMNotSupportAnonymousJoinMeeting;
 
-  /// No description provided for @reuseIMNotSupportAnonymousJoinMeeting.
+  /// No description provided for @meetingInviteDialogTitle.
   ///
-  /// In en, this message translates to:
-  /// **'IM reuse does not support anonymous login'**
-  String get reuseIMNotSupportAnonymousJoinMeeting;
+  /// In zh, this message translates to:
+  /// **'会议邀请'**
+  String get meetingInviteDialogTitle;
 
-  /// No description provided for @inviteDialogTitle.
+  /// No description provided for @meetingInviteContentCopySuccess.
   ///
-  /// In en, this message translates to:
-  /// **'Meeting Invite'**
-  String get inviteDialogTitle;
+  /// In zh, this message translates to:
+  /// **'已复制会议邀请内容'**
+  String get meetingInviteContentCopySuccess;
 
-  /// No description provided for @inviteContentCopySuccess.
+  /// No description provided for @meetingInviteTitle.
   ///
-  /// In en, this message translates to:
-  /// **'Meeting invitation copied'**
-  String get inviteContentCopySuccess;
-
-  /// No description provided for @inviteTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Invite your to join the meeting \n\n'**
-  String get inviteTitle;
+  /// In zh, this message translates to:
+  /// **'邀请您参加会议'**
+  String get meetingInviteTitle;
 
   /// No description provided for @meetingSubject.
   ///
-  /// In en, this message translates to:
-  /// **'Subject: '**
+  /// In zh, this message translates to:
+  /// **'会议主题'**
   String get meetingSubject;
 
   /// No description provided for @meetingTime.
   ///
-  /// In en, this message translates to:
-  /// **'Time: '**
+  /// In zh, this message translates to:
+  /// **'会议时间'**
   String get meetingTime;
 
-  /// No description provided for @meetingNum.
+  /// No description provided for @meetingInvitationUrl.
   ///
-  /// In en, this message translates to:
-  /// **'Meeting number: '**
-  String get meetingNum;
+  /// In zh, this message translates to:
+  /// **'入会链接'**
+  String get meetingInvitationUrl;
 
-  /// No description provided for @shortMeetingNum.
+  /// No description provided for @meetingCopyInvite.
   ///
-  /// In en, this message translates to:
-  /// **'Short Meeting number: '**
-  String get shortMeetingNum;
+  /// In zh, this message translates to:
+  /// **'复制邀请'**
+  String get meetingCopyInvite;
 
-  /// No description provided for @invitationUrl.
+  /// No description provided for @meetingInternalSpecial.
   ///
-  /// In en, this message translates to:
-  /// **'Meeting URL: '**
-  String get invitationUrl;
+  /// In zh, this message translates to:
+  /// **'内部专用'**
+  String get meetingInternalSpecial;
 
-  /// No description provided for @meetingPwd.
+  /// No description provided for @loginOnOtherDevice.
   ///
-  /// In en, this message translates to:
-  /// **'Meeting Password: '**
-  String get meetingPwd;
+  /// In zh, this message translates to:
+  /// **'已切换至其他设备'**
+  String get loginOnOtherDevice;
 
-  /// No description provided for @copyInvite.
+  /// No description provided for @authInfoExpired.
   ///
-  /// In en, this message translates to:
-  /// **'Copy invitation'**
-  String get copyInvite;
+  /// In zh, this message translates to:
+  /// **'登录状态已过期，请重新登录'**
+  String get authInfoExpired;
 
-  /// No description provided for @internalSpecial.
+  /// No description provided for @meetingCamera.
   ///
-  /// In en, this message translates to:
-  /// **'Internal'**
-  String get internalSpecial;
+  /// In zh, this message translates to:
+  /// **'相机'**
+  String get meetingCamera;
 
-  /// No description provided for @notWork.
+  /// No description provided for @meetingMicrophone.
   ///
-  /// In en, this message translates to:
-  /// **'Unavailable'**
-  String get notWork;
+  /// In zh, this message translates to:
+  /// **'麦克风'**
+  String get meetingMicrophone;
 
-  /// No description provided for @needPermissionTipsFirst.
+  /// No description provided for @meetingBluetooth.
   ///
-  /// In en, this message translates to:
-  /// **'Allow'**
-  String get needPermissionTipsFirst;
+  /// In zh, this message translates to:
+  /// **'蓝牙'**
+  String get meetingBluetooth;
 
-  /// No description provided for @needPermissionTipsTail.
+  /// No description provided for @meetingPhoneState.
   ///
-  /// In en, this message translates to:
-  /// **' to access your '**
-  String get needPermissionTipsTail;
+  /// In zh, this message translates to:
+  /// **'电话'**
+  String get meetingPhoneState;
 
-  /// No description provided for @funcNeed.
+  /// No description provided for @meetingNeedRationaleAudioPermission.
   ///
-  /// In en, this message translates to:
-  /// **'The feature requires '**
-  String get funcNeed;
+  /// In zh, this message translates to:
+  /// **'音视频会议需要申请{permission}权限，用于会议中的音频交流'**
+  String meetingNeedRationaleAudioPermission(Object permission);
 
-  /// No description provided for @toSetUp.
+  /// No description provided for @meetingNeedRationaleVideoPermission.
   ///
-  /// In en, this message translates to:
-  /// **'Go to'**
-  String get toSetUp;
+  /// In zh, this message translates to:
+  /// **'音视频会议需要申请{permission}权限，用于会议中的视频交流'**
+  String meetingNeedRationaleVideoPermission(Object permission);
 
-  /// No description provided for @permissionTips.
+  /// No description provided for @meetingNeedRationalePhotoPermission.
   ///
-  /// In en, this message translates to:
-  /// **'Permission'**
-  String get permissionTips;
+  /// In zh, this message translates to:
+  /// **'音视频会议需要申请照片权限，用于会议中的虚拟背景（添加、更换背景图片）功能'**
+  String get meetingNeedRationalePhotoPermission;
 
-  /// No description provided for @cameraPermission.
+  /// No description provided for @meetingDisconnectAudio.
   ///
-  /// In en, this message translates to:
-  /// **'Camera'**
-  String get cameraPermission;
+  /// In zh, this message translates to:
+  /// **'断开音频'**
+  String get meetingDisconnectAudio;
 
-  /// No description provided for @microphonePermission.
+  /// No description provided for @meetingReconnectAudio.
   ///
-  /// In en, this message translates to:
-  /// **'Microphone'**
-  String get microphonePermission;
+  /// In zh, this message translates to:
+  /// **'连接音频'**
+  String get meetingReconnectAudio;
 
-  /// No description provided for @bluetoothPermission.
+  /// No description provided for @meetingDisconnectAudioTips.
   ///
-  /// In en, this message translates to:
-  /// **'Bluetooth'**
-  String get bluetoothPermission;
+  /// In zh, this message translates to:
+  /// **'如需关闭会议声音，您可以点击更多中的“断开音频”'**
+  String get meetingDisconnectAudioTips;
 
-  /// No description provided for @phoneStatePermission.
+  /// No description provided for @meetingNotificationContentTitle.
   ///
-  /// In en, this message translates to:
-  /// **'Phone'**
-  String get phoneStatePermission;
+  /// In zh, this message translates to:
+  /// **'视频会议'**
+  String get meetingNotificationContentTitle;
 
-  /// No description provided for @noPermission.
+  /// No description provided for @meetingNotificationContentText.
   ///
-  /// In en, this message translates to:
-  /// **'No permission'**
-  String get noPermission;
+  /// In zh, this message translates to:
+  /// **'视频会议正在进行中'**
+  String get meetingNotificationContentText;
 
-  /// No description provided for @permissionRationalePrefix.
+  /// No description provided for @meetingNotificationContentTicker.
   ///
-  /// In en, this message translates to:
-  /// **'To make audio and video call, you must request '**
-  String get permissionRationalePrefix;
+  /// In zh, this message translates to:
+  /// **'视频会议'**
+  String get meetingNotificationContentTicker;
 
-  /// No description provided for @permissionRationaleSuffixAudio.
+  /// No description provided for @meetingNotificationChannelId.
   ///
-  /// In en, this message translates to:
-  /// **' permission for audio calling'**
-  String get permissionRationaleSuffixAudio;
-
-  /// No description provided for @permissionRationaleSuffixVideo.
-  ///
-  /// In en, this message translates to:
-  /// **' permission for video calling'**
-  String get permissionRationaleSuffixVideo;
-
-  /// No description provided for @menuTitleParticipants.
-  ///
-  /// In en, this message translates to:
-  /// **'Participants'**
-  String get menuTitleParticipants;
-
-  /// No description provided for @menuTitleManagerParticipants.
-  ///
-  /// In en, this message translates to:
-  /// **'Participants'**
-  String get menuTitleManagerParticipants;
-
-  /// No description provided for @menuTitleInvite.
-  ///
-  /// In en, this message translates to:
-  /// **'Invite'**
-  String get menuTitleInvite;
-
-  /// No description provided for @menuTitleChatroom.
-  ///
-  /// In en, this message translates to:
-  /// **'Chat'**
-  String get menuTitleChatroom;
-
-  /// No description provided for @menuTitleShareWhiteboard.
-  ///
-  /// In en, this message translates to:
-  /// **'Whiteboard'**
-  String get menuTitleShareWhiteboard;
-
-  /// No description provided for @menuTitleCloseWhiteboard.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop'**
-  String get menuTitleCloseWhiteboard;
-
-  /// No description provided for @notificationContentTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Video Meeting'**
-  String get notificationContentTitle;
-
-  /// No description provided for @notificationContentText.
-  ///
-  /// In en, this message translates to:
-  /// **'Meeting is ongoing'**
-  String get notificationContentText;
-
-  /// No description provided for @notificationContentTicker.
-  ///
-  /// In en, this message translates to:
-  /// **'Video meeting'**
-  String get notificationContentTicker;
-
-  /// No description provided for @notificationChannelId.
-  ///
-  /// In en, this message translates to:
+  /// In zh, this message translates to:
   /// **'ne_meeting_channel'**
-  String get notificationChannelId;
+  String get meetingNotificationChannelId;
 
-  /// No description provided for @notificationChannelName.
+  /// No description provided for @meetingNotificationChannelName.
   ///
-  /// In en, this message translates to:
-  /// **'Video meeting notification'**
-  String get notificationChannelName;
+  /// In zh, this message translates to:
+  /// **'视频会议通知'**
+  String get meetingNotificationChannelName;
 
-  /// No description provided for @notificationChannelDesc.
+  /// No description provided for @meetingNotificationChannelDesc.
   ///
-  /// In en, this message translates to:
-  /// **'Video meeting notification'**
-  String get notificationChannelDesc;
+  /// In zh, this message translates to:
+  /// **'视频会议通知'**
+  String get meetingNotificationChannelDesc;
 
-  /// No description provided for @delete.
+  /// No description provided for @meetingUserJoin.
   ///
-  /// In en, this message translates to:
-  /// **'Delete'**
-  String get delete;
+  /// In zh, this message translates to:
+  /// **'{userName}加入会议'**
+  String meetingUserJoin(Object userName);
 
-  /// No description provided for @nothing.
+  /// No description provided for @meetingUserLeave.
   ///
-  /// In en, this message translates to:
-  /// **'None'**
-  String get nothing;
+  /// In zh, this message translates to:
+  /// **'{userName}离开会议'**
+  String meetingUserLeave(Object userName);
+
+  /// No description provided for @meetingStartAudioShare.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启音频共享'**
+  String get meetingStartAudioShare;
+
+  /// No description provided for @meetingStopAudioShare.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭音频共享'**
+  String get meetingStopAudioShare;
+
+  /// No description provided for @meetingSwitchFcusView.
+  ///
+  /// In zh, this message translates to:
+  /// **'切换至演讲者视图'**
+  String get meetingSwitchFcusView;
+
+  /// No description provided for @meetingSwitchGalleryView.
+  ///
+  /// In zh, this message translates to:
+  /// **'切换至画廊视图'**
+  String get meetingSwitchGalleryView;
+
+  /// No description provided for @meetingNoSupportSwitch.
+  ///
+  /// In zh, this message translates to:
+  /// **'iPad不支持切换模式'**
+  String get meetingNoSupportSwitch;
+
+  /// No description provided for @meetingFuncNotAvailableWhenInCallState.
+  ///
+  /// In zh, this message translates to:
+  /// **'系统通话中，无法使用该功能'**
+  String get meetingFuncNotAvailableWhenInCallState;
+
+  /// No description provided for @meetingRejoining.
+  ///
+  /// In zh, this message translates to:
+  /// **'重新入会'**
+  String get meetingRejoining;
+
+  /// No description provided for @meetingSecurity.
+  ///
+  /// In zh, this message translates to:
+  /// **'安全'**
+  String get meetingSecurity;
+
+  /// No description provided for @meetingManagement.
+  ///
+  /// In zh, this message translates to:
+  /// **'会议管理'**
+  String get meetingManagement;
+
+  /// No description provided for @meetingWatermark.
+  ///
+  /// In zh, this message translates to:
+  /// **'会议水印'**
+  String get meetingWatermark;
+
+  /// No description provided for @meetingBeKickedOutByHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人已将您从会议中移除'**
+  String get meetingBeKickedOutByHost;
+
+  /// No description provided for @meetingBeKickedOut.
+  ///
+  /// In zh, this message translates to:
+  /// **'被移除会议'**
+  String get meetingBeKickedOut;
+
+  /// No description provided for @meetingClickOkToClose.
+  ///
+  /// In zh, this message translates to:
+  /// **'点击确定，该页面自动关闭'**
+  String get meetingClickOkToClose;
+
+  /// No description provided for @meetingLeaveConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定要离开会议吗?'**
+  String get meetingLeaveConfirm;
+
+  /// No description provided for @meetingWatermarkEnabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'水印已开启'**
+  String get meetingWatermarkEnabled;
+
+  /// No description provided for @meetingWatermarkDisabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'水印已关闭'**
+  String get meetingWatermarkDisabled;
+
+  /// No description provided for @meetingInfo.
+  ///
+  /// In zh, this message translates to:
+  /// **'会议信息'**
+  String get meetingInfo;
+
+  /// No description provided for @meetingNickname.
+  ///
+  /// In zh, this message translates to:
+  /// **'会议昵称'**
+  String get meetingNickname;
+
+  /// No description provided for @meetingHostChangeYourMeetingName.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人修改了你的会中名称'**
+  String get meetingHostChangeYourMeetingName;
+
+  /// No description provided for @meetingIsInCall.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在接听系统电话'**
+  String get meetingIsInCall;
+
+  /// No description provided for @screenShare.
+  ///
+  /// In zh, this message translates to:
+  /// **'共享屏幕'**
+  String get screenShare;
+
+  /// No description provided for @screenShareStop.
+  ///
+  /// In zh, this message translates to:
+  /// **'结束共享'**
+  String get screenShareStop;
+
+  /// No description provided for @screenShareOverLimit.
+  ///
+  /// In zh, this message translates to:
+  /// **'已有人在共享，您无法共享'**
+  String get screenShareOverLimit;
+
+  /// No description provided for @screenShareNoPermission.
+  ///
+  /// In zh, this message translates to:
+  /// **'没有屏幕共享权限'**
+  String get screenShareNoPermission;
+
+  /// No description provided for @screenShareTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'将开始截取您的屏幕上显示的所有内容。'**
+  String get screenShareTips;
+
+  /// No description provided for @screenShareStopFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'停止共享屏幕失败'**
+  String get screenShareStopFail;
+
+  /// No description provided for @screenShareStartFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'发起共享屏幕失败'**
+  String get screenShareStartFail;
+
+  /// No description provided for @screenShareLocalTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'{userName}正在共享屏幕'**
+  String screenShareLocalTips(Object userName);
+
+  /// No description provided for @screenShareUser.
+  ///
+  /// In zh, this message translates to:
+  /// **'{userName}的共享屏幕'**
+  String screenShareUser(Object userName);
+
+  /// No description provided for @screenShareInteractionTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'双指分开放大画面'**
+  String get screenShareInteractionTip;
+
+  /// No description provided for @whiteBoardShareStopFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'停止共享白板失败'**
+  String get whiteBoardShareStopFail;
+
+  /// No description provided for @whiteBoardShareStartFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'发起白板共享失败'**
+  String get whiteBoardShareStartFail;
+
+  /// No description provided for @whiteboardShare.
+  ///
+  /// In zh, this message translates to:
+  /// **'共享白板'**
+  String get whiteboardShare;
+
+  /// No description provided for @whiteBoardClose.
+  ///
+  /// In zh, this message translates to:
+  /// **'退出白板'**
+  String get whiteBoardClose;
+
+  /// No description provided for @whiteBoardInteractionTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'您被授予白板互动权限'**
+  String get whiteBoardInteractionTip;
+
+  /// No description provided for @whiteBoardUndoInteractionTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'您被取消白板互动权限'**
+  String get whiteBoardUndoInteractionTip;
+
+  /// No description provided for @whiteBoardNoAuthority.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂未开通白板权限，请联系销售开通'**
+  String get whiteBoardNoAuthority;
+
+  /// No description provided for @whiteBoardPackUp.
+  ///
+  /// In zh, this message translates to:
+  /// **'收起'**
+  String get whiteBoardPackUp;
+
+  /// No description provided for @meetingHasScreenShareShare.
+  ///
+  /// In zh, this message translates to:
+  /// **'屏幕共享时暂不支持白板共享'**
+  String get meetingHasScreenShareShare;
+
+  /// No description provided for @meetingHasWhiteBoardShare.
+  ///
+  /// In zh, this message translates to:
+  /// **'共享白板时暂不支持屏幕共享'**
+  String get meetingHasWhiteBoardShare;
+
+  /// No description provided for @meetingStopSharing.
+  ///
+  /// In zh, this message translates to:
+  /// **'停止共享'**
+  String get meetingStopSharing;
+
+  /// No description provided for @meetingStopSharingConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定停止正在进行的共享?'**
+  String get meetingStopSharingConfirm;
+
+  /// No description provided for @virtualBackground.
+  ///
+  /// In zh, this message translates to:
+  /// **'虚拟背景'**
+  String get virtualBackground;
+
+  /// No description provided for @virtualBackgroundImageNotExist.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义背景图片不存在'**
+  String get virtualBackgroundImageNotExist;
+
+  /// No description provided for @virtualBackgroundImageFormatNotSupported.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义背景图片的图片格式无效'**
+  String get virtualBackgroundImageFormatNotSupported;
+
+  /// No description provided for @virtualBackgroundImageDeviceNotSupported.
+  ///
+  /// In zh, this message translates to:
+  /// **'该设备不支持使用虚拟背景'**
+  String get virtualBackgroundImageDeviceNotSupported;
+
+  /// No description provided for @virtualBackgroundImageLarge.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义背景图片超过5M大小限制'**
+  String get virtualBackgroundImageLarge;
+
+  /// No description provided for @virtualBackgroundImageMax.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义背景图片超过最大数量'**
+  String get virtualBackgroundImageMax;
 
   /// No description provided for @virtualBackgroundSelectTip.
   ///
-  /// In en, this message translates to:
-  /// **'Effective when the image is selected'**
+  /// In zh, this message translates to:
+  /// **'所选背景立即生效'**
   String get virtualBackgroundSelectTip;
 
-  /// No description provided for @onUserJoinMeeting.
+  /// No description provided for @live.
   ///
-  /// In en, this message translates to:
-  /// **' join the meeting'**
-  String get onUserJoinMeeting;
+  /// In zh, this message translates to:
+  /// **'直播'**
+  String get live;
 
-  /// No description provided for @onUserLeaveMeeting.
+  /// No description provided for @liveMeeting.
   ///
-  /// In en, this message translates to:
-  /// **' leave'**
-  String get onUserLeaveMeeting;
+  /// In zh, this message translates to:
+  /// **'会议直播'**
+  String get liveMeeting;
 
-  /// No description provided for @userHasBeenAssignCoHostRole.
+  /// No description provided for @liveMeetingTitle.
   ///
-  /// In en, this message translates to:
-  /// **' has been assigned CO-HOST'**
-  String get userHasBeenAssignCoHostRole;
+  /// In zh, this message translates to:
+  /// **'会议直播主题'**
+  String get liveMeetingTitle;
 
-  /// No description provided for @userHasBeenRevokeCoHostRole.
+  /// No description provided for @liveMeetingUrl.
   ///
-  /// In en, this message translates to:
-  /// **' has been unassigned CO-HOST'**
-  String get userHasBeenRevokeCoHostRole;
+  /// In zh, this message translates to:
+  /// **'直播地址'**
+  String get liveMeetingUrl;
 
-  /// No description provided for @isInCall.
+  /// No description provided for @liveEnterLivePassword.
   ///
-  /// In en, this message translates to:
-  /// **'Answering the phone now'**
-  String get isInCall;
+  /// In zh, this message translates to:
+  /// **'请输入直播密码'**
+  String get liveEnterLivePassword;
+
+  /// No description provided for @liveEnterLiveSixDigitPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入6位数字密码'**
+  String get liveEnterLiveSixDigitPassword;
+
+  /// No description provided for @liveInteraction.
+  ///
+  /// In zh, this message translates to:
+  /// **'直播互动'**
+  String get liveInteraction;
+
+  /// No description provided for @liveInteractionTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启后，会议室和直播间消息互相可见'**
+  String get liveInteractionTips;
+
+  /// No description provided for @liveLevel.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅本企业员工可观看'**
+  String get liveLevel;
+
+  /// No description provided for @liveLevelTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启后，非本企业员工无法观看直播'**
+  String get liveLevelTip;
+
+  /// No description provided for @liveViewSetting.
+  ///
+  /// In zh, this message translates to:
+  /// **'直播视图设置'**
+  String get liveViewSetting;
+
+  /// No description provided for @liveViewSettingChange.
+  ///
+  /// In zh, this message translates to:
+  /// **'主播发生变更'**
+  String get liveViewSettingChange;
+
+  /// No description provided for @liveViewPreviewTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前直播视图预览'**
+  String get liveViewPreviewTips;
+
+  /// No description provided for @liveViewPreviewDesc.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先进行\n直播视图设置'**
+  String get liveViewPreviewDesc;
+
+  /// No description provided for @liveStart.
+  ///
+  /// In zh, this message translates to:
+  /// **'开始直播'**
+  String get liveStart;
+
+  /// No description provided for @liveUpdate.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新直播设置'**
+  String get liveUpdate;
+
+  /// No description provided for @liveStop.
+  ///
+  /// In zh, this message translates to:
+  /// **'停止直播'**
+  String get liveStop;
+
+  /// No description provided for @liveGalleryView.
+  ///
+  /// In zh, this message translates to:
+  /// **'画廊视图'**
+  String get liveGalleryView;
+
+  /// No description provided for @liveFocusView.
+  ///
+  /// In zh, this message translates to:
+  /// **'焦点视图'**
+  String get liveFocusView;
+
+  /// No description provided for @liveScreenShareView.
+  ///
+  /// In zh, this message translates to:
+  /// **'屏幕共享视图'**
+  String get liveScreenShareView;
+
+  /// No description provided for @liveChooseView.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择视图样式'**
+  String get liveChooseView;
+
+  /// No description provided for @liveChooseCountTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择参会者作为主播，最多选择4人'**
+  String get liveChooseCountTips;
+
+  /// No description provided for @liveStartFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'直播开始失败,请稍后重试'**
+  String get liveStartFail;
+
+  /// No description provided for @liveStartSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'直播开始成功'**
+  String get liveStartSuccess;
+
+  /// No description provided for @livePickerCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'已选择{length}人'**
+  String livePickerCount(Object length);
+
+  /// No description provided for @liveUpdateFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'直播更新失败,请稍后重试'**
+  String get liveUpdateFail;
+
+  /// No description provided for @liveUpdateSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'直播更新成功'**
+  String get liveUpdateSuccess;
+
+  /// No description provided for @liveStopFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'直播停止失败,请稍后重试'**
+  String get liveStopFail;
+
+  /// No description provided for @liveStopSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'直播停止成功'**
+  String get liveStopSuccess;
+
+  /// No description provided for @livePassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'直播密码'**
+  String get livePassword;
+
+  /// No description provided for @liveDisableAuthLevel.
+  ///
+  /// In zh, this message translates to:
+  /// **'直播过程中，不能修改观看直播权限'**
+  String get liveDisableAuthLevel;
+
+  /// No description provided for @liveStreaming.
+  ///
+  /// In zh, this message translates to:
+  /// **'直播中'**
+  String get liveStreaming;
+
+  /// No description provided for @participants.
+  ///
+  /// In zh, this message translates to:
+  /// **'参会者'**
+  String get participants;
+
+  /// No description provided for @participantsManager.
+  ///
+  /// In zh, this message translates to:
+  /// **'管理参会者'**
+  String get participantsManager;
+
+  /// No description provided for @participantAssignedHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'您已经成为主持人'**
+  String get participantAssignedHost;
+
+  /// No description provided for @participantAssignedCoHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'您已被设为联席主持人'**
+  String get participantAssignedCoHost;
+
+  /// No description provided for @participantUnassignedCoHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'您已被取消设为联席主持人'**
+  String get participantUnassignedCoHost;
+
+  /// No description provided for @participantAssignedActiveSpeaker.
+  ///
+  /// In zh, this message translates to:
+  /// **'您已被设置为焦点视频'**
+  String get participantAssignedActiveSpeaker;
+
+  /// No description provided for @participantUnassignedActiveSpeaker.
+  ///
+  /// In zh, this message translates to:
+  /// **'您已被取消焦点视频'**
+  String get participantUnassignedActiveSpeaker;
+
+  /// No description provided for @participantMuteAudioAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全体静音'**
+  String get participantMuteAudioAll;
+
+  /// No description provided for @participantMuteAudioAllDialogTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'所有以及新加入成员将被静音'**
+  String get participantMuteAudioAllDialogTips;
+
+  /// No description provided for @participantMuteVideoAllDialogTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'所有以及新加入成员将被关闭摄像头'**
+  String get participantMuteVideoAllDialogTips;
+
+  /// No description provided for @participantUnmuteAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'解除全体静音'**
+  String get participantUnmuteAll;
+
+  /// No description provided for @participantMute.
+  ///
+  /// In zh, this message translates to:
+  /// **'静音'**
+  String get participantMute;
+
+  /// No description provided for @participantUnmute.
+  ///
+  /// In zh, this message translates to:
+  /// **'解除静音'**
+  String get participantUnmute;
+
+  /// No description provided for @participantTurnOffVideos.
+  ///
+  /// In zh, this message translates to:
+  /// **'全体关闭视频'**
+  String get participantTurnOffVideos;
+
+  /// No description provided for @participantTurnOnVideos.
+  ///
+  /// In zh, this message translates to:
+  /// **'全体打开视频'**
+  String get participantTurnOnVideos;
+
+  /// No description provided for @participantStopVideo.
+  ///
+  /// In zh, this message translates to:
+  /// **'停止视频'**
+  String get participantStopVideo;
+
+  /// No description provided for @participantStartVideo.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启视频'**
+  String get participantStartVideo;
+
+  /// No description provided for @participantTurnOffAudioAndVideo.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭音视频'**
+  String get participantTurnOffAudioAndVideo;
+
+  /// No description provided for @participantTurnOnAudioAndVideo.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开音视频'**
+  String get participantTurnOnAudioAndVideo;
+
+  /// No description provided for @participantHostStoppedShare.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人已终止了您的共享'**
+  String get participantHostStoppedShare;
+
+  /// No description provided for @participantHostStopWhiteboard.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人已终止您的白板共享'**
+  String get participantHostStopWhiteboard;
+
+  /// No description provided for @participantAssignActiveSpeaker.
+  ///
+  /// In zh, this message translates to:
+  /// **'设为焦点视频'**
+  String get participantAssignActiveSpeaker;
+
+  /// No description provided for @participantUnassignActiveSpeaker.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消焦点视频'**
+  String get participantUnassignActiveSpeaker;
+
+  /// No description provided for @participantTransferHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'移交主持人'**
+  String get participantTransferHost;
+
+  /// No description provided for @participantTransferHostConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认将主持人移交给{userName}?'**
+  String participantTransferHostConfirm(Object userName);
+
+  /// No description provided for @participantRemove.
+  ///
+  /// In zh, this message translates to:
+  /// **'移除'**
+  String get participantRemove;
+
+  /// No description provided for @participantRename.
+  ///
+  /// In zh, this message translates to:
+  /// **'改名'**
+  String get participantRename;
+
+  /// No description provided for @participantRenameDialogTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'修改参会姓名'**
+  String get participantRenameDialogTitle;
+
+  /// No description provided for @participantAssignCoHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置联席主持人'**
+  String get participantAssignCoHost;
+
+  /// No description provided for @participantUnassignCoHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消联席主持人'**
+  String get participantUnassignCoHost;
+
+  /// No description provided for @participantRenameTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入新的昵称'**
+  String get participantRenameTips;
+
+  /// No description provided for @participantRenameSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'改名成功'**
+  String get participantRenameSuccess;
+
+  /// No description provided for @participantRenameFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'改名失败'**
+  String get participantRenameFail;
+
+  /// No description provided for @participantRemoveConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认移除'**
+  String get participantRemoveConfirm;
+
+  /// No description provided for @participantCannotRemoveSelf.
+  ///
+  /// In zh, this message translates to:
+  /// **'不能移除自己'**
+  String get participantCannotRemoveSelf;
+
+  /// No description provided for @participantMuteAudioFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'静音失败'**
+  String get participantMuteAudioFail;
+
+  /// No description provided for @participantUnMuteAudioFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'解除静音失败'**
+  String get participantUnMuteAudioFail;
+
+  /// No description provided for @participantMuteVideoFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'停止视频失败'**
+  String get participantMuteVideoFail;
+
+  /// No description provided for @participantUnMuteVideoFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启视频失败'**
+  String get participantUnMuteVideoFail;
+
+  /// No description provided for @participantFailedToAssignActiveSpeaker.
+  ///
+  /// In zh, this message translates to:
+  /// **'设为焦点视频失败'**
+  String get participantFailedToAssignActiveSpeaker;
+
+  /// No description provided for @participantFailedToUnassignActiveSpeaker.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消焦点视频失败'**
+  String get participantFailedToUnassignActiveSpeaker;
+
+  /// No description provided for @participantFailedToLowerHand.
+  ///
+  /// In zh, this message translates to:
+  /// **'放下成员举手失败'**
+  String get participantFailedToLowerHand;
+
+  /// No description provided for @participantFailedToTransferHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'移交主持人失败'**
+  String get participantFailedToTransferHost;
+
+  /// No description provided for @participantFailedToRemove.
+  ///
+  /// In zh, this message translates to:
+  /// **'移除失败'**
+  String get participantFailedToRemove;
+
+  /// No description provided for @participantOpenCamera.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开摄像头'**
+  String get participantOpenCamera;
+
+  /// No description provided for @participantOpenMicrophone.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开麦克风'**
+  String get participantOpenMicrophone;
+
+  /// No description provided for @participantHostOpenCameraTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人已重新打开您的摄像头，确认打开？'**
+  String get participantHostOpenCameraTips;
+
+  /// No description provided for @participantHostOpenMicroTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人已重新打开您的麦克风，确认打开？'**
+  String get participantHostOpenMicroTips;
+
+  /// No description provided for @participantMuteAllAudioTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'允许参会者自行解除静音'**
+  String get participantMuteAllAudioTip;
+
+  /// No description provided for @participantMuteAllVideoTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'允许参会者自行开启视频'**
+  String get participantMuteAllVideoTip;
+
+  /// No description provided for @participantMuteAllAudioSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'您已进行全体静音'**
+  String get participantMuteAllAudioSuccess;
+
+  /// No description provided for @participantMuteAllAudioFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'全体静音失败'**
+  String get participantMuteAllAudioFail;
+
+  /// No description provided for @participantMuteAllVideoSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'您已进行全体关闭视频'**
+  String get participantMuteAllVideoSuccess;
+
+  /// No description provided for @participantMuteAllVideoFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'全体关闭视频失败'**
+  String get participantMuteAllVideoFail;
+
+  /// No description provided for @participantUnMuteAllAudioSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'您已请求解除全体静音'**
+  String get participantUnMuteAllAudioSuccess;
+
+  /// No description provided for @participantUnMuteAllAudioFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'解除全体静音失败'**
+  String get participantUnMuteAllAudioFail;
+
+  /// No description provided for @participantUnMuteAllVideoSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'您已请求全体打开视频'**
+  String get participantUnMuteAllVideoSuccess;
+
+  /// No description provided for @participantUnMuteAllVideoFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'全体打开视频失败'**
+  String get participantUnMuteAllVideoFail;
+
+  /// No description provided for @participantHostMuteVideo.
+  ///
+  /// In zh, this message translates to:
+  /// **'您已被停止视频'**
+  String get participantHostMuteVideo;
+
+  /// No description provided for @participantHostMuteAudio.
+  ///
+  /// In zh, this message translates to:
+  /// **'您已被静音'**
+  String get participantHostMuteAudio;
+
+  /// No description provided for @participantHostMuteAllAudio.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人设置了全体静音'**
+  String get participantHostMuteAllAudio;
+
+  /// No description provided for @participantHostMuteAllVideo.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人设置了全体关闭视频'**
+  String get participantHostMuteAllVideo;
+
+  /// No description provided for @participantMuteAudioHandsUpOnTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人已将您解除静音，你可以自由发言'**
+  String get participantMuteAudioHandsUpOnTips;
+
+  /// No description provided for @participantOverRoleLimitCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'分配角色超过人数限制'**
+  String get participantOverRoleLimitCount;
+
+  /// No description provided for @participantMe.
+  ///
+  /// In zh, this message translates to:
+  /// **'我'**
+  String get participantMe;
+
+  /// No description provided for @participantSearchMember.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索成员'**
+  String get participantSearchMember;
+
+  /// No description provided for @participantHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人'**
+  String get participantHost;
+
+  /// No description provided for @participantCoHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'联席主持人'**
+  String get participantCoHost;
+
+  /// No description provided for @participantMuteAllHandsUpTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人已将全体静音，您可以举手申请发言'**
+  String get participantMuteAllHandsUpTips;
+
+  /// No description provided for @participantTurnOffAllVideoHandsUpTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人已将全体视频关闭，您可以举手申请开启视频'**
+  String get participantTurnOffAllVideoHandsUpTips;
+
+  /// No description provided for @participantWhiteBoardInteract.
+  ///
+  /// In zh, this message translates to:
+  /// **'授权白板互动'**
+  String get participantWhiteBoardInteract;
+
+  /// No description provided for @participantWhiteBoardInteractFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'授权白板互动失败'**
+  String get participantWhiteBoardInteractFail;
+
+  /// No description provided for @participantUndoWhiteBoardInteract.
+  ///
+  /// In zh, this message translates to:
+  /// **'撤回白板互动'**
+  String get participantUndoWhiteBoardInteract;
+
+  /// No description provided for @participantUndoWhiteBoardInteractFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'撤回白板互动失败'**
+  String get participantUndoWhiteBoardInteractFail;
+
+  /// No description provided for @participantUserHasBeenAssignCoHostRole.
+  ///
+  /// In zh, this message translates to:
+  /// **'已被设为联席主持人'**
+  String get participantUserHasBeenAssignCoHostRole;
+
+  /// No description provided for @participantUserHasBeenRevokeCoHostRole.
+  ///
+  /// In zh, this message translates to:
+  /// **'已被取消联席主持人'**
+  String get participantUserHasBeenRevokeCoHostRole;
+
+  /// No description provided for @participantInMeeting.
+  ///
+  /// In zh, this message translates to:
+  /// **'会议中'**
+  String get participantInMeeting;
+
+  /// No description provided for @participantNotJoined.
+  ///
+  /// In zh, this message translates to:
+  /// **'未入会'**
+  String get participantNotJoined;
+
+  /// No description provided for @participantAttendees.
+  ///
+  /// In zh, this message translates to:
+  /// **'成员管理'**
+  String get participantAttendees;
+
+  /// No description provided for @participantAdmit.
+  ///
+  /// In zh, this message translates to:
+  /// **'准入'**
+  String get participantAdmit;
+
+  /// No description provided for @participantWaitingTimePrefix.
+  ///
+  /// In zh, this message translates to:
+  /// **'已等待'**
+  String get participantWaitingTimePrefix;
+
+  /// No description provided for @participantPutInWaitingRoom.
+  ///
+  /// In zh, this message translates to:
+  /// **'移至等候室'**
+  String get participantPutInWaitingRoom;
+
+  /// No description provided for @participantExpelWaitingMemberDialogTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'移除等候成员'**
+  String get participantExpelWaitingMemberDialogTitle;
+
+  /// No description provided for @participantDisallowMemberRejoinMeeting.
+  ///
+  /// In zh, this message translates to:
+  /// **'不允许用户再次加入该会议'**
+  String get participantDisallowMemberRejoinMeeting;
+
+  /// No description provided for @cloudRecordingEnabledTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'是否开启云录制'**
+  String get cloudRecordingEnabledTitle;
+
+  /// No description provided for @cloudRecordingEnabledMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启后，将录制会议过程中的音视频与共享屏幕内容到云端，同时告知所有参会成员'**
+  String get cloudRecordingEnabledMessage;
+
+  /// No description provided for @cloudRecordingEnabledMessageWithoutNotice.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启后，将录制会议过程中的音视频与共享屏幕内容到云端'**
+  String get cloudRecordingEnabledMessageWithoutNotice;
+
+  /// No description provided for @cloudRecordingTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'该会议正在被录制中'**
+  String get cloudRecordingTitle;
+
+  /// No description provided for @cloudRecordingMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人开启了会议云录制，会议的创建者可以观看云录制文件，你可以在会议结束后联系创建者获取查看链接'**
+  String get cloudRecordingMessage;
+
+  /// No description provided for @cloudRecordingAgree.
+  ///
+  /// In zh, this message translates to:
+  /// **'如果留在会议中，表示你同意录制'**
+  String get cloudRecordingAgree;
+
+  /// No description provided for @cloudRecordingWhetherEndedTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'是否结束录制'**
+  String get cloudRecordingWhetherEndedTitle;
+
+  /// No description provided for @cloudRecordingEndedMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'录制文件将会在会议结束后同步至“历史会议-会议详情”中'**
+  String get cloudRecordingEndedMessage;
+
+  /// No description provided for @cloudRecordingEndedTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'云录制已结束'**
+  String get cloudRecordingEndedTitle;
+
+  /// No description provided for @cloudRecordingEndedAndGetUrl.
+  ///
+  /// In zh, this message translates to:
+  /// **'你可以在会议结束后联系会议创建者获取查看链接'**
+  String get cloudRecordingEndedAndGetUrl;
+
+  /// No description provided for @cloudRecordingStart.
+  ///
+  /// In zh, this message translates to:
+  /// **'云录制'**
+  String get cloudRecordingStart;
+
+  /// No description provided for @cloudRecordingStop.
+  ///
+  /// In zh, this message translates to:
+  /// **'停止录制'**
+  String get cloudRecordingStop;
+
+  /// No description provided for @cloudRecording.
+  ///
+  /// In zh, this message translates to:
+  /// **'录制中'**
+  String get cloudRecording;
+
+  /// No description provided for @cloudRecordingStartFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启录制失败'**
+  String get cloudRecordingStartFail;
+
+  /// No description provided for @cloudRecordingStopFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'停止录制失败'**
+  String get cloudRecordingStopFail;
+
+  /// No description provided for @cloudRecordingStarting.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在开启录制...'**
+  String get cloudRecordingStarting;
+
+  /// No description provided for @chat.
+  ///
+  /// In zh, this message translates to:
+  /// **'聊天'**
+  String get chat;
+
+  /// No description provided for @chatInputMessageHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入消息...'**
+  String get chatInputMessageHint;
+
+  /// No description provided for @chatCannotSendBlankLetter.
+  ///
+  /// In zh, this message translates to:
+  /// **'不支持发送空消息'**
+  String get chatCannotSendBlankLetter;
+
+  /// No description provided for @chatJoinFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'聊天室进入失败!'**
+  String get chatJoinFail;
+
+  /// No description provided for @chatNewMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'新消息'**
+  String get chatNewMessage;
+
+  /// No description provided for @chatUnsupportedFileExtension.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂不支持发送此类文件'**
+  String get chatUnsupportedFileExtension;
+
+  /// No description provided for @chatFileSizeExceedTheLimit.
+  ///
+  /// In zh, this message translates to:
+  /// **'文件大小不能超过200MB'**
+  String get chatFileSizeExceedTheLimit;
+
+  /// No description provided for @chatImageSizeExceedTheLimit.
+  ///
+  /// In zh, this message translates to:
+  /// **'图片大小不能超过20MB'**
+  String get chatImageSizeExceedTheLimit;
+
+  /// No description provided for @chatImageMessageTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'[图片]'**
+  String get chatImageMessageTip;
+
+  /// No description provided for @chatFileMessageTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'[文件]'**
+  String get chatFileMessageTip;
+
+  /// No description provided for @chatSaveToGallerySuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'已保存到系统相册'**
+  String get chatSaveToGallerySuccess;
+
+  /// No description provided for @chatOperationFailNoPermission.
+  ///
+  /// In zh, this message translates to:
+  /// **'无操作权限'**
+  String get chatOperationFailNoPermission;
+
+  /// No description provided for @chatOpenFileFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开文件失败'**
+  String get chatOpenFileFail;
+
+  /// No description provided for @chatOpenFileFailNoPermission.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开文件失败：无权限'**
+  String get chatOpenFileFailNoPermission;
+
+  /// No description provided for @chatOpenFileFailFileNotFound.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开文件失败：文件不存在'**
+  String get chatOpenFileFailFileNotFound;
+
+  /// No description provided for @chatOpenFileFailAppNotFound.
+  ///
+  /// In zh, this message translates to:
+  /// **'打开文件失败：无法找到打开此文件的应用'**
+  String get chatOpenFileFailAppNotFound;
+
+  /// No description provided for @chatRecall.
+  ///
+  /// In zh, this message translates to:
+  /// **'撤回'**
+  String get chatRecall;
+
+  /// No description provided for @chatAboveIsHistoryMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'以上为历史消息'**
+  String get chatAboveIsHistoryMessage;
+
+  /// No description provided for @chatYou.
+  ///
+  /// In zh, this message translates to:
+  /// **'你'**
+  String get chatYou;
+
+  /// No description provided for @chatRecallAMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'撤回一条消息'**
+  String get chatRecallAMessage;
+
+  /// No description provided for @chatMessageRecalled.
+  ///
+  /// In zh, this message translates to:
+  /// **'消息已被撤回'**
+  String get chatMessageRecalled;
+
+  /// No description provided for @chatMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'消息'**
+  String get chatMessage;
+
+  /// No description provided for @chatSendTo.
+  ///
+  /// In zh, this message translates to:
+  /// **'发送至'**
+  String get chatSendTo;
+
+  /// No description provided for @chatAllMembersInMeeting.
+  ///
+  /// In zh, this message translates to:
+  /// **'会议室所有人'**
+  String get chatAllMembersInMeeting;
+
+  /// No description provided for @chatAllMembersInWaitingRoom.
+  ///
+  /// In zh, this message translates to:
+  /// **'等候室所有人'**
+  String get chatAllMembersInWaitingRoom;
+
+  /// No description provided for @chatHistory.
+  ///
+  /// In zh, this message translates to:
+  /// **'聊天记录'**
+  String get chatHistory;
+
+  /// No description provided for @chatMessageSendToWaitingRoom.
+  ///
+  /// In zh, this message translates to:
+  /// **'发给等候室的消息'**
+  String get chatMessageSendToWaitingRoom;
+
+  /// No description provided for @chatNoChatHistory.
+  ///
+  /// In zh, this message translates to:
+  /// **'无聊天记录'**
+  String get chatNoChatHistory;
+
+  /// No description provided for @waitingRoomJoinMeeting.
+  ///
+  /// In zh, this message translates to:
+  /// **'加入会议'**
+  String get waitingRoomJoinMeeting;
+
+  /// No description provided for @waitingRoom.
+  ///
+  /// In zh, this message translates to:
+  /// **'等候室'**
+  String get waitingRoom;
+
+  /// No description provided for @waitingRoomJoinMeetingOption.
+  ///
+  /// In zh, this message translates to:
+  /// **'入会选项'**
+  String get waitingRoomJoinMeetingOption;
+
+  /// No description provided for @waitingRoomWaitHostToInviteJoinMeeting.
+  ///
+  /// In zh, this message translates to:
+  /// **'请等待，主持人即将拉您进入会议'**
+  String get waitingRoomWaitHostToInviteJoinMeeting;
+
+  /// No description provided for @waitingRoomWaitMeetingToStart.
+  ///
+  /// In zh, this message translates to:
+  /// **'请等待，会议尚未开始'**
+  String get waitingRoomWaitMeetingToStart;
+
+  /// No description provided for @waitingRoomTurnOnMicrophone.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启麦克风'**
+  String get waitingRoomTurnOnMicrophone;
+
+  /// No description provided for @waitingRoomTurnOnVideo.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启摄像头'**
+  String get waitingRoomTurnOnVideo;
+
+  /// No description provided for @waitingRoomEnabledOnEntry.
+  ///
+  /// In zh, this message translates to:
+  /// **'等候室已开启'**
+  String get waitingRoomEnabledOnEntry;
+
+  /// No description provided for @waitingRoomDisabledOnEntry.
+  ///
+  /// In zh, this message translates to:
+  /// **'等候室已关闭'**
+  String get waitingRoomDisabledOnEntry;
+
+  /// No description provided for @waitingRoomDisableDialogTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭等候室'**
+  String get waitingRoomDisableDialogTitle;
+
+  /// No description provided for @waitingRoomDisableDialogMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'等候室关闭后，新成员将直接进入会议室'**
+  String get waitingRoomDisableDialogMessage;
+
+  /// No description provided for @waitingRoomDisableDialogAdmitAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'允许现有等候室成员全部进入会议'**
+  String get waitingRoomDisableDialogAdmitAll;
+
+  /// No description provided for @waitingRoomCloseRightNow.
+  ///
+  /// In zh, this message translates to:
+  /// **'立即关闭'**
+  String get waitingRoomCloseRightNow;
+
+  /// No description provided for @waitingRoomCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前等候室已有{count}人等候'**
+  String waitingRoomCount(Object count);
+
+  /// No description provided for @movedToWaitingRoom.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人已将您移至等候室'**
+  String get movedToWaitingRoom;
+
+  /// No description provided for @deviceSpeaker.
+  ///
+  /// In zh, this message translates to:
+  /// **'扬声器'**
+  String get deviceSpeaker;
+
+  /// No description provided for @deviceReceiver.
+  ///
+  /// In zh, this message translates to:
+  /// **'手机听筒'**
+  String get deviceReceiver;
+
+  /// No description provided for @deviceBluetooth.
+  ///
+  /// In zh, this message translates to:
+  /// **'蓝牙耳机'**
+  String get deviceBluetooth;
+
+  /// No description provided for @deviceHeadphones.
+  ///
+  /// In zh, this message translates to:
+  /// **'有线耳机'**
+  String get deviceHeadphones;
+
+  /// No description provided for @deviceOutput.
+  ///
+  /// In zh, this message translates to:
+  /// **'输出设备'**
+  String get deviceOutput;
+
+  /// No description provided for @deviceHeadsetState.
+  ///
+  /// In zh, this message translates to:
+  /// **'您正在使用耳机'**
+  String get deviceHeadsetState;
 
   /// No description provided for @networkConnectionGood.
   ///
-  /// In en, this message translates to:
-  /// **'Network connection is good'**
+  /// In zh, this message translates to:
+  /// **'网络连接良好'**
   String get networkConnectionGood;
 
   /// No description provided for @networkConnectionGeneral.
   ///
-  /// In en, this message translates to:
-  /// **'Network connection is general'**
+  /// In zh, this message translates to:
+  /// **'网络连接一般'**
   String get networkConnectionGeneral;
 
   /// No description provided for @networkConnectionPoor.
   ///
-  /// In en, this message translates to:
-  /// **'Network connection is poor'**
+  /// In zh, this message translates to:
+  /// **'网络连接较差'**
   String get networkConnectionPoor;
 
-  /// No description provided for @localLatency.
+  /// No description provided for @nan.
   ///
-  /// In en, this message translates to:
-  /// **'Latency'**
-  String get localLatency;
+  /// In zh, this message translates to:
+  /// **'网络连接未知'**
+  String get nan;
 
-  /// No description provided for @packetLossRate.
+  /// No description provided for @networkLocalLatency.
   ///
-  /// In en, this message translates to:
-  /// **'Packet Loss Rate'**
-  String get packetLossRate;
+  /// In zh, this message translates to:
+  /// **'延迟：'**
+  String get networkLocalLatency;
 
-  /// No description provided for @startAudioShare.
+  /// No description provided for @networkPacketLossRate.
   ///
-  /// In en, this message translates to:
-  /// **'Start Sharing system audio'**
-  String get startAudioShare;
-
-  /// No description provided for @stopAudioShare.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop sharing system audio'**
-  String get stopAudioShare;
-
-  /// No description provided for @switchFcusView.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch to Focus view'**
-  String get switchFcusView;
-
-  /// No description provided for @switchGalleryView.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch to Gallery view'**
-  String get switchGalleryView;
-
-  /// No description provided for @noSupportSwitch.
-  ///
-  /// In en, this message translates to:
-  /// **'iPad does not support switching modes'**
-  String get noSupportSwitch;
-
-  /// No description provided for @funcNotAvailableWhenInCallState.
-  ///
-  /// In en, this message translates to:
-  /// **'Cannot use this feature while on a call'**
-  String get funcNotAvailableWhenInCallState;
-
-  /// No description provided for @networkAbnormality.
-  ///
-  /// In en, this message translates to:
-  /// **'Network abnormality'**
-  String get networkAbnormality;
-
-  /// No description provided for @networkAbnormalityPleaseCheckYourNetwork.
-  ///
-  /// In en, this message translates to:
-  /// **'Network abnormality, please check your network'**
-  String get networkAbnormalityPleaseCheckYourNetwork;
+  /// In zh, this message translates to:
+  /// **'丢包率：'**
+  String get networkPacketLossRate;
 
   /// No description provided for @networkReconnectionSuccessful.
   ///
-  /// In en, this message translates to:
-  /// **'Network reconnection successful'**
+  /// In zh, this message translates to:
+  /// **'网络重连成功'**
   String get networkReconnectionSuccessful;
 
-  /// No description provided for @disconnectedTryingToReconnect.
+  /// No description provided for @networkAbnormalityPleaseCheckYourNetwork.
   ///
-  /// In en, this message translates to:
-  /// **'Disconnected, trying to reconnect…'**
-  String get disconnectedTryingToReconnect;
+  /// In zh, this message translates to:
+  /// **'网络异常，请检查您的网络'**
+  String get networkAbnormalityPleaseCheckYourNetwork;
+
+  /// No description provided for @networkAbnormality.
+  ///
+  /// In zh, this message translates to:
+  /// **'网络异常'**
+  String get networkAbnormality;
 
   /// No description provided for @networkDisconnectedPleaseCheckYourNetworkStatusOrTryToRejoin.
   ///
-  /// In en, this message translates to:
-  /// **'Network disconnected, please check your network status or try to rejoin.'**
+  /// In zh, this message translates to:
+  /// **'网络已断开，请检查您的网络情况，或尝试重新入会'**
   String get networkDisconnectedPleaseCheckYourNetworkStatusOrTryToRejoin;
 
-  /// No description provided for @rejoining.
+  /// No description provided for @networkNotStable.
   ///
-  /// In en, this message translates to:
-  /// **'Rejoining'**
-  String get rejoining;
+  /// In zh, this message translates to:
+  /// **'当前网络状况不佳'**
+  String get networkNotStable;
+
+  /// No description provided for @networkUnavailableCloseFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'网络异常，结束会议失败'**
+  String get networkUnavailableCloseFail;
+
+  /// No description provided for @networkDisconnectedTryingToReconnect.
+  ///
+  /// In zh, this message translates to:
+  /// **'网络已断开，正在尝试重新连接…'**
+  String get networkDisconnectedTryingToReconnect;
 }
 
 class _NEMeetingUIKitLocalizationsDelegate

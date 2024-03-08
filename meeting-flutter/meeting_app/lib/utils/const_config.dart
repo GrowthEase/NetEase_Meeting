@@ -2,12 +2,11 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:nemeeting/service/util/user_preferences.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
-import '../uikit/values/asset_name.dart';
-import '../uikit/values/strings.dart';
+import '../language/meeting_localization/meeting_app_localizations.dart';
 
 /// 默认开启白板
 const bool openWhiteBoard = true;
@@ -16,8 +15,8 @@ const bool openWhiteBoard = true;
 
 const kNoMuteAllVideo = false;
 
-/// 默认开启录制
-const bool kNoCloudRecord = false;
+/// 默认关闭录制
+const bool kNoCloudRecord = true;
 
 ///
 const kNoSip = false;
@@ -26,9 +25,6 @@ const kNoMinimize = false;
 
 const kEnablePictureInPicture = true;
 
-/// 使用默认的短信验证码：081166
-const kUseFakeCheckCode = false;
-
 /// 配置会议中开启剩余时间提醒
 const kShowMeetingRemainingTip = true;
 
@@ -36,14 +32,6 @@ const kShowMeetingRemainingTip = true;
 const kEnablePasswordLogin = !kReleaseMode;
 
 const inMeetingMoreMenuItemId = 101;
-const inMeetingFeedbackMenu = NESingleStateMenuItem(
-  itemId: inMeetingMoreMenuItemId,
-  visibility: NEMenuVisibility.visibleAlways,
-  singleStateItem: NEMenuItemInfo(
-      text: Strings.inRoomFeedBack,
-      icon: AssetName.iconInRoomFeedback,
-      platformPackage: '/'),
-);
 
 Future<NEMeetingUIOptions> buildMeetingUIOptions({
   bool? noVideo,
@@ -51,7 +39,9 @@ Future<NEMeetingUIOptions> buildMeetingUIOptions({
   bool? showMeetingTime,
   bool? noCloudRecord,
   bool? audioAINSEnabled,
+  required BuildContext context,
 }) async {
+  final meetingAppLocalizations = MeetingAppLocalizations.of(context)!;
   final settingsService = NEMeetingKit.instance.getSettingsService();
   noVideo ??= !(await settingsService.isTurnOnMyVideoWhenJoinMeetingEnabled());
   noAudio ??= !(await settingsService.isTurnOnMyAudioWhenJoinMeetingEnabled());
@@ -80,6 +70,8 @@ Future<NEMeetingUIOptions> buildMeetingUIOptions({
     enableFrontCameraMirror: enableFrontCameraMirror,
     showMeetingRemainingTip: kShowMeetingRemainingTip,
     restorePreferredOrientations: [DeviceOrientation.portraitUp],
-    extras: {'shareScreenTips': Strings.shareScreenTips},
+    extras: {'shareScreenTips': meetingAppLocalizations.meetingShareScreenTips},
+    showCloudRecordMenuItem: true,
+    showCloudRecordingUI: false,
   );
 }

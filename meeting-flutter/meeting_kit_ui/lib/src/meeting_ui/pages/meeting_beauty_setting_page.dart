@@ -42,7 +42,7 @@ class _BeautySettingPageState extends BaseState<BeautySettingPage> {
         child: Scaffold(
             appBar: AppBar(
                 title: Text(
-                  NEMeetingUIKitLocalizations.of(context)!.beauty,
+                  NEMeetingUIKitLocalizations.of(context)!.meetingBeauty,
                   style: TextStyle(
                       color: _UIColors.color_222222,
                       fontSize: 19,
@@ -52,7 +52,7 @@ class _BeautySettingPageState extends BaseState<BeautySettingPage> {
                 centerTitle: true,
                 backgroundColor: Colors.white,
                 elevation: 0.0,
-                systemOverlayStyle: SystemUiOverlayStyle.dark,
+                systemOverlayStyle: AppStyle.systemUiOverlayStyleDark,
                 leading: GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   key: ValueKey('back'),
@@ -62,7 +62,7 @@ class _BeautySettingPageState extends BaseState<BeautySettingPage> {
                       alignment: Alignment.center,
                       padding: EdgeInsets.only(top: 20, bottom: 10),
                       child: Text(
-                        NEMeetingUIKitLocalizations.of(context)!.save,
+                        NEMeetingUIKitLocalizations.of(context)!.globalSave,
                         style: TextStyle(
                             color: Color(0xff2575FF),
                             fontSize: 14,
@@ -93,7 +93,7 @@ class _BeautySettingPageState extends BaseState<BeautySettingPage> {
             },
             level: beautyLevel.toInt(),
             isShowClose: false),
-      )
+      ),
     ]);
   }
 
@@ -108,7 +108,7 @@ class _BeautySettingPageState extends BaseState<BeautySettingPage> {
           context,
           Permission.camera,
           '',
-          NEMeetingUIKitLocalizations.of(context)!.cameraPermission);
+          NEMeetingUIKitLocalizations.of(context)!.meetingCamera);
       if (!granted) UINavUtils.pop(context, rootNavigator: true);
     }
     return granted;

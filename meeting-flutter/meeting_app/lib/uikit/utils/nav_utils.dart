@@ -108,13 +108,4 @@ class NavUtils {
   static const int clickTimes = 5;
   static const int duration = 2 * 1000;
   static var mHits = List<int>.filled(clickTimes, 0);
-
-  static void toDeveloper(BuildContext context) {
-    List.copyRange(mHits, 0, mHits, 1, mHits.length);
-    mHits[mHits.length - 1] = DateTime.now().millisecondsSinceEpoch;
-    if (mHits[0] >= (DateTime.now().millisecondsSinceEpoch - duration)) {
-      mHits = List<int>.filled(clickTimes, 0);
-      NavUtils.pushNamed(context, RouterName.backdoor);
-    }
-  }
 }

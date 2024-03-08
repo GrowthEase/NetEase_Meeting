@@ -18,4 +18,10 @@ class UserRepo extends IRepo {
   Future<Result<void>> updateNickname(String nickName) {
     return appService.updateNickname(nickName);
   }
+
+  /// 安全提示接口
+  Future<Result<AppNotifications>> getSecurityNoticeConfigs(
+      String appKey, String time) {
+    return appService.getSecurityNoticeConfigs(appKey, time);
+  }
 }

@@ -7,19 +7,14 @@ part of meeting_service;
 /// 'focusSwitchInterval' [int] 切换焦点视频的间隔（单位：s）
 /// 'videoStreamCount' [int] 订阅视频流个数 (deviceType相关)未单独设置返回默认值
 /// 'galleryPageSize' [int] 画廊单页显示数量 (clientType相关)
-/// '''
-/// {"code":0,"msg":"Success","ts":1648556746014,"cost":"50ms","requestId":"a303473a820f4413af04e690dff92191",
-/// "data":{"appConfig":{
-/// "APP_ROOM_RESOURCE":{"whiteboard":true,"chatroom":true,"live":true,"rtc":true}}}}
-/// '''
-class SDKConfig {
+class SDKConfig with _AloggerMixin {
   ///android version修改对应packages/meeting_sdk_android/gradle.properties的内容
   ///iOS version修改packages/meeting_sdk_ios/NEMeetingScript/spec/NEMeetingSDK.podspec的内容
-  static const String sdkVersionName = '3.17.0';
-  static const int sdkVersionCode = 31700;
+  static const String sdkVersionName = '4.3.0';
+  static const int sdkVersionCode = 40300;
   static const String sdkType = 'official'; //pub
 
-  static const _tag = 'SDKConfig';
+  // static const _tag = 'SDKConfig';
   static const int getSdkConfigRetryTime = 3; // 请求sdkConfig失败重试最大次数
   static const periodicRefreshConfigTime =
       const Duration(hours: 1); // 定时刷新sdkConfig时间
@@ -34,7 +29,14 @@ class SDKConfig {
 
   Stream<bool> get onConfigUpdated => _configUpdated.stream;
 
-  static late SDKConfig current = SDKConfig('');
+  static SDKConfig _current = SDKConfig('');
+  static final _notifier = ValueNotifier(_current);
+  static final ValueListenable<SDKConfig> configChangeNotifier = _notifier;
+  static set current(SDKConfig config) {
+    _notifier.value = config;
+  }
+
+  static SDKConfig get current => _notifier.value;
 
   SDKConfig(this.appKey);
 
@@ -44,19 +46,17 @@ class SDKConfig {
     }
     _periodicRefreshTaskScheduled = true;
     _timer = Timer.periodic(periodicRefreshConfigTime, (Timer timer) {
-      _doFetchConfig();
+      doFetchConfig();
     });
   }
 
   Future<bool> initialize() async {
-    Alog.i(
-      tag: _tag,
-      moduleName: _moduleName,
-      content: 'initialize: version=$sdkVersionName type=$sdkType app=$appKey',
+    commonLogger.i(
+      'initialize: version=$sdkVersionName type=$sdkType app=$appKey',
     );
     if (_initialized == null) {
       _initialized = Completer();
-      _doFetchConfig();
+      doFetchConfig();
     }
     return _initialized!.future;
   }
@@ -70,20 +70,17 @@ class SDKConfig {
     }
   }
 
-  Future<bool> _doFetchConfig() async {
+  Future<bool> doFetchConfig() async {
     if (TextUtils.isEmpty(appKey) || _disposed) {
       return false;
     }
     for (var index = 0; index < getSdkConfigRetryTime; ++index) {
-      await ensureNetwork();
+      await _ensureNetwork();
       if (_disposed) return false;
       var sdkGlobalConfig = await HttpApiHelper._getSDKGlobalConfig(appKey);
       if (_disposed) return false;
       if (sdkGlobalConfig.code == MeetingErrorCode.success) {
-        Alog.i(
-            tag: _tag,
-            moduleName: _moduleName,
-            content: 'fetch sdk config success');
+        commonLogger.i('fetch sdk config success');
         var globalConfig = sdkGlobalConfig.data;
         configs.clear();
         configs.addAll(globalConfig!.configs);
@@ -94,19 +91,15 @@ class SDKConfig {
         _schedulePeriodicRefreshConfigTask();
         return true;
       } else {
-        Alog.e(
-            tag: _tag,
-            moduleName: _moduleName,
-            content:
-                'get global config error: code=${sdkGlobalConfig.code}, index=$index');
+        commonLogger.e(
+            'get global config error: code=${sdkGlobalConfig.code}, index=$index');
         await Future.delayed(Duration(seconds: pow(2, index + 1).toInt()));
       }
     }
-    ensureNetwork().then((value) => _doFetchConfig());
     return false;
   }
 
-  Future ensureNetwork() async {
+  Future _ensureNetwork() async {
     if (await Connectivity().checkConnectivity() == ConnectivityResult.none) {
       await Connectivity()
           .onConnectivityChanged
@@ -125,18 +118,6 @@ class SDKConfig {
   /// 画廊单页显示数量 (clientType相关)
   int get galleryPageSize => (configs['galleryPageSize'] ?? 4) as int;
 
-  /// 美颜参数配置：证书，开关状态
-  // BeautyGlobalConfig get beauty =>
-  //     BeautyGlobalConfig.fromJson(_functionConfig('beauty'));
-
-  /// 直播开关状态
-  // FunBaseConfig get live =>
-  //     FunBaseConfig.fromJson(_functionConfig('meetingLive'));
-
-  /// 白板版本配置
-  // WhiteBoardGlobalConfig get whiteboardConfig =>
-  //     WhiteBoardGlobalConfig.fromJson(_functionConfig('whiteboard'));
-
   /// app config
   AppRoomResConfig get _appRoomResConfig =>
       AppRoomResConfig.fromJson(_config('APP_ROOM_RESOURCE'));
@@ -145,6 +126,7 @@ class SDKConfig {
   bool get isWhiteboardSupported => _appRoomResConfig.whiteboard;
   bool get isCloudRecordSupported => _appRoomResConfig.record;
   bool get isMeetingChatSupported => _appRoomResConfig.chatRoom;
+  bool get isWaitingRoomSupported => _appRoomResConfig.waitingRoom;
 
   /// 聊天室
   MeetingChatroomServerConfig get meetingChatroomConfig =>
@@ -167,15 +149,20 @@ class SDKConfig {
           fallback: true);
   bool get isMeetingEndTimeTipSupported => _meetingEndTimeTipConfig.enable;
 
+  /// 会议设置，是否支持音频设备切换，Android默认关闭，iOS默认开启
+  bool get isAudioDeviceSwitchEnabled =>
+      getConfig('meetingSettingsConfig')?['enableAudioDeviceSwitch'] ??
+      Platform.isIOS;
+
   /// 静音时关闭音频流Pub通道，默认为true
   MeetingFeatureConfig get unpubAudioOnMuteConfig =>
       MeetingFeatureConfig.fromJson(_config('UNPUB_AUDIO_ON_MUTE'),
           fallback: true);
 
-  // Map<String, dynamic> _functionConfig(String function) {
-  //   var config = configs['functionConfigs'] ?? {};
-  //   return (config[function] ?? <String, dynamic>{}) as Map<String, dynamic>;
-  // }
+  dynamic getConfig(String configName) {
+    final extrasConfig = _config('MEETING_CLIENT_CONFIG');
+    return extrasConfig[configName];
+  }
 
   Map<String, dynamic> _config(String function) {
     var config = configs['appConfig'] ?? {};
@@ -210,6 +197,7 @@ class AppRoomResConfig {
   late final bool rtc;
   late final bool record;
   late final bool sip;
+  late final bool waitingRoom;
 
   ///
   AppRoomResConfig.fromJson(Map<String, dynamic>? json) {
@@ -219,6 +207,7 @@ class AppRoomResConfig {
     rtc = (json?['rtc'] ?? false) as bool;
     record = (json?['record'] ?? false) as bool;
     sip = (json?['sip'] ?? false) as bool;
+    waitingRoom = (json?['waitingRoom'] ?? false) as bool;
   }
 }
 

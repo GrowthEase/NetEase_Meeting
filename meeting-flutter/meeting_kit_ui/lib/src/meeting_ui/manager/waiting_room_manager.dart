@@ -1,0 +1,208 @@
+// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+
+part of meeting_ui;
+
+typedef MyWaitingRoomStatusChangedHandler = void Function(
+    int status, int reason);
+
+typedef MyWaitingRoomMemberJoinHandler = void Function(
+    NEWaitingRoomMember member, int reason);
+
+class WaitingRoomManager with NEWaitingRoomListener, _AloggerMixin {
+  static const pageSize = 20;
+  static const pageOrder = true;
+
+  final NERoomContext roomContext;
+  final MyWaitingRoomStatusChangedHandler? waitingRoomStatusChangedHandler;
+  final MyWaitingRoomMemberJoinHandler? waitingRoomMemberJoinHandler;
+  late final waitingRoomController = roomContext.waitingRoomController;
+  late final waitingRoomMemberCountListenable =
+      ValueNotifier(waitingRoomController.getWaitingRoomInfo().memberCount);
+  late final waitingRoomEnabledOnEntryListenable = ValueNotifier(
+      waitingRoomController.getWaitingRoomInfo().isEnabledOnEntry);
+  late final _users = <String, NEWaitingRoomMember>{};
+  List<NEWaitingRoomMember>? _userList; // to prevent sort every time
+  var _loadingMore = false;
+  var _disposed = false;
+  var _hasInit = false;
+  Object? _loadingToken;
+  StreamSubscription? _connectivitySubscription;
+  final _userListChangeController = StreamController<Object>.broadcast();
+  Stream<Object> get userListChanged => _userListChangeController.stream;
+
+  final _unreadMemberUuids = <String>{};
+  final _unreadMemberCountNotify = ValueNotifier(0);
+  ValueNotifier<int> get unreadMemberCountListenable =>
+      _unreadMemberCountNotify;
+
+  WaitingRoomManager(
+    this.roomContext, {
+    this.waitingRoomStatusChangedHandler,
+    this.waitingRoomMemberJoinHandler,
+  }) {
+    waitingRoomController.addListener(this);
+  }
+
+  bool get isFeatureSupported {
+    return roomContext.waitingRoomController.isSupported ||
+        waitingRoomEnabledOnEntryListenable.value;
+  }
+
+  void _ensureInit() {
+    if (!_hasInit) {
+      _hasInit = true;
+      _connectivitySubscription =
+          Connectivity().onConnectivityChanged.listen((event) {
+        if (event != ConnectivityResult.none) {
+          tryLoadMoreUser(reset: true);
+        }
+      });
+      tryLoadMoreUser(reset: true);
+    }
+  }
+
+  void resetUnreadMemberCount() {
+    commonLogger.i('resetUnreadMemberCount');
+    _unreadMemberCountNotify.value = 0;
+    _unreadMemberUuids.clear();
+  }
+
+  void reset() {
+    commonLogger.i('reset: supported=$isFeatureSupported');
+    resetUnreadMemberCount();
+    _loadingMore = false;
+    _userList = null;
+    _users.clear();
+    _userListChangeController.add(const Object());
+    _ensureInit();
+    if (isMySelfManager && _hasInit) {
+      tryLoadMoreUser(reset: true);
+    }
+  }
+
+  void dispose() {
+    _disposed = true;
+    _connectivitySubscription?.cancel();
+    _userListChangeController.close();
+    waitingRoomController.removeListener(this);
+  }
+
+  bool get isMySelfManager =>
+      roomContext.isMySelfHost() || roomContext.isMySelfCoHost();
+
+  void onWaitingRoomInfoUpdated(NEWaitingRoomInfo info) {
+    waitingRoomMemberCountListenable.value = info.memberCount;
+    waitingRoomEnabledOnEntryListenable.value = info.isEnabledOnEntry;
+  }
+
+  void onMemberJoin(NEWaitingRoomMember member, int reason) {
+    if (isMySelfManager) {
+      _users[member.uuid] = member;
+      _userList = null;
+      _userListChangeController.add(const Object());
+      if (_unreadMemberUuids.add(member.uuid)) _unreadMemberCountNotify.value++;
+      waitingRoomMemberJoinHandler?.call(member, reason);
+    }
+  }
+
+  void onMemberLeave(String member, int reason) {
+    if (isMySelfManager && _users.remove(member) != null) {
+      _userList = null;
+      _userListChangeController.add(const Object());
+      if (_unreadMemberUuids.remove(member)) _unreadMemberCountNotify.value--;
+    }
+  }
+
+  void onMemberAdmitted(String member) {
+    if (isMySelfManager) {
+      _users[member]?.status = NEWaitingRoomConstants.STATUS_ADMITTED;
+      _userListChangeController.add(const Object());
+      if (_unreadMemberUuids.remove(member)) _unreadMemberCountNotify.value--;
+    }
+  }
+
+  void onMemberNameChanged(String member, String name) {
+    if (isMySelfManager) {
+      _users[member]?.name = name;
+      _userListChangeController.add(const Object());
+    }
+  }
+
+  void onMyWaitingRoomStatusChanged(int status, int reason) {
+    waitingRoomStatusChangedHandler?.call(status, reason);
+  }
+
+  int get currentMemberCount => waitingRoomMemberCountListenable.value;
+
+  List<NEWaitingRoomMember> get userList {
+    _ensureInit();
+    if (_userList == null) {
+      _userList = _users.values.toList()
+        ..sort((lhs, rhs) {
+          return lhs.joinTime.compareTo(rhs.joinTime);
+        });
+    }
+    return _userList!;
+  }
+
+  void tryLoadMoreUser({bool reset = false}) async {
+    commonLogger.i('tryLoadMoreUser: reset=$reset');
+    if (_loadingMore || _disposed || !isMySelfManager || !isFeatureSupported)
+      return;
+    if (!reset && _users.length > 0 && _users.length >= currentMemberCount)
+      return;
+    _loadingMore = true;
+    _loadingToken = Object();
+    final loadingToken = _loadingToken;
+    final pageResult = await waitingRoomController.getMemberList(
+      reset ? 0 : (userList.lastOrNull?.joinTime ?? 0),
+      pageSize,
+      pageOrder,
+    );
+    if (loadingToken != _loadingToken) return;
+    _loadingMore = false;
+    if (reset) {
+      _userList = null;
+      _users.clear();
+      _userListChangeController.add(const Object());
+      resetUnreadMemberCount();
+    }
+    final more = pageResult.data;
+    if (more != null && more.isNotEmpty && !_disposed && isMySelfManager) {
+      _userList = null;
+      _users.addEntries(more.map((e) => MapEntry(e.uuid, e)));
+      _userListChangeController.add(const Object());
+      if (reset) {
+        _unreadMemberUuids.addAll(more.map((e) => e.uuid));
+        _unreadMemberCountNotify.value = _unreadMemberUuids.length;
+      }
+    }
+  }
+
+  Future<VoidResult> expelMember(String uuid,
+      {bool disallowRejoin = false}) async {
+    final result = await waitingRoomController.expelMember(uuid,
+        disallowRejoin: disallowRejoin);
+    if (!_disposed && result.isSuccess()) {
+      _removeMemberInner(uuid);
+    }
+    return result;
+  }
+
+  Future<VoidResult> admitMember(String uuid) async {
+    final result = await waitingRoomController.admitMember(uuid);
+    if (!_disposed && result.code == NEErrorCode.waitingRoomMemberNotExist) {
+      _removeMemberInner(uuid);
+    }
+    return result;
+  }
+
+  void _removeMemberInner(String uuid) {
+    if (isMySelfManager && _users.remove(uuid) != null) {
+      _userList = null;
+      _userListChangeController.add(const Object());
+    }
+  }
+}

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
-import 'package:nemeeting/base/util/stringutil.dart';
 import 'package:nemeeting/service/model/login_info.dart';
+import 'package:netease_meeting_ui/meeting_ui.dart';
 
 import '../app_http_proto.dart';
 

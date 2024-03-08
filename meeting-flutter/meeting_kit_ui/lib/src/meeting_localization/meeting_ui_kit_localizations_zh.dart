@@ -9,283 +9,428 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   NEMeetingUIKitLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get joinMeeting => '加入会议';
+  String get globalAppName => '网易会议';
 
   @override
-  String get cancel => '取消';
+  String get globalDelete => '删除';
 
   @override
-  String get add => '添加';
+  String get globalNothing => '无';
 
   @override
-  String get beauty => '美颜';
+  String get globalCancel => '取消';
 
   @override
-  String get beautyLevel => '美颜等级';
+  String get globalAdd => '添加';
 
   @override
-  String get joiningTips => '正在进入会议...';
+  String get globalClose => '关闭';
 
   @override
-  String get leaveMeeting => '离开会议';
+  String get globalOpen => '打开';
 
   @override
-  String get quitMeeting => '结束会议';
+  String get globalFail => '失败';
 
   @override
-  String get defaultMeetingTitle => '视频会议';
+  String get globalYes => '是';
 
   @override
-  String get close => '关闭';
+  String get globalNo => '否';
 
   @override
-  String get open => '打开';
+  String get globalSave => '保存';
 
   @override
-  String get fail => '失败';
+  String get globalDone => '完成';
 
   @override
-  String get networkNotStable => '当前网络状况不佳';
+  String get globalNotify => '通知';
 
   @override
-  String get memberlistTitle => '参会者';
+  String get globalSure => '确定';
 
   @override
-  String get joinMeetingFail => '加入会议失败';
+  String get globalIKnow => '我知道了';
 
   @override
-  String get yourChangeHost => '您已经成为主持人';
+  String get globalCopy => '复制';
 
   @override
-  String get yourChangeCoHost => '您已被设为联席主持人';
+  String get globalCopySuccess => '复制成功';
 
   @override
-  String get yourChangeCancelCoHost => '您已被取消设为联席主持人';
+  String get globalEdit => '编辑';
 
   @override
-  String get localUserAssignedActiveSpeaker => '您已被设置为焦点视频';
+  String get globalGotIt => '知道了';
 
   @override
-  String get localUserUnAssignedActiveSpeaker => '您已被取消焦点视频';
+  String get globalMin => '分钟';
 
   @override
-  String get muteAudioAll => '全体静音';
+  String globalNotWork(Object permissionName) {
+    return '无法使用$permissionName';
+  }
 
   @override
-  String get muteAudioAllDialogTips => '所有以及新加入成员将被静音';
+  String globalNeedPermissionTips(Object permissionName, Object title) {
+    return '该功能需要$permissionName,请允许$title访问您的$permissionName权限';
+  }
 
   @override
-  String get muteVideoAllDialogTips => '所有以及新加入成员将被关闭摄像头';
+  String get globalToSetUp => '前往设置';
 
   @override
-  String get unMuteAudioAll => '解除全体静音';
+  String get globalNoPermission => '权限未授权';
 
   @override
-  String get muteAudio => '静音';
+  String get globalDays => '天';
 
   @override
-  String get unMuteAudio => '解除静音';
+  String get globalHours => '小时';
 
   @override
-  String get muteAllVideo => '全体关闭视频';
+  String get globalMinutes => '分钟';
 
   @override
-  String get unmuteAllVideo => '全体打开视频';
+  String get globalViewMessage => '查看消息';
 
   @override
-  String get muteVideo => '停止视频';
+  String get globalNoLongerRemind => '不再提醒';
 
   @override
-  String get unMuteVideo => '开启视频';
+  String get globalOperationFail => '操作失败';
 
   @override
-  String get muteAudioAndVideo => '关闭音视频';
+  String get meetingBeauty => '美颜';
 
   @override
-  String get unmuteAudioAndVideo => '打开音视频';
+  String get meetingBeautyLevel => '美颜等级';
+
+  @override
+  String get meetingJoinTips => '正在进入会议...';
+
+  @override
+  String get meetingQuit => '结束会议';
+
+  @override
+  String get meetingDefalutTitle => '视频会议';
+
+  @override
+  String get meetingJoinFail => '加入会议失败';
+
+  @override
+  String get meetingHostKickedYou => '因被主持人移出或切换至其他设备，您已退出会议';
+
+  @override
+  String get meetingMicphoneNotWorksDialogTitle => '无法使用麦克风';
+
+  @override
+  String get meetingMicphoneNotWorksDialogMessage => '您已静音，请点击\"解除静音\"开启麦克风';
+
+  @override
+  String get meetingFinish => '结束';
+
+  @override
+  String get meetingLeave => '离开';
+
+  @override
+  String get meetingLeaveFull => '离开会议';
+
+  @override
+  String get meetingSpeakingPrefix => '正在讲话:';
+
+  @override
+  String get meetingLockMeetingByHost => '会议已锁定，新参会者将无法加入会议';
+
+  @override
+  String get meetingLockMeetingByHostFail => '会议锁定失败';
+
+  @override
+  String get meetingUnLockMeetingByHost => '会议已解锁，新参会者将可以加入会议';
+
+  @override
+  String get meetingUnLockMeetingByHostFail => '会议解锁失败';
+
+  @override
+  String get meetingLock => '锁定会议';
+
+  @override
+  String get meetingMore => '更多';
+
+  @override
+  String get meetingPassword => '会议密码';
+
+  @override
+  String get meetingEnterPassword => '请输入会议密码';
+
+  @override
+  String get meetingWrongPassword => '密码错误';
+
+  @override
+  String get meetingNum => '会议号';
+
+  @override
+  String get meetingShortNum => '会议短号';
+
+  @override
+  String get meetingInfoDesc => '会议正在加密保护中';
+
+  @override
+  String get meetingAlreadyHandsUpTips => '您已举手，请等待主持人处理';
+
+  @override
+  String get meetingHandsUpApply => '举手申请';
+
+  @override
+  String get meetingCancelHandsUp => '取消举手';
+
+  @override
+  String get meetingCancelHandsUpConfirm => '是否确定取消举手？';
+
+  @override
+  String get meetingHandsUpDown => '手放下';
+
+  @override
+  String get meetingInHandsUp => '举手中';
+
+  @override
+  String get meetingHandsUpFail => '举手失败';
+
+  @override
+  String get meetingHandsUpSuccess => '举手成功，等待主持人处理';
+
+  @override
+  String get meetingCancelHandsUpFail => '取消举手失败';
+
+  @override
+  String get meetingHostRejectAudioHandsUp => '主持人已将您的手放下';
+
+  @override
+  String get meetingSip => 'SIP';
+
+  @override
+  String get meetingInviteUrl => '入会链接';
+
+  @override
+  String get meetingInvitePageTitle => '添加与会者';
+
+  @override
+  String get meetingSipNumber => 'SIP电话/终端';
+
+  @override
+  String get meetingSipHost => 'SIP地址';
+
+  @override
+  String get meetingInvite => '邀请';
+
+  @override
+  String get meetingInviteListTitle => '邀请列表';
+
+  @override
+  String get meetingInvitationSendSuccess => '已发起邀请';
+
+  @override
+  String get meetingInvitationSendFail => '邀请失败';
+
+  @override
+  String get meetingRemovedByHost => '您已被主持人移除会议';
+
+  @override
+  String get meetingCloseByHost => '会议已结束';
+
+  @override
+  String get meetingWasInterrupted => '会议已中断';
+
+  @override
+  String get meetingSyncDataError => '房间信息同步失败';
+
+  @override
+  String get meetingLeaveMeetingBySelf => '离开会议';
+
+  @override
+  String get meetingClosed => '会议被关闭';
+
+  @override
+  String get meetingConnectFail => '连接失败';
+
+  @override
+  String get meetingJoinTimeout => '加入会议超时，请重试';
+
+  @override
+  String get meetingEndOfLife => '会议时长已达上限，会议关闭';
+
+  @override
+  String get meetingEndTip => '距离会议关闭仅剩';
+
+  @override
+  String get meetingReuseIMNotSupportAnonymousJoinMeeting => 'IM复用不支持匿名入会';
+
+  @override
+  String get meetingInviteDialogTitle => '会议邀请';
+
+  @override
+  String get meetingInviteContentCopySuccess => '已复制会议邀请内容';
+
+  @override
+  String get meetingInviteTitle => '邀请您参加会议';
+
+  @override
+  String get meetingSubject => '会议主题';
+
+  @override
+  String get meetingTime => '会议时间';
+
+  @override
+  String get meetingInvitationUrl => '入会链接';
+
+  @override
+  String get meetingCopyInvite => '复制邀请';
+
+  @override
+  String get meetingInternalSpecial => '内部专用';
+
+  @override
+  String get loginOnOtherDevice => '已切换至其他设备';
+
+  @override
+  String get authInfoExpired => '登录状态已过期，请重新登录';
+
+  @override
+  String get meetingCamera => '相机';
+
+  @override
+  String get meetingMicrophone => '麦克风';
+
+  @override
+  String get meetingBluetooth => '蓝牙';
+
+  @override
+  String get meetingPhoneState => '电话';
+
+  @override
+  String meetingNeedRationaleAudioPermission(Object permission) {
+    return '音视频会议需要申请$permission权限，用于会议中的音频交流';
+  }
+
+  @override
+  String meetingNeedRationaleVideoPermission(Object permission) {
+    return '音视频会议需要申请$permission权限，用于会议中的视频交流';
+  }
+
+  @override
+  String get meetingNeedRationalePhotoPermission =>
+      '音视频会议需要申请照片权限，用于会议中的虚拟背景（添加、更换背景图片）功能';
+
+  @override
+  String get meetingDisconnectAudio => '断开音频';
+
+  @override
+  String get meetingReconnectAudio => '连接音频';
+
+  @override
+  String get meetingDisconnectAudioTips => '如需关闭会议声音，您可以点击更多中的“断开音频”';
+
+  @override
+  String get meetingNotificationContentTitle => '视频会议';
+
+  @override
+  String get meetingNotificationContentText => '视频会议正在进行中';
+
+  @override
+  String get meetingNotificationContentTicker => '视频会议';
+
+  @override
+  String get meetingNotificationChannelId => 'ne_meeting_channel';
+
+  @override
+  String get meetingNotificationChannelName => '视频会议通知';
+
+  @override
+  String get meetingNotificationChannelDesc => '视频会议通知';
+
+  @override
+  String meetingUserJoin(Object userName) {
+    return '$userName加入会议';
+  }
+
+  @override
+  String meetingUserLeave(Object userName) {
+    return '$userName离开会议';
+  }
+
+  @override
+  String get meetingStartAudioShare => '开启音频共享';
+
+  @override
+  String get meetingStopAudioShare => '关闭音频共享';
+
+  @override
+  String get meetingSwitchFcusView => '切换至演讲者视图';
+
+  @override
+  String get meetingSwitchGalleryView => '切换至画廊视图';
+
+  @override
+  String get meetingNoSupportSwitch => 'iPad不支持切换模式';
+
+  @override
+  String get meetingFuncNotAvailableWhenInCallState => '系统通话中，无法使用该功能';
+
+  @override
+  String get meetingRejoining => '重新入会';
+
+  @override
+  String get meetingSecurity => '安全';
+
+  @override
+  String get meetingManagement => '会议管理';
+
+  @override
+  String get meetingWatermark => '会议水印';
+
+  @override
+  String get meetingBeKickedOutByHost => '主持人已将您从会议中移除';
+
+  @override
+  String get meetingBeKickedOut => '被移除会议';
+
+  @override
+  String get meetingClickOkToClose => '点击确定，该页面自动关闭';
+
+  @override
+  String get meetingLeaveConfirm => '确定要离开会议吗?';
+
+  @override
+  String get meetingWatermarkEnabled => '水印已开启';
+
+  @override
+  String get meetingWatermarkDisabled => '水印已关闭';
+
+  @override
+  String get meetingInfo => '会议信息';
+
+  @override
+  String get meetingNickname => '会议昵称';
+
+  @override
+  String get meetingHostChangeYourMeetingName => '主持人修改了你的会中名称';
+
+  @override
+  String get meetingIsInCall => '正在接听系统电话';
 
   @override
   String get screenShare => '共享屏幕';
 
   @override
-  String get hostStopShare => '主持人已终止了您的共享';
+  String get screenShareStop => '结束共享';
 
   @override
-  String get hostStopWhiteboard => '主持人已终止您的白板共享';
+  String get screenShareOverLimit => '已有人在共享，您无法共享';
 
   @override
-  String get unScreenShare => '结束共享';
-
-  @override
-  String get focusVideo => '设为焦点视频';
-
-  @override
-  String get unFocusVideo => '取消焦点视频';
-
-  @override
-  String get changeHost => '移交主持人';
-
-  @override
-  String get changeHostTips => '确认将主持人移交给';
-
-  @override
-  String get remove => '移除';
-
-  @override
-  String get rename => '改名';
-
-  @override
-  String get makeCoHost => '设置联席主持人';
-
-  @override
-  String get cancelCoHost => '取消联席主持人';
-
-  @override
-  String get renameTips => '请输入新的昵称';
-
-  @override
-  String get renameSuccess => '改名成功';
-
-  @override
-  String get renameFail => '改名失败';
-
-  @override
-  String get removeTips => '确认移除';
-
-  @override
-  String get yes => '是';
-
-  @override
-  String get no => '否';
-
-  @override
-  String get cannotRemoveSelf => '不能移除自己';
-
-  @override
-  String get muteAudioFail => '静音失败';
-
-  @override
-  String get unMuteAudioFail => '解除静音失败';
-
-  @override
-  String get muteVideoFail => '停止视频失败';
-
-  @override
-  String get unMuteVideoFail => '开启视频失败';
-
-  @override
-  String get focusVideoFail => '设为焦点视频失败';
-
-  @override
-  String get unFocusVideoFail => '取消焦点视频失败';
-
-  @override
-  String get handsUpDownFail => '放下成员举手失败';
-
-  @override
-  String get changeHostFail => '移交主持人失败';
-
-  @override
-  String get removeMemberFail => '移除失败';
-
-  @override
-  String get save => '保存';
-
-  @override
-  String get done => '完成';
-
-  @override
-  String get notify => '通知';
-
-  @override
-  String get hostKickedYou => '因被主持人移出或切换至其他设备，您已退出会议';
-
-  @override
-  String get sure => '确定';
-
-  @override
-  String get openCamera => '打开摄像头';
-
-  @override
-  String get openMicro => '打开麦克风';
-
-  @override
-  String get micphoneNotWorksDialogTitle => '无法使用麦克风';
-
-  @override
-  String get micphoneNotWorksDialogMessage => '您已静音，请点击\"解除静音\"开启麦克风';
-
-  @override
-  String get hostOpenCameraTips => '主持人已重新打开您的摄像头，确认打开？';
-
-  @override
-  String get hostOpenMicroTips => '主持人已重新打开您的麦克风，确认打开？';
-
-  @override
-  String get finish => '结束';
-
-  @override
-  String get leave => '离开';
-
-  @override
-  String get muteAllAudioTip => '允许参会者自行解除静音';
-
-  @override
-  String get muteAllVideoTip => '允许参会者自行开启视频';
-
-  @override
-  String get muteAllAudioSuccess => '您已进行全体静音';
-
-  @override
-  String get muteAllAudioFail => '全体静音失败';
-
-  @override
-  String get muteAllVideoSuccess => '您已进行全体关闭视频';
-
-  @override
-  String get muteAllVideoFail => '全体关闭视频失败';
-
-  @override
-  String get unMuteAllAudioSuccess => '您已请求解除全体静音';
-
-  @override
-  String get unMuteAllAudioFail => '解除全体静音失败';
-
-  @override
-  String get unMuteAllVideoSuccess => '您已请求全体打开视频';
-
-  @override
-  String get unMuteAllVideoFail => '全体打开视频失败';
-
-  @override
-  String get meetingHostMuteVideo => '您已被停止视频';
-
-  @override
-  String get meetingHostMuteAudio => '您已被静音';
-
-  @override
-  String get meetingHostMuteAllAudio => '主持人设置了全体静音';
-
-  @override
-  String get meetingHostMuteAllVideo => '主持人设置了全体关闭视频';
-
-  @override
-  String get muteAudioHandsUpOnTips => '主持人已将您解除静音，你可以自由发言';
-
-  @override
-  String get shareOverLimit => '已有人在共享，您无法共享';
-
-  @override
-  String get noShareScreenPermission => '没有屏幕共享权限';
-
-  @override
-  String get hasWhiteBoardShare => '共享白板时暂不支持屏幕共享';
-
-  @override
-  String get overRoleLimitCount => '分配角色超过人数限制';
-
-  @override
-  String get hasScreenShareShare => '屏幕共享时暂不支持白板共享';
+  String get screenShareNoPermission => '没有屏幕共享权限';
 
   @override
   String get screenShareTips => '将开始截取您的屏幕上显示的所有内容。';
@@ -294,40 +439,56 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get screenShareStopFail => '停止共享屏幕失败';
 
   @override
+  String get screenShareStartFail => '发起共享屏幕失败';
+
+  @override
+  String screenShareLocalTips(Object userName) {
+    return '$userName正在共享屏幕';
+  }
+
+  @override
+  String screenShareUser(Object userName) {
+    return '$userName的共享屏幕';
+  }
+
+  @override
+  String get screenShareInteractionTip => '双指分开放大画面';
+
+  @override
   String get whiteBoardShareStopFail => '停止共享白板失败';
 
   @override
   String get whiteBoardShareStartFail => '发起白板共享失败';
 
   @override
-  String get screenShareStartFail => '发起共享屏幕失败';
+  String get whiteboardShare => '共享白板';
 
   @override
-  String get screenShareLocalTips => '正在共享屏幕';
-
-  @override
-  String get screenShareSuffix => '的共享屏幕';
-
-  @override
-  String get screenShareInteractionTip => '双指分开放大画面';
+  String get whiteBoardClose => '退出白板';
 
   @override
   String get whiteBoardInteractionTip => '您被授予白板互动权限';
 
   @override
-  String get undoWhiteBoardInteractionTip => '您被取消白板互动权限';
+  String get whiteBoardUndoInteractionTip => '您被取消白板互动权限';
 
   @override
-  String get speakingPrefix => '正在讲话: ';
+  String get whiteBoardNoAuthority => '暂未开通白板权限，请联系销售开通';
 
   @override
-  String get iKnow => '我知道了';
+  String get whiteBoardPackUp => '收起';
 
   @override
-  String get me => '我';
+  String get meetingHasScreenShareShare => '屏幕共享时暂不支持白板共享';
 
   @override
-  String get live => '直播';
+  String get meetingHasWhiteBoardShare => '共享白板时暂不支持屏幕共享';
+
+  @override
+  String get meetingStopSharing => '停止共享';
+
+  @override
+  String get meetingStopSharingConfirm => '确定停止正在进行的共享?';
 
   @override
   String get virtualBackground => '虚拟背景';
@@ -348,199 +509,25 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get virtualBackgroundImageMax => '自定义背景图片超过最大数量';
 
   @override
-  String get closeWhiteBoard => '退出白板';
+  String get virtualBackgroundSelectTip => '所选背景立即生效';
 
   @override
-  String get lockMeetingByHost => '会议已锁定，新参会者将无法加入会议';
+  String get live => '直播';
 
   @override
-  String get lockMeetingByHostFail => '会议锁定失败';
+  String get liveMeeting => '会议直播';
 
   @override
-  String get unLockMeetingByHost => '会议已解锁，新参会者将可以加入会议';
+  String get liveMeetingTitle => '会议直播主题';
 
   @override
-  String get unLockMeetingByHostFail => '会议解锁失败';
+  String get liveMeetingUrl => '直播地址';
 
   @override
-  String get lockMeeting => '锁定会议';
+  String get liveEnterLivePassword => '请输入直播密码';
 
   @override
-  String get inputMessageHint => '输入消息...';
-
-  @override
-  String get cannotSendBlankLetter => '不支持发送空消息';
-
-  @override
-  String get chat => '聊天';
-
-  @override
-  String get more => '更多';
-
-  @override
-  String get searchMember => '搜索成员';
-
-  @override
-  String get enterChatRoomFail => '聊天室进入失败!';
-
-  @override
-  String get newMessage => '新消息';
-
-  @override
-  String get unsupportedFileExtension => '暂不支持发送此类文件';
-
-  @override
-  String get fileSizeExceedTheLimit => '文件大小不能超过200MB';
-
-  @override
-  String get imageSizeExceedTheLimit => '图片大小不能超过20MB';
-
-  @override
-  String get imageMessageTip => '[图片]';
-
-  @override
-  String get fileMessageTip => '[文件]';
-
-  @override
-  String get saveToGallerySuccess => '已保存到系统相册';
-
-  @override
-  String get saveToGalleryFail => '操作失败';
-
-  @override
-  String get saveToGalleryFailNoPermission => '无操作权限';
-
-  @override
-  String get openFileFail => '打开文件失败';
-
-  @override
-  String get openFileFailNoPermission => '打开文件失败：无权限';
-
-  @override
-  String get openFileFailFileNotFound => '打开文件失败：文件不存在';
-
-  @override
-  String get openFileFailAppNotFound => '打开文件失败：无法找到打开此文件的应用';
-
-  @override
-  String get meetingPassword => '会议密码';
-
-  @override
-  String get inputMeetingPassword => '请输入会议密码';
-
-  @override
-  String get wrongPassword => '密码错误';
-
-  @override
-  String get headsetState => '您正在使用耳机';
-
-  @override
-  String get copy => '复制';
-
-  @override
-  String get copySuccess => '复制成功';
-
-  @override
-  String get disableLiveAuthLevel => '直播过程中，不能修改观看直播权限';
-
-  @override
-  String get host => '主持人';
-
-  @override
-  String get coHost => '联席主持人';
-
-  @override
-  String get meetingInfoDesc => '会议正在加密保护中';
-
-  @override
-  String get networkUnavailableCloseFail => '网络异常，结束会议失败';
-
-  @override
-  String get muteAllHandsUpTips => '主持人已将全体静音，您可以举手申请发言';
-
-  @override
-  String get muteAllVideoHandsUpTips => '主持人已将全体视频关闭，您可以举手申请开启视频';
-
-  @override
-  String get alreadyHandsUpTips => '您已举手，请等待主持人处理';
-
-  @override
-  String get handsUpApply => '举手申请';
-
-  @override
-  String get cancelHandsUp => '取消举手';
-
-  @override
-  String get cancelHandsUpTips => '是否确定取消举手？';
-
-  @override
-  String get handsUpDown => '手放下';
-
-  @override
-  String get whiteBoardInteract => '授权白板互动';
-
-  @override
-  String get whiteBoardInteractFail => '授权白板互动失败';
-
-  @override
-  String get undoWhiteBoardInteract => '撤回白板互动';
-
-  @override
-  String get undoWhiteBoardInteractFail => '撤回白板互动失败';
-
-  @override
-  String get inHandsUp => '举手中';
-
-  @override
-  String get handsUpFail => '举手失败';
-
-  @override
-  String get handsUpSuccess => '举手成功，等待主持人处理';
-
-  @override
-  String get cancelHandsUpFail => '取消举手失败';
-
-  @override
-  String get hostRejectAudioHandsUp => '主持人已将您的手放下';
-
-  @override
-  String get sipTip => 'SIP';
-
-  @override
-  String get meetingInviteUrl => '邀请链接';
-
-  @override
-  String get meetingInvitePageTitle => '添加与会者';
-
-  @override
-  String get sipNumber => 'SIP电话';
-
-  @override
-  String get sipHost => 'SIP地址';
-
-  @override
-  String get inviteListTitle => '邀请列表';
-
-  @override
-  String get invitationSendSuccess => '已发起邀请';
-
-  @override
-  String get invitationSendFail => '邀请失败';
-
-  @override
-  String get meetingLive => '会议直播';
-
-  @override
-  String get meetingLiveTitle => '会议直播主题';
-
-  @override
-  String get meetingLiveUrl => '直播地址';
-
-  @override
-  String get pleaseInputLivePassword => '请输入直播密码';
-
-  @override
-  String get pleaseInputLivePasswordHint => '请输入6位数字密码';
+  String get liveEnterLiveSixDigitPassword => '请输入6位数字密码';
 
   @override
   String get liveInteraction => '直播互动';
@@ -597,10 +584,9 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get liveStartSuccess => '直播开始成功';
 
   @override
-  String get livePickerCount => '已选择';
-
-  @override
-  String get livePickerCountPrefix => '人';
+  String livePickerCount(Object length) {
+    return '已选择$length人';
+  }
 
   @override
   String get liveUpdateFail => '直播更新失败,请稍后重试';
@@ -618,190 +604,464 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get livePassword => '直播密码';
 
   @override
-  String get editWhiteBoard => '编辑';
+  String get liveDisableAuthLevel => '直播过程中，不能修改观看直播权限';
 
   @override
-  String get packUpWhiteBoard => '收起';
+  String get liveStreaming => '直播中';
 
   @override
-  String get noAuthorityWhiteBoard => '暂未开通白板权限，请联系销售开通';
+  String get participants => '参会者';
 
   @override
-  String get ok => '知道了';
+  String get participantsManager => '管理参会者';
 
   @override
-  String get removedByHost => '您已被主持人移除会议';
+  String get participantAssignedHost => '您已经成为主持人';
 
   @override
-  String get closeByHost => '会议已结束';
+  String get participantAssignedCoHost => '您已被设为联席主持人';
 
   @override
-  String get loginOnOtherDevice => '已切换至其他设备';
+  String get participantUnassignedCoHost => '您已被取消设为联席主持人';
 
   @override
-  String get authInfoExpired => '网络异常，请检查网络连接后重新入会';
+  String get participantAssignedActiveSpeaker => '您已被设置为焦点视频';
 
   @override
-  String get syncDataError => '房间信息同步失败';
+  String get participantUnassignedActiveSpeaker => '您已被取消焦点视频';
 
   @override
-  String get leaveMeetingBySelf => '离开会议';
+  String get participantMuteAudioAll => '全体静音';
 
   @override
-  String get meetingClosed => '会议被关闭';
+  String get participantMuteAudioAllDialogTips => '所有以及新加入成员将被静音';
 
   @override
-  String get connectFail => '连接失败';
+  String get participantMuteVideoAllDialogTips => '所有以及新加入成员将被关闭摄像头';
 
   @override
-  String get joinTimeout => '加入会议超时，请重试';
+  String get participantUnmuteAll => '解除全体静音';
 
   @override
-  String get endOfLife => '会议时长已达上限，会议关闭';
+  String get participantMute => '静音';
 
   @override
-  String get endMeetingTip => '距离会议关闭仅剩';
+  String get participantUnmute => '解除静音';
 
   @override
-  String get min => '分钟';
+  String get participantTurnOffVideos => '全体关闭视频';
 
   @override
-  String get reuseIMNotSupportAnonymousJoinMeeting => 'IM复用不支持匿名入会';
+  String get participantTurnOnVideos => '全体打开视频';
 
   @override
-  String get inviteDialogTitle => '会议邀请';
+  String get participantStopVideo => '停止视频';
 
   @override
-  String get inviteContentCopySuccess => '已复制会议邀请内容';
+  String get participantStartVideo => '开启视频';
 
   @override
-  String get inviteTitle => '邀请您参加会议\n\n';
+  String get participantTurnOffAudioAndVideo => '关闭音视频';
 
   @override
-  String get meetingSubject => '会议主题：';
+  String get participantTurnOnAudioAndVideo => '打开音视频';
 
   @override
-  String get meetingTime => '会议时间：';
+  String get participantHostStoppedShare => '主持人已终止了您的共享';
 
   @override
-  String get meetingNum => '会议号：';
+  String get participantHostStopWhiteboard => '主持人已终止您的白板共享';
 
   @override
-  String get shortMeetingNum => '会议短号：';
+  String get participantAssignActiveSpeaker => '设为焦点视频';
 
   @override
-  String get invitationUrl => '入会链接：';
+  String get participantUnassignActiveSpeaker => '取消焦点视频';
 
   @override
-  String get meetingPwd => '会议密码：';
+  String get participantTransferHost => '移交主持人';
 
   @override
-  String get copyInvite => '复制邀请';
+  String participantTransferHostConfirm(Object userName) {
+    return '确认将主持人移交给$userName?';
+  }
 
   @override
-  String get internalSpecial => '内部专用';
+  String get participantRemove => '移除';
 
   @override
-  String get notWork => '无法使用';
+  String get participantRename => '改名';
 
   @override
-  String get needPermissionTipsFirst => '请允许';
+  String get participantRenameDialogTitle => '修改参会姓名';
 
   @override
-  String get needPermissionTipsTail => '访问您的';
+  String get participantAssignCoHost => '设置联席主持人';
 
   @override
-  String get funcNeed => '该功能需要';
+  String get participantUnassignCoHost => '取消联席主持人';
 
   @override
-  String get toSetUp => '前往设置';
+  String get participantRenameTips => '请输入新的昵称';
 
   @override
-  String get permissionTips => '权限';
+  String get participantRenameSuccess => '改名成功';
 
   @override
-  String get cameraPermission => '相机';
+  String get participantRenameFail => '改名失败';
 
   @override
-  String get microphonePermission => '麦克风';
+  String get participantRemoveConfirm => '确认移除';
 
   @override
-  String get bluetoothPermission => '蓝牙';
+  String get participantCannotRemoveSelf => '不能移除自己';
 
   @override
-  String get phoneStatePermission => '电话';
+  String get participantMuteAudioFail => '静音失败';
 
   @override
-  String get noPermission => '权限未授权';
+  String get participantUnMuteAudioFail => '解除静音失败';
 
   @override
-  String get permissionRationalePrefix => '音视频会议需要申请';
+  String get participantMuteVideoFail => '停止视频失败';
 
   @override
-  String get permissionRationaleSuffixAudio => '权限，用于会议中的音频交流';
+  String get participantUnMuteVideoFail => '开启视频失败';
 
   @override
-  String get permissionRationaleSuffixVideo => '权限，用于会议中的视频交流';
+  String get participantFailedToAssignActiveSpeaker => '设为焦点视频失败';
 
   @override
-  String get menuTitleParticipants => '参会者';
+  String get participantFailedToUnassignActiveSpeaker => '取消焦点视频失败';
 
   @override
-  String get menuTitleManagerParticipants => '管理参会者';
+  String get participantFailedToLowerHand => '放下成员举手失败';
 
   @override
-  String get menuTitleInvite => '邀请';
+  String get participantFailedToTransferHost => '移交主持人失败';
 
   @override
-  String get menuTitleChatroom => '聊天';
+  String get participantFailedToRemove => '移除失败';
 
   @override
-  String get menuTitleShareWhiteboard => '共享白板';
+  String get participantOpenCamera => '打开摄像头';
 
   @override
-  String get menuTitleCloseWhiteboard => '退出白板';
+  String get participantOpenMicrophone => '打开麦克风';
 
   @override
-  String get notificationContentTitle => '视频会议';
+  String get participantHostOpenCameraTips => '主持人已重新打开您的摄像头，确认打开？';
 
   @override
-  String get notificationContentText => '视频会议正在进行中';
+  String get participantHostOpenMicroTips => '主持人已重新打开您的麦克风，确认打开？';
 
   @override
-  String get notificationContentTicker => '视频会议';
+  String get participantMuteAllAudioTip => '允许参会者自行解除静音';
 
   @override
-  String get notificationChannelId => 'ne_meeting_channel';
+  String get participantMuteAllVideoTip => '允许参会者自行开启视频';
 
   @override
-  String get notificationChannelName => '视频会议通知';
+  String get participantMuteAllAudioSuccess => '您已进行全体静音';
 
   @override
-  String get notificationChannelDesc => '视频会议通知';
+  String get participantMuteAllAudioFail => '全体静音失败';
 
   @override
-  String get delete => '删除';
+  String get participantMuteAllVideoSuccess => '您已进行全体关闭视频';
 
   @override
-  String get nothing => '无';
+  String get participantMuteAllVideoFail => '全体关闭视频失败';
 
   @override
-  String get virtualBackgroundSelectTip => '所选背景立即生效';
+  String get participantUnMuteAllAudioSuccess => '您已请求解除全体静音';
 
   @override
-  String get onUserJoinMeeting => '加入会议';
+  String get participantUnMuteAllAudioFail => '解除全体静音失败';
 
   @override
-  String get onUserLeaveMeeting => '离开会议';
+  String get participantUnMuteAllVideoSuccess => '您已请求全体打开视频';
 
   @override
-  String get userHasBeenAssignCoHostRole => '已被设为联席主持人';
+  String get participantUnMuteAllVideoFail => '全体打开视频失败';
 
   @override
-  String get userHasBeenRevokeCoHostRole => '已被取消联席主持人';
+  String get participantHostMuteVideo => '您已被停止视频';
 
   @override
-  String get isInCall => '正在接听系统电话';
+  String get participantHostMuteAudio => '您已被静音';
+
+  @override
+  String get participantHostMuteAllAudio => '主持人设置了全体静音';
+
+  @override
+  String get participantHostMuteAllVideo => '主持人设置了全体关闭视频';
+
+  @override
+  String get participantMuteAudioHandsUpOnTips => '主持人已将您解除静音，你可以自由发言';
+
+  @override
+  String get participantOverRoleLimitCount => '分配角色超过人数限制';
+
+  @override
+  String get participantMe => '我';
+
+  @override
+  String get participantSearchMember => '搜索成员';
+
+  @override
+  String get participantHost => '主持人';
+
+  @override
+  String get participantCoHost => '联席主持人';
+
+  @override
+  String get participantMuteAllHandsUpTips => '主持人已将全体静音，您可以举手申请发言';
+
+  @override
+  String get participantTurnOffAllVideoHandsUpTips => '主持人已将全体视频关闭，您可以举手申请开启视频';
+
+  @override
+  String get participantWhiteBoardInteract => '授权白板互动';
+
+  @override
+  String get participantWhiteBoardInteractFail => '授权白板互动失败';
+
+  @override
+  String get participantUndoWhiteBoardInteract => '撤回白板互动';
+
+  @override
+  String get participantUndoWhiteBoardInteractFail => '撤回白板互动失败';
+
+  @override
+  String get participantUserHasBeenAssignCoHostRole => '已被设为联席主持人';
+
+  @override
+  String get participantUserHasBeenRevokeCoHostRole => '已被取消联席主持人';
+
+  @override
+  String get participantInMeeting => '会议中';
+
+  @override
+  String get participantNotJoined => '未入会';
+
+  @override
+  String get participantAttendees => '成员管理';
+
+  @override
+  String get participantAdmit => '准入';
+
+  @override
+  String get participantWaitingTimePrefix => '已等待';
+
+  @override
+  String get participantPutInWaitingRoom => '移至等候室';
+
+  @override
+  String get participantExpelWaitingMemberDialogTitle => '移除等候成员';
+
+  @override
+  String get participantDisallowMemberRejoinMeeting => '不允许用户再次加入该会议';
+
+  @override
+  String get cloudRecordingEnabledTitle => '是否开启云录制';
+
+  @override
+  String get cloudRecordingEnabledMessage =>
+      '开启后，将录制会议过程中的音视频与共享屏幕内容到云端，同时告知所有参会成员';
+
+  @override
+  String get cloudRecordingEnabledMessageWithoutNotice =>
+      '开启后，将录制会议过程中的音视频与共享屏幕内容到云端';
+
+  @override
+  String get cloudRecordingTitle => '该会议正在被录制中';
+
+  @override
+  String get cloudRecordingMessage =>
+      '主持人开启了会议云录制，会议的创建者可以观看云录制文件，你可以在会议结束后联系创建者获取查看链接';
+
+  @override
+  String get cloudRecordingAgree => '如果留在会议中，表示你同意录制';
+
+  @override
+  String get cloudRecordingWhetherEndedTitle => '是否结束录制';
+
+  @override
+  String get cloudRecordingEndedMessage => '录制文件将会在会议结束后同步至“历史会议-会议详情”中';
+
+  @override
+  String get cloudRecordingEndedTitle => '云录制已结束';
+
+  @override
+  String get cloudRecordingEndedAndGetUrl => '你可以在会议结束后联系会议创建者获取查看链接';
+
+  @override
+  String get cloudRecordingStart => '云录制';
+
+  @override
+  String get cloudRecordingStop => '停止录制';
+
+  @override
+  String get cloudRecording => '录制中';
+
+  @override
+  String get cloudRecordingStartFail => '开启录制失败';
+
+  @override
+  String get cloudRecordingStopFail => '停止录制失败';
+
+  @override
+  String get cloudRecordingStarting => '正在开启录制...';
+
+  @override
+  String get chat => '聊天';
+
+  @override
+  String get chatInputMessageHint => '输入消息...';
+
+  @override
+  String get chatCannotSendBlankLetter => '不支持发送空消息';
+
+  @override
+  String get chatJoinFail => '聊天室进入失败!';
+
+  @override
+  String get chatNewMessage => '新消息';
+
+  @override
+  String get chatUnsupportedFileExtension => '暂不支持发送此类文件';
+
+  @override
+  String get chatFileSizeExceedTheLimit => '文件大小不能超过200MB';
+
+  @override
+  String get chatImageSizeExceedTheLimit => '图片大小不能超过20MB';
+
+  @override
+  String get chatImageMessageTip => '[图片]';
+
+  @override
+  String get chatFileMessageTip => '[文件]';
+
+  @override
+  String get chatSaveToGallerySuccess => '已保存到系统相册';
+
+  @override
+  String get chatOperationFailNoPermission => '无操作权限';
+
+  @override
+  String get chatOpenFileFail => '打开文件失败';
+
+  @override
+  String get chatOpenFileFailNoPermission => '打开文件失败：无权限';
+
+  @override
+  String get chatOpenFileFailFileNotFound => '打开文件失败：文件不存在';
+
+  @override
+  String get chatOpenFileFailAppNotFound => '打开文件失败：无法找到打开此文件的应用';
+
+  @override
+  String get chatRecall => '撤回';
+
+  @override
+  String get chatAboveIsHistoryMessage => '以上为历史消息';
+
+  @override
+  String get chatYou => '你';
+
+  @override
+  String get chatRecallAMessage => '撤回一条消息';
+
+  @override
+  String get chatMessageRecalled => '消息已被撤回';
+
+  @override
+  String get chatMessage => '消息';
+
+  @override
+  String get chatSendTo => '发送至';
+
+  @override
+  String get chatAllMembersInMeeting => '会议室所有人';
+
+  @override
+  String get chatAllMembersInWaitingRoom => '等候室所有人';
+
+  @override
+  String get chatHistory => '聊天记录';
+
+  @override
+  String get chatMessageSendToWaitingRoom => '发给等候室的消息';
+
+  @override
+  String get chatNoChatHistory => '无聊天记录';
+
+  @override
+  String get waitingRoomJoinMeeting => '加入会议';
+
+  @override
+  String get waitingRoom => '等候室';
+
+  @override
+  String get waitingRoomJoinMeetingOption => '入会选项';
+
+  @override
+  String get waitingRoomWaitHostToInviteJoinMeeting => '请等待，主持人即将拉您进入会议';
+
+  @override
+  String get waitingRoomWaitMeetingToStart => '请等待，会议尚未开始';
+
+  @override
+  String get waitingRoomTurnOnMicrophone => '开启麦克风';
+
+  @override
+  String get waitingRoomTurnOnVideo => '开启摄像头';
+
+  @override
+  String get waitingRoomEnabledOnEntry => '等候室已开启';
+
+  @override
+  String get waitingRoomDisabledOnEntry => '等候室已关闭';
+
+  @override
+  String get waitingRoomDisableDialogTitle => '关闭等候室';
+
+  @override
+  String get waitingRoomDisableDialogMessage => '等候室关闭后，新成员将直接进入会议室';
+
+  @override
+  String get waitingRoomDisableDialogAdmitAll => '允许现有等候室成员全部进入会议';
+
+  @override
+  String get waitingRoomCloseRightNow => '立即关闭';
+
+  @override
+  String waitingRoomCount(Object count) {
+    return '当前等候室已有$count人等候';
+  }
+
+  @override
+  String get movedToWaitingRoom => '主持人已将您移至等候室';
+
+  @override
+  String get deviceSpeaker => '扬声器';
+
+  @override
+  String get deviceReceiver => '手机听筒';
+
+  @override
+  String get deviceBluetooth => '蓝牙耳机';
+
+  @override
+  String get deviceHeadphones => '有线耳机';
+
+  @override
+  String get deviceOutput => '输出设备';
+
+  @override
+  String get deviceHeadsetState => '您正在使用耳机';
 
   @override
   String get networkConnectionGood => '网络连接良好';
@@ -813,45 +1073,33 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get networkConnectionPoor => '网络连接较差';
 
   @override
-  String get localLatency => '延迟';
+  String get nan => '网络连接未知';
 
   @override
-  String get packetLossRate => '丢包率';
+  String get networkLocalLatency => '延迟：';
 
   @override
-  String get startAudioShare => '开启音频共享';
-
-  @override
-  String get stopAudioShare => '关闭音频共享';
-
-  @override
-  String get switchFcusView => '切换至演讲者视图';
-
-  @override
-  String get switchGalleryView => '切换至画廊视图';
-
-  @override
-  String get noSupportSwitch => 'iPad不支持切换模式';
-
-  @override
-  String get funcNotAvailableWhenInCallState => '系统通话中，无法使用该功能';
-
-  @override
-  String get networkAbnormality => '网络异常';
-
-  @override
-  String get networkAbnormalityPleaseCheckYourNetwork => '网络异常，请检查您的网络';
+  String get networkPacketLossRate => '丢包率：';
 
   @override
   String get networkReconnectionSuccessful => '网络重连成功';
 
   @override
-  String get disconnectedTryingToReconnect => '网络已断开，正在尝试重新连接…';
+  String get networkAbnormalityPleaseCheckYourNetwork => '网络异常，请检查您的网络';
+
+  @override
+  String get networkAbnormality => '网络异常';
 
   @override
   String get networkDisconnectedPleaseCheckYourNetworkStatusOrTryToRejoin =>
       '网络已断开，请检查您的网络情况，或尝试重新入会';
 
   @override
-  String get rejoining => '重新入会';
+  String get networkNotStable => '当前网络状况不佳';
+
+  @override
+  String get networkUnavailableCloseFail => '网络异常，结束会议失败';
+
+  @override
+  String get networkDisconnectedTryingToReconnect => '网络已断开，正在尝试重新连接…';
 }

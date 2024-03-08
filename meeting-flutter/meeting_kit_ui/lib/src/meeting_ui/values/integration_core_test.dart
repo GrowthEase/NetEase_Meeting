@@ -18,6 +18,7 @@ class MeetingUIValueKeys {
   static const inputMeetingPassword = ValueKey('inputMeetingPassword');
   static const inputMeetingPasswordJoinMeeting =
       ValueKey('inputMeetingPasswordJoinMeeting');
+  static const showMeetingInfo = ValueKey('showMeetingInfo');
 
   ///会议创建模板 MeetCreateRoute
   static const openMicrophoneCreateMeeting =
@@ -44,6 +45,7 @@ class MeetingUIValueKeys {
   static const raiseHands = ValueKey("raiseHands");
   static const sipNumber = ValueKey("sipNumber");
   static const sipHost = ValueKey("sipHost");
+  static const waitingRoomCountTipClose = ValueKey("waitingRoomCountTipClose");
 
   ///会中聊天界面 meeting_chatroom_page.dart
   static const inputMessageKey = ValueKey('inputMessageKey');
@@ -82,6 +84,21 @@ class MeetingUIValueKeys {
   ///美颜页面
   static const beautyLevelSlider = ValueKey('beautyLevelSlider');
   static const beautyPageClose = ValueKey('beautyPageClose');
+
+  ///虚拟背景页面
+  static const virtualBackgroundItem = ValueKey('virtualBackgroundItem');
+
+  ///会议安全页面
+  static const waitingRoomSwitch = ValueKey('waitingRoomSwitch');
+  static const watermarkSwitch = ValueKey('watermarkSwitch');
+  static const meetingLockSwitch = ValueKey('meetingLockSwitch');
+
+  ///会中成员管理
+  static const renameDialogInputKey = ValueKey('renameDialogInputKey');
+  static const handsUpIcon = ValueKey('handsUpIcon');
+
+  static const switchMyMicrophone = ValueKey('switchMyMicrophone');
+  static const switchMyCamera = ValueKey('switchMyCamera');
 
   /// 非product的版本，则显示。switchButton 默认 valueKey的后缀是value = false  -1; value = true 0，
   static Widget addTextWidgetTest({bool? value, ValueKey<String>? valueKey}) {

@@ -72,6 +72,7 @@ class AppHttpClient {
       String method, String path, Map<String, dynamic>? headers, data) async {
     Response? response;
     try {
+      final isGet = method.toLowerCase() == 'get';
       var options = Options();
       options.method = method;
       options.headers = mergeHeaders(baseHeaders, headers);
@@ -83,7 +84,8 @@ class AppHttpClient {
       final requestOptions = options.compose(
         dio.options,
         path,
-        data: data,
+        data: isGet ? null : data,
+        queryParameters: isGet && data is Map ? Map.from(data) : null,
       );
       response = await dio.fetch(requestOptions);
     } on DioError catch (e) {

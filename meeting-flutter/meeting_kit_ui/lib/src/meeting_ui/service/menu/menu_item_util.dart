@@ -13,21 +13,23 @@ class _MenuItemTypes {
 List<NEMeetingMenuItem>? buildMenuItemList(List? json) {
   return json
       ?.whereType<Map<String, dynamic>>()
-      .map((element) {
-        NEMeetingMenuItem? item;
-        final type = element['type'];
-        if (type == _MenuItemTypes.singleStateMenuItem) {
-          item = _buildSingleStateMenuItem(element);
-        } else if (type == _MenuItemTypes.checkableMenuItem) {
-          item = _buildCheckableMenuItem(element);
-        }
-        if (item?.isValid ?? false) {
-          return item;
-        }
-        return null;
-      })
+      .map(buildMenuItem)
       .whereType<NEMeetingMenuItem>()
       .toList(growable: false);
+}
+
+NEMeetingMenuItem? buildMenuItem(Map element) {
+  NEMeetingMenuItem? item;
+  final type = element['type'];
+  if (type == _MenuItemTypes.singleStateMenuItem) {
+    item = _buildSingleStateMenuItem(element);
+  } else if (type == _MenuItemTypes.checkableMenuItem) {
+    item = _buildCheckableMenuItem(element);
+  }
+  if (item?.isValid ?? false) {
+    return item;
+  }
+  return null;
 }
 
 NEMeetingMenuItem? _buildSingleStateMenuItem(Map json) {
@@ -54,6 +56,7 @@ NEMeetingMenuItem? _buildCheckableMenuItem(Map json) {
     return NECheckableMenuItem(
       itemId: json['itemId'] as int,
       visibility: NEMenuVisibility.values[json['visibility'] as int],
+      checked: json['checked'] as bool? ?? false,
       uncheckStateItem: NEMenuItemInfo._nullable(
         text: uncheckInfo['text'] as String?,
         icon: uncheckInfo['icon']?.toString(),

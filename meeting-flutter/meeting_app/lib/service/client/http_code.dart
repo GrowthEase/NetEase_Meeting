@@ -46,6 +46,8 @@ class HttpCode {
   static const int notHostPermission = 2100;
   static const int memberNotInMeeting = 2101;
   static const int controlCodeError = 2102;
+  static const int oldPasswordError = 3401;
+  static const int newPasswordIsSameToTheOld = 3427;
   static const int phoneErrorTip = 3408;
   static const int verifyCodeErrorTip = 3407;
   static const int meetingDurationTooLong = 3412;

@@ -9,11 +9,7 @@ import android.content.Context;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.EventChannel;
 
-public abstract class BroadcastReceiverEventChannel implements EventChannel.StreamHandler {
-
-  public final Context context;
-
-  private EventChannel.EventSink eventSink;
+public abstract class BroadcastReceiverEventChannel extends BaseEventChannel {
 
   private BroadcastReceiver receiver;
 
@@ -21,14 +17,11 @@ public abstract class BroadcastReceiverEventChannel implements EventChannel.Stre
       Context context,
       FlutterPlugin.FlutterPluginBinding flutterPluginBinding,
       String eventChannelName) {
-    this.context = context.getApplicationContext();
-    EventChannel eventChannel =
-        new EventChannel(flutterPluginBinding.getBinaryMessenger(), eventChannelName);
-    eventChannel.setStreamHandler(this);
+    super(context, flutterPluginBinding, eventChannelName);
   }
 
   public void dispose() {
-    eventSink = null;
+    super.dispose();
     if (receiver != null) {
       context.unregisterReceiver(receiver);
       receiver = null;
@@ -37,13 +30,8 @@ public abstract class BroadcastReceiverEventChannel implements EventChannel.Stre
 
   @Override
   public void onListen(Object arguments, EventChannel.EventSink events) {
-    eventSink = events;
+    super.onListen(arguments, events);
     initReceiver();
-  }
-
-  @Override
-  public void onCancel(Object arguments) {
-    dispose();
   }
 
   private void initReceiver() {
@@ -53,10 +41,4 @@ public abstract class BroadcastReceiverEventChannel implements EventChannel.Stre
   }
 
   protected abstract BroadcastReceiver registerReceiver();
-
-  public void notifyEvent(Object event) {
-    if (eventSink != null) {
-      eventSink.success(event);
-    }
-  }
 }

@@ -18,6 +18,7 @@
 		530F661C29C4597500DA53FB /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 530F661B29C4597500DA53FB /* CoreTelephony.framework */; };
 		530F661E29C4597D00DA53FB /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 530F661D29C4597D00DA53FB /* SystemConfiguration.framework */; };
 		530F662029C4598A00DA53FB /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 530F661F29C4598A00DA53FB /* libc++.tbd */; };
+		8AA055F02B96FC7B00AA1315 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8AA055F22B96FC7B00AA1315 /* InfoPlist.strings */; };
 		978B8F6F1D3862AE00F588F7 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 7AFFD8EE1D35381100E5BB4D /* AppDelegate.m */; };
 		97C146F31CF9000F007C117D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 97C146F21CF9000F007C117D /* main.m */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
@@ -58,6 +59,7 @@
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
 		21A79E48F9CA0484F1A5BF5F /* Pods-Runner-MeetingBroadcaster.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner-MeetingBroadcaster.release.xcconfig"; path = "Target Support Files/Pods-Runner-MeetingBroadcaster/Pods-Runner-MeetingBroadcaster.release.xcconfig"; sourceTree = "<group>"; };
+		2D29CA482B341DEF009AB553 /* MeetingBroadcasterRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MeetingBroadcasterRelease.entitlements; sourceTree = "<group>"; };
 		2DB8EC4E2654EEAA00BB171E /* ReplayKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ReplayKit.framework; path = System/Library/Frameworks/ReplayKit.framework; sourceTree = SDKROOT; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
 		530E41922A3760A100ADE1B9 /* MeetingBroadcaster.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MeetingBroadcaster.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -77,6 +79,12 @@
 		7AFFD8EE1D35381100E5BB4D /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		80A5568473CAEA7AC1CDFDDA /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8985AE8F74CEEDADBE40CA39 /* Pods-MeetingBroadcaster.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MeetingBroadcaster.release.xcconfig"; path = "Target Support Files/Pods-MeetingBroadcaster/Pods-MeetingBroadcaster.release.xcconfig"; sourceTree = "<group>"; };
+		8A3B20192B6F569C00A4A6F4 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Main.strings"; sourceTree = "<group>"; };
+		8A3B201A2B6F56DB00A4A6F4 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Main.strings; sourceTree = "<group>"; };
+		8AA055F12B96FC7B00AA1315 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		8AA055F32B96FC7D00AA1315 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		8AA055F42B96FC8000AA1315 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		8AA055F62B96FCB600AA1315 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Main.strings; sourceTree = "<group>"; };
 		92FEF41FFBDE7BB2875CC8EB /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
 		97C146EE1CF9000F007C117D /* Runner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runner.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -124,6 +132,7 @@
 		530E41942A3760A100ADE1B9 /* MeetingBroadcaster */ = {
 			isa = PBXGroup;
 			children = (
+				2D29CA482B341DEF009AB553 /* MeetingBroadcasterRelease.entitlements */,
 				532836642A42A38A00FA65F1 /* MeetingBroadcaster.entitlements */,
 				530E41A62A3763A400ADE1B9 /* Info.plist */,
 				530E41A52A3763A400ADE1B9 /* SampleHandler.h */,
@@ -166,6 +175,7 @@
 		97C146F01CF9000F007C117D /* Runner */ = {
 			isa = PBXGroup;
 			children = (
+				53100BF829CAF4EB00F13844 /* third_party */,
 				CA3E726023E7EEB400B775BB /* RunnerRelease.entitlements */,
 				CA3E725F23E7EE7E00B775BB /* RunnerDebug.entitlements */,
 				CA3E725D23E7E2F600B775BB /* NTESLinkStreamHandler.m */,
@@ -179,6 +189,7 @@
 				97C146F11CF9000F007C117D /* Supporting Files */,
 				1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */,
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
+				8AA055F22B96FC7B00AA1315 /* InfoPlist.strings */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -248,11 +259,11 @@
 			buildConfigurationList = 97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */;
 			buildPhases = (
 				670A89CEFDCF06CDAE6635D9 /* [CP] Check Pods Manifest.lock */,
-				9A6A7AAADEBF7BEB908E17B1 /* [CP] Embed Pods Frameworks */,
 				9740EEB61CF901F6004384FC /* Run Script */,
 				97C146EA1CF9000F007C117D /* Sources */,
 				97C146EB1CF9000F007C117D /* Frameworks */,
 				97C146EC1CF9000F007C117D /* Resources */,
+				9A6A7AAADEBF7BEB908E17B1 /* [CP] Embed Pods Frameworks */,
 				2DB8EC5C2654EEAA00BB171E /* Embed App Extensions */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 			);
@@ -272,7 +283,7 @@
 		97C146E61CF9000F007C117D /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1300;
+				LastUpgradeCheck = 1430;
 				ORGANIZATIONNAME = "The Chromium Authors";
 				TargetAttributes = {
 					530E41912A3760A100ADE1B9 = {
@@ -290,6 +301,8 @@
 			knownRegions = (
 				en,
 				Base,
+				"zh-Hans",
+				ja,
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
 			productRefGroup = 97C146EF1CF9000F007C117D /* Products */;
@@ -314,6 +327,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				26EBE31926C12FFE001B4A68 /* key_public.dat in Resources */,
+				8AA055F02B96FC7B00AA1315 /* InfoPlist.strings in Resources */,
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
@@ -408,22 +423,23 @@
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/DKImagePickerController/DKImagePickerController.framework",
 				"${BUILT_PRODUCTS_DIR}/DKPhotoGallery/DKPhotoGallery.framework",
+				"${PODS_ROOT}/Marvel/Marvel.framework",
 				"${PODS_ROOT}/NECoreIMKit/NECoreIMKit.framework",
 				"${PODS_ROOT}/NECoreKit/NECoreKit.framework",
 				"${BUILT_PRODUCTS_DIR}/NEDyldYuv/NEDyldYuv.framework",
 				"${PODS_ROOT}/NERoomKit/NERoomKit.framework",
-				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcAiDenoise.framework",
-				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcAiHowling.framework",
-				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcBeauty.framework",
-				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcFaceDetect.framework",
-				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcFaceEnhance.framework",
-				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcnn.framework",
-				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcSDK.framework",
-				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcReplayKit.framework",
-				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcPersonSegment.framework",
-				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcAudio3D.framework",
-				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcSuperResolution.framework",
-				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcVideoDenoise.framework",
+				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcAiDenoise.framework",
+				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcAiHowling.framework",
+				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcBeauty.framework",
+				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcFaceDetect.framework",
+				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcFaceEnhance.framework",
+				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcnn.framework",
+				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcSDK.framework",
+				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcReplayKit.framework",
+				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcPersonSegment.framework",
+				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcAudio3D.framework",
+				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcSuperResolution.framework",
+				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcVideoDenoise.framework",
 				"${PODS_ROOT}/NIMSDK_LITE/NIMSDK/NIMSDK.framework",
 				"${PODS_ROOT}/NIMSDK_LITE/NIMSDK/NIMNOS.framework",
 				"${BUILT_PRODUCTS_DIR}/Reachability/Reachability.framework",
@@ -433,13 +449,18 @@
 				"${PODS_ROOT}/YXArtemis/YXArtemis.framework",
 				"${BUILT_PRODUCTS_DIR}/connectivity/connectivity.framework",
 				"${BUILT_PRODUCTS_DIR}/device_info_plus/device_info_plus.framework",
+				"${BUILT_PRODUCTS_DIR}/device_information/device_information.framework",
 				"${BUILT_PRODUCTS_DIR}/file_picker/file_picker.framework",
+				"${BUILT_PRODUCTS_DIR}/hawk/hawk.framework",
+				"${BUILT_PRODUCTS_DIR}/integration_test/integration_test.framework",
+				"${BUILT_PRODUCTS_DIR}/marvelflutter/marvelflutter.framework",
 				"${BUILT_PRODUCTS_DIR}/netease_meeting_ui/netease_meeting_ui.framework",
 				"${BUILT_PRODUCTS_DIR}/netease_roomkit/netease_roomkit.framework",
 				"${BUILT_PRODUCTS_DIR}/open_filex/open_filex.framework",
 				"${BUILT_PRODUCTS_DIR}/package_info/package_info.framework",
 				"${BUILT_PRODUCTS_DIR}/path_provider_ios/path_provider_ios.framework",
 				"${BUILT_PRODUCTS_DIR}/shared_preferences_ios/shared_preferences_ios.framework",
+				"${BUILT_PRODUCTS_DIR}/sqflite/sqflite.framework",
 				"${BUILT_PRODUCTS_DIR}/url_launcher_ios/url_launcher_ios.framework",
 				"${BUILT_PRODUCTS_DIR}/wakelock/wakelock.framework",
 				"${BUILT_PRODUCTS_DIR}/webview_flutter_wkwebview/webview_flutter_wkwebview.framework",
@@ -449,6 +470,7 @@
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/DKImagePickerController.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/DKPhotoGallery.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Marvel.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NECoreIMKit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NECoreKit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NEDyldYuv.framework",
@@ -474,13 +496,18 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/YXArtemis.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/connectivity.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/device_info_plus.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/device_information.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/file_picker.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hawk.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/integration_test.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/marvelflutter.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/netease_meeting_ui.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/netease_roomkit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/open_filex.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/package_info.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/path_provider_ios.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/shared_preferences_ios.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/sqflite.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/url_launcher_ios.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/wakelock.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/webview_flutter_wkwebview.framework",
@@ -524,10 +551,23 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		8AA055F22B96FC7B00AA1315 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				8AA055F12B96FC7B00AA1315 /* en */,
+				8AA055F32B96FC7D00AA1315 /* zh-Hans */,
+				8AA055F42B96FC8000AA1315 /* ja */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
 		97C146FA1CF9000F007C117D /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
 				97C146FB1CF9000F007C117D /* Base */,
+				8A3B20192B6F569C00A4A6F4 /* zh-Hans */,
+				8A3B201A2B6F56DB00A4A6F4 /* ja */,
+				8AA055F62B96FCB600AA1315 /* en */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";
@@ -548,6 +588,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = arm64;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -608,7 +649,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 31700;
+				CURRENT_PROJECT_VERSION = 40300;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 569GNZ5392;
@@ -630,7 +671,7 @@
 					"DISABLE_PUSH_NOTIFICATIONS=1",
 				);
 				INFOPLIST_FILE = Runner/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -639,7 +680,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 3.17.0;
+				MARKETING_VERSION = 4.3.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -698,6 +739,10 @@
 					"-framework",
 					"\"device_info_plus\"",
 					"-framework",
+					"\"device_information\"",
+					"-framework",
+					"\"integration_test\"",
+					"-framework",
 					"\"package_info\"",
 					"-framework",
 					"\"url_launcher_ios\"",
@@ -732,11 +777,9 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_ENTITLEMENTS = MeetingBroadcaster/MeetingBroadcaster.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 31700;
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 569GNZ5392;
+				DEVELOPMENT_TEAM = 7C9A6NRV5L;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -751,13 +794,12 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 3.17.0;
+				MARKETING_VERSION = 4.3.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.MeetingBroadcaster;
+				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.debug.MeetingBroadcaster;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = meetingBroadcasterUniversalDistribution;
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -774,7 +816,7 @@
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CODE_SIGN_ENTITLEMENTS = MeetingBroadcaster/MeetingBroadcaster.entitlements;
+				CODE_SIGN_ENTITLEMENTS = MeetingBroadcaster/MeetingBroadcasterRelease.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
@@ -791,7 +833,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 3.17.0;
+				MARKETING_VERSION = 4.3.0;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.MeetingBroadcaster;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -830,7 +872,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 3.17.0;
+				MARKETING_VERSION = 4.3.0;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.MeetingBroadcaster;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -847,6 +889,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = arm64;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -905,6 +948,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = arm64;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -963,13 +1007,11 @@
 				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CODE_SIGN_ENTITLEMENTS = Runner/RunnerDebug.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 31700;
+				CURRENT_PROJECT_VERSION = 40300;
 				DEPLOYMENT_POSTPROCESSING = YES;
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 569GNZ5392;
+				DEVELOPMENT_TEAM = 7C9A6NRV5L;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -988,7 +1030,7 @@
 					"DISABLE_PUSH_NOTIFICATIONS=1",
 				);
 				INFOPLIST_FILE = Runner/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -997,7 +1039,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 3.17.0;
+				MARKETING_VERSION = 4.3.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -1056,6 +1098,10 @@
 					"-framework",
 					"\"device_info_plus\"",
 					"-framework",
+					"\"device_information\"",
+					"-framework",
+					"\"integration_test\"",
+					"-framework",
 					"\"package_info\"",
 					"-framework",
 					"\"url_launcher_ios\"",
@@ -1069,10 +1115,9 @@
 					"-fprofile-instr-generate",
 					"-lz",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting;
+				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.debug;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = nim_flutter_meeting_dis;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
@@ -1089,7 +1134,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 31700;
+				CURRENT_PROJECT_VERSION = 40300;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 569GNZ5392;
@@ -1111,7 +1156,7 @@
 					"DISABLE_PUSH_NOTIFICATIONS=1",
 				);
 				INFOPLIST_FILE = Runner/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1120,7 +1165,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 3.17.0;
+				MARKETING_VERSION = 4.3.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -1178,6 +1223,10 @@
 					"\"connectivity\"",
 					"-framework",
 					"\"device_info_plus\"",
+					"-framework",
+					"\"device_information\"",
+					"-framework",
+					"\"integration_test\"",
 					"-framework",
 					"\"package_info\"",
 					"-framework",

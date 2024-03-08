@@ -4,13 +4,13 @@
 
 part of meeting_ui;
 
-mixin InMeetingDataServiceCallback {
-  NEMeetingInfo? getCurrentMeetingInfo();
-}
-
 abstract class MinimizeMeetingManager {
   Future<NEResult<void>> minimizeCurrentMeeting();
   Future<NEResult<void>> fullCurrentMeeting();
+}
+
+abstract class MeetingMenuItemManager {
+  Future<NEResult<void>> updateInjectedMenuItem(NEMeetingMenuItem item);
 }
 
 abstract class AudioManager {
@@ -50,24 +50,17 @@ class InMeetingService with _AloggerMixin {
   final StreamController<NEHistoryMeetingItem> _historyMeetingItemStream =
       StreamController.broadcast();
 
-  InMeetingDataServiceCallback? _serviceCallback;
-  InMeetingDataServiceCallback? get serviceCallback => _serviceCallback;
   AudioManager? _audioDelegate;
 
   AudioManager? get audioManager => _audioDelegate;
 
-  NERoomContext? _currentRoomContext;
+  MeetingUIState? _currentMeetingUIState;
 
   MinimizeMeetingManager? _minimizeDelegate;
   MinimizeMeetingManager? get minimizeDelegate => _minimizeDelegate;
 
-  void rememberRoomContext(NERoomContext? context) {
-    _currentRoomContext = context;
-  }
-
-  void clearRoomContext() {
-    _currentRoomContext = null;
-  }
+  MeetingMenuItemManager? _menuItemDelegate;
+  MeetingMenuItemManager? get menuItemDelegate => _menuItemDelegate;
 
   void _updateHistoryMeetingItem(NEHistoryMeetingItem? item) {
     if (item != null) {
@@ -78,14 +71,52 @@ class InMeetingService with _AloggerMixin {
   Stream<NEHistoryMeetingItem> get historyMeetingItemStream =>
       _historyMeetingItemStream.stream;
 
-  NEMeetingInfo? get currentMeetingInfo {
-    return _serviceCallback != null
-        ? _serviceCallback!.getCurrentMeetingInfo()
-        : null;
+  void rememberMeetingUIState(MeetingUIState state) {
+    assert(_currentMeetingUIState == null || state == _currentMeetingUIState,
+        'Current meeting ui state is not null');
+    _currentMeetingUIState = state;
+  }
+
+  void clearMeetingUIState() {
+    _currentMeetingUIState = null;
+  }
+
+  NEMeetingInfo? currentMeetingInfo() {
+    final context = _currentMeetingUIState?.roomContext;
+    if (context == null) return null;
+    final meetingInfo = context.meetingInfo;
+    return NEMeetingInfo(
+      meetingId: meetingInfo.meetingId,
+      meetingNum: meetingInfo.meetingNum,
+      shortMeetingNum: meetingInfo.shortMeetingNum,
+      sipCid: context.sipCid,
+      type: meetingInfo.type.type,
+      subject: meetingInfo.subject,
+      password: context.password,
+      inviteCode: meetingInfo.inviteCode,
+      inviteUrl: meetingInfo.inviteUrl,
+      startTime: context.rtcStartTime,
+      duration: context.rtcStartTime == 0
+          ? 0
+          : DateTime.now().millisecondsSinceEpoch - context.rtcStartTime,
+      scheduleStartTime: meetingInfo.startTime,
+      scheduleEndTime: meetingInfo.endTime,
+      isHost: context.isMySelfHost(),
+      isLocked: context.isRoomLocked,
+      isInWaitingRoom: context.isInWaitingRoom(),
+      hostUserId: context.getHostUuid() ?? '',
+      extraData: context.extraData,
+      userList: (context.isInWaitingRoom()
+              ? [context.localMember]
+              : context.getAllUsers())
+          .map((e) => NEInMeetingUserInfo(
+              e.uuid, e.name, e.tag, e.role.name, context.isMySelf(e.uuid)))
+          .toList(growable: false),
+    );
   }
 
   Future<NEResult<void>> leaveCurrentMeeting(bool closeIfHost) async {
-    final context = _currentRoomContext;
+    final context = _currentMeetingUIState?.roomContext;
     if (context != null) {
       final willClose = closeIfHost && context.isMySelfHost();
       return willClose ? context.endRoom() : context.leaveRoom();

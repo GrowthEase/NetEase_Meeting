@@ -8,12 +8,13 @@ class MeetingImageMessageViewer extends StatefulWidget {
   final ImageMessageState message;
   final Future<VoidResult>? Function(ImageMessageState message)
       downloadAttachmentCallback;
-
-  const MeetingImageMessageViewer({
-    Key? key,
-    required this.message,
-    required this.downloadAttachmentCallback,
-  }) : super(key: key);
+  final VoidCallback? onRecalledDismiss;
+  const MeetingImageMessageViewer(
+      {Key? key,
+      required this.message,
+      required this.downloadAttachmentCallback,
+      this.onRecalledDismiss})
+      : super(key: key);
 
   @override
   State<MeetingImageMessageViewer> createState() =>
@@ -22,11 +23,18 @@ class MeetingImageMessageViewer extends StatefulWidget {
 
 class _MeetingImageMessageViewerState extends State<MeetingImageMessageViewer> {
   final _imageFilePathCompleter = Completer<String>();
-
+  late EventCallback _eventCallback;
   @override
   void initState() {
     super.initState();
     _computeImageFilePath();
+    _eventCallback = (arg) {
+      if (widget.message.msgId != (arg as ChatRecallMessage).messageId) return;
+      Navigator.popUntil(
+          context, ModalRoute.withName(MeetingChatRoomPage.routeName));
+      widget.onRecalledDismiss?.call();
+    };
+    EventBus().subscribe(RecallMessageNotify, _eventCallback);
   }
 
   @override
@@ -36,6 +44,7 @@ class _MeetingImageMessageViewerState extends State<MeetingImageMessageViewer> {
           .attachmentDownloadProgress
           .removeListener(_onOriginFileProgress);
     }
+    EventBus().unsubscribe(RecallMessageNotify, _eventCallback);
     super.dispose();
   }
 
@@ -162,23 +171,19 @@ class _MeetingImageMessageViewerState extends State<MeetingImageMessageViewer> {
     bool result = await PermissionHelper.requestPermissionSingle(
         context, Permission.storage, '', '',
         useDialog: false);
+    final localizations = NEMeetingUIKitLocalizations.of(context)!;
     if (result) {
       final result = await NEMeetingPlugin().imageGallerySaver.saveFile(
             path,
             extension: widget.message.extension,
           );
       if (result['isSuccess'] == true) {
-        _toastResult(true,
-            NEMeetingUIKitLocalizations.of(context)!.saveToGallerySuccess);
+        _toastResult(true, localizations.chatSaveToGallerySuccess);
       } else {
-        _toastResult(
-            false, NEMeetingUIKitLocalizations.of(context)!.saveToGalleryFail);
+        _toastResult(false, localizations.globalOperationFail);
       }
     } else {
-      _toastResult(
-          false,
-          NEMeetingUIKitLocalizations.of(context)!
-              .saveToGalleryFailNoPermission);
+      _toastResult(false, localizations.chatOperationFailNoPermission);
     }
   }
 

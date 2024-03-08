@@ -29,6 +29,8 @@ class _CreateMeetingRequest {
   /// 功能配置
   final NEMeetingFeatureConfig featureConfig;
 
+  final bool enableWaitingRoom;
+
   // /// 画面状态 1：打开，2：关闭
   // final int video;
   //
@@ -60,6 +62,7 @@ class _CreateMeetingRequest {
     // this.startTime,
     // this.endTime,
     this.password,
+    this.enableWaitingRoom = false,
     this.roomProperties,
     this.roleBinds,
     required this.roomConfigId,
@@ -85,5 +88,6 @@ class _CreateMeetingRequest {
             'sip': featureConfig.enableSip,
           }
         },
+        'openWaitingRoom': enableWaitingRoom,
       };
 }

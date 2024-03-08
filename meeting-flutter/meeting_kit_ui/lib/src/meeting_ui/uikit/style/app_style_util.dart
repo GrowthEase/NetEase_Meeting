@@ -6,16 +6,19 @@ part of meeting_ui;
 
 ///自定义状态栏风格
 class AppStyle {
-  static void setStatusBarTextBlackColor() {
-// 自定义手机顶部黑条样式（Android沉浸式）
-    if (Platform.isAndroid) {
-      SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarBrightness: Brightness.dark,
-          statusBarIconBrightness: Brightness.dark);
-      SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyle);
-    } else {
-      SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark);
-    }
+  static late final systemUiOverlayStyleDark =
+      SystemUiOverlayStyle.dark.copyWith(
+    statusBarColor: Colors.transparent,
+    systemNavigationBarColor: Colors.transparent,
+  );
+
+  static late final systemUiOverlayStyleLight =
+      SystemUiOverlayStyle.light.copyWith(
+    statusBarColor: Colors.transparent,
+    systemNavigationBarColor: Colors.transparent,
+  );
+
+  static void setSystemUIOverlayStyleDark() {
+    SystemChrome.setSystemUIOverlayStyle(systemUiOverlayStyleDark);
   }
 }

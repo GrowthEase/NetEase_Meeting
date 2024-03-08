@@ -65,7 +65,12 @@ class _PreVirtualBackgroundPageState
         bottom: 0,
         right: 0,
         left: 0,
-        child: buildAction(),
+        child: Container(
+          padding: EdgeInsets.only(
+              bottom: MediaQuery.maybeViewPaddingOf(context)?.bottom ?? 0),
+          color: Colors.white,
+          child: buildAction(),
+        ),
       )
     ]);
   }
@@ -83,6 +88,7 @@ class _PreVirtualBackgroundPageState
               itemCount: sourceList.length,
               itemBuilder: (BuildContext context, int index) {
                 return GestureDetector(
+                  key: MeetingUIValueKeys.virtualBackgroundItem,
                   child: Container(
                       width: 68,
                       // height: 48,
@@ -147,7 +153,8 @@ class _PreVirtualBackgroundPageState
               child: GestureDetector(
                   child: Padding(
                     padding: EdgeInsets.only(left: 16),
-                    child: Text(NEMeetingUIKitLocalizations.of(context)!.delete,
+                    child: Text(
+                        NEMeetingUIKitLocalizations.of(context)!.globalDelete,
                         style: TextStyle(color: Colors.grey)),
                   ),
                   onTap: () async {
@@ -200,7 +207,7 @@ class _PreVirtualBackgroundPageState
               child: Padding(
                 padding: EdgeInsets.only(right: 16),
                 child: Text(
-                  NEMeetingUIKitLocalizations.of(context)!.sure,
+                  NEMeetingUIKitLocalizations.of(context)!.globalSure,
                   style: TextStyle(color: Colors.blue),
                 ),
               ),
@@ -219,7 +226,7 @@ class _PreVirtualBackgroundPageState
           context,
           Permission.camera,
           '',
-          NEMeetingUIKitLocalizations.of(context)!.cameraPermission);
+          NEMeetingUIKitLocalizations.of(context)!.meetingCamera);
       if (!granted) UINavUtils.pop(context, rootNavigator: true);
     }
     return granted;
@@ -241,7 +248,6 @@ class _PreVirtualBackgroundPageState
       cache = await getApplicationDocumentsDirectory();
     }
 
-    ///默认的前6张
     var list = await _settingsService.getBuiltinVirtualBackgrounds();
     await previewRoomRtcController?.startBeauty();
     await previewRoomRtcController?.enableBeauty(true);
@@ -253,7 +259,7 @@ class _PreVirtualBackgroundPageState
       sourceList = replaceBundleId(cache!.path, sourceList);
       allowedDeleteAll = true;
     } else {
-      for (var i = 1; i <= 6; ++i) {
+      for (var i = 1; i <= 9; ++i) {
         String filePath = '${cache?.path}/virtual/$i.png';
         File file = File(filePath);
         var exist = await file.exists();
@@ -435,7 +441,7 @@ Widget buildItem(BuildContext context, int index, List<String> sourceList) {
     view = Container(
       alignment: Alignment.center,
       child: Text(
-        NEMeetingUIKitLocalizations.of(context)!.nothing,
+        NEMeetingUIKitLocalizations.of(context)!.globalNothing,
         style: TextStyle(color: Colors.black),
       ),
     );

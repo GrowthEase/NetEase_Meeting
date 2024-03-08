@@ -44,8 +44,20 @@ class MeetingBaseArguments {
       options.injectedMoreMenuItems;
 
   /// Toolbar菜单
-  List<NEMeetingMenuItem> get injectedToolbarMenuItems =>
-      options.injectedToolbarMenuItems;
+  List<NEMeetingMenuItem> get injectedToolbarMenuItems {
+    final items = <NEMeetingMenuItem>[...options.injectedToolbarMenuItems];
+    final index = items.indexOf(NEMenuItems.microphone);
+    if (index != -1 &&
+        options.injectedMoreMenuItems.contains(NEMenuItems.disconnectAudio) &&
+        !options.injectedToolbarMenuItems
+            .contains(NEMenuItems.disconnectAudio)) {
+      items.insert(
+          index,
+          options.injectedMoreMenuItems
+              .firstWhere((e) => e == NEMenuItems.disconnectAudio));
+    }
+    return items;
+  }
 
   /// 最小化
   bool get noMinimize => options.noMinimize;
@@ -63,7 +75,7 @@ class MeetingBaseArguments {
     if (title != null && title.isNotEmpty) {
       return title;
     }
-    return NEMeetingUIKit().ofLocalizations().defaultMeetingTitle;
+    return NEMeetingUIKit().ofLocalizations().meetingDefalutTitle;
   }
 
   String? get iosBroadcastAppGroup =>
@@ -93,7 +105,7 @@ class MeetingBaseArguments {
   List<DeviceOrientation>? get restorePreferredOrientations =>
       options.restorePreferredOrientations;
 
-  final _videoMuteListenable = ValueNotifier<bool>(true);
+  final _videoMuteListenable = ValueNotifier(true);
 
   ValueListenable<bool> get videoMuteListenable {
     return _videoMuteListenable;
@@ -106,12 +118,11 @@ class MeetingBaseArguments {
   /// 本地配置，从服务器同步，如果是全员静音需要改变
   bool get audioMute => _audioMuteListenable.value;
 
-  bool get initialAudioMute => options.noAudio;
-
-  bool get initialVideoMute => options.noVideo;
+  final bool initialAudioMute;
+  final bool initialVideoMute;
+  final bool initialIsInPIPView;
 
   final _audioMuteListenable = ValueNotifier(true);
-
   ValueListenable<bool> get audioMuteListenable {
     return _audioMuteListenable;
   }
@@ -132,5 +143,8 @@ class MeetingBaseArguments {
     this.password,
     required this.options,
     this.backgroundWidget,
+    this.initialAudioMute = true,
+    this.initialVideoMute = true,
+    this.initialIsInPIPView = false,
   });
 }

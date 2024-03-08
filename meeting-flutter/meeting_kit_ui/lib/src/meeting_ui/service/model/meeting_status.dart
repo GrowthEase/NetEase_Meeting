@@ -96,11 +96,14 @@ class NEMeetingEvent {
   /// 当前处于最小化会议
   static const int inMeetingMinimized = 4;
 
+  /// 当前处于等候室
+  static const int inWaitingRoom = 5;
+
   /// 当前正在从会议中断开，断开原因由 [NEMeetingStatus.arg] 描述，可能为以下原因：
   /// * [NEMeetingCode.self]
   /// * [NEMeetingCode.removedByHost]
   /// * [NEMeetingCode.closeByHost]
-  static const int disconnecting = 5;
+  static const int disconnecting = 6;
 
   /// 未知
   static const int unknown = 100;

@@ -7,11 +7,11 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:nemeeting/arguments/webview_arguments.dart';
 import 'package:nemeeting/service/model/security_notice_info.dart';
 import 'package:nemeeting/uikit/utils/nav_utils.dart';
 import 'package:nemeeting/uikit/utils/router_name.dart';
 import 'package:nemeeting/utils/security_notice_util.dart';
+import 'package:nemeeting/webview/webview_page.dart';
 
 import '../uikit/values/asset_name.dart';
 import '../uikit/values/borders.dart';
