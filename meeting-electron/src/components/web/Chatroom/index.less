@@ -1,0 +1,45 @@
+.nemeeting-chatroom-drawer .nemeeting-drawer-content-wrapper {
+  transition: none;
+  box-shadow: none;
+}
+.nemeeting-chatroom-drawer {
+  &.nemeeting-drawer-right > .nemeeting-drawer-content-wrapper {
+    top: 28px;
+  }
+}
+
+.nemeeting-chatroom-drawer.nemeeting-drawer-right
+  > .nemeeting-drawer-panel-motion-right-leave {
+  display: none;
+}
+
+.nemeeting-chatroom-drawer {
+}
+.nemeeting-chatroom-wrapper {
+  //position: absolute;
+  width: 100%;
+  //top: 50px;
+  height: 100%;
+  background: #fff;
+  // color: #333333;
+  transition: right 0.2s ease-out;
+  z-index: 13001;
+  overflow-y: auto;
+  .chatroom-chatroom-title {
+    display: none;
+  }
+  .chatroom-chatroom-wrapper {
+    box-sizing: border-box;
+    .chatroom-chat-card-file {
+      box-sizing: border-box;
+    }
+  }
+  a {
+    color: #1677ff;
+    text-decoration: none;
+    background-color: transparent;
+    outline: none;
+    cursor: pointer;
+    transition: color 0.3s;
+  }
+}

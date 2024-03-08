@@ -1,0 +1,118 @@
+#dark-toast {
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  transform: translateX(-50%);
+  // max-width: 50%;
+  background: #333;
+  z-index: 10;
+  padding: 5px 10px;
+  background: rgba(29, 29, 29, 0.73);
+  border-radius: 5px;
+  color: #fff;
+  text-align: center;
+  min-width: 100px;
+}
+.neMeeting-toast-container {
+  // max-width: 50%;
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  overflow: hidden;
+  z-index: 10000;
+  max-height: 300px;
+  top: 50px;
+  padding: 10px;
+  width: 98%;
+  pointer-events: none;
+}
+#dark-toast i .rotate-loop {
+  animation: rotate-loop 1s infinite;
+}
+@keyframes rotate-loop {
+  from {
+    transform: rotateZ(0deg);
+  }
+  to {
+    transform: rotateZ(360deg);
+  }
+}
+.nemeeint-toast {
+  // position: fixed;
+  white-space: pre-wrap;
+  text-overflow: ellipsis;
+  // overflow: hidden;
+  // top: 15%;
+  // left: 50%;
+  // transform: translateX(-50%);
+  background-color: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  .nemeeting-toast-fragment-wrap {
+    white-space: pre-wrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    z-index: 9990;
+    background: #ffffff;
+    box-shadow: 0px 0px 16px rgba(0, 0, 0, 0.12);
+    border-radius: 4px;
+    // pointer-events: none;
+    color: rgba(0, 0, 0, 0.65);
+    padding: 10px 23px;
+    font-size: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 1.57;
+    margin-top: 10px;
+  }
+  .nemeeint-toast-content {
+    white-space: pre-wrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-width: 800px;
+    flex: 1;
+  }
+  .iconfont {
+    font-size: 14px;
+    margin-right: 9px;
+  }
+  .iconsuccess {
+    color: #54cc77;
+  }
+  .iconfail {
+    color: #f94c51;
+  }
+  .iconwarning {
+    color: #faac15;
+  }
+  .iconinfo {
+    color: #1677ff;
+  }
+  .nemeeting-close-icon {
+    font-size: 12px;
+    margin-left: 10px;
+    cursor: pointer;
+  }
+  .nemeeting-toast-fragment {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .nemeeting-toast-fragment-content {
+    // max-width: 95%;
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    min-width: 100px;
+  }
+  .fail-fill {
+    .nemeeting-toast-fragment-wrap {
+      background: #fe3b30;
+    }
+    .nemeeting-toast-fragment-content {
+      color: #fff;
+    }
+  }
+}

@@ -1,0 +1,85 @@
+.baseInput {
+  position: relative;
+  width: 100%;
+  .baseInputContent {
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    outline: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+  .tip {
+    position: absolute;
+    font-size: 12px;
+    color: #337eff;
+    line-height: 22px;
+    top: 40x;
+    left: 2px;
+  }
+  .closeIcon {
+    position: absolute;
+    cursor: pointer;
+    height: 20px;
+    width: 20px;
+    background-color: #ccc;
+    color: #fff;
+    line-height: 20px;
+    border-radius: 50%;
+    right: 10px;
+    top: 5px;
+    font-size: 20px;
+  }
+}
+.baseInput {
+  :global {
+    .nemeeting-input {
+      border-top: none;
+      border-right: none;
+      border-left: none;
+      font-size: 17px;
+      color: #333333;
+      font-family: SFProText-Regular;
+      padding-left: 2px;
+      &:focus {
+        box-shadow: none;
+        color: #337eff;
+      }
+    }
+  }
+  :global {
+    .nemeeting-input-suffix {
+      height: 30px;
+    }
+  }
+}
+
+.phoneInput {
+  .phoneInputNumber {
+    color: #333;
+    width: 32px;
+    border-right: 1px solid #dcdfe5;
+    padding-right: 16px;
+    margin-right: 16px;
+  }
+  input {
+    padding-left: 16px;
+  }
+}
+.pwdInput {
+  :global {
+    .eyeIcon {
+      display: none;
+      cursor: pointer;
+    }
+    .nemeeting-input:focus + .nemeeting-input-suffix > .eyeIcon,
+    .eyeIcon:hover {
+      display: inline-block;
+    }
+  }
+}
+.countdown {
+  display: inline-block;
+  color: #337eff;
+  margin-right: 4px;
+}

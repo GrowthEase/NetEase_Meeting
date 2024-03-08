@@ -1,0 +1,209 @@
+@panelInnerWidth: 320px;
+
+@media screen and (max-width: 590px) {
+  .before-login {
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
+
+.before-login {
+  width: 375px;
+  height: 670px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(47, 56, 111, 0.1);
+  border-radius: 10px;
+  display: flex;
+  position: relative;
+  align-items: center;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 0 28px;
+  .login-and-register-btn {
+    margin-top: 110px;
+  }
+  .backIcon {
+    display: inline-block;
+    font-size: 20px;
+    cursor: pointer;
+    color: #666666;
+  }
+  .no-enterprise-tip {
+    display: flex;
+    color: #6666;
+    margin-top: 7px;
+    font-size: 14px;
+    width: 100%;
+    margin-bottom: 20px;
+    justify-content: space-between;
+  }
+  .to-demo {
+    padding-right: 0;
+  }
+  .create-count {
+    padding-left: 0;
+  }
+  .electron-drag-bar {
+    .drag-region {
+      -webkit-app-region: drag;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 60px;
+    }
+    height: 40px;
+    font-weight: normal;
+    line-height: 40px;
+    text-align: center;
+    font-size: 18px;
+    border-bottom: none;
+    position: relative;
+    width: 100%;
+  }
+  .logo-electron {
+    margin-top: 100px !important;
+  }
+  .logo {
+    display: block;
+    margin: 134px auto 40px auto;
+    width: 126px;
+  }
+  .login-button {
+    display: block;
+    width: 319px;
+    height: 50px;
+    //border: 1px solid #337eff;
+    border-radius: 25px;
+    margin-bottom: 15px;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+  .nemeeting-btn-primary:disabled {
+    background: #87bbff;
+    color: #fff;
+  }
+  .nemeeting-btn-default {
+    color: #337eff;
+  }
+  .footer {
+    position: absolute;
+    bottom: 40px;
+    text-align: center;
+    .footer-agreement {
+      margin-bottom: 16px;
+      color: #999999;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      text-align: left;
+      padding: 0 28px;
+      .text {
+        display: inline-block;
+        margin-left: 6px;
+      }
+      a {
+        color: #337eff;
+        display: inline-block;
+        margin: 0 3px;
+      }
+      .nemeeting-checkbox-input,
+      .nemeeting-checkbox-checked:after {
+        border-radius: 50%;
+      }
+    }
+    .footer-logo {
+      width: 130px;
+      height: 16px;
+    }
+  }
+
+  .login-wrapper {
+    width: 100%;
+    height: 100%;
+  }
+  .login-panel {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    text-align: center;
+    border-radius: 10px;
+    background-color: #ffffff;
+    color: #333333;
+    .login-content {
+      // padding-top: 116px;
+      // width: @panelInnerWidth;
+      margin: 0px auto;
+    }
+    .loginTop {
+      font-size: 24px;
+      padding: 0;
+      color: #333333;
+      margin: 0 0 30px 0;
+      text-align: left;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      line-height: 30px;
+      // .loginTopLeft {
+      //   display: flex;
+      //   align-items: center;
+      // }
+      i {
+        display: inline-block;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      .loginTitle {
+        margin-left: 10px;
+        font-weight: 500;
+      }
+      .loginType {
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 20px;
+        text-align: right;
+        color: #337eff;
+        cursor: pointer;
+      }
+    }
+    .sub-title {
+      font-size: 12px;
+      line-height: 17px;
+      min-height: 17px;
+    }
+    .input-container {
+      width: @panelInnerWidth;
+      margin: 26px auto 58px;
+      position: relative;
+      & > div {
+        margin-top: 26px;
+      }
+    }
+    .nemeeting-btn {
+      // width: @panelInnerWidth;
+      // height: 50px;
+      // border-radius: 25px;
+      // font-size: 16px;
+      // display: block;
+      // margin: 112px auto 0 auto;
+      // text-align: center;
+    }
+    .login-footer {
+      //position: absolute;
+      width: @panelInnerWidth;
+      bottom: 50px;
+      text-align: center;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 20px;
+    }
+    .nemeeting-btn.inactive {
+      pointer-events: none;
+      cursor: not-allowed;
+      &::before {
+        display: block;
+      }
+    }
+  }
+}
