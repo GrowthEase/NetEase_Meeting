@@ -1,9 +1,12 @@
 import WebRoomkit, { NEResult, NERoomLiveState } from 'neroom-web-sdk'
+import { NECustomSessionMessage } from 'neroom-web-sdk/dist/types/types/messageChannelService'
 import NEMeetingService from '../services/NEMeeting'
 import {
   LayoutTypeEnum,
   LiveBackgroundInfo,
   MeetingSetting,
+  NEChatPermission,
+  NEWaitingRoomChatPermission,
   RecordState,
   WatermarkInfo,
 } from './innerType'
@@ -208,9 +211,16 @@ export interface NEMeetingInfo extends NEMeetingSDKInfo {
    */
   rightDrawerTabs: {
     key: string
+    isPlugin?: boolean
     label?: string
   }[]
   rightDrawerTabActiveKey?: string
+  /**
+   * 通知消息列表
+   */
+  notificationMessages: Array<
+    NECustomSessionMessage & { unRead: boolean; beNotified: boolean }
+  >
   // 点击成员列表内部tab
   activeMemberManageTab: 'waitingRoom' | 'room'
   /**
@@ -262,6 +272,14 @@ export interface NEMeetingInfo extends NEMeetingSDKInfo {
     email?: string
     jobNumber?: string
   }
+  /**
+   * 固定视频
+   */
+  pinVideoUuid?: string
+  /**
+   * 私聊对象
+   */
+  privateChatMemberId?: string
 }
 
 export interface NEMeetingSDKInfo {
@@ -308,6 +326,9 @@ export interface NEMeetingSDKInfo {
   isCloudRecording: boolean
   cloudRecordState?: RecordState
   watermark?: WatermarkInfo
+  enableBlacklist?: boolean
+  meetingChatPermission?: NEChatPermission
+  waitingRoomChatPermission?: NEWaitingRoomChatPermission
 }
 export interface NEMeetingSDK {
   memberList: NEMember[]
@@ -809,6 +830,7 @@ export type EventName =
   | 'peerLeave'
   | 'roomEnded'
   | 'onMeetingStatusChanged'
+  | 'onScreenSharingStatusChange'
 /**
  * 会议组件
  */
@@ -835,7 +857,7 @@ export interface NEMeetingKit {
   /**
    *@ignore
    */
-  neMeeting: NEMeetingService | null
+  neMeeting?: NEMeetingService
   /**
    *@ignore
    */

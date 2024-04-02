@@ -1,19 +1,16 @@
-import { Button, notification } from 'antd'
-import './index.less'
-import React, {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-} from 'react'
-import { useTranslation } from 'react-i18next'
+import { Button } from 'antd'
 import classNames from 'classnames'
+import React, { forwardRef, useImperativeHandle } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useGlobalContext } from '../../../store'
+import './index.less'
 
 interface MemberNotifyProps {
   handleViewMsg: () => void
   style?: Record<string, string | number>
   onClose?: () => void
   onNotNotify?: () => void
+  notificationApi?: any
 }
 export interface MemberNotifyRef {
   notify: (memberCount: number) => void
@@ -26,18 +23,21 @@ const MemberNotify = forwardRef<
   React.PropsWithChildren<MemberNotifyProps>
 >((props, ref) => {
   const { handleViewMsg, onClose, onNotNotify, style } = props
+
+  const { notificationApi: notificationApiContext } = useGlobalContext()
   const { t } = useTranslation()
   const [count, setCount] = React.useState(0)
-  const [api, contextHolder] = notification.useNotification({
-    maxCount: 1,
-  })
+
+  const notificationApi = props.notificationApi || notificationApiContext
+
   useImperativeHandle(ref, () => ({
     notify,
     destroy,
   }))
 
   function notify(memberCount: number) {
-    api.info({
+    notificationApi?.destroy(WAITING_ROOM_MEMBER_JOIN_KEY)
+    notificationApi?.info({
       className: 'nemeeing-waiting-room-notify',
       key: WAITING_ROOM_MEMBER_JOIN_KEY,
       style,
@@ -49,7 +49,7 @@ const MemberNotify = forwardRef<
               size="small"
               style={{ fontSize: '12px', marginRight: '3px', color: '#666' }}
               onClick={() => {
-                api.destroy(WAITING_ROOM_MEMBER_JOIN_KEY)
+                notificationApi?.destroy(WAITING_ROOM_MEMBER_JOIN_KEY)
                 onNotNotify && onNotNotify()
               }}
               type="text"
@@ -101,10 +101,10 @@ const MemberNotify = forwardRef<
   }
 
   function destroy() {
-    api.destroy(WAITING_ROOM_MEMBER_JOIN_KEY)
+    notificationApi?.destroy(WAITING_ROOM_MEMBER_JOIN_KEY)
   }
 
-  return <>{contextHolder}</>
+  return <></>
 })
 
 export default React.memo(MemberNotify)

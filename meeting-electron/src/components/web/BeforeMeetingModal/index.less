@@ -5,15 +5,56 @@
   user-select: none;
 }
 
-.before-meeting-schedule-modal-footer {
-  justify-content: space-evenly!important;
-  padding: 20px 10px!important;
+.before-meeting-schedule-modal-footer.before-meeting-modal-footer {
+  padding: 20px 10px;
+}
+.nemeeting-repeat-edit-tip {
+  color: #f29900;
+  font-size: 14px;
+  margin: 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  .nemeeting-repeat-edit-tip-line {
+    width: 33px;
+    height: 1px;
+    border: none;
+    background-color: #f29900;
+  }
+}
+.schedule-recurring-edit-modal-content {
+  text-align: center;
+  margin: 35px 0;
+  font-size: 16px;
+}
+.schedule-recurring-edit-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  .schedule-edit-modal-footer-button {
+    min-width: 88px;
+  }
+}
+.nemeeting-schedule-cancel {
+  text-align: center;
+  margin-top: 26px;
+}
+.schedule-recurring-edit-modal-footer {
+  .schedule-edit-modal-footer-button {
+    span {
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      width: 100%;
+    }
+  }
 }
 .before-meeting-modal-footer {
   border-top: 1px solid #ebedf0;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-evenly;
   padding: 20px 30px;
   .nemeeting-popover-inner {
     padding: 5px 10px;
@@ -275,6 +316,10 @@
 .meeting-setting-item {
   margin: 10px 0;
 }
+.nemeeting-modal-root .nemeeting-modal-wrap.history-meeting-modal {
+  z-index: 1001;
+}
+
 div.history-meeting-modal {
   .nemeeting-modal {
     height: 670px;
@@ -309,6 +354,7 @@ div.history-meeting-modal {
       justify-content: center;
       align-items: center;
       font-size: 17px;
+      height: 30px;
       .back-icon {
         display: inline-block;
         font-size: 16px;
@@ -380,6 +426,12 @@ div.history-meeting-modal {
         font-size: 14px;
         .iconfont {
           margin-right: 6px;
+        }
+        .app-icon-img {
+          width: 20px;
+          height: 20px;
+          margin-right: 6px;
+          filter: invert(60%);
         }
       }
       .iconfont {
@@ -468,8 +520,8 @@ div.history-meeting-modal {
   }
   .meeting-list {
     font-weight: 400;
-    border: 1px solid #e5e5e5;
-    border-radius: 4px;
+    border-top: 1px solid #e5e5e5;
+    // border-radius: 4px;
     height: 585px;
     overflow-y: scroll;
 
@@ -585,6 +637,12 @@ div.history-meeting-modal {
   scrollbar-width: none;
   max-height: 460px;
   overflow-y: auto;
+  .nemeeting-schedule-setting {
+    font-size: 16px;
+    color: #333;
+    padding: 0 0 5px 0;
+    line-height: 1.5714285714285714;
+  }
   .nemeeting-form-item
     .nemeeting-form-item-label
     > label.nemeeting-form-item-required:not(
@@ -615,9 +673,23 @@ div.history-meeting-modal {
   }
 }
 
-.chatroom-modal-root {
+.history-meeting-modal {
   .nemeeting-modal-content {
     padding: 0;
+    overflow: hidden;
+  }
+}
+
+.chatroom-modal-root {
+  &.nemeeting-custom-modal .nemeeting-modal-body {
+    padding: 0;
+  }
+  .nemeeting-modal-header {
+    margin: 0;
+  }
+  .nemeeting-modal-content {
+    padding: 0;
+    overflow: hidden;
   }
   .nemeeting-modal-title {
     text-align: center;
@@ -628,6 +700,7 @@ div.history-meeting-modal {
     line-height: 50px;
   }
   .chatroom-content {
-    height: 650px;
+    height: 620px;
+    position: relative;
   }
 }

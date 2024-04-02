@@ -1,0 +1,46 @@
+.electron-drag-bar {
+  .drag-region {
+    -webkit-app-region: drag;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 40px;
+  }
+  height: 40px;
+  font-weight: normal;
+  line-height: 40px;
+  text-align: center;
+  font-size: 18px;
+  border-bottom: 1px solid #ebedf0;
+  position: relative;
+}
+
+.monitoring-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 16px 40px;
+  font-size: 14px;
+  .chart-tips {
+    width: 100%;
+    color: #999999;
+    display: flex;
+    justify-content: space-between;
+    margin: 10px 0 5px 0;
+  }
+  .chart {
+    width: 380px;
+    height: 140px;
+  }
+  .chat-bitrate {
+    width: 100%;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    .icon {
+      margin: 0 2px 0 10px;
+    }
+  }
+}

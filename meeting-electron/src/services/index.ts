@@ -74,6 +74,47 @@ export const defaultSmallMenus = [
   // }
 ]
 
+export function createDefaultSetting() {
+  return {
+    normalSetting: {
+      openVideo: false,
+      openAudio: false,
+      showDurationTime: false,
+      showSpeakerList: true,
+      showToolbar: true,
+      enableTransparentWhiteboard: false,
+      downloadPath: '',
+      language: '',
+    },
+    videoSetting: {
+      deviceId: '',
+      resolution: 720,
+      enableVideoMirroring: true,
+      isDefaultDevice: false,
+    },
+    audioSetting: {
+      recordDeviceId: '',
+      isDefaultRecordDevice: true,
+      playoutDeviceId: '',
+      isDefaultPlayoutDevice: true,
+      enableAudioVolumeAutoAdjust: true,
+      enableUnmuteBySpace: true,
+      recordVolume: 0,
+      playoutVolume: 0,
+      recordOutputVolume: 75,
+      playouOutputtVolume: 25,
+      enableAudioAI: true,
+      enableMusicMode: false,
+      enableAudioEchoCancellation: true,
+      enableAudioStereo: true,
+    },
+    beautySetting: {
+      beautyLevel: 0,
+      virtualBackgroundPath: '',
+    },
+  }
+}
+
 export function createMeetingInfoFactory(): NEMeetingInfo {
   return {
     localMember: {
@@ -131,47 +172,11 @@ export function createMeetingInfoFactory(): NEMeetingInfo {
     renderModel: 'big',
     toolBarList: defaultMenus,
     moreBarList: defaultMoreMenus,
-    setting: {
-      normalSetting: {
-        openVideo: false,
-        openAudio: false,
-        showDurationTime: false,
-        showSpeakerList: true,
-        showToolbar: true,
-        enableTransparentWhiteboard: false,
-        downloadPath: '',
-        language: '',
-      },
-      videoSetting: {
-        deviceId: '',
-        resolution: 720,
-        enableVideoMirroring: true,
-        isDefaultDevice: false,
-      },
-      audioSetting: {
-        recordDeviceId: '',
-        isDefaultRecordDevice: true,
-        playoutDeviceId: '',
-        isDefaultPlayoutDevice: true,
-        enableAudioVolumeAutoAdjust: true,
-        enableUnmuteBySpace: true,
-        recordVolume: 0,
-        playoutVolume: 0,
-        recordOutputVolume: 75,
-        playouOutputtVolume: 25,
-        enableAudioAI: true,
-        enableMusicMode: false,
-        enableAudioEchoCancellation: true,
-        enableAudioStereo: true,
-      },
-      beautySetting: {
-        beautyLevel: 0,
-        virtualBackgroundPath: '',
-      },
-    },
+    setting: createDefaultSetting(),
     isCloudRecording: false,
     cloudRecordState: RecordState.NotStart,
     rightDrawerTabs: [],
     activeMemberManageTab: 'room',
+    notificationMessages: [],
   }
 }

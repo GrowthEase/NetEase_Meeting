@@ -1,0 +1,80 @@
+.nemeeting-recurring {
+  margin-bottom: 16px;
+  .nemeeting-periodic-times {
+    text-align: center;
+  }
+  .nemeeting-input-group-addon {
+    padding: 0;
+    overflow: hidden;
+    border-radius: 2px;
+  }
+  .nemeeting-addon {
+    width: 32px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background-color: #fff;
+  }
+}
+.nemeeting-periodic-item {
+  display: flex;
+  align-items: center;
+  margin: 12px 0;
+}
+.nemeeting-periodic-item-label {
+  margin-right: 10px;
+}
+.nemeeting-periodic-item-content {
+  flex: 1;
+}
+.nemeeting-periodic-item-frequency {
+  align-items: start;
+}
+.nemeeting-days-of-month {
+  display: flex;
+  flex-wrap: wrap;
+  border: 1px solid #e1e3e5;
+  padding: 6px 7px;
+  position: relative;
+  .nemeeting-days-of-month-disable {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.04);
+    color: rgba(0, 0, 0, 0.25);
+  }
+  .nemeeting-days-of-month-item-wrap {
+    width: 40px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .nemeeting-days-of-month-item {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .nemeeting-days-of-month-item-selected {
+    background-color: #337eff;
+    color: #fff;
+  }
+}
+
+.schedule-recurring-edit-modal {
+  .nemeeting-modal-title {
+    max-width: 80%;
+    margin: 0 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

@@ -7,6 +7,12 @@
   overflow: hidden;
   width: 100%;
   position: relative;
+  
+  &:hover {
+    .cancel-focus {
+      display: flex;
+    }
+  }
   //.meeting-canvas-swiper {
   //background-color: #18181f;
   //.swiper-pagination-bullet-active {
@@ -74,6 +80,7 @@
     align-items: center;
     display: flex;
     max-width: 100%;
+    z-index: 10;
     .nickname {
       font-size: 10px;
       color: #fff;
@@ -144,24 +151,28 @@
     }
   }
   .cancel-focus {
-    position: fixed;
-    top: 57px; // 29元素高度+28toolbar高度
-    left: 4px;
+    position: absolute;
+    top: 0; // 29元素高度+28toolbar高度
+    left: 0;
     font-size: 14px;
     color: #fff;
     border: none;
     padding: 0 10px 0 8px;
-    height: 32px;
-    line-height: 32px;
-    background-color: rgba(49, 49, 56, 0.8);
+    height: 40px;
+    line-height: 40px;
+    background-color: rgba(0, 0, 0, 0.6);
     border-radius: 2px;
     z-index: 11;
     cursor: pointer;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     .cancel-focus-title {
-      margin-left: 4px;
+      margin-left: 8px;
+      margin-right: 16px;
+    }
+    .icongudingshipin {
+      font-size: 24px;
     }
   }
 

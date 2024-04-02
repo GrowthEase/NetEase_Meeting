@@ -760,115 +760,28 @@ public:
     virtual int muteLocalVideoStream(NERtcVideoStreamType type, bool mute) = 0;
 
     /**
-     * @if English
-     * Get a list of screens and windows that can be shared.
-     * <br>
-     * Before screen sharing or window sharing, you can call this method to get a list of objects that can be shared, so that users can select a screen or window to share from the thumbnail in the list.
-     * The list contains important information such as window ID and screen ID, which you can obtain and then call startScreenCaptureByDisplayId or startScreenCaptureByWindowId to start sharing.
+     * 获得一个可以分享的屏幕和窗口的列表
      *
      * @since v5.4.10
      *
-     * @par Calling Time
-     * Please call this interface after the engine is initialized, and this method can be called before and after joining the room.
-     *
-     * @note This method only applies to macOS and Windows.
-     * @par Parameter Description
-     * <table>
-     *  <tr>
-     *      <th>**Parameter Name**</th>
-     *      <th>**Type**</th>
-     *      <th>**Description**</th>
-     *  </tr>
-     *  <tr>
-     *      <td>thumbSize</td>
-     *      <td> \ref nertc::NERtcSize "NERtcSize"</td>
-     *      <td>The target size (in pixels) of the thumbnail of the screen or window. See NERtcSize for details.
-     *      <br>Under the premise of ensuring that the original image is not deformed, the SDK scales the original image to make the length of the longest side of the image consistent with the length of the longest side of the target size.
-     *      <br>For example, if the original image width and height are 400 × 300, and thumbSize is 100 x 100, the actual size of the thumbnail is 100 × 75.
-     *      <br>If the target size is larger than the original image size, the thumbnail is the original image, and the SDK does not perform scaling operations.</td>
-     *  </tr>
-     *  <tr>
-     *      <td>iconSize</td>
-     *      <td> \ref nertc::NERtcSize "NERtcSize"</td>
-     *      <td>The target size (in pixels) of the icon corresponding to the program. See NERtcSize for details.
-     *      <br>Under the premise of ensuring that the original image is not deformed, the SDK scales the original image to make the length of the longest side of the image consistent with the length of the longest side of the target size.
-     *      <br>For example, if the original image width and height are 400 × 300, and iconSize is 100 × 100, the actual size of the icon is 100 × 75.
-     *      <br>If the target size is larger than the original image size, the icon is the original image, and the SDK does not perform scaling operations.</td>
-     *  </tr>
-     *  <tr>
-     *      <td>includeScreen</td>
-     *      <td> bool </td>
-     *      <td>Whether the SDK returns screen information in addition to window information:
-     *      - true: Yes. The SDK returns screen and window information.
-     *      - false: No. The SDK only returns window information.</td>
-     *  </tr>
-     * </table>
-     * @par Example Code
-     * @code
-     * int count = 0;
-     * auto source_list = getScreenCaptureSourceList(nertc::NERtcSize(128, 72), nertc::NERtcSize(32, 32), true);
-     * if (source_list) {
-     *     count = source_list->getCount();
-     * }
-     * @endcode
-     *
-     *
-     * @return Pointer to the IScreenCaptureSourceList object.
-     * @endif
-     * @if Chinese
-     * 获得一个可以共享的屏幕和窗口的列表
-     * <br>
-     * 屏幕共享或窗口共享前，调用该方法获取可共享的屏幕和窗口的对象列表，方便用户通过列表中的缩略图选择共享某个显示器的屏幕或某个窗口。
-     * 列表中包含窗口 ID 和屏幕 ID 等重要信息。获取到 ID 后再调用 startScreenCaptureByDisplayId 或 startScreenCaptureByWindowId 开启共享。
-     *
-     * @since v5.4.10
-     *
-     * @par 调用时机
-     * 请在引擎初始化之后调用此接口，并且该方法可在加入房间前后调用。
+     * 屏幕共享或窗口共享前，你可以调用该方法获取可共享的屏幕和窗口的对象列表，方便用户通过列表中的缩略图选择共享某个显示器的屏幕或某个窗口。
+     * 列表中包含窗口 ID 和屏幕 ID 等重要信息，你可以获取到 ID 后再调用 startScreenCaptureByDisplayId 或 startScreenCaptureByWindowId 开启共享。
      *
      * @note 该方法仅适用于 macOS 和 Windows。
-     * @par 参数说明
-     * <table>
-     *  <tr>
-     *      <th>**参数名称**</th>
-     *      <th>**类型**</th>
-     *      <th>**描述**</th>
-     *  </tr>
-     *  <tr>
-     *      <td>thumbSize</td>
-     *      <td> \ref nertc::NERtcSize "NERtcSize"</td>
-     *      <td>屏幕或窗口的缩略图的目标尺寸（宽高单位为像素）。详见 NERtcSize。
-     *      <br>SDK 会在保证原图不变形的前提下，缩放原图，使图片最长边和目标尺寸的最长边的长度一致。
-     *      <br>例如，原图宽高为 400 × 300，thumbSize 为 100 x 100，缩略图实际尺寸为 100 × 75。
-     *      <br>如果目标尺寸大于原图尺寸，缩略图即为原图，SDK 不进行缩放操作。</td>
-     *  </tr>
-     *  <tr>
-     *      <td>iconSize</td>
-     *      <td> \ref nertc::NERtcSize "NERtcSize"</td>
-     *      <td>程序所对应的图标的目标尺寸（宽高单位为像素）。详见 NERtcSize。
-     *      <br>SDK 会在保证原图不变形的前提下，缩放原图，使图片最长边和目标尺寸的最长边的长度一致。
-     *      <br>例如，原图宽高为 400 × 300，iconSize 为 100 × 100，图标实际尺寸为 100 × 75。
-     *      <br>如果目标尺寸大于原图尺寸，图标即为原图，SDK 不进行缩放操作。</td>
-     *  </tr>
-     *  <tr>
-     *      <td>includeScreen</td>
-     *      <td> bool </td>
-     *      <td>除了窗口信息外，SDK 是否还返回屏幕信息：
-     *      - true: 是。SDK 返回屏幕和窗口信息。
-     *      - false: 否。SDK 仅返回窗口信息。</td>
-     *  </tr>
-     * </table>
-     * @par 示例代码
-     * @code
-     * int count = 0;
-     * auto source_list = getScreenCaptureSourceList(nertc::NERtcSize(128, 72), nertc::NERtcSize(32, 32), true);
-     * if (source_list) {
-     *     count = source_list->getCount();
-     * }
-     * @endcode
      *
-     * @return IScreenCaptureSourceList 对象指针。
-     * @endif
+     * @param thumbSize 屏幕或窗口的缩略图的目标尺寸（宽高单位为像素）。详见 SIZE。
+     * SDK 会在保证原图不变形的前提下，缩放原图，使图片最长边和目标尺寸的最长边的长度一致。
+     * 例如，原图宽高为 400 × 300，thumbSize 为 100 x 100，缩略图实际尺寸为 100 × 75。
+     * 如果目标尺寸大于原图尺寸，缩略图即为原图，SDK 不进行缩放操作。
+     * @param iconSize 程序所对应的图标的目标尺寸（宽高单位为像素）。详见 SIZE。
+     * SDK 会在保证原图不变形的前提下，缩放原图，使图片最长边和目标尺寸的最长边的长度一致。
+     * 例如，原图宽高为 400 × 300，iconSize 为 100 × 100，图标实际尺寸为 100 × 75。
+     * 如果目标尺寸大于原图尺寸，图标即为原图，SDK 不进行缩放操作。
+     * @param includeScreen 除了窗口信息外，SDK 是否还返回屏幕信息：
+     * - true: 是。SDK 返回屏幕和窗口信息。
+     * - false: 否。SDK 仅返回窗口信息。
+     *
+     * @return IScreenCaptureSourceList
      */
     virtual IScreenCaptureSourceList* getScreenCaptureSources(const NERtcSize& thumbSize, const NERtcSize& iconSize, const bool includeScreen) = 0;
 
@@ -977,120 +890,18 @@ public:
     virtual int startScreenCaptureByWindowId(source_id_t window_id, const NERtcRectangle& region_rect, const NERtcScreenCaptureParameters& capture_params) = 0;
 
     /**
-     * @if English
-     * Set the screen sharing parameters. This method is called during the screen sharing process to quickly switch the capture source.
-     * <br>
-     * If you want to switch the window to be shared during the screen sharing process, you can call this function again without having to restart the screen sharing.
-     * The following four scenarios are supported:
-     * - Share the entire screen: set the type of the source in the source parameter to kScreen, and set the region_rect parameter to { 0, 0, 0, 0 }.
-     * - Share a specified region: set the type of the source in the source parameter to kScreen, and set the region_rect parameter to a non-null value, for example, { 100, 100, 300, 300 }.
-     * - Share the entire window: set the type of the source in the source parameter to kWindow, and set the region_rect parameter to { 0, 0, 0, 0 }.
-     * - Share a specified window region: set the type of the source in the source parameter to kWindow, and set the region_rect parameter to a non-null value, for example, { 100, 100, 300, 300 }.
+     * 设置屏幕分享参数，该方法在屏幕分享过程中调用，用来快速切换采集源。
      *
-     * @since v5.4.10
-     *
-     * @par Calling Conditions
-     * Please call this interface after the screen sharing has been started.
-     *
-     * @note This method is only applicable to macOS and Windows.
-     * @par Parameter Description
-     * <table>
-     *  <tr>
-     *      <th>**Parameter Name**</th>
-     *      <th>**Type**</th>
-     *      <th>**Description**</th>
-     *  </tr>
-     *  <tr>
-     *      <td>source</td>
-     *      <td> \ref nertc::NERtcScreenCaptureSourceInfo "NERtcScreenCaptureSourceInfo"</td>
-     *      <td>Specify the capture source obtained through \ref nertc::IRtcEngineEx::getScreenCaptureSources.</td>
-     *  </tr>
-     *  <tr>
-     *      <td>region_rect</td>
-     *      <td> \ref nertc::NERtcRectangle "NERtcRectangle"</td>
-     *      <td>Specify the captured region.</td>
-     *  </tr>
-     *  <tr>
-     *      <td>capture_params</td>
-     *      <td> \ref nertc::NERtcScreenCaptureParameters "NERtcScreenCaptureParameters" </td>
-     *      <td>Specify the attributes of the screen sharing target, including capturing the mouse and highlighting the captured window. For details, please refer to the definition of NERtcScreenCaptureParameters.</td>
-     *  </tr>
-     * </table>
-     * @par Sample Code
-     * @code
-     * NERtcScreenCaptureSourceInfo source;
-     * source.source_id = info.id;
-     * source.type = nertc::kScreen;
-     * nertc::NERtcRectangle rc {0, 0, 0, 0};
-     * nertc::NERtcScreenCaptureParameters capture_params;
-     * // Initialize capture_params
-     * int ret = SetScreenCaptureSource(source, rc, capture_params);
-     * if (res != kNERtcNoError) {
-     *   // Prompt the user that the operation failed.
-     * }
-     * @endcode
-     *
-     * @return
-     * - 0: The method call was successful.
-     * - Others: The method call failed.
-     * @endif
-     * @if Chinese
-     * 设置屏幕共享参数，该方法在屏幕共享过程中调用，用来快速切换采集源。
-     * <br>
-     * 如果在屏幕共享的过程中，切换想要共享的窗口，可以再次调用这个方法而不需要重新开启屏幕共享。
+     * 如果您期望在屏幕分享的过程中，切换想要分享的窗口，可以再次调用这个函数而不需要重新开启屏幕分享。
      * 支持如下四种情况：
-     * - 共享整个屏幕：source 中 type 为 kScreen 的 source，region_rect 设为 { 0, 0, 0, 0 }。
-     * - 共享指定区域：source 中 type 为 kScreen 的 source，region_rect 设为非 nullptr，例如 { 100, 100, 300, 300 }。
-     * - 共享整个窗口：source 中 type 为 kWindow 的 source，region_rect 设为 { 0, 0, 0, 0 }。
-     * - 共享窗口区域：source 中 type 为 kWindow 的 source，region_rect 设为非 nullptr，例如 { 100, 100, 300, 300 }。
+     * - 共享整个屏幕：sourceInfoList 中 type 为 kScreen 的 source，region_rect 设为 { 0, 0, 0, 0 }。
+     * - 共享指定区域：sourceInfoList 中 type 为 kScreen 的 source，region_rect 设为非 nullptr，例如 { 100, 100, 300, 300 }。
+     * - 共享整个窗口：sourceInfoList 中 type 为 kWindow 的 source，region_rect 设为 { 0, 0, 0, 0 }。
+     * - 共享窗口区域：sourceInfoList 中 type 为 kWindow 的 source，region_rect 设为非 nullptr，例如 { 100, 100, 300, 300 }。
      *
-     * @since v5.4.10
-     *
-     * @par 调用时机
-     * 请在已经开启了屏幕共享之后再调用此接口
-     *
-     * @note 该方法仅适用于 macOS 和 Windows。
-     * @par 参数说明
-     * <table>
-     *  <tr>
-     *      <th>**参数名称**</th>
-     *      <th>**类型**</th>
-     *      <th>**描述**</th>
-     *  </tr>
-     *  <tr>
-     *      <td>source</td>
-     *      <td> \ref nertc::NERtcScreenCaptureSourceInfo "NERtcScreenCaptureSourceInfo"</td>
-     *      <td>指定共享源，通过 \ref nertc::IRtcChannel::getScreenCaptureSources "getScreenCaptureSources" 获取。</td>
-     *  </tr>
-     *  <tr>
-     *      <td>region_rect</td>
-     *      <td> \ref nertc::NERtcRectangle "NERtcRectangle"</td>
-     *      <td>指定捕获的区域。</td>
-     *  </tr>
-     *  <tr>
-     *      <td>capture_params</td>
-     *      <td> \ref nertc::NERtcScreenCaptureParameters "NERtcScreenCaptureParameters" </td>
-     *      <td>指定屏幕共享目标的属性，包括捕获鼠标，高亮捕获窗口等，详情参考 \ref nertc::NERtcScreenCaptureParameters 定义。</td>
-     *  </tr>
-     * </table>
-     * @par 示例代码
-     * @code
-     * NERtcScreenCaptureSourceInfo source;
-     * source.source_id = info.id;
-     * source.type = nertc::kScreen;
-     * nertc::NERtcRectangle rc {0, 0, 0, 0};
-     * nertc::NERtcScreenCaptureParameters capture_params;
-     * // capture_params 初始化
-     * int ret = SetScreenCaptureSource(source, rc, capture_params);
-     * if (ret != kNERtcNoError) {
-     *   // 提示用户操作失败。
-     * }
-     * @endcode
-     *
-     * @return 
-     * - 0: 方法调用成功。
-     * - 其他: 方法调用失败。
-     * @endif
+     * @param source      指定分享源。
+     * @param region_rect 指定捕获的区域。
+     * @param capture_params    指定屏幕分享目标的属性，包括捕获鼠标，高亮捕获窗口等，详情参考 NERtcScreenCaptureParameters 定义。
      */
     virtual int32_t setScreenCaptureSource(const NERtcScreenCaptureSourceInfo& source, const NERtcRectangle& region_rect, const NERtcScreenCaptureParameters& capture_params) = 0;
 
@@ -1234,7 +1045,7 @@ public:
      * <br>开启屏幕共享时，可以通过 NERtcScreenCaptureParameters 设置需要屏蔽的窗口列表；开发者可以在开启屏幕共享后，通过此方法动态调整需要屏蔽的窗口列表。被屏蔽的窗口不会显示在屏幕共享区域中。
      * @note 
      * - 在 Windows 平台中，该接口在屏幕共享过程中可动态调用；在 macOS 平台中，该接口自 V4.6.0 开始支持在屏幕共享过程中动态调用。
-     * - 在 Windows 平台中，某些窗口在被屏蔽之后，如果被置于图层最上层，此窗口图像可能会黑屏。此时会触发 onScreenCaptureStatus.kScreenCaptureStatusCovered 回调，建议应用层在触发此回调时提醒用户将待共享的窗口置于最上层。
+     * - 在 Windows 平台中，某些窗口在被屏蔽之后，如果被置于图层最上层，此窗口图像可能会黑屏。此时会触发 onScreenCaptureStatus.kScreenCaptureStatusCovered 回调，建议应用层在触发此回调时提醒用户将待分享的窗口置于最上层。
      * @since V4.5.0
      * @param  window_list      需要屏蔽的窗口 ID 列表。
      * @param  count            需屏蔽的窗口的数量。
@@ -1750,7 +1561,7 @@ public:
      *          - 设置用户角色为观众：加入房间后，远端用户不触发任何回调。
      * - 加入房间后调用该方法切换用户角色：
      *          - 从观众角色切为主播：本端用户触发 \ref nertc::IRtcChannelEventHandler::onClientRoleChanged "onClientRoleChanged" 回调，远端用户触发 \ref nertc::IRtcChannelEventHandler::onUserJoined(uid_t uid, const char *user_name, NERtcUserJoinExtraInfo join_extra_info) "onUserJoined" 回调。
-     *          - 从主播角色切为观众：本端用户触发 \ref nertc::IRtcChannelEventHandler::onClientRoleChanged "onClientRoleChanged" 回调，远端用户触发 \ref nertc::IRtcChannelEventHandler::onUserLeft(uid_t uid, NERtcSessionLeaveReason reason, NERtcUserJoinExtraInfo leave_extra_info) "onUserLeft" 回调。
+     *          - 从主播角色切为观众：本端用户触发 \ref nertc::IRtcChannelEventHandler::onClientRoleChanged "onClientRoleChanged" 回调，远端用户触发 \ref nertc::IRtcChannelEventHandler::onUserleft(uid_t uid, NERtcSessionLeaveReason reason, NERtcUserJoinExtraInfo leave_extra_info) "onUserleft" 回调。
      * @return
      * - 0（kNERtcNoError）：方法调用成功。
      * - 其他：方法调用失败。
@@ -3375,7 +3186,7 @@ public:
     * @param audible_distance 监听器能够听到扬声器并接收其语音的距离扬声器的最大距离。距离有效范围：[1,max int) ，无默认值。
     * @param conversational_distance 控制音频保持其原始音量的范围，超出该范围时，语音聊天的响度在被听到时开始淡出。
     * 默认值为 1。
-    * @param roll_off 距离衰减模式 #NERtcDistanceRolloffModel ，默认值 #kNERtcDistanceRolloffNone
+    * @param roll_off:距离衰减模式 #NERtcDistanceRolloffModel ，默认值 #kNERtcDistanceRolloffNone
     * @return
     * - 0: 方法调用成功
     * - 其他: 调用失败

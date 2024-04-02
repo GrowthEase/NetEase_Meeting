@@ -24,8 +24,9 @@ export async function getLog(logName: LogName, start = 0, end = Date.now()) {
   const logInfo = await logger.getLog(logName, start, end)
   let result = ''
   for (const ele of logInfo) {
-    result += `[${formatDate(ele.time, 'yyyy-MM-dd hh:mm:ss')}]${ele?.logStr
-      }\r\n`
+    result += `[${formatDate(ele.time, 'yyyy-MM-dd hh:mm:ss')}]${
+      ele?.logStr
+    }\r\n`
   }
   return result
 }
@@ -476,12 +477,24 @@ export function getDeviceKey() {
   return uuid
 }
 
-const passwordHash = ''
+const passwordHash = '@yiyong.im'
 
 export function md5Password(password: string) {
   return Md5.hashStr(password + passwordHash)
 }
 
+/**
+ * @description:
+ * @param obj
+ * @returns {string}
+ */
+export function objectToQueryString(obj: Record<string, any>): string {
+  const keys = Object.keys(obj)
+  const keyValuePairs = keys.map((key) => {
+    return encodeURIComponent(key) + '=' + encodeURIComponent(obj[key])
+  })
+  return keyValuePairs.join('&')
+}
 //获取昵称方法
 /**
  * 中文（最多两位，取最后两位） 》 英文 （最多两位，取前面两位）》 数字（最多两位，取最后两位） 》* 号
@@ -512,4 +525,12 @@ export function getUserName(name: string): string {
 
 export function checkPassword(pwd: string): boolean {
   return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d\S]{6,18}$/.test(pwd)
+}
+
+export function isPromiseCheck(obj): boolean {
+  return (
+    !!obj && //有实际含义的变量才执行方法，变量null，undefined和''空串都为false
+    (typeof obj === 'object' || typeof obj === 'function') && // 初始promise 或 promise.then返回的
+    typeof obj.then === 'function'
+  )
 }

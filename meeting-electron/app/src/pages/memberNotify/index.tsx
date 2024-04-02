@@ -1,13 +1,14 @@
-import { ConfigProvider } from 'antd';
-import zhCN from 'antd/locale/zh_CN';
+import { notification } from 'antd';
 import './index.less';
 import { useEffect, useRef } from 'react';
 import MemberNotify, {
   MemberNotifyRef,
 } from '../../../../src/components/web/MemberNotify';
+
 import { IPCEvent } from '@/types';
 
 export default function MemberNotifyPage() {
+  const [api, contextHolder] = notification.useNotification();
   const memberNotifyRef = useRef<MemberNotifyRef>(null);
   function handleViewMsg() {
     window.ipcRenderer?.send(IPCEvent.memberNotifyViewMemberMsg);
@@ -46,12 +47,14 @@ export default function MemberNotifyPage() {
   }, []);
   return (
     <div className="nemtting-notify-page">
+      {contextHolder}
       <MemberNotify
         style={{
           top: 0,
           right: 0,
         }}
         ref={memberNotifyRef}
+        notificationApi={api}
         onClose={onClose}
         onNotNotify={onNotNotify}
         handleViewMsg={handleViewMsg}

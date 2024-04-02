@@ -505,7 +505,7 @@ const NEMeetingKit: NEMeetingKitInterface = new Proxy<any>(
       NEMeetingKit.afterLeaveCallback = null
       NEMeetingKit.view = null
       NEMeetingKit.neMeeting?.release()
-      NEMeetingKit.neMeeting = null
+      NEMeetingKit.neMeeting = undefined
       NEMeetingKit.isInitialized = false
       outEventEmitter.removeAllListeners()
       if (window.isElectronNative) {

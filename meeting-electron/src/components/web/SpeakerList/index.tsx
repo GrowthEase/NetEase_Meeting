@@ -30,7 +30,7 @@ const SpeakerList: React.FC<SpeakerListProps> = ({
           <use xlinkHref="#iconyx-tv-voice-onx"></use>
         </svg>
       </div>
-      <span className={'speaker-title'}>{t('speaking')}：</span>
+      <span className={'speaker-title'}>{t('meetingSpeakingPrefix')}：</span>
       <span className={'speaker-info'} title={speakerStr}>
         {speakerStr}
       </span>

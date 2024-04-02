@@ -91,6 +91,7 @@ public:
      * @if Chinese
      * 屏幕共享源采集范围等变化的回调。如果要app层实现屏幕分享高亮框实现的话，需要注意在调用#startScreenCaptureByWindowId,
      * startScreenCaptureByDisplayId, startScreenCaptureByScreenRect时，参数NERtcScreenCaptureParameters中enable_high_light设置false，关闭SDK提供的高亮框，以免出现两个高亮框的情况。
+     * enable_high_light 和 force_update_data 设置为 true 时，也会有变化回调。例如使用SDK高亮时，同时需要获取窗口区域，实现批注功能。
      * @since V5.4.x
      * @note 自 V5.4.x 支持此回调。
      * @param data    屏幕共享源变化的信息。详细信息请参考 #NERtcScreenCaptureSourceData 。

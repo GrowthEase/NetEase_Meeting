@@ -461,7 +461,7 @@
  * - Multiple method calls can apply multiple global effects. Filters, stickers, and makeups can be added in the same way.
  * @note The method is only supported by macOS.
  * @since V4.2.202
- * @param type beauty type. For more information, see \ref nertc::NERtcBeautyEffectType "NERtcBeautyEffectType".
+ * @param type beauty type. For more information, see {@link NERtcBeautyEffectType}.
  * @param value Beauty intensity. Value range: [0, 1]. The default values of effects are different.
  * @return
  * - 0: success
@@ -473,7 +473,7 @@
  * - 多次调用此接口可以叠加多种全局美颜效果，也可以通过相关方法叠加滤镜、贴纸、美妆等自定义效果。
  * @note 该方法仅适用于 macOS 平台。
  * @since V4.2.202
- * @param type 美颜类型。详细信息请参考 \ref nertc::NERtcBeautyEffectType "NERtcBeautyEffectType"。
+ * @param type 美颜类型。详细信息请参考 {@link NERtcBeautyEffectType}。
  * @param value 对应美颜类型的强度。取值范围为 [0, 1]，各种美颜效果的默认值不同。
  * @return
   * - 0：方法调用成功。

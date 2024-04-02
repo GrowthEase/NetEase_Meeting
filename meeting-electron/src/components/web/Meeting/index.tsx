@@ -3,7 +3,6 @@ import './index.less'
 // import '../../../assets/iconfont/iconfont.css'
 import { ConfigProvider } from 'antd'
 
-import antd_zh_CH from 'antd/locale/zh_CN'
 import { useMeetingInfoContext } from '../../../store'
 import { ActionType } from '../../../types'
 import WaitingRoom from '../WaitingRoom'
@@ -43,18 +42,12 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
     })
   }, [])
 
-  return (
-    <ConfigProvider
-      prefixCls={antdPrefixCls}
-      locale={antd_zh_CH}
-      theme={{ hashed: false }}
-    >
-      {meetingInfo?.inWaitingRoom ? (
-        meetingInfo.meetingNum && <WaitingRoom />
-      ) : (
-        <MeetingContent width={width} height={height} />
-      )}
-    </ConfigProvider>
+  return meetingInfo?.inWaitingRoom ? (
+    meetingInfo.meetingNum ? (
+      <WaitingRoom />
+    ) : null
+  ) : (
+    <MeetingContent width={width} height={height} />
   )
 }
 

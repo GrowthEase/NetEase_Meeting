@@ -4435,6 +4435,17 @@ struct NERtcScreenCaptureParameters {
      * @endif
      */
     bool exclude_highlight_box;
+  
+    /**
+     * @if Chinese
+     * SDK 高亮时，是否回调 onScreenCaptureSourceDataUpdate
+     * - true: SDK 高亮时，onScreenCaptureSourceDataUpdate 也回调
+     * - false:  (默认) SDK 高亮时，不回调
+     * @since V5.5.30
+     * @Note 不支持动态修改，即一次屏幕分享开始，到屏幕分享结束的过程中，不支持改变该值
+     * @endif
+     */
+    bool force_update_data;
 
     NERtcScreenCaptureParameters()
         : profile(kNERtcScreenProfileHD1080P)
@@ -4453,7 +4464,8 @@ struct NERtcScreenCaptureParameters {
         , high_light_width(6)
         , high_light_color(0xFF7EDE00)
         , high_light_length(120)
-        , exclude_highlight_box(true) {}
+        , exclude_highlight_box(true)
+        , force_update_data(false) {}
 };
 
 /**
@@ -6692,6 +6704,15 @@ typedef enum {
 struct NERtcServerAddresses {
     /**
      * @if English
+     * lbs reuest url
+     * @endif
+     * @if Chinese
+     * lbs 服务请求地址
+     * @endif
+     */
+    char lbs_server[kNERtcMaxURILength];
+    /**
+     * @if English
      * 获取通道信息服务器
      * @endif
      * @if Chinese
@@ -7041,10 +7062,10 @@ typedef enum {
     kNERtcGMCryptoSM4ECB = 0,
    /**
    * @if English
-   * custom encryption.
+   * Custom encryption mode.
    * @endif
    * @if Chinese
-   * 自定义加密。
+   * 自定义加密模式。
    * @endif
    */
   NERtcEncryptionModeCustom,
@@ -7052,7 +7073,7 @@ typedef enum {
 
 /**
  * @if Chinese
- * 自定义加密数据。
+ * 自定义加密数据包。
  * @endif
  */
 struct NERtcMediaPacket {
@@ -7063,7 +7084,7 @@ struct NERtcMediaPacket {
 };
 /**
  * @if Chinese
- * 自定义加密数据回调。
+ * 自定义加密数据回调 observer。
  * @endif
  */
 class INERtcPacketObserver {
@@ -7104,12 +7125,11 @@ struct NERtcEncryptionConfig {
      * @endif
      */
     char key[kNERtcEncryptByteLength];
-
     /**
      * 自定义加密回调 observer, mode 为自定义加密时需要设置
      */
     INERtcPacketObserver* observer = nullptr;
-    
+
     NERtcEncryptionConfig() : mode(kNERtcGMCryptoSM4ECB) { memset(key, 0, sizeof(key)); }
 };
 
@@ -7580,56 +7600,6 @@ struct NERtcReverbParam {
     float preDelay;
 };
 
-typedef enum {
-    /**
-     * @if Chinese
-     * 无效模式
-     * @note 
-     * - 默认值, 默认不启用范围语音模式。
-     * @endif
-     */
-    NERtcRangeAudioModeNone = -1,
-    /**
-     * @if Chinese
-     * 默认模式
-     * @note 
-     * - 设置后玩家附近一定范围的人都能听到该玩家讲话，如果范围内也有玩家设置为此模式，则也可以互相通话。
-     * - TeamID相同的队友可以互相听到
-     * @endif
-     */
-    NERtcRangeAudioModeDefault = 0,
-    /**
-     * @if Chinese
-     * 小组模式
-     * @note 仅TeamID相同的队友可以互相听到
-     * @endif
-     */
-    NERtcRangeAudioModeTeam = 1,
-} NERtcRangeAudioMode;
-
-struct NERtcRangeAudioInfo {
-    /**
-     * @if Chinese
-     * 小队号
-     * @endif
-     */
-    int32_t team_id;
-    /**
-     * @if Chinese
-     * 语音模式。
-     * @endif
-     */
-    NERtcRangeAudioMode mode;
-    /**
-     * @if Chinese
-     * 语音接收范围。
-     * @endif
-     */
-    int audible_distance;
-
-    NERtcRangeAudioInfo() : team_id(-1), mode(NERtcRangeAudioModeNone), audible_distance(-1) {}
-};
-
 /** 
  * @if Chinese
  * 加入音视频房间时的一些可选信息。
@@ -7648,17 +7618,29 @@ struct NERtcJoinChannelOptions {
      * @endif
      */
     char* permission_key;
-    /**
-     * @if Chinese
-     * 范围语音参数信息。
-     * @endif
-     */
-    NERtcRangeAudioInfo range_audio_info;
-    
-    NERtcJoinChannelOptions() : permission_key(NULL), range_audio_info(){
+    NERtcJoinChannelOptions() : permission_key(NULL) { 
         memset(custom_info, 0, sizeof(custom_info)); 
     }
 };
+
+typedef enum {
+    /**
+     * @if Chinese
+     * 默认模式
+     * @note 
+     * - 设置后玩家附近一定范围的人都能听到该玩家讲话，如果范围内也有玩家设置为此模式，则也可以互相通话。
+     * - TeamID相同的队友可以互相听到
+     * @endif
+     */
+    NERtcRangeAudioModeDefault = 0,
+    /**
+     * @if Chinese
+     * 小组模式
+     * @note 仅TeamID相同的队友可以互相听到
+     * @endif
+     */
+    NERtcRangeAudioModeTeam = 1,
+} NERtcRangeAudioMode;
 
 struct NERtcJoinChannelOptionsEx {
     /**
@@ -8063,7 +8045,7 @@ struct NERtcThumbImageBuffer {
  */
 struct NERtcScreenCaptureSourceInfo {
   /**
-   * The type of the shared target. See \ref nertc::NERtcScreenCaptureSourceType "NERtcScreenCaptureSourceType".
+   * The type of the shared target. See \ref nertc::ScreenCaptureSourceType "ScreenCaptureSourceType".
    */
   NERtcScreenCaptureSourceType type;
   /**

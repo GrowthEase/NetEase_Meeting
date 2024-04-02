@@ -18,8 +18,8 @@
  - \ref nertc::INERtcAudioFrameObserver "INERtcAudioFrameObserver" 接口类用于向应用程序发送音频数据帧回调通知。
  - \ref nertc::IAudioDeviceManager "IAudioDeviceManager" 接口类用于向应用程序使用音频设备相关功能方法。
  - \ref nertc::IVideoDeviceManager "IVideoDeviceManager" 接口类用于向应用程序使用视频设备相关功能方法。
- - \ref nertc::IRtcChannel "IRtcChannel" 类在指定房间中实现实时音视频功能。通过创建多个 IRtcChannel 对象，用户可以同时加入多个房间。
- - \ref nertc::IRtcChannelEventHandler "IRtcChannelEventHandler" 类监听和报告指定房间的事件和数据。
+ - The \ref nertc::IRtcChannel "IRtcChannel" 类在指定房间中实现实时音视频功能。通过创建多个 IRtcChannel 对象，用户可以同时加入多个房间。
+ - The \ref nertc::IRtcChannelEventHandler "IRtcChannelEventHandler" 类监听和报告指定房间的事件和数据。
  
  ## 错误码
   
@@ -634,21 +634,6 @@
     <td> \ref nertc::IRtcEngineEx::setScreenCaptureMouseCursor "setScreenCaptureMouseCursor"</td>
     <td>设置共享屏幕时是否显示鼠标</td>
     <td>V4.6.10</td>
-  </tr>
-  <tr>
-    <td> \ref nertc::IRtcEngineEx::setScreenCaptureSource "setScreenCaptureSource"</td>
-    <td>设置屏幕共享参数</td>
-    <td>V5.5.20</td>
-  </tr>
-  <tr>
-    <td> \ref nertc::IRtcEngineEx::getScreenCaptureSources "getScreenCaptureSources"</td>
-    <td>获得一个可以共享的屏幕和窗口的列表</td>
-    <td>V5.5.20</td>
-  </tr>
-  <tr>
-    <td> \ref nertc::IRtcEngineEx::isFeatureSupported "isFeatureSupported"</td>
-    <td>查询当前设备是否支持 NERtc SDK 的某项功能</td>
-    <td>V5.5.20</td>
   </tr>
 </table>
 
@@ -1826,7 +1811,7 @@
 </table>
 
 
- <h2 id="空间音效（3D 音效）和范围语音">空间音效（3D 音效）和范围语音</h2>
+ <h2 id="设备管理">空间音效（3D 音效）和范围语音</h2>
 
 <table>
   <tr>

@@ -11,13 +11,18 @@
 }
 
 .nemeeting-right-drawer-root {
-  // &.nemeeting-drawer-right > .nemeeting-drawer-content-wrapper {
-  //   top: 28px;
-  // }
   .nemeeting-drawer-body {
     padding: 0px;
   }
   .nemeeting-right-drawer-nav {
+    overflow-x: auto;
+    background-color: #e5e6e8;
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+  .nemeeting-right-drawer-nav-container {
     display: flex;
     height: 40px;
     background-color: #e5e6e8;
@@ -33,16 +38,6 @@
         border-radius: 0;
         border-bottom: 1px solid #ebedf0;
       }
-      &:first-child {
-        .nemeeting-right-drawer-nav-item {
-          border-radius: 0px 0px 8px 0px;
-        }
-      }
-      &:last-child {
-        .nemeeting-right-drawer-nav-item {
-          border-radius: 0px 0px 0px 8px;
-        }
-      }
       .nemeeting-right-drawer-nav-item {
         display: flex;
         align-items: center;
@@ -51,16 +46,25 @@
         height: 100%;
         cursor: pointer;
         background-color: #e5e6e8;
-        border-radius: 0px 0px 8px 8px;
+        min-width: 107px;
+        .nemeeting-right-drawer-nav-item-label {
+          width: 60%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          text-align: center;
+        }
+        // border-radius: 0px 0px 8px 8px;
 
         .close-icon {
           font-size: 14px;
           position: absolute;
           top: 50%;
           transform: translateY(-50%);
-          right: 9px;
+          right: 3px;
         }
       }
+
       &.active {
         background-color: #e5e6e8;
         color: #333333;
@@ -69,6 +73,19 @@
           background-color: #fff;
           border-radius: 8px 8px 0px 0px;
         }
+      }
+    }
+    .nemeeting-right-drawer-nav-item-wrapper:has(
+        + .nemeeting-right-drawer-nav-item-wrapper.active
+      ) {
+      .nemeeting-right-drawer-nav-item {
+        border-radius: 0px 0px 8px 0px;
+      }
+    }
+    .nemeeting-right-drawer-nav-item-wrapper.active
+      + .nemeeting-right-drawer-nav-item-wrapper {
+      .nemeeting-right-drawer-nav-item {
+        border-radius: 0px 0px 0px 8px;
       }
     }
   }
