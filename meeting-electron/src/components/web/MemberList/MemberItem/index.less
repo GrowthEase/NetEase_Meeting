@@ -1,0 +1,37 @@
+.member-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 40px;
+  .member-item-avatar {
+    margin-right: 5px;
+  }
+  .member-item-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: pre;
+    color: #333;
+  }
+  .member-item-actions {
+    .more-button {
+      display: none;
+    }
+    .iconfont {
+      margin-left: 8px;
+    }
+    .iconyx-tv-more1x {
+      transform: rotate(90deg);
+      margin-left: 3px;
+      display: inline-block;
+    }
+    &.more-button-enable:hover {
+      .iconfont {
+        display: none;
+      }
+      .more-button {
+        display: block;
+      }
+    }
+  }
+}

@@ -1,0 +1,81 @@
+.roomsInfoWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+  .roomsLogo {
+    display: flex;
+    position: fixed;
+    top: 40px;
+    left: 40px;
+    .roomsIcon {
+      background-image: url('../../../assets/rooms-icon.png');
+      background-size: cover;
+      width: 60px;
+      height: 60px;
+      margin-right: 15px;
+    }
+    .roomsTitle {
+      font-size: 40px;
+      color: #fff;
+      height: 60px;
+      width: 350px;
+      line-height: 60px;
+      white-space: nowrap;
+      text-align: left;
+    }
+  }
+  .roomsInfo {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    height: 468px;
+    .roomsPosition {
+      font-weight: 500;
+      font-size: 48px;
+      line-height: 56px;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .timeWrapper {
+      height: 251px;
+      background: rgba(255, 255, 255, 0.1);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      box-sizing: border-box;
+      .time {
+        font-weight: 500;
+        font-size: 70px;
+        text-align: center;
+        letter-spacing: 20px;
+      }
+      .date {
+        font-weight: 400;
+        font-size: 38px;
+        margin: 0 auto;
+        text-align: center;
+        letter-spacing: 5px;
+        .certainDate {
+          margin-right: 20px;
+        }
+      }
+    }
+    .deviceId {
+      font-weight: 500;
+      font-size: 70px;
+      line-height: 82px;
+      text-align: center;
+      margin-top: 40px;
+      display: block;
+      letter-spacing: 1em;
+      margin-right: -1em;
+      text-align: right;
+    }
+  }
+}

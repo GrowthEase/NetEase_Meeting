@@ -1,0 +1,53 @@
+.dialog {
+  width: 700px;
+  height: 80px;
+  background-color: #fff;
+  border-radius: 4px;
+  position: fixed;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 0 24px;
+  z-index: 999999999999999;
+  .warnIcon {
+    background-image: url('../../assets/icon-warning.png');
+    width: 16px;
+    height: 16px;
+    flex-basis: 16px;
+    margin-top: 16px;
+    margin-right: 8px;
+  }
+  .titleWrapper {
+    flex: 1;
+    margin-top: 14px;
+    .title {
+      color: #333333;
+      font-size: 14px;
+    }
+    .subTitle {
+      margin-top: 7px;
+      color: #666666;
+      font-size: 12px;
+    }
+  }
+  .button {
+    margin-top: 24px;
+    width: 104px;
+    height: 36px;
+    flex-basis: 104px;
+    cursor: pointer;
+  }
+}
+.modal {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999999999999;
+}

@@ -141,6 +141,16 @@ abstract class NESettingsService extends ValueNotifier<Map> {
   /// 获取外部虚拟背景列表
   ///
   Future<List<String>> getExternalVirtualBackgrounds();
+
+  ///
+  /// 设置是否允许音频设备切换
+  ///
+  void enableAudioDeviceSwitch(bool enable);
+
+  ///
+  /// 获取是否允许音频设备切换
+  ///
+  Future<bool> isAudioDeviceSwitchEnabled();
 }
 
 class NEMeetingVirtualBackground {

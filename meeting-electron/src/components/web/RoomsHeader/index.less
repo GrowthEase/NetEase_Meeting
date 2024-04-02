@@ -1,0 +1,101 @@
+.rooms-header-container {
+  font-family: Monaco;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background-color: #292933;
+  padding: 8px 40px;
+  color: #fff;
+  box-sizing: border-box;
+  .rooms-header-left {
+    display: flex;
+    .rooms-header-item {
+      margin-right: 16px;
+    }
+  }
+  .rooms-header-item {
+    background-color: rgba(49, 49, 56, 0.8);
+    border-radius: 4px;
+  }
+
+  .live-item {
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    margin-left: 10px;
+    .living-icon {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background-color: #fe3b30;
+      margin-right: 4px;
+    }
+  }
+
+  .rooms-header-member {
+    position: relative;
+    width: 40px;
+    line-height: 40px;
+    display: flex;
+    align-items: center;
+    .icon-tool {
+      font-size: 30px;
+    }
+    .member-list-count-label {
+      position: absolute;
+      font-size: 14px;
+      line-height: 10px;
+      top: 0px;
+      left: 65%;
+      text-align: left;
+      z-index: 1000;
+      text-align: left;
+    }
+  }
+  .nemeeting-duration.rooms-header-item {
+    font-size: 17px;
+    line-height: 34px;
+    height: 34px;
+    padding: 0px 8px;
+    text-align: center;
+    min-width: 60px;
+  }
+  .network-item {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .meeting-network .nemeeting-singal-icon {
+      width: 21px;
+      height: 21px;
+    }
+  }
+
+  .rooms-header-center {
+    font-size: 20px;
+    line-height: 50px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 0;
+    bottom: 0;
+  }
+  .rooms-header-right {
+    position: absolute;
+    display: flex;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    padding: 8px 40px 8px 0;
+    font-size: 16px;
+    .rooms-header-item {
+      margin-left: 16px;
+      padding: 6px 16px;
+      text-align: center;
+    }
+  }
+}

@@ -1,0 +1,33 @@
+.pc-top-buttons {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  padding: 0 10px;
+  .iconfont {
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+  }
+  .anticon,
+  .iconfont {
+    padding: 2px;
+    cursor: pointer;
+    margin-right: 5px;
+    color: #909194;
+  }
+  .anticon,
+  .iconfont {
+    &:hover {
+      color: #fff;
+      background-color: #e5e5e5;
+    }
+    &.close:hover {
+      color: #fff;
+      background-color: red;
+    }
+  }
+}

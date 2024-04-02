@@ -1,0 +1,329 @@
+@import '../../../../src/styles/variables.less';
+
+.nemeeting-canvas-web {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  background: rgba(0, 0, 0, 0);
+
+  .nemeeting-audio-mode {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    overflow: hidden;
+    width: 100%;
+  }
+  .nemeeting-audio-mode-wrap {
+    padding: 24px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    background-color: #18181f;
+    width: 100%;
+    .nemeting-aduio-mode-swiper-btn {
+      background: linear-gradient(180deg, #33333f, #292933)!important;
+    }
+    .meeting-canvas-swiper-web {
+      width: 100%;
+    }
+    .nemeeting-swiper-slide {
+      flex-direction: column;
+    }
+    .nemeeting-audio-line {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+  .nemeeting-slider-resizable-indicate {
+    display: none;
+  }
+  &.speaker-layout-right {
+    flex-direction: row-reverse;
+    .nemeeting-swiper-slider {
+      z-index: 98;
+    }
+    .nemeeting-slider-resizable-indicate {
+      display: block;
+      position: absolute;
+      width: 2px;
+      left: -1px;
+      top: 50%;
+      margin-top: -12px;
+      height: 24px;
+      border-left: 1px solid #fff;
+      border-right: 1px solid #fff;
+    }
+  }
+  .bg-black {
+    background-color: #000;
+  }
+  .nemeeting-whiteboard-custom {
+    .tc-container-bottomRight,
+    .tc-container-bottomLeft {
+      margin-bottom: 84px !important;
+    }
+  }
+  .neswiper-wrap {
+    position: relative;
+  }
+  //.meeting-canvas-web {
+  //}
+  .swiper-view-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #18181f;
+  }
+  .screen-video-wrap {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    &:hover {
+      .screen-arrow {
+        display: block;
+      }
+    }
+  }
+  .screen-arrow {
+    display: none;
+    position: absolute;
+    left: 5px;
+    top: 10px;
+    z-index: 10;
+    padding: 5px;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.5);
+  }
+  .normal-screen-down {
+    transform: rotateX(180deg);
+    top: 40px;
+  }
+  .nemeeting-swiper-slide {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    align-content: center;
+    &.nemeeting-swiper-slide-widescreen {
+      width: 100% !important;
+    }
+  }
+  .speaker-slider {
+    position: relative;
+    //height: 95px;
+    .nemeeting-ring-phone-img {
+      width: 50px;
+    }
+    .answer-ring-phone,
+    .video-view-nickname {
+      font-size: 12px;
+    }
+    .video-card {
+      width: 25%;
+      height: 100%;
+      .center-nickname {
+        font-size: 12px;
+      }
+      .answering-phone-title {
+        font-size: 12px;
+      }
+      .answering-phone-icon {
+        width: 40px;
+      }
+    }
+  }
+  .gallery-slider {
+    position: relative;
+    height: 100%;
+    .nemeeting-ring-phone-img {
+      width: 50px;
+    }
+    .answer-ring-phone,
+    .video-view-nickname {
+      font-size: 12px;
+    }
+  }
+  .meeting-canvas-swiper-web {
+    height: 100%;
+  }
+  .nemeeting-main-view {
+    flex: 1;
+    position: relative;
+    &:hover {
+      .nemeeting-main-view-collapse-allow {
+        display: flex;
+      }
+    }
+    .nemeeting-main-view-collapse-allow {
+      display: none;
+      position: absolute;
+      background-color: rgba(49, 49, 56, 0.8);
+      color: #fff;
+      cursor: pointer;
+      border-radius: 2px;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      &.top {
+        font-size: 16px;
+        width: 21px;
+        height: 21px;
+        top: 5px;
+        right: 5px;
+
+        transform: rotate(180deg);
+        &.collapse {
+          top: 30px;
+          right: 5px;
+          transform: rotate(360deg);
+        }
+      }
+      &.right {
+        font-size: 24px;
+        top: 50%;
+        margin-top: -18px;
+        height: 34px;
+        right: 2px;
+        &.collapse {
+          transform: rotate(180deg);
+        }
+      }
+    }
+  }
+  .card-for-1 {
+    width: calc(100% - 4px);
+    height: calc(100% - 2px);
+  }
+  .card-for-2,
+  .card-for-3,
+  .card-for-4 {
+    width: calc(50% - 4px);
+    height: calc(50% - 2px);
+  }
+  .card-for-5,
+  .card-for-6,
+  .card-for-7,
+  .card-for-8,
+  .card-for-9 {
+    width: calc(33% - 4px);
+    height: calc(33% - 2px);
+  }
+  .card-for-10,
+  .card-for-11,
+  .card-for-12,
+  .card-for-13,
+  .card-for-14,
+  .card-for-15,
+  .card-for-16 {
+    width: calc(25% - 4px);
+    height: calc(25% - 2px);
+  }
+
+  //  swiper 前进后退自定义样式
+  .slider-button-prev {
+    //margin-right: 32px;
+    left: -62px;
+    &:before {
+      margin: -6px 0 0 -4px;
+      transform: rotate(-135deg);
+    }
+  }
+
+  .slider-button-next {
+    //margin-left: 32px;
+    right: -62px;
+    &:before {
+      margin: -6px 0 0 -8px;
+      transform: rotate(45deg);
+    }
+  }
+
+  .slider-button-gallery-next {
+    right: 0;
+  }
+  .slider-button-gallery-prev {
+    left: 0;
+  }
+
+  .no-show-swiper {
+    display: none;
+  }
+
+  .slider-button-prev,
+  .slider-button-next {
+    cursor: pointer;
+    height: 32px;
+    width: 32px;
+    line-height: 32px;
+    text-align: center;
+    position: absolute;
+    z-index: 10;
+    top: 50%;
+    margin-top: -16px;
+    border-radius: 50%;
+    background: #171717;
+    opacity: 0.9;
+    &:before {
+      content: '';
+      position: absolute;
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border: 2px solid #ffffff;
+      border-style: solid solid none none;
+      top: 50%;
+      left: 50%;
+    }
+    &.slider-button-speaker-right-prev {
+      left: 10px;
+    }
+    &.slider-button-speaker-right-next {
+      right: 10px;
+    }
+  }
+  .meeting-swiper-button-disabled {
+    display: none;
+  }
+
+  .meeting-small-layout {
+    height: 100%;
+    width: 100%;
+    .other-hasin {
+      height: 100%;
+      width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+    .self-hasin {
+      width: calc(100% / 3);
+      height: calc(100% / 3) !important;
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      z-index: 1;
+    }
+  }
+}
+
+.light-theme {
+  // .video-card{
+  //   color: @light-theme-color;
+  //   background: @light-theme-background-color;
+  // }
+  // .bg-black {
+  //   background: @light-theme-background-color;
+  // }
+  // .video-view-nickname{
+  //   color: @light-theme-color;
+  // }
+}

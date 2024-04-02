@@ -8,6 +8,7 @@ import 'package:dio/dio.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/model/account_app_info.dart';
 import 'package:nemeeting/service/model/account_apps.dart';
+import 'package:nemeeting/service/model/chatroom_info.dart';
 import 'package:nemeeting/service/model/client_upgrade_info.dart';
 import 'package:nemeeting/service/model/history_meeting.dart';
 import 'package:nemeeting/service/model/history_meeting_detail.dart';

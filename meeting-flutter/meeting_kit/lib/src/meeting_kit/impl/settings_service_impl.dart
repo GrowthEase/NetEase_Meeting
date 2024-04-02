@@ -259,6 +259,17 @@ class _NESettingsServiceImpl extends NESettingsService {
         _settingsCache[Keys.addExternalVirtualList] as List?;
     return Future.value(externalVirtualBackgrounds?.cast<String>() ?? []);
   }
+
+  @override
+  void enableAudioDeviceSwitch(bool enable) {
+    _writeSettings(Keys.enableAudioDeviceSwitch, enable);
+  }
+
+  @override
+  Future<bool> isAudioDeviceSwitchEnabled() {
+    return Future.value(_settingsCache[Keys.enableAudioDeviceSwitch] as bool? ??
+        SDKConfig.current.isAudioDeviceSwitchEnabled);
+  }
 }
 
 class Keys {

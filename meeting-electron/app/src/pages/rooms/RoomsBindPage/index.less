@@ -1,0 +1,121 @@
+.roomsBindWrapper {
+  height: 100%;
+  color: #fff;
+  .roomsBindInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    // height: 478px;
+    transform: translate(-50%, -50%);
+    .roomsIcon {
+      background-image: url('../../../assets/rooms-icon.png');
+      background-size: cover;
+      width: 115px;
+      height: 115px;
+      margin: 15px auto;
+    }
+    .roomsTitle {
+      font-size: 48px;
+      height: 50px;
+      width: 350px;
+      line-height: 50px;
+      white-space: nowrap;
+      text-align: center;
+    }
+    .roomsPosition {
+      font-size: 48px;
+      margin-top: 50px;
+    }
+    .roomsBindRemind {
+      font-size: 32px;
+      color: #fff;
+      height: 56px;
+      width: 864px;
+      line-height: 56px;
+      white-space: nowrap;
+      text-align: center;
+      font-weight: 300;
+      opacity: 0.7;
+    }
+    .roomsBindCode {
+      font-size: 70px;
+      letter-spacing: 30px;
+      margin-right: -30px;
+    }
+  }
+  .back {
+    position: fixed;
+    left: 40px;
+    top: 50%;
+    width: 150px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+  }
+  .next {
+    position: fixed;
+    right: 40px;
+    top: 50%;
+    width: 150px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+  }
+  .next:hover {
+    cursor: pointer;
+    .text,
+    .iconWrapper {
+      color: #fff;
+      opacity: 1;
+    }
+  }
+  .back:hover {
+    cursor: pointer;
+    .text,
+    .iconWrapper {
+      color: #fff;
+      opacity: 1;
+    }
+  }
+  .text {
+    display: inline-block;
+    color: #fff;
+    opacity: 0.6;
+    font-size: 32px;
+    width: 64px;
+    height: 60px;
+    line-height: 60px;
+    margin: 0 12px;
+  }
+  .iconWrapper {
+    color: #fff;
+    opacity: 0.6;
+    width: 60px;
+    height: 60px;
+    background-color: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    position: relative;
+    .icon {
+      width: 36px;
+      height: 36px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      fill: #fff;
+    }
+  }
+  .qrCodeBox {
+    width: 240px;
+    height: 240px;
+    border-radius: 12px;
+    background: #fff;
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
