@@ -237,7 +237,7 @@ const AppH5: React.FC<AppProps> = ({ height, width }) => {
           <Dialog
             visible={!!waitingRejoinMeeting}
             title={t('networkAbnormality')}
-            cancelText={t('leaveMeeting')}
+            cancelText={t('meetingLeaveFull')}
             confirmText={t('rejoin')}
             onCancel={() => {
               leaveMeeting()

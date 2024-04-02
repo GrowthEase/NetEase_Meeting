@@ -10,128 +10,124 @@ export default {
   host,
   coHost,
   attendee,
-  appName: '网易会议', // 顶部UI展示
-  joinMeeting: `加入会议`, // 入会时密码弹窗输入文本
-  leaveMeeting: `离开会议`, // 离开会议二次确认弹窗菜单按钮文本
-  quitMeeting: `结束会议`, // “结束会议”二次确认弹窗菜单按钮文本
-  finish: '结束会议', // 结束会议菜单按钮文本
+  globalAppName: '网易会议', // 顶部UI展示
+  meetingJoin: `加入会议`, // 入会时密码弹窗输入文本
+  meetingLeaveFull: `离开会议`, // 离开会议二次确认弹窗菜单按钮文本
+  meetingQuit: '结束会议', // 结束会议菜单按钮文本
   leave: '离开会议', // 离开会议菜单按钮文本
-  hostExitTips: `您确定要离开这个${meeting}吗？`, // 结束会议二次确认弹窗消息
-  leaveTips: `您确定要离开这个${meeting}吗？`, // 离开会议二次确认弹窗消息
+  hostExitTips: `确定要结束这个${meeting}吗？`, // 结束会议二次确认弹窗消息
+  meetingLeaveConfirm: `确定要离开会议吗？`, // 离开会议二次确认弹窗消息
   changePresenterTips: `是否移交主持人权限？`,
-  networkUnavailableCloseFail: `网络异常，结束${meeting}失败`, //  结束会议失败提示
-  cancel: '取消', //通用
-  ok: '确定', //通用
-  beauty: `美颜`, // 美颜功能名称
-  beautyLevel: `美颜等级`, // 美颜等级
-  joiningTips: `正在进入${meeting}...`, // 加入会议Loading提示信息
-  close: `关闭`, // 通用
-  open: `打开`, // 通用
-  networkUnavailable: `网络连接失败，请稍后重试！`, // 通用网络连接失败提示1
-  networkUnavailableCheck: `网络连接失败，请检查你的网络连接！`, // 通用网络连接失败提示2
-  memberListTitle: `${attendee}`, // 会议成员列表标题
-  joinMeetingFail: `加入${meeting}失败`, //  加入会议失败提示
+  networkUnavailableCloseFail: `网络异常，结束会议失败`, //  结束会议失败提示
+  globalCancel: '取消', //通用
+  globalSure: '确定', //通用
+  meetingBeauty: `美颜`, // 美颜功能名称
+  meetingBeautyLevel: `美颜等级`, // 美颜等级
+  meetingJoinTips: `正在进入${meeting}...`, // 加入会议Loading提示信息
+  globalClose: `关闭`, // 通用
+  globalOpen: `打开`, // 通用
+  participants: `${attendee}`, // 会议成员列表标题
+  meetingJoinFail: `加入会 议失败`, //  加入会议失败提示
   reJoinMeetingFail: `重新加入${meeting}失败`, // 重试加入会议失败提示
-  youBecomeTheHost: `您已经成为${host}`, // 被移交主持人的提示
-  youBecomeTheCoHost: `您已经成为${coHost}`, // 被移交主持人的提示
-  youBesetTheCoHost: `您已被设置${coHost}`, // 被移交主持人的提示
-  becomeTheCoHost: `已经成为${coHost}`, // 被移交主持人的提示
-  looseTheCoHost: `已被取消设为${coHost}`, // 被取消焦点视频提示
-  getVideoFocus: '您已被设置为焦点视频', // 被设置为焦点视频提示
-  looseVideoFocus: '您已被取消焦点视频', // 被取消焦点视频提示
-  muteAudioAll: '全体静音', // 全体静音功能
-  muteAudioAllDialogTips: '所有以及新加入成员将被静音', // 全体静音弹窗标题
-  muteAllAudioTip: `允许${attendee}自行解除静音`, // 操作全体静音弹窗可选项
-  muteAllAudioSuccess: '您已进行全体静音', //主持人端全体静音成功提示消息
-  meetingHostMuteAllAudio: `${host}设置了全体静音`, //全体静音时成员端提示消息
-  muteAllAudioFail: '全体静音失败', //全体静音失败提示消息
-  unMuteAudioAll: '解除全体静音', //解除全体静音功能
-  unMuteAllAudioSuccess: '您已请求解除全体静音', //解除全体静音成功提示消息
-  unMuteAllAudioFail: '解除全体静音失败', //解除全体静音失败提示消息
+  participantAssignedHost: `您已经成为主持人`, // 被移交主持人的提示
+  participantAssignedCoHost: `您已被设为联席主持人`, // 被移交主持人的提示
+  becomeTheCoHost: `已经成为${coHost}`, // 被移交主持人的提示x
+  participantUnassignedCoHost: `您已被取消设为联席主持人`, // 被取消焦点视频提示
+  participantAssignedActiveSpeaker: '您已被设置为焦点视频', // 被设置为焦点视频提示
+  participantUnassignedActiveSpeaker: '您已被取消焦点视频', // 被取消焦点视频提示
+  participantMuteAudioAll: '全体静音', // 全体静音功能
+  participantMuteAudioAllDialogTips: '所有以及新加入成员将被静音', // 全体静音弹窗标题
+  participantMuteAllAudioTip: `允许${attendee}自行解除静音`, // 操作全体静音弹窗可选项
+  participantMuteAllAudioSuccess: '您已进行全体静音', //主持人端全体静音成功提示消息
+  participantHostMuteAllAudio: `${host}设置了全体静音`, //全体静音时成员端提示消息
+  participantMuteAllAudioFail: '全体静音失败', //全体静音失败提示消息
+  participantUnmuteAll: '解除全体静音', //解除全体静音功能
+  participantUnMuteAllAudioSuccess: '您已请求解除全体静音', //解除全体静音成功提示消息
+  participantUnMuteAllAudioFail: '解除全体静音失败', //解除全体静音失败提示消息
   leaveByHost: `您已被${host}移出会议`,
   leaveBySelf: `您已在其他设备登录`,
 
-  muteVideoAll: '全体关闭视频',
-  muteVideoAllDialogTips: '所有以及新加入成员将被关闭视频',
-  muteAllVideoTip: `允许${attendee}自行开启视频`,
-  muteAllVideoSuccess: '您已进行全体关闭视频',
-  meetingHostMuteAllVideo: `${host}设置了全体关闭视频`,
-  muteAllVideoFail: '全体关闭视频失败',
+  participantTurnOffVideos: '全体关闭视频',
+  participantMuteVideoAllDialogTips: '所有以及新加入成员将被关闭视频',
+  participantMuteAllVideoTip: `允许${attendee}自行开启视频`,
+  participantMuteAllVideoSuccess: '您已进行全体关闭视频',
+  participantHostMuteAllVideo: `${host}设置了全体关闭视频`,
+  participantMuteAllVideoFail: '全体关闭视频失败',
   unMuteVideoAll: '开启全体视频',
-  unMuteAllVideoSuccess: '您已请求开启全体视频',
+  participantUnMuteAllVideoSuccess: '您已请求全体打开视频',
   unMuteAllVideoFail: '开启全体视频失败',
-  muteVideoAndAudio: '关闭音视频',
+  participantTurnOffAudioAndVideo: '关闭音视频',
   unmuteVideoAndAudio: '开启音视频',
   hostAgreeVideoHandsUp: `${host}已将您开启视频`,
 
-  muteAudio: '静音', //主持人操作成员静音功能菜单
-  unMuteAudio: '解除静音', //主持人操作成员解除静音功能菜单
-  muteVideo: '停止视频', //主持人操作成员停止视频功能菜单
-  unMuteVideo: '开启视频', // 主持人操作成员开启视频功能菜单
-  unScreenShare: '结束共享', // 主持人操作成员结束共享功能菜单
+  participantMute: '静音', //主持人操作成员静音功能菜单
+  participantUnmute: '解除静音', //主持人操作成员解除静音功能菜单
+  participantStopVideo: '停止视频', //主持人操作成员停止视频功能菜单
+  participantStartVideo: '开启视频', // 主持人操作成员开启视频功能菜单
+  screenShareStop: '结束共享', // 主持人操作成员结束共享功能菜单
   pauseScreenShare: '共享已暂停，请将窗口至于最上方',
   shareComputerAudio: '同时共享电脑声音',
-  hostStopShare: `${host}已终止了您的共享`, //主持人终止共享提示
-  focusVideo: '设为焦点视频', //主持人操作成员设置焦点视频菜单项
-  unFocusVideo: '取消焦点视频', //主持人操作成员取消焦点视频菜单项
-  handOverHost: `移交${host}`, //主持人操作成员移交主持人菜单项
-  handSetCoHost: `设为${coHost}`, // 主持人操作设置联席主持人
-  handUnSetCoHost: `取消设为${coHost}`, // 主持人操作取消联席主持人
-  handOverHostTips: `确认将${host}移交给`, //移交主持人确认弹窗消息
-  removeMember: '移除', //主持人操作成员移除成员菜单项
-  removeMemberTips: '确认移除', //移除成员确认弹窗消息
+  participantHostStoppedShare: `${host}已终止了您的共享`, //主持人终止共享提示
+  participantAssignActiveSpeaker: '设为焦点视频', //主持人操作成员设置焦点视频菜单项
+  participantUnassignActiveSpeaker: '取消焦点视频', //主持人操作成员取消焦点视频菜单项
+  participantTransferHost: `移交${host}`, //主持人操作成员移交主持人菜单项
+  participantAssignCoHost: `设置联席主持人`, // 主持人操作设置联席主持人
+  participantUnassignCoHost: `取消联席主持人`, // 主持人操作取消联席主持人
+  participantTransferHostConfirm: `确认将主持人移交给{{userName}}?`, //移交主持人确认弹窗消息
+  participantRemove: '移除', //主持人操作成员移除成员菜单项
+  participantRemoveConfirm: '确认移除', //移除成员确认弹窗消息
   yes: '是', //弹窗通用确认按钮文本静音
   no: '否', //弹窗通用否定按钮文本
-  cannotRemoveSelf: '不能移除自己', // 不能移除自己提示消息
-  muteAudioFail: '静音失败', //静音失败提示
-  unMuteAudioFail: '解除静音失败', //解除静音失败提示
-  muteVideoFail: '停止视频失败', //停止视频失败提示
-  unMuteVideoFail: '开启视频失败', //开启视频失败提示
-  focusVideoFail: '设为焦点视频失败', //设为焦点视频失败提示
-  unFocusVideoFail: '取消焦点视频失败', //取消焦点视频失败提示
-  putMemberHandsDownFail: '放下成员举手失败', //放下成员举手失败提示
-  handOverHostFail: `移交${host}失败`, //移交主持人失败提示
+  participantCannotRemoveSelf: '不能移除自己', // 不能移除自己提示消息
+  participantMuteAudioFail: '静音失败', //静音失败提示
+  participantUnMuteAudioFail: '解除静音失败', //解除静音失败提示
+  participantMuteVideoFail: '停止视频失败', //停止视频失败提示
+  participantUnMuteVideoFail: '开启视频失败', //开启视频失败提示
+  participantFailedToAssignActiveSpeaker: '设为焦点视频失败', //设为焦点视频失败提示
+  participantFailedToUnassignActiveSpeaker: '取消焦点视频失败', //取消焦点视频失败提示
+  participantFailedToLowerHand: '放下成员举手失败', //放下成员举手失败提示
+  participantFailedToTransferHost: `移交${host}失败`, //移交主持人失败提示
   removeMemberSuccess: '移除成功', //移除成员成功提示
-  removeMemberFail: '移除失败', //移除成员失败提示
+  participantFailedToRemove: '移除失败', //移除成员失败提示
   save: '保存', //通用功能按钮
   done: '完成', //通用功能按钮
   notify: '通知', //弹窗通用标题
-  hostKickedYou: `因被${host}移出或切换至其他设备，您已退出${meeting}`, //从会议中被移除提示
+  meetingSwitchOtherDevice: `因被${host}移出或切换至其他设备，您已退出${meeting}`, //从会议中被移除提示
   sure: '确定', //通用
   // forbiddenByHostVideo: `${host}已将您停止视频`, //本地重新打开摄像头失败，原因为被主持人禁用
-  openCamera: '打开摄像头', //主持人申请打开成员视频弹窗标题
-  hostOpenCameraTips: `${host}已重新打开您的摄像头，确认打开？`, //主持人申请打开成员视频弹窗消息
-  openMicro: '打开麦克风', //主持人申请打开成员音频弹窗标题
-  hostOpenMicroTips: `${host}已重新打开您的麦克风，确认打开？`, //主持人申请打开成员音频弹窗消息
-  meetingHostMuteVideo: '您已被停止视频', //主持人关闭成员视频提示消息
-  meetingHostMuteAudio: '您已被静音', //主持人关闭成员音频提示消息
+  participantOpenCamera: '打开摄像头', //主持人申请打开成员视频弹窗标题
+  participantHostOpenCameraTips: `${host}已重新打开您的摄像头，确认打开？`, //主持人申请打开成员视频弹窗消息
+  participantOpenMicrophone: '打开麦克风', //主持人申请打开成员音频弹窗标题
+  participantHostOpenMicroTips: `${host}已重新打开您的麦克风，确认打开？`, //主持人申请打开成员音频弹窗消息
+  participantHostMuteVideo: '您已被停止视频', //主持人关闭成员视频提示消息
+  participantHostMuteAudio: '您已被静音', //主持人关闭成员音频提示消息
   screenShare: '共享屏幕', //共享屏幕功能菜单文本
   screenShareTips: '将开始截取您的屏幕上显示的所有内容。', //屏幕共享弹窗消息
-  shareOverLimit: '已有人在共享，您无法共享', //超出共享人数限制提示消息
+  screenShareOverLimit: '已有人在共享，您无法共享', //超出共享人数限制提示消息
   screenShareStartFail: '发起共享屏幕失败', // 屏幕共享失败提示
-  hasWhiteBoardShare: '共享白板时暂不支持屏幕共享',
-  hasScreenShareShare: '屏幕共享时暂不支持白板共享',
-  screenShareStopFail: '关闭共享屏幕失败', //屏幕共享失败提示
-  whiteBoard: '共享白板', //共享白板功能菜单
-  closeWhiteBoard: '退出白板', //退出白板功能菜单
+  meetingHasWhiteBoardShare: '共享白板时暂不支持屏幕共享',
+  meetingHasScreenShareShare: '屏幕共享时暂不支持白板共享',
+  screenShareStopFail: '停止共享屏幕失败', //屏幕共享失败提示
+  whiteboardShare: '共享白板', //共享白板功能菜单
+  whiteBoardClose: '退出白板', //退出白板功能菜单
   whiteBoardShareStopFail: '停止共享白板失败',
   whiteBoardShareStartFail: '发起白板共享失败',
   functionalityLimitedByTheNumberOfPeople: '该功能允许的同时使用人数达到上限',
-  noScreenSharePermission: '没有屏幕共享权限',
+  screenShareNoPermission: '没有屏幕共享权限',
   screenShareLocalTips: '正在共享屏幕', //共享端“正在共享屏幕”提示
   screenShareSuffix: '的共享屏幕', //共享端画面名称后缀
   screenShareInteractionTip: '双指分开放大画面', // 操作共享屏幕的画面提示
-  whiteBoardInteractionTip: '您已获得白板互动权限限',
-  undoWhiteBoardInteractionTip: '您已被收回白板互动权限',
-  speakingPrefix: '正在讲话: ', //成员正在讲话前缀，后面会拼接用户昵称
+  whiteBoardInteractionTip: '您被授予白板互动权限',
+  whiteBoardUndoInteractionTip: '您被取消白板互动权限',
+  meetingSpeakingPrefix: '正在讲话', //成员正在讲话前缀，后面会拼接用户昵称
   screenShareModeForbiddenOp: '共享屏幕时不能开启/停止视频', //共享屏幕时操作打开/关闭摄像头失败提示
-  me: '我',
+  participantMe: '我',
   audioStateError: '当前音频被其他应用占用，请关闭后重试', //打开音频设备失败提示
-  lockMeeting: `锁定${meeting}`, //锁定会议功能
-  lockMeetingByHost: `${meeting}已锁定，新${attendee}将无法加入${meeting}`, //锁定会议成功主持人端提示消息
-  lockMeetingByHostFail: `${meeting}锁定失败`, //锁定失败提示
-  unLockMeetingByHost: `${meeting}已解锁，新${attendee}将可以加入${meeting}`, //解锁会议成功主持人端提示
-  unLockMeetingByHostFail: `${meeting}解锁失败`, //解锁会议失败提示
+  meetingLock: `锁定${meeting}`, //锁定会议功能
+  meetingLockMeetingByHost: `${meeting}已锁定，新${attendee}将无法加入${meeting}`, //锁定会议成功主持人端提示消息
+  meetingLockMeetingByHostFail: `${meeting}锁定失败`, //锁定失败提示
+  meetingUnLockMeetingByHost: `${meeting}已解锁，新${attendee}将可以加入${meeting}`, //解锁会议成功主持人端提示
+  meetingUnLockMeetingByHostFail: `${meeting}解锁失败`, //解锁会议失败提示
   coHostLimit: `${coHost}已达到上限`,
   // 聊天室相关
   // send: '发送', //通用
@@ -144,15 +140,15 @@ export default {
   // searchMember: '搜索成员', //成员搜索输入框提示文本
   // enterChatRoomFail: '聊天室进入失败!', //聊天室初始化失败提示
   meetingPassword: `${meeting}密码`, //会议密码弹窗标题
-  inputMeetingPassword: `请输入${meeting}密码`, // 会议密码弹窗输入框提示
-  wrongPassword: '密码错误', // 会议密码验证失败提示
-  headsetState: '您正在使用耳机',
+  meetingEnterPassword: `请输入${meeting}密码`, // 会议密码弹窗输入框提示
+  meetingWrongPassword: '密码错误', // 会议密码验证失败提示
+  deviceHeadsetState: '您正在使用耳机',
   meetingId: `${meeting}ID`, // 会议ID
   meetingNumber: `${meeting}号`, // 会议号
-  shortMeetingId: `${meeting}短号`, // 会议短号
-  copy: '复制邀请', //复制菜单文本
-  copyLink: '复制',
-  meetingUrl: '入会链接',
+  meetingShortNum: `${meeting}短号`, // 会议短号
+  meetingCopyInvite: '复制邀请', //复制菜单文本
+  globalCopy: '复制',
+  meetingInviteUrl: '入会链接',
   copySuccess: '复制成功', //复制成功提示消息
   defaultMeetingInfoTitle: `邀请您参加会议`, //会议信息标题
   meetingInfoDesc: `${meeting}正在加密保护中`, //会议描述文本
@@ -276,7 +272,6 @@ export default {
   cancelHandUpSuccess: ' 取消举手成功', // 取消举手成功提示
   meetingRecording: '会议录制中', // 开启录制时提示
   securityInfo: '会议正在加密保护中',
-  speaking: '正在说话',
   notJoinedMeeting: '成员尚未加入',
   disconnected: '网络已断开，正在尝试重新连接…',
   unmute: '暂时取消静音',
@@ -416,7 +411,7 @@ export default {
   disabledWatermark: '水印已关闭',
   sendTo: '发送至',
   closeRightRow: '立即关闭',
-  closeWaitingRoomCheck: '允许现有等候室成员全部进入会议',
+  waitingRoomDisableDialogAdmitAll: '允许现有等候室成员全部进入会议',
   waiting: '已等待',
   days: '天',
   hours: '小时',
@@ -426,7 +421,7 @@ export default {
   chatMessage: '聊天信息',
   joining: '正在进入会议...',
   notAllowJoin: '不允许用户再次加入该会议',
-  removeWaitingRoomMember: '移除等候成员',
+  participantExpelWaitingMemberDialogTitle: '移除等候成员',
   moveToWaitingRoom: '移至等候室',
 
   networkReconnectSuccess: '网络重连成功',
@@ -457,10 +452,24 @@ export default {
   pressSpaceBarToMute: '静音时长按空格键暂时开启麦克风',
   InputLevel: '输入级别',
   audio: '音频',
-  downloadPath: '聊天室文件保存路径',
+  downloadPath: '聊天文件保存路径',
   chosePath: '选择路径',
   language: '选择语言',
   file: '文件',
+
+  notification: '通知',
+  notifyCenter: '通知中心',
+  notifyCenterAllClear: '确认清空所有通知',
+  notifyCenterNoMessage: '暂无消息',
+  notifyCenterViewDetailsUnsupported: '该消息不支持查看详情',
+  notifyCenterViewingDetails: '查看详情',
+
+  meetingReclaimHost: '收回主持人',
+  meetingReclaimHostCancel: '暂不收回',
+  meetingReclaimHostTip:
+    '{{user}}目前是主持人，收回主持人权限可能会中断屏幕共享等',
+  meetingUserIsNowTheHost: '{{user}}已经成为主持人',
+  meetingReclaimHostFailed: '收回主持人失败',
 
   // 会前
   appTitle: '网易会议',
@@ -476,14 +485,14 @@ export default {
   updateUserNicknameSuccess: '修改昵称成功',
   updateUserNicknameFail: '修改昵称失败',
   emptyScheduleMeeting: '当前暂无即将召开的会议',
-  Monday: '周一',
-  Tuesday: '周二',
-  Wednesday: '周三',
-  Thursday: '周四',
-  Friday: '周五',
-  Saturday: '周六',
-  Sunday: '周日',
-  month: '月',
+  globalMonday: '周一',
+  globalTuesday: '周二',
+  globalWednesday: '周三',
+  globalThursday: '周四',
+  globalFriday: '周五',
+  globalSaturday: '周六',
+  globalSunday: '周日',
+  globalMonth: '月',
   historyMeeting: '历史会议',
   currentVersion: '当前版本',
   personalMeetingNum: '个人会议号',
@@ -525,7 +534,6 @@ export default {
   clearAllSuccess: '历史记录已清空',
   waitingRoomTip: '开启后新成员加入会议时会先加入等候室',
   subjectTitlePlaceholder: '请输入会议主题',
-  meetingInviteUrl: '会议邀请链接',
   endTime: '结束时间',
   meetingSetting: '会议设置',
   autoMute: '参会者加入会议时自动静音',
@@ -650,8 +658,8 @@ export default {
   settingPasswordFormatError: '密码格式错误，请重新输入',
   settingAccountInfo: '账号信息',
   settingConnectAdmin: '如需修改，请联系管理员后台修改',
-  settingUserName: '名称：',
-  settingEmail: '邮箱：',
+  settingUserName: '名称',
+  settingEmail: '邮箱',
   settingAccountSecurity: '账号安全',
   settingChangePassword: '修改密码',
   settingChangePasswordTip: '修改后您需要重新登录',
@@ -668,5 +676,96 @@ export default {
   settingExitApp: '退出应用',
   settingNotUpdate: '暂不更新',
   settingUPdateNow: '立即更新',
-  settingComfirmExitApp: '定退出应用',
+  settingConfirmExitApp: '定退出应用',
+
+  meetingPinView: '锁定视频',
+  meetingPinViewTip: '画面已锁定，点击{{corner}}取消锁定',
+  meetingTopLeftCorner: '左上角',
+  meetingBottomRightCorner: '右下角',
+  meetingUnpinView: '取消锁定视频',
+  meetingUnpinViewTip: '画面已解锁',
+  meetingUnpin: '取消锁定',
+  meetingPinFailedByFocus: '主持人已设置焦点视频，不支持该操作',
+  meetingBlacklist: '会议黑名单',
+  meetingBlacklistTip: '开启后，被标记"不允许再次加入”的用户将无法加入该会议',
+  meetingNotAllowedToRejoin: '不允许再次加入该会议',
+  unableMeetingBlacklistTip:
+    '关闭后将清空黑名单，被标记“不允许再次加入”的用户可重新加入会议',
+  unableMeetingBlacklistTitle: '确认关闭会议黑名单？',
+  meetingJoinBeforeHost: '允许参会者在主持人进会前加入会议',
+
+  waitingRoomAutoAdmit: '本次会议自动准入',
+  waitingRoomAdmitAll: '全部准入',
+  waitingRoomRemoveAll: '全部移除',
+  waitingRoomAdmitMember: '准入等候成员',
+  waitingRoomAdmitAllMembersTip: '是否允许等候室所有成员加入会议',
+  waitingRoomRemoveAllMemberTip: '将等候室的所有成员都移除',
+  meetingRepeatDate: '日期',
+  meetingRepeatWeekday: '星期',
+
+  meetingRepeatMeetings: '周期性会议',
+  meetingRepeatLabel: '重复',
+  meetingRepeatEnd: '结束',
+  meetingRepeatEveryday: '每天',
+  meetingRepeatEveryWeekday: '每个工作日',
+  meetingRepeatEveryWeek: '每周',
+  meetingRepeatEveryTwoWeek: '每两周',
+  meetingRepeatEveryMonth: '每月',
+  meetingRepeatOneDay: '某天',
+  meetingRepeatTimes: '限定会议次数',
+  meetingRepeatCustom: '自定义',
+  meetingRepeatFrequency: '频率',
+  meetingRepeatUnitDay: '天',
+  meetingRepeatUnitWeek: '周',
+  meetingRepeatUnitMonth: '月',
+  meetingRepeatAt: '位于',
+  meetingRepeatUnitEvery: '每',
+  meetingRepeat: '周期',
+  meetingRepeatOrderWeekday: '第{{week}}个 {{weekday}}',
+  meetingRepeatEditTips: '修改以下信息，将影响该系列周期性会议',
+  meetingRepeatEditing: '你正在编辑周期性会议',
+  meetingRepeatEditCurrent: '编辑本次会议',
+  meetingRepeatEditAll: '编辑所有会议',
+  meetingLeaveEditTips: '确认退出会议编辑吗？',
+  meetingRepeatCancelAll: '同时取消该系列周期性会议',
+  meetingLeaveEditTips2: '退出后，将无法保存当前会议的更改',
+  meetingEditContinue: '继续编辑',
+  meetingRepeatCancelEdit: '取消编辑',
+  meetingRepeatUncheckTips: '当前日程为{{date}}，无法取消选择',
+  settingAvatarTitle: '头像设置',
+  settingAvatarUpdateSuccess: '头像更新成功',
+  settingAvatarUpdateFail: '头像更新失败',
+
+  // 私聊
+  chatPrivate: '私聊',
+  chatPrivateInWaitingRoom: '等候室-私聊',
+  chatISaidTo: '我对{{userName}}说',
+  chatSaidToMe: '{{userName}} 对我说',
+  chatSaidToWaitingRoom: '{{userName}} 对等候室说',
+  chatISaidToWaitingRoom: '我对等候室所有人说',
+  meetingAllowMembersTo: '允许参会人员',
+  meetingChat: '会中聊天',
+  meetingChatEnabled: '会中聊天已开启',
+  meetingChatDisabled: '会中聊天已关闭',
+  chatMemberLeft: '参会者已离开会议',
+
+  // 质量监控
+  monitoring: '质量监控',
+  overall: '总体',
+  soundAndVideo: '音视频',
+  cpu: 'CPU',
+  memory: '内存',
+  network: '网络',
+  bandwidth: '带宽',
+  networkType: '网络类型',
+  delay: '延迟',
+  packageLossRate: '丢包率',
+  recently: '近',
+  bitrate: '码率',
+  speakerPlayback: '扬声器播放',
+  microphoneAcquisition: '麦克风采集',
+  resolution: '分辨率',
+  frameRate: '帧率',
+  moreMonitoring: '查看更多数据',
+  networkState: '网络状况',
 }

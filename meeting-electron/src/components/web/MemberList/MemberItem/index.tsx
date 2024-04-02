@@ -1,9 +1,10 @@
-import { Dropdown, MenuProps } from 'antd'
+import { Checkbox, Dropdown, MenuProps } from 'antd'
 import classNames from 'classnames'
-import React, { useMemo, useState } from 'react'
+import React, { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
+  ActionType,
   hostAction,
   memberAction,
   NEClientType,
@@ -14,13 +15,12 @@ import {
 
 import { errorCodeMap } from '../../../../config'
 import NEMeetingService from '../../../../services/NEMeeting'
-import { useGlobalContext } from '../../../../store'
+import { useGlobalContext, useMeetingInfoContext } from '../../../../store'
 import { substringByByte3 } from '../../../../utils'
 import AudioIcon from '../../../common/AudioIcon'
 import UserAvatar from '../../../common/Avatar'
 import Modal from '../../../common/Modal'
 import Toast from '../../../common/toast'
-import UpdateUserNicknameModal from '../../BeforeMeetingModal/UpdateUserNicknameModal'
 import './index.less'
 
 interface MemberItemProps {
@@ -42,6 +42,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
 }) => {
   const { t } = useTranslation()
   const { eventEmitter } = useGlobalContext()
+  const { dispatch } = useMeetingInfoContext()
 
   const { localMember } = meetingInfo
   const isWhiteSharer = meetingInfo.whiteboardUuid === localMember.uuid
@@ -50,6 +51,10 @@ const MemberItem: React.FC<MemberItemProps> = ({
   const isFocus = meetingInfo.focusUuid === data.uuid
   const isScreen = !!meetingInfo.screenUuid
   const isMySelf = localMember.uuid === data.uuid
+
+  const isElectronSharingScreen = useMemo(() => {
+    return window.ipcRenderer && localMember.isSharingScreen
+  }, [localMember.isSharingScreen])
 
   const name = useMemo(() => {
     const nickName = substringByByte3(data.name, 20)
@@ -64,10 +69,31 @@ const MemberItem: React.FC<MemberItemProps> = ({
       remarks.push(t('coHost'))
     }
     if (localMember.uuid === data.uuid) {
-      remarks.push(t('me'))
+      remarks.push(t('participantMe'))
     }
     return `${nickName} ${remarks.length ? `(${remarks.join(',')})` : ''}`
   }, [localMember, meetingInfo, data, t])
+
+  const privateChatItemShow = useMemo(() => {
+    // 自己不显示私聊
+    if (data.uuid === localMember.uuid) {
+      return false
+    }
+    if (isHost || isCoHost) {
+      return true
+    }
+    // 会议中的聊天权限
+    if (meetingInfo.meetingChatPermission === 4) {
+      return false
+    }
+    if (data.role === Role.host || data.role === Role.coHost) {
+      return true
+    }
+    if (meetingInfo.meetingChatPermission === 1) {
+      return true
+    }
+    return false
+  }, [localMember, meetingInfo, data, isCoHost, isHost])
 
   let items: {
     key: memberAction | hostAction
@@ -140,6 +166,82 @@ const MemberItem: React.FC<MemberItemProps> = ({
       },
     },
   ]
+  const pinViewItems = [
+    {
+      key: memberAction.pinView,
+      label: t('meetingPinView'),
+      isShow:
+        data.isVideoOn &&
+        data.uuid !== meetingInfo.pinVideoUuid &&
+        !meetingInfo.focusUuid &&
+        !isElectronSharingScreen,
+      onClick: async () => {
+        dispatch?.({
+          type: ActionType.UPDATE_MEETING_INFO,
+          data: {
+            pinVideoUuid: data.uuid,
+          },
+        })
+      },
+    },
+    {
+      key: memberAction.unpinView,
+      label: t('meetingUnpinView'),
+      isShow: data.uuid == meetingInfo.pinVideoUuid && !isElectronSharingScreen,
+      onClick: async () => {
+        dispatch?.({
+          type: ActionType.UPDATE_MEETING_INFO,
+          data: {
+            pinVideoUuid: '',
+          },
+        })
+      },
+    },
+  ]
+  const privateChatItems = [
+    {
+      key: memberAction.privateChat,
+      label: t('chatPrivate'),
+      isShow: privateChatItemShow,
+      onClick: () => {
+        neMeeting?.sendMemberControl(memberAction.privateChat, data.uuid)
+      },
+    },
+  ]
+
+  const removeDialog = () => {
+    let isChecked = false
+    Modal.confirm({
+      title: t('participantRemove'),
+      width: 270,
+      content: (
+        <>
+          <div>{t('participantRemoveConfirm') + data.name}</div>
+          {meetingInfo.enableBlacklist && (
+            <Checkbox
+              className="close-checkbox-tip"
+              onChange={(e) => (isChecked = e.target.checked)}
+            >
+              {t('meetingNotAllowedToRejoin')}
+            </Checkbox>
+          )}
+        </>
+      ),
+      onOk: async () => {
+        try {
+          await neMeeting?.sendHostControl(
+            hostAction.remove,
+            data.uuid,
+            isChecked
+          )
+        } catch (e: any) {
+          console.log('remove error', e)
+          Toast.fail(e.message || e.msg || t('participantFailedToRemove'))
+        }
+      },
+    })
+  }
+
   if (isHost || isCoHost) {
     items.push(
       ...[
@@ -154,13 +256,13 @@ const MemberItem: React.FC<MemberItemProps> = ({
                 data.uuid
               )
             } catch {
-              Toast.fail(t('putMemberHandsDownFail'))
+              Toast.fail(t('participantFailedToLowerHand'))
             }
           },
         },
         {
           key: hostAction.muteMemberAudio,
-          label: t('muteAudio'),
+          label: t('participantMute'),
           isShow: data.isAudioOn && data.isAudioConnected,
           onClick: async () => {
             try {
@@ -173,13 +275,13 @@ const MemberItem: React.FC<MemberItemProps> = ({
                 )
               }
             } catch {
-              Toast.fail(t('muteAudioFail'))
+              Toast.fail(t('participantMuteAudioFail'))
             }
           },
         },
         {
           key: hostAction.unmuteMemberAudio,
-          label: t('unMuteAudio'),
+          label: t('participantUnmute'),
           isShow: !data.isAudioOn && data.isAudioConnected,
           onClick: async () => {
             try {
@@ -200,7 +302,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
         },
         {
           key: hostAction.muteMemberVideo,
-          label: t('muteVideo'),
+          label: t('participantStopVideo'),
           isShow: data.isVideoOn,
           onClick: async () => {
             try {
@@ -213,13 +315,13 @@ const MemberItem: React.FC<MemberItemProps> = ({
                 )
               }
             } catch {
-              Toast.fail(t('muteVideoFail'))
+              Toast.fail(t('participantMuteVideoFail'))
             }
           },
         },
         {
           key: hostAction.unmuteMemberVideo,
-          label: t('unMuteVideo'),
+          label: t('participantStartVideo'),
           isShow: !data.isVideoOn,
           onClick: async () => {
             try {
@@ -240,7 +342,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
         },
         {
           key: hostAction.muteVideoAndAudio,
-          label: t('muteVideoAndAudio'),
+          label: t('participantTurnOffAudioAndVideo'),
           isShow: data.isVideoOn && data.isAudioOn,
           onClick: async () => {
             try {
@@ -276,40 +378,42 @@ const MemberItem: React.FC<MemberItemProps> = ({
             }
           },
         },
+        ...privateChatItems,
         {
           key: hostAction.setFocus,
-          label: t('focusVideo'),
+          label: t('participantAssignActiveSpeaker'),
           isShow: !isFocus && !isScreen,
           onClick: async () => {
             try {
               await neMeeting?.sendHostControl(hostAction.setFocus, data.uuid)
             } catch {
-              Toast.fail(t('focusVideoFail'))
+              Toast.fail(t('participantFailedToAssignActiveSpeaker'))
             }
           },
         },
         {
           key: hostAction.unsetFocus,
-          label: t('unFocusVideo'),
+          label: t('participantUnassignActiveSpeaker'),
           isShow: isFocus && !isScreen,
           onClick: async () => {
             try {
               await neMeeting?.sendHostControl(hostAction.unsetFocus, data.uuid)
             } catch {
-              Toast.fail(t('unFocusVideoFail'))
+              Toast.fail(t('participantFailedToUnassignActiveSpeaker'))
             }
           },
         },
+        ...pinViewItems,
         {
           key: hostAction.closeScreenShare,
-          label: t('unScreenShare'),
+          label: t('screenShareStop'),
           isShow:
             data.role !== Role.host &&
             meetingInfo.screenUuid === data.uuid &&
             localMember.uuid !== data.uuid,
           onClick: () => {
             Modal.confirm({
-              title: t('unScreenShare'),
+              title: t('screenShareStop'),
               content: t('closeCommonTips') + t('closeScreenShareTips'),
               onOk: async () => {
                 try {
@@ -326,12 +430,12 @@ const MemberItem: React.FC<MemberItemProps> = ({
         },
         {
           key: hostAction.closeWhiteShare,
-          label: t('closeWhiteBoard'),
+          label: t('whiteBoardClose'),
           isShow:
             data.role !== Role.host && meetingInfo.whiteboardUuid === data.uuid,
           onClick: () => {
             Modal.confirm({
-              title: t('closeWhiteBoard'),
+              title: t('whiteBoardClose'),
               content: t('closeCommonTips') + t('closeWhiteShareTips'),
               onOk: async () => {
                 try {
@@ -354,13 +458,15 @@ const MemberItem: React.FC<MemberItemProps> = ({
       ...[
         {
           key: hostAction.transferHost,
-          label: t('handOverHost'),
+          label: t('participantTransferHost'),
           isShow:
             data.role !== Role.host && data.clientType !== NEClientType.SIP,
           onClick: () => {
             Modal.confirm({
-              title: t('handOverHost'),
-              content: t('handOverHostTips') + data.name,
+              title: t('participantTransferHost'),
+              content: t('participantTransferHostConfirm', {
+                userName: data.name,
+              }),
               onOk: async () => {
                 try {
                   await neMeeting?.sendHostControl(
@@ -368,7 +474,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
                     data.uuid
                   )
                 } catch {
-                  Toast.fail(t('handOverHostFail'))
+                  Toast.fail(t('participantFailedToTransferHost'))
                 }
               },
             })
@@ -376,7 +482,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
         },
         {
           key: hostAction.setCoHost,
-          label: t('handSetCoHost'),
+          label: t('participantAssignCoHost'),
           isShow:
             data.role !== Role.host &&
             data.role !== Role.coHost &&
@@ -395,7 +501,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
         },
         {
           key: hostAction.unSetCoHost,
-          label: t('handUnSetCoHost'),
+          label: t('participantUnassignCoHost'),
           isShow:
             data.role === Role.coHost && data.clientType !== NEClientType.SIP,
           onClick: async () => {
@@ -404,8 +510,8 @@ const MemberItem: React.FC<MemberItemProps> = ({
                 hostAction.unSetCoHost,
                 data.uuid
               )
-            } catch {
-              // TODO:
+            } catch (e: any) {
+              Toast.fail(e.message || e.msg || e.code)
             }
           },
         },
@@ -413,20 +519,10 @@ const MemberItem: React.FC<MemberItemProps> = ({
         ...waitingRoomItems,
         {
           key: hostAction.remove,
-          label: t('removeMember'),
+          label: t('participantRemove'),
           isShow: data.role !== Role.host,
           onClick: () => {
-            Modal.confirm({
-              title: t('removeMember'),
-              content: t('removeMemberTips') + data.name,
-              onOk: async () => {
-                try {
-                  await neMeeting?.sendHostControl(hostAction.remove, data.uuid)
-                } catch {
-                  Toast.fail(t('removeMemberFail'))
-                }
-              },
-            })
+            removeDialog()
           },
         },
       ]
@@ -439,28 +535,39 @@ const MemberItem: React.FC<MemberItemProps> = ({
       ...[
         {
           key: hostAction.remove,
-          label: t('removeMember'),
+          label: t('participantRemove'),
           isShow: data.role !== Role.host && data.uuid !== localMember.uuid,
           onClick: () => {
-            Modal.confirm({
-              title: t('removeMember'),
-              content: t('removeMemberTips') + data.name,
-              onOk: async () => {
-                try {
-                  await neMeeting?.sendHostControl(hostAction.remove, data.uuid)
-                } catch {
-                  Toast.fail(t('removeMemberFail'))
-                }
-              },
-            })
+            removeDialog()
           },
         },
       ]
     )
   }
   if (!isCoHost && !isHost) {
-    items.push(...whiteBoardItems)
+    items.push(...privateChatItems, ...pinViewItems, ...whiteBoardItems)
   }
+  // 收回主持人，
+  if (!isHost) {
+    items.push({
+      key: memberAction.takeBackTheHost,
+      label: t('meetingReclaimHost'),
+      onClick: async () => {
+        try {
+          await neMeeting?.sendMemberControl(
+            memberAction.takeBackTheHost,
+            data.uuid
+          )
+        } catch {
+          Toast.fail(t('meetingReclaimHostFailed'))
+        }
+      },
+      // 需要判断自己是否是主持人，是当前的会议拥有者
+      isShow:
+        meetingInfo.ownerUserUuid === localMember.uuid && data.role === 'host',
+    })
+  }
+
   items = items.filter((item) => {
     const { isShow } = item
     delete item.isShow
@@ -507,6 +614,11 @@ const MemberItem: React.FC<MemberItemProps> = ({
             aria-hidden="true"
           >
             <use xlinkHref="#iconyx-baiban" />
+          </svg>
+        )}
+        {meetingInfo.focusUuid === data.uuid && (
+          <svg className="icon iconfont" aria-hidden="true">
+            <use xlinkHref="#iconjiaodian1" />
           </svg>
         )}
         <svg

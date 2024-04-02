@@ -1,13 +1,15 @@
-import { Slider, Radio, message } from 'antd'
-import { useEffect, useRef, useState } from 'react'
-import PlusCircleOutlined from '@ant-design/icons/PlusCircleOutlined'
 import CloseCircleFilled from '@ant-design/icons/CloseCircleFilled'
-import { EventType, NERoomBeautyEffectType } from '../../../types'
-import YUVCanvas from '../../../libs/yuv-canvas'
+import PlusCircleOutlined from '@ant-design/icons/PlusCircleOutlined'
+import { message, Radio, Slider } from 'antd'
 import EventEmitter from 'eventemitter3'
 import { NEPreviewController } from 'neroom-web-sdk'
+import { useEffect, useRef, useState } from 'react'
 import { IPCEvent } from '../../../../app/src/types'
+import YUVCanvas from '../../../libs/yuv-canvas'
+import { EventType, NERoomBeautyEffectType } from '../../../types'
+import { getYuvFrame } from '../../../utils/yuvFrame'
 import { useTranslation } from 'react-i18next'
+import { useCanvasSetting } from './useSetting'
 
 interface virtualBackground {
   src: string
@@ -25,6 +27,7 @@ interface BeautySettingProps {
   enableVideoMirroring: boolean
   eventEmitter: EventEmitter
   previewController: NEPreviewController
+  inMeeting?: boolean
 }
 enum tagNERoomVirtualBackgroundSourceStateReason {
   kNERoomVirtualBackgroundSourceStateReasonSuccess = 0 /**< 虚拟背景开启成功 */,
@@ -47,6 +50,7 @@ const BeautySetting: React.FC<BeautySettingProps> = ({
   enableVideoMirroring,
   previewController,
   eventEmitter,
+  inMeeting,
 }) => {
   const { t } = useTranslation()
   const i18n = {
@@ -56,12 +60,11 @@ const BeautySetting: React.FC<BeautySettingProps> = ({
     deviceNotSupport: t('virtualBackgroundError4'),
     virtualEnableFailed: t('virtualBackgroundError5'),
   }
+  const { videoCanvas, canvasRef } = useCanvasSetting()
   const [options, setOptions] = useState([
-    { label: t('beauty'), value: 'beauty', disabled: false },
+    { label: t('meetingBeauty'), value: 'beauty', disabled: false },
     { label: t('virtualBackground'), value: 'virtual', disabled: false },
   ])
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const videoCanvas = useRef<HTMLDivElement>(null)
 
   const isOpeningFileWindowRef = useRef<boolean>(false) // 防止重复打开文件选择窗口
 
@@ -98,7 +101,7 @@ const BeautySetting: React.FC<BeautySettingProps> = ({
   function handleVirtualBackgroundChange(path) {
     onVirtualBackgroundChange(path)
     //@ts-ignore
-    previewController?.enableVirtualBackground(!!path, path)
+    // previewController?.enableVirtualBackground(!!path, path)
 
     window.ipcRenderer?.removeAllListeners(
       EventType.rtcVirtualBackgroundSourceEnabled
@@ -192,64 +195,20 @@ const BeautySetting: React.FC<BeautySettingProps> = ({
       virtualBackgroundPath &&
         handleVirtualBackgroundChange(virtualBackgroundPath)
     }
-    //@ts-ignore
-    previewController.startBeauty()
-    //@ts-ignore
-    previewController.enableBeauty(true)
-    //@ts-ignore
-    previewController.setupLocalVideoCanvas(targetElement)
+    if (!inMeeting) {
+      //@ts-ignore
+      previewController.startBeauty()
+      //@ts-ignore
+      previewController.enableBeauty(true)
+      //@ts-ignore
+      previewController.setupLocalVideoCanvas(targetElement)
+    }
     // if(window.isWins32) {
     // windows 如果设置页面和会中页面同时打开设备会占用，所以统一到会中渲染进程开启
     window.ipcRenderer?.send(IPCEvent.previewController, {
       method: 'startPreview',
       args: [],
     })
-
-    const canvas = canvasRef.current
-    const yuv = YUVCanvas.attach(canvas)
-    function handleVideoFrameData(
-      event,
-      uuid,
-      bSubVideo,
-      data,
-      type,
-      width,
-      height
-    ) {
-      if (canvas && videoCanvas.current) {
-        canvas.style.height = `${videoCanvas.current.clientHeight}px`
-      }
-      const buffer = {
-        format: {
-          width,
-          height,
-          chromaWidth: width / 2,
-          chromaHeight: height / 2,
-          cropLeft: 0, // default
-          cropTop: 0, // default
-          cropHeight: height,
-          cropWidth: width,
-          displayWidth: width, // derived from width via cropWidth
-          displayHeight: height, // derived from cropHeight
-        },
-        ...data,
-      }
-      yuv.drawFrame(buffer)
-    }
-    if (window.isElectronNative) {
-      window.ipcRenderer?.on(
-        EventType.previewVideoFrameData,
-        handleVideoFrameData
-      )
-    }
-    return () => {
-      if (window.isElectronNative) {
-        window.ipcRenderer?.off(
-          EventType.previewVideoFrameData,
-          handleVideoFrameData
-        )
-      }
-    }
   }, [previewController])
 
   useEffect(() => {

@@ -14,15 +14,23 @@ export default function NPSPage() {
     appKey: '',
     nickname: '',
   });
-  const { search } = useLocation();
   useEffect(() => {
-    const paramsIter = new URLSearchParams(window.location.search || search);
-    const paramsObject: any = {};
-    for (const [key, value] of paramsIter.entries()) {
-      paramsObject[key] = value;
+    // 设置页面标题
+    setTimeout(() => {
+      document.title = 'NPS';
+    });
+
+    function handleMessage(e: MessageEvent) {
+      const { event, payload } = e.data;
+      if (event === 'setNpsInfo') {
+        setNpsProps(payload);
+      }
     }
-    console.log('paramsObject>>>', paramsObject);
-    setNpsProps(paramsObject);
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

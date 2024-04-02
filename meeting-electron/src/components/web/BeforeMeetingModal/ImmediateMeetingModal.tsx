@@ -1,28 +1,19 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import classNames from 'classnames'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
-import './index.less'
-import Modal from '../../common/Modal'
-import {
-  Button,
-  Input,
-  Form,
-  Checkbox,
-  ModalProps,
-  Popover,
-  Divider,
-  Tag,
-} from 'antd'
+import { Button, Checkbox, Form, Input, ModalProps, Tag } from 'antd'
+import EventEmitter from 'eventemitter3'
+import { NEDeviceBaseInfo, NEPreviewController } from 'neroom-web-sdk'
+import YUVCanvas from '../../../libs/yuv-canvas'
 import {
   EventType,
   MeetingSetting,
   NERoomBeautyEffectType,
 } from '../../../types'
-import { NEPreviewController } from 'neroom-web-sdk'
 import { SettingTabType } from '../Setting/Setting'
-import YUVCanvas from '../../../libs/yuv-canvas'
-import EventEmitter from 'eventemitter3'
 import { useTranslation } from 'react-i18next'
+import { getYuvFrame } from '../../../utils/yuvFrame'
+import Modal from '../../common/Modal'
 import UserAvatar from '../../common/Avatar'
 import { getDefaultDeviceId } from '../../../utils'
 
@@ -404,22 +395,7 @@ const ImmediateMeetingModal: React.FC<ImmediateMeetingModalProps> = ({
         if (canvas && videoPreviewRef.current) {
           canvas.style.height = `${videoPreviewRef.current.clientHeight}px`
         }
-        const buffer = {
-          format: {
-            width,
-            height,
-            chromaWidth: width / 2,
-            chromaHeight: height / 2,
-            cropLeft: 0, // default
-            cropTop: 0, // default
-            cropHeight: height,
-            cropWidth: width,
-            displayWidth: width, // derived from width via cropWidth
-            displayHeight: height, // derived from cropHeight
-          },
-          ...data,
-        }
-        yuv.drawFrame(buffer)
+        yuv.drawFrame(getYuvFrame(data, width, height))
       }
       if (window.isElectronNative) {
         eventEmitter.on(EventType.previewVideoFrameData, handleVideoFrameData)

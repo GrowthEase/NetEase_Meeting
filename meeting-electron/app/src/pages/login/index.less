@@ -7,13 +7,24 @@
   }
 }
 
-.before-login {
+.before-login-wrap {
+  display: flex;
+  flex-direction: column;
   width: 375px;
   height: 670px;
   background: #ffffff;
   box-shadow: 0 10px 30px rgba(47, 56, 111, 0.1);
   border-radius: 10px;
+  box-sizing: border-box;
+  .electron-drag-bar {
+    border-bottom: none;
+  }
+}
+.before-login {
+  background: #ffffff;
+  border-radius: 10px;
   display: flex;
+  flex: 1;
   position: relative;
   align-items: center;
   flex-direction: column;

@@ -144,6 +144,9 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
                   : members.map((member: NEMember, i: number) => {
                       return (
                         <VideoCard
+                          canPinVideo={
+                            memberList.length > 1 && member.isVideoOn
+                          }
                           showBorder={
                             meetingInfo.focusUuid
                               ? meetingInfo.focusUuid === member.uuid

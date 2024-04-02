@@ -10,132 +10,79 @@ import {
   WATERMARK_STRATEGY,
 } from '../../../../src/types';
 import SpeakerList from '../../../../src/components/web/SpeakerList';
-import YUVCanvas from '../../../../src/libs/yuv-canvas';
 import {
   drawWatermark,
   stopDrawWatermark,
 } from '../../../../src/utils/watermark';
+import { worker } from '../../../../src/components/web/Meeting/Meeting';
+import UserAvatar from '../../../../src/components/common/Avatar';
 
 const VideoCard: React.FC<{
   member: NEMember;
   sharingScreen: boolean;
   volume: number;
   isMySelf: boolean;
-}> = ({ member, sharingScreen, volume, isMySelf }) => {
+}> = ({ member, volume, isMySelf }) => {
   const viewRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  /*
-  function getPosition() {
-    if (member.isVideoOn) {
-      const targetElement = document.getElementById(
-        `nemeeting-${member.uuid}-video-card`,
-      );
-      if (targetElement) {
-        const rect = targetElement.getBoundingClientRect();
-        // 计算相对于<body>的位置
-        const bodyRect = document.body.getBoundingClientRect();
-        const relativePosition = {
-          x: rect.x - bodyRect.x,
-          y: rect.y - bodyRect.y,
-          width: targetElement.clientWidth,
-          height: targetElement.clientHeight,
-        };
-        window.ipcRenderer?.send('nemeeting-video-card-open', {
-          uuid: member.uuid,
-          position: relativePosition,
-          mirroring: false,
-          type: 'video',
-          isMySelf: isMySelf,
-          streamType: 1,
-        });
-      }
-    }
-  }
-  */
 
-  /*
-  useEffect(() => {
-    if (sharingScreen) {
-      setTimeout(() => {
-        getPosition();
-      }, 100);
-      return () => {
-        window.ipcRenderer?.send('nemeeting-video-card-close', {
-          uuid: member.uuid,
-          type: 'video',
-        });
-      };
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [member.isVideoOn, sharingScreen]);
-  */
+  const isInPhone = useMemo(() => {
+    return member.properties?.phoneState?.value == '1';
+  }, [member.properties?.phoneState?.value]);
 
   useEffect(() => {
-    if (member.isVideoOn) {
-      window.ipcRenderer?.send('nemeeting-sharing-screen', {
-        method: 'videoOpen',
-        data: {
+    const canvas = canvasRef.current;
+    if (canvas && viewRef.current) {
+      canvas.style.height = `${viewRef.current.clientHeight}px`;
+      // @ts-ignore
+      const offscreen = canvas.transferControlToOffscreen();
+      worker.postMessage(
+        {
+          canvas: offscreen,
           uuid: member.uuid,
-          isMySelf,
         },
-      });
+        [offscreen],
+      );
+    }
+  }, [member.uuid]);
 
-      const canvas = canvasRef.current;
-      if (canvas && viewRef.current) {
-        const yuv = YUVCanvas.attach(canvas);
-        function handle(
-          _: any,
-          uuid: string,
-          bSubVideo: boolean,
-          data: any,
-          type: string,
-          width: number,
-          height: number,
-        ) {
-          if (uuid === member.uuid) {
-            if (canvas && viewRef.current) {
-              canvas.style.height = `${viewRef.current.clientHeight}px`;
-            }
-            const uvWidth = width / 2;
-            let pixelStorei = 1;
-            if (uvWidth % 8 === 0) {
-              pixelStorei = 8;
-            } else if (uvWidth % 4 === 0) {
-              pixelStorei = 4;
-            } else if (uvWidth % 2 === 0) {
-              pixelStorei = 2;
-            }
-            const buffer = {
-              format: {
-                width,
-                height,
-                chromaWidth: width / 2,
-                chromaHeight: height / 2,
-                cropLeft: 0, // default
-                cropTop: 0, // default
-                cropHeight: height,
-                cropWidth: width,
-                displayWidth: width, // derived from width via cropWidth
-                displayHeight: height, // derived from cropHeight
-                pixelStorei,
-              },
-              ...data,
-            };
-            yuv.drawFrame(buffer);
-          }
-        }
-        window.ipcRenderer?.on('onVideoFrameData', handle);
-        return () => {
-          window.ipcRenderer?.send('nemeeting-sharing-screen', {
-            method: 'videoClose',
-            data: {
-              uuid: member.uuid,
-              isMySelf,
+  useEffect(() => {
+    if (member.isVideoOn) {
+      const parentWindow = window.parent;
+      if (!isMySelf) {
+        parentWindow?.postMessage(
+          {
+            event: 'rtcController',
+            payload: {
+              fnKey: 'setupRemoteVideoCanvas',
+              args: ['', member.uuid],
             },
-          });
-          window.ipcRenderer?.removeListener('onVideoFrameData', handle);
-        };
+          },
+          '*',
+        );
+        parentWindow?.postMessage({
+          event: 'rtcController',
+          payload: {
+            fnKey: 'subscribeRemoteVideoStream',
+            args: [member.uuid, 1],
+          },
+        });
       }
+
+      return () => {
+        if (!isMySelf) {
+          parentWindow?.postMessage(
+            {
+              event: 'rtcController',
+              payload: {
+                fnKey: 'unsubscribeRemoteVideoStream',
+                args: [member.uuid],
+              },
+            },
+            '*',
+          );
+        }
+      };
     }
   }, [member.isVideoOn, member.uuid, isMySelf]);
 
@@ -145,16 +92,35 @@ const VideoCard: React.FC<{
       key={member.uuid}
       id={`nemeeting-${member.uuid}-video-card`}
       ref={viewRef}
-      // style={{
-      //   background: member.isVideoOn ? 'transparent' : undefined,
-      // }}
     >
       <canvas
         ref={canvasRef}
         className="nemeeting-video-view-canvas"
         style={{ display: member.isVideoOn ? '' : 'none' }}
       />
-      {member.isVideoOn ? '' : member.name}
+      {member.isVideoOn ? (
+        ''
+      ) : (
+        <UserAvatar
+          size={48}
+          nickname={member.name}
+          avatar={member.avatar}
+          className=""
+        />
+      )}
+      {isInPhone ? (
+        <>
+          <div className="nemeeting-audio-card-phone-icon">
+            <svg
+              className="icon iconfont nemeeting-icon-phone"
+              style={{ fontSize: '32px' }}
+              aria-hidden="true"
+            >
+              <use xlinkHref="#icondianhua"></use>
+            </svg>
+          </div>
+        </>
+      ) : null}
       <div className={'nickname-tip'}>
         <div className="nickname">
           {member.isAudioConnected ? (
@@ -180,7 +146,6 @@ export default function VideoPage() {
   const [videoCount, setVideoCount] = useState(1);
   const [pageNum, setPageNum] = useState(1);
   const [volumeMap, setVolumeMap] = useState<Record<string, number>>({});
-  const [isSharing, setIsSharing] = useState(false);
 
   const memberListRef = useRef<NEMember[]>([]);
 
@@ -241,131 +206,66 @@ export default function VideoPage() {
   }, [memberList, volumeMap]);
 
   useEffect(() => {
-    if (videoCount === 4) {
-      window.ipcRenderer?.send('nemeeting-sharing-screen', {
-        method: 'videoWindowHeightChange',
-        data: {
-          height: 120 * memberListFilter.length,
-        },
-      });
+    let height = 35;
+    if (videoCount === 1) {
+      height = 120;
+    } else if (videoCount === 4) {
+      height = 120 * memberListFilter.length;
     }
+    window.ipcRenderer?.send('nemeeting-sharing-screen', {
+      method: 'videoWindowHeightChange',
+      data: {
+        height,
+      },
+    });
   }, [memberListFilter.length, videoCount]);
 
   useEffect(() => {
-    window.ipcRenderer?.send('nemeeting-sharing-screen', {
-      method: 'videoCountModelChange',
-      data: {
-        videoCount,
-      },
-    });
-  }, [videoCount]);
-
-  useEffect(() => {
-    window.ipcRenderer?.on('updateData', (_, data) => {
-      const { meetingInfo, memberList } = data;
-      setMeetingInfo(meetingInfo);
-      setMemberList(memberList);
-    });
-    window.ipcRenderer?.on('nemeeting-sharing-screen', (_, value) => {
-      const { method, data } = value;
-      switch (method) {
-        case 'startScreenShare':
-          memberListRef.current.forEach((member) => {
-            if (member.isVideoOn) {
-              window.ipcRenderer?.send('nemeeting-sharing-screen', {
-                method: 'videoClose',
-                data: {
-                  uuid: member.uuid,
-                },
-              });
-            }
-          });
-          setIsSharing(true);
-          break;
-        case 'stopScreenShare':
-          setIsSharing(false);
-          break;
-        case 'videoCountModelChange':
-          const { videoCount } = data;
-          setVideoCount(videoCount);
-          break;
+    function handleMessage(e: MessageEvent) {
+      const { event, payload } = e.data;
+      if (event === 'onVideoFrameData') {
+        const { uuid, data, width, height } = payload;
+        worker.postMessage(
+          {
+            frame: {
+              width,
+              height,
+              data,
+            },
+            uuid,
+          },
+          [data.bytes.buffer],
+        );
+      } else if (event === 'updateData') {
+        const { meetingInfo, memberList } = payload;
+        setMeetingInfo(meetingInfo);
+        setMemberList(memberList);
       }
+    }
+    window.addEventListener('message', handleMessage);
+    window.ipcRenderer?.send('nemeeting-sharing-screen', {
+      method: 'videoWindowOpen',
     });
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
   }, []);
 
   useEffect(() => {
-    if (meetingInfo?.localMember?.uuid) {
-      const listener = (_: any, value: any) => {
-        const { method, data } = value;
-        switch (method) {
-          case 'audioVolumeIndication':
-            const { key, payload } = data;
-            if (key === EventType.RtcLocalAudioVolumeIndication) {
-              setVolumeMap((prev) => ({
-                ...prev,
-                [meetingInfo.localMember.uuid]: payload,
-              }));
-            }
-            if (key === EventType.RtcAudioVolumeIndication) {
-              payload.forEach((item: any) => {
-                setVolumeMap((prev) => ({
-                  ...prev,
-                  [item.userUuid]: item.volume,
-                }));
-              });
-            }
-            break;
-        }
-      };
-      window.ipcRenderer?.on('nemeeting-sharing-screen', listener);
-      return () => {
-        window.ipcRenderer?.off('nemeeting-sharing-screen', listener);
-      };
-    }
-  }, [volumeMap, meetingInfo?.localMember?.uuid]);
-
-  useEffect(() => {
-    if (meetingInfo && videoPageDomRef.current) {
-      const localMember = meetingInfo?.localMember;
-      const needDrawWatermark =
-        meetingInfo.meetingNum &&
-        meetingInfo.watermark &&
-        (meetingInfo.watermark.videoStrategy === WATERMARK_STRATEGY.OPEN ||
-          meetingInfo.watermark.videoStrategy ===
-            WATERMARK_STRATEGY.FORCE_OPEN);
-
-      if (needDrawWatermark && meetingInfo.watermark) {
-        const { videoStyle, videoFormat } = meetingInfo.watermark;
-        const supportInfo = {
-          name: meetingInfo.watermarkConfig?.name || localMember.name,
-          phone: meetingInfo.watermarkConfig?.phone || '',
-          email: meetingInfo.watermarkConfig?.email || '',
-          jobNumber: meetingInfo.watermarkConfig?.jobNumber || '',
-        };
-        function replaceFormat(format: string, info: Record<string, string>) {
-          const regex = /{([^}]+)}/g;
-          const result = format.replace(regex, (match, key) => {
-            const value = info[key];
-            return value ? value : match; // 如果值存在，则返回对应的值，否则返回原字符串
-          });
-          return result;
-        }
-
-        drawWatermark({
-          container: videoPageDomRef.current,
-          content: replaceFormat(videoFormat, supportInfo),
-          type: videoStyle,
-          offsetX: 20,
-          offsetY: 30,
+    function handleMessage(e: MessageEvent) {
+      const { event, payload } = e.data;
+      if (event === 'audioVolumeIndication') {
+        setVolumeMap({
+          ...volumeMap,
+          [payload.userUuid]: payload.volume,
         });
-      } else {
-        stopDrawWatermark();
       }
-      return () => {
-        stopDrawWatermark();
-      };
     }
-  }, [meetingInfo, memberListFilter]);
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [volumeMap]);
 
   return (
     <>
@@ -399,50 +299,47 @@ export default function VideoPage() {
         </svg>
         <div className="drag-area"></div>
       </div>
-      {isSharing ? (
-        <div className="video-page" ref={videoPageDomRef}>
-          {videoCount === 4 && (
-            <>
-              {pageNum > 1 && (
-                <svg
-                  className="icon iconfont page-turn-icon previous-page"
-                  aria-hidden="true"
-                  onClick={() => setPageNum((prev) => prev - 1)}
-                >
-                  <use xlinkHref="#icontriangle-up1x"></use>
-                </svg>
-              )}
-              {pageNum < pageTotal && (
-                <svg
-                  className="icon iconfont page-turn-icon next-page"
-                  aria-hidden="true"
-                  onClick={() => setPageNum((prev) => prev + 1)}
-                >
-                  <use xlinkHref="#icontriangle-down1x"></use>
-                </svg>
-              )}
-            </>
-          )}
-
-          {videoCount === 0 ? (
-            <SpeakerList speakerList={speakerList} />
-          ) : (
-            memberListFilter?.map((member) =>
-              member ? (
-                <VideoCard
-                  sharingScreen={
-                    meetingInfo?.localMember.isSharingScreen ?? false
-                  }
-                  member={member}
-                  key={pageNum + member.uuid}
-                  volume={volumeMap[member.uuid] || 0}
-                  isMySelf={member.uuid === meetingInfo?.localMember.uuid}
-                />
-              ) : null,
-            )
-          )}
-        </div>
-      ) : null}
+      <div className="video-page" ref={videoPageDomRef}>
+        {videoCount === 4 && (
+          <>
+            {pageNum > 1 && (
+              <svg
+                className="icon iconfont page-turn-icon previous-page"
+                aria-hidden="true"
+                onClick={() => setPageNum((prev) => prev - 1)}
+              >
+                <use xlinkHref="#icontriangle-up1x"></use>
+              </svg>
+            )}
+            {pageNum < pageTotal && (
+              <svg
+                className="icon iconfont page-turn-icon next-page"
+                aria-hidden="true"
+                onClick={() => setPageNum((prev) => prev + 1)}
+              >
+                <use xlinkHref="#icontriangle-down1x"></use>
+              </svg>
+            )}
+          </>
+        )}
+        {videoCount === 0 ? (
+          <SpeakerList speakerList={speakerList} />
+        ) : (
+          memberListFilter?.map((member) =>
+            member ? (
+              <VideoCard
+                sharingScreen={
+                  meetingInfo?.localMember.isSharingScreen ?? false
+                }
+                member={member}
+                key={pageNum + member.uuid}
+                volume={volumeMap[member.uuid] || 0}
+                isMySelf={member.uuid === meetingInfo?.localMember.uuid}
+              />
+            ) : null,
+          )
+        )}
+      </div>
     </>
   );
 }

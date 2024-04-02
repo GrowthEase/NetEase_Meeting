@@ -47,14 +47,23 @@ import { Button, message } from 'antd'
 import { NEMemberVolumeInfo } from 'neroom-web-sdk/dist/types/platform/web/type'
 import { useTranslation } from 'react-i18next'
 import { IPCEvent } from '../../../../app/src/types'
+import usePostMessageHandle from '../../../hooks/usePostMessagehandle'
 import usePreviewHandler from '../../../hooks/usePreviewHandler'
 import eleIpc from '../../../services/electron/index'
 import { drawWatermark, stopDrawWatermark } from '../../../utils/watermark'
+import {
+  closeAllWindows,
+  closeWindow,
+  getActiveWindows,
+  getWindow,
+  openWindow,
+} from '../../../utils/windowsProxy'
 import PCTopButtons from '../../common/PCTopButtons'
 import Toast from '../../common/toast'
 import ScreenShareListModal, {
   ScreenShareModalRef,
 } from '../../electron/ScreenShareListModal'
+import { cacheMsgs, setCacheMsgs } from '../Chatroom/Chatroom'
 import ControlBar from '../ControlBar'
 import InviteModal from '../InviteModal'
 import Live from '../Live'
@@ -62,16 +71,22 @@ import LongPressSpaceUnmute from '../LongPressSpaceUnmute'
 import MeetingDuration from '../MeetingDuration'
 import MeetingInfo from '../MeetingInfo'
 import MeetingLayout from '../MeetingLayout'
+import MeetingNotification from '../MeetingNotification'
+import { useMeetingNotificationInMeeting } from '../MeetingNotification/useMeetingNotification'
+import useMeetingPlugin from '../MeetingRightDrawer/MeetingPlugin/useMeetingPlugin'
 import Network from '../Network'
 import Record from '../Record'
 import RoomsHeader from '../RoomsHeader'
 import Setting from '../Setting'
+import { SettingTabType } from '../Setting/Setting'
 import SpeakerList from '../SpeakerList'
 import './index.less'
 
-// import '../../../assets/iconfont/iconfont.css'
+const worker = new Worker(
+  new URL('../../../libs/yuv-canvas/worker.js', import.meta.url)
+)
 
-type SettingTabType = 'video' | 'audio' | 'beauty' | 'normal'
+export { worker }
 
 interface AppProps {
   width: number
@@ -177,6 +192,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
   const [showLiveModel, setShowLiveModel] = useState(false)
   const showCloudRecordingUIRef = useRef<boolean>(true)
   const cloudRecordModalRef = useRef<any>(null)
+
   showCloudRecordingUIRef.current = showCloudRecordingUI !== false
 
   const {
@@ -194,7 +210,10 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
     timeTipContent,
   } = useEventHandler()
 
+  useMeetingNotificationInMeeting()
+
   const meetingCanvasDomWidthResizeTimer = useRef<number | NodeJS.Timeout>()
+
   const mouseMoveTimerRef = useRef<number | NodeJS.Timeout>()
   // 是否点击全屏共享按钮
   const [isFullSharingScreen, setIsFullSharingScreen] = useState(false)
@@ -212,6 +231,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
   const newMeetingWebRef = useRef<HTMLDivElement>(null)
   const toastIdRef = useRef<string>('')
   const [isDarkMode, setIsDarkMode] = useState(true)
+  const { onClickPlugin } = useMeetingPlugin()
 
   const handUpCount = useMemo(() => {
     return memberList.filter((item) => item.isHandsUp).length
@@ -224,6 +244,9 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
   usePreviewHandler()
 
   const { localMember } = meetingInfo
+  const meetingInfoRef = useRef(meetingInfo)
+  meetingInfoRef.current = meetingInfo
+
   const eleIpcIns = useMemo(() => eleIpc?.getInstance() || null, [])
   // 是否在预览
   const [isStartPreview, setIsStartPreview] = useState(false)
@@ -264,6 +287,8 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
     localMember.isSharingScreen,
     isAudioMode,
   ])
+
+  const { handlePostMessage } = usePostMessageHandle()
 
   useEffect(() => {
     if (memberList.length == 1) {
@@ -403,7 +428,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
         cloudRecordModalRef.current = null
       },
       okText: t('sure'),
-      cancelText: t('cancel'),
+      cancelText: t('globalCancel'),
       onOk: () => {
         if (meetingInfo.isCloudRecording) {
           neMeeting
@@ -464,12 +489,93 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
     )
   }, [meetingInfo.cloudRecordState, showCloudRecordingUI])
 
+  // 打开会中窗口
+  function openMeetingWindow(payload: {
+    name: string
+    url?: string
+    postMessageData?: { event: string; payload: any }
+  }) {
+    const newWindow = openWindow(payload.name, payload.url)
+    const postMessage = () => {
+      payload.postMessageData &&
+        newWindow?.postMessage(payload.postMessageData, '*')
+    }
+    // 不是第一次打开
+    if (newWindow?.firstOpen === false) {
+      postMessage()
+    } else {
+      windowLoadListener(newWindow)
+      newWindow?.addEventListener('load', () => {
+        postMessage()
+      })
+    }
+  }
+
+  function windowLoadListener(childWindow) {
+    const previewController = neMeeting?.previewController
+    const previewContext = neMeeting?.roomService?.getPreviewRoomContext()
+    const chatController = neMeeting?.chatController
+    const rtcController = neMeeting?.rtcController
+    const roomService = neMeeting?.roomService
+    function messageListener(e) {
+      const { event, payload } = e.data
+      if (event === 'neMeeting' && neMeeting) {
+        const { replyKey, fnKey, args } = payload
+        const result = neMeeting[fnKey]?.(...args)
+        handlePostMessage(childWindow, result, replyKey)
+      } else if (event === 'meetingInfoDispatch') {
+        dispatch?.(payload)
+      } else if (event === 'notificationClick') {
+        const { action } = payload
+        if (action.startsWith('meeting://open_plugin')) {
+          onClickPlugin(action)
+        }
+      } else if (event === 'previewContext' && previewController) {
+        const { replyKey, fnKey, args } = payload
+        const result = previewContext?.[fnKey]?.(...args)
+        handlePostMessage(childWindow, result, replyKey)
+      } else if (event === 'previewController' && previewController) {
+        const { replyKey, fnKey, args } = payload
+        const result = previewController[fnKey]?.(...args)
+        handlePostMessage(childWindow, result, replyKey)
+      } else if (event === 'chatController' && chatController) {
+        const { replyKey, fnKey, args } = payload
+        const result = chatController[fnKey]?.(...args)
+        handlePostMessage(childWindow, result, replyKey)
+      } else if (event === 'roomService' && roomService) {
+        const { replyKey, fnKey, args } = payload
+        const result = roomService[fnKey]?.(...args)
+        handlePostMessage(childWindow, result, replyKey)
+      } else if (event === 'chatroomOnMsgs') {
+        setCacheMsgs(payload)
+      } else if (event === 'rtcController' && rtcController) {
+        const { replyKey, fnKey, args } = payload
+        const result = rtcController[fnKey]?.(...args)
+        handlePostMessage(childWindow, result, replyKey)
+      } else if (event === 'openWindow') {
+        openMeetingWindow(payload)
+      }
+    }
+    childWindow?.addEventListener('message', messageListener)
+  }
+
   const handleControlBarDefaultButtonClick = async (key: string) => {
     switch (key) {
       case 'memberList':
         if (isElectronSharingScreen) {
-          window.ipcRenderer?.send('nemeeting-sharing-screen', {
-            method: 'openMemberList',
+          openMeetingWindow({
+            name: 'memberWindow',
+            postMessageData: {
+              event: 'updateData',
+              payload: {
+                memberList: JSON.parse(JSON.stringify(memberList)),
+                meetingInfo: JSON.parse(JSON.stringify(meetingInfo)),
+                waitingRoomInfo: JSON.parse(JSON.stringify(waitingRoomInfo)),
+                waitingRoomMemberList: JSON.parse(
+                  JSON.stringify(waitingRoomMemberList)
+                ),
+              },
+            },
           })
         } else {
           const rightDrawerTabs = meetingInfo.rightDrawerTabs
@@ -504,8 +610,21 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
         break
       case 'chat':
         if (isElectronSharingScreen) {
-          window.ipcRenderer?.send('nemeeting-sharing-screen', {
-            method: 'openChatRoom',
+          console.log('open chatWindow', cacheMsgs)
+          openMeetingWindow({
+            name: 'chatWindow',
+            postMessageData: {
+              event: 'updateData',
+              payload: {
+                memberList: JSON.parse(JSON.stringify(memberList)),
+                meetingInfo: JSON.parse(JSON.stringify(meetingInfo)),
+                waitingRoomInfo: JSON.parse(JSON.stringify(waitingRoomInfo)),
+                waitingRoomMemberList: JSON.parse(
+                  JSON.stringify(waitingRoomMemberList)
+                ),
+                cacheMsgs: cacheMsgs,
+              },
+            },
           })
         } else {
           const rightDrawerTabs = meetingInfo.rightDrawerTabs
@@ -526,6 +645,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
               },
             })
           } else {
+            console.log('open chatroom')
             dispatch?.({
               type: ActionType.UPDATE_MEETING_INFO,
               data: {
@@ -535,12 +655,59 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
             })
           }
         }
-
+        break
+      case 'notification':
+        if (isElectronSharingScreen) {
+          openMeetingWindow({
+            name: 'notificationListWindow',
+            postMessageData: {
+              event: 'windowOpen',
+              payload: {
+                meetingInfo: JSON.parse(JSON.stringify(meetingInfo)),
+                isInMeeting: true,
+              },
+            },
+          })
+        } else {
+          const rightDrawerTabs = meetingInfo.rightDrawerTabs
+          const item = rightDrawerTabs.find(
+            (item) => item.key === 'notification'
+          )
+          if (!item) {
+            rightDrawerTabs.push({
+              key: 'notification',
+            })
+          }
+          // 只有一个，则关闭
+          if (item && rightDrawerTabs.length === 1) {
+            dispatch?.({
+              type: ActionType.UPDATE_MEETING_INFO,
+              data: {
+                rightDrawerTabs: [],
+                rightDrawerTabActiveKey: '',
+              },
+            })
+          } else {
+            dispatch?.({
+              type: ActionType.UPDATE_MEETING_INFO,
+              data: {
+                rightDrawerTabs: [...rightDrawerTabs],
+                rightDrawerTabActiveKey: 'notification',
+              },
+            })
+          }
+        }
         break
       case 'invite':
         if (isElectronSharingScreen) {
-          window.ipcRenderer?.send('nemeeting-sharing-screen', {
-            method: 'openInvite',
+          openMeetingWindow({
+            name: 'inviteWindow',
+            postMessageData: {
+              event: 'updateData',
+              payload: {
+                meetingInfo: JSON.parse(JSON.stringify(meetingInfo)),
+              },
+            },
           })
         } else {
           setInviteModalVisible(!inviteModalVisible)
@@ -642,8 +809,8 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
   useUpdateEffect(() => {
     if (isHostOrCoHost) {
       const successMsg = meetingInfo.isLocked
-        ? t('lockMeetingByHost')
-        : t('unLockMeetingByHost')
+        ? t('meetingLockMeetingByHost')
+        : t('meetingUnLockMeetingByHost')
       Toast.success(successMsg)
     }
   }, [meetingInfo.isLocked])
@@ -710,7 +877,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
             </>
           ),
           okText: t('gotIt'),
-          cancelText: t('leaveMeeting'),
+          cancelText: t('meetingLeaveFull'),
           onOk() {
             showRecordTipModalRef.current.destroy()
             showRecordTipModalRef.current = null
@@ -894,6 +1061,14 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
     handleOpenChatroomOrMemberList(openRightDrawer)
   }, [openRightDrawer])
 
+  // 重新加入会议
+  const rejoinMeeting = () => {
+    eventEmitter?.emit(UserEventType.RejoinMeeting, {
+      isAudioOn: localMember.isAudioOn,
+      isVideoOn: localMember.isVideoOn,
+    })
+  }
+
   useEffect(() => {
     if (!!waitingRejoinMeeting) {
       if (isElectronSharingScreen) {
@@ -908,7 +1083,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
       Modal.confirm({
         title: t('networkAbnormality'),
         content: t('networkDisconnected'),
-        cancelText: t('leaveMeeting'),
+        cancelText: t('meetingLeaveFull'),
         okText: t('rejoin'),
         onCancel: () => {
           leaveMeeting()
@@ -918,7 +1093,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
         },
       })
     }
-  }, [waitingRejoinMeeting, isElectronSharingScreen])
+  }, [waitingRejoinMeeting])
 
   useEffect(() => {
     if (!meetingInfo.meetingNum) {
@@ -927,8 +1102,8 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
     if (isShowAudioDialog) {
       if (!localMember.isAudioOn) {
         const modal = Modal.confirm({
-          title: t('openMicro'),
-          content: t('hostOpenMicroTips'),
+          title: t('participantOpenMicrophone'),
+          content: t('participantHostOpenMicroTips'),
           onCancel: () => {
             setIsOpenAudioByHost(false)
             setIsShowAudioDialog(false)
@@ -979,8 +1154,8 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
     if (isShowVideoDialog) {
       if (!localMember.isVideoOn) {
         const modal = Modal.confirm({
-          title: t('openCamera'),
-          content: t('hostOpenCameraTips'),
+          title: t('participantOpenCamera'),
+          content: t('participantHostOpenCameraTips'),
           onCancel: () => {
             setIsOpenVideoByHost(false)
             setIsShowVideoDialog(false)
@@ -1154,17 +1329,6 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
     return deviceId
   }
 
-  function rejoinMeeting() {
-    eventEmitter?.emit(UserEventType.RejoinMeeting)
-    globalDispatch?.({
-      type: ActionType.UPDATE_GLOBAL_CONFIG,
-      data: {
-        waitingRejoinMeeting: false,
-      },
-    })
-    // setIsShowRejoinDialog(false)
-  }
-
   async function leaveMeeting() {
     globalDispatch?.({
       type: ActionType.UPDATE_GLOBAL_CONFIG,
@@ -1206,7 +1370,16 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
 
   function onSettingClick(type: SettingTabType) {
     if (window.ipcRenderer) {
-      window.ipcRenderer?.send(IPCEvent.openSetting, type || 'normal')
+      openMeetingWindow({
+        name: 'settingWindow',
+        postMessageData: {
+          event: 'openSetting',
+          payload: {
+            type,
+            inMeeting: true,
+          },
+        },
+      })
     } else {
       setSettingOpen(true)
       setSettingModalTab(type)
@@ -1236,9 +1409,13 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
           setting.audioSetting.isDefaultPlayoutDevice = isDefault
         }
       }
-      window.ipcRenderer?.send(IPCEvent.changeSettingDeviceFromControlBar, {
-        type,
-        deviceId,
+      const settingWindow = getWindow('settingWindow')
+      settingWindow?.postMessage({
+        event: IPCEvent.changeSettingDeviceFromControlBar,
+        payload: {
+          type,
+          deviceId,
+        },
       })
       onSettingChange(setting)
     }
@@ -1260,12 +1437,13 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
         sourceId: shareItem?.id || shareItem?.displayId,
         isApp: shareItem?.isApp,
       })
+      openShareVideoWindow()
     } catch (e: any) {
       if (e && e.code === 1012) {
         Toast.fail(t('functionalityLimitedByTheNumberOfPeople'))
       }
       if (e && e.code === 1024) {
-        Toast.fail(t('noScreenSharePermission'))
+        Toast.fail(t('screenShareNoPermission'))
       }
       //@ts-ignore
       neMeeting?.rtcController?.stopSystemAudioLoopbackCapture?.()
@@ -1273,6 +1451,24 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
     } finally {
       setScreenShareModalOpen(false)
     }
+  }
+
+  function openShareVideoWindow() {
+    memberList.forEach((member) => {
+      if (member.isVideoOn && member.uuid !== localMember.uuid) {
+        neMeeting?.unsubscribeRemoteVideoStream(member.uuid, 1)
+      }
+    })
+    openMeetingWindow({
+      name: 'shareVideoWindow',
+      postMessageData: {
+        event: 'updateData',
+        payload: {
+          memberList: JSON.parse(JSON.stringify(memberList)),
+          meetingInfo: JSON.parse(JSON.stringify(meetingInfo)),
+        },
+      },
+    })
   }
 
   const getIsFullScreen = async () => {
@@ -1317,6 +1513,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
       }
     }
   }, [meetingInfo.meetingNum, waitingRejoinMeeting])
+
   useEffect(() => {
     if (window.isElectronNative) {
       window.ipcRenderer?.on(IPCEvent.previewController, (_, data) => {
@@ -1336,99 +1533,104 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
       })
     }
   }, [])
+
   useEffect(() => {
-    function neMeetingListener(_, value) {
-      const { method, data } = value
-      if (method === 'neMeeting') {
-        const { fnKey, args } = data
-        const fn = neMeeting?.[fnKey]
-        fn?.apply(neMeeting, args)
-          ?.then(() => {
-            window.ipcRenderer?.send('nemeeting-sharing-screen', {
-              method: 'neMeetingReply',
-              data: {
-                fnKey,
-                error: null,
-              },
-            })
-          })
-          .catch((error) => {
-            window.ipcRenderer?.send('nemeeting-sharing-screen', {
-              method: 'neMeetingReply',
-              data: {
-                fnKey,
-                error,
-              },
-            })
-          })
+    if (isElectronSharingScreen) {
+      closeWindow('settingWindow')
+      function setExcludeWindowList(_, data) {
+        // @ts-ignore
+        neMeeting?.rtcController.setExcludeWindowList(...data)
       }
-      if (method === 'chatController') {
-        const chatController = neMeeting?.chatController
-        if (chatController) {
-          const { fnKey, args, replyKey } = data
-          const fn = chatController[fnKey]
-          if (fn && fn.apply) {
-            fn.apply(chatController, args)
-              .then((res) => {
-                window.ipcRenderer?.send('nemeeting-sharing-screen', {
-                  method: 'chatControllerReply',
-                  data: {
-                    replyKey,
-                    fnKey,
-                    result: res,
-                    error: null,
-                  },
-                })
-              })
-              .catch((error) => {
-                window.ipcRenderer?.send('nemeeting-sharing-screen', {
-                  method: 'chatControllerReply',
-                  data: {
-                    replyKey,
-                    fnKey,
-                    error: error,
-                  },
-                })
-              })
-          }
-        }
-      }
-      if (method === 'rtcController') {
-        const rtcController = neMeeting?.rtcController
-        if (rtcController) {
-          const { fnKey, args } = data
-          const fn = rtcController[fnKey]
-          if (fn && fn.apply) {
-            fn.apply(rtcController, args)
-          }
-        }
+      window.ipcRenderer?.on('setExcludeWindowList', setExcludeWindowList)
+      return () => {
+        window.ipcRenderer?.off('setExcludeWindowList', setExcludeWindowList)
+        closeAllWindows()
       }
     }
-    window.ipcRenderer?.send('nemeeting-sharing-screen', {
-      method: 'updateData',
-      data: {
-        memberList: JSON.parse(JSON.stringify(memberList)),
-        meetingInfo: JSON.parse(JSON.stringify(meetingInfo)),
-        waitingRoomInfo: JSON.parse(JSON.stringify(waitingRoomInfo)),
-        waitingRoomMemberList: JSON.parse(
-          JSON.stringify(waitingRoomMemberList)
-        ),
-      },
-    })
-    if (isElectronSharingScreen) {
-      window.ipcRenderer?.on('nemeeting-sharing-screen', neMeetingListener)
-      return () => {
-        window.ipcRenderer?.off('nemeeting-sharing-screen', neMeetingListener)
-      }
+  }, [isElectronSharingScreen, neMeeting?.rtcController])
+
+  useEffect(() => {
+    if (meetingInfo.screenUuid === localMember.uuid) {
+      getActiveWindows().forEach((window) => {
+        window.postMessage({
+          event: 'updateData',
+          payload: {
+            memberList: JSON.parse(JSON.stringify(memberList)),
+            meetingInfo: JSON.parse(JSON.stringify(meetingInfo)),
+            waitingRoomInfo: JSON.parse(JSON.stringify(waitingRoomInfo)),
+            waitingRoomMemberList: JSON.parse(
+              JSON.stringify(waitingRoomMemberList)
+            ),
+          },
+        })
+      })
     }
   }, [
     memberList,
     meetingInfo,
-    isElectronSharingScreen,
-    neMeeting,
     waitingRoomInfo,
     waitingRoomMemberList,
+    localMember.uuid,
   ])
+
+  useEffect(() => {
+    function handle(uuid, bSubVideo, data, type, width, height) {
+      if (isStartPreview && uuid === localMember.uuid) {
+        const settingWindow = getWindow('settingWindow')
+        settingWindow?.postMessage(
+          {
+            event: 'onVideoFrameData',
+            payload: {
+              uuid,
+              bSubVideo,
+              data,
+              type,
+              width,
+              height,
+            },
+          },
+          '*',
+          [data.bytes.buffer]
+        )
+      }
+      if (meetingInfo.screenUuid === localMember.uuid) {
+        const shareVideoWindow = getWindow('shareVideoWindow')
+        shareVideoWindow?.postMessage(
+          {
+            event: 'onVideoFrameData',
+            payload: {
+              uuid,
+              bSubVideo,
+              data,
+              type,
+              width,
+              height,
+            },
+          },
+          '*',
+          [data.bytes.buffer]
+        )
+      } else {
+        const type = bSubVideo ? 'screen' : 'video'
+        worker.postMessage(
+          {
+            frame: {
+              width,
+              height,
+              data,
+            },
+            uuid,
+            type,
+          },
+          [data.bytes.buffer]
+        )
+      }
+    }
+    eventEmitter?.on(EventType.onVideoFrameData, handle)
+    return () => {
+      eventEmitter?.off(EventType.onVideoFrameData, handle)
+    }
+  }, [meetingInfo.screenUuid, eventEmitter, isStartPreview, localMember.uuid])
 
   useEffect(() => {
     const properties = localMember.properties
@@ -1490,44 +1692,6 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
     }
   }, [online, waitingRejoinMeeting, isElectronSharingScreen, t])
 
-  useEffect(() => {
-    if (isElectronSharingScreen) {
-      let sendCount = 0
-      function handle(...args) {
-        sendCount += 1
-        // 3帧一发
-        const hz = args[args.length - 1] > 800 ? 3 : 2
-        if (sendCount % hz === 0) {
-          window.ipcRenderer?.send('nemeeting-sharing-screen', {
-            method: 'onVideoFrameData',
-            data: args,
-          })
-        }
-      }
-      eventEmitter?.on(EventType.onVideoFrameData, handle)
-      return () => {
-        eventEmitter?.off(EventType.onVideoFrameData, handle)
-      }
-    }
-  }, [isElectronSharingScreen, eventEmitter])
-  useEffect(() => {
-    if (isStartPreview) {
-      function handle(...args) {
-        const uuid = args[0]
-        if (uuid === meetingInfo.myUuid) {
-          window.ipcRenderer?.send('previewControllerListener', {
-            method: EventType.previewVideoFrameData,
-            args,
-          })
-        }
-      }
-      eventEmitter?.on(EventType.onVideoFrameData, handle)
-      return () => {
-        eventEmitter?.off(EventType.onVideoFrameData, handle)
-      }
-    }
-  }, [isStartPreview, eventEmitter])
-
   const isShowControlBar = useMemo(() => {
     if (meetingInfo.hiddenControlBar === true) {
       return false
@@ -1586,41 +1750,27 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
     localMember.uuid,
   ])
 
+  useUpdateEffect(() => {
+    const isLastChatroomTab =
+      meetingInfo.rightDrawerTabs.length === 1 &&
+      meetingInfo.rightDrawerTabs[0].key === 'chatroom'
+
+    if (
+      !isLastChatroomTab &&
+      meetingInfo.rightDrawerTabActiveKey === 'chatroom'
+    ) {
+      handleControlBarDefaultButtonClick('chat')
+    }
+  }, [meetingInfo.rightDrawerTabActiveKey])
+
+  // 通知组件是否正在共享屏幕
   useEffect(() => {
-    window.ipcRenderer?.on('NERoomSDKProxy', (_, value) => {
-      const { method, data } = value
-      if (method === 'roomService') {
-        const roomService = neMeeting?.roomService
-        if (roomService) {
-          const { fnKey, args, replyKey } = data
-          const fn = roomService[fnKey]
-          if (fn && fn.apply) {
-            fn.apply(roomService, args)
-              .then((res) => {
-                window.ipcRenderer?.send('NERoomSDKProxyReply', {
-                  data: {
-                    replyKey,
-                    fnKey,
-                    result: res,
-                    error: null,
-                  },
-                })
-              })
-              .catch((error) => {
-                window.ipcRenderer?.send('NERoomSDKProxyReply', {
-                  method,
-                  data: {
-                    replyKey,
-                    fnKey,
-                    error: error,
-                  },
-                })
-              })
-          }
-        }
-      }
-    })
-  }, [])
+    const isSharingScreen = meetingInfo.screenUuid === localMember.uuid
+    outEventEmitter?.emit(
+      UserEventType.OnScreenSharingStatusChange,
+      isSharingScreen
+    )
+  }, [meetingInfo.screenUuid, localMember.uuid, outEventEmitter])
 
   return (
     <div
@@ -1669,7 +1819,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
           }, 3000)
         }}
       >
-        {meetingInfo.meetingNum ? (
+        {meetingInfo.meetingNum && !waitingRejoinMeeting ? (
           <>
             {/*<MeetingHeader open={true} getContainer={false} />*/}
             <ControlBar
@@ -1701,7 +1851,10 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
                   </div>
                 )}
                 {!meetingInfo.isRooms && !waitingRejoinMeeting && (
-                  <Network className={'nemeeting-network'} />
+                  <Network
+                    className={'nemeeting-network'}
+                    onSettingClick={onSettingClick}
+                  />
                 )}
                 {!meetingInfo.isRooms && !waitingRejoinMeeting && (
                   <MeetingInfo className={'nemeeting-info'} />
@@ -1788,7 +1941,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
           <div className="meeting-loading">
             <div className="meeting-loading-content">
               <img className="meeting-loading-img" src={loading} alt="" />
-              <div className="meeting-loading-text">{t('joiningTips')}</div>
+              <div className="meeting-loading-text">{t('meetingJoinTips')}</div>
             </div>
           </div>
         ) : (
@@ -1817,6 +1970,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
           <p className={'nemeeint-online'}>{t('disconnected')}</p>
         </div>
       )}
+      <MeetingNotification />
     </div>
   )
 }

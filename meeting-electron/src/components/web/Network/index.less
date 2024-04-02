@@ -26,9 +26,11 @@
   }
 }
 
-.nemeeting-network-popover{
-  .nemeeting-popover-inner{
+.nemeeting-network-popover {
+  .nemeeting-popover-inner {
+    overflow: hidden;
     border-radius: 4px;
+    padding: 0;
   }
 }
 
@@ -37,7 +39,7 @@
   background-color: #fff;
   color: #000;
   line-height: 17px;
-  padding: 5px 5px 15px 5px;
+  padding: 15px;
   height: auto;
   .nemeeting-title {
     text-align: left;
@@ -56,24 +58,33 @@
     flex: 1;
     text-align: left;
   }
-  .network-packet-loss{
+  .network-packet-loss {
     display: flex;
     justify-content: space-between;
     height: 60px;
     line-height: 30px;
     color: #333333;
-    .network-packet-loss-rate{
+    .network-packet-loss-rate {
       padding-top: 14px;
     }
-    .icon-up-rate{
+    .icon-up-rate {
       font-size: 12px;
       margin-right: 5px;
     }
-    .icon-down-rate{
+    .icon-down-rate {
       font-size: 12px;
       margin-right: 5px;
     }
   }
+}
+.more-monitoring {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 40px;
+  color: #2575ff;
+  cursor: pointer;
+  border-top: 1px solid #e0e0e0;
 }
 
 // .light-theme{

@@ -13,6 +13,7 @@ export function groupMembersService(data: {
   layout?: LayoutTypeEnum
   isWhiteboardTransparent?: boolean
   whiteboardUuid?: string
+  pinVideoUuid?: string
 }): Array<NEMember[]> {
   const {
     memberList,
@@ -26,6 +27,7 @@ export function groupMembersService(data: {
     layout,
     isWhiteboardTransparent,
     whiteboardUuid,
+    pinVideoUuid,
   } = data
   let tmpMemberList: NEMember[] = Array.isArray(memberList)
     ? [...memberList]
@@ -72,6 +74,9 @@ export function groupMembersService(data: {
         // 如果第一个不是本端，则设置第二个元素为本端
         sortMember2Top(tmpMemberList, myUuid)
         sortMember2Top(tmpMemberList, focusUuid)
+      } else if (pinVideoUuid) {
+        pinVideoUuid !== myUuid && sortMember2Top(tmpMemberList, myUuid)
+        sortMember2Top(tmpMemberList, pinVideoUuid)
       } else if (activeSpeakerUuid && activeMember && enableSortByVoice) {
         // 存在说话最大声者, 设置第二个元素为本端
         // 先把本端排第一位，由于最开始active已经排序过，所以第一个位置为active

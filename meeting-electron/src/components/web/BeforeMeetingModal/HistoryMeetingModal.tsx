@@ -1,47 +1,46 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
-import './index.less'
-import Modal from '../../common/Modal'
-import {
-  Button,
-  Input,
-  Form,
-  Checkbox,
-  ModalProps,
-  Radio,
-  Table,
-  RadioChangeEvent,
-  Empty,
-  Spin,
-  Space,
-} from 'antd'
-import { copyElementValue, formatDate } from '../../../utils'
-import Toast from '../../common/toast'
-import { MeetingList } from '../../../types/type'
-import EmptyImg from '../../../assets/empty.png'
-import NEMeetingKit from '../../../index'
-import { MeetingSetting } from '../../../types'
-import { IPCEvent } from '../../../../app/src/types'
-import ChatroomModal from './ChatroomModal'
+import { ModalProps, Space, Spin } from 'antd'
 import { NERoomService } from 'neroom-web-sdk'
 import { useTranslation } from 'react-i18next'
+import { IPCEvent } from '../../../../app/src/types'
+import EmptyImg from '../../../assets/empty.png'
+import NEMeetingService from '../../../services/NEMeeting'
+import { MeetingList } from '../../../types/type'
+import {
+  copyElementValue,
+  formatDate,
+  objectToQueryString,
+} from '../../../utils'
+import Modal from '../../common/Modal'
+import Toast from '../../common/toast'
+import ChatroomModal from './ChatroomModal'
+import PluginAppModal from './PluginAppModal'
 
 type MeetingSwitchType = 'all' | 'collect'
 
 interface HistoryMeetingProps extends ModalProps {
   roomService?: NERoomService
   accountId?: string
+  neMeeting?: NEMeetingService
+  meetingId?: string
+  onBack?: () => void
 }
 
 const HistoryMeetingModal: React.FC<HistoryMeetingProps> = ({
   roomService,
   accountId,
+  neMeeting,
   ...restProps
 }) => {
   const { t } = useTranslation()
   const [open, setOpen] = useState<boolean>()
+  const [meetingId, setMeetingId] = useState<string>()
 
-  // console.log('HistoryMeetingModal', restProps.open, restProps)
+  useEffect(() => {
+    setMeetingId(restProps.meetingId)
+  }, [restProps.meetingId])
+
   useEffect(() => {
     setOpen(restProps.open)
   }, [restProps.open])
@@ -51,7 +50,7 @@ const HistoryMeetingModal: React.FC<HistoryMeetingProps> = ({
       title={<span className="modal-title">{t('historyMeeting')}</span>}
       width={375}
       maskClosable={false}
-      footer={<></>}
+      footer={null}
       wrapClassName="history-meeting-modal"
       styles={{
         body: { padding: 0 },
@@ -63,6 +62,11 @@ const HistoryMeetingModal: React.FC<HistoryMeetingProps> = ({
         open={restProps.open}
         roomService={roomService}
         accountId={accountId}
+        neMeeting={neMeeting}
+        meetingId={meetingId}
+        onBack={() => {
+          setMeetingId(undefined)
+        }}
       />
     </Modal>
   )
@@ -71,7 +75,10 @@ const HistoryMeetingModal: React.FC<HistoryMeetingProps> = ({
 const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
   open,
   roomService,
+  neMeeting,
   accountId,
+  meetingId,
+  ...restProps
 }) => {
   const { t } = useTranslation()
 
@@ -99,18 +106,18 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
     recordUrl: t('cloudRecordingLink'),
     record: t('startCloudRecord'),
     chat: t('chatHistory'),
-    joinMeeting: t('joinMeeting'),
+    joinMeeting: t('meetingJoin'),
     recordFileGenerating: t('generatingCloudRecordingFile'),
   }
 
   const WeekdaysSort = [
-    t('Sunday'),
-    t('Monday'),
-    t('Tuesday'),
-    t('Wednesday'),
-    t('Thursday'),
-    t('Friday'),
-    t('Saturday'),
+    t('globalSunday'),
+    t('globalMonday'),
+    t('globalTuesday'),
+    t('globalWednesday'),
+    t('globalThursday'),
+    t('globalFriday'),
+    t('globalSaturday'),
   ]
 
   const [type, setType] = useState<MeetingSwitchType>('all')
@@ -125,17 +132,34 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
   // 导出状态，1.可导出，2.没权限，3.已过期
   const [chatroomExportAccess, setChatroomExportAccess] = useState<number>(0)
 
+  const [pluginInfoList, setPluginInfoList] = useState<any[]>([])
+  const [currentPluginInfo, setCurrentPluginInfo] = useState<any>()
+
   useEffect(() => {
     if (open) {
-      setShowDetails(false)
-      setCurrentMeeting(null)
-      setIsRequesting(true)
-      getTableData()
+      if (meetingId) {
+        neMeeting
+          ?.getHistoryMeeting({ meetingId })
+          .then((item) => {
+            setShowDetails(true)
+            setCurrentMeeting(item)
+            return getHistoryMeetingDetail(item)
+          })
+          .then(() => {
+            setIsRequesting(true)
+            getTableData()
+          })
+      } else {
+        setShowDetails(false)
+        setCurrentMeeting(null)
+        setIsRequesting(true)
+        getTableData()
+      }
     } else {
       setMeetingList([])
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type, open])
+  }, [type, open, meetingId])
 
   let scrollRef
 
@@ -157,55 +181,52 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
    * @param isMore 是否为向下滚动请求更多
    * @param neeAll 是否为查询目前所有数据
    */
-  const getTableData = useCallback(
-    async (isMore = false, needAll = false) => {
-      const params: any = {}
+  const getTableData = async (isMore = false, needAll = false) => {
+    const params: any = {}
+    if (isMore) {
+      // 接口入参的起始id为当前数据最后一条的id
+      const key = type === 'all' ? 'attendeeId' : 'favoriteId'
+      const startId = meetingList?.[meetingList?.length - 1]?.[key]
+      typeof startId === 'number' && (params.startId = startId)
+    }
+    if (needAll) {
+      // 接口请求条数为当前数据长度
+      let total = 0
+      setMeetingList((_data) => {
+        total = _data?.length
+        return _data
+      })
+      params.limit = total
+    }
+    const getMeetingList = async (params) => {
+      const method =
+        type === 'all' ? 'getHistoryMeetingList' : 'getCollectMeetingList'
+      const res = await neMeeting?.[method]?.(params)
+      const list = res?.[type === 'all' ? 'meetingList' : 'favoriteList']
+      return (
+        list?.map((item) => ({
+          ...item,
+          isFavorite: item.isFavorite || type === 'collect',
+        })) || []
+      )
+    }
+    try {
+      const resList = await Promise.allSettled([getMeetingList(params)])
+      const list = resList.flatMap((res) =>
+        res.status === 'fulfilled' ? res.value : []
+      )
       if (isMore) {
-        // 接口入参的起始id为当前数据最后一条的id
-        const key = type === 'all' ? 'attendeeId' : 'favoriteId'
-        const startId = meetingList?.[meetingList?.length - 1]?.[key]
-        typeof startId === 'number' && (params.startId = startId)
+        setMeetingList([...meetingList, ...list])
+      } else {
+        setMeetingList([...list])
       }
-      if (needAll) {
-        // 接口请求条数为当前数据长度
-        let total = 0
-        setMeetingList((_data) => {
-          total = _data?.length
-          return _data
-        })
-        params.limit = total
-      }
-      const getMeetingList = async (params) => {
-        const method =
-          type === 'all' ? 'getHistoryMeetingList' : 'getCollectMeetingList'
-        const res = await NEMeetingKit?.actions?.neMeeting?.[method]?.(params)
-        const list = res?.[type === 'all' ? 'meetingList' : 'favoriteList']
-        return (
-          list?.map((item) => ({
-            ...item,
-            isFavorite: item.isFavorite || type === 'collect',
-          })) || []
-        )
-      }
-      try {
-        const resList = await Promise.allSettled([getMeetingList(params)])
-        const list = resList.flatMap((res) =>
-          res.status === 'fulfilled' ? res.value : []
-        )
-        if (isMore) {
-          setMeetingList([...meetingList, ...list])
-        } else {
-          setMeetingList([...list])
-        }
-        setIsMore(list?.length >= 20) // 服务端默认分页条数为20条
-        setIsRequesting(false)
-      } catch (error) {
-        console.error(error)
-        setIsRequesting(false)
-      }
-    },
-    [meetingList, type]
-  )
+      setIsMore(list?.length >= 20) // 服务端默认分页条数为20条
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsRequesting(false)
+    }
+  }
 
   const handleCopy = (event, value: any) => {
     event.stopPropagation()
@@ -216,7 +237,7 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
 
   const handleCollect = (roomArchiveId: string, isFavorite: boolean) => {
     if (!isFavorite) {
-      NEMeetingKit?.actions?.neMeeting
+      neMeeting
         ?.collectMeeting(roomArchiveId)
         ?.then((res) => {
           Toast.success(i18n.collectSuccess)
@@ -235,7 +256,7 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
           Toast.fail(i18n.collectFail)
         })
     } else {
-      NEMeetingKit?.actions?.neMeeting
+      neMeeting
         ?.cancelCollectMeeting(roomArchiveId)
         ?.then((res) => {
           Toast.success(i18n.cancelCollectSuccess)
@@ -271,12 +292,8 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
     return num.slice(0, 3) + '-' + num.slice(3, 6) + '-' + num.slice(6)
   }
 
-  const handleItemClick = (item: MeetingList) => {
-    setCurrentMeeting(item)
-    setShowDetails(true)
-    setRecordList(null)
-    setChatroomExportAccess(0)
-    NEMeetingKit.actions?.neMeeting
+  const getHistoryMeetingDetail = async (item: MeetingList) => {
+    neMeeting
       ?.getRoomCloudRecordList(item.roomArchiveId)
       .then((res) => {
         console.log('res>>>>>', res)
@@ -302,13 +319,27 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
         console.log('error>>>>', error)
         setRecordList(null)
       })
-    NEMeetingKit.actions?.neMeeting
+    neMeeting
       ?.getHistoryMeetingDetail({
         roomArchiveId: item.roomArchiveId,
       })
       .then((res) => {
-        setChatroomExportAccess(res.chatroom.exportAccess)
+        if (res.chatroom) {
+          setChatroomExportAccess(res.chatroom.exportAccess)
+        }
+        if (res.pluginInfoList) {
+          setPluginInfoList(res.pluginInfoList)
+        }
       })
+  }
+
+  const handleItemClick = (item: MeetingList) => {
+    setCurrentMeeting(item)
+    setShowDetails(true)
+    setRecordList(null)
+    setChatroomExportAccess(0)
+    setPluginInfoList([])
+    getHistoryMeetingDetail(item)
   }
 
   const onUrlClick = (url) => {
@@ -328,13 +359,14 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
             onClick={() => {
               setShowDetails(false)
               setCurrentMeeting(null)
+              restProps.onBack?.()
             }}
             className={`back-icon icon`}
             aria-hidden="true"
           >
             <use xlinkHref="#iconyx-returnx"></use>
           </svg>
-          <div>{i18n.meetingDetails}</div>
+          {/* <div>{i18n.meetingDetails}</div> */}
         </div>
         {/* 内容 */}
         <div className="nemeeting-detail-content">
@@ -387,7 +419,9 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
             </span>
           </div>
         </div>
-        {recordList || chatroomExportAccess === 1 ? (
+        {recordList ||
+        chatroomExportAccess === 1 ||
+        pluginInfoList.length > 0 ? (
           <div className="nemeeting-detail-app">
             <div className="meeting-title mb16">
               <div>{i18n.app}</div>
@@ -439,11 +473,26 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
                 className="nemeeting-detail-app-item"
                 onClick={() => {
                   if (window.isElectronNative) {
-                    window.ipcRenderer?.send('open-meeting-history-chat', {
-                      roomArchiveId: currentMeeting.roomArchiveId,
-                      subject: currentMeeting.subject,
-                      startTime: currentMeeting.roomStartTime,
-                    })
+                    const parentWindow = window.parent
+                    parentWindow?.postMessage(
+                      {
+                        event: 'openWindow',
+                        payload: {
+                          name: 'chatWindow',
+                          postMessageData: {
+                            event: 'updateData',
+                            payload: {
+                              roomArchiveId: String(
+                                currentMeeting.roomArchiveId
+                              ),
+                              subject: currentMeeting.subject,
+                              startTime: currentMeeting.roomStartTime,
+                            },
+                          },
+                        },
+                      },
+                      '*'
+                    )
                   } else {
                     setChatroomArchiveId(currentMeeting.roomArchiveId)
                   }
@@ -460,13 +509,72 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
                 </svg>
               </div>
             )}
+            {pluginInfoList.map((plugin) => {
+              return (
+                <div
+                  key={plugin.pluginId}
+                  className="nemeeting-detail-app-item"
+                  onClick={() => {
+                    if (window.isElectronNative) {
+                      const parentWindow = window.parent
+                      const url =
+                        '#/plugin?' +
+                        objectToQueryString({ pluginId: plugin.pluginId })
+                      parentWindow?.postMessage(
+                        {
+                          event: 'openWindow',
+                          payload: {
+                            name: plugin.pluginId,
+                            url: url,
+                            postMessageData: {
+                              event: 'updateData',
+                              payload: {
+                                pluginId: plugin.pluginId,
+                                url: plugin.homeUrl,
+                                roomArchiveId: currentMeeting.roomArchiveId,
+                                isInMeeting: false,
+                                title: plugin.name,
+                              },
+                            },
+                          },
+                        },
+                        '*'
+                      )
+                    } else {
+                      setCurrentPluginInfo({
+                        ...plugin,
+                        roomArchiveId: currentMeeting.roomArchiveId,
+                      })
+                    }
+                  }}
+                >
+                  <div className="nemeeting-detail-app-item-title">
+                    <img
+                      crossOrigin="anonymous"
+                      className="app-icon-img"
+                      src={plugin.icon.defaultIcon}
+                    />
+                    {plugin.name}
+                  </div>
+                  <svg className="icon iconfont" aria-hidden="true">
+                    <use xlinkHref="#iconarrow-line-regular" />
+                  </svg>
+                </div>
+              )
+            })}
           </div>
         ) : null}
       </div>
     ) : (
       <></>
     )
-  }, [currentMeeting, recordList, joinLoading, chatroomExportAccess])
+  }, [
+    currentMeeting,
+    recordList,
+    joinLoading,
+    chatroomExportAccess,
+    pluginInfoList,
+  ])
 
   const MeetingContent = useMemo(() => {
     return (
@@ -564,6 +672,7 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
 
   return (
     <div className="meeting-history">
+      <Spin spinning={isRequesting} className="scroll-loading" />
       {showDetails && MeetingDetails}
       <div className="meeting-type">
         <div
@@ -608,7 +717,6 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
           <></>
         )}
       </div>
-      <Spin spinning={isRequesting} className="scroll-loading" />
       <ChatroomModal
         open={!!chatroomArchiveId}
         roomArchiveId={chatroomArchiveId}
@@ -617,6 +725,12 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
         subject={currentMeeting?.subject}
         startTime={currentMeeting?.roomStartTime}
         onCancel={() => setChatroomArchiveId(undefined)}
+      />
+      <PluginAppModal
+        open={!!currentPluginInfo}
+        pluginInfo={currentPluginInfo}
+        neMeeting={neMeeting}
+        onCancel={() => setCurrentPluginInfo(undefined)}
       />
     </div>
   )

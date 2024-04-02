@@ -128,12 +128,12 @@ const LiveTitleInfo: React.FC<LiveTitleInfoProps> = (props) => {
         </div>
       </div>
       {/*  直播观看地址*/}
-      <div className="form-item ml36">
+      <div className="form-item ml36" style={{ width: '370px' }}>
         <p className="live-title">{t('liveUrl')}</p>
         <div className="live-url">
           <p className="live-link live-input">{liveUrl}</p>
           <p className="copy-link" onClick={() => onHandleCopy(liveUrl)}>
-            {t('copyLink')}
+            {t('globalCopy')}
           </p>
         </div>
       </div>
@@ -320,20 +320,22 @@ const LiveInfo: React.FC<LiveInfoProps> = (props) => {
             )}
           </div>
         </div>
-        <div className="form-item-employees enable-wrap">
-          <input
-            type="checkbox"
-            name="onlyEmployeesAllow"
-            id="onlyEmployeesAllow"
-            className="live-checkbox"
-            checked={onlyEmployeesAllow}
-            disabled={isStarted}
-            onChange={() => setOnlyEmployeesAllow(!onlyEmployeesAllow)}
-          />
-          <label className="sub-title mr14" htmlFor="onlyEmployeesAllow">
-            {t('onlyEmployeesAllow')}
-          </label>
-          <span className="chat-tip">{t('onlyEmployeesAllowTip')}</span>
+        <div className="form-item-employees">
+          <div className="chat-tip nemeeting-live-employees">
+            <input
+              type="checkbox"
+              name="onlyEmployeesAllow"
+              id="onlyEmployeesAllow"
+              className="live-checkbox"
+              checked={onlyEmployeesAllow}
+              disabled={isStarted}
+              onChange={() => setOnlyEmployeesAllow(!onlyEmployeesAllow)}
+            />
+            <label className="sub-title mr14" htmlFor="onlyEmployeesAllow">
+              {t('onlyEmployeesAllow')}
+            </label>
+          </div>
+          <div className="chat-tip">({t('onlyEmployeesAllowTip')})</div>
         </div>
       </div>
       <div className="form-wrap nemeeting-live-enable-chat-wrap">
@@ -352,7 +354,7 @@ const LiveInfo: React.FC<LiveInfoProps> = (props) => {
           </label>
           <span className="chat-tip flex1">{t('enableChatTip')}</span>
         </div>
-        <div className="form-item enable-wrap ml26">
+        <div className="form-item enable-wrap ml35">
           {/* 直播背景图 */}
           <div className="nemeeting-live-bg-preview-wrap">
             <div className="nemeeting-live-bg-preview-title">
@@ -397,7 +399,7 @@ const LiveInfo: React.FC<LiveInfoProps> = (props) => {
             </Spin>
           </div>
           {/* 直播封面 */}
-          <div className="nemeeting-live-bg-preview-wrap ml26">
+          <div className="nemeeting-live-bg-preview-wrap ml35">
             <div className="nemeeting-live-bg-preview-title">
               {t('liveCoverPicture')}
             </div>

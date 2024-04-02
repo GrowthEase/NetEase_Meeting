@@ -1,54 +1,53 @@
+import { Button, Checkbox, DrawerProps, Dropdown, Input, MenuProps } from 'antd'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  Input,
-  Drawer,
-  Button,
-  Switch,
-  Checkbox,
-  DrawerProps,
-  Dropdown,
-  MenuProps,
-} from 'antd'
 import { useTranslation } from 'react-i18next'
-import { useUpdateEffect } from 'ahooks'
 
-import MemberItem from './MemberItem'
 import {
   useGlobalContext,
   useMeetingInfoContext,
   useWaitingRoomContext,
 } from '../../../store'
 import {
-  ActionType,
   AttendeeOffType,
+  hostAction,
   MeetingEventType,
+  memberAction,
   NEMeetingInfo,
   NEMember,
   Role,
-  hostAction,
 } from '../../../types'
+import MemberItem from './MemberItem'
 
-import './index.less'
-import Modal from '../../common/Modal'
-import Toast from '../../common/toast'
-import NEMeetingService from '../../../services/NEMeeting'
-import WaitingRoomMemberItem from './WaitingRoomMemberItem'
 import { NEWaitingRoomMember } from 'neroom-web-sdk/dist/types/types/interface'
 import { AutoSizer, List } from 'react-virtualized'
+import NEMeetingService from '../../../services/NEMeeting'
+import Modal from '../../common/Modal'
+import Toast from '../../common/toast'
 import UpdateUserNicknameModal from '../BeforeMeetingModal/UpdateUserNicknameModal'
+import './index.less'
+import WaitingRoomMemberItem from './WaitingRoomMemberItem'
 
 interface MemberListFooterProps {
   meetingInfo: NEMeetingInfo
   neMeeting?: NEMeetingService
+  hostUuid?: string
+  isOwner?: boolean
+  isHostOrCoHost?: boolean
+  tab: 'room' | 'waitingRoom'
 }
 
 const MemberListFooter: React.FC<MemberListFooterProps> = ({
   meetingInfo,
   neMeeting,
+  hostUuid,
+  isOwner,
+  isHostOrCoHost,
+  tab,
 }) => {
   const { t } = useTranslation()
   const meetingInfoRef = useRef<NEMeetingInfo | null>(null)
   const muteAllAudioModalRef = useRef<any>(null)
+  const notAllowJoinRef = useRef(false)
   meetingInfoRef.current = meetingInfo
 
   const allowUnMuteVideoBySelfRef = useRef(true)
@@ -57,6 +56,8 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
   const isElectronSharingScreen = useMemo(() => {
     return window.isElectronNative && meetingInfo.localMember?.isSharingScreen
   }, [meetingInfo.localMember?.isSharingScreen])
+
+  const meetingReclaimHost = isOwner && !isHostOrCoHost
 
   // 是否允许checkbox需要与当前整体会控状态一致
   useEffect(() => {
@@ -71,7 +72,7 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
       return
     }
     muteAllAudioModalRef.current = Modal.confirm({
-      title: t('muteVideoAllDialogTips'),
+      title: t('participantMuteVideoAllDialogTips'),
       content: (
         <Checkbox
           defaultChecked={allowUnMuteVideoBySelfRef.current}
@@ -79,13 +80,13 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
             (allowUnMuteVideoBySelfRef.current = e.target.checked)
           }
         >
-          {t('muteAllVideoTip')}
+          {t('participantMuteAllVideoTip')}
         </Checkbox>
       ),
       afterClose: () => {
         muteAllAudioModalRef.current = null
       },
-      okText: t('muteVideoAll'),
+      okText: t('participantTurnOffVideos'),
       onOk: async () => {
         const type = allowUnMuteVideoBySelfRef.current
           ? hostAction.muteAllVideo
@@ -93,9 +94,9 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
 
         try {
           await neMeeting?.sendHostControl(type, '')
-          Toast.success(t('muteAllVideoSuccess'))
+          Toast.success(t('participantMuteAllVideoSuccess'))
         } catch (error) {
-          Toast.fail(t('muteAllVideoFail'))
+          Toast.fail(t('participantMuteAllVideoFail'))
         }
       },
     })
@@ -104,7 +105,7 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
     neMeeting
       ?.sendHostControl(hostAction.unmuteAllVideo, '')
       .then(() => {
-        Toast.success(t('unMuteAllVideoSuccess'))
+        Toast.success(t('participantUnMuteAllVideoSuccess'))
       })
       .catch((error) => {
         Toast.fail(t('unMuteAllVideoFail'))
@@ -113,7 +114,7 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
   }
   function muteAudio() {
     Modal.confirm({
-      title: t('muteAudioAllDialogTips'),
+      title: t('participantMuteAudioAllDialogTips'),
       content: (
         <Checkbox
           defaultChecked={allowUnMuteAudioBySelfRef.current}
@@ -121,10 +122,10 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
             (allowUnMuteAudioBySelfRef.current = e.target.checked)
           }
         >
-          {t('muteAllAudioTip')}
+          {t('participantMuteAllAudioTip')}
         </Checkbox>
       ),
-      okText: t('muteAudioAll'),
+      okText: t('participantMuteAudioAll'),
       onOk() {
         const type = allowUnMuteAudioBySelfRef.current
           ? hostAction.muteAllAudio
@@ -132,10 +133,10 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
         return neMeeting
           ?.sendHostControl(type, '')
           .then(() => {
-            Toast.success(t('muteAllAudioSuccess'))
+            Toast.success(t('participantMuteAllAudioSuccess'))
           })
           .catch((error) => {
-            Toast.fail(t('muteAllAudioFail'))
+            Toast.fail(t('participantMuteAllAudioFail'))
             throw error
           })
       },
@@ -145,28 +146,10 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
     neMeeting
       ?.sendHostControl(hostAction.unmuteAllAudio, '')
       .then(() => {
-        Toast.success(t('unMuteAllAudioSuccess'))
+        Toast.success(t('participantUnMuteAllAudioSuccess'))
       })
       .catch((error) => {
-        Toast.fail(t('unMuteAllAudioFail'))
-        throw error
-      })
-  }
-  function toggleMeetingLock() {
-    const enable = !meetingInfo.isLocked
-    const type = enable ? hostAction.lockMeeting : hostAction.unlockMeeting
-    const failMsg = enable
-      ? t('lockMeetingByHostFail')
-      : t('unLockMeetingByHostFail')
-
-    neMeeting
-      ?.sendHostControl(type, '')
-      .then(() => {
-        // 通过判断 meetingInfo.isLocked  来显示
-        // Toast.success(successMsg)
-      })
-      .catch((error) => {
-        Toast.fail(failMsg)
+        Toast.fail(t('participantUnMuteAllAudioFail'))
         throw error
       })
   }
@@ -174,33 +157,108 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
   const buttons = [
     {
       key: 'muteAudio',
-      label: t('muteAudioAll'),
+      label: t('participantMuteAudioAll'),
       onClick: muteAudio,
-      disabled: meetingInfo.muteBtnConfig?.showMuteAllAudio === false,
+      disabled:
+        meetingInfo.muteBtnConfig?.showMuteAllAudio === false ||
+        meetingReclaimHost,
     },
     {
       key: 'unmuteAudio',
-      label: t('unMuteAudioAll'),
+      label: t('participantUnmuteAll'),
       onClick: unmuteAudio,
-      disabled: meetingInfo.muteBtnConfig?.showUnMuteAllAudio === false,
+      disabled:
+        meetingInfo.muteBtnConfig?.showUnMuteAllAudio === false ||
+        meetingReclaimHost,
     },
     {
       key: 'muteVideo',
-      label: t('muteVideoAll'),
+      label: t('participantTurnOffVideos'),
       onClick: muteVideo,
-      disabled: meetingInfo.muteBtnConfig?.showMuteAllVideo === false,
+      disabled:
+        meetingInfo.muteBtnConfig?.showMuteAllVideo === false ||
+        meetingReclaimHost,
     },
     {
       key: 'unmuteVideo',
       label: t('unMuteVideoAll'),
       onClick: unmuteVideo,
-      disabled: meetingInfo.muteBtnConfig?.showUnMuteAllVideo === false,
+      disabled:
+        meetingInfo.muteBtnConfig?.showUnMuteAllVideo === false ||
+        meetingReclaimHost,
+    },
+    {
+      key: 'meetingReclaimHost',
+      label: t('meetingReclaimHost'),
+      onClick: async () => {
+        try {
+          await neMeeting?.sendMemberControl(
+            memberAction.takeBackTheHost,
+            hostUuid
+          )
+        } catch {
+          Toast.fail(t('meetingReclaimHostFailed'))
+        }
+      },
+      disabled: !meetingReclaimHost,
     },
   ].filter((item) => !item.disabled)
 
   const aheadButtons = buttons.splice(0, 2)
 
   const items: MenuProps['items'] = buttons
+
+  const handleAdmitAll = () => {
+    Modal.confirm({
+      title: t('waitingRoomAdmitMember'),
+      width: 270,
+      cancelText: t('globalCancel'),
+      okText: t('waitingRoomAdmitAll'),
+      content: (
+        <div className="nemeeting-waiting-room-all-tip">
+          {t('waitingRoomAdmitAllMembersTip')}
+        </div>
+      ),
+      onOk: async () => {
+        try {
+          await neMeeting?.admitAllMembers()
+        } catch (e: any) {
+          Toast.fail(e?.msg || e?.message)
+        }
+      },
+    })
+  }
+
+  const handleRemoveAll = () => {
+    Modal.confirm({
+      title: t('participantExpelWaitingMemberDialogTitle'),
+      width: 270,
+      content: (
+        <>
+          <div className="nemeeting-waiting-room-all-tip">
+            {t('waitingRoomRemoveAllMemberTip')}
+          </div>
+          {meetingInfo.enableBlacklist ? (
+            <Checkbox
+              className="close-checkbox-tip"
+              onChange={(e) => (notAllowJoinRef.current = e.target.checked)}
+            >
+              {t('notAllowJoin')}
+            </Checkbox>
+          ) : null}
+        </>
+      ),
+      cancelText: t('globalCancel'),
+      okText: t('waitingRoomRemoveAll'),
+      onOk: async () => {
+        try {
+          await neMeeting?.expelAllMembers(notAllowJoinRef.current)
+        } catch (e: any) {
+          Toast.fail(e?.msg || e?.message)
+        }
+      },
+    })
+  }
 
   return (
     <>
@@ -213,33 +271,65 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
           onKeyDown={(e) => e.preventDefault()}
         />
       </div> */}
-      {aheadButtons.length === 0 ? null : (
+      {tab === 'room' ? (
+        aheadButtons.length === 0 ? null : (
+          <div
+            className={`${
+              isElectronSharingScreen ? 'member-List-footer-item-sharing' : ''
+            } member-List-footer-item pd20`}
+          >
+            {aheadButtons.map((item, index) => {
+              return (
+                <Button
+                  key={item.key}
+                  className="member-List-footer-btn"
+                  type="primary"
+                  onClick={item.onClick}
+                  title={item.label}
+                  style={{ maxWidth: index === 1 ? '126px' : '102px' }}
+                >
+                  {item.label}
+                </Button>
+              )
+            })}
+            {items.length > 0 ? (
+              <Dropdown
+                menu={{ items }}
+                trigger={['click']}
+                placement="topRight"
+              >
+                <div className="member-list-footer-more-btn">
+                  <svg className="icon iconfont" aria-hidden="true">
+                    <use xlinkHref="#icongengduo"></use>
+                  </svg>
+                </div>
+              </Dropdown>
+            ) : null}
+          </div>
+        )
+      ) : (
         <div
           className={`${
             isElectronSharingScreen ? 'member-List-footer-item-sharing' : ''
-          } member-List-footer-item pd20`}
+          } member-List-footer-item member-list-waiting-footer-item pd20`}
         >
-          {aheadButtons.map((item) => {
-            return (
-              <Button
-                key={item.key}
-                className="member-List-footer-btn"
-                type="primary"
-                onClick={item.onClick}
-              >
-                {item.label}
-              </Button>
-            )
-          })}
-          {items.length > 0 ? (
-            <Dropdown menu={{ items }} trigger={['click']} placement="topRight">
-              <div className="member-list-footer-more-btn">
-                <svg className="icon iconfont" aria-hidden="true">
-                  <use xlinkHref="#icongengduo"></use>
-                </svg>
-              </div>
-            </Dropdown>
-          ) : null}
+          <Button
+            style={{ width: 124 }}
+            className="member-List-footer-btn"
+            type="primary"
+            onClick={handleAdmitAll}
+            title={t('waitingRoomAdmitAll')}
+          >
+            {t('waitingRoomAdmitAll')}
+          </Button>
+          <Button
+            style={{ width: 124 }}
+            className="member-List-footer-btn"
+            onClick={handleRemoveAll}
+            title={t('waitingRoomRemoveAll')}
+          >
+            {t('waitingRoomRemoveAll')}
+          </Button>
         </div>
       )}
     </>
@@ -344,10 +434,20 @@ const MemberList: React.FC<MemberListProps> = ({
 
   const [searchName, setSearchName] = useState('')
 
+  const isOwner = useMemo(
+    () => localMember.uuid === meetingInfo.ownerUserUuid,
+    [localMember.uuid, meetingInfo.ownerUserUuid]
+  )
+
   const isHostOrCoHost = useMemo(
     () => localMember.role === Role.host || localMember.role === Role.coHost,
     [localMember.role]
   )
+
+  const hostUuid = useMemo(() => {
+    return memberList.find((item) => item.role === Role.host)?.uuid
+  }, [memberList])
+
   useEffect(() => {
     // 如果是主持人或者联席主持人才有等候室tab
     if (!isHostOrCoHost) {
@@ -368,7 +468,7 @@ const MemberList: React.FC<MemberListProps> = ({
     const videoOn: NEMember[] = []
     const audioAndVideoOn: NEMember[] = []
     const other: NEMember[] = []
-    const tempMemberList: NEMember[] = []
+
     memberList.forEach((member) => {
       if (member.role === Role.host) {
         host.push(member)
@@ -546,7 +646,7 @@ const MemberList: React.FC<MemberListProps> = ({
         </div>
       )
     },
-    [waitingRoomMemberListFilter]
+    [waitingRoomMemberListFilter, meetingInfo.enableBlacklist]
   )
 
   return (
@@ -590,39 +690,41 @@ const MemberList: React.FC<MemberListProps> = ({
         />
       </div>
 
-      {isHostOrCoHost && waitingRoomInfo.memberCount > 0 && (
-        <div className="pd20">
-          <div className="nemeeting-member-list-tabs">
-            <div
-              className={`nemeeting-member-list-tab ${
-                meetingInfo.activeMemberManageTab == 'room'
-                  ? 'nemeeting-member-list-tab-selected'
-                  : ''
-              }`}
-              onClick={() => changeTab('room')}
-            >
-              {t('inMeeting')}({memberList.length})
-            </div>
-            <div
-              className={`nemeeting-member-list-tab ${
-                meetingInfo.activeMemberManageTab == 'waitingRoom'
-                  ? 'nemeeting-member-list-tab-selected'
-                  : ''
-              }`}
-              onClick={() => changeTab('waitingRoom')}
-            >
-              <span style={{ position: 'relative' }}>
-                {t('waitingRoom')}({waitingRoomInfo.memberCount})
-                {!!waitingRoomInfo.unReadMsgCount && (
-                  <span className="waiting-room-unread-notify"></span>
-                )}
-              </span>
+      {isHostOrCoHost &&
+        waitingRoomInfo.memberCount > 0 &&
+        waitingRoomMemberList.length > 0 && (
+          <div className="pd20">
+            <div className="nemeeting-member-list-tabs">
+              <div
+                className={`nemeeting-member-list-tab ${
+                  meetingInfo.activeMemberManageTab == 'room'
+                    ? 'nemeeting-member-list-tab-selected'
+                    : ''
+                }`}
+                onClick={() => changeTab('room')}
+              >
+                {t('inMeeting')}({memberList.length})
+              </div>
+              <div
+                className={`nemeeting-member-list-tab ${
+                  meetingInfo.activeMemberManageTab == 'waitingRoom'
+                    ? 'nemeeting-member-list-tab-selected'
+                    : ''
+                }`}
+                onClick={() => changeTab('waitingRoom')}
+              >
+                <span style={{ position: 'relative' }}>
+                  {t('waitingRoom')}({waitingRoomInfo.memberCount})
+                  {!!waitingRoomInfo.unReadMsgCount && (
+                    <span className="waiting-room-unread-notify"></span>
+                  )}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="member-list-content pd20" ref={scrollRef}>
+      <div className="member-list-content" ref={scrollRef}>
         {meetingInfo.activeMemberManageTab === 'room' && (
           <AutoSizer>
             {({ height, width }) => (
@@ -699,8 +801,15 @@ const MemberList: React.FC<MemberListProps> = ({
           }}
         />
       </div>
-      {isHostOrCoHost ? (
-        <MemberListFooter meetingInfo={meetingInfo} neMeeting={neMeeting} />
+      {isHostOrCoHost || isOwner ? (
+        <MemberListFooter
+          tab={meetingInfo.activeMemberManageTab}
+          meetingInfo={meetingInfo}
+          neMeeting={neMeeting}
+          isHostOrCoHost={isHostOrCoHost}
+          isOwner={isOwner}
+          hostUuid={hostUuid}
+        />
       ) : null}
     </div>
   )

@@ -64,15 +64,15 @@ export const LoginCom: React.FC<LoginComProps> = ({
     setLoading(true);
     const payload = isCode
       ? {
-        mobile: phone.value,
-        verifyCode: code.value,
-      }
+          mobile: phone.value,
+          verifyCode: code.value,
+        }
       : {
-        username: phone.value,
-        password: newVersion
-          ? Md5.hashStr(pwd.value + '')
-          : Md5.hashStr(pwd.value + ''),
-      };
+          username: phone.value,
+          password: newVersion
+            ? Md5.hashStr(pwd.value + '@yiyong.im')
+            : Md5.hashStr(pwd.value + '@163'),
+        };
     loginApi(payload)
       .then((data) => {
         console.log('res..', data);

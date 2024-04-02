@@ -16,6 +16,7 @@ import { history, useLocation } from 'umi';
 import { useTranslation } from 'react-i18next';
 import Toast from '../../../../src/components/common/toast';
 import { LOCAL_STORAGE_KEY } from '../../../../src/config';
+import { css } from '@emotion/css';
 
 let appKey = '';
 const platform = window.isElectronNative ? 'electron' : 'web';
@@ -26,8 +27,6 @@ export default function MeetingPage() {
   const i18n = {
     feedback: t('feedback'),
     password: t('meetingPassword'),
-    passwordPlaceholder: t('inputMeetingPassword'),
-    passwordError: t('wrongPassword'),
     uploadLogLoading: t('uploadLoadingText'),
   };
 
@@ -246,6 +245,7 @@ export default function MeetingPage() {
           name: accountInfoRef.current.nickname,
         },
         moreBarList: [
+          { id: 29 },
           { id: 25 },
           {
             id: 1000,
@@ -370,6 +370,7 @@ export default function MeetingPage() {
             name: accountInfoRef.current.nickname,
           },
           moreBarList: [
+            { id: 29 },
             { id: 25 },
             {
               id: 1000,
@@ -399,6 +400,7 @@ export default function MeetingPage() {
   useEffect(() => {
     NEMeetingKit.actions.neMeeting?.updateMeetingInfo({
       moreBarList: [
+        { id: 29 },
         { id: 25 },
         {
           id: 1000,
@@ -421,26 +423,63 @@ export default function MeetingPage() {
     );
   }, [t]);
 
+  // win32 边框样式问题
+  const [isMaximized, setIsMaximized] = useState(false);
+  const [isSharingScreen, setIsSharingScreen] = useState(false);
+
+  useEffect(() => {
+    function handleMaximizeWindow(_: any, value: boolean) {
+      setIsMaximized(value);
+    }
+    NEMeetingKit.actions.on('onScreenSharingStatusChange', setIsSharingScreen);
+    window.ipcRenderer?.on('maximize-window', handleMaximizeWindow);
+    return () => {
+      window.ipcRenderer?.off('maximize-window', handleMaximizeWindow);
+    };
+  }, []);
+
+  console.log('isMaximized', isMaximized, isSharingScreen);
+
+  const winCls =
+    window.isElectronNative &&
+    window.isWins32 &&
+    !isMaximized &&
+    !isSharingScreen
+      ? css`
+          width: calc(100% - 4px);
+          height: calc(100% - 4px);
+          margin: 2px;
+          #ne-web-meeting {
+            box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.5);
+          }
+        `
+      : css`
+          width: 100%;
+          height: 100%;
+        `;
+
   return (
     <>
-      <div
-        id="ne-web-meeting"
-        style={
-          !!eleIpcIns && !window.isElectronNative
-            ? {
-                position: 'absolute',
-                top: 28,
-                left: 0,
-                right: 0,
-                width: '100%',
-                height: 'calc(100% - 28px)',
-              }
-            : {
-                width: '100%',
-                height: '100%',
-              }
-        }
-      ></div>
+      <div className={winCls}>
+        <div
+          id="ne-web-meeting"
+          style={
+            !!eleIpcIns && !window.isElectronNative
+              ? {
+                  position: 'absolute',
+                  top: 28,
+                  left: 0,
+                  right: 0,
+                  width: '100%',
+                  height: 'calc(100% - 28px)',
+                }
+              : {
+                  width: '100%',
+                  height: '100%',
+                }
+          }
+        ></div>
+      </div>
       <Feedback
         visible={feedbackModalOpen}
         meetingId={meetingId}

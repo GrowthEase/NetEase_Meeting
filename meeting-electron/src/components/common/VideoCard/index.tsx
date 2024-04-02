@@ -1,7 +1,7 @@
-import debounce from 'lodash/debounce'
 import React, {
   CSSProperties,
   LegacyRef,
+  MutableRefObject,
   useCallback,
   useContext,
   useEffect,
@@ -11,7 +11,6 @@ import React, {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 import useWatch from '../../../hooks/useWatch'
-import YUVCanvas from '../../../libs/yuv-canvas'
 import { GlobalContext, MeetingInfoContext } from '../../../store'
 import {
   ActionType,
@@ -25,17 +24,17 @@ import {
 import AudioIcon from '../AudioIcon'
 import './index.less'
 
-import errorHitImg from '../../../assets/hints-error.png'
-import { substringByByte3 } from '../../../utils'
+import { debounce, substringByByte3 } from '../../../utils'
 import UserAvatar from '../Avatar'
 import AudioCard from './audioCard'
+import { worker } from '../../web/Meeting/Meeting'
 
 interface VideoCardProps {
   isMySelf: boolean
   member: NEMember
   isMain: boolean
   sliderMembersLength?: number
-  streamType?: number
+  streamType?: 0 | 1
   type?: 'video' | 'screen'
   isSubscribeVideo?: boolean // 是否订阅视频流
   className?: string
@@ -49,9 +48,10 @@ interface VideoCardProps {
   // 是否镜像
   mirroring?: boolean
   videoViewPosition?: number
-  // 是否需要提前订阅大流
   avatarSize?: AvatarSize
   isAudioMode?: boolean
+  onDoubleClick?: (member: NEMember) => void
+  unsubscribeMembersTimerMap?: MutableRefObject<Record<string, any>>
 }
 
 const VideoCard: React.FC<VideoCardProps> = (props) => {
@@ -69,9 +69,10 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     focusBtnClassName,
     style,
     mirroring,
-    videoViewPosition,
     avatarSize,
     isAudioMode,
+    onDoubleClick,
+    unsubscribeMembersTimerMap,
   } = props
   const { t } = useTranslation()
   const type = props.type || 'video'
@@ -83,8 +84,8 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
   const timer = useRef<any>(null)
   const videoSizeTimer = useRef<any>(null)
   const refreshRateCountRef = useRef<number>(0)
-  const [resolutionWidth, setResolutionWidth] = useState<number>(0)
-  const [resolutionHeight, setResolutionHeight] = useState<number>(0)
+  const resolutionWidthRef = useRef<number>(0)
+  const resolutionHeightRef = useRef<number>(0)
   const [refreshRate, setRefreshRate] = useState<number>(0)
 
   const isMainVideo = useMemo<boolean>(() => {
@@ -125,16 +126,49 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
             member.name,
             streamType === 0 ? '大流' : '小流'
           )
-          neMeeting?.rtcController?.subscribeRemoteVideoStream(
-            member.uuid,
-            streamType
-          )
+          neMeeting?.subscribeRemoteVideoStream(member.uuid, streamType)
+          if (
+            unsubscribeMembersTimerMap &&
+            unsubscribeMembersTimerMap.current[member.uuid]
+          ) {
+            clearTimeout(unsubscribeMembersTimerMap.current[member.uuid])
+            unsubscribeMembersTimerMap.current[member.uuid] = null
+            delete unsubscribeMembersTimerMap.current[member.uuid]
+          }
         },
         window.isElectronNative ? 100 : 0
       )
     }
   }, 300)
 
+  const showCancelFocusBtn = useMemo(() => {
+    return (
+      canShowCancelFocusBtn &&
+      !meetingInfo.isRooms &&
+      meetingInfo.showFocusBtn !== false
+    )
+  }, [canShowCancelFocusBtn, meetingInfo.isRooms, meetingInfo.showFocusBtn])
+
+  const canShowCancelPinBtn = useMemo(() => {
+    return (
+      (!canShowCancelFocusBtn || !meetingInfo.showFocusBtn) &&
+      isMain &&
+      !meetingInfo.focusUuid &&
+      meetingInfo.pinVideoUuid === member.uuid &&
+      type !== 'screen'
+    )
+  }, [
+    showCancelFocusBtn,
+    meetingInfo.pinVideoUuid,
+    member.uuid,
+    type,
+    meetingInfo.focusUuid,
+  ])
+  const canShowMainPinBtn = useMemo(() => {
+    return (
+      isMain && !meetingInfo.focusUuid && type != 'screen' && member.isVideoOn
+    )
+  }, [meetingInfo.focusUuid, isMain, type, member.isVideoOn])
   const playRemoteSubVideo = () => {
     if (isMySelf || type !== 'screen') {
       return
@@ -167,39 +201,37 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
       // 设置本端画布
       viewRef.current &&
         neMeeting?.rtcController?.setupLocalVideoCanvas(viewRef.current)
-
       // isVideoOn存在值则非第一次进入会议
       if (member.isVideoOn) {
         neMeeting?.rtcController?.playLocalStream('video')
       } else {
         //  第一次进入会议，且不是 Electron
-        if (!window.isElectronNative) {
-          const isHost =
-            member.role === Role.host || member.role === Role.coHost
-          // 如果开启音视频进入会议
-          if (
-            meetingInfo.isUnMutedVideo &&
-            (meetingInfo.videoOff === AttendeeOffType.disable || isHost)
-          ) {
-            neMeeting?.unmuteLocalVideo()
-          }
-
-          if (
-            meetingInfo.isUnMutedAudio &&
-            (meetingInfo.audioOff === AttendeeOffType.disable || isHost)
-          ) {
-            neMeeting?.unmuteLocalAudio()
-          }
-          // 后续设置为false
-          dispatch &&
-            dispatch({
-              type: ActionType.UPDATE_MEETING_INFO,
-              data: {
-                isUnMutedVideo: false,
-                isUnMutedAudio: false,
-              },
-            })
+        // if (!window.isElectronNative) {
+        const isHost = member.role === Role.host || member.role === Role.coHost
+        // 如果开启音视频进入会议
+        if (
+          meetingInfo.isUnMutedVideo &&
+          (meetingInfo.videoOff === AttendeeOffType.disable || isHost)
+        ) {
+          neMeeting?.unmuteLocalVideo()
         }
+
+        if (
+          meetingInfo.isUnMutedAudio &&
+          (meetingInfo.audioOff === AttendeeOffType.disable || isHost)
+        ) {
+          neMeeting?.unmuteLocalAudio()
+        }
+        // 后续设置为false
+        dispatch &&
+          dispatch({
+            type: ActionType.UPDATE_MEETING_INFO,
+            data: {
+              isUnMutedVideo: false,
+              isUnMutedAudio: false,
+            },
+          })
+        // }
       }
     } else {
       if (type === 'screen') {
@@ -210,10 +242,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
             playRemoteVideo()
           } else {
             timer.current = setTimeout(() => {
-              neMeeting?.rtcController?.unsubscribeRemoteVideoStream(
-                member.uuid,
-                streamType
-              )
+              neMeeting?.unsubscribeRemoteVideoStream(member.uuid, streamType)
               timer.current = null
             }, 5000)
             // neMeeting?.rtcController?.unsubscribeRemoteVideoStream(
@@ -236,10 +265,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     if (member.isVideoOn) {
       if (!isSubscribeVideo) {
         timer.current = setTimeout(() => {
-          neMeeting?.rtcController?.unsubscribeRemoteVideoStream(
-            member.uuid,
-            streamType
-          )
+          neMeeting?.unsubscribeRemoteVideoStream(member.uuid, streamType)
           timer.current = null
         }, 10000)
       } else {
@@ -267,19 +293,13 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
           if (isSubscribeVideo) {
             playRemoteVideo()
           } else {
-            neMeeting?.rtcController?.unsubscribeRemoteVideoStream(
-              member.uuid,
-              streamType
-            )
+            neMeeting?.unsubscribeRemoteVideoStream(member.uuid, streamType)
           }
         }
       } else {
         // 非本端取消订阅
         !isMySelf &&
-          neMeeting?.rtcController?.unsubscribeRemoteVideoStream(
-            member.uuid,
-            streamType
-          )
+          neMeeting?.unsubscribeRemoteVideoStream(member.uuid, streamType)
       }
     }
   })
@@ -373,157 +393,29 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     }
   }
 
-  const cancelFocus = () => {
-    neMeeting?.sendHostControl(31, member.uuid)
+  const cancelFocus = (type: 'focus' | 'pin') => {
+    if (type === 'focus') {
+      neMeeting?.sendHostControl(31, member.uuid)
+    } else {
+      dispatch?.({
+        type: ActionType.UPDATE_MEETING_INFO,
+        data: {
+          pinVideoUuid: '',
+        },
+      })
+    }
   }
 
-  /** 多窗口模式
-  const getPosition = () => {
-    if ((member.isVideoOn && isSubscribeVideo) || type === 'screen') {
-      const targetElement = document.getElementById(
-        `nemeeting-${member.uuid}-video-card-${type}`
-      )
-      if (targetElement) {
-        const rect = targetElement.getBoundingClientRect()
-        // 计算相对于<body>的位置
-        const bodyRect = document.body.getBoundingClientRect()
-        const relativePosition = {
-          x: rect.x - bodyRect.x,
-          y: rect.y - bodyRect.y,
-          width: targetElement.clientWidth,
-          height: targetElement.clientHeight,
-        }
-        window.ipcRenderer?.send('nemeeting-video-card-open', {
-          uuid: member.uuid,
-          position: relativePosition,
-          mirroring,
-          type,
-          isMySelf: member.uuid === meetingInfo.localMember.uuid,
-          streamType,
-        })
-      }
-    }
+  const handleDoubleClick = () => {
+    onDoubleClick?.(member)
   }
-  */
 
-  /** 多窗口模式
-  useEffect(() => {
-    if (window.isElectronNative) {
-      window.ipcRenderer?.send('nemeeting-video-card-close', {
-        uuid: member.uuid,
-        type,
-      })
-
-      const windowResizeTimer: any = null
-
-      const timer = setTimeout(() => {
-        getPosition()
-      }, 0)
-
-      const targetElement = document.getElementById(
-        `nemeeting-${member.uuid}-video-card-${type}`
-      )
-
-      let isResize = false
-
-      const ro = new ResizeObserver((entries) => {
-        if (entries.length > 0 && isResize) {
-          windowResizeTimer && clearTimeout(windowResizeTimer)
-          getPosition()
-        } else {
-          isResize = true
-        }
-      })
-      ro.observe(targetElement as HTMLElement)
-
-      window.addEventListener('resize', getPosition)
-
-      return () => {
-        window.ipcRenderer?.send('nemeeting-video-card-close', {
-          uuid: member.uuid,
-          type,
-        })
-        clearTimeout(timer)
-
-        ro.unobserve(targetElement as HTMLElement)
-        windowResizeTimer && clearTimeout(windowResizeTimer)
-        window.removeEventListener('resize', getPosition)
-      }
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    member.isVideoOn,
-    member.uuid,
-    isSubscribeVideo,
-    meetingInfo.layout,
-    meetingInfo.whiteboardUuid,
-    meetingInfo.focusUuid,
-    // 先取出订阅，否则在设置页面修改镜像时候，画面会直接没有，渲染到主画面上
-    // mirroring,
-    type,
-    meetingInfo.screenUuid,
-    meetingInfo.isRooms,
-    sliderMembersLength,
-  ])
-  */
-
-  /**  多窗口模式
-  useUpdateEffect(() => {
-    if (window.isElectronNative) {
-      getPosition()
-    }
-  }, [videoViewPosition])
-  */
-
-  useEffect(() => {
-    // 处理 Electron  入会
-    if (isMySelf && window.isElectronNative) {
-      function handleMemberJoinRtcChannel(members) {
-        const my = members.find((item) => item.uuid === member.uuid)
-        if (my && !member.isVideoOn) {
-          const isHost =
-            member.role === Role.host || member.role === Role.coHost
-          // 如果开启音视频进入会议
-          if (
-            meetingInfo.isUnMutedVideo &&
-            (meetingInfo.videoOff === AttendeeOffType.disable || isHost)
-          ) {
-            neMeeting?.unmuteLocalVideo()
-          }
-
-          if (
-            meetingInfo.isUnMutedAudio &&
-            (meetingInfo.audioOff === AttendeeOffType.disable || isHost)
-          ) {
-            neMeeting?.unmuteLocalAudio()
-          }
-          // 后续设置为false
-          dispatch &&
-            dispatch({
-              type: ActionType.UPDATE_MEETING_INFO,
-              data: {
-                isUnMutedVideo: false,
-                isUnMutedAudio: false,
-              },
-            })
-        }
-      }
-      eventEmitter?.on(
-        EventType.MemberJoinRtcChannel,
-        handleMemberJoinRtcChannel
-      )
-      return () => {
-        eventEmitter?.off(
-          EventType.MemberJoinRtcChannel,
-          handleMemberJoinRtcChannel
-        )
-      }
-    }
-  }, [isMySelf, eventEmitter, member, meetingInfo, neMeeting, dispatch])
+  const pinView = () => {
+    onDoubleClick?.(member)
+  }
 
   const handleVideoFrame = useCallback(
-    (yuvCanvas, canvas) => {
+    (canvas) => {
       return (uuid, bSubVideo, data, _, width, height) => {
         if (uuid === member.uuid) {
           if (
@@ -533,7 +425,6 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
             if (canvas && viewRef.current) {
               const viewWidth = viewRef.current.clientWidth
               const viewHeight = viewRef.current.clientHeight
-
               if (viewWidth / (width / height) > viewHeight) {
                 canvas.style.height = `${viewHeight}px`
                 canvas.style.width = `${viewHeight * (width / height)}px`
@@ -542,34 +433,8 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
                 canvas.style.height = `${viewWidth / (width / height)}px`
               }
             }
-            const uvWidth = width / 2
-            let pixelStorei = 1
-            if (uvWidth % 8 === 0) {
-              pixelStorei = 8
-            } else if (uvWidth % 4 === 0) {
-              pixelStorei = 4
-            } else if (uvWidth % 2 === 0) {
-              pixelStorei = 2
-            }
-            const buffer = {
-              format: {
-                width,
-                height,
-                chromaWidth: width / 2,
-                chromaHeight: height / 2,
-                cropLeft: 0, // default
-                cropTop: 0, // default
-                cropHeight: height,
-                cropWidth: width,
-                displayWidth: width, // derived from width via cropWidth
-                displayHeight: height, // derived from cropHeight
-                pixelStorei, // default
-              },
-              ...data,
-            }
-            yuvCanvas.drawFrame(buffer)
-            setResolutionWidth(width)
-            setResolutionHeight(height)
+            resolutionWidthRef.current = width
+            resolutionHeightRef.current = height
             refreshRateCountRef.current++
           }
         }
@@ -594,33 +459,70 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     if (member.isSharingScreen && type === 'screen') {
       const canvas = canvasRef.current
       if (canvas && viewRef.current) {
-        const yuv = YUVCanvas.attach(canvas)
-        const handle = handleVideoFrame(yuv, canvas)
+        // @ts-ignore
+        const offscreen = canvas.transferControlToOffscreen()
+        worker.postMessage(
+          {
+            canvas: offscreen,
+            uuid: member.uuid,
+            type,
+          },
+          [offscreen]
+        )
+        const handle = handleVideoFrame(canvas)
         eventEmitter?.on(EventType.onVideoFrameData, handle)
         return () => {
-          yuv.clear()
-          yuv.destroy()
           eventEmitter?.off(EventType.onVideoFrameData, handle)
+          worker.postMessage({
+            removeCanvas: true,
+            uuid: member.uuid,
+            type,
+          })
         }
       }
     }
-  }, [eventEmitter, member.isSharingScreen, type, handleVideoFrame])
+  }, [
+    eventEmitter,
+    member.isSharingScreen,
+    type,
+    handleVideoFrame,
+    member.uuid,
+  ])
 
   useEffect(() => {
     if (member.isVideoOn && isSubscribeVideo && type === 'video') {
       const canvas = canvasRef.current
       if (canvas && viewRef.current) {
-        const yuv = YUVCanvas.attach(canvas)
-        const handle = handleVideoFrame(yuv, canvas)
+        // @ts-ignore
+        const offscreen = canvas.transferControlToOffscreen()
+        worker.postMessage(
+          {
+            canvas: offscreen,
+            uuid: member.uuid,
+            type,
+          },
+          [offscreen]
+        )
+        const handle = handleVideoFrame(canvas)
         eventEmitter?.on(EventType.onVideoFrameData, handle)
         return () => {
-          yuv.clear()
-          yuv.destroy()
           eventEmitter?.off(EventType.onVideoFrameData, handle)
+          worker.postMessage({
+            removeCanvas: true,
+            uuid: member.uuid,
+            type,
+          })
         }
       }
     }
-  }, [eventEmitter, type, member.isVideoOn, isSubscribeVideo, handleVideoFrame])
+  }, [
+    eventEmitter,
+    type,
+    member.isVideoOn,
+    isSubscribeVideo,
+    handleVideoFrame,
+    member.uuid,
+  ])
 
   return isAudioMode ? (
     <AudioCard
@@ -641,34 +543,45 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
       } ${className || ''}`}
       style={{
         ...style,
-        ...((window.isElectronNative && member.isVideoOn && isSubscribeVideo) ||
-        type === 'screen'
-          ? {
-              // background: 'transparent',
-              // border: showBorder ? undefined : 'none',
-            }
-          : {}),
+      }}
+      onDoubleClick={(e) => {
+        handleDoubleClick()
       }}
       onClick={(e) => onCardClick(e)}
     >
       {!!meetingInfo.isDebugMode && (
         <div className="resolution">
-          {resolutionWidth}x{resolutionHeight} {refreshRate}Hz
+          {resolutionWidthRef.current}x{resolutionHeightRef.current}{' '}
+          {refreshRate}Hz
         </div>
       )}
-      {canShowCancelFocusBtn &&
-        !meetingInfo.isRooms &&
-        meetingInfo.showFocusBtn !== false && (
+      {showCancelFocusBtn || canShowCancelPinBtn ? (
+        <div
+          onClick={() => cancelFocus(showCancelFocusBtn ? 'focus' : 'pin')}
+          className={`cancel-focus ${focusBtnClassName || ''}`}
+        >
+          <svg className="icon iconfont icongudingshipin" aria-hidden="true">
+            <use xlinkHref="#icongudingshipin"></use>
+          </svg>
+          <span className="cancel-focus-title">
+            {showCancelFocusBtn
+              ? t('participantUnassignActiveSpeaker')
+              : t('meetingUnpin')}
+          </span>
+        </div>
+      ) : (
+        canShowMainPinBtn && (
           <div
-            onClick={cancelFocus}
+            onClick={() => pinView()}
             className={`cancel-focus ${focusBtnClassName || ''}`}
           >
-            <svg className="icon iconfont" aria-hidden="true">
-              <use xlinkHref="#iconjiaodianshipin"></use>
+            <svg className="icon iconfont icongudingshipin" aria-hidden="true">
+              <use xlinkHref="#icongudingshipin"></use>
             </svg>
-            <span className="cancel-focus-title">{t('unFocusVideo')}</span>
+            <span className="cancel-focus-title">{t('meetingPinView')}</span>
           </div>
-        )}
+        )
+      )}
 
       {member.properties?.phoneState?.value == '1' &&
         !member.isSharingScreen && (

@@ -12,9 +12,14 @@ import { Navigation } from 'swiper'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import { MeetingInfoContext, useGlobalContext } from '../../../store'
-import { groupMembersService } from '../../h5/MeetingCanvas/service'
 import './index.less'
-import { EventType, LayoutTypeEnum, NEMember, Role } from '../../../types'
+import {
+  ActionType,
+  EventType,
+  LayoutTypeEnum,
+  NEMember,
+  Role,
+} from '../../../types'
 import { useTranslation } from 'react-i18next'
 import WhiteboardView from './WhiteboardView'
 import { Swiper as SwiperClass } from 'swiper/types'
@@ -23,6 +28,7 @@ import classNames from 'classnames'
 
 import useActiveSpeakerManager from '../../../hooks/useActiveSpeakerManager'
 import AudioModeCanvas from './AudioModeCanvas'
+import useMeetingCanvas from '../../../hooks/useMeetingCanvas'
 
 interface MeetingCanvasProps {
   className?: string
@@ -35,6 +41,10 @@ interface MeetingCanvasProps {
   wrapperWidth?: number
 }
 
+interface LayoutInfo {
+  layout: LayoutTypeEnum
+  speakerLayoutPlacement: 'top' | 'right'
+}
 interface SmallRenderProps {
   mainHeight: number
 }
@@ -65,25 +75,48 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
   const [maxResizableWidth, setMaxResizableWidth] = useState(0)
   // const [activeSpeakerList, setActiveSpeakerList] = useState<string[]>([])
   const isSpeakerRef = useRef<boolean>(isSpeaker)
+
   // const [speakerRightViewColumnNum, setSpeakerRightViewColumnNum] = useState(1)
-  const swiperInstanceRef = useRef<SwiperClass | null>(null)
-  isSpeakerRef.current = isSpeaker
 
   const isSpeakerLayoutPlacementRight =
     isSpeaker && meetingInfo.speakerLayoutPlacement === 'right'
 
-  const hideNoVideoMembers =
-    meetingInfo.localMember.properties?.hideNoVideoMembers?.value === '1'
-
-  const memberList = useMemo(() => {
-    if (hideNoVideoMembers) {
-      const list = originMemberList.filter(
-        (item) => item.isVideoOn || item.isSharingScreen
-      )
-      return list.length > 0 ? list : [meetingInfo.localMember]
+  const groupNum = useMemo(() => {
+    let groupNum = 4
+    if (isSpeakerLayoutPlacementRight) {
+      groupNum = 6
+      if (resizableWidth > 340) {
+        groupNum = 4
+      }
+      if (resizableWidth > 500) {
+        groupNum = 9
+      }
+      if (resizableWidth > 660) {
+        groupNum = 16
+      }
     }
-    return originMemberList
-  }, [hideNoVideoMembers, originMemberList, meetingInfo.localMember])
+    return groupNum
+  }, [resizableWidth, isSpeakerLayoutPlacementRight])
+
+  const {
+    hideNoVideoMembers,
+    memberList,
+    canPreSubscribe,
+    groupMembers,
+    handleViewDoubleClick,
+    preSpeakerLayoutInfo,
+    handleUnsubscribeMembers,
+    unsubscribeMembersTimerMap,
+    clearUnsubscribeMembersTimer,
+  } = useMeetingCanvas({
+    isSpeaker,
+    isAudioMode,
+    isSpeakerLayoutPlacementRight,
+    groupNum,
+    resizableWidth,
+  })
+  const swiperInstanceRef = useRef<SwiperClass | null>(null)
+  isSpeakerRef.current = isSpeaker
 
   const showCollapseBtn = useMemo(() => {
     if (
@@ -177,60 +210,6 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     meetingInfo.localMember.role === Role.host ||
     meetingInfo.localMember.role === Role.coHost
 
-  const groupNum = useMemo(() => {
-    let groupNum = 4
-    if (isSpeakerLayoutPlacementRight) {
-      groupNum = 6
-      if (resizableWidth > 340) {
-        groupNum = 4
-      }
-      if (resizableWidth > 500) {
-        groupNum = 9
-      }
-      if (resizableWidth > 660) {
-        groupNum = 16
-      }
-    }
-    return groupNum
-  }, [resizableWidth, isSpeakerLayoutPlacementRight])
-
-  // 对成员列表进行排序
-  const groupMembers = useMemo(() => {
-    if (isAudioMode) {
-      // 如果是音频模式则所有成员都在一页不用分页;
-      return [memberList]
-    } else {
-      return groupMembersService({
-        memberList,
-        groupNum: isSpeaker ? groupNum : 16,
-        screenUuid: meetingInfo.screenUuid,
-        focusUuid: meetingInfo.focusUuid,
-        myUuid: meetingInfo.localMember.uuid,
-        activeSpeakerUuid: meetingInfo.lastActiveSpeakerUuid || '',
-        groupType: 'web',
-        enableSortByVoice: !!meetingInfo.enableSortByVoice,
-        layout: isSpeaker ? LayoutTypeEnum.Speaker : LayoutTypeEnum.Gallery,
-        whiteboardUuid: meetingInfo.whiteboardUuid,
-        isWhiteboardTransparent: meetingInfo.isWhiteboardTransparent,
-      })
-    }
-  }, [
-    memberList,
-    memberList.length,
-    meetingInfo.hostUuid,
-    meetingInfo.focusUuid,
-    meetingInfo.activeSpeakerUuid,
-    meetingInfo.screenUuid,
-    meetingInfo.whiteboardUuid,
-    meetingInfo.layout,
-    isSpeaker,
-    meetingInfo.lastActiveSpeakerUuid,
-    meetingInfo.isWhiteboardTransparent,
-    resizableWidth,
-    isSpeakerLayoutPlacementRight,
-    groupNum,
-    isAudioMode,
-  ])
   // 获取画布行数和列数
   function getLineNumAndColumnNum(memberCount: number) {
     // 一行存放几个视图
@@ -266,21 +245,27 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
       }
     }
   }, [isSpeaker, isAudioMode])
-  // 是否能够提前订阅
-  const canPreSubscribe = useMemo(() => {
-    console.log(
-      'canPreSubscribe',
-      globalConfig?.appConfig.MEETING_CLIENT_CONFIG?.activeSpeakerConfig,
-      isSpeaker,
-      !meetingInfo.focusUuid
-    )
-    return (
-      globalConfig?.appConfig.MEETING_CLIENT_CONFIG?.activeSpeakerConfig
-        .enableVideoPreSubscribe &&
-      isSpeaker &&
-      !meetingInfo.focusUuid
-    )
-  }, [globalConfig?.appConfig, isSpeaker, meetingInfo.focusUuid])
+
+  // 记录上一次的布局信息
+  useEffect(() => {
+    if (meetingInfo.layout === LayoutTypeEnum.Speaker) {
+      preSpeakerLayoutInfo.current = meetingInfo.speakerLayoutPlacement
+    }
+  }, [meetingInfo.layout, meetingInfo.speakerLayoutPlacement])
+
+  useEffect(() => {
+    // 如果是宫格布局则切换到上一次演讲者布局(顶部列表/右侧列表)，如果上一次不是演讲者视图则切换到演讲者上下布局
+    if (meetingInfo.pinVideoUuid) {
+      setActiveIndex(0)
+      dispatch?.({
+        type: ActionType.UPDATE_MEETING_INFO,
+        data: {
+          layout: LayoutTypeEnum.Speaker,
+          speakerLayoutPlacement: preSpeakerLayoutInfo.current,
+        },
+      })
+    }
+  }, [meetingInfo.pinVideoUuid])
 
   useEffect(() => {
     if (isSpeakerRef.current && !isSpeakerLayoutPlacementRight) {
@@ -361,6 +346,15 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     meetingInfo.isWhiteboardTransparent,
   ])
 
+  const isElectronSharingScreen = useMemo(() => {
+    return window.ipcRenderer && meetingInfo.localMember.isSharingScreen
+  }, [meetingInfo.localMember.isSharingScreen])
+
+  // 主画面成员
+  const mainMember = useMemo(() => {
+    return groupMembers[0]?.[0] || meetingInfo.localMember
+  }, [groupMembers])
+
   useEffect(() => {
     function handleActiveSpeakerActiveChanged(info: {
       user: string
@@ -369,7 +363,8 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
       // 需要订阅大流
       if (info.active) {
         console.warn('开始订阅大流>>>>>', info.user)
-        neMeeting?.rtcController?.subscribeRemoteVideoStream(info.user, 0)
+        neMeeting?.subscribeRemoteVideoStream(info.user, 0)
+        clearUnsubscribeMembersTimer(info.user)
       } else {
         // 如果不在说话列表且不再当前页则取消订阅，否则订阅大流;
         const memberList = sliderGroupMembers[activeIndex]
@@ -378,13 +373,16 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
         })
         console.warn('取消订阅大流>>>>>', member, info.user)
         if (member) {
-          neMeeting?.rtcController?.subscribeRemoteVideoStream(info.user, 1)
+          neMeeting?.subscribeRemoteVideoStream(info.user, 1)
+          clearUnsubscribeMembersTimer(info.user)
         } else {
-          neMeeting?.rtcController?.unsubscribeRemoteVideoStream(info.user, 0)
+          if (info.user !== mainMember.uuid) {
+            neMeeting?.unsubscribeRemoteVideoStream(info.user, 0)
+          }
         }
       }
     }
-    if (canPreSubscribe) {
+    if (canPreSubscribe && !isElectronSharingScreen) {
       eventEmitter?.on(
         EventType.ActiveSpeakerActiveChanged,
         handleActiveSpeakerActiveChanged
@@ -396,12 +394,13 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
         )
       }
     }
-  }, [sliderGroupMembers, activeIndex, canPreSubscribe])
-
-  // 主画面成员
-  const mainMember = useMemo(() => {
-    return groupMembers[0]?.[0] || meetingInfo.localMember
-  }, [groupMembers])
+  }, [
+    sliderGroupMembers,
+    activeIndex,
+    canPreSubscribe,
+    mainMember.uuid,
+    isElectronSharingScreen,
+  ])
 
   // 是否显示顶部成员列表
   let isShowSlider =
@@ -422,10 +421,6 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     !mainMember?.hide &&
     (!meetingInfo.whiteboardUuid || meetingInfo.isWhiteboardTransparent)
 
-  const isElectronSharingScreen = useMemo(() => {
-    return window.ipcRenderer && meetingInfo.localMember.isSharingScreen
-  }, [meetingInfo.localMember.isSharingScreen])
-
   useEffect(() => {
     if (
       (!sliderGroupMembers[activeIndex] ||
@@ -435,6 +430,25 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
       setActiveIndex(activeIndex - 1)
     }
   }, [sliderGroupMembers, activeIndex])
+
+  // 不在当前页的成员5s后取消订阅，如果5s内重新进入当前页则取消定时器
+  useEffect(() => {
+    if (!isElectronSharingScreen) {
+      return
+    }
+    handleUnsubscribeMembers(
+      sliderGroupMembers,
+      activeSpeakerList,
+      activeIndex,
+      mainMember.isVideoOn ? mainMember.uuid : ''
+    )
+  }, [
+    activeIndex,
+    sliderGroupMembers,
+    activeSpeakerList,
+    mainMember,
+    isElectronSharingScreen,
+  ])
 
   useEffect(() => {
     if (isSpeakerLayoutPlacementRight && !isElectronSharingScreen) {
@@ -537,6 +551,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
   ) : (
     <>
       {isShowSlider && !isSpeakerFull && (
+        // @ts-ignore
         <Resizable
           enable={isSpeakerLayoutPlacementRight ? { left: true } : false}
           className={`nemeeting-swiper-slider ${
@@ -661,8 +676,12 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
                             meetingInfo.enableVideoMirror &&
                             member?.uuid === meetingInfo.myUuid
                           }
+                          onDoubleClick={handleViewDoubleClick}
                           isAudioMode={isAudioMode}
                           avatarSize={isSpeaker ? 32 : 48}
+                          unsubscribeMembersTimerMap={
+                            unsubscribeMembersTimerMap
+                          }
                           showBorder={
                             isSpeaker
                               ? false
@@ -725,9 +744,9 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
           {showCollapseBtn && (
             <div
               className={classNames('nemeeting-main-view-collapse-allow', {
-                ['top']: !isSpeakerLayoutPlacementRight,
-                ['right']: isSpeakerLayoutPlacementRight,
-                ['collapse']: isSpeakerFull,
+                ['nemeeting-top']: !isSpeakerLayoutPlacementRight,
+                ['nemeeting-right']: isSpeakerLayoutPlacementRight,
+                ['nemeeting-collapse']: isSpeakerFull,
               })}
               onClick={handleCollapse}
             >
@@ -747,6 +766,8 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
             [mainMember].map((member) => {
               return (
                 <VideoCard
+                  onDoubleClick={handleViewDoubleClick}
+                  unsubscribeMembersTimerMap={unsubscribeMembersTimerMap}
                   mirroring={
                     meetingInfo.enableVideoMirror &&
                     !(
@@ -768,13 +789,20 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
                   canShowCancelFocusBtn={
                     member?.uuid == meetingInfo.focusUuid && isHost
                   }
-                  focusBtnClassName="focus-tp-normal"
+                  focusBtnClassName={
+                    isSpeakerFull ||
+                    memberList.length === 1 ||
+                    (isSpeaker && meetingInfo.speakerLayoutPlacement == 'right')
+                      ? 'focus-tp-normal'
+                      : ''
+                  }
                 />
               )
             })}
           {meetingInfo.screenUuid && !meetingInfo.whiteboardUuid && (
             <div className="screen-video-wrap">
               <VideoCard
+                unsubscribeMembersTimerMap={unsubscribeMembersTimerMap}
                 showBorder={false}
                 isSubscribeVideo={true}
                 isMain={true}

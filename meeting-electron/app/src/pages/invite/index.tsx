@@ -11,11 +11,17 @@ export default function InvitePage() {
   const [meetingInfo, setMeetingInfo] = useState();
 
   useEffect(() => {
-    // @ts-ignore
-    window.ipcRenderer?.on('updateData', (_, data) => {
-      const { meetingInfo } = data;
-      setMeetingInfo(meetingInfo);
-    });
+    function handleMessage(e: MessageEvent) {
+      const { event, payload } = e.data;
+      if (event === 'updateData') {
+        const { meetingInfo } = payload;
+        setMeetingInfo(meetingInfo);
+      }
+    }
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
   }, []);
 
   useEffect(() => {

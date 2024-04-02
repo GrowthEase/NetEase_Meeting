@@ -1,4 +1,7 @@
+import { ConfigProvider, notification } from 'antd'
+import { NotificationInstance } from 'antd/es/notification/interface'
 import React, { useReducer } from 'react'
+import { createMeetingInfoFactory } from '../services'
 import {
   Action,
   ActionType,
@@ -11,10 +14,15 @@ import {
   Role,
   WaitingRoomContextInterface,
 } from '../types'
-import { createMeetingInfoFactory } from '../services'
 import { NEMeetingIdDisplayOption } from '../types/type'
 
-export const GlobalContext = React.createContext<GlobalContextInterface>({})
+const antdPrefixCls = 'nemeeting'
+
+type GlobalContextType = GlobalContextInterface & {
+  notificationApi?: NotificationInstance
+}
+
+export const GlobalContext = React.createContext<GlobalContextType>({})
 
 const globalReducer = (
   state: GlobalContextInterface,
@@ -34,6 +42,9 @@ const globalReducer = (
 }
 
 export const GlobalContextProvider: React.FC<GlobalProviderProps> = (props) => {
+  const [notificationApi, contextHolder] = notification.useNotification({
+    stack: false,
+  })
   const [global, dispatch] = useReducer(globalReducer, {
     eventEmitter: props.eventEmitter,
     outEventEmitter: props.outEventEmitter,
@@ -49,14 +60,17 @@ export const GlobalContextProvider: React.FC<GlobalProviderProps> = (props) => {
     moreBarList: [],
   })
   return (
-    <GlobalContext.Provider value={{ ...global, dispatch }}>
-      {props.children}
-    </GlobalContext.Provider>
+    <ConfigProvider prefixCls={antdPrefixCls} theme={{ hashed: false }}>
+      <GlobalContext.Provider value={{ ...global, dispatch, notificationApi }}>
+        {contextHolder}
+        {props.children}
+      </GlobalContext.Provider>
+    </ConfigProvider>
   )
 }
 
-export const useGlobalContext = (): GlobalContextInterface =>
-  React.useContext<GlobalContextInterface>(GlobalContext)
+export const useGlobalContext = (): GlobalContextType =>
+  React.useContext<GlobalContextType>(GlobalContext)
 
 export const MeetingInfoContext =
   React.createContext<MeetingInfoContextInterface>({

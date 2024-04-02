@@ -11,6 +11,7 @@ import {
   drawWatermark,
   stopDrawWatermark,
 } from '../../../../src/utils/watermark';
+import NEMeetingService from '../../../../src/services/NEMeeting';
 const eventEmitter = new EventEmitter();
 
 export default function ChatPage() {
@@ -19,157 +20,189 @@ export default function ChatPage() {
   const [memberList, setMemberList] = useState();
   const [meetingInfo, setMeetingInfo] = useState<NEMeetingInfo>();
   const [waitingRoomInfo, setWaitingRoomInfo] = useState();
+  const [waitingRoomMemberList, setWaitingRoomMemberList] = useState();
+
+  const [initMsgs, setInitMsgs] = useState<any[]>([]);
   const [visible, setVisible] = useState(false);
+  const neMeetingReplyCount = useRef(0);
   const chatControllerReplyCount = useRef(0);
   const roomServiceReplyCount = useRef(0);
-  const [roomArchiveId, setRoomArchiveId] = useState<string>();
 
-  const { search } = useLocation();
-  const params = new URLSearchParams(window.location.search || search);
-  const urlRoomArchiveId = params.get('roomArchiveId');
-  const startTime = Number(params.get('startTime'));
-  const subject = params.get('subject');
+  const [chatInfo, setChatInfo] = useState<{
+    roomArchiveId: string;
+    startTime: number;
+    subject: string;
+  }>();
 
-  const neMeeting: any = {
-    imInfo: {},
-    roomService: new Proxy(
-      {},
-      {
-        get: function (_, propKey) {
-          if (propKey === 'isSupported') {
-            return true;
-          }
-          return function (...args: any) {
-            return new Promise((resolve, reject) => {
-              roomServiceReplyCount.current += 1;
-              const replyKey = `roomService-reply-${roomServiceReplyCount.current}`;
-              window.ipcRenderer?.once(replyKey, (_: any, value: any) => {
-                const { fnKey, error, result } = value;
-                console.log(fnKey, error, result);
-                if (fnKey === propKey) {
-                  error ? reject(error) : resolve(result);
+  const neMeeting = new Proxy(
+    {},
+    {
+      get: function (_, propKey) {
+        if (propKey === 'imInfo') {
+          return {};
+        }
+        if (propKey === 'roomService') {
+          return new Proxy(
+            {},
+            {
+              get: function (_, propKey) {
+                if (propKey === 'isSupported') {
+                  return true;
                 }
-              });
-              window.ipcRenderer?.send('NERoomSDKProxy', {
-                method: 'roomService',
-                data: {
+                return function (...args: any) {
+                  return new Promise((resolve, reject) => {
+                    roomServiceReplyCount.current += 1;
+                    const replyKey = `roomService-reply-${roomServiceReplyCount.current}`;
+                    const parentWindow = window.parent;
+                    parentWindow?.postMessage(
+                      {
+                        event: 'roomService',
+                        payload: {
+                          replyKey,
+                          fnKey: propKey,
+                          args: args,
+                        },
+                      },
+                      '*',
+                    );
+                    const handleMessage = (e: MessageEvent) => {
+                      const { event, payload } = e.data;
+                      if (event === replyKey) {
+                        const { result, error } = payload;
+                        if (error) {
+                          reject(error);
+                        } else {
+                          resolve(result);
+                        }
+                        window.removeEventListener('message', handleMessage);
+                      }
+                    };
+                    window.addEventListener('message', handleMessage);
+                  });
+                };
+              },
+            },
+          );
+        }
+        if (propKey === 'chatController') {
+          return new Proxy(
+            {},
+            {
+              get: function (_, propKey) {
+                if (propKey === 'isSupported') {
+                  return true;
+                }
+                return function (...args: any) {
+                  return new Promise((resolve, reject) => {
+                    chatControllerReplyCount.current += 1;
+                    const replyKey = `chatController-reply-${chatControllerReplyCount.current}`;
+                    const parentWindow = window.parent;
+                    parentWindow?.postMessage(
+                      {
+                        event: 'chatController',
+                        payload: {
+                          replyKey,
+                          fnKey: propKey,
+                          args: args,
+                        },
+                      },
+                      '*',
+                    );
+                    const handleMessage = (e: MessageEvent) => {
+                      const { event, payload } = e.data;
+                      if (event === replyKey) {
+                        const { result, error } = payload;
+                        if (error) {
+                          reject(error);
+                        } else {
+                          resolve(result);
+                        }
+                        window.removeEventListener('message', handleMessage);
+                      }
+                    };
+                    window.addEventListener('message', handleMessage);
+                  });
+                };
+              },
+            },
+          );
+        }
+        return function (...args: any) {
+          return new Promise((resolve, reject) => {
+            const parentWindow = window.parent;
+            const replyKey = `neMeetingReply_${neMeetingReplyCount.current++}`;
+            parentWindow?.postMessage(
+              {
+                event: 'neMeeting',
+                payload: {
+                  replyKey,
                   fnKey: propKey,
                   args: args,
-                  replyKey: `roomService-reply-${roomServiceReplyCount.current}`,
-                  isInvoke: true,
                 },
-              });
-            });
-          };
-        },
-      },
-    ),
-    chatController: new Proxy(
-      {},
-      {
-        get: function (_, propKey) {
-          if (propKey === 'isSupported') {
-            return true;
-          }
-          return function (...args: any) {
-            return new Promise((resolve, reject) => {
-              chatControllerReplyCount.current += 1;
-              const replyKey = `chatController-reply-${chatControllerReplyCount.current}`;
-              // @ts-ignore
-              window.ipcRenderer?.once(replyKey, (_: any, value: any) => {
-                const { fnKey, error, result } = value;
-                console.log(fnKey, error, result);
-                if (fnKey === propKey) {
-                  error ? reject(error) : resolve(result);
+              },
+              '*',
+            );
+            const handleMessage = (e: MessageEvent) => {
+              const { event, payload } = e.data;
+              if (event === replyKey) {
+                const { result, error } = payload;
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(result);
                 }
-              });
-              // @ts-ignore
-              window.ipcRenderer?.send('nemeeting-sharing-screen', {
-                method: 'chatController',
-                data: {
-                  fnKey: propKey,
-                  args: args,
-                  replyKey: `chatController-reply-${chatControllerReplyCount.current}`,
-                },
-              });
-            });
-          };
-        },
+                window.removeEventListener('message', handleMessage);
+              }
+            };
+            window.addEventListener('message', handleMessage);
+          });
+        };
       },
-    ),
-  };
+    },
+  ) as NEMeetingService;
+
+  function dispatch(payload: any) {
+    const parentWindow = window.parent;
+    parentWindow?.postMessage(
+      {
+        event: 'meetingInfoDispatch',
+        payload: payload,
+      },
+      '*',
+    );
+  }
 
   useEffect(() => {
-    // @ts-ignore
-    window.ipcRenderer?.on('updateData', (_, data) => {
-      const { meetingInfo, memberList, waitingRoomInfo } = data;
-      setMeetingInfo(meetingInfo);
-      setMemberList(memberList);
-      setWaitingRoomInfo(waitingRoomInfo);
-    });
-    // @ts-ignore
-    window.ipcRenderer?.on('nemeeting-sharing-screen', (_, value) => {
-      const { method, data } = value;
-      if (method === 'chatListener') {
-        console.log('chatListener', data);
-        eventEmitter.emit.apply(eventEmitter, [data.key, ...data.args]);
+    function handleMessage(e: MessageEvent) {
+      const { event, payload } = e.data;
+      if (event === 'updateData') {
+        const {
+          meetingInfo,
+          memberList,
+          waitingRoomInfo,
+          waitingRoomMemberList,
+          cacheMsgs,
+          roomArchiveId,
+          startTime,
+          subject,
+        } = payload;
+        setMeetingInfo(meetingInfo);
+        setMemberList(memberList);
+        setWaitingRoomInfo(waitingRoomInfo);
+        setWaitingRoomMemberList(waitingRoomMemberList);
+        setInitMsgs(cacheMsgs);
+        roomArchiveId && setChatInfo({ roomArchiveId, startTime, subject });
+      } else if (event === 'chatroomEvent') {
+        eventEmitter.emit.apply(eventEmitter, [payload.key, ...payload.args]);
       }
-      if (method === 'openChatRoom') {
-        setVisible(true);
-      }
-      if (method === 'closeChatRoom') {
-        setVisible(false);
-      }
-    });
+    }
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
   }, []);
 
-  useEffect(() => {
-    setRoomArchiveId('');
-    setTimeout(() => {
-      setRoomArchiveId(urlRoomArchiveId || '');
-    });
-  }, [urlRoomArchiveId]);
-
-  useEffect(() => {
-    if (meetingInfo) {
-      const localMember = meetingInfo?.localMember;
-      const needDrawWatermark =
-        meetingInfo.meetingNum &&
-        meetingInfo.watermark &&
-        (meetingInfo.watermark.videoStrategy === WATERMARK_STRATEGY.OPEN ||
-          meetingInfo.watermark.videoStrategy ===
-            WATERMARK_STRATEGY.FORCE_OPEN);
-
-      if (needDrawWatermark && meetingInfo.watermark) {
-        const { videoStyle, videoFormat } = meetingInfo.watermark;
-        const supportInfo = {
-          name: meetingInfo.watermarkConfig?.name || localMember.name,
-          phone: meetingInfo.watermarkConfig?.phone || '',
-          email: meetingInfo.watermarkConfig?.email || '',
-          jobNumber: meetingInfo.watermarkConfig?.jobNumber || '',
-        };
-        function replaceFormat(format: string, info: Record<string, string>) {
-          const regex = /{([^}]+)}/g;
-          const result = format.replace(regex, (match, key) => {
-            const value = info[key];
-            return value ? value : match; // 如果值存在，则返回对应的值，否则返回原字符串
-          });
-          return result;
-        }
-
-        drawWatermark({
-          container: document.body,
-          content: replaceFormat(videoFormat, supportInfo),
-          type: videoStyle,
-        });
-      } else {
-        stopDrawWatermark();
-      }
-      return () => {
-        stopDrawWatermark();
-      };
-    }
-  }, [meetingInfo]);
+  console.log('chatInfo', chatInfo);
 
   useEffect(() => {
     setTimeout(() => {
@@ -179,41 +212,36 @@ export default function ChatPage() {
 
   return (
     <>
-      {urlRoomArchiveId ? (
-        <div className={roomArchiveId ? 'history-chat-wrapper' : undefined}>
-          {roomArchiveId && (
-            <div className="electron-drag-bar">
-              <div className="drag-region" />
-              {t('chatHistory')}
-              <PCTopButtons minimizable={false} maximizable={false} />
-            </div>
-          )}
-          {!!roomArchiveId && (
-            <ChatRoom
-              startTime={startTime || 0}
-              subject={subject || ''}
-              roomArchiveId={roomArchiveId || undefined}
-              isViewHistory={!!roomArchiveId}
-              neMeeting={neMeeting}
-              eventEmitter={eventEmitter}
-              memberList={memberList}
-              meetingInfo={meetingInfo}
-              visible={visible}
-            />
-          )}
+      {chatInfo && chatInfo?.roomArchiveId ? (
+        <div className="history-chat-wrapper">
+          <div className="electron-drag-bar">
+            <div className="drag-region" />
+            {t('chatHistory')}
+            <PCTopButtons minimizable={false} maximizable={false} />
+          </div>
+          <ChatRoom
+            startTime={chatInfo.startTime}
+            subject={chatInfo.subject}
+            roomArchiveId={chatInfo.roomArchiveId}
+            isViewHistory={true}
+            neMeeting={neMeeting}
+            eventEmitter={eventEmitter}
+            memberList={memberList}
+            meetingInfo={meetingInfo}
+            visible={visible}
+          />
         </div>
       ) : !!meetingInfo?.ownerUserUuid && !!meetingInfo?.localMember.uuid ? (
         <ChatRoom
-          startTime={startTime || 0}
-          subject={subject || ''}
-          roomArchiveId={roomArchiveId || undefined}
-          isViewHistory={!!roomArchiveId}
           neMeeting={neMeeting}
           eventEmitter={eventEmitter}
           memberList={memberList}
           meetingInfo={meetingInfo}
           waitingRoomInfo={waitingRoomInfo}
-          visible={visible}
+          waitingRoomMemberList={waitingRoomMemberList}
+          visible={true}
+          initMsgs={initMsgs}
+          meetingInfoDispatch={dispatch}
         />
       ) : null}
     </>

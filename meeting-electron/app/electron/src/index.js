@@ -11,27 +11,34 @@ const {
   Menu,
   nativeTheme,
   crashReporter,
-  clipboard,
   powerSaveBlocker,
 } = require('electron');
 const log = require('electron-log/main');
-const {
-  checkUpdate,
-  getVersionCode,
-  initUpdateListener,
-} = require('./utils/update');
-const { autoUpdater } = require('electron-updater');
-const { initLog, getLogDate } = require('./utils/log');
+const { initUpdateListener } = require('./utils/update');
+const { getLogDate } = require('./utils/log');
 const { promisify } = require('util');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const si = require('systeminformation');
 const { exec } = require('child_process');
+const {
+  sharingScreen,
+  closeScreenSharingWindow,
+  addScreenSharingIpc,
+} = require('./sharingScreen');
+const {
+  createBeforeMeetingWindow,
+  beforeNewWins,
+} = require('./beforeMeetingWindow');
+
+const { initMonitoring } = require('./utils/monitoring');
+
+initMonitoring();
+
 const readFileAsync = promisify(fs.readFile);
 const readDirAsync = promisify(fs.readdir);
 // 窗口数量
-
 app.commandLine.appendSwitch('--max-active-webgl-contexts', 1000);
 
 const os_ver = os.release();
@@ -69,12 +76,6 @@ log.transports.file.resolvePathFn = (variables) =>
   path.join(logPath, 'app', variables.fileName);
 console.log = log.log;
 
-const {
-  sharingScreen,
-  closeScreenSharingWindow,
-  addScreenSharingIpc,
-} = require('./sharingScreen_canvas');
-
 app.setPath('crashDumps', path.join(logPath, 'app', 'crashDumps'));
 
 crashReporter.start({
@@ -103,10 +104,6 @@ const MINI_WIDTH = 1150;
 let beforeMeetingWindow;
 let mainWindow;
 let settingWindow;
-let historyWindow;
-let historyChatWindow;
-let npsWindow;
-let aboutWindow;
 let inMeeting = false;
 let inWaitingRoom = false;
 let alreadySetWidth = false;
@@ -115,6 +112,8 @@ let isOpenSettingWindow = false;
 let powerSaveBlockerId = null;
 let isOpenSettingDialog = false;
 let inviteUrl = '';
+
+const newWins = {};
 
 //  创建日志文件夹
 if (!fs.existsSync(logPath)) {
@@ -177,6 +176,68 @@ async function getVirtualBackground(forceUpdate = false, event) {
   return virtualBackgroundList;
 }
 
+function setExcludeWindowList() {
+  mainWindow.webContents.send('setExcludeWindowList', [
+    [...Object.values(newWins), mainWindow]
+      .filter((item) => item && !item.isDestroyed())
+      .map((item) =>
+        isWin32
+          ? item.getNativeWindowHandle()
+          : Number(item.getMediaSourceId().split(':')[1]),
+      ),
+    isWin32,
+  ]);
+}
+
+function openNewWindow(url) {
+  const newWin = newWins[url];
+
+  if (!newWin || newWin.isDestroyed()) return;
+
+  if (url.includes('screenSharing/video')) {
+    newWin.setWindowButtonVisibility?.(false);
+
+    const mainWindowPosition = mainWindow.getPosition();
+    // 通过位置信息获取对应的屏幕
+    const currentScreen = screen.getDisplayNearestPoint({
+      x: mainWindowPosition[0],
+      y: mainWindowPosition[1],
+    });
+    // 获取屏幕的位置，宽度和高度
+    const screenX = currentScreen.bounds.x;
+    const screenY = currentScreen.bounds.y;
+    const screenWidth = currentScreen.bounds.width;
+    // 计算窗口的新位置
+    const newX = screenX + screenWidth - newWin.getSize()[0] - 20;
+    const newY = screenY;
+    // 将窗口移动到新位置
+    newWin.setPosition(newX, newY);
+
+    newWin.setAlwaysOnTop(true, 'screen-saver');
+  }
+  if (url.includes('notification/card')) {
+    newWin.setWindowButtonVisibility?.(false);
+    // 获取主窗口的位置信息
+    const mainWindowPosition = mainWindow.getPosition();
+    // 通过位置信息获取对应的屏幕
+    const currentScreen = screen.getDisplayNearestPoint({
+      x: mainWindowPosition[0],
+      y: mainWindowPosition[1],
+    });
+    // 获取屏幕的位置，宽度和高度
+    const screenX = currentScreen.bounds.x;
+    const screenY = currentScreen.bounds.y;
+    const screenWidth = currentScreen.bounds.width;
+    const screenHeight = currentScreen.bounds.height;
+    // 计算窗口的新位置
+    const newX = screenX + screenWidth - newWin.getSize()[0] - 20;
+    const newY = screenY + screenHeight - newWin.getSize()[1] - 20;
+    // 将窗口移动到新位置
+    newWin.setPosition(newX, newY);
+    newWin.setAlwaysOnTop(true, 'screen-saver');
+  }
+}
+
 function createWindow(data) {
   // Create the browser window.
   const mousePosition = screen.getCursorScreenPoint();
@@ -204,6 +265,7 @@ function createWindow(data) {
         contextIsolation: false,
         nodeIntegration: true,
         enableRemoteModule: true,
+        // nodeIntegrationInWorker: true,
         preload: path.join(__dirname, './preload.js'),
       },
     });
@@ -264,6 +326,165 @@ function createWindow(data) {
     }
   });
 
+  mainWindow.webContents.on(
+    'did-create-window',
+    (newWin, { url: originalUrl }) => {
+      const url = originalUrl.replace(/.*?(?=#)/, '');
+      newWins[url] = newWin;
+      // 通过 openWindow 打开的窗口，需要在关闭时通知主窗口
+      newWin.on('close', (event) => {
+        mainWindow.webContents.send(`windowClosed:${url}`);
+        if (url.includes('setting')) {
+          mainWindow?.webContents.send('previewController', {
+            method: 'stopPreview',
+            args: [],
+          });
+        }
+        // 通过隐藏处理关闭，关闭有一定概率崩溃
+        newWin.hide();
+        event.preventDefault();
+      });
+      openNewWindow(url);
+
+      // windows下alt键会触发菜单栏，需要屏蔽
+      if (isWin32) {
+        newWin.webContents.on('before-input-event', (event, input) => {
+          if (input.alt) {
+            event.preventDefault();
+          }
+        });
+      }
+
+      // 聊天窗口打开下载文件夹
+      newWin.webContents.session.removeAllListeners('will-download');
+      newWin.webContents.session.on('will-download', (event, item) => {
+        item.on('done', (event, state) => {
+          if (state === 'completed') {
+            // 文件下载完成，打开文件所在路径
+            const path = event.sender.getSavePath();
+            shell.showItemInFolder(path);
+          }
+        });
+      });
+
+      setExcludeWindowList();
+      if (isLocal) {
+        newWin.webContents.openDevTools();
+      }
+    },
+  );
+
+  mainWindow.webContents.setWindowOpenHandler(({ url: originalUrl }) => {
+    const url = originalUrl.replace(/.*?(?=#)/, '');
+    const commonOptions = {
+      width: 375,
+      height: 670,
+      titleBarStyle: 'hidden',
+      maximizable: false,
+      minimizable: false,
+      resizable: false,
+      autoHideMenuBar: true,
+      title: '',
+      webPreferences: {
+        contextIsolation: false,
+        nodeIntegration: true,
+        preload: path.join(__dirname, './ipc.js'),
+      },
+    };
+    if (url.endsWith('screenSharing/video')) {
+      const pW = 215;
+      const pH = MEETING_HEADER_HEIGHT + 120;
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          ...commonOptions,
+          width: pW - 2,
+          height: pH,
+          titleBarStyle: 'hidden',
+          transparent: true,
+        },
+      };
+    } else if (url.includes('#/plugin?')) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          ...commonOptions,
+          titleBarStyle: 'default',
+        },
+      };
+    } else if (url.includes('#/notification/card')) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          ...commonOptions,
+          width: 360,
+          height: 260,
+        },
+      };
+    } else if (url.includes('#/notification/list')) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          ...commonOptions,
+          titleBarStyle: 'default',
+        },
+      };
+    } else if (url.includes('#/setting')) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          ...commonOptions,
+          width: 800,
+          height: 560,
+          trafficLightPosition: {
+            x: 10,
+            y: 13,
+          },
+        },
+      };
+    } else if (url.includes('#/invite')) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          ...commonOptions,
+          titleBarStyle: 'default',
+          width: 520,
+          height: 350,
+        },
+      };
+    } else if (url.includes('#/member')) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          ...commonOptions,
+          titleBarStyle: 'default',
+          width: 400,
+          height: 600,
+        },
+      };
+    } else if (url.includes('#/chat')) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          ...commonOptions,
+          titleBarStyle: 'default',
+          width: 400,
+          height: 600,
+        },
+      };
+    } else if (url.includes('#/monitoring')) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          ...commonOptions,
+          height: 300,
+          width: 455,
+        },
+      };
+    }
+    return { action: 'deny' };
+  });
+
   mainWindow.on('leave-full-screen', () => {
     mainWindow.setTitle('网易会议');
   });
@@ -272,200 +493,6 @@ function createWindow(data) {
   });
 
   initMainWindowSize();
-}
-
-function createBeforeMeeting() {
-  const mousePosition = screen.getCursorScreenPoint();
-  const nowDisplay = screen.getDisplayNearestPoint(mousePosition);
-  const { x, y, width, height } = nowDisplay.workArea;
-  beforeMeetingWindow = new BrowserWindow({
-    titleBarStyle: 'hidden',
-    width: 375,
-    height: 670,
-    x: Math.round(x + (width - 375) / 2),
-    y: Math.round(y + (height - 670) / 2),
-    trafficLightPosition: {
-      x: 10,
-      y: 13,
-    },
-    resizable: false,
-    maximizable: false,
-    backgroundColor: '#fff',
-    title: '网易会议',
-    webPreferences: {
-      contextIsolation: false,
-      nodeIntegration: true,
-      enableRemoteModule: true,
-      preload: path.join(__dirname, './preload.js'),
-    },
-  });
-
-  if (isLocal) {
-    beforeMeetingWindow.loadURL('https://localhost:8000/');
-    setTimeout(() => {
-      beforeMeetingWindow?.webContents.openDevTools();
-    }, 3000);
-  } else {
-    beforeMeetingWindow.loadFile(path.join(__dirname, '../build/index.html'));
-  }
-}
-
-function createHistoryWindow() {
-  if (historyWindow) return;
-  historyWindow = new BrowserWindow({
-    width: 375,
-    height: 670,
-    titleBarStyle: 'hidden',
-    maximizable: false,
-    minimizable: false,
-    resizable: false,
-    trafficLightPosition: {
-      x: 10,
-      y: 13,
-    },
-    title: '历史会议',
-    webPreferences: {
-      contextIsolation: false,
-      nodeIntegration: true,
-      preload: path.join(__dirname, './preload.js'),
-    },
-  });
-  if (isLocal) {
-    historyWindow.loadURL('https://localhost:8000/#/history');
-  } else {
-    historyWindow.loadFile(path.join(__dirname, '../build/index.html'), {
-      hash: 'history',
-    });
-  }
-  historyWindow.hide();
-  historyWindow.on('closed', function () {
-    historyWindow = null;
-  });
-}
-
-function createHistoryChatWindow({ roomArchiveId, subject, startTime }) {
-  if (historyChatWindow && !historyChatWindow.isDestroyed()) {
-    historyChatWindow.show();
-  } else {
-    historyChatWindow = new BrowserWindow({
-      width: 375,
-      height: 670,
-      titleBarStyle: 'hidden',
-      maximizable: false,
-      minimizable: false,
-      resizable: false,
-      trafficLightPosition: {
-        x: 10,
-        y: 13,
-      },
-      title: '聊天记录',
-      webPreferences: {
-        contextIsolation: false,
-        nodeIntegration: true,
-        preload: path.join(__dirname, './preload.js'),
-      },
-    });
-    historyChatWindow.webContents.session.removeAllListeners('will-download');
-    historyChatWindow.webContents.session.on('will-download', (event, item) => {
-      item.on('done', (event, state) => {
-        if (state === 'completed') {
-          console.log('historyChatWindow will-download');
-          // 文件下载完成，打开文件所在路径
-          const path = event.sender.getSavePath();
-          shell.showItemInFolder(path);
-        }
-      });
-    });
-  }
-
-  if (isLocal) {
-    historyChatWindow.loadURL(
-      `https://localhost:8000/#/chat?roomArchiveId=${roomArchiveId}&subject=${subject}&startTime=${startTime}`,
-    );
-  } else {
-    historyChatWindow.loadFile(path.join(__dirname, '../build/index.html'), {
-      hash: 'chat',
-      query: {
-        roomArchiveId,
-        subject,
-        startTime,
-      },
-    });
-  }
-
-  historyChatWindow.on('closed', function () {
-    historyChatWindow = null;
-  });
-}
-
-function createAboutWindow() {
-  if (aboutWindow && !aboutWindow.isDestroyed()) {
-    aboutWindow.show();
-    return;
-  }
-  aboutWindow = new BrowserWindow({
-    width: 375,
-    height: 460,
-    titleBarStyle: 'hidden',
-    maximizable: false,
-    minimizable: false,
-    resizable: false,
-    trafficLightPosition: {
-      x: 10,
-      y: 13,
-    },
-    title: '关于',
-    webPreferences: {
-      contextIsolation: false,
-      nodeIntegration: true,
-      preload: path.join(__dirname, './ipc.js'),
-    },
-  });
-  if (isLocal) {
-    aboutWindow.loadURL('https://localhost:8000/#/about');
-  } else {
-    aboutWindow.loadFile(path.join(__dirname, '../build/index.html'), {
-      hash: 'about',
-    });
-  }
-  aboutWindow.show();
-  aboutWindow.on('closed', function () {
-    aboutWindow = null;
-  });
-}
-
-// data: meetingId: string, appKey: string, nickname: string,
-function createNPSWindow(data) {
-  npsWindow = new BrowserWindow({
-    width: 800,
-    height: 380,
-    titleBarStyle: 'hidden',
-    maximizable: false,
-    minimizable: false,
-    resizable: false,
-    title: 'NPS 评分',
-    webPreferences: {
-      contextIsolation: false,
-      nodeIntegration: true,
-      preload: path.join(__dirname, './ipc.js'),
-    },
-  });
-  if (isLocal) {
-    npsWindow.loadURL(
-      `https://localhost:8000/#/nps?meetingId=${data.meetingId}&appKey=${data.appKey}&nickname=${data.nickname}`,
-    );
-  } else {
-    npsWindow.loadFile(path.join(__dirname, '../build/index.html'), {
-      hash: 'nps',
-      query: {
-        ...data,
-      },
-    });
-  }
-  npsWindow.hide();
-  npsWindow.on('closed', function () {
-    npsWindow = null;
-  });
 }
 
 function closeSettingWindowHandle(type) {
@@ -501,45 +528,45 @@ function closeSettingWindowHandle(type) {
 }
 function createSettingWindow(type) {
   // 窗口存在且未销毁情况不需要重新创建
-  if (settingWindow && !settingWindow.isDestroyed()) {
-    settingWindow.show();
-    isOpenSettingWindow = true;
-    settingWindow.webContents.send('showSettingWindow', {
-      isShow: true,
-      type,
-      inMeeting: !inWaitingRoom && inMeeting,
-    });
-    settingWindow.moveAbove(
-      inMeeting
-        ? mainWindow?.getMediaSourceId()
-        : beforeMeetingWindow?.getMediaSourceId(),
-    );
-    return;
-  }
-  if (!settingWindow) {
-    settingWindow = new BrowserWindow({
-      width: 800,
-      height: 560,
-      titleBarStyle: 'hidden',
-      trafficLightPosition: {
-        x: 10,
-        y: 13,
-      },
-      maximizable: false,
-      minimizable: false,
-      resizable: false,
-      fullscreen: false,
-      alwaysOnTop: true,
-      show: false,
-      title: '设置',
-      webPreferences: {
-        contextIsolation: false,
-        nodeIntegration: true,
-        preload: path.join(__dirname, './preload.js'),
-      },
-    });
-  }
-  settingWindow.hide();
+  // if (settingWindow && !settingWindow.isDestroyed()) {
+  //   settingWindow.show();
+  //   isOpenSettingWindow = true;
+  //   settingWindow.webContents.send('showSettingWindow', {
+  //     isShow: true,
+  //     type,
+  //     inMeeting: !inWaitingRoom && inMeeting,
+  //   });
+  //   settingWindow.moveAbove(
+  //     inMeeting
+  //       ? mainWindow?.getMediaSourceId()
+  //       : beforeMeetingWindow?.getMediaSourceId(),
+  //   );
+  //   return;
+  // }
+  // if (!settingWindow) {
+  //   settingWindow = new BrowserWindow({
+  //     width: 800,
+  //     height: 560,
+  //     titleBarStyle: 'hidden',
+  //     trafficLightPosition: {
+  //       x: 10,
+  //       y: 13,
+  //     },
+  //     maximizable: false,
+  //     minimizable: false,
+  //     resizable: false,
+  //     fullscreen: false,
+  //     alwaysOnTop: true,
+  //     show: false,
+  //     title: '设置',
+  //     webPreferences: {
+  //       contextIsolation: false,
+  //       nodeIntegration: true,
+  //       preload: path.join(__dirname, './preload.js'),
+  //     },
+  //   });
+  // }
+  // settingWindow.hide();
   // getVirtualBackground();
   ipcMain.on('nemeeting-beauty', async (event, data) => {
     const { value } = data;
@@ -558,8 +585,9 @@ function createSettingWindow(type) {
     } else if (data.event === 'addVirtualBackground') {
       const { dialog } = require('electron');
       isOpenSettingDialog = true;
+
       dialog
-        .showOpenDialog(settingWindow, {
+        .showOpenDialog(BrowserWindow.fromWebContents(event.sender), {
           properties: ['openFile'],
           filters: [{ name: 'image', extensions: ['jpg', 'png', 'jpeg'] }],
         })
@@ -597,41 +625,7 @@ function createSettingWindow(type) {
       }
     } else if (data.event === 'close') {
       const { mirror } = value;
-      // if (inMeeting) {
-      //   const video = videoWindows.find((item) => item.isMySelf);
-      //   if (video) {
-      //     previewController.setupLocalVideoCanvas(
-      //       video.window.getNativeWindowHandle(),
-      //       mirror,
-      //     );
-      //   }
-      // }
     }
-  });
-  if (isLocal) {
-    settingWindow.loadURL('https://localhost:8000/#/setting');
-  } else {
-    settingWindow.loadFile(path.join(__dirname, `../build/index.html`), {
-      hash: 'setting',
-    });
-  }
-  settingWindow.on('close', function (event) {
-    event.preventDefault();
-    isOpenSettingWindow = false;
-    if (inMeeting) {
-      mainWindow?.webContents.send('previewController', {
-        method: 'stopPreview',
-        args: [],
-      });
-    } else {
-      beforeMeetingWindow?.webContents.send('previewController', {
-        method: 'stopPreview',
-        args: [],
-      });
-    }
-
-    // ipcMain.removeAllListeners('nemeeting-beauty');
-    closeSettingWindowHandle(type);
   });
 }
 
@@ -756,7 +750,8 @@ if (isLocal) {
 watchProtocol();
 
 app.whenReady().then(() => {
-  createBeforeMeeting();
+  beforeMeetingWindow = createBeforeMeetingWindow();
+
   initUpdateListener(beforeMeetingWindow, {}, `${app.name}/rooms`);
 
   app.on('render-process-gone', (event, webContents, details) => {
@@ -777,6 +772,38 @@ app.whenReady().then(() => {
     }
   });
 
+  // 通过 openWindow 打开的窗口，focusWindow 前置窗口
+  ipcMain.on('focusWindow', (_, url) => {
+    if (inMeeting) {
+      if (newWins[url] && !newWins[url].isDestroyed()) {
+        newWins[url].show();
+      }
+      openNewWindow(url);
+      setExcludeWindowList();
+    } else {
+      if (beforeNewWins[url] && !beforeNewWins[url].isDestroyed()) {
+        beforeNewWins[url].show();
+      }
+    }
+  });
+
+  ipcMain.handle('saveAvatarToPath', async (event, base64String) => {
+    const base64Data = base64String.replace(/^data:image\/\w+;base64,/, '');
+    const imageCacheDirPath = path.join(userDataPath, 'imageCache');
+    if (!fs.existsSync(imageCacheDirPath)) {
+      fs.mkdirSync(imageCacheDirPath);
+    }
+    const filePath = path.join(imageCacheDirPath, 'avatar.png');
+
+    try {
+      await fs.promises.writeFile(filePath, base64Data, 'base64');
+      return { status: 'success', filePath };
+    } catch (error) {
+      console.error('Error saving image:', error);
+      return { status: 'error', message: error.message };
+    }
+  });
+
   ipcMain.on('relaunch', () => {
     app.relaunch();
     app.exit(0);
@@ -792,6 +819,7 @@ app.whenReady().then(() => {
     }
   });
 
+  // 打开侧边抽屉，显示成员列表或者聊天室等
   ipcMain.on('openChatroomOrMemberList', (event, isOpen) => {
     if (!mainWindow) {
       return;
@@ -887,12 +915,10 @@ app.whenReady().then(() => {
   });
 
   ipcMain.on('set-meeting-nps', (event, meetingId) => {
-    console.log('set-meeting-nps>>>>>>', meetingId);
     beforeMeetingWindow?.webContents.send('set-meeting-nps', meetingId);
   });
 
   ipcMain.on('need-open-meeting-nps', () => {
-    console.log('need-open-meeting-nps');
     beforeMeetingWindow?.webContents.send('need-open-meeting-nps');
   });
 
@@ -957,15 +983,14 @@ app.whenReady().then(() => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createBeforeMeeting();
   });
+
   app.on('before-quit', (event) => {
     // mac 程序坞直接右键退出会先走这里。如果是在会中直接退出
     if (inMeeting && !isWin32) {
       app.exit(0);
     }
   });
-  ipcMain.on('changeMirror', (event, value) => {
-    localMirror = !!value;
-  });
+
   ipcMain.on('nemeeting-download-path', (event, value) => {
     if (value === 'get') {
       event.returnValue = app.getPath('downloads');
@@ -974,7 +999,7 @@ app.whenReady().then(() => {
       const { dialog } = require('electron');
       isOpenSettingDialog = true;
       dialog
-        .showOpenDialog(settingWindow, {
+        .showOpenDialog(BrowserWindow.fromWebContents(event.sender), {
           properties: ['openDirectory'],
         })
         .then(function (response) {
@@ -992,30 +1017,14 @@ app.whenReady().then(() => {
     }
   });
 
-  ipcMain.on('open-chatroom', () => {
-    mainWindow?.webContents.send('open-chatroom');
-  });
-
-  ipcMain.on('show-window', (event) => {
-    const window = BrowserWindow.fromWebContents(event.sender);
-    if (window && !window.isDestroyed()) {
-      window.showInactive();
-    }
-  });
-
   ipcMain.on('nemeeting-file-save-as', (event, value) => {
     const { dialog } = require('electron');
     const { defaultPath, filePath } = value;
     dialog
-      .showSaveDialog(
-        sharingScreen.isSharing
-          ? sharingScreen.screenSharingChatRoomWindow
-          : mainWindow,
-        {
-          defaultPath: defaultPath,
-          filters: [{ name: '', extensions: '*' }],
-        },
-      )
+      .showSaveDialog(BrowserWindow.fromWebContents(event.sender), {
+        defaultPath: defaultPath,
+        filters: [{ name: '', extensions: '*' }],
+      })
       .then(function (response) {
         let resFilePath = '';
         if (!response.canceled) {
@@ -1032,70 +1041,6 @@ app.whenReady().then(() => {
         event.sender.send('nemeeting-file-save-as-reply', '');
       });
   });
-  // 全屏模式鼠标移出应用逻辑处理
-  // ipcMain.on('mouseLeave', () => {
-  //   // window 不用处理全屏遮挡问题
-  //   if (isWin32 && isMouseLeave) {
-  //     return;
-  //   }
-  //   // 判断当前是否全屏
-  //   const isFullscreen = parentWindow?.isFullScreen();
-  //   if (isFullscreen && mainWindow) {
-  //     isMouseLeave = true;
-  //     const { y: y_position, height } = mainWindow.getBounds();
-  //     mainWindow.setResizable(true);
-  //     mainWindow.setBounds({
-  //       y: y_position + MEETING_HEADER_HEIGHT * 2,
-  //       height: height - MEETING_HEADER_HEIGHT * 2,
-  //     });
-  //     isWin32 && mainWindow.setResizable(false);
-  //   }
-  // });
-  // ipcMain.on('mouseEnter', () => {
-  //   // window 不用处理全屏遮挡问题
-  //   if (isWin32 || !isMouseLeave) {
-  //     return;
-  //   }
-  //   const isFullscreen = parentWindow?.isFullScreen();
-  //   // 如果在全屏状态下 主画面要恢复全屏
-  //   if (isFullscreen && mainWindow) {
-  //     isMouseLeave = false;
-  //     const { y: y_position, height } = mainWindow.getBounds();
-  //     mainWindow.setResizable(true);
-  //     mainWindow.setBounds({
-  //       y: y_position - MEETING_HEADER_HEIGHT * 2,
-  //       height: height + MEETING_HEADER_HEIGHT * 2,
-  //     });
-  //   }
-  // });
-
-  ipcMain.on('NERoomSDKProxy', (event, value) => {
-    if (inMeeting) {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow?.webContents.send('NERoomSDKProxy', value);
-      }
-    } else {
-      if (beforeMeetingWindow && !beforeMeetingWindow.isDestroyed()) {
-        beforeMeetingWindow?.webContents.send('NERoomSDKProxy', value);
-      }
-    }
-  });
-  ipcMain.on('NERoomSDKProxyReply', (event, value) => {
-    const { data } = value;
-    if (historyChatWindow && !historyChatWindow.isDestroyed()) {
-      historyChatWindow?.webContents.send(data.replyKey, value.data);
-    }
-    if (
-      sharingScreen.isSharing &&
-      sharingScreen.screenSharingChatRoomWindow &&
-      !sharingScreen.screenSharingChatRoomWindow.isDestroyed()
-    ) {
-      sharingScreen.screenSharingChatRoomWindow?.webContents.send(
-        data.replyKey,
-        value.data,
-      );
-    }
-  });
 
   ipcMain.on('nemeeting-open-file', (event, value) => {
     const { isDir, filePath } = value;
@@ -1110,42 +1055,12 @@ app.whenReady().then(() => {
       event.sender.send('nemeeting-open-file-reply', exists);
     });
   });
-  ipcMain.on('nemeeting-paste-image', (event, value) => {
-    const imageCache = path.join(userDataPath, 'imageCache');
-    const clipboardImage = clipboard.readImage('clipboard');
-    if (!clipboardImage.isEmpty()) {
-      // TODO: 保存图片到本地
-      /*
-      const imageBuffer = image.toPNG(); // 或者使用其他格式如 toJPEG
-      // 将图片数据保存到本地文件
-      const fs = require('fs');
-      const imagePath = path.join(imageCache, `${Date.now()}.png`); // 保存图片的路径
-      fs.writeFileSync(imagePath, imageBuffer);
-      */
-    }
-  });
 
   ipcMain.on('nemeeting-choose-file', (event, value) => {
     const { type, extensions, extendedData } = value;
-    log.info(
-      'nemeeting-choose-file',
-      type,
-      extensions,
-      sharingScreen.isSharing,
-      mainWindow?.isDestroyed(),
-    );
-    let browserWindow;
-    if (
-      sharingScreen.isSharing &&
-      sharingScreen.screenSharingChatRoomWindow &&
-      !sharingScreen.screenSharingChatRoomWindow.isDestroyed()
-    ) {
-      browserWindow = sharingScreen.screenSharingChatRoomWindow;
-    } else if (mainWindow && !mainWindow.isDestroyed()) {
-      browserWindow = mainWindow;
-    }
+
     dialog
-      .showOpenDialog(browserWindow, {
+      .showOpenDialog(BrowserWindow.fromWebContents(event.sender), {
         properties: ['openFile'],
         filters: [{ name: type, extensions: extensions }],
       })
@@ -1235,7 +1150,6 @@ app.whenReady().then(() => {
 
   ipcMain.on('quiteFullscreen', () => {
     mainWindow.isFullScreen() && mainWindow.setFullScreen(false);
-    // mainWindow.unmaximize();
   });
 
   ipcMain.on('flushStorageData', () => {
@@ -1246,23 +1160,17 @@ app.whenReady().then(() => {
   });
 
   ipcMain.on('beforeLogin', () => {
-    // settingWindow?.destroy();
-    // settingWindow = null;
-    npsWindow?.destroy();
-    npsWindow = null;
-    historyWindow?.destroy();
-    historyWindow = null;
-    aboutWindow?.destroy();
-    aboutWindow = null;
     mainWindow?.destroy();
     mainWindow = null;
     inMeeting = false;
+    // 退出登录，关闭会前的窗口
+    Object.keys(beforeNewWins).forEach((key) => {
+      beforeNewWins[key]?.close();
+    });
   });
 
   ipcMain.on('beforeEnterRoom', () => {
     inMeeting = false;
-
-    console.log('beforeEnterRoom>>>');
     beforeMeetingWindow?.showInactive();
     mainWindow?.destroy();
     mainWindow = null;
@@ -1271,7 +1179,6 @@ app.whenReady().then(() => {
     if (settingWindow) {
       closeSettingWindowHandle();
     }
-    historyWindow?.showInactive();
     // 清理videoWindows
     closeScreenSharingWindow();
 
@@ -1280,6 +1187,7 @@ app.whenReady().then(() => {
       beforeMeetingWindow.webContents.session.flushStorageData();
     } catch {}
   });
+
   ipcMain.on('in-waiting-room', (event, isInWaitingRoom) => {
     // 等候室关闭，需要同步关闭设置页面
     if (!isInWaitingRoom) {
@@ -1292,8 +1200,8 @@ app.whenReady().then(() => {
     }
     inWaitingRoom = isInWaitingRoom;
   });
+
   ipcMain.on('enterRoom', (event, data) => {
-    console.log('enter>>>>>>', data);
     if (!data) {
       return;
     }
@@ -1301,17 +1209,15 @@ app.whenReady().then(() => {
     inMeeting = true;
     alreadySetWidth = false;
 
-    historyWindow?.close();
-    historyChatWindow?.close();
-    npsWindow?.close();
-    aboutWindow?.close();
-
     createWindow(data);
 
     // 阻止屏幕休眠
     powerSaveBlockerId = powerSaveBlocker.start('prevent-display-sleep');
 
-    // mainWindow.showInactive();
+    Object.keys(beforeNewWins).forEach((key) => {
+      beforeNewWins[key]?.close();
+    });
+
     if (settingWindow) {
       closeSettingWindowHandle();
     }
@@ -1323,13 +1229,14 @@ app.whenReady().then(() => {
       mainWindow?.show();
     });
 
+    if (isWin32) {
+      mainWindow.setBackgroundColor('rgba(255, 255, 255,0)');
+    }
+
     mainWindow.webContents.send(
       'set-theme-color',
       nativeTheme.shouldUseDarkColors ?? true,
     );
-
-    // mainWindow.show();
-
     // 强制缓存
     try {
       mainWindow.webContents.session.flushStorageData();
@@ -1343,53 +1250,10 @@ app.whenReady().then(() => {
     if (beforeMeetingWindow && !beforeMeetingWindow.isDestroyed()) {
       beforeMeetingWindow.webContents.send('changeSetting', setting);
     }
-    if (historyWindow && !historyWindow.isDestroyed()) {
-      historyWindow.webContents.send('changeSetting', setting);
-    }
-    if (historyChatWindow && !historyChatWindow.isDestroyed()) {
-      historyChatWindow?.webContents.send('changeSetting', setting);
-    }
-    if (aboutWindow && !aboutWindow.isDestroyed()) {
-      aboutWindow.webContents.send('changeSetting', setting);
-    }
-    if (npsWindow && !npsWindow.isDestroyed()) {
-      npsWindow.webContents.send('changeSetting', setting);
-    }
-    if (
-      sharingScreen.screenSharingChatRoomWindow &&
-      !sharingScreen.screenSharingChatRoomWindow.isDestroyed()
-    ) {
-      sharingScreen.screenSharingChatRoomWindow.webContents.send(
-        'changeSetting',
-        setting,
-      );
-    }
-    if (
-      sharingScreen.screenSharingMemberListWindow &&
-      !sharingScreen.screenSharingMemberListWindow.isDestroyed()
-    ) {
-      sharingScreen.screenSharingMemberListWindow.webContents.send(
-        'changeSetting',
-        setting,
-      );
-    }
-    if (
-      sharingScreen.screenSharingInviteWindow &&
-      !sharingScreen.screenSharingInviteWindow.isDestroyed()
-    ) {
-      sharingScreen.screenSharingInviteWindow.webContents.send(
-        'changeSetting',
-        setting,
-      );
-    }
-    if (
-      sharingScreen.screenSharingVideoWindow &&
-      !sharingScreen.screenSharingVideoWindow.isDestroyed()
-    ) {
-      sharingScreen.screenSharingVideoWindow.webContents.send(
-        'changeSetting',
-        setting,
-      );
+    if (!inMeeting) {
+      Object.values(beforeNewWins).forEach((win) => {
+        win.webContents.send('changeSetting', setting);
+      });
     }
   });
 
@@ -1408,61 +1272,16 @@ app.whenReady().then(() => {
       setting,
     );
   });
+
   ipcMain.on('openSetting', (event, type) => {
     console.log('openSetting>>>>', type);
     createSettingWindow(type);
-  });
-
-  ipcMain.on('open-meeting-history', () => {
-    createHistoryWindow();
-    const bounds = beforeMeetingWindow.getBounds();
-    historyWindow.setPosition(Math.round(bounds.x + 375), Math.round(bounds.y));
-    historyWindow.webContents.send('open-meeting-history');
-    historyWindow.show();
-  });
-
-  ipcMain.on('open-meeting-history-chat', (_, value) => {
-    createHistoryChatWindow(value);
-    const bounds = historyWindow.getBounds();
-    historyChatWindow.setPosition(Math.round(bounds.x), Math.round(bounds.y));
-  });
-
-  ipcMain.on('open-meeting-about', () => {
-    createAboutWindow();
-    const mousePosition = screen.getCursorScreenPoint();
-    const nowDisplay = screen.getDisplayNearestPoint(mousePosition);
-    const { x, y, width, height } = nowDisplay.workArea;
-
-    aboutWindow?.setSize(375, 460);
-    aboutWindow?.setPosition(
-      Math.round(x + (width + 440) / 2),
-      Math.round(y + (height - 620) / 2),
-    );
-    aboutWindow.webContents.send('open-meeting-history');
-  });
-
-  ipcMain.on('open-meeting-nps', (_, value) => {
-    createNPSWindow(value);
-    const mousePosition = screen.getCursorScreenPoint();
-    const nowDisplay = screen.getDisplayNearestPoint(mousePosition);
-    const { x, y, width, height } = nowDisplay.workArea;
-
-    npsWindow.setPosition(
-      Math.round(x + (width - 800) / 2),
-      Math.round(y + (height - 400) / 2),
-    );
-    // npsWindow.webContents.send('open-meeting-nps', value);
-    npsWindow.show();
   });
 
   ipcMain.on('meetingStatus', (_, value) => {
     settingWindow?.webContents.send('meetingStatus', value);
   });
 
-  //   app.on('before-quit', (event) => {
-  //     console.log('\n监听到quit');
-  //     app.isQuiting = true;
-  //   });
   ipcMain.on('shareWindow', async (event, { targetName, targetId }) => {
     console.log('main shareWindow', { targetName, targetId }, process.platform);
     const windowId = +targetId.split(':')[1];
@@ -1502,7 +1321,7 @@ app.whenReady().then(() => {
         {
           label: '关于网易会议',
           click: () => {
-            createAboutWindow();
+            console.log('关于网易会议');
           },
         },
         { type: 'separator' },
@@ -1582,42 +1401,3 @@ app.whenReady().then(() => {
     getVirtualBackground();
   }, 1000);
 });
-
-function checkUpdate_draft() {
-  if (process.platform == 'darwin') {
-    autoUpdater.setFeedURL('http://10.219.24.244:8822/electron-meeting/darwin'); //设置要检测更新的路径
-  } else {
-    autoUpdater.setFeedURL('http://10.219.24.244:8822/electron-meeting/win32');
-  }
-  //监听'error'事件
-  autoUpdater.on('error', (err) => {
-    console.log(err);
-  });
-
-  //监听'update-available'事件，发现有新版本时触发
-  autoUpdater.on('update-available', () => {
-    console.log('found new version');
-  });
-
-  //监听'update-downloaded'事件，新版本下载完成时触发
-  autoUpdater.on('update-downloaded', () => {
-    setTimeout(() => {
-      dialog
-        .showMessageBox({
-          type: 'info',
-          message: '发现新版本，是否更新？',
-          buttons: ['是', '否'],
-        })
-        .then((buttonIndex) => {
-          if (buttonIndex.response == 0) {
-            //选择是，则退出程序，安装新版本
-            autoUpdater.quitAndInstall();
-            app.exit(0);
-          }
-        });
-    }, 5000);
-  });
-
-  //检测更新
-  autoUpdater.checkForUpdates();
-}

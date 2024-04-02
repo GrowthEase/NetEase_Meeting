@@ -103,7 +103,7 @@ const Invite: React.FC<InviteInfoProps> = ({ meetingInfo, onCancel }) => {
       isShow: !!meetingInfo?.password,
     },
     {
-      label: `${t('meetingUrl')}：${meetingInfo?.meetingInviteUrl}`,
+      label: `${t('meetingInviteUrl')}：${meetingInfo?.meetingInviteUrl}`,
       isShow: !!meetingInfo?.meetingInviteUrl,
     },
   ].filter((item) => Boolean(item.isShow))
@@ -139,7 +139,7 @@ const Invite: React.FC<InviteInfoProps> = ({ meetingInfo, onCancel }) => {
           type="primary"
           onClick={handleCopy}
         >
-          {t('copy')}
+          {t('meetingCopyInvite')}
         </Button>
       </div>
     </>

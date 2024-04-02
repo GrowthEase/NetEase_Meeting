@@ -1,39 +1,46 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 
-import './index.less'
-import Modal from '../../common/Modal'
 import {
   Button,
-  Input,
-  Form,
   Checkbox,
-  ModalProps,
   DatePicker,
   DatePickerProps,
+  Form,
+  Input,
   message,
-  Radio,
+  ModalProps,
   Popover,
+  Radio,
 } from 'antd'
 import TimePicker from 'antd/es/time-picker'
 import dayjs from 'dayjs'
-import weekday from 'dayjs/plugin/weekday'
 import localeData from 'dayjs/plugin/localeData'
+import weekday from 'dayjs/plugin/weekday'
+import weekOfYear from 'dayjs/plugin/weekOfYear'
 import { useTranslation } from 'react-i18next'
 import {
   AttendeeOffType,
   CreateMeetingResponse,
   GetMeetingConfigResponse,
+  MeetingEndType,
+  MeetingRepeatCustomStepUnit,
+  MeetingRepeatFrequencyType,
+  MeetingRepeatType,
 } from '../../../types'
-import { getMeetingDisplayId } from '../../../utils'
-import { copyElementValue } from '../../../utils'
+import { copyElementValue, getMeetingDisplayId } from '../../../utils'
+import Modal from '../../common/Modal'
 import Toast from '../../common/toast'
+import './index.less'
 
 import en_US from 'antd/es/date-picker/locale/en_US'
-import zh_CN from 'antd/es/date-picker/locale/zh_CN'
 import ja_JP from 'antd/es/date-picker/locale/ja_JP'
+import zh_CN from 'antd/es/date-picker/locale/zh_CN'
+import EventEmitter from 'eventemitter3'
+import PeriodicMeeting from './PeriodicMeeting'
 
 dayjs.extend(weekday)
 dayjs.extend(localeData)
+dayjs.extend(weekOfYear)
 
 const DatePickerFormItem: React.FC<DatePickerProps> = (props) => {
   const { i18n } = useTranslation()
@@ -56,6 +63,13 @@ const DatePickerFormItem: React.FC<DatePickerProps> = (props) => {
         className="time-picker"
         {...props}
         value={props.value}
+        locale={
+          {
+            'zh-CN': zh_CN,
+            'en-US': en_US,
+            'ja-JP': ja_JP,
+          }[i18n.language]
+        }
         changeOnBlur
         format={'HH:mm'}
         minuteStep={30}
@@ -138,7 +152,7 @@ const PasswordFormItem: React.FC<PasswordFormItemProps> = ({
           />
           {value?.password && disabled && (
             <Button type="link" onClick={() => handleCopy(value.password)}>
-              {t('copyLink')}
+              {t('globalCopy')}
             </Button>
           )}
         </div>
@@ -180,6 +194,8 @@ type SummitValue = {
   meetingId?: number
   attendeeAudioOffType?: AttendeeOffType
   enableWaitingRoom?: boolean
+  enableJoinBeforeHost?: boolean
+  recurringRule?: any
 }
 
 interface ScheduleMeetingModalProps extends ModalProps {
@@ -187,10 +203,12 @@ interface ScheduleMeetingModalProps extends ModalProps {
   nickname?: string
   submitLoading?: boolean
   appLiveAvailable?: boolean
-  onCancelMeeting?: () => void
+  onCancelMeeting?: (cancelRecurringMeeting?: boolean) => void
   onJoinMeeting?: (meetingNum: string) => void
   onSummit?: (value: SummitValue) => void
   globalConfig: GetMeetingConfigResponse | null
+  onCancel?: () => void
+  eventEmitter: EventEmitter
 }
 
 const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
@@ -202,9 +220,18 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
   onJoinMeeting,
   onSummit,
   globalConfig,
+  eventEmitter,
   ...restProps
 }) => {
   const { t } = useTranslation()
+  const [editRecurringType, setEditRecurringType] = useState<
+    'current' | 'all' | ''
+  >('')
+  const [openRecurringModalType, setOpenRecurringModalType] = useState<
+    'edit' | 'exitEdit' | 'cancel' | ''
+  >('')
+
+  const cancelRecurringRef = useRef(false)
 
   const i18n = {
     title: t('scheduleMeeting'),
@@ -226,10 +253,10 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
     noCancel: t('noCancelScheduleMeeting'),
     submitBtn: t('scheduleMeeting'),
     cancelBtn: t('cancelScheduleMeeting'),
-    joinBtn: t('joinMeeting'),
+    joinBtn: t('meetingJoin'),
     editBtn: t('editScheduleMeeting'),
     saveBtn: t('save'),
-    copyBtn: t('copy'),
+    copyBtn: t('meetingCopyInvite'),
     copySuccess: t('copySuccess'),
     onlyEmployees: t('onlyEmployeesAllow'),
     meetingTitleError: t('subjectTitlePlaceholder'),
@@ -366,10 +393,48 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
         openLive: values.openLive,
         liveOnlyEmployees: values.liveOnlyEmployees,
         enableWaitingRoom: values.meetingPassword?.enableWaitingRoom,
+        enableJoinBeforeHost: values.enableJoinBeforeHost,
       }
       if (values.audioOff) {
         data.audioOff = true
         data.attendeeAudioOffType = values.attendeeAudioOffType
+      }
+      const oldRecurringRule = meeting?.recurringRule
+      // 如果开启周期性会议
+      if (
+        values.repeat?.enable ||
+        (oldRecurringRule &&
+          oldRecurringRule.type !== MeetingRepeatType.NoRepeat)
+      ) {
+        // 编辑模式保存，如果选择修改周期会议才传更新周期会议数据
+        if (meeting?.meetingId && editRecurringType === 'current') {
+          onSummit?.(data)
+          return
+        }
+        const customizedFrequency = values.repeat.customizedFrequency
+        data.recurringRule = {
+          type: values.repeat?.enable
+            ? values.repeat.type
+            : MeetingRepeatType.NoRepeat,
+          endRule: {
+            type: values.repeat.endType,
+            times:
+              values.repeat.endType === MeetingEndType.Times
+                ? values.repeat.endTimes
+                : undefined, // 如果是次数，传次数，否则传undefined
+            date:
+              values.repeat.endType === MeetingEndType.Day
+                ? values.repeat.endDate?.format('YYYY/MM/DD')
+                : undefined, // 如果是日期，传日期，否则传undefined
+          },
+        }
+        // 如果是自定义周期性会议，传自定义周期性会议，否则传undefined
+        data.recurringRule.customizedFrequency = {
+          stepSize: customizedFrequency.stepSize,
+          stepUnit: customizedFrequency.stepUnit,
+          daysOfWeek: customizedFrequency.daysOfWeek,
+          daysOfMonth: customizedFrequency.daysOfMonth,
+        }
       }
       onSummit?.(data)
     })
@@ -381,57 +446,108 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
     })
   }
 
+  const getDefaultRepeatInfo = (startTime: dayjs.Dayjs) => {
+    return {
+      enable: false,
+      startTime: startTime,
+      type: MeetingRepeatType.Everyday,
+      endType: MeetingEndType.Day,
+      endTimes: 7,
+      endDate: startTime?.add(6, 'day'),
+      customizedFrequency: {
+        frequencyType: MeetingRepeatFrequencyType.Day,
+        stepUnit: MeetingRepeatCustomStepUnit.Day,
+        stepSize: 1,
+        daysOfWeek: [],
+        daysOfMonth: [],
+      },
+    }
+  }
+
+  function setEditMeetingInfo(
+    meeting: CreateMeetingResponse,
+    defaultRepeatInfo
+  ) {
+    console.log('meeting>>>>>>', meeting)
+    setIsDetail(true)
+    let liveOnlyEmployees = false
+    const extensionConfig =
+      meeting.settings.roomInfo.roomProperties?.live?.extensionConfig
+    if (extensionConfig) {
+      try {
+        liveOnlyEmployees = JSON.parse(extensionConfig).onlyEmployeesAllow
+      } catch {}
+    }
+    form.setFieldsValue({
+      subject: meeting.subject,
+      startTime: dayjs(meeting.startTime),
+      endTime: dayjs(meeting.endTime),
+      meetingPassword: {
+        enable: !!meeting.settings.roomInfo.password,
+        password: meeting.settings.roomInfo.password,
+        enableWaitingRoom: meeting?.settings.roomInfo.openWaitingRoom,
+      },
+      audioOff: false,
+      // 新字段audioOff已启用，留着用于兼容老版本
+      attendeeAudioOffType:
+        meeting.settings.roomInfo.roomProperties?.audioOff?.value?.split(
+          '_'
+        )[0] != AttendeeOffType.disable,
+      openLive: meeting?.settings.roomInfo.roomConfig.resource.live,
+      enableJoinBeforeHost: meeting?.settings.roomInfo.enableJoinBeforeHost,
+      liveOnlyEmployees: liveOnlyEmployees,
+    })
+    const audioOff = meeting.settings.roomInfo.roomProperties?.audioOff
+    if (audioOff) {
+      const audioOffValue = audioOff.value?.split('_')[0]
+      if (audioOffValue != AttendeeOffType.disable) {
+        form.setFieldsValue({
+          audioOff: true,
+          attendeeAudioOffType: audioOffValue,
+        })
+      }
+    }
+    const recurringRule = meeting.recurringRule
+    let repeatInfo: any
+    console.log('recurringRule>>>>>>', recurringRule)
+    if (recurringRule && recurringRule.type != MeetingRepeatType.NoRepeat) {
+      repeatInfo = {
+        enable: true,
+        type: recurringRule.type,
+        endType: recurringRule.endRule.type,
+        endTimes: recurringRule.endRule.times || 7,
+        endDate: recurringRule.endRule.date
+          ? dayjs(recurringRule.endRule.date)
+          : dayjs(meeting.startTime).add(7, 'day'),
+      }
+      const customizedFrequency = recurringRule.customizedFrequency
+      const stepUnit =
+        customizedFrequency?.stepUnit || MeetingRepeatCustomStepUnit.Day
+      repeatInfo.customizedFrequency = {
+        stepSize: customizedFrequency?.stepSize || 1,
+        stepUnit,
+        daysOfWeek: customizedFrequency?.daysOfWeek || [],
+        daysOfMonth: customizedFrequency?.daysOfMonth || [],
+        frequencyType:
+          stepUnit > 2 ? MeetingRepeatFrequencyType.Month : stepUnit,
+      }
+    } else {
+      repeatInfo = defaultRepeatInfo
+    }
+    form.setFieldValue('repeat', { ...repeatInfo })
+  }
   useEffect(() => {
     if (restProps.open) {
+      let startTime
+      if (dayjs().minute() < 30) {
+        startTime = dayjs().minute(30).second(0)
+      } else {
+        startTime = dayjs().add(1, 'hour').minute(0).second(0)
+      }
       if (meeting) {
-        console.log('meeting>>>>>>', meeting)
-        setIsDetail(true)
-        let liveOnlyEmployees = false
-        const extensionConfig =
-          meeting.settings.roomInfo.roomProperties?.live?.extensionConfig
-        if (extensionConfig) {
-          try {
-            liveOnlyEmployees = JSON.parse(extensionConfig).onlyEmployeesAllow
-          } catch {}
-        }
-        form.setFieldsValue({
-          subject: meeting.subject,
-          startTime: dayjs(meeting.startTime),
-          endTime: dayjs(meeting.endTime),
-          meetingPassword: {
-            enable: !!meeting.settings.roomInfo.password,
-            password: meeting.settings.roomInfo.password,
-            enableWaitingRoom: meeting?.settings.roomInfo.openWaitingRoom,
-          },
-          audioOff: false,
-          // 新字段audioOff已启用，留着用于兼容老版本
-          attendeeAudioOffType:
-            meeting.settings.roomInfo.roomProperties?.audioOff?.value?.split(
-              '_'
-            )[0] == AttendeeOffType.disable
-              ? false
-              : true,
-          openLive: meeting?.settings.roomInfo.roomConfig.resource.live,
-          liveOnlyEmployees: liveOnlyEmployees,
-        })
-        const audioOff = meeting.settings.roomInfo.roomProperties?.audioOff
-        if (audioOff) {
-          const audioOffValue = audioOff.value?.split('_')[0]
-          if (audioOffValue != AttendeeOffType.disable) {
-            form.setFieldsValue({
-              audioOff: true,
-              attendeeAudioOffType: audioOffValue,
-            })
-          }
-        }
+        setEditMeetingInfo(meeting, getDefaultRepeatInfo(startTime))
       } else {
         setIsDetail(false)
-        let startTime
-        if (dayjs().minute() < 30) {
-          startTime = dayjs().minute(30).second(0)
-        } else {
-          startTime = dayjs().add(1, 'hour').minute(0).second(0)
-        }
         form.setFieldsValue({
           subject: `${nickname}预约的会议`,
           startTime: startTime,
@@ -441,6 +557,8 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
             password: '',
             enableWaitingRoom: false,
           },
+          enableJoinBeforeHost: true,
+          repeat: getDefaultRepeatInfo(startTime),
           attendeeAudioOffType: AttendeeOffType.offAllowSelfOn,
           audioOff: false,
           openLive: false,
@@ -460,6 +578,11 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
       if (endTime > startTime?.add(1, 'day')) {
         form.setFieldValue('endTime', startTime.add(1, 'day'))
       }
+      const repeatInfo = form.getFieldValue('repeat')
+      // form.setFieldValue('repeat', {
+      //   ...repeatInfo,
+      //   endDate: startTime?.add(6, 'day'),
+      // })
     }
   }, [restProps.open, startTime, form])
 
@@ -481,12 +604,190 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
     }
   }, [openAutoMute])
 
+  const handleEdit = () => {
+    const recurringRule = meeting?.recurringRule
+    if (recurringRule && recurringRule.type != MeetingRepeatType.NoRepeat) {
+      setOpenRecurringModalType('edit')
+    } else {
+      setIsDetail(false)
+    }
+  }
+
+  // 处理编辑本次还是全部周期性会议
+  const handleEditRecurring = (type: 'current' | 'all') => {
+    setEditRecurringType(type)
+    setOpenRecurringModalType('')
+    setIsDetail(false)
+  }
+
+  const modalTile = useMemo(() => {
+    switch (openRecurringModalType) {
+      case 'edit':
+        return i18n.editBtn
+      case 'cancel':
+        return i18n.cancelBtn
+      case 'exitEdit':
+        return t('meetingLeaveEditTips')
+      default:
+        return ''
+    }
+  }, [openRecurringModalType])
+
+  // 弹窗内容
+  const modalContent = useMemo(() => {
+    switch (openRecurringModalType) {
+      case 'edit':
+        return (
+          <div className={'schedule-recurring-edit-modal-content'}>
+            {t('meetingRepeatEditing')}
+          </div>
+        )
+      case 'cancel':
+        return (
+          <div className="nemeeting-schedule-cancel">
+            <div>{i18n.cancelTips}</div>
+            {meeting?.recurringRule &&
+              meeting?.recurringRule?.type != MeetingRepeatType.NoRepeat && (
+                <Checkbox
+                  value={cancelRecurringRef.current}
+                  style={{ marginTop: '12px' }}
+                  onChange={(e) => {
+                    cancelRecurringRef.current = e.target.checked
+                  }}
+                >
+                  {t('meetingRepeatCancelAll')}
+                </Checkbox>
+              )}
+          </div>
+        )
+      case 'exitEdit':
+        return (
+          <div className={'schedule-recurring-edit-modal-content'}>
+            {t('meetingLeaveEditTips2')}
+          </div>
+        )
+      default:
+        return ''
+    }
+  }, [openRecurringModalType, meeting?.recurringRule?.type])
+
+  // 弹窗底部按钮
+  const modalFooter = useMemo(() => {
+    switch (openRecurringModalType) {
+      // 编辑会议弹窗
+      case 'edit':
+        return (
+          <div className="schedule-recurring-edit-modal-footer">
+            <Button
+              shape="round"
+              className="schedule-edit-modal-footer-button"
+              onClick={() => handleEditRecurring('current')}
+              type="primary"
+            >
+              {t('meetingRepeatEditCurrent')}
+            </Button>
+            <Button
+              style={{ margin: '0 12px' }}
+              shape="round"
+              className="schedule-edit-modal-footer-button"
+              onClick={() => handleEditRecurring('all')}
+              ghost
+              type="primary"
+            >
+              {t('meetingRepeatEditAll')}
+            </Button>
+            <Button
+              shape="round"
+              className="schedule-edit-modal-footer-button"
+              onClick={() => setOpenRecurringModalType('')}
+            >
+              {t('globalCancel')}
+            </Button>
+          </div>
+        )
+      // 取消会议弹窗
+      case 'cancel':
+        return (
+          <div className="schedule-recurring-edit-modal-footer">
+            <Button
+              style={{ marginRight: '12px' }}
+              shape="round"
+              className="schedule-edit-modal-footer-button"
+              onClick={() => {
+                onCancelMeeting?.(cancelRecurringRef.current)
+                setOpenRecurringModalType('')
+              }}
+              type="primary"
+            >
+              {t('cancelScheduleMeeting')}
+            </Button>
+            <Button
+              shape="round"
+              className="schedule-edit-modal-footer-button"
+              onClick={() => setOpenRecurringModalType('')}
+            >
+              {t('noCancelScheduleMeeting')}
+            </Button>
+          </div>
+        )
+
+      // 退出会议编辑弹窗
+      case 'exitEdit':
+        return (
+          <div className="schedule-recurring-edit-modal-footer">
+            <Button
+              style={{ marginRight: '12px' }}
+              shape="round"
+              className="schedule-edit-modal-footer-button"
+              onClick={(e) => {
+                setOpenRecurringModalType('')
+                setTimeout(() => {
+                  restProps.onCancel?.()
+                })
+              }}
+              type="primary"
+            >
+              {t('meetingRepeatCancelEdit')}
+            </Button>
+            <Button
+              shape="round"
+              className="schedule-edit-modal-footer-button"
+              onClick={() => setOpenRecurringModalType('')}
+            >
+              {t('meetingEditContinue')}
+            </Button>
+          </div>
+        )
+    }
+  }, [openRecurringModalType])
+
+  const handleCancelEditMeeting = (e) => {
+    const recurringRule = meeting?.recurringRule
+    // 当前编辑的是周期性会议
+    if (
+      !isDetail &&
+      recurringRule &&
+      recurringRule?.type != MeetingRepeatType.NoRepeat
+    ) {
+      setOpenRecurringModalType('exitEdit')
+    } else {
+      if (!isDetail && meeting) {
+        setOpenRecurringModalType('exitEdit')
+      } else {
+        restProps.onCancel?.()
+      }
+    }
+  }
   return (
     <Modal
       title={i18n.title}
       width={375}
       maskClosable={false}
       destroyOnClose
+      afterClose={() => {
+        cancelRecurringRef.current = false
+        setOpenRecurringModalType('')
+      }}
       wrapClassName="user-select-none"
       footer={
         <div className="before-meeting-modal-footer before-meeting-schedule-modal-footer">
@@ -494,15 +795,7 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
             <Button
               className="before-meeting-modal-footer-button"
               onClick={() => {
-                Modal.confirm({
-                  title: i18n.cancelBtn,
-                  content: i18n.cancelTips,
-                  okText: i18n.cancelBtn,
-                  cancelText: i18n.noCancel,
-                  onOk: () => {
-                    onCancelMeeting?.()
-                  },
-                })
+                setOpenRecurringModalType('cancel')
               }}
               danger
             >
@@ -514,7 +807,7 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
               type="primary"
               className="before-meeting-modal-footer-button"
               ghost
-              onClick={() => setIsDetail(false)}
+              onClick={() => handleEdit()}
             >
               {i18n.editBtn}
             </Button>
@@ -538,9 +831,22 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
               {meeting ? i18n.saveBtn : i18n.submitBtn}
             </Button>
           )}
+          {/*是否编辑周期性会议弹窗*/}
+          <Modal
+            title={modalTile}
+            width={375}
+            className={'schedule-recurring-edit-modal'}
+            open={!!openRecurringModalType}
+            destroyOnClose
+            onCancel={() => setOpenRecurringModalType('')}
+            footer={modalFooter}
+          >
+            {modalContent}
+          </Modal>
         </div>
       }
       {...restProps}
+      onCancel={handleCancelEditMeeting}
     >
       <div className="before-meeting-modal-content">
         <div className="schedule-meeting-container">
@@ -570,7 +876,7 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
                     type="link"
                     onClick={() => handleCopy(meeting.meetingNum)}
                   >
-                    {i18n.copyBtn}
+                    {t('globalCopy')}
                   </Button>
                 </div>
               </Form.Item>
@@ -591,6 +897,9 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
             <Form.Item name="startTime" label={i18n.startTime}>
               <DatePickerFormItem
                 // showTime={{ minuteStep: 30, showSecond: false }}
+                onChange={(data) => {
+                  eventEmitter?.emit('startTimeChange', data)
+                }}
                 allowClear={false}
                 disabledDate={startDisabledDate}
                 disabledTime={startDisabledTime}
@@ -610,6 +919,39 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
                 disabled={isDetail}
               />
             </Form.Item>
+            {meeting?.meetingId &&
+              meeting.recurringRule &&
+              meeting.recurringRule.type !== MeetingRepeatType.NoRepeat &&
+              !isDetail &&
+              editRecurringType === 'current' && (
+                <div className="nemeeting-repeat-edit-tip">
+                  <span className="nemeeting-repeat-edit-tip-line" />
+                  <span className="nemeeting-repeat-edit-tip-content">
+                    {t('meetingRepeatEditTips')}
+                  </span>
+                  <span className="nemeeting-repeat-edit-tip-line" />
+                </div>
+              )}
+            {meeting?.meetingId &&
+            meeting.recurringRule &&
+            meeting.recurringRule.type !== MeetingRepeatType.NoRepeat &&
+            !isDetail &&
+            editRecurringType === 'current'
+              ? null
+              : startTime && (
+                  <Form.Item
+                    name="repeat"
+                    noStyle
+                    style={{ marginBottom: '15px' }}
+                  >
+                    <PeriodicMeeting
+                      eventEmitter={eventEmitter}
+                      canEdit={!isDetail}
+                      dayjs={dayjs}
+                      startTime={startTime}
+                    />
+                  </Form.Item>
+                )}
             <Form.Item
               className="password-form-item-wrapper"
               name="meetingPassword"
@@ -623,13 +965,18 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
                 }
               />
             </Form.Item>
+            <div className="nemeeting-schedule-setting">
+              {i18n.meetingSetting}
+            </div>
             <Form.Item
               name="audioOff"
-              label={i18n.meetingSetting}
               valuePropName="checked"
+              noStyle
               style={{ marginBottom: openAutoMute ? 0 : 24 }}
             >
-              <Checkbox disabled={isDetail}>{i18n.autoMute}</Checkbox>
+              <Checkbox style={{ lineHeight: '32px' }} disabled={isDetail}>
+                {i18n.autoMute}
+              </Checkbox>
             </Form.Item>
             {openAutoMute && (
               <Form.Item name="attendeeAudioOffType" style={{ marginLeft: 24 }}>
@@ -649,6 +996,11 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
                 </Radio.Group>
               </Form.Item>
             )}
+            <Form.Item name="enableJoinBeforeHost" valuePropName="checked">
+              <Checkbox disabled={isDetail}>
+                {t('meetingJoinBeforeHost')}
+              </Checkbox>
+            </Form.Item>
             {appLiveAvailable && (
               <Form.Item
                 name="openLive"

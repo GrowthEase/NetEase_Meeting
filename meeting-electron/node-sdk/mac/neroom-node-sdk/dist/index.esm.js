@@ -672,7 +672,7 @@ var NEAuthService = /** @class */ (function () {
                     resolve(SuccessBody(null));
                 }
                 else {
-                    reject(FailureBodySync({ code: code, message: message }));
+                    reject(FailureBodySync(null, message, code));
                 }
             });
         });
@@ -685,7 +685,7 @@ var NEAuthService = /** @class */ (function () {
                     resolve(SuccessBody(null));
                 }
                 else {
-                    reject(FailureBodySync({ code: code, message: message }));
+                    reject(FailureBodySync(null, message, code));
                 }
             });
         });
@@ -723,6 +723,181 @@ var NEAuthService = /** @class */ (function () {
     };
     NEAuthService.TAG_NAME = 'NEAuthService';
     return NEAuthService;
+}());
+
+var NEMessageChannelService = /** @class */ (function () {
+    function NEMessageChannelService(initOptions) {
+        this._listenerMap = new Map();
+        this._messageSessionListenerMap = new Map();
+        this._messageChannelService = initOptions.messageChannelService;
+    }
+    NEMessageChannelService.prototype.addMessageChannelListener = function (listener) {
+        var _onReceiveCustomMessage = listener.onReceiveCustomMessage;
+        if (_onReceiveCustomMessage) {
+            listener.onReceiveCustomMessage = function (message) {
+                var roomUuid = message.roomUuid, senderUuid = message.senderUuid, commandId = message.commandId, data = message.data;
+                var resData = data;
+                if (commandId === 99) {
+                    resData = {
+                        body: data,
+                    };
+                }
+                _onReceiveCustomMessage({
+                    roomUuid: roomUuid,
+                    senderUuid: senderUuid,
+                    commandId: commandId,
+                    data: resData,
+                });
+            };
+        }
+        function _messageChannelListenerCallback(key) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
+            if (listener[key]) {
+                listener[key].apply(listener, __spreadArray([], __read(args), false));
+            }
+        }
+        var index = this._messageChannelService.addMessageChannelListener(_messageChannelListenerCallback);
+        this._listenerMap.set(listener, index);
+    };
+    NEMessageChannelService.prototype.removeMessageChannelListener = function (listener) {
+        var index = this._listenerMap.get(listener);
+        if (index !== undefined) {
+            this._messageChannelService.removeMessageChannelListener(index);
+        }
+    };
+    NEMessageChannelService.prototype.sendCustomMessage = function (roomUuid, userUuid, commandId, data) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._messageChannelService.sendCustomMessage(roomUuid, userUuid, commandId, data, function (code, message) {
+                if (code === 0) {
+                    resolve({ code: 0, message: null, data: null });
+                }
+                else {
+                    reject({ code: code, message: message });
+                }
+            });
+        });
+    };
+    NEMessageChannelService.prototype.sendCustomMessageToRoom = function (roomUuid, commandId, data) {
+        throw new Error('Method not implemented.');
+    };
+    NEMessageChannelService.prototype.addReceiveSessionMessageListener = function (listener) {
+        function _receiveSessionMessageListener(key) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
+            if (listener[key]) {
+                listener[key].apply(listener, __spreadArray([], __read(args), false));
+            }
+        }
+        var index = this._messageChannelService.addReceiveSessionMessageListener(_receiveSessionMessageListener);
+        this._messageSessionListenerMap.set(listener, index);
+    };
+    NEMessageChannelService.prototype.removeReceiveSessionMessageListener = function (listener) {
+        var index = this._messageSessionListenerMap.get(listener);
+        if (index !== undefined) {
+            this._messageChannelService.removeReceiveSessionMessageListener(index);
+        }
+    };
+    NEMessageChannelService.prototype.queryUnreadMessageList = function (sessionId, sessionType) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._messageChannelService.queryUnreadMessageList(sessionId, sessionType, function (code, message, data) {
+                if (code === 0) {
+                    resolve(SuccessBody(data));
+                }
+                else {
+                    reject(FailureBodySync(null, message, code));
+                }
+            });
+        });
+    };
+    NEMessageChannelService.prototype.clearUnreadCount = function (sessionId, sessionType) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._messageChannelService.clearUnreadCount(sessionId, sessionType, function (code, message) {
+                if (code === 0) {
+                    resolve(SuccessBody(null));
+                }
+                else {
+                    reject(FailureBodySync(null, message, code));
+                }
+            });
+        });
+    };
+    NEMessageChannelService.prototype.deleteSessionMessage = function (sessionId, sessionType, messageId) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._messageChannelService.deleteSessionMessage(sessionId, sessionType, messageId, function (code, message) {
+                if (code === 0) {
+                    resolve(SuccessBody(null));
+                }
+                else {
+                    reject(FailureBodySync(null, message, code));
+                }
+            });
+        });
+    };
+    NEMessageChannelService.prototype.deleteAllSessionMessage = function (sessionId, sessionType) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._messageChannelService.deleteAllSessionMessage(sessionId, sessionType, function (code, message) {
+                if (code === 0) {
+                    resolve(SuccessBody(null));
+                }
+                else {
+                    reject(FailureBodySync(null, message, code));
+                }
+            });
+        });
+    };
+    NEMessageChannelService.prototype.getSessionMessagesHistory = function (param) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._messageChannelService.getSessionMessagesHistory(param, function (code, message, data) {
+                if (code === 0) {
+                    resolve(SuccessBody(data));
+                }
+                else {
+                    reject(FailureBodySync(null, message, code));
+                }
+            });
+        });
+    };
+    NEMessageChannelService.prototype.destroy = function () {
+        return new Promise(function (resolve, reject) {
+            // todo
+        });
+    };
+    return NEMessageChannelService;
+}());
+
+var NENosService = /** @class */ (function () {
+    function NENosService(initOptions) {
+        this._nosService = initOptions.roomKit.getNosService();
+    }
+    NENosService.prototype.setNosDownloadFilePath = function (path) {
+        return this._nosService.setNosDownloadFilePath(path);
+    };
+    NENosService.prototype.uploadResource = function (path) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._nosService.uploadResource(path, function (code, message, data) {
+                if (code === 200) {
+                    resolve(SuccessBody(data));
+                }
+                else {
+                    reject(FailureBodySync(null, message, code));
+                }
+            });
+        });
+    };
+    NENosService.TAG_NAME = 'NEAuthService';
+    return NENosService;
 }());
 
 var NERoomLiveController = /** @class */ (function () {
@@ -1231,6 +1406,32 @@ var NERoomRtcController = /** @class */ (function () {
     //   // todo
     //   throw new Error('Method not implemented.')
     // }
+    NERoomRtcController.prototype.disconnectMyAudio = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._rtcController.disconnectMyAudio(function (code, message) {
+                if (code === 0) {
+                    return resolve(SuccessBody(null));
+                }
+                else {
+                    return reject(FailureBodySync(null, message, code));
+                }
+            });
+        });
+    };
+    NERoomRtcController.prototype.reconnectMyAudio = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._rtcController.reconnectMyAudio(function (code, message) {
+                if (code === 0) {
+                    return resolve(SuccessBody(null));
+                }
+                else {
+                    return reject(FailureBodySync(null, message, code));
+                }
+            });
+        });
+    };
     NERoomRtcController.prototype.unmuteMyAudio = function () {
         var _this = this;
         return new Promise(function (resolve, reject) {
@@ -1450,110 +1651,6 @@ var NERoomRtcController = /** @class */ (function () {
         return this._rtcController.stopAudioDump();
     };
     return NERoomRtcController;
-}());
-
-var NERoomWhiteboardController = /** @class */ (function () {
-    function NERoomWhiteboardController(initOptions) {
-        this.isSupported = true;
-        this.isJoinedWhiteboard = true;
-        this._roomWhiteboardController = initOptions.roomWhiteboardController;
-    }
-    NERoomWhiteboardController.prototype.setWhiteboardNeedInfo = function (params) {
-        throw new Error('Method not implemented.');
-    };
-    NERoomWhiteboardController.prototype.initWhiteboard = function () {
-        return Promise.resolve(SuccessBody(null));
-    };
-    NERoomWhiteboardController.prototype.getWhiteboardUrl = function () {
-        return this._roomWhiteboardController.getWhiteboardUrl();
-    };
-    NERoomWhiteboardController.prototype.login = function () {
-        return this._roomWhiteboardController.login();
-    };
-    NERoomWhiteboardController.prototype.auth = function () {
-        return this._roomWhiteboardController.auth();
-    };
-    NERoomWhiteboardController.prototype.setupWhiteboardCanvas = function (view) {
-        function _viewCallBack(key) {
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
-            if (view[key]) {
-                view[key].apply(view, __spreadArray([], __read(args), false));
-            }
-        }
-        this._roomWhiteboardController.setupWhiteboardCanvas(_viewCallBack);
-        return Promise.resolve(SuccessBody(null));
-    };
-    NERoomWhiteboardController.prototype.resetWhiteboardCanvas = function (view) {
-        throw new Error('Method not implemented.');
-    };
-    NERoomWhiteboardController.prototype.startWhiteboardShare = function () {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            _this._roomWhiteboardController.startWhiteboardShare(function (code, message) {
-                console.log('startWhiteboardShare', code, message);
-                if (code === 0) {
-                    resolve(SuccessBody(null));
-                }
-                else {
-                    reject(FailureBodySync({ code: code, message: message }));
-                }
-            });
-        });
-    };
-    NERoomWhiteboardController.prototype.stopWhiteboardShare = function () {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            _this._roomWhiteboardController.stopWhiteboardShare(function (code, message) {
-                if (code === 0) {
-                    resolve(SuccessBody(null));
-                }
-                else {
-                    reject(FailureBodySync({ code: code, message: message }));
-                }
-            });
-        });
-    };
-    NERoomWhiteboardController.prototype.getWhiteboardSharingUserUuid = function () {
-        return this._roomWhiteboardController.getWhiteboardSharingUserUuid();
-    };
-    NERoomWhiteboardController.prototype.stopMemberWhiteboardShare = function (userUuid) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            _this._roomWhiteboardController.stopMemberWhiteboardShare(userUuid, function (code, message) {
-                if (code === 0) {
-                    resolve(SuccessBody(null));
-                }
-                else {
-                    reject(FailureBodySync({ code: code, message: message }));
-                }
-            });
-        });
-    };
-    NERoomWhiteboardController.prototype.setEnableDraw = function (enable) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            var res = _this._roomWhiteboardController.setEnableDraw(enable);
-            if (res === 0) {
-                resolve(SuccessBody(null));
-            }
-            else {
-                reject(FailureBodySync({ code: res, message: 'setEnableDraw failed' }));
-            }
-        });
-    };
-    NERoomWhiteboardController.prototype.setCanvasBackgroundColor = function (color) {
-        throw new Error('Method not implemented.');
-    };
-    NERoomWhiteboardController.prototype.lockCameraWithContent = function (width, height) {
-        throw new Error('Method not implemented.');
-    };
-    NERoomWhiteboardController.prototype.destroy = function () {
-        return Promise.resolve(SuccessBody(null));
-    };
-    return NERoomWhiteboardController;
 }());
 
 var NEChatroomType;
@@ -1816,6 +1913,110 @@ var NERoomChatController = /** @class */ (function () {
     return NERoomChatController;
 }());
 
+var NERoomWhiteboardController = /** @class */ (function () {
+    function NERoomWhiteboardController(initOptions) {
+        this.isSupported = true;
+        this.isJoinedWhiteboard = true;
+        this._roomWhiteboardController = initOptions.roomWhiteboardController;
+    }
+    NERoomWhiteboardController.prototype.setWhiteboardNeedInfo = function (params) {
+        throw new Error('Method not implemented.');
+    };
+    NERoomWhiteboardController.prototype.initWhiteboard = function () {
+        return Promise.resolve(SuccessBody(null));
+    };
+    NERoomWhiteboardController.prototype.getWhiteboardUrl = function () {
+        return this._roomWhiteboardController.getWhiteboardUrl();
+    };
+    NERoomWhiteboardController.prototype.login = function () {
+        return this._roomWhiteboardController.login();
+    };
+    NERoomWhiteboardController.prototype.auth = function () {
+        return this._roomWhiteboardController.auth();
+    };
+    NERoomWhiteboardController.prototype.setupWhiteboardCanvas = function (view) {
+        function _viewCallBack(key) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
+            if (view[key]) {
+                view[key].apply(view, __spreadArray([], __read(args), false));
+            }
+        }
+        this._roomWhiteboardController.setupWhiteboardCanvas(_viewCallBack);
+        return Promise.resolve(SuccessBody(null));
+    };
+    NERoomWhiteboardController.prototype.resetWhiteboardCanvas = function (view) {
+        throw new Error('Method not implemented.');
+    };
+    NERoomWhiteboardController.prototype.startWhiteboardShare = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._roomWhiteboardController.startWhiteboardShare(function (code, message) {
+                console.log('startWhiteboardShare', code, message);
+                if (code === 0) {
+                    resolve(SuccessBody(null));
+                }
+                else {
+                    reject(FailureBodySync({ code: code, message: message }));
+                }
+            });
+        });
+    };
+    NERoomWhiteboardController.prototype.stopWhiteboardShare = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._roomWhiteboardController.stopWhiteboardShare(function (code, message) {
+                if (code === 0) {
+                    resolve(SuccessBody(null));
+                }
+                else {
+                    reject(FailureBodySync({ code: code, message: message }));
+                }
+            });
+        });
+    };
+    NERoomWhiteboardController.prototype.getWhiteboardSharingUserUuid = function () {
+        return this._roomWhiteboardController.getWhiteboardSharingUserUuid();
+    };
+    NERoomWhiteboardController.prototype.stopMemberWhiteboardShare = function (userUuid) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._roomWhiteboardController.stopMemberWhiteboardShare(userUuid, function (code, message) {
+                if (code === 0) {
+                    resolve(SuccessBody(null));
+                }
+                else {
+                    reject(FailureBodySync({ code: code, message: message }));
+                }
+            });
+        });
+    };
+    NERoomWhiteboardController.prototype.setEnableDraw = function (enable) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var res = _this._roomWhiteboardController.setEnableDraw(enable);
+            if (res === 0) {
+                resolve(SuccessBody(null));
+            }
+            else {
+                reject(FailureBodySync({ code: res, message: 'setEnableDraw failed' }));
+            }
+        });
+    };
+    NERoomWhiteboardController.prototype.setCanvasBackgroundColor = function (color) {
+        throw new Error('Method not implemented.');
+    };
+    NERoomWhiteboardController.prototype.lockCameraWithContent = function (width, height) {
+        throw new Error('Method not implemented.');
+    };
+    NERoomWhiteboardController.prototype.destroy = function () {
+        return Promise.resolve(SuccessBody(null));
+    };
+    return NERoomWhiteboardController;
+}());
+
 var NEWaitingRoomController = /** @class */ (function () {
     function NEWaitingRoomController(inintOptions) {
         this._waitingRoomController = null;
@@ -1880,11 +2081,25 @@ var NEWaitingRoomController = /** @class */ (function () {
             });
         });
     };
-    NEWaitingRoomController.prototype.admitMember = function (userUuid) {
+    NEWaitingRoomController.prototype.admitMember = function (userUuid, autoAdmit) {
         var _this = this;
         return new Promise(function (resolve, reject) {
             var _a;
-            (_a = _this._waitingRoomController) === null || _a === void 0 ? void 0 : _a.admitMember(String(userUuid), function (code, message) {
+            (_a = _this._waitingRoomController) === null || _a === void 0 ? void 0 : _a.admitMember(String(userUuid), !!autoAdmit, function (code, message) {
+                if (code === 0) {
+                    return resolve(SuccessBody(null));
+                }
+                else {
+                    return reject(FailureBodySync(null, message, code));
+                }
+            });
+        });
+    };
+    NEWaitingRoomController.prototype.admitAllMembers = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var _a;
+            (_a = _this._waitingRoomController) === null || _a === void 0 ? void 0 : _a.admitAllMembers(function (code, message) {
                 if (code === 0) {
                     return resolve(SuccessBody(null));
                 }
@@ -1899,6 +2114,20 @@ var NEWaitingRoomController = /** @class */ (function () {
         return new Promise(function (resolve, reject) {
             var _a;
             (_a = _this._waitingRoomController) === null || _a === void 0 ? void 0 : _a.expelMember(String(userUuid), !!disallowRejoin, function (code, message) {
+                if (code === 0) {
+                    return resolve(SuccessBody(null));
+                }
+                else {
+                    return reject(FailureBodySync(null, message, code));
+                }
+            });
+        });
+    };
+    NEWaitingRoomController.prototype.expelAllMembers = function (disallowRejoin) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var _a;
+            (_a = _this._waitingRoomController) === null || _a === void 0 ? void 0 : _a.expelAllMembers(!!disallowRejoin, function (code, message) {
                 if (code === 0) {
                     return resolve(SuccessBody(null));
                 }
@@ -2149,6 +2378,13 @@ var NERoomContext = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
+    Object.defineProperty(NERoomContext.prototype, "isRoomBlacklistEnabled", {
+        get: function () {
+            return this._roomContext.isRoomBlacklistEnabled();
+        },
+        enumerable: false,
+        configurable: true
+    });
     NERoomContext.prototype.isInWaitingRoom = function () {
         return this._roomContext.isInWaitingRoom();
     };
@@ -2160,7 +2396,7 @@ var NERoomContext = /** @class */ (function () {
                     resolve(SuccessBody(null));
                 }
                 else {
-                    reject(FailureBodySync({ code: code, message: message }));
+                    reject(FailureBodySync(null, message, code));
                 }
             });
         });
@@ -2173,7 +2409,7 @@ var NERoomContext = /** @class */ (function () {
                     resolve(SuccessBody(null));
                 }
                 else {
-                    reject(FailureBodySync({ code: code, message: message }));
+                    reject(FailureBodySync(null, message, code));
                 }
             });
         });
@@ -2187,7 +2423,7 @@ var NERoomContext = /** @class */ (function () {
             // @ts-ignore
             listener.onMemberRoleChanged = function (userUuid, beforeRole, afterRole) {
                 var member = _this.getMember(userUuid);
-                member && _onMemberRoleChanged(member, beforeRole, afterRole);
+                _onMemberRoleChanged(member || userUuid, beforeRole, afterRole);
             };
         }
         if (_onMemberPropertiesChanged) {
@@ -2199,7 +2435,7 @@ var NERoomContext = /** @class */ (function () {
                         value: properties[key],
                     };
                 });
-                member && _onMemberPropertiesChanged(member, properties);
+                _onMemberPropertiesChanged(member || userUuid, properties);
             };
         }
         if (_onRoomEnded) {
@@ -2247,7 +2483,20 @@ var NERoomContext = /** @class */ (function () {
                     resolve(SuccessBody(null));
                 }
                 else {
-                    reject(FailureBodySync({ code: code, message: message }));
+                    reject(FailureBodySync(null, message, code));
+                }
+            });
+        });
+    };
+    NERoomContext.prototype.changeMembersRole = function (userRoleMap) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._roomContext.changeMembersRole(userRoleMap, function (code, message) {
+                if (code === 0) {
+                    resolve(SuccessBody(null));
+                }
+                else {
+                    reject(FailureBodySync(null, message, code));
                 }
             });
         });
@@ -2260,20 +2509,21 @@ var NERoomContext = /** @class */ (function () {
                     resolve(SuccessBody(null));
                 }
                 else {
-                    reject(FailureBodySync({ code: code, message: message }));
+                    reject(FailureBodySync(null, message, code));
                 }
             });
         });
     };
-    NERoomContext.prototype.kickMemberOut = function (userUuid) {
+    NERoomContext.prototype.kickMemberOut = function (userUuid, toBlacklist) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            _this._roomContext.kickMemberOut(userUuid, function (code, message) {
+            _this._roomContext.kickMemberOut(userUuid, !!toBlacklist, function (code, message) {
+                console.log('kickMemberOut', code, message);
                 if (code === 0) {
                     resolve(SuccessBody(null));
                 }
                 else {
-                    reject(FailureBodySync({ code: code, message: message }));
+                    reject(FailureBodySync(null, message, code));
                 }
             });
         });
@@ -2286,7 +2536,20 @@ var NERoomContext = /** @class */ (function () {
                     resolve(SuccessBody(null));
                 }
                 else {
-                    reject(FailureBodySync({ code: code, message: message }));
+                    reject(FailureBodySync(null, message, code));
+                }
+            });
+        });
+    };
+    NERoomContext.prototype.changeMemberName = function (userUuid, name) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._roomContext.changeMemberName(userUuid, name, function (code, message) {
+                if (code === 0) {
+                    resolve(SuccessBody(null));
+                }
+                else {
+                    reject(FailureBodySync(null, message, code));
                 }
             });
         });
@@ -2299,7 +2562,7 @@ var NERoomContext = /** @class */ (function () {
                     resolve(SuccessBody(null));
                 }
                 else {
-                    reject(FailureBodySync({ code: code, message: message }));
+                    reject(FailureBodySync(null, message, code));
                 }
             });
         });
@@ -2313,7 +2576,7 @@ var NERoomContext = /** @class */ (function () {
                     resolve(SuccessBody(null));
                 }
                 else {
-                    reject(FailureBodySync({ code: code, message: message }));
+                    reject(FailureBodySync(null, message, code));
                 }
             });
         });
@@ -2326,7 +2589,7 @@ var NERoomContext = /** @class */ (function () {
                     resolve(SuccessBody(null));
                 }
                 else {
-                    reject(FailureBodySync({ code: code, message: message }));
+                    reject(FailureBodySync(null, message, code));
                 }
             });
         });
@@ -2339,7 +2602,7 @@ var NERoomContext = /** @class */ (function () {
                     resolve(SuccessBody(null));
                 }
                 else {
-                    reject(FailureBodySync({ code: code, message: message }));
+                    reject(FailureBodySync(null, message, code));
                 }
             });
         });
@@ -2357,7 +2620,7 @@ var NERoomContext = /** @class */ (function () {
                     resolve(SuccessBody(null));
                 }
                 else {
-                    reject(FailureBodySync({ code: code, message: message }));
+                    reject(FailureBodySync(null, message, code));
                 }
             });
         });
@@ -2370,7 +2633,7 @@ var NERoomContext = /** @class */ (function () {
                     resolve(SuccessBody(null));
                 }
                 else {
-                    reject(FailureBodySync({ code: code, message: message }));
+                    reject(FailureBodySync(null, message, code));
                 }
             });
         });
@@ -2381,7 +2644,6 @@ var NERoomContext = /** @class */ (function () {
             ? this.localMember
             : (_a = this.remoteMembers.find(function (member) { return member.uuid === uuid; })) !== null && _a !== void 0 ? _a : null;
     };
-    // TODO: addRtcStatsListener
     NERoomContext.prototype.addRtcStatsListener = function (listener) {
         function _rtcStatsListenerCallback(key) {
             var args = [];
@@ -2395,7 +2657,6 @@ var NERoomContext = /** @class */ (function () {
         var index = this._roomContext.addRtcStatsListener(_rtcStatsListenerCallback);
         this._rtcStatsListenerMap.set(listener, index);
     };
-    // TODO: removeRtcStatsListener
     NERoomContext.prototype.removeRtcStatsListener = function (listener) {
         var index = this._rtcStatsListenerMap.get(listener);
         if (index !== undefined) {
@@ -2432,6 +2693,19 @@ var NERoomContext = /** @class */ (function () {
         var _this = this;
         return new Promise(function (resolve, reject) {
             _this._roomContext.rejoinAfterAdmittedToRoom(function (code, message) {
+                if (code === 0) {
+                    return resolve(SuccessBody(null));
+                }
+                else {
+                    return reject(FailureBodySync(null, message, code));
+                }
+            });
+        });
+    };
+    NERoomContext.prototype.enableRoomBlacklist = function (enable) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._roomContext.enableRoomBlacklist(!!enable, function (code, message) {
                 if (code === 0) {
                     return resolve(SuccessBody(null));
                 }
@@ -2873,96 +3147,6 @@ var NERoomService = /** @class */ (function () {
         return this._roomService.destroy();
     };
     return NERoomService;
-}());
-
-var NEMessageChannelService = /** @class */ (function () {
-    function NEMessageChannelService(initOptions) {
-        this._listenerMap = new Map();
-        this._messageChannelService = initOptions.messageChannelService;
-    }
-    NEMessageChannelService.prototype.addMessageChannelListener = function (listener) {
-        var _onReceiveCustomMessage = listener.onReceiveCustomMessage;
-        if (_onReceiveCustomMessage) {
-            listener.onReceiveCustomMessage = function (message) {
-                var roomUuid = message.roomUuid, senderUuid = message.senderUuid, commandId = message.commandId, data = message.data;
-                var resData = data;
-                if (commandId === 99) {
-                    resData = {
-                        body: data,
-                    };
-                }
-                _onReceiveCustomMessage({
-                    roomUuid: roomUuid,
-                    senderUuid: senderUuid,
-                    commandId: commandId,
-                    data: resData,
-                });
-            };
-        }
-        function _messageChannelListenerCallback(key) {
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
-            if (listener[key]) {
-                listener[key].apply(listener, __spreadArray([], __read(args), false));
-            }
-        }
-        var index = this._messageChannelService.addMessageChannelListener(_messageChannelListenerCallback);
-        this._listenerMap.set(listener, index);
-    };
-    NEMessageChannelService.prototype.removeMessageChannelListener = function (listener) {
-        var index = this._listenerMap.get(listener);
-        if (index !== undefined) {
-            this._messageChannelService.removeMessageChannelListener(index);
-        }
-    };
-    NEMessageChannelService.prototype.sendCustomMessage = function (roomUuid, userUuid, commandId, data) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            _this._messageChannelService.sendCustomMessage(roomUuid, userUuid, commandId, data, function (code, message) {
-                if (code === 0) {
-                    resolve({ code: 0, message: null, data: null });
-                }
-                else {
-                    reject({ code: code, message: message });
-                }
-            });
-        });
-    };
-    NEMessageChannelService.prototype.sendCustomMessageToRoom = function (roomUuid, commandId, data) {
-        throw new Error('Method not implemented.');
-    };
-    NEMessageChannelService.prototype.destroy = function () {
-        return new Promise(function (resolve, reject) {
-            // todo
-        });
-    };
-    return NEMessageChannelService;
-}());
-
-var NENosService = /** @class */ (function () {
-    function NENosService(initOptions) {
-        this._nosService = initOptions.roomKit.getNosService();
-    }
-    NENosService.prototype.setNosDownloadFilePath = function (path) {
-        return this._nosService.setNosDownloadFilePath(path);
-    };
-    NENosService.prototype.uploadResource = function (path) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            _this._nosService.uploadResource(path, function (code, message, data) {
-                if (code === 200) {
-                    resolve(SuccessBody(data));
-                }
-                else {
-                    reject(FailureBodySync({ code: code, message: message }));
-                }
-            });
-        });
-    };
-    NENosService.TAG_NAME = 'NEAuthService';
-    return NENosService;
 }());
 
 var neroom = require('../build/Release/neroom.node');

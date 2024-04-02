@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react'
 
-import Modal from '../../common/Modal'
-import { Button, Checkbox, Input, message } from 'antd'
+import { Button, Input } from 'antd'
 import { feedbackApi } from '../../../utils/feedbackApi'
+import Modal from '../../common/Modal'
 import Toast from '../../common/toast'
 
 import lottie from 'lottie-web'
 import score0 from './lottie/Angry_data.json'
-import score1 from './lottie/Sad_data.json'
+import blushingJSON from './lottie/Blushing_data.json'
 import score2 from './lottie/Happy_data.json'
 import score3 from './lottie/Heart+Eyes_data.json'
-import blushingJSON from './lottie/Blushing_data.json'
+import score1 from './lottie/Sad_data.json'
 
-import './index.less'
 import { useTranslation } from 'react-i18next'
+import './index.less'
 
 const { TextArea } = Input
 
@@ -36,26 +36,9 @@ const NPSModal: React.FC<NPSModalProps> = ({
   appKey,
 }) => {
   const { t } = useTranslation()
-  const ipcRenderer = window.ipcRenderer
-
-  useEffect(() => {
-    if (meetingId && nickname && appKey && visible) {
-      if (ipcRenderer) {
-        // ipcRenderer.send('open-meeting-nps', {
-        //   meetingId,
-        //   nickname,
-        //   appKey,
-        // })
-        ipcRenderer.on('close-meeting-nps', () => {
-          onClose()
-        })
-      }
-    }
-  }, [meetingId, nickname, appKey, visible, ipcRenderer])
-
   return (
     <>
-      {!ipcRenderer ? (
+      {!window.isElectronNative ? (
         <Modal
           title={t('npsTitle')}
           open={visible}
@@ -75,6 +58,8 @@ const NPSModal: React.FC<NPSModalProps> = ({
 }
 
 const NPS: React.FC<NPSProps> = ({ meetingId, nickname, appKey }) => {
+  console.log(meetingId, nickname, appKey)
+
   const { t } = useTranslation()
 
   const [selectedScore, setSelectedScore] = useState<number>(-1)

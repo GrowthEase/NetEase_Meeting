@@ -35,6 +35,8 @@
   box-sizing: border-box;
   color: @text-primary-color;
   .nemeeting-header-item {
+    display: flex;
+    align-items: center;
     cursor: pointer;
   }
   .electron-drag-bar {
@@ -64,7 +66,10 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 15px;
-
+    .header-item {
+      display: flex;
+      align-items: center;
+    }
     .user-button {
       cursor: pointer;
       width: 32px;
@@ -77,6 +82,14 @@
       color: #fff;
       .iconfont {
         font-size: 16px;
+      }
+    }
+    .notification-icon {
+      margin-right: 12px;
+      cursor: pointer;
+      .iconfont {
+        font-size: 24px;
+        color: #909194;
       }
     }
     .setting-button {
@@ -233,6 +246,10 @@
     font-size: 20px;
     color: #333;
     flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
   }
   .anticon {
     color: #cccccc;
@@ -329,6 +346,10 @@
     justify-content: center;
     flex-direction: column;
     border-bottom: 1px solid #f2f3f5;
+    .periodic-tag {
+      color: #337eff;
+      border: 1px solid #bacef0;
+    }
     .top {
       font-size: 12px;
       color: rgba(153, 153, 153, 1);
