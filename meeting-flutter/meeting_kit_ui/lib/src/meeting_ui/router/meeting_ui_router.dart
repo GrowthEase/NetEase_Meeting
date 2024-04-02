@@ -16,20 +16,10 @@ class MeetingUIRouter extends StatefulWidget {
 
   @override
   State<MeetingUIRouter> createState() => _MeetingUIRouterState();
-
-  static void pop(
-    BuildContext context, {
-    Object? result,
-    int? disconnectingCode,
-  }) {
-    return _MeetingUIRouterScope.of(context)!
-        .state
-        .pop(result: result, disconnectingCode: disconnectingCode);
-  }
 }
 
 class _MeetingUIRouterState extends State<MeetingUIRouter> with _AloggerMixin {
-  late final MeetingUIState state;
+  late final MeetingUINavigator uiNavigator;
   late final MeetingUIRouterDelegate routerDelegate;
   var disconnectingCode = NEMeetingCode.undefined;
   var hasRequestPop = false;
@@ -41,9 +31,10 @@ class _MeetingUIRouterState extends State<MeetingUIRouter> with _AloggerMixin {
     super.initState();
     commonLogger.i('initState');
     Wakelock.enable();
-    state = MeetingUIState(widget.roomContext, widget.arguments);
-    routerDelegate = MeetingUIRouterDelegate(state);
-    InMeetingService().rememberMeetingUIState(state);
+    uiNavigator = MeetingUINavigator()
+      ..popHandler = pop
+      ..initMeeting(widget.arguments);
+    routerDelegate = MeetingUIRouterDelegate(uiNavigator);
   }
 
   late Route myselfRoute;
@@ -59,13 +50,12 @@ class _MeetingUIRouterState extends State<MeetingUIRouter> with _AloggerMixin {
     Wakelock.disable().catchError((e) {
       commonLogger.i('Wakelock error $e');
     });
-    InMeetingService().clearMeetingUIState();
+    uiNavigator.dispose();
     MeetingCore().notifyStatusChange(
         NEMeetingStatus(NEMeetingEvent.disconnecting, arg: disconnectingCode));
     MeetingCore().notifyStatusChange(NEMeetingStatus(NEMeetingEvent.idle));
     EventBus().emit(NEMeetingUIEvents.flutterPageDisposed);
     AppStyle.setSystemUIOverlayStyleDark();
-    state.dispose();
     super.dispose();
   }
 
@@ -93,11 +83,8 @@ class _MeetingUIRouterState extends State<MeetingUIRouter> with _AloggerMixin {
         return !(await routerDelegate.popRoute());
       },
       child: NEMeetingUIKitLocalizationsScope(
-        child: _MeetingUIRouterScope(
-          state: this,
-          child: Router(
-            routerDelegate: routerDelegate,
-          ),
+        child: Router(
+          routerDelegate: routerDelegate,
         ),
       ),
     );
@@ -114,15 +101,15 @@ class MeetingUIRouterDelegate extends RouterDelegate<Object>
   @override
   GlobalKey<NavigatorState> navigatorKey = key;
 
-  final MeetingUIState state;
+  final MeetingUINavigator uiNavigator;
 
-  MeetingUIRouterDelegate(this.state) {
-    state.addListener(notifyListeners);
+  MeetingUIRouterDelegate(this.uiNavigator) {
+    uiNavigator.addListener(notifyListeners);
   }
 
   @override
   void dispose() {
-    state.removeListener(notifyListeners);
+    uiNavigator.removeListener(notifyListeners);
     super.dispose();
   }
 
@@ -133,7 +120,7 @@ class MeetingUIRouterDelegate extends RouterDelegate<Object>
 
   @override
   Widget build(BuildContext context) {
-    return Navigator(
+    final navigator = Navigator(
       key: navigatorKey,
       initialRoute: null,
       observers: [
@@ -141,24 +128,38 @@ class MeetingUIRouterDelegate extends RouterDelegate<Object>
       ],
       onPopPage: _handlePopPagedRoute,
       pages: [
-        if (state.isInWaitingRoom)
+        if (uiNavigator.isInWaitingRoom)
           MaterialPage(
             name: _RouterName.waitingRoom,
-            key: const ValueKey<String>(_RouterName.waitingRoom),
+            key: ValueKey((_RouterName.waitingRoom, uiNavigator.roomContext)),
             child: Builder(
               builder: (context) =>
-                  MeetingWaitingRoomPage(state.meetingArguments),
+                  MeetingWaitingRoomPage(uiNavigator.meetingArguments),
             ),
           ),
-        if (state.isInMeeting)
+        if (uiNavigator.isInMeeting)
           MaterialPage(
             name: _RouterName.inMeeting,
-            key: const ValueKey<String>(_RouterName.inMeeting),
+            key: ValueKey((_RouterName.inMeeting, uiNavigator.roomContext)),
             child: Builder(
-              builder: (context) => MeetingPage(state.meetingArguments),
+              builder: (context) => MeetingPage(uiNavigator.meetingArguments),
             ),
           ),
       ],
+    );
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(
+          value: uiNavigator,
+        ),
+        ChangeNotifierProvider.value(
+          value: uiNavigator.meetingLifecycleState,
+        ),
+        ChangeNotifierProvider.value(
+          value: uiNavigator.meetingUIState,
+        ),
+      ],
+      child: navigator,
     );
   }
 
@@ -177,45 +178,6 @@ class MeetingUIRouterDelegate extends RouterDelegate<Object>
 class _RouterName {
   static const waitingRoom = 'waitingRoom';
   static const inMeeting = 'inMeeting';
-}
-
-mixin MeetingUIStateScope<T extends StatefulWidget> on State<T> {
-  MeetingUIState? _meetingUIState;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _meetingUIState =
-        _MeetingUIRouterScope.of(context, nullOk: true)?.state.state;
-  }
-
-  MeetingUIState? get currentMeetingUIState => _meetingUIState;
-
-  MeetingArguments? get currentMeetingArguments =>
-      currentMeetingUIState?.meetingArguments;
-}
-
-class _MeetingUIRouterScope extends InheritedWidget {
-  final _MeetingUIRouterState state;
-
-  const _MeetingUIRouterScope({
-    required this.state,
-    required Widget child,
-  }) : super(child: child);
-
-  static _MeetingUIRouterScope? of(BuildContext context,
-      {bool nullOk = false}) {
-    final _MeetingUIRouterScope? result =
-        context.dependOnInheritedWidgetOfExactType<_MeetingUIRouterScope>();
-    assert(
-        result != null || nullOk, 'No _MeetingUIRouterScope found in context');
-    return result;
-  }
-
-  @override
-  bool updateShouldNotify(_MeetingUIRouterScope old) {
-    return old.state != state;
-  }
 }
 
 class _LoggingNavigatorObserver extends NavigatorObserver with _AloggerMixin {

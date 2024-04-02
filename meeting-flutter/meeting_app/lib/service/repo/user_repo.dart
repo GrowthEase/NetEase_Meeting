@@ -19,6 +19,11 @@ class UserRepo extends IRepo {
     return appService.updateNickname(nickName);
   }
 
+  /// 更新头像
+  Future<Result<void>> updateAvatar(String url) {
+    return appService.updateAvatar(url);
+  }
+
   /// 安全提示接口
   Future<Result<AppNotifications>> getSecurityNoticeConfigs(
       String appKey, String time) {

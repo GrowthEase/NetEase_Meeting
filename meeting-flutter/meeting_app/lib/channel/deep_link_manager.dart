@@ -16,7 +16,6 @@ import 'package:nemeeting/uikit/utils/router_name.dart';
 import 'package:nemeeting/uikit/values/colors.dart';
 import 'package:nemeeting/utils/const_config.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
-import 'package:nemeeting/utils/nav_register.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 import 'package:netease_meeting_core/meeting_service.dart';
 import 'package:intl/intl.dart';
@@ -25,18 +24,27 @@ import 'package:netease_meeting_assets/netease_meeting_assets.dart';
 
 import '../language/meeting_localization/meeting_app_localizations.dart';
 
-class DeepLinkManager with WidgetsBindingObserver {
+class DeepLinkManager {
   static final _instance = DeepLinkManager._internal();
   String _deepLinkUri = '';
+  bool paused = true;
 
   factory DeepLinkManager() => _instance;
 
   DeepLinkManager._internal() {
     NEPlatformChannel().listen(_handleDeepLinkUri);
-    WidgetsBinding.instance.addObserver(this);
     GlobalPreferences().ensurePrivacyAgree().then((value) {
       privacyAgreed = true;
     });
+    AppLifecycleListener(
+      onResume: () {
+        if (paused) {
+          paused = false;
+          onAppRestart();
+        }
+      },
+      onPause: () => paused = true,
+    );
   }
 
   static const _TAG = "DeepLinkManager";
@@ -81,7 +89,8 @@ class DeepLinkManager with WidgetsBindingObserver {
 
   void _handlePendingRequest() {
     if (!isEnabled ||
-        WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+        WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed ||
+        NEMeetingUIKit().getMeetingStatus().event != NEMeetingEvent.idle) {
       return;
     }
 
@@ -108,19 +117,18 @@ class DeepLinkManager with WidgetsBindingObserver {
   String? _lastCheckedMeetingKey;
   _CheckRequest? _checkingMeetingKey;
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) async {
+  void onAppRestart() async {
     assert(() {
-      debugPrintSynchronously(
-          '$_TAG: didChangeAppLifecycleState, $_pendingCheckRequest');
+      debugPrintSynchronously('$_TAG: onAppRestart $_pendingCheckRequest');
       return true;
     }());
-    if (state == AppLifecycleState.resumed && _pendingCheckRequest == null) {
+    if (_pendingCheckRequest == null) {
       _handlePendingRequest();
     }
   }
 
   void tryParseDeepLinkFromClipBoard() async {
+    debugPrint('tryParseDeepLinkFromClipBoard');
     // get meeting id from clipboard
     final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
     if (clipboardData == null) return;
@@ -268,7 +276,7 @@ class DeepLinkManager with WidgetsBindingObserver {
       if (!needConfirm) {
         // 新需求：如果是链接入会，需要跳到加入会议页面，手动加入会议
         AppProfile.deepLinkMeetingId = meetingInfo?.meetingNum ?? meetingKey;
-        RoutesRegister.pushNamedAndRemoveUntil(_context!, RouterName.meetJoin,
+        NavUtils.pushNamedAndRemoveUntil(_context!, RouterName.meetJoin,
             utilRouteName: RouterName.homePage);
         _checkingMeetingKey = null;
         return true;

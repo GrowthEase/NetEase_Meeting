@@ -45,13 +45,19 @@ class HttpApiHelper {
   }
 
   /// 编辑预约会议
-  static Future<NEResult<NEMeetingItem>> _editRoom(NEMeetingItem item) {
-    return execute(_EditMeetingApi(item));
+  static Future<NEResult<NEMeetingItem>> _editRoom(
+      NEMeetingItem item, bool editRecurringMeeting) {
+    if (editRecurringMeeting) {
+      return execute(_EditRecurringMeetingApi(item));
+    } else {
+      return execute(_EditMeetingApi(item));
+    }
   }
 
   ///取消预约会议，开始前可以取消
-  static Future<NEResult<void>> _cancelRoom(int meetingId) {
-    return execute(_CancelMeetingApi(meetingId));
+  static Future<NEResult<void>> _cancelRoom(
+      int meetingId, bool cancelRecurringMeeting) {
+    return execute(_CancelMeetingApi(meetingId, cancelRecurringMeeting));
   }
 
   ///删除预约会议
@@ -78,5 +84,33 @@ class HttpApiHelper {
   ///获取用户信息配置
   static Future<NEResult<AccountSettings>> _getSettingsApi() {
     return execute(_GetSettingsApi());
+  }
+
+  /// 获取小应用列表
+  static Future<NEResult<NEMeetingWebAppList>> getWebAppList() {
+    return execute(_GetWebAppListApi());
+  }
+
+  /// 获取JSAPI授权
+  static Future<NEResult<void>> jsAPIPermission(
+      JSApiPermissionRequest request) {
+    return execute(_GetJSApiPermissionApi(request));
+  }
+
+  /// 获取授权码
+  static Future<NEResult<AuthCodeModel>> getAuthCode(String pluginId) {
+    return execute(_GetAuthCodeApi(pluginId));
+  }
+
+  /// 获取主持人和联席主持人列表
+  static Future<NEResult<List<NERoomMember>>> _getHostAndCoHostList(
+      String roomUuid) {
+    return execute(_GetHostAndCoHostListApi(roomUuid));
+  }
+
+  /// 获取等候室属性
+  static Future<NEResult<Map<String, dynamic>>> _getWaitingRoomProperties(
+      String roomUuid) {
+    return execute(_GetWaitingRoomPropertiesApi(roomUuid));
   }
 }

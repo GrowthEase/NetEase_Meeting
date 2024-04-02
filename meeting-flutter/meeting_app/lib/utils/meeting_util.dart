@@ -2,6 +2,7 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:netease_meeting_core/meeting_kit.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
@@ -54,5 +55,24 @@ class MeetingUtil {
 
   static bool getAutoRegistered() {
     return AuthManager().autoRegistered ?? false;
+  }
+
+  /// 未读消息数
+  static ValueNotifier<int> _unreadNotifyMessageListenable = ValueNotifier(0);
+
+  /// 设置未读消息数
+  static setUnreadNotifyMessageListenable(value) {
+    _unreadNotifyMessageListenable.value = value;
+  }
+
+  /// 未读消息数增加
+  /// [value] 增加的数量,默认+1
+  static unreadNotifyMessageListenableIncrement({int value = 1}) {
+    _unreadNotifyMessageListenable.value += value;
+  }
+
+  /// 获取未读消息数
+  static ValueListenable<int> getUnreadNotifyMessageListenable() {
+    return _unreadNotifyMessageListenable;
   }
 }

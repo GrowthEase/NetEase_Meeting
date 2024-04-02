@@ -79,6 +79,7 @@ class LoginSSOState extends BaseState with MeetingAppLocalizationsMixin {
         elevation: 0.0,
         leading: IconButton(
           icon: const Icon(
+            key: MeetingUIValueKeys.back,
             IconFont.iconyx_returnx,
             size: 18,
             color: AppColors.black_333333,
@@ -99,7 +100,7 @@ class LoginSSOState extends BaseState with MeetingAppLocalizationsMixin {
                   : meetingAppLocalizations.authLoginBySSO,
               style: TextStyle(
                 color: AppColors.color_337eff,
-                fontSize: 14.0.sp,
+                fontSize: 14.0.spMin,
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -124,7 +125,7 @@ class LoginSSOState extends BaseState with MeetingAppLocalizationsMixin {
                     ? meetingAppLocalizations.authLoginBySSO
                     : meetingAppLocalizations.authLoginByCorpMail,
                 style: TextStyle(
-                  fontSize: 28.sp,
+                  fontSize: 28.spMin,
                   color: AppColors.black_222222,
                   fontWeight: FontWeight.w500,
                 ),

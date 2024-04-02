@@ -21,10 +21,13 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
         _AloggerMixin,
         NEWaitingRoomListener,
         MeetingKitLocalizationsMixin,
-        MeetingUIStateScope {
+        MeetingStateScope,
+        MeetingNavigatorScope,
+        FirstBuildScope {
   late final NERoomContext roomContext;
   late final MeetingInfo meetingInfo;
   late NEMeetingState meetingState;
+  late bool showChatroomEntrance = false;
   late bool audioMute, videoMute;
   MeetingArguments arguments;
 
@@ -69,7 +72,6 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
         sdkConfig: sdkConfig,
         chatroomConfig:
             arguments.options.chatroomConfig ?? NEMeetingChatroomConfig());
-    setupChatRoom();
     createHistoryMeetingItem();
     handleNetworkStateChanged();
     handleAppLifecycleChangeEvent();
@@ -146,29 +148,29 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
   }
 
   bool get isChatSupport =>
-      !arguments.noChat && roomContext.chatController.isSupported;
+      !arguments.noChat &&
+      roomContext.chatController.isSupported &&
+      meetingState == NEMeetingState.started;
+
+  @override
+  void onFirstBuild() {
+    setupChatRoom();
+  }
 
   void setupChatRoom() async {
-    if (isChatSupport) {
-      late VoidResult joinResult;
-      // 重试加入聊天室
-      for (var index = 1; index <= 3; index++) {
-        joinResult = await roomContext.chatController
-            .joinChatroom(chatroomType: NEChatroomType.waitingRoom);
-        if (!mounted || joinResult.isSuccess()) break;
-        // 异常Case：Android端在IM重连过程中，会导致聊天室加入失败，返回 1000 错误码
-        // 需要重试，等待 IM 重连成功后在执行加入聊天室的操作
-        await Future.delayed(Duration(seconds: pow(2, index).toInt()));
-        if (!mounted) break;
-      }
-      _messageSource.setJoinChatroomResult(joinResult.isSuccess());
-      if (mounted && !joinResult.isSuccess()) {
-        /// 聊天室进入失败
-        showToast(NEMeetingUIKitLocalizations.of(context)!.chatJoinFail);
-      }
-      commonLogger.i(
-        'waitingRoom join chatroom result: ${joinResult.toString()}',
-      );
+    if (!showChatroomEntrance && isChatSupport) {
+      meetingUIState.waitingRoomChatroom.join().then((value) {
+        if (!mounted) return;
+        commonLogger.i('waitingRoom join chatroom success: $value');
+        if (value.isSuccess()) {
+          setState(() {
+            showChatroomEntrance = true;
+          });
+          chatRoomManager.hasJoinWaitingRoomChatroom = () => true;
+        } else if (value.code != NEMeetingErrorCode.chatroomNotExists) {
+          showToast(NEMeetingUIKitLocalizations.of(context)!.chatJoinFail);
+        }
+      });
     }
   }
 
@@ -185,8 +187,9 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
   void cleanup() {
     if (hasCleanup) return;
     hasCleanup = true;
-    roomContext.removeEventCallback(roomCallback);
-    roomContext.waitingRoomController.removeListener(this);
+    roomContext
+      ..removeEventCallback(roomCallback)
+      ..waitingRoomController.removeListener(this);
     if (videoPreviewStarted) {
       roomContext.rtcController.stopPreview();
     }
@@ -204,6 +207,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
     });
     _roomEndStreamSubscription?.cancel();
     _waitingRoomStatusSubscription?.cancel();
+    _chatRoomManager?.dispose();
     cleanup();
     super.dispose();
   }
@@ -212,7 +216,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
     _rejoinAfterAdmittedToRoom().then((value) {
       if (!mounted) return;
       if (!value) {
-        MeetingUIRouter.pop(context);
+        meetingNavigator.pop();
       }
       cleanup();
     });
@@ -231,10 +235,10 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
     }
     final success = result.isSuccess();
     if (!_isInPIPView.value) {
-      currentMeetingUIState!.isMinimized = false;
+      meetingUIState.isMinimized = false;
     }
     if (success) {
-      currentMeetingUIState!.navigateToInMeetingFromWaitingRoom(
+      meetingNavigator.navigateToInMeetingFromWaitingRoom(
           arguments: widget.arguments.copyWith(
         initialAudioMute: audioMute,
         initialVideoMute: videoMute,
@@ -260,6 +264,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
       if (item.meetingId == meetingInfo.meetingId) {
         setState(() {
           meetingState = item.state;
+          setupChatRoom();
         });
         return;
       }
@@ -267,6 +272,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
   }
 
   void handleRoomEnd(NERoomEndReason reason) {
+    if (disconnectingCode != null) return;
     disconnectingCode = NEMeetingCode.undefined;
     switch (reason) {
       case NERoomEndReason.kKickBySelf:
@@ -281,6 +287,8 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
             meetingUiLocalizations.globalClose,
             NEMeetingCode.removedByHost,
           );
+        } else {
+          setState(() {});
         }
         return;
       case NERoomEndReason.kCloseByMember:
@@ -306,7 +314,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
         break;
     }
     if (!_isInPIPView.value) {
-      MeetingUIRouter.pop(context, disconnectingCode: disconnectingCode);
+      meetingNavigator.pop(disconnectingCode: disconnectingCode);
     } else {
       setState(() {});
     }
@@ -320,7 +328,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
       title,
       message,
       () {
-        MeetingUIRouter.pop(context, disconnectingCode: disconnectingCode);
+        meetingNavigator.pop(disconnectingCode: disconnectingCode);
       },
       acceptText: okText,
       canBack: false,
@@ -379,7 +387,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
       });
     }
     if (state == AppLifecycleState.resumed) {
-      currentMeetingUIState!.isMinimized = false;
+      meetingUIState.isMinimized = false;
       _isInPIPView.value = false;
       if (Platform.isIOS) {
         floating.disposePIP();
@@ -392,7 +400,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
 
     /// 非小窗模式会议关闭状态
     if (_isInPIPView.value != true && disconnectingCode != null) {
-      MeetingUIRouter.pop(context, disconnectingCode: disconnectingCode);
+      meetingNavigator.pop(disconnectingCode: disconnectingCode);
     }
   }
 
@@ -470,10 +478,14 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
       fit: StackFit.expand,
       children: [
         if (!hasBackground)
-          NEMeetingImages.assetImage(NEMeetingImages.waitingRoomBackground),
+          Image(
+            image: NEMeetingImages.assetImageProvider(
+                NEMeetingImages.waitingRoomBackground),
+            fit: BoxFit.cover,
+          ),
         if (hasBackground)
           FadeInImage(
-            placeholder: NEMeetingImages.assetImageAssets(
+            placeholder: NEMeetingImages.assetImageProvider(
                 NEMeetingImages.waitingRoomBackground),
             image: ResizeImage(
               NetworkImage(backgroundImageUrl),
@@ -508,7 +520,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
             ],
           ),
         ),
-        if (isChatSupport)
+        if (showChatroomEntrance)
           Align(
               alignment: Alignment.bottomCenter,
               child: GestureDetector(
@@ -548,6 +560,12 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
     );
   }
 
+  ChatRoomManager? _chatRoomManager;
+  ChatRoomManager get chatRoomManager {
+    _chatRoomManager ??= ChatRoomManager(roomContext);
+    return _chatRoomManager!;
+  }
+
   void onChat() {
     Navigator.of(context).push(MaterialMeetingPageRoute(
         settings: RouteSettings(name: MeetingChatRoomPage.routeName),
@@ -556,8 +574,8 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
             arguments: ChatRoomArguments(
               roomContext: roomContext,
               messageSource: _messageSource,
+              chatRoomManager: chatRoomManager,
             ),
-            initialChatroomType: NEChatroomType.waitingRoom,
           );
         }));
   }
@@ -681,6 +699,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
                 Container(
                   height: 45,
                   alignment: Alignment.center,
+                  padding: EdgeInsets.symmetric(horizontal: 12),
                   child: Text(
                     localizations.meetingLeaveConfirm,
                     style: TextStyle(
@@ -834,9 +853,9 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
       bottom: max(vp.bottom, 12),
     );
     _roomEndStreamSubscription ??=
-        currentMeetingUIState!.roomEndStream.listen(handleRoomEnd);
+        meetingLifecycleState.roomEndStream.listen(handleRoomEnd);
     _waitingRoomStatusSubscription ??=
-        currentMeetingUIState!.onAdmittedToMeeting.listen(onAdmittedToMeeting);
+        meetingLifecycleState.onAdmittedToMeeting.listen(onAdmittedToMeeting);
   }
 
   var videoPreviewAlignment = Alignment.bottomRight;

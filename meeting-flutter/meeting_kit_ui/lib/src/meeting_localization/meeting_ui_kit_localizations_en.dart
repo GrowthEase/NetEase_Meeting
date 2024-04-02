@@ -436,6 +436,80 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get meetingIsInCall => 'Answering the phone now';
 
   @override
+  String get meetingPinView => 'Lock video';
+
+  @override
+  String meetingPinViewTip(Object corner) {
+    return 'The video is locked, tap unlock at $corner to unlock';
+  }
+
+  @override
+  String get meetingTopLeftCorner => 'top left corner';
+
+  @override
+  String get meetingBottomRightCorner => 'bottom right corner';
+
+  @override
+  String get meetingUnpinView => 'Unlock video';
+
+  @override
+  String get meetingUnpinViewTip => 'Video unlocked';
+
+  @override
+  String get meetingUnpin => 'Unlock';
+
+  @override
+  String get meetingPinFailedByFocus =>
+      'The host has set the focus video, and this operation is not supported.';
+
+  @override
+  String get meetingBlacklist => 'Meeting Blacklist';
+
+  @override
+  String get meetingBlacklistDetail =>
+      'Once turned on, users marked \"No Re-joining\" will not be able to join the meeting.';
+
+  @override
+  String get unableMeetingBlacklistTitle =>
+      'Are you sure to turn off the meeting blacklist?';
+
+  @override
+  String get unableMeetingBlacklistTip =>
+      'After turned off, the blacklist will be cleared, and users marked \"No Re-joining\" can re-join the meeting.';
+
+  @override
+  String get meetingNotAllowedToRejoin =>
+      'Not allowed to join the meeting again.';
+
+  @override
+  String get meetingAllowMembersTo => 'Allow attendees to';
+
+  @override
+  String get meetingChat => 'Group and Private Chats';
+
+  @override
+  String get meetingChatEnabled => 'Chat has been enabled.';
+
+  @override
+  String get meetingChatDisabled => 'Chat has been disabled.';
+
+  @override
+  String get meetingReclaimHost => 'Reclaim Host';
+
+  @override
+  String get meetingReclaimHostCancel => 'Not Now';
+
+  @override
+  String meetingReclaimHostTip(Object user) {
+    return '$user is the host now, and withdrawing host privileges may interrupt screen sharing, etc';
+  }
+
+  @override
+  String meetingUserIsNowTheHost(Object user) {
+    return '$user is the host now.';
+  }
+
+  @override
   String get screenShare => 'Share';
 
   @override
@@ -640,7 +714,7 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
       'Editing live streaming permission is not allowed during streaming';
 
   @override
-  String get liveStreaming => 'Live Streaming';
+  String get liveStreaming => 'Live';
 
   @override
   String get participants => 'Participants';
@@ -855,7 +929,7 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
       'The number of assigned roles exceeds the upper limit';
 
   @override
-  String get participantMe => 'me';
+  String get participantMe => 'Me';
 
   @override
   String get participantSearchMember => 'Search';
@@ -916,12 +990,19 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get participantPutInWaitingRoom => 'Remove to waiting room';
 
   @override
-  String get participantExpelWaitingMemberDialogTitle =>
-      'Remove waiting members';
-
-  @override
   String get participantDisallowMemberRejoinMeeting =>
       'Do not allow users to join this meeting again';
+
+  @override
+  String participantVideoIsPinned(Object corner) {
+    return 'The video is locked, tap unlock at $corner to unlock';
+  }
+
+  @override
+  String get participantVideoIsUnpinned => 'Video unlocked';
+
+  @override
+  String get participantNotFound => 'No member found';
 
   @override
   String get cloudRecordingEnabledTitle =>
@@ -1066,6 +1147,74 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get chatNoChatHistory => 'No chat history';
 
   @override
+  String get chatAllMembers => 'Everyone';
+
+  @override
+  String get chatPrivate => 'Private';
+
+  @override
+  String get chatPrivateInWaitingRoom => 'Waiting room-private';
+
+  @override
+  String get chatPermission => 'Chat permissions';
+
+  @override
+  String get chatFree => 'All chats allowed';
+
+  @override
+  String get chatPublicOnly => 'Group chats only';
+
+  @override
+  String get chatPrivateHostOnly => 'Chat with host only';
+
+  @override
+  String get chatMuted => 'Mute all attendees';
+
+  @override
+  String get chatPermissionInMeeting => 'Chat permissions in the meeting';
+
+  @override
+  String get chatPermissionInWaitingRoom =>
+      'Chat permissions in the waiting room';
+
+  @override
+  String get chatWaitingRoomPrivateHostOnly => 'Chat with the host';
+
+  @override
+  String get chatHostMutedEveryone => 'Block all chats';
+
+  @override
+  String get chatHostLeft =>
+      'The host has left and cannot send private chat messages';
+
+  @override
+  String chatSaidToMe(Object userName) {
+    return '$userName said to me';
+  }
+
+  @override
+  String chatISaidTo(Object userName) {
+    return 'I said to$userName';
+  }
+
+  @override
+  String chatSaidToWaitingRoom(Object userName) {
+    return '$userName to everyone waiting';
+  }
+
+  @override
+  String get chatISaidToWaitingRoom => 'To Everyone waiting';
+
+  @override
+  String get chatSendFailed => 'Failed to send';
+
+  @override
+  String get chatMemberLeft => 'The participants have left the meeting';
+
+  @override
+  String get chatWaitingRoomMuted => 'The host has not opened the chat';
+
+  @override
   String get waitingRoomJoinMeeting => 'Join';
 
   @override
@@ -1114,7 +1263,33 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   }
 
   @override
+  String get waitingRoomAutoAdmit => 'Admit to meeting automatically';
+
+  @override
   String get movedToWaitingRoom => 'The host has moved you to the waiting room';
+
+  @override
+  String get waitingRoomAdmitAll => 'Admit All';
+
+  @override
+  String get waitingRoomRemoveAll => 'Remove All';
+
+  @override
+  String get waitingRoomAdmitMember => 'Admit Waiting Attendee';
+
+  @override
+  String get waitingRoomAdmitAllMembersTip =>
+      'Do you want to admit all attendees in the waiting room to the meeting';
+
+  @override
+  String get waitingRoomRemoveAllMemberTip =>
+      'Are you sure you want to remove all attendees from the waiting room ?';
+
+  @override
+  String get waitingRoomExpelWaitingMember => 'Remove waiting members';
+
+  @override
+  String get waiting => 'Waiting';
 
   @override
   String get deviceSpeaker => 'Speaker';
@@ -1176,4 +1351,24 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   @override
   String get networkDisconnectedTryingToReconnect =>
       'Disconnected, trying to reconnect…';
+
+  @override
+  String get notifyCenter => 'Notification';
+
+  @override
+  String get notifyCenterAllClear => 'Confirm to clear all notifications?';
+
+  @override
+  String get notifyCenterNoMessage => 'No news';
+
+  @override
+  String get notifyCenterViewDetailsUnsupported =>
+      'The message does not support viewing details';
+
+  @override
+  String get notifyCenterViewingDetails => 'View details';
+
+  @override
+  String get globalOperationNotSupportedInMeeting =>
+      'This operation is not supported in the meeting.';
 }

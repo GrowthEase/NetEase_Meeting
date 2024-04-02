@@ -109,7 +109,10 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
         title: Text(
           meetingAppLocalizations.historyMeeting,
           textAlign: TextAlign.center,
-          style: TextStyle(color: AppColors.black_222222, fontSize: 17),
+          style: TextStyle(
+              color: AppColors.black_222222,
+              fontSize: 17,
+              fontWeight: FontWeight.bold),
         ),
       ),
       body: Column(
@@ -294,7 +297,11 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
           if (item.meetingNum == "") {
             return buildTimeTitle(item.roomEntryTime);
           } else {
-            return buildMeetingItem(item: item);
+            return buildMeetingItem(
+              item: item,
+              showBottomDivider: index + 1 < allMeetingList.length &&
+                  allMeetingList[index + 1].meetingNum != "",
+            );
           }
         },
         controller: _allMeetingScrollController);
@@ -311,7 +318,12 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
           if (item.meetingNum == "") {
             return buildTimeTitle(item.roomEntryTime);
           } else {
-            return buildMeetingItem(item: item, isInFavoritePage: true);
+            return buildMeetingItem(
+              item: item,
+              isInFavoritePage: true,
+              showBottomDivider: index + 1 < favoriteMeetingList.length &&
+                  favoriteMeetingList[index + 1].meetingNum != "",
+            );
           }
         },
         controller: _favoriteMeetingScrollController);
@@ -353,8 +365,11 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
     );
   }
 
-  Widget buildMeetingItem(
-      {required HistoryMeeting item, bool isInFavoritePage = false}) {
+  Widget buildMeetingItem({
+    required HistoryMeeting item,
+    bool isInFavoritePage = false,
+    bool showBottomDivider = true,
+  }) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       child: Container(
@@ -381,19 +396,23 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
                       crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Text.rich(TextSpan(children: [
-                          TextSpan(
-                            text:
-                                '${TimeUtil.timeFormatHourMinute(DateTime.fromMillisecondsSinceEpoch(item.roomEntryTime))}',
-                            style: TextStyle(
-                                color: AppColors.black_222222, fontSize: 12),
-                          ),
-                          TextSpan(
-                              text:
-                                  " | ${meetingAppLocalizations.meetingNum}:${TextUtil.applyMask(item.meetingNum, "000-000-0000")}",
-                              style: TextStyle(
-                                  color: AppColors.color_999999, fontSize: 12))
-                        ])),
+                        Text.rich(
+                            key: MeetingValueKey.historyMeetingItemTitle,
+                            TextSpan(children: [
+                              TextSpan(
+                                text:
+                                    '${TimeUtil.timeFormatHourMinute(DateTime.fromMillisecondsSinceEpoch(item.roomEntryTime))}',
+                                style: TextStyle(
+                                    color: AppColors.black_222222,
+                                    fontSize: 12),
+                              ),
+                              TextSpan(
+                                  text:
+                                      " | ${meetingAppLocalizations.meetingNum}:${TextUtil.applyMask(item.meetingNum, "000-000-0000")}",
+                                  style: TextStyle(
+                                      color: AppColors.color_999999,
+                                      fontSize: 12))
+                            ])),
                         SizedBox(width: 10),
                         GestureDetector(
                           key: MeetingValueKey.scheduleMeetingIdCopy,
@@ -422,14 +441,15 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
                 ))
               ],
             ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                margin: EdgeInsets.only(left: 50),
-                height: 0.5,
-                color: AppColors.color_999999,
+            if (showBottomDivider)
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  margin: EdgeInsets.only(left: 50),
+                  height: 0.5,
+                  color: AppColors.color_999999,
+                ),
               ),
-            ),
             Align(
               alignment: Alignment.centerRight,
               child: GestureDetector(

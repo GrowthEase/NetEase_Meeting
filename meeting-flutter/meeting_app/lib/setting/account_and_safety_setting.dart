@@ -166,8 +166,8 @@ class _AccountAndSafetySettingState
     return Container(
       color: AppColors.white,
       padding: EdgeInsets.only(left: 20),
-      height: 1,
-      child: Divider(height: 1),
+      height: 0.5,
+      child: Divider(height: 0.5),
     );
   }
 

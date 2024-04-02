@@ -15,7 +15,6 @@ import '../uikit/state/meeting_base_state.dart';
 import '../uikit/utils/nav_utils.dart';
 import '../uikit/values/asset_name.dart';
 import '../uikit/values/colors.dart';
-import '../uikit/values/dimem.dart';
 import '../uikit/values/fonts.dart';
 
 import '../webview/webview_page.dart';
@@ -175,7 +174,7 @@ class _AboutState extends MeetingBaseState<About>
       child: Container(
         color: AppColors.globalBg,
       ),
-      height: 1.h,
+      height: 0.5,
     );
   }
 

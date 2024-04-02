@@ -160,6 +160,18 @@ class _MeetingItemImpl extends NEMeetingItem {
 
   bool get isWaitingRoomEnabled => _waitingRoomEnabled;
 
+  bool _enableJoinBeforeHost = true;
+
+  @override
+  bool isEnableJoinBeforeHost() {
+    return _enableJoinBeforeHost;
+  }
+
+  @override
+  void setEnableJoinBeforeHost(bool enable) {
+    _enableJoinBeforeHost = enable;
+  }
+
   Map handleRoomProperties() {
     var roomProperties = {}; // 参考 创建会议 ，从seeting里获取controls就可以了
     if (settings.controls?.isEmpty ?? true) {
@@ -191,6 +203,17 @@ class _MeetingItemImpl extends NEMeetingItem {
       map['live'] = handleLiveProperties();
     }
     return map;
+  }
+
+  NEMeetingRecurringRule _recurringRule =
+      NEMeetingRecurringRule(type: NEMeetingRecurringRuleType.no);
+
+  @override
+  NEMeetingRecurringRule get recurringRule => _recurringRule;
+
+  @override
+  set recurringRule(NEMeetingRecurringRule recurringRule) {
+    _recurringRule = recurringRule;
   }
 
   ///处理直播属性
@@ -230,6 +253,8 @@ class _MeetingItemImpl extends NEMeetingItem {
             _roleBinds?.map((key, value) => MapEntry(key, value.index)),
         'noSip': !_noSip,
         'waitingRoomEnabled': _waitingRoomEnabled,
+        'enableJoinBeforeHost': _enableJoinBeforeHost,
+        'recurringRule': _recurringRule.toJson()
       };
 
   @override
@@ -242,6 +267,7 @@ class _MeetingItemImpl extends NEMeetingItem {
       'roomConfigId': _roomConfigId ?? kMeetingTemplateId,
       'roomProperties': handleRoomProperties(),
       'openWaitingRoom': _waitingRoomEnabled,
+      'enableJoinBeforeHost': _enableJoinBeforeHost,
       'roomConfig': {
         'resource': {
           // 'waitingRoom': _waitingRoomEnabled,
@@ -254,7 +280,10 @@ class _MeetingItemImpl extends NEMeetingItem {
         'roleBinds': _roleBinds?.map((key, value) {
           var roleType = MeetingRoles.mapEnumRoleToString(value);
           return MapEntry(key, roleType);
-        })
+        }),
+
+      /// 周期性会议
+      'recurringRule': _recurringRule.toJson()
     };
     return map;
   }
@@ -270,6 +299,7 @@ class _MeetingItemImpl extends NEMeetingItem {
     impl.endTime = (map['endTime'] ?? 0) as int;
     impl.noSip = (map['noSip'] ?? true) as bool;
     impl.setWaitingRoomEnabled((map['waitingRoomEnabled'] ?? false) as bool);
+    impl.setEnableJoinBeforeHost((map['enableJoinBeforeHost'] ?? true) as bool);
     impl.state = _MeetingStateExtension.fromState(map['state'] as int);
     impl.password = map['password'] as String?;
     impl.roleBinds =
@@ -280,6 +310,8 @@ class _MeetingItemImpl extends NEMeetingItem {
     impl.live = NEMeetingItemLive.fromJson(map['live']);
     impl.extraData = map['extraData'] as String?;
     impl.settings = NEMeetingItemSettings.fromNativeJson(map['settings']);
+    impl.recurringRule = NEMeetingRecurringRule.fromJson(map['recurringRule'],
+        startTime: DateTime.fromMillisecondsSinceEpoch(impl.startTime));
     return impl;
   }
 
@@ -313,6 +345,8 @@ class _MeetingItemImpl extends NEMeetingItem {
     });
     impl.noSip = (resource?['sip'] ?? true) as bool;
     impl.setWaitingRoomEnabled((roomInfo?['openWaitingRoom'] ?? false) as bool);
+    impl.setEnableJoinBeforeHost(
+        (roomInfo?['enableJoinBeforeHost'] ?? true) as bool);
     Map? extraDataMap = roomProperties?['extraData'] as Map?;
     impl.extraData = extraDataMap?['value'] as String?;
     final audioOffMap = roomProperties?[AudioControlProperty.key] as Map?;
@@ -340,6 +374,8 @@ class _MeetingItemImpl extends NEMeetingItem {
     impl.live = liveSettings;
 
     impl.inviteUrl = map['meetingInviteUrl'] as String?;
+    impl.recurringRule = NEMeetingRecurringRule.fromJson(map['recurringRule'],
+        startTime: DateTime.fromMillisecondsSinceEpoch(impl.startTime));
     return impl;
   }
 

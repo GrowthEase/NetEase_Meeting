@@ -7,6 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:nemeeting/service/util/user_preferences.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 import '../language/meeting_localization/meeting_app_localizations.dart';
+import '../uikit/values/asset_name.dart';
+import '../uikit/values/strings.dart';
 
 /// 默认开启白板
 const bool openWhiteBoard = true;
@@ -31,7 +33,18 @@ const kShowMeetingRemainingTip = true;
 /// 开启密码登录
 const kEnablePasswordLogin = !kReleaseMode;
 
+/// 开启摇一摇打开二维码扫描
+const kEnableShakeAndOpenQrScan = false;
+
 const inMeetingMoreMenuItemId = 101;
+NESingleStateMenuItem inMeetingFeedbackMenu = NESingleStateMenuItem(
+  itemId: inMeetingMoreMenuItemId,
+  visibility: NEMenuVisibility.visibleAlways,
+  singleStateItem: NEMenuItemInfo(
+      text: Strings.inRoomFeedBack,
+      icon: AssetName.iconInRoomFeedback,
+      platformPackage: '/'),
+);
 
 Future<NEMeetingUIOptions> buildMeetingUIOptions({
   bool? noVideo,
@@ -46,6 +59,8 @@ Future<NEMeetingUIOptions> buildMeetingUIOptions({
   noVideo ??= !(await settingsService.isTurnOnMyVideoWhenJoinMeetingEnabled());
   noAudio ??= !(await settingsService.isTurnOnMyAudioWhenJoinMeetingEnabled());
   showMeetingTime ??= await settingsService.isShowMyMeetingElapseTimeEnabled();
+  final enableAudioDeviceSwitch =
+      await UserPreferences().isAudioDeviceSwitchEnabled();
   // audioAINSEnabled ??= await settingsService.isAudioAINSEnabled();
   noCloudRecord ??= kNoCloudRecord;
   final showShareUserVideo = await UserPreferences().getShowShareUserVideo();
@@ -72,6 +87,7 @@ Future<NEMeetingUIOptions> buildMeetingUIOptions({
     restorePreferredOrientations: [DeviceOrientation.portraitUp],
     extras: {'shareScreenTips': meetingAppLocalizations.meetingShareScreenTips},
     showCloudRecordMenuItem: true,
-    showCloudRecordingUI: false,
+    showCloudRecordingUI: true,
+    enableAudioDeviceSwitch: enableAudioDeviceSwitch,
   );
 }

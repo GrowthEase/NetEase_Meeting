@@ -105,6 +105,8 @@ class MeetingValueKey {
   static const schedulePwdSwitch = ValueKey('schedulePwdSwitch');
   static const schedulePwdInput = ValueKey('schedulePwdInput');
   static const scheduleWaitingRoom = ValueKey('waitingRoom');
+  static const scheduleEnableJoinBeforeHost =
+      ValueKey('scheduleEnableJoinBeforeHost');
   static const scheduleAttendeeAudio = ValueKey('scheduleAttendeeAudio');
   static const scheduleAttendeeAudioAllow =
       ValueKey('scheduleAttendeeAudioAllow');
@@ -121,12 +123,16 @@ class MeetingValueKey {
   static const scheduleCopyLiveUrl = ValueKey('scheduleCopyLiveUrl');
   static const scheduleFavorite = ValueKey('scheduleFavorite');
   static const scheduleMeetingIdCopy = ValueKey('scheduleMeetingIdCopy');
+  static const scheduleMeetingItemTitle = ValueKey('scheduleMeetingItemTitle');
 
   static const logoutByDialog = ValueKey('logoutByDialog');
 
   static const feedbackInput = ValueKey("feedbackInput");
 
   static const copy = ValueKey('copy');
+
+  /// 历史会议
+  static const historyMeetingItemTitle = ValueKey('historyMeetingItemTitle');
 
   /// 评价关闭按钮
   static const evaluationCloseBtn = ValueKey("evaluationCloseBtn");

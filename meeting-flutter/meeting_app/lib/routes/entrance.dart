@@ -81,8 +81,8 @@ class _EntranceRouteState extends LifecycleBaseState
                   child: MeetingTextField(
                     controller: _corpCodeController,
                     hintText: meetingAppLocalizations.authEnterCorpCode,
-                    textInputAction: TextInputAction.next,
-                    onSubmitted: (_) => launchCorpLogin,
+                    textInputAction: TextInputAction.done,
+                    onEditingComplete: launchCorpLogin,
                   ),
                 ),
               ),
@@ -167,7 +167,7 @@ class _EntranceRouteState extends LifecycleBaseState
               meetingAppLocalizations.authCreateAccountByPC,
           style: TextStyle(
             color: AppColors.color_666666,
-            fontSize: 12.sp,
+            fontSize: 12.spMin,
           ),
         ),
         Spacer(),
@@ -176,7 +176,7 @@ class _EntranceRouteState extends LifecycleBaseState
             meetingAppLocalizations.authLoginToTrialEdition,
             style: TextStyle(
               color: AppColors.blue_337eff,
-              fontSize: 14.sp,
+              fontSize: 14.spMin,
             ),
           ),
           onTap: () {
@@ -196,7 +196,7 @@ class _EntranceRouteState extends LifecycleBaseState
           meetingAppLocalizations.authHasCorpCode,
           style: TextStyle(
             color: AppColors.color_666666,
-            fontSize: 14.sp,
+            fontSize: 14.spMin,
           ),
         ),
         GestureDetector(
@@ -204,7 +204,7 @@ class _EntranceRouteState extends LifecycleBaseState
             meetingAppLocalizations.authLoginToCorpEdition,
             style: TextStyle(
               color: AppColors.blue_337eff,
-              fontSize: 14.sp,
+              fontSize: 14.spMin,
             ),
           ),
           onTap: () {
@@ -228,7 +228,7 @@ class _EntranceRouteState extends LifecycleBaseState
           textAlign: TextAlign.center,
           style: TextStyle(
             color: AppColors.blue_337eff,
-            fontSize: 14.sp,
+            fontSize: 14.spMin,
           ),
         ),
         onTap: () async {

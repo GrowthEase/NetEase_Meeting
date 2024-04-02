@@ -157,6 +157,28 @@ class MeetingInfo {
   /// meeting 配置相关
   late final MeetingSettings? settings;
 
+  /// 房间拥有者的用户uuid
+  late final String? ownerUserUuid;
+
+  MeetingInfo({
+    required this.meetingId,
+    required this.meetingNum,
+    required this.roomUuid,
+    this.roomArchiveId,
+    required this.type,
+    required this.subject,
+    this.inviteUrl,
+    this.inviteCode,
+    required this.startTime,
+    required this.endTime,
+    required this.state,
+    this.shortMeetingNum,
+    this.sipCid,
+    this.authorization,
+    this.settings,
+    this.ownerUserUuid,
+  });
+
   MeetingInfo.fromMap(Map map) {
     meetingId = map['meetingId'] as int;
     meetingNum = map['meetingNum'] as String;
@@ -171,6 +193,7 @@ class MeetingInfo {
     state = _MeetingStateExtension.fromState(map['state'] as int);
     shortMeetingNum = map['shortMeetingNum'] as String?;
     sipCid = map['sipCid'] as String?;
+    ownerUserUuid = map['ownerUserUuid'] as String?;
 
     final appKey = map['meetingAppKey'] as String?;
     final user = map['meetingUserUuid'] as String?;
@@ -182,6 +205,29 @@ class MeetingInfo {
     }
 
     settings = MeetingSettings.fromMap(map['settings'] as Map?);
+  }
+
+  MeetingInfo copyWith({
+    NEMeetingState? state,
+  }) {
+    return MeetingInfo(
+      meetingId: meetingId,
+      meetingNum: meetingNum,
+      roomArchiveId: roomArchiveId,
+      roomUuid: roomUuid,
+      type: type,
+      subject: subject,
+      inviteUrl: inviteUrl,
+      inviteCode: inviteCode,
+      startTime: startTime,
+      endTime: endTime,
+      state: state ?? this.state,
+      shortMeetingNum: shortMeetingNum,
+      sipCid: sipCid,
+      authorization: authorization,
+      settings: settings,
+      ownerUserUuid: ownerUserUuid,
+    );
   }
 }
 

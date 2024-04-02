@@ -17,6 +17,7 @@ class GlobalPreferences extends Preferences {
   static const String _keyPrivacyDialogShowed = 'privacyDialogShowed';
   static const String _keyMeetingEvaluation = 'meetingEvaluation';
   static const String _keyCorpCode = 'corpCode';
+  static const String keyShakeAndOpenQrScan = 'shakeAndOpenQrScan';
 
   GlobalPreferences._internal();
 
@@ -62,6 +63,14 @@ class GlobalPreferences extends Preferences {
       _privacyAgreeCompleter.complete();
     }
     return setBoolSp(_keyPrivacyDialogShowed, enabled);
+  }
+
+  Future<bool> get isShakeAndOpenQrScanEnabled async {
+    return await getBoolSp(keyShakeAndOpenQrScan) ?? false;
+  }
+
+  Future<bool> setShakeAndOpenQrScanEnabled(bool enabled) async {
+    return setBoolSp(keyShakeAndOpenQrScan, enabled);
   }
 
   Future<String?> get meetingEnv async {

@@ -98,6 +98,23 @@ abstract class NEMeetingItem {
   ///
   bool get isWaitingRoomEnabled;
 
+  ///
+  /// 周期性会议规则
+  ///
+  NEMeetingRecurringRule get recurringRule;
+
+  set recurringRule(NEMeetingRecurringRule recurringRule);
+
+  ///
+  /// 查询是否允许成员在主持人入会前加入，默认为 true
+  ///
+  bool isEnableJoinBeforeHost();
+
+  ///
+  /// 设置是否允许成员在主持人入会前加入
+  ///
+  void setEnableJoinBeforeHost(bool enable);
+
   Map toJson();
 
   Map request();

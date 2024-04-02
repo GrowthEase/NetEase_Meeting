@@ -17,8 +17,8 @@ import 'package:nemeeting/routes/home_page.dart';
 import 'package:nemeeting/routes/auth/login_mobile.dart';
 import 'package:nemeeting/routes/network_not_available_page.dart';
 import 'package:nemeeting/setting/account_and_safety_setting.dart';
-import 'package:nemeeting/uikit/utils/nav_utils.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:nemeeting/setting/avatar_setting.dart';
+import 'package:nemeeting/routes/qr_scan_page.dart';
 import '../routes/auth/reset_initial_password.dart';
 import '../language/localizations.dart';
 import '../uikit/utils/router_name.dart';
@@ -41,12 +41,14 @@ class RoutesRegister {
     RouterName.historyMeet: (context) => HistoryMeetingRoute(),
     RouterName.meetingSetting: (context) => MeetingSetting(),
     RouterName.nickSetting: (context) => NickSetting(),
+    RouterName.avatarSetting: (context) => AvatarSetting(),
     RouterName.about: (context) => About(),
     RouterName.scheduleMeeting: (context) => ScheduleMeetingRoute(),
     RouterName.networkNotAvailable: (context) => NetworkNotAvailableRoute(),
     RouterName.accountAndSafety: (context) => AccountAndSafetySettingRoute(),
     RouterName.modifyPassword: (context) => ModifyPasswordRoute(),
     RouterName.webview: (context) => WebViewPage(),
+    RouterName.qrScan: (context) => QrScanPage(),
   };
 
   static Map<String, Widget Function(dynamic)> get routes {
@@ -54,35 +56,14 @@ class RoutesRegister {
         key, (context) => MeetingAppLocalizationsScope(builder: value)));
   }
 
-  static MaterialPageRoute getPageRoute(
-      String routeName, BuildContext context) {
+  static MaterialPageRoute getPageRoute(String routeName, BuildContext context,
+      {Object? arguments}) {
     var builder = routes[routeName];
     if (builder == null) {
       throw Exception('Invalid route name: $routeName');
     }
-    return MaterialPageRoute(builder: (context) => builder(context));
-  }
-
-  static void pushPage(
-    BuildContext context,
-    String routeName, {
-    Object? arguments,
-  }) {
-    NavUtils.pushNamed(context, routeName,
-        arguments: arguments,
-        pageRoute: NEMeetingUIKit().getMeetingStatus().event ==
-                NEMeetingEvent.inMeetingMinimized ||
-            NEMeetingUIKit().getMeetingStatus().event ==
-                NEMeetingEvent.inMeeting);
-  }
-
-  static void pushNamedAndRemoveUntil(
-    BuildContext context,
-    String routeName, {
-    String? utilRouteName,
-    Object? arguments,
-  }) {
-    NavUtils.pushNamedAndRemoveUntil(context, routeName,
-        utilRouteName: utilRouteName, arguments: arguments);
+    return MaterialPageRoute(
+        builder: (context) => builder(context),
+        settings: RouteSettings(arguments: arguments));
   }
 }

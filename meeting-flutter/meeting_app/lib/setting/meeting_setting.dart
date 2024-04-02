@@ -71,8 +71,8 @@ class _MeetingSettingState extends MeetingBaseState<MeetingSetting>
               MeetingValueKey.enableAudioDeviceSwitch,
               meetingAppLocalizations.settingEnableAudioDeviceSwitch,
               false,
-              settings.isAudioDeviceSwitchEnabled(), (value) {
-            settings.enableAudioDeviceSwitch(value);
+              UserPreferences().isAudioDeviceSwitchEnabled(), (value) {
+            UserPreferences().enableAudioDeviceSwitch(value);
           }),
         ]);
   }
@@ -86,8 +86,8 @@ class _MeetingSettingState extends MeetingBaseState<MeetingSetting>
     return Container(
       color: AppColors.white,
       padding: EdgeInsets.only(left: 20),
-      height: 1,
-      child: Divider(height: 1),
+      height: 0.5,
+      child: Divider(height: 0.5),
     );
   }
 

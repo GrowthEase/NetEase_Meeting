@@ -901,6 +901,132 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'正在接听系统电话'**
   String get meetingIsInCall;
 
+  /// No description provided for @meetingPinView.
+  ///
+  /// In zh, this message translates to:
+  /// **'锁定视频'**
+  String get meetingPinView;
+
+  /// No description provided for @meetingPinViewTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'画面已锁定，点击{corner}取消锁定'**
+  String meetingPinViewTip(Object corner);
+
+  /// No description provided for @meetingTopLeftCorner.
+  ///
+  /// In zh, this message translates to:
+  /// **'左上角'**
+  String get meetingTopLeftCorner;
+
+  /// No description provided for @meetingBottomRightCorner.
+  ///
+  /// In zh, this message translates to:
+  /// **'右下角'**
+  String get meetingBottomRightCorner;
+
+  /// No description provided for @meetingUnpinView.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消锁定视频'**
+  String get meetingUnpinView;
+
+  /// No description provided for @meetingUnpinViewTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'画面已解锁'**
+  String get meetingUnpinViewTip;
+
+  /// No description provided for @meetingUnpin.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消锁定'**
+  String get meetingUnpin;
+
+  /// No description provided for @meetingPinFailedByFocus.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人已设置焦点视频，不支持该操作'**
+  String get meetingPinFailedByFocus;
+
+  /// No description provided for @meetingBlacklist.
+  ///
+  /// In zh, this message translates to:
+  /// **'会议黑名单'**
+  String get meetingBlacklist;
+
+  /// No description provided for @meetingBlacklistDetail.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启后，被标记“不允许再次加入”的用户将无法加入该会议'**
+  String get meetingBlacklistDetail;
+
+  /// No description provided for @unableMeetingBlacklistTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认关闭会议黑名单？'**
+  String get unableMeetingBlacklistTitle;
+
+  /// No description provided for @unableMeetingBlacklistTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭后将清空黑名单，被标记“不允许再次加入”的用户可重新加入会议'**
+  String get unableMeetingBlacklistTip;
+
+  /// No description provided for @meetingNotAllowedToRejoin.
+  ///
+  /// In zh, this message translates to:
+  /// **'不允许再次加入该会议'**
+  String get meetingNotAllowedToRejoin;
+
+  /// No description provided for @meetingAllowMembersTo.
+  ///
+  /// In zh, this message translates to:
+  /// **'允许参会人员'**
+  String get meetingAllowMembersTo;
+
+  /// No description provided for @meetingChat.
+  ///
+  /// In zh, this message translates to:
+  /// **'会中聊天'**
+  String get meetingChat;
+
+  /// No description provided for @meetingChatEnabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'会中聊天已开启'**
+  String get meetingChatEnabled;
+
+  /// No description provided for @meetingChatDisabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'会中聊天已关闭'**
+  String get meetingChatDisabled;
+
+  /// No description provided for @meetingReclaimHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'收回主持人'**
+  String get meetingReclaimHost;
+
+  /// No description provided for @meetingReclaimHostCancel.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂不收回'**
+  String get meetingReclaimHostCancel;
+
+  /// No description provided for @meetingReclaimHostTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'{user}目前是主持人，收回主持人权限可能会中断屏幕共享等'**
+  String meetingReclaimHostTip(Object user);
+
+  /// No description provided for @meetingUserIsNowTheHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'{user}已经成为主持人'**
+  String meetingUserIsNowTheHost(Object user);
+
   /// No description provided for @screenShare.
   ///
   /// In zh, this message translates to:
@@ -1759,17 +1885,29 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'移至等候室'**
   String get participantPutInWaitingRoom;
 
-  /// No description provided for @participantExpelWaitingMemberDialogTitle.
-  ///
-  /// In zh, this message translates to:
-  /// **'移除等候成员'**
-  String get participantExpelWaitingMemberDialogTitle;
-
   /// No description provided for @participantDisallowMemberRejoinMeeting.
   ///
   /// In zh, this message translates to:
   /// **'不允许用户再次加入该会议'**
   String get participantDisallowMemberRejoinMeeting;
+
+  /// No description provided for @participantVideoIsPinned.
+  ///
+  /// In zh, this message translates to:
+  /// **'画面已锁定，点击{corner}取消锁定'**
+  String participantVideoIsPinned(Object corner);
+
+  /// No description provided for @participantVideoIsUnpinned.
+  ///
+  /// In zh, this message translates to:
+  /// **'画面已解锁'**
+  String get participantVideoIsUnpinned;
+
+  /// No description provided for @participantNotFound.
+  ///
+  /// In zh, this message translates to:
+  /// **'未找到相关成员'**
+  String get participantNotFound;
 
   /// No description provided for @cloudRecordingEnabledTitle.
   ///
@@ -2008,13 +2146,13 @@ abstract class NEMeetingUIKitLocalizations {
   /// No description provided for @chatAllMembersInMeeting.
   ///
   /// In zh, this message translates to:
-  /// **'会议室所有人'**
+  /// **'会议内所有人'**
   String get chatAllMembersInMeeting;
 
   /// No description provided for @chatAllMembersInWaitingRoom.
   ///
   /// In zh, this message translates to:
-  /// **'等候室所有人'**
+  /// **'等候室内所有人'**
   String get chatAllMembersInWaitingRoom;
 
   /// No description provided for @chatHistory.
@@ -2034,6 +2172,126 @@ abstract class NEMeetingUIKitLocalizations {
   /// In zh, this message translates to:
   /// **'无聊天记录'**
   String get chatNoChatHistory;
+
+  /// No description provided for @chatAllMembers.
+  ///
+  /// In zh, this message translates to:
+  /// **'所有人'**
+  String get chatAllMembers;
+
+  /// No description provided for @chatPrivate.
+  ///
+  /// In zh, this message translates to:
+  /// **'私聊'**
+  String get chatPrivate;
+
+  /// No description provided for @chatPrivateInWaitingRoom.
+  ///
+  /// In zh, this message translates to:
+  /// **'等候室-私聊'**
+  String get chatPrivateInWaitingRoom;
+
+  /// No description provided for @chatPermission.
+  ///
+  /// In zh, this message translates to:
+  /// **'聊天权限'**
+  String get chatPermission;
+
+  /// No description provided for @chatFree.
+  ///
+  /// In zh, this message translates to:
+  /// **'允许自由聊天'**
+  String get chatFree;
+
+  /// No description provided for @chatPublicOnly.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅允许公开聊天'**
+  String get chatPublicOnly;
+
+  /// No description provided for @chatPrivateHostOnly.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅允许私聊主持人'**
+  String get chatPrivateHostOnly;
+
+  /// No description provided for @chatMuted.
+  ///
+  /// In zh, this message translates to:
+  /// **'全体成员禁言'**
+  String get chatMuted;
+
+  /// No description provided for @chatPermissionInMeeting.
+  ///
+  /// In zh, this message translates to:
+  /// **'会议中聊天权限'**
+  String get chatPermissionInMeeting;
+
+  /// No description provided for @chatPermissionInWaitingRoom.
+  ///
+  /// In zh, this message translates to:
+  /// **'等候室聊天权限'**
+  String get chatPermissionInWaitingRoom;
+
+  /// No description provided for @chatWaitingRoomPrivateHostOnly.
+  ///
+  /// In zh, this message translates to:
+  /// **'允许等候室成员私聊主持人'**
+  String get chatWaitingRoomPrivateHostOnly;
+
+  /// No description provided for @chatHostMutedEveryone.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人已设置为全员禁言'**
+  String get chatHostMutedEveryone;
+
+  /// No description provided for @chatHostLeft.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人已离会，无法发送私聊消息'**
+  String get chatHostLeft;
+
+  /// No description provided for @chatSaidToMe.
+  ///
+  /// In zh, this message translates to:
+  /// **'{userName} 对我说'**
+  String chatSaidToMe(Object userName);
+
+  /// No description provided for @chatISaidTo.
+  ///
+  /// In zh, this message translates to:
+  /// **'我对{userName}说'**
+  String chatISaidTo(Object userName);
+
+  /// No description provided for @chatSaidToWaitingRoom.
+  ///
+  /// In zh, this message translates to:
+  /// **'{userName} 对等候室所有人说'**
+  String chatSaidToWaitingRoom(Object userName);
+
+  /// No description provided for @chatISaidToWaitingRoom.
+  ///
+  /// In zh, this message translates to:
+  /// **'我对等候室所有人说'**
+  String get chatISaidToWaitingRoom;
+
+  /// No description provided for @chatSendFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'发送失败'**
+  String get chatSendFailed;
+
+  /// No description provided for @chatMemberLeft.
+  ///
+  /// In zh, this message translates to:
+  /// **'参会者已离开会议'**
+  String get chatMemberLeft;
+
+  /// No description provided for @chatWaitingRoomMuted.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人暂未开放等候室聊天'**
+  String get chatWaitingRoomMuted;
 
   /// No description provided for @waitingRoomJoinMeeting.
   ///
@@ -2119,11 +2377,59 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'当前等候室已有{count}人等候'**
   String waitingRoomCount(Object count);
 
+  /// No description provided for @waitingRoomAutoAdmit.
+  ///
+  /// In zh, this message translates to:
+  /// **'本次会议自动准入'**
+  String get waitingRoomAutoAdmit;
+
   /// No description provided for @movedToWaitingRoom.
   ///
   /// In zh, this message translates to:
   /// **'主持人已将您移至等候室'**
   String get movedToWaitingRoom;
+
+  /// No description provided for @waitingRoomAdmitAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部准入'**
+  String get waitingRoomAdmitAll;
+
+  /// No description provided for @waitingRoomRemoveAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部移除'**
+  String get waitingRoomRemoveAll;
+
+  /// No description provided for @waitingRoomAdmitMember.
+  ///
+  /// In zh, this message translates to:
+  /// **'准入等候成员'**
+  String get waitingRoomAdmitMember;
+
+  /// No description provided for @waitingRoomAdmitAllMembersTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'是否允许等候室所有成员加入会议?'**
+  String get waitingRoomAdmitAllMembersTip;
+
+  /// No description provided for @waitingRoomRemoveAllMemberTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'将等候室的所有成员都移除?'**
+  String get waitingRoomRemoveAllMemberTip;
+
+  /// No description provided for @waitingRoomExpelWaitingMember.
+  ///
+  /// In zh, this message translates to:
+  /// **'移除等候成员'**
+  String get waitingRoomExpelWaitingMember;
+
+  /// No description provided for @waiting.
+  ///
+  /// In zh, this message translates to:
+  /// **'等候中'**
+  String get waiting;
 
   /// No description provided for @deviceSpeaker.
   ///
@@ -2238,6 +2544,42 @@ abstract class NEMeetingUIKitLocalizations {
   /// In zh, this message translates to:
   /// **'网络已断开，正在尝试重新连接…'**
   String get networkDisconnectedTryingToReconnect;
+
+  /// No description provided for @notifyCenter.
+  ///
+  /// In zh, this message translates to:
+  /// **'通知中心'**
+  String get notifyCenter;
+
+  /// No description provided for @notifyCenterAllClear.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认清空所有通知?'**
+  String get notifyCenterAllClear;
+
+  /// No description provided for @notifyCenterNoMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无消息'**
+  String get notifyCenterNoMessage;
+
+  /// No description provided for @notifyCenterViewDetailsUnsupported.
+  ///
+  /// In zh, this message translates to:
+  /// **'该消息不支持查看详情'**
+  String get notifyCenterViewDetailsUnsupported;
+
+  /// No description provided for @notifyCenterViewingDetails.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看详情'**
+  String get notifyCenterViewingDetails;
+
+  /// No description provided for @globalOperationNotSupportedInMeeting.
+  ///
+  /// In zh, this message translates to:
+  /// **'会议中暂不支持该操作'**
+  String get globalOperationNotSupportedInMeeting;
 }
 
 class _NEMeetingUIKitLocalizationsDelegate

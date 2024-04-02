@@ -10,12 +10,14 @@ class AppStyle {
       SystemUiOverlayStyle.dark.copyWith(
     statusBarColor: Colors.transparent,
     systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarIconBrightness: Brightness.dark,
   );
 
   static late final systemUiOverlayStyleLight =
       SystemUiOverlayStyle.light.copyWith(
     statusBarColor: Colors.transparent,
     systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarIconBrightness: Brightness.dark,
   );
 
   static void setSystemUIOverlayStyleDark() {

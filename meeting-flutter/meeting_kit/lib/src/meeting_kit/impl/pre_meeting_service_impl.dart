@@ -74,15 +74,17 @@ class _NEPreMeetingServiceImpl extends NEPreMeetingService with _AloggerMixin {
   }
 
   @override
-  Future<NEResult<NEMeetingItem>> editMeeting(NEMeetingItem item) {
-    apiLogger.i('editMeeting ,item${item.toString()}');
-    return PreRoomRepository.editRoom(item);
+  Future<NEResult<NEMeetingItem>> editMeeting(
+      NEMeetingItem item, bool editRecurringMeeting) {
+    apiLogger.i('editMeeting ,item${item.toString()} $editRecurringMeeting');
+    return PreRoomRepository.editRoom(item, editRecurringMeeting);
   }
 
   @override
-  Future<NEResult<void>> cancelMeeting(int meetingId) {
-    apiLogger.i('cancelMeeting $meetingId');
-    return PreRoomRepository.cancelRoom(meetingId);
+  Future<NEResult<void>> cancelMeeting(
+      int meetingId, bool cancelRecurringMeeting) {
+    apiLogger.i('cancelMeeting $meetingId $cancelRecurringMeeting');
+    return PreRoomRepository.cancelRoom(meetingId, cancelRecurringMeeting);
   }
 
   @override

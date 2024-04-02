@@ -16,9 +16,15 @@ class ChatRoomArguments {
   ChatRoomMessageSource messageSource;
   final NERoomContext? roomContext;
   final WaitingRoomManager? waitingRoomManager;
+  final ChatRoomManager? chatRoomManager;
+  final Stream? roomInfoUpdatedEventStream;
 
   ChatRoomArguments(
-      {this.roomContext, required this.messageSource, this.waitingRoomManager});
+      {this.roomContext,
+      required this.messageSource,
+      this.waitingRoomManager,
+      this.chatRoomManager,
+      this.roomInfoUpdatedEventStream});
 
   Object? getMessage(int index) {
     if (index < 0 || index >= msgSize) {
@@ -61,15 +67,16 @@ class ChatRoomMessageSource {
 
   /// 从前面插入的消息
   bool isInsertMessage = false;
-  final _joinChatroomCompleter = Completer<bool>();
-  void setJoinChatroomResult(bool result) {
-    if (!_joinChatroomCompleter.isCompleted) {
-      _joinChatroomCompleter.complete(result);
-    }
-  }
 
-  Future ensureChatroomJoined() {
-    return _joinChatroomCompleter.future;
+  Future Function()? inMeetingChatroomJoined;
+  Future Function()? waitingRoomChatroomJoined;
+  Future ensureChatroomJoined(NEChatroomType type) async {
+    if (type == NEChatroomType.common && inMeetingChatroomJoined != null) {
+      await inMeetingChatroomJoined!();
+    } else if (type == NEChatroomType.waitingRoom &&
+        waitingRoomChatroomJoined != null) {
+      await waitingRoomChatroomJoined!();
+    }
   }
 
   bool get isFileMessageEnabled {
@@ -115,6 +122,8 @@ class ChatRoomMessageSource {
         msg.fromAvatar,
         msg.text,
         msg.messageUuid,
+        msg.toUserUuidList,
+        msg.fromUserUuid,
         msg.chatroomType,
       );
     } else if (msg is NERoomChatImageMessage) {
@@ -137,6 +146,8 @@ class ChatRoomMessageSource {
           msg.height,
           msg.messageUuid,
           msg.url,
+          msg.toUserUuidList,
+          msg.fromUserUuid,
           msg.chatroomType,
         );
       }
@@ -156,6 +167,8 @@ class ChatRoomMessageSource {
           msg.size,
           msg.extension,
           msg.messageUuid,
+          msg.toUserUuidList,
+          msg.fromUserUuid,
           msg.chatroomType,
         );
       }
@@ -174,7 +187,7 @@ class ChatRoomMessageSource {
       }
       EventBus().emit(
           RecallMessageNotify,
-          ChatRecallMessage(recalledMessageId, msg.operateBy ?? "",
+          ChatRecallMessage(recalledMessageId, msg.operateBy?.uuid ?? "",
               fileCancelDownload: fileCancelDownload));
       replaceToRecallMessage(msg);
     }
@@ -199,8 +212,10 @@ class ChatRoomMessageSource {
           msg.messageUuid,
           msg.time,
           msg.eventType,
-          msg.operateBy,
+          msg.operateBy?.uuid,
           msg.recalledMessageId,
+          msg.toUserUuidList,
+          msg.fromUserUuid,
           msg.chatroomType,
         );
       }
@@ -341,11 +356,15 @@ mixin MessageState {
   bool get isSend;
 
   NEChatroomType get chatroomType;
+  List<String>? get toUserUuidList;
 
   ValueNotifier<bool> failStatusListenable = ValueNotifier(false);
   bool get isFailed => failStatusListenable.value;
 
   bool get isHistory;
+
+  bool get isPrivateMessage =>
+      toUserUuidList != null && toUserUuidList!.isNotEmpty;
 
   void updateProgress(int transferred, int total) {
     // do nothing
@@ -358,6 +377,7 @@ mixin OutMessageState on MessageState {
   int time = DateTime.now().millisecondsSinceEpoch;
   String? msgId;
   final bool isSend = true;
+  List<String>? toUserNicknameList;
 
   ValueNotifier<double> attachmentUploadProgressListenable = ValueNotifier(0.0);
 
@@ -398,6 +418,7 @@ mixin InMessageState on MessageState {
 
   String? get attachmentPath;
   bool isHistory = false;
+  String? get fromUserUuid;
 
   ValueNotifier<double> attachmentDownloadProgress = ValueNotifier(0.0);
 
@@ -466,12 +487,28 @@ class OutTextMessage with MessageState, TextMessageState, OutMessageState {
   final String nickname;
   final String? avatar;
   final String text;
+  final List<String>? toUserUuidList;
   final NEChatroomType chatroomType;
+  final List<String>? toUserNicknameList;
 
-  OutTextMessage(this.nickname, this.avatar, this.text, this.chatroomType);
+  OutTextMessage(
+    this.nickname,
+    this.avatar,
+    this.text,
+    this.toUserUuidList,
+    this.toUserNicknameList,
+    this.chatroomType,
+  );
 
   OutTextMessage copy() {
-    return OutTextMessage(nickname, avatar, text, chatroomType);
+    return OutTextMessage(
+      nickname,
+      avatar,
+      text,
+      toUserUuidList,
+      toUserNicknameList,
+      chatroomType,
+    );
   }
 }
 
@@ -482,10 +519,12 @@ class InTextMessage with MessageState, TextMessageState, InMessageState {
   final String? avatar;
   final String text;
   final String msgId;
+  final List<String>? toUserUuidList;
+  final String? fromUserUuid;
   final NEChatroomType chatroomType;
 
   InTextMessage(this.uuid, this.time, this.nickname, this.avatar, this.text,
-      this.msgId, this.chatroomType);
+      this.msgId, this.toUserUuidList, this.fromUserUuid, this.chatroomType);
 
   @override
   String? get attachmentPath => null;
@@ -589,10 +628,12 @@ class OutImageMessage with MessageState, ImageMessageState, OutMessageState {
   final String originPath;
   final String path;
   final int size;
+  final List<String>? toUserUuidList;
   final NEChatroomType chatroomType;
+  final List<String>? toUserNicknameList;
 
-  OutImageMessage(
-      this.nickname, this.avatar, this.path, this.size, this.chatroomType,
+  OutImageMessage(this.nickname, this.avatar, this.path, this.size,
+      this.toUserUuidList, this.toUserNicknameList, this.chatroomType,
       [int? width, int? height])
       : thumbPath = path,
         originPath = path {
@@ -601,8 +642,8 @@ class OutImageMessage with MessageState, ImageMessageState, OutMessageState {
   }
 
   OutImageMessage copy() {
-    return OutImageMessage(
-        nickname, avatar, path, size, chatroomType, width, height);
+    return OutImageMessage(nickname, avatar, path, size, toUserUuidList,
+        toUserNicknameList, chatroomType, width, height);
   }
 }
 
@@ -618,6 +659,8 @@ class InImageMessage with MessageState, ImageMessageState, InMessageState {
   final String? url;
   final String? extension;
   final String msgId;
+  final List<String>? toUserUuidList;
+  final String? fromUserUuid;
   final NEChatroomType chatroomType;
 
   InImageMessage(
@@ -633,6 +676,8 @@ class InImageMessage with MessageState, ImageMessageState, InMessageState {
     this.height,
     this.msgId,
     this.url,
+    this.toUserUuidList,
+    this.fromUserUuid,
     this.chatroomType,
   );
 
@@ -701,12 +746,23 @@ class InNotificationMessage
   final int eventType;
   final String? operator;
   final String? recalledMessageId;
+  final List<String>? toUserUuidList;
+  final String? fromUserUuid;
   final NEChatroomType chatroomType;
   final String nickname;
   final String? avatar;
 
-  InNotificationMessage(this.nickname, this.avatar, this.uuid, this.time,
-      this.eventType, this.operator, this.recalledMessageId, this.chatroomType);
+  InNotificationMessage(
+      this.nickname,
+      this.avatar,
+      this.uuid,
+      this.time,
+      this.eventType,
+      this.operator,
+      this.recalledMessageId,
+      this.toUserUuidList,
+      this.fromUserUuid,
+      this.chatroomType);
 
   @override
   String? get attachmentPath => null;
@@ -722,14 +778,24 @@ class OutFileMessage with MessageState, FileMessageState, OutMessageState {
   final String path;
   final int size;
   final String? extension;
+  final List<String>? toUserUuidList;
   final NEChatroomType chatroomType;
+  final List<String>? toUserNicknameList;
 
-  OutFileMessage(this.nickname, this.avatar, this.name, this.path, this.size,
-      this.extension, this.chatroomType);
+  OutFileMessage(
+      this.nickname,
+      this.avatar,
+      this.name,
+      this.path,
+      this.size,
+      this.extension,
+      this.toUserUuidList,
+      this.toUserNicknameList,
+      this.chatroomType);
 
   OutFileMessage copy() {
-    return OutFileMessage(
-        nickname, avatar, name, path, size, extension, chatroomType);
+    return OutFileMessage(nickname, avatar, name, path, size, extension,
+        toUserUuidList, toUserNicknameList, chatroomType);
   }
 }
 
@@ -743,10 +809,23 @@ class InFileMessage with MessageState, FileMessageState, InMessageState {
   final int size;
   final String? extension;
   final String msgId;
+  final List<String>? toUserUuidList;
+  final String? fromUserUuid;
   final NEChatroomType chatroomType;
 
-  InFileMessage(this.uuid, this.time, this.nickname, this.avatar, this.name,
-      this.path, this.size, this.extension, this.msgId, this.chatroomType);
+  InFileMessage(
+      this.uuid,
+      this.time,
+      this.nickname,
+      this.avatar,
+      this.name,
+      this.path,
+      this.size,
+      this.extension,
+      this.msgId,
+      this.toUserUuidList,
+      this.fromUserUuid,
+      this.chatroomType);
 
   @override
   String? get attachmentPath => path;

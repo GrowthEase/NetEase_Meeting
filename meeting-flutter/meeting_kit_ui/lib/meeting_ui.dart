@@ -32,6 +32,7 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:wakelock/wakelock.dart';
 import 'package:pedantic/pedantic.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
 import 'package:netease_meeting_assets/netease_meeting_assets.dart';
 import 'package:netease_roomkit/netease_roomkit.dart';
@@ -45,6 +46,7 @@ import 'package:crypto/crypto.dart' show md5;
 import 'package:convert/convert.dart' as meetingHex show hex;
 import 'package:cached_network_image/cached_network_image.dart'
     as MeetingCachedNetworkImage show CachedNetworkImage;
+import 'package:webview_flutter/webview_flutter.dart';
 
 export 'package:netease_meeting_core/meeting_kit.dart';
 export 'package:netease_meeting_ui/meeting_plugin.dart'
@@ -63,13 +65,18 @@ part 'src/meeting_ui/pages/proxy/meeting_page_proxy.dart';
 part 'src/meeting_ui/pages/proxy/beauty_page_proxy.dart';
 part 'src/meeting_ui/pages/proxy/virtual_background_page_proxy.dart';
 part 'src/meeting_ui/pages/meeting_members_page.dart';
+part 'src/meeting_ui/pages/meeting_chatroom_members_page.dart';
 part 'src/meeting_ui/pages/meeting_page.dart';
 part 'src/meeting_ui/pages/meeting_security_page.dart';
+part 'src/meeting_ui/pages/meeting_chat_permission_page.dart';
 part 'src/meeting_ui/pages/meeting_chatroom_page.dart';
 part 'src/meeting_ui/pages/meeting_info_page.dart';
 part 'src/meeting_ui/pages/meeting_invite_page.dart';
+part 'src/meeting_ui/pages/meeting_notify_message.dart';
 part 'src/meeting_ui/manager/waiting_room_manager.dart';
 part 'src/meeting_ui/manager/active_speaker_manager.dart';
+part 'src/meeting_ui/manager/chatroom_manager.dart';
+part 'src/meeting_ui/manager/chatroom_instance_manager.dart';
 part 'src/meeting_ui/state/meeting_state.dart';
 part 'src/meeting_ui/values/colors.dart';
 part 'src/meeting_ui/widget/text_watermark.dart';
@@ -100,6 +107,7 @@ part 'src/meeting_ui/widget/localizations.dart';
 part 'src/meeting_ui/widget/draggable_positioned.dart';
 part 'src/meeting_ui/widget/meeting_kit_config.dart';
 part 'src/meeting_ui/widget/meeting_avatar.dart';
+part 'src/meeting_ui/widget/meeting_member_page_view.dart';
 part 'src/meeting_ui/module_name.dart';
 part 'src/meeting_ui/option/window_mode.dart';
 part 'src/meeting_ui/pages/meeting_whiteboard_page.dart';
@@ -111,7 +119,7 @@ part 'src/meeting_ui/service/menu/menu_item.dart';
 part 'src/meeting_ui/service/menu/menu_item_util.dart';
 part 'src/meeting_ui/service/menu/menu_items.dart';
 part 'src/meeting_ui/service/model/meeting_status.dart';
-
+part 'src/meeting_ui/pages/meeting_web_app_page.dart';
 part 'src/meeting_ui/uikit/lifecycle/state_lifecycle.dart';
 part 'src/meeting_ui/uikit/state/lifecycle_base_state.dart';
 part 'src/meeting_ui/uikit/state/base_state.dart';
@@ -136,7 +144,9 @@ part 'src/meeting_ui/widget/floating/raw_pip_view.dart';
 part 'src/meeting_ui/widget/floating/gesture_zoombox.dart';
 part 'src/meeting_ui/utils/utils.dart';
 part 'src/meeting_ui/utils/meeting_string_util.dart';
+part 'src/meeting_ui/utils/rtc_utils.dart';
 part 'src/meeting_ui/utils/length_text_input_formatter.dart';
+part 'src/meeting_ui/utils/meeting_notify_center_action.dart';
 part 'src/meeting_ui/widget/auto_pop_scope.dart';
 part 'src/meeting_ui/widget/auto_hide_keyboard.dart';
 

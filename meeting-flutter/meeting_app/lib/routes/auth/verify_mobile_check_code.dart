@@ -163,7 +163,7 @@ class VerifyMobileCheckCodeState extends AuthBaseState
     return Container(
       margin: EdgeInsets.only(left: 30, top: 7, right: 30),
       child: Text(
-        meetingAppLocalizations.authCheckCodeHasSendToMobile('+86-${mobile}'),
+        meetingAppLocalizations.authCheckCodeHasSendToMobile('+86-$mobile'),
         textAlign: TextAlign.left,
         style: TextStyle(
           color: AppColors.primaryText,

@@ -373,6 +373,12 @@ abstract class MeetingAppLocalizations {
   /// **'登录'**
   String get authLogin;
 
+  /// No description provided for @authLoginToNetEase.
+  ///
+  /// In zh, this message translates to:
+  /// **'登录'**
+  String get authLoginToNetEase;
+
   /// No description provided for @authRegisterAndLogin.
   ///
   /// In zh, this message translates to:
@@ -741,6 +747,12 @@ abstract class MeetingAppLocalizations {
   /// **'推荐使用Chrome浏览器'**
   String get authSuggestChrome;
 
+  /// No description provided for @authLoggingIn.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在登录会议'**
+  String get authLoggingIn;
+
   /// No description provided for @meetingCreate.
   ///
   /// In zh, this message translates to:
@@ -1101,6 +1113,12 @@ abstract class MeetingAppLocalizations {
   /// **'会议号:'**
   String get meetingId;
 
+  /// No description provided for @meetingShortId.
+  ///
+  /// In zh, this message translates to:
+  /// **'会议号:'**
+  String get meetingShortId;
+
   /// No description provided for @meetingStartTime.
   ///
   /// In zh, this message translates to:
@@ -1166,6 +1184,289 @@ abstract class MeetingAppLocalizations {
   /// In zh, this message translates to:
   /// **'会议已被其他登录设备取消'**
   String get meetingHasBeenCanceled;
+
+  /// No description provided for @meetingRepeat.
+  ///
+  /// In zh, this message translates to:
+  /// **'周期'**
+  String get meetingRepeat;
+
+  /// No description provided for @meetingFrequency.
+  ///
+  /// In zh, this message translates to:
+  /// **'重复频率'**
+  String get meetingFrequency;
+
+  /// No description provided for @meetingNoRepeat.
+  ///
+  /// In zh, this message translates to:
+  /// **'不重复'**
+  String get meetingNoRepeat;
+
+  /// No description provided for @meetingRepeatEveryday.
+  ///
+  /// In zh, this message translates to:
+  /// **'每天'**
+  String get meetingRepeatEveryday;
+
+  /// No description provided for @meetingRepeatEveryWeekday.
+  ///
+  /// In zh, this message translates to:
+  /// **'每个工作日'**
+  String get meetingRepeatEveryWeekday;
+
+  /// No description provided for @meetingRepeatEveryWeek.
+  ///
+  /// In zh, this message translates to:
+  /// **'每周'**
+  String get meetingRepeatEveryWeek;
+
+  /// No description provided for @meetingRepeatEveryTwoWeek.
+  ///
+  /// In zh, this message translates to:
+  /// **'每两周'**
+  String get meetingRepeatEveryTwoWeek;
+
+  /// No description provided for @meetingRepeatEveryMonth.
+  ///
+  /// In zh, this message translates to:
+  /// **'每月'**
+  String get meetingRepeatEveryMonth;
+
+  /// No description provided for @meetingRepeatCustom.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义'**
+  String get meetingRepeatCustom;
+
+  /// No description provided for @meetingRepeatEndAt.
+  ///
+  /// In zh, this message translates to:
+  /// **'结束于'**
+  String get meetingRepeatEndAt;
+
+  /// No description provided for @meetingRepeatEndAtOneday.
+  ///
+  /// In zh, this message translates to:
+  /// **'结束于某天'**
+  String get meetingRepeatEndAtOneday;
+
+  /// No description provided for @meetingRepeatTimes.
+  ///
+  /// In zh, this message translates to:
+  /// **'限定会议次数'**
+  String get meetingRepeatTimes;
+
+  /// No description provided for @meetingRepeatStop.
+  ///
+  /// In zh, this message translates to:
+  /// **'结束重复'**
+  String get meetingRepeatStop;
+
+  /// No description provided for @meetingDayInMonth.
+  ///
+  /// In zh, this message translates to:
+  /// **'{day}日'**
+  String meetingDayInMonth(Object day);
+
+  /// No description provided for @meetingRepeatSelectDate.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择日期'**
+  String get meetingRepeatSelectDate;
+
+  /// No description provided for @meetingRepeatDayInWeek.
+  ///
+  /// In zh, this message translates to:
+  /// **'每{week}周的{day}重复'**
+  String meetingRepeatDayInWeek(Object day, Object week);
+
+  /// No description provided for @meetingRepeatDay.
+  ///
+  /// In zh, this message translates to:
+  /// **'每{day}天重复'**
+  String meetingRepeatDay(Object day);
+
+  /// No description provided for @meetingRepeatDayInMonth.
+  ///
+  /// In zh, this message translates to:
+  /// **'每{month}个月的{day}重复'**
+  String meetingRepeatDayInMonth(Object day, Object month);
+
+  /// No description provided for @meetingRepeatDayInWeekInMonth.
+  ///
+  /// In zh, this message translates to:
+  /// **'每{month}个月的第{week}个{weekday}重复'**
+  String meetingRepeatDayInWeekInMonth(
+      Object month, Object week, Object weekday);
+
+  /// No description provided for @meetingRepeatDate.
+  ///
+  /// In zh, this message translates to:
+  /// **'日期'**
+  String get meetingRepeatDate;
+
+  /// No description provided for @meetingRepeatWeekday.
+  ///
+  /// In zh, this message translates to:
+  /// **'星期'**
+  String get meetingRepeatWeekday;
+
+  /// No description provided for @meetingRepeatOrderWeekday.
+  ///
+  /// In zh, this message translates to:
+  /// **'第{week}个{weekday}'**
+  String meetingRepeatOrderWeekday(Object week, Object weekday);
+
+  /// No description provided for @meetingRepeatEditing.
+  ///
+  /// In zh, this message translates to:
+  /// **'你正在编辑周期性会议'**
+  String get meetingRepeatEditing;
+
+  /// No description provided for @meetingRepeatEditCurrent.
+  ///
+  /// In zh, this message translates to:
+  /// **'编辑本次会议'**
+  String get meetingRepeatEditCurrent;
+
+  /// No description provided for @meetingRepeatEditAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'编辑所有会议'**
+  String get meetingRepeatEditAll;
+
+  /// No description provided for @meetingRepeatEditTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'修改以下信息，将影响该系列周期性会议'**
+  String get meetingRepeatEditTips;
+
+  /// No description provided for @meetingLeaveEditTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认退出会议编辑吗？'**
+  String get meetingLeaveEditTips;
+
+  /// No description provided for @meetingRepeatCancelAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'同时取消该系列周期性会议'**
+  String get meetingRepeatCancelAll;
+
+  /// No description provided for @meetingCancelCancel.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂不取消'**
+  String get meetingCancelCancel;
+
+  /// No description provided for @meetingCancelConfirm2.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消会议'**
+  String get meetingCancelConfirm2;
+
+  /// No description provided for @meetingLeaveEditTips2.
+  ///
+  /// In zh, this message translates to:
+  /// **'退出后，将无法保存当前会议的更改'**
+  String get meetingLeaveEditTips2;
+
+  /// No description provided for @meetingEditContinue.
+  ///
+  /// In zh, this message translates to:
+  /// **'继续编辑'**
+  String get meetingEditContinue;
+
+  /// No description provided for @meetingEditLeave.
+  ///
+  /// In zh, this message translates to:
+  /// **'退出'**
+  String get meetingEditLeave;
+
+  /// No description provided for @meetingRepeatUnitEvery.
+  ///
+  /// In zh, this message translates to:
+  /// **'每'**
+  String get meetingRepeatUnitEvery;
+
+  /// No description provided for @meetingRepeatUnitDay.
+  ///
+  /// In zh, this message translates to:
+  /// **'天'**
+  String get meetingRepeatUnitDay;
+
+  /// No description provided for @meetingRepeatUnitWeek.
+  ///
+  /// In zh, this message translates to:
+  /// **'周'**
+  String get meetingRepeatUnitWeek;
+
+  /// No description provided for @meetingRepeatUnitMonth.
+  ///
+  /// In zh, this message translates to:
+  /// **'个月'**
+  String get meetingRepeatUnitMonth;
+
+  /// No description provided for @meetingRepeatLimitTimes.
+  ///
+  /// In zh, this message translates to:
+  /// **'限定会议次数{times}次'**
+  String meetingRepeatLimitTimes(Object times);
+
+  /// No description provided for @meetingJoinBeforeHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'允许参会者在主持人进会前加入会议'**
+  String get meetingJoinBeforeHost;
+
+  /// No description provided for @meetingRepeatMeetings.
+  ///
+  /// In zh, this message translates to:
+  /// **'周期性会议'**
+  String get meetingRepeatMeetings;
+
+  /// No description provided for @meetingRepeatLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'重复'**
+  String get meetingRepeatLabel;
+
+  /// No description provided for @meetingRepeatEnd.
+  ///
+  /// In zh, this message translates to:
+  /// **'结束'**
+  String get meetingRepeatEnd;
+
+  /// No description provided for @meetingRepeatOneDay.
+  ///
+  /// In zh, this message translates to:
+  /// **'某天'**
+  String get meetingRepeatOneDay;
+
+  /// No description provided for @meetingRepeatFrequency.
+  ///
+  /// In zh, this message translates to:
+  /// **'频率'**
+  String get meetingRepeatFrequency;
+
+  /// No description provided for @meetingRepeatAt.
+  ///
+  /// In zh, this message translates to:
+  /// **'位于'**
+  String get meetingRepeatAt;
+
+  /// No description provided for @meetingRepeatUncheckTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前日程为{date}，无法取消选择'**
+  String meetingRepeatUncheckTips(Object date);
+
+  /// No description provided for @meetingRepeatCancelEdit.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消编辑'**
+  String get meetingRepeatCancelEdit;
 
   /// No description provided for @historyMeeting.
   ///
@@ -1473,11 +1774,41 @@ abstract class MeetingAppLocalizations {
   /// **'手机'**
   String get settingMobile;
 
-  /// No description provided for @settingHead.
+  /// No description provided for @settingAvatar.
   ///
   /// In zh, this message translates to:
   /// **'头像'**
-  String get settingHead;
+  String get settingAvatar;
+
+  /// No description provided for @settingAvatarUpdateSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'修改头像成功'**
+  String get settingAvatarUpdateSuccess;
+
+  /// No description provided for @settingAvatarUpdateFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'修改头像失败'**
+  String get settingAvatarUpdateFail;
+
+  /// No description provided for @settingAvatarTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'头像设置'**
+  String get settingAvatarTitle;
+
+  /// No description provided for @settingTakePicture.
+  ///
+  /// In zh, this message translates to:
+  /// **'拍照'**
+  String get settingTakePicture;
+
+  /// No description provided for @settingChoosePicture.
+  ///
+  /// In zh, this message translates to:
+  /// **'从手机相册选择'**
+  String get settingChoosePicture;
 
   /// No description provided for @settingPersonalCenter.
   ///

@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:netease_common/netease_common.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 import 'package:netease_roomkit/netease_roomkit.dart'
     hide
@@ -22,6 +23,7 @@ import 'package:netease_roomkit/netease_roomkit.dart'
         NERtcVideoView,
         NERtcVideoRenderer,
         NEAuthService;
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 import 'meeting_service.dart';
 
@@ -40,7 +42,17 @@ export 'package:netease_meeting_core/meeting_service.dart'
         NERoomAudioControl,
         NERoomVideoControl,
         NEAccountInfo,
-        NERoomAttendeeOffType;
+        NERoomAttendeeOffType,
+        NEMeetingWebAppItem,
+        NEMeetingWebAppList,
+        NEMeetingRecurringRuleType,
+        NEMeetingFrequencyUnitType,
+        NEMeetingRecurringEndRuleType,
+        NEMeetingRecurringWeekday,
+        NEMeetingRecurringRule,
+        NEMeetingCustomizedFrequency,
+        NEMeetingRecurringEndRule,
+        SDKConfig;
 export 'package:netease_roomkit/netease_roomkit.dart'
     show
         NEServerConfig,
@@ -53,25 +65,49 @@ export 'package:netease_roomkit/netease_roomkit.dart'
         NEChatroomHistoryMessageSearchOption;
 
 part 'src/meeting_kit/meeting_account_service.dart';
+
 part 'src/meeting_kit/impl/screen_sharing_service_impl.dart';
+
 part 'src/meeting_kit/impl/meeting_account_service_impl.dart';
+
 part 'src/meeting_kit/impl/meeting_kit_impl.dart';
+
 part 'src/meeting_kit/impl/meeting_service_impl.dart';
+
 part 'src/meeting_kit/impl/pre_meeting_service_impl.dart';
+
 part 'src/meeting_kit/impl/settings_service_impl.dart';
+
 part 'src/meeting_kit/values/meeting_kit_strings.dart';
+
 part 'src/meeting_kit/meeting_service.dart';
+
 part 'src/meeting_kit/pre_meeting_service.dart';
+
 part 'src/meeting_kit/settings_service.dart';
+
 part 'src/meeting_kit/live_meeting_service.dart';
+
 part 'src/meeting_kit/impl/live_meeting_service_impl.dart';
+
 part 'src/meeting_kit/module_name.dart';
+
 part 'src/meeting_kit/log/log_service.dart';
+
 part 'src/meeting_kit/utils/rtc_utils.dart';
+
+part 'src/meeting_kit/utils/session_message_notify_card_data.dart';
+
 part 'src/meeting_kit/utils/network_task_executor.dart';
+
 part 'src/meeting_kit/meeting_context.dart';
+
 part 'src/meeting_kit/report/meeting_report.dart';
+
 part 'src/meeting_kit/screen_sharing_service.dart';
+part 'src/meeting_kit/meeting_web_app_bridge.dart';
+part 'src/meeting_kit/meeting_nos_service.dart';
+part 'src/meeting_kit/impl/meeting_nos_service_impl.dart';
 
 class NEMeetingServerConfig {
   static const _serverUrlKey = 'serverUrl';
@@ -180,6 +216,11 @@ abstract class NEMeetingKit {
   ///
   Future<NEResult<void>> switchLanguage(NEMeetingLanguage? language);
 
+  ///
+  /// 当前语言
+  ///
+  NEMeetingLanguage get currentLanguage;
+
   ValueListenable<Locale> get localeListenable;
 
   NEMeetingKitLocalizations get localizations =>
@@ -194,6 +235,48 @@ abstract class NEMeetingKit {
   ///
   /// [listener] 监听器.
   void removeAuthListener(NEMeetingAuthListener listener);
+
+  /// 注册session监听器
+  ///
+  /// [listener] 监听器.
+  void addReceiveSessionMessageListener(NERoomMessageSessionListener listener);
+
+  /// 注销session状态监听器
+  ///
+  /// [listener] 监听器.
+  void removeReceiveSessionMessageListener(
+      NERoomMessageSessionListener listener);
+
+  /// 获取指定会话的未读消息列表
+  /// sessionId 会话id
+  /// sessionType 会话类型
+  /// 消息列表
+  ///
+  Future<NEResult<List<NEMeetingCustomSessionMessage>>> queryUnreadMessageList(
+      String sessionId,
+      {NEMeetingSessionTypeEnum sessionType = NEMeetingSessionTypeEnum.P2P});
+
+  ///使用前提：
+  ///已在云信控制台[开启动态查询历史消息功能](https://doc.yunxin.163.com/messaging/docs/TI3NTU1NDA?platform=android#开启动态查询历史消息功能d)。
+  /// [param] 查询参数
+  /// 消息列表
+  ///
+  Future<NEResult<List<NEMeetingCustomSessionMessage>>>
+      getSessionMessagesHistory(NEMeetingGetMessagesHistoryParam param);
+
+  ///  sessionId 会话id
+  ///  sessionType 会话类型
+  ///  清理未读消息数
+  ///
+  Future<VoidResult> clearUnreadCount(String sessionId,
+      {NEMeetingSessionTypeEnum sessionType = NEMeetingSessionTypeEnum.P2P});
+
+  ///  sessionId 会话id
+  ///  sessionType 会话类型
+  ///  删除所有消息
+  ///
+  Future<VoidResult> deleteAllSessionMessage(String sessionId,
+      {NEMeetingSessionTypeEnum sessionType = NEMeetingSessionTypeEnum.P2P});
 
   /// 登录鉴权。在已登录状态下可以创建和加入会议，但在未登录状态下只能加入会议
   ///
@@ -235,6 +318,9 @@ abstract class NEMeetingKit {
 
   /// 获取会议直播服务
   NELiveMeetingService getLiveMeetingService();
+
+  /// 获取文件服务
+  NEMeetingNosService getNosService();
 
   /// 注销当前已登录的账号
   Future<NEResult<void>> logout();
@@ -306,6 +392,9 @@ class NEMeetingErrorCode {
 
   /// 鉴权过期，如密码重置
   static const int authExpired = NEErrorCode.authExpired;
+
+  /// 聊天室不存在
+  static const int chatroomNotExists = 110001;
 }
 
 /// 房间登陆状态回调
@@ -315,6 +404,22 @@ abstract class NEMeetingAuthListener {
 
   /// 账号信息过期通知，原因为用户修改了密码，应用层随后应该重新登录
   void onAuthInfoExpired();
+}
+
+/// 自定义会话监听器
+abstract class NERoomMessageSessionListener {
+  /// 接收到自定义消息
+  void onReceiveSessionMessage(NEMeetingCustomSessionMessage message);
+
+  /// 最近会话聊天记录变更
+  void onChangeRecentSession(List<NEMeetingRecentSession> messages);
+
+  /// 自定义消息被删除
+  void onDeleteSessionMessage(NEMeetingCustomSessionMessage message);
+
+  /// 自定义消息全部被删除
+  void onDeleteAllSessionMessage(
+      String sessionId, NEMeetingSessionTypeEnum sessionType);
 }
 
 ///
@@ -344,4 +449,126 @@ class NEMeetingLanguage {
 
   @override
   int get hashCode => locale.hashCode;
+}
+
+class NEMeetingCustomSessionMessage {
+  String? sessionId;
+  NEMeetingSessionTypeEnum? sessionType;
+  String? messageId;
+  NotifyCardData? data;
+  int? time;
+
+  NEMeetingCustomSessionMessage(
+      {this.sessionId, this.sessionType, this.messageId, this.data, this.time});
+
+  NEMeetingCustomSessionMessage.fromMap(Map<String, dynamic> json) {
+    sessionId = json['sessionId'];
+    sessionType = NEMeetingSessionTypeEnumExtension.toType(json['sessionType']);
+    messageId = json['messageId'];
+    time = json['time'] ?? 0;
+    data = json['data'] != null ? NotifyCardData.fromMap(json['data']) : null;
+  }
+}
+
+/// 查询消息的参数
+class NEMeetingGetMessagesHistoryParam {
+  /// 会话ID
+  final String sessionId;
+
+  // /**
+  //  * 会话类型
+  //  */
+  // final NEMeetingSessionTypeEnum sessionType;
+
+  /// 开始时间（时间戳小）
+  int? fromTime;
+
+  /// 结束时间（时间戳大）
+  int? toTime;
+
+  /// 条数限制
+  /// 限制0~100，否则414。其中0会被转化为100
+  int? limit;
+
+  /// 查询方向,默认从大到小排序
+  NEMeetingMessageSearchOrder? order = NEMeetingMessageSearchOrder.kDesc;
+
+  NEMeetingGetMessagesHistoryParam(
+      {required this.sessionId,
+      this.fromTime,
+      this.toTime,
+      this.limit,
+      this.order});
+}
+
+/// 会话消息类型
+///
+enum NEMeetingSessionTypeEnum {
+  /// 未知
+  None,
+
+  /// 通话场景
+  P2P
+}
+
+/// 会话消息类型
+///
+enum NEMeetingMessageSearchOrder { kDesc, kAsc }
+
+/// 会议消息类型
+extension NEMeetingSessionTypeEnumExtension on NEMeetingSessionTypeEnum {
+  static NEMeetingSessionTypeEnum toType(int? type) =>
+      (NEMeetingSessionTypeEnum.values.firstWhere(
+        (element) => element.index - 1 == type,
+        orElse: () => NEMeetingSessionTypeEnum.None,
+      ));
+}
+
+/// 最近联系人消息变更
+class NEMeetingRecentSession {
+  ///  获取聊天对象的Id（好友帐号，群ID等）
+  /// [sessionId] 最近联系人帐号
+  ///
+  final String? sessionId;
+
+  /// 获取与该联系人的最后一条消息的发送方的帐号
+  /// [fromAccount] 发送者帐号
+  final String? fromAccount;
+
+  /// 获取与该联系人的最后一条消息的发送方的昵称
+  /// [fromNick]发送者昵称
+  ///
+  final String? fromNick;
+
+  /// 获取会话类型
+  ///
+  final NEMeetingSessionTypeEnum? sessionType;
+
+  /// 最近一条消息的UUID
+  final String? recentMessageId;
+
+  /// 获取该联系人的未读消息条数
+  /// 未读数
+  final int unreadCount;
+
+  /// 获取最近一条消息的缩略内容。<br></br>
+  /// 对于文本消息，返回文本内容。<br></br>
+  /// 对于其他消息，返回一个简单的说明内容。如需展示更详细，或其他需求，可根据[.getAttachment]生成。
+  /// 缩略内容
+  ///
+  final String? content;
+
+  /// 获取最近一条消息的时间，单位为ms
+  ///
+  final int time;
+
+  NEMeetingRecentSession(
+      this.sessionId,
+      this.fromAccount,
+      this.fromNick,
+      this.sessionType,
+      this.recentMessageId,
+      this.unreadCount,
+      this.content,
+      this.time);
 }

@@ -5,9 +5,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:nemeeting/utils/nav_register.dart';
+import 'package:netease_meeting_ui/meeting_ui.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../utils/router_name.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -54,11 +54,17 @@ class NavUtils {
     BuildContext context,
     String routeName, {
     Object? arguments,
-    bool pageRoute = false,
+    bool? pageRoute,
   }) {
-    return pageRoute
-        ? Navigator.push(context,
-            RoutesRegister.getPageRoute(routeName, context) as Route<T>)
+    return (pageRoute ??
+            NEMeetingUIKit().getMeetingStatus().event ==
+                    NEMeetingEvent.inMeetingMinimized ||
+                NEMeetingUIKit().getMeetingStatus().event ==
+                    NEMeetingEvent.inMeeting)
+        ? Navigator.push(
+            context,
+            RoutesRegister.getPageRoute(routeName, context,
+                arguments: arguments) as Route<T>)
         : Navigator.of(context).pushNamed(routeName, arguments: arguments);
   }
 

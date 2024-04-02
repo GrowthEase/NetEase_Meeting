@@ -12,10 +12,12 @@ abstract class NEPreMeetingService {
   Future<NEResult<NEMeetingItem>> scheduleMeeting(NEMeetingItem item);
 
   /// 编辑预约会议
-  Future<NEResult<NEMeetingItem>> editMeeting(NEMeetingItem item);
+  Future<NEResult<NEMeetingItem>> editMeeting(
+      NEMeetingItem item, bool editRecurringMeeting);
 
   /// 取消预约会议，开始前可以取消
-  Future<NEResult<void>> cancelMeeting(int meetingId);
+  Future<NEResult<void>> cancelMeeting(
+      int meetingId, bool cancelRecurringMeeting);
 
   /// 根据唯一id获取会议信息
   Future<NEResult<NEMeetingItem>> getMeetingItemById(String meetingNum);

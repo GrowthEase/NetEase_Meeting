@@ -6,6 +6,8 @@ import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:nemeeting/pre_meeting/schedule_meeting_repeat.dart';
+import 'package:nemeeting/pre_meeting/schedule_meeting_repeat_end.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 
 import '../base/util/text_util.dart';
@@ -26,6 +28,8 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
   bool meetingPwdSwitch = false;
   bool enableWaitingRoom = false;
 
+  bool enableJoinBeforeHost = true;
+
   bool attendeeAudioAutoOff = false;
   bool attendeeAudioAutoOffNotAllowSelfOn = false;
 
@@ -41,6 +45,9 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
   late NEMeetingItem meetingItem;
 
   late DateTime startTime, endTime;
+
+  /// 周期性会议规则
+  late NEMeetingRecurringRule recurringRule;
 
   late TextEditingController meetingSubjectController,
       meetingPasswordController;
@@ -100,6 +107,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
                           selectTimeCallback: (dateTime) {
                             setState(() {
                               startTime = dateTime;
+                              recurringRule.startTime = dateTime;
                               if (startTime.millisecondsSinceEpoch >=
                                   endTime.millisecondsSinceEpoch) {
                                 endTime = startTime.add(Duration(minutes: 30));
@@ -119,6 +127,17 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
                               endTime = dateTime;
                             });
                           }),
+                      buildSplit(),
+                      if (isEditAll() != false) buildRepeat(),
+                      if (isEditAll() != false) buildSplit(),
+                      if (recurringRule.type != NEMeetingRecurringRuleType.no &&
+                          isEditAll() != false)
+                        buildRepeatEndDate(),
+
+                      /// 单次周期性会议修改要有提示
+                      if (recurringRule.type != NEMeetingRecurringRuleType.no &&
+                          isEditAll() == false)
+                        buildEditRepeatMeetingTips(),
                       buildPartTitle(meetingAppLocalizations.meetingSecurity),
                       buildPwd(),
                       if (meetingPwdSwitch) buildSplit(),
@@ -174,6 +193,17 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
                             }),
                       ],
                       buildSpace(),
+                      SwitchItem(
+                        key: MeetingValueKey.scheduleEnableJoinBeforeHost,
+                        value: enableJoinBeforeHost,
+                        title: meetingAppLocalizations.meetingJoinBeforeHost,
+                        onChange: (value) {
+                          setState(() {
+                            enableJoinBeforeHost = value;
+                          });
+                        },
+                      ),
+                      buildSpace(),
                       if (isLiveEnabled) buildLive(),
                       if (isLiveEnabled && liveSwitch) buildSplit(),
                       if (isLiveEnabled && liveSwitch) buildLiveLevel(),
@@ -185,13 +215,10 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
                           color: AppColors.globalBg,
                         ),
                       ),
-                      buildActionButton(),
                     ],
                   ))));
         }));
   }
-
-  Widget buildActionButton();
 
   Widget buildRadio({
     required String title,
@@ -266,7 +293,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
       color: AppColors.white,
       padding: EdgeInsets.only(left: 20),
       child: Container(
-        height: 1,
+        height: 0.5,
         color: AppColors.colorE8E9EB,
       ),
     );
@@ -328,7 +355,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
     return buildTime(
         meetingAppLocalizations.meetingEndTime,
         endTime,
-        startTime.add(Duration(minutes: 30)),
+        startTime.add(Duration(minutes: _minuteInterval)),
         startTime.add(Duration(days: 1)),
         MeetingValueKey.scheduleEndTime,
         selectTimeCallback);
@@ -368,6 +395,146 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
     );
   }
 
+  Widget buildRepeat() {
+    return GestureDetector(
+      child: Container(
+        height: Dimen.primaryItemHeight,
+        color: Colors.white,
+        padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
+        child: Row(
+          children: <Widget>[
+            Text(meetingAppLocalizations.meetingRepeat,
+                style: TextStyle(fontSize: 16, color: AppColors.black_222222)),
+            Spacer(),
+            Text(getRepeatText(),
+                style: TextStyle(fontSize: 14, color: AppColors.color_999999)),
+            SizedBox(
+              width: 8,
+            ),
+            Icon(IconFont.iconyx_allowx, size: 14, color: AppColors.greyCCCCCC)
+          ],
+        ),
+      ),
+      onTap: () {
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+          return MeetingAppLocalizationsScope(
+              child: ScheduleMeetingRepeatRoute(recurringRule,
+                  startTime.millisecondsSinceEpoch, isEditAll() != null));
+        })).then((value) => setState(() {}));
+      },
+    );
+  }
+
+  String getRepeatText() {
+    switch (recurringRule.type) {
+      case NEMeetingRecurringRuleType.no:
+        return meetingAppLocalizations.meetingNoRepeat;
+      case NEMeetingRecurringRuleType.day:
+        return meetingAppLocalizations.meetingRepeatEveryday;
+      case NEMeetingRecurringRuleType.weekday:
+        return meetingAppLocalizations.meetingRepeatEveryWeekday;
+      case NEMeetingRecurringRuleType.week:
+        return meetingAppLocalizations.meetingRepeatEveryWeek;
+      case NEMeetingRecurringRuleType.twoWeeks:
+        return meetingAppLocalizations.meetingRepeatEveryTwoWeek;
+      case NEMeetingRecurringRuleType.dayOfMonth:
+        return meetingAppLocalizations.meetingRepeatEveryMonth;
+      case NEMeetingRecurringRuleType.undefine:
+        return meetingAppLocalizations.meetingNoRepeat;
+      case NEMeetingRecurringRuleType.custom:
+        return meetingAppLocalizations.meetingRepeatCustom;
+    }
+  }
+
+  Widget buildEditRepeatMeetingTips() {
+    return Container(
+      height: 32,
+      color: Colors.transparent,
+      alignment: Alignment.center,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+              flex: 1,
+              child: Container(
+                margin: EdgeInsets.only(left: 20, right: 8),
+                height: 1,
+                color: AppColors.color_f29900,
+              )),
+          Expanded(
+            flex: 4,
+            child: Text(
+              meetingAppLocalizations.meetingRepeatEditTips,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: AppColors.color_f29900),
+              softWrap: true,
+            ),
+          ),
+          Expanded(
+              flex: 1,
+              child: Container(
+                margin: EdgeInsets.only(left: 8, right: 20),
+                height: 1,
+                color: AppColors.color_f29900,
+              )),
+        ],
+      ),
+    );
+  }
+
+  Widget buildRepeatEndDate() {
+    return GestureDetector(
+      child: Container(
+        height: Dimen.primaryItemHeight,
+        color: Colors.white,
+        padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
+        child: Row(
+          children: <Widget>[
+            Text(meetingAppLocalizations.meetingRepeatEndAt,
+                style: TextStyle(fontSize: 16, color: AppColors.black_222222)),
+            Spacer(),
+            Text(getRepeatEndText(),
+                style: TextStyle(fontSize: 14, color: AppColors.color_999999)),
+            SizedBox(
+              width: 8,
+            ),
+            Icon(IconFont.iconyx_allowx, size: 14, color: AppColors.greyCCCCCC)
+          ],
+        ),
+      ),
+      onTap: () {
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+          return MeetingAppLocalizationsScope(
+              child: ScheduleMeetingRepeatEndRoute(recurringRule));
+        })).then((value) => setState(() {}));
+      },
+    );
+  }
+
+  String getRepeatEndText() {
+    switch (recurringRule.endRule?.type) {
+      case NEMeetingRecurringEndRuleType.date:
+        return (recurringRule.endRule?.date ?? '').replaceAll('/', '-');
+      case NEMeetingRecurringEndRuleType.times:
+        return meetingAppLocalizations
+            .meetingRepeatLimitTimes(recurringRule.endRule?.times ?? 0);
+      case NEMeetingRecurringEndRuleType.undefine:
+        return '';
+      case null:
+        return '';
+    }
+  }
+
+  /// null为非编辑模式
+  /// true为编辑所有
+  /// false为编辑单次
+  bool? isEditAll() {
+    return null;
+  }
+
+  /// 时间选择最小跨度，测试的时候调低
+  final _minuteInterval = 30;
+
   void _showCupertinoDatePicker(
     final DateTime minTime,
     DateTime? maxTime,
@@ -394,7 +561,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
                 child: CupertinoDatePicker(
                   minimumDate: minTime,
                   maximumDate: maxTime,
-                  minuteInterval: 30,
+                  minuteInterval: _minuteInterval,
                   use24hFormat: true,
                   initialDateTime: initialDateTime ?? minTime,
                   backgroundColor: AppColors.white,
@@ -430,7 +597,8 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
                 Navigator.pop(context);
               },
               child: Text(meetingAppLocalizations.globalCancel,
-                  style: TextStyle(fontSize: 14))),
+                  style:
+                      TextStyle(fontSize: 14, color: AppColors.color_1f2329))),
           Text(meetingAppLocalizations.meetingChooseDate,
               style: TextStyle(fontSize: 17, color: AppColors.color_1f2329)),
           TextButton(
@@ -438,8 +606,10 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
                 Navigator.pop(context, 'done');
               },
               child: Text(meetingAppLocalizations.globalComplete,
-                  style:
-                      TextStyle(fontSize: 14, color: AppColors.blue_337eff))),
+                  style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.blue_337eff,
+                      fontWeight: FontWeight.w500))),
         ],
       ),
     );
@@ -606,6 +776,34 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
         ],
       ),
     );
+  }
+
+  @override
+  Future<bool?> shouldPop() {
+    return showCupertinoDialog<bool>(
+        context: context,
+        builder: (context) {
+          return CupertinoAlertDialog(
+            title: Text(meetingAppLocalizations.meetingLeaveEditTips),
+            content: Text(meetingAppLocalizations.meetingLeaveEditTips2),
+            actions: [
+              CupertinoDialogAction(
+                child: Text(meetingAppLocalizations.meetingEditContinue,
+                    style: TextStyle(color: AppColors.black_333333)),
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+              ),
+              CupertinoDialogAction(
+                child: Text(meetingAppLocalizations.meetingEditLeave,
+                    style: TextStyle(color: AppColors.blue_337eff)),
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
+              )
+            ],
+          );
+        });
   }
 
   @override

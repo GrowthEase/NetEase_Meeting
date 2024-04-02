@@ -8,6 +8,11 @@ part of meeting_ui;
 /// SDK内置的菜单点击时不会触发回调，只有自定义菜单才会回调。
 const int firstInjectableMenuId = 100;
 
+/// 70-99作为小应用的id，暂不考虑小应用数量超出30个的情况
+/// 小应用列表会在这个区间内取值作为自己的itemId
+const int webAppItemIdMin = 70;
+const int webAppItemIdMax = 99;
+
 /// SDK内置菜单，需要与平台定义的ID值保持一致
 /// Note: 如果修改ID值，请同步修改平台上的定义
 class NEMenuIDs {
@@ -28,6 +33,7 @@ class NEMenuIDs {
     screenShare,
     participants,
     managerParticipants,
+    notifyCenter,
     invitation,
     chatroom,
     whiteBoard,
@@ -73,6 +79,9 @@ class NEMenuIDs {
 
   /// 内置"断开音频"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
   static const int disconnectAudio = 25;
+
+  /// 内置"通知"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
+  static const int notifyCenter = 26;
 }
 
 class NEMenuItems {
@@ -86,6 +95,7 @@ class NEMenuItems {
       ];
 
   static List<NEMeetingMenuItem> get defaultMoreMenuItems => [
+        notifyCenter,
         invitation,
         chatroom,
         whiteBoard,
@@ -164,6 +174,13 @@ class NEMenuItems {
   static final security = NESingleStateMenuItem(
     itemId: NEMenuIDs.security,
     visibility: NEMenuVisibility.visibleToHostOnly,
+    singleStateItem: NEMenuItemInfo.undefine,
+  );
+
+  /// 通知菜单
+  static final notifyCenter = NESingleStateMenuItem(
+    itemId: NEMenuIDs.notifyCenter,
+    visibility: NEMenuVisibility.visibleAlways,
     singleStateItem: NEMenuItemInfo.undefine,
   );
 

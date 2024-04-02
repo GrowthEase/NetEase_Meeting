@@ -421,6 +421,75 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get meetingIsInCall => '正在接听系统电话';
 
   @override
+  String get meetingPinView => '锁定视频';
+
+  @override
+  String meetingPinViewTip(Object corner) {
+    return '画面已锁定，点击$corner取消锁定';
+  }
+
+  @override
+  String get meetingTopLeftCorner => '左上角';
+
+  @override
+  String get meetingBottomRightCorner => '右下角';
+
+  @override
+  String get meetingUnpinView => '取消锁定视频';
+
+  @override
+  String get meetingUnpinViewTip => '画面已解锁';
+
+  @override
+  String get meetingUnpin => '取消锁定';
+
+  @override
+  String get meetingPinFailedByFocus => '主持人已设置焦点视频，不支持该操作';
+
+  @override
+  String get meetingBlacklist => '会议黑名单';
+
+  @override
+  String get meetingBlacklistDetail => '开启后，被标记“不允许再次加入”的用户将无法加入该会议';
+
+  @override
+  String get unableMeetingBlacklistTitle => '确认关闭会议黑名单？';
+
+  @override
+  String get unableMeetingBlacklistTip => '关闭后将清空黑名单，被标记“不允许再次加入”的用户可重新加入会议';
+
+  @override
+  String get meetingNotAllowedToRejoin => '不允许再次加入该会议';
+
+  @override
+  String get meetingAllowMembersTo => '允许参会人员';
+
+  @override
+  String get meetingChat => '会中聊天';
+
+  @override
+  String get meetingChatEnabled => '会中聊天已开启';
+
+  @override
+  String get meetingChatDisabled => '会中聊天已关闭';
+
+  @override
+  String get meetingReclaimHost => '收回主持人';
+
+  @override
+  String get meetingReclaimHostCancel => '暂不收回';
+
+  @override
+  String meetingReclaimHostTip(Object user) {
+    return '$user目前是主持人，收回主持人权限可能会中断屏幕共享等';
+  }
+
+  @override
+  String meetingUserIsNowTheHost(Object user) {
+    return '$user已经成为主持人';
+  }
+
+  @override
   String get screenShare => '共享屏幕';
 
   @override
@@ -858,10 +927,18 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get participantPutInWaitingRoom => '移至等候室';
 
   @override
-  String get participantExpelWaitingMemberDialogTitle => '移除等候成员';
+  String get participantDisallowMemberRejoinMeeting => '不允许用户再次加入该会议';
 
   @override
-  String get participantDisallowMemberRejoinMeeting => '不允许用户再次加入该会议';
+  String participantVideoIsPinned(Object corner) {
+    return '画面已锁定，点击$corner取消锁定';
+  }
+
+  @override
+  String get participantVideoIsUnpinned => '画面已解锁';
+
+  @override
+  String get participantNotFound => '未找到相关成员';
 
   @override
   String get cloudRecordingEnabledTitle => '是否开启云录制';
@@ -984,10 +1061,10 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get chatSendTo => '发送至';
 
   @override
-  String get chatAllMembersInMeeting => '会议室所有人';
+  String get chatAllMembersInMeeting => '会议内所有人';
 
   @override
-  String get chatAllMembersInWaitingRoom => '等候室所有人';
+  String get chatAllMembersInWaitingRoom => '等候室内所有人';
 
   @override
   String get chatHistory => '聊天记录';
@@ -997,6 +1074,72 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get chatNoChatHistory => '无聊天记录';
+
+  @override
+  String get chatAllMembers => '所有人';
+
+  @override
+  String get chatPrivate => '私聊';
+
+  @override
+  String get chatPrivateInWaitingRoom => '等候室-私聊';
+
+  @override
+  String get chatPermission => '聊天权限';
+
+  @override
+  String get chatFree => '允许自由聊天';
+
+  @override
+  String get chatPublicOnly => '仅允许公开聊天';
+
+  @override
+  String get chatPrivateHostOnly => '仅允许私聊主持人';
+
+  @override
+  String get chatMuted => '全体成员禁言';
+
+  @override
+  String get chatPermissionInMeeting => '会议中聊天权限';
+
+  @override
+  String get chatPermissionInWaitingRoom => '等候室聊天权限';
+
+  @override
+  String get chatWaitingRoomPrivateHostOnly => '允许等候室成员私聊主持人';
+
+  @override
+  String get chatHostMutedEveryone => '主持人已设置为全员禁言';
+
+  @override
+  String get chatHostLeft => '主持人已离会，无法发送私聊消息';
+
+  @override
+  String chatSaidToMe(Object userName) {
+    return '$userName 对我说';
+  }
+
+  @override
+  String chatISaidTo(Object userName) {
+    return '我对$userName说';
+  }
+
+  @override
+  String chatSaidToWaitingRoom(Object userName) {
+    return '$userName 对等候室所有人说';
+  }
+
+  @override
+  String get chatISaidToWaitingRoom => '我对等候室所有人说';
+
+  @override
+  String get chatSendFailed => '发送失败';
+
+  @override
+  String get chatMemberLeft => '参会者已离开会议';
+
+  @override
+  String get chatWaitingRoomMuted => '主持人暂未开放等候室聊天';
 
   @override
   String get waitingRoomJoinMeeting => '加入会议';
@@ -1043,7 +1186,31 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   }
 
   @override
+  String get waitingRoomAutoAdmit => '本次会议自动准入';
+
+  @override
   String get movedToWaitingRoom => '主持人已将您移至等候室';
+
+  @override
+  String get waitingRoomAdmitAll => '全部准入';
+
+  @override
+  String get waitingRoomRemoveAll => '全部移除';
+
+  @override
+  String get waitingRoomAdmitMember => '准入等候成员';
+
+  @override
+  String get waitingRoomAdmitAllMembersTip => '是否允许等候室所有成员加入会议?';
+
+  @override
+  String get waitingRoomRemoveAllMemberTip => '将等候室的所有成员都移除?';
+
+  @override
+  String get waitingRoomExpelWaitingMember => '移除等候成员';
+
+  @override
+  String get waiting => '等候中';
 
   @override
   String get deviceSpeaker => '扬声器';
@@ -1102,4 +1269,22 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get networkDisconnectedTryingToReconnect => '网络已断开，正在尝试重新连接…';
+
+  @override
+  String get notifyCenter => '通知中心';
+
+  @override
+  String get notifyCenterAllClear => '确认清空所有通知?';
+
+  @override
+  String get notifyCenterNoMessage => '暂无消息';
+
+  @override
+  String get notifyCenterViewDetailsUnsupported => '该消息不支持查看详情';
+
+  @override
+  String get notifyCenterViewingDetails => '查看详情';
+
+  @override
+  String get globalOperationNotSupportedInMeeting => '会议中暂不支持该操作';
 }

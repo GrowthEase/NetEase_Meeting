@@ -17,6 +17,8 @@ class Application {
 
   static Alogger _logger = Alogger.normal('Application', Constants.moduleName);
 
+  static bool isQrScanPagePopped = false;
+
   static Future<bool> ensureInitialized() async {
     if (_initializedCompleter == null) {
       _initializedCompleter = Completer<bool>();

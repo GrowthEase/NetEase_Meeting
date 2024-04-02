@@ -7,12 +7,13 @@ part of meeting_service;
 /// 取消预约会议
 class _CancelMeetingApi extends HttpApi<void> {
   int meetingId;
+  bool cancelRecurringMeeting;
 
-  _CancelMeetingApi(this.meetingId);
+  _CancelMeetingApi(this.meetingId, this.cancelRecurringMeeting);
 
   @override
   String path() =>
-      'scene/meeting/${ServiceRepository().appKey}/v1/cancel/$meetingId';
+      'scene/meeting/${ServiceRepository().appKey}/v1/cancel/$meetingId?cancelRecurringMeeting=$cancelRecurringMeeting';
 
   @override
   String get method => 'DELETE';

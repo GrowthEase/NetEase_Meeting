@@ -1,6 +1,6 @@
 
 // Android端依赖管理
 project.ext {
-    rtcVersion = "5.5.22"
-    roomKitVersion = '1.26.0'
+    rtcVersion = "5.5.33"
+    roomKitVersion = '1.27.0'
 }

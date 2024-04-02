@@ -26,6 +26,12 @@ class AvatarTextStyle {
   });
 }
 
+const _xSmallTextStyle = AvatarTextStyle(
+  fontSizeOneChinese: 8,
+  fontSizeTwoChinese: 6,
+  fontSizeLetter: 8,
+);
+
 const _smallTextStyle = AvatarTextStyle(
   fontSizeOneChinese: 12,
   fontSizeTwoChinese: 10,
@@ -76,6 +82,13 @@ class NEMeetingAvatar extends StatelessWidget {
     this.url,
     required this.textStyle,
   }) : assert(name != null || url != null);
+
+  NEMeetingAvatar.xSmall({
+    super.key,
+    this.name,
+    this.url,
+  })  : size = 16,
+        textStyle = _xSmallTextStyle;
 
   NEMeetingAvatar.small({
     super.key,

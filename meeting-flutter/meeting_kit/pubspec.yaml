@@ -21,8 +21,13 @@ dependencies:
   uuid: ^4.3.3
   device_info_plus: ^8.0.0
 
+  webview_flutter: ^4.4.2
+  webview_flutter_android: ^3.13.2
+
+  intl: ^0.18.0
+
   yunxin_alog: ^2.0.0
-  netease_roomkit: 1.26.0
+  netease_roomkit: 1.27.0
 
 dev_dependencies:
   flutter_test:

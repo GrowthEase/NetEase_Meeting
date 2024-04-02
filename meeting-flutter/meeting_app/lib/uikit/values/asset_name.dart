@@ -59,4 +59,11 @@ class AssetName {
       'assets/lottie/icon_evaluation_hearteye.json';
   static const String iconEvaluationBlush =
       'assets/lottie/icon_evaluation_blush.json';
+  static const String iconNotification = 'assets/images/icon_notification.png';
+  static const String iconNotificationDelete = 'assets/images/icon_delete.png';
+  static const String iconNotificationEmpty =
+      'assets/images/notify_center_empty.png';
+
+  static const String iconUncheck = 'assets/images/icon_uncheck.png';
+  static const String iconChecked = 'assets/images/icon_checked.png';
 }

@@ -36,3 +36,17 @@ abstract class BaseState<T extends StatefulWidget> extends State<T>
 
   void onAppLifecycleState(AppLifecycleState state) {}
 }
+
+mixin FirstBuildScope<T extends StatefulWidget> on State<T> {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_firstBuild) {
+      _firstBuild = false;
+      onFirstBuild();
+    }
+  }
+
+  bool _firstBuild = true;
+  void onFirstBuild() {}
+}

@@ -21,6 +21,7 @@ class MeetingTextField extends StatefulWidget {
   final FocusNode? focusNode;
   final GestureTapCallback? onTap;
   final ValueChanged<String>? onChanged;
+  final VoidCallback? onEditingComplete;
 
   const MeetingTextField({
     super.key,
@@ -36,6 +37,7 @@ class MeetingTextField extends StatefulWidget {
     this.focusNode,
     this.onTap,
     this.onChanged,
+    this.onEditingComplete,
   });
 
   @override
@@ -105,7 +107,7 @@ class _MeetingTextFieldState extends State<MeetingTextField> {
         hintText: widget.hintText,
         hintStyle: TextStyle(
           color: AppColors.greyB0B6BE,
-          fontSize: 16.sp,
+          fontSize: 16.spMin,
         ),
         border: MaterialStateUnderlineInputBorder.resolveWith(
           (states) {
@@ -123,13 +125,14 @@ class _MeetingTextFieldState extends State<MeetingTextField> {
       textInputAction: widget.textInputAction,
       style: TextStyle(
         color: AppColors.color_333333,
-        fontSize: 16.sp,
+        fontSize: 16.spMin,
       ),
       maxLines: 1,
       focusNode: widget.focusNode,
       onTap: widget.onTap,
       inputFormatters: widget.inputFormatters,
       onSubmitted: widget.onSubmitted,
+      onEditingComplete: widget.onEditingComplete,
     );
     return widget.width != null || widget.height != null
         ? SizedBox(
@@ -164,7 +167,7 @@ class MeetingActionButton extends StatelessWidget {
           style: TextStyle(
             color: AppColors.secondaryText.withOpacity(opacity),
             fontWeight: FontWeight.w400,
-            fontSize: 16.sp,
+            fontSize: 16.spMin,
             decoration: TextDecoration.none,
           ),
         ),

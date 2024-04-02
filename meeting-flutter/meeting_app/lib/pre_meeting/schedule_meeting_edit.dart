@@ -16,7 +16,10 @@ import '../uikit/values/colors.dart';
 class ScheduleMeetingEditRoute extends StatefulWidget {
   final NEMeetingItem item;
 
-  ScheduleMeetingEditRoute(this.item);
+  /// 是否修改所有会议（周期性会议）
+  final bool isEditAll;
+
+  ScheduleMeetingEditRoute(this.item, {this.isEditAll = false});
 
   @override
   State<StatefulWidget> createState() {
@@ -27,11 +30,16 @@ class ScheduleMeetingEditRoute extends StatefulWidget {
 class _ScheduleMeetingEditRouteState
     extends ScheduleMeetingBaseState<ScheduleMeetingEditRoute>
     with MeetingAppLocalizationsMixin {
-  NEMeetingItem item;
+  final NEMeetingItem item;
 
   _ScheduleMeetingEditRouteState(this.item);
 
   bool cloudRecordOn = !kNoCloudRecord;
+
+  @override
+  bool? isEditAll() {
+    return widget.isEditAll;
+  }
 
   @override
   void initState() {
@@ -40,6 +48,7 @@ class _ScheduleMeetingEditRouteState
     meetingPwdSwitch = !TextUtil.isEmpty(item.password);
     cloudRecordOn = item.settings.cloudRecordOn;
     enableWaitingRoom = item.isWaitingRoomEnabled;
+    enableJoinBeforeHost = item.isEnableJoinBeforeHost();
     attendeeAudioAutoOff = item.settings.isAudioOffAllowSelfOn ||
         item.settings.isAudioOffNotAllowSelfOn;
     attendeeAudioAutoOffNotAllowSelfOn = item.settings.isAudioOffNotAllowSelfOn;
@@ -49,6 +58,27 @@ class _ScheduleMeetingEditRouteState
 
     meetingSubjectController = TextEditingController(text: '${item.subject}');
     callTime();
+
+    /// 不能直接把item里的recurringRule赋值给recurringRule，只在点击保存时改
+    recurringRule = NEMeetingRecurringRule(
+        type: item.recurringRule.type, startTime: startTime);
+    if (item.recurringRule.customizedFrequency != null) {
+      recurringRule.customizedFrequency = NEMeetingCustomizedFrequency(
+        stepSize: item.recurringRule.customizedFrequency!.stepSize,
+        stepUnit: item.recurringRule.customizedFrequency!.stepUnit,
+        daysOfMonth: item.recurringRule.customizedFrequency!.daysOfMonth,
+        daysOfWeek: item.recurringRule.customizedFrequency!.daysOfWeek,
+        recurringRule: WeakReference(recurringRule),
+      );
+    }
+    if (item.recurringRule.endRule != null) {
+      recurringRule.endRule = NEMeetingRecurringEndRule(
+        recurringRule: WeakReference(recurringRule),
+        type: item.recurringRule.endRule!.type,
+        date: item.recurringRule.endRule!.date,
+        times: item.recurringRule.endRule!.times,
+      );
+    }
   }
 
   void callTime() {
@@ -62,32 +92,20 @@ class _ScheduleMeetingEditRouteState
   }
 
   @override
-  Widget buildActionButton() {
-    return Container(
-      padding: EdgeInsets.all(30),
-      child: ElevatedButton(
+  List<Widget> buildActions() {
+    return <Widget>[
+      TextButton(
         key: MeetingValueKey.scheduleBtn,
-        style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
-              if (states.contains(MaterialState.disabled)) {
-                return AppColors.blue_50_337eff;
-              }
-              return AppColors.blue_337eff;
-            }),
-            padding:
-                MaterialStateProperty.all(EdgeInsets.symmetric(vertical: 13)),
-            shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                side: BorderSide(color: AppColors.blue_337eff, width: 0),
-                borderRadius: BorderRadius.all(Radius.circular(25))))),
-        onPressed: _editMeeting,
         child: Text(
           meetingAppLocalizations.globalSave,
           style: TextStyle(
-              color: Colors.white, fontSize: 16, fontWeight: FontWeight.w400),
-          textAlign: TextAlign.center,
+            color: AppColors.color_337eff,
+            fontSize: 16.0,
+          ),
         ),
-      ),
-    );
+        onPressed: _editMeeting,
+      )
+    ];
   }
 
   void _editMeeting() {
@@ -122,6 +140,7 @@ class _ScheduleMeetingEditRouteState
     item.startTime = startTimeChanged ? startTime.millisecondsSinceEpoch : 0;
     item.endTime = endTimeChanged ? endTime.millisecondsSinceEpoch : 0;
     item.setWaitingRoomEnabled(enableWaitingRoom);
+    item.setEnableJoinBeforeHost(enableJoinBeforeHost);
     item.password = meetingPwdSwitch == true ? password : '';
     var setting = NEMeetingItemSettings();
     if (attendeeAudioAutoOff) {
@@ -136,16 +155,18 @@ class _ScheduleMeetingEditRouteState
     }
     setting.cloudRecordOn = cloudRecordOn;
     item.settings = setting;
-    // Todo: @sunjian
     var live = NEMeetingItemLive();
     live.enable = liveSwitch;
     live.liveWebAccessControlLevel = (liveSwitch && liveLevelSwitch)
         ? NELiveAuthLevel.appToken.index
         : NELiveAuthLevel.token.index;
     item.live = live;
+    final editRecurringMeeting = widget.isEditAll &&
+        item.recurringRule.type != NEMeetingRecurringRuleType.no;
+    item.recurringRule = recurringRule;
     NEMeetingKit.instance
         .getPreMeetingService()
-        .editMeeting(item)
+        .editMeeting(item, editRecurringMeeting)
         .then((result) {
       LoadingUtil.cancelLoading();
       if (result.isSuccess()) {

@@ -15,10 +15,16 @@ class RouterName {
   static const String verifyMobileCheckCode = 'verifyMobileCheckCode';
   static const String meetingSetting = 'meetingSetting';
   static const String nickSetting = 'nickSetting';
+  static const String avatarSetting = 'avatarSetting';
   static const String webview = 'webview';
   static const String about = 'about';
   static const String scheduleMeeting = 'scheduleMeeting';
   static const String networkNotAvailable = 'networkNotAvailable';
   static const String accountAndSafety = 'accountAndSafety';
   static const String modifyPassword = 'modifyPassword';
+  static const String notifyMessageCenter = 'notifyMessageCenter';
+  static const String scheduleMeetingDetail = 'scheduleMeetingDetail';
+  static const String controlAbout = 'controlabout';
+  static const String controlSetting = 'controlsetting';
+  static const String qrScan = 'qrScan';
 }

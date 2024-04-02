@@ -10,8 +10,8 @@ part of meeting_service;
 class SDKConfig with _AloggerMixin {
   ///android version修改对应packages/meeting_sdk_android/gradle.properties的内容
   ///iOS version修改packages/meeting_sdk_ios/NEMeetingScript/spec/NEMeetingSDK.podspec的内容
-  static const String sdkVersionName = '4.3.0';
-  static const int sdkVersionCode = 40300;
+  static const String sdkVersionName = '4.4.0';
+  static const int sdkVersionCode = 40400;
   static const String sdkType = 'official'; //pub
 
   // static const _tag = 'SDKConfig';
@@ -109,6 +109,16 @@ class SDKConfig with _AloggerMixin {
 
   Map configs = {};
 
+  /// 是否禁止编辑昵称
+  bool get nicknameUpdateDisabled {
+    return _config('MEETING_ACCOUNT_CONFIG')['nicknameUpdateDisabled'] ?? false;
+  }
+
+  /// 是否禁止编辑头像
+  bool get avatarUpdateDisabled {
+    return _config('MEETING_ACCOUNT_CONFIG')['avatarUpdateDisabled'] ?? false;
+  }
+
   /// 切换焦点视频的间隔（单位：s）
   int get focusSwitchInterval => (configs['focusSwitchInterval'] ?? 2) as int;
 
@@ -127,6 +137,10 @@ class SDKConfig with _AloggerMixin {
   bool get isCloudRecordSupported => _appRoomResConfig.record;
   bool get isMeetingChatSupported => _appRoomResConfig.chatRoom;
   bool get isWaitingRoomSupported => _appRoomResConfig.waitingRoom;
+
+  /// 会话Id
+  String get appNotifySessionId =>
+      configs['appConfig']['notifySenderAccid'] ?? '';
 
   /// 聊天室
   MeetingChatroomServerConfig get meetingChatroomConfig =>
@@ -149,10 +163,9 @@ class SDKConfig with _AloggerMixin {
           fallback: true);
   bool get isMeetingEndTimeTipSupported => _meetingEndTimeTipConfig.enable;
 
-  /// 会议设置，是否支持音频设备切换，Android默认关闭，iOS默认开启
+  /// 会议设置，是否支持音频设备切换，默认开启
   bool get isAudioDeviceSwitchEnabled =>
-      getConfig('meetingSettingsConfig')?['enableAudioDeviceSwitch'] ??
-      Platform.isIOS;
+      getConfig('meetingSettingsConfig')?['enableAudioDeviceSwitch'] ?? true;
 
   /// 静音时关闭音频流Pub通道，默认为true
   MeetingFeatureConfig get unpubAudioOnMuteConfig =>

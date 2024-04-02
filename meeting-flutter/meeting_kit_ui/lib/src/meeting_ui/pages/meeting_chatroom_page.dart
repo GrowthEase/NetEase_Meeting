@@ -7,35 +7,26 @@ part of meeting_ui;
 class MeetingChatRoomPage extends StatefulWidget {
   static const String routeName = "/meetingChatRoom";
   final ChatRoomArguments arguments;
-  final bool isMinimized;
   final String? roomArchiveId;
 
-  final NEChatroomType initialChatroomType;
-
-  MeetingChatRoomPage(
-      {required this.arguments,
-      this.isMinimized = false,
-      this.roomArchiveId,
-      this.initialChatroomType = NEChatroomType.common});
+  MeetingChatRoomPage({required this.arguments, this.roomArchiveId});
 
   @override
   State<StatefulWidget> createState() {
-    return MeetingChatRoomState(
-        arguments, isMinimized, roomArchiveId, initialChatroomType);
+    return MeetingChatRoomState(arguments, roomArchiveId);
   }
 }
 
 class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
-    with MeetingUIStateScope {
+    with MeetingStateScope, MeetingKitLocalizationsMixin, EventTrackMixin {
   final ChatRoomArguments _arguments;
-  final bool _isMinimized;
-  String? _roomArchiveId;
+  bool _isInHistoryPage = false;
 
   late TextEditingController _contentController;
-  final NEChatroomType initialChatroomType;
 
-  MeetingChatRoomState(this._arguments, this._isMinimized, this._roomArchiveId,
-      this.initialChatroomType);
+  MeetingChatRoomState(this._arguments, String? roomArchiveId) {
+    _isInHistoryPage = roomArchiveId != null;
+  }
 
   late int _initialScrollIndex;
   final ItemScrollController itemScrollController = ItemScrollController();
@@ -50,18 +41,6 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
   bool canScrollToBottom = false;
 
   int delayDuration = 150;
-
-  final _waitingRoomChatEnabled = ValueNotifier(false);
-  void updateWaitingRoomChatEnabled() {
-    final enabled = _isMySelfHostOrCoHost() &&
-        _arguments.waitingRoomManager?.userList.isNotEmpty == true;
-    if (!enabled) {
-      _selectedChatroomType.value = NEChatroomType.common;
-    }
-    _waitingRoomChatEnabled.value = enabled;
-  }
-
-  final _selectedChatroomType = ValueNotifier(NEChatroomType.common);
 
   final FocusNode _focusNode = FocusNode();
 
@@ -104,13 +83,13 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
   late NERoomChatController chatController;
 
   String get _myNickname {
-    return _arguments.roomContext?.localMember.name ??
+    return roomContext?.localMember.name ??
         NEMeetingKit.instance.getAccountService().getAccountInfo()?.nickname ??
         '';
   }
 
   String? get _myAvatar {
-    return _arguments.roomContext?.localMember.avatar ??
+    return roomContext?.localMember.avatar ??
         NEMeetingKit.instance.getAccountService().getAccountInfo()?.avatar;
   }
 
@@ -119,6 +98,11 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
   late EventCallback _eventCallback;
   int nextPullMessageTime = 0;
   bool isShowLoading = false;
+  late final roomContext = _arguments.roomContext;
+  late final chatRoomManager = _arguments.chatRoomManager;
+  late final NERoomEventCallback roomEventCallback;
+  String? avatarClickActionShowUuid;
+
   @override
   void initState() {
     super.initState();
@@ -128,11 +112,15 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
       debugImageOverheadAllowance = 10 * 1024 * 1024; // 10M
       return true;
     }());
-    if (_arguments.roomContext != null) {
-      chatController = _arguments.roomContext!.chatController;
+    if (roomContext != null) {
+      chatController = roomContext!.chatController;
+      roomContext!.addEventCallback(roomEventCallback = NERoomEventCallback(
+        memberRoleChanged: memberRoleChanged,
+        memberLeaveRoom: memberLeaveRoom,
+      ));
+      chatRoomManager?.updateHostAndCoHostInWaitingRoom();
     }
     _contentController = TextEditingController();
-    _roomArchiveId = widget.roomArchiveId;
     lifecycleListen(_arguments.messageSource.messageStream,
         (dynamic dataSource) {
       setState(() {
@@ -151,23 +139,11 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
     _initialScrollIndex = max(_arguments.msgSize - 1, 0);
     itemPositionsListener.itemPositions
         .addListener(_handleItemPositionsChanged);
-    _arguments.roomContext?.addEventCallback(NERoomEventCallback(
-      memberRoleChanged: memberRoleChanged,
-    ));
-
-    /// 等候室人数为0时，聊天发送对象自动切回会议中所有人
-    final waitingRoomManager = _arguments.waitingRoomManager;
-    if (waitingRoomManager != null) {
-      lifecycleListen(waitingRoomManager.userListChanged, (value) {
-        updateWaitingRoomChatEnabled();
-      });
-    }
-    updateWaitingRoomChatEnabled();
 
     _eventCallback = (arg) {
       disableScrollToBottom = true;
       if ((arg as ChatRecallMessage).operateBy !=
-              _arguments.roomContext?.localMember.uuid ||
+              roomContext?.localMember.uuid ||
           NEMeetingKit.instance
                   .getAccountService()
                   .getAccountInfo()
@@ -183,7 +159,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
       print('ScrollablePositionedList initial index: $_initialScrollIndex');
       return true;
     }());
-    if (_roomArchiveId != null) {
+    if (_isInHistoryPage) {
       pullMessagesNotInMeeting(isFirst: true);
     } else {
       EventBus().subscribe(RecallMessageNotify, _eventCallback);
@@ -191,23 +167,28 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
   }
 
   void memberRoleChanged(
-      NERoomMember member, NERoomRole before, NERoomRole after) {
-    if (isSelf(member.uuid)) {
-      updateWaitingRoomChatEnabled();
+      NERoomMember member, NERoomRole oldRole, NERoomRole newRole) {
+    /// 如果自己的身份变更，刷新界面
+    if (roomContext!.isMySelf(member.uuid)) {
+      setState(() {});
     }
   }
 
-  bool isSelf(String? userId) {
-    return userId != null && _arguments.roomContext?.isMySelf(userId) == true;
+  void memberLeaveRoom(List<NERoomMember> members) {
+    /// 如果点击头像弹窗时，该用户离开房间，则关闭弹窗
+    if (members.any((element) => avatarClickActionShowUuid == element.uuid)) {
+      Navigator.of(context)
+          .popUntil(ModalRoute.withName(MeetingChatRoomPage.routeName));
+    }
   }
 
   void showRecallDialog() {
-    DialogUtils.showOneButtonCommonDialog(context,
-        NEMeetingUIKitLocalizations.of(context)!.chatMessageRecalled, null, () {
+    DialogUtils.showOneButtonCommonDialog(
+        context, meetingUiLocalizations.chatMessageRecalled, null, () {
       if (!mounted) return;
       // _arguments.messageSource.replaceToRecallMessage(message);
       Navigator.of(context).pop();
-    }, acceptText: NEMeetingUIKitLocalizations.of(context)!.globalSure);
+    }, acceptText: meetingUiLocalizations.globalSure);
   }
 
   void _scrollToIndex(int index, [double alignment = 0]) async {
@@ -287,35 +268,33 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
         appBar: buildAppBar(context),
         resizeToAvoidBottomInset: true,
         //body: SafeArea(top: false, left: false, right: false, child: buildBody()),
-        body:
-            _roomArchiveId != null && !isShowLoading && _arguments.msgSize <= 0
-                ? Center(child: LayoutBuilder(builder: (context, constraints) {
-                    return Container(
-                      margin: EdgeInsets.only(
-                          top: (constraints.maxHeight -
-                                      appBarHeight -
-                                      statusBarHeight) /
-                                  2 -
-                              appBarHeight -
-                              statusBarHeight),
-                      child: Column(
-                        children: [
-                          Image.asset(NEMeetingImages.noMessageHistory,
-                              package: NEMeetingImages.package),
-                          Text(
-                            NEMeetingUIKitLocalizations.of(context)!
-                                .chatNoChatHistory,
-                            style: TextStyle(
-                                fontSize: 14,
-                                color: _UIColors.color_999999,
-                                fontWeight: FontWeight.w400,
-                                decoration: TextDecoration.none),
-                          ),
-                        ],
+        body: _isInHistoryPage && !isShowLoading && _arguments.msgSize <= 0
+            ? Center(child: LayoutBuilder(builder: (context, constraints) {
+                return Container(
+                  margin: EdgeInsets.only(
+                      top: (constraints.maxHeight -
+                                  appBarHeight -
+                                  statusBarHeight) /
+                              2 -
+                          appBarHeight -
+                          statusBarHeight),
+                  child: Column(
+                    children: [
+                      Image.asset(NEMeetingImages.noMessageHistory,
+                          package: NEMeetingImages.package),
+                      Text(
+                        meetingUiLocalizations.chatNoChatHistory,
+                        style: TextStyle(
+                            fontSize: 14,
+                            color: _UIColors.color_999999,
+                            fontWeight: FontWeight.w400,
+                            decoration: TextDecoration.none),
                       ),
-                    );
-                  }))
-                : buildBody(),
+                    ],
+                  ),
+                );
+              }))
+            : buildBody(),
         floatingActionButton:
             showToBottom && _arguments.messageSource.unread > 0
                 ? newMessageTips()
@@ -331,9 +310,9 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
   AppBar buildAppBar(BuildContext context) {
     return AppBar(
         title: Text(
-          _roomArchiveId != null
-              ? NEMeetingUIKitLocalizations.of(context)!.chatHistory
-              : NEMeetingUIKitLocalizations.of(context)!.chat,
+          _isInHistoryPage
+              ? meetingUiLocalizations.chatHistory
+              : meetingUiLocalizations.chat,
           style: TextStyle(color: _UIColors.color_222222, fontSize: 17),
         ),
         centerTitle: true,
@@ -341,7 +320,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
         elevation: 0.0,
         systemOverlayStyle: AppStyle.systemUiOverlayStyleDark,
         leading: GestureDetector(
-          child: _roomArchiveId != null
+          child: _isInHistoryPage
               ? IconButton(
                   key: MeetingUIValueKeys.back,
                   icon: const Icon(
@@ -357,7 +336,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
                   alignment: Alignment.center,
                   key: MeetingUIValueKeys.chatRoomClose,
                   child: Text(
-                    NEMeetingUIKitLocalizations.of(context)!.globalClose,
+                    meetingUiLocalizations.globalClose,
                     style:
                         TextStyle(color: _UIColors.blue_337eff, fontSize: 16),
                     textAlign: TextAlign.center,
@@ -369,7 +348,34 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
             }
             Navigator.pop(context);
           },
-        ));
+        ),
+        actions: [
+          if (roomContext?.isMySelfHostOrCoHost() == true &&
+              _arguments.waitingRoomManager != null)
+            Padding(
+                padding: EdgeInsets.only(right: 16),
+                child: GestureDetector(
+                  onTap: () {
+                    if (_focusNode.hasFocus) {
+                      _focusNode.unfocus();
+                    }
+                    Navigator.of(context).push(MaterialMeetingPageRoute(
+                        settings: RouteSettings(
+                            name: MeetingChatPermissionPage.routeName),
+                        builder: (context) {
+                          return MeetingChatPermissionPage(
+                            roomContext!,
+                            _arguments.waitingRoomManager!,
+                          );
+                        }));
+                  },
+                  child: Icon(
+                    NEMeetingIconFont.icon_chat_setting,
+                    size: 24,
+                    color: _UIColors.color656A72,
+                  ),
+                ))
+        ]);
   }
 
   Widget newMessageTips() {
@@ -381,37 +387,30 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
             onTap: () {
               _scrollToIndex(_arguments.msgSize - 1);
             },
-            child: ValueListenableBuilder(
-                valueListenable: _waitingRoomChatEnabled,
-                builder: (BuildContext context, bool enabled, Widget? child) {
-                  return Container(
-                    margin: EdgeInsets.only(bottom: 62 + (enabled ? 30 : 0)),
-                    padding: EdgeInsets.symmetric(horizontal: 5),
-                    height: 28,
-                    decoration: BoxDecoration(
-                        color: _UIColors.blue_337eff,
-                        borderRadius: BorderRadius.all(Radius.circular(14.0)),
-                        boxShadow: [
-                          BoxShadow(
-                              offset: Offset(0, 2),
-                              blurRadius: 2,
-                              color: _UIColors.blue_50_337eff)
-                        ]),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Icon(Icons.arrow_downward,
-                            size: 16, color: Colors.white),
-                        Text(
-                          NEMeetingUIKitLocalizations.of(context)!
-                              .chatNewMessage,
-                          style: TextStyle(color: Colors.white, fontSize: 12),
-                        )
-                      ],
-                    ),
-                  );
-                })));
+            child: Container(
+                margin: EdgeInsets.only(bottom: 90),
+                padding: EdgeInsets.symmetric(horizontal: 5),
+                height: 28,
+                decoration: BoxDecoration(
+                    color: _UIColors.blue_337eff,
+                    borderRadius: BorderRadius.all(Radius.circular(14.0)),
+                    boxShadow: [
+                      BoxShadow(
+                          offset: Offset(0, 2),
+                          blurRadius: 2,
+                          color: _UIColors.blue_50_337eff)
+                    ]),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Icon(Icons.arrow_downward, size: 16, color: Colors.white),
+                    Text(
+                      meetingUiLocalizations.chatNewMessage,
+                      style: TextStyle(color: Colors.white, fontSize: 12),
+                    )
+                  ],
+                ))));
   }
 
   bool onWillPop() {
@@ -429,16 +428,10 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
           child: Column(
         children: <Widget>[
           buildListView(),
-          if (inputPanelEnabled) buildInputPanel()
+          if (!_isInHistoryPage) buildInputPanel()
         ],
       )),
     );
-  }
-
-  bool get inputPanelEnabled {
-    return _arguments.roomContext != null &&
-        (_isMySelfHostOrCoHost() ||
-            initialChatroomType != NEChatroomType.waitingRoom);
   }
 
   MessageState? convertMessage(NERoomChatMessage msg,
@@ -446,8 +439,16 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
     var valid = false;
     InMessageState? message;
     if (msg is NERoomChatTextMessage && msg.text.isNotEmpty) {
-      message = InTextMessage(msg.messageUuid, msg.time, msg.fromNick,
-          msg.fromAvatar, msg.text, msg.messageUuid, msg.chatroomType);
+      message = InTextMessage(
+          msg.messageUuid,
+          msg.time,
+          msg.fromNick,
+          msg.fromAvatar,
+          msg.text,
+          msg.messageUuid,
+          msg.toUserUuidList,
+          msg.fromUserUuid,
+          msg.chatroomType);
     } else if (msg is NERoomChatImageMessage) {
       valid = (isRoomOutHistory
               ? true
@@ -468,9 +469,11 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
           msg.height,
           msg.messageUuid,
           msg.url,
+          msg.toUserUuidList,
+          msg.fromUserUuid,
           msg.chatroomType,
         );
-        if (_roomArchiveId == null) {
+        if (!_isInHistoryPage) {
           message.startDownloadAttachment(
               chatController.downloadAttachment(msg.messageUuid));
         } else {
@@ -494,6 +497,8 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
           msg.size,
           msg.extension,
           msg.messageUuid,
+          msg.toUserUuidList,
+          msg.fromUserUuid,
           msg.chatroomType,
         );
       }
@@ -504,11 +509,13 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
           msg.messageUuid,
           msg.time,
           msg.eventType,
-          msg.operateBy,
+          msg.operateBy?.uuid,
           msg.recalledMessageId,
+          msg.toUserUuidList,
+          msg.fromUserUuid,
           msg.chatroomType);
     }
-    if (msg.fromUserUuid == _arguments.roomContext?.localMember.uuid ||
+    if (msg.fromUserUuid == roomContext?.localMember.uuid ||
         NEMeetingKit.instance.getAccountService().getAccountInfo()?.userUuid ==
             msg.fromUserUuid) {
       message?.isSend = true;
@@ -551,13 +558,13 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
               behavior: _DisableOverScrollBehavior(),
               child: RefreshIndicator.adaptive(
                   color: _UIColors.color_666666,
-                  onRefresh: () async => _roomArchiveId != null
+                  onRefresh: () async => _isInHistoryPage
                       ? pullMessagesNotInMeeting()
                       : pullMessages(),
                   child: ValueListenableBuilder<bool>(
                     valueListenable: isAlwaysScrollable,
                     builder: (BuildContext context, bool value, _) {
-                      return _roomArchiveId != null && _initialScrollIndex == 0
+                      return _isInHistoryPage && _initialScrollIndex == 0
                           ? Container()
                           : ScrollablePositionedList.builder(
                               key: Key('MessageList'),
@@ -583,7 +590,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
                                   return buildNotifyContent(message);
                                 }
                                 if (message is HistorySegment &&
-                                    _roomArchiveId == null) {
+                                    !_isInHistoryPage) {
                                   return buildHistorySegment();
                                 }
                                 if (message is AnchorMessage) {
@@ -615,8 +622,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
             Container(
                 padding: EdgeInsets.symmetric(horizontal: 12),
                 child: Text(
-                  NEMeetingUIKitLocalizations.of(context)!
-                      .chatAboveIsHistoryMessage,
+                  meetingUiLocalizations.chatAboveIsHistoryMessage,
                   style: TextStyle(
                     color: _UIColors.color_999999,
                     fontSize: 12,
@@ -645,158 +651,282 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
     );
   }
 
-  Widget buildInputPanel() {
-    return Container(
-      padding: EdgeInsets.only(top: 10, bottom: 12, left: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-              offset: Offset(0, -0.5),
-              blurRadius: 0.5,
-              color: _UIColors.colorE1E3E6)
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+  Widget buildSendTo() {
+    if (chatRoomManager == null) return SizedBox();
+    final sendToTarget = _arguments.chatRoomManager!.sendToTarget;
+    String header = meetingUiLocalizations.chatSendTo;
+    String targetName = '';
+    String? targetRole;
+    Widget? icon;
+    Widget allMembersIcon = Icon(
+      NEMeetingIconFont.icon_all_members_16,
+      size: 16,
+      color: _UIColors.color656A72,
+    );
+    if (sendToTarget.value != null) {
+      switch (sendToTarget.value) {
+        case NEChatroomType.common:
+          targetName = meetingUiLocalizations.chatAllMembersInMeeting;
+          icon = allMembersIcon;
+          break;
+        case NEChatroomType.waitingRoom:
+          targetName = meetingUiLocalizations.chatAllMembersInWaitingRoom;
+          icon = allMembersIcon;
+          break;
+        default:
+          final targetMember = sendToTarget.value as NEBaseRoomMember;
+          targetName = targetMember.name;
+          targetRole = getTargetRole(targetMember);
+          header = meetingUiLocalizations.chatPrivate;
+
+          /// 主持人私聊等候室成员
+          if (roomContext?.isMySelfHostOrCoHost() == true &&
+              chatRoomType == NEChatroomType.waitingRoom) {
+            header = meetingUiLocalizations.chatPrivateInWaitingRoom;
+          }
+          icon = NEMeetingAvatar.xSmall(
+            name: targetMember.name,
+            url: targetMember.avatar,
+          );
+          break;
+      }
+    }
+    final tipTextStyle = TextStyle(
+      color: _UIColors.color_999999,
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+      decoration: TextDecoration.none,
+    );
+    return Padding(
+      padding: EdgeInsets.all(12),
+      child: Row(
         children: [
-          ValueListenableBuilder(
-              valueListenable: _waitingRoomChatEnabled,
-              builder: (BuildContext context, bool enabled, Widget? child) {
-                if (!enabled) return SizedBox.shrink();
-                return Column(
+          Expanded(
+              child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _showSelectTargetDialog,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$header:',
+                  style: TextStyle(
+                    color: _UIColors.color_666666,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+                SizedBox(width: 8),
+                Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          NEMeetingUIKitLocalizations.of(context)!.chatSendTo,
-                          style: TextStyle(
-                            color: _UIColors.color_666666,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            decoration: TextDecoration.none,
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: _showSelectTargetSheet,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ValueListenableBuilder<NEChatroomType>(
-                                  valueListenable: _selectedChatroomType,
-                                  builder: (context, value, child) {
-                                    return Text(
-                                      value == NEChatroomType.common
-                                          ? NEMeetingUIKitLocalizations.of(
-                                                  context)!
-                                              .chatAllMembersInMeeting
-                                          : NEMeetingUIKitLocalizations.of(
-                                                  context)!
-                                              .chatAllMembersInWaitingRoom,
-                                      style: TextStyle(
-                                        color: _UIColors.color_333333,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w400,
-                                        decoration: TextDecoration.none,
-                                      ),
-                                    );
-                                  }),
-                              Container(
-                                width: 20,
-                                height: 20,
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  NEMeetingIconFont.icon_triangle_down,
-                                  size: 8,
-                                  color: _UIColors.color_999999,
-                                ),
-                              )
-                            ],
-                          ),
-                        )
-                      ],
+                    if (icon != null) icon,
+                    SizedBox(width: 4),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: 136),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                              child: Text(
+                            targetName,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: _UIColors.color_333333,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                              decoration: TextDecoration.none,
+                            ),
+                          )),
+                          if (targetRole != null)
+                            Text(
+                              targetRole,
+                              style: tipTextStyle,
+                            ),
+                        ],
+                      ),
                     ),
-                    SizedBox(height: 10),
+                    SizedBox(width: 4),
+                    Icon(
+                      NEMeetingIconFont.icon_arrow_down,
+                      size: 14,
+                      color: _UIColors.color_999999,
+                    ),
                   ],
+                )
+              ],
+            ),
+          )),
+          StreamBuilder(
+              stream: chatRoomManager?.chatPermissionChanged,
+              builder: (context, snapshot) {
+                return Text(
+                  getChatPermissionTip(),
+                  style: tipTextStyle,
                 );
               }),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              buildInputBox(),
-              if (!_arguments.isImageMessageEnabled &&
-                  !_arguments.isFileMessageEnabled)
-                SizedBox(width: 10),
-              if (_arguments.isImageMessageEnabled)
-                buildIcon(Icons.image_outlined, 10,
-                    _arguments.isFileMessageEnabled ? 5 : 10, _onSelectImage),
-              if (_arguments.isFileMessageEnabled)
-                buildIcon(
-                    Icons.folder_open_outlined,
-                    _arguments.isImageMessageEnabled ? 5 : 10,
-                    10,
-                    _onSelectFile)
-            ],
-          )
         ],
       ),
     );
   }
 
-  void _showSelectTargetSheet() {
-    final localizations = NEMeetingUIKitLocalizations.of(context)!;
-    DialogUtils.showChildNavigatorPopup<_ChatTargetSheetIDs>(
-        context,
-        (context) => CupertinoActionSheet(
-              actions: <Widget>[
-                _buildActionSheetItem(
-                    context,
-                    false,
-                    localizations.chatAllMembersInMeeting,
-                    _ChatTargetSheetIDs.allMembersInMeeting),
-                _buildActionSheetItem(
-                    context,
-                    false,
-                    localizations.chatAllMembersInWaitingRoom,
-                    _ChatTargetSheetIDs.allMembersInWaitingRoom),
+  String? getTargetRole(NEBaseRoomMember user) {
+    if (roomContext == null) return null;
+    var roles = <String>[];
+    if (user is NERoomMember) {
+      switch (user.role.name) {
+        case MeetingRoles.kHost:
+          roles.add(meetingUiLocalizations.participantHost);
+        case MeetingRoles.kCohost:
+          roles.add(meetingUiLocalizations.participantCoHost);
+      }
+    }
+    return roles.isNotEmpty ? '(${roles.join(',')})' : null;
+  }
+
+  String getChatPermissionTip() {
+    if (roomContext == null ||
+        roomContext!.isInWaitingRoom() ||
+        roomContext!.isMySelfHostOrCoHost()) return '';
+    switch (roomContext!.chatPermission) {
+      case NEChatPermission.publicChatOnly:
+        return meetingUiLocalizations.chatPublicOnly;
+      case NEChatPermission.privateChatHostOnly:
+        return meetingUiLocalizations.chatPrivateHostOnly;
+      default:
+        return '';
+    }
+  }
+
+  Widget buildInputPanel() {
+    return ValueListenableBuilder(
+        valueListenable: _arguments.chatRoomManager!.sendToTarget,
+        builder: (context, value, child) {
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                    offset: Offset(0, -0.5),
+                    blurRadius: 0.5,
+                    color: _UIColors.colorE1E3E6)
               ],
-              cancelButton: _buildActionSheetItem(context, true,
-                  localizations.globalCancel, _ChatTargetSheetIDs.cancel),
-            )).then<void>((_ChatTargetSheetIDs? itemId) async {
-      if (itemId == null || itemId == _ChatTargetSheetIDs.cancel) return;
-      _selectedChatroomType.value =
-          itemId == _ChatTargetSheetIDs.allMembersInWaitingRoom &&
-                  _waitingRoomChatEnabled.value
-              ? NEChatroomType.waitingRoom
-              : NEChatroomType.common;
-    });
+            ),
+            child: buildChatRoomBottom(value),
+          );
+        });
   }
 
-  Widget _buildActionSheetItem(BuildContext context, bool defaultAction,
-      String title, _ChatTargetSheetIDs itemId,
-      {Color textColor = _UIColors.color_007AFF}) {
-    return CupertinoActionSheetAction(
-        isDefaultAction: defaultAction,
-        child: Text(title, style: TextStyle(color: textColor)),
-        onPressed: () => Navigator.pop(context, itemId));
+  Widget buildChatRoomBottom(dynamic sendTarget) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        /// 如果有发送目标，则显示`发送至`
+        if (sendTarget != null) ...[
+          SizedBox(height: 4),
+          buildSendTo(),
+          SizedBox(height: 4),
+        ],
+        if (sendTarget == null)
+          buildMutedTips()
+        else
+          Padding(
+            padding: EdgeInsets.only(left: 12, right: 12, bottom: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                buildInputBox(),
+                if (_arguments.isImageMessageEnabled) SizedBox(width: 10),
+                if (_arguments.isImageMessageEnabled)
+                  buildIcon(Icons.image_outlined, _onSelectImage),
+                if (_arguments.isFileMessageEnabled) SizedBox(width: 10),
+                if (_arguments.isFileMessageEnabled)
+                  buildIcon(Icons.folder_open_outlined, _onSelectFile),
+              ],
+            ),
+          ),
+      ],
+    );
   }
 
-  Widget buildIcon(IconData icon, double leftPadding, double rightPadding,
-      VoidCallback onTap) {
+  /// 输入框禁止状态
+  Widget buildMutedTips() {
+    bool isInWaitingRoom = roomContext?.isInWaitingRoom() == true;
+
+    /// 主持人禁言所有人
+    String tips = isInWaitingRoom
+        ? meetingUiLocalizations.chatWaitingRoomMuted
+        : meetingUiLocalizations.chatHostMutedEveryone;
+
+    /// 仅私聊主持人，且主持人全部离开
+    if ((isInWaitingRoom &&
+            roomContext?.waitingRoomChatPermission ==
+                NEWaitingRoomChatPermission.privateChatHostOnly) ||
+        (!isInWaitingRoom &&
+            roomContext?.chatPermission ==
+                NEChatPermission.privateChatHostOnly)) {
+      tips = meetingUiLocalizations.chatHostLeft;
+    }
+    return Container(
+      height: 60,
+      alignment: Alignment.center,
+      padding: EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            NEMeetingIconFont.icon_chat_muted,
+            size: 20,
+            color: _UIColors.color_999999,
+          ),
+          SizedBox(width: 4),
+          Flexible(
+              child: Text(
+            tips,
+            style: TextStyle(
+              color: _UIColors.color_999999,
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              decoration: TextDecoration.none,
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+
+  /// 是否已经显示选择发送目标的弹窗
+  bool _isShowSelectTargetDialog = false;
+  Future<void> _showSelectTargetDialog() async {
+    if (roomContext == null || _isShowSelectTargetDialog) return;
+    _isShowSelectTargetDialog = true;
+
+    /// 打开列表刷新主持人信息(下期优化成实时刷新逻辑)
+    if (roomContext!.isInWaitingRoom()) {
+      chatRoomManager?.updateHostAndCoHostInWaitingRoom();
+    }
+    await DialogUtils.showChildNavigatorPopup(
+      context,
+      (context) => MeetingChatRoomMemberPage(
+        roomContext!,
+        _arguments.waitingRoomManager,
+        _arguments.chatRoomManager!,
+        _arguments.roomInfoUpdatedEventStream,
+      ),
+      routeSettings: RouteSettings(name: 'MeetMemberPage'),
+    );
+    _isShowSelectTargetDialog = false;
+  }
+
+  Widget buildIcon(IconData icon, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.only(
-            left: leftPadding, right: rightPadding, top: 10, bottom: 10),
-        child: Icon(
-          icon,
-          size: 20,
-          color: const Color(0xFF656A72),
-        ),
+      child: Icon(
+        icon,
+        size: 24,
+        color: const Color(0xFF656A72),
       ),
     );
   }
@@ -826,8 +956,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
             filled: true,
             isDense: true,
             fillColor: Colors.transparent,
-            hintText:
-                NEMeetingUIKitLocalizations.of(context)!.chatInputMessageHint,
+            hintText: meetingUiLocalizations.chatInputMessageHint,
             hintStyle: TextStyle(
                 fontSize: 14,
                 color: _UIColors.color_999999,
@@ -835,6 +964,38 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
             border: InputBorder.none,
           )),
     ));
+  }
+
+  /// 获取当前发消息所处的房间类型
+  NEChatroomType get chatRoomType {
+    if (chatRoomManager == null) return NEChatroomType.common;
+    if (chatRoomManager!.sendToTarget.value is NEBaseRoomMember) {
+      return roomContext?.isInWaitingRoom() == true ||
+              chatRoomManager!.sendToTarget.value is NEWaitingRoomMember
+          ? NEChatroomType.waitingRoom
+          : NEChatroomType.common;
+    }
+    return chatRoomManager!.sendToTarget.value;
+  }
+
+  List<String>? get toUserUuidList {
+    if (chatRoomManager == null) return null;
+    if (chatRoomManager!.sendToTarget.value is NEBaseRoomMember) {
+      final targetMember =
+          chatRoomManager!.sendToTarget.value as NEBaseRoomMember;
+      return [targetMember.uuid];
+    }
+    return null;
+  }
+
+  List<String>? get toUserNicknameList {
+    if (chatRoomManager == null) return null;
+    if (chatRoomManager!.sendToTarget.value is NEBaseRoomMember) {
+      final targetMember =
+          chatRoomManager!.sendToTarget.value as NEBaseRoomMember;
+      return [targetMember.name];
+    }
+    return null;
   }
 
   /// send message
@@ -846,10 +1007,9 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
     sending = true;
     final content = _contentController.text;
     if (content.isBlank) {
-      showToast(
-          NEMeetingUIKitLocalizations.of(context)!.chatCannotSendBlankLetter);
-    } else if (await _realSendMessage(OutTextMessage(
-        _myNickname, _myAvatar, content, _selectedChatroomType.value))) {
+      showToast(meetingUiLocalizations.chatCannotSendBlankLetter);
+    } else if (await _realSendMessage(OutTextMessage(_myNickname, _myAvatar,
+        content, toUserUuidList, toUserNicknameList, chatRoomType))) {
       _contentController.clear();
     }
     sending = false;
@@ -868,21 +1028,19 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
   }
 
   bool _isMySelfHostOrCoHost() {
-    return _arguments.roomContext?.isMySelfHost() == true ||
-        _arguments.roomContext?.isMySelfCoHost() == true;
+    return roomContext?.isMySelfHost() == true ||
+        roomContext?.isMySelfCoHost() == true;
   }
 
   void pullMessages() async {
     if (await _hasNetworkOrToast() == false) return;
 
     final messages = <MessageState>[];
-    final commonMessagesFuture =
-        widget.initialChatroomType != NEChatroomType.waitingRoom
-            ? fetchChatroomHistoryMessages(NEChatroomType.common)
-            : Future.value(<MessageState>[]);
+    final commonMessagesFuture = roomContext?.isInWaitingRoom() == false
+        ? fetchChatroomHistoryMessages(NEChatroomType.common)
+        : Future.value(<MessageState>[]);
     final waitingRoomMessagesFuture =
-        widget.initialChatroomType == NEChatroomType.waitingRoom ||
-                _isMySelfHostOrCoHost()
+        roomContext?.isInWaitingRoom() == true || _isMySelfHostOrCoHost()
             ? fetchChatroomHistoryMessages(NEChatroomType.waitingRoom)
             : Future.value(<MessageState>[]);
     await Future.wait<List<MessageState>>([
@@ -1011,7 +1169,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
             int width = message.width ?? 100;
             ChatImageSize _size =
                 calculateImageSampleSize(context, width, height);
-            return _roomArchiveId != null
+            return _isInHistoryPage
                 ? MeetingCachedNetworkImage.CachedNetworkImage(
                     width: _size.width,
                     height: _size.height,
@@ -1024,15 +1182,283 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
           }
           return Container();
         },
-        sendTo: (message.chatroomType == NEChatroomType.waitingRoom &&
-                _isMySelfHostOrCoHost())
-            ? Text(
-                '（${NEMeetingUIKitLocalizations.of(context)!.chatMessageSendToWaitingRoom}）',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: _UIColors.color_999999, fontSize: 12),
-              )
-            : null,
+        messageFrom: buildMessageFrom(message),
+        messageType: buildMessageType(message),
+        avatarOnTap: () =>
+            message is InMessageState && message.fromUserUuid != null
+                ? handleAvatarClick(message.fromUserUuid!, message.nickname)
+                : null,
+      );
+    }
+    return null;
+  }
+
+  void handleAvatarClick(String userUuid, String nickName) {
+    if (getAvatarActions(userUuid, nickName).isEmpty) return;
+    avatarClickActionShowUuid = userUuid;
+    DialogUtils.showChildNavigatorPopup<_AvatarActionData>(
+      context,
+      (context) {
+        return StreamBuilder(
+          stream: _arguments.roomInfoUpdatedEventStream,
+          builder: (context, _) {
+            final actions = getAvatarActions(userUuid, nickName);
+            final child = CupertinoActionSheet(
+              title: Text(
+                nickName,
+                style: TextStyle(color: _UIColors.grey_8F8F8F, fontSize: 13),
+              ),
+              actions: actions,
+              cancelButton: CupertinoActionSheetAction(
+                isDefaultAction: true,
+                child: buildSheetText(meetingUiLocalizations.globalCancel,
+                    _UIColors.color_007AFF),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            );
+            return AutoPopScope(
+              child: child,
+              listenable: ValueNotifier(actions.isEmpty),
+            );
+          },
+        );
+      },
+    ).then<void>((_AvatarActionData? value) async {
+      if (value != null && value.action.index != -1) {
+        await handleAction(value.action, value.userUuid, value.nickName);
+      }
+      avatarClickActionShowUuid = null;
+    });
+  }
+
+  Future<void> handleAction(
+      _AvatarActionType action, String userUuid, String nickName) async {
+    /// 参会者已离开会议
+    if (_getMember(userUuid) == null) {
+      showToast(meetingUiLocalizations.chatMemberLeft);
+      return;
+    }
+    switch (action) {
+      case _AvatarActionType.chatPrivate:
+        switchToChatPrivate(userUuid);
+        break;
+      case _AvatarActionType.remove:
+        if (_getMember(userUuid) is NERoomMember) {
+          await removeMember(userUuid, nickName);
+        } else {
+          await expelMember(userUuid, nickName);
+        }
+        break;
+    }
+    avatarClickActionShowUuid = null;
+  }
+
+  /// 移除等候室成员
+  Future<void> expelMember(String userUuid, String nickName) async {
+    if (_arguments.waitingRoomManager == null) return;
+    final isRoomBlackListEnabled =
+        _arguments.waitingRoomManager!.roomContext.isRoomBlackListEnabled;
+    final result = await showConfirmDialogWithCheckbox(
+      title: meetingUiLocalizations.waitingRoomExpelWaitingMember,
+      message: meetingUiLocalizations.participantRemoveConfirm + '$nickName?',
+      checkboxMessage: isRoomBlackListEnabled
+          ? meetingUiLocalizations.participantDisallowMemberRejoinMeeting
+          : null,
+      cancelLabel: meetingUiLocalizations.globalCancel,
+      okLabel: meetingUiLocalizations.participantRemove,
+    );
+    if (!mounted || result == null) return;
+    _arguments.waitingRoomManager
+        ?.expelMember(userUuid, disallowRejoin: result.checked);
+  }
+
+  /// 移除会中成员
+  Future<void> removeMember(String userUuid, String nickName) async {
+    trackPeriodicEvent(TrackEventName.removeMember,
+        extra: {'member_uid': userUuid});
+
+    final result = await showConfirmDialogWithCheckbox(
+      title: meetingUiLocalizations.participantRemoveConfirm + '$nickName?',
+      checkboxMessage: roomContext?.isRoomBlackListEnabled == true
+          ? meetingUiLocalizations.meetingNotAllowedToRejoin
+          : null,
+      initialChecked: false,
+      cancelLabel: meetingUiLocalizations.globalCancel,
+      okLabel: meetingUiLocalizations.globalSure,
+    );
+    if (!mounted || result == null) return;
+    removeMember2Server(userUuid, result.checked);
+  }
+
+  void removeMember2Server(String userUuid, bool toBlacklist) {
+    lifecycleExecute(roomContext!.kickMemberOut(userUuid, toBlacklist))
+        .then((NEResult? result) {
+      if (mounted && result != null && !result.isSuccess()) {
+        showToast(
+          result.msg ?? meetingUiLocalizations.participantFailedToRemove,
+        );
+      }
+    });
+  }
+
+  void switchToChatPrivate(String userUuid) {
+    final member = _getChatMember(userUuid);
+    final waitingRoomMember = _arguments.waitingRoomManager?.userList
+        .where((element) => element.uuid == userUuid)
+        .firstOrNull;
+    if (member != null) {
+      _arguments.chatRoomManager
+          ?.updateSendTarget(newTarget: member, userSelected: true);
+    } else if (waitingRoomMember != null) {
+      _arguments.chatRoomManager
+          ?.updateSendTarget(newTarget: waitingRoomMember, userSelected: true);
+    }
+  }
+
+  /// 获取点击头像的菜单项
+  List<Widget> getAvatarActions(String userUuid, String nickName) {
+    /// 等候室成员，点击管理员才显示私聊菜单
+    if (roomContext!.isInWaitingRoom()) {
+      if (chatRoomManager?.hostAndCoHost
+                  .where((e) => e.uuid == userUuid)
+                  .isNotEmpty ==
+              true &&
+          roomContext!.waitingRoomChatPermission ==
+              NEWaitingRoomChatPermission.privateChatHostOnly) {
+        return [
+          buildActionSheet(meetingUiLocalizations.chatPrivate, userUuid,
+              nickName, _AvatarActionType.chatPrivate),
+        ];
+      }
+      return [];
+    }
+
+    final actionMember = _getMember(userUuid);
+    if (roomContext == null) {
+      return [];
+    }
+
+    final isUserHostOrCoHost = roomContext!.isHostOrCoHost(userUuid);
+    final isSelfHostOrCoHost = roomContext!.isMySelfHostOrCoHost();
+    final isUserHost = roomContext!.isHost(userUuid);
+
+    /// 会中成员和管理员
+    bool chatPrivate = false;
+    switch (roomContext!.chatPermission) {
+      case NEChatPermission.freeChat:
+        chatPrivate = true;
+        break;
+      case NEChatPermission.publicChatOnly:
+      case NEChatPermission.privateChatHostOnly:
+        chatPrivate = isUserHostOrCoHost;
+        break;
+      case NEChatPermission.noChat:
+        break;
+    }
+    if (isSelfHostOrCoHost) {
+      chatPrivate = true;
+    }
+
+    return <Widget>[
+      if (chatPrivate)
+        buildActionSheet(
+          meetingUiLocalizations.chatPrivate,
+          userUuid,
+          nickName,
+          _AvatarActionType.chatPrivate,
+          color: actionMember == null ? _UIColors.color_999999 : null,
+        ),
+      if (isSelfHostOrCoHost && !isUserHost && actionMember != null)
+        buildActionSheet(
+          meetingUiLocalizations.participantRemove,
+          userUuid,
+          nickName,
+          _AvatarActionType.remove,
+          color: _UIColors.colorF24957,
+        ),
+    ];
+  }
+
+  Widget buildActionSheet(String text, String userUuid, String nickName,
+      _AvatarActionType avatarActionType,
+      {Color? color}) {
+    return CupertinoActionSheetAction(
+      child: buildSheetText(text, color ?? _UIColors.color_007AFF),
+      onPressed: () {
+        Navigator.pop(
+            context, _AvatarActionData(avatarActionType, userUuid, nickName));
+      },
+    );
+  }
+
+  Widget buildSheetText(String text, Color? color) {
+    return Text(text, style: TextStyle(color: color, fontSize: 20));
+  }
+
+  Widget buildMessageFrom(MessageState message) {
+    String text = message.nickname;
+    if (message.isPrivateMessage) {
+      if (message is OutMessageState) {
+        if (message.toUserNicknameList?.isNotEmpty == true) {
+          text = meetingUiLocalizations
+              .chatISaidTo(message.toUserNicknameList![0]);
+        } else {
+          final member = roomContext?.getMember(message.toUserUuidList!.first);
+          text = meetingUiLocalizations.chatISaidTo(member?.name ?? '');
+        }
+      }
+      if (message is InMessageState) {
+        text = meetingUiLocalizations.chatSaidToMe(message.nickname);
+      }
+    } else if (message.chatroomType == NEChatroomType.waitingRoom) {
+      text = message is OutMessageState
+          ? meetingUiLocalizations.chatISaidToWaitingRoom
+          : meetingUiLocalizations.chatSaidToWaitingRoom(message.nickname);
+    }
+    return Text(
+      text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(color: _UIColors.color_333333, fontSize: 12),
+    );
+  }
+
+  /// 获取聊天对象，等候室获取管理员，会议室获取成员
+  NEBaseRoomMember? _getChatMember(String? userUuid) {
+    if (roomContext == null) return null;
+    if (roomContext!.isInWaitingRoom()) {
+      return chatRoomManager?.hostAndCoHost
+          .where((member) => member.uuid == userUuid)
+          .firstOrNull;
+    } else {
+      return roomContext?.getMember(userUuid);
+    }
+  }
+
+  /// 获取等候室或会中成员
+  NEBaseRoomMember? _getMember(String? userUuid) {
+    if (roomContext == null) return null;
+    return roomContext?.getMember(userUuid) ??
+        _arguments.waitingRoomManager?.userList
+            .where((member) => member.uuid == userUuid)
+            .firstOrNull ??
+        chatRoomManager?.hostAndCoHost
+            .where((element) => element.uuid == userUuid)
+            .firstOrNull;
+  }
+
+  Widget? buildMessageType(MessageState message) {
+    if (message.isPrivateMessage) {
+      final text = message.chatroomType == NEChatroomType.waitingRoom
+          ? meetingUiLocalizations.chatPrivateInWaitingRoom
+          : meetingUiLocalizations.chatPrivate;
+      return Text(
+        '($text)',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(color: _UIColors.color_337eff, fontSize: 12),
       );
     }
     return null;
@@ -1080,7 +1506,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
           }
         },
         onDismiss: () => actionMenuShowing = false,
-        actions: [NEMeetingUIKitLocalizations.of(context)!.chatRecall]);
+        actions: [meetingUiLocalizations.chatRecall]);
   }
 
   Widget buildFileContent(FileMessageState message, bool isRight) {
@@ -1088,7 +1514,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
       message: message,
       onTap: (msg) => _handleFileMessageClick(message),
     );
-    return _roomArchiveId != null
+    return _isInHistoryPage
         ? fileContent
         : ChatMenuWidget(
             onValueChanged: (value) {
@@ -1106,17 +1532,17 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
               }
             },
             canShow: () => isRight && message.msgId != null,
-            actions: [NEMeetingUIKitLocalizations.of(context)!.chatRecall]);
+            actions: [meetingUiLocalizations.chatRecall]);
   }
 
   Widget buildNotifyContent(NotificationMessageState message) {
     String name = "";
-    if (_arguments.roomContext?.localMember.uuid == message.operator ||
+    if (roomContext?.localMember.uuid == message.operator ||
         NEMeetingKit.instance.getAccountService().getAccountInfo()?.userUuid ==
             message.operator) {
-      name = NEMeetingUIKitLocalizations.of(context)!.chatYou;
+      name = meetingUiLocalizations.chatYou;
     } else {
-      final member = _arguments.roomContext?.getMember(message.operator);
+      final member = _getMember(message.operator);
       name = "\u201C${member?.name ?? message.nickname}\u201D";
     }
 
@@ -1125,7 +1551,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
       margin: EdgeInsets.symmetric(vertical: 15),
       padding: EdgeInsets.symmetric(horizontal: 46),
       child: Text(
-        "$name${NEMeetingUIKitLocalizations.of(context)!.chatRecallAMessage}",
+        "$name${meetingUiLocalizations.chatRecallAMessage}",
         style: TextStyle(color: _UIColors.color_999999, fontSize: 12),
         textAlign: TextAlign.center,
       ),
@@ -1133,7 +1559,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
   }
 
   void _handleFileMessageClick(FileMessageState message) async {
-    if (_roomArchiveId != null) return;
+    if (_isInHistoryPage) return;
     if (message is OutFileMessage) {
       _realOpenFile(message.path, message.name);
     } else if (message is InFileMessage) {
@@ -1185,17 +1611,15 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
     );
     if (!mounted) return;
     if (resultType == ResultType.noAppToOpen) {
-      showToast(
-          NEMeetingUIKitLocalizations.of(context)!.chatOpenFileFailAppNotFound);
+      showToast(meetingUiLocalizations.chatOpenFileFailAppNotFound);
     } else if (resultType == ResultType.fileNotFound) {
       showToast(
-        NEMeetingUIKitLocalizations.of(context)!.chatOpenFileFailFileNotFound,
+        meetingUiLocalizations.chatOpenFileFailFileNotFound,
       );
     } else if (resultType == ResultType.permissionDenied) {
-      showToast(NEMeetingUIKitLocalizations.of(context)!
-          .chatOpenFileFailNoPermission);
+      showToast(meetingUiLocalizations.chatOpenFileFailNoPermission);
     } else if (resultType == ResultType.error) {
-      showToast(NEMeetingUIKitLocalizations.of(context)!.chatOpenFileFail);
+      showToast(meetingUiLocalizations.chatOpenFileFail);
     }
   }
 
@@ -1233,7 +1657,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
-        child: _roomArchiveId != null
+        child: _isInHistoryPage
             ? child
             : ChatMenuWidget(
                 onValueChanged: (value) {
@@ -1257,9 +1681,8 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
                 onShow: () => actionMenuShowing = true,
                 onDismiss: () => actionMenuShowing = false,
                 actions: [
-                    NEMeetingUIKitLocalizations.of(context)!.globalCopy,
-                    if (isRight)
-                      NEMeetingUIKitLocalizations.of(context)!.chatRecall
+                    meetingUiLocalizations.globalCopy,
+                    if (isRight) meetingUiLocalizations.chatRecall
                   ]));
   }
 
@@ -1286,37 +1709,34 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
     }
     _selectingType = type;
 
-    final beforeType = _selectedChatroomType.value;
+    final beforeTarget = chatRoomManager?.sendToTarget.value;
     FilePicker.platform
         .pickFiles(
-      type:
-          _selectingType == SelectType.image ? FileType.image : FileType.custom,
-      allowedExtensions: _selectingType == SelectType.image
-          ? null
-          : supportedExtensions.toList(growable: false),
-    )
+          type: _selectingType == SelectType.image
+              ? FileType.image
+              : FileType.custom,
+          allowedExtensions: _selectingType == SelectType.image
+              ? null
+              : supportedExtensions.toList(growable: false),
+        )
         .then((value) {
-      /// 如果在选择文件的过程中，取消了联席主持人
-      if (beforeType != _selectedChatroomType.value) {
-        return;
-      }
+          /// 如果在选择文件的过程中，发送对象变更了,则提示发送失败
+          if (beforeTarget != chatRoomManager?.sendToTarget.value) {
+            showToast(meetingUiLocalizations.chatSendFailed);
+            return;
+          }
 
-      /// 选择文件过程中，被移到等候室不发送
-      if (_arguments.roomContext?.isInWaitingRoom() == true) {
-        return;
-      }
-
-      _onFileSelected(
-        value?.files.first,
-        supportedExtensions,
-        maxFileSize,
-        type == SelectType.image
-            ? NEMeetingUIKitLocalizations.of(context)!
-                .chatImageSizeExceedTheLimit
-            : NEMeetingUIKitLocalizations.of(context)!
-                .chatFileSizeExceedTheLimit,
-      );
-    }).whenComplete(() => _selectingType = SelectType.none);
+          _onFileSelected(
+            value?.files.first,
+            supportedExtensions,
+            maxFileSize,
+            type == SelectType.image
+                ? meetingUiLocalizations.chatImageSizeExceedTheLimit
+                : meetingUiLocalizations.chatFileSizeExceedTheLimit,
+          );
+        })
+        .whenComplete(() => _selectingType = SelectType.none)
+        .ignore();
   }
 
   void _onFileSelected(
@@ -1334,24 +1754,23 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
       if (file.existsSync()) {
         String? errorMsg;
         if (!supportedExtensions.contains(extension?.toLowerCase())) {
-          errorMsg = NEMeetingUIKitLocalizations.of(context)!
-              .chatUnsupportedFileExtension;
+          errorMsg = meetingUiLocalizations.chatUnsupportedFileExtension;
         } else if (size > maxFileSize) {
           errorMsg = sizeExceedErrorMsg;
         }
-        if (errorMsg != null && !_isMinimized) {
-          ToastUtils.showToast(context, errorMsg);
+        if (errorMsg != null) {
+          showToast(errorMsg);
           file.delete();
           return;
         }
 
         Object? message;
         if (_selectingType == SelectType.image) {
-          message = OutImageMessage(
-              _myNickname, _myAvatar, path, size, _selectedChatroomType.value);
+          message = OutImageMessage(_myNickname, _myAvatar, path, size,
+              toUserUuidList, toUserNicknameList, chatRoomType);
         } else if (_selectingType == SelectType.file) {
           message = OutFileMessage(_myNickname, _myAvatar, name, path, size,
-              extension, _selectedChatroomType.value);
+              extension, toUserUuidList, toUserNicknameList, chatRoomType);
         }
         if (message != null) {
           _realSendMessage(message);
@@ -1367,26 +1786,36 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
           _arguments.messageSource.removeMessage(message);
           message = message.copy();
         }
-        await _arguments.messageSource.ensureChatroomJoined();
+        await _arguments.messageSource
+            .ensureChatroomJoined(message.chatroomType);
         if (message is OutImageMessage) {
           message.startSend(chatController.sendImageMessage(
             message.uuid,
             message.path,
-            null,
+            message.toUserUuidList,
             chatroomType: message.chatroomType,
           ));
         } else if (message is OutFileMessage) {
           message.startSend(chatController.sendFileMessage(
             message.uuid,
             message.path,
-            null,
+            message.toUserUuidList,
             chatroomType: message.chatroomType,
           ));
         } else if (message is OutTextMessage) {
-          message.startSend(chatController.sendBroadcastTextMessage(
-            message.text,
-            chatroomType: message.chatroomType,
-          ));
+          if (message.isPrivateMessage &&
+              message.toUserUuidList?.first != null) {
+            message.startSend(chatController.sendDirectTextMessage(
+              message.toUserUuidList!.first,
+              message.text,
+              chatroomType: message.chatroomType,
+            ));
+          } else {
+            message.startSend(chatController.sendBroadcastTextMessage(
+              message.text,
+              chatroomType: message.chatroomType,
+            ));
+          }
         }
         _arguments.messageSource
             .append(message, message.time, incUnread: false);
@@ -1419,6 +1848,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
       debugInvertOversizedImages = false;
       return true;
     }());
+    roomContext?.removeEventCallback(roomEventCallback);
     _arguments.messageSource.resetUnread();
     _contentController.dispose();
     _focusNode.dispose();
@@ -1434,8 +1864,10 @@ class _MessageItem extends StatelessWidget {
   final MessageState message;
   final void Function(MessageState)? onRetry;
   final bool shouldShowRetry;
-  final Widget? sendTo;
+  final Widget? messageFrom;
+  final Widget? messageType;
   final WidgetBuilder contentBuilder;
+  final VoidCallback? avatarOnTap;
 
   bool get outgoing => !incoming;
 
@@ -1446,7 +1878,9 @@ class _MessageItem extends StatelessWidget {
     required this.contentBuilder,
     this.shouldShowRetry = true,
     this.onRetry,
-    this.sendTo,
+    this.messageFrom,
+    this.messageType,
+    this.avatarOnTap,
   }) : super(key: key);
 
   static const _failureIconSize = 21.0;
@@ -1467,15 +1901,12 @@ class _MessageItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final head = NEMeetingAvatar.small(
-      name: message.nickname,
-      url: message.avatar,
-    );
-    final nickname = Text(
-      message.nickname,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: TextStyle(color: _UIColors.color_333333, fontSize: 12),
+    final head = GestureDetector(
+      onTap: avatarOnTap,
+      child: NEMeetingAvatar.medium(
+        name: message.nickname,
+        url: message.avatar,
+      ),
     );
     final child = ValueListenableBuilder(
       valueListenable: message.failStatusListenable,
@@ -1500,9 +1931,18 @@ class _MessageItem extends StatelessWidget {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (sendTo != null && outgoing) sendTo!,
-                        nickname,
-                        if (sendTo != null && incoming) sendTo!,
+                        if (messageType != null && outgoing) ...[
+                          messageType!,
+                          SizedBox(width: 4),
+                        ],
+                        if (messageFrom != null && outgoing)
+                          Flexible(child: messageFrom!),
+                        if (messageFrom != null && incoming)
+                          Flexible(child: messageFrom!),
+                        if (messageType != null && incoming) ...[
+                          SizedBox(width: 4),
+                          messageType!,
+                        ],
                       ],
                     ),
                     SizedBox(height: 4),
@@ -2113,8 +2553,15 @@ class _DisableOverScrollBehavior extends ScrollBehavior {
   }
 }
 
-enum _ChatTargetSheetIDs {
-  allMembersInMeeting,
-  allMembersInWaitingRoom,
-  cancel,
+class _AvatarActionData {
+  final _AvatarActionType action;
+  final String userUuid;
+  final String nickName;
+
+  _AvatarActionData(this.action, this.userUuid, this.nickName);
+}
+
+enum _AvatarActionType {
+  chatPrivate,
+  remove,
 }

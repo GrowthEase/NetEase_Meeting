@@ -77,8 +77,10 @@ class InMeetingService with _AloggerMixin {
     _currentMeetingUIState = state;
   }
 
-  void clearMeetingUIState() {
-    _currentMeetingUIState = null;
+  void clearMeetingUIState(MeetingUIState state) {
+    if (_currentMeetingUIState == state) {
+      _currentMeetingUIState = null;
+    }
   }
 
   NEMeetingInfo? currentMeetingInfo() {
@@ -123,5 +125,9 @@ class InMeetingService with _AloggerMixin {
     }
     return Future.value(const NEResult(
         code: NEMeetingErrorCode.failed, msg: 'meeting not exists'));
+  }
+
+  NERoomContext? currentRoomContext() {
+    return _currentMeetingUIState?.roomContext;
   }
 }

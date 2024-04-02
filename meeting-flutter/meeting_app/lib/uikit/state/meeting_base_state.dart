@@ -17,10 +17,14 @@ abstract class MeetingBaseState<T extends StatefulWidget>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text(
           getTitle(),
-          style: TextStyle(color: AppColors.color_222222, fontSize: 17),
+          style: TextStyle(
+              color: AppColors.color_222222,
+              fontSize: 17,
+              fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -34,7 +38,9 @@ abstract class MeetingBaseState<T extends StatefulWidget>
                   color: AppColors.black_333333,
                 ),
                 onPressed: () {
-                  Navigator.maybePop(context);
+                  shouldPop().then((value) {
+                    if (value != false) Navigator.maybePop(context);
+                  });
                 },
               )
             : null,
@@ -58,6 +64,10 @@ abstract class MeetingBaseState<T extends StatefulWidget>
 
   bool isShowBackBtn() {
     return true;
+  }
+
+  Future<bool?> shouldPop() {
+    return Future.value(true);
   }
 
   List<Widget> buildActions() {

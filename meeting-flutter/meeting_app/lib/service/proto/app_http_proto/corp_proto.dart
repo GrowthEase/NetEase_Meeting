@@ -4,7 +4,6 @@
 
 import 'package:nemeeting/service/auth/password_utils.dart';
 import 'package:nemeeting/service/model/login_info.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
 
 import '../../repo/corp_repo.dart';
 import '../app_http_proto.dart';

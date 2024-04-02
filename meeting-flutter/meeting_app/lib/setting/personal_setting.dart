@@ -2,12 +2,11 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+import 'package:image_picker/image_picker.dart';
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
-import 'package:nemeeting/service/config/app_config.dart';
-import 'package:nemeeting/service/config/login_type.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 import '../language/localizations.dart';
 import '../uikit/state/meeting_base_state.dart';
@@ -19,10 +18,13 @@ import '../uikit/values/fonts.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
 
 import '../utils/integration_test.dart';
+import 'dart:io';
 
 class PersonalSetting extends StatefulWidget {
   final String companyName;
+
   PersonalSetting(this.companyName);
+
   @override
   State<StatefulWidget> createState() {
     return _PersonalSettingState();
@@ -55,9 +57,7 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting>
             isShowArrow: canModifyNick(),
             onTap: () {
               if (canModifyNick()) {
-                NavUtils.pushNamed(context, RouterName.nickSetting,
-                    pageRoute: NEMeetingUIKit().getMeetingStatus().event ==
-                        NEMeetingEvent.inMeetingMinimized);
+                NavUtils.pushNamed(context, RouterName.nickSetting);
               }
             }),
         Container(
@@ -76,7 +76,10 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting>
             arrowTip: '',
             isShowArrow: true,
             onTap: () {
-              NavUtils.pushNamed(context, RouterName.accountAndSafety);
+              NavUtils.pushNamed(
+                context,
+                RouterName.accountAndSafety,
+              );
             }),
         Container(
           color: AppColors.globalBg,
@@ -231,32 +234,98 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting>
     );
   }
 
-  Container buildHead() {
-    return Container(
-      height: Dimen.primaryItemHeight,
-      color: Colors.white,
-      padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
-      child: Row(
-        children: <Widget>[
-          Text(
-            meetingAppLocalizations.settingHead,
-            style: TextStyle(fontSize: 16, color: AppColors.black_222222),
+  Widget buildHead() {
+    return GestureDetector(
+        onTap: showCropImageActionSheet,
+        child: Container(
+          height: Dimen.primaryItemHeight,
+          color: Colors.white,
+          padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
+          child: Row(
+            children: <Widget>[
+              Text(
+                meetingAppLocalizations.settingAvatar,
+                style: TextStyle(fontSize: 16, color: AppColors.black_222222),
+              ),
+              Spacer(),
+              ListenableBuilder(
+                listenable: NEMeetingKit.instance.getAccountService(),
+                builder: (context, child) {
+                  final accountInfo = NEMeetingKit.instance
+                      .getAccountService()
+                      .getAccountInfo();
+                  return NEMeetingAvatar.medium(
+                    name: accountInfo?.nickname,
+                    url: accountInfo?.avatar,
+                  );
+                },
+              ),
+            ],
           ),
-          Spacer(),
-          ListenableBuilder(
-            listenable: NEMeetingKit.instance.getAccountService(),
-            builder: (context, child) {
-              final accountInfo =
-                  NEMeetingKit.instance.getAccountService().getAccountInfo();
-              return NEMeetingAvatar.medium(
-                name: accountInfo?.nickname,
-                url: accountInfo?.avatar,
-              );
-            },
-          ),
-        ],
-      ),
-    );
+        ));
+  }
+
+  final _imagePicker = ImagePicker();
+
+  void _pickImage(ImageSource source) async {
+    try {
+      final pickedFile = await _imagePicker.pickImage(source: source);
+      if (!mounted || pickedFile == null) {
+        return;
+      }
+      NavUtils.pushNamed(context, RouterName.avatarSetting,
+          arguments: FileImage(File(pickedFile.path)));
+    } catch (e) {
+      debugPrint('Pick image error: $e');
+    }
+  }
+
+  void showCropImageActionSheet() {
+    if (!canModifyAvatar()) {
+      return;
+    }
+    final isInMeeting = NEMeetingUIKit().getMeetingStatus().event ==
+            NEMeetingEvent.inMeetingMinimized ||
+        NEMeetingUIKit().getMeetingStatus().event == NEMeetingEvent.inMeeting;
+    if (isInMeeting) {
+      ToastUtils.showToast(context,
+          meetingAppLocalizations.meetingOperationNotSupportedInMeeting);
+      return;
+    }
+    showCupertinoModalPopup<String>(
+        context: context,
+        builder: (BuildContext context) => CupertinoActionSheet(
+              title: Text(
+                meetingAppLocalizations.settingAvatarTitle,
+                style: TextStyle(color: AppColors.grey_8F8F8F, fontSize: 13),
+              ),
+              actions: <Widget>[
+                CupertinoActionSheetAction(
+                    child: Text(meetingAppLocalizations.settingTakePicture,
+                        style: TextStyle(color: AppColors.color_007AFF)),
+                    onPressed: () {
+                      Navigator.pop(
+                          context, meetingAppLocalizations.globalCancel);
+                      _pickImage(ImageSource.camera);
+                    }),
+                CupertinoActionSheetAction(
+                    child: Text(meetingAppLocalizations.settingChoosePicture,
+                        style: TextStyle(color: AppColors.color_007AFF)),
+                    onPressed: () {
+                      Navigator.pop(
+                          context, meetingAppLocalizations.globalCancel);
+                      _pickImage(ImageSource.gallery);
+                    }),
+              ],
+              cancelButton: CupertinoActionSheetAction(
+                isDefaultAction: true,
+                child: Text(meetingAppLocalizations.globalCancel,
+                    style: TextStyle(color: AppColors.color_007AFF)),
+                onPressed: () {
+                  Navigator.pop(context, meetingAppLocalizations.globalCancel);
+                },
+              ),
+            ));
   }
 
   void showLogoutActionSheet() {
@@ -325,8 +394,8 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting>
     return Container(
       color: AppColors.white,
       padding: EdgeInsets.only(left: 20),
-      height: 1,
-      child: Divider(height: 1),
+      height: 0.5,
+      child: Divider(height: 0.5),
     );
   }
 
@@ -336,7 +405,10 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting>
   }
 
   bool canModifyNick() {
-    return AppConfig().isPublicFlavor &&
-        (AuthManager().loginType != LoginType.sso.index);
+    return !SDKConfig.current.nicknameUpdateDisabled;
+  }
+
+  bool canModifyAvatar() {
+    return !SDKConfig.current.avatarUpdateDisabled;
   }
 }

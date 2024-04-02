@@ -17,3 +17,19 @@ Future<void> isSupportPIP() async {
 void dismissKeyboard(BuildContext context) {
   FocusScope.of(context).requestFocus(FocusNode());
 }
+
+final watermarkConfiguration = ValueNotifier<TextWatermarkConfiguration?>(null);
+
+Widget wrapWithWatermark({required Widget child, bool onForeground = true}) {
+  return ValueListenableBuilder<TextWatermarkConfiguration?>(
+    valueListenable: watermarkConfiguration,
+    builder: (context, configuration, child) {
+      return TextWaterMark(
+        child: child!,
+        onForeground: onForeground,
+        configuration: configuration,
+      );
+    },
+    child: child,
+  );
+}

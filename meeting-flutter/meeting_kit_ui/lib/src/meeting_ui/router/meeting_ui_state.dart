@@ -4,20 +4,100 @@
 
 part of meeting_ui;
 
-class MeetingUIState extends ChangeNotifier
-    with NEWaitingRoomListener, WidgetsBindingObserver, _AloggerMixin {
-  MeetingUIState(NERoomContext roomContext, this._arguments)
-      : assert(roomContext == _arguments.roomContext),
-        _isInWaitingRoom = roomContext.isInWaitingRoom(),
-        _isInMeeting = !roomContext.isInWaitingRoom() {
-    _currentRoomContext = roomContext;
-    updateRoomContext(roomContext);
-    WidgetsBinding.instance.addObserver(this);
+typedef PopHandler({Object? result, int? disconnectingCode});
+
+class MeetingUINavigator extends ChangeNotifier with _AloggerMixin {
+  PopHandler? popHandler;
+  void pop({Object? result, int? disconnectingCode}) {
+    commonLogger.i('pop');
+    popHandler?.call(result: result, disconnectingCode: disconnectingCode);
   }
+
+  void initMeeting(MeetingArguments arguments) {
+    commonLogger.i('initMeeting');
+    final roomContext = arguments.roomContext;
+    if (roomContext.isInWaitingRoom()) {
+      navigateToWaitingRoomFromInMeeting(arguments: arguments);
+    } else {
+      navigateToInMeetingFromWaitingRoom(arguments: arguments);
+    }
+  }
+
+  bool _isInWaitingRoom = false;
+  bool get isInWaitingRoom => _isInWaitingRoom;
+  void navigateToWaitingRoomFromInMeeting(
+      {required MeetingArguments arguments}) {
+    commonLogger.i('navigateToWaitingRoomFromInMeeting');
+    _isInWaitingRoom = true;
+    _isInMeeting = false;
+    _ensureMeetingStates(arguments);
+    notifyListeners();
+  }
+
+  bool _isInMeeting = false;
+  bool get isInMeeting => _isInMeeting;
+  void navigateToInMeetingFromWaitingRoom(
+      {required MeetingArguments arguments}) {
+    commonLogger.i('navigateToInMeetingFromWaitingRoom');
+    _isInWaitingRoom = false;
+    _isInMeeting = true;
+    _ensureMeetingStates(arguments);
+    notifyListeners();
+  }
+
+  void _ensureMeetingStates(MeetingArguments arguments) {
+    /// roomContext 发生变化，如异常断开后重新入会
+    if (_meetingUIState._roomContext != arguments.roomContext) {
+      _meetingLifecycleState.dispose();
+      _meetingLifecycleState = MeetingLifecycleState(arguments.roomContext);
+    }
+
+    InMeetingService().clearMeetingUIState(_meetingUIState);
+
+    /// 每次都创建新的状态对象
+    _meetingUIState.dispose();
+    _meetingUIState = MeetingUIState(arguments, _meetingLifecycleState);
+    InMeetingService().rememberMeetingUIState(_meetingUIState);
+  }
+
+  var _meetingLifecycleState = MeetingLifecycleState();
+  MeetingLifecycleState get meetingLifecycleState => _meetingLifecycleState;
+
+  var _meetingUIState = MeetingUIState();
+  MeetingUIState get meetingUIState => _meetingUIState;
+
+  MeetingArguments get meetingArguments => _meetingUIState.meetingArguments;
+
+  NERoomContext get roomContext => _meetingUIState.roomContext;
+
+  @override
+  void dispose() {
+    _meetingLifecycleState.dispose();
+    _meetingUIState.dispose();
+    InMeetingService().clearMeetingUIState(_meetingUIState);
+    super.dispose();
+  }
+}
+
+/// 会议生命周期状态管理
+class MeetingLifecycleState extends ChangeNotifier
+    with NEWaitingRoomListener, WidgetsBindingObserver, _AloggerMixin {
+  final NERoomContext? roomContext;
+
+  MeetingLifecycleState([this.roomContext]) {
+    if (roomContext != null) {
+      roomContext!.addEventCallback(_roomEventCallback);
+      roomContext!.waitingRoomController.addListener(this);
+      WidgetsBinding.instance.addObserver(this);
+    }
+  }
+
+  /// 当前会议是否处于最小化状态，可能是通过点击最小化按钮或通过会议组件提供的最小化接口
+  bool isMinimized = false;
 
   late final _roomEventCallback = NERoomEventCallback(
     roomEnd: (NERoomEndReason reason) {
-      debugPrint('roomEnd: $reason');
+      commonLogger.i('roomEnd: $reason');
       _roomEndReason = reason;
       _roomEndStreamController.add(reason);
     },
@@ -32,48 +112,6 @@ class MeetingUIState extends ChangeNotifier
     } else {
       return Stream.fromFuture(_roomEndStreamController.stream.first);
     }
-  }
-
-  late NERoomContext _currentRoomContext;
-  NERoomContext get roomContext => _currentRoomContext;
-  void updateRoomContext(NERoomContext roomContext) {
-    debugPrint('updateRoomContext');
-    _currentRoomContext.removeEventCallback(_roomEventCallback);
-    _currentRoomContext.waitingRoomController.removeListener(this);
-    roomContext.addEventCallback(_roomEventCallback);
-    roomContext.waitingRoomController.addListener(this);
-    _roomEndReason = null;
-    _currentRoomContext = roomContext;
-  }
-
-  bool _isInWaitingRoom = false;
-
-  bool get isInWaitingRoom => _isInWaitingRoom;
-
-  bool _isInMeeting = false;
-
-  bool get isInMeeting => _isInMeeting;
-
-  MeetingArguments _arguments;
-
-  MeetingArguments get meetingArguments => _arguments;
-
-  void navigateToInMeetingFromWaitingRoom(
-      {required MeetingArguments arguments}) {
-    debugPrint('navigateToInMeetingFromWaitingRoom');
-    _isInWaitingRoom = false;
-    _isInMeeting = true;
-    _arguments = arguments;
-    notifyListeners();
-  }
-
-  void navigateToWaitingRoomFromInMeeting(
-      {required MeetingArguments arguments}) {
-    debugPrint('navigateToWaitingRoomFromInMeeting');
-    _isInWaitingRoom = true;
-    _isInMeeting = false;
-    _arguments = arguments;
-    notifyListeners();
   }
 
   int? _waitingRoomStatus, _pendingWaitingRoomStatus;
@@ -103,9 +141,9 @@ class MeetingUIState extends ChangeNotifier
     if (status == NEWaitingRoomConstants.STATUS_ADMITTED) {
       return Stream.value(status!);
     } else {
-      return Stream.fromFuture(_waitingRoomStatusStreamController.stream
-          .firstWhere(
-              (status) => NEWaitingRoomConstants.STATUS_ADMITTED == status));
+      return _waitingRoomStatusStreamController.stream
+          .where((status) => NEWaitingRoomConstants.STATUS_ADMITTED == status)
+          .take(1);
     }
   }
 
@@ -117,9 +155,11 @@ class MeetingUIState extends ChangeNotifier
     if (status == NEWaitingRoomConstants.STATUS_WAITING) {
       return Stream.value(status!);
     } else {
-      return Stream.fromFuture(_waitingRoomStatusStreamController.stream
-          .firstWhere(
-              (status) => NEWaitingRoomConstants.STATUS_WAITING == status));
+      return _waitingRoomStatusStreamController.stream
+          .where(
+            (status) => NEWaitingRoomConstants.STATUS_WAITING == status,
+          )
+          .take(1);
     }
   }
 
@@ -145,21 +185,99 @@ class MeetingUIState extends ChangeNotifier
 
   void _onEnterBackground() {}
 
-  /// 当前会议是否处于最小化状态，可能是通过点击最小化按钮或通过会议组件提供的最小化接口
-  bool isMinimized = false;
-
   @override
   void dispose() {
-    _currentRoomContext.removeEventCallback(_roomEventCallback);
-    _currentRoomContext.waitingRoomController.removeListener(this);
+    if (roomContext != null) {
+      roomContext!.removeEventCallback(_roomEventCallback);
+      roomContext!.waitingRoomController.removeListener(this);
+      WidgetsBinding.instance.removeObserver(this);
+    }
     _roomEndStreamController.close();
     _waitingRoomStatusStreamController.close();
-    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   @override
   String toString() {
-    return 'MeetingUIState{isInWaitingRoom: $_isInWaitingRoom, isInMeeting: $_isInMeeting}';
+    return 'MeetingLifecycleState{'
+        'roomEndReason: $_roomEndReason, '
+        'waitingRoomStatus: $_waitingRoomStatus, '
+        'pendingWaitingRoomStatus: $_pendingWaitingRoomStatus, '
+        'isInForeground: $_isInForeground'
+        '}';
+  }
+}
+
+/// 会议 UI 状态管理
+class MeetingUIState extends ChangeNotifier with _AloggerMixin {
+  MeetingUIState([this._arguments, this._lifecycleState])
+      : _roomContext = _arguments?.roomContext {
+    if (_roomContext != null) {
+      _inMeetingChatroom =
+          RealChatroomInstance(_roomContext!, NEChatroomType.common);
+      _inMeetingChatroom.addListener(notifyListeners);
+      _waitingRoomChatroom =
+          RealChatroomInstance(_roomContext!, NEChatroomType.waitingRoom);
+      _waitingRoomChatroom.addListener(notifyListeners);
+    }
+  }
+
+  final MeetingArguments? _arguments;
+  final MeetingLifecycleState? _lifecycleState;
+  final NERoomContext? _roomContext;
+
+  ChatroomInstance _inMeetingChatroom =
+      FakeChatroomInstance(NEChatroomType.common);
+  ChatroomInstance get inMeetingChatroom => _inMeetingChatroom;
+
+  ChatroomInstance _waitingRoomChatroom =
+      FakeChatroomInstance(NEChatroomType.waitingRoom);
+  ChatroomInstance get waitingRoomChatroom => _waitingRoomChatroom;
+
+  MeetingArguments get meetingArguments => _arguments!;
+  NERoomContext get roomContext => _roomContext!;
+
+  bool get isMinimized => _lifecycleState?.isMinimized ?? false;
+  set isMinimized(bool value) => _lifecycleState?.isMinimized = value;
+
+  /// 本地锁定视频的用户，优先级低于“焦点视频”
+  String? _lockedUser;
+  String? get lockedUser => _lockedUser;
+  void lockUserVideo(String? userId) {
+    if (userId != _lockedUser) {
+      commonLogger.i('lockUserVideo: $_lockedUser -> $userId');
+      _lockedUser = userId;
+      notifyListeners();
+    }
+  }
+
+  @override
+  void dispose() {
+    inMeetingChatroom.dispose();
+    waitingRoomChatroom.dispose();
+    super.dispose();
+  }
+}
+
+mixin MeetingNavigatorScope<T extends StatefulWidget> on State<T> {
+  late MeetingUINavigator meetingNavigator;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    meetingNavigator = Provider.of<MeetingUINavigator>(context);
+  }
+}
+
+mixin MeetingStateScope<T extends StatefulWidget> on State<T> {
+  late MeetingLifecycleState meetingLifecycleState;
+  late MeetingUIState meetingUIState;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    meetingLifecycleState =
+        Provider.of<MeetingLifecycleState?>(context) ?? MeetingLifecycleState();
+    meetingUIState = Provider.of<MeetingUIState?>(context) ?? MeetingUIState();
   }
 }

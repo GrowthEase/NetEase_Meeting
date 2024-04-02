@@ -2,9 +2,6 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
-import 'dart:io';
-
-import 'package:nemeeting/base/util/global_preferences.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:nemeeting/service/config/servers.dart';
@@ -12,7 +9,6 @@ import 'package:nemeeting/webview/webview_page.dart';
 import '../language/meeting_localization/meeting_app_localizations.dart';
 import '../uikit/utils/nav_utils.dart';
 import '../uikit/utils/router_name.dart';
-import '../uikit/values/colors.dart';
 import '../uikit/widget/meeting_protocols.dart';
 
 class PrivacyUtil {

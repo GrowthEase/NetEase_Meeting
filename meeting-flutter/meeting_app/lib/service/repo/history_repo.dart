@@ -2,8 +2,8 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
-import 'package:nemeeting/service/model/chatroom_info.dart';
 import 'package:nemeeting/service/model/history_meeting.dart';
+import 'package:nemeeting/service/model/history_meeting_detail.dart';
 import 'package:nemeeting/service/repo/i_repo.dart';
 import 'package:nemeeting/service/response/result.dart';
 
@@ -16,6 +16,11 @@ class HistoryRepo extends IRepo {
 
   Future<Result<List<HistoryMeeting>>> getAllHistoryMeetings([int? startId]) {
     return appService.getAllHistoryMeetings(startId);
+  }
+
+  Future<Result<HistoryMeeting>> getHistoryMeetingDetailsByMeetingId(
+      int meetingId) async {
+    return appService.getHistoryMeetingDetailsByMeetingId(meetingId);
   }
 
   Future<Result<List<HistoryMeeting>>> getFavoriteMeetings(
@@ -39,7 +44,7 @@ class HistoryRepo extends IRepo {
     return appService.cancelFavoriteMeetingByRoomArchiveId(roomArchiveId);
   }
 
-  Future<Result<ChatroomInfo>> getHistoryMeetingDetail(
+  Future<Result<HistoryMeetingDetail>> getHistoryMeetingDetail(
       int roomArchiveId) async {
     return appService.getHistoryMeetingDetails(roomArchiveId);
   }

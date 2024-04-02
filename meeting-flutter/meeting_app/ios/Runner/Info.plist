@@ -49,11 +49,11 @@
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string></string>
+	<string>音视频会议需要申请相机权限，用于会议中的视频交流</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string></string>
+	<string>音视频会议需要申请麦克风权限，用于会议中的音频交流</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string></string>
+	<string>音视频会议需要申请照片权限，用于会议中的虚拟背景（添加、更换背景图片）功能</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>
