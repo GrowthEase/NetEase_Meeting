@@ -31,6 +31,8 @@ class _ScheduleMeetingRouteState
     meetingItem = NEMeetingItem();
     meetingSubjectController = TextEditingController();
     callTime();
+    recurringRule = NEMeetingRecurringRule(
+        type: NEMeetingRecurringRuleType.no, startTime: startTime);
   }
 
   // 是否被初始化
@@ -61,32 +63,19 @@ class _ScheduleMeetingRouteState
   }
 
   @override
-  Widget buildActionButton() {
-    return Container(
-      padding: EdgeInsets.all(30),
-      child: ElevatedButton(
-        key: MeetingValueKey.scheduleBtn,
-        style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
-              if (states.contains(MaterialState.disabled)) {
-                return AppColors.blue_50_337eff;
-              }
-              return AppColors.blue_337eff;
-            }),
-            padding:
-                MaterialStateProperty.all(EdgeInsets.symmetric(vertical: 13)),
-            shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                side: BorderSide(color: AppColors.blue_337eff, width: 0),
-                borderRadius: BorderRadius.all(Radius.circular(25))))),
-        onPressed: _scheduleMeeting,
+  List<Widget> buildActions() {
+    return <Widget>[
+      TextButton(
         child: Text(
-          meetingAppLocalizations.meetingScheduleNow,
+          meetingAppLocalizations.globalComplete,
           style: TextStyle(
-              color: Colors.white, fontSize: 16, fontWeight: FontWeight.w400),
-          textAlign: TextAlign.center,
+            color: AppColors.color_337eff,
+            fontSize: 16.0,
+          ),
         ),
-      ),
-    );
+        onPressed: _scheduleMeeting,
+      )
+    ];
   }
 
   void _scheduleMeeting() {
@@ -116,6 +105,7 @@ class _ScheduleMeetingRouteState
     }
     scheduling = true;
     LoadingUtil.showLoading();
+    meetingItem.recurringRule = recurringRule;
     meetingItem.subject = subject;
     meetingItem.startTime = startTime.millisecondsSinceEpoch;
     meetingItem.endTime = endTime.millisecondsSinceEpoch;
@@ -141,6 +131,7 @@ class _ScheduleMeetingRouteState
     meetingItem.live = live;
     meetingItem.noSip = kNoSip;
     meetingItem.setWaitingRoomEnabled(enableWaitingRoom);
+    meetingItem.setEnableJoinBeforeHost(enableJoinBeforeHost);
     NEMeetingKit.instance
         .getPreMeetingService()
         .scheduleMeeting(meetingItem)

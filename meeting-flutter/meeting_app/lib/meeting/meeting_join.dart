@@ -71,6 +71,7 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute>
             builder: (BuildContext context) {
               return IconButton(
                 icon: const Icon(
+                  key: MeetingValueKey.back,
                   IconFont.iconyx_returnx,
                   color: AppColors.black_333333,
                   size: 18,
@@ -128,6 +129,7 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute>
       child: Theme(
         data: ThemeData(hintColor: AppColors.greyDCDFE5),
         child: TextField(
+          key: MeetingValueKey.inputMeetingId,
           autofocus: _meetingIdController.text.isEmpty,
           style: TextStyle(color: AppColors.color_333333, fontSize: 17),
           inputFormatters: [

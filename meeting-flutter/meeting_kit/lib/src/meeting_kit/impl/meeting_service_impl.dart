@@ -93,7 +93,9 @@ class _NEMeetingServiceImpl extends NEMeetingService
         enableSip: !opts.noSip && SDKConfig.current.isSipSupported,
       ),
     ).thenEndStep(trackingEvent).map<NERoomContext>((meetingInfo) {
-      _meetingInfo = meetingInfo;
+      _meetingInfo = meetingInfo.copyWith(
+        state: NEMeetingState.started,
+      );
       trackingEvent?.beginStep(kMeetingStepJoinRoom);
       return _roomService
           .joinRoom(

@@ -6,3 +6,4 @@ output-class: MeetingAppLocalizations
 header-file: header.txt
 synthetic-package: false
 untranslated-messages-file: untranslated.txt
+format: true

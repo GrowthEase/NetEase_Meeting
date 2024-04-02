@@ -129,19 +129,22 @@ class MeetingLiveSettingState
     return Container(
         color: _UIColors.globalBg,
         child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              buildViewCountTips(),
-              Container(
-                color: Colors.white,
-                height: 329,
-                child:
-                    availableLiveUids.isNotEmpty ? buildMembers() : Container(),
-              ),
-              buildViewTips(),
-              buildViewPreview(),
-            ],
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                buildViewCountTips(),
+                Container(
+                  color: Colors.white,
+                  height: 329,
+                  child: availableLiveUids.isNotEmpty
+                      ? buildMembers()
+                      : Container(),
+                ),
+                buildViewTips(),
+                buildViewPreview(),
+              ],
+            ),
           ),
         ));
   }

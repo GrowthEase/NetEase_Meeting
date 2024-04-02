@@ -43,16 +43,17 @@ class _WebViewState extends MeetingBaseState<WebViewPage> {
 
   @override
   Widget buildBody() {
-    return WebView(
-      initialUrl: arguments.url,
-      javascriptMode: JavascriptMode.unrestricted,
-      onPageStarted: (url) {
+    final controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..loadRequest(Uri.parse(arguments.url))
+      ..setNavigationDelegate(NavigationDelegate(onPageStarted: (url) {
         Alog.d(tag: _tag, content: 'onPageStarted $url');
-      },
-      onPageFinished: (url) {
+      }, onPageFinished: (url) {
         Alog.d(tag: _tag, content: 'onPageFinished $url');
-      },
-    );
+      }, onWebResourceError: (error) {
+        Alog.d(tag: _tag, content: 'onWebResourceError $error');
+      }));
+    return WebViewWidget(controller: controller);
   }
 
   @override

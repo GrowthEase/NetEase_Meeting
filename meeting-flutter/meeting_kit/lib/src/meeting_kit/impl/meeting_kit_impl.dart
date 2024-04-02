@@ -13,6 +13,7 @@ class _NEMeetingKitImpl extends NEMeetingKit
   _NESettingsServiceImpl settingsService = _NESettingsServiceImpl();
   NEPreMeetingService preMeetingService = _NEPreMeetingServiceImpl();
   NELiveMeetingService liveMeetingService = _NELiveMeetingServiceImpl();
+  NEMeetingNosService nosService = _NEMeetingNosServiceImpl();
 
   Map? assetServerConfig;
 
@@ -26,6 +27,11 @@ class _NEMeetingKitImpl extends NEMeetingKit
   Map<String, String>? sdkVersionsHeaders;
 
   final Set<NEMeetingAuthListener> _authListenerSet = <NEMeetingAuthListener>{};
+  final Set<NERoomMessageSessionListener> _sessionListenerSet =
+      <NERoomMessageSessionListener>{};
+
+  /// 缓存会议内的会话消息列表
+  Map<int, Set<NEMeetingCustomSessionMessage>?> _sessionMessageMapCache = {};
 
   _NEMeetingKitImpl() {
     HttpHeaderRegistry().addContributor(() {
@@ -66,6 +72,58 @@ class _NEMeetingKitImpl extends NEMeetingKit
         } catch (e) {}
       }
     }));
+
+    NERoomKit.instance.messageChannelService
+        .addReceiveSessionMessageCallback(NERoomMessageSessionCallback(
+      onReceiveMessageSessionCallback: (message) {
+        if (message.data != null) {
+          try {
+            final data = NotifyCardData.fromMap(jsonDecode(message.data!));
+            commonLogger.i(
+                'receive session message: ${message.data},_sessionListenerSet: ${_sessionListenerSet.length}');
+            final customSessionMessage = NEMeetingCustomSessionMessage(
+              sessionId: message.sessionId,
+              sessionType: NEMeetingSessionTypeEnumExtension.toType(
+                  message.sessionType?.index),
+              messageId: message.messageId,
+              data: data,
+              time: message.time,
+            );
+
+            /// 缓存会议内的会话消息
+            if (data.data?.meetingId != null && data.data?.meetingId != 0) {
+              _sessionMessageMapCache[data.data!.meetingId!] ??= {};
+              _sessionMessageMapCache[data.data!.meetingId!]
+                  ?.add(customSessionMessage);
+            }
+            for (var listener in _sessionListenerSet) {
+              listener.onReceiveSessionMessage(customSessionMessage);
+            }
+          } catch (e) {}
+        }
+      },
+      onRecentSessionChangeCallback:
+          (List<NERoomRecentSession> recentSessionChangeMessageList) {
+        commonLogger.i(
+            'receive recent session message: $recentSessionChangeMessageList');
+        for (var listener in _sessionListenerSet) {
+          listener.onChangeRecentSession(recentSessionChangeMessageList
+              .map((e) => NEMeetingRecentSession(
+                    e.sessionId,
+                    e.fromAccount,
+                    e.fromNick,
+                    NEMeetingSessionTypeEnumExtension.toType(
+                        e.sessionType?.index),
+                    e.recentMessageId,
+                    e.unreadCount,
+                    e.content,
+                    e.time,
+                  ))
+              .toList());
+        }
+      },
+    ));
+
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -298,6 +356,9 @@ class _NEMeetingKitImpl extends NEMeetingKit
   NELiveMeetingService getLiveMeetingService() => liveMeetingService;
 
   @override
+  NEMeetingNosService getNosService() => nosService;
+
+  @override
   Future<NEResult<void>> logout() async {
     apiLogger.i('logout');
     return NERoomKit.instance.authService.logout().onSuccess(() {
@@ -355,13 +416,132 @@ class _NEMeetingKitImpl extends NEMeetingKit
       'eventData': event.toMap(),
     });
   }
+
+  @override
+  void addReceiveSessionMessageListener(NERoomMessageSessionListener listener) {
+    apiLogger.i(
+        'receive session message addReceiveSessionMessageListener $listener');
+    _sessionListenerSet.add(listener);
+
+    /// 会议内的缓存会话消息列表
+    if (_sessionMessageMapCache.isNotEmpty) {
+      _sessionMessageMapCache.forEach((key, value) {
+        value?.forEach((element) {
+          listener.onReceiveSessionMessage(element);
+        });
+      });
+      _sessionMessageMapCache.clear(); // 使用 clear 方法一次性移除所有映射项
+    }
+  }
+
+  @override
+  void removeReceiveSessionMessageListener(
+      NERoomMessageSessionListener listener) {
+    apiLogger.i('removeReceiveSessionMessageListener $listener');
+    _sessionListenerSet.remove(listener);
+    _sessionMessageMapCache.clear();
+  }
+
+  @override
+  Future<NEResult<List<NEMeetingCustomSessionMessage>>> queryUnreadMessageList(
+      String sessionId,
+      {NEMeetingSessionTypeEnum sessionType = NEMeetingSessionTypeEnum.P2P}) {
+    return _roomKit.messageChannelService
+        .queryUnreadMessageList(sessionId,
+            sessionType:
+                NERoomSessionTypeEnumExtension.toType(sessionType.index))
+        .then(
+          (value) => NEResult(
+            code: value.code,
+            msg: value.msg,
+            data: value.data
+                ?.map(
+                  (e) => NEMeetingCustomSessionMessage(
+                    sessionId: e.sessionId,
+                    sessionType: NEMeetingSessionTypeEnumExtension.toType(
+                        e.sessionType?.index),
+                    messageId: e.messageId,
+                    time: e.time,
+                    data: NotifyCardData.fromMap(jsonDecode(e.data!)),
+                  ),
+                )
+                .toList(),
+          ),
+        );
+  }
+
+  @override
+  Future<NEResult<List<NEMeetingCustomSessionMessage>>>
+      getSessionMessagesHistory(NEMeetingGetMessagesHistoryParam param) {
+    return _roomKit.messageChannelService
+        .getSessionMessagesHistory(
+          NERoomGetMessagesHistoryParam(
+            sessionId: param.sessionId,
+            sessionType: NERoomSessionTypeEnum.P2P,
+            limit: param.limit ?? 100,
+            fromTime: param.fromTime,
+            toTime: param.toTime,
+            order: NEMessageSearchOrderExtension.toType(param.order?.index),
+          ),
+        )
+        .then(
+          (value) => NEResult(
+            code: value.code,
+            msg: value.msg,
+            data: value.data
+                ?.map(
+                  (e) => NEMeetingCustomSessionMessage(
+                    sessionId: e.sessionId,
+                    sessionType: NEMeetingSessionTypeEnumExtension.toType(
+                        e.sessionType?.index),
+                    messageId: e.messageId,
+                    time: e.time,
+                    data: NotifyCardData.fromMap(jsonDecode(e.data!)),
+                  ),
+                )
+                .toList(),
+          ),
+        );
+  }
+
+  @override
+  Future<VoidResult> clearUnreadCount(String sessionId,
+      {NEMeetingSessionTypeEnum sessionType = NEMeetingSessionTypeEnum.P2P}) {
+    return _roomKit.messageChannelService.clearUnreadCount(sessionId,
+        sessionType: NERoomSessionTypeEnumExtension.toType(sessionType.index));
+  }
+
+  @override
+  Future<VoidResult> deleteAllSessionMessage(String sessionId,
+      {NEMeetingSessionTypeEnum sessionType = NEMeetingSessionTypeEnum.P2P}) {
+    return _roomKit.messageChannelService.deleteAllSessionMessage(
+      sessionId,
+      sessionType: NERoomSessionTypeEnumExtension.toType(sessionType.index),
+    );
+  }
+
+  @override
+  NEMeetingLanguage get currentLanguage {
+    final locale = _userSetLanguage == null ||
+            _userSetLanguage == NEMeetingLanguage.automatic
+        ? WidgetsBinding.instance.platformDispatcher.locale
+        : _userSetLanguage!.locale;
+    if (locale.languageCode == 'zh') {
+      return NEMeetingLanguage.chinese;
+    }
+    if (locale.languageCode == 'ja') {
+      return NEMeetingLanguage.japanese;
+    }
+    return NEMeetingLanguage.english;
+  }
 }
 
 NEResult<void> _handleMeetingResultCode(int code, [String? msg]) {
   final localizations = NEMeetingKit.instance.localizations;
   if (code == MeetingErrorCode.success) {
     return NEResult<void>(code: NEMeetingErrorCode.success, msg: msg);
-  } else if (code == MeetingErrorCode.meetingAlreadyExists) {
+  } else if (code == MeetingErrorCode.meetingAlreadyExists ||
+      code == MeetingErrorCode.meetingAlreadyStarted) {
     return NEResult<void>(
         code: NEMeetingErrorCode.meetingAlreadyExist, msg: msg);
   } else if (code == MeetingErrorCode.networkError) {

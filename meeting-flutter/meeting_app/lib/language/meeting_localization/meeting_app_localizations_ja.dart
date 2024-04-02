@@ -150,6 +150,9 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get authLogin => 'ログイン';
 
   @override
+  String get authLoginToNetEase => '網易会議にログインする';
+
+  @override
   String get authRegisterAndLogin => '登録/ログイン';
 
   @override
@@ -280,7 +283,7 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get authForgetPassword => 'パスワードを忘れる';
 
   @override
-  String get authPhoneErrorTip => '電話番号が無効です';
+  String get authPhoneErrorTip => '電話番号が無効';
 
   @override
   String get authPleaseLoginFirst => 'まず 網易会議 にログインします';
@@ -344,6 +347,9 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get authSuggestChrome => 'Chromeの使用を推奨します';
 
   @override
+  String get authLoggingIn => '会議登録中';
+
+  @override
   String get meetingCreate => '会議を開始';
 
   @override
@@ -390,13 +396,13 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get meetingOperationNotSupportedInMeeting => '会議はこの操作をサポートしていません';
 
   @override
-  String get meetingPersonalMeetingID => '個人会議ID';
+  String get meetingPersonalMeetingID => '個人会議 ID';
 
   @override
-  String get meetingPersonalShortMeetingID => '個人会議ショートid';
+  String get meetingPersonalShortMeetingID => '個人会議の短縮 ID';
 
   @override
-  String get meetingUsePersonalMeetId => '個人会議IDを使う';
+  String get meetingUsePersonalMeetId => '個人会議 IDを使う';
 
   @override
   String get meetingPassword => 'パスワード';
@@ -472,7 +478,7 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get meetingEnterTopic => '会議のテーマを入力する';
 
   @override
-  String get meetingEndTime => '終了時間です';
+  String get meetingEndTime => '終了時間';
 
   @override
   String get meetingChooseDate => '選択デート';
@@ -484,7 +490,7 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get meetingLiveUrl => 'ライブ アドレス';
 
   @override
-  String get meetingLiveLevelTip => '従業員のみ視聴可能です';
+  String get meetingLiveLevelTip => '従業員のみ視聴可能';
 
   @override
   String get meetingRecordOn => '参加者が会議に参加すると、記録を開始します';
@@ -508,7 +514,7 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get meetingEdit => '会議を編集する';
 
   @override
-  String get meetingScheduleEditSuccess => '修正成功です';
+  String get meetingScheduleEditSuccess => '修正成功';
 
   @override
   String get meetingInfoDialogMeetingTitle => 'タイトル';
@@ -529,6 +535,9 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
 
   @override
   String get meetingId => '会議 ID:';
+
+  @override
+  String get meetingShortId => '会議 ID:';
 
   @override
   String get meetingStartTime => '開始時間';
@@ -563,6 +572,164 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
 
   @override
   String get meetingHasBeenCanceled => '会議が他のログインデバイスによってキャンセルされました';
+
+  @override
+  String get meetingRepeat => '周期';
+
+  @override
+  String get meetingFrequency => '繰り返し周波数';
+
+  @override
+  String get meetingNoRepeat => '重複しない';
+
+  @override
+  String get meetingRepeatEveryday => '毎日';
+
+  @override
+  String get meetingRepeatEveryWeekday => '出勤日ごと';
+
+  @override
+  String get meetingRepeatEveryWeek => '毎週';
+
+  @override
+  String get meetingRepeatEveryTwoWeek => '2週間ごとに';
+
+  @override
+  String get meetingRepeatEveryMonth => '毎月';
+
+  @override
+  String get meetingRepeatCustom => 'カスタマイズ';
+
+  @override
+  String get meetingRepeatEndAt => 'で終わる';
+
+  @override
+  String get meetingRepeatEndAtOneday => '有効期限';
+
+  @override
+  String get meetingRepeatTimes => '会議の回数を制限する';
+
+  @override
+  String get meetingRepeatStop => 'シリーズを終了する';
+
+  @override
+  String meetingDayInMonth(Object day) {
+    return '$day日';
+  }
+
+  @override
+  String get meetingRepeatSelectDate => '日付を選択する';
+
+  @override
+  String meetingRepeatDayInWeek(Object day, Object week) {
+    return '$week週ごとの$day繰り返し';
+  }
+
+  @override
+  String meetingRepeatDay(Object day) {
+    return '$day日ごとに繰り返す';
+  }
+
+  @override
+  String meetingRepeatDayInMonth(Object day, Object month) {
+    return '$monthヶ月ごとの$day繰り返し';
+  }
+
+  @override
+  String meetingRepeatDayInWeekInMonth(
+      Object month, Object week, Object weekday) {
+    return '$monthヶ月ごとの$week個目の$weekday繰り返し';
+  }
+
+  @override
+  String get meetingRepeatDate => '日付';
+
+  @override
+  String get meetingRepeatWeekday => '週';
+
+  @override
+  String meetingRepeatOrderWeekday(Object week, Object weekday) {
+    return '第$week$weekday';
+  }
+
+  @override
+  String get meetingRepeatEditing => '繰り返しミーティングを編集していること。';
+
+  @override
+  String get meetingRepeatEditCurrent => '今回の会議を編集する';
+
+  @override
+  String get meetingRepeatEditAll => 'すべての会議を編集する';
+
+  @override
+  String get meetingRepeatEditTips => '以下の情報を修正すると,この週期的な会議に影響が出ます';
+
+  @override
+  String get meetingLeaveEditTips => '会議の編集からの退会を確認しますか?';
+
+  @override
+  String get meetingRepeatCancelAll => '週期的な一連の会議を廃止します';
+
+  @override
+  String get meetingCancelCancel => '削除しない';
+
+  @override
+  String get meetingCancelConfirm2 => '削除';
+
+  @override
+  String get meetingLeaveEditTips2 => '終了すると、現在のミーティングの変更は保存できません';
+
+  @override
+  String get meetingEditContinue => '編集を続けます';
+
+  @override
+  String get meetingEditLeave => '退出する';
+
+  @override
+  String get meetingRepeatUnitEvery => '';
+
+  @override
+  String get meetingRepeatUnitDay => '日';
+
+  @override
+  String get meetingRepeatUnitWeek => '週';
+
+  @override
+  String get meetingRepeatUnitMonth => '月';
+
+  @override
+  String meetingRepeatLimitTimes(Object times) {
+    return '限定回数$times回です';
+  }
+
+  @override
+  String get meetingJoinBeforeHost => '参加者はホストの前に参加することができます';
+
+  @override
+  String get meetingRepeatMeetings => '周期的な会議';
+
+  @override
+  String get meetingRepeatLabel => '繰り返します';
+
+  @override
+  String get meetingRepeatEnd => '終わった';
+
+  @override
+  String get meetingRepeatOneDay => 'ある日';
+
+  @override
+  String get meetingRepeatFrequency => '周波数';
+
+  @override
+  String get meetingRepeatAt => 'にあります';
+
+  @override
+  String meetingRepeatUncheckTips(Object date) {
+    return '現在は$dateです。選択を解除できません';
+  }
+
+  @override
+  String get meetingRepeatCancelEdit => '編集の取り消し';
 
   @override
   String get historyMeeting => '歴史会議';
@@ -622,10 +789,10 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get settingValidatorNickTip => '漢字、英字、数字をサポートする，最大20文字';
 
   @override
-  String get settingModifySuccess => '修正成功です';
+  String get settingModifySuccess => '修正成功';
 
   @override
-  String get settingModifyFailed => '修正失敗です';
+  String get settingModifyFailed => '修正失敗';
 
   @override
   String get settingCheckUpdate => '更新のチェック';
@@ -634,7 +801,7 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get settingFindNewVersion => '新版本';
 
   @override
-  String get settingAlreadyLatestVersion => '最新版です';
+  String get settingAlreadyLatestVersion => '最新版';
 
   @override
   String get settingVersion => 'Version:';
@@ -718,7 +885,22 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get settingMobile => '電話';
 
   @override
-  String get settingHead => 'プロフィール写真';
+  String get settingAvatar => 'プロフィール写真';
+
+  @override
+  String get settingAvatarUpdateSuccess => 'アイコンの修正成功です';
+
+  @override
+  String get settingAvatarUpdateFail => 'プロフィール画像の修正に失敗しました';
+
+  @override
+  String get settingAvatarTitle => 'プロフィール画像の設定です';
+
+  @override
+  String get settingTakePicture => '写真を撮ります';
+
+  @override
+  String get settingChoosePicture => '携帯のアルバムから選びます';
 
   @override
   String get settingPersonalCenter => '個人センター';

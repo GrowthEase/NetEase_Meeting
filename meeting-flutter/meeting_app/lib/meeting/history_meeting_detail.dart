@@ -7,6 +7,7 @@ import 'package:nemeeting/base/util/text_util.dart';
 import 'package:nemeeting/base/util/timeutil.dart';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/service/model/chatroom_info.dart';
+import 'package:nemeeting/service/model/history_meeting_detail.dart';
 import 'package:nemeeting/uikit/utils/nav_utils.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
 import 'package:netease_meeting_assets/netease_meeting_assets.dart';
@@ -41,6 +42,7 @@ class _HistoryMeetingDetailRouteState
   bool hasChatHistory = false;
   final recordUrlList = <String>[];
   late ChatroomInfo chatroomInfo;
+  final pluginInfoList = <NEMeetingWebAppItem>[];
 
   _HistoryMeetingDetailRouteState(this.item);
 
@@ -65,12 +67,32 @@ class _HistoryMeetingDetailRouteState
         if (mounted) setState(() {});
       });
     }
-    getChatroomInfo().then((value) {
+    getHistoryMeetingDetail().then((value) {
       if (mounted && value.isSuccess() && value.data != null) {
-        chatroomInfo = value.data!;
-        if (chatroomInfo.exportAccess == 1 && chatroomInfo.chatroomId != null) {
-          hasChatHistory = true;
-          setState(() {});
+        if (value.data!.chatroomInfo != null) {
+          chatroomInfo = value.data!.chatroomInfo!;
+          if (chatroomInfo.exportAccess == 1 &&
+              chatroomInfo.chatroomId != null) {
+            hasChatHistory = true;
+            setState(() {});
+          }
+        }
+        if (value.data!.pluginInfoList?.isNotEmpty ?? false) {
+          value.data!.pluginInfoList?.forEach((element) {
+            pluginInfoList.clear();
+            if (element.homeUrl.isNotEmpty &&
+                element.pluginId.isNotEmpty &&
+                element.name.isNotEmpty) {
+              pluginInfoList.add(NEMeetingWebAppItem(
+                pluginId: element.pluginId,
+                name: element.name,
+                icon: element.icon,
+                homeUrl: element.homeUrl,
+                sessionId: element.sessionId,
+              ));
+            }
+            setState(() {});
+          });
         }
       }
     });
@@ -115,7 +137,8 @@ class _HistoryMeetingDetailRouteState
           height: 20,
         ),
         if (hasChatHistory || hasCloudRecordTask) buildApplicationTitle(),
-        if (hasChatHistory || hasCloudRecordTask) buildApplicationModule()
+        if (hasChatHistory || hasCloudRecordTask || pluginInfoList.isNotEmpty)
+          buildApplicationModule()
       ],
     );
   }
@@ -150,6 +173,8 @@ class _HistoryMeetingDetailRouteState
               if (hasCloudRecordTask) buildCloudRecord(),
               if (hasCloudRecordTask) SizedBox(height: 10),
               if (hasChatHistory) buildMessageHistory(),
+              SizedBox(height: 10),
+              if (pluginInfoList.isNotEmpty) buildPluginListWidget(),
             ],
           ),
         ),
@@ -191,6 +216,53 @@ class _HistoryMeetingDetailRouteState
                 size: 18, color: AppColors.color_999999)
           ]),
         ));
+  }
+
+  Widget buildPluginListWidget() {
+    return Container(
+        height: (52 * pluginInfoList.length).toDouble(),
+        child: ListView.builder(
+            itemCount: pluginInfoList.length,
+            itemBuilder: (context, index) {
+              return GestureDetector(
+                  onTap: () async {
+                    Navigator.of(context).push(MaterialMeetingPageRoute(
+                        settings:
+                            RouteSettings(name: MeetingWebAppPage.routeName),
+                        builder: (context) {
+                          return MeetingWebAppPage(
+                            roomArchiveId: item.roomArchiveId.toString(),
+                            homeUrl: pluginInfoList[index].homeUrl,
+                            title: pluginInfoList[index].name,
+                            sessionId: pluginInfoList[index].sessionId,
+                          );
+                        }));
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                        border:
+                            Border.all(color: AppColors.color_EAEBEC, width: 1),
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(4)),
+                    height: 52,
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(NEMeetingIconFont.icon_history_message,
+                                  size: 20, color: AppColors.color_666666),
+                              SizedBox(width: 6),
+                              Text(pluginInfoList[index].name,
+                                  style: _textStyle)
+                            ],
+                          ),
+                          Icon(NEMeetingIconFont.icon_yx_allowx,
+                              size: 18, color: AppColors.color_999999)
+                        ]),
+                  ));
+            }));
   }
 
   Widget buildMeetingEnd() {
@@ -399,7 +471,7 @@ class _HistoryMeetingDetailRouteState
     return HistoryRepo().cancelFavoriteByRoomArchiveId(item.roomArchiveId);
   }
 
-  Future<Result<ChatroomInfo>> getChatroomInfo() {
+  Future<Result<HistoryMeetingDetail>> getHistoryMeetingDetail() {
     return HistoryRepo().getHistoryMeetingDetail(item.roomArchiveId);
   }
 }

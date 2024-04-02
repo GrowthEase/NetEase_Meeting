@@ -54,6 +54,7 @@ class ModifyPasswordState extends BaseState with MeetingAppLocalizationsMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         //title: Text(''),
         backgroundColor: Colors.white,
@@ -77,7 +78,7 @@ class ModifyPasswordState extends BaseState with MeetingAppLocalizationsMixin {
             Text(
               meetingAppLocalizations.settingModifyPassword,
               style: TextStyle(
-                fontSize: 28.sp,
+                fontSize: 28.spMin,
                 color: AppColors.black_222222,
                 fontWeight: FontWeight.w500,
               ),
@@ -103,7 +104,7 @@ class ModifyPasswordState extends BaseState with MeetingAppLocalizationsMixin {
                 return Text(
                   oldPasswordErrorText,
                   style: TextStyle(
-                    fontSize: 12.sp,
+                    fontSize: 12.spMin,
                     color: AppColors.colorF24957,
                   ),
                 );
@@ -136,7 +137,7 @@ class ModifyPasswordState extends BaseState with MeetingAppLocalizationsMixin {
                 return Text(
                   meetingAppLocalizations.settingValidatorPwdTip,
                   style: TextStyle(
-                    fontSize: 12.sp,
+                    fontSize: 12.spMin,
                     color: color,
                   ),
                 );
@@ -177,7 +178,7 @@ class ModifyPasswordState extends BaseState with MeetingAppLocalizationsMixin {
                 return Text(
                   errorText,
                   style: TextStyle(
-                    fontSize: 12.sp,
+                    fontSize: 12.spMin,
                     color: AppColors.colorF24957,
                   ),
                 );
@@ -200,7 +201,7 @@ class ModifyPasswordState extends BaseState with MeetingAppLocalizationsMixin {
               child: Text(
                 meetingAppLocalizations.settingModifyAndReLogin,
                 style: TextStyle(
-                  fontSize: 12.sp,
+                  fontSize: 12.spMin,
                   color: AppColors.colorB6B9BE,
                 ),
               ),
@@ -247,6 +248,7 @@ class ModifyPasswordState extends BaseState with MeetingAppLocalizationsMixin {
         ToastUtils.showToast(
             context, meetingAppLocalizations.settingModifySuccess,
             duration: const Duration(seconds: 1), onDismiss: () {
+          if (!mounted) return;
           NavUtils.pushNamedAndRemoveUntil(context, RouterName.entrance);
         });
       } else {

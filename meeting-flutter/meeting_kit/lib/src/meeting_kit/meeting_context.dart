@@ -43,6 +43,36 @@ extension NEMeetingContext on NERoomContext {
     return NEMeetingWatermark.fromMap(map);
   }
 
+  /// 会中聊天权限
+  NEChatPermission get chatPermission {
+    final value = roomProperties[NEChatPermissionProperty.key];
+    final permission =
+        value == null ? NEChatPermission.freeChat.index : int.tryParse(value);
+    return NEChatPermissionValue.fromValue(permission);
+  }
+
+  /// 等候室聊天权限
+  NEWaitingRoomChatPermission get waitingRoomChatPermission {
+    final value = roomProperties[NEWaitingRoomChatPermissionProperty.key];
+    final permission = value == null
+        ? NEWaitingRoomChatPermission.privateChatHostOnly.index
+        : int.tryParse(value);
+    return NEWaitingRoomChatPermissionValue.fromValue(permission);
+  }
+
+  /// 修改聊天室权限接口
+  Future<NEResult<void>> updateChatPermission(NEChatPermission chatPermission) {
+    return updateRoomProperty(
+        NEChatPermissionProperty.key, chatPermission.value.toString());
+  }
+
+  /// 修改等候室聊天室权限接口
+  Future<NEResult<void>> updateWaitingRoomChatPermission(
+      NEWaitingRoomChatPermission waitingRoomChatPermission) {
+    return updateRoomProperty(NEWaitingRoomChatPermissionProperty.key,
+        waitingRoomChatPermission.value.toString());
+  }
+
   Future<NEResult<void>> enableConfidentialWatermark(bool enable) {
     final newWatermark = watermark..videoStrategy = enable ? 1 : 0;
     return updateRoomProperty(
@@ -62,6 +92,8 @@ extension NEMeetingContext on NERoomContext {
           (NERoomMember member, NERoomRole before, NERoomRole after) {
         if (isHost(member.uuid)) {
           _state.hostUuid = member.uuid;
+        } else if (_state.hostUuid == member.uuid && !member.isHost) {
+          _state.hostUuid = null;
         }
       },
       memberPropertiesChanged: (member, _) => member._updateStates(),
@@ -70,16 +102,15 @@ extension NEMeetingContext on NERoomContext {
     localMember.updateMyPhoneStateLocal(false);
   }
 
-  void _findHost() {
-    if (_state.hostUuid == null) {
-      final members = remoteMembers;
-      members.add(localMember);
-      members.forEach((user) {
-        if (isHost(user.uuid)) {
-          _state.hostUuid = user.uuid;
-          return;
-        }
-      });
+  void _findHost({bool refresh = false}) {
+    if (!refresh && _state.hostUuid != null) {
+      return;
+    }
+    for (var user in [localMember, ...remoteMembers]) {
+      if (isHost(user.uuid)) {
+        _state.hostUuid = user.uuid;
+        return;
+      }
     }
   }
 
@@ -93,6 +124,10 @@ extension NEMeetingContext on NERoomContext {
     final value = roomProperties[VideoControlProperty.key];
     return value != null &&
         value.startsWith(RegExp(VideoControlProperty.disable)) != true;
+  }
+
+  bool get canReclaimHost {
+    return meetingInfo.ownerUserUuid == localMember.uuid && !isMySelfHost();
   }
 
   bool canUnmuteMyAudio() =>
@@ -112,12 +147,26 @@ extension NEMeetingContext on NERoomContext {
       localMember.isSharingScreen;
 
   /// 获取所有用户
-  Iterable<NERoomMember> getAllUsers() {
+  Iterable<NERoomMember> getAllUsers({bool sort = true}) {
     final members = remoteMembers;
     members.add(localMember);
+    if (sort) {
+      members.sort(compareUser);
+    }
     return members.where((member) =>
         member.isVisible && (member.isInRtcChannel || member.uuid == myUuid));
   }
+
+  /// 获取主持人和联席主持人
+  Iterable<NERoomMember> getHostAndCoHost({bool sort = true}) {
+    final members = remoteMembers;
+    if (sort) {
+      members.sort(compareUser);
+    }
+    return members.where((member) => isHostOrCoHost(member.uuid));
+  }
+
+  bool isMySelfHostOrCoHost() => isHostOrCoHost(localMember.uuid);
 
   /// 自己是不是主持人
   bool isMySelfHost() => isHost(localMember.uuid);
@@ -132,13 +181,14 @@ extension NEMeetingContext on NERoomContext {
   String get myUuid => localMember.uuid;
 
   /// 获取主持人用户id
-  String? getHostUuid() {
-    _findHost();
+  String? getHostUuid({bool refresh = false}) {
+    _findHost(refresh: refresh);
     return _state.hostUuid;
   }
 
   /// 获取主持人member
-  NERoomMember? getHostMember() => getMember(getHostUuid());
+  NERoomMember? getHostMember({bool refresh = false}) =>
+      getMember(getHostUuid(refresh: refresh));
 
   String? getFocusUuid() {
     final member = getMember(roomProperties[_PropertyKeys.kFocus]);
@@ -165,6 +215,14 @@ extension NEMeetingContext on NERoomContext {
   Future<NEResult<void>> handOverHost(String userId) {
     assert(isMySelfHost());
     return handOverMyRole(userId);
+  }
+
+  Future<NEResult<void>> reclaimHost(String userId) {
+    assert(canReclaimHost && isHost(userId));
+    return changeMembersRole({
+      localMember.uuid: MeetingRoles.kHost,
+      userId: MeetingRoles.kMember,
+    });
   }
 
   Future<NEResult<void>> raiseMyHand() {
@@ -214,6 +272,86 @@ extension NEMeetingContext on NERoomContext {
       ..addParam(kEventParamMeetingId, meetingInfo.meetingId)
       ..addParam(kEventParamMeetingNum, meetingInfo.meetingNum)
       ..addParam(kEventParamRoomArchiveId, meetingInfo.roomArchiveId);
+  }
+
+  /// 获取小应用列表
+  Future<NEResult<NEMeetingWebAppList>> getWebAppList() {
+    return WebAppRepository.getWebAppList();
+  }
+
+  /// 获取会议主持人信息
+  Future<List<NERoomMember>?> getHostAndCoHostList() {
+    return MeetingRepository.getHostAndCoHostList(meetingInfo.roomUuid).then(
+        (list) => list.data
+          ?..sort((NERoomMember lhs, NERoomMember rhs) =>
+              rhs.role.name == MeetingRoles.kHost ? 1 : -1));
+  }
+
+  /// 获取最新的等候室属性配置
+  Future<Map<String, dynamic>?> getWaitingRoomProperties() {
+    return MeetingRepository.getWaitingRoomProperties(meetingInfo.roomUuid)
+        .then((value) => value.data);
+  }
+
+  ///成员列表展示顺序：
+  /// 主持人->联席主持人->自己->举手->屏幕共享（白板）->音视频->视频->音频->昵称排序
+  ///
+  int compareUser(NERoomMember lhs, NERoomMember rhs) {
+    if (isHost(lhs.uuid)) {
+      return -1;
+    }
+    if (isHost(rhs.uuid)) {
+      return 1;
+    }
+    if (isCoHost(lhs.uuid)) {
+      return -1;
+    }
+    if (isCoHost(rhs.uuid)) {
+      return 1;
+    }
+    if (isMySelf(lhs.uuid)) {
+      return -1;
+    }
+    if (isMySelf(rhs.uuid)) {
+      return 1;
+    }
+    if (lhs.isRaisingHand) {
+      return -1;
+    }
+    if (rhs.isRaisingHand) {
+      return 1;
+    }
+    if (lhs.isSharingScreen) {
+      return -1;
+    }
+    if (rhs.isSharingScreen) {
+      return 1;
+    }
+    if (lhs.isSharingWhiteboard) {
+      return -1;
+    }
+    if (rhs.isSharingWhiteboard) {
+      return 1;
+    }
+    if (lhs.isVideoOn && lhs.isAudioOn) {
+      return -1;
+    }
+    if (rhs.isVideoOn && rhs.isAudioOn) {
+      return 1;
+    }
+    if (lhs.isVideoOn) {
+      return -1;
+    }
+    if (rhs.isVideoOn) {
+      return 1;
+    }
+    if (lhs.isAudioOn) {
+      return -1;
+    }
+    if (rhs.isAudioOn) {
+      return 1;
+    }
+    return lhs.name.compareTo(rhs.name);
   }
 }
 

@@ -225,6 +225,10 @@ final _builtinMenuItemIcons = <int, Map<int, Icon>>{
     _noneState: const Icon(NEMeetingIconFont.icon_security,
         color: _UIColors.colorECEDEF),
   },
+  NEMenuIDs.notifyCenter: {
+    _noneState:
+        const Icon(NEMeetingIconFont.icon_notify, color: _UIColors.colorECEDEF),
+  },
   NEMenuIDs.disconnectAudio: {
     _uncheckState: const Icon(NEMeetingIconFont.icon_disconnect,
         color: _UIColors.colorECEDEF),
@@ -392,6 +396,9 @@ class MenuItemInfo extends StatelessWidget {
   }
 
   ImageProvider getImage(NEMenuItemInfo itemInfo) {
+    if (itemInfo.isNetworkImage) {
+      return NetworkImage(itemInfo.icon!);
+    }
     if (itemInfo.hasPlatformPackage) {
       ///当是 '/'表示flutter是根目录，无需添加packages
       return AssetImage(itemInfo.icon!,
@@ -446,6 +453,8 @@ String? _getDefaultMenuTitle(
           : localizations!.cloudRecordingStart;
     case NEMenuIDs.security:
       return localizations!.meetingSecurity;
+    case NEMenuIDs.notifyCenter:
+      return localizations!.globalNotify;
     case InternalMenuIDs.more:
       return localizations!.meetingMore;
     case InternalMenuIDs.beauty:

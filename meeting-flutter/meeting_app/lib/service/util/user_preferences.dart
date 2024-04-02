@@ -4,6 +4,7 @@
 
 import 'package:nemeeting/base/util/sp_util.dart';
 import 'package:nemeeting/service/profile/app_profile.dart';
+import 'package:netease_meeting_ui/meeting_ui.dart';
 
 class UserPreferences extends Preferences {
   static const String localSetting = 'localSetting';
@@ -11,6 +12,7 @@ class UserPreferences extends Preferences {
   static const String showShareUserVideo = 'showShareUserVideo';
   static const String transparentWB = 'transparentWB';
   static const String frontCameraMirror = 'frontCameraMirror';
+  static const String audioDeviceSwitch = 'audioDeviceSwitch';
 
   UserPreferences._internal();
 
@@ -34,6 +36,15 @@ class UserPreferences extends Preferences {
 
   Future<void> setTransparentWhiteboardEnabled(bool value) async {
     setBoolSp(_wrapperKey(transparentWB), value);
+  }
+
+  void enableAudioDeviceSwitch(bool enable) {
+    setBoolSp(_wrapperKey(audioDeviceSwitch), enable);
+  }
+
+  Future<bool> isAudioDeviceSwitchEnabled() async {
+    return getBoolSp(_wrapperKey(audioDeviceSwitch))
+        .then((value) => value ?? SDKConfig.current.isAudioDeviceSwitchEnabled);
   }
 
   Future<bool> isFrontCameraMirrorEnabled() async {

@@ -26,6 +26,7 @@ class LoginMobileState extends BaseState {
         elevation: 0.0,
         leading: IconButton(
           icon: const Icon(
+            key: MeetingUIValueKeys.back,
             IconFont.iconyx_returnx,
             size: 18,
             color: AppColors.black_333333,

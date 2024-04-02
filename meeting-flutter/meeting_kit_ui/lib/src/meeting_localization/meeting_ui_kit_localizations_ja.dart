@@ -172,10 +172,10 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get meetingWrongPassword => 'パスワード間違い';
 
   @override
-  String get meetingNum => '会議ID';
+  String get meetingNum => '会議 ID';
 
   @override
-  String get meetingShortNum => '会議の短縮番号';
+  String get meetingShortNum => '会議の短縮 ID';
 
   @override
   String get meetingInfoDesc => '会議は暗号化保護されています';
@@ -265,7 +265,7 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get meetingEndOfLife => '会議時間が上限に達したため、会議は終了しました';
 
   @override
-  String get meetingEndTip => '会議が終了するまであと 1 つだけです';
+  String get meetingEndTip => '会議終了まで残り';
 
   @override
   String get meetingReuseIMNotSupportAnonymousJoinMeeting =>
@@ -424,6 +424,77 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
 
   @override
   String get meetingIsInCall => '現在電話対応中';
+
+  @override
+  String get meetingPinView => 'ロック画面';
+
+  @override
+  String meetingPinViewTip(Object corner) {
+    return '画面がロックされたので、$cornerをクリックしてロックを解除します。';
+  }
+
+  @override
+  String get meetingTopLeftCorner => '左上';
+
+  @override
+  String get meetingBottomRightCorner => '右下';
+
+  @override
+  String get meetingUnpinView => 'ロック解除';
+
+  @override
+  String get meetingUnpinViewTip => '画面がロック解除されました';
+
+  @override
+  String get meetingUnpin => 'ロック解除';
+
+  @override
+  String get meetingPinFailedByFocus => '司会者はフォーカスビデオを設定しており、対応していません。';
+
+  @override
+  String get meetingBlacklist => '会議ブラックリスト';
+
+  @override
+  String get meetingBlacklistDetail =>
+      'オンにすると、「再参加を許可しない」とマークされたユーザーは会議に参加できなくなります';
+
+  @override
+  String get unableMeetingBlacklistTitle => '会議のブラックリストを確認しますか?';
+
+  @override
+  String get unableMeetingBlacklistTip =>
+      'オフにするとブラックリストがクリアされ、「再参加を許可しない」とマークされたユーザーは会議に再参加できます';
+
+  @override
+  String get meetingNotAllowedToRejoin => '会議への再参加は認められません';
+
+  @override
+  String get meetingAllowMembersTo => '出席者を';
+
+  @override
+  String get meetingChat => '会議の中で雑談し';
+
+  @override
+  String get meetingChatEnabled => 'チャットが有効になりました。';
+
+  @override
+  String get meetingChatDisabled => 'チャットは無効になりました。';
+
+  @override
+  String get meetingReclaimHost => '司会者を回収';
+
+  @override
+  String get meetingReclaimHostCancel => '回収は保留';
+
+  @override
+  String meetingReclaimHostTip(Object user) {
+    return '$userは司会者ですが、司会者の権限を取り戻すと画面共有などが中断される可能性があります';
+  }
+
+  @override
+  String meetingUserIsNowTheHost(Object user) {
+    return '$userは司会者になりました';
+  }
 
   @override
   String get screenShare => '画面共有';
@@ -614,7 +685,7 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get liveDisableAuthLevel => 'ライブ配信中は、ライブ配信の視聴権限を変更できません';
 
   @override
-  String get liveStreaming => '生放送';
+  String get liveStreaming => '生放送中';
 
   @override
   String get participants => '参加者';
@@ -812,7 +883,7 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get participantOverRoleLimitCount => '割り当てられた役割が制限数を超えています';
 
   @override
-  String get participantMe => 'わたし';
+  String get participantMe => '私';
 
   @override
   String get participantSearchMember => '検索メンバー';
@@ -868,11 +939,19 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get participantPutInWaitingRoom => '待合室に移動';
 
   @override
-  String get participantExpelWaitingMemberDialogTitle => '待合室メンバーの除去';
-
-  @override
   String get participantDisallowMemberRejoinMeeting =>
       'ユーザーが会議に再参加することは許可されていません';
+
+  @override
+  String participantVideoIsPinned(Object corner) {
+    return '画面がロックされたので、$cornerをクリックしてロックを解除します。';
+  }
+
+  @override
+  String get participantVideoIsUnpinned => '画面がロック解除されました';
+
+  @override
+  String get participantNotFound => '関連メンバーが見つかりませんでした';
 
   @override
   String get cloudRecordingEnabledTitle => 'クラウド録画を有効にするかどうか';
@@ -992,16 +1071,16 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get chatMessageRecalled => 'メッセージは撤回されました';
 
   @override
-  String get chatMessage => 'メッセージです';
+  String get chatMessage => 'メッセージ';
 
   @override
   String get chatSendTo => '発送します';
 
   @override
-  String get chatAllMembersInMeeting => '会議の全員です';
+  String get chatAllMembersInMeeting => '会議の全員';
 
   @override
-  String get chatAllMembersInWaitingRoom => '待合室の全員です';
+  String get chatAllMembersInWaitingRoom => '待合室の全員';
 
   @override
   String get chatHistory => 'チャット履歴';
@@ -1013,13 +1092,79 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get chatNoChatHistory => 'チャット記録はありません';
 
   @override
+  String get chatAllMembers => '全員';
+
+  @override
+  String get chatPrivate => '私語';
+
+  @override
+  String get chatPrivateInWaitingRoom => '待合室-私語';
+
+  @override
+  String get chatPermission => 'チャット権限';
+
+  @override
+  String get chatFree => '全員(非公開メッセージを含む)';
+
+  @override
+  String get chatPublicOnly => '公開チャットのみ';
+
+  @override
+  String get chatPrivateHostOnly => '司会者とのチャットのみ';
+
+  @override
+  String get chatMuted => '全員発言禁止';
+
+  @override
+  String get chatPermissionInMeeting => '会議中のチャット権限';
+
+  @override
+  String get chatPermissionInWaitingRoom => '待合室チャット権限';
+
+  @override
+  String get chatWaitingRoomPrivateHostOnly => '司会者とチャットする';
+
+  @override
+  String get chatHostMutedEveryone => '司会者は全員禁言に設定されている';
+
+  @override
+  String get chatHostLeft => '司会者はもう会議を離れて、彼と話ができない';
+
+  @override
+  String chatSaidToMe(Object userName) {
+    return '$userNameは私に言いました';
+  }
+
+  @override
+  String chatISaidTo(Object userName) {
+    return '私は$userNameに言いました';
+  }
+
+  @override
+  String chatSaidToWaitingRoom(Object userName) {
+    return '$userNameは待合室の全員に言いました';
+  }
+
+  @override
+  String get chatISaidToWaitingRoom => '私は待合室の全員に言いました';
+
+  @override
+  String get chatSendFailed => '送信に失敗しました';
+
+  @override
+  String get chatMemberLeft => '参加者は会議を出た';
+
+  @override
+  String get chatWaitingRoomMuted => '司会者はチャット機能を開放していない';
+
+  @override
   String get waitingRoomJoinMeeting => 'ミーティングに参加';
 
   @override
   String get waitingRoom => '待合室';
 
   @override
-  String get waitingRoomJoinMeetingOption => '入会オプションです';
+  String get waitingRoomJoinMeetingOption => '入会オプション';
 
   @override
   String get waitingRoomWaitHostToInviteJoinMeeting =>
@@ -1058,7 +1203,31 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   }
 
   @override
+  String get waitingRoomAutoAdmit => '自動的に会議に参加する';
+
+  @override
   String get movedToWaitingRoom => 'ホストがあなたを待合室に移動させました';
+
+  @override
+  String get waitingRoomAdmitAll => 'すべて許可します';
+
+  @override
+  String get waitingRoomRemoveAll => 'すべて削除';
+
+  @override
+  String get waitingRoomAdmitMember => '待機メンバーを許可します';
+
+  @override
+  String get waitingRoomAdmitAllMembersTip => '待合室のメンバー全員を会議に参加させることは許可しますか?';
+
+  @override
+  String get waitingRoomRemoveAllMemberTip => '待合室のすべてのメンバーを削除しますか？';
+
+  @override
+  String get waitingRoomExpelWaitingMember => '待合室メンバーの除去';
+
+  @override
+  String get waiting => '待合室';
 
   @override
   String get deviceSpeaker => 'スピーカー';
@@ -1119,4 +1288,22 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   @override
   String get networkDisconnectedTryingToReconnect =>
       'ネットワークが切断されました。再接続を試みています...';
+
+  @override
+  String get notifyCenter => '通知センター';
+
+  @override
+  String get notifyCenterAllClear => 'すべての通知の消去を確認します?';
+
+  @override
+  String get notifyCenterNoMessage => '通知はありません';
+
+  @override
+  String get notifyCenterViewDetailsUnsupported => 'このメッセージは詳細を見ることをサポートしません';
+
+  @override
+  String get notifyCenterViewingDetails => '詳細を見る';
+
+  @override
+  String get globalOperationNotSupportedInMeeting => '会議はこの操作をサポートしていません';
 }

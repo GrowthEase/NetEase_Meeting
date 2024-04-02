@@ -50,6 +50,7 @@ class LoginCorpAccountState extends BaseState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         //title: Text(''),
         backgroundColor: Colors.white,
@@ -74,7 +75,7 @@ class LoginCorpAccountState extends BaseState
               child: Text(
                 corpInfo.corpName,
                 style: TextStyle(
-                  fontSize: 28.sp,
+                  fontSize: 28.spMin,
                   color: AppColors.black_222222,
                   fontWeight: FontWeight.w500,
                 ),
@@ -90,6 +91,7 @@ class LoginCorpAccountState extends BaseState
               controller: _corpAccountController,
               hintText: meetingAppLocalizations.authEnterAccount,
               keyboardType: TextInputType.visiblePassword,
+              textInputAction: TextInputAction.next,
             ),
             SizedBox(
               height: 20.h,
@@ -98,10 +100,8 @@ class LoginCorpAccountState extends BaseState
               height: 44.h,
               controller: _corpPasswordController,
               hintText: meetingAppLocalizations.authEnterPassword,
-              textInputAction: TextInputAction.next,
               inputFormatters: PasswordUtils.passwordTextInputFormatters,
               obscureText: true,
-              onSubmitted: (_) => login(),
             ),
             SizedBox(
               height: 16.h,
@@ -114,7 +114,7 @@ class LoginCorpAccountState extends BaseState
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: AppColors.blue_337eff,
-                      fontSize: 14.sp,
+                      fontSize: 14.spMin,
                     ),
                   ),
                   onTap: () {

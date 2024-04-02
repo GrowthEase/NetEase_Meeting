@@ -58,11 +58,15 @@ class NEMeetingImages {
       'assets/images/icon_file_type_unknown.png';
   static const String arrow = 'assets/images/arrow.png';
   static const String noMessageHistory = 'assets/images/no_message_history.png';
+  static const String noNotifyMessageHistory =
+      'assets/images/no_notify_message.png';
+  static const String iconChecked = 'assets/images/icon_checked.png';
+  static const String iconUnchecked = 'assets/images/icon_unchecked.png';
 
   static Image assetImage(String image) =>
       Image.asset(image, package: meetingAssetsPackageName);
 
-  static AssetImage assetImageAssets(String image) =>
+  static AssetImage assetImageProvider(String image) =>
       AssetImage(image, package: meetingAssetsPackageName);
 }
 

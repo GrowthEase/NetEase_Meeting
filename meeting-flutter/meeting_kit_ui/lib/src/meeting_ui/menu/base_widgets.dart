@@ -15,7 +15,9 @@ class ValueNotifierAdapter<T, R> extends ValueNotifier<R> {
 
   void refresh() => _updateValue();
 
-  void _updateValue() => value = mapper(source.value);
+  void _updateValue() {
+    value = mapper(source.value);
+  }
 
   @override
   void dispose() {

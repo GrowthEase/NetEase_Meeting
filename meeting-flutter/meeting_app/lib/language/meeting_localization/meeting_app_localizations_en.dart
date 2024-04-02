@@ -156,6 +156,9 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String get authLogin => 'Log in';
 
   @override
+  String get authLoginToNetEase => 'Logging in to NetEase Meeting';
+
+  @override
   String get authRegisterAndLogin => 'Register/Login';
 
   @override
@@ -356,6 +359,9 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String get authSuggestChrome => 'Chrome browser is recommended';
 
   @override
+  String get authLoggingIn => 'Logging in to Meeting';
+
+  @override
   String get meetingCreate => 'Start';
 
   @override
@@ -551,6 +557,9 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String get meetingId => 'Meeting ID:';
 
   @override
+  String get meetingShortId => 'ID:';
+
+  @override
   String get meetingStartTime => 'Start Time';
 
   @override
@@ -586,6 +595,167 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   @override
   String get meetingHasBeenCanceled =>
       'The meeting has been cancelled by another login device';
+
+  @override
+  String get meetingRepeat => 'Recurring';
+
+  @override
+  String get meetingFrequency => 'Frequency';
+
+  @override
+  String get meetingNoRepeat => 'Never';
+
+  @override
+  String get meetingRepeatEveryday => 'Daily';
+
+  @override
+  String get meetingRepeatEveryWeekday => 'Every weekday';
+
+  @override
+  String get meetingRepeatEveryWeek => 'Weekly';
+
+  @override
+  String get meetingRepeatEveryTwoWeek => 'Biweekly';
+
+  @override
+  String get meetingRepeatEveryMonth => 'Monthly';
+
+  @override
+  String get meetingRepeatCustom => 'Custom';
+
+  @override
+  String get meetingRepeatEndAt => 'End Series';
+
+  @override
+  String get meetingRepeatEndAtOneday => 'Due Date';
+
+  @override
+  String get meetingRepeatTimes => 'Occurrences';
+
+  @override
+  String get meetingRepeatStop => 'End Series';
+
+  @override
+  String meetingDayInMonth(Object day) {
+    return '$day';
+  }
+
+  @override
+  String get meetingRepeatSelectDate => 'Select Date';
+
+  @override
+  String meetingRepeatDayInWeek(Object day, Object week) {
+    return 'The meeting will repeat on $day every $week week(s)';
+  }
+
+  @override
+  String meetingRepeatDay(Object day) {
+    return 'The meeting will repeat every $day day(s)';
+  }
+
+  @override
+  String meetingRepeatDayInMonth(Object day, Object month) {
+    return 'The meeting will repeat on  $day every $month month(s)';
+  }
+
+  @override
+  String meetingRepeatDayInWeekInMonth(
+      Object month, Object week, Object weekday) {
+    return 'The meeting will repeat on  No.$week  $weekday every $month month(s)';
+  }
+
+  @override
+  String get meetingRepeatDate => 'Day';
+
+  @override
+  String get meetingRepeatWeekday => 'Week';
+
+  @override
+  String meetingRepeatOrderWeekday(Object week, Object weekday) {
+    return 'No.$week $weekday';
+  }
+
+  @override
+  String get meetingRepeatEditing => 'You are editing a recurring meeting.';
+
+  @override
+  String get meetingRepeatEditCurrent => 'Edit Current Meeting';
+
+  @override
+  String get meetingRepeatEditAll => 'Edit Recurring Meeting';
+
+  @override
+  String get meetingRepeatEditTips =>
+      'Modifying the following information will affect this recurring meeting';
+
+  @override
+  String get meetingLeaveEditTips =>
+      'Are you sure you want to quit meeting editing?';
+
+  @override
+  String get meetingRepeatCancelAll => 'Cancel the entire series as well';
+
+  @override
+  String get meetingCancelCancel => 'Not Now';
+
+  @override
+  String get meetingCancelConfirm2 => 'Cancel Meeting';
+
+  @override
+  String get meetingLeaveEditTips2 =>
+      'After cancel , changes to the current meeting cannot be saved';
+
+  @override
+  String get meetingEditContinue => 'Continue Editing';
+
+  @override
+  String get meetingEditLeave => 'Quit';
+
+  @override
+  String get meetingRepeatUnitEvery => '';
+
+  @override
+  String get meetingRepeatUnitDay => 'day(s)';
+
+  @override
+  String get meetingRepeatUnitWeek => 'week(s)';
+
+  @override
+  String get meetingRepeatUnitMonth => 'month(s)';
+
+  @override
+  String meetingRepeatLimitTimes(Object times) {
+    return 'Occurrences $times';
+  }
+
+  @override
+  String get meetingJoinBeforeHost => 'Attendees can join before host';
+
+  @override
+  String get meetingRepeatMeetings => 'Recurring meeting';
+
+  @override
+  String get meetingRepeatLabel => 'Recurring';
+
+  @override
+  String get meetingRepeatEnd => 'End on';
+
+  @override
+  String get meetingRepeatOneDay => 'Day';
+
+  @override
+  String get meetingRepeatFrequency => 'Frequency';
+
+  @override
+  String get meetingRepeatAt => 'On';
+
+  @override
+  String meetingRepeatUncheckTips(Object date) {
+    return 'Currently $date, unable to deselect';
+  }
+
+  @override
+  String get meetingRepeatCancelEdit => 'Cancel Editing';
 
   @override
   String get historyMeeting => 'Meeting history';
@@ -751,7 +921,23 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String get settingMobile => 'Phone';
 
   @override
-  String get settingHead => 'Profile Photo';
+  String get settingAvatar => 'Profile Photo';
+
+  @override
+  String get settingAvatarUpdateSuccess =>
+      'Succeeded in modifying the profile photo';
+
+  @override
+  String get settingAvatarUpdateFail => 'Failed to modify the profile photo';
+
+  @override
+  String get settingAvatarTitle => 'Profile Photo Settings';
+
+  @override
+  String get settingTakePicture => 'Take a picture';
+
+  @override
+  String get settingChoosePicture => 'Select from your phone album';
 
   @override
   String get settingPersonalCenter => 'Personal Center';

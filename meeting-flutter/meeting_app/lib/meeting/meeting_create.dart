@@ -87,6 +87,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute>
             builder: (BuildContext context) {
               return IconButton(
                 icon: const Icon(
+                  key: MeetingValueKey.back,
                   IconFont.iconyx_returnx,
                   size: 18,
                   color: AppColors.black_333333,
@@ -102,7 +103,10 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute>
           backgroundColor: Colors.white,
           title: Text(meetingAppLocalizations.meetingCreate,
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.black_222222, fontSize: 17)),
+              style: TextStyle(
+                  color: AppColors.black_222222,
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold)),
           // systemOverlayStyle: SystemUiOverlayStyle.dark,
         ),
         body: Column(
@@ -139,8 +143,8 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute>
     return Container(
       color: AppColors.white,
       padding: EdgeInsets.only(left: 20),
-      height: 1,
-      child: Divider(height: 1),
+      height: 0.5,
+      child: Divider(height: 0.5),
     );
   }
 
@@ -158,9 +162,6 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute>
               style: TextStyle(color: AppColors.black_222222, fontSize: 17),
             ),
           ),
-          MeetingValueKey.addTextWidgetTest(
-              valueKey: MeetingValueKey.userSelfMeetingNumCreateMeeting,
-              value: userSelfMeetingNum),
           CupertinoSwitch(
               key: MeetingValueKey.userSelfMeetingNumCreateMeeting,
               value: userSelfMeetingNum,
@@ -250,9 +251,6 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute>
               style: TextStyle(color: AppColors.black_222222, fontSize: 16),
             ),
           ),
-          MeetingValueKey.addTextWidgetTest(
-              valueKey: MeetingValueKey.schedulePwdSwitch,
-              value: meetingPwdSwitch),
           CupertinoSwitch(
               key: MeetingValueKey.schedulePwdSwitch,
               value: meetingPwdSwitch,
@@ -331,9 +329,6 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute>
               style: TextStyle(color: AppColors.black_222222, fontSize: 16),
             ),
           ),
-          MeetingValueKey.addTextWidgetTest(
-              valueKey: MeetingValueKey.openCameraCreateMeeting,
-              value: openCamera),
           CupertinoSwitch(
               key: MeetingValueKey.openCameraCreateMeeting,
               value: openCamera,
@@ -363,9 +358,6 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute>
               style: TextStyle(color: AppColors.black_222222, fontSize: 16),
             ),
           ),
-          MeetingValueKey.addTextWidgetTest(
-              valueKey: MeetingValueKey.openRecordEnterMeeting,
-              value: openRecord),
           CupertinoSwitch(
               key: MeetingValueKey.openRecordEnterMeeting,
               value: openRecord,
@@ -394,9 +386,6 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute>
               style: TextStyle(color: AppColors.black_222222, fontSize: 16),
             ),
           ),
-          MeetingValueKey.addTextWidgetTest(
-              valueKey: MeetingValueKey.openMicrophoneCreateMeeting,
-              value: openMicrophone),
           CupertinoSwitch(
               key: MeetingValueKey.openMicrophoneCreateMeeting,
               value: openMicrophone,

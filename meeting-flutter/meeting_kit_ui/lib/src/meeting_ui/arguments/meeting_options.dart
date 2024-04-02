@@ -154,6 +154,9 @@ class NEMeetingUIOptions {
   ///
   late final bool enableWaitingRoom;
 
+  /// 允许音频设备切换
+  late final bool enableAudioDeviceSwitch;
+
   NEMeetingUIOptions.fromJson(Map<String, dynamic> json) {
     title = json['title'] as String?;
     noVideo = (json['noVideo'] ?? true) as bool;
@@ -208,6 +211,7 @@ class NEMeetingUIOptions {
     showCloudRecordMenuItem = (json['showCloudRecordMenuItem'] ?? true) as bool;
     showCloudRecordingUI = (json['showCloudRecordingUI'] ?? true) as bool;
     enableWaitingRoom = (json['enableWaitingRoom'] ?? false) as bool;
+    enableAudioDeviceSwitch = (json['enableAudioDeviceSwitch'] ?? true) as bool;
   }
 
   NEMeetingUIOptions({
@@ -249,6 +253,7 @@ class NEMeetingUIOptions {
     this.showCloudRecordMenuItem = true,
     this.showCloudRecordingUI = true,
     this.enableWaitingRoom = false,
+    this.enableAudioDeviceSwitch = true,
     List<NEMeetingMenuItem>? injectedToolbarMenuItems,
     List<NEMeetingMenuItem>? injectedMoreMenuItems,
   }) {

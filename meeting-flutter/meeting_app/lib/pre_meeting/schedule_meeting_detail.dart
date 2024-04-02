@@ -59,7 +59,7 @@ class _ScheduleMeetingDetailRouteState
                   element.state == NEMeetingState.recycled)) {
             ToastUtils.showToast(
                 context, meetingAppLocalizations.meetingHasBeenCanceled);
-            Navigator.pop(context);
+            Navigator.maybePop(context);
           } else {
             setState(() {
               item = element;
@@ -91,13 +91,61 @@ class _ScheduleMeetingDetailRouteState
             ),
           ),
           onPressed: () {
-            Navigator.of(context)
-                .push(MaterialMeetingAppPageRoute(builder: (context) {
-              return ScheduleMeetingEditRoute(item);
-            }));
+            if (item.recurringRule.type != NEMeetingRecurringRuleType.no) {
+              showEditActionSheet();
+            } else {
+              Navigator.of(context)
+                  .push(MaterialMeetingAppPageRoute(builder: (context) {
+                return ScheduleMeetingEditRoute(item, isEditAll: true);
+              }));
+            }
           },
         )
     ];
+  }
+
+  void showEditActionSheet() {
+    showCupertinoModalPopup<String>(
+        context: context,
+        builder: (BuildContext context) => CupertinoActionSheet(
+              title: Text(
+                meetingAppLocalizations.meetingRepeatEditing,
+                style: TextStyle(color: AppColors.grey_8F8F8F, fontSize: 13),
+              ),
+              actions: <Widget>[
+                CupertinoActionSheetAction(
+                    child: Text(
+                        meetingAppLocalizations.meetingRepeatEditCurrent,
+                        style: TextStyle(color: AppColors.color_007AFF)),
+                    onPressed: () {
+                      Navigator.pop(
+                          context, meetingAppLocalizations.globalCancel);
+                      Navigator.of(context)
+                          .push(MaterialMeetingAppPageRoute(builder: (context) {
+                        return ScheduleMeetingEditRoute(item, isEditAll: false);
+                      }));
+                    }),
+                CupertinoActionSheetAction(
+                    child: Text(meetingAppLocalizations.meetingRepeatEditAll,
+                        style: TextStyle(color: AppColors.color_007AFF)),
+                    onPressed: () {
+                      Navigator.pop(
+                          context, meetingAppLocalizations.globalCancel);
+                      Navigator.of(context)
+                          .push(MaterialMeetingAppPageRoute(builder: (context) {
+                        return ScheduleMeetingEditRoute(item, isEditAll: true);
+                      }));
+                    }),
+              ],
+              cancelButton: CupertinoActionSheetAction(
+                isDefaultAction: true,
+                child: Text(meetingAppLocalizations.globalCancel,
+                    style: TextStyle(color: AppColors.color_007AFF)),
+                onPressed: () {
+                  Navigator.pop(context, meetingAppLocalizations.globalCancel);
+                },
+              ),
+            ));
   }
 
   @override
@@ -435,39 +483,54 @@ class _ScheduleMeetingDetailRouteState
   }
 
   void _cancelMeeting() {
-    showCupertinoModalPopup<String>(
-        context: context,
-        builder: (BuildContext context) => CupertinoActionSheet(
-              title: Text(
-                meetingAppLocalizations.meetingCancelConfirm,
-                style: TextStyle(color: AppColors.grey_8F8F8F, fontSize: 13),
-              ),
-              actions: <Widget>[
-                CupertinoActionSheetAction(
-                    child: Text(meetingAppLocalizations.meetingCancel,
-                        style: TextStyle(color: AppColors.colorFE3B30)),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _onCancel();
-                    }),
-              ],
-              cancelButton: CupertinoActionSheetAction(
-                isDefaultAction: true,
-                child: Text(meetingAppLocalizations.meetingNotCancel,
-                    style: TextStyle(color: AppColors.color_007AFF)),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              ),
-            ));
+    if (item.recurringRule.type != NEMeetingRecurringRuleType.no) {
+      showConfirmDialogWithCheckbox(
+        title: meetingAppLocalizations.meetingCancelConfirm,
+        checkboxMessage: meetingAppLocalizations.meetingRepeatCancelAll,
+        initialChecked: false,
+        cancelLabel: meetingAppLocalizations.meetingNotCancel,
+        okLabel: meetingAppLocalizations.meetingCancel,
+        cancelTextColor: AppColors.color_337eff,
+        okTextColor: AppColors.color_F24957,
+      ).then((result) {
+        if (!mounted || result == null) return;
+        _onCancel(result.checked);
+      });
+    } else {
+      showCupertinoModalPopup<String>(
+          context: context,
+          builder: (BuildContext context) => CupertinoActionSheet(
+                title: Text(
+                  meetingAppLocalizations.meetingCancelConfirm,
+                  style: TextStyle(color: AppColors.grey_8F8F8F, fontSize: 13),
+                ),
+                actions: <Widget>[
+                  CupertinoActionSheetAction(
+                      child: Text(meetingAppLocalizations.meetingCancel,
+                          style: TextStyle(color: AppColors.colorFE3B30)),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _onCancel(false);
+                      }),
+                ],
+                cancelButton: CupertinoActionSheetAction(
+                  isDefaultAction: true,
+                  child: Text(meetingAppLocalizations.meetingNotCancel,
+                      style: TextStyle(color: AppColors.color_007AFF)),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              ));
+    }
   }
 
-  void _onCancel() {
+  void _onCancel(bool cancelAll) {
     LoadingUtil.showLoading();
     cancelByMySelf = true;
     NEMeetingKit.instance
         .getPreMeetingService()
-        .cancelMeeting(item.meetingId!)
+        .cancelMeeting(item.meetingId!, cancelAll)
         .then(((result) {
       LoadingUtil.cancelLoading();
       if (result.code == HttpCode.success) {
@@ -492,8 +555,8 @@ class _ScheduleMeetingDetailRouteState
     return Container(
       color: AppColors.white,
       padding: EdgeInsets.only(left: 20),
-      height: 1,
-      child: Divider(height: 1),
+      height: 0.5,
+      child: Divider(height: 0.5),
     );
   }
 

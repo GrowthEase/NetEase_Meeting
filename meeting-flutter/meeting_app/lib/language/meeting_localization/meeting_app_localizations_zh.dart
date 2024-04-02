@@ -147,6 +147,9 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get authLogin => '登录';
 
   @override
+  String get authLoginToNetEase => '登录';
+
+  @override
   String get authRegisterAndLogin => '注册/登录';
 
   @override
@@ -341,6 +344,9 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get authSuggestChrome => '推荐使用Chrome浏览器';
 
   @override
+  String get authLoggingIn => '正在登录会议';
+
+  @override
   String get meetingCreate => '即刻会议';
 
   @override
@@ -525,6 +531,9 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get meetingId => '会议号:';
 
   @override
+  String get meetingShortId => '会议号:';
+
+  @override
   String get meetingStartTime => '开始时间';
 
   @override
@@ -556,6 +565,164 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
 
   @override
   String get meetingHasBeenCanceled => '会议已被其他登录设备取消';
+
+  @override
+  String get meetingRepeat => '周期';
+
+  @override
+  String get meetingFrequency => '重复频率';
+
+  @override
+  String get meetingNoRepeat => '不重复';
+
+  @override
+  String get meetingRepeatEveryday => '每天';
+
+  @override
+  String get meetingRepeatEveryWeekday => '每个工作日';
+
+  @override
+  String get meetingRepeatEveryWeek => '每周';
+
+  @override
+  String get meetingRepeatEveryTwoWeek => '每两周';
+
+  @override
+  String get meetingRepeatEveryMonth => '每月';
+
+  @override
+  String get meetingRepeatCustom => '自定义';
+
+  @override
+  String get meetingRepeatEndAt => '结束于';
+
+  @override
+  String get meetingRepeatEndAtOneday => '结束于某天';
+
+  @override
+  String get meetingRepeatTimes => '限定会议次数';
+
+  @override
+  String get meetingRepeatStop => '结束重复';
+
+  @override
+  String meetingDayInMonth(Object day) {
+    return '$day日';
+  }
+
+  @override
+  String get meetingRepeatSelectDate => '选择日期';
+
+  @override
+  String meetingRepeatDayInWeek(Object day, Object week) {
+    return '每$week周的$day重复';
+  }
+
+  @override
+  String meetingRepeatDay(Object day) {
+    return '每$day天重复';
+  }
+
+  @override
+  String meetingRepeatDayInMonth(Object day, Object month) {
+    return '每$month个月的$day重复';
+  }
+
+  @override
+  String meetingRepeatDayInWeekInMonth(
+      Object month, Object week, Object weekday) {
+    return '每$month个月的第$week个$weekday重复';
+  }
+
+  @override
+  String get meetingRepeatDate => '日期';
+
+  @override
+  String get meetingRepeatWeekday => '星期';
+
+  @override
+  String meetingRepeatOrderWeekday(Object week, Object weekday) {
+    return '第$week个$weekday';
+  }
+
+  @override
+  String get meetingRepeatEditing => '你正在编辑周期性会议';
+
+  @override
+  String get meetingRepeatEditCurrent => '编辑本次会议';
+
+  @override
+  String get meetingRepeatEditAll => '编辑所有会议';
+
+  @override
+  String get meetingRepeatEditTips => '修改以下信息，将影响该系列周期性会议';
+
+  @override
+  String get meetingLeaveEditTips => '确认退出会议编辑吗？';
+
+  @override
+  String get meetingRepeatCancelAll => '同时取消该系列周期性会议';
+
+  @override
+  String get meetingCancelCancel => '暂不取消';
+
+  @override
+  String get meetingCancelConfirm2 => '取消会议';
+
+  @override
+  String get meetingLeaveEditTips2 => '退出后，将无法保存当前会议的更改';
+
+  @override
+  String get meetingEditContinue => '继续编辑';
+
+  @override
+  String get meetingEditLeave => '退出';
+
+  @override
+  String get meetingRepeatUnitEvery => '每';
+
+  @override
+  String get meetingRepeatUnitDay => '天';
+
+  @override
+  String get meetingRepeatUnitWeek => '周';
+
+  @override
+  String get meetingRepeatUnitMonth => '个月';
+
+  @override
+  String meetingRepeatLimitTimes(Object times) {
+    return '限定会议次数$times次';
+  }
+
+  @override
+  String get meetingJoinBeforeHost => '允许参会者在主持人进会前加入会议';
+
+  @override
+  String get meetingRepeatMeetings => '周期性会议';
+
+  @override
+  String get meetingRepeatLabel => '重复';
+
+  @override
+  String get meetingRepeatEnd => '结束';
+
+  @override
+  String get meetingRepeatOneDay => '某天';
+
+  @override
+  String get meetingRepeatFrequency => '频率';
+
+  @override
+  String get meetingRepeatAt => '位于';
+
+  @override
+  String meetingRepeatUncheckTips(Object date) {
+    return '当前日程为$date，无法取消选择';
+  }
+
+  @override
+  String get meetingRepeatCancelEdit => '取消编辑';
 
   @override
   String get historyMeeting => '历史会议';
@@ -711,7 +878,22 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get settingMobile => '手机';
 
   @override
-  String get settingHead => '头像';
+  String get settingAvatar => '头像';
+
+  @override
+  String get settingAvatarUpdateSuccess => '修改头像成功';
+
+  @override
+  String get settingAvatarUpdateFail => '修改头像失败';
+
+  @override
+  String get settingAvatarTitle => '头像设置';
+
+  @override
+  String get settingTakePicture => '拍照';
+
+  @override
+  String get settingChoosePicture => '从手机相册选择';
 
   @override
   String get settingPersonalCenter => '个人中心';

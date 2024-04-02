@@ -17,12 +17,14 @@ class MeetingSecurityPage extends StatefulWidget {
 }
 
 class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
-    with MeetingKitLocalizationsMixin, MeetingUIStateScope {
+    with MeetingKitLocalizationsMixin, MeetingStateScope, _AloggerMixin {
   final SecurityArguments _arguments;
   late final NERoomContext _roomContext;
   late final NERoomEventCallback roomEventCallback;
   final isLocked = ValueNotifier<bool>(false);
+  final meetingChatEnabled = ValueNotifier<bool>(false);
   final watermarkEnabled = ValueNotifier<bool>(false);
+  final isBlackListEnabled = ValueNotifier<bool>(true);
 
   MeetingSecurityState(this._arguments);
 
@@ -32,9 +34,13 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
     _roomContext = _arguments.roomContext;
     isLocked.value = _roomContext.isRoomLocked;
     watermarkEnabled.value = _roomContext.watermark.isEnable();
+    isBlackListEnabled.value = _roomContext.isRoomBlackListEnabled;
+    meetingChatEnabled.value =
+        _roomContext.chatPermission != NEChatPermission.noChat;
     _roomContext.addEventCallback(roomEventCallback = NERoomEventCallback(
       roomLockStateChanged: (value) => isLocked.value = value,
       roomPropertiesChanged: _onRoomPropertiesChanged,
+      roomBlacklistStateChanged: (value) => isBlackListEnabled.value = value,
     ));
     _arguments.waitingRoomManager.waitingRoomEnabledOnEntryListenable
         .addListener(_onWaitingRoomEnabledOnEntryChanged);
@@ -57,13 +63,19 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
     }
   }
 
-  /// 会议成员角色变更，返回会议页面
   void _onRoomPropertiesChanged(Map<String, String> properties) {
     if (properties.containsKey(WatermarkProperty.key)) {
       watermarkEnabled.value = _roomContext.watermark.isEnable();
       showToast(watermarkEnabled.value
           ? NEMeetingUIKitLocalizations.of(context)!.meetingWatermarkEnabled
           : NEMeetingUIKitLocalizations.of(context)!.meetingWatermarkDisabled);
+    }
+    if (properties.containsKey(NEChatPermissionProperty.key)) {
+      meetingChatEnabled.value =
+          _roomContext.chatPermission != NEChatPermission.noChat;
+      showToast(meetingChatEnabled.value
+          ? NEMeetingUIKitLocalizations.of(context)!.meetingChatEnabled
+          : NEMeetingUIKitLocalizations.of(context)!.meetingChatDisabled);
     }
   }
 
@@ -117,30 +129,33 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
   }
 
   Widget _buildBody() {
-    final localizations = NEMeetingUIKitLocalizations.of(context)!;
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildSubTitle(localizations.meetingManagement),
+          _buildSubTitle(meetingUiLocalizations.meetingManagement),
           if (_arguments.waitingRoomManager.isFeatureSupported) ...[
-            _buildWaitingRoom(localizations.waitingRoom),
+            _buildWaitingRoom(),
             _buildSplit(),
           ],
           if (!_roomContext.watermark.isForce()) ...[
-            _buildWatermark(localizations.meetingWatermark),
+            _buildWatermark(),
             _buildSplit(),
           ],
-          _buildLockMeeting(localizations.meetingLock),
+          _buildLockMeeting(),
+          _buildSplit(),
+          _buildBlackList(),
+          _buildSubTitle(meetingUiLocalizations.meetingAllowMembersTo),
+          _buildMeetingChat(),
         ],
       ),
     );
   }
 
-  Widget _buildWaitingRoom(String title) {
+  Widget _buildWaitingRoom() {
     return _buildItemManage(
       key: MeetingUIValueKeys.waitingRoomSwitch,
-      title: title,
+      title: meetingUiLocalizations.waitingRoom,
       valueNotifier:
           _arguments.waitingRoomManager.waitingRoomEnabledOnEntryListenable,
       onChanged: (on) async {
@@ -201,20 +216,37 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
     });
   }
 
-  Widget _buildWatermark(String title) {
+  Widget _buildWatermark() {
     return _buildItemManage(
         key: MeetingUIValueKeys.watermarkSwitch,
-        title: title,
+        title: meetingUiLocalizations.meetingWatermark,
         valueNotifier: watermarkEnabled,
         onChanged: (newValue) => _updateWatermarkState(newValue));
   }
 
-  Widget _buildLockMeeting(String title) {
+  Widget _buildLockMeeting() {
     return _buildItemManage(
         key: MeetingUIValueKeys.meetingLockSwitch,
-        title: title,
+        title: meetingUiLocalizations.meetingLock,
         valueNotifier: isLocked,
         onChanged: (newValue) => _updateLockState(newValue));
+  }
+
+  Widget _buildBlackList() {
+    return _buildItemManage(
+        key: MeetingUIValueKeys.meetingLockSwitch,
+        title: meetingUiLocalizations.meetingBlacklist,
+        content: meetingUiLocalizations.meetingBlacklistDetail,
+        valueNotifier: isBlackListEnabled,
+        onChanged: (newValue) => _updateBlackListState(newValue));
+  }
+
+  Widget _buildMeetingChat() {
+    return _buildItemManage(
+        key: MeetingUIValueKeys.meetingChat,
+        title: meetingUiLocalizations.meetingChat,
+        valueNotifier: meetingChatEnabled,
+        onChanged: (newValue) => _updateMeetingChatState(newValue));
   }
 
   Widget _buildSubTitle(String subTitle) {
@@ -227,23 +259,44 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
 
   Widget _buildItemManage({
     required String title,
+    String? content,
     required ValueNotifier<bool> valueNotifier,
     required Function(bool newValue) onChanged,
     Key? key,
   }) {
     return Container(
-      height: 56,
       color: _UIColors.white,
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
+      constraints: BoxConstraints(minHeight: 56),
+      padding: EdgeInsets.symmetric(
+        vertical: 6,
+        horizontal: 20,
       ),
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              title,
-              style: TextStyle(color: _UIColors.black_222222, fontSize: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(fontSize: 16, color: _UIColors.color_222222),
+                ),
+                if (content != null)
+                  Container(
+                    height: 1,
+                  ),
+                if (content != null)
+                  Container(
+                    width: 250,
+                    child: Text(
+                      content,
+                      style: TextStyle(
+                          fontSize: 12, color: _UIColors.color_999999),
+                    ),
+                  ),
+              ],
             ),
           ),
           ValueListenableBuilder<bool>(
@@ -292,6 +345,43 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
   void _updateWatermarkState(bool watermark) {
     doIfNetworkAvailable(() {
       lifecycleExecute(_roomContext.enableConfidentialWatermark(watermark))
+          .then((result) {
+        if (!mounted) return;
+      });
+    });
+  }
+
+  /// 黑名单
+  void _updateBlackListState(bool enable) {
+    if (enable) {
+      modifyBlackListState2Server(true);
+    } else {
+      DialogUtils.showCommonDialog(
+          context,
+          meetingUiLocalizations.unableMeetingBlacklistTitle,
+          meetingUiLocalizations.unableMeetingBlacklistTip, () {
+        Navigator.of(context).pop();
+      }, () {
+        modifyBlackListState2Server(false);
+        Navigator.of(context).pop();
+      });
+    }
+  }
+
+  void modifyBlackListState2Server(bool enable) {
+    doIfNetworkAvailable(() {
+      lifecycleExecute(_roomContext.enableRoomBlacklist(enable)).then((result) {
+        commonLogger
+            .i('modifyBlackListState2Server enable: $enable result: $result');
+      });
+    });
+  }
+
+  /// 开关会中聊天
+  void _updateMeetingChatState(bool enable) {
+    doIfNetworkAvailable(() {
+      lifecycleExecute(_roomContext.updateChatPermission(
+              enable ? NEChatPermission.freeChat : NEChatPermission.noChat))
           .then((result) {
         if (!mounted) return;
       });

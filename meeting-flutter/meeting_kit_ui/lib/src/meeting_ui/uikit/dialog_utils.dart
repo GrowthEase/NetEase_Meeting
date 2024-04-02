@@ -344,7 +344,7 @@ class DialogUtils {
         });
   }
 
-  static DismissCallback showCustomContentOverlay(
+  static DismissCallback showCustomContentDialog(
     BuildContext context,
     String title,
     String content,
@@ -357,48 +357,41 @@ class DialogUtils {
     bool isContentCenter = true,
     Widget? contentWidget,
   }) {
-    final overlayEntry = OverlayEntry(builder: (_) {
-      return Stack(
-        children: [
-          Listener(
-            behavior: HitTestBehavior.opaque,
-            onPointerDown: (_) {},
-          ),
-          NEMeetingUIKitLocalizationsScope(
-              builder: (context) => CupertinoAlertDialog(
-                    title: TextUtils.isEmpty(title) ? null : Text(title),
-                    content: contentWidget ??
-                        Text(content,
-                            textAlign: isContentCenter
-                                ? TextAlign.center
-                                : TextAlign.left),
-                    actions: <Widget>[
-                      CupertinoDialogAction(
-                        child: Text(cancelText ??
-                            NEMeetingUIKitLocalizations.of(context)!
-                                .globalCancel),
-                        onPressed: cancelCallback,
-                        textStyle: TextStyle(
-                            color: cancelTextColor ?? _UIColors.color_666666),
-                      ),
-                      CupertinoDialogAction(
-                        child: Text(acceptText ??
-                            NEMeetingUIKitLocalizations.of(context)!
-                                .globalSure),
-                        onPressed: acceptCallback,
-                        textStyle: TextStyle(
-                            color: acceptTextColor ?? _UIColors.color_337eff),
-                      ),
-                    ],
-                  )),
-        ],
-      );
-    });
-    Overlay.of(context).insert(overlayEntry);
-    return () => dismissOverlayEntry(overlayEntry);
+    return showDialogWithDismissCallback(
+      context: context,
+      builder: (_) {
+        return NEMeetingUIKitLocalizationsScope(
+          builder: (context) {
+            return CupertinoAlertDialog(
+              title: Text(title),
+              content: contentWidget ??
+                  Text(content,
+                      textAlign:
+                          isContentCenter ? TextAlign.center : TextAlign.left),
+              actions: <Widget>[
+                CupertinoDialogAction(
+                  child: Text(cancelText ??
+                      NEMeetingUIKitLocalizations.of(context)!.globalCancel),
+                  onPressed: cancelCallback,
+                  textStyle: TextStyle(
+                      color: cancelTextColor ?? _UIColors.color_666666),
+                ),
+                CupertinoDialogAction(
+                  child: Text(acceptText ??
+                      NEMeetingUIKitLocalizations.of(context)!.globalSure),
+                  onPressed: acceptCallback,
+                  textStyle: TextStyle(
+                      color: acceptTextColor ?? _UIColors.color_337eff),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
-  static DismissCallback showOneTimerButtonOverlay(
+  static DismissCallback showOneTimerButtonDialog(
     BuildContext context,
     String title,
     String content,
@@ -406,45 +399,30 @@ class DialogUtils {
     String? acceptText,
     bool isContentCenter = true,
   }) {
-    final overlayEntry = OverlayEntry(builder: (_) {
-      return Stack(
-        children: [
-          Listener(
-            behavior: HitTestBehavior.opaque,
-            onPointerDown: (_) {},
-          ),
-          NEMeetingUIKitLocalizationsScope(builder: (_) {
-            return NEMeetingUIKitLocalizationsScope(
-                builder: (context) => CupertinoAlertDialog(
-                      title: TextUtils.isEmpty(title) ? null : Text(title),
-                      content: Text(content,
-                          textAlign: isContentCenter
-                              ? TextAlign.center
-                              : TextAlign.left),
-                      actions: <Widget>[
-                        CountdownButton(
-                          countdownDuration: 3,
-                          buttonText: NEMeetingUIKitLocalizations.of(context)!
-                              .globalIKnow,
-                          onPressed: callback,
-                          closeDialog: callback,
-                        ),
-                      ],
-                    ));
-          }),
-        ],
-      );
-    });
-    Overlay.of(context).insert(overlayEntry);
-    return () => dismissOverlayEntry(overlayEntry);
-  }
-
-  static bool dismissOverlayEntry(OverlayEntry overlayEntry) {
-    if (overlayEntry.mounted) {
-      overlayEntry.remove();
-      return true;
-    }
-    return false;
+    return showDialogWithDismissCallback(
+      context: context,
+      builder: (_) {
+        return NEMeetingUIKitLocalizationsScope(
+          builder: (context) {
+            return CupertinoAlertDialog(
+              title: Text(title),
+              content: Text(content,
+                  textAlign:
+                      isContentCenter ? TextAlign.center : TextAlign.left),
+              actions: <Widget>[
+                CountdownButton(
+                  countdownDuration: 3,
+                  buttonText:
+                      NEMeetingUIKitLocalizations.of(context)!.globalIKnow,
+                  onPressed: callback,
+                  closeDialog: callback,
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 }
 
@@ -461,13 +439,63 @@ class InputDialogResult {
 typedef ContentWrapperBuilder = Widget Function(Widget child);
 
 extension MeetingUIDialogUtils on State {
+  Future<bool?> showConfirmDialog({
+    required String title,
+    String? message,
+    required String cancelLabel,
+    required String okLabel,
+    ContentWrapperBuilder? contentWrapperBuilder,
+  }) {
+    return DialogUtils.showChildNavigatorDialog<bool>(
+      context,
+      (context) {
+        final child = CupertinoAlertDialog(
+          title:
+              Text(title, style: TextStyle(color: Colors.black, fontSize: 17)),
+          content: message != null
+              ? Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: _UIColors.color_333333,
+                  ),
+                )
+              : null,
+          actions: <Widget>[
+            CupertinoDialogAction(
+              child: Text(cancelLabel),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              textStyle: TextStyle(color: _UIColors.color_333333),
+            ),
+            CupertinoDialogAction(
+              child: Text(okLabel),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+              textStyle: TextStyle(color: _UIColors.color_337eff),
+            ),
+          ],
+        );
+        return contentWrapperBuilder != null
+            ? contentWrapperBuilder(child)
+            : child;
+      },
+      routeSettings: RouteSettings(name: title),
+    );
+  }
+
   Future<ConfirmDialogResult?> showConfirmDialogWithCheckbox({
     required String title,
     String? message,
-    required String checkboxMessage,
+    String? checkboxMessage,
     bool initialChecked = false,
     required String cancelLabel,
     required String okLabel,
+    Color? cancelTextColor,
+    Color? okTextColor,
     ContentWrapperBuilder? contentWrapperBuilder,
   }) {
     final result = ConfirmDialogResult(initialChecked);
@@ -491,32 +519,36 @@ extension MeetingUIDialogUtils on State {
                       ),
                     ),
                   ),
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    setState(() {
-                      result.checked = !result.checked;
-                    });
-                  },
-                  child: Text.rich(
-                    TextSpan(children: [
-                      WidgetSpan(
-                        child: Icon(
-                          Icons.check_box,
-                          size: 14,
-                          color: result.checked
-                              ? _UIColors.blue_337eff
-                              : _UIColors.colorB3B3B3,
-                        ),
-                      ),
-                      TextSpan(
-                        text: checkboxMessage,
-                      ),
-                    ]),
-                    style:
-                        TextStyle(fontSize: 13, color: _UIColors.color_666666),
+                if (checkboxMessage != null) ...[
+                  Container(
+                    height: 10,
                   ),
-                ),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      setState(() {
+                        result.checked = !result.checked;
+                      });
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        NEMeetingImages.assetImage(result.checked
+                            ? NEMeetingImages.iconChecked
+                            : NEMeetingImages.iconUnchecked),
+                        SizedBox(width: 4),
+                        Flexible(
+                            child: Text(
+                          checkboxMessage,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: _UIColors.color_333333,
+                          ),
+                        )),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
             actions: <Widget>[
@@ -525,14 +557,16 @@ extension MeetingUIDialogUtils on State {
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                textStyle: TextStyle(color: _UIColors.color_666666),
+                textStyle:
+                    TextStyle(color: cancelTextColor ?? _UIColors.color_666666),
               ),
               CupertinoDialogAction(
                 child: Text(okLabel),
                 onPressed: () {
                   Navigator.of(context).pop(result);
                 },
-                textStyle: TextStyle(color: _UIColors.color_337eff),
+                textStyle:
+                    TextStyle(color: okTextColor ?? _UIColors.color_337eff),
               ),
             ],
           );

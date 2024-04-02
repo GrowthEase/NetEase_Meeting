@@ -139,26 +139,38 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
         TextUtils.isEmpty(shortMeetingNum)) {
       //do not show short meeting id ,or short meeting id is empty, show only full meeting id
       return [
-        buildCopyItem(NEMeetingUIKitLocalizations.of(context)!.meetingNum,
-            meetingNum.toMeetingNumFormat(),
-            itemDetailCopyFormatter: meetingIdCopyFormatter)
+        buildCopyItem(
+          NEMeetingUIKitLocalizations.of(context)!.meetingNum,
+          meetingNum.toMeetingNumFormat(),
+          itemDetailCopyFormatter: meetingIdCopyFormatter,
+          itemDetailKey: MeetingUIValueKeys.meetingNum,
+        )
       ];
     } else if (!widget.options.isLongMeetingIdEnabled) {
       //show only short meeting id
       return [
-        buildCopyItem(NEMeetingUIKitLocalizations.of(context)!.meetingNum,
-            shortMeetingNum)
+        buildCopyItem(
+          NEMeetingUIKitLocalizations.of(context)!.meetingNum,
+          shortMeetingNum,
+          itemDetailKey: MeetingUIValueKeys.meetingNum,
+        )
       ];
     } else {
       //show both
       return [
-        buildCopyItem(NEMeetingUIKitLocalizations.of(context)!.meetingShortNum,
-            shortMeetingNum,
-            itemLabel: NEMeetingUIKitLocalizations.of(context)!
-                .meetingInternalSpecial),
-        buildCopyItem(NEMeetingUIKitLocalizations.of(context)!.meetingNum,
-            meetingNum.toMeetingNumFormat(),
-            itemDetailCopyFormatter: meetingIdCopyFormatter),
+        buildCopyItem(
+          NEMeetingUIKitLocalizations.of(context)!.meetingShortNum,
+          shortMeetingNum,
+          itemLabel:
+              NEMeetingUIKitLocalizations.of(context)!.meetingInternalSpecial,
+          itemDetailKey: MeetingUIValueKeys.meetingNum,
+        ),
+        buildCopyItem(
+          NEMeetingUIKitLocalizations.of(context)!.meetingNum,
+          meetingNum.toMeetingNumFormat(),
+          itemDetailCopyFormatter: meetingIdCopyFormatter,
+          itemDetailKey: MeetingUIValueKeys.meetingNum,
+        ),
       ];
     }
   }
@@ -171,12 +183,16 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
 
   Widget _buildPwd() {
     return buildCopyItem(
-        NEMeetingUIKitLocalizations.of(context)!.meetingPassword,
-        roomContext.password);
+      NEMeetingUIKitLocalizations.of(context)!.meetingPassword,
+      roomContext.password,
+      itemDetailKey: MeetingUIValueKeys.meetingPassword,
+    );
   }
 
   Widget buildCopyItem(String itemTitle, String? itemDetail,
-      {String? itemLabel, String Function(String)? itemDetailCopyFormatter}) {
+      {Key? itemDetailKey,
+      String? itemLabel,
+      String Function(String)? itemDetailCopyFormatter}) {
     return Container(
       height: 32,
       color: Colors.white,
@@ -195,6 +211,7 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
           ),
           Flexible(
             child: Text(
+              key: itemDetailKey,
               '${itemDetail ?? ""}',
               overflow: TextOverflow.ellipsis,
               softWrap: false,

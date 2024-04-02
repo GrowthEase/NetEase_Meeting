@@ -130,6 +130,16 @@ class WaitingRoomManager with NEWaitingRoomListener, _AloggerMixin {
     }
   }
 
+  @override
+  void onAllMembersKicked() {
+    if (isMySelfManager) {
+      _users.clear();
+      _userList = null;
+      _userListChangeController.add(const Object());
+      resetUnreadMemberCount();
+    }
+  }
+
   void onMyWaitingRoomStatusChanged(int status, int reason) {
     waitingRoomStatusChangedHandler?.call(status, reason);
   }
@@ -191,12 +201,22 @@ class WaitingRoomManager with NEWaitingRoomListener, _AloggerMixin {
     return result;
   }
 
-  Future<VoidResult> admitMember(String uuid) async {
-    final result = await waitingRoomController.admitMember(uuid);
+  Future<VoidResult> expelAllMembers({bool disallowRejoin = false}) {
+    return waitingRoomController.expelAllMembers(
+        disallowRejoin: disallowRejoin);
+  }
+
+  Future<VoidResult> admitMember(String uuid, {bool autoAdmit = false}) async {
+    final result =
+        await waitingRoomController.admitMember(uuid, autoAdmit: autoAdmit);
     if (!_disposed && result.code == NEErrorCode.waitingRoomMemberNotExist) {
       _removeMemberInner(uuid);
     }
     return result;
+  }
+
+  Future<VoidResult> admitAllMembers() {
+    return waitingRoomController.admitAllMembers();
   }
 
   void _removeMemberInner(String uuid) {

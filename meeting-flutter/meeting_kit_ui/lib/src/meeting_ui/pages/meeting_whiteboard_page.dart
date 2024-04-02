@@ -74,6 +74,10 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
     return _buildBody();
   }
 
+  /// 白板视图手势识别。编辑状态下，使用 EagerGestureRecognizer，否则使用默认的 recognizer。
+  late final _whiteboardViewGestureRecognizer =
+      _ConditionalEagerGestureRecognizer(condition: () => isEditing);
+
   Widget _buildBody() {
     return SafeArea(
       child: Stack(
@@ -83,13 +87,11 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
             child: Container(
               alignment: Alignment.center,
               child: whiteBoardController.createWhiteboardView(
-                gestureRecognizers: isEditing
-                    ? <Factory<OneSequenceGestureRecognizer>>[
-                        new Factory<OneSequenceGestureRecognizer>(
-                          () => EagerGestureRecognizer(),
-                        ),
-                      ].toSet()
-                    : null,
+                gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>[
+                  new Factory<OneSequenceGestureRecognizer>(
+                    () => _whiteboardViewGestureRecognizer,
+                  ),
+                ].toSet(),
                 backgroundColor: widget.backgroundColor,
               ),
             ),
@@ -225,5 +227,20 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
     }
     Alog.i(tag: _tag, moduleName: _moduleName, content: '>>>>>path: $path');
     return path;
+  }
+}
+
+class _ConditionalEagerGestureRecognizer extends EagerGestureRecognizer {
+  final ValueGetter<bool>? condition;
+
+  _ConditionalEagerGestureRecognizer({
+    this.condition,
+  });
+
+  @override
+  void addAllowedPointer(PointerDownEvent event) {
+    if (condition?.call() ?? true) {
+      super.addAllowedPointer(event);
+    }
   }
 }

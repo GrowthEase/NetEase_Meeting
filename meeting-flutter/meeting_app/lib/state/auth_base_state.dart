@@ -4,7 +4,6 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:nemeeting/utils/privacy_util.dart';
 import '../uikit/state/meeting_base_state.dart';
 import '../uikit/values/colors.dart';
 

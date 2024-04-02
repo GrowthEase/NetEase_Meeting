@@ -109,6 +109,13 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
   }
 
   ///
+  /// 获取当前会议上下文。如果当前无正在进行中的会议，则回调数据对象为空
+  ///
+  NERoomContext? getCurrentRoomContext() {
+    return InMeetingService().currentRoomContext();
+  }
+
+  ///
   /// 添加会议状态监听实例，用于接收会议状态变更通知
   ///
   /// * [listener] 要添加的监听实例
@@ -132,7 +139,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
   /// 获取当前会议状态
   ///
   NEMeetingStatus getMeetingStatus() {
-    apiLogger.i('getMeetingStatus: $_meetingStatus');
+    apiLogger.i('getMeetingStatus: ${_meetingStatus.event}');
     return _meetingStatus;
   }
 

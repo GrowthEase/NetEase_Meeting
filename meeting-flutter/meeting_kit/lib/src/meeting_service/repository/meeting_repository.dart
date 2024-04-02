@@ -58,4 +58,15 @@ class MeetingRepository {
   static Future<NEResult<AnonymousLoginInfo>> anonymousLogin() {
     return HttpApiHelper._anonymousLogin();
   }
+
+  /// 获取会议主持人信息
+  static Future<NEResult<List<NERoomMember>>> getHostAndCoHostList(roomUuid) {
+    return HttpApiHelper._getHostAndCoHostList(roomUuid);
+  }
+
+  /// 获取最新的房间属性
+  static Future<NEResult<Map<String, dynamic>>> getWaitingRoomProperties(
+      roomUuid) {
+    return HttpApiHelper._getWaitingRoomProperties(roomUuid);
+  }
 }

@@ -93,7 +93,7 @@ class ResetInitialPasswordState extends BaseState
             Text(
               meetingAppLocalizations.authResetInitialPasswordTitle,
               style: TextStyle(
-                fontSize: 28.sp,
+                fontSize: 28.spMin,
                 color: AppColors.black_222222,
                 fontWeight: FontWeight.w500,
               ),
@@ -126,7 +126,7 @@ class ResetInitialPasswordState extends BaseState
                 return Text(
                   meetingAppLocalizations.settingValidatorPwdTip,
                   style: TextStyle(
-                    fontSize: 12.sp,
+                    fontSize: 12.spMin,
                     color: color,
                   ),
                 );
@@ -167,7 +167,7 @@ class ResetInitialPasswordState extends BaseState
                 return Text(
                   errorText,
                   style: TextStyle(
-                    fontSize: 12.sp,
+                    fontSize: 12.spMin,
                     color: AppColors.colorF24957,
                   ),
                 );

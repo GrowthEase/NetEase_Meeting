@@ -9,8 +9,9 @@ part of meeting_ui;
 class MeetingUIValueKeys {
   ///会中界面 meeting_page.dart
   static const nickName = ValueKey('nickName');
-  static const meetingId = ValueKey('meetingId');
-  static const switchLoudspeaker = ValueKey('switchLoudspeaker');
+  static const meetingNum = ValueKey('meetingNum');
+  static const meetingPassword = ValueKey('meetingPassword');
+  static const switchAudioDevice = ValueKey('switchAudioDevice');
   static const switchCamera = ValueKey('switchCamera');
   static const networkStatus = ValueKey('networkStatus');
   static const meetingDuration = ValueKey('meetingDuration');
@@ -92,8 +93,14 @@ class MeetingUIValueKeys {
   static const waitingRoomSwitch = ValueKey('waitingRoomSwitch');
   static const watermarkSwitch = ValueKey('watermarkSwitch');
   static const meetingLockSwitch = ValueKey('meetingLockSwitch');
+  static const meetingChat = ValueKey('meetingChat');
+
+  /// 聊天权限界面
+  static const waitingChatPermissionSwitch =
+      ValueKey('waitingChatPermissionSwitch');
 
   ///会中成员管理
+  static const memberItem = ValueKey('memberItem');
   static const renameDialogInputKey = ValueKey('renameDialogInputKey');
   static const handsUpIcon = ValueKey('handsUpIcon');
 

@@ -61,9 +61,11 @@
   //        [layer flush];
   //    }
   //    [layer enqueueSampleBuffer:sampleBuffer];
-  if (self.renderResult) {
-    self.renderResult(self.userUuid, width, height, sampleBuffer);
-  }
-  CFRelease(sampleBuffer);
+  dispatch_async(dispatch_get_main_queue(), ^{
+    if (self.renderResult) {
+      self.renderResult(self.userUuid, width, height, sampleBuffer);
+    }
+    CFRelease(sampleBuffer);
+  });
 }
 @end

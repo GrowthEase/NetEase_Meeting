@@ -41,47 +41,70 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
   bool viewChange = false;
 
   late NERoomLiveController liveStreamController;
+  late NERoomLiveInfo _liveInfo;
+  late NERoomContext _roomContext;
+  NERoomEventCallback? roomEventCallback;
 
   @override
   void initState() {
     super.initState();
+    _roomContext = _arguments.roomContext;
+    _liveInfo = _arguments.live;
     liveStreamController = _arguments.roomContext.liveController;
-    _liveTitleController = TextEditingController(
-        text: _arguments.live.title ?? _arguments.roomContext.roomName);
+    _liveTitleController =
+        TextEditingController(text: _liveInfo.title ?? _roomContext.roomName);
     initPassword();
     liveUidFromJson();
-    viewChange = !listEquals(_arguments.live.userUuidList,
-        _arguments.oldLiveInfo?.userUuidList ?? []);
-    _handViewChange();
-    liveLayout = _arguments.live.liveLayout;
+    viewChange = !listEquals(_liveInfo.userUuidList, liveUids);
+    liveLayout = _liveInfo.liveLayout;
     chatRoomEnableSwitch = liveChatRoomEnable();
     liveLevelEnableSwitch = onlyEmployeesAllow();
     lifecycleListen(_arguments.roomInfoUpdatedEventStream, (_) {
       filterLiveUids();
-      _handViewChange();
+      viewChange = !listEquals(_liveInfo.userUuidList, liveUids);
       setState(() {});
     });
+    _roomContext.addEventCallback(roomEventCallback = NERoomEventCallback(
+      liveStateChanged: (_) => _updateLiveInfo(),
+    ));
+  }
+
+  void _updateLiveInfo() async {
+    final currentLiveInfo =
+        (await _roomContext.liveController.getLiveInfo()).data;
+    if (currentLiveInfo != null) {
+      _liveInfo = currentLiveInfo;
+      _liveTitleController.text = _liveInfo.title ?? _roomContext.roomName;
+      _livePasswordController.text = _liveInfo.password ?? '';
+      liveUidFromJson();
+      viewChange = !listEquals(_liveInfo.userUuidList, liveUids);
+      liveLayout = _liveInfo.liveLayout;
+      chatRoomEnableSwitch = liveChatRoomEnable();
+      liveLevelEnableSwitch = onlyEmployeesAllow();
+      setState(() {});
+    }
   }
 
   bool liveChatRoomEnable() {
-    if (_arguments.live.extensionConfig != null) {
-      var map = jsonDecode(_arguments.live.extensionConfig!);
+    if (_liveInfo.extensionConfig != null) {
+      var map = jsonDecode(_liveInfo.extensionConfig!);
       return map['liveChatRoomEnable'] ?? false;
     }
     return true;
   }
 
   bool onlyEmployeesAllow() {
-    if (_arguments.live.extensionConfig != null) {
-      var map = jsonDecode(_arguments.live.extensionConfig!);
+    if (_liveInfo.extensionConfig != null) {
+      var map = jsonDecode(_liveInfo.extensionConfig!);
       return map['onlyEmployeesAllow'] ?? false;
     }
     return false;
   }
 
   List<String?> liveUidFromJson() {
-    if (_arguments.live.extensionConfig != null) {
-      var map = jsonDecode(_arguments.live.extensionConfig!);
+    if (_liveInfo.extensionConfig != null) {
+      liveUids.clear();
+      var map = jsonDecode(_liveInfo.extensionConfig!);
       var uids = (map['listUids'] ?? []) as List;
       liveUids.addAll(uids.map((e) => e as String?).toList());
     }
@@ -107,13 +130,8 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
     return liveLayout;
   }
 
-  void _handViewChange() {
-    viewChange =
-        viewChange || !listEquals(_arguments.live.userUuidList, liveUids);
-  }
-
   void initPassword() {
-    livePassword = _arguments.live.password;
+    livePassword = _liveInfo.password;
     livePwdSwitch = !TextUtils.isEmpty(livePassword);
     _livePasswordController = TextEditingController(text: livePassword);
   }
@@ -221,7 +239,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
   }
 
   Widget buildTitleWithState() {
-    if (_arguments.live.state == NERoomLiveState.started) {
+    if (_liveInfo.state == NERoomLiveState.started) {
       return buildNotModifyTitle();
     }
     return buildTitle();
@@ -234,7 +252,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
       alignment: Alignment.centerLeft,
       padding: EdgeInsets.symmetric(horizontal: 20),
       child: Text(
-        _arguments.live.title ?? '',
+        _liveInfo.title ?? '',
         style: TextStyle(fontSize: 16, color: _UIColors.black_222222),
       ),
     );
@@ -324,8 +342,8 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
   }
 
   List<Widget> buildPwdWithState() {
-    if (_arguments.live.state == NERoomLiveState.started) {
-      return TextUtils.isEmpty(_arguments.live.password)
+    if (_liveInfo.state == NERoomLiveState.started) {
+      return TextUtils.isEmpty(_liveInfo.password)
           ? []
           : [buildSpace(), buildNotModifyPwd()];
     } else {
@@ -342,7 +360,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
     return buildCopyItem(
         MeetingUIValueKeys.copyLivePassword,
         NEMeetingUIKitLocalizations.of(context)!.livePassword,
-        _arguments.live.password!);
+        _liveInfo.password!);
   }
 
   Widget buildPwd() {
@@ -442,9 +460,6 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
                           color: _UIColors.color_999999, fontSize: 12)),
                 ],
               )),
-          MeetingUIValueKeys.addTextWidgetTest(
-              valueKey: MeetingUIValueKeys.liveInteraction,
-              value: chatRoomEnableSwitch),
           CupertinoSwitch(
               key: MeetingUIValueKeys.liveInteraction,
               value: chatRoomEnableSwitch,
@@ -480,14 +495,11 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
                           color: _UIColors.color_999999, fontSize: 12)),
                 ],
               )),
-          MeetingUIValueKeys.addTextWidgetTest(
-              valueKey: MeetingUIValueKeys.liveLevel,
-              value: liveLevelEnableSwitch),
           CupertinoSwitch(
               key: MeetingUIValueKeys.liveLevel,
               value: liveLevelEnableSwitch,
               onChanged: (bool value) {
-                if (_arguments.live.state != NERoomLiveState.started) {
+                if (_liveInfo.state != NERoomLiveState.started) {
                   setState(() {
                     liveLevelEnableSwitch = value;
                   });
@@ -520,18 +532,17 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
                     userUuidList: liveUids));
           })).then((value) {
             if (value is NERoomLiveInfo) {
-              viewChange = !listEquals(value.userUuidList, liveUids) ||
-                  (liveLayout != value.liveLayout &&
-                      value.liveLayout != NERoomLiveLayout.screenShare);
+              viewChange =
+                  !listEquals(value.userUuidList, _liveInfo.userUuidList) ||
+                      (_liveInfo.liveLayout != value.liveLayout &&
+                          value.liveLayout != NERoomLiveLayout.screenShare);
               liveUids.clear();
               if (value.userUuidList != null)
                 liveUids.addAll(value.userUuidList!);
               if (value.liveLayout != NERoomLiveLayout.screenShare) {
                 liveLayout = value.liveLayout;
               }
-              if (viewChange) {
-                setState(() {});
-              }
+              setState(() {});
             }
           });
         },
@@ -557,13 +568,13 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
   }
 
   Widget viewTips() {
-    if (_arguments.live.state == NERoomLiveState.init) {
+    if (_liveInfo.state == NERoomLiveState.init) {
       return Text(
           liveUids.isNotEmpty
               ? '${NEMeetingUIKitLocalizations.of(context)!.livePickerCount(liveUids.length)}}'
               : '',
           style: TextStyle(fontSize: 14, color: _UIColors.color_999999));
-    } else if (viewChange && _arguments.live.state != NERoomLiveState.ended) {
+    } else if (viewChange && _liveInfo.state != NERoomLiveState.ended) {
       return Text(
           NEMeetingUIKitLocalizations.of(context)!.liveViewSettingChange,
           style: TextStyle(fontSize: 14, color: _UIColors.colorEB352B));
@@ -752,7 +763,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
   }
 
   Widget buildActionButton() {
-    if (_arguments.live.state == NERoomLiveState.started) {
+    if (_liveInfo.state == NERoomLiveState.started) {
       return Row(children: [
         Expanded(child: buildUpdate()),
         SizedBox(width: 9),
@@ -824,7 +835,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
   }
 
   bool isStateDirty() {
-    var live = _arguments.live;
+    var live = _liveInfo;
     return liveChatRoomEnable() != chatRoomEnableSwitch ||
         live.password != livePassword ||
         live.liveLayout != liveLayout ||
@@ -954,6 +965,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
     _liveTitleController.dispose();
     _livePasswordController.dispose();
     _focusNode.dispose();
+    _roomContext.removeEventCallback(roomEventCallback!);
     super.dispose();
   }
 }

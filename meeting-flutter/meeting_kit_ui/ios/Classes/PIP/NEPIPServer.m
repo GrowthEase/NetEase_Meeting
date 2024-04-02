@@ -302,7 +302,7 @@ API_AVAILABLE(ios(15.0))
     return;
   }
   NERoomMember *member = [self.roomContext getMemberWithUuid:userUuid];
-  if (!member) {
+  if (!member || ![self.currentUuid isEqualToString:userUuid]) {
     result([NEPIPResult code:-1 desc:@"Member does not exist."]);
     return;
   }
@@ -417,10 +417,14 @@ API_AVAILABLE(ios(15.0))
   }
   if (roomMember != nil) {
     if ([roomMember.uuid isEqualToString:_roomContext.localMember.uuid]) {
-      [self.displayView updateStateWithMember:roomMember isSelf:YES];
+      if ([self.currentUuid isEqualToString:roomMember.uuid]) {
+        [self.displayView updateStateWithMember:roomMember isSelf:YES];
+      }
       self.maskView.name = name;
     } else {
-      [self.displayView updateStateWithMember:roomMember isSelf:NO];
+      if ([self.currentUuid isEqualToString:roomMember.uuid]) {
+        [self.displayView updateStateWithMember:roomMember isSelf:NO];
+      }
     }
   }
 }

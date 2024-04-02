@@ -11,6 +11,7 @@ import 'package:nemeeting/service/model/account_apps.dart';
 import 'package:nemeeting/service/model/chatroom_info.dart';
 import 'package:nemeeting/service/model/client_upgrade_info.dart';
 import 'package:nemeeting/service/model/history_meeting.dart';
+import 'package:nemeeting/service/model/history_meeting_detail.dart';
 import 'package:nemeeting/service/model/login_info.dart';
 import 'package:nemeeting/service/model/parse_sso_token.dart';
 import 'package:nemeeting/service/proto/app_http_proto/auth_code_proto.dart';
@@ -33,7 +34,9 @@ import 'package:nemeeting/service/proto/app_http_proto/report_yidun_token.dart';
 import 'package:nemeeting/service/proto/app_http_proto/switch_app_proto.dart';
 import 'package:nemeeting/service/proto/app_http_proto/update_nickname_proto.dart';
 import 'package:nemeeting/service/proto/app_http_proto/security_notice_proto.dart';
+import 'package:nemeeting/service/proto/app_http_proto/update_avatar_proto.dart';
 import 'package:nemeeting/service/model/security_notice_info.dart';
+import 'package:nemeeting/service/proto/get_meeting_info_proto.dart';
 import 'package:nemeeting/service/response/result.dart';
 import 'package:nemeeting/service/service/base_service.dart';
 
@@ -95,6 +98,11 @@ class AppService extends BaseService {
     return execute(UpdateNicknameProto(nickName));
   }
 
+  /// 更新头像
+  Future<Result<void>> updateAvatar(String url) {
+    return execute(UpdateAvatarProto(url));
+  }
+
   /// 客户端升级
   Future<Result<UpgradeInfo>> getClientUpdateInfo(String? accountId,
       String versionName, int versionCode, int clientAppCode) async {
@@ -142,6 +150,16 @@ class AppService extends BaseService {
     return Result(code: -1, msg: 'Empty appKey or userId');
   }
 
+  // 获取历史会议某个具体会议详细信息
+  Future<Result<HistoryMeeting>> getHistoryMeetingDetailsByMeetingId(
+      int meetingId) async {
+    final appKey = AuthManager().appKey;
+    if (appKey != null) {
+      return execute(HistoryMeetingDetailsInfoProto(appKey, meetingId));
+    }
+    return Result(code: -1, msg: 'Empty appKey or userId');
+  }
+
   // 获取会议收藏列表
   Future<Result<List<HistoryMeeting>>> getFavoriteMeetings(
       [int? startId, int limit = 20]) async {
@@ -181,7 +199,7 @@ class AppService extends BaseService {
   }
 
   // 获取历史会议详细信息、聊天室信息
-  Future<Result<ChatroomInfo>> getHistoryMeetingDetails(
+  Future<Result<HistoryMeetingDetail>> getHistoryMeetingDetails(
       int roomArchiveId) async {
     final appKey = AuthManager().appKey;
     if (appKey != null) {

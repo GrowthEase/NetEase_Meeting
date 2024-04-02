@@ -22,8 +22,8 @@ enum NEMenuVisibility {
 typedef NEMenuItemTextGetter(BuildContext context);
 
 /// 菜单项某一状态下的描述信息，包括菜单文本和图标。
-class NEMenuItemInfo {
-  static const undefine = NEMenuItemInfo._nullable();
+class NEMenuItemInfo<T> {
+  static final undefine = NEMenuItemInfo._nullable();
 
   static const int maxTextLength = 10;
 
@@ -39,12 +39,20 @@ class NEMenuItemInfo {
   /// flutter平台下，如果传入该字段，则会从flutter平台加载资源
   final String? platformPackage;
 
-  const NEMenuItemInfo._nullable({this.text, this.icon})
+  /// 是否是图片链接
+  final bool isNetworkImage;
+
+  NEMenuItemInfo._nullable({this.text, this.icon, this.isNetworkImage = false})
       : textGetter = null,
         platformPackage = null;
 
-  const NEMenuItemInfo(
-      {this.textGetter, this.text, this.icon, this.platformPackage})
+  NEMenuItemInfo(
+      {this.textGetter,
+      this.text,
+      this.icon,
+      this.platformPackage,
+      this.customObject,
+      this.isNetworkImage = false})
       : assert(textGetter != null || text != null);
 
   bool get hasIcon => icon != null && icon != '0';
@@ -55,6 +63,8 @@ class NEMenuItemInfo {
 
   bool get hasPlatformPackage =>
       platformPackage != null && platformPackage != '';
+
+  T? customObject;
 
   @override
   String toString() {
@@ -141,8 +151,8 @@ abstract class NEMeetingMenuItem {
 }
 
 /// 仅包含单个状态的菜单项，点击时不会进行状态迁移
-class NESingleStateMenuItem extends NEMeetingMenuItem {
-  final NEMenuItemInfo singleStateItem;
+class NESingleStateMenuItem<T> extends NEMeetingMenuItem {
+  final NEMenuItemInfo<T> singleStateItem;
 
   const NESingleStateMenuItem(
       {required int itemId,

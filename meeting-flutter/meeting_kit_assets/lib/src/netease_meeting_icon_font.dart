@@ -97,6 +97,10 @@ class NEMeetingIconFont {
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_security = IconData(0xe700,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_notify = IconData(0xe6c9,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_delete = IconData(0xe6ca,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_meeting_info_time = IconData(0xe73d,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_meeting_info_title = IconData(0xe615,
@@ -114,5 +118,19 @@ class NEMeetingIconFont {
   static const IconData icon_reconnect = IconData(0xe6cd,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_asterisk = IconData(0xe6cb,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_pin = IconData(0xe6cf,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_focus = IconData(0xe6e3,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_all_members_32 = IconData(0xe6d4,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_all_members_16 = IconData(0xe6d6,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_chat_setting = IconData(0xe6d7,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_chat_muted = IconData(0xe6d3,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_arrow_down = IconData(0xe6d8,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
 }
