@@ -1,11 +1,14 @@
 # NEMeetingKit
 
-NEMeetingKit
+NEMeetingKit-electron
 
+## 前置依赖
+node 16.14.1
 ## 下载依赖
 
 ```bash
-$ npm install:app
+$ npm install node-gyp -g
+$ npm run install:app
 ```
 
 ```html
@@ -13,6 +16,12 @@ $ npm install:app
 ```
 
 ## 使用
+
+### 设置appkey
+```html
+进入app/.umirc.ts 文件编辑APP_KEY字段根据环境填入对应appkey
+```
+
 
 ### 启动 web 服务
 

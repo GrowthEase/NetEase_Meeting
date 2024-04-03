@@ -58,7 +58,7 @@ function createNotifyWindow(mainWindow) {
   });
   const notifyWindow = sharingScreen.memberNotifyWindow;
   if (isLocal) {
-    notifyWindow.loadURL('https://localhost:8000/#/memberNotify');
+    notifyWindow.loadURL('http://localhost:8000/#/memberNotify');
   } else {
     notifyWindow.loadFile(path.join(__dirname, '../build/index.html'), {
       hash: 'memberNotify',

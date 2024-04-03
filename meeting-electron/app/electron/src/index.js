@@ -299,7 +299,7 @@ function createWindow(data) {
         return `${key}=${data[key] || ''}`;
       })
       .join('&');
-    mainWindow.loadURL(`https://localhost:8000/#/meeting?${query}`);
+    mainWindow.loadURL(`http://localhost:8000/#/meeting?${query}`);
 
     // Open the DevTools.
     mainWindow.webContents.openDevTools();

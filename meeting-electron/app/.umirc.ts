@@ -21,8 +21,8 @@ const MEETING_DOMAIN = {
 }[RUN_ENV];
 
 const APP_KEY = {
-  development: '',
-  production: '',
+  development: '', // 开发环境
+  production: '', // 生产环境
   performance: '',
 }[RUN_ENV];
 
@@ -50,12 +50,6 @@ export default defineConfig({
   favicon: 'favicon.ico',
   nodeModulesTransform: {
     type: 'none',
-  },
-  devServer: {
-    https: {
-      cert: './ssl/cert.pem',
-      key: './ssl/cert.key',
-    },
   },
   routes: [
     {
