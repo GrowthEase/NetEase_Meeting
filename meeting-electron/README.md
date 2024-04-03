@@ -19,8 +19,12 @@ $ npm run install:app
 根据当前系统复制根目录下的node-sdk/{系统}/neroom-node-sdk文件夹到app/electron/node_modules下
 ```
 
+## 使用
 
-
+### 设置appkey
+```html
+进入app/.umirc.ts 文件编辑APP_KEY字段根据环境填入对应appkey
+```
 
 ### 启动 web 服务
 
