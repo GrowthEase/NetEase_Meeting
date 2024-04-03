@@ -51,14 +51,18 @@ $ npm run build:prod
 ### Electron
 
 - 打包 Windows
-  - 复制 app/elelctron/package.build.win.json 内容替换到 app/elelctron/package.json
+  - 复制 app/electron/package.build.win.json 内容替换到 app/electron/package.json
     ```bash
     $ cd app/electron
     $ npm run build
     ```
 - 打包 Mac
-  - 复制 app/elelctron/package.build.json 内容替换到 app/elelctron/package.json
+  - 复制 app/electron/package.build.json 内容替换到 app/electron/package.json
     ```bash
     $ cd app/electron
     $ npm run build
     ```
+- 产物地址
+```html
+app/electron/dist
+```
