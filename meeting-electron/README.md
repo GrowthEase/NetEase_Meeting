@@ -47,9 +47,9 @@ $ npm start
 ```bash
 $ cd app
 $ npm run build:prod
-
-完成后会在app文件夹下生成build文件夹
 ```
+
+> 命令完成后会在app文件夹下生成build文件夹。在打包 Electron 应用时需要使用到该文件夹
 
 ### Electron
 > 注意打包Electron之前需要先打包 web，并复制 app/build 文件夹到 app/electron下
