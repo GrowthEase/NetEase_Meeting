@@ -40,7 +40,7 @@
       "artifactName": "meeting.${ext}",
       "mergeASARs": false,
       "icon": "assets/macx.icns",
-      "identity": "",
+      "identity": null,
       "target": [
         {
           "target": "dmg",
