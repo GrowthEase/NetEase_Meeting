@@ -32,7 +32,7 @@ function createBeforeMeetingWindow() {
   });
   if (isLocal) {
     beforeMeetingWindow.loadURL('http://localhost:8000/');
-    beforeMeetingWindow.webContents.openDevTools();
+    // beforeMeetingWindow.webContents.openDevTools();
   } else {
     beforeMeetingWindow.loadFile(path.join(__dirname, '../build/index.html'));
   }
