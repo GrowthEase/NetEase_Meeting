@@ -49,10 +49,14 @@ $ npm start
 ```bash
 $ cd app
 $ npm run build:prod
+
+完成后会在app文件夹下生成build文件夹
 ```
 
 ### Electron
-
+- 注意打包Electron之前需要先打包 web
+- 复制 app下build文件夹到 app/electron下
+```bash
 - 打包 Windows
   - 复制 app/electron/package.build.win.json 内容替换到 app/electron/package.json
     ```bash
