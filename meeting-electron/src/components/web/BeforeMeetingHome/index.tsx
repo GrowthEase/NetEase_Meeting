@@ -4,9 +4,8 @@ import CloseOutlined from '@ant-design/icons/CloseOutlined'
 import EditOutlined from '@ant-design/icons/EditOutlined'
 import ExclamationCircleFilled from '@ant-design/icons/ExclamationCircleFilled'
 import RightOutlined from '@ant-design/icons/RightOutlined'
-import { Button, Dropdown, Input, MenuProps, Spin, Tag } from 'antd'
+import { Badge, Button, Dropdown, Input, MenuProps, Spin, Tag } from 'antd'
 import dayjs from 'dayjs'
-import qs from 'qs'
 import { useTranslation } from 'react-i18next'
 
 import EmptyScheduleMeetingImg from '../../../assets/empty-schedule-meeting.png'
@@ -16,6 +15,7 @@ import JoinMeetingImg from '../../../assets/join-meeting.jpg'
 import LightFeedbackImg from '../../../assets/light-feedback.png'
 import ScheduleMeetingImg from '../../../assets/schedule-meeting.jpg'
 import NEMeetingKit from '../../../index'
+
 import { copyElementValue, getMeetingDisplayId } from '../../../utils'
 import AboutModal from '../BeforeMeetingModal/AboutModal'
 import HistoryMeetingModal from '../BeforeMeetingModal/HistoryMeetingModal'
@@ -29,13 +29,17 @@ import Setting from '../Setting'
 import './index.less'
 
 import Eventemitter from 'eventemitter3'
-import { NEPreviewController, NERoomService } from 'neroom-web-sdk'
 import {
   LOCALSTORAGE_INVITE_MEETING_URL,
   LOCALSTORAGE_USER_INFO,
   NOT_FIRST_LOGIN,
 } from '../../../../app/src/config'
+
+import { NEPreviewController, NERoomService } from 'neroom-web-sdk'
+import { NECustomSessionMessage } from 'neroom-web-sdk/dist/types/types/messageChannelService'
+import qs from 'qs'
 import { IPCEvent } from '../../../../app/src/types'
+import usePostMessageHandle from '../../../hooks/usePostMessagehandle'
 import eleIpc from '../../../services/electron/index'
 import {
   CreateMeetingResponse,
@@ -43,13 +47,17 @@ import {
   EventType,
   GetMeetingConfigResponse,
   JoinOptions,
+  MeetingRepeatType,
   MeetingSetting,
 } from '../../../types'
 import { NEMeetingStatus } from '../../../types/type'
+import { getWindow, openWindow } from '../../../utils/windowsProxy'
 import UserAvatar from '../../common/Avatar'
 import Modal from '../../common/Modal'
 import PCTopButtons from '../../common/PCTopButtons'
 import Toast from '../../common/toast'
+import ImageCropModal from '../BeforeMeetingModal/ImageCropModal'
+import NotificationListModal from '../BeforeMeetingModal/NotificationListModal'
 import { SettingTabType } from '../Setting/Setting'
 
 const eventEmitter = new Eventemitter()
@@ -74,7 +82,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
   const i18n = {
     appTitle: t('appTitle'),
     immediateMeeting: t('immediateMeeting'),
-    joinMeeting: t('joinMeeting'),
+    joinMeeting: t('meetingJoin'),
     scheduleMeeting: t('scheduleMeeting'),
     scheduleMeetingSuccess: t('scheduleMeetingSuccess'),
     scheduleMeetingFail: t('scheduleMeetingFail'),
@@ -88,15 +96,15 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     emptyScheduleMeeting: t('emptyScheduleMeeting'),
     meetingId: t('meetingId'),
     weekdays: [
-      t('Sunday'),
-      t('Monday'),
-      t('Tuesday'),
-      t('Wednesday'),
-      t('Thursday'),
-      t('Friday'),
-      t('Saturday'),
+      t('globalSunday'),
+      t('globalMonday'),
+      t('globalTuesday'),
+      t('globalWednesday'),
+      t('globalThursday'),
+      t('globalFriday'),
+      t('globalSaturday'),
     ],
-    month: t('month'),
+    month: t('globalMonth'),
     historyMeeting: t('historyMeeting'),
     currentVersion: t('currentVersion'),
     personalMeetingNum: t('personalMeetingNum'),
@@ -115,11 +123,11 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     copySuccess: t('copySuccess'),
     password: t('meetingPassword'),
     passwordPlaceholder: t('livePasswordTip'),
-    passwordError: t('wrongPassword'),
+    passwordError: t('meetingWrongPassword'),
     hint: t('commonTitle'),
     gotIt: t('gotIt'),
-    cancel: t('cancel'),
-    confirm: t('ok'),
+    cancel: t('globalCancel'),
+    confirm: t('globalSure'),
     networkError: t('networkAbnormalityAndCheck'),
     restoreMeetingTips: t('restoreMeetingTips'),
     restore: t('restore'),
@@ -139,8 +147,11 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false)
   const [npsModalOpen, setNpsModalOpen] = useState(false)
   const [historyMeetingModalOpen, setHistoryMeetingModalOpen] = useState(false)
+  const [notificationListModalOpen, setNotificationListModalOpen] =
+    useState(false)
   const [updateUserNicknameModalOpen, setUpdateUserNicknameModalOpen] =
     useState(false)
+  const [imageCropModalOpen, setImageCropModalOpen] = useState(false)
   const [aboutModalOpen, setAboutModalOpen] = useState(false)
   const [accountInfo, setAccountInfo] = useState<any>()
   const accountInfoRef = React.useRef<any>()
@@ -173,6 +184,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
   const [isOffLine, setIsOffLine] = useState<boolean>(false)
   const [isSSOLogin, setIsSSOLogin] = useState<boolean>(false)
   const isLogin = useRef<boolean>(false)
+  const [historyMeetingId, setHistoryMeetingId] = useState<string>()
 
   const eleIpcIns = useMemo(() => eleIpc.getInstance(), [])
   const [showLoading, setShowLoading] = useState<boolean>(false)
@@ -186,11 +198,16 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
   const platform = eleIpcIns ? 'electron' : 'web'
   const previewRoomListenerRef = useRef<any>(null)
   const [invitationMeetingNum, setInvitationMeetingNum] = useState<string>('')
-
+  const [notificationMessages, setNotificationMessages] = useState<
+    NECustomSessionMessage[]
+  >([])
+  const { handlePostMessage } = usePostMessageHandle()
   function getMeetingIdFromUrl(url) {
     const match = url.match(/meetingId=([^&]+)/)
     return match ? match[1] : null
   }
+
+  const imageCropValueRef = useRef<string>('')
 
   useEffect(() => {
     let setting: any = localStorage.getItem('ne-meeting-setting')
@@ -309,9 +326,18 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
             avatar={accountInfo?.avatar}
             size={48}
             className="user-avatar"
+            isEdit={
+              globalConfig?.appConfig.MEETING_ACCOUNT_CONFIG
+                .avatarUpdateDisabled !== true
+            }
+            onClick={() => {
+              globalConfig?.appConfig.MEETING_ACCOUNT_CONFIG
+                .avatarUpdateDisabled !== true && openImageCrop()
+            }}
           />
           <div className="user-name">{accountInfo?.nickname}</div>
-          {!isSSOLogin && (
+          {globalConfig?.appConfig.MEETING_ACCOUNT_CONFIG
+            .nicknameUpdateDisabled === true ? null : (
             <EditOutlined
               onClick={() => {
                 setUserMenuOpen(false)
@@ -426,8 +452,8 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
           style={{ cursor: 'pointer' }}
           onClick={() => {
             setUserMenuOpen(false)
-            if (eleIpcIns) {
-              eleIpcIns.sendMessage('open-meeting-about')
+            if (window.isElectronNative) {
+              openBeforeMeetingWindow({ name: 'aboutWindow' })
             } else {
               setAboutModalOpen(true)
             }
@@ -569,6 +595,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
           name: accountInfo.nickname,
         },
         moreBarList: [
+          { id: 29 },
           { id: 25 },
           {
             id: 1000,
@@ -600,7 +627,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     )
   }
 
-  function scheduleMeeting(
+  function scheduleMeeting({
     subject,
     startTime,
     endTime,
@@ -610,8 +637,10 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     meetingId,
     liveOnlyEmployees,
     attendeeAudioOffType,
-    enableWaitingRoom
-  ) {
+    enableWaitingRoom,
+    enableJoinBeforeHost,
+    recurringRule,
+  }) {
     setSubmitLoading(true)
     setImmediateMeetingModalOpen(false)
     setJoinMeetingModalOpen(false)
@@ -630,6 +659,8 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
         liveOnlyEmployees: liveOnlyEmployees,
         attendeeAudioOffType,
         enableWaitingRoom,
+        enableJoinBeforeHost,
+        recurringRule,
       })
       .then(() => {
         setScheduleMeetingModalOpen(false)
@@ -642,6 +673,10 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
         }
       })
       .catch((error) => {
+        // 会议已不存在则关闭弹窗
+        if (error.code === 3104) {
+          setScheduleMeetingModalOpen(false)
+        }
         setSubmitLoading(false)
         Toast.fail(
           error.msg ||
@@ -702,6 +737,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
               name: accountInfo.nickname,
             },
             moreBarList: [
+              { id: 29 },
               { id: 25 },
               {
                 id: 1000,
@@ -887,6 +923,19 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                 }
               )
 
+              NEMeetingKit.actions.neMeeting?.eventEmitter.on(
+                EventType.ReceiveAccountInfoUpdate,
+                (res) => {
+                  console.log('收到账号信息变更', res)
+                  setAccountInfo((prev) => {
+                    return {
+                      ...prev,
+                      ...res.meetingAccountInfo,
+                    }
+                  })
+                }
+              )
+
               NEMeetingKit.actions.neMeeting?.getAppInfo().then((res) => {
                 console.log('getAppInfo', res)
                 setAppName(res.appName)
@@ -1033,7 +1082,30 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       return
     }
     previewRoomListenerRef.current = {
+      onLocalAudioVolumeIndication: (volume: number) => {
+        const settingWindow = getWindow('settingWindow')
+        settingWindow?.postMessage(
+          {
+            event: EventType.RtcLocalAudioVolumeIndication,
+            payload: {
+              volume,
+            },
+          },
+          '*'
+        )
+      },
       onRtcVirtualBackgroundSourceEnabled: (enabled, reason) => {
+        const settingWindow = getWindow('settingWindow')
+        settingWindow?.postMessage(
+          {
+            event: EventType.rtcVirtualBackgroundSourceEnabled,
+            payload: {
+              enabled,
+              reason,
+            },
+          },
+          '*'
+        )
         window.ipcRenderer?.send('previewControllerListener', {
           method: EventType.rtcVirtualBackgroundSourceEnabled,
           args: [
@@ -1053,6 +1125,22 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
           type,
           width,
           height
+        )
+        const settingWindow = getWindow('settingWindow')
+        settingWindow?.postMessage(
+          {
+            event: 'onVideoFrameData',
+            payload: {
+              uuid,
+              bSubVideo,
+              data,
+              type,
+              width,
+              height,
+            },
+          },
+          '*',
+          [data.bytes.buffer]
         )
         window.ipcRenderer?.send('previewControllerListener', {
           method: EventType.previewVideoFrameData,
@@ -1142,16 +1230,167 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
   document.title = i18n.appTitle
 
   function onSettingClick(type?: 'normal' | 'audio' | 'video' | 'beauty') {
+    type = type || 'normal'
     // 非Electron
     setSettingOpen(true)
     if (!window.isElectronNative) {
-      setSettingModalTab(type || 'normal')
+      setSettingModalTab(type)
     } else {
-      window.ipcRenderer?.send(IPCEvent.openSetting, type || 'normal')
-      window.ipcRenderer?.once(IPCEvent.closeSetting, () => {
-        console.log('closeSetting')
-        setSettingOpen(false)
+      openBeforeMeetingWindow({
+        name: 'settingWindow',
+        postMessageData: {
+          event: 'openSetting',
+          payload: {
+            type: 'normal',
+            inMeeting: false,
+          },
+        },
       })
+    }
+  }
+
+  function openBeforeMeetingWindow(payload: {
+    name: string
+    url?: string
+    postMessageData?: { event: string; payload: any }
+  }) {
+    const newWindow = openWindow(payload.name, payload.url)
+    const postMessage = () => {
+      payload.postMessageData &&
+        newWindow?.postMessage(payload.postMessageData, '*')
+    }
+    // 不是第一次打开
+    if (newWindow?.firstOpen === false) {
+      postMessage()
+    } else {
+      windowLoadListener(newWindow)
+      newWindow?.addEventListener('load', () => {
+        postMessage()
+      })
+    }
+  }
+
+  function windowLoadListener(childWindow) {
+    function messageListener(e) {
+      const { event, payload } = e.data
+      const neMeeting = NEMeetingKit.actions.neMeeting
+      const roomService = NEMeetingKit.actions.neMeeting?.roomService
+      const previewController =
+        NEMeetingKit.actions.neMeeting?.previewController
+      const previewContext =
+        NEMeetingKit.actions.neMeeting?.roomService?.getPreviewRoomContext()
+      if (event === 'neMeeting' && neMeeting) {
+        const { replyKey, fnKey, args } = payload
+        const result = neMeeting[fnKey]?.(...args)
+        handlePostMessage(childWindow, result, replyKey)
+      } else if (event === 'roomService' && roomService) {
+        const { replyKey, fnKey, args } = payload
+        const result = roomService[fnKey]?.(...args)
+        handlePostMessage(childWindow, result, replyKey)
+      } else if (event === 'previewController' && previewController) {
+        const { replyKey, fnKey, args } = payload
+        const result = previewController[fnKey]?.(...args)
+        handlePostMessage(childWindow, result, replyKey)
+      } else if (event === 'previewContext' && previewController) {
+        const { replyKey, fnKey, args } = payload
+        const result = previewContext?.[fnKey]?.(...args)
+        handlePostMessage(childWindow, result, replyKey)
+      } else if (event === 'updateUserAvatar') {
+        const { url } = payload
+        setAccountInfo({
+          ...accountInfo,
+          avatar: url,
+        })
+        Toast.success(t('settingAvatarUpdateSuccess'))
+      } else if (event === 'openWindow') {
+        openBeforeMeetingWindow(payload)
+      } else if (event === 'notificationClick') {
+        console.log('notificationClick', payload)
+        handleNotificationClick(payload.action)
+      }
+    }
+    childWindow?.addEventListener('message', messageListener)
+  }
+
+  function openImageCrop() {
+    const fileInput = document.createElement('input')
+    fileInput.type = 'file'
+    fileInput.accept = 'image/*'
+    fileInput.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+
+      if (file) {
+        const maxAllowedSize = 5 * 1024 * 1024
+        if (file?.size > maxAllowedSize) {
+          Toast.fail('图片大小不能超过5MB')
+          return
+        }
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          imageCropValueRef.current = e.target?.result as string
+          if (window.isElectronNative) {
+            openBeforeMeetingWindow({
+              name: 'imageCropWindow',
+              postMessageData: {
+                event: 'setAvatarImage',
+                payload: {
+                  image: imageCropValueRef.current,
+                },
+              },
+            })
+          } else {
+            setImageCropModalOpen(true)
+          }
+        }
+        reader.readAsDataURL(file)
+      }
+    }
+    fileInput.click()
+  }
+
+  function openNotificationList() {
+    const sessionId = globalConfig?.appConfig.notifySenderAccid
+    if (sessionId) {
+      NEMeetingKit.actions.neMeeting?.clearUnreadCount(sessionId).then(() => {
+        setNotificationMessages([])
+      })
+    }
+    if (window.isElectronNative) {
+      openBeforeMeetingWindow({
+        name: 'notificationListWindow',
+        postMessageData: {
+          event: 'windowOpen',
+          payload: {
+            sessionId,
+            isInMeeting: false,
+          },
+        },
+      })
+    } else {
+      setNotificationListModalOpen(true)
+    }
+  }
+  function handleNotificationClick(action?: string) {
+    if (action?.startsWith('meeting://meeting_history')) {
+      const urlObj = new URL(action)
+      const searchParams = new URLSearchParams(urlObj.search)
+      const meetingId = searchParams.get('meetingId')
+      if (meetingId) {
+        setHistoryMeetingId(meetingId)
+        if (window.isElectronNative) {
+          openBeforeMeetingWindow({
+            name: 'historyWindow',
+            postMessageData: {
+              event: 'windowOpen',
+              payload: {
+                meetingId,
+              },
+            },
+          })
+        } else {
+          setHistoryMeetingModalOpen(true)
+        }
+      }
     }
   }
 
@@ -1164,14 +1403,21 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
         (!nps.time || nps.time < Date.now() - 24 * 60 * 60 * 1000) &&
         nps.need
       ) {
-        setNpsModalOpen(true)
         nps.time = Date.now()
         if (window.isElectronNative) {
-          window.ipcRenderer?.send(IPCEvent.openNPS, {
-            meetingId: nps.meetingId,
-            nickname: accountInfoRef.current?.nickname,
-            appKey,
+          openBeforeMeetingWindow({
+            name: 'npsWindow',
+            postMessageData: {
+              event: 'setNpsInfo',
+              payload: {
+                meetingId: nps.meetingId,
+                nickname: accountInfoRef.current?.nickname,
+                appKey,
+              },
+            },
           })
+        } else {
+          setNpsModalOpen(true)
         }
       }
       nps.need = false
@@ -1283,9 +1529,78 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     })
   }, [])
 
+  // 查询通知消息
+  useEffect(() => {
+    function onReceiveMessage(message?) {
+      const sessionId = globalConfig?.appConfig.notifySenderAccid
+      if (sessionId && message?.sessionId === sessionId) {
+        // 这里需要延迟查询，否则会出现消息获取不了的问题
+        setTimeout(
+          () => {
+            NEMeetingKit.actions.neMeeting
+              ?.queryUnreadMessageList(sessionId)
+              .then((res) => {
+                setNotificationMessages(res)
+              })
+          },
+          message.messageId ? 3000 : 0
+        )
+      }
+    }
+    onReceiveMessage({ sessionId: globalConfig?.appConfig.notifySenderAccid })
+    NEMeetingKit.actions.neMeeting?.eventEmitter.on(
+      EventType.OnReceiveSessionMessage,
+      onReceiveMessage
+    )
+    function onChangeRecentSession(sessions) {
+      console.log('onChangeRecentSession', sessions)
+      const sessionId = globalConfig?.appConfig.notifySenderAccid
+      if (sessionId) {
+        const session = sessions.find((s) => s.sessionId === sessionId)
+        if (session?.unreadCount === 0) {
+          setNotificationMessages([])
+        }
+      }
+    }
+    NEMeetingKit.actions.neMeeting?.eventEmitter.on(
+      EventType.OnChangeRecentSession,
+      onChangeRecentSession
+    )
+    function onDeleteAllSessionMessage(sessionId, sessionType) {
+      console.log('onDeleteAllSessionMessage', sessionId, sessionType)
+      const notificationListWindow = getWindow('notificationListWindow')
+      notificationListWindow?.postMessage({
+        event: 'eventEmitter',
+        payload: {
+          key: EventType.OnDeleteAllSessionMessage,
+          args: [sessionId, sessionType],
+        },
+      })
+    }
+    NEMeetingKit.actions.neMeeting?.eventEmitter.on(
+      EventType.OnDeleteAllSessionMessage,
+      onDeleteAllSessionMessage
+    )
+    return () => {
+      NEMeetingKit.actions.neMeeting?.eventEmitter.off(
+        EventType.OnReceiveSessionMessage,
+        onReceiveMessage
+      )
+      NEMeetingKit.actions.neMeeting?.eventEmitter.off(
+        EventType.OnChangeRecentSession,
+        onChangeRecentSession
+      )
+      NEMeetingKit.actions.neMeeting?.eventEmitter.on(
+        EventType.OnDeleteAllSessionMessage,
+        onDeleteAllSessionMessage
+      )
+    }
+  }, [globalConfig])
+
   useEffect(() => {
     NEMeetingKit.actions.neMeeting?.updateMeetingInfo({
       moreBarList: [
+        { id: 29 },
         { id: 25 },
         {
           id: 1000,
@@ -1342,11 +1657,29 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                     <UserAvatar
                       nickname={accountInfo?.nickname}
                       avatar={accountInfo?.avatar}
-                      size={32}
+                      size={36}
                     ></UserAvatar>
                   </Dropdown>
                 </div>
                 <div className="nemeeting-header-item">
+                  <div
+                    className="notification-icon"
+                    onClick={() => {
+                      openNotificationList()
+                    }}
+                  >
+                    <Badge
+                      count={
+                        notificationMessages.length > 99
+                          ? '99+'
+                          : notificationMessages.length
+                      }
+                    >
+                      <svg className="icon iconfont" aria-hidden="true">
+                        <use xlinkHref="#icontongzhizhongxinrukou"></use>
+                      </svg>
+                    </Badge>
+                  </div>
                   <div
                     className="setting-button"
                     onClick={() => {
@@ -1411,9 +1744,18 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                       Toast.fail(i18n.networkError)
                       return
                     }
-                    if (eleIpcIns) {
-                      eleIpcIns.sendMessage('open-meeting-history')
+                    if (window.isElectronNative) {
+                      openBeforeMeetingWindow({
+                        name: 'historyWindow',
+                        postMessageData: {
+                          event: 'windowOpen',
+                          payload: {
+                            meetingId: '',
+                          },
+                        },
+                      })
                     } else {
+                      setHistoryMeetingId('')
                       setHistoryMeetingModalOpen(true)
                     }
                   }}
@@ -1449,6 +1791,16 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                                 &nbsp;&nbsp;|&nbsp;&nbsp;{i18n.meetingId}:&nbsp;
                                 {getMeetingDisplayId(meeting.meetingNum)}
                                 &nbsp;&nbsp;
+                                {meeting.recurringRule &&
+                                  meeting.recurringRule.type !==
+                                    MeetingRepeatType.NoRepeat && (
+                                    <Tag
+                                      color="#EBF2FF"
+                                      className="periodic-tag"
+                                    >
+                                      {t('meetingRepeat')}
+                                    </Tag>
+                                  )}
                                 <span
                                   className={
                                     meeting.state === 2
@@ -1477,6 +1829,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                                       joinMeeting({
                                         meetingNum: meeting.meetingNum,
                                         nickName: accountInfo.nickname,
+                                        avatar: accountInfo.avatar,
                                         enableVideoMirror:
                                           setting?.videoSetting
                                             .enableVideoMirroring,
@@ -1622,6 +1975,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
               submitLoading={submitLoading}
               appLiveAvailable={appLiveAvailable}
               globalConfig={globalConfig}
+              eventEmitter={eventEmitter}
               meeting={editMeeting}
               onCancel={() => setScheduleMeetingModalOpen(false)}
               onJoinMeeting={(meetingId) => {
@@ -1639,11 +1993,14 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                   showDurationTime: setting?.normalSetting.showDurationTime,
                 })
               }}
-              onCancelMeeting={() => {
+              onCancelMeeting={(cancelRecurringMeeting?: boolean) => {
                 setScheduleMeetingModalOpen(false)
                 editMeeting &&
                   NEMeetingKit.actions.neMeeting
-                    ?.cancelMeeting(String(editMeeting.meetingId))
+                    ?.cancelMeeting(
+                      String(editMeeting.meetingId),
+                      cancelRecurringMeeting
+                    )
                     .then((res) => {
                       console.log(res)
                       Toast.success(i18n.cancelScheduleMeetingSuccess)
@@ -1660,41 +2017,29 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
               }}
               onSummit={(value) => {
                 setSubmitLoading(true)
-                scheduleMeeting(
-                  value.subject,
-                  value.startTime,
-                  value.endTime,
-                  value.password,
-                  value.audioOff,
-                  value.openLive,
-                  value.meetingId,
-                  value.liveOnlyEmployees,
-                  value.attendeeAudioOffType,
-                  value.enableWaitingRoom
-                )
+                scheduleMeeting({
+                  subject: value.subject,
+                  startTime: value.startTime,
+                  endTime: value.endTime,
+                  password: value.password,
+                  audioOff: value.audioOff,
+                  openLive: value.openLive,
+                  meetingId: value.meetingId,
+                  liveOnlyEmployees: value.liveOnlyEmployees,
+                  attendeeAudioOffType: value.attendeeAudioOffType,
+                  enableWaitingRoom: value.enableWaitingRoom,
+                  enableJoinBeforeHost: value.enableJoinBeforeHost,
+                  recurringRule: value.recurringRule,
+                })
               }}
             />
             <HistoryMeetingModal
               open={historyMeetingModalOpen}
               onCancel={() => setHistoryMeetingModalOpen(false)}
               roomService={roomService}
+              neMeeting={NEMeetingKit.actions.neMeeting}
               accountId={accountInfo?.account}
-              onSummit={(value) => {
-                setSubmitLoading(true)
-                return joinMeeting({
-                  meetingNum: value.meetingNum,
-                  nickName: accountInfo?.nickname,
-                  video: value.openCamera ? 1 : 2,
-                  audio: value.openMic ? 1 : 2,
-                  avatar: accountInfo?.avatar,
-                  showSpeaker: setting?.normalSetting.showSpeakerList,
-                  enableUnmuteBySpace:
-                    setting?.audioSetting.enableUnmuteBySpace,
-                  enableFixedToolbar: setting?.normalSetting.showToolbar,
-                  enableVideoMirror: setting?.videoSetting.enableVideoMirroring,
-                  showDurationTime: setting?.normalSetting.showDurationTime,
-                })
-              }}
+              meetingId={historyMeetingId}
             />
 
             {previewController && !window.ipcRenderer && (
@@ -1779,6 +2124,28 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
         nickname={accountInfo?.nickname}
         appKey={appKey}
         onClose={() => setNpsModalOpen(false)}
+      />
+      <NotificationListModal
+        neMeeting={NEMeetingKit.actions.neMeeting}
+        sessionId={globalConfig?.appConfig.notifySenderAccid}
+        open={notificationListModalOpen}
+        eventEmitter={NEMeetingKit.actions.neMeeting?.eventEmitter}
+        onCancel={() => setNotificationListModalOpen(false)}
+        onClick={handleNotificationClick}
+      />
+      <ImageCropModal
+        image={imageCropValueRef.current}
+        open={imageCropModalOpen}
+        neMeeting={NEMeetingKit.actions.neMeeting}
+        onCancel={() => setImageCropModalOpen(false)}
+        onUpdate={(avatar) => {
+          setAccountInfo({
+            ...accountInfo,
+            avatar,
+          })
+          setImageCropModalOpen(false)
+          Toast.success(t('settingAvatarUpdateSuccess'))
+        }}
       />
       {showLoading && (
         <p className="nemeeting-feedback-loading-text">

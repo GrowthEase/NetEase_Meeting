@@ -1,4 +1,4 @@
-const { ipcRenderer } = require('electron');
+const { ipcRenderer, webFrame } = require('electron');
 const NERoom = require('neroom-node-sdk');
 const log = require('electron-log/renderer');
 log.transports.console.format = '[{y}-{m}-{d} {h}:{i}:{s}.{ms}] {text}';
@@ -26,3 +26,4 @@ window.platform = process.platform;
 window.systemPlatform = process.platform;
 window.ipcRenderer = ipcRenderer;
 window.eleProcess = process;
+window.webFrame = webFrame;

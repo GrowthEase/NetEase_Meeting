@@ -1,18 +1,21 @@
+import { EventPriority, XKitReporter } from '@xkit-yx/utils'
+import WebRoomkit from 'neroom-web-sdk'
+import { useContext, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { IPCEvent } from '../../app/src/types'
+import { errorCodeMap } from '../config'
+import NEMeetingService from '../services/NEMeeting'
 import {
-  useContext,
-  useEffect,
-  useState,
-  useRef,
-  useMemo,
-  useCallback,
-} from 'react'
+  MeetingInfoContext,
+  useGlobalContext,
+  useWaitingRoomContext,
+} from '../store'
 import {
   ActionType,
   AttendeeOffType,
   CreateOptions,
   EventType,
   GetMeetingConfigResponse,
-  GlobalContext as GlobalContextInterface,
   JoinOptions,
   LoginOptions,
   MeetingEventType,
@@ -21,20 +24,12 @@ import {
   StaticReportType,
 } from '../types'
 import {
-  RecordState,
+  memberAction,
+  NERoomBeautyEffectType,
   tagNERoomRtcAudioProfileType,
   tagNERoomRtcAudioScenarioType,
+  UserEventType,
 } from '../types/innerType'
-import {
-  GlobalContext,
-  MeetingInfoContext,
-  useMeetingInfoContext,
-  useWaitingRoomContext,
-} from '../store'
-import { NERoomBeautyEffectType, UserEventType } from '../types/innerType'
-import NEMeetingService from '../services/NEMeeting'
-import Toast from './common/toast'
-import Dialog from './h5/ui/dialog'
 import {
   MoreBarList,
   NEMeetingCode,
@@ -43,13 +38,10 @@ import {
   Role,
   ToolBarList,
 } from '../types/type'
-import { useTranslation } from 'react-i18next'
-import { errorCodeMap } from '../config'
-import { EventPriority, XKitReporter } from '@xkit-yx/utils'
-import WebRoomkit from 'neroom-web-sdk'
 import { IntervalEvent } from '../utils/report'
-import { useGlobalContext } from '../store'
-import { IPCEvent } from '../../app/src/types'
+import Modal from './common/Modal'
+import Toast from './common/toast'
+import Dialog from './h5/ui/dialog'
 interface AuthProps {
   renderCallback?: () => void
 }
@@ -165,27 +157,34 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         NEMeetingStatus.MEETING_STATUS_IDLE
       )
     })
-    eventEmitter?.on(UserEventType.RejoinMeeting, () => {
-      const options = {
-        ...joinOptionRef.current,
-        password: passwordRef.current,
+    eventEmitter?.on(
+      UserEventType.RejoinMeeting,
+      (data: { isAudioOn: boolean; isVideoOn: boolean }) => {
+        if (joinOptionRef.current) {
+          joinOptionRef.current.audio = data.isAudioOn ? 1 : 2
+          joinOptionRef.current.video = data.isVideoOn ? 1 : 2
+        }
+        const options = {
+          ...joinOptionRef.current,
+          password: passwordRef.current,
+        }
+        console.log('optons>>>>>>', joinOptionRef)
+        setPasswordDialogShow(false)
+        if (isAnonymousLogin) {
+          outEventEmitter?.emit(UserEventType.AnonymousJoinMeeting, {
+            options,
+            callback: callbackRef.current,
+            isRejoin: true,
+          })
+        } else {
+          outEventEmitter?.emit(UserEventType.JoinMeeting, {
+            options,
+            callback: callbackRef.current,
+            isRejoin: true,
+          })
+        }
       }
-      console.log('optons>>>>>>', joinOptionRef)
-      setPasswordDialogShow(false)
-      if (isAnonymousLogin) {
-        outEventEmitter?.emit(UserEventType.AnonymousJoinMeeting, {
-          options,
-          callback: callbackRef.current,
-          isRejoin: true,
-        })
-      } else {
-        outEventEmitter?.emit(UserEventType.JoinMeeting, {
-          options,
-          callback: callbackRef.current,
-          isRejoin: true,
-        })
-      }
-    })
+    )
     outEventEmitter?.on(
       UserEventType.SetScreenSharingSourceId,
       (sourceId: string) => {
@@ -207,13 +206,8 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
           })
           .catch((e) => {
             if (data.isRejoin) {
-              // 会议已被锁定或者已结束
-              if (e.code === 1019 || e.code == 3102) {
-                if (window.isElectronNative) {
-                  Toast.info(
-                    errorCodeMap[e.code] || e.msg || e.message || 'join failed'
-                  )
-                }
+              // 会议已被锁定或者已结束、被加入黑名单
+              if (e.code === 1019 || e.code == 3102 || e.code === 601011) {
                 setTimeout(() => {
                   outEventEmitter?.emit(
                     UserEventType.onMeetingStatusChanged,
@@ -422,21 +416,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       UserEventType.onMeetingStatusChanged,
       NEMeetingStatus.MEETING_STATUS_INMEETING
     )
-    globalDispatch?.({
-      type: ActionType.UPDATE_GLOBAL_CONFIG,
-      data: {
-        waitingRejoinMeeting: false,
-        online: true,
-        meetingIdDisplayOption: options.meetingIdDisplayOption
-          ? options.meetingIdDisplayOption
-          : 0,
-        showCloudRecordingUI:
-          options.showCloudRecordingUI === false ? false : true,
-        showCloudRecordMenuItem:
-          options.showCloudRecordMenuItem === false ? false : true,
-      },
-    })
-    rejoinCountRef.current = 0
+
     joinOptionRef.current = options
 
     updateGlobalConfig({
@@ -457,6 +437,26 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
     //     },
     //   })
     handleMeetingInfo(waitingRoomOptions)
+
+    if (neMeeting?.subscribeMembersMap) {
+      neMeeting.subscribeMembersMap = {}
+    }
+
+    globalDispatch?.({
+      type: ActionType.UPDATE_GLOBAL_CONFIG,
+      data: {
+        waitingRejoinMeeting: false,
+        online: true,
+        meetingIdDisplayOption: options.meetingIdDisplayOption
+          ? options.meetingIdDisplayOption
+          : 0,
+        showCloudRecordingUI:
+          options.showCloudRecordingUI === false ? false : true,
+        showCloudRecordMenuItem:
+          options.showCloudRecordMenuItem === false ? false : true,
+      },
+    })
+    rejoinCountRef.current = 0
   }
 
   function handleMeetingInfo(data?: {
@@ -484,8 +484,32 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         joinOptionRef.current.meetingNum = meeting.meetingInfo.meetingNum
       }
       const meetingInfo = meeting.meetingInfo
+      const memberList = meeting.memberList
+      const hostMember = memberList.find((member) => member.role === Role.host)
+      if (
+        hostMember &&
+        hostMember?.uuid !== meetingInfo.localMember.uuid &&
+        meetingInfo.localMember.uuid === meetingInfo.ownerUserUuid
+      ) {
+        Modal.confirm({
+          key: 'takeBackTheHost',
+          title: t('meetingReclaimHostTip', { user: hostMember.name }),
+          okText: t('meetingReclaimHost'),
+          cancelText: t('meetingReclaimHostCancel'),
+          onOk: async () => {
+            try {
+              await neMeeting?.sendMemberControl(
+                memberAction.takeBackTheHost,
+                hostMember.uuid
+              )
+            } catch {
+              Toast.fail(t('meetingReclaimHostFailed'))
+            }
+          },
+        })
+      }
       if (meetingInfo.localMember.role === Role.coHost) {
-        Toast.info(t('youBesetTheCoHost'))
+        Toast.info(t('participantAssignedCoHost'))
       }
       const whiteboardUuid = meetingInfo.whiteboardUuid
       if (!whiteboardUuid && joinOptionRef.current?.defaultWindowMode === 2) {
@@ -518,7 +542,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         !meetingInfo.localMember.hide &&
         !meetingInfo.inWaitingRoom
       ) {
-        Toast.info(t('meetingHostMuteAllVideo'))
+        Toast.info(t('participantHostMuteAllVideo'))
       }
       if (
         (meetingInfo.audioOff.startsWith(AttendeeOffType.offNotAllowSelfOn) ||
@@ -528,7 +552,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         !meetingInfo.localMember.hide &&
         !meetingInfo.inWaitingRoom
       ) {
-        Toast.info(t('meetingHostMuteAllAudio'))
+        Toast.info(t('participantHostMuteAllAudio'))
       }
       // @ts-ignore
       neMeeting?.rtcController?.enableAudioVolumeIndication?.(true, 200)
@@ -536,7 +560,6 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       if (setting) {
         const { normalSetting, audioSetting, videoSetting, beautySetting } =
           setting
-
         if (beautySetting && beautySetting.beautyLevel > 0) {
           const beautyLevel = beautySetting.beautyLevel
           // @ts-ignore
@@ -792,7 +815,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         if (window.isElectronNative) {
           window.ipcRenderer?.send(IPCEvent.changeMeetingStatus, false)
         }
-        passwordRef.current && setErrorText(t('wrongPassword'))
+        passwordRef.current && setErrorText(t('meetingWrongPassword'))
         joinOptionRef.current = options
         // 会议状态回调：会议状态为等待，原因是需要输入密码
         outEventEmitter?.emit(
@@ -803,7 +826,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         setPasswordDialogShow(true)
         break
       case 1019:
-        Toast.info(t('lockMeetingByHost'))
+        Toast.info(t('meetingLockMeetingByHost'))
         hideLoadingPage()
         dispatch?.({
           type: ActionType.RESET_MEETING,
@@ -977,7 +1000,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
   // 密码入会
   function joinMeetingWithPsw() {
     if (!password.trim()) {
-      setErrorText(t('inputMeetingPassword'))
+      setErrorText(t('meetingEnterPassword'))
       return
     }
     outEventEmitter?.emit(
@@ -1005,8 +1028,8 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         visible={passwordDialogShow}
         title={t('meetingPassword')}
         width={320}
-        confirmText={t('joinMeeting')}
-        cancelText={t('cancel')}
+        confirmText={t('meetingJoin')}
+        cancelText={t('globalCancel')}
         confirmClassName={`nemeeting-password-join ${
           !password || password.length < 6
             ? 'nemeeting-password-join-disabled'
@@ -1040,7 +1063,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
               display: 'block',
             }}
             className={'input-ele'}
-            placeholder={t('inputMeetingPassword')}
+            placeholder={t('meetingEnterPassword')}
             maxLength={20}
             value={password.replace(/[^\d]/g, '').slice(0, 6)}
             required

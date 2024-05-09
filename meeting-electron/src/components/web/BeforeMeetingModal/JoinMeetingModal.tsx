@@ -13,6 +13,7 @@ import {
   MeetingSetting,
   NERoomBeautyEffectType,
 } from '../../../types'
+import { getYuvFrame } from '../../../utils/yuvFrame'
 import { getDefaultDeviceId, getMeetingDisplayId } from '../../../utils'
 import Modal from '../../common/Modal'
 import Toast from '../../common/toast'
@@ -70,9 +71,9 @@ const JoinMeetingModal: React.FC<JoinMeetingModalProps> = ({
   const { t } = useTranslation()
 
   const i18n = {
-    title: t('joinMeeting'),
+    title: t('meetingJoin'),
     inputPlaceholder: t('meetingIDInputPlaceholder'),
-    submitBtn: t('joinMeeting'),
+    submitBtn: t('meetingJoin'),
     mic: t('microphone'),
     camera: t('camera'),
     clearAll: t('clearAll'),
@@ -370,22 +371,7 @@ const JoinMeetingModal: React.FC<JoinMeetingModalProps> = ({
         if (canvas && videoPreviewRef.current) {
           canvas.style.height = `${videoPreviewRef.current.clientHeight}px`
         }
-        const buffer = {
-          format: {
-            width,
-            height,
-            chromaWidth: width / 2,
-            chromaHeight: height / 2,
-            cropLeft: 0, // default
-            cropTop: 0, // default
-            cropHeight: height,
-            cropWidth: width,
-            displayWidth: width, // derived from width via cropWidth
-            displayHeight: height, // derived from cropHeight
-          },
-          ...data,
-        }
-        yuv.drawFrame(buffer)
+        yuv.drawFrame(getYuvFrame(data, width, height))
       }
       if (window.isElectronNative) {
         eventEmitter.on(EventType.previewVideoFrameData, handleVideoFrameData)
@@ -530,12 +516,11 @@ const JoinMeetingModal: React.FC<JoinMeetingModalProps> = ({
             trigger={[]}
             menu={{ items }}
             placement="bottom"
+            autoAdjustOverflow={false}
             open={openRecentMeetingList && recentMeetingList.length > 0}
-            getPopupContainer={(triggerNode) => {
-              return triggerNode.parentElement || triggerNode
-            }}
             onOpenChange={(open) => setOpenRecentMeetingList(open)}
             rootClassName="recent-meeting-dropdown"
+            getPopupContainer={(node) => node}
             destroyPopupOnHide
           >
             <Input

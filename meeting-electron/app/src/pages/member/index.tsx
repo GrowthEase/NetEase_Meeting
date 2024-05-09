@@ -2,13 +2,14 @@ import './index.less';
 import { ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import MemberList from '../../../../src/components/web/MemberList';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   drawWatermark,
   stopDrawWatermark,
 } from '../../../../src/utils/watermark';
 import { NEMeetingInfo, WATERMARK_STRATEGY } from '../../../../src/types';
 import { useTranslation } from 'react-i18next';
+import NEMeetingService from '../../../../src/services/NEMeeting';
 
 export default function MemberPage() {
   const { t } = useTranslation();
@@ -18,91 +19,70 @@ export default function MemberPage() {
   const [waitingRoomInfo, setWaitingRoomInfo] = useState();
   const [waitingRoomMemberList, setWaitingRoomMemberList] = useState();
 
+  const replyCount = useRef(0);
   const neMeeting = new Proxy(
     {},
     {
       get: function (_, propKey) {
         return function (...args: any) {
           return new Promise((resolve, reject) => {
-            window.ipcRenderer?.once('neMeetingReply', (_: any, value: any) => {
-              const { fnKey, error } = value;
-              if (fnKey === propKey) {
-                error ? reject(error) : resolve('success');
-              }
-            });
-            window.ipcRenderer?.send('nemeeting-sharing-screen', {
-              method: 'neMeeting',
-              data: {
-                fnKey: propKey,
-                args: args,
+            const parentWindow = window.parent;
+            const replyKey = `neMeetingReply_${replyCount.current++}`;
+            parentWindow?.postMessage(
+              {
+                event: 'neMeeting',
+                payload: {
+                  replyKey,
+                  fnKey: propKey,
+                  args: args,
+                },
               },
-            });
+              '*',
+            );
+            const handleMessage = (e: MessageEvent) => {
+              const { event, payload } = e.data;
+              if (event === replyKey) {
+                const { result, error } = payload;
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve(result);
+                }
+                window.removeEventListener('message', handleMessage);
+              }
+            };
+            window.addEventListener('message', handleMessage);
           });
         };
       },
     },
-  );
+  ) as NEMeetingService;
 
   useEffect(() => {
-    window.ipcRenderer?.on('updateData', (_, data) => {
-      const {
-        meetingInfo,
-        memberList,
-        waitingRoomInfo,
-        waitingRoomMemberList,
-      } = data;
-      console.log('updateData', data);
-      setMeetingInfo(meetingInfo);
-      setMemberList(memberList);
-      setWaitingRoomInfo(waitingRoomInfo);
-      setWaitingRoomMemberList(waitingRoomMemberList);
-    });
+    function handleMessage(e: MessageEvent) {
+      const { event, payload } = e.data;
+      if (event === 'updateData') {
+        const {
+          meetingInfo,
+          memberList,
+          waitingRoomInfo,
+          waitingRoomMemberList,
+        } = payload;
+        setMeetingInfo(meetingInfo);
+        setMemberList(memberList);
+        setWaitingRoomInfo(waitingRoomInfo);
+        setWaitingRoomMemberList(waitingRoomMemberList);
+      }
+    }
+    window.addEventListener('message', handleMessage);
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
   }, []);
 
   useEffect(() => {
-    if (meetingInfo) {
-      const localMember = meetingInfo?.localMember;
-      const needDrawWatermark =
-        meetingInfo.meetingNum &&
-        meetingInfo.watermark &&
-        (meetingInfo.watermark.videoStrategy === WATERMARK_STRATEGY.OPEN ||
-          meetingInfo.watermark.videoStrategy ===
-            WATERMARK_STRATEGY.FORCE_OPEN);
-
-      if (needDrawWatermark && meetingInfo.watermark) {
-        const { videoStyle, videoFormat } = meetingInfo.watermark;
-        const supportInfo = {
-          name: meetingInfo.watermarkConfig?.name || localMember.name,
-          phone: meetingInfo.watermarkConfig?.phone || '',
-          email: meetingInfo.watermarkConfig?.email || '',
-          jobNumber: meetingInfo.watermarkConfig?.jobNumber || '',
-        };
-        function replaceFormat(format: string, info: Record<string, string>) {
-          const regex = /{([^}]+)}/g;
-          const result = format.replace(regex, (match, key) => {
-            const value = info[key];
-            return value ? value : match; // 如果值存在，则返回对应的值，否则返回原字符串
-          });
-          return result;
-        }
-
-        drawWatermark({
-          container: document.body,
-          content: replaceFormat(videoFormat, supportInfo),
-          type: videoStyle,
-        });
-      } else {
-        stopDrawWatermark();
-      }
-      return () => {
-        stopDrawWatermark();
-      };
-    }
-  }, [meetingInfo]);
-
-  useEffect(() => {
     setTimeout(() => {
-      document.title = t('memberListTitle');
+      document.title = t('participants');
     });
   }, [t]);
 

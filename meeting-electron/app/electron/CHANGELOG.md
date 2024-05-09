@@ -1,3 +1,20 @@
+## v4.4.0(2024-04-02)
+
+### New Features
+
+- 支持会中锁定特定用户视频画面
+- 支持会议创建者收回主持人权限
+- 支持会中全部准入、全部移除等候室成员
+- 支持本次会议自动准入等候室成员
+- 支持聊天室私聊功能和聊天权限控制
+- 入会时支持指定参会者头像
+
+### Compatibility
+
+- **room-kit:** ⚙️ Compatible with `NERTC` version `5.5.33`
+- **room-kit:** ⚙️ Compatible with `NIM` version `9.15.1`
+- **room-kit:** ⚙️ Compatible with `NERoomKit` version `1.27.0`
+
 ## v4.3.0(2024-03-06)
 
 ### New Features

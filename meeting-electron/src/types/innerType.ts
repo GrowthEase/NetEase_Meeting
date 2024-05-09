@@ -1,7 +1,10 @@
+import { IntervalEvent } from '@xkit-yx/utils'
 import Eventemitter from 'eventemitter3'
-import NEMeetingService from '../services/NEMeeting'
-import { ReactNode } from 'react'
 import { Roomkit } from 'neroom-web-sdk'
+import { NEWaitingRoomMember } from 'neroom-web-sdk/dist/types/types/interface'
+import { ReactNode } from 'react'
+import NEMeetingService from '../services/NEMeeting'
+import { Logger } from '../utils/Logger'
 import {
   AttendeeOffType,
   MoreBarList,
@@ -16,9 +19,6 @@ import {
   VideoFrameRate,
   VideoResolution,
 } from './type'
-import { Logger } from '../utils/Logger'
-import { IntervalEvent } from '@xkit-yx/utils'
-import { NEWaitingRoomMember } from 'neroom-web-sdk/dist/types/types/interface'
 
 /**
  * 内部使用的类型不对外暴露
@@ -45,6 +45,7 @@ export interface CreateMeetingResponse {
     roomInfo: {
       roomConfigId: number
       openWaitingRoom?: boolean
+      enableJoinBeforeHost?: boolean
       roomConfig: {
         resource: {
           chatroom: boolean
@@ -61,6 +62,20 @@ export interface CreateMeetingResponse {
     }
     liveConfig?: {
       liveAddress: string
+    }
+  }
+  recurringRule: {
+    type: MeetingRepeatType
+    customizedFrequency?: {
+      stepSize: number
+      stepUnit: MeetingRepeatCustomStepUnit
+      daysOfWeek: number[]
+      daysOfMonth: number[]
+    }
+    endRule: {
+      type: number
+      date: number
+      times: number
     }
   }
 }
@@ -134,6 +149,7 @@ export enum EventType {
   ChatroomMessageAttachmentProgress = 'chatroomMessageAttachmentProgress',
   ReceivePassThroughMessage = 'receivePassThroughMessage',
   ReceiveScheduledMeetingUpdate = 'receiveScheduledMeetingUpdate',
+  ReceiveAccountInfoUpdate = 'receiveAccountInfoUpdate',
   DeviceChange = 'deviceChange',
   NetworkError = 'networkError',
   ClientBanned = 'ClientBanned', // 用户被踢
@@ -161,12 +177,22 @@ export enum EventType {
   MemberNameChangedInWaitingRoom = 'memberNameChangedInWaitingRoom',
   MyWaitingRoomStatusChanged = 'myWaitingRoomStatusChanged',
   WaitingRoomInfoUpdated = 'waitingRoomInfoUpdated',
+  WaitingRoomAllMembersKicked = 'waitingRoomAllMembersKicked',
   RoomLiveBackgroundInfoChanged = 'roomLiveBackgroundInfoChanged',
+  RoomBlacklistStateChanged = 'onRoomBlacklistStateChanged',
 
   // 说话者列表相关
   ActiveSpeakerActiveChanged = 'OnActiveSpeakerActiveChanged',
   ActiveSpeakerListChanged = 'OnActiveSpeakerListChanged',
+  // 通知
+  OnReceiveSessionMessage = 'onReceiveSessionMessage',
+  OnChangeRecentSession = 'onChangeRecentSession',
+  OnDeleteSessionMessage = 'onDeleteSessionMessage',
+  OnDeleteAllSessionMessage = 'onDeleteAllSessionMessage',
+
   ChangeDeviceFromSetting = 'changeDeviceFromSetting',
+  // 私聊
+  OnPrivateChatMemberIdSelected = 'onPrivateChatMemberIdSelected',
 }
 
 export enum MeetingEventType {
@@ -197,6 +223,7 @@ export enum UserEventType {
   EndMeeting = 'endMeeting',
   LeaveMeeting = 'leaveMeeting',
   UpdateMeetingInfo = 'updateMeetingInfo',
+  OnScreenSharingStatusChange = 'onScreenSharingStatusChange',
 }
 
 export enum memberAction {
@@ -212,7 +239,11 @@ export enum memberAction {
   closeWhiteShare = 61,
   shareWhiteShare = 62,
   cancelShareWhiteShare = 63,
+  pinView = 67,
+  unpinView = 68,
   modifyMeetingNickName = 104,
+  takeBackTheHost = 105,
+  privateChat = 106,
 }
 
 export enum hostAction {
@@ -244,6 +275,8 @@ export enum hostAction {
   moveToWaitingRoom = 66,
   openWatermark = 64,
   closeWatermark = 65,
+  changeChatPermission = 70,
+  changeWaitingRoomChatPermission = 71,
 }
 
 export type NERoomChatMessageType =
@@ -367,6 +400,18 @@ export enum RecordState {
   Stopping = 'stopping',
 }
 
+export enum NEChatPermission {
+  FREE_CHAT = 1,
+  PUBLIC_CHAT_ONLY = 2,
+  PRIVATE_CHAT_HOST_ONLY = 3,
+  NO_CHAT = 4,
+}
+
+export enum NEWaitingRoomChatPermission {
+  NO_CHAT = 0,
+  PRIVATE_CHAT_HOST_ONLY = 1,
+}
+
 export type WatermarkInfo = {
   videoStrategy: WATERMARK_STRATEGY
   videoStyle: WATERMARK_STYLE
@@ -413,6 +458,7 @@ export type GetMeetingConfigResponse = {
       waitingRoom: boolean
     }
     MEETING_BEAUTY?: {
+      enable: boolean
       licenseUrl: string
       md5: string
       levels: any[]
@@ -432,6 +478,14 @@ export type GetMeetingConfigResponse = {
       enable: boolean
     }
     ROOM_WATERMARK: WatermarkInfo
+    notifySenderAccid: string
+    MEETING_ACCOUNT_CONFIG: {
+      avatarUpdateDisabled: boolean
+      nicknameUpdateDisabled: boolean
+      phoneNumberPattern: string
+      userNameRegisterEnabled: boolean
+      usernameAsPhoneNumber: boolean
+    }
   }
 }
 
@@ -583,6 +637,8 @@ export interface NEMeetingCreateOptions extends NEMeetingBaseOptions {
   createMeetingReport?: IntervalEvent
   enableWaitingRoom?: boolean
   attendeeAudioOffType?: AttendeeOffType
+  enableJoinBeforeHost?: boolean
+  recurringRule?: Record<string, any>
 }
 interface NEMeetingBaseOptions {
   meetingId?: number
@@ -665,6 +721,7 @@ export enum NEMenuIDs { // 菜单项ID
   security = 26,
   record = 27,
   setting = 28,
+  notification = 29,
 }
 
 export enum SingleMeunIds { // 单状态按钮
@@ -1006,3 +1063,30 @@ export interface ActiveSpeakerConfig {
 }
 
 export type AvatarSize = 64 | 48 | 36 | 32 | 24
+
+export enum MeetingRepeatType {
+  NoRepeat = 1,
+  Everyday = 2,
+  EveryWeekday,
+  EveryWeek,
+  EveryTwoWeek,
+  EveryMonth,
+  Custom,
+}
+export enum MeetingEndType {
+  Day = 1,
+  Times,
+}
+
+export enum MeetingRepeatCustomStepUnit {
+  Day = 1,
+  Week,
+  MonthOfDay,
+  MonthOfWeek,
+}
+
+export enum MeetingRepeatFrequencyType {
+  Day = 1,
+  Week = 2,
+  Month = 3,
+}

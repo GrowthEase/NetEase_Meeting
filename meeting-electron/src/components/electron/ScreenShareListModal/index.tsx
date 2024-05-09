@@ -43,8 +43,8 @@ const ScreenShareListModal = forwardRef<
   const { t } = useTranslation()
   const i18n = {
     title: t('selectSharedContent'),
-    confirm: t('ok'),
-    cancel: t('cancel'),
+    confirm: t('globalSure'),
+    cancel: t('globalCancel'),
     startShare: t('startShare'),
     desktop: t('desktop'),
     applicationWindow: t('applicationWindow'),

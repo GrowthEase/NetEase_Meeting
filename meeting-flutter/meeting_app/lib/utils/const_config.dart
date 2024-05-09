@@ -7,6 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:nemeeting/service/util/user_preferences.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 import '../language/meeting_localization/meeting_app_localizations.dart';
+import '../uikit/values/asset_name.dart';
+import '../uikit/values/strings.dart';
 
 /// 默认开启白板
 const bool openWhiteBoard = true;
@@ -35,6 +37,14 @@ const kEnablePasswordLogin = !kReleaseMode;
 const kEnableShakeAndOpenQrScan = false;
 
 const inMeetingMoreMenuItemId = 101;
+NESingleStateMenuItem inMeetingFeedbackMenu = NESingleStateMenuItem(
+  itemId: inMeetingMoreMenuItemId,
+  visibility: NEMenuVisibility.visibleAlways,
+  singleStateItem: NEMenuItemInfo(
+      text: Strings.inRoomFeedBack,
+      icon: AssetName.iconInRoomFeedback,
+      platformPackage: '/'),
+);
 
 Future<NEMeetingUIOptions> buildMeetingUIOptions({
   bool? noVideo,

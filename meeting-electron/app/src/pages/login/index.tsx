@@ -109,7 +109,7 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogged }) => {
   }
 
   return (
-    <div className="before-login">
+    <div className="before-login-wrap">
       {window.isElectronNative && (
         <div className="electron-drag-bar">
           <div className="drag-region" />
@@ -117,98 +117,55 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogged }) => {
           <PCTopButtons maximizable={false} />
         </div>
       )}
-      {type === 'home' && (
-        <>
-          <img
-            className={`logo ${window.isElectronNative ? 'logo-electron' : ''}`}
-            src={AppAboutLogoImage}
-          />
-          <BaseInput
-            style={{ width: '100%', paddingLeft: 0 }}
-            size="middle"
-            value={enterpriseCode.value}
-            placeholder={t('authEnterCorpCode')}
-            set={setEnterpriseCode}
-          />
-          <div className="no-enterprise-tip">
-            <div>
-              {t('authNoCorpCode')}
+      <div className="before-login">
+        {type === 'home' && (
+          <>
+            <img
+              className={`logo ${
+                window.isElectronNative ? 'logo-electron' : ''
+              }`}
+              src={AppAboutLogoImage}
+            />
+            <BaseInput
+              style={{ width: '100%', paddingLeft: 0 }}
+              size="middle"
+              value={enterpriseCode.value}
+              placeholder={t('authEnterCorpCode')}
+              set={setEnterpriseCode}
+            />
+            <div className="no-enterprise-tip">
+              <div>
+                {t('authNoCorpCode')}
+                <Button
+                  className="create-count"
+                  type="link"
+                  onClick={onCreateAccount}
+                >
+                  {t('authCreateNow')}
+                </Button>
+              </div>
               <Button
-                className="create-count"
                 type="link"
-                onClick={onCreateAccount}
+                className="to-demo"
+                onClick={() => {
+                  goType('register');
+                }}
               >
-                {t('authCreateNow')}
+                {t('authLoginToTrialEdition')}
               </Button>
             </div>
             <Button
-              type="link"
-              className="to-demo"
+              type="primary"
+              disabled={!enterpriseCode.value}
+              loading={enterpriseLoading}
+              className="login-button"
               onClick={() => {
-                goType('register');
+                goEnterprise();
               }}
             >
-              {t('authLoginToTrialEdition')}
+              {t('authNextStep')}
             </Button>
-          </div>
-          <Button
-            type="primary"
-            disabled={!enterpriseCode.value}
-            loading={enterpriseLoading}
-            className="login-button"
-            onClick={() => {
-              goEnterprise();
-            }}
-          >
-            {t('authNextStep')}
-          </Button>
-          <Button
-            type="link"
-            onClick={() => {
-              onClickLogin('sso');
-            }}
-          >
-            {t('authLoginBySSO')}
-          </Button>
-        </>
-      )}
-      {type === 'enterpriseLogin' && (
-        <EnterpriseLogin
-          enterpriseInfo={enterpriseInfo}
-          checkIsAgree={checkIsAgree}
-          onLogged={onLogged}
-          goBack={goBack}
-          onSSOLogin={() => login('sso')}
-        />
-      )}
-      {type === 'register' && (
-        <>
-          <img
-            className={`logo ${window.isElectronNative ? 'logo-electron' : ''}`}
-            src={AppAboutLogoImage}
-          />
-          <Button
-            type="primary"
-            className="login-button login-and-register-btn"
-            onClick={() => {
-              onClickLogin('login');
-            }}
-          >
-            {t('authRegisterAndLogin')}
-          </Button>
-          <div className="no-enterprise-tip">
-            <div>
-              {t('authHasCorpCode')}
-              <Button
-                onClick={() => goType('home')}
-                className="create-count"
-                type="link"
-              >
-                {t('authLoginToCorpEdition')}
-              </Button>
-            </div>
             <Button
-              className="create-count"
               type="link"
               onClick={() => {
                 onClickLogin('sso');
@@ -216,69 +173,118 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogged }) => {
             >
               {t('authLoginBySSO')}
             </Button>
-          </div>
-        </>
-      )}
-      {type === 'sso' && (
-        <LoginBySSO
-          checkIsAgree={checkIsAgree}
-          goBack={goBack}
-          code={enterpriseCode.value}
-        />
-      )}
-      {type === 'login' && (
-        <NormalLogin
-          onSSOLogin={() => login('sso')}
-          goBack={goBack}
-          onLogged={onLogged}
-        />
-      )}
-      <div className="footer">
-        <div className="footer-agreement">
-          <Checkbox
-            onChange={(e) => {
-              setIsAgree(e.target.checked);
-            }}
-            checked={isAgree}
+          </>
+        )}
+        {type === 'enterpriseLogin' && (
+          <EnterpriseLogin
+            enterpriseInfo={enterpriseInfo}
+            checkIsAgree={checkIsAgree}
+            onLogged={onLogged}
+            goBack={goBack}
+            onSSOLogin={() => login('sso')}
           />
-          <span className="text">
-            {t('authHasReadAndAgreeMeeting')}
-            <a
-              href="https://meeting.163.com/privacy/agreement_mobile_ysbh_wap.shtml"
-              target="_blank"
-              title={t('authPrivacy')}
-              onClick={(e) => {
-                if (window.ipcRenderer) {
-                  window.ipcRenderer.send(
-                    'open-browser-window',
-                    'https://meeting.163.com/privacy/agreement_mobile_ysbh_wap.shtml',
-                  );
-                  e.preventDefault();
-                }
+        )}
+        {type === 'register' && (
+          <>
+            <img
+              className={`logo ${
+                window.isElectronNative ? 'logo-electron' : ''
+              }`}
+              src={AppAboutLogoImage}
+            />
+            <Button
+              type="primary"
+              className="login-button login-and-register-btn"
+              onClick={() => {
+                onClickLogin('login');
               }}
             >
-              {t('authPrivacy')}
-            </a>
-            {t('authAnd')}
-            <a
-              href="https://netease.im/meeting/clauses?serviceType=0"
-              target="_blank"
-              title={t('authUserProtocol')}
-              onClick={(e) => {
-                if (window.ipcRenderer) {
-                  window.ipcRenderer.send(
-                    'open-browser-window',
-                    'https://netease.im/meeting/clauses?serviceType=0',
-                  );
-                  e.preventDefault();
-                }
+              {t('authRegisterAndLogin')}
+            </Button>
+            <div className="no-enterprise-tip">
+              <div>
+                {t('authHasCorpCode')}
+                <Button
+                  onClick={() => goType('home')}
+                  className="create-count"
+                  type="link"
+                >
+                  {t('authLoginToCorpEdition')}
+                </Button>
+              </div>
+              <Button
+                className="create-count"
+                type="link"
+                onClick={() => {
+                  onClickLogin('sso');
+                }}
+              >
+                {t('authLoginBySSO')}
+              </Button>
+            </div>
+          </>
+        )}
+        {type === 'sso' && (
+          <LoginBySSO
+            checkIsAgree={checkIsAgree}
+            goBack={goBack}
+            code={enterpriseCode.value}
+          />
+        )}
+        {type === 'login' && (
+          <NormalLogin
+            onSSOLogin={() => login('sso')}
+            goBack={goBack}
+            onLogged={onLogged}
+          />
+        )}
+        <div className="footer">
+          <div className="footer-agreement">
+            <Checkbox
+              onChange={(e) => {
+                setIsAgree(e.target.checked);
               }}
-            >
-              {t('authUserProtocol')}
-            </a>
-          </span>
+              checked={isAgree}
+            />
+            <span className="text">
+              {t('authHasReadAndAgreeMeeting')}
+              <a
+                href="https://meeting.163.com/privacy/agreement_mobile_ysbh_wap.shtml"
+                target="_blank"
+                title={t('authPrivacy')}
+                onClick={(e) => {
+                  if (window.ipcRenderer) {
+                    window.ipcRenderer.send(
+                      'open-browser-window',
+                      'https://meeting.163.com/privacy/agreement_mobile_ysbh_wap.shtml',
+                    );
+                    e.preventDefault();
+                  }
+                }}
+              >
+                {t('authPrivacy')}
+              </a>
+              {t('authAnd')}
+              <a
+                href="https://netease.im/meeting/clauses?serviceType=0"
+                target="_blank"
+                title={t('authUserProtocol')}
+                onClick={(e) => {
+                  if (window.ipcRenderer) {
+                    window.ipcRenderer.send(
+                      'open-browser-window',
+                      'https://netease.im/meeting/clauses?serviceType=0',
+                    );
+                    e.preventDefault();
+                  }
+                }}
+              >
+                {t('authUserProtocol')}
+              </a>
+            </span>
+          </div>
+          <img className="footer-logo" src={MobLogo} />
         </div>
-        <img className="footer-logo" src={MobLogo} />
       </div>
     </div>
   );

@@ -1,6 +1,14 @@
 import CaretDownOutlined from '@ant-design/icons/CaretDownOutlined'
 import CaretUpOutlined from '@ant-design/icons/CaretUpOutlined'
-import { Button, Checkbox, Divider, Drawer, DrawerProps, Popover } from 'antd'
+import {
+  Badge,
+  Button,
+  Checkbox,
+  Divider,
+  Drawer,
+  DrawerProps,
+  Popover,
+} from 'antd'
 import classNames from 'classnames'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -48,7 +56,9 @@ import MuteAudioIcon from '../../../assets/mute-audio.png'
 import MuteSpeakIcon from '../../../assets/mute-speak.png'
 import MuteVideoIcon from '../../../assets/mute-video.png'
 import { errorCodeMap } from '../../../config'
+import { getWindow } from '../../../utils/windowsProxy'
 import UserAvatar from '../../common/Avatar'
+import useMeetingPlugin from '../MeetingRightDrawer/MeetingPlugin/useMeetingPlugin'
 import MemberNotify, { MemberNotifyRef } from '../MemberNotify'
 
 let closeModal
@@ -85,6 +95,8 @@ const ControlBar: React.FC<ControlBarProps> = ({
   const { dispatch } = useMeetingInfoContext()
   const localMemberRef = useRef(meetingInfo.localMember)
 
+  const { pluginList, onClickPlugin } = useMeetingPlugin()
+
   const memberNotifyRef = useRef<MemberNotifyRef>(null)
 
   const { localMember } = meetingInfo
@@ -98,6 +110,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
 
   const muteTipsNeedShowRef = useRef(0)
 
+  const [securityPopoverOpen, setSecurityPopoverOpen] = useState(false)
   const [moreBtnOpen, setMoreBtnOpen] = useState(false)
   const [audioDeviceListOpen, setAudioDeviceListOpen] = useState(false)
   const [videoDeviceListOpen, setVideoDeviceListOpen] = useState(false)
@@ -110,13 +123,14 @@ const ControlBar: React.FC<ControlBarProps> = ({
   const [selectedMicrophone, setSelectedMicrophone] = useState<string>()
   const [selectedSpeaker, setSelectedSpeaker] = useState<string>()
   const [isDarkMode, setIsDarkMode] = useState(true)
-  const [securityPopoverOpen, setSecurityPopoverOpen] = useState(false)
   const [handUpPopoverOpen, setHandUpPopoverOpen] = useState(false)
   const [newMsg, setNewMsg] = useState<{
     fromNick: string
     fromAvatar?: string
     text: string
     type: string
+    isPrivate: boolean
+    chatroomType: number
   }>()
   const [waitingRoomUnReadCount, setWaitingRoomUnReadCount] = useState(0)
   const isStartingRecordRef = useRef(false)
@@ -234,7 +248,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
           localMember.isAudioOn &&
           !isHostOrCoHost
         ) {
-          Toast.info(t('meetingHostMuteAllAudio'))
+          Toast.info(t('participantHostMuteAllAudio'))
           neMeeting?.muteLocalAudio()
         }
       } catch (error: any) {
@@ -260,7 +274,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
     } else {
       if (!needHandUp('audio')) {
         if (microphones.length <= 0) {
-          Toast.fail(t('unMuteAudioFail'))
+          Toast.fail(t('participantUnMuteAudioFail'))
         } else {
           try {
             await neMeeting?.unmuteLocalAudio()
@@ -308,7 +322,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
               defaultChecked={notAllowJoinRef.current}
               onChange={(e) => (notAllowJoinRef.current = e.target.checked)}
             >
-              {t('closeWaitingRoomCheck')}
+              {t('waitingRoomDisableDialogAdmitAll')}
             </Checkbox>
           </>
         ),
@@ -348,6 +362,34 @@ const ControlBar: React.FC<ControlBarProps> = ({
     }
   }
 
+  // 开关黑名单
+  function enableRoomBlackList(enable) {
+    neMeeting?.enableRoomBlackList?.(enable)?.catch((error) => {
+      Toast.fail(error.msg || error.message || 'failed')
+    })
+  }
+  // 处理点击开关黑名单
+  async function handleEnableBlackList(event) {
+    event.stopPropagation()
+    // 如果是关闭黑名单需要弹框二次确认
+    if (meetingInfo.enableBlacklist) {
+      Modal.confirm({
+        width: 370,
+        title: t('unableMeetingBlacklistTitle'),
+        content: (
+          <>
+            <div>{t('unableMeetingBlacklistTip')}</div>
+          </>
+        ),
+        onOk: async () => {
+          enableRoomBlackList(false)
+        },
+      })
+      return
+    }
+    enableRoomBlackList(true)
+  }
+
   async function handleVideo() {
     if (!deviceAccessStatusRef.current.camera && window.isElectronNative) {
       eventEmitter?.emit(MeetingEventType.noCameraPermission)
@@ -376,7 +418,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
     } else {
       if (!needHandUp('video')) {
         if (cameras.length <= 0) {
-          Toast.fail(t('unMuteVideoFail'))
+          Toast.fail(t('participantUnMuteVideoFail'))
         } else {
           try {
             await neMeeting?.unmuteLocalVideo()
@@ -429,8 +471,8 @@ const ControlBar: React.FC<ControlBarProps> = ({
     ),
     label: localMember.isAudioConnected
       ? localMember.isAudioOn
-        ? t('muteAudio')
-        : t('unMuteAudio')
+        ? t('participantMute')
+        : t('participantUnmute')
       : t('connectAudioShort'),
     onClick: handleAudio,
     hidden: localMember.hide,
@@ -455,7 +497,9 @@ const ControlBar: React.FC<ControlBarProps> = ({
         ></use>
       </svg>
     ),
-    label: localMember.isVideoOn ? t('muteVideo') : t('unMuteVideo'),
+    label: localMember.isVideoOn
+      ? t('participantStopVideo')
+      : t('participantStartVideo'),
     onClick: handleVideo,
     hidden: localMember.hide,
   }
@@ -469,95 +513,157 @@ const ControlBar: React.FC<ControlBarProps> = ({
         align={
           isElectronSharingScreen ? { offset: [0, 35] } : { offset: [0, -15] }
         }
+        arrow={false}
         trigger={['click']}
         rootClassName="security-popover device-popover"
         open={securityPopoverOpen}
         getTooltipContainer={(node) => node}
         autoAdjustOverflow={false}
         placement={isElectronSharingScreen ? 'bottom' : 'top'}
-        onOpenChange={setSecurityPopoverOpen}
-        afterOpenChange={setSecurityPopoverOpen}
-        arrow={false}
         content={
-          <div className="device-list">
-            {globalConfig?.appConfig?.APP_ROOM_RESOURCE?.waitingRoom && (
-              <>
-                <div className="device-list-title">{t('securitySettings')}</div>
+          <>
+            <div className="device-list">
+              <div className="device-list-title">{t('securitySettings')}</div>
+              {globalConfig?.appConfig?.APP_ROOM_RESOURCE?.waitingRoom && (
+                <>
+                  <div
+                    className="device-item"
+                    key="waitingRoom"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      handleWaitingRoom()
+                    }}
+                  >
+                    <div className="device-item-label">{t('waitingRoom')}</div>
+                    {meetingInfo.isWaitingRoomEnabled && (
+                      <svg className="icon iconfont" aria-hidden="true">
+                        <use xlinkHref="#iconcheck-line-regular1x"></use>
+                      </svg>
+                    )}
+                  </div>
+                </>
+              )}
+              {meetingInfo.watermark?.videoStrategy ===
+              WATERMARK_STRATEGY.FORCE_OPEN ? null : (
                 <div
                   className="device-item"
-                  key="waitingRoom"
+                  key="meetingWatermark"
                   onClick={(event) => {
                     event.stopPropagation()
-                    handleWaitingRoom()
+                    const enable =
+                      meetingInfo.watermark?.videoStrategy ===
+                      WATERMARK_STRATEGY.OPEN
+                    const type = enable
+                      ? hostAction.closeWatermark
+                      : hostAction.openWatermark
+
+                    neMeeting?.sendHostControl(type, '')
                   }}
                 >
-                  <div className="device-item-label">{t('waitingRoom')}</div>
-                  {meetingInfo.isWaitingRoomEnabled && (
+                  <div className="device-item-label">
+                    {t('meetingWatermark')}
+                  </div>
+                  {meetingInfo.watermark?.videoStrategy ===
+                    WATERMARK_STRATEGY.OPEN && (
                     <svg className="icon iconfont" aria-hidden="true">
                       <use xlinkHref="#iconcheck-line-regular1x"></use>
                     </svg>
                   )}
                 </div>
-              </>
-            )}
-            {meetingInfo.watermark?.videoStrategy ===
-            WATERMARK_STRATEGY.FORCE_OPEN ? null : (
+              )}
               <div
                 className="device-item"
-                key="meetingWatermark"
+                key="lockMeeting"
                 onClick={(event) => {
                   event.stopPropagation()
-                  const enable =
-                    meetingInfo.watermark?.videoStrategy ===
-                    WATERMARK_STRATEGY.OPEN
+                  const enable = !meetingInfo.isLocked
                   const type = enable
-                    ? hostAction.closeWatermark
-                    : hostAction.openWatermark
-
-                  neMeeting?.sendHostControl(type, '')
+                    ? hostAction.lockMeeting
+                    : hostAction.unlockMeeting
+                  const failMsg = enable
+                    ? t('meetingLockMeetingByHostFail')
+                    : t('meetingUnLockMeetingByHostFail')
+                  neMeeting
+                    ?.sendHostControl(type, '')
+                    .then(() => {
+                      // 通过判断 meetingInfo.isLocked  来显示
+                      // Toast.success(successMsg)
+                    })
+                    .catch((error) => {
+                      Toast.fail(failMsg)
+                      throw error
+                    })
                 }}
               >
-                <div className="device-item-label">{t('meetingWatermark')}</div>
-                {meetingInfo.watermark?.videoStrategy ===
-                  WATERMARK_STRATEGY.OPEN && (
+                <div className="device-item-label">{t('meetingLock')}</div>
+                {meetingInfo.isLocked && (
                   <svg className="icon iconfont" aria-hidden="true">
                     <use xlinkHref="#iconcheck-line-regular1x"></use>
                   </svg>
                 )}
               </div>
-            )}
-            <div
-              className="device-item"
-              key="lockMeeting"
-              onClick={(event) => {
-                event.stopPropagation()
-                const enable = !meetingInfo.isLocked
-                const type = enable
-                  ? hostAction.lockMeeting
-                  : hostAction.unlockMeeting
-                const failMsg = enable
-                  ? t('lockMeetingByHostFail')
-                  : t('unLockMeetingByHostFail')
-                neMeeting
-                  ?.sendHostControl(type, '')
-                  .then(() => {
-                    // 通过判断 meetingInfo.isLocked  来显示
-                    // Toast.success(successMsg)
-                  })
-                  .catch((error) => {
-                    Toast.fail(failMsg)
-                    throw error
-                  })
-              }}
-            >
-              <div className="device-item-label">{t('lockMeeting')}</div>
-              {meetingInfo.isLocked && (
-                <svg className="icon iconfont" aria-hidden="true">
-                  <use xlinkHref="#iconcheck-line-regular1x"></use>
-                </svg>
-              )}
+              <div
+                className="device-item"
+                key="blackList"
+                onClick={handleEnableBlackList}
+              >
+                <div className="device-item-label">
+                  {t('meetingBlacklist')}
+                  <Popover content={t('meetingBlacklistTip')}>
+                    <svg
+                      className="icon iconfont icona-45 nemeeting-blacklist-tip"
+                      aria-hidden="true"
+                    >
+                      <use xlinkHref="#icona-45"></use>
+                    </svg>
+                  </Popover>
+                </div>
+
+                {meetingInfo.enableBlacklist && (
+                  <svg className="icon iconfont" aria-hidden="true">
+                    <use xlinkHref="#iconcheck-line-regular1x"></use>
+                  </svg>
+                )}
+              </div>
             </div>
-          </div>
+            <div className="device-list">
+              <div className="device-list-title">
+                {t('meetingAllowMembersTo')}
+              </div>
+              <div
+                className="device-item"
+                key="lockMeeting"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  const chatPermission =
+                    meetingInfo.meetingChatPermission !== 4 ? 4 : 1
+                  neMeeting
+                    ?.sendHostControl(
+                      hostAction.changeChatPermission,
+                      '',
+                      chatPermission
+                    )
+                    .then(() => {
+                      if (chatPermission === 4) {
+                        Toast.info(t('meetingChatDisabled'))
+                      } else {
+                        Toast.success(t('meetingChatEnabled'))
+                      }
+                    })
+                    .catch((error) => {
+                      throw error
+                    })
+                }}
+              >
+                <div className="device-item-label">{t('meetingChat')}</div>
+                {meetingInfo.meetingChatPermission !== 4 && (
+                  <svg className="icon iconfont" aria-hidden="true">
+                    <use xlinkHref="#iconcheck-line-regular1x"></use>
+                  </svg>
+                )}
+              </div>
+            </div>
+          </>
         }
       >
         <div>
@@ -587,7 +693,9 @@ const ControlBar: React.FC<ControlBarProps> = ({
         <use xlinkHref="#iconyx-tv-sharescreen1x"></use>
       </svg>
     ),
-    label: !localMember.isSharingScreen ? t('screenShare') : t('unScreenShare'),
+    label: !localMember.isSharingScreen
+      ? t('screenShare')
+      : t('screenShareStop'),
     onClick: () => {
       shareScreen()
     },
@@ -608,8 +716,8 @@ const ControlBar: React.FC<ControlBarProps> = ({
       </svg>
     ),
     label: !localMember.isSharingWhiteboard
-      ? t('whiteBoard')
-      : t('closeWhiteBoard'),
+      ? t('whiteboardShare')
+      : t('whiteBoardClose'),
     onClick: async () => {
       if (lockButtonClickRef.current['whiteBoard']) {
         return
@@ -636,7 +744,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
         if (meetingInfo.whiteboardUuid) {
           Toast.info(t('screenShareNotAllow'))
         } else if (meetingInfo.screenUuid) {
-          Toast.info(t('hasScreenShareShare'))
+          Toast.info(t('meetingHasScreenShareShare'))
         } else {
           try {
             // 如果开启透明白板则先更新房间属性
@@ -793,41 +901,94 @@ const ControlBar: React.FC<ControlBarProps> = ({
       : t('startCloudRecord'),
   }
 
+  function newMsgsContent() {
+    if (!newMsg) {
+      return null
+    }
+    const { chatroomType, fromNick, isPrivate, fromAvatar } = newMsg
+    let nickLabel
+    if (isPrivate) {
+      if (newMsg.chatroomType === 1) {
+        nickLabel = (
+          <>
+            <span className={`new-message-name-text`}>{fromNick}</span>
+            <span className={`new-message-name-private`}>
+              &nbsp;{t('chatSaidToMe', { userName: '' })}
+            </span>
+            <span className="new-message-name-private-tips">
+              ({t('chatPrivateInWaitingRoom')})
+            </span>
+          </>
+        )
+      } else {
+        nickLabel = (
+          <>
+            <span className={`new-message-name-text`}>{fromNick}</span>
+            <span className={`new-message-name-private`}>
+              &nbsp;{t('chatSaidToMe', { userName: '' })}
+            </span>
+            <span className="new-message-name-private-tips">
+              ({t('chatPrivate')})
+            </span>
+          </>
+        )
+      }
+    } else {
+      if (chatroomType === 1) {
+        nickLabel = (
+          <>
+            <span className={`new-message-name-text`}>{fromNick}</span>
+            <span className={`new-message-name-private`}>
+              &nbsp;{t('chatSaidToWaitingRoom', { userName: '' })}
+            </span>
+          </>
+        )
+      } else {
+        nickLabel = fromNick
+      }
+    }
+
+    return (
+      <div className="new-message-content">
+        <div className="new-message-avatar">
+          <UserAvatar
+            size={32}
+            nickname={fromNick || ''}
+            avatar={fromAvatar || ''}
+          />
+        </div>
+        <div>
+          <div className="new-message-name"> {nickLabel}</div>
+          {newMsg?.type === 'image' && (
+            <div className="new-message-text">{t('imageMsg')}</div>
+          )}
+          {newMsg?.type === 'file' && (
+            <div className="new-message-text">{t('fileMsg')}</div>
+          )}
+          {newMsg?.type === 'text' && (
+            <div className="new-message-text">{newMsg.text}</div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   const chatBtn = {
     id: 21,
     key: 'chat',
     icon: (
       <Popover
         destroyTooltipOnHide
-        align={isElectronSharingScreen ? { offset: [0, 35] } : undefined}
+        align={
+          isElectronSharingScreen ? { offset: [0, 35] } : { offset: [0, -15] }
+        }
         open={!!newMsg && !meetingInfo.isRooms}
         placement={isElectronSharingScreen ? 'bottom' : 'top'}
         autoAdjustOverflow={false}
         getTooltipContainer={(node) => node}
         rootClassName="new-message-popover"
-        content={
-          <div className="new-message-content">
-            <div className="new-message-avatar">
-              <UserAvatar
-                size={32}
-                nickname={newMsg?.fromNick || ''}
-                avatar={newMsg?.fromAvatar || ''}
-              />
-            </div>
-            <div>
-              <div className="new-message-name">{newMsg?.fromNick}：</div>
-              {newMsg?.type === 'image' && (
-                <div className="new-message-text">{t('imageMsg')}</div>
-              )}
-              {newMsg?.type === 'file' && (
-                <div className="new-message-text">{t('fileMsg')}</div>
-              )}
-              {newMsg?.type === 'text' && (
-                <div className="new-message-text">{newMsg.text}</div>
-              )}
-            </div>
-          </div>
-        }
+        arrow={false}
+        content={newMsgsContent()}
       >
         <svg className="icon iconfont" aria-hidden="true">
           <use xlinkHref="#iconchat1x"></use>
@@ -871,6 +1032,39 @@ const ControlBar: React.FC<ControlBarProps> = ({
     hidden: localMember.hide,
   }
 
+  const notificationBtn = {
+    id: 29,
+    key: 'notification',
+    icon: (
+      <Badge
+        count={
+          meetingInfo.notificationMessages.filter((msg) => msg.unRead).length >
+          99
+            ? '99+'
+            : meetingInfo.notificationMessages.filter((msg) => msg.unRead)
+                .length
+        }
+      >
+        <svg className="icon iconfont" aria-hidden="true">
+          <use xlinkHref="#icontongzhizhongxinrukou"></use>
+        </svg>
+      </Badge>
+    ),
+    label: t('notification'),
+    onClick: async () => {
+      dispatch?.({
+        type: ActionType.UPDATE_MEETING_INFO,
+        data: {
+          notificationMessages: meetingInfo.notificationMessages.map((msg) => {
+            return { ...msg, unRead: false }
+          }),
+        },
+      })
+      onDefaultButtonClick?.('notification')
+    },
+    hidden: localMember.hide,
+  }
+
   const liveBtn = {
     id: 25,
     key: 'live',
@@ -905,6 +1099,13 @@ const ControlBar: React.FC<ControlBarProps> = ({
 
   if (moreBarList.length > 0) {
     moreBarList.forEach((item) => {
+      // 在屏幕共享下，过滤更多菜单的按钮
+      if (isElectronSharingScreen) {
+        if (![3, 21, 20, 29].includes(item.id)) {
+          return
+        }
+      }
+
       let btn = {
         2: screenShareBtn,
         3: memberListBtn,
@@ -915,6 +1116,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
         27: recordBtn,
         28: settingBtn,
         25: liveBtn,
+        29: notificationBtn,
       }[item.id]
 
       // 用来更新按钮状态
@@ -984,6 +1186,26 @@ const ControlBar: React.FC<ControlBarProps> = ({
       btn && moreButtons.push(btn)
     })
   }
+  if (pluginList.length > 0) {
+    pluginList.forEach((plugin) => {
+      const btn = {
+        id: plugin.pluginId,
+        key: plugin.pluginId,
+        icon: (
+          <img
+            src={plugin.icon.defaultIcon}
+            className="icon-image plugin-icon-image"
+          />
+        ),
+        label: plugin.name,
+        sessionId: plugin.notifySenderAccid,
+        onClick: () => {
+          onClickPlugin?.(plugin)
+        },
+      }
+      moreButtons.push(btn)
+    })
+  }
 
   moreButtons = moreButtons.filter((item) => item && Boolean(!item.hidden))
 
@@ -1003,6 +1225,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
         27: recordBtn,
         28: settingBtn,
         25: liveBtn,
+        29: notificationBtn,
       }[item.id]
 
       const proxyItem = new Proxy(item, {
@@ -1077,14 +1300,28 @@ const ControlBar: React.FC<ControlBarProps> = ({
     icon: (
       <Popover
         destroyTooltipOnHide
+        align={
+          isElectronSharingScreen ? { offset: [0, 35] } : { offset: [0, -15] }
+        }
+        arrow={false}
         trigger={['click']}
         rootClassName="more-button-popover"
         open={moreBtnOpen}
-        onOpenChange={setMoreBtnOpen}
-        afterOpenChange={setMoreBtnOpen}
         getTooltipContainer={(node) => node}
+        autoAdjustOverflow={false}
+        placement={isElectronSharingScreen ? 'bottom' : 'top'}
         content={
-          <div className="more-button-list">
+          <div
+            className="more-button-list"
+            style={
+              moreButtons.length > 3
+                ? {
+                    flexWrap: 'wrap',
+                    width: 230,
+                  }
+                : undefined
+            }
+          >
             {moreButtons.map((item) => {
               return (
                 <div
@@ -1092,7 +1329,15 @@ const ControlBar: React.FC<ControlBarProps> = ({
                   className="more-button-item"
                   onClick={item.onClick}
                 >
-                  {item.icon}
+                  <Badge
+                    dot={
+                      meetingInfo.notificationMessages.filter(
+                        (msg) => msg.unRead && msg.sessionId === item.sessionId
+                      ).length > 0
+                    }
+                  >
+                    {item.icon}
+                  </Badge>
                   <div className="more-button-item-text">{item.label}</div>
                 </div>
               )
@@ -1101,16 +1346,22 @@ const ControlBar: React.FC<ControlBarProps> = ({
         }
       >
         <div>
-          <svg className="icon iconfont" aria-hidden="true">
-            <use xlinkHref="#iconyx-tv-more1x"></use>
-          </svg>
+          <Badge
+            dot={
+              meetingInfo.notificationMessages.filter((msg) => msg.unRead)
+                .length > 0
+            }
+          >
+            <svg className="icon iconfont" aria-hidden="true">
+              <use xlinkHref="#iconyx-tv-more1x"></use>
+            </svg>
+          </Badge>
         </div>
       </Popover>
     ),
     label: t('moreBtn'),
-    hidden:
-      localMember.hide || isElectronSharingScreen || moreButtons.length === 0,
-    onClick: async () => {
+    hidden: localMember.hide || moreButtons.length === 0,
+    onClick: () => {
       setMoreBtnOpen(!moreBtnOpen)
     },
   }
@@ -1219,8 +1470,8 @@ const ControlBar: React.FC<ControlBarProps> = ({
     }
 
     closeModal = Modal.confirm({
-      title: isHostOrCoHost ? t('finish') : t('leave'),
-      content: isHostOrCoHost ? t('hostExitTips') : t('leaveTips'),
+      title: isHostOrCoHost ? t('meetingQuit') : t('leave'),
+      content: isHostOrCoHost ? t('hostExitTips') : t('meetingLeaveConfirm'),
       focusTriggerAfterClose: false,
       transitionName: '',
       mask: false,
@@ -1233,7 +1484,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
               closeModal = null
             }}
           >
-            {t('cancel')}
+            {t('globalCancel')}
           </Button>
           <Button type="primary" onClick={handleLeave}>
             {t('leave')}
@@ -1251,7 +1502,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
                 }
               }}
             >
-              {t('finish')}
+              {t('meetingQuit')}
             </Button>
           )}
         </div>
@@ -1620,7 +1871,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
                           localMember.isAudioOn &&
                           !isHostOrCoHost
                         ) {
-                          Toast.info(t('meetingHostMuteAllAudio'))
+                          Toast.info(t('participantHostMuteAllAudio'))
                           neMeeting?.muteLocalAudio()
                         }
                       }
@@ -1654,6 +1905,8 @@ const ControlBar: React.FC<ControlBarProps> = ({
 
             {!isElectronSharingScreen &&
               window.ipcRenderer &&
+              (!!globalConfig?.appConfig?.MEETING_VIRTUAL_BACKGROUND?.enable ||
+                !!globalConfig?.appConfig?.MEETING_BEAUTY?.enable) &&
               type === 'video' && (
                 <div
                   className="nesetting"
@@ -1699,9 +1952,9 @@ const ControlBar: React.FC<ControlBarProps> = ({
       }
     } else {
       if (meetingInfo.screenUuid) {
-        Toast.info(t('shareOverLimit'))
+        Toast.info(t('screenShareOverLimit'))
       } else if (meetingInfo.whiteboardUuid) {
-        Toast.info(t('hasWhiteBoardShare'))
+        Toast.info(t('meetingHasWhiteBoardShare'))
       } else {
         // 如果是Electron则抛到上层处理
         if (window.ipcRenderer) {
@@ -1767,24 +2020,18 @@ const ControlBar: React.FC<ControlBarProps> = ({
       }
       // 判断是否需要红点
       if (isElectronSharingScreen) {
-        window.ipcRenderer
-          ?.invoke(IPCEvent.getMemberListWindowIsOpen)
-          .then((isOpen) => {
-            if (isOpen && meetingInfo.activeMemberManageTab == 'waitingRoom') {
-              return
-            }
-            waitingRoomDispatch?.({
-              type: ActionType.WAITING_ROOM_UPDATE_INFO,
-              data: {
-                info: {
-                  unReadMsgCount: (waitingRoomInfo.unReadMsgCount || 0) + 1,
-                },
-              },
-            })
-          })
-          .catch((e) => {
-            console.log('getMemberListWindowIsOpen error: ', e)
-          })
+        const isOpen = !!getWindow('memberWindow')
+        if (isOpen && meetingInfo.activeMemberManageTab == 'waitingRoom') {
+          return
+        }
+        waitingRoomDispatch?.({
+          type: ActionType.WAITING_ROOM_UPDATE_INFO,
+          data: {
+            info: {
+              unReadMsgCount: (waitingRoomInfo.unReadMsgCount || 0) + 1,
+            },
+          },
+        })
       } else {
         if (!isOpenWaitingRoomMemberList) {
           waitingRoomDispatch?.({
@@ -2119,6 +2366,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
         videoDeviceListOpen ||
         audioDeviceListOpen ||
         securityPopoverOpen ||
+        moreBtnOpen ||
         screenSharingPopoverOpen
       ) {
         window.ipcRenderer?.send('nemeeting-sharing-screen', {
@@ -2135,6 +2383,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
     audioDeviceListOpen,
     screenSharingPopoverOpen,
     securityPopoverOpen,
+    moreBtnOpen,
     isElectronSharingScreen,
   ])
 
@@ -2219,7 +2468,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
             pauseTimer && clearTimeout(pauseTimer)
             setTimeout(() => {
               shareScreen()
-              Toast.info(t('unScreenShare'))
+              Toast.info(t('screenShareStop'))
               Toast.destroy(pauseToastId)
             }, 500)
             break
@@ -2395,7 +2644,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
             className="control-bar-rooms-end-button"
             onClick={handleLeaveOrEnd}
           >
-            {isHostOrCoHost ? t('finish') : t('leave')}
+            {isHostOrCoHost ? t('meetingQuit') : t('leave')}
           </div>
         </div>
       ) : (
@@ -2449,7 +2698,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
                 <div key={button.key} className="control-bar-button-item-box">
                   <div
                     className="control-bar-button-item"
-                    onClick={() => button.onClick()}
+                    onClick={button.onClick}
                   >
                     {button.icon}
                     <div
@@ -2466,7 +2715,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
               ))}
               {isElectronSharingScreen ? (
                 <div className="control-bar-stop-sharing-button">
-                  <span onClick={shareScreen}>{t('unScreenShare')}</span>
+                  <span onClick={shareScreen}>{t('screenShareStop')}</span>
                   <Popover
                     destroyTooltipOnHide
                     getTooltipContainer={(node) => node}
@@ -2542,7 +2791,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
                   className="control-bar-end-button"
                   onClick={handleLeaveOrEnd}
                 >
-                  {isHostOrCoHost ? t('finish') : t('leave')}
+                  {isHostOrCoHost ? t('meetingQuit') : t('leave')}
                 </div>
               )}
             </>

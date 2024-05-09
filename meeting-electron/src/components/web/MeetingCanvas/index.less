@@ -18,6 +18,9 @@
     overflow: hidden;
     width: 100%;
   }
+  .focus-tp-normal {
+    top: 57px;
+  }
   .nemeeting-audio-mode-wrap {
     padding: 24px;
     box-sizing: border-box;
@@ -169,7 +172,7 @@
       align-items: center;
       justify-content: center;
       z-index: 100;
-      &.top {
+      &.nemeeting-top {
         font-size: 16px;
         width: 21px;
         height: 21px;
@@ -177,19 +180,19 @@
         right: 5px;
 
         transform: rotate(180deg);
-        &.collapse {
+        &.nemeeting-collapse {
           top: 30px;
           right: 5px;
           transform: rotate(360deg);
         }
       }
-      &.right {
+      &.nemeeting-right {
         font-size: 24px;
         top: 50%;
         margin-top: -18px;
         height: 34px;
         right: 2px;
-        &.collapse {
+        &.nemeeting-collapse {
           transform: rotate(180deg);
         }
       }

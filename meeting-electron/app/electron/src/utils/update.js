@@ -108,6 +108,7 @@ async function checkUpdate(
 }
 
 async function createTempUpdateFile(name, cacheDir) {
+  // https://github.com/electron-userland/electron-builder/pull/2474#issuecomment-366481912
   let nameCounter = 0;
   let result = name;
   let resultPath = path.join(cacheDir, result);

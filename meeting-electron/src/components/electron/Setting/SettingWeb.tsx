@@ -8,22 +8,29 @@ import NERoom, {
 import eleIpc from '../../../services/electron'
 import { IPCEvent } from '../../../../app/src/types'
 import { LOCALSTORAGE_MEETING_SETTING } from '../../../../app/src/config'
+import { createDefaultSetting } from '../../../services'
 
 const isElectron = !!window.ipcRenderer
+
+interface SettingWebProps {
+  previewContext: NEPreviewRoomContext
+  previewController: NEPreviewController
+  inMeeting: boolean
+  defaultTab?: SettingTabType
+}
 // 设置页面用于Electron独立页面
-const SeetingWeb: React.FC = () => {
+const SettingWeb: React.FC<SettingWebProps> = ({
+  previewContext,
+  previewController,
+  inMeeting,
+  defaultTab = 'normal',
+}) => {
   const [settingModalTab, setSettingModalTab] =
     useState<SettingTabType>('normal')
   const [setting, setSetting] = useState<MeetingSetting | null>(null)
-  const [inMeeting, setInMeeting] = useState(false)
-  const [showSetting, setShowSetting] = useState(false)
+  const [showSetting, setShowSetting] = useState(true)
   const settingRef = useRef<MeetingSetting | null>()
-  const [previewController, setPreviewController] = useState<
-    NEPreviewController | any
-  >()
-  const [previewContext, setPreviewContext] = useState<
-    NEPreviewRoomContext | any
-  >()
+
   const eleIpcIns = useMemo(
     () => (isElectron ? eleIpc.getInstance() : null),
     []
@@ -38,62 +45,36 @@ const SeetingWeb: React.FC = () => {
         console.log('settingStrRef', settingRef.current)
         setSetting(settingRef.current)
       } catch (error) {}
-    }
-    let roomkit
-    if (window.ipcRenderer) {
-      roomkit = new window.NERoom()
     } else {
-      roomkit = NERoom.getInstance()
-      setPreviewContext(roomkit.roomService.getPreviewRoomContext())
+      setSetting(createDefaultSetting())
     }
-    roomkit
-      .initialize({
-        appKey: 'test',
-      })
-      .then(() => {
-        setPreviewContext(roomkit.roomService.getPreviewRoomContext())
-        setPreviewController(
-          roomkit.roomService.getPreviewRoomContext()?.previewController
-        )
-      })
 
-    window.ipcRenderer?.on(
-      IPCEvent.showSettingWindow,
-      (event, { isShow, type, inMeeting }) => {
-        console.log('showSettingWindow', { isShow, type })
-        const settingStr = localStorage.getItem(LOCALSTORAGE_MEETING_SETTING)
-        console.log('settingStr', settingStr)
-        if (settingStr) {
-          try {
-            settingRef.current = JSON.parse(settingStr) as MeetingSetting
-            console.log('settingStrRef', settingRef.current)
-            setSetting(settingRef.current)
-          } catch (error) {}
-        }
-        setShowSetting(isShow)
-        setInMeeting(inMeeting)
-        if (isShow) {
-          setSettingModalTab(type)
-        } else {
-          setSettingModalTab('normal')
-        }
-      }
-    )
+    // window.ipcRenderer?.on(
+    //   IPCEvent.showSettingWindow,
+    //   (event, { isShow, type, inMeeting }) => {
+    //     console.log('showSettingWindow', { isShow, type })
+    //     const settingStr = localStorage.getItem(LOCALSTORAGE_MEETING_SETTING)
+    //     console.log('settingStr', settingStr)
+    //     if (settingStr) {
+    //       try {
+    //         settingRef.current = JSON.parse(settingStr) as MeetingSetting
+    //         console.log('settingStrRef', settingRef.current)
+    //         setSetting(settingRef.current)
+    //       } catch (error) {}
+    //     }
+    //     setShowSetting(isShow)
+    //     if (isShow) {
+    //       setSettingModalTab(type)
+    //     } else {
+    //       setSettingModalTab('normal')
+    //     }
+    //   }
+    // )
 
-    window.ipcRenderer?.on(IPCEvent.meetingStatus, (event, value) => {
-      console.log('meetingStatus', value)
-      const { inMeeting } = value
-      setInMeeting(inMeeting)
-    })
-
-    window.ipcRenderer?.on(
-      IPCEvent.changeSettingDeviceFromControlBar,
-      (event, { type, deviceId }) => {
-        // 'video' | 'speaker' | 'microphone'
-        console.log('changeSettingDeviceFromControlBar11111111', {
-          type,
-          deviceId,
-        })
+    function handleMessage(e: MessageEvent) {
+      const { event, payload } = e.data
+      if (event === IPCEvent.changeSettingDeviceFromControlBar) {
+        const { type, deviceId } = payload
         if (!settingRef.current) {
           return
         }
@@ -110,7 +91,13 @@ const SeetingWeb: React.FC = () => {
         }
         setSetting({ ...settingRef.current })
       }
-    )
+    }
+
+    window.addEventListener('message', handleMessage)
+
+    return () => {
+      window.removeEventListener('message', handleMessage)
+    }
   }, [])
 
   function onSettingChange(setting: MeetingSetting) {
@@ -138,9 +125,9 @@ const SeetingWeb: React.FC = () => {
   }
   return (
     <div className="nemeeting-setting">
-      {previewController && showSetting && (
+      {previewController && setting && (
         <Setting
-          defaultTab={settingModalTab}
+          defaultTab={defaultTab}
           setting={setting}
           onSettingChange={onSettingChange}
           onDeviceChange={onDeviceChange}
@@ -153,4 +140,4 @@ const SeetingWeb: React.FC = () => {
   )
 }
 
-export default SeetingWeb
+export default SettingWeb

@@ -1,20 +1,15 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Button, Checkbox, Dropdown, Input, message } from 'antd'
-import { MenuProps } from 'antd'
+import { Button, Checkbox, Dropdown, MenuProps } from 'antd'
+import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import classNames from 'classnames'
 
 import { NEMeetingInfo } from '../../../../types'
 
-import './index.less'
-import { useGlobalContext, useMeetingInfoContext } from '../../../../store'
+import { NEWaitingRoomMember } from 'neroom-web-sdk/dist/types/types/interface'
+import NEMeetingService from '../../../../services/NEMeeting'
+import UserAvatar from '../../../common/Avatar'
 import Modal from '../../../common/Modal'
 import Toast from '../../../common/toast'
-import UpdateUserNicknameModal from '../../BeforeMeetingModal/UpdateUserNicknameModal'
-import AudioIcon from '../../../common/AudioIcon'
-import NEMeetingService from '../../../../services/NEMeeting'
-import { NEWaitingRoomMember } from 'neroom-web-sdk/dist/types/types/interface'
-import UserAvatar from '../../../common/Avatar'
+import './index.less'
 
 interface MemberItemProps {
   data: NEWaitingRoomMember
@@ -62,8 +57,8 @@ const WaitingRoomMemberItem: React.FC<MemberItemProps> = ({
     }
   }
 
-  function admitMember(uuid: string) {
-    neMeeting?.admitMember(uuid)?.catch((error: any) => {
+  function admitMember(uuid: string, autoAdmit?: boolean) {
+    neMeeting?.admitMember(uuid, autoAdmit)?.catch((error: any) => {
       Toast.fail(error?.msg || error?.message)
       throw error
     })
@@ -74,8 +69,9 @@ const WaitingRoomMemberItem: React.FC<MemberItemProps> = ({
       return
     }
     expelMemberModalRef.current = Modal.confirm({
-      title: t('removeWaitingRoomMember'),
-      content: (
+      title: t('participantExpelWaitingMemberDialogTitle'),
+      width: 270,
+      content: meetingInfo.enableBlacklist && (
         <Checkbox
           className="close-checkbox-tip"
           defaultChecked={notAllowJoinRef.current}
@@ -87,7 +83,8 @@ const WaitingRoomMemberItem: React.FC<MemberItemProps> = ({
       afterClose() {
         expelMemberModalRef.current = null
       },
-      okText: t('removeMember'),
+      cancelText: t('globalCancel'),
+      okText: t('participantRemove'),
       onOk: async () => {
         try {
           await neMeeting?.expelMember(uuid, notAllowJoinRef.current)
@@ -113,8 +110,15 @@ const WaitingRoomMemberItem: React.FC<MemberItemProps> = ({
     }
   }, [])
 
+  const items: MenuProps['items'] = [
+    {
+      label: t('waitingRoomAutoAdmit'),
+      key: 'waitingRoomAutoAdmit1',
+    },
+  ]
+
   return (
-    <div className="waiting-room-member-item">
+    <div className="waiting-room-member-item pd20">
       <div className="waiting-room-member-item-name">
         <div className="waiting-room-member-name-wrap">
           <UserAvatar
@@ -139,19 +143,31 @@ const WaitingRoomMemberItem: React.FC<MemberItemProps> = ({
       <div className="waiting-room-operate">
         {data.status === 1 ? (
           <>
-            <Button
-              className="wating-room-operate-btn mr-15"
-              size="small"
-              onClick={() => admitMember(data.uuid)}
+            <Dropdown
+              menu={{
+                items,
+                onClick: (e) => {
+                  admitMember(data.uuid, true)
+                },
+              }}
             >
-              {t('admit')}
-            </Button>
+              <Button
+                className="wating-room-operate-btn mr-15"
+                size="small"
+                onClick={() => admitMember(data.uuid)}
+              >
+                {t('admit')}
+                <svg className="icon iconfont" aria-hidden="true">
+                  <use xlinkHref="#iconjiantou-xia-copy" />
+                </svg>
+              </Button>
+            </Dropdown>
             <Button
               className="wating-room-operate-btn"
               size="small"
               onClick={() => expelMember(data.uuid)}
             >
-              {t('removeMember')}
+              {t('participantRemove')}
             </Button>
           </>
         ) : (

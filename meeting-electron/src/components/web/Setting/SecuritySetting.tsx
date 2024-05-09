@@ -171,7 +171,7 @@ const SecuritySetting: React.FC = () => {
               type="primary"
               onClick={() => onHandleModifyPwd()}
             >
-              {t('ok')}
+              {t('globalSure')}
             </Button>
           </div>
         }

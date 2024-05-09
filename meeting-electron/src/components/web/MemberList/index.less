@@ -11,7 +11,7 @@
   .nemeeting-drawer-footer {
     padding: 0;
   }
-  
+
   .waiting-room-unread-notify {
     position: absolute;
     top: 0;
@@ -27,7 +27,7 @@
     height: 30px;
     margin-top: 20px;
     border-radius: 16px;
-    border: 1px solid #d9d9d9
+    border: 1px solid #d9d9d9;
   }
   .member-list-content {
     // height: calc(100% - 200px);
@@ -35,7 +35,7 @@
     overflow-y: auto;
   }
   .member-List-footer-item-sharing {
-    justify-content: space-around!important;
+    justify-content: space-around !important;
   }
   .member-List-footer-item {
     display: flex;
@@ -43,14 +43,21 @@
     min-height: 40px;
     align-items: center;
     height: 68px;
-    border-top: 1px solid #EBEDF0;
-    justify-content: space-between;
+    border-top: 1px solid #ebedf0;
+    justify-content: center;
     &:last-child {
       border-bottom: none;
     }
     .member-List-footer-btn {
       border-radius: 16px;
       padding: 4px 20px;
+      margin: 0 5px;
+      span {
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        width: 100%;
+        overflow: hidden;
+      }
     }
     .member-list-footer-more-btn {
       width: 32px;
@@ -63,9 +70,12 @@
       cursor: pointer;
       font-size: 22px;
       &:hover {
-        background-color: #EFEFEF;;
+        background-color: #efefef;
       }
     }
+  }
+  .member-list-waiting-footer-item {
+    justify-content: space-around !important;
   }
   .nemeeting-member-list-tabs {
     height: 32px;
@@ -90,4 +100,8 @@
     border-radius: 5px;
     color: #fff;
   }
+}
+.nemeeting-waiting-room-all-tip {
+  color: #333;
+  font-size: 13px;
 }

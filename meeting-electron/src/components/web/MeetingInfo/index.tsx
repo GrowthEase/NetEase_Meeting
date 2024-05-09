@@ -56,7 +56,7 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({ className }) => {
               NEMeetingIdDisplayOption.DISPLAY_LONG_ID_ONLY && (
               <div className="meeting-info-item">
                 <div className="meeting-info-item-title">
-                  {t('shortMeetingId')}
+                  {t('meetingShortNum')}
                 </div>
                 <div className="meeting-info-item-content">
                   {meetingInfo.shortMeetingNum}{' '}
@@ -117,7 +117,9 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({ className }) => {
             </div>
           </div>
           <div className="meeting-info-item">
-            <div className="meeting-info-item-title">{t('meetingUrl')}</div>
+            <div className="meeting-info-item-title">
+              {t('meetingInviteUrl')}
+            </div>
             <div className="meeting-info-item-content">
               {meetingInfo.meetingInviteUrl}
               <svg

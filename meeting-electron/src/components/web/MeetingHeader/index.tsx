@@ -92,7 +92,7 @@ const MeetingHeader: React.FC<DrawerProps> = ({ ...restProps }) => {
                 </div>
                 <div className="meeting-info-item">
                   <div className="meeting-info-item-title">
-                    {t('meetingUrl')}
+                    {t('meetingInviteUrl')}
                   </div>
                   <div className="meeting-info-item-content">
                     {meetingInfo.meetingInviteUrl}

@@ -22,7 +22,7 @@ import {
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { IPCEvent } from '../../../../app/src/types'
-import YUVCanvas from '../../../libs/yuv-canvas'
+import { LOCALSTORAGE_USER_INFO } from '../../../config'
 import { EventType, MeetingDeviceInfo, MeetingSetting } from '../../../types'
 import {
   checkIsDefaultDevice,
@@ -32,11 +32,20 @@ import {
 } from '../../../utils'
 import BeautySetting from './BeautySetting'
 import './index.less'
+import MonitoringSetting from './MonitoringSetting'
 import SecuritySetting from './SecuritySetting'
-import { LOCALSTORAGE_USER_INFO } from '../../../config'
+import { useAudioSetting, useCanvasSetting } from './useSetting'
+
 const eventEmitter = new EventEmitter()
 
-export type SettingTabType = 'normal' | 'video' | 'audio' | 'beauty'
+export type SettingTabType =
+  | 'normal'
+  | 'video'
+  | 'audio'
+  | 'beauty'
+  | 'virtual'
+  | 'security'
+  | 'monitoring'
 
 type MenuItem = Required<MenuProps>['items'][number]
 
@@ -74,6 +83,7 @@ interface SettingProps {
 }
 
 interface NormalSettingProps {
+  inMeeting?: boolean
   setting: {
     openVideo: boolean
     openAudio: boolean
@@ -190,6 +200,7 @@ const defaultSetting: MeetingSetting = {
 }
 
 const NormalSetting: React.FC<NormalSettingProps> = ({
+  inMeeting,
   setting,
   onShowSpeakerListChange,
   onShowTimeChange,
@@ -310,18 +321,22 @@ const NormalSetting: React.FC<NormalSettingProps> = ({
           </div>
         </>
       )}
-      <div className="normal-setting-title">{t('language')}</div>
-      <Select
-        value={languageValue}
-        className="video-device-select"
-        suffixIcon={<CaretDownOutlined style={{ pointerEvents: 'none' }} />}
-        onChange={onLanguageChange}
-        options={[
-          { value: 'zh-CN', label: '简体中文' },
-          { value: 'en-US', label: 'English' },
-          { value: 'ja-JP', label: '日本語' },
-        ]}
-      />
+      {inMeeting ? null : (
+        <>
+          <div className="normal-setting-title">{t('language')}</div>
+          <Select
+            value={languageValue}
+            className="video-device-select"
+            suffixIcon={<CaretDownOutlined style={{ pointerEvents: 'none' }} />}
+            onChange={onLanguageChange}
+            options={[
+              { value: 'zh-CN', label: '简体中文' },
+              { value: 'en-US', label: 'English' },
+              { value: 'ja-JP', label: '日本語' },
+            ]}
+          />
+        </>
+      )}
     </div>
   )
 }
@@ -346,12 +361,10 @@ const VideoSetting: React.FC<VideoSettingProps> = ({
   startPreview,
   onEnableVideoMirroringChange,
   stopPreview,
-  enableTransparentWhiteboard,
   setting,
 }) => {
   const { t } = useTranslation()
-  const videoCanvas = useRef<HTMLDivElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const { videoCanvas, canvasRef } = useCanvasSetting()
   function handleChange(
     deviceId: string,
     deviceInfo: MeetingDeviceInfo | MeetingDeviceInfo[]
@@ -377,52 +390,6 @@ const VideoSetting: React.FC<VideoSettingProps> = ({
       stopPreview().finally(() => {
         videoCanvas.current && startPreview(videoCanvas.current)
       })
-    }
-    const canvas = canvasRef.current
-    const yuv = YUVCanvas.attach(canvas)
-    function handleVideoFrameData(
-      event,
-      uuid,
-      bSubVideo,
-      data,
-      type,
-      width,
-      height
-    ) {
-      if (canvas && videoCanvas.current) {
-        canvas.style.height = `${videoCanvas.current.clientHeight}px`
-      }
-      const buffer = {
-        format: {
-          width,
-          height,
-          chromaWidth: width / 2,
-          chromaHeight: height / 2,
-          cropLeft: 0, // default
-          cropTop: 0, // default
-          cropHeight: height,
-          cropWidth: width,
-          displayWidth: width, // derived from width via cropWidth
-          displayHeight: height, // derived from cropHeight
-        },
-        ...data,
-      }
-      yuv.drawFrame(buffer)
-    }
-    if (window.isElectronNative) {
-      window.ipcRenderer?.on(
-        EventType.previewVideoFrameData,
-        handleVideoFrameData
-      )
-    }
-    return () => {
-      // stopPreview()
-      if (window.isElectronNative) {
-        window.ipcRenderer?.off(
-          EventType.previewVideoFrameData,
-          handleVideoFrameData
-        )
-      }
     }
   }, [])
   return (
@@ -535,6 +502,7 @@ const AudioSetting: React.FC<AudioSettingProps> = ({
     isRecordTesting: false,
     isPlayoutTesting: false,
   })
+  useAudioSetting(eventEmitter)
 
   function onTestPlayout() {
     if (isStartPlayoutTest) {
@@ -982,7 +950,7 @@ const Setting: React.FC<SettingProps> = ({
     setting?.videoSetting || {
       deviceId: '',
       isDefaultDevice: false,
-      resolution: 1080,
+      resolution: 720,
       enableVideoMirroring: true,
     }
   )
@@ -1013,9 +981,7 @@ const Setting: React.FC<SettingProps> = ({
     }
   )
 
-  const [currenMenuKey, setCurrenMenuKey] = useState<
-    'normal' | 'video' | 'audio' | 'beauty' | 'virtual' | 'security'
-  >(defaultTab)
+  const [currenMenuKey, setCurrenMenuKey] = useState<SettingTabType>(defaultTab)
   const [videoDeviceList, setVideoDeviceList] = useState<NEDeviceBaseInfo[]>([])
   const [recordDeviceList, setRecordDeviceList] = useState<NEDeviceBaseInfo[]>(
     []
@@ -1044,21 +1010,33 @@ const Setting: React.FC<SettingProps> = ({
         t('general'),
         'normal',
         <svg className={'icon iconfont icon-menu '} aria-hidden="true">
-          <use xlinkHref="#iconyx-tv-settingx1"></use>
+          {currenMenuKey === 'normal' ? (
+            <use xlinkHref="#iconsetting-basic-selected"></use>
+          ) : (
+            <use xlinkHref="#iconsetting-basic"></use>
+          )}
         </svg>
       ),
       getItem(
         t('audio'),
         'audio',
-        <svg className={'icon iconfont icon-menu '} aria-hidden="true">
-          <use xlinkHref="#iconyx-tv-voice-onx"></use>
+        <svg className={'icon iconfont icon-menu'} aria-hidden="true">
+          {currenMenuKey === 'audio' ? (
+            <use xlinkHref="#iconsetting-audio-selected"></use>
+          ) : (
+            <use xlinkHref="#iconsetting-audio"></use>
+          )}
         </svg>
       ),
       getItem(
         t('video'),
         'video',
         <svg className={'icon iconfont icon-menu '} aria-hidden="true">
-          <use xlinkHref="#iconyx-tv-video-onx"></use>
+          {currenMenuKey === 'video' ? (
+            <use xlinkHref="#iconsetting-video-selected"></use>
+          ) : (
+            <use xlinkHref="#iconsetting-video"></use>
+          )}
         </svg>
       ),
     ]
@@ -1070,7 +1048,11 @@ const Setting: React.FC<SettingProps> = ({
           </span>,
           'beauty',
           <svg className={'icon iconfont icon-menu '} aria-hidden="true">
-            <use xlinkHref="#icona-Frame2"></use>
+            {currenMenuKey === 'beauty' ? (
+              <use xlinkHref="#iconsetting-beauty-selected"></use>
+            ) : (
+              <use xlinkHref="#iconsetting-beauty"></use>
+            )}
           </svg>
         )
       )
@@ -1081,13 +1063,32 @@ const Setting: React.FC<SettingProps> = ({
           t('accountAndSecurity'),
           'security',
           <svg className={'icon iconfont icon-menu '} aria-hidden="true">
-            <use xlinkHref="#iconshezhi-zhanghaoyuanquan"></use>
+            {currenMenuKey === 'security' ? (
+              <use xlinkHref="#iconsetting-account-selected"></use>
+            ) : (
+              <use xlinkHref="#iconsetting-account"></use>
+            )}
+          </svg>
+        )
+      )
+    }
+    if (window.isElectronNative && inMeeting) {
+      defaultMenus.push(
+        getItem(
+          t('monitoring'),
+          'monitoring',
+          <svg className={'icon iconfont icon-menu '} aria-hidden="true">
+            {currenMenuKey === 'monitoring' ? (
+              <use xlinkHref="#iconsetting-monitoring-selected"></use>
+            ) : (
+              <use xlinkHref="#iconsetting-monitoring"></use>
+            )}
           </svg>
         )
       )
     }
     return defaultMenus
-  }, [showBeauty, showSecurity, i18n.language])
+  }, [showBeauty, showSecurity, i18n.language, inMeeting, currenMenuKey])
 
   const handleMenuItems = () => {
     const globalConfig = JSON.parse(
@@ -1227,7 +1228,8 @@ const Setting: React.FC<SettingProps> = ({
 
   useEffect(() => {
     getPreMeetingSetting()
-    getDevices()
+    // 新窗口模式需要延迟1s获取，否则会中页面会获取不到
+    getDevices(true)
     function handleDeviceChange(e) {
       getDevices()
     }
@@ -1240,7 +1242,15 @@ const Setting: React.FC<SettingProps> = ({
         setVirtualBackgroundList(value)
       }
     )
+    function handleMessage(e: MessageEvent) {
+      const { event } = e.data
+      if (event === 'openSetting') {
+        getDevices(true)
+      }
+    }
+    window.addEventListener('message', handleMessage)
     return () => {
+      window.removeEventListener('message', handleMessage)
       navigator.mediaDevices.removeEventListener('devicechange', debounceHandle)
     }
   }, [i18n.language])
@@ -1249,12 +1259,13 @@ const Setting: React.FC<SettingProps> = ({
     if (previewContext) {
       const virtualBackgroundPath =
         settingRef.current?.beautySetting.virtualBackgroundPath
+      console.log('virtualBackgroundPath>>>>>', virtualBackgroundPath)
       if (virtualBackgroundPath) {
         //@ts-ignore
-        previewController?.enableVirtualBackground(
-          !!virtualBackgroundPath,
-          virtualBackgroundPath
-        )
+        // previewController?.enableVirtualBackground(
+        //   !!virtualBackgroundPath,
+        //   virtualBackgroundPath
+        // )
       }
 
       const previewRoomListener = {
@@ -1299,8 +1310,8 @@ const Setting: React.FC<SettingProps> = ({
     }
   }
 
-  function getDevices() {
-    let _setting = settingRef.current
+  function getDevices(init = false) {
+    let _setting = init ? undefined : settingRef.current
     if (!_setting) {
       const tmpSetting = localStorage.getItem('ne-meeting-setting')
       if (tmpSetting) {
@@ -1366,25 +1377,24 @@ const Setting: React.FC<SettingProps> = ({
               }
             }
           }
-          // if (selectedDeviceId != _setting?.videoSetting.deviceId) {
-
-          const defaultDeviceId = getDefaultDeviceId(selectedDeviceId)
-          previewController?.switchDevice({
-            type: 'camera',
-            deviceId: defaultDeviceId,
-          })
-          if (window.isElectronNative) {
-            window.ipcRenderer?.send(IPCEvent.previewController, {
-              method: 'switchDevice',
-              args: [
-                {
-                  type: 'camera',
-                  deviceId: defaultDeviceId,
-                },
-              ],
+          if (selectedDeviceId != _setting?.videoSetting.deviceId) {
+            const defaultDeviceId = getDefaultDeviceId(selectedDeviceId)
+            previewController?.switchDevice({
+              type: 'camera',
+              deviceId: defaultDeviceId,
             })
+            if (window.isElectronNative) {
+              window.ipcRenderer?.send(IPCEvent.previewController, {
+                method: 'switchDevice',
+                args: [
+                  {
+                    type: 'camera',
+                    deviceId: defaultDeviceId,
+                  },
+                ],
+              })
+            }
           }
-          // }
         } else {
           setVideoSetting({
             ..._setting!.videoSetting,
@@ -1429,24 +1439,24 @@ const Setting: React.FC<SettingProps> = ({
               _audioSetting.isDefaultRecordDevice = isDefaultDevice
             }
           }
-          // if (selectedDeviceId != _audioSetting.recordDeviceId) {
-          const defaultDeviceId = getDefaultDeviceId(selectedDeviceId)
-          previewController?.switchDevice({
-            type: 'microphone',
-            deviceId: defaultDeviceId,
-          })
-          if (window.isElectronNative) {
-            window.ipcRenderer?.send(IPCEvent.previewController, {
-              method: 'switchDevice',
-              args: [
-                {
-                  type: 'microphone',
-                  deviceId: defaultDeviceId,
-                },
-              ],
+          if (selectedDeviceId != _audioSetting.recordDeviceId) {
+            const defaultDeviceId = getDefaultDeviceId(selectedDeviceId)
+            previewController?.switchDevice({
+              type: 'microphone',
+              deviceId: defaultDeviceId,
             })
+            if (window.isElectronNative) {
+              window.ipcRenderer?.send(IPCEvent.previewController, {
+                method: 'switchDevice',
+                args: [
+                  {
+                    type: 'microphone',
+                    deviceId: defaultDeviceId,
+                  },
+                ],
+              })
+            }
           }
-          // }
         } else {
           _audioSetting.recordDeviceId = ''
         }
@@ -1486,25 +1496,25 @@ const Setting: React.FC<SettingProps> = ({
                   _audioSetting.isDefaultPlayoutDevice = isDefaultDevice
                 }
               }
-              // if (selectedDeviceId != _audioSetting.playoutDeviceId) {
-              const defaultDeviceId = getDefaultDeviceId(selectedDeviceId)
-              previewController?.switchDevice({
-                type: 'speaker',
-                deviceId: defaultDeviceId,
-              })
-
-              if (window.isElectronNative) {
-                window.ipcRenderer?.send(IPCEvent.previewController, {
-                  method: 'switchDevice',
-                  args: [
-                    {
-                      type: 'speaker',
-                      deviceId: defaultDeviceId,
-                    },
-                  ],
+              if (selectedDeviceId != _audioSetting.playoutDeviceId) {
+                const defaultDeviceId = getDefaultDeviceId(selectedDeviceId)
+                previewController?.switchDevice({
+                  type: 'speaker',
+                  deviceId: defaultDeviceId,
                 })
+
+                if (window.isElectronNative) {
+                  window.ipcRenderer?.send(IPCEvent.previewController, {
+                    method: 'switchDevice',
+                    args: [
+                      {
+                        type: 'speaker',
+                        deviceId: defaultDeviceId,
+                      },
+                    ],
+                  })
+                }
               }
-              // }
             } else {
               _audioSetting.playoutDeviceId = ''
             }
@@ -1575,7 +1585,6 @@ const Setting: React.FC<SettingProps> = ({
     deviceName: string,
     deviceInfo: MeetingDeviceInfo
   ) {
-    console.log('onVideoDeviceChange', deviceInfo)
     setVideoSetting({
       ...videoSetting,
       deviceId: deviceInfo.deviceId,
@@ -1678,12 +1687,12 @@ const Setting: React.FC<SettingProps> = ({
     try {
       // electron下需要调用
       // @ts-ignore
-      if (previewController.adjustPlaybackSignalVolume) {
+      if (window.isElectronNative) {
         // @ts-ignore
         previewController.adjustPlaybackSignalVolume(value)
       } else {
         // @ts-ignore
-        previewController._rtc?._client.setPlaybackVolume(value)
+        previewController._rtc?._client?.setPlaybackVolume(value)
       }
     } catch (e) {}
     setAudioSetting({
@@ -1693,12 +1702,12 @@ const Setting: React.FC<SettingProps> = ({
   }
   function setPlaybackVolume(volume: number) {
     // @ts-ignore
-    previewController._rtc?._client.setPlaybackVolume(volume)
+    previewController._rtc?._client?.setPlaybackVolume(volume)
   }
 
   function setCaptureVolume(volume: number) {
     // @ts-ignore
-    previewController._rtc?.localStream.setCaptureVolume(volume)
+    previewController._rtc?.localStream?.setCaptureVolume(volume)
   }
 
   function onRecordOutputChange(value: number) {
@@ -1771,8 +1780,8 @@ const Setting: React.FC<SettingProps> = ({
 
   function startPreview(view: HTMLElement) {
     testVideoStateRef.current = true
-    if (window.ipcRenderer) {
-      previewController?.setupLocalVideoCanvas(view)
+    if (window.isElectronNative) {
+      !inMeeting && previewController?.setupLocalVideoCanvas(view)
 
       // if(window.isWins32) {
       // windows 如果设置页面和会中页面同时打开设备会占用，所以统一到会中渲染进程开启
@@ -1875,6 +1884,7 @@ const Setting: React.FC<SettingProps> = ({
       <div className="setting-content">
         {currenMenuKey === 'normal' && (
           <NormalSetting
+            inMeeting={inMeeting}
             onEnableTransparentWhiteboardChange={
               onEnableTransparentWhiteboardChange
             }
@@ -1933,6 +1943,7 @@ const Setting: React.FC<SettingProps> = ({
         {currenMenuKey === 'security' && <SecuritySetting />}
         {currenMenuKey === 'beauty' && (
           <BeautySetting
+            inMeeting={inMeeting}
             eventEmitter={eventEmitter}
             previewController={previewController}
             enableVideoMirroring={videoSetting.enableVideoMirroring}
@@ -1955,6 +1966,7 @@ const Setting: React.FC<SettingProps> = ({
             }}
           />
         )}
+        {currenMenuKey === 'monitoring' && <MonitoringSetting />}
       </div>
     </div>
   )

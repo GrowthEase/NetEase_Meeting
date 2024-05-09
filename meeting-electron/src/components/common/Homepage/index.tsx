@@ -545,10 +545,10 @@ const Homepage = () => {
                     setShowExitApp(false)
                   }}
                 >
-                  {t('cancel')}
+                  {t('globalCancel')}
                 </Button>
                 <Button className="update-btn" type="primary" onClick={exitApp}>
-                  {t('ok')}
+                  {t('globalSure')}
                 </Button>
               </div>
             </div>

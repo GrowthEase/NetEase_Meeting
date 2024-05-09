@@ -1,8 +1,11 @@
 interface Window {
   systemPlatform?: 'win32' | 'darwin'
   isElectronNative?: boolean
-  NERoom?: any,
+  NERoom?: any
   isWins32: boolean
+  webFrame?: {
+    clearCache: () => void
+  }
   ipcRenderer?: {
     send: (channel: string, ...args: any[]) => void
     sendSync: (channel: string, ...args: any[]) => any

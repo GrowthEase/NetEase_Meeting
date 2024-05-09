@@ -11,6 +11,7 @@ import {
   NEMember,
 } from '../../../types'
 import Toast from '../../common/toast'
+import { SettingTabType } from '../Setting/Setting'
 import './index.less'
 
 interface NetworkInfoProps {
@@ -18,6 +19,7 @@ interface NetworkInfoProps {
   networkDelay: number
   upPacketLossRate?: number
   downPacketLossRate?: number
+  onSettingClick?: (type: SettingTabType) => void
 }
 
 interface PacketLossRate {
@@ -31,6 +33,7 @@ const NetworkInfo: React.FC<NetworkInfoProps> = ({
   networkDelay,
   upPacketLossRate,
   downPacketLossRate,
+  onSettingClick,
 }) => {
   const { i18n, t } = useTranslation()
   const title = useMemo(() => {
@@ -53,43 +56,59 @@ const NetworkInfo: React.FC<NetworkInfoProps> = ({
   }, [i18n.language])
 
   return (
-    <div className="nemeeting-network-info" style={style}>
-      <p className="nemeeting-title">{title}</p>
-      <div className="network-content">
-        <div className="network-item">
-          <p className="network-item-title">{t('latency')}：</p>
-          <p>{networkDelay}ms</p>
-        </div>
-        {!!window.isElectronNative && (
-          <div className="network-packet-loss">
-            <p>{t('packetLossRate')}：</p>
-            <div className="network-packet-loss-rate">
-              <div>
-                <svg className="icon iconfont icon-up-rate" aria-hidden="true">
-                  <use xlinkHref="#icona-Frame341"></use>
-                </svg>
-                {upPacketLossRate}%
-              </div>
-              <div>
-                <svg
-                  className="icon iconfont icon-down-rate"
-                  aria-hidden="true"
-                >
-                  <use xlinkHref="#icona-Frame340"></use>
-                </svg>
-                {downPacketLossRate}%
+    <>
+      <div className="nemeeting-network-info" style={style}>
+        <p className="nemeeting-title">{title}</p>
+        <div className="network-content">
+          <div className="network-item">
+            <p className="network-item-title">{t('latency')}：</p>
+            <p>{networkDelay}ms</p>
+          </div>
+          {!!window.isElectronNative && (
+            <div className="network-packet-loss">
+              <p>{t('packetLossRate')}：</p>
+              <div className="network-packet-loss-rate">
+                <div>
+                  <svg
+                    className="icon iconfont icon-up-rate"
+                    aria-hidden="true"
+                  >
+                    <use xlinkHref="#icona-Frame341"></use>
+                  </svg>
+                  {upPacketLossRate}%
+                </div>
+                <div>
+                  <svg
+                    className="icon iconfont icon-down-rate"
+                    aria-hidden="true"
+                  >
+                    <use xlinkHref="#icona-Frame340"></use>
+                  </svg>
+                  {downPacketLossRate}%
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+      {window.isElectronNative ? (
+        <div
+          className="more-monitoring"
+          onClick={() => {
+            onSettingClick?.('monitoring')
+          }}
+        >
+          {t('moreMonitoring')}
+        </div>
+      ) : null}
+    </>
   )
 }
-const Network: React.FC<{ className?: string; onlyIcon?: boolean }> = ({
-  className,
-  onlyIcon,
-}) => {
+const Network: React.FC<{
+  className?: string
+  onlyIcon?: boolean
+  onSettingClick?: (type: SettingTabType) => void
+}> = ({ className, onlyIcon, onSettingClick }) => {
   const { eventEmitter, online } =
     useContext<GlobalContextInterface>(GlobalContext)
   const { t } = useTranslation()
@@ -181,7 +200,11 @@ const Network: React.FC<{ className?: string; onlyIcon?: boolean }> = ({
           : data.rxAudioPacketLossRate
         setUpPacketLossRate(_upPacketLoss)
         setDownPacketLossRate(_downPacketLoss)
-        setNetworkDelay(data.downRtt)
+        let rtt = data.downRtt
+        if (data.upRtt) {
+          rtt += data.upRtt
+        }
+        setNetworkDelay(rtt)
       }
     )
     return () => {
@@ -224,6 +247,7 @@ const Network: React.FC<{ className?: string; onlyIcon?: boolean }> = ({
               networkDelay={networkDelay}
               upPacketLossRate={upPacketLossRate}
               downPacketLossRate={downPacketLossRate}
+              onSettingClick={onSettingClick}
             />
           }
         >
