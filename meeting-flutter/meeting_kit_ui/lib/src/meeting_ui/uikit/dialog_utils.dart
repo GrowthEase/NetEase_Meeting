@@ -19,12 +19,14 @@ class DialogUtils {
     return showDialog(
         context: context,
         useRootNavigator: false,
+        barrierDismissible: canBack,
         routeSettings: RouteSettings(name: title),
         builder: (BuildContext buildContext) {
           contextNotifier?.value = buildContext;
           return NEMeetingUIKitLocalizationsScope(
               builder: (BuildContext context) {
-            return WillPopScope(
+            return PopScope(
+              canPop: canBack,
               child: CupertinoAlertDialog(
                 title: TextUtils.isEmpty(title) ? null : Text(title),
                 content: Text(content,
@@ -47,9 +49,6 @@ class DialogUtils {
                   ),
                 ],
               ),
-              onWillPop: () async {
-                return canBack;
-              },
             );
           });
         }).whenComplete(() => contextNotifier?.value = null);
@@ -61,11 +60,13 @@ class DialogUtils {
     return showDialog(
         context: context,
         useRootNavigator: false,
+        barrierDismissible: canBack,
         routeSettings: RouteSettings(name: title),
         builder: (_) {
           return NEMeetingUIKitLocalizationsScope(
               builder: (BuildContext context) {
-            return WillPopScope(
+            return PopScope(
+              canPop: canBack,
               child: CupertinoAlertDialog(
                 title: TextUtils.isEmpty(title) ? null : Text(title),
                 content: content != null
@@ -81,9 +82,6 @@ class DialogUtils {
                   ),
                 ],
               ),
-              onWillPop: () async {
-                return canBack;
-              },
             );
           });
         });
@@ -102,11 +100,13 @@ class DialogUtils {
     return showDialogWithDismissCallback(
         context: context,
         useRootNavigator: false,
+        barrierDismissible: canBack,
         routeSettings: routeSettings ?? RouteSettings(name: title),
         builder: (_) {
           return NEMeetingUIKitLocalizationsScope(
               builder: (BuildContext context) {
-            return WillPopScope(
+            return PopScope(
+              canPop: canBack,
               child: CupertinoAlertDialog(
                 title: TextUtils.isEmpty(title) ? null : Text(title),
                 content: content != null
@@ -122,9 +122,6 @@ class DialogUtils {
                   ),
                 ],
               ),
-              onWillPop: () async {
-                return canBack;
-              },
             );
           });
         });
@@ -137,7 +134,7 @@ class DialogUtils {
     Color? barrierColor = Colors.black54,
     String? barrierLabel,
     bool useSafeArea = true,
-    bool useRootNavigator = true,
+    bool useRootNavigator = false,
     RouteSettings? routeSettings,
     Offset? anchorPoint,
     TraversalEdgeBehavior? traversalEdgeBehavior,
@@ -166,7 +163,7 @@ class DialogUtils {
     );
     Navigator.of(context, rootNavigator: useRootNavigator).push<T>(route);
     return () {
-      if (route.canPop) {
+      if (context.mounted && route.canPop) {
         Navigator.of(context, rootNavigator: useRootNavigator)
             .removeRoute(route);
         return true;
@@ -200,6 +197,55 @@ class DialogUtils {
           );
         });
       },
+    );
+  }
+
+  /// 打开企业通讯录底部弹窗
+  static Future showContactsPopup({
+    required BuildContext context,
+    required String Function(int) titleBuilder,
+    required List<NEScheduledMember> scheduledMemberList,
+    required String myUserUuid,
+    required String? ownerUuid,
+    bool editable = true,
+    Future Function()? addActionClick,
+    Future Function()? loadMoreContacts,
+  }) {
+    return showMeetingPopupPageRoute(
+      context: context,
+      builder: (_) => NEMeetingUIKitLocalizationsScope(
+        child: ContactsPopup(
+          titleBuilder: titleBuilder,
+          scheduledMemberList: scheduledMemberList,
+          myUserUuid: myUserUuid,
+          addActionClick: addActionClick,
+          editable: editable,
+          ownerUuid: ownerUuid,
+          loadMoreContacts: loadMoreContacts,
+        ),
+      ),
+      routeSettings: RouteSettings(name: 'ContactsPopup'),
+    );
+  }
+
+  /// 打开企业通讯录选择联系人底部弹窗
+  static Future showContactsAddPopup(
+      {required BuildContext context,
+      required String Function(int) titleBuilder,
+      required List<NEScheduledMember> scheduledMemberList,
+      required String myUserUuid,
+      required ContactItemClickCallback itemClickCallback}) {
+    return showMeetingPopupPageRoute(
+      context: context,
+      builder: (_) => NEMeetingUIKitLocalizationsScope(
+        child: ContactsAddPopup(
+          titleBuilder: titleBuilder,
+          scheduledMemberList: scheduledMemberList,
+          myUserUuid: myUserUuid,
+          itemClickCallback: itemClickCallback,
+        ),
+      ),
+      routeSettings: RouteSettings(name: 'ContactsAddPopup'),
     );
   }
 
@@ -359,6 +405,7 @@ class DialogUtils {
   }) {
     return showDialogWithDismissCallback(
       context: context,
+      useRootNavigator: false,
       builder: (_) {
         return NEMeetingUIKitLocalizationsScope(
           builder: (context) {
@@ -401,6 +448,7 @@ class DialogUtils {
   }) {
     return showDialogWithDismissCallback(
       context: context,
+      useRootNavigator: false,
       builder: (_) {
         return NEMeetingUIKitLocalizationsScope(
           builder: (context) {

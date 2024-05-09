@@ -45,16 +45,11 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-        child: Scaffold(
-            body: Container(
-          color: Colors.black,
-          child: buildVirtualPreViewWidget(context),
-        )),
-        onWillPop: () async {
-          _requestPop();
-          return false;
-        });
+    return Scaffold(
+        body: Container(
+      color: Colors.black,
+      child: buildVirtualPreViewWidget(context),
+    ));
   }
 
   Widget buildVirtualPreViewWidget(BuildContext context) {
@@ -224,7 +219,7 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
                   style: TextStyle(color: Colors.blue),
                 ),
               ),
-              onTap: () => _requestPop(),
+              onTap: () => Navigator.of(context).pop(),
             ),
           ]),
         ),
@@ -290,9 +285,5 @@ class _VirtualBackgroundPageState extends BaseState<VirtualBackgroundPage> {
     Future.delayed(Duration(milliseconds: 200), () {
       if (mounted) setState(() {});
     });
-  }
-
-  void _requestPop() {
-    Navigator.of(context).pop();
   }
 }

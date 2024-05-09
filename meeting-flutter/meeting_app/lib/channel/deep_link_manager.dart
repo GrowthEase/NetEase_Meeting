@@ -171,10 +171,6 @@ class DeepLinkManager {
 
   Future<bool> _checkMeeting(String? meetingKey,
       {required bool needConfirm, required int type}) async {
-    assert(() {
-      debugPrintSynchronously('$_TAG: _checkMeeting \n ${StackTrace.current}');
-      return true;
-    }());
     Alog.i(
         tag: _TAG,
         content:
@@ -275,7 +271,12 @@ class DeepLinkManager {
       // needConfirm：如果为true就是剪切板入会，如果为false就是链接入会
       if (!needConfirm) {
         // 新需求：如果是链接入会，需要跳到加入会议页面，手动加入会议
-        AppProfile.deepLinkMeetingId = meetingInfo?.meetingNum ?? meetingKey;
+        final meetingId = meetingInfo?.meetingNum ?? meetingKey;
+        if (AppProfile.deepLinkMeetingId == meetingId) {
+          /// 主动查询和被动上报会连续触发这个回调，所以需要判断是否已经处理过
+          return true;
+        }
+        AppProfile.deepLinkMeetingId = meetingId;
         NavUtils.pushNamedAndRemoveUntil(_context!, RouterName.meetJoin,
             utilRouteName: RouterName.homePage);
         _checkingMeetingKey = null;
@@ -357,7 +358,7 @@ class DeepLinkManager {
       ToastUtils.showToast(
           context, meetingAppLocalizations.authLoginOnOtherDevice);
       AuthManager().logout();
-      NavUtils.pushNamedAndRemoveUntil(context, RouterName.entrance);
+      NavUtils.toEntrance(context);
     } else if (errorCode == NEMeetingErrorCode.alreadyInMeeting) {
       ToastUtils.showToast(context,
           meetingAppLocalizations.meetingOperationNotSupportedInMeeting);

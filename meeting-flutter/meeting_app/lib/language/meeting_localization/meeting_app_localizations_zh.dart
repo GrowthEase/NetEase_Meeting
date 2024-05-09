@@ -54,7 +54,7 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get globalCopyright => '网易公司版权所有©1997-2024';
 
   @override
-  String get globalAppRegistryNO => '浙ICP17006647号-124A';
+  String get globalAppRegistryNO => '浙ICP备17006647号-124A';
 
   @override
   String get globalNetworkUnavailableCheck => '网络连接失败，请检查你的网络连接！';
@@ -99,6 +99,12 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get globalDay => '日';
 
   @override
+  String get globalHours => '小时';
+
+  @override
+  String get globalMinutes => '分钟';
+
+  @override
   String get globalSave => '保存';
 
   @override
@@ -133,6 +139,12 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
 
   @override
   String get globalIKnow => '我知道了';
+
+  @override
+  String get globalAdd => '添加';
+
+  @override
+  String get globalDateFormat => 'yyyy年MM月dd日';
 
   @override
   String get authImmediatelyRegister => '立即注册';
@@ -567,6 +579,9 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get meetingHasBeenCanceled => '会议已被其他登录设备取消';
 
   @override
+  String get meetingHasBeenCanceledByOwner => '会议被创建者取消';
+
+  @override
   String get meetingRepeat => '周期';
 
   @override
@@ -725,6 +740,35 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get meetingRepeatCancelEdit => '取消编辑';
 
   @override
+  String get meetingGuestJoin => '访客入会';
+
+  @override
+  String get meetingGuestJoinSecurityNotice => '已开启访客入会，请注意会议信息安全';
+
+  @override
+  String get meetingGuestJoinEnableTip => '开启后允许外部人员参会';
+
+  @override
+  String get meetingAttendees => '参会者';
+
+  @override
+  String meetingAttendeeCount(Object count) {
+    return '$count人';
+  }
+
+  @override
+  String get meetingAddAttendee => '添加参会者';
+
+  @override
+  String get meetingSearchAndAddAttendee => '搜索并添加参会人';
+
+  @override
+  String get meetingOpen => '展开';
+
+  @override
+  String get meetingClose => '收起';
+
+  @override
   String get historyMeeting => '历史会议';
 
   @override
@@ -735,6 +779,9 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
 
   @override
   String get historyMeetingListEmpty => '暂无历史会议';
+
+  @override
+  String get historyCollectMeetingListEmpty => '暂无收藏会议';
 
   @override
   String get historyChat => '聊天记录';
@@ -920,6 +967,11 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get settingServiceBundleTitle => '您可召开：';
 
   @override
+  String settingServiceBundleExpireTime(Object expireTime) {
+    return '服务到期：$expireTime';
+  }
+
+  @override
   String settingServiceBundleDetailLimitedMinutes(
       Object maxCount, Object maxMinutes) {
     return '$maxCount人、限时$maxMinutes分钟会议';
@@ -929,6 +981,12 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String settingServiceBundleDetailUnlimitedMinutes(Object maxCount) {
     return '$maxCount人、单场不限时会议';
   }
+
+  @override
+  String get settingServiceBundleExpirationDate => '服务到期：';
+
+  @override
+  String get settingServiceBundleExpirationDateTip => '服务已到期，如需延长时问，请联系企业管理员。';
 
   @override
   String get settingUpdateFailed => '更新失败';
@@ -956,6 +1014,15 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
 
   @override
   String get settingComfirmExitApp => '确定退出应用';
+
+  @override
+  String get settingSwitchLanguage => '语言切换';
+
+  @override
+  String get settingSetLanguage => '设置语言';
+
+  @override
+  String get settingLanguageTip => '简体中文';
 
   @override
   String get feedbackInRoom => '问题反馈';

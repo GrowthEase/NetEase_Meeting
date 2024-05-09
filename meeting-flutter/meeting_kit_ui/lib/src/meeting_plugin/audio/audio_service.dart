@@ -62,6 +62,9 @@ class NEAudioService extends _Service {
   Future<void> showAudioDevicePicker() =>
       _methodChannel.invokeMethod('showAudioDevicePicker', buildArguments());
 
+  Future<void> restartBluetooth() =>
+      _methodChannel.invokeMethod('restartBluetooth', buildArguments());
+
   /// 离开房间时调用，清理音频状态
   Future<void> stop() => _methodChannel.invokeMethod('stop', buildArguments());
 

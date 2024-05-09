@@ -107,6 +107,7 @@ class MeetingValueKey {
   static const scheduleWaitingRoom = ValueKey('waitingRoom');
   static const scheduleEnableJoinBeforeHost =
       ValueKey('scheduleEnableJoinBeforeHost');
+  static const scheduleEnableGuestJoin = ValueKey('scheduleEnableGuestJoin');
   static const scheduleAttendeeAudio = ValueKey('scheduleAttendeeAudio');
   static const scheduleAttendeeAudioAllow =
       ValueKey('scheduleAttendeeAudioAllow');

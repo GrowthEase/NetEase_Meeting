@@ -65,6 +65,9 @@ class _NEMeetingServiceImpl extends NEMeetingService
                     : VideoControlProperty.offNotAllowSelfOn);
       }
     });
+    roomProperties[GuestJoinProperty.key] = opts.enableGuestJoin
+        ? GuestJoinProperty.enable
+        : GuestJoinProperty.disable;
     if (param.extraData?.isNotEmpty ?? false) {
       roomProperties[MeetingPropertyKeys.kExtraData] = param.extraData;
     }
@@ -128,9 +131,8 @@ class _NEMeetingServiceImpl extends NEMeetingService
 
   @override
   Future<NEResult<NERoomContext>> joinMeeting(
-    NEJoinMeetingParams param,
-    NEJoinMeetingOptions opts,
-  ) async {
+      NEJoinMeetingParams param, NEJoinMeetingOptions opts,
+      {bool isInvite = false}) async {
     apiLogger.i('joinMeeting');
     final trackingEvent = param.trackingEvent;
 
@@ -155,28 +157,31 @@ class _NEMeetingServiceImpl extends NEMeetingService
     trackingEvent?.beginStep(kMeetingStepJoinRoom);
     final meetingInfo = meetingInfoResult.nonNullData;
     final authorization = meetingInfo.authorization;
+    final _params = NEJoinRoomParams(
+      roomUuid: meetingInfo.roomUuid,
+      userName: param.displayName,
+      role: MeetingRoles.kUndefined,
+      password: param.password,
+      avatar: param.avatar ?? _accountService.getAccountInfo()?.avatar,
+      injectedAuthorization: authorization != null
+          ? NEInjectedAuthorization(
+              appKey: authorization.appKey,
+              user: authorization.user,
+              token: authorization.token)
+          : null,
+      initialMyProperties: param.tag != null && param.tag!.isNotEmpty
+          ? {
+              MeetingPropertyKeys.kMemberTag: param.tag!,
+            }
+          : null,
+    );
+    final _options = NEJoinRoomOptions(
+      enableMyAudioDeviceOnJoinRtc: opts.enableMyAudioDeviceOnJoinRtc,
+    );
     var joinRoomResult = await _roomService.joinRoom(
-      NEJoinRoomParams(
-        roomUuid: meetingInfo.roomUuid,
-        userName: param.displayName,
-        role: MeetingRoles.kUndefined,
-        password: param.password,
-        avatar: param.avatar ?? _accountService.getAccountInfo()?.avatar,
-        injectedAuthorization: authorization != null
-            ? NEInjectedAuthorization(
-                appKey: authorization.appKey,
-                user: authorization.user,
-                token: authorization.token)
-            : null,
-        initialMyProperties: param.tag != null && param.tag!.isNotEmpty
-            ? {
-                MeetingPropertyKeys.kMemberTag: param.tag!,
-              }
-            : null,
-      ),
-      NEJoinRoomOptions(
-        enableMyAudioDeviceOnJoinRtc: opts.enableMyAudioDeviceOnJoinRtc,
-      ),
+      _params,
+      _options,
+      isInvite: isInvite,
     );
     trackingEvent?.endStepWithResult(joinRoomResult);
     if (joinRoomResult.code == MeetingErrorCode.success &&

@@ -2,13 +2,14 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:nemeeting/base/util/global_preferences.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/model/account_app_info.dart';
 import 'package:nemeeting/service/model/account_apps.dart';
-import 'package:nemeeting/service/model/chatroom_info.dart';
 import 'package:nemeeting/service/model/client_upgrade_info.dart';
 import 'package:nemeeting/service/model/history_meeting.dart';
 import 'package:nemeeting/service/model/history_meeting_detail.dart';
@@ -37,6 +38,7 @@ import 'package:nemeeting/service/proto/app_http_proto/security_notice_proto.dar
 import 'package:nemeeting/service/proto/app_http_proto/update_avatar_proto.dart';
 import 'package:nemeeting/service/model/security_notice_info.dart';
 import 'package:nemeeting/service/proto/get_meeting_info_proto.dart';
+import 'package:nemeeting/service/repo/corp_repo.dart';
 import 'package:nemeeting/service/response/result.dart';
 import 'package:nemeeting/service/service/base_service.dart';
 
@@ -47,6 +49,8 @@ class AppService extends BaseService {
   static final AppService _singleton = AppService._internal();
 
   factory AppService() => _singleton;
+
+  NECorpInfo? _corpInfo = null;
 
   /// 安全提示接口
   Future<Result<AppNotifications>> getSecurityNoticeConfigs(
@@ -206,5 +210,22 @@ class AppService extends BaseService {
       return execute(HistoryMeetingDetailsProto(appKey, roomArchiveId));
     }
     return Result(code: -1, msg: 'Empty appKey or userId');
+  }
+
+  void saveCorpInfo(NECorpInfo corpInfo) {
+    GlobalPreferences().setCorpInfo(jsonEncode(corpInfo));
+  }
+
+  Future<NECorpInfo?> getCorpInfo() async {
+    if (_corpInfo != null) {
+      return _corpInfo;
+    }
+    String? corpInfo = await GlobalPreferences().corpInfo;
+    if (corpInfo != null) {
+      _corpInfo = NECorpInfo.fromJson(jsonDecode(corpInfo) as Map);
+      return _corpInfo;
+    } else {
+      return null;
+    }
   }
 }

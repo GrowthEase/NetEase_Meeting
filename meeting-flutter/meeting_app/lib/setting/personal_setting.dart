@@ -347,9 +347,7 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting>
                         key: MeetingValueKey.logoutByDialog,
                         style: TextStyle(color: AppColors.colorFE3B30)),
                     onPressed: () {
-                      AuthManager().logout();
-                      NavUtils.pushNamedAndRemoveUntil(
-                          context, RouterName.entrance);
+                      _logout();
                     }),
               ],
               cancelButton: CupertinoActionSheetAction(
@@ -380,14 +378,17 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting>
               CupertinoDialogAction(
                 child: Text(meetingAppLocalizations.settingLogout),
                 onPressed: () {
-                  AuthManager().logout();
-                  NavUtils.pushNamedAndRemoveUntil(
-                      context, RouterName.entrance);
+                  _logout();
                 },
               ),
             ],
           );
         });
+  }
+
+  _logout() {
+    AuthManager().logout();
+    NavUtils.toEntrance(context);
   }
 
   Container _buildSplit() {

@@ -4,22 +4,22 @@
 
 part of meeting_service;
 
-/// 获取预约会议 信息
+/// 根据meetingId获取会议信息
 class _GetMeetingItemByIdApi extends HttpApi<NEMeetingItem> {
-  String meetingNum;
+  int meetingId;
 
-  _GetMeetingItemByIdApi(this.meetingNum);
+  _GetMeetingItemByIdApi(this.meetingId);
+
+  @override
+  String path() =>
+      'scene/meeting/${ServiceRepository().appKey}/v1/info/meeting/$meetingId';
 
   @override
   String get method => 'GET';
 
   @override
-  String path() =>
-      'scene/meeting/${ServiceRepository().appKey}/v1/info/$meetingNum';
-
-  @override
-  NEMeetingItem result(Map map) {
-    return NEMeetingItem.fromJson(map);
+  NEMeetingItem parseResult(dynamic data) {
+    return NEMeetingItem.fromJson(data);
   }
 
   @override

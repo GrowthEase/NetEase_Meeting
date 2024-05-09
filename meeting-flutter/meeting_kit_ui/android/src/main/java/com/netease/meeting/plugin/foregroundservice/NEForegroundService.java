@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
-import android.os.Process;
 import android.util.Log;
 import com.netease.yunxin.flutter.plugins.roomkit.RoomKitEventDispatcher;
 import com.netease.yunxin.flutter.plugins.roomkit.RoomKitEventListener;
@@ -120,18 +119,6 @@ public class NEForegroundService extends Service {
   @Override
   public IBinder onBind(Intent intent) {
     return null;
-  }
-
-  @Override
-  public void onTaskRemoved(Intent rootIntent) {
-    super.onTaskRemoved(rootIntent);
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-      Log.i(TAG, "kill self due to task removed!");
-      //quit application
-      stopSelf();
-      android.os.Process.killProcess(Process.myPid());
-      System.exit(0);
-    }
   }
 
   private static class StartForegroundServiceListener extends RoomKitEventListener {

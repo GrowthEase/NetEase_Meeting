@@ -51,7 +51,7 @@ class _EntranceRouteState extends LifecycleBaseState
     AppNotificationManager().reset();
     GlobalPreferences().hasPrivacyDialogShowed.then((value) {
       if (value != true) {
-        showPrivacyDialog(context);
+        PrivacyUtil.showPrivacyDialog(context);
       }
     });
 
@@ -232,7 +232,7 @@ class _EntranceRouteState extends LifecycleBaseState
           ),
         ),
         onTap: () async {
-          if (!await ensurePrivacyAgree()) return;
+          if (!await PrivacyUtil.ensurePrivacyAgree(context)) return;
           NavUtils.pushNamed(context, RouterName.ssoLogin,
               arguments: _corpCodeController.text.trim());
         });
@@ -258,15 +258,8 @@ class _EntranceRouteState extends LifecycleBaseState
     super.dispose();
   }
 
-  Future<bool> ensurePrivacyAgree() async {
-    if (!PrivacyUtil.privateAgreementChecked) {
-      return showPrivacyDialog(context, exitIfNotOk: false);
-    }
-    return true;
-  }
-
   void launchCorpLogin() async {
-    if (!await ensurePrivacyAgree()) return;
+    if (!await PrivacyUtil.ensurePrivacyAgree(context)) return;
     doIfNetworkAvailable(() async {
       final corpCode = _corpCodeController.text.trim();
       LoadingUtil.showLoading();
@@ -284,83 +277,7 @@ class _EntranceRouteState extends LifecycleBaseState
 
   //发起URS登录
   void launchTrialLogin() async {
-    if (!await ensurePrivacyAgree()) return;
+    if (!await PrivacyUtil.ensurePrivacyAgree(context)) return;
     NavUtils.pushNamed(context, RouterName.mobileLogin);
-  }
-
-  Future<bool> showPrivacyDialog(BuildContext context,
-      {bool exitIfNotOk = true}) async {
-    TextSpan buildTextSpan(String text, WebViewArguments? arguments) {
-      return TextSpan(
-        text: text,
-        style: buildTextStyle(
-          arguments != null ? AppColors.blue_337eff : AppColors.color_999999,
-        ),
-        recognizer: arguments == null
-            ? null
-            : (TapGestureRecognizer()
-              ..onTap = () {
-                NavUtils.pushNamed(context, RouterName.webview,
-                    arguments: arguments);
-              }),
-      );
-    }
-
-    final userArguments = WebViewArguments(
-        Servers.userProtocol, meetingAppLocalizations.authServiceAgreement);
-    final privacyArguments =
-        WebViewArguments(Servers.privacy, meetingAppLocalizations.authPrivacy);
-    final message = meetingAppLocalizations.authPrivacyDialogMessage(
-        '##neteasePrivacy##', '##neteaseUserProtocol##');
-    final messageList = message.split('##');
-    return showCupertinoDialog(
-        context: context,
-        builder: (context) {
-          return CupertinoAlertDialog(
-            title: Text(meetingAppLocalizations.authPrivacyDialogTitle),
-            content: Text.rich(
-              TextSpan(
-                children: [
-                  for (var item in messageList)
-                    item == 'neteasePrivacy'
-                        ? buildTextSpan(
-                            meetingAppLocalizations.authNeteasePrivacy,
-                            privacyArguments)
-                        : item == 'neteaseUserProtocol'
-                            ? buildTextSpan(
-                                meetingAppLocalizations
-                                    .authNetEaseServiceAgreement,
-                                userArguments)
-                            : buildTextSpan(item, null),
-                ],
-              ),
-            ),
-            actions: <Widget>[
-              CupertinoDialogAction(
-                child: Text(exitIfNotOk
-                    ? meetingAppLocalizations.globalQuit
-                    : meetingAppLocalizations.globalCancel),
-                onPressed: () {
-                  Navigator.of(context).pop(false);
-                },
-              ),
-              CupertinoDialogAction(
-                child: Text(meetingAppLocalizations.globalAgree),
-                onPressed: () {
-                  Navigator.of(context).pop(true);
-                },
-              ),
-            ],
-          );
-        }).then((value) {
-      if (value != true && exitIfNotOk) {
-        exit(0);
-      }
-      if (value == true) {
-        GlobalPreferences().setPrivacyDialogShowed(true);
-        PrivacyUtil.privateAgreementChecked = true;
-      }
-      return value ?? false;
-    });
   }
 }

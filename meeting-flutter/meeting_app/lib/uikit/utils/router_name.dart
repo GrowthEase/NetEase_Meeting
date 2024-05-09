@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 class RouterName {
+  static const String main = 'main';
   static const String mobileLogin = 'mobileLogin';
   static const String corpAccountLogin = 'corpAccountLogin';
   static const String resetInitialPassword = 'resetInitialPassword';
@@ -27,4 +28,5 @@ class RouterName {
   static const String controlAbout = 'controlabout';
   static const String controlSetting = 'controlsetting';
   static const String qrScan = 'qrScan';
+  static const String languageSetting = 'languageSetting';
 }

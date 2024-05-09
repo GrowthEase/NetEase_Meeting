@@ -38,8 +38,6 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
   final MembersArguments arguments;
   final _MembersPageType? initialPageType;
 
-  static const _radius = Radius.circular(8);
-
   bool allowSelfAudioOn = false;
   bool allowSelfVideoOn = false;
 
@@ -65,51 +63,57 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
 
   @override
   Widget build(BuildContext context) {
-    final data = MediaQuery.of(context);
-    var padding = data.size.height * 0.15;
-    return Padding(
-      padding: EdgeInsets.only(top: padding),
-      child: Container(
-        decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius:
-                BorderRadius.only(topLeft: _radius, topRight: _radius)),
-        child: MeetingMemberPageView(
-          title: title,
-          roomContext: roomContext,
-          waitingRoomManager: waitingRoomManager,
-          roomInfoUpdatedEventStream: arguments.roomInfoUpdatedEventStream,
-          initialPageType: initialPageType,
-          pageBuilder: (page, _) {
-            if (page.filteredUserList.isEmpty) {
-              return Column(children: [
-                SizedBox(height: 40),
-                Text(
-                  meetingUiLocalizations.participantNotFound,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.normal,
-                    color: _UIColors.color3D3D3D,
-                    decoration: TextDecoration.none,
-                  ),
+    return Scaffold(
+      body: MeetingMemberPageView(
+        title: title,
+        roomContext: roomContext,
+        waitingRoomManager: waitingRoomManager,
+        roomInfoUpdatedEventStream: arguments.roomInfoUpdatedEventStream,
+        initialPageType: initialPageType,
+        pageFilter: (_PageData page) {
+          if (page.type == _MembersPageType.notYetJoined) {
+            /// 只有主持人跟联席主持人才展示未入会列表
+            return isSelfHostOrCoHost();
+          }
+          return true;
+        },
+        pageBuilder: (page, _) {
+          if (page.filteredUserList.isEmpty) {
+            return Column(children: [
+              SizedBox(height: 40),
+              Text(
+                meetingUiLocalizations.participantNotFound,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                  color: _UIColors.color3D3D3D,
+                  decoration: TextDecoration.none,
                 ),
-              ]);
-            }
-            if (page.type == _MembersPageType.inMeeting) {
-              return _buildInMeetingPage(
-                  page.filteredUserList as List<NERoomMember>);
-            } else if (page.type == _MembersPageType.waitingRoom) {
-              return WaitingRoomMemberList(
-                  waitingRoomManager,
-                  page.filteredUserList as List<NEWaitingRoomMember>,
-                  arguments.isMySelfManagerListenable,
-                  onMemberItemClick,
-                  buildActionTextButton);
-            } else {
-              return SizedBox.shrink();
-            }
-          },
-        ),
+              ),
+            ]);
+          }
+          if (page.type == _MembersPageType.inMeeting) {
+            return _buildInMeetingPage(
+                page.filteredUserList as List<NERoomMember>);
+          } else if (page.type == _MembersPageType.waitingRoom) {
+            return WaitingRoomMemberList(
+                waitingRoomManager,
+                page.filteredUserList as List<NEWaitingRoomMember>,
+                arguments.isMySelfManagerListenable,
+                onMemberItemClick,
+                buildActionTextButton);
+          } else if (page.type == _MembersPageType.notYetJoined &&
+              isSelfHostOrCoHost()) {
+            return InviteMemberList(
+              arguments.isMySelfManagerListenable,
+              page.filteredUserList as List<NERoomMember>,
+              arguments.roomContext.sipController,
+              arguments.roomContext.appInviteController,
+            );
+          } else {
+            return SizedBox.shrink();
+          }
+        },
       ),
     );
   }
@@ -420,6 +424,11 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
                   size: 20),
               const SizedBox(width: 16),
             ],
+            if (user.clientType == NEClientType.sip) ...[
+              Icon(NEMeetingIconFont.icon_sip,
+                  color: _UIColors.color_337eff, size: 20),
+              const SizedBox(width: 16),
+            ],
             if (user.isSharingWhiteboard) ...[
               Icon(NEMeetingIconFont.icon_whiteboard,
                   color: _UIColors.color_337eff, size: 20),
@@ -508,108 +517,127 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     final isSelfSharingWhiteboard = whiteboardController.isSharingWhiteboard();
     final lockedUser = buildContext.read<MeetingUIState>().lockedUser;
 
-    return <Widget>[
-      if (!arguments.options.noRename && (isSelf || isSelfHostOrCoHost()))
-        buildActionSheet(meetingUiLocalizations.participantRename, user,
-            MemberActionType.updateNick),
-      if (isSelfHostOrCoHost() && user.isRaisingHand)
-        buildActionSheet(meetingUiLocalizations.meetingHandsUpDown, user,
-            MemberActionType.hostRejectHandsUp),
-      if (isSelfHostOrCoHost() && user.isAudioOn && user.isAudioConnected)
-        buildActionSheet(meetingUiLocalizations.participantMute, user,
-            MemberActionType.hostMuteAudio),
-      if (isSelfHostOrCoHost() && !user.isAudioOn && user.isAudioConnected)
-        buildActionSheet(meetingUiLocalizations.participantUnmute, user,
-            MemberActionType.hostUnMuteAudio),
-      if (isSelfHostOrCoHost() && user.isVideoOn)
-        buildActionSheet(meetingUiLocalizations.participantStopVideo, user,
-            MemberActionType.hostMuteVideo),
-      if (isSelfHostOrCoHost() && !user.isVideoOn)
-        buildActionSheet(meetingUiLocalizations.participantStartVideo, user,
-            MemberActionType.hostUnMuteVideo),
-      if (isSelfHostOrCoHost() &&
-          (!user.isVideoOn || !user.isAudioOn) &&
-          user.isAudioConnected)
-        buildActionSheet(meetingUiLocalizations.participantTurnOnAudioAndVideo,
-            user, MemberActionType.hostUnmuteAudioAndVideo),
-      if (isSelfHostOrCoHost() &&
-          user.isVideoOn &&
-          user.isAudioOn &&
-          user.isAudioConnected)
-        buildActionSheet(meetingUiLocalizations.participantTurnOffAudioAndVideo,
-            user, MemberActionType.hostMuteAudioAndVideo),
-      if (!isSelf &&
-          user.clientType != NEClientType.sip &&
-          (isSelfHostOrCoHost() ||
-              roomContext.chatPermission == NEChatPermission.freeChat ||
-              (roomContext.chatPermission != NEChatPermission.noChat &&
-                  roomContext.isHostOrCoHost(user.uuid))))
-        buildActionSheet(meetingUiLocalizations.chatPrivate, user,
-            MemberActionType.chatPrivate),
-      if (isSelfHostOrCoHost() && !hasScreenSharing && !isPinned)
-        buildActionSheet(meetingUiLocalizations.participantAssignActiveSpeaker,
-            user, MemberActionType.setFocusVideo),
-      if (isSelfHostOrCoHost() && !hasScreenSharing && isPinned)
-        buildActionSheet(
-            meetingUiLocalizations.participantUnassignActiveSpeaker,
-            user,
-            MemberActionType.cancelFocusVideo),
-      if (user.isVideoOn &&
-          lockedUser != user.uuid &&
-          !hasScreenSharing &&
-          !hasWhiteboardSharing &&
-          roomContext.getFocusUuid() == null)
-        buildActionSheet(meetingUiLocalizations.meetingPinView, user,
-            MemberActionType.lockVideo),
-      if (lockedUser == user.uuid)
-        buildActionSheet(meetingUiLocalizations.meetingUnpinView, user,
-            MemberActionType.unlockVideo),
-      if (isSelfHost &&
-          !isSelf &&
-          !isUserCoHost &&
-          user.clientType != NEClientType.sip)
-        buildActionSheet(meetingUiLocalizations.participantAssignCoHost, user,
-            MemberActionType.makeCoHost),
-      if (isSelfHost &&
-          !isSelf &&
-          isUserCoHost &&
-          user.clientType != NEClientType.sip)
-        buildActionSheet(meetingUiLocalizations.participantUnassignCoHost, user,
-            MemberActionType.cancelCoHost),
-      if (isSelfHost && !isSelf && user.clientType != NEClientType.sip)
-        buildActionSheet(meetingUiLocalizations.participantTransferHost, user,
-            MemberActionType.changeHost),
-      if (isUserHost && roomContext.canReclaimHost)
-        buildActionSheet(meetingUiLocalizations.meetingReclaimHost, user,
-            MemberActionType.reclaimHost),
-      if (isSelfHostOrCoHost() && user.isSharingScreen && !isSelf)
-        buildActionSheet(meetingUiLocalizations.screenShareStop, user,
-            MemberActionType.hostStopScreenShare),
-      if (isSelfHostOrCoHost() && isCurrentSharingWhiteboard)
-        buildActionSheet(meetingUiLocalizations.whiteBoardClose, user,
-            MemberActionType.hostStopWhiteBoardShare),
-      if (!isSelf && isSelfSharingWhiteboard && hasInteract)
-        buildActionSheet(
-            meetingUiLocalizations.participantUndoWhiteBoardInteract,
-            user,
-            MemberActionType.undoMemberWhiteboardInteraction),
-      if (!isSelf && isSelfSharingWhiteboard && !hasInteract)
-        buildActionSheet(meetingUiLocalizations.participantWhiteBoardInteract,
-            user, MemberActionType.awardedMemberWhiteboardInteraction),
-      if ((isSelfHost || roomContext.isMySelfCoHost()) &&
-          !isSelf &&
-          !isUserHost &&
-          !isUserCoHost &&
-          waitingRoomManager.waitingRoomEnabledOnEntryListenable.value)
-        buildActionSheet(meetingUiLocalizations.participantPutInWaitingRoom,
-            user, MemberActionType.putInWaitingRoom),
-      if (isSelfHost && !isSelf)
-        buildActionSheet(meetingUiLocalizations.participantRemove, user,
-            MemberActionType.removeMember),
-      if (roomContext.isMySelfCoHost() && !isSelf && !isUserHost)
-        buildActionSheet(meetingUiLocalizations.participantRemove, user,
-            MemberActionType.removeMember),
-    ];
+    if (user.clientType == NEClientType.sip) {
+      return <Widget>[
+        if (isSelfHostOrCoHost() && !arguments.options.noRename)
+          buildActionSheet(meetingUiLocalizations.participantRename, user,
+              MemberActionType.updateNick),
+        if (isSelfHostOrCoHost() && user.isAudioOn && user.isAudioConnected)
+          buildActionSheet(meetingUiLocalizations.participantMute, user,
+              MemberActionType.hostMuteAudio),
+        if (isSelfHostOrCoHost() && !user.isAudioOn && user.isAudioConnected)
+          buildActionSheet(meetingUiLocalizations.participantUnmute, user,
+              MemberActionType.hostUnMuteAudio),
+        if (isSelfHostOrCoHost() && user.isVideoOn)
+          buildActionSheet(meetingUiLocalizations.participantStopVideo, user,
+              MemberActionType.hostMuteVideo),
+        if (isSelfHostOrCoHost() && !user.isVideoOn)
+          buildActionSheet(meetingUiLocalizations.participantStartVideo, user,
+              MemberActionType.hostUnMuteVideo),
+      ];
+    } else {
+      return <Widget>[
+        if (!arguments.options.noRename && (isSelf || isSelfHostOrCoHost()))
+          buildActionSheet(meetingUiLocalizations.participantRename, user,
+              MemberActionType.updateNick),
+        if (isSelfHostOrCoHost() && user.isRaisingHand)
+          buildActionSheet(meetingUiLocalizations.meetingHandsUpDown, user,
+              MemberActionType.hostRejectHandsUp),
+        if (isSelfHostOrCoHost() && user.isAudioOn && user.isAudioConnected)
+          buildActionSheet(meetingUiLocalizations.participantMute, user,
+              MemberActionType.hostMuteAudio),
+        if (isSelfHostOrCoHost() && !user.isAudioOn && user.isAudioConnected)
+          buildActionSheet(meetingUiLocalizations.participantUnmute, user,
+              MemberActionType.hostUnMuteAudio),
+        if (isSelfHostOrCoHost() && user.isVideoOn)
+          buildActionSheet(meetingUiLocalizations.participantStopVideo, user,
+              MemberActionType.hostMuteVideo),
+        if (isSelfHostOrCoHost() && !user.isVideoOn)
+          buildActionSheet(meetingUiLocalizations.participantStartVideo, user,
+              MemberActionType.hostUnMuteVideo),
+        if (isSelfHostOrCoHost() &&
+            (!user.isVideoOn || !user.isAudioOn) &&
+            user.isAudioConnected)
+          buildActionSheet(
+              meetingUiLocalizations.participantTurnOnAudioAndVideo,
+              user,
+              MemberActionType.hostUnmuteAudioAndVideo),
+        if (isSelfHostOrCoHost() &&
+            user.isVideoOn &&
+            user.isAudioOn &&
+            user.isAudioConnected)
+          buildActionSheet(
+              meetingUiLocalizations.participantTurnOffAudioAndVideo,
+              user,
+              MemberActionType.hostMuteAudioAndVideo),
+        if (!isSelf &&
+            (isSelfHostOrCoHost() ||
+                roomContext.chatPermission == NEChatPermission.freeChat ||
+                (roomContext.chatPermission != NEChatPermission.noChat &&
+                    roomContext.isHostOrCoHost(user.uuid))))
+          buildActionSheet(meetingUiLocalizations.chatPrivate, user,
+              MemberActionType.chatPrivate),
+        if (isSelfHostOrCoHost() && !hasScreenSharing && !isPinned)
+          buildActionSheet(
+              meetingUiLocalizations.participantAssignActiveSpeaker,
+              user,
+              MemberActionType.setFocusVideo),
+        if (isSelfHostOrCoHost() && !hasScreenSharing && isPinned)
+          buildActionSheet(
+              meetingUiLocalizations.participantUnassignActiveSpeaker,
+              user,
+              MemberActionType.cancelFocusVideo),
+        if (user.isVideoOn &&
+            lockedUser != user.uuid &&
+            !hasScreenSharing &&
+            !hasWhiteboardSharing &&
+            roomContext.getFocusUuid() == null)
+          buildActionSheet(meetingUiLocalizations.meetingPinView, user,
+              MemberActionType.lockVideo),
+        if (lockedUser == user.uuid)
+          buildActionSheet(meetingUiLocalizations.meetingUnpinView, user,
+              MemberActionType.unlockVideo),
+        if (isSelfHost && !isSelf && !isUserCoHost)
+          buildActionSheet(meetingUiLocalizations.participantAssignCoHost, user,
+              MemberActionType.makeCoHost),
+        if (isSelfHost && !isSelf && isUserCoHost)
+          buildActionSheet(meetingUiLocalizations.participantUnassignCoHost,
+              user, MemberActionType.cancelCoHost),
+        if (isSelfHost && !isSelf)
+          buildActionSheet(meetingUiLocalizations.participantTransferHost, user,
+              MemberActionType.changeHost),
+        if (isUserHost && roomContext.canReclaimHost)
+          buildActionSheet(meetingUiLocalizations.meetingReclaimHost, user,
+              MemberActionType.reclaimHost),
+        if (isSelfHostOrCoHost() && user.isSharingScreen && !isSelf)
+          buildActionSheet(meetingUiLocalizations.screenShareStop, user,
+              MemberActionType.hostStopScreenShare),
+        if (isSelfHostOrCoHost() && isCurrentSharingWhiteboard)
+          buildActionSheet(meetingUiLocalizations.whiteBoardClose, user,
+              MemberActionType.hostStopWhiteBoardShare),
+        if (!isSelf && isSelfSharingWhiteboard && hasInteract)
+          buildActionSheet(
+              meetingUiLocalizations.participantUndoWhiteBoardInteract,
+              user,
+              MemberActionType.undoMemberWhiteboardInteraction),
+        if (!isSelf && isSelfSharingWhiteboard && !hasInteract)
+          buildActionSheet(meetingUiLocalizations.participantWhiteBoardInteract,
+              user, MemberActionType.awardedMemberWhiteboardInteraction),
+        if ((isSelfHost || roomContext.isMySelfCoHost()) &&
+            !isSelf &&
+            !isUserHost &&
+            !isUserCoHost &&
+            waitingRoomManager.waitingRoomEnabledOnEntryListenable.value)
+          buildActionSheet(meetingUiLocalizations.participantPutInWaitingRoom,
+              user, MemberActionType.putInWaitingRoom),
+        if (isSelfHost && !isSelf)
+          buildActionSheet(meetingUiLocalizations.participantRemove, user,
+              MemberActionType.removeMember),
+        if (roomContext.isMySelfCoHost() && !isSelf && !isUserHost)
+          buildActionSheet(meetingUiLocalizations.participantRemove, user,
+              MemberActionType.removeMember),
+      ];
+    }
   }
 
   void handleInMeetingMemberItemClick(NERoomMember user) {
@@ -1033,6 +1061,9 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     }
     if (roomContext.isCoHost(user.uuid)) {
       subtitle.add(meetingUiLocalizations.participantCoHost);
+    }
+    if (roomContext.isGuest(user.uuid)) {
+      subtitle.add(meetingUiLocalizations.meetingGuest);
     }
     if (roomContext.isMySelf(user.uuid)) {
       subtitle.add(meetingUiLocalizations.participantMe);
@@ -1616,5 +1647,240 @@ extension RenameDialogUtils on State {
       ],
       contentWrapperBuilder: contentWrapperBuilder,
     ).then((result) => result?.value);
+  }
+}
+
+class InviteMemberList extends StatefulWidget {
+  final List<NERoomMember> userList;
+  final ValueListenable<bool> isMySelfManagerListenable;
+  final NERoomSIPController sipController;
+  final NERoomAppInviteController appInviteController;
+
+  const InviteMemberList(this.isMySelfManagerListenable, this.userList,
+      this.sipController, this.appInviteController,
+      {super.key});
+
+  @override
+  State<InviteMemberList> createState() => _InviteMemberListState(
+      isMySelfManagerListenable, sipController, appInviteController);
+}
+
+class _InviteMemberListState extends State<InviteMemberList>
+    with MeetingKitLocalizationsMixin {
+  final ValueListenable<bool> isMySelfManagerListenable;
+  final NERoomSIPController sipController;
+  final NERoomAppInviteController appInviteController;
+
+  _InviteMemberListState(this.isMySelfManagerListenable, this.sipController,
+      this.appInviteController);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: <Widget>[
+        Expanded(
+          child: ListView.separated(
+            cacheExtent: 48,
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            itemCount: widget.userList.length,
+            itemBuilder: (context, index) {
+              return buildMemberItem(widget.userList[index]);
+            },
+            separatorBuilder: (BuildContext context, int index) {
+              return Container(height: 1, color: _UIColors.globalBg);
+            },
+          ),
+        ),
+        Container(height: 1, color: _UIColors.globalBg),
+      ],
+    );
+  }
+
+  /// 成员是否正在邀请中，正在邀请显示取消，已经没在邀请的显示再次呼叫
+  bool _isUserInInviting(NERoomMember user) {
+    return (user.isInSIPInviting || user.isInAppInviting) &&
+        (user.inviteState == NERoomMemberInviteState.calling ||
+            user.inviteState == NERoomMemberInviteState.waitingCall);
+  }
+
+  Widget buildMemberItem(NERoomMember user) {
+    return Container(
+      height: 48,
+      padding: EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: <Widget>[
+          NEMeetingAvatar.large(
+            name: user.name,
+            url: user.avatar,
+          ),
+          SizedBox(width: 12),
+          Expanded(
+              child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                user.name,
+                textAlign: TextAlign.left,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.normal,
+                  color: _UIColors.color_333333,
+                  decoration: TextDecoration.none,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                getInviteState(user),
+                textAlign: TextAlign.left,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.normal,
+                  color: user.inviteState == NERoomMemberInviteState.calling
+                      ? _UIColors.color_26BD71
+                      : _UIColors.color_999999,
+                  decoration: TextDecoration.none,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          )),
+          GestureDetector(
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                border: Border.all(
+                    color: _isUserInInviting(user)
+                        ? _UIColors.colorF24957
+                        : _UIColors.color_26BD71,
+                    width: 1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                _isUserInInviting(user)
+                    ? meetingUiLocalizations.globalCancel
+                    : meetingUiLocalizations.sipCall,
+                style: TextStyle(
+                    color: _isUserInInviting(user)
+                        ? _UIColors.colorF24957
+                        : _UIColors.color_26BD71,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    decoration: TextDecoration.none),
+              ),
+            ),
+            onTap: () {
+              ConnectivityManager().isConnected().then((value) async {
+                if (!value) {
+                  ToastUtils.showToast(
+                      context,
+                      meetingUiLocalizations
+                          .networkAbnormalityPleaseCheckYourNetwork,
+                      isError: true);
+                  return;
+                }
+                if (_isUserInInviting(user)) {
+                  if (user.isInSIPInviting) {
+                    sipController.cancelCall(user.uuid);
+                  } else if (user.isInAppInviting) {
+                    appInviteController.cancelCall(user.uuid);
+                  }
+                } else {
+                  VoidResult voidResult = VoidResult(code: -1);
+                  if (user.isInSIPInviting) {
+                    voidResult = await sipController.callByUserUuid(user.uuid);
+                  } else if (user.isInAppInviting) {
+                    voidResult =
+                        await appInviteController.callByUserUuid(user.uuid);
+                  }
+                  switch (voidResult.code) {
+                    case 1022:
+                      ToastUtils.showToast(context,
+                          meetingUiLocalizations.memberCountOutOfRange);
+                      break;
+                    case 3005:
+                      ToastUtils.showToast(
+                          context, meetingUiLocalizations.sipCallIsInInviting);
+                      break;
+                    case 3006:
+                      ToastUtils.showToast(
+                          context, meetingUiLocalizations.sipCallIsInMeeting);
+                      break;
+                    case 601011:
+                      ToastUtils.showToast(
+                          context, meetingUiLocalizations.sipCallIsInBlacklist);
+                      break;
+                    default:
+                      break;
+                  }
+                }
+              });
+            },
+          ),
+          GestureDetector(
+            child: Container(
+              margin: EdgeInsets.only(left: 12, right: 12),
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                border: Border.all(color: _UIColors.greyCCCCCC, width: 1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                meetingUiLocalizations.participantRemove,
+                style: TextStyle(
+                    color: _UIColors.black_333333,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    decoration: TextDecoration.none),
+              ),
+            ),
+            onTap: () {
+              ConnectivityManager().isConnected().then((value) {
+                if (!value) {
+                  ToastUtils.showToast(
+                      context,
+                      meetingUiLocalizations
+                          .networkAbnormalityPleaseCheckYourNetwork,
+                      isError: true);
+                  return;
+                }
+                if (user.isInSIPInviting) {
+                  sipController.removeCall(user.uuid);
+                } else if (user.isInAppInviting) {
+                  appInviteController.removeCall(user.uuid);
+                }
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  String getInviteState(NERoomMember user) {
+    switch (user.inviteState) {
+      case NERoomMemberInviteState.calling:
+        return user.isInSIPInviting
+            ? meetingUiLocalizations.sipCallStatusCalling
+            : meetingUiLocalizations.callStatusCalling;
+      case NERoomMemberInviteState.waitingCall:
+        return meetingUiLocalizations.sipCallStatusWaiting;
+      case NERoomMemberInviteState.rejected:
+        return meetingUiLocalizations.sipCallStatusRejected;
+      case NERoomMemberInviteState.noAnswer:
+        return meetingUiLocalizations.sipCallStatusUnaccepted;
+      case NERoomMemberInviteState.canceled:
+        return meetingUiLocalizations.sipCallStatusCanceled;
+      case NERoomMemberInviteState.error:
+        return meetingUiLocalizations.sipCallStatusError;
+      case NERoomMemberInviteState.waitingJoin:
+        return meetingUiLocalizations.callStatusWaitingJoin;
+      default:
+        break;
+    }
+    return '';
   }
 }

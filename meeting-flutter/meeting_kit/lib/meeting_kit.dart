@@ -5,11 +5,12 @@
 library meeting_kit;
 
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:connectivity/connectivity.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
@@ -52,7 +53,11 @@ export 'package:netease_meeting_core/meeting_service.dart'
         NEMeetingRecurringRule,
         NEMeetingCustomizedFrequency,
         NEMeetingRecurringEndRule,
-        SDKConfig;
+        SDKConfig,
+        NEContact,
+        MeetingRoles,
+        NEScheduledMember,
+        NEScheduledMemberExt;
 export 'package:netease_roomkit/netease_roomkit.dart'
     show
         NEServerConfig,
@@ -65,45 +70,29 @@ export 'package:netease_roomkit/netease_roomkit.dart'
         NEChatroomHistoryMessageSearchOption;
 
 part 'src/meeting_kit/meeting_account_service.dart';
-
 part 'src/meeting_kit/impl/screen_sharing_service_impl.dart';
-
 part 'src/meeting_kit/impl/meeting_account_service_impl.dart';
-
 part 'src/meeting_kit/impl/meeting_kit_impl.dart';
-
 part 'src/meeting_kit/impl/meeting_service_impl.dart';
-
+part 'src/meeting_kit/meeting_invite_service.dart';
+part 'src/meeting_kit/impl/meeting_invite_service_impl.dart';
 part 'src/meeting_kit/impl/pre_meeting_service_impl.dart';
-
 part 'src/meeting_kit/impl/settings_service_impl.dart';
-
 part 'src/meeting_kit/values/meeting_kit_strings.dart';
-
 part 'src/meeting_kit/meeting_service.dart';
-
 part 'src/meeting_kit/pre_meeting_service.dart';
-
 part 'src/meeting_kit/settings_service.dart';
-
 part 'src/meeting_kit/live_meeting_service.dart';
-
 part 'src/meeting_kit/impl/live_meeting_service_impl.dart';
-
 part 'src/meeting_kit/module_name.dart';
-
 part 'src/meeting_kit/log/log_service.dart';
-
 part 'src/meeting_kit/utils/rtc_utils.dart';
-
 part 'src/meeting_kit/utils/session_message_notify_card_data.dart';
-
 part 'src/meeting_kit/utils/network_task_executor.dart';
-
+part 'src/meeting_kit/utils/connectivity_manager.dart';
+part 'src/meeting_kit/utils/meeting_invite_queue_util.dart';
 part 'src/meeting_kit/meeting_context.dart';
-
 part 'src/meeting_kit/report/meeting_report.dart';
-
 part 'src/meeting_kit/screen_sharing_service.dart';
 part 'src/meeting_kit/meeting_web_app_bridge.dart';
 part 'src/meeting_kit/meeting_nos_service.dart';
@@ -239,13 +228,14 @@ abstract class NEMeetingKit {
   /// 注册session监听器
   ///
   /// [listener] 监听器.
-  void addReceiveSessionMessageListener(NERoomMessageSessionListener listener);
+  void addReceiveSessionMessageListener(
+      NEMeetingMessageSessionListener listener);
 
   /// 注销session状态监听器
   ///
   /// [listener] 监听器.
   void removeReceiveSessionMessageListener(
-      NERoomMessageSessionListener listener);
+      NEMeetingMessageSessionListener listener);
 
   /// 获取指定会话的未读消息列表
   /// sessionId 会话id
@@ -303,6 +293,9 @@ abstract class NEMeetingKit {
 
   /// 获取用于创建或加入会议的会议服务。
   NEMeetingService getMeetingService();
+
+  /// 获取用于邀请服务服务。
+  NEMeetingInviteService getMeetingInviteService();
 
   /// 获取用于屏幕共享的会议服务。
   NEScreenSharingService getScreenSharingService();
@@ -404,22 +397,25 @@ abstract class NEMeetingAuthListener {
 
   /// 账号信息过期通知，原因为用户修改了密码，应用层随后应该重新登录
   void onAuthInfoExpired();
+
+  /// 断线重连成功
+  void onReconnected();
 }
 
 /// 自定义会话监听器
-abstract class NERoomMessageSessionListener {
+abstract mixin class NEMeetingMessageSessionListener {
   /// 接收到自定义消息
-  void onReceiveSessionMessage(NEMeetingCustomSessionMessage message);
+  void onReceiveSessionMessage(NEMeetingCustomSessionMessage message) {}
 
   /// 最近会话聊天记录变更
-  void onChangeRecentSession(List<NEMeetingRecentSession> messages);
+  void onChangeRecentSession(List<NEMeetingRecentSession> messages) {}
 
   /// 自定义消息被删除
-  void onDeleteSessionMessage(NEMeetingCustomSessionMessage message);
+  void onDeleteSessionMessage(NEMeetingCustomSessionMessage message) {}
 
   /// 自定义消息全部被删除
   void onDeleteAllSessionMessage(
-      String sessionId, NEMeetingSessionTypeEnum sessionType);
+      String sessionId, NEMeetingSessionTypeEnum sessionType) {}
 }
 
 ///
@@ -452,14 +448,19 @@ class NEMeetingLanguage {
 }
 
 class NEMeetingCustomSessionMessage {
-  String? sessionId;
-  NEMeetingSessionTypeEnum? sessionType;
-  String? messageId;
-  NotifyCardData? data;
-  int? time;
+  late final String? sessionId;
+  late final NEMeetingSessionTypeEnum? sessionType;
+  late final String? messageId;
+  late final NotifyCardData? data;
+  late final int time;
 
-  NEMeetingCustomSessionMessage(
-      {this.sessionId, this.sessionType, this.messageId, this.data, this.time});
+  NEMeetingCustomSessionMessage({
+    this.sessionId,
+    this.sessionType,
+    this.messageId,
+    this.data,
+    int? time,
+  }) : time = time ?? 0;
 
   NEMeetingCustomSessionMessage.fromMap(Map<String, dynamic> json) {
     sessionId = json['sessionId'];

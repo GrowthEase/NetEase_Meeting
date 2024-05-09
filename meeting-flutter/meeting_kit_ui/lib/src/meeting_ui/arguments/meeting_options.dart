@@ -157,6 +157,24 @@ class NEMeetingUIOptions {
   /// 允许音频设备切换
   late final bool enableAudioDeviceSwitch;
 
+  ///
+  /// 是否允许SDK请求电话权限，默认允许。在获取电话权限后，SDK会监听系统电话状态，在接听来电或拨打电话时，
+  /// 会自动断开会议内的音视频（不会退出会议），并在系统电话结束后，自动重新连接会议的音视频。
+  /// 仅对 Android 平台有效。
+  ///
+  late final bool noReadPhoneState;
+
+  /// 配置会议中是否展示 web 小应用，如签到应用。默认展示。
+  late final bool noWebApps;
+
+  ///
+  /// 配置会议中是否展示通知中心菜单，默认展示。
+  ///
+  late final bool noNotifyCenter;
+
+  /// 是否允许访客入会
+  late final bool enableGuestJoin;
+
   NEMeetingUIOptions.fromJson(Map<String, dynamic> json) {
     title = json['title'] as String?;
     noVideo = (json['noVideo'] ?? true) as bool;
@@ -212,6 +230,10 @@ class NEMeetingUIOptions {
     showCloudRecordingUI = (json['showCloudRecordingUI'] ?? true) as bool;
     enableWaitingRoom = (json['enableWaitingRoom'] ?? false) as bool;
     enableAudioDeviceSwitch = (json['enableAudioDeviceSwitch'] ?? true) as bool;
+    noReadPhoneState = (json['noReadPhoneState'] ?? false) as bool;
+    noWebApps = (json['noWebApps'] ?? false) as bool;
+    noNotifyCenter = (json['noNotifyCenter'] ?? false) as bool;
+    enableGuestJoin = (json['enableGuestJoin'] ?? false) as bool;
   }
 
   NEMeetingUIOptions({
@@ -254,6 +276,10 @@ class NEMeetingUIOptions {
     this.showCloudRecordingUI = true,
     this.enableWaitingRoom = false,
     this.enableAudioDeviceSwitch = true,
+    this.noReadPhoneState = false,
+    this.noWebApps = false,
+    this.noNotifyCenter = false,
+    this.enableGuestJoin = false,
     List<NEMeetingMenuItem>? injectedToolbarMenuItems,
     List<NEMeetingMenuItem>? injectedMoreMenuItems,
   }) {
@@ -270,6 +296,57 @@ class NEMeetingUIOptions {
   bool get isShortMeetingIdEnabled =>
       meetingIdDisplayOption == MeetingIdDisplayOption.displayAll ||
       meetingIdDisplayOption == MeetingIdDisplayOption.displayShortIdOnly;
+
+  /// 拷贝函数
+  NEMeetingUIOptions copyWith({
+    bool? noVideo,
+    bool? noAudio,
+  }) {
+    return NEMeetingUIOptions(
+      title: title,
+      noVideo: noVideo ?? this.noVideo,
+      noAudio: noAudio ?? this.noAudio,
+      noMuteAllVideo: noMuteAllVideo,
+      noMuteAllAudio: noMuteAllAudio,
+      showMeetingTime: showMeetingTime,
+      noChat: noChat,
+      noInvite: noInvite,
+      noSip: noSip,
+      noMinimize: noMinimize,
+      enablePictureInPicture: enablePictureInPicture,
+      noGallery: noGallery,
+      noSwitchCamera: noSwitchCamera,
+      noSwitchAudioMode: noSwitchAudioMode,
+      noWhiteBoard: noWhiteBoard,
+      enableTransparentWhiteboard: enableTransparentWhiteboard,
+      enableFrontCameraMirror: enableFrontCameraMirror,
+      noRename: noRename,
+      noCloudRecord: noCloudRecord,
+      defaultWindowMode: defaultWindowMode,
+      meetingIdDisplayOption: meetingIdDisplayOption,
+      restorePreferredOrientations: restorePreferredOrientations,
+      joinTimeout: joinTimeout,
+      showMemberTag: showMemberTag,
+      noLive: noLive,
+      showMeetingRemainingTip: showMeetingRemainingTip,
+      detectMutedMic: detectMutedMic,
+      unpubAudioOnMute: unpubAudioOnMute,
+      showScreenShareUserVideo: showScreenShareUserVideo,
+      showWhiteboardShareUserVideo: showWhiteboardShareUserVideo,
+      showFloatingMicrophone: showFloatingMicrophone,
+      chatroomConfig: chatroomConfig,
+      audioProfile: audioProfile,
+      enableAudioShare: enableAudioShare,
+      enableWaitingRoom: enableWaitingRoom,
+      enableAudioDeviceSwitch: enableAudioDeviceSwitch,
+      noReadPhoneState: noReadPhoneState,
+      noWebApps: noWebApps,
+      noNotifyCenter: noNotifyCenter,
+      enableGuestJoin: enableGuestJoin,
+      injectedToolbarMenuItems: injectedToolbarMenuItems,
+      injectedMoreMenuItems: injectedMoreMenuItems,
+    );
+  }
 }
 
 class MeetingIdDisplayOption {

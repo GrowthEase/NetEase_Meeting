@@ -2,6 +2,7 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
@@ -11,8 +12,8 @@ import 'package:nemeeting/pre_meeting/schedule_meeting_repeat_end.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 
 import '../base/util/text_util.dart';
-import '../base/util/timeutil.dart';
 import '../language/localizations.dart';
+import '../service/auth/auth_manager.dart';
 import '../uikit/const/consts.dart';
 import '../uikit/state/meeting_base_state.dart';
 import '../uikit/values/colors.dart';
@@ -59,6 +60,36 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
 
   bool showMeetingRecord = false;
 
+  bool enableGuestJoin = false;
+
+  List<NEContact> get contactList => scheduledMemberList
+      .where((element) => element.contact != null)
+      .map((e) => e.contact!)
+      .toList();
+
+  /// userUuid to role
+  List<NEScheduledMember> scheduledMemberList = [];
+
+  /// 滑动控制器
+  ScrollController _scrollController = ScrollController();
+  int _pageSize = 20;
+
+  ScheduleMeetingBaseState({NEMeetingItem? item}) {
+    if (item == null) {
+      meetingItem = NEMeetingItem();
+      meetingItem.ownerUserUuid = AuthManager().accountId;
+      meetingItem.scheduledMemberList = [];
+    } else {
+      meetingItem = item;
+    }
+    meetingItem.scheduledMemberList!.sort((lhs, rhs) =>
+        NEScheduledMemberExt.compareMember(
+            lhs, rhs, AuthManager().accountId, meetingItem.ownerUserUuid));
+    scheduledMemberList.clear();
+    scheduledMemberList
+        .addAll(meetingItem.scheduledMemberList!.map((e) => e.copy()));
+  }
+  late final int _maxMembers;
   @override
   void initState() {
     super.initState();
@@ -76,6 +107,15 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
         // showMeetingRecord = values[1];
       });
     });
+
+    _scrollController = ScrollController()
+      ..addListener(() {
+        if (_scrollController.position.pixels ==
+            _scrollController.position.maxScrollExtent) {
+          loadMoreContacts().then((value) => setState(() {}));
+        }
+      });
+    _maxMembers = SDKConfig.current.scheduleMemberMax;
   }
 
   @override
@@ -138,6 +178,10 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
                       if (recurringRule.type != NEMeetingRecurringRuleType.no &&
                           isEditAll() == false)
                         buildEditRepeatMeetingTips(),
+                      if (SDKConfig.current.isScheduledMembersEnabled) ...[
+                        buildSpace(),
+                        buildScheduleAttendees(),
+                      ],
                       buildPartTitle(meetingAppLocalizations.meetingSecurity),
                       buildPwd(),
                       if (meetingPwdSwitch) buildSplit(),
@@ -156,6 +200,25 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
                                 enableWaitingRoom = value;
                               });
                             }),
+                      if (context.isGuestJoinEnabled) ...[
+                        buildSpace(),
+                        SwitchItem(
+                            key: MeetingValueKey.scheduleEnableGuestJoin,
+                            value: enableGuestJoin,
+                            title: meetingAppLocalizations.meetingGuestJoin,
+                            summary: enableGuestJoin
+                                ? meetingAppLocalizations
+                                    .meetingGuestJoinSecurityNotice
+                                : meetingAppLocalizations
+                                    .meetingGuestJoinEnableTip,
+                            summaryColor:
+                                enableGuestJoin ? AppColors.color_f29900 : null,
+                            onChange: (value) {
+                              setState(() {
+                                enableGuestJoin = value;
+                              });
+                            }),
+                      ],
                       buildPartTitle(meetingAppLocalizations.settingMeeting),
                       SwitchItem(
                           key: MeetingValueKey.scheduleAttendeeAudio,
@@ -219,6 +282,9 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
                   ))));
         }));
   }
+
+  /// 是不是自己
+  bool isMySelf(String? uuid) => uuid == AuthManager().accountId;
 
   Widget buildRadio({
     required String title,
@@ -337,6 +403,120 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
     );
   }
 
+  /// 构建会议参会者
+  Widget buildScheduleAttendees() {
+    final myUserUuid =
+        NEMeetingKit.instance.getAccountService().getAccountInfo()?.userUuid ??
+            '';
+    return GestureDetector(
+      onTap: () => DialogUtils.showContactsPopup(
+        context: context,
+        titleBuilder: (int size) =>
+            '${meetingAppLocalizations.meetingAttendees}（$size）',
+        scheduledMemberList: scheduledMemberList,
+        myUserUuid: myUserUuid,
+        ownerUuid: meetingItem.ownerUserUuid,
+        addActionClick: () => DialogUtils.showContactsAddPopup(
+          context: context,
+          titleBuilder: (int size) =>
+              '${meetingAppLocalizations.meetingAddAttendee}${size > 0 ? '（$size）' : ''}',
+          scheduledMemberList: scheduledMemberList,
+          myUserUuid: myUserUuid,
+          itemClickCallback: handleClickCallback,
+        ),
+        loadMoreContacts: loadMoreContacts,
+      ).then((value) {
+        setState(() {});
+      }),
+      child: Container(
+        color: Colors.white,
+        padding:
+            EdgeInsets.symmetric(horizontal: Dimen.globalPadding, vertical: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Text(
+                  meetingAppLocalizations.meetingAttendees,
+                  style: TextStyle(
+                      color: AppColors.color_222222,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400),
+                ),
+                Expanded(child: SizedBox.shrink()),
+                Text(
+                    meetingAppLocalizations
+                        .meetingAttendeeCount('${scheduledMemberList.length}'),
+                    style: TextStyle(
+                        color: AppColors.color_999999,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400)),
+                SizedBox(width: 8),
+                Icon(IconFont.iconyx_allowx,
+                    size: 14, color: AppColors.greyCCCCCC)
+              ],
+            ),
+            SizedBox(height: 16),
+            buildAttendeesList(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 构建参会者列表widget
+  Widget buildAttendeesList() {
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: () => DialogUtils.showContactsAddPopup(
+            context: context,
+            titleBuilder: (int size) =>
+                '${meetingAppLocalizations.meetingAddAttendee}${size > 0 ? '（$size）' : ''}',
+            scheduledMemberList: scheduledMemberList,
+            myUserUuid: NEMeetingKit.instance
+                    .getAccountService()
+                    .getAccountInfo()
+                    ?.userUuid ??
+                '',
+            itemClickCallback: handleClickCallback,
+          ).then((value) {
+            setState(() {});
+          }),
+          child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.colorF2F2F5,
+              ),
+              child: Icon(Icons.add, size: 16, color: AppColors.color_999999)),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+            child: Container(
+          height: 32,
+          child: ListView.separated(
+            itemCount: contactList.length,
+            scrollDirection: Axis.horizontal,
+            controller: _scrollController,
+            itemBuilder: (context, index) {
+              return NEMeetingAvatar.medium(
+                name: contactList[index].name,
+                url: contactList[index].avatar,
+                showRoleIcon: isMySelf(contactList[index].userUuid),
+              );
+            },
+            separatorBuilder: (context, index) {
+              return const SizedBox(width: 10);
+            },
+          ),
+        ))
+      ],
+    );
+  }
+
   Widget buildStartTime(
       {required DateTime startTime,
       required DateTime endTime,
@@ -379,7 +559,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
             Text(itemTitle,
                 style: TextStyle(fontSize: 16, color: AppColors.black_222222)),
             Spacer(),
-            Text(TimeUtil.timeFormatWithMinute(showTime),
+            Text(MeetingTimeUtil.timeFormatWithMinute(showTime),
                 style: TextStyle(fontSize: 14, color: AppColors.color_999999)),
             SizedBox(
               width: 8,
@@ -448,7 +628,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
 
   Widget buildEditRepeatMeetingTips() {
     return Container(
-      height: 32,
+      padding: EdgeInsets.only(top: 16),
       color: Colors.transparent,
       alignment: Alignment.center,
       child: Row(
@@ -806,11 +986,66 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
         });
   }
 
+  /// 默认添加当前用户为参会主持人
+  void addMyselfToDefaultAttendee() {
+    final accountInfo =
+        NEMeetingKit.instance.getAccountService().getAccountInfo();
+    final userUuid = accountInfo?.userUuid ?? '';
+    scheduledMemberList.add(NEScheduledMember(
+        role: MeetingRoles.kHost,
+        userUuid: userUuid,
+        contact: NEContact(
+            name: accountInfo?.nickname ?? '',
+            avatar: accountInfo?.avatar,
+            userUuid: userUuid)));
+  }
+
+  /// 本地分页加载通讯录成员
+  Future loadMoreContacts() async {
+    if (scheduledMemberList.length <= contactList.length) return;
+    int end = min(contactList.length + _pageSize, scheduledMemberList.length);
+    final userUuids = scheduledMemberList
+        .sublist(contactList.length, end)
+        .map((e) => e.userUuid)
+        .toList();
+
+    /// 加载更多
+    final result = await NEMeetingKit.instance
+        .getAccountService()
+        .getContactsInfo(userUuids);
+
+    /// 移除找不到通讯录信息的用户
+    scheduledMemberList.removeWhere(
+        (uuid) => result.data?.notFindUserUuids.contains(uuid) == true);
+
+    /// 更新通讯录信息
+    result.data?.meetingAccountListResp.forEach((contact) {
+      final scheduleMember = scheduledMemberList
+          .where((element) => element.userUuid == contact.userUuid)
+          .firstOrNull;
+      scheduleMember?.contact = contact;
+    });
+  }
+
   @override
   void dispose() {
     meetingPasswordController.dispose();
     meetingSubjectController.dispose();
     focusNode.dispose();
     super.dispose();
+  }
+
+  /// 选择人员回调
+  /// [contact] 选择的联系人
+  /// [currentSelectedSize] 当前已选择的人数
+  /// 返回值为是否允许选择
+  bool handleClickCallback(
+      NEContact contact, int currentSelectedSize, String? maxSelectedTip) {
+    /// 选择人数超限
+    if (scheduledMemberList.length + currentSelectedSize >= _maxMembers) {
+      ToastUtils.showToast(context, maxSelectedTip!);
+      return false;
+    }
+    return true;
   }
 }

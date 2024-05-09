@@ -1,4 +1,5 @@
 "NSCameraUsageDescription" = "Audio-video meeting needs to apply for Camera permission for video communication.";
 "NSMicrophoneUsageDescription" = "Audio-video meeting needs to apply for Microphone permission for audio communication.";
 "NSPhotoUsageDescription" = "Need to apply for photo permission for the virtual background (adding and changing background images) function in the meeting";
+"NSContactsUsageDescription" = "Authorize access to your address book to call a contact to join a meeting by phone";
 "CFBundleDisplayName" = "NetEase Meeting";

@@ -147,7 +147,8 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
   /// 初始化
   ///
   Future<NEResult<void>> initialize(NEMeetingUIKitConfig config) async {
-    apiLogger.i('initializeUI');
+    apiLogger.i(
+        'initializeUI useAssetServerConfig = ${config.useAssetServerConfig}');
     if (config.useAssetServerConfig && config.serverConfig == null) {
       try {
         final serverConfigJsonString = await NEMeetingPlugin()
@@ -237,6 +238,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
             noSip: opts.noSip,
             enableWaitingRoom: opts.enableWaitingRoom,
             enableMyAudioDeviceOnJoinRtc: opts.detectMutedMic,
+            enableGuestJoin: opts.enableGuestJoin,
           ),
         )
         .map<void>((roomContext) async {
@@ -273,6 +275,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
     MeetingPageRouteDidPushCallback? onMeetingPageRouteDidPush,
     int? startTime,
     Widget? backgroundWidget,
+    bool isInvite = false,
   }) async {
     apiLogger.i('joinMeetingUI');
     if (param.trackingEvent == null) {
@@ -294,7 +297,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
       () {
         return NEMeetingKit.instance
             .getMeetingService()
-            .joinMeeting(param, joinOpts);
+            .joinMeeting(param, joinOpts, isInvite: isInvite);
       },
       onPasswordPageRouteWillPush: onPasswordPageRouteWillPush,
       onMeetingPageRouteWillPush: onMeetingPageRouteWillPush,
@@ -418,8 +421,9 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
       );
       return navigatorState
           .push(MaterialPageRoute(
-              builder: (BuildContext context) =>
-                  MeetingPageProxy(meetingWaitingArguments)))
+              builder: (BuildContext context) => MeetingVerifyPasswordPage(
+                    arguments: meetingWaitingArguments,
+                  )))
           .then((value) async {
         if (value is NERoomContext) {
           if (onMeetingPageRouteWillPush != null) {
@@ -507,7 +511,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
     Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => BeautyPageProxy(beautyLevel: level)));
+            builder: (context) => BeautySettingPage(beautyLevel: level)));
     return Future.value(const NEResult(code: NEMeetingErrorCode.success));
   }
 
@@ -519,7 +523,7 @@ class NEMeetingUIKit with _AloggerMixin, WidgetsBindingObserver {
     }
 
     Navigator.push(context,
-        MaterialPageRoute(builder: (context) => VirtualBackgroundPageProxy()));
+        MaterialPageRoute(builder: (context) => NEPreVirtualBackgroundPage()));
     return Future.value(const NEResult(code: NEMeetingErrorCode.success));
   }
 

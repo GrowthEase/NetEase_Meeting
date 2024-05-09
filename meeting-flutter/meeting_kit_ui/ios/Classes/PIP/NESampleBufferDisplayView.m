@@ -5,16 +5,21 @@
 #import "NESampleBufferDisplayView.h"
 #import <AVKit/AVKit.h>
 #import "NENeteaseMeetingUI.h"
+#if __has_include(<netease_meeting_ui/netease_meeting_ui-Swift.h>)
+#import <netease_meeting_ui/netease_meeting_ui-Swift.h>
+#else
+#import "netease_meeting_ui-Swift.h"
+#endif
 
 @interface NESampleBufferDisplayView ()
 @property(nonatomic, strong) UIView *titleBgView;
-@property(nonatomic, strong) UILabel *titleLabel;
 @property(nonatomic, strong) UIView *infoBgView;
 @property(nonatomic, strong) UILabel *nameLabel;
 @property(nonatomic, strong) UIImageView *audioImage;
 @property(nonatomic, strong) UIView *phoneBgView;
 @property(nonatomic, strong) UIImageView *phoneImage;
 @property(nonatomic, strong) UILabel *phoneLabel;
+@property(nonatomic, strong) NEMeetingAvatar *avatar;
 @end
 
 @implementation NESampleBufferDisplayView
@@ -38,13 +43,7 @@
     [self.titleBgView.trailingAnchor constraintEqualToAnchor:self.trailingAnchor],
     [self.titleBgView.bottomAnchor constraintEqualToAnchor:self.bottomAnchor]
   ]];
-  [self.titleBgView addSubview:self.titleLabel];
-  [NSLayoutConstraint activateConstraints:@[
-    [self.titleLabel.topAnchor constraintEqualToAnchor:self.titleBgView.topAnchor],
-    [self.titleLabel.leadingAnchor constraintEqualToAnchor:self.titleBgView.leadingAnchor],
-    [self.titleLabel.trailingAnchor constraintEqualToAnchor:self.titleBgView.trailingAnchor],
-    [self.titleLabel.bottomAnchor constraintEqualToAnchor:self.titleBgView.bottomAnchor]
-  ]];
+  [self.titleBgView addSubview:self.avatar];
 
   [self addSubview:self.phoneBgView];
   [NSLayoutConstraint activateConstraints:@[
@@ -95,13 +94,16 @@
   ]];
 }
 - (void)updateStateWithMember:(NERoomMember *)member isSelf:(BOOL)isSelf {
-  self.titleLabel.text = member.name;
   self.nameLabel.text = member.name;
   self.audioImage.image =
       [NENeteaseMeetingUI ne_imageName:member.isAudioOn ? @"audio_on" : @"audio_off"];
+  self.avatar.name = member.name;
+  self.avatar.url = member.avatar;
   if (isSelf) {
     self.titleBgView.hidden = NO;
+    self.avatar.hidden = member.isVideoOn;
   } else {
+    self.avatar.hidden = NO;
     self.titleBgView.hidden = member.isVideoOn;
   }
 }
@@ -113,6 +115,13 @@
 - (void)showInfo:(BOOL)flag {
   self.infoBgView.hidden = !flag;
 }
+- (void)layoutSubviews {
+  [super layoutSubviews];
+  CGFloat width = MIN(self.frame.size.width, self.frame.size.height);
+  self.avatar.frame = CGRectMake(0, 0, width / 2, width / 2);
+  self.avatar.layer.cornerRadius = width / 4;
+  self.avatar.center = self.center;
+}
 #pragma mark------------------------ Getter ------------------------
 - (UIView *)titleBgView {
   if (!_titleBgView) {
@@ -121,17 +130,6 @@
     _titleBgView.translatesAutoresizingMaskIntoConstraints = NO;
   }
   return _titleBgView;
-}
-- (UILabel *)titleLabel {
-  if (!_titleLabel) {
-    _titleLabel = [[UILabel alloc] initWithFrame:CGRectZero];
-    _titleLabel.textColor = UIColor.whiteColor;
-    _titleLabel.textAlignment = NSTextAlignmentCenter;
-    _titleLabel.font = [UIFont systemFontOfSize:16];
-    _titleLabel.backgroundColor = UIColor.clearColor;
-    _titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
-  }
-  return _titleLabel;
 }
 - (UIView *)phoneBgView {
   if (!_phoneBgView) {
@@ -193,5 +191,13 @@
     _audioImage.translatesAutoresizingMaskIntoConstraints = NO;
   }
   return _audioImage;
+}
+- (NEMeetingAvatar *)avatar {
+  if (!_avatar) {
+    _avatar = [[NEMeetingAvatar alloc] initWithFrame:CGRectMake(0, 0, 100, 100)];
+    _avatar.layer.cornerRadius = 50;
+    _avatar.clipsToBounds = true;
+  }
+  return _avatar;
 }
 @end

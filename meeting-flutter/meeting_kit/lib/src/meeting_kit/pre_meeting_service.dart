@@ -19,8 +19,15 @@ abstract class NEPreMeetingService {
   Future<NEResult<void>> cancelMeeting(
       int meetingId, bool cancelRecurringMeeting);
 
-  /// 根据唯一id获取会议信息
-  Future<NEResult<NEMeetingItem>> getMeetingItemById(String meetingNum);
+  /// 根据meetingNum获取会议信息
+  Future<NEResult<NEMeetingItem>> getMeetingItemByNum(String meetingNum);
+
+  /// 根据meetingId获取会议信息
+  Future<NEResult<NEMeetingItem>> getMeetingItemById(int meetingId);
+
+  /// 根据meetingNum获取预约会议成员列表
+  Future<NEResult<List<NEScheduledMember>>> getScheduledMembers(
+      String meetingNum);
 
   /// 根据会议状态查询会议信息列表， 不传默认返回NEMeetingItemStatus.init, NEMeetingItemStatus.started
   Future<NEResult<List<NEMeetingItem>>> getMeetingList(

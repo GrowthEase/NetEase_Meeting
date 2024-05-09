@@ -74,11 +74,15 @@ class NEAccountInfo {
         'name': String name,
         'meetingMaxMinutes': int? maxMinutes,
         'meetingMaxMembers': int maxMembers,
+        'expireTimeStamp': int expireTimestamp,
+        'expireTip': String expireTip,
       } =>
         ServiceBundle(
           name: name,
           maxMinutes: maxMinutes,
           maxMembers: maxMembers,
+          expireTimestamp: expireTimestamp,
+          expireTip: expireTip,
         ),
       _ => null,
     };
@@ -146,12 +150,24 @@ class ServiceBundle {
   final String name;
   final int? maxMinutes;
   final int maxMembers;
+  final int expireTimestamp;
+  final String expireTip;
 
   ServiceBundle({
     required this.name,
     required this.maxMinutes,
     required this.maxMembers,
+    required this.expireTimestamp,
+    this.expireTip = '',
   });
 
   bool get isUnlimited => maxMinutes == null || maxMinutes! < 0;
+
+  /// 是否永不已过期
+  bool get isNeverExpired => expireTimestamp == -1;
+
+  /// 是否已过期
+  bool get isExpired =>
+      !isNeverExpired &&
+      expireTimestamp < DateTime.now().millisecondsSinceEpoch;
 }

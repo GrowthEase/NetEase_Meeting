@@ -32,8 +32,8 @@ class DeviceInfo {
         var iosDeviceInfo = await plat.iosInfo;
         _manufacturer = 'Apple';
         _clientType = ClientType.iOS;
-        _model = iosDeviceInfo.name ?? 'unknown';
-        _osVer = iosDeviceInfo.systemVersion ?? 'unknown';
+        _model = iosDeviceInfo.name;
+        _osVer = iosDeviceInfo.systemVersion;
       } else if (Platform.isWindows) {
         _clientType = ClientType.windows;
       } else if (Platform.isMacOS) {

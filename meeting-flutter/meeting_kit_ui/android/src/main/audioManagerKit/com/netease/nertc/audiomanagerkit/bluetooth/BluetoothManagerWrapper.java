@@ -85,4 +85,8 @@ public abstract class BluetoothManagerWrapper {
   public State getState() {
     return mBluetoothState;
   }
+
+  public boolean canConnectToDevice() {
+    return true;
+  }
 }

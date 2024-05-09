@@ -218,6 +218,16 @@ class NEMeetingRecurringRule {
           type: NEMeetingRecurringRuleType.no, startTime: startTime);
     }
   }
+
+  // 深拷贝
+  NEMeetingRecurringRule copy() {
+    return NEMeetingRecurringRule(
+      type: type,
+      customizedFrequency: customizedFrequency,
+      endRule: endRule,
+      startTime: startTime,
+    );
+  }
 }
 
 /// 周期性会议自定义规则

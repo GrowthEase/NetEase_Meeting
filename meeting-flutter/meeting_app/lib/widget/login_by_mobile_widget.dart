@@ -17,6 +17,7 @@ import 'package:nemeeting/uikit/utils/router_name.dart';
 import 'package:nemeeting/constants.dart';
 import 'package:nemeeting/uikit/values/colors.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 import '../language/localizations.dart';
 
@@ -33,9 +34,11 @@ class LoginByMobileWidget extends StatefulWidget {
 
 class LoginByMobileState extends LifecycleBaseState<LoginByMobileWidget>
     with MeetingAppLocalizationsMixin {
+  static const String TAG = 'LoginByMobileState';
   late final appKey = AppConfig().appKey;
   late String mobile;
   late TextEditingController _mobileController;
+  late MaskTextInputFormatter _mobileFormatter;
   final FocusNode _focusNode = FocusNode();
   bool _mobileFocus = false;
   bool _btnEnable = false;
@@ -46,8 +49,9 @@ class LoginByMobileState extends LifecycleBaseState<LoginByMobileWidget>
   void initState() {
     super.initState();
     mobile = widget.mobile ?? '';
-    _mobileController =
-        MaskedTextController(text: mobile, mask: '000 0000 0000');
+    _mobileFormatter = MaskTextInputFormatter(
+        mask: '### #### ####', filter: {"#": RegExp(r'[0-9]')});
+    _mobileController = TextEditingController(text: mobile);
     _focusNode.addListener(() {
       setState(() {
         _mobileFocus = _focusNode.hasFocus;
@@ -120,14 +124,8 @@ class LoginByMobileState extends LifecycleBaseState<LoginByMobileWidget>
                               cursorColor: AppColors.blue_337eff,
                               keyboardAppearance: Brightness.light,
                               inputFormatters: [
-//                            WhitelistingTextInputFormatter(
-//                                RegExp("[a-z,A-Z,0-9]")),
-                                //限制只允许输入字母和数字
-                                FilteringTextInputFormatter.allow(
-                                    RegExp(r'\d+|s')),
-                                //限制只允许输入数字
-                                LengthLimitingTextInputFormatter(
-                                    mobileLength), //限制输入长度不超过13位
+                                LengthLimitingTextInputFormatter(mobileLength),
+                                _mobileFormatter
                               ],
                               decoration: InputDecoration(
                                   hintText:
@@ -149,7 +147,13 @@ class LoginByMobileState extends LifecycleBaseState<LoginByMobileWidget>
                                                 });
                                               },
                                             )),
-                              onSubmitted: (value) => getCheckCodeServer(),
+                              onSubmitted: (value) {
+                                if (appKey?.isNotEmpty ?? false) {
+                                  getCheckCodeServer(appKey!);
+                                } else {
+                                  Alog.e(tag: TAG, content: 'appKey is empty');
+                                }
+                              },
                               onChanged: (value) {
                                 setState(() {
                                   _btnEnable = value.length >= mobileLength;
@@ -194,7 +198,15 @@ class LoginByMobileState extends LifecycleBaseState<LoginByMobileWidget>
                               width: 0),
                           borderRadius:
                               BorderRadius.all(Radius.circular(25))))),
-                  onPressed: _btnEnable ? getCheckCodeServer : null,
+                  onPressed: () {
+                    if (_btnEnable) {
+                      if (appKey?.isNotEmpty ?? false) {
+                        getCheckCodeServer(appKey!);
+                      } else {
+                        Alog.e(tag: TAG, content: 'appKey is empty');
+                      }
+                    }
+                  },
                   child: Text(
                     meetingAppLocalizations.authGetCheckCode,
                     style: TextStyle(color: Colors.white, fontSize: 16),
@@ -207,7 +219,7 @@ class LoginByMobileState extends LifecycleBaseState<LoginByMobileWidget>
         ));
   }
 
-  void getCheckCodeServer() {
+  void getCheckCodeServer(String appKey) {
     final mobile = TextUtil.replaceAllBlank(_mobileController.text);
 
     Alog.d(

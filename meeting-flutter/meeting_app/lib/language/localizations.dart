@@ -26,10 +26,7 @@ class MeetingAppLocalizationsScope extends StatelessWidget {
       builder: (BuildContext context, Locale value, Widget? child) {
         return Localizations(
           locale: value,
-          delegates: [
-            MeetingAppLocalizations.delegate,
-            ...MeetingAppLocalizations.localizationsDelegates
-          ],
+          delegates: MeetingAppLocalizations.localizationsDelegates,
           child: Builder(
             builder: (ctx) {
               return builder != null ? builder!(ctx) : child!;

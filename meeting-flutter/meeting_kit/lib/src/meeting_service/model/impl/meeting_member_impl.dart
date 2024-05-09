@@ -47,6 +47,15 @@ class _NEMeetingMemberImpl extends NERoomMember {
   @override
   NEClientType clientType = NEClientType.unknown;
 
+  @override
+  NERoomMemberInviteState inviteState = NERoomMemberInviteState.unknown;
+
+  @override
+  bool isInSIPInviting = false;
+
+  @override
+  bool isInAppInviting = false;
+
   _NEMeetingMemberImpl({
     required this.uuid,
     required this.name,

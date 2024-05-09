@@ -72,32 +72,22 @@ class MeetingChatRoomMembersPageState
 
   @override
   Widget build(BuildContext context) {
-    final data = MediaQuery.of(context);
-    var padding = data.size.height * 0.15;
-    return Padding(
-      padding: EdgeInsets.only(top: padding),
-      child: Container(
-        decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius:
-                BorderRadius.only(topLeft: _radius, topRight: _radius)),
-        child: MeetingMemberPageView(
-          title: (_) => meetingUiLocalizations.chatSendTo,
-          roomContext: roomContext,
-          waitingRoomManager: waitingRoomManager,
-          chatRoomManager: chatRoomManager,
-          roomInfoUpdatedEventStream: roomInfoUpdatedEventStream,
-          showUserEnterHint: false,
-          pageFilter: (page) {
-            return (page.type == _MembersPageType.inMeeting &&
-                    meetingUIState.inMeetingChatroom.hasJoin) ||
-                (page.type == _MembersPageType.waitingRoom &&
-                    meetingUIState.waitingRoomChatroom.hasJoin);
-          },
-          pageBuilder: (page, searchKey) =>
-              _buildMemberListPage(page, searchKey),
-          memberSize: calculateMemberSize,
-        ),
+    return Scaffold(
+      body: MeetingMemberPageView(
+        title: (_) => meetingUiLocalizations.chatSendTo,
+        roomContext: roomContext,
+        waitingRoomManager: waitingRoomManager,
+        chatRoomManager: chatRoomManager,
+        roomInfoUpdatedEventStream: roomInfoUpdatedEventStream,
+        showUserEnterHint: false,
+        pageFilter: (page) {
+          return (page.type == _MembersPageType.inMeeting &&
+                  meetingUIState.inMeetingChatroom.hasJoin) ||
+              (page.type == _MembersPageType.waitingRoom &&
+                  meetingUIState.waitingRoomChatroom.hasJoin);
+        },
+        pageBuilder: (page, searchKey) => _buildMemberListPage(page, searchKey),
+        memberSize: calculateMemberSize,
       ),
     );
   }

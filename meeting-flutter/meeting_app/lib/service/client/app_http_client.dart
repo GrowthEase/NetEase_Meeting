@@ -27,8 +27,8 @@ class AppHttpClient {
   AppHttpClient._internal() {
     final options = BaseOptions(
       baseUrl: servers.baseUrl,
-      connectTimeout: servers.connectTimeout,
-      receiveTimeout: servers.receiveTimeout,
+      connectTimeout: Duration(milliseconds: servers.connectTimeout),
+      receiveTimeout: Duration(milliseconds: servers.receiveTimeout),
     );
 
     dio = Dio(options);
@@ -88,7 +88,7 @@ class AppHttpClient {
         queryParameters: isGet && data is Map ? Map.from(data) : null,
       );
       response = await dio.fetch(requestOptions);
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       Alog.e(
           tag: 'HTTP',
           moduleName: moduleName,
@@ -105,12 +105,12 @@ class AppHttpClient {
       options ??= Options();
       options.headers = mergeHeaders(baseHeaders, options.headers);
       options.responseType = ResponseType.bytes;
-      options.receiveTimeout = 0;
+      options.receiveTimeout = Duration.zero;
       Alog.d(
           moduleName: moduleName, tag: 'HTTP', content: 'down load file $url');
       response = await dio.download(url, filePath,
           onReceiveProgress: onReceiveProgress, options: options);
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       Alog.e(moduleName: moduleName, tag: 'HTTP', content: '$url error=$e');
     }
     return response;

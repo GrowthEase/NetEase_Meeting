@@ -142,83 +142,31 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      child: Scaffold(
-        backgroundColor: _UIColors.white,
-        appBar: buildAppBar(context),
-        //body: SafeArea(top: false, left: false, right: false, child: buildBody()),
-        body: buildBody(),
-      ),
-      onWillPop: () async {
-        return true;
-      },
-    );
-  }
-
-  AppBar buildAppBar(BuildContext context) {
-    return AppBar(
-        title: Text(
-          NEMeetingUIKitLocalizations.of(context)!.liveMeeting,
-          style: TextStyle(color: _UIColors.color_222222, fontSize: 17),
-        ),
-        centerTitle: true,
-        backgroundColor: _UIColors.white,
-        elevation: 0.0,
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
-        leading: GestureDetector(
-          child: Container(
-            alignment: Alignment.center,
-            key: MeetingUIValueKeys.chatRoomClose,
-            child: Text(
-              NEMeetingUIKitLocalizations.of(context)!.globalClose,
-              style: TextStyle(color: _UIColors.blue_337eff, fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
+    return Scaffold(
+        appBar: TitleBar(
+          title: TitleBarTitle(
+            NEMeetingUIKitLocalizations.of(context)!.liveMeeting,
           ),
-          onTap: () {
-            Navigator.pop(context, false);
-          },
-        ));
-  }
-
-  Widget buildBody() {
-    return Container(
-        color: _UIColors.globalBg,
-        child: SafeArea(
-          child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () {
-                FocusScope.of(context).unfocus();
-              },
-              child: LayoutBuilder(builder:
-                  (BuildContext context, BoxConstraints viewportConstraints) {
-                return SingleChildScrollView(
-                    child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minHeight: viewportConstraints.maxHeight,
-                        ),
-                        child: IntrinsicHeight(
-                            child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: <Widget>[
-                            buildSpace(),
-                            buildTitleWithState(),
-                            buildSpace(),
-                            buildLiveUrl(),
-                            ...buildPwdWithState(),
-                            buildSpace(),
-                            buildLiveInteraction(),
-                            buildSpace(),
-                            buildLiveLevel(),
-                            buildSpace(),
-                            buildViewItem(),
-                            _buildSplit(),
-                            buildViewPreview(),
-                            buildViewTips(),
-                            buildActionButton()
-                          ],
-                        ))));
-              })),
+        ),
+        backgroundColor: _UIColors.globalBg,
+        body: ListView(
+          children: <Widget>[
+            buildSpace(),
+            buildTitleWithState(),
+            buildSpace(),
+            buildLiveUrl(),
+            ...buildPwdWithState(),
+            buildSpace(),
+            buildLiveInteraction(),
+            buildSpace(),
+            buildLiveLevel(),
+            buildSpace(),
+            buildViewItem(),
+            _buildSplit(),
+            buildViewPreview(),
+            buildViewTips(),
+            buildActionButton()
+          ],
         ));
   }
 
@@ -522,15 +470,20 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
         behavior: HitTestBehavior.opaque,
         onTap: () {
           FocusScope.of(context).unfocus();
-          Navigator.of(context)
-              .push(MaterialMeetingPageRoute(builder: (context) {
-            return MeetingLiveSettingPage(
+          showMeetingPopupPageRoute(
+            context: context,
+            builder: (context) {
+              return MeetingLiveSettingPage(
                 _arguments,
                 NERoomLiveInfo(
-                    title: _liveTitleController.text,
-                    liveLayout: liveLayout,
-                    userUuidList: liveUids));
-          })).then((value) {
+                  title: _liveTitleController.text,
+                  liveLayout: liveLayout,
+                  userUuidList: liveUids,
+                ),
+              );
+            },
+            routeSettings: RouteSettings(name: 'MeetingLiveSettingPage'),
+          ).then((value) {
             if (value is NERoomLiveInfo) {
               viewChange =
                   !listEquals(value.userUuidList, _liveInfo.userUuidList) ||
@@ -886,8 +839,8 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
         }
       }
     }
-    Connectivity().checkConnectivity().then((value) {
-      if (value == ConnectivityResult.none) {
+    ConnectivityManager().isConnected().then((connected) {
+      if (!connected) {
         ToastUtils.showToast(context,
             NEMeetingKitLocalizations.of(context)!.networkUnavailableCheck);
       } else {

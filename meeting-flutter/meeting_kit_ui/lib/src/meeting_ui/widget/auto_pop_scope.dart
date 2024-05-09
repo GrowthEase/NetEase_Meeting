@@ -68,7 +68,7 @@ class _AutoPopScopeState extends State<AutoPopScope> {
       hasRequestPop = true;
       widget.listenable?.removeListener(_checkWillAutoPop);
       postOnFrame(() {
-        if (!mounted) return;
+        if (!mounted || !myselfRoute.isActive) return;
         if (myselfRoute.isCurrent) {
           Navigator.of(context).pop();
         } else {

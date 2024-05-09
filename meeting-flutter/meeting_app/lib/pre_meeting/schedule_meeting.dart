@@ -25,14 +25,16 @@ class ScheduleMeetingRoute extends StatefulWidget {
 class _ScheduleMeetingRouteState
     extends ScheduleMeetingBaseState<ScheduleMeetingRoute>
     with MeetingAppLocalizationsMixin {
+  _ScheduleMeetingRouteState() : super();
+
   @override
   void initState() {
     super.initState();
-    meetingItem = NEMeetingItem();
     meetingSubjectController = TextEditingController();
     callTime();
     recurringRule = NEMeetingRecurringRule(
         type: NEMeetingRecurringRuleType.no, startTime: startTime);
+    addMyselfToDefaultAttendee();
   }
 
   // 是否被初始化
@@ -53,7 +55,7 @@ class _ScheduleMeetingRouteState
   void callTime() {
     var now = DateTime.now();
     startTime = DateTime(now.year, now.month, now.day,
-        now.minute > 30 ? now.hour + 1 : now.hour, now.minute <= 30 ? 30 : 0);
+        now.minute >= 30 ? now.hour + 1 : now.hour, now.minute < 30 ? 30 : 0);
     endTime = startTime.add(Duration(minutes: 30));
   }
 
@@ -107,6 +109,7 @@ class _ScheduleMeetingRouteState
     LoadingUtil.showLoading();
     meetingItem.recurringRule = recurringRule;
     meetingItem.subject = subject;
+    meetingItem.scheduledMemberList = scheduledMemberList;
     meetingItem.startTime = startTime.millisecondsSinceEpoch;
     meetingItem.endTime = endTime.millisecondsSinceEpoch;
     meetingItem.password = meetingPwdSwitch ? password : null;
@@ -132,6 +135,7 @@ class _ScheduleMeetingRouteState
     meetingItem.noSip = kNoSip;
     meetingItem.setWaitingRoomEnabled(enableWaitingRoom);
     meetingItem.setEnableJoinBeforeHost(enableJoinBeforeHost);
+    meetingItem.setEnableGuestJoin(enableGuestJoin);
     NEMeetingKit.instance
         .getPreMeetingService()
         .scheduleMeeting(meetingItem)

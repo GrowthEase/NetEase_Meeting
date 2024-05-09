@@ -4,7 +4,6 @@
 
 import 'dart:async';
 
-import 'package:connectivity/connectivity.dart';
 import 'package:flutter/widgets.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 
@@ -12,9 +11,9 @@ import '../language/meeting_localization/meeting_app_localizations.dart';
 
 extension StateExt on State {
   Future<T?> doIfNetworkAvailable<T>(FutureOr<T> Function() callback) async {
-    final result = await Connectivity().checkConnectivity();
+    final connected = await ConnectivityManager().isConnected();
     if (!mounted) return null;
-    if (result == ConnectivityResult.none) {
+    if (!connected) {
       ToastUtils.showToast(context,
           MeetingAppLocalizations.of(context)!.globalNetworkUnavailableCheck);
       return null;

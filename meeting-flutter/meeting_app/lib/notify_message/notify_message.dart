@@ -3,35 +3,36 @@
 // found in the LICENSE file.
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:connectivity/connectivity.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/service/model/history_meeting.dart';
 import 'package:nemeeting/service/repo/history_repo.dart';
+import 'package:netease_common/netease_common.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 import '../language/localizations.dart';
 import '../meeting/history_meeting_detail.dart';
+import '../pre_meeting/schedule_meeting_detail.dart';
 import '../uikit/state/meeting_base_state.dart';
 import '../uikit/values/asset_name.dart';
 import '../uikit/values/colors.dart';
 import '../uikit/values/fonts.dart';
-import '../uikit/values/strings.dart';
-import 'package:intl/intl.dart';
 
-class MeetingNotifyMessage extends StatefulWidget {
+class MeetingAppNotifyCenter extends StatefulWidget {
   final String sessionId;
   final void Function()? onClearAllMessage;
 
-  MeetingNotifyMessage({required this.sessionId, this.onClearAllMessage});
+  MeetingAppNotifyCenter({required this.sessionId, this.onClearAllMessage});
 
   @override
   State<StatefulWidget> createState() {
-    return MeetingNotifyMessageState();
+    return MeetingAppNotifyCenterState();
   }
 }
 
-class MeetingNotifyMessageState extends MeetingBaseState<MeetingNotifyMessage> {
+class MeetingAppNotifyCenterState
+    extends MeetingBaseState<MeetingAppNotifyCenter>
+    with NEMeetingMessageSessionListener {
   ValueNotifier<List<NEMeetingCustomSessionMessage>> _messageListListenable =
       ValueNotifier([]);
 
@@ -53,18 +54,12 @@ class MeetingNotifyMessageState extends MeetingBaseState<MeetingNotifyMessage> {
     lifecycleExecuteUI(NEMeetingKit.instance
         .clearUnreadCount(widget.sessionId)
         .then((result) async {
-      if (await Connectivity().checkConnectivity() == ConnectivityResult.none) {
-        ToastUtils.showToast(
-            context,
-            NEMeetingUIKitLocalizations.of(context)!
-                .networkAbnormalityPleaseCheckYourNetwork);
-        return;
-      }
       if (result.isSuccess()) {
         widget.onClearAllMessage?.call();
       }
     }));
     _loadMoreData(toTime);
+    NEMeetingKit.instance.addReceiveSessionMessageListener(this);
   }
 
   @override
@@ -79,22 +74,20 @@ class MeetingNotifyMessageState extends MeetingBaseState<MeetingNotifyMessage> {
               return value.length > 0
                   ? Container(
                       padding: EdgeInsets.all(16),
-                      child: SingleChildScrollView(
-                          controller: _scrollController,
-                          child: ListView.separated(
-                              separatorBuilder: (context, index) =>
-                                  SizedBox(height: 6),
-                              itemBuilder: (context, index) {
-                                return GestureDetector(
-                                  child: buildNotifyMessageItem(context, index),
-                                  onTap: () {
-                                    pushPage(index);
-                                  },
-                                );
-                              },
-                              itemCount: value.length,
-                              shrinkWrap: true,
-                              physics: NeverScrollableScrollPhysics())),
+                      child: ListView.separated(
+                        controller: _scrollController,
+                        separatorBuilder: (context, index) =>
+                            SizedBox(height: 6),
+                        itemBuilder: (context, index) {
+                          return GestureDetector(
+                            child: buildNotifyMessageItem(context, index),
+                            onTap: () {
+                              pushPage(index);
+                            },
+                          );
+                        },
+                        itemCount: value.length,
+                      ),
                     )
                   : Container(
                       padding: EdgeInsets.only(
@@ -157,7 +150,7 @@ class MeetingNotifyMessageState extends MeetingBaseState<MeetingNotifyMessage> {
     }
 
     if (isShowClearDialogDialog) return;
-    if (await Connectivity().checkConnectivity() == ConnectivityResult.none) {
+    if (!await ConnectivityManager().isConnected()) {
       ToastUtils.showToast(
           context, NEMeetingUIKitLocalizations.of(context)!.networkAbnormality);
       return;
@@ -166,7 +159,8 @@ class MeetingNotifyMessageState extends MeetingBaseState<MeetingNotifyMessage> {
     showCupertinoDialog(
         context: context,
         builder: (BuildContext buildContext) => CupertinoAlertDialog(
-              content: Text(Strings.clearAllNotify),
+              content: Text(NEMeetingUIKitLocalizations.of(context)!
+                  .notifyCenterAllClear),
               actions: <Widget>[
                 CupertinoDialogAction(
                     child: Text(
@@ -223,6 +217,7 @@ class MeetingNotifyMessageState extends MeetingBaseState<MeetingNotifyMessage> {
             child: Text(
               '${body?.title}',
               overflow: TextOverflow.ellipsis,
+              maxLines: 3,
               textAlign: TextAlign.center,
               style: TextStyle(
                   fontSize: 14,
@@ -236,6 +231,7 @@ class MeetingNotifyMessageState extends MeetingBaseState<MeetingNotifyMessage> {
             child: Text(
               '${body?.content}',
               overflow: TextOverflow.ellipsis,
+              maxLines: 10,
               style: TextStyle(
                 fontSize: 14,
                 color: AppColors.color_666666,
@@ -305,31 +301,94 @@ class MeetingNotifyMessageState extends MeetingBaseState<MeetingNotifyMessage> {
     }));
   }
 
+  /// 收到新的会话消息
+  @override
+  void onReceiveSessionMessage(NEMeetingCustomSessionMessage message) {
+    if (message.sessionId == widget.sessionId) {
+      setState(() {
+        final index = _messageListListenable.value.firstIndexOf((element) {
+          return message.time >= element.time;
+        });
+        if (index == -1) {
+          _messageListListenable.value.add(message);
+        } else {
+          _messageListListenable.value.insert(index, message);
+          if (index == 0) {
+            postOnFrame(() {
+              _scrollController.animateTo(0,
+                  duration: Duration(milliseconds: 100), curve: Curves.easeIn);
+            });
+          }
+        }
+      });
+    }
+  }
+
   @override
   void dispose() {
+    NEMeetingKit.instance
+      ..removeReceiveSessionMessageListener(this)
+      ..clearUnreadCount(widget.sessionId);
     _scrollController.dispose();
     _messageListListenable.value.clear();
     super.dispose();
   }
 
+  /// 跳转到对应的页面
   void pushPage(int index) {
     var data = _messageListListenable.value[index].data?.data;
-    var action = data?.notifyCard?.notifyCenterCardClickAction;
-    if (action != null &&
-        action.contains(MeetingNotifyCenterActionUtil.action_meeting_history) &&
-        data?.meetingId != null) {
-      HistoryRepo()
-          .getHistoryMeetingDetailsByMeetingId(data!.meetingId!)
-          .then((value) {
-        if (value.isSuccess() && value.data != null) {
-          Navigator.of(context).push(MaterialMeetingAppPageRoute(
-              builder: (context) =>
-                  HistoryMeetingDetailRoute(value.data as HistoryMeeting)));
-        } else {
-          ToastUtils.showToast(context, Strings.viewDetailsUnSupported);
-        }
-      });
+    var type = data?.type;
+    if (type == null) return;
+    switch (type) {
+      case NotifyCenterCardType.meetingNewRecordFile:
+        _pushMeetingHistory(data);
+        break;
+      case NotifyCenterCardType.meetingScheduleInvite:
+      case NotifyCenterCardType.meetingScheduleInfoUpdate:
+        _pushMeetingScheduleDetail(data);
+        break;
+      default:
+        break;
     }
+  }
+
+  /// 跳转到会议历史详情
+  void _pushMeetingHistory(CardData? data) {
+    if (data?.meetingId == null) return;
+    HistoryRepo()
+        .getHistoryMeetingDetailsByMeetingId(data!.meetingId!)
+        .then((value) {
+      if (value.isSuccess() && value.data != null) {
+        Navigator.of(context).push(MaterialMeetingAppPageRoute(
+            builder: (context) =>
+                HistoryMeetingDetailRoute(value.data as HistoryMeeting)));
+      } else {
+        ToastUtils.showToast(
+            context,
+            NEMeetingUIKitLocalizations.of(context)!
+                .notifyCenterViewDetailsUnsupported);
+      }
+    });
+  }
+
+  /// 跳转到会议日程详情
+  void _pushMeetingScheduleDetail(CardData? data) {
+    if (data?.meetingId == null) return;
+    NEMeetingKit.instance
+        .getPreMeetingService()
+        .getMeetingItemById(data!.meetingId!)
+        .then((value) {
+      if (value.isSuccess() && value.data != null) {
+        Navigator.of(context).push(MaterialMeetingAppPageRoute(
+            settings: RouteSettings(name: ScheduleMeetingDetailRoute.routeName),
+            builder: (context) => ScheduleMeetingDetailRoute(value.data!)));
+      } else {
+        ToastUtils.showToast(
+            context,
+            NEMeetingUIKitLocalizations.of(context)!
+                .notifyCenterViewDetailsUnsupported);
+      }
+    });
   }
 
   /// 构建头部
@@ -360,6 +419,7 @@ class MeetingNotifyMessageState extends MeetingBaseState<MeetingNotifyMessage> {
               child: Text(
                 '${header?.subject}',
                 overflow: TextOverflow.ellipsis,
+                maxLines: 5,
                 style: TextStyle(
                     fontSize: 16,
                     color: AppColors.color_999999,
@@ -370,10 +430,8 @@ class MeetingNotifyMessageState extends MeetingBaseState<MeetingNotifyMessage> {
               padding: EdgeInsets.only(right: 16),
               child: Text(
                 timeStamp != null
-                    ? DateFormat(Strings.meetingInfoNotifyMessageDateFormat)
-                        .format(DateTime.fromMillisecondsSinceEpoch(timeStamp))
-                    : Strings.unKnown,
-                overflow: TextOverflow.ellipsis,
+                    ? MeetingTimeUtil.getTimeFormatMDHM(timeStamp)
+                    : NEMeetingUIKitLocalizations.of(context)!.globalNothing,
                 style: TextStyle(
                     fontSize: 14,
                     color: AppColors.color_999999,
@@ -385,4 +443,23 @@ class MeetingNotifyMessageState extends MeetingBaseState<MeetingNotifyMessage> {
       ),
     );
   }
+}
+
+class NotifyCenterCardType {
+  /// 录制文件生成通知
+  static const String meetingNewRecordFile = 'MEETING.NEW_RECORD_FILE ';
+
+  /// 预约会议更新通知
+  static const String meetingScheduleInfoUpdate =
+      'MEETING.SCHEDULE.INFO.UPDATE';
+
+  /// 预约会议邀请通知
+  static const String meetingScheduleInvite = 'MEETING.SCHEDULE.INVITE';
+
+  /// 预约会议取消通知
+  static const String meetingScheduleCancel = 'MEETING.SCHEDULE.CANCEL';
+
+  /// 预约成员被移除通知
+  static const String meetingScheduleMemberRemove =
+      'MEETING.SCHEDULE.MEMBER.REMOVED';
 }

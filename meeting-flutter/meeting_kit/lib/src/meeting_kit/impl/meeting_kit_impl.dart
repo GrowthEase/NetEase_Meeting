@@ -14,6 +14,7 @@ class _NEMeetingKitImpl extends NEMeetingKit
   NEPreMeetingService preMeetingService = _NEPreMeetingServiceImpl();
   NELiveMeetingService liveMeetingService = _NELiveMeetingServiceImpl();
   NEMeetingNosService nosService = _NEMeetingNosServiceImpl();
+  _NEMeetingInviteServiceImpl inviteService = _NEMeetingInviteServiceImpl();
 
   Map? assetServerConfig;
 
@@ -27,13 +28,14 @@ class _NEMeetingKitImpl extends NEMeetingKit
   Map<String, String>? sdkVersionsHeaders;
 
   final Set<NEMeetingAuthListener> _authListenerSet = <NEMeetingAuthListener>{};
-  final Set<NERoomMessageSessionListener> _sessionListenerSet =
-      <NERoomMessageSessionListener>{};
+  final Set<NEMeetingMessageSessionListener> _sessionListenerSet =
+      <NEMeetingMessageSessionListener>{};
 
   /// 缓存会议内的会话消息列表
   Map<int, Set<NEMeetingCustomSessionMessage>?> _sessionMessageMapCache = {};
 
   _NEMeetingKitImpl() {
+    ConnectivityManager();
     HttpHeaderRegistry().addContributor(() {
       final appKey = config?.appKey;
       final languageTag = localeListenable.value.toLanguageTag();
@@ -53,6 +55,8 @@ class _NEMeetingKitImpl extends NEMeetingKit
       } else if ({NEAuthEvent.kTokenExpired, NEAuthEvent.kIncorrectToken}
           .contains(event)) {
         notifyAuthInfoExpired();
+      } else if (event == NEAuthEvent.kReconnected) {
+        notifyReconnected();
       }
     });
     HttpErrorRepository()
@@ -90,8 +94,31 @@ class _NEMeetingKitImpl extends NEMeetingKit
               time: message.time,
             );
 
-            /// 缓存会议内的会话消息
-            if (data.data?.meetingId != null && data.data?.meetingId != 0) {
+            /// 处理App邀请消息
+            /// timestamp 距离当前60内, 且当前无会议
+            if (data.data?.type == NENotifyCenterCardType.meetingInvite &&
+                data.data?.timestamp != null &&
+                DateTime.now().millisecondsSinceEpoch - data.data!.timestamp! <
+                    60 * 1000) {
+              InviteQueueUtil.instance.pushInvite(data.data);
+              var inviteInfoObj = NEMeetingInviteInfo.fromMap(
+                  data.data?.inviteInfo?.toMap()); // 会议邀请信息
+              inviteInfoObj.meetingNum = data.data?.meetingNum ?? '';
+
+              /// 处理会议邀请消息,转移到邀请服务处理
+              inviteService.listeners.forEach((element) {
+                element.onMeetingInviteStatusChanged(
+                    NEMeetingInviteStatus.calling,
+                    data.data?.meetingId.toString(),
+                    inviteInfoObj);
+              });
+              return;
+            }
+
+            /// 缓存会议内的插件消息
+            if (data.data?.pluginId != null &&
+                data.data?.meetingId != null &&
+                data.data?.meetingId != 0) {
               _sessionMessageMapCache[data.data!.meetingId!] ??= {};
               _sessionMessageMapCache[data.data!.meetingId!]
                   ?.add(customSessionMessage);
@@ -132,6 +159,11 @@ class _NEMeetingKitImpl extends NEMeetingKit
         .toList()
         .forEach((listener) => listener.onAuthInfoExpired());
     logout();
+  }
+
+  /// 通知重连成功
+  void notifyReconnected() {
+    _authListenerSet.toList().forEach((listener) => listener.onReconnected());
   }
 
   @override
@@ -341,6 +373,9 @@ class _NEMeetingKitImpl extends NEMeetingKit
   NEMeetingService getMeetingService() => meetingService;
 
   @override
+  NEMeetingInviteService getMeetingInviteService() => inviteService;
+
+  @override
   NEScreenSharingService getScreenSharingService() => screenSharingService;
 
   @override
@@ -418,7 +453,8 @@ class _NEMeetingKitImpl extends NEMeetingKit
   }
 
   @override
-  void addReceiveSessionMessageListener(NERoomMessageSessionListener listener) {
+  void addReceiveSessionMessageListener(
+      NEMeetingMessageSessionListener listener) {
     apiLogger.i(
         'receive session message addReceiveSessionMessageListener $listener');
     _sessionListenerSet.add(listener);
@@ -436,7 +472,7 @@ class _NEMeetingKitImpl extends NEMeetingKit
 
   @override
   void removeReceiveSessionMessageListener(
-      NERoomMessageSessionListener listener) {
+      NEMeetingMessageSessionListener listener) {
     apiLogger.i('removeReceiveSessionMessageListener $listener');
     _sessionListenerSet.remove(listener);
     _sessionMessageMapCache.clear();

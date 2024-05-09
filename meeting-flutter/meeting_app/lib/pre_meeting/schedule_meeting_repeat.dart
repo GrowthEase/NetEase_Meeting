@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:nemeeting/pre_meeting/schedule_meeting_repeat_custom.dart';
+import 'package:nemeeting/utils/meeting_string_util.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 import '../language/localizations.dart';
 import '../uikit/state/meeting_base_state.dart';
@@ -86,15 +87,18 @@ class _ScheduleMeetingRepeatRouteState
         break;
       case NEMeetingRecurringRuleType.week:
         title = meetingAppLocalizations.meetingRepeatEveryWeek;
-        subTitle = ' (${getWeekday(time.weekday)})';
+        subTitle =
+            ' (${MeetingStringUtil.getWeekday(time.weekday, meetingAppLocalizations)})';
         break;
       case NEMeetingRecurringRuleType.twoWeeks:
         title = meetingAppLocalizations.meetingRepeatEveryTwoWeek;
-        subTitle = ' (${getWeekday(time.weekday)})';
+        subTitle =
+            ' (${MeetingStringUtil.getWeekday(time.weekday, meetingAppLocalizations)})';
         break;
       case NEMeetingRecurringRuleType.dayOfMonth:
         title = meetingAppLocalizations.meetingRepeatEveryMonth;
-        subTitle = ' (${getDay(time)})';
+        subTitle =
+            ' (${MeetingStringUtil.getDay(time, meetingAppLocalizations)})';
         break;
       default:
         title = '';
@@ -182,7 +186,8 @@ class _ScheduleMeetingRepeatRouteState
           alignment: Alignment.center,
           child: ListTile(
               title: Text(
-                getCustomRepeatDesc(),
+                MeetingStringUtil.getCustomRepeatDesc(widget.recurringRule,
+                    widget.startTime, meetingAppLocalizations),
                 style: TextStyle(fontSize: 16, color: AppColors.color_999999),
                 softWrap: true,
               ),
@@ -201,52 +206,6 @@ class _ScheduleMeetingRepeatRouteState
     );
   }
 
-  String getCustomRepeatDesc() {
-    final customizedFrequency = widget.recurringRule.customizedFrequency;
-    if (customizedFrequency != null) {
-      if (customizedFrequency.stepUnit == NEMeetingFrequencyUnitType.day) {
-        return meetingAppLocalizations
-            .meetingRepeatDay(customizedFrequency.stepSize);
-      } else if (customizedFrequency.stepUnit ==
-          NEMeetingFrequencyUnitType.weekday) {
-        customizedFrequency.daysOfWeek!.sort((value1, value2) {
-          return value1.index - value2.index;
-        });
-        final week = customizedFrequency.daysOfWeek!
-            .map((e) => getWeekdayEx(e))
-            .join(' ');
-        return meetingAppLocalizations.meetingRepeatDayInWeek(
-            week, customizedFrequency.stepSize);
-      } else if (customizedFrequency.stepUnit ==
-          NEMeetingFrequencyUnitType.dayOfMonth) {
-        customizedFrequency.daysOfMonth!.sort();
-        final day = customizedFrequency.daysOfMonth!
-            .map((e) => meetingAppLocalizations.meetingDayInMonth(e.toString()))
-            .join(' ');
-        return meetingAppLocalizations.meetingRepeatDayInMonth(
-            day, customizedFrequency.stepSize);
-      } else if (customizedFrequency.stepUnit ==
-          NEMeetingFrequencyUnitType.weekdayOfMonth) {
-        final time = DateTime.fromMillisecondsSinceEpoch(widget.startTime);
-        var firstDayOfMonth = DateTime(time.year, time.month, 1);
-        var dayOfWeek = firstDayOfMonth.weekday;
-        var currentWeekDay = time.weekday;
-        var day = time.day;
-        final currentWeekOfMonth;
-        if (dayOfWeek <= currentWeekDay) {
-          currentWeekOfMonth = (day + dayOfWeek - 2) ~/ 7 + 1;
-        } else {
-          currentWeekOfMonth = (day + dayOfWeek - 2) ~/ 7;
-        }
-        return meetingAppLocalizations.meetingRepeatDayInWeekInMonth(
-            customizedFrequency.stepSize,
-            currentWeekOfMonth,
-            getWeekday(time.weekday));
-      }
-    }
-    return '';
-  }
-
   Widget buildSpace({double height = 20}) {
     return Container(
       color: AppColors.globalBg,
@@ -263,47 +222,5 @@ class _ScheduleMeetingRepeatRouteState
         color: AppColors.colorE8E9EB,
       ),
     );
-  }
-
-  String getWeekdayEx(NEMeetingRecurringWeekday weekday) {
-    int day;
-    if (weekday == NEMeetingRecurringWeekday.sunday) {
-      day = 7;
-    } else {
-      day = weekday.index - 1;
-    }
-    return getWeekday(day);
-  }
-
-  String getWeekday(int day) {
-    String weekdayStr = '';
-    switch (day) {
-      case 1:
-        weekdayStr = meetingAppLocalizations.globalMonday;
-        break;
-      case 2:
-        weekdayStr = meetingAppLocalizations.globalTuesday;
-        break;
-      case 3:
-        weekdayStr = meetingAppLocalizations.globalWednesday;
-        break;
-      case 4:
-        weekdayStr = meetingAppLocalizations.globalThursday;
-        break;
-      case 5:
-        weekdayStr = meetingAppLocalizations.globalFriday;
-        break;
-      case 6:
-        weekdayStr = meetingAppLocalizations.globalSaturday;
-        break;
-      case 7:
-        weekdayStr = meetingAppLocalizations.globalSunday;
-        break;
-    }
-    return weekdayStr;
-  }
-
-  String getDay(DateTime time) {
-    return meetingAppLocalizations.meetingDayInMonth(time.day.toString());
   }
 }

@@ -53,7 +53,7 @@ class _MeetingMemberPageViewState
   late final PageDataManager pageDataManager;
   final ChatRoomManager? chatRoomManager;
   late final NERoomEventCallback roomEventCallback;
-  final _MembersPageType? initialPageType;
+  _MembersPageType? initialPageType;
   final bool showUserEnterHint;
 
   final _pageIndex = ValueNotifier<int>(0);
@@ -100,6 +100,10 @@ class _MeetingMemberPageViewState
         setState(() {
           pageDataManager.inMeeting.userList =
               roomContext.getAllUsers().toList();
+          _sortNotYetJoinedUserList();
+
+          /// 处理各种异步场景，如果设置过初始化页面却没跳转过，总要跳转过去
+          _jumpToInitialPage();
         });
       });
     }
@@ -115,6 +119,8 @@ class _MeetingMemberPageViewState
       waitingRoomManager!.unreadMemberCountListenable
           .addListener(_resetUnreadMemberCount);
     }
+    _sortNotYetJoinedUserList();
+
     if (!roomContext.isInWaitingRoom()) {
       pageDataManager.inMeeting.userList = roomContext.getAllUsers().toList();
     } else if (chatRoomManager != null) {
@@ -129,22 +135,65 @@ class _MeetingMemberPageViewState
     _pageIndex.addListener(_resetUnreadMemberCount);
 
     /// 传入初始页面类型
+    _jumpToInitialPage();
+    pageDataManager.addListener(() {
+      final pages = pageDataManager.pages;
+
+      /// 如果当前选中页面大于总页面数，则跳到第一页
+      if (_pageIndex.value >= pages.length) {
+        _pageIndex.value = 0;
+      }
+      _pageController.jumpToPage(_pageIndex.value);
+    });
+  }
+
+  _sortNotYetJoinedUserList() {
+    final userList = [
+      ...roomContext.inSIPInvitingMembers,
+      ...roomContext.inAppInvitingMembers
+    ].toSet().toList();
+
+    /// 未入会列表有排序，呼叫中>等待呼叫>未接听/已拒接/呼叫异常/已取消
+    userList.sort((a, b) {
+      if (a.inviteState == NERoomMemberInviteState.calling) {
+        return -1;
+      } else if (b.inviteState == NERoomMemberInviteState.calling) {
+        return 1;
+      } else if (a.inviteState == NERoomMemberInviteState.waitingCall) {
+        return -1;
+      } else if (b.inviteState == NERoomMemberInviteState.waitingCall) {
+        return 1;
+      } else if (a.inviteState == NERoomMemberInviteState.noAnswer ||
+          a.inviteState == NERoomMemberInviteState.rejected ||
+          a.inviteState == NERoomMemberInviteState.canceled ||
+          a.inviteState == NERoomMemberInviteState.error) {
+        return 1;
+      } else if (b.inviteState == NERoomMemberInviteState.noAnswer ||
+          b.inviteState == NERoomMemberInviteState.rejected ||
+          b.inviteState == NERoomMemberInviteState.canceled ||
+          a.inviteState == NERoomMemberInviteState.error) {
+        return -1;
+      } else {
+        return 0;
+      }
+    });
+    pageDataManager.notYetJoined.userList = userList;
+  }
+
+  _jumpToInitialPage() {
+    /// 跳过则不跳了
+    if (initialPageType == null) return;
     final index = pageDataManager.pages
         .firstIndexOf((page) => page.type == initialPageType);
     if (index != -1) {
       _jumpToPage(index);
+      initialPageType = null;
     }
-    pageDataManager.addListener(() {
-      final pages = pageDataManager.pages;
-      final index = _pageIndex.value.clamp(0, pages.length - 1);
-      _pageIndex.value = index;
-      _pageController.jumpToPage(index);
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
+    return PopScopeBuilder(
       child: SafeArea(
         top: false,
         child: Listener(
@@ -161,15 +210,10 @@ class _MeetingMemberPageViewState
           ),
         ),
       ),
-      onPopInvoked: (didPop) async {
-        if (didPop) {
-          return;
-        }
-        final navigator = Navigator.of(context);
-        if (onWillPop()) {
-          navigator.pop();
-        }
-      },
+      listenable: _focusNode,
+      canPopGetter: (_) => !_focusNode.hasFocus,
+      onInterceptPop: () => _focusNode.unfocus(),
+      onDidPop: () => _focusNode.unfocus(),
     );
   }
 
@@ -185,52 +229,12 @@ class _MeetingMemberPageViewState
     }
   }
 
-  bool onWillPop() {
-    if (_focusNode.hasFocus) {
-      _focusNode.unfocus();
-      return false;
-    }
-    return true;
-  }
-
   Widget buildTitle() {
-    final radius = Radius.circular(8);
-    return Container(
-      height: 48,
-      decoration: ShapeDecoration(
-          shape: RoundedRectangleBorder(
-              side: BorderSide(color: _UIColors.globalBg),
-              borderRadius:
-                  BorderRadius.only(topLeft: radius, topRight: radius))),
-      child: Stack(
-        children: <Widget>[
-          if (title != null)
-            Center(
-              child: Text(
-                title!.call(pageDataManager),
-                style: TextStyle(
-                    color: _UIColors.black_333333,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 16.0,
-                    decoration: TextDecoration.none),
-              ),
-            ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: RawMaterialButton(
-              constraints:
-                  const BoxConstraints(minWidth: 40.0, minHeight: 48.0),
-              child: Icon(
-                NEMeetingIconFont.icon_yx_tv_duankaix,
-                color: _UIColors.color_666666,
-                size: 15,
-                key: MeetingUIValueKeys.close,
-              ),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          )
-        ],
+    return TitleBar(
+      title: TitleBarTitle(
+        title?.call(pageDataManager) ?? '',
       ),
+      showBottomDivider: true,
     );
   }
 
@@ -352,17 +356,26 @@ class _MeetingMemberPageViewState
                                         child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Text(
-                                          getSubject(pages[i].type),
-                                          style: TextStyle(
-                                            color: value == i
-                                                ? _UIColors.white
-                                                : _UIColors.color_333333,
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w400,
-                                            decoration: TextDecoration.none,
-                                          ),
-                                        ),
+                                        Container(child: LayoutBuilder(
+                                          builder: (BuildContext context,
+                                              BoxConstraints constraints) {
+                                            return FittedBox(
+                                              fit: BoxFit.scaleDown,
+                                              child: Text(
+                                                getSubject(pages[i].type),
+                                                style: TextStyle(
+                                                  color: value == i
+                                                      ? _UIColors.white
+                                                      : _UIColors.color_333333,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w400,
+                                                  decoration:
+                                                      TextDecoration.none,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        )),
                                         _buildMemberSizeWidget(
                                             pages[i], value == i),
                                       ],
@@ -507,12 +520,17 @@ class PageDataManager extends ChangeNotifier {
     (user, searchKey) => searchKey == null || user.name.contains(searchKey),
   );
 
+  late final notYetJoined = _PageData<NEBaseRoomMember>(
+    _MembersPageType.notYetJoined,
+    (user, searchKey) => searchKey == null || user.name.contains(searchKey),
+  );
+
   /// page是否可见
   final _defaultIsPageVisible = (pageData) => pageData.hasData;
   bool Function(_PageData pageData)? isPageVisible;
 
   PageDataManager({this.isPageVisible}) {
-    Listenable.merge([inMeeting, waitingRoom]).addListener(() {
+    Listenable.merge([inMeeting, waitingRoom, notYetJoined]).addListener(() {
       notifyListeners();
     });
   }
@@ -521,11 +539,14 @@ class PageDataManager extends ChangeNotifier {
         if ((isPageVisible ?? _defaultIsPageVisible).call(inMeeting)) inMeeting,
         if ((isPageVisible ?? _defaultIsPageVisible).call(waitingRoom))
           waitingRoom,
+        if ((isPageVisible ?? _defaultIsPageVisible).call(notYetJoined))
+          notYetJoined,
       ];
 
   set searchKey(String? text) {
     inMeeting.searchKey = text;
     waitingRoom.searchKey = text;
+    notYetJoined.searchKey = text;
   }
 
   bool get shouldShowTabBar => pages.length > 1;

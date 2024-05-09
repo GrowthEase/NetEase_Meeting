@@ -18,8 +18,9 @@ class _HttpExecutor {
 
   _HttpExecutor._internal() {
     var options = http.BaseOptions(
-        connectTimeout: _serversConfig.connectTimeout,
-        receiveTimeout: _serversConfig.receiveTimeout);
+      connectTimeout: Duration(milliseconds: _serversConfig.connectTimeout),
+      receiveTimeout: Duration(milliseconds: _serversConfig.receiveTimeout),
+    );
 
     dio = http.Dio(options);
     dio.interceptors.add(LogInterceptor(
@@ -59,7 +60,7 @@ class _HttpExecutor {
         queryParameters: isGet && data is Map ? Map.from(data) : null,
       );
       response = await dio.fetch(requestOptions);
-    } on http.DioError catch (e) {
+    } on http.DioException catch (e) {
       Alog.e(
           tag: _tag,
           moduleName: _moduleName,
@@ -79,7 +80,7 @@ class _HttpExecutor {
           content: 'MeetingSDK, HttpExecutor:  download file $url');
       response = await dio.get(url,
           onReceiveProgress: onReceiveProgress, options: options);
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       Alog.d(
           tag: _tag,
           moduleName: _moduleName,

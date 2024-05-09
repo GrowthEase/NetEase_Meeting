@@ -41,6 +41,15 @@ class PermissionHelper {
     return result;
   }
 
+  static Future<bool> requestContactsPermission(BuildContext context) async {
+    return await requestPermissionSingle(
+        context,
+        Permission.contacts,
+        NEMeetingUIKitLocalizations.of(context)!.sipLocalContacts,
+        NEMeetingUIKitLocalizations.of(context)!.sipLocalContacts,
+        message: NEMeetingUIKitLocalizations.of(context)!.sipContactsPrivacy);
+  }
+
   static Future<bool> requestPermissionSingle(BuildContext context,
       Permission permission, String title, String permissionName,
       {String? message,

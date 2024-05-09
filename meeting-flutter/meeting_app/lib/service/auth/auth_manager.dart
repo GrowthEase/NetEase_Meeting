@@ -19,8 +19,10 @@ import 'package:nemeeting/service/response/result.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 
 import '../../language/localizations.dart';
+import '../../utils/meeting_util.dart';
 import '../config/servers.dart';
 import '../module_name.dart' as module;
+import '../util/user_preferences.dart';
 
 class AuthManager {
   static final String _tag = 'AuthManager';
@@ -120,12 +122,6 @@ class AuthManager {
     String? appKey,
     Future<NEResult<void>> Function() loginAction,
   ) async {
-    print("========_loginInfo = $_loginInfo");
-    try {
-      throw Error(); // 抛出一个错误以获取调用栈信息
-    } catch (error, stackTrace) {
-      print('========StackTrace: $stackTrace');
-    }
     if (appKey == null || appKey.isEmpty) {
       return Result(code: NEMeetingErrorCode.failed, msg: 'appKey is empty');
     }
@@ -143,7 +139,9 @@ class AuthManager {
       NEMeetingUIKitConfig(
         appKey: appKey,
         appName: meetingAppLocalizations.globalAppName,
-        // useAssetServerConfig: AppConfig().isPrivateEnv,
+
+        /// 使用asset资源目录下的服务器配置文件
+        useAssetServerConfig: true,
         iosBroadcastAppGroup: iosBroadcastExtensionAppGroup,
         serverUrl: Servers().baseUrl,
         extras: AppConfig.isInDebugMode
@@ -213,7 +211,8 @@ class AuthManager {
     AppProfile.clear();
     _loginInfo = null;
     GlobalPreferences().setLoginInfo('{}');
-    GlobalPreferences().setMeetingInfo('');
+    UserPreferences().setMeetingInfo('');
+    MeetingUtil.setUnreadNotifyMessageListenable(0);
     _authInfoChanged.add(_loginInfo);
   }
 

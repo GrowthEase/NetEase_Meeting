@@ -24,7 +24,7 @@ abstract class MeetingBaseState<T extends StatefulWidget>
           style: TextStyle(
               color: AppColors.color_222222,
               fontSize: 17,
-              fontWeight: FontWeight.bold),
+              fontWeight: FontWeight.w500),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,

@@ -117,6 +117,13 @@ class NEFloatingService extends _Service {
     return disposePIP ?? false;
   }
 
+  Future<void> inviteDispose() async {
+    if (Platform.isIOS) {
+      return _methodChannel.invokeMethod(
+          'inviteDispose', buildArguments(arg: <String, dynamic>{}));
+    }
+  }
+
   /// Confirms or denies PiP availability.
   ///
   /// PiP may be unavailable because of system settings managed
@@ -130,13 +137,25 @@ class NEFloatingService extends _Service {
 
   Future<void> setup(
       String roomUuid, String waitingTips, String interruptedTips,
-      {bool autoEnterPIP = false}) async {
+      {bool autoEnterPIP = false,
+      String? inviterRoomId,
+      String? inviterName,
+      String? inviterIcon}) async {
     if (_isPIPSetupDone) return;
     Map map = buildArguments();
     map['roomUuid'] = roomUuid;
     map['auto_enter_pip'] = autoEnterPIP;
     map['waitingTips'] = waitingTips;
     map['interruptedTips'] = interruptedTips;
+    if (TextUtils.isNotEmpty(inviterIcon)) {
+      map['inviterIcon'] = inviterIcon;
+    }
+    if (TextUtils.isNotEmpty(inviterRoomId)) {
+      map['inviterRoomId'] = inviterRoomId;
+    }
+    if (TextUtils.isNotEmpty(inviterName)) {
+      map['inviterName'] = inviterName;
+    }
     final result = await _methodChannel.invokeMethod('setupPIP', map);
     if (result == null) {
       alog.i("PIP -> setup pip. roomUuid: $roomUuid. result: null");

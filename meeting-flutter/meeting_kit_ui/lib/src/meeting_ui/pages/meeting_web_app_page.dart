@@ -72,58 +72,36 @@ class _MeetingWebAppPageState extends State<MeetingWebAppPage> {
         }
       },
       child: Scaffold(
-        appBar: buildAppBar(context),
-        body: Column(
-          children: [
-            Expanded(
-              child: WebViewWidget(controller: bridge.controller),
+        appBar: TitleBar(
+          title: TitleBarTitle(widget.title),
+          showBottomDivider: true,
+          leading: !_toClose
+              ? GestureDetector(
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    child: Icon(
+                      NEMeetingIconFont.icon_yx_returnx,
+                      size: 18,
+                      color: _UIColors.color_666666,
+                    ),
+                  ),
+                  onTap: () {
+                    bridge.controller.goBack();
+                  },
+                )
+              : null,
+        ),
+        body: WebViewWidget(
+          controller: bridge.controller,
+          gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>[
+            new Factory<OneSequenceGestureRecognizer>(
+              () => EagerGestureRecognizer(),
             ),
-          ],
+          ].toSet(),
         ), // This trailing comma makes auto-formatting nicer for build methods.
       ),
     );
-  }
-
-  AppBar buildAppBar(BuildContext context) {
-    return AppBar(
-        title: Text(
-          widget.title,
-          style: TextStyle(color: _UIColors.color_222222, fontSize: 17),
-        ),
-        centerTitle: true,
-        backgroundColor: _UIColors.colorF6F6F6,
-        elevation: 0.0,
-        systemOverlayStyle: AppStyle.systemUiOverlayStyleDark,
-        leading: _toClose
-            ? GestureDetector(
-                child: Container(
-                  alignment: Alignment.center,
-                  key: MeetingUIValueKeys.chatRoomClose,
-                  child: Text(
-                    NEMeetingUIKitLocalizations.of(context)!.globalClose,
-                    style:
-                        TextStyle(color: _UIColors.blue_337eff, fontSize: 16),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                },
-              )
-            : GestureDetector(
-                child: Container(
-                  alignment: Alignment.center,
-                  key: MeetingUIValueKeys.chatRoomClose,
-                  child: Icon(
-                    NEMeetingIconFont.icon_yx_returnx,
-                    size: 18,
-                    color: _UIColors.color_666666,
-                  ),
-                ),
-                onTap: () {
-                  bridge.controller.goBack();
-                },
-              ));
   }
 
   @override

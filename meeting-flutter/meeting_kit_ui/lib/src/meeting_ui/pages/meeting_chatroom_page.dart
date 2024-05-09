@@ -262,7 +262,13 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
   Widget build(BuildContext context) {
     final double appBarHeight = AppBar().preferredSize.height;
     final double statusBarHeight = MediaQuery.of(context).padding.top;
-    return WillPopScope(
+    return PopScopeBuilder<FocusNode>(
+      listenable: _focusNode,
+      canPopGetter: (focusNode) => !focusNode.hasFocus,
+      onInterceptPop: () => _focusNode.unfocus(),
+      onDidPop: () {
+        if (_focusNode.hasFocus) _focusNode.unfocus();
+      },
       child: Scaffold(
         backgroundColor: _UIColors.colorF6F6F6,
         appBar: buildAppBar(context),
@@ -301,81 +307,48 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
                 : null,
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       ),
-      onWillPop: () async {
-        return onWillPop();
-      },
     );
   }
 
-  AppBar buildAppBar(BuildContext context) {
-    return AppBar(
-        title: Text(
-          _isInHistoryPage
-              ? meetingUiLocalizations.chatHistory
-              : meetingUiLocalizations.chat,
-          style: TextStyle(color: _UIColors.color_222222, fontSize: 17),
-        ),
-        centerTitle: true,
-        backgroundColor: _UIColors.colorF6F6F6,
-        elevation: 0.0,
-        systemOverlayStyle: AppStyle.systemUiOverlayStyleDark,
-        leading: GestureDetector(
-          child: _isInHistoryPage
-              ? IconButton(
-                  key: MeetingUIValueKeys.back,
-                  icon: const Icon(
-                    NEMeetingIconFont.icon_yx_returnx,
-                    color: _UIColors.black_333333,
-                    size: 18,
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                )
-              : Container(
-                  alignment: Alignment.center,
-                  key: MeetingUIValueKeys.chatRoomClose,
-                  child: Text(
-                    meetingUiLocalizations.globalClose,
-                    style:
-                        TextStyle(color: _UIColors.blue_337eff, fontSize: 16),
-                    textAlign: TextAlign.center,
-                  ),
+  PreferredSizeWidget buildAppBar(BuildContext context) {
+    return TitleBar(
+      title: TitleBarTitle(
+        _isInHistoryPage
+            ? meetingUiLocalizations.chatHistory
+            : meetingUiLocalizations.chat,
+      ),
+      showBottomDivider: true,
+      // systemOverlayStyle: AppStyle.systemUiOverlayStyleDark,
+      leading: roomContext?.isMySelfHostOrCoHost() == true &&
+              _arguments.waitingRoomManager != null
+          ? GestureDetector(
+              onTap: () {
+                if (_focusNode.hasFocus) {
+                  _focusNode.unfocus();
+                }
+                showMeetingPopupPageRoute(
+                    context: context,
+                    routeSettings: RouteSettings(
+                        name: MeetingChatPermissionPage.routeName),
+                    builder: (context) {
+                      return MeetingChatPermissionPage(
+                        roomContext!,
+                        _arguments.waitingRoomManager!,
+                      );
+                    });
+              },
+              child: Container(
+                width: 48,
+                height: 48,
+                child: Icon(
+                  NEMeetingIconFont.icon_chat_setting,
+                  size: 24,
+                  color: _UIColors.color656A72,
                 ),
-          onTap: () {
-            if (_focusNode.hasFocus) {
-              _focusNode.unfocus();
-            }
-            Navigator.pop(context);
-          },
-        ),
-        actions: [
-          if (roomContext?.isMySelfHostOrCoHost() == true &&
-              _arguments.waitingRoomManager != null)
-            Padding(
-                padding: EdgeInsets.only(right: 16),
-                child: GestureDetector(
-                  onTap: () {
-                    if (_focusNode.hasFocus) {
-                      _focusNode.unfocus();
-                    }
-                    Navigator.of(context).push(MaterialMeetingPageRoute(
-                        settings: RouteSettings(
-                            name: MeetingChatPermissionPage.routeName),
-                        builder: (context) {
-                          return MeetingChatPermissionPage(
-                            roomContext!,
-                            _arguments.waitingRoomManager!,
-                          );
-                        }));
-                  },
-                  child: Icon(
-                    NEMeetingIconFont.icon_chat_setting,
-                    size: 24,
-                    color: _UIColors.color656A72,
-                  ),
-                ))
-        ]);
+              ),
+            )
+          : null,
+    );
   }
 
   Widget newMessageTips() {
@@ -411,14 +384,6 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
                     )
                   ],
                 ))));
-  }
-
-  bool onWillPop() {
-    if (_focusNode.hasFocus) {
-      _focusNode.unfocus();
-      return false;
-    }
-    return true;
   }
 
   Widget buildBody() {
@@ -907,15 +872,15 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
     if (roomContext!.isInWaitingRoom()) {
       chatRoomManager?.updateHostAndCoHostInWaitingRoom();
     }
-    await DialogUtils.showChildNavigatorPopup(
-      context,
-      (context) => MeetingChatRoomMemberPage(
+    await showMeetingPopupPageRoute(
+      context: context,
+      builder: (context) => MeetingChatRoomMemberPage(
         roomContext!,
         _arguments.waitingRoomManager,
         _arguments.chatRoomManager!,
         _arguments.roomInfoUpdatedEventStream,
       ),
-      routeSettings: RouteSettings(name: 'MeetMemberPage'),
+      routeSettings: RouteSettings(name: 'MeetingSelectChatMemberPage'),
     );
     _isShowSelectTargetDialog = false;
   }
@@ -1686,19 +1651,40 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
                   ]));
   }
 
-  void _onSelectImage() {
-    _selectFile(SelectType.image, _kSupportedImageFileExtensions,
-        _kSupportedImageFileMaxSize);
+  Future<bool> ensureStoragePermission() async {
+    if (Platform.isAndroid) {
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      if (androidInfo.version.sdkInt >= 33) return true;
+      final status = await Permission.storage.status;
+      if (status != PermissionStatus.granted) {
+        final granted =
+            await Permission.storage.request() == PermissionStatus.granted;
+        if (mounted && !granted) {
+          showToast(meetingUiLocalizations.globalNoPermission);
+        }
+        return granted;
+      }
+    }
+    return true;
+  }
+
+  void _onSelectImage() async {
     if (_focusNode.hasFocus) {
       _focusNode.unfocus();
     }
+    if (await ensureStoragePermission() && mounted) {
+      _selectFile(SelectType.image, _kSupportedImageFileExtensions,
+          _kSupportedImageFileMaxSize);
+    }
   }
 
-  void _onSelectFile() {
-    _selectFile(SelectType.file, _kSupportedRawFileExtensions,
-        _kSupportedRawFileMaxSize);
+  void _onSelectFile() async {
     if (_focusNode.hasFocus) {
       _focusNode.unfocus();
+    }
+    if (await ensureStoragePermission() && mounted) {
+      _selectFile(SelectType.file, _kSupportedRawFileExtensions,
+          _kSupportedRawFileMaxSize);
     }
   }
 
@@ -1735,6 +1721,9 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
                 : meetingUiLocalizations.chatFileSizeExceedTheLimit,
           );
         })
+        .onError<PlatformException>((error, stackTrace) {
+          if (mounted) showToast(meetingUiLocalizations.globalNoPermission);
+        }, test: (error) => error.code == "read_external_storage_denied")
         .whenComplete(() => _selectingType = SelectType.none)
         .ignore();
   }
@@ -1834,8 +1823,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
   }
 
   Future<bool> _hasNetworkOrToast() async {
-    final value = await Connectivity().checkConnectivity();
-    if (value == ConnectivityResult.none) {
+    if (!await ConnectivityManager().isConnected()) {
       showToast(NEMeetingKitLocalizations.of(context)!.networkUnavailableCheck);
       return false;
     }

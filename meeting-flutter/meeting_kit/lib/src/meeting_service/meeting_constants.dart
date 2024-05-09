@@ -79,6 +79,19 @@ class WatermarkProperty {
   static const key = 'watermark';
 }
 
+///
+/// 访客入会开关属性Key
+///
+class GuestJoinProperty {
+  static const key = 'guest';
+
+  /// 未启用
+  static const disable = '0';
+
+  /// 启用
+  static const enable = '1';
+}
+
 class MeetingRoles {
   MeetingRoles._();
 
@@ -97,6 +110,9 @@ class MeetingRoles {
   /// 传空，服务端会自动分配角色
   static const kUndefined = '';
 
+  /// 外部访客
+  static const kGuest = 'guest';
+
   ///
   /// 将 String类型的roleType 转换为 枚举
   ///
@@ -108,6 +124,9 @@ class MeetingRoles {
         break;
       case MeetingRoles.kCohost:
         roleType = NEMeetingRoleType.coHost;
+        break;
+      case MeetingRoles.kGuest:
+        roleType = NEMeetingRoleType.guest;
         break;
     }
     return roleType;
@@ -126,6 +145,9 @@ class MeetingRoles {
         roleType = MeetingRoles.kCohost;
         break;
       case NEMeetingRoleType.member:
+        break;
+      case NEMeetingRoleType.guest:
+        roleType = MeetingRoles.kGuest;
         break;
     }
     return roleType;

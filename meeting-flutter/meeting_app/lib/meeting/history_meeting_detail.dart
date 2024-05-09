@@ -2,9 +2,8 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
-import 'package:connectivity/connectivity.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:nemeeting/base/util/text_util.dart';
-import 'package:nemeeting/base/util/timeutil.dart';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/service/model/chatroom_info.dart';
 import 'package:nemeeting/service/model/history_meeting_detail.dart';
@@ -185,15 +184,19 @@ class _HistoryMeetingDetailRouteState
   Widget buildMessageHistory() {
     return GestureDetector(
         onTap: () async {
-          Navigator.of(context).push(MaterialMeetingPageRoute(
-              settings: RouteSettings(name: MeetingChatRoomPage.routeName),
+          showMeetingPopupPageRoute(
+              context: context,
+              barrierColor: Colors.black.withOpacity(0.8),
+              routeSettings: RouteSettings(name: MeetingChatRoomPage.routeName),
               builder: (context) {
-                return MeetingChatRoomPage(
-                  arguments:
-                      ChatRoomArguments(messageSource: ChatRoomMessageSource()),
-                  roomArchiveId: item.roomArchiveId.toString(),
+                return NEMeetingUIKitLocalizationsScope(
+                  child: MeetingChatRoomPage(
+                    arguments: ChatRoomArguments(
+                        messageSource: ChatRoomMessageSource()),
+                    roomArchiveId: item.roomArchiveId.toString(),
+                  ),
                 );
-              }));
+              });
         },
         child: Container(
           decoration: BoxDecoration(
@@ -226,8 +229,10 @@ class _HistoryMeetingDetailRouteState
             itemBuilder: (context, index) {
               return GestureDetector(
                   onTap: () async {
-                    Navigator.of(context).push(MaterialMeetingPageRoute(
-                        settings:
+                    showMeetingPopupPageRoute(
+                        barrierColor: Colors.black.withOpacity(0.8),
+                        context: context,
+                        routeSettings:
                             RouteSettings(name: MeetingWebAppPage.routeName),
                         builder: (context) {
                           return MeetingWebAppPage(
@@ -236,7 +241,7 @@ class _HistoryMeetingDetailRouteState
                             title: pluginInfoList[index].name,
                             sessionId: pluginInfoList[index].sessionId,
                           );
-                        }));
+                        });
                   },
                   child: Container(
                     decoration: BoxDecoration(
@@ -357,7 +362,7 @@ class _HistoryMeetingDetailRouteState
 
   Widget buildStartTime(DateTime dateTime) {
     return Text(
-        '${meetingAppLocalizations.meetingStartTime}: ${TimeUtil.timeFormatWithMinute2(dateTime)}',
+        '${meetingAppLocalizations.meetingStartTime}: ${MeetingTimeUtil.timeFormatWithMinute2(dateTime)}',
         style: _textStyle);
   }
 
@@ -454,8 +459,7 @@ class _HistoryMeetingDetailRouteState
   }
 
   Future<bool> isNetworkConnect() async {
-    var state =
-        await Connectivity().checkConnectivity() != ConnectivityResult.none;
+    var state = await ConnectivityManager().isConnected();
     if (!state) {
       ToastUtils.showToast(
           context, meetingAppLocalizations.globalNetworkUnavailableCheck);

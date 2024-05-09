@@ -298,8 +298,8 @@ class NEMeetingJSBridge {
 
   _requestAuthCode(JSAPIParams params) {
     final param = params.params;
-    if (param != null) {
-      final pluginId = param['pluginId'] as String;
+    final pluginId = param?['pluginId']?.toString();
+    if (pluginId != null) {
       WebAppRepository.getAuthCode(pluginId).then((value) {
         final result = JSAPIResult(
           method: params.method,
@@ -326,12 +326,15 @@ class NEMeetingJSBridge {
 
   _config(JSAPIParams params) {
     final param = params.params;
-    if (param != null) {
-      final openId = param['openId'] as String?;
-      final nonce = param['nonce'] as String;
-      final curTime = param['curTime'] as String;
-      final checkSum = param['checkSum'] as String;
-      final pluginId = param['pluginId'] as String;
+    final openId = param?['openId'] as String?;
+    final nonce = param?['nonce'] as String?;
+    final curTime = param?['curTime'] as String?;
+    final checkSum = param?['checkSum'] as String?;
+    final pluginId = param?['pluginId'] as String?;
+    if (nonce != null &&
+        curTime != null &&
+        checkSum != null &&
+        pluginId != null) {
       JSApiPermissionRequest request = JSApiPermissionRequest(
           pluginId: pluginId,
           openId: openId,

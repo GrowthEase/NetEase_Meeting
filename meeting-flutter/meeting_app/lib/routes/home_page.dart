@@ -5,7 +5,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-import 'package:connectivity/connectivity.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nemeeting/application.dart';
@@ -13,13 +12,14 @@ import 'package:nemeeting/base/util/global_preferences.dart';
 import 'package:nemeeting/channel/deep_link_manager.dart';
 import 'package:nemeeting/routes/auth/reset_initial_password.dart';
 import 'package:nemeeting/service/config/app_config.dart';
+import 'package:nemeeting/service/util/user_preferences.dart';
 import 'package:nemeeting/setting/personal_setting.dart';
 import 'package:nemeeting/utils/const_config.dart';
 import 'package:nemeeting/utils/dialog_utils.dart';
 import 'package:nemeeting/base/util/text_util.dart';
-import 'package:nemeeting/base/util/timeutil.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:nemeeting/utils/meeting_string_util.dart';
 import 'package:nemeeting/widget/meeting_network_notice.dart';
 import 'package:nemeeting/widget/meeting_security_notice.dart';
 import 'package:netease_common/netease_common.dart';
@@ -45,6 +45,7 @@ import '../channel/ne_platform_channel.dart';
 import '../language/localizations.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import '../notify_message/notify_message.dart';
+import '../service/model/security_notice_info.dart';
 
 class HomePageRouteArguments {
   final ResetPasswordRequest? resetPasswordRequest;
@@ -69,7 +70,10 @@ class HomePageRoute extends StatefulWidget {
 
 class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
     with MeetingAppLocalizationsMixin
-    implements NEMeetingAuthListener, NERoomMessageSessionListener {
+    implements
+        NEMeetingAuthListener,
+        NEMeetingMessageSessionListener,
+        NEMeetingInviteListener {
   late PageController _pageController;
   int _currentIndex = 0;
 
@@ -103,8 +107,6 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
   /// 是否已经展示结束会议的dialog
   static bool isShowEndDialog = false;
 
-  ValueNotifier<bool> _networkAvailable = ValueNotifier(true);
-
   final streamSubscriptions = <StreamSubscription>[];
 
   late final meetingAccountService = NEMeetingKit.instance.getAccountService();
@@ -125,14 +127,13 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
       }
     });
 
-    handleNetworkStateChanged();
     handleMeetingSdk();
     scheduleMeeting();
 
     /// 会议如果还未结束，只是等候室和房间切换状态，则正常进入会议不显示会议恢复弹框
     if (widget.isPipMode) return;
 
-    GlobalPreferences().meetingInfo.then((meetingInfo) {
+    UserPreferences().meetingInfo.then((meetingInfo) {
       if (TextUtil.isEmpty(meetingInfo) ||
           (NEMeetingUIKit().getCurrentMeetingInfo() != null &&
               (NEMeetingUIKit().getMeetingStatus().event ==
@@ -151,7 +152,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
         showRecoverJoinMeetingDialog(meetingNum);
       } else {
         Alog.d(tag: tag, content: 'minutes >15 meeting info clean');
-        GlobalPreferences().setMeetingInfo('');
+        UserPreferences().setMeetingInfo('');
       }
     });
 
@@ -172,16 +173,16 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
         MeetingUtil.setUnreadNotifyMessageListenable(value.data!.length);
       }
     });
-  }
+    EventBus().subscribe(NEMeetingUIEvents.flutterInvitedChanged, (arg) {
+      var meetingInfo = NEMeetingUIKit().getCurrentMeetingInfo();
+      final CardData? cardData = arg.cardData;
+      if (meetingInfo == null && arg.type != InviteJoinActionType.reject) {
+        handleEvent(cardData, arg.type == InviteJoinActionType.audioAccept);
+      }
+    });
 
-  @override
-  @mustCallSuper
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-    if (!_networkAvailable.value && state == AppLifecycleState.resumed) {
-      Connectivity().checkConnectivity().then((value) =>
-          _networkAvailable.value = value != ConnectivityResult.none);
-    }
+    /// 会议监听呼叫事件
+    NEMeetingKit.instance.getMeetingInviteService().addEventListener(this);
   }
 
   @override
@@ -207,7 +208,6 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
       setState(() {});
       switch (meetingStatus) {
         case NEMeetingEvent.disconnecting:
-          meetingEvaluationAction(meetingStartDate, DateTime.now());
           switch (status.arg) {
             case NEMeetingCode.closeByHost:
 
@@ -243,7 +243,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
             //   ToastUtils.showToast(context, meetingAppLocalizations.removedByHost);
             //   break;
           }
-          GlobalPreferences().setMeetingInfo('');
+          UserPreferences().setMeetingInfo('');
           break;
         case NEMeetingEvent.inWaitingRoom:
         case NEMeetingEvent.inMeeting:
@@ -262,11 +262,6 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
   void scheduleMeeting() {
     getMeetingList();
     scheduleCallback = (List<NEMeetingItem> data, bool incremental) {
-      data = data
-          .where((element) =>
-              element.ownerUserUuid == null ||
-              element.ownerUserUuid == AuthManager().accountId)
-          .toList();
       if (incremental) {
         data.forEach((element) {
           if (element.state == NEMeetingState.init ||
@@ -277,7 +272,8 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
             if (existIndex >= 0) {
               meetingList[existIndex] = element;
             } else {
-              meetingList.add(element);
+              /// 会议状态变更，且当前列表不存在该会议，则重新获取会议列表
+              getMeetingList();
             }
           } else if (element.state.index >= NEMeetingState.cancel.index) {
             meetingList.removeWhere((e) =>
@@ -334,7 +330,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
     AppDialogUtils.showCommonDialog(
         context, '', meetingAppLocalizations.meetingRecover, () {
       NavUtils.closeCurrentState('cancel');
-      GlobalPreferences().setMeetingInfo('');
+      UserPreferences().setMeetingInfo('');
     }, () async {
       NavUtils.closeCurrentState('ok');
       LoadingUtil.showLoading();
@@ -365,7 +361,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
       );
       LoadingUtil.cancelLoading();
       if (!result.isSuccess()) {
-        GlobalPreferences().setMeetingInfo('');
+        UserPreferences().setMeetingInfo('');
         ToastUtils.showToast(context, result.msg);
       }
     },
@@ -413,6 +409,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
   }
 
   bool _initUpgradeAndDeepLink = false;
+
   void initUpgradeAndDeepLink() {
     if (_initUpgradeAndDeepLink) return;
     _initUpgradeAndDeepLink = true;
@@ -423,21 +420,25 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
   Widget build(BuildContext context) {
     initUpgradeAndDeepLink();
 
-    return Scaffold(
-        backgroundColor: Colors.white,
-        body: PageView(
-          controller: _pageController,
-          onPageChanged: onPageChange,
-          allowImplicitScrolling: true,
-          physics: AlwaysScrollableScrollPhysics(),
-          children: <Widget>[
-            buildHomePage(),
-            NEMeetingKitFeatureConfig(
-              child: buildSettingPage(),
+    return Stack(
+      children: [
+        Scaffold(
+            backgroundColor: Colors.white,
+            body: PageView(
+              controller: _pageController,
+              onPageChanged: onPageChange,
+              allowImplicitScrolling: true,
+              physics: AlwaysScrollableScrollPhysics(),
+              children: <Widget>[
+                buildHomePage(),
+                NEMeetingKitFeatureConfig(
+                  child: buildSettingPage(),
+                ),
+              ],
             ),
-          ],
-        ),
-        bottomNavigationBar: buildBottomAppBar());
+            bottomNavigationBar: buildBottomAppBar()),
+      ],
+    );
   }
 
   BottomAppBar buildBottomAppBar() {
@@ -506,7 +507,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
                                   MaterialPageRoute(
                                     builder: (context) =>
                                         NEMeetingUIKitLocalizationsScope(
-                                      child: MeetingNotifyMessage(
+                                      child: MeetingAppNotifyCenter(
                                           sessionId: SDKConfig
                                               .current.appNotifySessionId,
                                           onClearAllMessage: () {
@@ -559,13 +560,8 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
             )
           ],
         ),
-        ValueListenableBuilder<bool>(
-            valueListenable: _networkAvailable,
-            builder: (context, value, child) {
-              return value
-                  ? MeetingAppNotificationBar()
-                  : MeetingNetworkNotificationBar();
-            }),
+        buildNotificationBar(
+            meetingAccountService.getAccountInfo()?.serviceBundle),
         Container(color: AppColors.globalBg, height: 1),
         SizedBox(height: 24),
         Row(
@@ -753,7 +749,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
                             TextSpan(children: [
                               TextSpan(
                                   text:
-                                      '${TimeUtil.timeFormatHourMinute(DateTime.fromMillisecondsSinceEpoch(item.startTime))}',
+                                      '${MeetingTimeUtil.timeFormatHourMinute(DateTime.fromMillisecondsSinceEpoch(item.startTime))}',
                                   style: TextStyle(
                                       color: AppColors.black_222222,
                                       fontSize: 12)),
@@ -783,10 +779,10 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
                                     color: AppColors.color_337eff,
                                     fontSize: 10)),
                           ),
-                        if (item.recurringRule.type !=
-                            NEMeetingRecurringRuleType.no)
-                          SizedBox(width: 8),
-                        Text(' ${getItemStatus(item.state)}',
+                        SizedBox(width: 8),
+                        Text(
+                            MeetingStringUtil.getItemStatus(
+                                item.state, meetingAppLocalizations),
                             style: TextStyle(
                                 color: getItemStatusColor(item.state),
                                 fontSize: 12))
@@ -819,10 +815,11 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
                     color: AppColors.colorE6E7EB))
           ])),
       onTap: () {
-        Navigator.of(context)
-            .push(MaterialMeetingAppPageRoute(builder: (context) {
-          return ScheduleMeetingDetailRoute(item);
-        }));
+        Navigator.of(context).push(MaterialMeetingAppPageRoute(
+            settings: RouteSettings(name: ScheduleMeetingDetailRoute.routeName),
+            builder: (context) {
+              return ScheduleMeetingDetailRoute(item);
+            }));
         //NavUtils.pushNamed(context, RouterName.scheduleMeetingDetail);
       },
     );
@@ -835,26 +832,6 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
       return AppColors.color_f29900;
     }
     return AppColors.color_999999;
-  }
-
-  String getItemStatus(NEMeetingState status) {
-    // if (status == null) {
-    //   return meetingAppLocalizations.meetingStatusInvalid;
-    // }
-    switch (status) {
-      case NEMeetingState.init:
-        return meetingAppLocalizations.meetingStatusInit;
-      case NEMeetingState.started:
-        return meetingAppLocalizations.meetingStatusStarted;
-      case NEMeetingState.ended:
-        return meetingAppLocalizations.meetingStatusEnded;
-      case NEMeetingState.cancel:
-        return meetingAppLocalizations.meetingStatusCancel;
-      case NEMeetingState.recycled:
-        return meetingAppLocalizations.meetingStatusRecycle;
-      case NEMeetingState.invalid:
-        return '';
-    }
   }
 
   Expanded buildItem(String assetStr, String text, VoidCallback voidCallback) {
@@ -923,14 +900,12 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
                   visible: MeetingUtil.hasShortMeetingNum(), child: line()),
               buildSettingItem(meetingAppLocalizations.settingMeeting,
                   () => NavUtils.pushNamed(context, RouterName.meetingSetting)),
-              // line(),
-              // buildSettingItem(
-              //   meetingAppLocalizations.languageSwitch,
-              //   () => RoutesRegister.pushPage(
-              //       context, RouterName.languageSetting),
-              //   iconTip: meetingAppLocalizations.languageTip,
-              // ),
               line(),
+              buildSettingItem(
+                meetingAppLocalizations.settingSwitchLanguage,
+                () => NavUtils.pushNamed(context, RouterName.languageSetting),
+                iconTip: meetingAppLocalizations.settingLanguageTip,
+              ),
               Builder(
                 builder: (context) {
                   return context.isBeautyFaceEnabled
@@ -1126,6 +1101,9 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
             serviceBundle.maxMembers)
         : meetingAppLocalizations.settingServiceBundleDetailLimitedMinutes(
             serviceBundle.maxMembers, serviceBundle.maxMinutes!);
+    final serviceBundleExpireTime =
+        meetingAppLocalizations.settingServiceBundleExpireTime(
+            MeetingTimeUtil.getTimeFormatYMD(serviceBundle.expireTimestamp));
     return Container(
       padding: EdgeInsets.all(16),
       margin: EdgeInsets.only(bottom: 16),
@@ -1141,12 +1119,25 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              meetingAppLocalizations.settingServiceBundleTitle,
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.color_666666,
-              ),
+            Row(
+              children: [
+                Text(
+                  meetingAppLocalizations.settingServiceBundleTitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.color_666666,
+                  ),
+                ),
+                if (!serviceBundle.isNeverExpired) Spacer(),
+                if (!serviceBundle.isNeverExpired)
+                  Text(
+                    serviceBundleExpireTime,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.color_999999,
+                    ),
+                  ),
+              ],
             ),
             SizedBox(
               height: 8,
@@ -1178,6 +1169,20 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
                 )),
               ],
             ),
+            if (!serviceBundle.isNeverExpired)
+              Container(
+                height: 1,
+                margin: EdgeInsets.only(top: 10, bottom: 10),
+                color: AppColors.colorE8E9EB,
+              ),
+            if (!serviceBundle.isNeverExpired)
+              Text(
+                serviceBundle.expireTip,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.color_666666,
+                ),
+              ),
           ],
         ),
       ),
@@ -1270,10 +1275,11 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
 
   @override
   void onKickOut() {
+    if (!mounted) return;
     ToastUtils.showToast(
         context, meetingAppLocalizations.authLoginOnOtherDevice, onDismiss: () {
       AuthManager().logout();
-      NavUtils.pushNamedAndRemoveUntil(context, RouterName.entrance);
+      NavUtils.toEntrance(context);
     });
   }
 
@@ -1285,12 +1291,17 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
     showAuthInfoExpiredDialog();
   }
 
+  @override
+  void onReconnected() {
+    getMeetingList();
+  }
+
   bool isAuthInfoExpiredDialogShowing = false;
+
   void showAuthInfoExpiredDialog() {
     if (isAuthInfoExpiredDialogShowing) return;
     isAuthInfoExpiredDialogShowing = true;
     AuthManager().logout();
-    var navigator = Navigator.of(context, rootNavigator: true);
     showCupertinoDialog(
       context: context,
       builder: (BuildContext context) {
@@ -1301,8 +1312,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
             CupertinoDialogAction(
               child: Text(meetingAppLocalizations.globalSure),
               onPressed: () {
-                navigator.pushNamedAndRemoveUntil(
-                    RouterName.entrance, (Route<dynamic> route) => false);
+                NavUtils.toEntrance(context, rootNavigator: true);
               },
             )
           ],
@@ -1339,9 +1349,9 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
   void _setGlobalMeetingInfo(NEMeetingInfo? currentMeetingInfo) {
     var map = <String, dynamic>{
       'meetingNum': currentMeetingInfo?.meetingNum,
-      'currentTime': TimeUtil.getCurrentTimeMilliseconds()
+      'currentTime': MeetingTimeUtil.getCurrentTimeMilliseconds()
     };
-    GlobalPreferences().setMeetingInfo(jsonEncode(map));
+    UserPreferences().setMeetingInfo(jsonEncode(map));
   }
 
   void _setGlobalMeetingEvaluation(DateTime date) {
@@ -1352,25 +1362,8 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
     GlobalPreferences().setMeetingEvaluation(jsonEncode(map));
   }
 
-  void handleNetworkStateChanged() {
-    Connectivity().checkConnectivity().then(
-        (value) => _networkAvailable.value = value != ConnectivityResult.none);
-    final _networkSubscription = Connectivity()
-        .onConnectivityChanged
-        .listen((ConnectivityResult result) {
-      _networkAvailable.value = result != ConnectivityResult.none;
-
-      /// 添加网络检测，网络恢复时，刷新预约会议列表
-      if (result != ConnectivityResult.none) {
-        getMeetingList();
-      }
-    });
-    streamSubscriptions.add(_networkSubscription);
-  }
-
   void meetingEvaluationAction(DateTime startDate, DateTime endDate) async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.none) {
+    if (!await ConnectivityManager().isConnected()) {
       return;
     }
     var evaluationInfo = await GlobalPreferences().meetingEvaluation;
@@ -1461,18 +1454,18 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
                   fontWeight: FontWeight.w500),
             ),
           )),
-          Container(
-              height: 16,
-              padding: EdgeInsets.only(right: 20),
-              child: GestureDetector(
-                  key: MeetingValueKey.evaluationCloseBtn,
-                  child: Image(
-                      image: AssetImage(AssetName.iconEvaluationCloseSheet)),
-                  onTap: () {
-                    _setGlobalMeetingEvaluation(DateTime.now());
-                    Navigator.pop(context);
-                    isShowNPS = false;
-                  }))
+          GestureDetector(
+            onTap: () {
+              _setGlobalMeetingEvaluation(DateTime.now());
+              Navigator.pop(context);
+              isShowNPS = false;
+            },
+            child: Container(
+                key: MeetingValueKey.evaluationCloseBtn,
+                padding: EdgeInsets.all(20),
+                child: Image(
+                    image: AssetImage(AssetName.iconEvaluationCloseSheet))),
+          )
         ]);
   }
 
@@ -1843,11 +1836,7 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
 
   @override
   void onDeleteAllSessionMessage(
-      String sessionId, NEMeetingSessionTypeEnum sessionType) {
-    if (sessionId == sessionId && sessionType == NEMeetingSessionTypeEnum.P2P) {
-      MeetingUtil.unreadNotifyMessageListenableIncrement();
-    }
-  }
+      String sessionId, NEMeetingSessionTypeEnum sessionType) {}
 
   @override
   void onDeleteSessionMessage(NEMeetingCustomSessionMessage message) {
@@ -1855,10 +1844,43 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
   }
 
   @override
-  void onReceiveSessionMessage(NEMeetingCustomSessionMessage message) {
-    if (message.sessionId == SDKConfig.current.appNotifySessionId) {
-      MeetingUtil.unreadNotifyMessageListenableIncrement();
-    }
+  void onReceiveSessionMessage(NEMeetingCustomSessionMessage message) {}
+
+  /// 电话或视频入会
+  /// [inviteData] 邀请数据
+  /// [videoMute] 是否视频关闭
+  ///
+  Future<void> handleEvent(CardData? inviteData, bool videoMute) async {
+    if (inviteData?.meetingNum == null || !mounted) return;
+    LoadingUtil.showLoading();
+    NEMeetingUIKit().joinMeetingUI(
+      context,
+      NEJoinMeetingUIParams(
+        meetingNum: inviteData!.meetingNum!,
+        displayName: MeetingUtil.getNickName(),
+        watermarkConfig: NEWatermarkConfig(
+          name: MeetingUtil.getNickName(),
+        ),
+      ),
+      await buildMeetingUIOptions(
+        noVideo: videoMute,
+        noAudio: false,
+        context: context,
+      ),
+      onPasswordPageRouteWillPush: () async {
+        LoadingUtil.cancelLoading();
+      },
+      onMeetingPageRouteWillPush: () async {
+        LoadingUtil.cancelLoading();
+      },
+      backgroundWidget: MeetingAppLocalizationsScope(child: HomePageRoute()),
+      isInvite: true,
+    ).then((result) {
+      LoadingUtil.cancelLoading();
+      if (mounted && !result.isSuccess()) {
+        ToastUtils.showToast(context, result.msg);
+      }
+    });
   }
 
   void initAccelerometer() {
@@ -1879,4 +1901,29 @@ class _HomePageRouteState extends LifecycleBaseState<HomePageRoute>
       }
     }));
   }
+
+  /// 通知栏
+  /// [serviceBundle] 服务包信息
+  /// [connected] 网络是否连接
+  /// [child] 子组件
+  ///
+  Widget buildNotificationBar(ServiceBundle? serviceBundle) {
+    if (serviceBundle?.isExpired == true) {
+      return MeetingAppNotificationBar(
+        notification: AppNotification.expireMessageTip(
+            content: serviceBundle?.expireTip,
+            time: serviceBundle?.expireTimestamp),
+      );
+    } else {
+      return ConnectivityChangedBuilder(builder: (context, connected, child) {
+        return connected
+            ? MeetingAppNotificationBar()
+            : MeetingNetworkNotificationBar();
+      });
+    }
+  }
+
+  @override
+  void onMeetingInviteStatusChanged(NEMeetingInviteStatus status,
+      String? meetingId, NEMeetingInviteInfo inviteInfo) {}
 }

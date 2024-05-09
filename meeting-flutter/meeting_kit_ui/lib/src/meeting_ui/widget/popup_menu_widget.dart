@@ -65,11 +65,8 @@ class _PopupMenuWidgetState extends State<PopupMenuWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () {
-        removeOverlay();
-        return Future.value(true);
-      },
+    return PopScope(
+      onPopInvoked: (_) => removeOverlay(),
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
         child: widget.child,

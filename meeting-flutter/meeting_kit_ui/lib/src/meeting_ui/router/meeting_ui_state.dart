@@ -110,7 +110,14 @@ class MeetingLifecycleState extends ChangeNotifier
     if (_roomEndReason != null) {
       return Stream.value(_roomEndReason!);
     } else {
-      return Stream.fromFuture(_roomEndStreamController.stream.first);
+      final controller = StreamController<NERoomEndReason>(sync: true);
+      _roomEndStreamController.stream.first.then((value) {
+        controller.add(value);
+        controller.close();
+      }, onError: (error, stackTrace) {
+        controller.close();
+      });
+      return controller.stream;
     }
   }
 

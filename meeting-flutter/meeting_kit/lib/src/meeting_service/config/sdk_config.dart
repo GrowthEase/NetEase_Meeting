@@ -10,8 +10,8 @@ part of meeting_service;
 class SDKConfig with _AloggerMixin {
   ///android version修改对应packages/meeting_sdk_android/gradle.properties的内容
   ///iOS version修改packages/meeting_sdk_ios/NEMeetingScript/spec/NEMeetingSDK.podspec的内容
-  static const String sdkVersionName = '4.4.0';
-  static const int sdkVersionCode = 40400;
+  static const String sdkVersionName = '4.5.0';
+  static const int sdkVersionCode = 40500;
   static const String sdkType = 'official'; //pub
 
   // static const _tag = 'SDKConfig';
@@ -100,10 +100,11 @@ class SDKConfig with _AloggerMixin {
   }
 
   Future _ensureNetwork() async {
-    if (await Connectivity().checkConnectivity() == ConnectivityResult.none) {
-      await Connectivity()
-          .onConnectivityChanged
-          .firstWhere((element) => element != ConnectivityResult.none);
+    if ((await Connectivity().checkConnectivity()).any((connectivityResult) =>
+        connectivityResult == ConnectivityResult.none)) {
+      await Connectivity().onConnectivityChanged.firstWhere((elements) =>
+          elements.every((connectivityResult) =>
+              connectivityResult != ConnectivityResult.none));
     }
   }
 
@@ -137,10 +138,35 @@ class SDKConfig with _AloggerMixin {
   bool get isCloudRecordSupported => _appRoomResConfig.record;
   bool get isMeetingChatSupported => _appRoomResConfig.chatRoom;
   bool get isWaitingRoomSupported => _appRoomResConfig.waitingRoom;
+  bool get isSipInviteSupported => _appRoomResConfig.sipInvite;
+
+  /// 是否支持访客入会，默认打开
+  bool get isGuestJoinSupported => _appRoomResConfig.guest;
+
+  /// 是否支持预约会议指定成员
+  bool get isScheduledMembersEnabled =>
+      (configs['appConfig']?['MEETING_SCHEDULED_MEMBER_CONFIG']?['enable'] ??
+          true) as bool;
+
+  /// 单场会议所支持的联席主持人人数限制
+  int get coHostLimit => (configs['appConfig']
+          ?['MEETING_SCHEDULED_MEMBER_CONFIG']?['coHostLimit'] ??
+      4) as int;
+
+  /// 单场会议预约成员人数限制
+  int get scheduleMemberMax =>
+      (configs['appConfig']?['MEETING_SCHEDULED_MEMBER_CONFIG']?['max'] ?? 300)
+          as int;
+
+  /// SIP外呼显示号码
+  String? get outboundPhoneNumber =>
+      configs['appConfig']['outboundPhoneNumber'] as String?;
 
   /// 会话Id
-  String get appNotifySessionId =>
-      configs['appConfig']['notifySenderAccid'] ?? '';
+  String get appNotifySessionId => switch (configs['appConfig']) {
+        {'notifySenderAccid': String notifySessionId} => notifySessionId,
+        _ => '',
+      };
 
   /// 聊天室
   MeetingChatroomServerConfig get meetingChatroomConfig =>
@@ -150,6 +176,11 @@ class SDKConfig with _AloggerMixin {
   MeetingBeautyConfig get _meetingBeautyConfig =>
       MeetingBeautyConfig.fromJson(_config('MEETING_BEAUTY'));
   bool get isBeautyFaceSupported => _meetingBeautyConfig.enable;
+
+  /// 视频跟随
+  MeetingViewOrderConfig get _meetingViewOrderConfig =>
+      MeetingViewOrderConfig.fromJson(_config('ROOM_VIEW_ORDER'));
+  bool get isViewOrderSupported => _meetingViewOrderConfig.enable;
 
   /// 虚拟背景
   MeetingFeatureConfig get _meetingVirtualBackgroundConfig =>
@@ -211,6 +242,8 @@ class AppRoomResConfig {
   late final bool record;
   late final bool sip;
   late final bool waitingRoom;
+  late final bool sipInvite;
+  late final bool guest;
 
   ///
   AppRoomResConfig.fromJson(Map<String, dynamic>? json) {
@@ -221,6 +254,8 @@ class AppRoomResConfig {
     record = (json?['record'] ?? false) as bool;
     sip = (json?['sip'] ?? false) as bool;
     waitingRoom = (json?['waitingRoom'] ?? false) as bool;
+    sipInvite = (json?['sipInvite'] ?? false) as bool;
+    guest = (json?['guest'] ?? true) as bool;
   }
 }
 
@@ -231,6 +266,17 @@ class MeetingFeatureConfig {
   MeetingFeatureConfig.fromJson(Map<String, dynamic>? json,
       {bool fallback = false}) {
     enable = json?['enable'] ?? fallback;
+  }
+}
+
+/// 跟随主持人视图模式相关配置
+class MeetingViewOrderConfig {
+  late bool enable;
+
+  MeetingViewOrderConfig.fromJson(Map<String, dynamic>? json) {
+    if (json != null) {
+      enable = json['enable'] ?? false;
+    }
   }
 }
 

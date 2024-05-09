@@ -30,7 +30,7 @@ class _MeetingUIRouterState extends State<MeetingUIRouter> with _AloggerMixin {
   void initState() {
     super.initState();
     commonLogger.i('initState');
-    Wakelock.enable();
+    WakelockPlus.enable();
     uiNavigator = MeetingUINavigator()
       ..popHandler = pop
       ..initMeeting(widget.arguments);
@@ -47,10 +47,11 @@ class _MeetingUIRouterState extends State<MeetingUIRouter> with _AloggerMixin {
   @override
   void dispose() {
     commonLogger.i('dispose');
-    Wakelock.disable().catchError((e) {
+    WakelockPlus.disable().catchError((e) {
       commonLogger.i('Wakelock error $e');
     });
     uiNavigator.dispose();
+    routerDelegate.dispose();
     MeetingCore().notifyStatusChange(
         NEMeetingStatus(NEMeetingEvent.disconnecting, arg: disconnectingCode));
     MeetingCore().notifyStatusChange(NEMeetingStatus(NEMeetingEvent.idle));
@@ -64,6 +65,13 @@ class _MeetingUIRouterState extends State<MeetingUIRouter> with _AloggerMixin {
         label:
             'Pop meeting ui router: isCurrent=${myselfRoute.isCurrent}, disconnectingCode=$disconnectingCode');
     assert(!hasRequestPop, 'Duplicated request pop meeting ui router');
+
+    /// 如果是加入另外一个会议，不处理
+    if (routerDelegate.joinAnotherMeeting) {
+      routerDelegate.joinAnotherMeeting = false;
+      return;
+    }
+
     if (hasRequestPop) return;
     hasRequestPop = true;
     if (disconnectingCode != null) {
@@ -103,13 +111,25 @@ class MeetingUIRouterDelegate extends RouterDelegate<Object>
 
   final MeetingUINavigator uiNavigator;
 
+  /// 会议邀请事件回调
+  EventCallback? callback;
+
   MeetingUIRouterDelegate(this.uiNavigator) {
     uiNavigator.addListener(notifyListeners);
+    callback ??= (arg) {
+      var meetingContext = NEMeetingUIKit().getCurrentRoomContext();
+      final CardData? cardData = arg.cardData;
+      if (meetingContext != null && arg.type != InviteJoinActionType.reject) {
+        handleEvent(cardData, arg.type == InviteJoinActionType.audioAccept);
+      }
+    };
+    EventBus().subscribe(NEMeetingUIEvents.flutterInvitedChanged, callback!);
   }
 
   @override
   void dispose() {
     uiNavigator.removeListener(notifyListeners);
+    EventBus().unsubscribe(NEMeetingUIEvents.flutterInvitedChanged, callback);
     super.dispose();
   }
 
@@ -172,6 +192,50 @@ class MeetingUIRouterDelegate extends RouterDelegate<Object>
     }
     commonLogger.i('_handlePopPagedRoute: ${page.name} $result');
     return route.didPop(result);
+  }
+
+  /// 离开当前会议并加入另外一个会议
+  bool joinAnotherMeeting = false;
+
+  /// 处理邀请点击事件
+  Future<void> handleEvent(CardData? inviteData, bool videoMute) async {
+    /// 设置字段拦截不退出
+    joinAnotherMeeting = true;
+
+    /// 如果当前在会议中，先离开会议
+    if (uiNavigator.isInMeeting) {
+      await uiNavigator.roomContext.leaveRoom();
+    }
+    final newRoomResult =
+        await NEMeetingKit.instance.getMeetingInviteService().acceptInvite(
+              NEJoinMeetingParams(
+                meetingNum: inviteData!.meetingNum!,
+                displayName: uiNavigator.roomContext.localMember.name,
+              ),
+              NEJoinMeetingOptions(
+                enableMyAudioDeviceOnJoinRtc:
+                    uiNavigator.meetingArguments.options.detectMutedMic,
+              ),
+            );
+    if (newRoomResult.isSuccess()) {
+      uiNavigator.initMeeting(MeetingArguments(
+        roomContext: newRoomResult.data!,
+        meetingInfo: newRoomResult.data!.meetingInfo,
+        options: uiNavigator.meetingArguments.options.copyWith(
+          noAudio: false,
+          noVideo: videoMute,
+        ),
+        backgroundWidget: uiNavigator.meetingArguments.backgroundWidget,
+        watermarkConfig: uiNavigator.meetingArguments.watermarkConfig,
+      ));
+      return;
+    }
+
+    /// 离开了当前会议，但是加入新会议失败了，返回首页
+    else {
+      uiNavigator.pop();
+    }
+    ToastUtils.showBotToast('${newRoomResult.msg}');
   }
 }
 

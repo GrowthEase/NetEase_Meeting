@@ -54,10 +54,8 @@ class WaitingRoomManager with NEWaitingRoomListener, _AloggerMixin {
     if (!_hasInit) {
       _hasInit = true;
       _connectivitySubscription =
-          Connectivity().onConnectivityChanged.listen((event) {
-        if (event != ConnectivityResult.none) {
-          tryLoadMoreUser(reset: true);
-        }
+          ConnectivityManager().onReconnected.listen((event) {
+        tryLoadMoreUser(reset: true);
       });
       tryLoadMoreUser(reset: true);
     }

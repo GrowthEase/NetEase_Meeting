@@ -128,6 +128,11 @@ class StringUtil {
     // return '${str.substring(0, min(str.length, 10))}${((str.length) > 10 ? "..." : "")}';
   }
 
+  static String truncateEx(String str) {
+    Characters characters = str.characters;
+    return characters.take(calculateMaxLengthIndex(str, 20)).toString();
+  }
+
   static String hideMobileNumMiddleFour(String phoneNumber) {
     if (phoneNumber.length != 11) {
       Alog.d(

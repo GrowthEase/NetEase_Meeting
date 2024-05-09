@@ -31,32 +31,50 @@ class NotifyCardData {
 ///
 class CardData {
   int? meetingId;
+  String? meetingNum;
   String? type;
   int? timestamp;
+
+  /// 弹窗持续时间
+  int? popupDuration;
   String? pluginId;
   NotifyCard? notifyCard;
+  InviteInfo? inviteInfo;
+  String? roomUuid;
 
   CardData({meetingId, type, notifyCard});
 
   CardData.fromMap(Map<String, dynamic> json) {
     meetingId = json['meetingId'];
+    meetingNum = json['meetingNum'];
     type = json['type'];
     timestamp = json['timestamp'];
     pluginId = json['pluginId'];
     notifyCard = json['notifyCard'] != null
         ? NotifyCard.fromMap(json['notifyCard'])
         : null;
+    inviteInfo = json['inviteInfo'] != null
+        ? InviteInfo.fromMap(json['inviteInfo'])
+        : null;
+    roomUuid = json['roomUuid'];
+    popupDuration = json['popupDuration'];
   }
 
   Map<String, dynamic> toMap() {
     final Map<String, dynamic> data = Map<String, dynamic>();
     data['meetingId'] = meetingId;
+    data['meetingNum'] = meetingNum;
     data['timestamp'] = timestamp;
     data['pluginId'] = pluginId;
     data['type'] = type;
     if (notifyCard != null) {
       data['notifyCard'] = notifyCard!.toMap();
     }
+    if (inviteInfo != null) {
+      data['inviteInfo'] = inviteInfo!.toMap();
+    }
+    data['roomUuid'] = roomUuid;
+    data['popupDuration'] = popupDuration;
     return data;
   }
 }
@@ -161,4 +179,39 @@ class PopUpCardBottomButton {
     data['action'] = action;
     return data;
   }
+}
+
+class InviteInfo {
+  String? inviterName;
+  String? inviterIcon;
+  String? subject;
+  bool? outOfMeeting;
+
+  InviteInfo({
+    required this.inviterName,
+    this.inviterIcon,
+    required this.subject,
+    this.outOfMeeting,
+  });
+
+  InviteInfo.fromMap(Map<String, dynamic> json) {
+    inviterName = json['inviterName'];
+    inviterIcon = json['inviterIcon'];
+    subject = json['subject'];
+    outOfMeeting = json['outOfMeeting'];
+  }
+
+  Map<String, dynamic> toMap() {
+    final Map<String, dynamic> data = Map<String, dynamic>();
+    data['inviterName'] = inviterName;
+    data['inviterIcon'] = inviterIcon;
+    data['subject'] = subject;
+    data['outOfMeeting'] = outOfMeeting;
+    return data;
+  }
+}
+
+class NENotifyCenterCardType {
+  /// 会议邀请通知
+  static const String meetingInvite = 'MEETING.INVITE';
 }

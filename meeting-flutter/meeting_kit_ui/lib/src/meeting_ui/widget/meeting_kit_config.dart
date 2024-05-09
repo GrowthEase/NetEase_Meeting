@@ -99,6 +99,8 @@ extension NEMeetingKitConfigExtension on BuildContext {
 
   bool get isWaitingRoomEnabled => _sdkConfig.isWaitingRoomSupported;
 
+  bool get isGuestJoinEnabled => _sdkConfig.isGuestJoinSupported;
+
   bool get isVirtualBackgroundEnabled =>
       _sdkConfig.isVirtualBackgroundSupported;
 }

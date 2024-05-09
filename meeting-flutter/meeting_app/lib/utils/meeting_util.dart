@@ -65,12 +65,6 @@ class MeetingUtil {
     _unreadNotifyMessageListenable.value = value;
   }
 
-  /// 未读消息数增加
-  /// [value] 增加的数量,默认+1
-  static unreadNotifyMessageListenableIncrement({int value = 1}) {
-    _unreadNotifyMessageListenable.value += value;
-  }
-
   /// 获取未读消息数
   static ValueListenable<int> getUnreadNotifyMessageListenable() {
     return _unreadNotifyMessageListenable;

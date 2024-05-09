@@ -2,7 +2,6 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
-import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/service/repo/history_repo.dart';
 import 'package:nemeeting/uikit/values/asset_name.dart';
@@ -13,7 +12,6 @@ import '../service/response/result.dart';
 import '../uikit/values/fonts.dart';
 import '../uikit/values/Ints.dart';
 import 'package:nemeeting/service/client/http_code.dart';
-import 'package:nemeeting/base/util/timeutil.dart';
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:netease_meeting_assets/netease_meeting_assets.dart';
 import '../service/model/history_meeting.dart';
@@ -123,7 +121,7 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
   }
 
   Future<void> updateAllMeetings({int? startId, bool isAppend = false}) async {
-    if (await Connectivity().checkConnectivity() == ConnectivityResult.none) {
+    if (!await ConnectivityManager().isConnected()) {
       ToastUtils.showToast(
           context, meetingAppLocalizations.globalNetworkUnavailableCheck);
       return;
@@ -288,7 +286,7 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
 
   Widget buildAllMeetingUI() {
     if (allMeetingList.isEmpty) {
-      return buildEmptyView();
+      return buildEmptyView(meetingAppLocalizations.historyMeetingListEmpty);
     }
     return ListView.builder(
         itemCount: allMeetingList.length,
@@ -309,7 +307,8 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
 
   Widget buildCollectMeetingUI() {
     if (favoriteMeetingList.isEmpty) {
-      return buildEmptyView();
+      return buildEmptyView(
+          meetingAppLocalizations.historyCollectMeetingListEmpty);
     }
     return ListView.builder(
         itemCount: favoriteMeetingList.length,
@@ -345,7 +344,7 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
   }
 
   /// 缺省图
-  Widget buildEmptyView() {
+  Widget buildEmptyView(String content) {
     return Center(
       child: SingleChildScrollView(
         child: Column(children: [
@@ -353,7 +352,7 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
             image: AssetImage(AssetName.emptyHistoryMeetingList),
           ),
           Text(
-            meetingAppLocalizations.historyMeetingListEmpty,
+            content,
             style: TextStyle(
                 fontSize: 13,
                 color: AppColors.color_666666,
@@ -401,7 +400,7 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
                             TextSpan(children: [
                               TextSpan(
                                 text:
-                                    '${TimeUtil.timeFormatHourMinute(DateTime.fromMillisecondsSinceEpoch(item.roomEntryTime))}',
+                                    '${MeetingTimeUtil.timeFormatHourMinute(DateTime.fromMillisecondsSinceEpoch(item.roomEntryTime))}',
                                 style: TextStyle(
                                     color: AppColors.black_222222,
                                     fontSize: 12),
@@ -533,13 +532,12 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
   }
 
   Future<bool> isNetworkConnect() async {
-    var state =
-        await Connectivity().checkConnectivity() != ConnectivityResult.none;
-    if (!state) {
+    if (!await ConnectivityManager().isConnected()) {
       ToastUtils.showToast(
           context, meetingAppLocalizations.globalNetworkUnavailableCheck);
+      return false;
     }
-    return state;
+    return true;
   }
 
   Future<Result<int?>> favouriteMeeting(int roomArchiveId) {

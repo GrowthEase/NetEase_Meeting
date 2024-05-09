@@ -50,6 +50,8 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>音视频会议需要申请相机权限，用于会议中的视频交流</string>
+	<key>NSContactsUsageDescription</key>
+	<string>请授权访问您的通讯录，用于呼叫联系人以电话方式入会</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>音视频会议需要申请麦克风权限，用于会议中的音频交流</string>
 	<key>NSPhotoLibraryUsageDescription</key>

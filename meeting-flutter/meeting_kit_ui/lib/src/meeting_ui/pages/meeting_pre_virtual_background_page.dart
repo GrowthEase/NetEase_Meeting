@@ -4,6 +4,17 @@
 
 part of meeting_ui;
 
+class NEPreVirtualBackgroundPage extends StatelessWidget {
+  const NEPreVirtualBackgroundPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return NEMeetingUIKitLocalizationsScope(
+      child: PreVirtualBackgroundPage(),
+    );
+  }
+}
+
 class PreVirtualBackgroundPage extends StatefulWidget {
   PreVirtualBackgroundPage({Key? key});
 
@@ -46,16 +57,11 @@ class _PreVirtualBackgroundPageState
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-        child: Scaffold(
-            body: Container(
-          color: Colors.white,
-          child: buildBeautyPreViewWidget(context),
-        )),
-        onWillPop: () async {
-          _requestPop();
-          return false;
-        });
+    return Scaffold(
+        body: Container(
+      color: Colors.white,
+      child: buildBeautyPreViewWidget(context),
+    ));
   }
 
   Widget buildBeautyPreViewWidget(BuildContext context) {
@@ -211,7 +217,7 @@ class _PreVirtualBackgroundPageState
                   style: TextStyle(color: Colors.blue),
                 ),
               ),
-              onTap: () => _requestPop(),
+              onTap: () => Navigator.of(context).pop(),
             ),
           ]),
         ),
@@ -284,8 +290,6 @@ class _PreVirtualBackgroundPageState
     }
     if (mounted) setState(() {});
   }
-
-  void _requestPop() => Navigator.of(context).pop();
 
   @override
   void dispose() {

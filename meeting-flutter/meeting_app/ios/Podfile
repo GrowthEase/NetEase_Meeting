@@ -39,7 +39,7 @@ flutter_ios_podfile_setup
 target "Runner" do
   use_frameworks!
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
-  pod "Marvel", "1.0.6.7"
+  pod "Marvel", "1.0.7"
   # 如果是测试阶段且是本地依赖，则根据路径引用NERoom
   if Pod.const_defined?(:MEETING_TEST) && MEETING_TEST && Pod.const_defined?(:LOCAL_DEPENDENCY) && LOCAL_DEPENDENCY
     puts "本地依赖"
@@ -81,6 +81,7 @@ post_install do |installer|
         "$(inherited)",
         "PERMISSION_CAMERA=1",
         "PERMISSION_MICROPHONE=1",
+        "PERMISSION_CONTACTS=1",
       ]
     end
   end

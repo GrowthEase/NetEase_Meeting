@@ -44,6 +44,19 @@ class _NEMeetingAccountServiceImpl extends NEMeetingAccountService {
   }
 
   @override
+  Future<NEResult<List<NEContact>>> searchContacts(
+      {String? name, String? phoneNumber, int? pageSize, int? pageNum}) {
+    return MeetingRepository.searchContacts(
+        name, phoneNumber, pageSize, pageNum);
+  }
+
+  @override
+  Future<NEResult<NEContactsInfoResponse>> getContactsInfo(
+      List<String> userUuids) {
+    return MeetingRepository.getContactsInfo(userUuids);
+  }
+
+  @override
   _setAccountInfo(NEAccountInfo? accountInfo, [bool anonymous = false]) {
     this._accountInfo = accountInfo;
     this._anonymous = accountInfo == null ? false : anonymous;

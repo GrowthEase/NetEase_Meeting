@@ -10,6 +10,17 @@ typedef TextToastBuilder = Widget Function(
 class ToastUtils {
   static final _root = ToastManager();
 
+  static void showBotToast(String text, {bool isError = false}) {
+    BotToast.showText(
+        text: text,
+        textStyle: TextStyle(
+          color: isError ? Color(0xffFF4742) : Colors.white,
+          fontSize: 14.0,
+          decoration: TextDecoration.none,
+          fontWeight: FontWeight.w400,
+        ));
+  }
+
   static void showToast(
     BuildContext context,
     String? text, {

@@ -80,11 +80,8 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="meeting.netease.im"
-                    android:scheme="nemeeting" />
-                <data
-                        android:host="meeting.yunxinroom.com"
-                        android:scheme="nemeeting" />
+                    android:host="${deepLinkHost}"
+                    android:scheme="${deepLinkScheme}" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

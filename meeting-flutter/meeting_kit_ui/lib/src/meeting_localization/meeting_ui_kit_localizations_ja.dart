@@ -66,9 +66,6 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get globalGotIt => 'わかりました';
 
   @override
-  String get globalMin => '分';
-
-  @override
   String globalNotWork(Object permissionName) {
     return '$permissionNameが使えません。';
   }
@@ -101,6 +98,18 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
 
   @override
   String get globalOperationFail => '操作に失敗しました';
+
+  @override
+  String get globalOperationNotSupportedInMeeting => '会議はこの操作をサポートしていません';
+
+  @override
+  String get globalClear => '削除';
+
+  @override
+  String get globalSearch => '検索';
+
+  @override
+  String get globalReject => '拒否';
 
   @override
   String get meetingBeauty => '美顔';
@@ -495,6 +504,50 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String meetingUserIsNowTheHost(Object user) {
     return '$userは司会者になりました';
   }
+
+  @override
+  String get meetingGuestJoin => '訪問者入会';
+
+  @override
+  String get meetingGuestJoinSecurityNotice => '訪問者入会を開始しましたので、会議情報の安全にご注意ください';
+
+  @override
+  String get meetingGuestJoinEnableTip => 'オープン後に外部のユーザを参加させる';
+
+  @override
+  String get meetingGuestJoinEnabled => '訪問者入会を開きました';
+
+  @override
+  String get meetingGuestJoinDisabled => '訪問者入会は閉鎖されました';
+
+  @override
+  String get meetingGuestJoinConfirm => '訪問者入会を開くことを確認しますか？';
+
+  @override
+  String get meetingGuestJoinConfirmTip => 'オープン後に外部のユーザを参加させる';
+
+  @override
+  String get meetingSearchNotFound => '検索結果はまだありません';
+
+  @override
+  String get meetingGuestJoinSupported => '外部からの訪問者の入会にも対応しています';
+
+  @override
+  String get meetingGuest => '訪問者';
+
+  @override
+  String get meetingGuestJoinNamePlaceholder => '入会名を入力してください';
+
+  @override
+  String meetingAppInvite(Object userName) {
+    return '$userNameはあなたを招待します';
+  }
+
+  @override
+  String get meetingAudioJoinAction => '音声';
+
+  @override
+  String get meetingVideoJoinAction => 'ビデオ';
 
   @override
   String get screenShare => '画面共有';
@@ -954,6 +1007,18 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get participantNotFound => '関連メンバーが見つかりませんでした';
 
   @override
+  String get participantSetHost => '司会者にし';
+
+  @override
+  String get participantSetCoHost => '合同司会者にし';
+
+  @override
+  String get participantCancelCoHost => '合同司会者を取り消す';
+
+  @override
+  String get participantRemoveAttendee => '参加者の削除';
+
+  @override
   String get cloudRecordingEnabledTitle => 'クラウド録画を有効にするかどうか';
 
   @override
@@ -1305,5 +1370,269 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get notifyCenterViewingDetails => '詳細を見る';
 
   @override
-  String get globalOperationNotSupportedInMeeting => '会議はこの操作をサポートしていません';
+  String get sipCallByNumber => '電話';
+
+  @override
+  String get sipCall => 'よびだし';
+
+  @override
+  String get sipContacts => '会議の連絡先';
+
+  @override
+  String get sipNumberPlaceholder => '携帯番号を入力してください';
+
+  @override
+  String get sipName => '招待者名';
+
+  @override
+  String get sipNamePlaceholder => '会議で名前が表示されます';
+
+  @override
+  String get sipCallNumber => 'ダイヤルアウト番号：';
+
+  @override
+  String get sipNumberError => '正しい携帯番号を入力してください';
+
+  @override
+  String get sipCallIsCalling => 'この番号はすでに呼び出し中です';
+
+  @override
+  String get sipLocalContacts => 'ローカルアドレス帳';
+
+  @override
+  String get sipContactsClear => 'クリアランス';
+
+  @override
+  String get sipCalling => '呼び出し中...';
+
+  @override
+  String get sipCallTerm => 'サスペンド';
+
+  @override
+  String get sipCallOthers => '他のメンバーを呼ぶ';
+
+  @override
+  String get sipCallFailed => 'コール失敗';
+
+  @override
+  String get sipCallAgain => '電話をかけ直す';
+
+  @override
+  String get sipSearch => '検索けんさく';
+
+  @override
+  String get sipSearchContacts => '参加者を検索して追加';
+
+  @override
+  String get sipCallPhone => 'でんわよびだし';
+
+  @override
+  String get sipCallingNumber => '入会していない';
+
+  @override
+  String get sipCallCancel => 'キャンセルコール';
+
+  @override
+  String get sipCallAgainEx => 'さいよびだし';
+
+  @override
+  String get sipCallStatusCalling => '電話通話中';
+
+  @override
+  String get callStatusCalling => '通話中';
+
+  @override
+  String get sipCallStatusWaiting => '呼び出し待ち中';
+
+  @override
+  String get callStatusWaitingJoin => '入会していない';
+
+  @override
+  String get sipCallStatusTermed => '切断済み';
+
+  @override
+  String get sipCallStatusUnaccepted => '受信していません';
+
+  @override
+  String get sipCallStatusRejected => 'リジェクト';
+
+  @override
+  String get sipCallStatusCanceled => 'キャンセル済み';
+
+  @override
+  String get sipCallStatusError => 'よびだしれいがい';
+
+  @override
+  String get sipPhoneNumber => '電話番号';
+
+  @override
+  String sipCallMemberSelected(Object count) {
+    return '選択:$count';
+  }
+
+  @override
+  String get sipContactsPrivacy => 'アドレス帳へのアクセスを許可してください連絡先に電話で入会します';
+
+  @override
+  String get memberCountOutOfRange => '会議人数上限に達しました';
+
+  @override
+  String get sipContactNoNumber => 'ユーザー番号なし';
+
+  @override
+  String get sipCallIsInMeeting => 'ユーザーは会議中です';
+
+  @override
+  String get sipCallIsInInviting => 'ユーザーが招待中';
+
+  @override
+  String get sipCallIsInBlacklist =>
+      'メンバーの再参加は許可されていません。招待する場合は、会議のブラックリストを閉じてください';
+
+  @override
+  String get sipCallByPhone => '電話';
+
+  @override
+  String get sipKeypad => 'キーパッド';
+
+  @override
+  String get sipBatchCall => 'バッチコール';
+
+  @override
+  String get sipLocalContactsEmpty => 'ローカルアドレスが空です';
+
+  @override
+  String sipCallMaxCount(Object count) {
+    return '1回の最大選択$count人';
+  }
+
+  @override
+  String get sipInviteInfo => 'コピー詳細';
+
+  @override
+  String get sipAddressInvite => '連絡する';
+
+  @override
+  String get sipJoinOtherMeetingTip => '参加後は本会議を離れます。';
+
+  @override
+  String get monitoring => '品質監督';
+
+  @override
+  String get overall => '総体';
+
+  @override
+  String get soundAndVideo => '視聴';
+
+  @override
+  String get cpu => 'CPU';
+
+  @override
+  String get memory => 'メモリ';
+
+  @override
+  String get network => 'ネットワーク';
+
+  @override
+  String get bandwidth => '帯域幅';
+
+  @override
+  String get networkType => 'ネットワークタイプ';
+
+  @override
+  String get networkState => 'ネットワークの状態';
+
+  @override
+  String get delay => '遅延';
+
+  @override
+  String get packageLossRate => 'パケット損失率';
+
+  @override
+  String get recently => '近い';
+
+  @override
+  String get audio => 'オーディオ';
+
+  @override
+  String get microphone => 'マイク台';
+
+  @override
+  String get speaker => 'スピーカ';
+
+  @override
+  String get bitrate => 'コードレート';
+
+  @override
+  String get speakerPlayback => 'スピーカ再生';
+
+  @override
+  String get microphoneAcquisition => 'マイク収集';
+
+  @override
+  String get resolution => '解像度';
+
+  @override
+  String get frameRate => 'フレームレート';
+
+  @override
+  String get moreMonitoring => '詳細データの表示';
+
+  @override
+  String get layoutSettings => 'レイアウト設定';
+
+  @override
+  String get galleryModeMaxCount => 'ギャラリーモードでの単画面表示の最大画面数';
+
+  @override
+  String galleryModeScreens(Object count) {
+    return '$count画面';
+  }
+
+  @override
+  String get followGalleryLayout => '司会者のビデオの順序に従う';
+
+  @override
+  String get resetGalleryLayout => 'ビデオの順序をリセット';
+
+  @override
+  String get followGalleryLayoutTips =>
+      '司会者ギャラリーモードの最初の25個のビデオをすべての参加者に順次同期させ、参加者が自分で変更することは許されない。';
+
+  @override
+  String get followGalleryLayoutConfirm =>
+      '司会者は「司会者のビデオの順序に従う」を設定しており、ビデオを移動することはできません。';
+
+  @override
+  String get followGalleryLayoutResetConfirm =>
+      '司会者は「司会者のビデオの順序に従う」を設定しており、ビデオ順序をリセットすることはできません。';
+
+  @override
+  String get saveGalleryLayoutTitle => 'ビデオシーケンスの保存';
+
+  @override
+  String get saveGalleryLayoutContent =>
+      '現在のビデオの順序を予約された会議に保存して、後続の会議で使用することができて、保存を確定しますか？';
+
+  @override
+  String get replaceGalleryLayoutContent =>
+      'この予約会議には古いビデオ順序がありますが、新しいビデオ順序に置き換えて保存しますか？';
+
+  @override
+  String get loadGalleryLayoutTitle => 'ビデオのロード順序';
+
+  @override
+  String get loadGalleryLayoutContent => 'この予約会議にはビデオの順番がありますが、ロードしますか？';
+
+  @override
+  String get load => 'ロード＃ロード＃';
+
+  @override
+  String get noLoadGalleryLayout => 'ロード可能なビデオシーケンスがありません';
+
+  @override
+  String get loadSuccess => 'ロード成功';
+
+  @override
+  String get loadFail => 'ロードに失敗しました';
 }
