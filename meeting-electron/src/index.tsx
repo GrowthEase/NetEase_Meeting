@@ -1,12 +1,13 @@
-import React from 'react'
-import ReactDOM from 'react-dom'
-// import AppH5 from './AppH5'
-import App from './components/web/Meeting'
-import { GlobalContextProvider, MeetingInfoContextProvider } from './store'
-import './index.less'
-import NERoom from 'neroom-web-sdk'
 import Eventemitter from 'eventemitter3'
-import NEMeetingService from './services/NEMeeting'
+import NERoom from 'neroom-web-sdk'
+import ReactDOM from 'react-dom'
+import './assets/iconfont.js'
+import Auth from './components/Auth'
+import BaseCustomBtnConfig from './components/common/CustomButton/customButton'
+import AppH5 from './components/h5/Meeting'
+import App from './components/web/Meeting'
+import './index.less'
+import i18n from './locales/i18n'
 import {
   createMeetingInfoFactory,
   defaultMenus,
@@ -14,24 +15,21 @@ import {
   defaultMoreMenus,
   defaultMoreMenusInH5,
 } from './services'
-import Auth from './components/Auth'
-import { UserEventType } from './types/innerType'
+import NEMeetingService from './services/NEMeeting'
+import NEMeetingInviteService from './services/NEMeetingInviteService'
+import { GlobalContextProvider, MeetingInfoContextProvider } from './store'
 import {
   CreateOptions,
+  EventName,
   JoinOptions,
   LoginOptions,
-  NEMeeting,
-  NEMeetingRole,
-  NEMeetingKit as NEMeetingKitInterface,
   NEMeetingInitConfig,
-  EventName,
+  NEMeetingKit as NEMeetingKitInterface,
 } from './types'
+import { UserEventType } from './types/innerType'
 import { NEMeetingInfo, NEMeetingLanguage } from './types/type'
-import i18n from './locales/i18n'
-import './assets/iconfont.js'
 import { checkType, getDefaultLanguage } from './utils'
 import { Logger } from './utils/Logger'
-import BaseCustomBtnConfig from './components/common/CustomButton/customButton'
 // import { LogName } from './utils/logStorage'
 // import { downloadLog, uploadLog } from './utils'
 // 入参
@@ -41,171 +39,15 @@ interface NEMeetingKitProps {
   width: number
   logger: Logger
   neMeeting: NEMeetingService
+  inviteService: NEMeetingInviteService
   meetingServerDomain?: string
 }
 const eventEmitter = new Eventemitter()
 // 外部用户监听使用
 const outEventEmitter = new Eventemitter()
 
-// 代理 NERoomNode 对象
-
-const promiseFunction = [
-  'sendImageMessage',
-  'sendFileMessage',
-  'downloadAttachment',
-  'getScreenCaptureSourceList',
-  'cancelSendFileMessage',
-  'cancelDownloadAttachment',
-  'startScreenShare',
-  'stopScreenShare',
-  'stopSystemAudioLoopbackCapture',
-  'uploadLog',
-  'unmuteMyVideo',
-  'muteMyVideo',
-  'unmuteMyAudio',
-  'muteMyAudio',
-
-  'createRoom',
-  'joinRoom',
-  'leaveRoom',
-  'endRoom',
-  'updateMemberProperty',
-
-  'deleteMemberProperty',
-  'kickMemberOut',
-  'lockRoom',
-  'unlockRoom',
-  'updateRoomProperty',
-  'handOverMyRole',
-  'changeMemberRole',
-  'joinRtcChannel',
-  'joinChatroom',
-  // 'setLocalAudioProfile',
-  'switchDevice',
-  'enumRecordDevices',
-  'enumCameraDevices',
-  'enumPlayoutDevices',
-  // 'setLocalVideoConfig',
-  'enableAudioAINS',
-  'enableAudioEchoCancellation',
-  'enableAudioVolumeAutoAdjust',
-  'changeMyName',
-  'muteMemberVideo',
-  'muteMemberAudio',
-
-  'setupLocalVideoCanvas',
-  'setupRemoteVideoCanvas',
-  'subscribeRemoteVideoStream',
-  'unsubscribeRemoteVideoStream',
-  'subscribeRemoteVideoSubStream',
-  'unsubscribeRemoteVideoSubStream',
-
-  'sendTextMessage',
-  'sendImageMessage',
-  'sendFileMessage',
-
-  'startCloudRecord',
-  'stopCloudRecord',
-  'getRoomCloudRecordList',
-]
-
-let neRoomNodePromiseCount = 0
-
-function proxyNERoomNode(targetObj, targetKey: string) {
-  function proxyNERoomNodeListener(targetKey, fnName, fn) {
-    window.ipcRenderer?.removeAllListeners(
-      `NERoomNodeListenerProxy-${targetKey}-${fnName}`
-    )
-    window.ipcRenderer?.on(
-      `NERoomNodeListenerProxy-${targetKey}-${fnName}`,
-      (_, data) => {
-        fn(...data)
-      }
-    )
-  }
-  if (typeof targetObj !== 'object' || targetObj === null) {
-    return targetObj
-  }
-  return new Proxy(targetObj, {
-    get(target, prop) {
-      if (typeof prop === 'symbol') {
-        return target[prop]
-      }
-      if (
-        target[prop] === '__FUNCTION__' ||
-        typeof target[prop] === 'function'
-      ) {
-        return function (...args) {
-          args.forEach((arg, index) => {
-            if (arg instanceof Array) {
-              // 递归处理
-            } else if (arg instanceof HTMLElement) {
-              args[index] = {}
-            } else if (typeof arg === 'object') {
-              const obj = {}
-              for (const key in arg) {
-                const element = arg[key]
-                if (typeof element === 'function') {
-                  obj[key] = '__LISTENER_FUNCTION__'
-                  proxyNERoomNodeListener(targetKey, key, element)
-                } else {
-                  obj[key] = element
-                }
-              }
-              args[index] = obj
-            }
-          })
-          if (promiseFunction.includes(prop)) {
-            return new Promise((resolve, reject) => {
-              const promiseCount = neRoomNodePromiseCount++
-              window.ipcRenderer?.once(
-                `NERoomNodePromiseProxyReply-${targetKey}-${prop}-${promiseCount}`,
-                (_, data) => {
-                  if (data.promise === 'resolve') {
-                    resolve(data.value)
-                  } else {
-                    reject(data.value)
-                  }
-                }
-              )
-              window.ipcRenderer?.send('NERoomNodeProxyMethod', {
-                target: targetKey,
-                key: prop,
-                isPromise: true,
-                args,
-                promiseCount,
-              })
-            })
-          } else {
-            const res = window.ipcRenderer?.sendSync('NERoomNodeProxyMethod', {
-              target: targetKey,
-              key: prop,
-              args,
-            })
-            if (res.promise) {
-              return res.promise === 'resolve'
-                ? Promise.resolve(res.value)
-                : Promise.reject(res.value)
-            } else {
-              return proxyNERoomNode(res.value, `${targetKey}-${prop}`)
-            }
-          }
-        }
-      } else {
-        const res = window.ipcRenderer?.sendSync('NERoomNodeProxyProperty', {
-          target: targetKey,
-          key: prop,
-        })
-        return proxyNERoomNode(res.value, `${targetKey}-${prop}`)
-      }
-    },
-  })
-}
-
 let roomkit
 if (window.isElectronNative && window.NERoom) {
-  // const neroom = window.ipcRenderer?.sendSync('NERoomNodeProxyInit')
-  // roomkit = proxyNERoomNode(neroom, 'neroom')
   roomkit = new window.NERoom()
 } else {
   roomkit = NERoom.getInstance()
@@ -257,7 +99,7 @@ function loadAsyncScript(url: string, callback?: () => void) {
 // 设置自定义菜单配置
 const setCustomList = async (obj: JoinOptions) => {
   // @ts-ignore
-  const isH5 = process.env.PLATFORM === 'h5'
+  const isH5 = process.env.PLATFORM === 'h5' || window.h5App
   // 工具栏菜单
   const _defaultMenus = isH5 ? defaultMenusInH5 : defaultMenus
   const _customMenus = checkType(obj.toolBarList, 'array')
@@ -295,10 +137,6 @@ const render = async (
   let globalConfig
   try {
     globalConfig = await neMeeting.getGlobalConfig()
-    localStorage.setItem(
-      'nemeeting-global-config',
-      JSON.stringify(globalConfig)
-    )
   } catch (e) {
     console.warn('getGlobalConfig', e)
   }
@@ -307,6 +145,7 @@ const render = async (
       outEventEmitter={outEventEmitter}
       eventEmitter={eventEmitter}
       neMeeting={neMeeting}
+      inviteService={props.inviteService}
       joinLoading={joinLoading}
       logger={props.logger}
       globalConfig={globalConfig}
@@ -316,12 +155,11 @@ const render = async (
         meetingInfo={createMeetingInfoFactory()}
       >
         <Auth renderCallback={callback} />
-        <App width={props.width} height={props.height} />
-        {/*{process.env.PLATFORM === ('h5' as 'web' | 'h5') ? (*/}
-        {/*  <AppH5 width={props.width} height={props.height} />*/}
-        {/*) : (*/}
-        {/*  <App width={props.width} height={props.height} />*/}
-        {/*)}*/}
+        {process.env.PLATFORM === 'h5' || window.h5App ? (
+          <AppH5 width={props.width} height={props.height} />
+        ) : (
+          <App width={props.width} height={props.height} />
+        )}
       </MeetingInfoContextProvider>
     </GlobalContextProvider>,
     view
@@ -336,6 +174,7 @@ const NEMeetingKit: NEMeetingKitInterface = new Proxy<any>(
     // remoteMemberList: [],
     // localMember: {},
     neMeeting: null,
+    inviteService: null,
     roomkit: null,
     globalEventListener: null,
     isInitialized: false,
@@ -406,9 +245,19 @@ const NEMeetingKit: NEMeetingKitInterface = new Proxy<any>(
       if (NEMeetingKit.globalEventListener) {
         roomkit.addGlobalEventListener(NEMeetingKit.globalEventListener)
       }
-      const neMeeting = new NEMeetingService({ roomkit, eventEmitter, logger })
+      const neMeeting = new NEMeetingService({
+        roomkit,
+        eventEmitter,
+        outEventEmitter,
+        logger,
+      })
       NEMeetingKit.roomkit = roomkit
       NEMeetingKit.neMeeting = neMeeting
+      const inviteService = new NEMeetingInviteService({
+        neMeeting,
+        eventEmitter: outEventEmitter,
+      })
+      NEMeetingKit.inviteService = inviteService
       const locale = getLanguage(config.locale || 'zh-CN')
       console.log('locale', locale)
       i18n.changeLanguage(locale)
@@ -420,6 +269,7 @@ const NEMeetingKit: NEMeetingKitInterface = new Proxy<any>(
           width,
           height,
           neMeeting,
+          inviteService,
           logger,
           ...config,
           appKey: config.appKey,
@@ -505,6 +355,8 @@ const NEMeetingKit: NEMeetingKitInterface = new Proxy<any>(
       NEMeetingKit.afterLeaveCallback = null
       NEMeetingKit.view = null
       NEMeetingKit.neMeeting?.release()
+      NEMeetingKit.inviteService?.destroy()
+      NEMeetingKit.inviteService = undefined
       NEMeetingKit.neMeeting = undefined
       NEMeetingKit.isInitialized = false
       outEventEmitter.removeAllListeners()

@@ -1,3 +1,5 @@
+import classNames from 'classnames'
+import { Resizable } from 're-resizable'
 import React, {
   useCallback,
   useContext,
@@ -6,13 +8,13 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import VideoCard from '../../common/VideoCard'
-import { Swiper, SwiperSlide } from 'swiper/react'
+import { useTranslation } from 'react-i18next'
 import { Navigation } from 'swiper'
 import 'swiper/css'
 import 'swiper/css/navigation'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { Swiper as SwiperClass } from 'swiper/types'
 import { MeetingInfoContext, useGlobalContext } from '../../../store'
-import './index.less'
 import {
   ActionType,
   EventType,
@@ -20,15 +22,15 @@ import {
   NEMember,
   Role,
 } from '../../../types'
-import { useTranslation } from 'react-i18next'
+import VideoCard from '../../common/VideoCard'
+import './index.less'
 import WhiteboardView from './WhiteboardView'
-import { Swiper as SwiperClass } from 'swiper/types'
-import { Resizable } from 're-resizable'
-import classNames from 'classnames'
 
 import useActiveSpeakerManager from '../../../hooks/useActiveSpeakerManager'
-import AudioModeCanvas from './AudioModeCanvas'
 import useMeetingCanvas from '../../../hooks/useMeetingCanvas'
+import AudioModeCanvas from './AudioModeCanvas'
+import VideoGalleryLayout from './VideoGalleryLayout'
+import Toast from '../../common/toast'
 
 interface MeetingCanvasProps {
   className?: string
@@ -54,13 +56,9 @@ const VIEW_RATIO = 16 / 9
 // 正常画布显示
 const BigRender: React.FC<MeetingCanvasProps> = (props) => {
   const { isSpeaker, isLocalScreen, isAudioMode } = props
-  const { eventEmitter, globalConfig, neMeeting } = useGlobalContext()
+  const { eventEmitter, neMeeting } = useGlobalContext()
   const { activeSpeakerList } = useActiveSpeakerManager()
-  const {
-    meetingInfo,
-    memberList: originMemberList,
-    dispatch,
-  } = useContext(MeetingInfoContext)
+  const { meetingInfo, dispatch } = useContext(MeetingInfoContext)
   // 当前显示页面index
   const [activeIndex, setActiveIndex] = useState(0)
   const [windowInnerWidth, setWindowInnerWidth] = useState(656)
@@ -75,8 +73,15 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
   const [maxResizableWidth, setMaxResizableWidth] = useState(0)
   // const [activeSpeakerList, setActiveSpeakerList] = useState<string[]>([])
   const isSpeakerRef = useRef<boolean>(isSpeaker)
+  const toastIdRef = useRef<string>('')
+  const isMounted = useRef(false)
+  const { t } = useTranslation()
 
   // const [speakerRightViewColumnNum, setSpeakerRightViewColumnNum] = useState(1)
+
+  const isGalleryLayout = useMemo(() => {
+    return meetingInfo.layout === 'gallery'
+  }, [meetingInfo.layout])
 
   const isSpeakerLayoutPlacementRight =
     isSpeaker && meetingInfo.speakerLayoutPlacement === 'right'
@@ -106,7 +111,6 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     handleViewDoubleClick,
     preSpeakerLayoutInfo,
     handleUnsubscribeMembers,
-    unsubscribeMembersTimerMap,
     clearUnsubscribeMembersTimer,
   } = useMeetingCanvas({
     isSpeaker,
@@ -114,6 +118,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     isSpeakerLayoutPlacementRight,
     groupNum,
     resizableWidth,
+    groupType: 'web',
   })
   const swiperInstanceRef = useRef<SwiperClass | null>(null)
   isSpeakerRef.current = isSpeaker
@@ -184,6 +189,22 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     }
   }, [])
 
+  function onCallClick(member: NEMember) {
+    console.warn('onCallClick', member)
+    if (!isHost) {
+      return
+    }
+    const uuid = member.uuid
+    if (member.inviteType === 2) {
+      neMeeting?.inviteByUserUuid(uuid)?.catch((e) => {
+        Toast.fail(e.message)
+      })
+    } else {
+      neMeeting?.callByUserUuid(uuid)?.catch((e) => {
+        Toast.fail(e.message)
+      })
+    }
+  }
   const isSpeakerFull = useMemo(() => {
     if (
       meetingInfo.layout === LayoutTypeEnum.Gallery ||
@@ -206,9 +227,12 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     return !!meetingInfo.screenUuid ? 'screen' : 'video'
   }, [meetingInfo.screenUuid])
 
-  const isHost =
-    meetingInfo.localMember.role === Role.host ||
-    meetingInfo.localMember.role === Role.coHost
+  const isHost = useMemo(() => {
+    return (
+      meetingInfo.localMember.role === Role.host ||
+      meetingInfo.localMember.role === Role.coHost
+    )
+  }, [meetingInfo.localMember?.role])
 
   // 获取画布行数和列数
   function getLineNumAndColumnNum(memberCount: number) {
@@ -303,7 +327,8 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     })
     setVideoViewHeight(height)
     // 加20宽度，否则会出现父容器宽度跟不上里面画面宽度，造成竖向排列
-    setSwiperWidth(width * columnNum + 20)
+    // setSwiperWidth(width * columnNum + 20)
+    setSwiperWidth(width * columnNum)
   }
 
   function handleCollapse() {
@@ -313,7 +338,26 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
       setSpeakerTopCollapse(!speakerTopCollapse)
     }
   }
-
+  useEffect(() => {
+    if (!isMounted.current) {
+      return
+    }
+    if (toastIdRef.current) {
+      Toast.destroy(toastIdRef.current)
+    }
+    if (meetingInfo.pinVideoUuid) {
+      toastIdRef.current = Toast.info(
+        t('meetingPinViewTip', {
+          corner: t('meetingTopLeftCorner'),
+        })
+      )
+    } else {
+      toastIdRef.current = Toast.info(t('meetingUnpinViewTip'))
+    }
+  }, [meetingInfo.pinVideoUuid])
+  useEffect(() => {
+    isMounted.current = true
+  }, [])
   const videoCardViewHeight = useMemo(() => {
     return isAudioMode ? 128 : videoViewHeight
   }, [isAudioMode, videoViewHeight])
@@ -433,7 +477,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
 
   // 不在当前页的成员5s后取消订阅，如果5s内重新进入当前页则取消定时器
   useEffect(() => {
-    if (!isElectronSharingScreen) {
+    if (isElectronSharingScreen) {
       return
     }
     handleUnsubscribeMembers(
@@ -543,11 +587,50 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
 
   return isElectronSharingScreen ? null : isAudioMode ? ( // 音频模式
     <AudioModeCanvas
+      onCallClick={(member) => onCallClick(member)}
       meetingInfo={meetingInfo}
       memberList={memberList.filter((item) => {
         return !hideNoVideoMembers || item.isVideoOn
       })}
     />
+  ) : // <VideoGalleryLayout />
+  isGalleryLayout ? (
+    <>
+      <div
+        id={'meetingSwiperButtonPrev'}
+        className={classNames('slider-button-prev', {
+          'slider-button-gallery-prev': !isSpeaker,
+          'slider-button-speaker-right-prev': isSpeakerLayoutPlacementRight,
+          'meeting-swiper-button-disabled':
+            activeIndex === 0 || sliderGroupMembers.length <= 1,
+        })}
+        onClick={() => {
+          setActiveIndex(activeIndex - 1)
+        }}
+      />
+      <div
+        id={'meetingSwiperButtonNext'}
+        className={classNames('slider-button-next', {
+          'slider-button-gallery-next': !isSpeaker,
+          'slider-button-speaker-right-next': isSpeakerLayoutPlacementRight,
+          'meeting-swiper-button-disabled':
+            activeIndex === sliderGroupMembers.length - 1 ||
+            sliderGroupMembers.length <= 1,
+        })}
+        onClick={() => {
+          setActiveIndex(activeIndex + 1)
+        }}
+      />
+      <VideoGalleryLayout
+        videoViewHeight={videoViewHeight}
+        videoViewWidth={videoViewWidth}
+        members={sliderGroupMembers[activeIndex] ?? []}
+        handleViewDoubleClick={handleViewDoubleClick}
+        pageNum={activeIndex}
+        width={swiperWidth}
+        onCallClick={(member) => onCallClick(member)}
+      />
+    </>
   ) : (
     <>
       {isShowSlider && !isSpeakerFull && (
@@ -672,6 +755,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
                         activeSpeakerList.includes(member.uuid)
                       return (
                         <VideoCard
+                          onCallClick={onCallClick}
                           mirroring={
                             meetingInfo.enableVideoMirror &&
                             member?.uuid === meetingInfo.myUuid
@@ -679,9 +763,6 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
                           onDoubleClick={handleViewDoubleClick}
                           isAudioMode={isAudioMode}
                           avatarSize={isSpeaker ? 32 : 48}
-                          unsubscribeMembersTimerMap={
-                            unsubscribeMembersTimerMap
-                          }
                           showBorder={
                             isSpeaker
                               ? false
@@ -705,7 +786,6 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
                               : 0
                           }
                           isMySelf={member.uuid === meetingInfo.myUuid}
-                          sliderMembersLength={filterMembers.length}
                           key={member.uuid}
                           type={'video'}
                           className={`h-full text-white nemeeting-video-card video-card card-for-${members.length}`}
@@ -767,7 +847,6 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
               return (
                 <VideoCard
                   onDoubleClick={handleViewDoubleClick}
-                  unsubscribeMembersTimerMap={unsubscribeMembersTimerMap}
                   mirroring={
                     meetingInfo.enableVideoMirror &&
                     !(
@@ -777,6 +856,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
                     ) &&
                     member?.uuid === meetingInfo.myUuid
                   }
+                  onCallClick={onCallClick}
                   showBorder={false}
                   isSubscribeVideo={true}
                   isMain={true}
@@ -793,7 +873,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
                     isSpeakerFull ||
                     memberList.length === 1 ||
                     (isSpeaker && meetingInfo.speakerLayoutPlacement == 'right')
-                      ? 'focus-tp-normal'
+                      ? 'nemeeting-focus-tp-normal'
                       : ''
                   }
                 />
@@ -802,7 +882,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
           {meetingInfo.screenUuid && !meetingInfo.whiteboardUuid && (
             <div className="screen-video-wrap">
               <VideoCard
-                unsubscribeMembersTimerMap={unsubscribeMembersTimerMap}
+                onCallClick={onCallClick}
                 showBorder={false}
                 isSubscribeVideo={true}
                 isMain={true}

@@ -1,7 +1,6 @@
-import { use } from 'i18next';
 import Styles from './index.less';
 import { Button, ConfigProvider } from 'antd';
-import { useEffect, useState, FC, useRef } from 'react';
+import { useEffect, useState, FC } from 'react';
 
 const antdPrefixCls = 'nemeeting';
 

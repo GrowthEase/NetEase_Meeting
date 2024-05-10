@@ -5,6 +5,7 @@ import Toast from '../../common/toast'
 import { copyElementValue } from '../../../utils'
 import './index.less'
 import { NEMeetingIdDisplayOption } from '../../../types/type'
+import { useTranslation } from 'react-i18next'
 
 interface MeetingInfoProps {
   visible: boolean
@@ -17,6 +18,15 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({
   const [selfShow, setSelfShow] = useState(false)
   const { meetingInfo } =
     useContext<MeetingInfoContextInterface>(MeetingInfoContext)
+  const { t, i18n: i18next } = useTranslation()
+  const i18n = {
+    copySuccess: t('copySuccess'),
+    shortId: t('shortId'),
+    meetingHost: t('host'),
+    meetingId: t('meetingId'),
+    meetingPassword: t('meetingPassword'),
+    meetingInviteUrl: t('meetingInviteUrl'),
+  }
 
   const { meetingIdDisplayOption } = useGlobalContext()
 
@@ -34,7 +44,7 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({
 
   const handleCopy = (value: any) => {
     copyElementValue(value, () => {
-      Toast.success('复制成功')
+      Toast.success(i18n.copySuccess)
     })
   }
 
@@ -74,7 +84,7 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({
                   </div>
                   <div className="meeting-info-security text-xs">
                     <i className="icon-cert iconfont iconcertification1x"></i>
-                    <span>会议正加密保护中</span>
+                    <span>{t('meetingInfoDesc')}</span>
                   </div>
                 </div>
                 <hr className="border-wrap" />
@@ -83,7 +93,7 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({
                     meetingIdDisplayOption !==
                       NEMeetingIdDisplayOption.DISPLAY_LONG_ID_ONLY && (
                       <div className="info-item">
-                        <div className="info-item-title">会议短号</div>
+                        <div className="info-item-title">{i18n.shortId}</div>
                         <div className="info-item-content">
                           {meetingInfo?.shortMeetingNum}
                         </div>
@@ -96,7 +106,7 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({
                       NEMeetingIdDisplayOption.DISPLAY_SHORT_ID_ONLY &&
                       !meetingInfo?.shortMeetingNum)) && (
                     <div className="info-item">
-                      <div className="info-item-title">会议ID</div>
+                      <div className="info-item-title">{i18n.meetingId}</div>
                       <div className="info-item-content">
                         <span>{displayId}</span>
                         {copyItem(meetingInfo?.meetingNum)}
@@ -106,7 +116,9 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({
 
                   {meetingInfo?.password && (
                     <div className="info-item">
-                      <div className="info-item-title">会议密码</div>
+                      <div className="info-item-title">
+                        {i18n.meetingPassword}
+                      </div>
                       <div className="info-item-content">
                         {meetingInfo?.password}
                       </div>
@@ -114,18 +126,23 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({
                     </div>
                   )}
                   <div className="info-item">
-                    <div className="info-item-title">主持人</div>
+                    <div className="info-item-title">{i18n.meetingHost}</div>
                     <div className="info-item-content">
                       {meetingInfo?.hostName}
                     </div>
                   </div>
 
-                  {/* {meetingInfo?.url && (
-                    <>
-                      <div>邀请链接</div>
-                      <div className="col-span-2">{meetingInfo?.url}</div>
-                    </>
-                  )} */}
+                  {meetingInfo?.meetingInviteUrl && (
+                    <div className="info-item">
+                      <div className="info-item-title">
+                        {i18n.meetingInviteUrl}
+                      </div>
+                      <div className="info-item-content info-item-content-url">
+                        {meetingInfo?.meetingInviteUrl}
+                        {copyItem(meetingInfo?.meetingInviteUrl)}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -1,62 +1,16 @@
-import { useLocation } from 'umi';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import MeetingNotificationList from '../../../../src/components/web/MeetingNotification/List';
-import NEMeetingService from '../../../../src/services/NEMeeting';
+import ImageCrop from '../../../../src/components/common/ImageCrop';
+import PCTopButtons from '../../../../src/components/common/PCTopButtons';
 
 import './index.less';
-import PCTopButtons from '../../../../src/components/common/PCTopButtons';
-import { useTranslation } from 'react-i18next';
-import { NEMeetingInfo } from '../../../../src/types';
-import ImageCrop from '../../../../src/components/common/ImageCrop';
+import { useGlobalContext } from '../../../../src/store';
 
 const ImageCropPage: React.FC = () => {
   const { t } = useTranslation();
-  const i18n = {
-    title: t('settingAvatarTitle'),
-  };
-
+  const { neMeeting } = useGlobalContext();
   const [image, setImage] = useState<string>('');
-
-  const replyCount = useRef(0);
-
-  const neMeeting = new Proxy(
-    {},
-    {
-      get: function (_, propKey) {
-        return function (...args: any) {
-          return new Promise((resolve, reject) => {
-            const parentWindow = window.parent;
-            const replyKey = `neMeetingReply_${replyCount.current++}`;
-            parentWindow?.postMessage(
-              {
-                event: 'neMeeting',
-                payload: {
-                  replyKey,
-                  fnKey: propKey,
-                  args: args,
-                },
-              },
-              '*',
-            );
-            const handleMessage = (e: MessageEvent) => {
-              const { event, payload } = e.data;
-              if (event === replyKey) {
-                const { result, error } = payload;
-                if (error) {
-                  reject(error);
-                } else {
-                  resolve(result);
-                }
-                window.removeEventListener('message', handleMessage);
-              }
-            };
-            window.addEventListener('message', handleMessage);
-          });
-        };
-      },
-    },
-  ) as NEMeetingService;
 
   function handleOk(url?: string) {
     const parentWindow = window.parent;
@@ -67,17 +21,12 @@ const ImageCropPage: React.FC = () => {
           url,
         },
       },
-      '*',
+      parentWindow.origin,
     );
     window.close();
   }
 
   useEffect(() => {
-    // 设置页面标题
-    setTimeout(() => {
-      document.title = i18n.title;
-    });
-
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data;
       console.log('setAvatarImage', event, payload);
@@ -89,14 +38,19 @@ const ImageCropPage: React.FC = () => {
     return () => {
       window.removeEventListener('message', handleMessage);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    setTimeout(() => {
+      document.title = t('settingAvatarTitle');
+    });
+  }, [t]);
 
   return (
     <>
       <div className="electron-drag-bar">
         <div className="drag-region" />
-        {i18n.title}
+        {t('settingAvatarTitle')}
         <PCTopButtons minimizable={false} maximizable={false} />
       </div>
       <ImageCrop

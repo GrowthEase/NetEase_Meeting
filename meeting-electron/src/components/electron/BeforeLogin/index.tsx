@@ -1,5 +1,5 @@
 import { Button, Checkbox } from 'antd'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import AppAboutLogoImage from '../../../assets/app-about-logo.png'
 import MobLogo from '../../../assets/mob-logo@2x.png'
 import Toast from '../../common/toast'

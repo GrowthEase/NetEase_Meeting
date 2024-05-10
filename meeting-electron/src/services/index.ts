@@ -26,6 +26,7 @@ export const defaultMoreMenus = [
   // 默认更多区域
   { id: NEMenuIDs.sip },
   { id: NEMenuIDs.live },
+  { id: NEMenuIDs.notification },
 ]
 
 // H5默认主区
@@ -37,7 +38,7 @@ export const defaultMenusInH5 = [
 ]
 
 // H5默认更多区域
-export const defaultMoreMenusInH5 = []
+export const defaultMoreMenusInH5 = [{ id: NEMenuIDs.notification }]
 
 export const defaultSmallMenus = [
   { id: NEMenuIDs.mic },
@@ -91,6 +92,7 @@ export function createDefaultSetting() {
       resolution: 720,
       enableVideoMirroring: true,
       isDefaultDevice: false,
+      galleryModeMaxCount: 16,
     },
     audioSetting: {
       recordDeviceId: '',
@@ -128,6 +130,7 @@ export function createMeetingInfoFactory(): NEMeetingInfo {
       isSharingWhiteboard: false,
       properties: {},
       clientType: NEClientType.WEB,
+      inviteState: 0,
       role: Role.member,
       name: '',
     },
@@ -178,5 +181,6 @@ export function createMeetingInfoFactory(): NEMeetingInfo {
     rightDrawerTabs: [],
     activeMemberManageTab: 'room',
     notificationMessages: [],
+    privateChatMemberId: 'meetingAll',
   }
 }

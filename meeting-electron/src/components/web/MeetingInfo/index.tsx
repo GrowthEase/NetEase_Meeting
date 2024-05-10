@@ -32,6 +32,24 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({ className }) => {
     })
   }
 
+  function getMeetingInviteUrl() {
+    const meetingInviteUrl = meetingInfo.meetingInviteUrl
+    if (!meetingInviteUrl) {
+      return
+    }
+    return meetingInviteUrl
+    /*
+    if (location.origin === 'https://meeting.163.com') {
+      return meetingInviteUrl
+    } else {
+      const urlObj = new URL(meetingInviteUrl)
+      const searchParams = new URLSearchParams(urlObj.search)
+      const code = searchParams.get('meeting')
+      return `https://yiyong-qa.netease.im/yiyong-static/statics/invite/?meeting=${code}`
+    }
+    */
+  }
+
   return (
     <Popover
       className={className}
@@ -110,6 +128,21 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({ className }) => {
               </div>
             </div>
           )}
+          {meetingInfo?.sipCid && (
+            <div className="meeting-info-item">
+              <div className="meeting-info-item-title">{t('sip')}</div>
+              <div className="meeting-info-item-content">
+                {meetingInfo?.sipCid}
+                <svg
+                  className="icon iconfont iconcopy1x"
+                  aria-hidden="true"
+                  onClick={() => handleCopy(meetingInfo?.sipCid)}
+                >
+                  <use xlinkHref="#iconcopy1x"></use>
+                </svg>
+              </div>
+            </div>
+          )}
           <div className="meeting-info-item">
             <div className="meeting-info-item-title">{t('host')}</div>
             <div className="meeting-info-item-content">
@@ -125,7 +158,7 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({ className }) => {
               <svg
                 className="icon iconfont iconcopy1x"
                 aria-hidden="true"
-                onClick={() => handleCopy(meetingInfo.meetingInviteUrl)}
+                onClick={() => handleCopy(getMeetingInviteUrl())}
               >
                 <use xlinkHref="#iconcopy1x"></use>
               </svg>

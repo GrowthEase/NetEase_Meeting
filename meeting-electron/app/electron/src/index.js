@@ -100,6 +100,7 @@ const AGREEMENT_REGEXP = new RegExp(`^${agreement}://`);
 const MEETING_HEADER_HEIGHT = isWin32 ? 31 : 28;
 
 const MINI_WIDTH = 1150;
+const MINI_HEIGHT = 690;
 
 let beforeMeetingWindow;
 let mainWindow;
@@ -230,8 +231,8 @@ function openNewWindow(url) {
     const screenWidth = currentScreen.bounds.width;
     const screenHeight = currentScreen.bounds.height;
     // 计算窗口的新位置
-    const newX = screenX + screenWidth - newWin.getSize()[0] - 20;
-    const newY = screenY + screenHeight - newWin.getSize()[1] - 20;
+    const newX = screenX + screenWidth - newWin.getSize()[0] - 60;
+    const newY = screenY + screenHeight - newWin.getSize()[1] - 60;
     // 将窗口移动到新位置
     newWin.setPosition(newX, newY);
     newWin.setAlwaysOnTop(true, 'screen-saver');
@@ -239,55 +240,55 @@ function openNewWindow(url) {
 }
 
 function createWindow(data) {
+  console.log('createWindow>>>>>>>>>', data);
   // Create the browser window.
   const mousePosition = screen.getCursorScreenPoint();
   const nowDisplay = screen.getDisplayNearestPoint(mousePosition);
   const { x, y, width, height } = nowDisplay.workArea;
-  if (!mainWindow) {
-    // 打开成员列表或者聊天室窗口宽度变宽
-    const ext_w_h = isWin32 ? 8 : 0;
-    mainWindow = new BrowserWindow({
-      titleBarStyle: 'hidden',
-      title: '网易会议',
-      width: 1100 - 2 - ext_w_h * 2,
-      height: 720 - MEETING_HEADER_HEIGHT - ext_w_h,
-      x: Math.round(x + (width - 375) / 2),
-      y: Math.round(y + (height - 670) / 2),
-      trafficLightPosition: {
-        x: 10,
-        y: 7,
-      },
-      hasShadow: true,
-      backgroundColor: '#fff',
-      transparent: true,
-      show: false,
-      webPreferences: {
-        contextIsolation: false,
-        nodeIntegration: true,
-        enableRemoteModule: true,
-        // nodeIntegrationInWorker: true,
-        preload: path.join(__dirname, './preload.js'),
-      },
-    });
-
-    mainWindow.on('maximize', () => {
-      mainWindow?.webContents.send('maximize-window', true);
-    });
-    mainWindow.on('unmaximize', () => {
-      mainWindow?.webContents.send('maximize-window', false);
-    });
-    mainWindow.webContents.session.removeAllListeners('will-download');
-    mainWindow.webContents.session.on('will-download', (event, item) => {
-      item.on('done', (event, state) => {
-        if (state === 'completed') {
-          console.log('mainWindow will-download');
-          // 文件下载完成，打开文件所在路径
-          const path = event.sender.getSavePath();
-          shell.showItemInFolder(path);
-        }
-      });
-    });
+  // if (!mainWindow) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.destroy();
   }
+  // 打开成员列表或者聊天室窗口宽度变宽
+  const ext_w_h = isWin32 ? 8 : 0;
+  mainWindow = new BrowserWindow({
+    titleBarStyle: 'hidden',
+    title: '网易会议',
+    trafficLightPosition: {
+      x: 10,
+      y: 7,
+    },
+    hasShadow: true,
+    backgroundColor: '#fff',
+    transparent: true,
+    show: false,
+    webPreferences: {
+      contextIsolation: false,
+      nodeIntegration: true,
+      enableRemoteModule: true,
+      // nodeIntegrationInWorker: true,
+      preload: path.join(__dirname, './preload.js'),
+    },
+  });
+
+  mainWindow.on('maximize', () => {
+    mainWindow?.webContents.send('maximize-window', true);
+  });
+  mainWindow.on('unmaximize', () => {
+    mainWindow?.webContents.send('maximize-window', false);
+  });
+  mainWindow.webContents.session.removeAllListeners('will-download');
+  mainWindow.webContents.session.on('will-download', (event, item) => {
+    item.on('done', (event, state) => {
+      if (state === 'completed') {
+        console.log('mainWindow will-download');
+        // 文件下载完成，打开文件所在路径
+        const path = event.sender.getSavePath();
+        shell.showItemInFolder(path);
+      }
+    });
+  });
+  // }
 
   const { joinType, meetingNum, password, openCamera, openMic, nickName } =
     data;
@@ -435,7 +436,7 @@ function createWindow(data) {
         overrideBrowserWindowOptions: {
           ...commonOptions,
           width: 800,
-          height: 560,
+          height: 680,
           trafficLightPosition: {
             x: 10,
             y: 13,
@@ -448,8 +449,8 @@ function createWindow(data) {
         overrideBrowserWindowOptions: {
           ...commonOptions,
           titleBarStyle: 'default',
-          width: 520,
-          height: 350,
+          width: 498,
+          height: 548,
         },
       };
     } else if (url.includes('#/member')) {
@@ -479,6 +480,14 @@ function createWindow(data) {
           ...commonOptions,
           height: 300,
           width: 455,
+        },
+      };
+    } else if (url.includes('#/about')) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          ...commonOptions,
+          height: 460,
         },
       };
     }
@@ -699,15 +708,13 @@ function initMainWindowSize() {
   const nowDisplay = screen.getDisplayNearestPoint(mousePosition);
   const { x, y, width, height } = nowDisplay.workArea;
 
-  const _height = 670;
-
   mainWindow.setBounds({
     width: Math.round(MINI_WIDTH),
-    height: Math.round(_height),
+    height: Math.round(MINI_HEIGHT),
     x: Math.round(x + (width - MINI_WIDTH) / 2),
-    y: Math.round(y + (height - _height) / 2),
+    y: Math.round(y + (height - MINI_HEIGHT) / 2),
   });
-  mainWindow.setMinimumSize(MINI_WIDTH, 670);
+  mainWindow.setMinimumSize(MINI_WIDTH, MINI_HEIGHT);
 }
 
 // 设置主题色
@@ -755,7 +762,7 @@ app.whenReady().then(() => {
   initUpdateListener(beforeMeetingWindow, {}, `${app.name}/rooms`);
 
   app.on('render-process-gone', (event, webContents, details) => {
-    if (webContents.id) {
+    if (webContents.id && !beforeMeetingWindow?.isDestroyed()) {
       // 会中窗口崩溃了
       if (webContents.id === mainWindow?.webContents.id) {
         if (mainWindow && !mainWindow.isDestroyed()) {
@@ -825,9 +832,9 @@ app.whenReady().then(() => {
       return;
     }
     if (isOpen) {
-      mainWindow.setMinimumSize(MINI_WIDTH + 320, 670);
+      mainWindow.setMinimumSize(MINI_WIDTH + 320, MINI_HEIGHT);
     } else {
-      mainWindow.setMinimumSize(MINI_WIDTH, 670);
+      mainWindow.setMinimumSize(MINI_WIDTH, MINI_HEIGHT);
     }
 
     mainWindow?.webContents.send('openChatroomOrMemberList-reply', isOpen);
@@ -1169,9 +1176,15 @@ app.whenReady().then(() => {
     });
   });
 
+  ipcMain.on('inMeeting', () => {
+    inMeeting = true;
+    beforeMeetingWindow?.webContents.send('beforeMeeting', false);
+  });
+
   ipcMain.on('beforeEnterRoom', () => {
     inMeeting = false;
     beforeMeetingWindow?.showInactive();
+    beforeMeetingWindow?.webContents.send('beforeMeeting', true);
     mainWindow?.destroy();
     mainWindow = null;
     powerSaveBlockerId && powerSaveBlocker.stop(powerSaveBlockerId);
@@ -1205,8 +1218,8 @@ app.whenReady().then(() => {
     if (!data) {
       return;
     }
-
-    inMeeting = true;
+    console.log('enterRoom>>>>>>>>>>>>>>');
+    // inMeeting = true;
     alreadySetWidth = false;
 
     createWindow(data);
@@ -1221,7 +1234,6 @@ app.whenReady().then(() => {
     if (settingWindow) {
       closeSettingWindowHandle();
     }
-    mainWindow.setMinimumSize(MINI_WIDTH, 670 - MEETING_HEADER_HEIGHT);
     beforeMeetingWindow?.webContents.send('join-meeting-loading', true);
     mainWindow.webContents.once('dom-ready', () => {
       beforeMeetingWindow?.webContents.send('join-meeting-loading', false);
@@ -1321,7 +1333,11 @@ app.whenReady().then(() => {
         {
           label: '关于网易会议',
           click: () => {
-            console.log('关于网易会议');
+            if (inMeeting) {
+              mainWindow?.webContents.send('open-meeting-about');
+            } else {
+              beforeMeetingWindow.webContents.send('open-meeting-about');
+            }
           },
         },
         { type: 'separator' },
@@ -1376,9 +1392,10 @@ app.whenReady().then(() => {
             if (inMeeting) {
               mainWindow?.showInactive();
               mainWindow?.webContents.send('open-meeting-feedback');
+            } else {
+              beforeMeetingWindow.showInactive();
+              beforeMeetingWindow.webContents.send('open-meeting-feedback');
             }
-            beforeMeetingWindow.showInactive();
-            beforeMeetingWindow.webContents.send('open-meeting-feedback');
           },
         },
       ],

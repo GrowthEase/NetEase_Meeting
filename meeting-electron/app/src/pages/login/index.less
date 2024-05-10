@@ -2,11 +2,10 @@
 
 @media screen and (max-width: 590px) {
   .before-login {
-    width: 100% !important;
-    height: 100% !important;
+    width: 100%;
+    height: 100%;
   }
 }
-
 .before-login-wrap {
   display: flex;
   flex-direction: column;
@@ -27,9 +26,20 @@
   flex: 1;
   position: relative;
   align-items: center;
+  justify-content: center;
   flex-direction: column;
   box-sizing: border-box;
   padding: 0 28px;
+  height: 100%;
+  .before-login-content {
+    display: flex;
+    flex: 1;
+    position: relative;
+    align-items: center;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+  }
   .login-and-register-btn {
     margin-top: 110px;
   }
@@ -84,6 +94,7 @@
     display: block;
     width: 319px;
     height: 50px;
+    min-height: 50px;
     //border: 1px solid #337eff;
     border-radius: 25px;
     margin-bottom: 15px;
@@ -98,9 +109,10 @@
     color: #337eff;
   }
   .footer {
-    position: absolute;
+    // position: absolute;
     bottom: 40px;
     text-align: center;
+    margin-bottom: 40px;
     .footer-agreement {
       margin-bottom: 16px;
       color: #999999;
@@ -108,10 +120,11 @@
       display: flex;
       align-items: center;
       text-align: left;
-      padding: 0 28px;
+      justify-content: center;
       .text {
         display: inline-block;
         margin-left: 6px;
+        text-align: center;
       }
       a {
         color: #337eff;
@@ -216,5 +229,21 @@
         display: block;
       }
     }
+  }
+}
+
+@media screen and (max-width: 590px) {
+  .before-login-wrap {
+    width: 100%;
+    height: 100%;
+    box-shadow: none;
+  }
+  .before-login .login-panel .login-content,
+  .before-login .login-panel .input-container {
+    width: 100%;
+    margin: 0;
+  }
+  .before-login .login-panel .nemeeting-btn {
+    margin: 0 auto;
   }
 }

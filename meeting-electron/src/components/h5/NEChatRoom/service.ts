@@ -11,7 +11,9 @@ export function handleRecMsgService(msgs: NERoomChatMessage[]): any {
       }
       return (
         ['text', 'image', 'audio', 'video', 'file'].includes(msg.type) ||
-        (msg.type === 'notification' && msg.text)
+        (msg.type === 'notification' &&
+          msg.attach?.type &&
+          ['deleteChatroomMsg', 'historyMessage'].includes(msg.attach.type))
       )
     })
     .map((msg: any) => {

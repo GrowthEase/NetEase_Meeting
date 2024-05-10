@@ -1,4 +1,4 @@
-import { Button, Checkbox, DrawerProps, Dropdown, Input, MenuProps } from 'antd'
+import { Button, Checkbox, Dropdown, Input, MenuProps } from 'antd'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -18,14 +18,16 @@ import {
 } from '../../../types'
 import MemberItem from './MemberItem'
 
-import { NEWaitingRoomMember } from 'neroom-web-sdk/dist/types/types/interface'
 import { AutoSizer, List } from 'react-virtualized'
 import NEMeetingService from '../../../services/NEMeeting'
+import { NEMeetingInviteStatus } from '../../../types/type'
 import Modal from '../../common/Modal'
 import Toast from '../../common/toast'
 import UpdateUserNicknameModal from '../BeforeMeetingModal/UpdateUserNicknameModal'
 import './index.less'
+import InSipInvitingMemberItem from './InSipInvitingMemberItem'
 import WaitingRoomMemberItem from './WaitingRoomMemberItem'
+import { useUpdateEffect } from 'ahooks'
 
 interface MemberListFooterProps {
   meetingInfo: NEMeetingInfo
@@ -33,7 +35,7 @@ interface MemberListFooterProps {
   hostUuid?: string
   isOwner?: boolean
   isHostOrCoHost?: boolean
-  tab: 'room' | 'waitingRoom'
+  tab: 'room' | 'waitingRoom' | 'invite'
 }
 
 const MemberListFooter: React.FC<MemberListFooterProps> = ({
@@ -271,7 +273,7 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
           onKeyDown={(e) => e.preventDefault()}
         />
       </div> */}
-      {tab === 'room' ? (
+      {tab === 'room' || tab === 'invite' ? (
         aheadButtons.length === 0 ? null : (
           <div
             className={`${
@@ -336,53 +338,19 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
   )
 }
 
-interface MemberListProps extends DrawerProps {
-  memberList?: NEMember[]
-  meetingInfo?: NEMeetingInfo
-  waitingRoomInfo?: {
-    memberCount: number
-    isEnabledOnEntry: boolean
-    unReadMsgCount?: number
-  }
-  waitingRoomMemberList?: NEWaitingRoomMember[]
-  neMeeting?: NEMeetingService
-}
-
-const MemberList: React.FC<MemberListProps> = ({
-  memberList: initMemberList,
-  meetingInfo: initMeetingInfo,
-  waitingRoomInfo: initWaitingRoomInfo,
-  waitingRoomMemberList: initWaitingRoomMemberList,
-  neMeeting: initNeMeeting,
-  ...restProps
-}) => {
+const MemberList: React.FC = () => {
   const { t } = useTranslation()
-  const { memberList: memberListContext } = useMeetingInfoContext()
-  const { meetingInfo: meetingInfoContext } = useMeetingInfoContext()
-  const { neMeeting: neMeetingContext, eventEmitter } = useGlobalContext()
   const {
-    waitingRoomInfo: waitingRoomInfoContext,
-    memberList: waitingRoomMemberListContext,
-  } = useWaitingRoomContext()
+    meetingInfo,
+    memberList,
+    inInvitingMemberList: inSipInvitingMemberList,
+  } = useMeetingInfoContext()
+  const { neMeeting, eventEmitter } = useGlobalContext()
+  const { waitingRoomInfo, memberList: waitingRoomMemberList } =
+    useWaitingRoomContext()
   const scrollRef = useRef<HTMLDivElement>(null)
   const getWaitingRoomMemberRef = useRef(false)
 
-  const neMeeting = initNeMeeting || neMeetingContext
-
-  const [memberList, setMemberList] = useState(
-    initMemberList || memberListContext
-  )
-  const [meetingInfo, setMeetingInfo] = useState(
-    initMeetingInfo || meetingInfoContext
-  )
-
-  const [waitingRoomInfo, setWaitingRoomInfo] = useState(
-    initWaitingRoomInfo || waitingRoomInfoContext
-  )
-
-  const [waitingRoomMemberList, setWaitingRoomMemberList] = useState(
-    initWaitingRoomMemberList || waitingRoomMemberListContext
-  )
   const [updateUserNicknameModalOpen, setUpdateUserNicknameModalOpen] =
     useState(false)
 
@@ -393,34 +361,24 @@ const MemberList: React.FC<MemberListProps> = ({
   })
 
   useEffect(() => {
-    setMemberList(initMemberList || memberListContext)
-  }, [initMemberList, memberListContext])
-
-  useEffect(() => {
-    setMeetingInfo(initMeetingInfo || meetingInfoContext)
-  }, [initMeetingInfo, meetingInfoContext])
-
-  useEffect(() => {
-    setWaitingRoomInfo(initWaitingRoomInfo || waitingRoomInfoContext)
-  }, [initWaitingRoomInfo, waitingRoomInfoContext])
-
-  useEffect(() => {
-    setWaitingRoomMemberList(
-      initWaitingRoomMemberList || waitingRoomMemberListContext
-    )
-  }, [initWaitingRoomMemberList, waitingRoomMemberListContext])
-
-  useEffect(() => {
     eventEmitter?.on(
       MeetingEventType.changeMemberListTab,
-      (tab: 'room' | 'waitingRoom') => {
-        if (waitingRoomInfo.memberCount > 0) {
+      (tab: 'room' | 'waitingRoom' | 'invite') => {
+        if (tab === 'waitingRoom' && waitingRoomInfo.memberCount > 0) {
           neMeeting?.updateMeetingInfo({
             activeMemberManageTab: tab,
           })
+        } else if (
+          tab === 'invite' &&
+          inSipInvitingMemberList &&
+          inSipInvitingMemberList.length > 0
+        ) {
+          neMeeting?.updateMeetingInfo({
+            activeMemberManageTab: 'invite',
+          })
         } else {
           neMeeting?.updateMeetingInfo({
-            activeMemberManageTab: 'room',
+            // activeMemberManageTab: 'room',
           })
         }
       }
@@ -428,7 +386,7 @@ const MemberList: React.FC<MemberListProps> = ({
     return () => {
       eventEmitter?.off(MeetingEventType.changeMemberListTab)
     }
-  }, [waitingRoomInfo.memberCount])
+  }, [waitingRoomInfo.memberCount, inSipInvitingMemberList?.length])
 
   const { localMember } = meetingInfo
 
@@ -450,12 +408,13 @@ const MemberList: React.FC<MemberListProps> = ({
 
   useEffect(() => {
     // 如果是主持人或者联席主持人才有等候室tab
-    if (!isHostOrCoHost) {
+    if (localMember && localMember.role && !isHostOrCoHost) {
       neMeeting?.updateMeetingInfo({
         activeMemberManageTab: 'room',
       })
     }
-  }, [isHostOrCoHost])
+  }, [isHostOrCoHost, localMember])
+
   const [showMemberList, setShowMemberList] = useState<NEMember[]>([])
 
   useEffect(() => {
@@ -526,24 +485,75 @@ const MemberList: React.FC<MemberListProps> = ({
       : waitingRoomMemberList
   }, [searchName, waitingRoomMemberList])
 
-  function changeTab(tab: 'room' | 'waitingRoom') {
+  // 需要进行呼叫中>等待呼叫（按照选择顺序排）>未接听/已拒接>待入会
+  const inSipInvitingMemberListSort = useMemo(() => {
+    if (!inSipInvitingMemberList) {
+      return []
+    }
+    const calling: NEMember[] = []
+    const waiting: NEMember[] = []
+    const notAnswered: NEMember[] = []
+    const toBeInvited: NEMember[] = []
+    inSipInvitingMemberList.forEach((member) => {
+      if (member.inviteState === NEMeetingInviteStatus.calling) {
+        calling.push(member)
+      } else if (member.inviteState === NEMeetingInviteStatus.waitingCall) {
+        waiting.push(member)
+      } else if (
+        member.inviteState === NEMeetingInviteStatus.noAnswer ||
+        member.inviteState === NEMeetingInviteStatus.rejected
+      ) {
+        notAnswered.push(member)
+      } else {
+        toBeInvited.push(member)
+      }
+    })
+    return [...calling, ...waiting, ...notAnswered, ...toBeInvited]
+  }, [inSipInvitingMemberList])
+
+  const inSipInvitingMemberListFilter = useMemo(() => {
+    if (!inSipInvitingMemberListSort) {
+      return []
+    }
+    return searchName
+      ? inSipInvitingMemberListSort?.filter((member) =>
+          member.name.toLowerCase().includes(searchName.toLowerCase())
+        )
+      : inSipInvitingMemberListSort
+  }, [searchName, inSipInvitingMemberListSort])
+
+  function changeTab(tab: 'room' | 'waitingRoom' | 'invite') {
     neMeeting?.updateMeetingInfo({
       activeMemberManageTab: tab,
     })
   }
 
-  useEffect(() => {
-    if (!waitingRoomInfo.isEnabledOnEntry || waitingRoomInfo.memberCount == 0) {
-      neMeeting?.updateMeetingInfo({
-        activeMemberManageTab: 'room',
-      })
-    }
-  }, [waitingRoomInfo.isEnabledOnEntry, waitingRoomInfo.memberCount])
+  // useUpdateEffect(() => {
+  //   if (!waitingRoomInfo.isEnabledOnEntry || waitingRoomInfo.memberCount == 0) {
+  //     if (meetingInfo.activeMemberManageTab === 'waitingRoom') {
+  //       neMeeting?.updateMeetingInfo({
+  //         activeMemberManageTab: 'room',
+  //       })
+  //     }
+  //   }
+  // }, [waitingRoomInfo.isEnabledOnEntry, waitingRoomInfo.memberCount])
+
+  // useUpdateEffect(() => {
+  //   if (!inSipInvitingMemberList || inSipInvitingMemberList?.length == 0) {
+  //     if (meetingInfo.activeMemberManageTab === 'invite') {
+  //       neMeeting?.updateMeetingInfo({
+  //         activeMemberManageTab: 'room',
+  //       })
+  //     }
+  //   }
+  // }, [inSipInvitingMemberList?.length])
+
   useEffect(() => {
     if (meetingInfo.activeMemberManageTab === 'waitingRoom') {
       neMeeting?.updateWaitingRoomUnReadCount(0)
     }
   }, [meetingInfo.activeMemberManageTab])
+
   useEffect(() => {
     if (meetingInfo.activeMemberManageTab === 'waitingRoom') {
       const scrollElement = scrollRef.current
@@ -551,27 +561,23 @@ const MemberList: React.FC<MemberListProps> = ({
         return
       }
       function handleScroll() {
-        console.log('scroll')
         //@ts-ignore
         if (
           scrollElement &&
           scrollElement.scrollTop + scrollElement.clientHeight >=
             scrollElement.scrollHeight
         ) {
-          console.log(1, getWaitingRoomMemberRef.current, waitingRoomMemberList)
           if (
             getWaitingRoomMemberRef.current ||
             waitingRoomMemberList.length === 0
           ) {
             return
           }
-          console.log(2)
           const lastMember =
             waitingRoomMemberList[waitingRoomMemberList.length - 1]
           if (!lastMember) {
             return
           }
-          console.log(3)
           getWaitingRoomMemberRef.current = true
           neMeeting
             ?.waitingRoomGetMemberList?.(lastMember?.joinTime, 20, true)
@@ -649,6 +655,46 @@ const MemberList: React.FC<MemberListProps> = ({
     [waitingRoomMemberListFilter, meetingInfo.enableBlacklist]
   )
 
+  const inSipInvitingRowRenderer = useCallback(
+    ({ index, key, parent, style }) => {
+      if (!inSipInvitingMemberListFilter) {
+        return <div style={style} key={key}></div>
+      }
+      const member = inSipInvitingMemberListFilter[index]
+      console.log('inSipInvitingRowRenderer', member)
+      return (
+        <div style={style} key={key}>
+          <InSipInvitingMemberItem
+            neMeeting={neMeeting}
+            key={member.uuid}
+            data={member}
+          />
+        </div>
+      )
+    },
+    [inSipInvitingMemberListFilter]
+  )
+  const showWaitingTab = useMemo(() => {
+    return waitingRoomMemberList.length > 0 && waitingRoomInfo.memberCount > 0
+  }, [waitingRoomInfo.memberCount, waitingRoomMemberList.length])
+
+  const showSipInviteTab = useMemo(() => {
+    return inSipInvitingMemberList ? inSipInvitingMemberList.length > 0 : false
+  }, [inSipInvitingMemberList?.length])
+
+  const footerTab = useMemo(() => {
+    if (showWaitingTab && meetingInfo.activeMemberManageTab === 'waitingRoom') {
+      return 'waitingRoom'
+    } else if (
+      showSipInviteTab &&
+      meetingInfo.activeMemberManageTab === 'invite'
+    ) {
+      return 'invite'
+    } else {
+      return 'room'
+    }
+  }, [showWaitingTab, showSipInviteTab, meetingInfo.activeMemberManageTab])
+
   return (
     // <Drawer
     //   title={
@@ -690,27 +736,32 @@ const MemberList: React.FC<MemberListProps> = ({
         />
       </div>
 
-      {isHostOrCoHost &&
-        waitingRoomInfo.memberCount > 0 &&
-        waitingRoomMemberList.length > 0 && (
-          <div className="pd20">
-            <div className="nemeeting-member-list-tabs">
-              <div
-                className={`nemeeting-member-list-tab ${
-                  meetingInfo.activeMemberManageTab == 'room'
-                    ? 'nemeeting-member-list-tab-selected'
-                    : ''
-                }`}
-                onClick={() => changeTab('room')}
-              >
-                {t('inMeeting')}({memberList.length})
-              </div>
+      {isHostOrCoHost && (showWaitingTab || showSipInviteTab) && (
+        <div className="pd20">
+          <div className="nemeeting-member-list-tabs">
+            <div
+              className={`nemeeting-member-list-tab ${
+                meetingInfo.activeMemberManageTab == 'room' ||
+                (meetingInfo.activeMemberManageTab == 'waitingRoom' &&
+                  !showWaitingTab) ||
+                (!showSipInviteTab &&
+                  meetingInfo.activeMemberManageTab == 'invite')
+                  ? 'nemeeting-member-list-tab-selected'
+                  : ''
+              }`}
+              onClick={() => changeTab('room')}
+              title={t('inMeeting')}
+            >
+              {t('inMeeting')}({memberList.length})
+            </div>
+            {showWaitingTab && (
               <div
                 className={`nemeeting-member-list-tab ${
                   meetingInfo.activeMemberManageTab == 'waitingRoom'
                     ? 'nemeeting-member-list-tab-selected'
                     : ''
                 }`}
+                title={t('waitingRoom')}
                 onClick={() => changeTab('waitingRoom')}
               >
                 <span style={{ position: 'relative' }}>
@@ -720,12 +771,31 @@ const MemberList: React.FC<MemberListProps> = ({
                   )}
                 </span>
               </div>
-            </div>
+            )}
+
+            {showSipInviteTab && (
+              <div
+                className={`nemeeting-member-list-tab ${
+                  meetingInfo.activeMemberManageTab == 'invite'
+                    ? 'nemeeting-member-list-tab-selected'
+                    : ''
+                }`}
+                onClick={() => changeTab('invite')}
+                title={t('participantNotJoined')}
+              >
+                {t('participantNotJoined')}({inSipInvitingMemberList?.length})
+              </div>
+            )}
           </div>
-        )}
+        </div>
+      )}
 
       <div className="member-list-content" ref={scrollRef}>
-        {meetingInfo.activeMemberManageTab === 'room' && (
+        {(meetingInfo.activeMemberManageTab === 'room' ||
+          (meetingInfo.activeMemberManageTab === 'invite' &&
+            !showSipInviteTab) ||
+          (meetingInfo.activeMemberManageTab === 'waitingRoom' &&
+            !showWaitingTab)) && (
           <AutoSizer>
             {({ height, width }) => (
               <List
@@ -739,15 +809,30 @@ const MemberList: React.FC<MemberListProps> = ({
             )}
           </AutoSizer>
         )}
-        {meetingInfo.activeMemberManageTab === 'waitingRoom' && (
+        {meetingInfo.activeMemberManageTab === 'waitingRoom' &&
+          showWaitingTab && (
+            <AutoSizer>
+              {({ height, width }) => (
+                <List
+                  height={height}
+                  overscanRowCount={10}
+                  rowCount={waitingRoomMemberListFilter.length}
+                  rowHeight={46}
+                  rowRenderer={waitingRoomRowRenderer}
+                  width={width}
+                />
+              )}
+            </AutoSizer>
+          )}
+        {meetingInfo.activeMemberManageTab === 'invite' && showSipInviteTab && (
           <AutoSizer>
             {({ height, width }) => (
               <List
                 height={height}
                 overscanRowCount={10}
-                rowCount={waitingRoomMemberListFilter.length}
+                rowCount={inSipInvitingMemberListFilter?.length || 0}
                 rowHeight={46}
-                rowRenderer={waitingRoomRowRenderer}
+                rowRenderer={inSipInvitingRowRenderer}
                 width={width}
               />
             )}
@@ -803,7 +888,7 @@ const MemberList: React.FC<MemberListProps> = ({
       </div>
       {isHostOrCoHost || isOwner ? (
         <MemberListFooter
-          tab={meetingInfo.activeMemberManageTab}
+          tab={footerTab}
           meetingInfo={meetingInfo}
           neMeeting={neMeeting}
           isHostOrCoHost={isHostOrCoHost}

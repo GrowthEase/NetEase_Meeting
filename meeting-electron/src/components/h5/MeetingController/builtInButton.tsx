@@ -1,5 +1,6 @@
 import { NEMember, Role } from '../../../types'
 import './index.less'
+import { useTranslation } from 'react-i18next'
 
 // 音频管理组件
 type AudioButtonProps = {
@@ -13,6 +14,7 @@ const AudioButton: React.FC<AudioButtonProps> = ({
   item,
   onClick,
 }) => {
+  const { t } = useTranslation()
   return (
     <div
       key={item.id}
@@ -53,8 +55,8 @@ const AudioButton: React.FC<AudioButtonProps> = ({
       {
         <div className="custom-text">
           {localMember?.isAudioOn
-            ? item.btnConfig?.[0]?.text || '静音'
-            : item.btnConfig?.[1]?.text || '取消静音'}
+            ? item.btnConfig?.[0]?.text || t('participantMute')
+            : item.btnConfig?.[1]?.text || t('participantUnmute')}
         </div>
       }
     </div>
@@ -73,6 +75,7 @@ const VideoButton: React.FC<VideoButtonProps> = ({
   item,
   onClick,
 }) => {
+  const { t } = useTranslation()
   return (
     <div
       key={item.id}
@@ -113,8 +116,8 @@ const VideoButton: React.FC<VideoButtonProps> = ({
       {
         <div className="custom-text">
           {localMember?.isVideoOn
-            ? item.btnConfig?.[0]?.text || '关闭摄像头'
-            : item.btnConfig?.[1]?.text || '打开摄像头'}
+            ? item.btnConfig?.[0]?.text || t('participantStopVideo')
+            : item.btnConfig?.[1]?.text || t('participantStartVideo')}
         </div>
       }
     </div>
@@ -136,6 +139,7 @@ const MemberButton: React.FC<MemberButtonProps> = ({
   onClick,
   onClickHandsUpBtn,
 }) => {
+  const { t } = useTranslation()
   return (
     <div className="relative controller-item">
       {/*举手图标显示`*/}
@@ -148,7 +152,7 @@ const MemberButton: React.FC<MemberButtonProps> = ({
         >
           <i className="icon-tool iconfont iconraisehands1x"></i>
           <span className="hands-arrow"></span>
-          <span className="hands-arrow-text">举手中</span>
+          <span className="hands-arrow-text">{t('inHandsUp')}</span>
         </span>
       )}
       <div
@@ -169,8 +173,8 @@ const MemberButton: React.FC<MemberButtonProps> = ({
         <div className="custom-text">
           {item.btnConfig?.text ||
             (localMember.role === Role.host || localMember.role === Role.coHost
-              ? '管理参会者'
-              : '参会者')}
+              ? t('memberListBtnForHost')
+              : t('memberListBtnForNormal'))}
         </div>
       </div>
     </div>
@@ -188,6 +192,7 @@ const ChatButton: React.FC<ChatButtonProps> = ({
   unReadCount,
   item,
 }) => {
+  const { t } = useTranslation()
   return (
     <div
       className="relative controller-item"
@@ -209,7 +214,7 @@ const ChatButton: React.FC<ChatButtonProps> = ({
         <i className="icon-tool iconfont iconshipin-liaotian"></i>
       )}
       {/* 按钮文案 */}
-      <div className="custom-text">{item.btnConfig?.text || '聊天'}</div>
+      <div className="custom-text">{item.btnConfig?.text || t('chat')}</div>
     </div>
   )
 }

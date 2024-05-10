@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NPS } from '../../../../src/components/web/NPS';
 import './index.less';
-import { ConfigProvider } from 'antd';
-import zhCN from 'antd/locale/zh_CN';
-import { history, useLocation } from 'umi';
 import PCTopButtons from '../../../../src/components/common/PCTopButtons';
 import { useTranslation } from 'react-i18next';
 

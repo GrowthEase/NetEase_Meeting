@@ -1,6 +1,6 @@
 import { NEMemberVolumeInfo } from 'neroom-web-sdk/dist/types/platform/web/type'
-import { useContext, useEffect, useRef, useState } from 'react'
-import { useGlobalContext, useMeetingInfoContext } from '../store'
+import { useEffect, useRef, useState } from 'react'
+import { useGlobalContext } from '../store'
 import { EventType } from '../types'
 import { NERoomMember } from 'neroom-web-sdk'
 

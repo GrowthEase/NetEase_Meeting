@@ -1,10 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Setting, { SettingTabType } from '../../web/Setting/Setting'
 import { MeetingSetting } from '../../../types'
-import NERoom, {
-  NEPreviewController,
-  NEPreviewRoomContext,
-} from 'neroom-web-sdk'
+import { NEPreviewController, NEPreviewRoomContext } from 'neroom-web-sdk'
 import eleIpc from '../../../services/electron'
 import { IPCEvent } from '../../../../app/src/types'
 import { LOCALSTORAGE_MEETING_SETTING } from '../../../../app/src/config'

@@ -1,8 +1,190 @@
 .invite-modal .nemeeting-modal-body {
   padding: 0;
 }
-.invite-info-content {
-  padding: 0 40px;
+.nemeeting-invite-content {
+  height: 490px;
+  display: flex;
+  flex-direction: column;
+  .nemeeting-tabs-nav {
+    height: 40px;
+  }
+  .nemeeting-invite-SIP-wrap {
+    height: 100%;
+    width: 100%;
+    .nemeeting-tabs {
+      height: 100%;
+    }
+    .nemeeting-tabs-content {
+      height: 100%;
+    }
+    .nemeeting-tabs-tabpane {
+      height: 100%;
+    }
+  }
+  .nemeeting-SIP-call-icon-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 32px;
+    margin-top: 59px;
+    align-items: center;
+    flex-direction: column;
+  }
+  .nemeeting-SIP-call-icon {
+    width: 52px;
+    height: 52px;
+    cursor: pointer;
+  }
+  .nemeeting-SIP-calling-num {
+    font-size: 28px;
+    color: #333;
+    text-align: center;
+    line-height: 33px;
+  }
+
+  .nemeeting-SIP-calling-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .nemeeting-SIP-duration-time {
+    color: #333;
+    font-size: 24px;
+    font-weight: 500;
+    margin-top: 12px;
+    text-align: center;
+  }
+  .nemeeting-SIP-calling-info-name {
+    margin-top: 8px;
+  }
+  .nemeeting-invite-SIP {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    padding: 0 60px;
+    box-sizing: border-box;
+    .nemeeting-SIP-calling-failed {
+      color: #F24957;
+    }
+  }
+  .nemeeting-SIP-batch-call-btn-left {
+    margin-right: 30px;
+  }
+  .nemeeting-SIP-batch-call-btn-wrap, .nemeeting-address-book-invitation-btn-wrap{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .nemeeting-SIP-batch-call-btn {
+    width: 147px
+  }
+  .nemeeting-tab-content {
+    flex: 1;
+  }
+  .nemeeting-tab-content-small {
+    padding-left: 60px;
+    padding-right: 60px;
+    box-sizing: border-box;
+  }
+  .nemeeting-tab-label-name {
+    min-width: 100px;
+    text-align: center;
+  }
+  .nemeeting-SIP-tab {
+    margin: 8px 60px 12px 60px;
+  }
+  .nemeeting-SIP-btn {
+    width: 100%;
+    margin-bottom: 39px;
+  }
+  .nemeeting-sip-call-status {
+    text-align: center;
+    font-size: 14px;
+    color: #9DA0A6;
+    margin-top: 8px;
+  }
+  .nemeeting-sip-call-num {
+    text-align: center;
+    font-size: 14px;
+    color: #B4B8BF;
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .nemeeting-SIP-item {
+    margin-bottom: 24px;
+  }
+  .nemeeting-SIP-item-title {
+    margin-bottom: 20px;
+  }
+  .nemeeting-sip-phone-tip {
+    color: #F24957;
+    font-size: 12px;
+    margin-top: 12px;
+  }
+  .nmemeeting-SIP-phone-select-wrap {
+    display: flex;
+    align-content: center;
+    position: relative;
+    .nemeeting-select-outlined.nemeeting-select-status-error:not(.nemeeting-select-customize-input) .nemeeting-select-selector {
+      border-top: none;
+      border-right: none;
+      border-left: none;
+      border-bottom: 1px solid #ff4d4f;
+    }
+  }
+  .nemeeting-SIP-phone-num {
+    color: #333;
+    width: 36px;
+    display: flex;
+    padding-right: 9px;
+    align-content: center;
+    border-right: 1px solid #dcdfe5;
+    height: 20px;
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+
+  }
+  .nemeeting-SIP-calling {
+    color: #676B73;
+    text-align: center;
+    margin-top: 16px;
+  }
+  .nemeeting-SIP-call-other-wrap {
+    display: flex;
+    align-content: center;
+    justify-content: center;
+  }
+  .nemeeting-SIP-call-other {
+    color: #337eff;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .nemeeting-SIP-phone-select {
+    flex: 1;
+    .nemeeting-select-selector {
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      outline: none;
+      box-shadow: none!important;
+      border-radius: 0;
+      .nemeeting-select-selection-item {
+        margin-left: 48px;
+      }
+      .nemeeting-select-selection-search-input {
+        margin-left: 48px;
+      }
+    }
+  }
 }
 .invite-info-item {
   width: 100%;
@@ -47,6 +229,83 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 60px;
   border-top: 1px solid #ebedf0;
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  .invite-info-copy-button {
+    width: 326px;
+  }
+}
+.nemeeting-connect-member-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  .nemeeting-connect-member-item-title {
+    font-size: 12px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 180px;
+  }
+  .nemeeting-connect-member-item-title-tip {
+    color: #B3B7BC;
+    margin-left: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: pre;
+  }
+  .nemeeting-connect-member-item-name {
+    margin-left: 8px;
+    line-height: 14px;
+  }
+  .nemeeting-connect-member-item-close {
+    cursor: pointer;
+    color: rgba(60, 60, 67, 0.6);
+  }
+
+}
+.nemeeting-SIP-search {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  .nemeeting-SIP-search-content {
+    display: flex;
+    align-items: center;
+  }
+  .nemeeting-SIP-search-name-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-left: 8px;
+  }
+  .nemeeting-SIP-search-dept {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: pre;
+    max-width: 150px;
+    font-size: 12px;
+    color: #B3B7BC;
+  }
+
+  .nemeeting-SIP-search-name {
+    max-width: 150px;
+    color: #333;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: pre;
+  }
+  .nemeeting-SIP-search-phone {
+    font-size: 14px;
+    color: #222;
+  }
+}
+
+.nemeeting-address-book-invitation {
+  margin-top: 8px;
+  .nemeeting-address-book-invitation-btn {
+    width: 326px;
+  }
 }

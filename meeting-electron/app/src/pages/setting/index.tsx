@@ -1,12 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import PCTopButtons from '../../../../src/components/common/PCTopButtons';
 import SettingWeb from '../../../../src/components/electron/Setting/SettingWeb';
 import Styles from './index.less';
 import { ConfigProvider } from 'antd';
-import antd_zh_CH from 'antd/locale/zh_CN';
 import { useTranslation } from 'react-i18next';
 import { NEPreviewController, NEPreviewRoomContext } from 'neroom-web-sdk';
-import { useLocation } from 'umi';
 import { SettingTabType } from '../../../../src/components/web/Setting/Setting';
 const antdPrefixCls = 'nemeeting';
 
@@ -56,7 +54,7 @@ export default function IndexPage() {
               args: args,
             },
           },
-          '*',
+          parentWindow.origin,
         );
         const handleMessage = (e: MessageEvent) => {
           const { event, payload } = e.data;
@@ -74,24 +72,26 @@ export default function IndexPage() {
       });
     };
   }
-  const previewController = new Proxy(
-    {},
-    {
-      get: function (_, propKey) {
-        return proxyHandle(propKey);
+  const previewController = useMemo(() => {
+    return new Proxy(
+      {},
+      {
+        get: function (_, propKey) {
+          return proxyHandle(propKey);
+        },
       },
-    },
-  ) as NEPreviewController;
-
-  const previewContext = new Proxy(
-    {},
-    {
-      get: function (_, propKey) {
-        return proxyHandle(propKey);
+    ) as NEPreviewController;
+  }, []);
+  const previewContext = useMemo(() => {
+    return new Proxy(
+      {},
+      {
+        get: function (_, propKey) {
+          return proxyHandle(propKey);
+        },
       },
-    },
-  ) as NEPreviewRoomContext;
-
+    ) as NEPreviewRoomContext;
+  }, []);
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data;

@@ -1,4 +1,9 @@
-import WebRoomkit, { NEResult, NERoomLiveState } from 'neroom-web-sdk'
+import WebRoomkit, {
+  NEResult,
+  NERoomLiveState,
+  NERoomMemberInviteState,
+  NERoomMemberInviteType,
+} from 'neroom-web-sdk'
 import { NECustomSessionMessage } from 'neroom-web-sdk/dist/types/types/messageChannelService'
 import NEMeetingService from '../services/NEMeeting'
 import {
@@ -10,6 +15,7 @@ import {
   RecordState,
   WatermarkInfo,
 } from './innerType'
+import NEMeetingInviteService from '../services/NEMeetingInviteService'
 
 export interface NEMember {
   /**
@@ -68,6 +74,11 @@ export interface NEMember {
    */
   clientType: NEClientType
   /**
+   * 当前成员邀请状态
+   */
+  inviteState: NEMeetingInviteStatus | NERoomMemberInviteState
+  inviteType?: NERoomMemberInviteType
+  /**
    * @ignore 不对外暴露
    */
   rtcUid?: number
@@ -80,7 +91,7 @@ export interface NEMember {
   avatar?: string
 }
 
-export enum NEClientType {
+export enum NEClientInnerType {
   WEB = 'web',
   ANDROID = 'android',
   IOS = 'ios',
@@ -89,6 +100,16 @@ export enum NEClientType {
   MAC = 'mac',
   SIP = 'SIP',
   UNKNOWN = 'unknown',
+}
+export enum NEClientType {
+  UNKNOWN,
+  IOS,
+  ANDROID,
+  PC,
+  WEB,
+  SIP,
+  MAC,
+  MINIAPP,
 }
 export enum NEMeetingRole {
   /** 参会者 */
@@ -191,6 +212,14 @@ export interface NEMeetingInfo extends NEMeetingSDKInfo {
    */
   enableVideoMirror?: boolean
   /**
+   * 画廊模式下，最大画面数量
+   */
+  galleryModeMaxCount?: number
+  /**
+   * 本地画面排序
+   */
+  localViewOrder?: string
+  /**
    * 是否显示会议持续时间，默认为false 不显示
    */
   showDurationTime?: boolean
@@ -219,10 +248,17 @@ export interface NEMeetingInfo extends NEMeetingSDKInfo {
    * 通知消息列表
    */
   notificationMessages: Array<
-    NECustomSessionMessage & { unRead: boolean; beNotified: boolean }
+    NECustomSessionMessage & {
+      /** 是否已读 */
+      unRead: boolean
+      /** 是否已经弹出通知 */
+      beNotified: boolean
+      /** 是否在通知中心展示 */
+      noShowInNotificationCenter: boolean
+    }
   >
   // 点击成员列表内部tab
-  activeMemberManageTab: 'waitingRoom' | 'room'
+  activeMemberManageTab: 'waitingRoom' | 'room' | 'invite'
   /**
    * 开发模式，展示分辨率
    */
@@ -280,6 +316,10 @@ export interface NEMeetingInfo extends NEMeetingSDKInfo {
    * 私聊对象
    */
   privateChatMemberId?: string
+  /** 配置会议中是否展示通知中心菜单，默认展示。 */
+  noNotifyCenter?: boolean
+  /** 配置会议中是否展示 web 小应用，如签到应用。 默认会拉取小应用列表并展示。 */
+  noWebApps?: boolean
 }
 
 export interface NEMeetingSDKInfo {
@@ -314,11 +354,25 @@ export interface NEMeetingSDKInfo {
   videoOff: AttendeeOffType
   isLocked: boolean
   inWaitingRoom?: boolean
+  /**
+   * 远端画面排序
+   */
+  remoteViewOrder?: string
+  /**
+   * 是否是预约会议 0否 1 周期会议 2 预约会议
+   */
+  isScheduledMeeting?: number
+  /**
+   * 预约会议中保存的会议视图排序
+   */
+  scheduledMeetingViewOrder?: string
   liveConfig: {
     liveAddress: string
   }
   /** 2表示锁定，1解除锁定 */
   liveState?: NERoomLiveState
+  /** 房间最大人数 */
+  maxMembers?: number
   remainingSeconds?: number
   /**
    * 会议录制状态
@@ -329,9 +383,14 @@ export interface NEMeetingSDKInfo {
   enableBlacklist?: boolean
   meetingChatPermission?: NEChatPermission
   waitingRoomChatPermission?: NEWaitingRoomChatPermission
+  /**
+   * 访客入会
+   */
+  enableGuestJoin?: boolean
 }
 export interface NEMeetingSDK {
   memberList: NEMember[]
+  inInvitingMemberList: NEMember[]
   meetingInfo: NEMeetingSDKInfo
 }
 export interface NEMeeting {
@@ -483,6 +542,7 @@ export type LoginOptions = {
   accountId: string
   accountToken: string
   isTemporary?: boolean
+  authType?: string
   loginType?: number
 }
 
@@ -722,6 +782,15 @@ export interface JoinOptions {
     email?: string
     jobNumber?: string
   }
+  /** 配置会议中是否展示通知中心菜单，默认展示。 */
+  noNotifyCenter?: boolean
+  /** 配置会议中是否展示 web 小应用，如签到应用。 默认会拉取小应用列表并展示。 */
+  noWebApps?: boolean
+
+  /**
+   * h5端是否显示共享者的摄像头画面
+   */
+  showScreenShareUserVideo?: boolean
 }
 
 export enum NEMeetingIdDisplayOption {
@@ -747,6 +816,8 @@ export enum Role {
   coHost = 'cohost',
   /** 影子用户 */
   observer = 'observer',
+  /** 访客 */
+  guest = 'guest',
 }
 /**
  * 视频分辨率
@@ -858,6 +929,8 @@ export interface NEMeetingKit {
    *@ignore
    */
   neMeeting?: NEMeetingService
+
+  inviteService?: NEMeetingInviteService
   /**
    *@ignore
    */
@@ -964,6 +1037,12 @@ export interface NEMeetingKit {
    */
   join: (options: JoinOptions, callback: (e?: any) => void) => void
   /**
+   * 通过邀请会议接口
+   * @param options 相应配置参数
+   * @param callback 接口回调
+   */
+  acceptInvite: (options: JoinOptions, callback: (e?: any) => void) => void
+  /**
    * 动态更新自定义按钮
    * @param options
    */
@@ -1069,7 +1148,7 @@ export enum NEMeetingLeaveType {
   kICK_BY_SELF = 13,
 }
 
-export default interface NEMeetingKitAction {
+export interface NEMeetingKitAction {
   actions: NEMeetingKit
 }
 
@@ -1239,4 +1318,30 @@ export interface NERecordFileInfo {
   pieceIndex: number
   userUuid?: string
   nickname?: string
+}
+export enum NEMeetingInviteStatus {
+  /**
+   * 未知
+   */
+  unknown,
+
+  waitingCall,
+  calling,
+  rejected,
+  noAnswer,
+  error,
+  removed,
+  canceled,
+  waitingJoin,
+}
+
+export interface NEMeetingScheduledMember {
+  userUuid: string
+  role: Role
+}
+
+export interface NEMeetingInviteInfo {
+  inviterName?: string
+  inviterIcon?: string
+  subject?: string
 }

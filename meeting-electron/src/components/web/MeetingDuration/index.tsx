@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import classNames from 'classnames'
 import './index.less'
+import { meetingDuration } from '../../../utils'
 
 interface MeetingDurationProps {
   className?: string
@@ -24,21 +25,6 @@ const MeetingDuration: React.FC<MeetingDurationProps> = React.memo(
         timerRef.current = undefined
       }
     }, [])
-    function meetingDuration(startTime: number): string {
-      const now = new Date().getTime()
-      const duration = now - startTime
-      const hours = Math.floor(duration / (1000 * 60 * 60))
-      const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60))
-      const seconds = Math.floor((duration % (1000 * 60)) / 1000)
-      let durationString = ''
-      if (hours >= 1) {
-        durationString += `${hours.toString().padStart(2, '0')}:`
-      }
-      durationString += `${minutes.toString().padStart(2, '0')}:${seconds
-        .toString()
-        .padStart(2, '0')}`
-      return durationString
-    }
 
     return (
       <div className={classNames('nemeeting-duration', className)}>

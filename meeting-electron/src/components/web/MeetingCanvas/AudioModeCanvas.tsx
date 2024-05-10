@@ -6,10 +6,12 @@ import { Swiper as SwiperClass } from 'swiper/types'
 import { Navigation } from 'swiper'
 import { debounce } from '../../../utils'
 import classNames from 'classnames'
+import useAudioMode from '../../../hooks/useAudioMode'
 
 interface AudioModeCanvasProps {
   meetingInfo: NEMeetingInfo
   memberList: NEMember[]
+  onCallClick?: (member: NEMember) => void
 }
 
 const defaultColumnWidth = 102
@@ -18,16 +20,25 @@ const defaultColumnHeight = 128
 const AudioModeCanvas: React.FC<AudioModeCanvasProps> = ({
   memberList,
   meetingInfo,
+  onCallClick,
 }) => {
   const audioModeRef = useRef<HTMLDivElement | null>(null)
   const audioModeWrapRef = useRef<HTMLDivElement | null>(null)
-  const swiperInstanceRef = useRef<SwiperClass | null>(null)
-  const [activeIndex, setActiveIndex] = useState(0)
   const [preAndNextBtnOffset, setPreAndNextBtnOffset] = useState(0)
 
   // const masonryRef = useRef<any>(null)
-  const [columnCount, setColumnCount] = useState(0)
-  const [lineCount, setLineCount] = useState(0)
+
+  const {
+    groupMemberList,
+    activeIndex,
+    setColumnCount,
+    setLineCount,
+    setActiveIndex,
+    swiperInstanceRef,
+  } = useAudioMode({
+    meetingInfo,
+    memberList,
+  })
 
   const calculateColumnCountAndLineCount = useCallback(
     (width: number, height: number) => {
@@ -66,12 +77,6 @@ const AudioModeCanvas: React.FC<AudioModeCanvasProps> = ({
         lineCount = 5
       }
       setLineCount(lineCount)
-
-      // const columnCount = Math.max(Math.floor(width / defaultColumnWidth), 1)
-      // setColumnCount(columnCount)
-      // // 总共有多少行
-      // const lines = Math.max(Math.floor(height / defaultColumnHeight), 1)
-      // setLineCount(lines)
     },
     []
   )
@@ -102,53 +107,6 @@ const AudioModeCanvas: React.FC<AudioModeCanvasProps> = ({
       }
     }
   }, [onResize])
-
-  function convertTo2DArray(
-    arr: NEMember[],
-    lineCount: number,
-    columnCount: number
-  ): Array<Array<NEMember[]>> {
-    const result: Array<Array<NEMember[]>> = []
-    if (columnCount <= 0 || lineCount <= 0) {
-      return result
-    }
-    let pageIndex = 0
-    while (pageIndex * lineCount * columnCount < arr.length) {
-      const page: Array<NEMember[]> = []
-      for (
-        let i = 0;
-        i < lineCount && (pageIndex * lineCount + i) * columnCount < arr.length;
-        i++
-      ) {
-        const row = arr.slice(
-          (pageIndex * lineCount + i) * columnCount,
-          (pageIndex * lineCount + i + 1) * columnCount
-        )
-        page.push(row)
-      }
-      result.push(page)
-      pageIndex++
-    }
-    return result
-  }
-
-  const groupMemberList = useMemo(() => {
-    const res = convertTo2DArray(memberList, lineCount, columnCount)
-    if (swiperInstanceRef.current && !swiperInstanceRef.current.destroyed) {
-      swiperInstanceRef.current?.slideTo(0)
-    }
-    return res
-  }, [columnCount, lineCount, memberList])
-
-  useEffect(() => {
-    if (activeIndex > groupMemberList.length - 1) {
-      const _activeIndex = Math.max(groupMemberList.length - 1, 0)
-      if (swiperInstanceRef.current && !swiperInstanceRef.current.destroyed) {
-        swiperInstanceRef.current?.slideTo(_activeIndex)
-      }
-      setActiveIndex(_activeIndex)
-    }
-  }, [groupMemberList.length, activeIndex])
 
   return (
     <div
@@ -218,6 +176,7 @@ const AudioModeCanvas: React.FC<AudioModeCanvasProps> = ({
                             isMySelf={member.uuid === meetingInfo.myUuid}
                             key={member.uuid}
                             className={`h-full text-white nemeeting-video-card video-card card-for-1`}
+                            onCallClick={onCallClick}
                             member={member}
                             style={{
                               height: defaultColumnHeight + 'px',

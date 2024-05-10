@@ -15,7 +15,7 @@ export class IntervalEvent extends IEvent {
       framework: window.ipcRenderer
         ? 'Electron-native'
         : // @ts-ignore
-        process.env.PLATFORM === 'h5'
+        process.env.PLATFORM === 'h5' || window.h5App
         ? 'H5'
         : '',
     })

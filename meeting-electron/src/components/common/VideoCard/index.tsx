@@ -25,15 +25,15 @@ import AudioIcon from '../AudioIcon'
 import './index.less'
 
 import { debounce, substringByByte3 } from '../../../utils'
-import UserAvatar from '../Avatar'
-import AudioCard from './audioCard'
 import { worker } from '../../web/Meeting/Meeting'
+import UserAvatar from '../Avatar'
+import Toast from '../toast'
+import AudioCard from './audioCard'
 
 interface VideoCardProps {
   isMySelf: boolean
   member: NEMember
   isMain: boolean
-  sliderMembersLength?: number
   streamType?: 0 | 1
   type?: 'video' | 'screen'
   isSubscribeVideo?: boolean // 是否订阅视频流
@@ -51,13 +51,13 @@ interface VideoCardProps {
   avatarSize?: AvatarSize
   isAudioMode?: boolean
   onDoubleClick?: (member: NEMember) => void
-  unsubscribeMembersTimerMap?: MutableRefObject<Record<string, any>>
+  noPin?: boolean
+  onCallClick?: (member: NEMember) => void
 }
 
 const VideoCard: React.FC<VideoCardProps> = (props) => {
   const {
     streamType = 0,
-    sliderMembersLength,
     member,
     className,
     onClick,
@@ -72,7 +72,8 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     avatarSize,
     isAudioMode,
     onDoubleClick,
-    unsubscribeMembersTimerMap,
+    noPin,
+    onCallClick,
   } = props
   const { t } = useTranslation()
   const type = props.type || 'video'
@@ -127,14 +128,6 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
             streamType === 0 ? '大流' : '小流'
           )
           neMeeting?.subscribeRemoteVideoStream(member.uuid, streamType)
-          if (
-            unsubscribeMembersTimerMap &&
-            unsubscribeMembersTimerMap.current[member.uuid]
-          ) {
-            clearTimeout(unsubscribeMembersTimerMap.current[member.uuid])
-            unsubscribeMembersTimerMap.current[member.uuid] = null
-            delete unsubscribeMembersTimerMap.current[member.uuid]
-          }
         },
         window.isElectronNative ? 100 : 0
       )
@@ -166,9 +159,13 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
   ])
   const canShowMainPinBtn = useMemo(() => {
     return (
-      isMain && !meetingInfo.focusUuid && type != 'screen' && member.isVideoOn
+      isMain &&
+      !meetingInfo.focusUuid &&
+      type != 'screen' &&
+      member.isVideoOn &&
+      !noPin
     )
-  }, [meetingInfo.focusUuid, isMain, type, member.isVideoOn])
+  }, [meetingInfo.focusUuid, isMain, type, member.isVideoOn, noPin])
   const playRemoteSubVideo = () => {
     if (isMySelf || type !== 'screen') {
       return
@@ -208,11 +205,17 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
         //  第一次进入会议，且不是 Electron
         // if (!window.isElectronNative) {
         const isHost = member.role === Role.host || member.role === Role.coHost
+        console.warn(
+          'mounted>>>>>>',
+          meetingInfo.isUnMutedVideo,
+          meetingInfo.videoOff
+        )
         // 如果开启音视频进入会议
         if (
           meetingInfo.isUnMutedVideo &&
           (meetingInfo.videoOff === AttendeeOffType.disable || isHost)
         ) {
+          console.warn('开启视频')
           neMeeting?.unmuteLocalVideo()
         }
 
@@ -241,10 +244,10 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
           if (isSubscribeVideo) {
             playRemoteVideo()
           } else {
-            timer.current = setTimeout(() => {
-              neMeeting?.unsubscribeRemoteVideoStream(member.uuid, streamType)
-              timer.current = null
-            }, 5000)
+            // timer.current = setTimeout(() => {
+            //   neMeeting?.unsubscribeRemoteVideoStream(member.uuid, streamType)
+            //   timer.current = null
+            // }, 5000)
             // neMeeting?.rtcController?.unsubscribeRemoteVideoStream(
             //   member.uuid,
             //   streamType
@@ -264,10 +267,10 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     }
     if (member.isVideoOn) {
       if (!isSubscribeVideo) {
-        timer.current = setTimeout(() => {
-          neMeeting?.unsubscribeRemoteVideoStream(member.uuid, streamType)
-          timer.current = null
-        }, 10000)
+        // timer.current = setTimeout(() => {
+        //   neMeeting?.unsubscribeRemoteVideoStream(member.uuid, streamType)
+        //   timer.current = null
+        // }, 10000)
       } else {
         if (timer.current) {
           clearTimeout(timer.current)
@@ -293,13 +296,13 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
           if (isSubscribeVideo) {
             playRemoteVideo()
           } else {
-            neMeeting?.unsubscribeRemoteVideoStream(member.uuid, streamType)
+            // neMeeting?.unsubscribeRemoteVideoStream(member.uuid, streamType)
           }
         }
       } else {
         // 非本端取消订阅
-        !isMySelf &&
-          neMeeting?.unsubscribeRemoteVideoStream(member.uuid, streamType)
+        // !isMySelf &&
+        // neMeeting?.unsubscribeRemoteVideoStream(member.uuid, streamType)
       }
     }
   })
@@ -414,15 +417,17 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     onDoubleClick?.(member)
   }
 
-  const handleVideoFrame = useCallback(
-    (canvas) => {
-      return (uuid, bSubVideo, data, _, width, height) => {
-        if (uuid === member.uuid) {
-          if (
-            (bSubVideo && type === 'screen') ||
-            (!bSubVideo && type === 'video')
-          ) {
-            if (canvas && viewRef.current) {
+  const handleVideoFrame = useCallback(() => {
+    return (uuid, bSubVideo, data, _, width, height) => {
+      if (uuid === member.uuid) {
+        if (
+          (bSubVideo && type === 'screen') ||
+          (!bSubVideo && type === 'video')
+        ) {
+          if (viewRef.current) {
+            // 性能优化
+            const canvas = canvasRef.current
+            if (canvas) {
               const viewWidth = viewRef.current.clientWidth
               const viewHeight = viewRef.current.clientHeight
               if (viewWidth / (width / height) > viewHeight) {
@@ -433,15 +438,14 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
                 canvas.style.height = `${viewWidth / (width / height)}px`
               }
             }
-            resolutionWidthRef.current = width
-            resolutionHeightRef.current = height
-            refreshRateCountRef.current++
           }
+          resolutionWidthRef.current = width
+          resolutionHeightRef.current = height
+          refreshRateCountRef.current++
         }
       }
-    },
-    [member.uuid, type]
-  )
+    }
+  }, [member.uuid, type])
 
   useEffect(() => {
     if (meetingInfo.isDebugMode) {
@@ -469,7 +473,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
           },
           [offscreen]
         )
-        const handle = handleVideoFrame(canvas)
+        const handle = handleVideoFrame()
         eventEmitter?.on(EventType.onVideoFrameData, handle)
         return () => {
           eventEmitter?.off(EventType.onVideoFrameData, handle)
@@ -503,7 +507,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
           },
           [offscreen]
         )
-        const handle = handleVideoFrame(canvas)
+        const handle = handleVideoFrame()
         eventEmitter?.on(EventType.onVideoFrameData, handle)
         return () => {
           eventEmitter?.off(EventType.onVideoFrameData, handle)
@@ -524,6 +528,10 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     member.uuid,
   ])
 
+  function handleCallClick() {
+    onCallClick?.(member)
+  }
+
   return isAudioMode ? (
     <AudioCard
       member={member}
@@ -532,6 +540,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
         showBorder ? 'nemeeting-active-border' : ''
       } ${className || ''}`}
       onClick={(e) => onCardClick(e)}
+      onCallClick={handleCallClick}
     >
       <span className="nemeeting-ios-time" ref={viewRef}></span>
     </AudioCard>
@@ -595,9 +604,11 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
                     </svg>
                   )} */}
                   <UserAvatar
+                    onCallClick={handleCallClick}
                     size={avatarSize || 32}
                     nickname={member.name}
                     avatar={member.avatar}
+                    inviteState={member.inviteState}
                     className=""
                   />
                   <div className="nemeeting-audio-card-phone-icon">
@@ -616,6 +627,8 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
           </>
         )}
       <div
+        // 标记video container
+        id={`nemeeting-video-container-${member.uuid}-${type}`}
         ref={viewRef}
         className={`video-view h-full w-full ${member.uuid}-${type}-${isMain} ${
           mirroring && type === 'video' ? 'nemeeting-video-mirror' : ''
@@ -636,16 +649,18 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
       {((type === 'video' && !member.isVideoOn) ||
         (type === 'screen' && (!member.isSharingScreen || isMySelf))) && (
         <UserAvatar
+          onCallClick={handleCallClick}
           size={avatarSize || 32}
           nickname={member.name}
           avatar={member.avatar}
+          inviteState={member.inviteState}
           className="video-view-nickname-avatar absolute"
         />
       )}
 
       <div className={'nickname-tip'}>
         <div className="nickname">
-          {member.isAudioConnected ? (
+          {!member.inviteState && member.isAudioConnected ? (
             member.isAudioOn ? (
               <AudioIcon
                 className="icon iconfont"

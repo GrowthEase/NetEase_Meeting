@@ -1,5 +1,6 @@
 import { defineConfig } from 'umi';
-const platform = process.env.REACT_APP_PLATFORM;
+const platform = process.env.PLATFORM;
+const nodeEnv = process.env.NODE_ENV;
 
 const RUN_ENV = process.env.RUN_ENV || 'development';
 
@@ -46,44 +47,54 @@ console.log(
   SSO_APP_KEY,
 );
 
+const routes = [
+  {
+    path: '/',
+    component: '@/layouts/index',
+    routes: [
+      { path: '/', component: '@/pages/index' },
+      { path: '/h5', component: '@/pages/h5' },
+    ],
+  },
+];
+
+if (platform === 'electron' || nodeEnv === 'development') {
+  routes[0].routes.push(
+    { path: '/setting', component: '@/pages/setting' },
+    { path: '/history', component: '@/pages/history' },
+    { path: '/login', component: '@/pages/login' },
+    { path: '/nps', component: '@/pages/nps' },
+    { path: '/about', component: '@/pages/about' },
+    { path: '/rooms', component: '@/pages/rooms' },
+    { path: '/meeting', component: '@/pages/meeting' },
+    { path: '/member', component: '@/pages/member' },
+    { path: '/chat', component: '@/pages/chat' },
+    { path: '/invite', component: '@/pages/invite' },
+    { path: '/memberNotify', component: '@/pages/memberNotify' },
+    { path: '/plugin', component: '@/pages/plugin' },
+    { path: '/notification/list', component: '@/pages/notification/list' },
+    { path: '/notification/card', component: '@/pages/notification/card' },
+    { path: '/imageCrop', component: '@/pages/imageCrop' },
+    { path: '/scheduleMeeting', component: '@/pages/scheduleMeeting' },
+    { path: '/monitoring', component: '@/pages/monitoring' },
+    { path: '/addressBook', component: '@/pages/addressBook' },
+    {
+      path: '/screenSharing/video',
+      component: '@/pages/screenSharing/video',
+    },
+    {
+      path: '/authorization',
+      component: '@/pages/authorization',
+    },
+  );
+}
+
 export default defineConfig({
   favicon: 'favicon.ico',
   nodeModulesTransform: {
     type: 'none',
   },
-  routes: [
-    {
-      path: '/',
-      component: '@/layouts/index',
-      routes: [
-        { path: '/', component: '@/pages/index' },
-        { path: '/parent', component: '@/pages/parent' },
-        { path: '/setting', component: '@/pages/setting' },
-        { path: '/history', component: '@/pages/history' },
-        { path: '/login', component: '@/pages/login' },
-        { path: '/nps', component: '@/pages/nps' },
-        { path: '/about', component: '@/pages/about' },
-        { path: '/rooms', component: '@/pages/rooms' },
-        { path: '/meeting', component: '@/pages/meeting' },
-        { path: '/member', component: '@/pages/member' },
-        { path: '/chat', component: '@/pages/chat' },
-        { path: '/invite', component: '@/pages/invite' },
-        { path: '/memberNotify', component: '@/pages/memberNotify' },
-        {
-          path: '/screenSharing/videoParent',
-          component: '@/pages/screenSharing/videoParent',
-        },
-        {
-          path: '/screenSharing/video',
-          component: '@/pages/screenSharing/video',
-        },
-        {
-          path: '/authorization',
-          component: '@/pages/authorization',
-        },
-      ],
-    },
-  ],
+  routes: routes,
   fastRefresh: {},
   history: {
     type: 'hash',
@@ -105,7 +116,7 @@ export default defineConfig({
       .end();
   },
   define: {
-    'process.env.REACT_APP_PLATFORM': platform,
+    // 'process.env.PLATFORM': platform,
     'process.env.ROOMS_DOMAIN': ROOMS_DOMAIN,
     'process.env.MEETING_DOMAIN': MEETING_DOMAIN,
     'process.env.APP_KEY': APP_KEY,

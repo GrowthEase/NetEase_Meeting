@@ -1,10 +1,11 @@
 import React, { useContext, useEffect, useMemo, useRef } from 'react'
+import { GlobalContext, MeetingInfoContext } from '../../../../store'
 import {
   GlobalContext as GlobalContextInterface,
   NEMeetingInfo,
 } from '../../../../types'
-import { GlobalContext, MeetingInfoContext } from '../../../../store'
 import './index.less'
+import { useWhiteboard } from '../../../../hooks/useWhiteboard'
 
 interface WhiteboardProps {
   className?: string
@@ -13,58 +14,12 @@ interface WhiteboardProps {
 const WhiteBoardView: React.FC<WhiteboardProps> = ({ className, isEnable }) => {
   const isElectronNode = !!window.isElectronNative
 
-  const viewRef = useRef<HTMLDivElement | null>(null)
-  const { meetingInfo } = useContext(MeetingInfoContext)
-  const meetingInfoRef = useRef<NEMeetingInfo | null>(null)
-  meetingInfoRef.current = meetingInfo
-
   const { neMeeting } = useContext<GlobalContextInterface>(GlobalContext)
 
   const [whiteboardUrl, setWhiteboardUrl] = React.useState<string>('')
 
-  const enableDraw = useMemo(() => {
-    return meetingInfo.whiteboardUuid === meetingInfo.localMember.uuid
-  }, [meetingInfo.whiteboardUuid, meetingInfo.localMember.uuid])
-
-  const whiteColor = 'rgba(255, 255, 255, 1)'
-  const transparentColor = 'rgba(255, 255, 255, 0)'
-  const isSetCanvasRef = useRef(false)
-
-  function iframeDomLockCameraWithContent(width: number, height: number) {
-    const iframeDom = document.getElementById(
-      'nemeeting-whiteboard-iframe'
-    ) as HTMLIFrameElement
-    if (iframeDom) {
-      iframeDom.contentWindow?.postMessage(
-        `{"action":"jsDirectCall","param":{"action":"lockCameraWithContent","params":[{"height": ${height}, "width": ${width}}],"target":"drawPlugin"}}`,
-        '*'
-      )
-    }
-  }
-
-  function iframeDomUnlockCameraWithContent() {
-    const iframeDom = document.getElementById(
-      'nemeeting-whiteboard-iframe'
-    ) as HTMLIFrameElement
-    if (iframeDom) {
-      iframeDom.contentWindow?.postMessage(
-        `{"action":"jsDirectCall","param":{"action":"unlockCameraWithContent","params":[],"target":"drawPlugin"}}`,
-        '*'
-      )
-    }
-  }
-
-  function iframeDomSetCanvasBackgroundColor(color: string) {
-    const iframeDom = document.getElementById(
-      'nemeeting-whiteboard-iframe'
-    ) as HTMLIFrameElement
-    if (iframeDom) {
-      iframeDom.contentWindow?.postMessage(
-        `{"action":"jsDirectCall","param":{"action":"setAppConfig","params":[{"canvasBgColor": "${color}"}],"target":"drawPlugin"}}`,
-        '*'
-      )
-    }
-  }
+  const { viewRef, enableDraw, isSetCanvasRef, dealTransparentWhiteboard } =
+    useWhiteboard()
 
   function iframeDomSetColor(color: string) {
     const iframeDom = document.getElementById(
@@ -159,85 +114,10 @@ const WhiteBoardView: React.FC<WhiteboardProps> = ({ className, isEnable }) => {
         } catch {}
       })
       // @ts-ignore
-      setWhiteboardUrl(whiteboardController?.getWhiteboardUrl())
+      const whiteboardUrl = whiteboardController?.getWhiteboardUrl()
+      setWhiteboardUrl(whiteboardUrl)
     }
   }, [])
-
-  useEffect(() => {
-    if (!isSetCanvasRef.current) {
-      return
-    }
-    if (enableDraw) {
-      neMeeting?.whiteboardController?.setEnableDraw(true)
-    } else {
-      neMeeting?.whiteboardController?.setEnableDraw(false)
-    }
-  }, [enableDraw])
-
-  useEffect(() => {
-    if (!isSetCanvasRef.current) {
-      return
-    }
-    if (
-      meetingInfo.localMember.properties.wbDrawable?.value == '1' ||
-      meetingInfo.whiteboardUuid === meetingInfo.localMember.uuid
-    ) {
-      neMeeting?.whiteboardController?.setEnableDraw(true)
-    } else {
-      neMeeting?.whiteboardController?.setEnableDraw(false)
-    }
-  }, [meetingInfo.localMember.properties])
-
-  useEffect(() => {
-    if (meetingInfo.isWhiteboardTransparent) {
-      const mainVideoSize = meetingInfo.mainVideoSize
-
-      if (!isElectronNode) {
-        neMeeting?.whiteboardController?.lockCameraWithContent(
-          mainVideoSize.width,
-          mainVideoSize.height
-        )
-      } else {
-        iframeDomLockCameraWithContent(
-          mainVideoSize.width,
-          mainVideoSize.height
-        )
-      }
-    }
-  }, [meetingInfo.mainVideoSize.width, meetingInfo.mainVideoSize.height])
-
-  // 处理透明白板
-  const dealTransparentWhiteboard = () => {
-    if (!isElectronNode) {
-      const whiteboardController = neMeeting?.whiteboardController
-      if (meetingInfoRef.current?.isWhiteboardTransparent) {
-        whiteboardController?.setCanvasBackgroundColor(transparentColor)
-        const mainVideoSize = meetingInfo.mainVideoSize
-        whiteboardController?.lockCameraWithContent(
-          mainVideoSize.width,
-          mainVideoSize.height
-        )
-      } else {
-        whiteboardController?.setCanvasBackgroundColor(whiteColor)
-      }
-    } else {
-      if (meetingInfoRef.current?.isWhiteboardTransparent) {
-        iframeDomSetCanvasBackgroundColor(transparentColor)
-        const mainVideoSize = meetingInfo.mainVideoSize
-        iframeDomLockCameraWithContent(
-          mainVideoSize.width,
-          mainVideoSize.height
-        )
-      } else {
-        iframeDomSetCanvasBackgroundColor(whiteColor)
-        iframeDomUnlockCameraWithContent()
-      }
-    }
-  }
-
-  useEffect(() => {
-    dealTransparentWhiteboard()
-  }, [meetingInfoRef.current?.isWhiteboardTransparent])
 
   return (
     <div
