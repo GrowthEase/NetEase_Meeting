@@ -46,6 +46,17 @@ class AppNotification {
   int? time;
   bool? enable;
 
+  /// 用于过期提示
+  /// [content] 提示内容
+  /// [time] 过期时间
+  ///
+  AppNotification.expireMessageTip({required this.content, required this.time})
+      : title = '',
+        okBtnLabel = '',
+        url = '',
+        type = 1,
+        enable = true;
+
   AppNotification.fromJson(Map<String, dynamic> json) {
     content = (json['content'] ?? '') as String;
     title = (json['title'] ?? '') as String;

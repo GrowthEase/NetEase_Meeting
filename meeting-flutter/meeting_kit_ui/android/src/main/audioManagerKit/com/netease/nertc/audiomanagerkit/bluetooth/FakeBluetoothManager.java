@@ -24,6 +24,11 @@ public class FakeBluetoothManager extends BluetoothManagerWrapper {
   }
 
   @Override
+  public boolean canConnectToDevice() {
+    return false;
+  }
+
+  @Override
   public void start() {
     mBluetoothState = State.HEADSET_UNAVAILABLE;
     registerAudioDeviceCallback(true);
@@ -89,8 +94,6 @@ public class FakeBluetoothManager extends BluetoothManagerWrapper {
                 }
               }
             };
-      }
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         mAudioManager.registerAudioDeviceCallback(mAudioDeviceCallback, mHandler);
       }
     }

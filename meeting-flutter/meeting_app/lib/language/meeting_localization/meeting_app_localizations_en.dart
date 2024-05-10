@@ -55,7 +55,7 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
       'Copyright ©1997-2024 NetEase Inc.\nAll Rights Reserved.';
 
   @override
-  String get globalAppRegistryNO => '浙ICP17006647号-124A';
+  String get globalAppRegistryNO => '浙ICP备17006647号-124A';
 
   @override
   String get globalNetworkUnavailableCheck =>
@@ -107,6 +107,12 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String get globalDay => '';
 
   @override
+  String get globalHours => 'hrs';
+
+  @override
+  String get globalMinutes => 'mins';
+
+  @override
   String get globalSave => 'Save';
 
   @override
@@ -141,6 +147,12 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
 
   @override
   String get globalIKnow => 'Got it';
+
+  @override
+  String get globalAdd => 'Add';
+
+  @override
+  String get globalDateFormat => 'yyyy-MM-dd';
 
   @override
   String get authImmediatelyRegister => 'Register Now';
@@ -597,6 +609,10 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
       'The meeting has been cancelled by another login device';
 
   @override
+  String get meetingHasBeenCanceledByOwner =>
+      'The meeting has been cancelled by the creator';
+
+  @override
   String get meetingRepeat => 'Recurring';
 
   @override
@@ -758,6 +774,37 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String get meetingRepeatCancelEdit => 'Cancel Editing';
 
   @override
+  String get meetingGuestJoin => 'Guest Mode';
+
+  @override
+  String get meetingGuestJoinSecurityNotice =>
+      'Guest mode enabled, please pay attention to the security of meeting';
+
+  @override
+  String get meetingGuestJoinEnableTip =>
+      'External visitors will be allowed to attend the meeting when enabled.';
+
+  @override
+  String get meetingAttendees => 'Participants';
+
+  @override
+  String meetingAttendeeCount(Object count) {
+    return '$count people';
+  }
+
+  @override
+  String get meetingAddAttendee => 'Add Participants';
+
+  @override
+  String get meetingSearchAndAddAttendee => 'Search and add participants';
+
+  @override
+  String get meetingOpen => 'Show';
+
+  @override
+  String get meetingClose => 'Fold';
+
+  @override
   String get historyMeeting => 'Meeting history';
 
   @override
@@ -768,6 +815,9 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
 
   @override
   String get historyMeetingListEmpty => 'No history meetings';
+
+  @override
+  String get historyCollectMeetingListEmpty => 'No Favorite meetings';
 
   @override
   String get historyChat => 'Chat History';
@@ -967,6 +1017,11 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String get settingServiceBundleTitle => 'Supported Meetings';
 
   @override
+  String settingServiceBundleExpireTime(Object expireTime) {
+    return 'Expiration: $expireTime';
+  }
+
+  @override
   String settingServiceBundleDetailLimitedMinutes(
       Object maxCount, Object maxMinutes) {
     return '$maxCount participants, limited time $maxMinutes minutes meeting';
@@ -976,6 +1031,13 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String settingServiceBundleDetailUnlimitedMinutes(Object maxCount) {
     return '$maxCount participants，unlimited time meeting';
   }
+
+  @override
+  String get settingServiceBundleExpirationDate => 'Expiration Date';
+
+  @override
+  String get settingServiceBundleExpirationDateTip =>
+      'Service has expired, please contact the management if you need to extend it.';
 
   @override
   String get settingUpdateFailed => 'Update Failed';
@@ -1003,6 +1065,15 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
 
   @override
   String get settingComfirmExitApp => 'Confirm to exit the app';
+
+  @override
+  String get settingSwitchLanguage => 'Language';
+
+  @override
+  String get settingSetLanguage => 'Language';
+
+  @override
+  String get settingLanguageTip => 'English';
 
   @override
   String get feedbackInRoom => 'Feedback';

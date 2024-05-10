@@ -32,7 +32,7 @@ class Application {
     final config = AppConfig();
     await config.init();
     _logger.i(
-        'App initialized: env=${config.env}, vName=${config.versionName}, vCode=${config.versionCode}');
+        'App initialized: vName=${config.versionName}, vCode=${config.versionCode}');
     _initializedCompleter!.complete(true);
   }
 }

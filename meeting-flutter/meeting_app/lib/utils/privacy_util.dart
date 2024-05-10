@@ -2,16 +2,22 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
+import 'package:nemeeting/base/util/global_preferences.dart';
 import 'package:nemeeting/service/config/servers.dart';
+import 'package:nemeeting/uikit/values/colors.dart';
 import 'package:nemeeting/webview/webview_page.dart';
 import '../language/meeting_localization/meeting_app_localizations.dart';
 import '../uikit/utils/nav_utils.dart';
 import '../uikit/utils/router_name.dart';
 import '../uikit/widget/meeting_protocols.dart';
+import 'package:yunxin_alog/yunxin_alog.dart';
 
 class PrivacyUtil {
+  static const String TAG = "PrivacyUtil";
   static ValueNotifier<bool> checked = ValueNotifier<bool>(false);
 
   static set privateAgreementChecked(bool value) => checked.value = value;
@@ -35,6 +41,13 @@ class PrivacyUtil {
     _tapUserProtocol.dispose();
   }
 
+  static Future<bool> ensurePrivacyAgree(BuildContext context) async {
+    if (!PrivacyUtil.privateAgreementChecked) {
+      return PrivacyUtil.showPrivacyDialog(context, exitIfNotOk: false);
+    }
+    return true;
+  }
+
   static Widget protocolTips() {
     return ValueListenableBuilder(
       builder: (BuildContext context, bool value, Widget? child) {
@@ -45,18 +58,104 @@ class PrivacyUtil {
             checked.value = value;
           },
           tapUserProtocol: () {
-            NavUtils.pushNamed(context, RouterName.webview,
-                arguments: WebViewArguments(Servers.userProtocol,
-                    meetingAppLocalizations.authServiceAgreement));
+            if (Servers().userProtocol?.isNotEmpty ?? false) {
+              NavUtils.pushNamed(context, RouterName.webview,
+                  arguments: WebViewArguments(Servers().userProtocol!,
+                      meetingAppLocalizations.authServiceAgreement));
+            } else {
+              Alog.e(tag: TAG, content: "privacy is empty");
+            }
           },
           tapPrivacy: () {
-            NavUtils.pushNamed(context, RouterName.webview,
-                arguments: WebViewArguments(
-                    Servers.privacy, meetingAppLocalizations.authPrivacy));
+            if (Servers().privacy?.isNotEmpty ?? false) {
+              NavUtils.pushNamed(context, RouterName.webview,
+                  arguments: WebViewArguments(
+                      Servers().privacy!, meetingAppLocalizations.authPrivacy));
+            } else {
+              Alog.e(tag: TAG, content: "privacy is empty");
+            }
           },
         );
       },
       valueListenable: checked,
     );
+  }
+
+  static Future<bool> showPrivacyDialog(BuildContext context,
+      {bool exitIfNotOk = true}) async {
+    MeetingAppLocalizations meetingAppLocalizations =
+        MeetingAppLocalizations.of(context)!;
+    TextSpan buildTextSpan(String text, WebViewArguments? arguments) {
+      return TextSpan(
+        text: text,
+        style: buildTextStyle(
+          arguments != null ? AppColors.blue_337eff : AppColors.color_999999,
+        ),
+        recognizer: arguments == null
+            ? null
+            : (TapGestureRecognizer()
+              ..onTap = () {
+                NavUtils.pushNamed(context, RouterName.webview,
+                    arguments: arguments);
+              }),
+      );
+    }
+
+    final userArguments = WebViewArguments(
+        Servers().userProtocol, meetingAppLocalizations.authServiceAgreement);
+    final privacyArguments = WebViewArguments(
+        Servers().privacy, meetingAppLocalizations.authPrivacy);
+    final message = meetingAppLocalizations.authPrivacyDialogMessage(
+        '##neteasePrivacy##', '##neteaseUserProtocol##');
+    final messageList = message.split('##');
+    return showCupertinoDialog(
+        context: context,
+        builder: (context) {
+          return CupertinoAlertDialog(
+            title: Text(meetingAppLocalizations.authPrivacyDialogTitle),
+            content: Text.rich(
+              TextSpan(
+                children: [
+                  for (var item in messageList)
+                    item == 'neteasePrivacy'
+                        ? buildTextSpan(
+                            meetingAppLocalizations.authNeteasePrivacy,
+                            privacyArguments)
+                        : item == 'neteaseUserProtocol'
+                            ? buildTextSpan(
+                                meetingAppLocalizations
+                                    .authNetEaseServiceAgreement,
+                                userArguments)
+                            : buildTextSpan(item, null),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              CupertinoDialogAction(
+                child: Text(exitIfNotOk
+                    ? meetingAppLocalizations.globalQuit
+                    : meetingAppLocalizations.globalCancel),
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+              ),
+              CupertinoDialogAction(
+                child: Text(meetingAppLocalizations.globalAgree),
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
+              ),
+            ],
+          );
+        }).then((value) {
+      if (value != true && exitIfNotOk) {
+        exit(0);
+      }
+      if (value == true) {
+        GlobalPreferences().setPrivacyDialogShowed(true);
+        PrivacyUtil.privateAgreementChecked = true;
+      }
+      return value ?? false;
+    });
   }
 }

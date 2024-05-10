@@ -10,6 +10,7 @@ class NEMeetingImages {
 
   static const String meetingJoin = "assets/images/icon_meeting_joining.png";
   static const String hangup = "assets/images/icon_hangup.png";
+  static const String call = "assets/images/icon_call.png";
   static const String controlCreateMeeting =
       "assets/images/icon_control_create_meeting.png";
   static const String controlJoinMeeting =
@@ -62,6 +63,17 @@ class NEMeetingImages {
       'assets/images/no_notify_message.png';
   static const String iconChecked = 'assets/images/icon_checked.png';
   static const String iconUnchecked = 'assets/images/icon_unchecked.png';
+  static const String iconContacts = 'assets/images/icon_contacts.png';
+  static const String iconEmptyContacts =
+      'assets/images/icon_empty_contacts.png';
+  static const String iconCircleChecked =
+      'assets/images/icon_circle_checked.png';
+  static const String iconCircleUnchecked =
+      'assets/images/icon_circle_unchecked.png';
+  static const String iconCircleCheckedImmutable =
+      'assets/images/icon_circle_checked_immutable.png';
+  static const String iconNoContacts = 'assets/images/no_contacts.png';
+  static const String callLoadingGif = 'assets/images/call_loading.gif';
 
   static Image assetImage(String image) =>
       Image.asset(image, package: meetingAssetsPackageName);

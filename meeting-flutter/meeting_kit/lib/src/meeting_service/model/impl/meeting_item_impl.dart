@@ -9,6 +9,8 @@ class _MeetingItemImpl extends NEMeetingItem {
 
   String? ownerUserUuid;
 
+  String? ownerNickname;
+
   String? _roomUuid;
 
   int? _roomConfigId;
@@ -162,6 +164,8 @@ class _MeetingItemImpl extends NEMeetingItem {
 
   bool _enableJoinBeforeHost = true;
 
+  bool _enableGuestJoin = false;
+
   @override
   bool isEnableJoinBeforeHost() {
     return _enableJoinBeforeHost;
@@ -172,8 +176,18 @@ class _MeetingItemImpl extends NEMeetingItem {
     _enableJoinBeforeHost = enable;
   }
 
+  @override
+  bool isEnableGuestJoin() {
+    return _enableGuestJoin;
+  }
+
+  @override
+  void setEnableGuestJoin(bool enable) {
+    _enableGuestJoin = enable;
+  }
+
   Map handleRoomProperties() {
-    var roomProperties = {}; // 参考 创建会议 ，从seeting里获取controls就可以了
+    var roomProperties = {}; // 参考 创建会议 ，从setting里获取controls就可以了
     if (settings.controls?.isEmpty ?? true) {
       // 如果controls为空，说明没有启用 自动静音 和 自动关闭视频
       roomProperties[AudioControlProperty.key] = AudioControlProperty.disable;
@@ -197,6 +211,8 @@ class _MeetingItemImpl extends NEMeetingItem {
                     : VideoControlProperty.offNotAllowSelfOn);
       }
     });
+    roomProperties[GuestJoinProperty.key] =
+        _enableGuestJoin ? GuestJoinProperty.enable : GuestJoinProperty.disable;
     roomProperties[MeetingPropertyKeys.kExtraData] = extraData;
     Map map = roomProperties.map((k, v) => MapEntry(k, {'value': v}));
     if (live?.enable ?? false) {
@@ -251,10 +267,12 @@ class _MeetingItemImpl extends NEMeetingItem {
         'live': live?.toJson(),
         'roleBinds':
             _roleBinds?.map((key, value) => MapEntry(key, value.index)),
-        'noSip': !_noSip,
+        'noSip': _noSip,
         'waitingRoomEnabled': _waitingRoomEnabled,
         'enableJoinBeforeHost': _enableJoinBeforeHost,
-        'recurringRule': _recurringRule.toJson()
+        'enableGuestJoin': _enableGuestJoin,
+        'recurringRule': _recurringRule.toJson(),
+        'scheduledMembers': scheduledMemberList?.map((e) => e.toJson()).toList()
       };
 
   @override
@@ -283,9 +301,43 @@ class _MeetingItemImpl extends NEMeetingItem {
         }),
 
       /// 周期性会议
-      'recurringRule': _recurringRule.toJson()
+      'recurringRule': _recurringRule.toJson(),
+
+      /// 预约会议指定成员
+      'scheduledMembers': scheduledMemberList?.map((e) => e.toJson()).toList(),
     };
     return map;
+  }
+
+  @override
+  NEMeetingItem copy() {
+    _MeetingItemImpl impl = _MeetingItemImpl();
+    impl.ownerUserUuid = ownerUserUuid;
+    impl.ownerNickname = ownerNickname;
+    impl.meetingType = meetingType;
+    impl.meetingNum = meetingNum;
+    impl.shortMeetingNum = shortMeetingNum;
+    impl.roomConfigId = roomConfigId;
+    impl.roomUuid = roomUuid;
+    impl.meetingId = meetingId;
+    impl.subject = subject;
+    impl.startTime = startTime;
+    impl.endTime = endTime;
+    impl.password = password;
+    impl.settings = settings;
+    impl.state = state;
+    impl.extraData = extraData;
+    impl.live = live;
+    impl.roleBinds = roleBinds;
+    impl.noSip = noSip;
+    impl.inviteUrl = inviteUrl;
+    impl.scheduledMemberList =
+        scheduledMemberList?.map((e) => e.copy()).toList();
+    impl.setWaitingRoomEnabled(isWaitingRoomEnabled);
+    impl.recurringRule = recurringRule.copy();
+    impl.setEnableJoinBeforeHost(isEnableJoinBeforeHost());
+    impl.setEnableGuestJoin(isEnableGuestJoin());
+    return impl;
   }
 
   static _MeetingItemImpl _fromNativeJson(Map<dynamic, dynamic>? map) {
@@ -300,6 +352,7 @@ class _MeetingItemImpl extends NEMeetingItem {
     impl.noSip = (map['noSip'] ?? true) as bool;
     impl.setWaitingRoomEnabled((map['waitingRoomEnabled'] ?? false) as bool);
     impl.setEnableJoinBeforeHost((map['enableJoinBeforeHost'] ?? true) as bool);
+    impl.setEnableGuestJoin((map['enableGuestJoin'] ?? false) as bool);
     impl.state = _MeetingStateExtension.fromState(map['state'] as int);
     impl.password = map['password'] as String?;
     impl.roleBinds =
@@ -312,6 +365,9 @@ class _MeetingItemImpl extends NEMeetingItem {
     impl.settings = NEMeetingItemSettings.fromNativeJson(map['settings']);
     impl.recurringRule = NEMeetingRecurringRule.fromJson(map['recurringRule'],
         startTime: DateTime.fromMillisecondsSinceEpoch(impl.startTime));
+    impl.scheduledMemberList = (map['scheduledMemberList'] as List?)
+        ?.map((e) => NEScheduledMember.fromJson(e))
+        .toList();
     return impl;
   }
 
@@ -322,6 +378,7 @@ class _MeetingItemImpl extends NEMeetingItem {
     }
     var impl = _MeetingItemImpl();
     impl.ownerUserUuid = map['ownerUserUuid'] as String?;
+    impl.ownerNickname = map['ownerNickname'] as String?;
     impl.roomUuid = map['roomUuid'] as String?;
     impl.subject = map['subject'] as String?;
     impl.meetingType = map['type'] as int?;
@@ -343,10 +400,12 @@ class _MeetingItemImpl extends NEMeetingItem {
       var roleType = MeetingRoles.mapStringRoleToEnum(value);
       return MapEntry(key, roleType);
     });
-    impl.noSip = (resource?['sip'] ?? true) as bool;
+    impl.noSip = !((resource?['sip'] ?? false) as bool);
     impl.setWaitingRoomEnabled((roomInfo?['openWaitingRoom'] ?? false) as bool);
     impl.setEnableJoinBeforeHost(
         (roomInfo?['enableJoinBeforeHost'] ?? true) as bool);
+    impl.setEnableGuestJoin(roomProperties?[GuestJoinProperty.key]?['value'] ==
+        GuestJoinProperty.enable);
     Map? extraDataMap = roomProperties?['extraData'] as Map?;
     impl.extraData = extraDataMap?['value'] as String?;
     final audioOffMap = roomProperties?[AudioControlProperty.key] as Map?;
@@ -376,6 +435,9 @@ class _MeetingItemImpl extends NEMeetingItem {
     impl.inviteUrl = map['meetingInviteUrl'] as String?;
     impl.recurringRule = NEMeetingRecurringRule.fromJson(map['recurringRule'],
         startTime: DateTime.fromMillisecondsSinceEpoch(impl.startTime));
+    impl.scheduledMemberList = (map['scheduledMemberList'] as List?)
+        ?.map((e) => NEScheduledMember.fromJson(e))
+        .toList();
     return impl;
   }
 

@@ -66,9 +66,6 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get globalGotIt => 'Got it';
 
   @override
-  String get globalMin => 'minutes';
-
-  @override
   String globalNotWork(Object permissionName) {
     return 'Unable to use $permissionName';
   }
@@ -101,6 +98,19 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
 
   @override
   String get globalOperationFail => 'Operation failed';
+
+  @override
+  String get globalOperationNotSupportedInMeeting =>
+      'This operation is not supported in the meeting.';
+
+  @override
+  String get globalClear => 'Clear';
+
+  @override
+  String get globalSearch => 'Search';
+
+  @override
+  String get globalReject => 'Reject';
 
   @override
   String get meetingBeauty => 'Beauty';
@@ -508,6 +518,54 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String meetingUserIsNowTheHost(Object user) {
     return '$user is the host now.';
   }
+
+  @override
+  String get meetingGuestJoin => 'Guest Mode';
+
+  @override
+  String get meetingGuestJoinSecurityNotice =>
+      'Guest mode enabled, please pay attention to the security of meeting';
+
+  @override
+  String get meetingGuestJoinEnableTip =>
+      'External visitors will be allowed to attend the meeting when enabled.';
+
+  @override
+  String get meetingGuestJoinEnabled => 'Guest mode has been enabled';
+
+  @override
+  String get meetingGuestJoinDisabled => 'Guest mode  has been closed';
+
+  @override
+  String get meetingGuestJoinConfirm => 'Are you sure to enable guest mode?';
+
+  @override
+  String get meetingGuestJoinConfirmTip =>
+      'External visitors will be allowed to attend the meeting when enabled.';
+
+  @override
+  String get meetingSearchNotFound => 'No search results are available';
+
+  @override
+  String get meetingGuestJoinSupported =>
+      'External visitors can join this meeting';
+
+  @override
+  String get meetingGuest => 'Guest';
+
+  @override
+  String get meetingGuestJoinNamePlaceholder => 'Enter the meeting nickname';
+
+  @override
+  String meetingAppInvite(Object userName) {
+    return '$userName invites you to join';
+  }
+
+  @override
+  String get meetingAudioJoinAction => 'Voice';
+
+  @override
+  String get meetingVideoJoinAction => 'Video';
 
   @override
   String get screenShare => 'Share';
@@ -1005,6 +1063,18 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get participantNotFound => 'No member found';
 
   @override
+  String get participantSetHost => 'Set as host';
+
+  @override
+  String get participantSetCoHost => 'Set as co-host';
+
+  @override
+  String get participantCancelCoHost => 'Cancel the co-host';
+
+  @override
+  String get participantRemoveAttendee => 'Delete';
+
+  @override
   String get cloudRecordingEnabledTitle =>
       'Are you sure you want to start a cloud recording?';
 
@@ -1369,6 +1439,274 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get notifyCenterViewingDetails => 'View details';
 
   @override
-  String get globalOperationNotSupportedInMeeting =>
-      'This operation is not supported in the meeting.';
+  String get sipCallByNumber => 'Phone';
+
+  @override
+  String get sipCall => 'Call';
+
+  @override
+  String get sipContacts => 'Contacts';
+
+  @override
+  String get sipNumberPlaceholder => 'Enter the phone number';
+
+  @override
+  String get sipName => 'Invitee name';
+
+  @override
+  String get sipNamePlaceholder => 'Names will be presented at the meeting';
+
+  @override
+  String get sipCallNumber => 'Dial out number:';
+
+  @override
+  String get sipNumberError => 'Phone number error';
+
+  @override
+  String get sipCallIsCalling => 'The number is already in a call';
+
+  @override
+  String get sipLocalContacts => 'Local contacts';
+
+  @override
+  String get sipContactsClear => 'Clear';
+
+  @override
+  String get sipCalling => 'Calling';
+
+  @override
+  String get sipCallTerm => 'Hang up';
+
+  @override
+  String get sipCallOthers => 'Call other members';
+
+  @override
+  String get sipCallFailed => 'Call failed';
+
+  @override
+  String get sipCallAgain => 'Redial';
+
+  @override
+  String get sipSearch => 'Search';
+
+  @override
+  String get sipSearchContacts => 'Search and add participants';
+
+  @override
+  String get sipCallPhone => 'Phone call';
+
+  @override
+  String get sipCallingNumber => 'To join';
+
+  @override
+  String get sipCallCancel => 'Cancel call';
+
+  @override
+  String get sipCallAgainEx => 'Call again';
+
+  @override
+  String get sipCallStatusCalling => 'Calling';
+
+  @override
+  String get callStatusCalling => 'Calling';
+
+  @override
+  String get sipCallStatusWaiting => 'Waiting for call';
+
+  @override
+  String get callStatusWaitingJoin => 'To join';
+
+  @override
+  String get sipCallStatusTermed => 'Hung up';
+
+  @override
+  String get sipCallStatusUnaccepted => 'No answer';
+
+  @override
+  String get sipCallStatusRejected => 'Rejected';
+
+  @override
+  String get sipCallStatusCanceled => 'Cancelled';
+
+  @override
+  String get sipCallStatusError => 'Call exception';
+
+  @override
+  String get sipPhoneNumber => 'Phone number';
+
+  @override
+  String sipCallMemberSelected(Object count) {
+    return 'Selected: $count';
+  }
+
+  @override
+  String get sipContactsPrivacy =>
+      'Authorize access to your address book to call a contact to join a meeting by phone';
+
+  @override
+  String get memberCountOutOfRange =>
+      'The maximum number of participants has been reached';
+
+  @override
+  String get sipContactNoNumber => 'User has no number.';
+
+  @override
+  String get sipCallIsInMeeting => 'The user is already in a meeting.';
+
+  @override
+  String get sipCallIsInInviting => 'The user is inviting.';
+
+  @override
+  String get sipCallIsInBlacklist =>
+      'The member has been blocked. To invite, disable the meeting blacklist';
+
+  @override
+  String get sipCallByPhone => 'Phone';
+
+  @override
+  String get sipKeypad => 'Keypad';
+
+  @override
+  String get sipBatchCall => 'Batch Call';
+
+  @override
+  String get sipLocalContactsEmpty => 'Local address book is empty';
+
+  @override
+  String sipCallMaxCount(Object count) {
+    return 'Select at most $count people at a time.';
+  }
+
+  @override
+  String get sipInviteInfo => 'Copy details';
+
+  @override
+  String get sipAddressInvite => 'Contacts';
+
+  @override
+  String get sipJoinOtherMeetingTip =>
+      'Will leave the current meeting once you accept.';
+
+  @override
+  String get monitoring => 'Quality Monitoring';
+
+  @override
+  String get overall => 'Overall';
+
+  @override
+  String get soundAndVideo => 'Audiovisual';
+
+  @override
+  String get cpu => 'CPU';
+
+  @override
+  String get memory => 'Memory';
+
+  @override
+  String get network => 'Network';
+
+  @override
+  String get bandwidth => 'Bandwidth';
+
+  @override
+  String get networkType => 'Network Type';
+
+  @override
+  String get networkState => 'Network';
+
+  @override
+  String get delay => 'Latency';
+
+  @override
+  String get packageLossRate => 'Packet loss';
+
+  @override
+  String get recently => 'Last';
+
+  @override
+  String get audio => 'Audio';
+
+  @override
+  String get microphone => 'Mic';
+
+  @override
+  String get speaker => 'Speaker';
+
+  @override
+  String get bitrate => 'Bitrate';
+
+  @override
+  String get speakerPlayback => 'Speaker Playback';
+
+  @override
+  String get microphoneAcquisition => 'Mic Capture';
+
+  @override
+  String get resolution => 'Resolution';
+
+  @override
+  String get frameRate => 'Frame';
+
+  @override
+  String get moreMonitoring => 'View More';
+
+  @override
+  String get layoutSettings => 'Layout setting';
+
+  @override
+  String get galleryModeMaxCount =>
+      'Max participants per screen in gallery view';
+
+  @override
+  String galleryModeScreens(Object count) {
+    return '$count';
+  }
+
+  @override
+  String get followGalleryLayout => 'Follow the host\'s video sequence';
+
+  @override
+  String get resetGalleryLayout => 'Reset video sequence';
+
+  @override
+  String get followGalleryLayoutTips =>
+      'The first 25 videos in host gallery mode are synchronized to all participants, and participants are not allowed to change themselves.';
+
+  @override
+  String get followGalleryLayoutConfirm =>
+      'The host has set \"Follow the host\'s video sequence\" and cannot move the video.';
+
+  @override
+  String get followGalleryLayoutResetConfirm =>
+      'The host has set \"Follow the host\'s video sequence\", and the video order cannot be reset.';
+
+  @override
+  String get saveGalleryLayoutTitle => 'Save video sequence';
+
+  @override
+  String get saveGalleryLayoutContent =>
+      'Save the current video sequence to the scheduled meeting for subsequent meetings. Are you sure to save the video sequence?';
+
+  @override
+  String get replaceGalleryLayoutContent =>
+      'The scheduled meeting already has an old video sequence. Do you want to replace it and save it to the new video sequence?';
+
+  @override
+  String get loadGalleryLayoutTitle => 'Load video sequence';
+
+  @override
+  String get loadGalleryLayoutContent =>
+      'The scheduled meeting already has a video sequence. Do you want to load it?';
+
+  @override
+  String get load => 'Load';
+
+  @override
+  String get noLoadGalleryLayout => 'There is no video sequence to load';
+
+  @override
+  String get loadSuccess => 'Load successfully';
+
+  @override
+  String get loadFail => 'Failed to load';
 }

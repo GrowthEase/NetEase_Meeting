@@ -65,11 +65,9 @@ class ChatRoomManager with _AloggerMixin {
   /// 网络恢复时，刷新发送对象和等候室聊天权限配置
   void initConnectivityStatus() {
     _connectivitySubscription =
-        Connectivity().onConnectivityChanged.listen((event) {
-      if (event != ConnectivityResult.none) {
-        updateHostAndCoHostInWaitingRoom();
-        updateWaitingRoomConfig();
-      }
+        ConnectivityManager().onReconnected.listen((event) {
+      updateHostAndCoHostInWaitingRoom();
+      updateWaitingRoomConfig();
     });
   }
 
@@ -125,8 +123,8 @@ class ChatRoomManager with _AloggerMixin {
     if (userSelected) {
       userSelectedTarget = newTarget is NEBaseRoomMember ? newTarget : null;
     }
-
-    _sendToTarget.value = newTarget != null ? newTarget : userSelectedTarget;
+    newTarget ??= userSelectedTarget;
+    _sendToTarget.value = newTarget ?? _sendToTarget.value;
 
     /// 根据身份权限配置，不在范围内，则切换为默认对象
     _updateSendTargetBasedOnUserRole();
@@ -140,18 +138,27 @@ class ChatRoomManager with _AloggerMixin {
     }
 
     /// 选中的成员离开会议
-    if (_sendToTarget.value is NERoomMember &&
-        !isMemberInMeeting(_sendToTarget.value)) {
+    bool resetSendTarget = _sendToTarget.value is NERoomMember &&
+        !isMemberInMeeting(_sendToTarget.value);
+
+    /// 选中的等候室成员离开
+    resetSendTarget = resetSendTarget ||
+        (_sendToTarget.value is NEWaitingRoomMember &&
+            !isMemberInWaitingRoom(_sendToTarget.value));
+
+    /// 选中的等候室成员，但自己已经不是主持人或者联席主持人
+    resetSendTarget = resetSendTarget ||
+        (_sendToTarget.value is NEWaitingRoomMember &&
+            !roomContext.isMySelfHostOrCoHost());
+    if (resetSendTarget) {
       _sendToTarget.value = null;
     }
 
     /// 主持人或者联席主持人的情况进行处理
     if (roomContext.isMySelfHostOrCoHost()) {
       /// 等候室人数为0或选中的成员离开，自动切回会议中所有人
-      if ((_sendToTarget.value == NEChatroomType.waitingRoom &&
-              _isWaitingRoomEmpty) ||
-          (_sendToTarget.value is NEWaitingRoomMember &&
-              !isMemberInWaitingRoom(_sendToTarget.value))) {
+      if (_sendToTarget.value == NEChatroomType.waitingRoom &&
+          _isWaitingRoomEmpty) {
         _sendToTarget.value = null;
       }
       // _sendToTarget.value ??= NEChatroomType.common;

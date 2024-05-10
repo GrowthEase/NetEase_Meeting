@@ -11,6 +11,7 @@ typedef ScheduledRoomStatusListener<T> = void Function(
 class _NEPreMeetingServiceImpl extends NEPreMeetingService with _AloggerMixin {
   static const kTypeMeetingInfoChanged = 100;
   static const kTypeMeetingStateChanged = 101;
+  static const kTypeMeetingScheduleInviteCancel = 201;
 
   static final _NEPreMeetingServiceImpl _instance =
       _NEPreMeetingServiceImpl._();
@@ -36,7 +37,8 @@ class _NEPreMeetingServiceImpl extends NEPreMeetingService with _AloggerMixin {
             (type == kTypeMeetingStateChanged &&
                 state != preState &&
                 state <= NEMeetingState.ended.index)) {
-          final result = await getMeetingItemById(data['meetingNum'] as String);
+          final result =
+              await getMeetingItemByNum(data['meetingNum'] as String);
           if (result.isSuccess() &&
               result.nonNullData.meetingType ==
                   NEMeetingType.kReservation.type) {
@@ -50,6 +52,16 @@ class _NEPreMeetingServiceImpl extends NEPreMeetingService with _AloggerMixin {
             'meetingNum': data['meetingNum'],
             'meetingId': data['meetingId'],
             'state': state,
+          }));
+        }
+
+        /// 预约会议指定成员后，移除指定成员收到该事件
+        else if (type == kTypeMeetingScheduleInviteCancel) {
+          changeItems.add(NEMeetingItem.fromJson({
+            'roomUuid': data['meetingNum'],
+            'meetingNum': data['meetingNum'],
+            'meetingId': data['meetingId'],
+            'state': NEMeetingState.cancel.index,
           }));
         }
 
@@ -88,9 +100,9 @@ class _NEPreMeetingServiceImpl extends NEPreMeetingService with _AloggerMixin {
   }
 
   @override
-  Future<NEResult<NEMeetingItem>> getMeetingItemById(String meetingNum) {
-    apiLogger.i('getMeetingItemById $meetingNum');
-    return PreRoomRepository.getRoomItemById(meetingNum);
+  Future<NEResult<NEMeetingItem>> getMeetingItemByNum(String meetingNum) {
+    apiLogger.i('getMeetingItemByNum $meetingNum');
+    return PreRoomRepository.getRoomItemByNum(meetingNum);
   }
 
   @override
@@ -117,5 +129,18 @@ class _NEPreMeetingServiceImpl extends NEPreMeetingService with _AloggerMixin {
     if (_listeners.contains(callback)) {
       _listeners.remove(callback);
     }
+  }
+
+  @override
+  Future<NEResult<NEMeetingItem>> getMeetingItemById(int meetingId) {
+    apiLogger.i('getMeetingItemById $meetingId');
+    return PreRoomRepository.getMeetingItemById(meetingId);
+  }
+
+  @override
+  Future<NEResult<List<NEScheduledMember>>> getScheduledMembers(
+      String meetingNum) {
+    apiLogger.i('getScheduledMembers $meetingNum');
+    return PreRoomRepository.getScheduledMembers(meetingNum);
   }
 }

@@ -38,46 +38,49 @@ class _BeautySettingPageState extends BaseState<BeautySettingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-        child: Scaffold(
-            appBar: AppBar(
-                title: Text(
-                  NEMeetingUIKitLocalizations.of(context)!.meetingBeauty,
-                  style: TextStyle(
-                      color: _UIColors.color_222222,
-                      fontSize: 19,
-                      decoration: TextDecoration.none,
-                      fontWeight: FontWeight.w500),
-                ),
-                centerTitle: true,
-                backgroundColor: Colors.white,
-                elevation: 0.0,
-                systemOverlayStyle: AppStyle.systemUiOverlayStyleDark,
-                leading: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  key: ValueKey('back'),
-                  child: Container(
-                      width: 150,
-                      height: 40,
-                      alignment: Alignment.center,
-                      padding: EdgeInsets.only(top: 20, bottom: 10),
-                      child: Text(
-                        NEMeetingUIKitLocalizations.of(context)!.globalSave,
-                        style: TextStyle(
-                            color: Color(0xff2575FF),
-                            fontSize: 14,
-                            decoration: TextDecoration.none,
-                            fontWeight: FontWeight.w500),
-                      )),
-                  onTap: () {
-                    _requestPop();
-                  },
-                )),
-            body: buildBeautyPreViewWidget(context)),
-        onWillPop: () async {
-          _requestPop();
-          return false;
-        });
+    return NEMeetingUIKitLocalizationsScope(builder: (context) {
+      return PopScope(
+          child: Scaffold(
+              appBar: AppBar(
+                  title: Text(
+                    NEMeetingUIKitLocalizations.of(context)!.meetingBeauty,
+                    style: TextStyle(
+                        color: _UIColors.color_222222,
+                        fontSize: 19,
+                        decoration: TextDecoration.none,
+                        fontWeight: FontWeight.w500),
+                  ),
+                  centerTitle: true,
+                  backgroundColor: Colors.white,
+                  elevation: 0.0,
+                  systemOverlayStyle: AppStyle.systemUiOverlayStyleDark,
+                  leading: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    key: ValueKey('back'),
+                    child: Container(
+                        width: 150,
+                        height: 40,
+                        alignment: Alignment.center,
+                        padding: EdgeInsets.only(top: 20, bottom: 10),
+                        child: Text(
+                          NEMeetingUIKitLocalizations.of(context)!.globalSave,
+                          style: TextStyle(
+                              color: Color(0xff2575FF),
+                              fontSize: 14,
+                              decoration: TextDecoration.none,
+                              fontWeight: FontWeight.w500),
+                        )),
+                    onTap: () {
+                      UINavUtils.pop(context, rootNavigator: true);
+                    },
+                  )),
+              body: buildBeautyPreViewWidget(context)),
+          onPopInvoked: (didPop) async {
+            NEMeetingKit.instance
+                .getSettingsService()
+                .setBeautyFaceValue(beautyLevel);
+          });
+    });
   }
 
   Widget buildBeautyPreViewWidget(BuildContext context) {
@@ -112,11 +115,6 @@ class _BeautySettingPageState extends BaseState<BeautySettingPage> {
       if (!granted) UINavUtils.pop(context, rootNavigator: true);
     }
     return granted;
-  }
-
-  void _requestPop() {
-    NEMeetingKit.instance.getSettingsService().setBeautyFaceValue(beautyLevel);
-    UINavUtils.pop(context, rootNavigator: true);
   }
 
   Future<void> _initRenderer() async {

@@ -13,6 +13,7 @@ class UserPreferences extends Preferences {
   static const String transparentWB = 'transparentWB';
   static const String frontCameraMirror = 'frontCameraMirror';
   static const String audioDeviceSwitch = 'audioDeviceSwitch';
+  static const String _keyMeetingInfo = "meetingInfo";
 
   UserPreferences._internal();
 
@@ -54,6 +55,14 @@ class UserPreferences extends Preferences {
 
   Future<void> setFrontCameraMirrorEnabled(bool value) async {
     setBoolSp(_wrapperKey(frontCameraMirror), value);
+  }
+
+  Future<void> setMeetingInfo(String value) async {
+    setSp(_keyMeetingInfo, value);
+  }
+
+  Future<String?> get meetingInfo async {
+    return getSp(_keyMeetingInfo);
   }
 
   /// save

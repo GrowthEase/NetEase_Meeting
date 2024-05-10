@@ -2,26 +2,6 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
-buildscript {
-    ext.kotlin_version = '1.6.10'
-    repositories {
-        mavenCentral()
-        google()
-        maven {
-            url  "https://oss.sonatype.org/content/repositories/snapshots/"
-        }
-    }
-
-    dependencies {
-        classpath 'com.android.tools.build:gradle:7.4.2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-
-    subprojects {
-        apply from: "${project.rootDir}/../../meetingConfig.gradle"
-    }
-}
-
 allprojects {
     repositories {
         mavenCentral()
@@ -42,4 +22,8 @@ subprojects {
 
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
+}
+
+subprojects {
+    apply from: "${project.rootDir}/../../meetingConfig.gradle"
 }

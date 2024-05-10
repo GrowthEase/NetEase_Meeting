@@ -225,6 +225,10 @@ final _builtinMenuItemIcons = <int, Map<int, Icon>>{
     _noneState: const Icon(NEMeetingIconFont.icon_security,
         color: _UIColors.colorECEDEF),
   },
+  NEMenuIDs.sipCall: {
+    _noneState: const Icon(NEMeetingIconFont.icon_call_out,
+        color: _UIColors.colorECEDEF),
+  },
   NEMenuIDs.notifyCenter: {
     _noneState:
         const Icon(NEMeetingIconFont.icon_notify, color: _UIColors.colorECEDEF),
@@ -453,6 +457,8 @@ String? _getDefaultMenuTitle(
           : localizations!.cloudRecordingStart;
     case NEMenuIDs.security:
       return localizations!.meetingSecurity;
+    case NEMenuIDs.sipCall:
+      return localizations!.sipCall;
     case NEMenuIDs.notifyCenter:
       return localizations!.globalNotify;
     case InternalMenuIDs.more:

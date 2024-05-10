@@ -17,6 +17,7 @@ import '../uikit/values/asset_name.dart';
 import '../uikit/values/colors.dart';
 import '../uikit/values/fonts.dart';
 
+import 'package:yunxin_alog/yunxin_alog.dart';
 import '../webview/webview_page.dart';
 
 class About extends StatefulWidget {
@@ -28,6 +29,7 @@ class About extends StatefulWidget {
 
 class _AboutState extends MeetingBaseState<About>
     with MeetingAppLocalizationsMixin {
+  static const String TAG = 'About';
   bool newVersionTips = false;
 
   @override
@@ -152,19 +154,24 @@ class _AboutState extends MeetingBaseState<About>
         () => Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => WebViewPage(WebViewArguments(
-                    Servers.userProtocol,
-                    meetingAppLocalizations.authServiceAgreement)))));
+                builder: (context) => MeetingAppLocalizationsScope(
+                    child: WebViewPage(WebViewArguments(Servers().userProtocol,
+                        meetingAppLocalizations.authServiceAgreement))))));
   }
 
   Widget buildPrivacy() {
-    return buildItem(
-        meetingAppLocalizations.authPrivacy,
-        () => Navigator.push(
+    return buildItem(meetingAppLocalizations.authPrivacy, () {
+      if (Servers().privacy?.isNotEmpty ?? false) {
+        Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => WebViewPage(WebViewArguments(
-                    Servers.privacy, meetingAppLocalizations.authPrivacy)))));
+                builder: (context) => MeetingAppLocalizationsScope(
+                    child: WebViewPage(WebViewArguments(Servers().privacy,
+                        meetingAppLocalizations.authPrivacy)))));
+      } else {
+        Alog.e(tag: TAG, content: "privacy is empty");
+      }
+    });
   }
 
   Container buildSplit() {
@@ -227,9 +234,7 @@ class _AboutState extends MeetingBaseState<About>
               ),
             ),
           ),
-          onTap: () {
-            NavUtils.launchByURL(Servers.appRegistryDetailUrl);
-          },
+          onTap: () {},
         ),
         Icon(
           IconFont.iconyx_allowx,

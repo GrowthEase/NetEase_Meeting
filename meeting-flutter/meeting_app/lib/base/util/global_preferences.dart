@@ -7,17 +7,18 @@ import 'dart:async';
 import '../util/sp_util.dart';
 
 class GlobalPreferences extends Preferences {
+  static const String _keyCorpInfo = "corpInfo";
   static const String _keyLoginInfo = "loginInfo";
   static const String _keyMeetingDebug = "meetingDebug";
   static const String _keyMeetingEnv = "meetingEnv";
   static const String _keyNERtcLogLevel = "nertcLogLevel";
   static const String _keyUserProtocolPrivacy = "userProtocolPrivacy";
   static const String _keySecurityNotice = "securityNotice";
-  static const String _keyMeetingInfo = "meetingInfo";
   static const String _keyPrivacyDialogShowed = 'privacyDialogShowed';
   static const String _keyMeetingEvaluation = 'meetingEvaluation';
   static const String _keyCorpCode = 'corpCode';
   static const String keyShakeAndOpenQrScan = 'shakeAndOpenQrScan';
+  static const String languageCode = 'languageCode';
 
   GlobalPreferences._internal();
 
@@ -32,6 +33,14 @@ class GlobalPreferences extends Preferences {
 
   Future<String?> get loginInfo async {
     return getSp(_keyLoginInfo);
+  }
+
+  Future<void> setCorpInfo(String value) async {
+    setSp(_keyCorpInfo, value);
+  }
+
+  Future<String?> get corpInfo async {
+    return getSp(_keyCorpInfo);
   }
 
   Future<bool?> get meetingDebug async {
@@ -109,14 +118,6 @@ class GlobalPreferences extends Preferences {
     setSp(_keySecurityNotice, notice);
   }
 
-  Future<void> setMeetingInfo(String value) async {
-    setSp(_keyMeetingInfo, value);
-  }
-
-  Future<String?> get meetingInfo async {
-    return getSp(_keyMeetingInfo);
-  }
-
   Future<void> setMeetingEvaluation(String value) async {
     setSp(_keyMeetingEvaluation, value);
   }
@@ -131,5 +132,11 @@ class GlobalPreferences extends Preferences {
 
   void saveCorpCode(String? value) {
     value != null ? setSp(_keyCorpCode, value) : remove(_keyCorpCode);
+  }
+
+  Future<String?> getLanguageCode() => getSp(languageCode);
+
+  Future<void> setLanguageCode(String value) async {
+    setSp(languageCode, value);
   }
 }

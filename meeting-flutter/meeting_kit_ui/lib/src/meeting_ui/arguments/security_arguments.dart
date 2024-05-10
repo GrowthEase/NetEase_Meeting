@@ -8,7 +8,8 @@ class SecurityArguments {
   final NERoomContext roomContext;
   final WaitingRoomManager waitingRoomManager;
   final ValueListenable<bool> isMySelfManagerListenable;
+  final bool isGuestJoinSupported;
 
   SecurityArguments(this.roomContext, this.waitingRoomManager,
-      this.isMySelfManagerListenable);
+      this.isMySelfManagerListenable, this.isGuestJoinSupported);
 }

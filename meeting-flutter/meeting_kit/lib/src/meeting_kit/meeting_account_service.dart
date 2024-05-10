@@ -10,6 +10,14 @@ abstract class NEMeetingAccountService extends ChangeNotifier {
   /// 账号信息
   NEAccountInfo? getAccountInfo();
 
+  /// 企业通讯录搜索
+  Future<NEResult<List<NEContact>>> searchContacts(
+      {String? name, String? phoneNumber, int? pageSize, int? pageNum});
+
+  /// 通讯录用户信息查询
+  Future<NEResult<NEContactsInfoResponse>> getContactsInfo(
+      List<String> userUuids);
+
   bool get isLoggedIn => getAccountInfo() != null;
 
   _setAccountInfo(NEAccountInfo? accountInfo, [bool anonymous = false]);

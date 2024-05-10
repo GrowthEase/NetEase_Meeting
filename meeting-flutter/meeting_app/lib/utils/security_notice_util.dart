@@ -4,12 +4,12 @@
 
 import 'dart:async';
 
-import 'package:connectivity/connectivity.dart';
 import 'package:flutter/widgets.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/model/security_notice_info.dart';
 
 import 'package:nemeeting/service/repo/user_repo.dart';
+import 'package:netease_meeting_ui/meeting_ui.dart';
 
 class AppNotificationManager {
   static const _tag = 'AppNotificationManager';
@@ -34,10 +34,8 @@ class AppNotificationManager {
   }
 
   AppNotificationManager._internal() {
-    Connectivity().onConnectivityChanged.listen((event) {
-      if (event != ConnectivityResult.none) {
-        _doFetch();
-      }
+    ConnectivityManager().onReconnected.listen((event) {
+      _doFetch();
     });
   }
 

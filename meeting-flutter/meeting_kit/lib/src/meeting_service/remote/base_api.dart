@@ -7,7 +7,7 @@ part of meeting_service;
 abstract class BaseApi<T> {
   String path();
 
-  Map data();
+  Object? data();
 
   T parseResult(dynamic data) {
     return result(data as Map);

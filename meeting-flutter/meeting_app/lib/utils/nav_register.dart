@@ -21,6 +21,7 @@ import 'package:nemeeting/setting/avatar_setting.dart';
 import 'package:nemeeting/routes/qr_scan_page.dart';
 import '../routes/auth/reset_initial_password.dart';
 import '../language/localizations.dart';
+import '../setting/language_setting.dart';
 import '../uikit/utils/router_name.dart';
 import 'package:nemeeting/setting/meeting_setting.dart';
 import 'package:nemeeting/setting/nick_setting.dart';
@@ -49,6 +50,7 @@ class RoutesRegister {
     RouterName.modifyPassword: (context) => ModifyPasswordRoute(),
     RouterName.webview: (context) => WebViewPage(),
     RouterName.qrScan: (context) => QrScanPage(),
+    RouterName.languageSetting: (context) => LanguageSetting(),
   };
 
   static Map<String, Widget Function(dynamic)> get routes {

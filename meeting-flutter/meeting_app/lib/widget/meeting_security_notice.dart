@@ -19,10 +19,12 @@ import '../uikit/values/colors.dart';
 
 class MeetingAppNotificationBar extends StatefulWidget {
   final VoidCallback? onClose;
+  final AppNotification? notification;
 
   MeetingAppNotificationBar({
     Key? key,
     this.onClose,
+    this.notification,
   }) : super(key: key);
 
   @override
@@ -39,11 +41,15 @@ class MeetingAppNotificationBarState extends State<MeetingAppNotificationBar> {
   @override
   void initState() {
     super.initState();
-    _subscription = AppNotificationManager().appNotification.listen((event) {
-      setState(() {
-        _notification = event;
+    if (widget.notification != null) {
+      _notification = widget.notification;
+    } else {
+      _subscription = AppNotificationManager().appNotification.listen((event) {
+        setState(() {
+          _notification = event;
+        });
       });
-    });
+    }
   }
 
   @override

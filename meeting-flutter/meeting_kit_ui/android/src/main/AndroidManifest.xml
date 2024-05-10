@@ -15,6 +15,10 @@
 
     <!-- Android 13需要此运行时权限，但对于前台 Service 可以不用申请 -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- 通讯录读取 -->
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+
     <application>
 
         <!-- 解决高版本SDK(31以上)中不能访问系统SO库的问题：部分机型虚拟背景不生效 -->

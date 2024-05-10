@@ -217,12 +217,6 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'知道了'**
   String get globalGotIt;
 
-  /// No description provided for @globalMin.
-  ///
-  /// In zh, this message translates to:
-  /// **'分钟'**
-  String get globalMin;
-
   /// No description provided for @globalNotWork.
   ///
   /// In zh, this message translates to:
@@ -282,6 +276,30 @@ abstract class NEMeetingUIKitLocalizations {
   /// In zh, this message translates to:
   /// **'操作失败'**
   String get globalOperationFail;
+
+  /// No description provided for @globalOperationNotSupportedInMeeting.
+  ///
+  /// In zh, this message translates to:
+  /// **'会议中暂不支持该操作'**
+  String get globalOperationNotSupportedInMeeting;
+
+  /// No description provided for @globalClear.
+  ///
+  /// In zh, this message translates to:
+  /// **'清空'**
+  String get globalClear;
+
+  /// No description provided for @globalSearch.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索'**
+  String get globalSearch;
+
+  /// No description provided for @globalReject.
+  ///
+  /// In zh, this message translates to:
+  /// **'拒绝'**
+  String get globalReject;
 
   /// No description provided for @meetingBeauty.
   ///
@@ -1026,6 +1044,90 @@ abstract class NEMeetingUIKitLocalizations {
   /// In zh, this message translates to:
   /// **'{user}已经成为主持人'**
   String meetingUserIsNowTheHost(Object user);
+
+  /// No description provided for @meetingGuestJoin.
+  ///
+  /// In zh, this message translates to:
+  /// **'访客入会'**
+  String get meetingGuestJoin;
+
+  /// No description provided for @meetingGuestJoinSecurityNotice.
+  ///
+  /// In zh, this message translates to:
+  /// **'已开启访客入会，请注意会议信息安全'**
+  String get meetingGuestJoinSecurityNotice;
+
+  /// No description provided for @meetingGuestJoinEnableTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启后允许外部人员参会'**
+  String get meetingGuestJoinEnableTip;
+
+  /// No description provided for @meetingGuestJoinEnabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'访客入会已开启'**
+  String get meetingGuestJoinEnabled;
+
+  /// No description provided for @meetingGuestJoinDisabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'访客入会已关闭'**
+  String get meetingGuestJoinDisabled;
+
+  /// No description provided for @meetingGuestJoinConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认开启访客入会？'**
+  String get meetingGuestJoinConfirm;
+
+  /// No description provided for @meetingGuestJoinConfirmTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启后允许外部人员参会'**
+  String get meetingGuestJoinConfirmTip;
+
+  /// No description provided for @meetingSearchNotFound.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无搜索结果'**
+  String get meetingSearchNotFound;
+
+  /// No description provided for @meetingGuestJoinSupported.
+  ///
+  /// In zh, this message translates to:
+  /// **'该会议支持外部访客入会'**
+  String get meetingGuestJoinSupported;
+
+  /// No description provided for @meetingGuest.
+  ///
+  /// In zh, this message translates to:
+  /// **'外部访客'**
+  String get meetingGuest;
+
+  /// No description provided for @meetingGuestJoinNamePlaceholder.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入入会昵称'**
+  String get meetingGuestJoinNamePlaceholder;
+
+  /// No description provided for @meetingAppInvite.
+  ///
+  /// In zh, this message translates to:
+  /// **'{userName} 邀请你加入'**
+  String meetingAppInvite(Object userName);
+
+  /// No description provided for @meetingAudioJoinAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'语音入会'**
+  String get meetingAudioJoinAction;
+
+  /// No description provided for @meetingVideoJoinAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'视频入会'**
+  String get meetingVideoJoinAction;
 
   /// No description provided for @screenShare.
   ///
@@ -1909,6 +2011,30 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'未找到相关成员'**
   String get participantNotFound;
 
+  /// No description provided for @participantSetHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'设为主持人'**
+  String get participantSetHost;
+
+  /// No description provided for @participantSetCoHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'设为联席主持人'**
+  String get participantSetCoHost;
+
+  /// No description provided for @participantCancelCoHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'撤销联席主持人'**
+  String get participantCancelCoHost;
+
+  /// No description provided for @participantRemoveAttendee.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除参会者'**
+  String get participantRemoveAttendee;
+
   /// No description provided for @cloudRecordingEnabledTitle.
   ///
   /// In zh, this message translates to:
@@ -2146,13 +2272,13 @@ abstract class NEMeetingUIKitLocalizations {
   /// No description provided for @chatAllMembersInMeeting.
   ///
   /// In zh, this message translates to:
-  /// **'会议内所有人'**
+  /// **'会议中所有人'**
   String get chatAllMembersInMeeting;
 
   /// No description provided for @chatAllMembersInWaitingRoom.
   ///
   /// In zh, this message translates to:
-  /// **'等候室内所有人'**
+  /// **'等候室所有人'**
   String get chatAllMembersInWaitingRoom;
 
   /// No description provided for @chatHistory.
@@ -2575,11 +2701,515 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'查看详情'**
   String get notifyCenterViewingDetails;
 
-  /// No description provided for @globalOperationNotSupportedInMeeting.
+  /// No description provided for @sipCallByNumber.
   ///
   /// In zh, this message translates to:
-  /// **'会议中暂不支持该操作'**
-  String get globalOperationNotSupportedInMeeting;
+  /// **'拨号入会'**
+  String get sipCallByNumber;
+
+  /// No description provided for @sipCall.
+  ///
+  /// In zh, this message translates to:
+  /// **'呼叫'**
+  String get sipCall;
+
+  /// No description provided for @sipContacts.
+  ///
+  /// In zh, this message translates to:
+  /// **'会议通讯录'**
+  String get sipContacts;
+
+  /// No description provided for @sipNumberPlaceholder.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入手机号'**
+  String get sipNumberPlaceholder;
+
+  /// No description provided for @sipName.
+  ///
+  /// In zh, this message translates to:
+  /// **'受邀者名称'**
+  String get sipName;
+
+  /// No description provided for @sipNamePlaceholder.
+  ///
+  /// In zh, this message translates to:
+  /// **'名字将会在会议中展示'**
+  String get sipNamePlaceholder;
+
+  /// No description provided for @sipCallNumber.
+  ///
+  /// In zh, this message translates to:
+  /// **'拨出号码：'**
+  String get sipCallNumber;
+
+  /// No description provided for @sipNumberError.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入正确的手机号'**
+  String get sipNumberError;
+
+  /// No description provided for @sipCallIsCalling.
+  ///
+  /// In zh, this message translates to:
+  /// **'该号码已在呼叫中'**
+  String get sipCallIsCalling;
+
+  /// No description provided for @sipLocalContacts.
+  ///
+  /// In zh, this message translates to:
+  /// **'本地通讯录'**
+  String get sipLocalContacts;
+
+  /// No description provided for @sipContactsClear.
+  ///
+  /// In zh, this message translates to:
+  /// **'清空'**
+  String get sipContactsClear;
+
+  /// No description provided for @sipCalling.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在呼叫中...'**
+  String get sipCalling;
+
+  /// No description provided for @sipCallTerm.
+  ///
+  /// In zh, this message translates to:
+  /// **'挂断'**
+  String get sipCallTerm;
+
+  /// No description provided for @sipCallOthers.
+  ///
+  /// In zh, this message translates to:
+  /// **'呼叫其他成员'**
+  String get sipCallOthers;
+
+  /// No description provided for @sipCallFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'呼叫失败'**
+  String get sipCallFailed;
+
+  /// No description provided for @sipCallAgain.
+  ///
+  /// In zh, this message translates to:
+  /// **'重新拨打'**
+  String get sipCallAgain;
+
+  /// No description provided for @sipSearch.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索'**
+  String get sipSearch;
+
+  /// No description provided for @sipSearchContacts.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索并添加参会人'**
+  String get sipSearchContacts;
+
+  /// No description provided for @sipCallPhone.
+  ///
+  /// In zh, this message translates to:
+  /// **'电话呼叫'**
+  String get sipCallPhone;
+
+  /// No description provided for @sipCallingNumber.
+  ///
+  /// In zh, this message translates to:
+  /// **'未入会'**
+  String get sipCallingNumber;
+
+  /// No description provided for @sipCallCancel.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消呼叫'**
+  String get sipCallCancel;
+
+  /// No description provided for @sipCallAgainEx.
+  ///
+  /// In zh, this message translates to:
+  /// **'再次呼叫'**
+  String get sipCallAgainEx;
+
+  /// No description provided for @sipCallStatusCalling.
+  ///
+  /// In zh, this message translates to:
+  /// **'电话呼叫中'**
+  String get sipCallStatusCalling;
+
+  /// No description provided for @callStatusCalling.
+  ///
+  /// In zh, this message translates to:
+  /// **'呼叫中'**
+  String get callStatusCalling;
+
+  /// No description provided for @sipCallStatusWaiting.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待呼叫中'**
+  String get sipCallStatusWaiting;
+
+  /// No description provided for @callStatusWaitingJoin.
+  ///
+  /// In zh, this message translates to:
+  /// **'待入会'**
+  String get callStatusWaitingJoin;
+
+  /// No description provided for @sipCallStatusTermed.
+  ///
+  /// In zh, this message translates to:
+  /// **'已挂断'**
+  String get sipCallStatusTermed;
+
+  /// No description provided for @sipCallStatusUnaccepted.
+  ///
+  /// In zh, this message translates to:
+  /// **'未接听'**
+  String get sipCallStatusUnaccepted;
+
+  /// No description provided for @sipCallStatusRejected.
+  ///
+  /// In zh, this message translates to:
+  /// **'已拒接'**
+  String get sipCallStatusRejected;
+
+  /// No description provided for @sipCallStatusCanceled.
+  ///
+  /// In zh, this message translates to:
+  /// **'呼叫已取消'**
+  String get sipCallStatusCanceled;
+
+  /// No description provided for @sipCallStatusError.
+  ///
+  /// In zh, this message translates to:
+  /// **'呼叫异常'**
+  String get sipCallStatusError;
+
+  /// No description provided for @sipPhoneNumber.
+  ///
+  /// In zh, this message translates to:
+  /// **'电话号码'**
+  String get sipPhoneNumber;
+
+  /// No description provided for @sipCallMemberSelected.
+  ///
+  /// In zh, this message translates to:
+  /// **'已选：{count}'**
+  String sipCallMemberSelected(Object count);
+
+  /// No description provided for @sipContactsPrivacy.
+  ///
+  /// In zh, this message translates to:
+  /// **'请授权访问您的通讯录，用于呼叫联系人以电话方式入会'**
+  String get sipContactsPrivacy;
+
+  /// No description provided for @memberCountOutOfRange.
+  ///
+  /// In zh, this message translates to:
+  /// **'已达会议人数上限'**
+  String get memberCountOutOfRange;
+
+  /// No description provided for @sipContactNoNumber.
+  ///
+  /// In zh, this message translates to:
+  /// **'该成员无电话信息，暂不支持选择'**
+  String get sipContactNoNumber;
+
+  /// No description provided for @sipCallIsInMeeting.
+  ///
+  /// In zh, this message translates to:
+  /// **'该成员已在会议中'**
+  String get sipCallIsInMeeting;
+
+  /// No description provided for @sipCallIsInInviting.
+  ///
+  /// In zh, this message translates to:
+  /// **'该成员正在呼叫中'**
+  String get sipCallIsInInviting;
+
+  /// No description provided for @sipCallIsInBlacklist.
+  ///
+  /// In zh, this message translates to:
+  /// **'该成员已被标记不允许再次加入，如需邀请，请关闭会议黑名单'**
+  String get sipCallIsInBlacklist;
+
+  /// No description provided for @sipCallByPhone.
+  ///
+  /// In zh, this message translates to:
+  /// **'电话呼叫'**
+  String get sipCallByPhone;
+
+  /// No description provided for @sipKeypad.
+  ///
+  /// In zh, this message translates to:
+  /// **'拨号'**
+  String get sipKeypad;
+
+  /// No description provided for @sipBatchCall.
+  ///
+  /// In zh, this message translates to:
+  /// **'批量呼叫'**
+  String get sipBatchCall;
+
+  /// No description provided for @sipLocalContactsEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'本地通讯录为空'**
+  String get sipLocalContactsEmpty;
+
+  /// No description provided for @sipCallMaxCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'单次最多选择{count}人'**
+  String sipCallMaxCount(Object count);
+
+  /// No description provided for @sipInviteInfo.
+  ///
+  /// In zh, this message translates to:
+  /// **'邀请信息'**
+  String get sipInviteInfo;
+
+  /// No description provided for @sipAddressInvite.
+  ///
+  /// In zh, this message translates to:
+  /// **'通讯录邀请'**
+  String get sipAddressInvite;
+
+  /// No description provided for @sipJoinOtherMeetingTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'加入后将离开当前会议'**
+  String get sipJoinOtherMeetingTip;
+
+  /// No description provided for @monitoring.
+  ///
+  /// In zh, this message translates to:
+  /// **'质量监控'**
+  String get monitoring;
+
+  /// No description provided for @overall.
+  ///
+  /// In zh, this message translates to:
+  /// **'总体'**
+  String get overall;
+
+  /// No description provided for @soundAndVideo.
+  ///
+  /// In zh, this message translates to:
+  /// **'音视频'**
+  String get soundAndVideo;
+
+  /// No description provided for @cpu.
+  ///
+  /// In zh, this message translates to:
+  /// **'CPU'**
+  String get cpu;
+
+  /// No description provided for @memory.
+  ///
+  /// In zh, this message translates to:
+  /// **'内存'**
+  String get memory;
+
+  /// No description provided for @network.
+  ///
+  /// In zh, this message translates to:
+  /// **'网络'**
+  String get network;
+
+  /// No description provided for @bandwidth.
+  ///
+  /// In zh, this message translates to:
+  /// **'带宽'**
+  String get bandwidth;
+
+  /// No description provided for @networkType.
+  ///
+  /// In zh, this message translates to:
+  /// **'网络类型'**
+  String get networkType;
+
+  /// No description provided for @networkState.
+  ///
+  /// In zh, this message translates to:
+  /// **'网络状况'**
+  String get networkState;
+
+  /// No description provided for @delay.
+  ///
+  /// In zh, this message translates to:
+  /// **'延迟'**
+  String get delay;
+
+  /// No description provided for @packageLossRate.
+  ///
+  /// In zh, this message translates to:
+  /// **'丢包率'**
+  String get packageLossRate;
+
+  /// No description provided for @recently.
+  ///
+  /// In zh, this message translates to:
+  /// **'近'**
+  String get recently;
+
+  /// No description provided for @audio.
+  ///
+  /// In zh, this message translates to:
+  /// **'音频'**
+  String get audio;
+
+  /// No description provided for @microphone.
+  ///
+  /// In zh, this message translates to:
+  /// **'麦克风'**
+  String get microphone;
+
+  /// No description provided for @speaker.
+  ///
+  /// In zh, this message translates to:
+  /// **'扬声器'**
+  String get speaker;
+
+  /// No description provided for @bitrate.
+  ///
+  /// In zh, this message translates to:
+  /// **'码率'**
+  String get bitrate;
+
+  /// No description provided for @speakerPlayback.
+  ///
+  /// In zh, this message translates to:
+  /// **'扬声器播放'**
+  String get speakerPlayback;
+
+  /// No description provided for @microphoneAcquisition.
+  ///
+  /// In zh, this message translates to:
+  /// **'麦克风采集'**
+  String get microphoneAcquisition;
+
+  /// No description provided for @resolution.
+  ///
+  /// In zh, this message translates to:
+  /// **'分辨率'**
+  String get resolution;
+
+  /// No description provided for @frameRate.
+  ///
+  /// In zh, this message translates to:
+  /// **'帧率'**
+  String get frameRate;
+
+  /// No description provided for @moreMonitoring.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看更多数据'**
+  String get moreMonitoring;
+
+  /// No description provided for @layoutSettings.
+  ///
+  /// In zh, this message translates to:
+  /// **'布局设置'**
+  String get layoutSettings;
+
+  /// No description provided for @galleryModeMaxCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'画廊模式下单屏显示的最大画面数'**
+  String get galleryModeMaxCount;
+
+  /// No description provided for @galleryModeScreens.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 画面'**
+  String galleryModeScreens(Object count);
+
+  /// No description provided for @followGalleryLayout.
+  ///
+  /// In zh, this message translates to:
+  /// **'跟随主持人视频顺序'**
+  String get followGalleryLayout;
+
+  /// No description provided for @resetGalleryLayout.
+  ///
+  /// In zh, this message translates to:
+  /// **'重置视频顺序'**
+  String get resetGalleryLayout;
+
+  /// No description provided for @followGalleryLayoutTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'将主持人画廊模式前25个视频顺序同步给所有参会者，且不允许参会者自行改变。'**
+  String get followGalleryLayoutTips;
+
+  /// No description provided for @followGalleryLayoutConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人已设置“跟随主持人视频顺序”，无法移动视频。'**
+  String get followGalleryLayoutConfirm;
+
+  /// No description provided for @followGalleryLayoutResetConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人已设置“跟随主持人视频顺序”，无法重置视频顺序。'**
+  String get followGalleryLayoutResetConfirm;
+
+  /// No description provided for @saveGalleryLayoutTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存视频顺序'**
+  String get saveGalleryLayoutTitle;
+
+  /// No description provided for @saveGalleryLayoutContent.
+  ///
+  /// In zh, this message translates to:
+  /// **'将当前视频顺序保存到该预约会议，可供后续会议使用，确定保存？'**
+  String get saveGalleryLayoutContent;
+
+  /// No description provided for @replaceGalleryLayoutContent.
+  ///
+  /// In zh, this message translates to:
+  /// **'该预约会议已有一份旧的视频顺序，是否替换并保存为新的视频顺序？'**
+  String get replaceGalleryLayoutContent;
+
+  /// No description provided for @loadGalleryLayoutTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'加载视频顺序'**
+  String get loadGalleryLayoutTitle;
+
+  /// No description provided for @loadGalleryLayoutContent.
+  ///
+  /// In zh, this message translates to:
+  /// **'该预约会议已有一份视频顺序，是否加载？'**
+  String get loadGalleryLayoutContent;
+
+  /// No description provided for @load.
+  ///
+  /// In zh, this message translates to:
+  /// **'加载'**
+  String get load;
+
+  /// No description provided for @noLoadGalleryLayout.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无可加载的视频顺序'**
+  String get noLoadGalleryLayout;
+
+  /// No description provided for @loadSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'加载成功'**
+  String get loadSuccess;
+
+  /// No description provided for @loadFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'加载失败'**
+  String get loadFail;
 }
 
 class _NEMeetingUIKitLocalizationsDelegate

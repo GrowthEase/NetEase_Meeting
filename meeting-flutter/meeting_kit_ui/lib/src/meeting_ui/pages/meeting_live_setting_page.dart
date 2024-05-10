@@ -79,10 +79,30 @@ class MeetingLiveSettingState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _UIColors.white,
-      appBar: buildAppBar(context),
-      body: buildBody(),
-    );
+        backgroundColor: _UIColors.white,
+        appBar: TitleBar(
+          leading: const TitleBarCloseIcon(),
+          trailing: TextButton(
+              child: Text(NEMeetingUIKitLocalizations.of(context)!.globalSave,
+                  style:
+                      TextStyle(color: _UIColors.color_337eff, fontSize: 16.0)),
+              onPressed: () {
+                final newList = [...liveUids]..removeWhere((userId) {
+                    final user = roomContext.getMember(userId.toString());
+                    return user == null || !isUserValidForLive(user);
+                  });
+                Navigator.pop(
+                    context,
+                    liveLayout != NERoomLiveLayout.none
+                        ? (NERoomLiveInfo(title: _live.title)
+                          ..liveLayout = liveLayout
+                          ..userUuidList = newList)
+                        : null);
+              }),
+          title: TitleBarTitle(
+              NEMeetingUIKitLocalizations.of(context)!.liveViewSetting),
+        ),
+        body: buildBody());
   }
 
   AppBar buildAppBar(BuildContext context) {

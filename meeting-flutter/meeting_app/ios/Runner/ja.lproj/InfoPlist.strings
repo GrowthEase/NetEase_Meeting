@@ -1,4 +1,5 @@
 "NSCameraUsageDescription" = "音声ビデオ会議では、ビデオ通信を行うためにカメラ権限を申請する必要があります。";
 "NSMicrophoneUsageDescription" = "オーディオ会議では、オーディオ通信を行うためにマイク権限を申請する必要があります。";
 "NSPhotoUsageDescription" = "会議での仮想背景(背景画像の追加・変更)機能のために、写真権限の申請が必要です。";
+"NSContactsUsageDescription" = "アドレス帳へのアクセスを許可してください連絡先に電話で入会します";
 "CFBundleDisplayName" = "網易会議";

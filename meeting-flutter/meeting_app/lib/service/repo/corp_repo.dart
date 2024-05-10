@@ -149,9 +149,8 @@ final class NESSOLoginController with AppLogger {
   Uri _buildAuthUri(String appKey, int idp) {
     _appKey = appKey;
     _uuid = Uuid().v4();
-    final uri = Uri.parse(Servers().baseUrl);
+    final uri = Uri.parse(Servers().baseUrl + 'scene/meeting/v2/sso-authorize');
     return uri.replace(
-      path: '/scene/meeting/v2/sso-authorize',
       queryParameters: {
         if (callback != null && callback!.isNotEmpty) 'callback': callback!,
         'appKey': appKey,

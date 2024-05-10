@@ -108,10 +108,10 @@ class NERoomLogService {
     var directory;
     if (Platform.isIOS) {
       directory = await getApplicationDocumentsDirectory();
-      return '${directory.path}/NIMSDK/Logs/extra_log/MeetingKit/';
+      return '${directory.path}/NIMSDK/Logs/extra_log/xkit/';
     } else {
       directory = await getExternalStorageDirectory();
-      return '${directory.path}/nim/extra_log/MeetingKit/';
+      return '${directory.path}/nim/extra_log/xkit/';
     }
   }
 }

@@ -4,12 +4,16 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nemeeting/base/util/global_preferences.dart';
 import 'package:nemeeting/routes/home_page.dart';
 import 'package:nemeeting/service/auth/password_utils.dart';
+import 'package:nemeeting/service/config/app_config.dart';
 import 'package:nemeeting/service/repo/auth_repo.dart';
 import 'package:nemeeting/service/repo/corp_repo.dart';
+import 'package:nemeeting/uikit/values/asset_name.dart';
 import 'package:nemeeting/uikit/values/colors.dart';
 import 'package:nemeeting/uikit/values/fonts.dart';
+import 'package:nemeeting/utils/privacy_util.dart';
 import 'package:nemeeting/utils/state_utils.dart';
 import 'package:nemeeting/widget/meeting_text_field.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
@@ -32,6 +36,16 @@ class LoginCorpAccountState extends BaseState
   late NECorpInfo corpInfo;
   final _corpAccountController = TextEditingController();
   final _corpPasswordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    GlobalPreferences().hasPrivacyDialogShowed.then((value) {
+      if (value != true) {
+        PrivacyUtil.showPrivacyDialog(context);
+      }
+    });
+  }
 
   @override
   void didChangeDependencies() {
@@ -117,7 +131,10 @@ class LoginCorpAccountState extends BaseState
                       fontSize: 14.spMin,
                     ),
                   ),
-                  onTap: () {
+                  onTap: () async {
+                    if (!await PrivacyUtil.ensurePrivacyAgree(context)) {
+                      return;
+                    }
                     NavUtils.pushNamed(context, RouterName.ssoLogin,
                         arguments: corpInfo.corpCode);
                   }),
@@ -134,6 +151,17 @@ class LoginCorpAccountState extends BaseState
                     onTap: isLoginButtonEnable ? login : null);
               },
             ),
+            Spacer(),
+            Padding(
+              padding: EdgeInsets.only(left: 20.w, right: 20.w),
+              child: PrivacyUtil.protocolTips(),
+            ),
+            SizedBox(
+              height: 16.h,
+            ),
+            SizedBox(
+              height: 10.h,
+            ),
           ],
         ),
       ),
@@ -145,7 +173,10 @@ class LoginCorpAccountState extends BaseState
         PasswordUtils.isLengthValid(_corpPasswordController.text.trim());
   }
 
-  void login() {
+  Future<void> login() async {
+    if (!await PrivacyUtil.ensurePrivacyAgree(context)) {
+      return;
+    }
     doIfNetworkAvailable(() async {
       final account = _corpAccountController.text.trim();
       final password = _corpPasswordController.text.trim();

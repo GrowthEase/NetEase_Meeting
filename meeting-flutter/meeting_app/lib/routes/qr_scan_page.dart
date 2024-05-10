@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/application.dart';
 import 'package:nemeeting/uikit/state/meeting_base_state.dart';
@@ -103,7 +102,7 @@ class QrScanState extends MeetingBaseState<QrScanPage> {
               children: <Widget>[
                 if (result != null)
                   Text(
-                      'Barcode Type: ${describeEnum(result!.format)}   Data: ${result!.code}')
+                      'Barcode Type: ${result!.format.name}   Data: ${result!.code}')
                 else
                   const Text('Scan a code'),
                 Row(
@@ -136,7 +135,7 @@ class QrScanState extends MeetingBaseState<QrScanPage> {
                             builder: (context, snapshot) {
                               if (snapshot.data != null) {
                                 return Text(
-                                    'Camera facing ${describeEnum(snapshot.data!)}');
+                                    'Camera facing ${snapshot.data!.name}');
                               } else {
                                 return const Text('loading');
                               }

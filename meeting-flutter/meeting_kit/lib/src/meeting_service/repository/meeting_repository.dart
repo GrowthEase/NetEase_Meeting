@@ -33,8 +33,8 @@ class MeetingRepository {
     );
   }
 
-  static Future<NEResult<MeetingInfo>> getMeetingInfo(String meetingId) {
-    return HttpApiHelper.execute(_GetMeetingInfoApi(meetingId));
+  static Future<NEResult<MeetingInfo>> getMeetingInfo(String meetingNum) {
+    return HttpApiHelper.execute(_GetMeetingInfoApi(meetingNum));
   }
 
   static Future<NEResult<MeetingInfo>> getMeetingInfoBySharingCode(
@@ -68,5 +68,17 @@ class MeetingRepository {
   static Future<NEResult<Map<String, dynamic>>> getWaitingRoomProperties(
       roomUuid) {
     return HttpApiHelper._getWaitingRoomProperties(roomUuid);
+  }
+
+  /// 通讯录搜索
+  static Future<NEResult<List<NEContact>>> searchContacts(
+      String? name, String? phoneNumber, int? pageSize, int? pageNum) {
+    return HttpApiHelper._searchContacts(name, phoneNumber, pageSize, pageNum);
+  }
+
+  /// 通讯录用户信息获取, userUuids最大长度50
+  static Future<NEResult<NEContactsInfoResponse>> getContactsInfo(
+      List<String> userUuids) {
+    return HttpApiHelper._getContactsInfo(userUuids);
   }
 }

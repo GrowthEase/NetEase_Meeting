@@ -54,7 +54,7 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get globalCopyright => 'すべての著作権1997-2024ネッ網易会社は\nすべての権利を留保する。';
 
   @override
-  String get globalAppRegistryNO => '浙ICP17006647号-124A';
+  String get globalAppRegistryNO => '浙ICP备17006647号-124A';
 
   @override
   String get globalNetworkUnavailableCheck =>
@@ -102,6 +102,12 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get globalDay => '日';
 
   @override
+  String get globalHours => '時間';
+
+  @override
+  String get globalMinutes => '分';
+
+  @override
   String get globalSave => '保存';
 
   @override
@@ -136,6 +142,12 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
 
   @override
   String get globalIKnow => '知っています';
+
+  @override
+  String get globalAdd => '追加';
+
+  @override
+  String get globalDateFormat => 'yyyy-MM-dd';
 
   @override
   String get authImmediatelyRegister => '登録します';
@@ -574,6 +586,9 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get meetingHasBeenCanceled => '会議が他のログインデバイスによってキャンセルされました';
 
   @override
+  String get meetingHasBeenCanceledByOwner => '会議は作成者によってキャンセルされました';
+
+  @override
   String get meetingRepeat => '周期';
 
   @override
@@ -732,6 +747,35 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get meetingRepeatCancelEdit => '編集の取り消し';
 
   @override
+  String get meetingGuestJoin => '訪問者入会';
+
+  @override
+  String get meetingGuestJoinSecurityNotice => '訪問者入会を開始しましたので、会議情報の安全にご注意ください';
+
+  @override
+  String get meetingGuestJoinEnableTip => 'オープン後に外部のユーザを参加させる';
+
+  @override
+  String get meetingAttendees => '参加者';
+
+  @override
+  String meetingAttendeeCount(Object count) {
+    return '$count人';
+  }
+
+  @override
+  String get meetingAddAttendee => '参加者の追加';
+
+  @override
+  String get meetingSearchAndAddAttendee => '参加者を検索して追加';
+
+  @override
+  String get meetingOpen => '展開';
+
+  @override
+  String get meetingClose => '折り畳み';
+
+  @override
   String get historyMeeting => '歴史会議';
 
   @override
@@ -742,6 +786,9 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
 
   @override
   String get historyMeetingListEmpty => '歴史会議はまだありません';
+
+  @override
+  String get historyCollectMeetingListEmpty => 'コレクションのない会議';
 
   @override
   String get historyChat => 'チャット記録';
@@ -927,6 +974,11 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get settingServiceBundleTitle => 'サポートされる会議';
 
   @override
+  String settingServiceBundleExpireTime(Object expireTime) {
+    return '期限:$expireTime';
+  }
+
+  @override
   String settingServiceBundleDetailLimitedMinutes(
       Object maxCount, Object maxMinutes) {
     return '$maxCount名の参加者、期間限定$maxMinutes分会議';
@@ -936,6 +988,13 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String settingServiceBundleDetailUnlimitedMinutes(Object maxCount) {
     return '$maxCount人、単場無制限時会議';
   }
+
+  @override
+  String get settingServiceBundleExpirationDate => '有効期限';
+
+  @override
+  String get settingServiceBundleExpirationDateTip =>
+      'サービスが期限切れです。延長が必要な場合は、企業管理者に連絡してください。';
 
   @override
   String get settingUpdateFailed => '更新に失敗しました';
@@ -963,6 +1022,15 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
 
   @override
   String get settingComfirmExitApp => '確認してアプリを終了します';
+
+  @override
+  String get settingSwitchLanguage => '言語設定';
+
+  @override
+  String get settingSetLanguage => '言語設定';
+
+  @override
+  String get settingLanguageTip => '日本語';
 
   @override
   String get feedbackInRoom => 'フィードバック';

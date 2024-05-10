@@ -66,9 +66,6 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get globalGotIt => '知道了';
 
   @override
-  String get globalMin => '分钟';
-
-  @override
   String globalNotWork(Object permissionName) {
     return '无法使用$permissionName';
   }
@@ -101,6 +98,18 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get globalOperationFail => '操作失败';
+
+  @override
+  String get globalOperationNotSupportedInMeeting => '会议中暂不支持该操作';
+
+  @override
+  String get globalClear => '清空';
+
+  @override
+  String get globalSearch => '搜索';
+
+  @override
+  String get globalReject => '拒绝';
 
   @override
   String get meetingBeauty => '美颜';
@@ -488,6 +497,50 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String meetingUserIsNowTheHost(Object user) {
     return '$user已经成为主持人';
   }
+
+  @override
+  String get meetingGuestJoin => '访客入会';
+
+  @override
+  String get meetingGuestJoinSecurityNotice => '已开启访客入会，请注意会议信息安全';
+
+  @override
+  String get meetingGuestJoinEnableTip => '开启后允许外部人员参会';
+
+  @override
+  String get meetingGuestJoinEnabled => '访客入会已开启';
+
+  @override
+  String get meetingGuestJoinDisabled => '访客入会已关闭';
+
+  @override
+  String get meetingGuestJoinConfirm => '确认开启访客入会？';
+
+  @override
+  String get meetingGuestJoinConfirmTip => '开启后允许外部人员参会';
+
+  @override
+  String get meetingSearchNotFound => '暂无搜索结果';
+
+  @override
+  String get meetingGuestJoinSupported => '该会议支持外部访客入会';
+
+  @override
+  String get meetingGuest => '外部访客';
+
+  @override
+  String get meetingGuestJoinNamePlaceholder => '请输入入会昵称';
+
+  @override
+  String meetingAppInvite(Object userName) {
+    return '$userName 邀请你加入';
+  }
+
+  @override
+  String get meetingAudioJoinAction => '语音入会';
+
+  @override
+  String get meetingVideoJoinAction => '视频入会';
 
   @override
   String get screenShare => '共享屏幕';
@@ -941,6 +994,18 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get participantNotFound => '未找到相关成员';
 
   @override
+  String get participantSetHost => '设为主持人';
+
+  @override
+  String get participantSetCoHost => '设为联席主持人';
+
+  @override
+  String get participantCancelCoHost => '撤销联席主持人';
+
+  @override
+  String get participantRemoveAttendee => '删除参会者';
+
+  @override
   String get cloudRecordingEnabledTitle => '是否开启云录制';
 
   @override
@@ -1061,10 +1126,10 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get chatSendTo => '发送至';
 
   @override
-  String get chatAllMembersInMeeting => '会议内所有人';
+  String get chatAllMembersInMeeting => '会议中所有人';
 
   @override
-  String get chatAllMembersInWaitingRoom => '等候室内所有人';
+  String get chatAllMembersInWaitingRoom => '等候室所有人';
 
   @override
   String get chatHistory => '聊天记录';
@@ -1286,5 +1351,263 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get notifyCenterViewingDetails => '查看详情';
 
   @override
-  String get globalOperationNotSupportedInMeeting => '会议中暂不支持该操作';
+  String get sipCallByNumber => '拨号入会';
+
+  @override
+  String get sipCall => '呼叫';
+
+  @override
+  String get sipContacts => '会议通讯录';
+
+  @override
+  String get sipNumberPlaceholder => '请输入手机号';
+
+  @override
+  String get sipName => '受邀者名称';
+
+  @override
+  String get sipNamePlaceholder => '名字将会在会议中展示';
+
+  @override
+  String get sipCallNumber => '拨出号码：';
+
+  @override
+  String get sipNumberError => '请输入正确的手机号';
+
+  @override
+  String get sipCallIsCalling => '该号码已在呼叫中';
+
+  @override
+  String get sipLocalContacts => '本地通讯录';
+
+  @override
+  String get sipContactsClear => '清空';
+
+  @override
+  String get sipCalling => '正在呼叫中...';
+
+  @override
+  String get sipCallTerm => '挂断';
+
+  @override
+  String get sipCallOthers => '呼叫其他成员';
+
+  @override
+  String get sipCallFailed => '呼叫失败';
+
+  @override
+  String get sipCallAgain => '重新拨打';
+
+  @override
+  String get sipSearch => '搜索';
+
+  @override
+  String get sipSearchContacts => '搜索并添加参会人';
+
+  @override
+  String get sipCallPhone => '电话呼叫';
+
+  @override
+  String get sipCallingNumber => '未入会';
+
+  @override
+  String get sipCallCancel => '取消呼叫';
+
+  @override
+  String get sipCallAgainEx => '再次呼叫';
+
+  @override
+  String get sipCallStatusCalling => '电话呼叫中';
+
+  @override
+  String get callStatusCalling => '呼叫中';
+
+  @override
+  String get sipCallStatusWaiting => '等待呼叫中';
+
+  @override
+  String get callStatusWaitingJoin => '待入会';
+
+  @override
+  String get sipCallStatusTermed => '已挂断';
+
+  @override
+  String get sipCallStatusUnaccepted => '未接听';
+
+  @override
+  String get sipCallStatusRejected => '已拒接';
+
+  @override
+  String get sipCallStatusCanceled => '呼叫已取消';
+
+  @override
+  String get sipCallStatusError => '呼叫异常';
+
+  @override
+  String get sipPhoneNumber => '电话号码';
+
+  @override
+  String sipCallMemberSelected(Object count) {
+    return '已选：$count';
+  }
+
+  @override
+  String get sipContactsPrivacy => '请授权访问您的通讯录，用于呼叫联系人以电话方式入会';
+
+  @override
+  String get memberCountOutOfRange => '已达会议人数上限';
+
+  @override
+  String get sipContactNoNumber => '该成员无电话信息，暂不支持选择';
+
+  @override
+  String get sipCallIsInMeeting => '该成员已在会议中';
+
+  @override
+  String get sipCallIsInInviting => '该成员正在呼叫中';
+
+  @override
+  String get sipCallIsInBlacklist => '该成员已被标记不允许再次加入，如需邀请，请关闭会议黑名单';
+
+  @override
+  String get sipCallByPhone => '电话呼叫';
+
+  @override
+  String get sipKeypad => '拨号';
+
+  @override
+  String get sipBatchCall => '批量呼叫';
+
+  @override
+  String get sipLocalContactsEmpty => '本地通讯录为空';
+
+  @override
+  String sipCallMaxCount(Object count) {
+    return '单次最多选择$count人';
+  }
+
+  @override
+  String get sipInviteInfo => '邀请信息';
+
+  @override
+  String get sipAddressInvite => '通讯录邀请';
+
+  @override
+  String get sipJoinOtherMeetingTip => '加入后将离开当前会议';
+
+  @override
+  String get monitoring => '质量监控';
+
+  @override
+  String get overall => '总体';
+
+  @override
+  String get soundAndVideo => '音视频';
+
+  @override
+  String get cpu => 'CPU';
+
+  @override
+  String get memory => '内存';
+
+  @override
+  String get network => '网络';
+
+  @override
+  String get bandwidth => '带宽';
+
+  @override
+  String get networkType => '网络类型';
+
+  @override
+  String get networkState => '网络状况';
+
+  @override
+  String get delay => '延迟';
+
+  @override
+  String get packageLossRate => '丢包率';
+
+  @override
+  String get recently => '近';
+
+  @override
+  String get audio => '音频';
+
+  @override
+  String get microphone => '麦克风';
+
+  @override
+  String get speaker => '扬声器';
+
+  @override
+  String get bitrate => '码率';
+
+  @override
+  String get speakerPlayback => '扬声器播放';
+
+  @override
+  String get microphoneAcquisition => '麦克风采集';
+
+  @override
+  String get resolution => '分辨率';
+
+  @override
+  String get frameRate => '帧率';
+
+  @override
+  String get moreMonitoring => '查看更多数据';
+
+  @override
+  String get layoutSettings => '布局设置';
+
+  @override
+  String get galleryModeMaxCount => '画廊模式下单屏显示的最大画面数';
+
+  @override
+  String galleryModeScreens(Object count) {
+    return '$count 画面';
+  }
+
+  @override
+  String get followGalleryLayout => '跟随主持人视频顺序';
+
+  @override
+  String get resetGalleryLayout => '重置视频顺序';
+
+  @override
+  String get followGalleryLayoutTips => '将主持人画廊模式前25个视频顺序同步给所有参会者，且不允许参会者自行改变。';
+
+  @override
+  String get followGalleryLayoutConfirm => '主持人已设置“跟随主持人视频顺序”，无法移动视频。';
+
+  @override
+  String get followGalleryLayoutResetConfirm => '主持人已设置“跟随主持人视频顺序”，无法重置视频顺序。';
+
+  @override
+  String get saveGalleryLayoutTitle => '保存视频顺序';
+
+  @override
+  String get saveGalleryLayoutContent => '将当前视频顺序保存到该预约会议，可供后续会议使用，确定保存？';
+
+  @override
+  String get replaceGalleryLayoutContent => '该预约会议已有一份旧的视频顺序，是否替换并保存为新的视频顺序？';
+
+  @override
+  String get loadGalleryLayoutTitle => '加载视频顺序';
+
+  @override
+  String get loadGalleryLayoutContent => '该预约会议已有一份视频顺序，是否加载？';
+
+  @override
+  String get load => '加载';
+
+  @override
+  String get noLoadGalleryLayout => '暂无可加载的视频顺序';
+
+  @override
+  String get loadSuccess => '加载成功';
+
+  @override
+  String get loadFail => '加载失败';
 }

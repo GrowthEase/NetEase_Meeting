@@ -249,7 +249,7 @@ class ModifyPasswordState extends BaseState with MeetingAppLocalizationsMixin {
             context, meetingAppLocalizations.settingModifySuccess,
             duration: const Duration(seconds: 1), onDismiss: () {
           if (!mounted) return;
-          NavUtils.pushNamedAndRemoveUntil(context, RouterName.entrance);
+          NavUtils.toEntrance(context);
         });
       } else {
         var errorMsg =

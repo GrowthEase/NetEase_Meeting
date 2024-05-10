@@ -68,31 +68,10 @@ class MeetingChatPermissionState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _UIColors.globalBg,
-      appBar: buildAppBar(context),
+      appBar: TitleBar(
+        title: TitleBarTitle(meetingUiLocalizations.chat),
+      ),
       body: _buildBody(),
-    );
-  }
-
-  AppBar buildAppBar(BuildContext context) {
-    return AppBar(
-      title: Text(
-        meetingUiLocalizations.chat,
-        style: TextStyle(color: _UIColors.color_222222, fontSize: 17),
-      ),
-      centerTitle: true,
-      backgroundColor: _UIColors.white,
-      elevation: 0.0,
-      leading: IconButton(
-        icon: const Icon(
-          NEMeetingIconFont.icon_yx_returnx,
-          size: 18,
-          color: _UIColors.color_666666,
-        ),
-        onPressed: () {
-          Navigator.maybePop(context);
-        },
-      ),
-      // systemOverlayStyle: SystemUiOverlayStyle.light,
     );
   }
 
@@ -259,9 +238,9 @@ class MeetingChatPermissionState
   }
 
   void doIfNetworkAvailable(VoidCallback callback) async {
-    final result = await Connectivity().checkConnectivity();
+    final connected = await ConnectivityManager().isConnected();
     if (!mounted) return;
-    if (result == ConnectivityResult.none) {
+    if (!connected) {
       showToast(meetingKitLocalizations.networkUnavailableCheck);
       return;
     }

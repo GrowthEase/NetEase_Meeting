@@ -65,9 +65,15 @@ class HttpApiHelper {
     return execute(_DeleteMeetingApi(meetingId));
   }
 
-  ///根据唯一id获取会议信息
-  static Future<NEResult<NEMeetingItem>> _getRoomItemById(String meetingNum) {
-    return execute(_GetMeetingItemByIdApi(meetingNum));
+  ///根据meetingNum获取会议信息
+  static Future<NEResult<NEMeetingItem>> _getMeetingItemByNum(
+      String meetingNum) {
+    return execute(_GetMeetingItemByNumApi(meetingNum));
+  }
+
+  /// 根据MeetingId查询会议信息，如果是周期性会议的话，返回的是周期性会议最新的一次会议信息
+  static Future<NEResult<NEMeetingItem>> _getMeetingItemById(int meetingId) {
+    return execute(_GetMeetingItemByIdApi(meetingId));
   }
 
   ///根据会议状态查询会议信息列表
@@ -112,5 +118,23 @@ class HttpApiHelper {
   static Future<NEResult<Map<String, dynamic>>> _getWaitingRoomProperties(
       String roomUuid) {
     return execute(_GetWaitingRoomPropertiesApi(roomUuid));
+  }
+
+  /// 通讯录搜索
+  static Future<NEResult<List<NEContact>>> _searchContacts(
+      String? name, String? phoneNumber, int? pageSize, int? pageNum) {
+    return execute(_SearchContactsApi(name, phoneNumber, pageSize, pageNum));
+  }
+
+  /// 通讯录用户信息获取, userUuids最大长度50
+  static Future<NEResult<NEContactsInfoResponse>> _getContactsInfo(
+      List<String> userUuids) {
+    return execute(_GetContactsInfoApi(userUuids));
+  }
+
+  /// 获取预约会议参会者列表接口
+  static Future<NEResult<List<NEScheduledMember>>> _getScheduledMembers(
+      String meetingNum) {
+    return execute(_GetScheduledMembersApi(meetingNum));
   }
 }

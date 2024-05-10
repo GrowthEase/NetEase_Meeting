@@ -75,18 +75,23 @@ class NEMeetingAvatar extends StatelessWidget {
   /// 头像地址
   final String? url;
 
+  /// 展示头像右下角身份icon
+  final bool? showRoleIcon;
+
   const NEMeetingAvatar({
     super.key,
     required this.size,
     this.name,
     this.url,
     required this.textStyle,
+    this.showRoleIcon,
   }) : assert(name != null || url != null);
 
   NEMeetingAvatar.xSmall({
     super.key,
     this.name,
     this.url,
+    this.showRoleIcon,
   })  : size = 16,
         textStyle = _xSmallTextStyle;
 
@@ -94,6 +99,7 @@ class NEMeetingAvatar extends StatelessWidget {
     super.key,
     this.name,
     this.url,
+    this.showRoleIcon,
   })  : size = 24,
         textStyle = _smallTextStyle;
 
@@ -101,6 +107,7 @@ class NEMeetingAvatar extends StatelessWidget {
     super.key,
     this.name,
     this.url,
+    this.showRoleIcon,
   })  : size = 32,
         textStyle = _mediumTextStyle;
 
@@ -108,6 +115,7 @@ class NEMeetingAvatar extends StatelessWidget {
     super.key,
     this.name,
     this.url,
+    this.showRoleIcon,
   })  : size = 36,
         textStyle = _largeTextStyle;
 
@@ -115,6 +123,7 @@ class NEMeetingAvatar extends StatelessWidget {
     super.key,
     this.name,
     this.url,
+    this.showRoleIcon,
   })  : size = 48,
         textStyle = _xlargeTextStyle;
 
@@ -122,6 +131,7 @@ class NEMeetingAvatar extends StatelessWidget {
     super.key,
     this.name,
     this.url,
+    this.showRoleIcon,
   })  : size = 64,
         textStyle = _xxlargeTextStyle;
 
@@ -162,7 +172,7 @@ class NEMeetingAvatar extends StatelessWidget {
 
     final url = this.url;
 
-    return ClipOval(
+    Widget icon = ClipOval(
       child: Container(
         height: size,
         width: size,
@@ -206,6 +216,38 @@ class NEMeetingAvatar extends StatelessWidget {
                   )
                 : null),
       ),
+    );
+    if (showRoleIcon == true) {
+      icon = _wrapRoleIcon(icon);
+    }
+    return icon;
+  }
+
+  Widget _wrapRoleIcon(Widget icon) {
+    final iconSize = size * 0.5;
+    return Stack(
+      children: [
+        icon,
+        Positioned(
+          right: 0,
+          bottom: 0,
+          child: Container(
+            width: iconSize,
+            height: iconSize,
+            padding: EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              color: _UIColors.color_337eff,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 1),
+            ),
+            child: Icon(
+              NEMeetingIconFont.icon_meeting_owner,
+              color: Colors.white,
+              size: iconSize - 6,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

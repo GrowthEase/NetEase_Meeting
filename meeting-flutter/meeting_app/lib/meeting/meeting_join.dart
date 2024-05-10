@@ -267,6 +267,7 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute>
   }
 
   Future<void> joinMeeting() async {
+    FocusScope.of(context).requestFocus(FocusNode());
     var historyItem = await NEMeetingKit.instance
         .getSettingsService()
         .getHistoryMeetingItem();
@@ -323,7 +324,7 @@ class _MeetJoinRouteState extends LifecycleBaseState<MeetJoinRoute>
       ToastUtils.showToast(
           context, meetingAppLocalizations.authLoginOnOtherDevice);
       AuthManager().logout();
-      NavUtils.pushNamedAndRemoveUntil(context, RouterName.entrance);
+      NavUtils.toEntrance(context);
     } else if (errorCode == NEMeetingErrorCode.alreadyInMeeting) {
       ToastUtils.showToast(context,
           meetingAppLocalizations.meetingOperationNotSupportedInMeeting);

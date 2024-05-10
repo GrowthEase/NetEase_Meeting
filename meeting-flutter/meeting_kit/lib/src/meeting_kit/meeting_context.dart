@@ -43,12 +43,36 @@ extension NEMeetingContext on NERoomContext {
     return NEMeetingWatermark.fromMap(map);
   }
 
+  /// 获取视频跟随模式下的用户列表
+  List<String> get hostVideoOrderList {
+    final value = roomProperties[ViewOrderConfigProperty.key];
+    if (value == null || value.isEmpty) {
+      return [];
+    }
+    List<String> list = value.split(',');
+    return list;
+  }
+
+  /// 是否开启视频跟随模式
+  bool isFollowHostVideoOrderOn() {
+    final value = roomProperties[ViewOrderConfigProperty.key];
+    return value != null && value.isNotEmpty && value.length > 1;
+  }
+
   /// 会中聊天权限
   NEChatPermission get chatPermission {
     final value = roomProperties[NEChatPermissionProperty.key];
     final permission =
         value == null ? NEChatPermission.freeChat.index : int.tryParse(value);
     return NEChatPermissionValue.fromValue(permission);
+  }
+
+  /// 会中被邀请的人员列表
+  List<NERoomMember> get inviteMembers {
+    List<NERoomMember> members = [];
+    members.addAll(inSIPInvitingMembers);
+    members.addAll(inAppInvitingMembers);
+    return members;
   }
 
   /// 等候室聊天权限
@@ -114,6 +138,17 @@ extension NEMeetingContext on NERoomContext {
     }
   }
 
+  bool get isGuestJoinEnabled =>
+      roomProperties[GuestJoinProperty.key] == GuestJoinProperty.enable;
+
+  /// 设置是否允许访客入会
+  Future<NEResult<void>> enableGuestJoin(bool enable) {
+    return updateRoomProperty(
+      GuestJoinProperty.key,
+      enable ? GuestJoinProperty.enable : GuestJoinProperty.disable,
+    );
+  }
+
   bool get isAllAudioMuted {
     final value = roomProperties[AudioControlProperty.key];
     return value != null &&
@@ -147,11 +182,42 @@ extension NEMeetingContext on NERoomContext {
       localMember.isSharingScreen;
 
   /// 获取所有用户
-  Iterable<NERoomMember> getAllUsers({bool sort = true}) {
-    final members = remoteMembers;
+  Iterable<NERoomMember> getAllUsers(
+      {bool sort = true,
+      bool isViewOrder = false,
+      bool isIncludeInviteMember = false,
+      bool isIncludeInviteWaitingJoinMember = true}) {
+    /// 所有需要展示的成员列表
+    List<NERoomMember> members = [];
+    if (isIncludeInviteMember) {
+      inviteMembers.forEach((element) {
+        if (isIncludeInviteWaitingJoinMember ||
+            element.inviteState != NERoomMemberInviteState.waitingJoin) {
+          members.add(element);
+        }
+      });
+    }
+    members.addAll(remoteMembers);
     members.add(localMember);
     if (sort) {
       members.sort(compareUser);
+    }
+    if (isViewOrder &&
+        hostVideoOrderList.isNotEmpty &&
+        hostVideoOrderList.length > 0) {
+      // 根据 hostVideoOrderList 的顺序重新排序 remoteMembers
+      List<NERoomMember> sortedRemoteMembers = hostVideoOrderList
+          .map((uuid) => getMember(uuid))
+          .whereType<NERoomMember>()
+          .toList();
+      // 添加未在 hostVideoOrderList 中的用户
+      members.removeWhere((member) => sortedRemoteMembers.contains(member));
+      members = [...sortedRemoteMembers, ...members];
+    }
+    members = members.toSet().toList();
+    if (isIncludeInviteMember) {
+      return members
+          .where((member) => member.isVisible || member.uuid == myUuid);
     }
     return members.where((member) =>
         member.isVisible && (member.isInRtcChannel || member.uuid == myUuid));
@@ -174,6 +240,10 @@ extension NEMeetingContext on NERoomContext {
   /// 判断用户是不是主持人
   bool isHost(String? uuid) =>
       uuid != null && getMember(uuid)?.role.name == MeetingRoles.kHost;
+
+  /// 判断用户是不是外部访客
+  bool isGuest(String? uuid) =>
+      uuid != null && getMember(uuid)?.role.name == MeetingRoles.kGuest;
 
   /// 是不是当前用户
   bool isMySelf(String uuid) => localMember.uuid == uuid;
@@ -294,9 +364,19 @@ extension NEMeetingContext on NERoomContext {
   }
 
   ///成员列表展示顺序：
-  /// 主持人->联席主持人->自己->举手->屏幕共享（白板）->音视频->视频->音频->昵称排序
+  /// 主持人->联席主持人->自己->举手->屏幕共享（白板）->音视频->视频->音频-> 邀请 -> 昵称排序
+  /// 优先处理如果是邀请状态就不向前排序
   ///
   int compareUser(NERoomMember lhs, NERoomMember rhs) {
+    final isLhsInvite = lhs.isInSIPInviting || lhs.isInAppInviting;
+    final isRhsInvite = rhs.isInSIPInviting || rhs.isInAppInviting;
+
+    if (isLhsInvite) {
+      return 1;
+    }
+    if (isRhsInvite) {
+      return -1;
+    }
     if (isHost(lhs.uuid)) {
       return -1;
     }
@@ -429,6 +509,18 @@ extension NEMeetingRtcController on NERoomRtcController {
       return _ctx.deleteRoomProperty(_PropertyKeys.kFocus);
     }
     return Future.value(NEResult.success());
+  }
+
+  /// 主持人或者联系主持人取消设置/设置对应用户为视频跟随模式
+  Future<NEResult<void>> viewOrderConfigProperty(
+      String viewOrderConfigProperty) {
+    _alog.i('view order config: $viewOrderConfigProperty');
+    if (viewOrderConfigProperty.isNotEmpty || viewOrderConfigProperty != '') {
+      return _ctx.updateRoomProperty(
+          ViewOrderConfigProperty.key, viewOrderConfigProperty);
+    } else {
+      return _ctx.deleteRoomProperty(ViewOrderConfigProperty.key);
+    }
   }
 
   ///主持人将所有与会者视频关闭。
@@ -578,6 +670,11 @@ class WhiteboardDrawableProperty {
 class WhiteboardConfigProperty {
   static const String key = 'whiteboardConfig';
   static const String isTransparent = 'isTransparent';
+}
+
+/// 视图顺序配置
+class ViewOrderConfigProperty {
+  static const String key = 'viewOrder';
 }
 
 extension _ColorString on Color {

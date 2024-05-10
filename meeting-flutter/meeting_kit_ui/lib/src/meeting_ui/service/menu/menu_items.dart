@@ -40,6 +40,7 @@ class NEMenuIDs {
     cloudRecord,
     security,
     disconnectAudio,
+    sipCall,
   };
 
   /// 内置"音频"菜单ID，使用该ID的菜单可添加至Toolbar菜单列表中的任意位置。
@@ -82,6 +83,9 @@ class NEMenuIDs {
 
   /// 内置"通知"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
   static const int notifyCenter = 26;
+
+  /// 内置"呼叫"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
+  static const int sipCall = 27;
 }
 
 class NEMenuItems {
@@ -102,6 +106,7 @@ class NEMenuItems {
         cloudRecord,
         security,
         disconnectAudio,
+        sipCall,
       ];
 
   static final NEMeetingMenuItem microphone = NECheckableMenuItem(
@@ -190,5 +195,12 @@ class NEMenuItems {
     visibility: NEMenuVisibility.visibleAlways,
     uncheckStateItem: NEMenuItemInfo.undefine,
     checkedStateItem: NEMenuItemInfo.undefine,
+  );
+
+  /// 呼叫
+  static final sipCall = NESingleStateMenuItem(
+    itemId: NEMenuIDs.sipCall,
+    visibility: NEMenuVisibility.visibleToHostOnly,
+    singleStateItem: NEMenuItemInfo.undefine,
   );
 }

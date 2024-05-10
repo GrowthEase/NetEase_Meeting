@@ -90,12 +90,18 @@ class NEStartMeetingOptions {
   ///
   final bool enableMyAudioDeviceOnJoinRtc;
 
+  ///
+  /// 是否开启访客入会
+  ///
+  final bool enableGuestJoin;
+
   NEStartMeetingOptions({
     this.noChat = false,
     this.noCloudRecord = true,
     this.noSip = false,
     this.enableWaitingRoom = false,
     this.enableMyAudioDeviceOnJoinRtc = true,
+    this.enableGuestJoin = false,
   });
 }
 
@@ -168,17 +174,17 @@ abstract class NEMeetingService {
     NEStartMeetingOptions opts,
   );
 
-  /// 加入一个当前正在进行中的会议，已登录或未登录均可加入会议。
+  /// 加入一个当前正在进行中的会议，只有完成SDK的登录鉴权操作才允许加入会议。
   /// 加入会议成功后，SDK会拉起会议页面，调用方不用做其他操作
   ///
   /// * [param] 会议参数对象，不能为空
   /// * [opts]  会议选项对象，可空；当未指定时，会使用默认的选项
+  /// * [isInvite] 是否为邀请入会
   ///
   /// 该回调会返回一个[NERoomContext]房间上下文实例，该实例支持会议相关扩展 [NEMeetingContext]
   Future<NEResult<NERoomContext>> joinMeeting(
-    NEJoinMeetingParams param,
-    NEJoinMeetingOptions opts,
-  );
+      NEJoinMeetingParams param, NEJoinMeetingOptions opts,
+      {bool isInvite = false});
 
   ///  加入一个当前正在进行中的会议，已登录或未登录均可加入会议。
   ///<p>加入会议成功后，SDK会拉起会议页面，调用方不用做其他操作。

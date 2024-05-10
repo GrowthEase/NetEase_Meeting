@@ -133,4 +133,18 @@ class NEMeetingIconFont {
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_arrow_down = IconData(0xe6d8,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_meeting_owner = IconData(0xe6ed,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_hand_up = IconData(0xe76c,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_narrow = IconData(0xe6ee,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_system_phone = IconData(0xe6ea,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_sip_phone = IconData(0xe6e9,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_call_out = IconData(0xe6eb,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_system_call_in = IconData(0xe6fe,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
 }

@@ -196,7 +196,7 @@ abstract class MeetingAppLocalizations {
   /// No description provided for @globalAppRegistryNO.
   ///
   /// In zh, this message translates to:
-  /// **'浙ICP17006647号-124A'**
+  /// **'浙ICP备17006647号-124A'**
   String get globalAppRegistryNO;
 
   /// No description provided for @globalNetworkUnavailableCheck.
@@ -277,6 +277,18 @@ abstract class MeetingAppLocalizations {
   /// **'日'**
   String get globalDay;
 
+  /// No description provided for @globalHours.
+  ///
+  /// In zh, this message translates to:
+  /// **'小时'**
+  String get globalHours;
+
+  /// No description provided for @globalMinutes.
+  ///
+  /// In zh, this message translates to:
+  /// **'分钟'**
+  String get globalMinutes;
+
   /// No description provided for @globalSave.
   ///
   /// In zh, this message translates to:
@@ -348,6 +360,18 @@ abstract class MeetingAppLocalizations {
   /// In zh, this message translates to:
   /// **'我知道了'**
   String get globalIKnow;
+
+  /// No description provided for @globalAdd.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加'**
+  String get globalAdd;
+
+  /// No description provided for @globalDateFormat.
+  ///
+  /// In zh, this message translates to:
+  /// **'yyyy年MM月dd日'**
+  String get globalDateFormat;
 
   /// No description provided for @authImmediatelyRegister.
   ///
@@ -1185,6 +1209,12 @@ abstract class MeetingAppLocalizations {
   /// **'会议已被其他登录设备取消'**
   String get meetingHasBeenCanceled;
 
+  /// No description provided for @meetingHasBeenCanceledByOwner.
+  ///
+  /// In zh, this message translates to:
+  /// **'会议被创建者取消'**
+  String get meetingHasBeenCanceledByOwner;
+
   /// No description provided for @meetingRepeat.
   ///
   /// In zh, this message translates to:
@@ -1468,6 +1498,60 @@ abstract class MeetingAppLocalizations {
   /// **'取消编辑'**
   String get meetingRepeatCancelEdit;
 
+  /// No description provided for @meetingGuestJoin.
+  ///
+  /// In zh, this message translates to:
+  /// **'访客入会'**
+  String get meetingGuestJoin;
+
+  /// No description provided for @meetingGuestJoinSecurityNotice.
+  ///
+  /// In zh, this message translates to:
+  /// **'已开启访客入会，请注意会议信息安全'**
+  String get meetingGuestJoinSecurityNotice;
+
+  /// No description provided for @meetingGuestJoinEnableTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启后允许外部人员参会'**
+  String get meetingGuestJoinEnableTip;
+
+  /// No description provided for @meetingAttendees.
+  ///
+  /// In zh, this message translates to:
+  /// **'参会者'**
+  String get meetingAttendees;
+
+  /// No description provided for @meetingAttendeeCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count}人'**
+  String meetingAttendeeCount(Object count);
+
+  /// No description provided for @meetingAddAttendee.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加参会者'**
+  String get meetingAddAttendee;
+
+  /// No description provided for @meetingSearchAndAddAttendee.
+  ///
+  /// In zh, this message translates to:
+  /// **'搜索并添加参会人'**
+  String get meetingSearchAndAddAttendee;
+
+  /// No description provided for @meetingOpen.
+  ///
+  /// In zh, this message translates to:
+  /// **'展开'**
+  String get meetingOpen;
+
+  /// No description provided for @meetingClose.
+  ///
+  /// In zh, this message translates to:
+  /// **'收起'**
+  String get meetingClose;
+
   /// No description provided for @historyMeeting.
   ///
   /// In zh, this message translates to:
@@ -1491,6 +1575,12 @@ abstract class MeetingAppLocalizations {
   /// In zh, this message translates to:
   /// **'暂无历史会议'**
   String get historyMeetingListEmpty;
+
+  /// No description provided for @historyCollectMeetingListEmpty.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无收藏会议'**
+  String get historyCollectMeetingListEmpty;
 
   /// No description provided for @historyChat.
   ///
@@ -1858,6 +1948,12 @@ abstract class MeetingAppLocalizations {
   /// **'您可召开：'**
   String get settingServiceBundleTitle;
 
+  /// No description provided for @settingServiceBundleExpireTime.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务到期：{expireTime}'**
+  String settingServiceBundleExpireTime(Object expireTime);
+
   /// No description provided for @settingServiceBundleDetailLimitedMinutes.
   ///
   /// In zh, this message translates to:
@@ -1870,6 +1966,18 @@ abstract class MeetingAppLocalizations {
   /// In zh, this message translates to:
   /// **'{maxCount}人、单场不限时会议'**
   String settingServiceBundleDetailUnlimitedMinutes(Object maxCount);
+
+  /// No description provided for @settingServiceBundleExpirationDate.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务到期：'**
+  String get settingServiceBundleExpirationDate;
+
+  /// No description provided for @settingServiceBundleExpirationDateTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务已到期，如需延长时问，请联系企业管理员。'**
+  String get settingServiceBundleExpirationDateTip;
 
   /// No description provided for @settingUpdateFailed.
   ///
@@ -1924,6 +2032,24 @@ abstract class MeetingAppLocalizations {
   /// In zh, this message translates to:
   /// **'确定退出应用'**
   String get settingComfirmExitApp;
+
+  /// No description provided for @settingSwitchLanguage.
+  ///
+  /// In zh, this message translates to:
+  /// **'语言切换'**
+  String get settingSwitchLanguage;
+
+  /// No description provided for @settingSetLanguage.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置语言'**
+  String get settingSetLanguage;
+
+  /// No description provided for @settingLanguageTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'简体中文'**
+  String get settingLanguageTip;
 
   /// No description provided for @feedbackInRoom.
   ///

@@ -9,6 +9,7 @@ import 'package:nemeeting/utils/integration_test.dart';
 class SwitchItem extends StatelessWidget {
   final String title;
   final String? summary;
+  final Color? summaryColor;
   final bool value;
   final ValueChanged<bool>? onChange;
 
@@ -16,6 +17,7 @@ class SwitchItem extends StatelessWidget {
     ValueKey? key,
     required this.title,
     this.summary,
+    this.summaryColor,
     required this.value,
     required this.onChange,
   }) : super(key: key);
@@ -40,7 +42,8 @@ class SwitchItem extends StatelessWidget {
                   if (summary != null)
                     Text(summary!,
                         style: TextStyle(
-                            color: AppColors.color_999999, fontSize: 12)),
+                            color: summaryColor ?? AppColors.color_999999,
+                            fontSize: 12)),
                 ],
               )),
           if (key != null)

@@ -24,8 +24,10 @@ class AppDialogUtils {
     return showDialog(
         context: context,
         useRootNavigator: false,
+        barrierDismissible: canBack,
         builder: (BuildContext context) {
-          return WillPopScope(
+          return PopScope(
+            canPop: canBack,
             child: CupertinoAlertDialog(
               title: _isEmpty(title) ? null : Text(title),
               content: Text(content,
@@ -44,9 +46,6 @@ class AppDialogUtils {
                 ),
               ],
             ),
-            onWillPop: () async {
-              return canBack;
-            },
           );
         });
   }
@@ -59,8 +58,10 @@ class AppDialogUtils {
     return showDialog(
         context: context,
         useRootNavigator: false,
+        barrierDismissible: canBack,
         builder: (BuildContext context) {
-          return WillPopScope(
+          return PopScope(
+            canPop: canBack,
             child: CupertinoAlertDialog(
               title: _isEmpty(title) ? null : Text(title),
               content: Text(content,
@@ -73,9 +74,6 @@ class AppDialogUtils {
                 ),
               ],
             ),
-            onWillPop: () async {
-              return canBack;
-            },
           );
         });
   }

@@ -9,16 +9,9 @@ class NetworkTaskExecutor with _AloggerMixin {
   bool _disposed = false;
   final _taskRegistry = <Object, List<_NetworkTask>>{};
   final _pendingCompleteTaskRegistry = <Object, Future>{};
-  late final StreamSubscription _subscription;
-
-  var _latestConnectivityResult = ConnectivityResult.none;
 
   NetworkTaskExecutor() {
-    _subscription =
-        Connectivity().onConnectivityChanged.listen(_onNetworkChanged);
-    Connectivity()
-        .checkConnectivity()
-        .then((value) => _onNetworkChanged(value));
+    ConnectivityManager().addListener(_onNetworkChanged);
   }
 
   Future<T?> execute<T>(
@@ -53,20 +46,19 @@ class NetworkTaskExecutor with _AloggerMixin {
   void dispose() {
     _disposed = true;
     _taskRegistry.clear();
-    _subscription.cancel();
+    ConnectivityManager().removeListener(_onNetworkChanged);
   }
 
-  bool _isNetworkConnected() {
-    return _latestConnectivityResult != ConnectivityResult.none;
+  Future<bool> _isNetworkConnected() async {
+    return ConnectivityManager().isConnected();
   }
 
-  void _onNetworkChanged(ConnectivityResult value) {
-    _latestConnectivityResult = value;
+  void _onNetworkChanged() {
     _scheduleTasks();
   }
 
-  void _scheduleTasks() {
-    if (_disposed || !_isNetworkConnected()) return;
+  void _scheduleTasks() async {
+    if (_disposed || !await _isNetworkConnected()) return;
     final registry = Map.of(_taskRegistry);
     _taskRegistry.clear();
     registry.forEach((key, tasks) {
@@ -74,9 +66,9 @@ class NetworkTaskExecutor with _AloggerMixin {
     });
   }
 
-  void _executeTaskInParallel(Object key, List<_NetworkTask> tasks) {
+  void _executeTaskInParallel(Object key, List<_NetworkTask> tasks) async {
     final executed = <_NetworkTask>[];
-    while (tasks.isNotEmpty && _isNetworkConnected()) {
+    while (tasks.isNotEmpty && await _isNetworkConnected()) {
       final task = tasks.removeAt(0);
       executed.add(task);
       final _previousTaskFuture =

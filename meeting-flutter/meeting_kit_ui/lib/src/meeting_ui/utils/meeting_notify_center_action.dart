@@ -10,9 +10,8 @@ typedef ClearAllMessage = void Function(String? sessionId)?;
 class MeetingNotifyCenterActionUtil {
   static const action_pre = 'meeting://';
   static const action_plugin_pre = '${action_pre}open_plugin?';
-
   static const action_meeting_history = '${action_pre}meeting_history';
-  static const action_no_more_remind = 'meeting://no_more_remind';
+  static const action_no_more_remind = '${action_pre}no_more_remind';
 
   /// 获取plugin_id
   static String? getPluginId(String action) {
@@ -24,8 +23,9 @@ class MeetingNotifyCenterActionUtil {
   static void openPlugin(BuildContext context, NERoomContext roomContext,
       NESingleStateMenuItem<NEMeetingWebAppItem> item,
       {ClearAllMessage clearAllMessage}) {
-    Navigator.of(context).push(MaterialMeetingPageRoute(
-        settings: RouteSettings(name: MeetingWebAppPage.routeName),
+    showMeetingPopupPageRoute(
+        context: context,
+        routeSettings: RouteSettings(name: MeetingWebAppPage.routeName),
         builder: (context) {
           return wrapWithWatermark(
               child: MeetingWebAppPage(
@@ -36,7 +36,7 @@ class MeetingNotifyCenterActionUtil {
             roomContext: roomContext,
             clearAllMessage: clearAllMessage,
           ));
-        }));
+        });
   }
 
   /// 将插件转化成sessionList

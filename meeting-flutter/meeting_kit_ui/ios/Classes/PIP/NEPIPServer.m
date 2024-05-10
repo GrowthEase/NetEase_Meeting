@@ -6,6 +6,7 @@
 #import <AVKit/AVKit.h>
 @import NERoomKit;
 #import "MeetingUILog.h"
+#import "NEInviteIncomingView.h"
 #import "NEPIPMaskDisplayView.h"
 #import "NEPIPRenderer.h"
 #import "NESampleBufferDisplayView.h"
@@ -49,13 +50,16 @@ static NSString *kPIPServerClassName = @"NEPIPServer";
 API_AVAILABLE(ios(15.0))
 @interface NEPIPServer () <AVPictureInPictureControllerDelegate,
                            NERoomListener,
-                           NEWaitingRoomListener>
+                           NEWaitingRoomListener,
+                           NERoomMessageSessionListener,
+                           NEMessageChannelListener>
 @property(nonatomic, strong) AVPictureInPictureVideoCallViewController *videoCallViewController;
 @property(nonatomic, strong) AVPictureInPictureController *pipController;
 @property(nonatomic, strong) NESampleBufferDisplayView *displayView;
 @property(nonatomic, strong) NEScreenShareDisplayView *shareDisplayView;
 @property(nonatomic, strong) NEPIPMaskDisplayView *maskView;
 @property(nonatomic, strong) NEPIPRenderer *shareRenderer;
+@property(nonatomic, strong) NEInviteIncomingView *inviteView;
 @property(nonatomic, copy) NSString *currentUuid;
 @property(nonatomic, copy) NSString *shareUuid;
 @property(nonatomic, strong) NERoomContext *roomContext;
@@ -69,6 +73,8 @@ API_AVAILABLE(ios(15.0))
 @property(nonatomic, copy) NSString *interruptedTips;
 // 是否已经退出房间
 @property(nonatomic, assign) BOOL roomEnded;
+// 当前正在邀请自己的房间id
+@property(nonatomic, copy) NSString *inviterRoomId;
 @end
 
 @implementation NEPIPServer
@@ -94,9 +100,17 @@ API_AVAILABLE(ios(15.0))
     [self memberInCall:call result:result];
   } else if ([method isEqualToString:@"updatePIPParams"]) {
     result(@YES);
+  } else if ([method isEqualToString:@"inviteDispose"]) {
+    [self inviteDispose:call result:result];
   } else {
     result(FlutterMethodNotImplemented);
   }
+}
+
+- (void)inviteDispose:(FlutterMethodCall *)call result:(FlutterResult)result {
+  self.inviteView.hidden = YES;
+  [self.inviteView stopAnimation];
+  self.inviterRoomId = nil;
 }
 
 - (void)setupPIP:(FlutterMethodCall *)call result:(FlutterResult)result {
@@ -125,6 +139,9 @@ API_AVAILABLE(ios(15.0))
   [self.roomContext addRoomListenerWithListener:self];
   self.roomEnded = NO;
 
+  [[NERoomKit shared].messageChannelService addMessageChannelListenerWithListener:self];
+  [[NERoomKit shared].messageChannelService addSessionMessageListenerWithListener:self];
+
   AVPictureInPictureVideoCallViewController *videoCallVC =
       [[AVPictureInPictureVideoCallViewController alloc] init];
   videoCallVC.preferredContentSize =
@@ -144,6 +161,12 @@ API_AVAILABLE(ios(15.0))
   [videoCallVC.view meeting_addConstrainedSubView:shareView];
   self.shareDisplayView = shareView;
 
+  NEInviteIncomingView *inviteView = [[NEInviteIncomingView alloc] initWithFrame:CGRectZero];
+  inviteView.backgroundColor = UIColor.blackColor;
+  inviteView.hidden = YES;
+  [videoCallVC.view meeting_addConstrainedSubView:inviteView];
+  self.inviteView = inviteView;
+
   NEPIPMaskDisplayView *maskView = [[NEPIPMaskDisplayView alloc] initWithFrame:CGRectZero];
   maskView.backgroundColor = UIColor.blackColor;
   maskView.hidden = YES;
@@ -152,6 +175,20 @@ API_AVAILABLE(ios(15.0))
 
   self.waitingTips = arguments[@"waitingTips"];
   self.interruptedTips = arguments[@"interruptedTips"];
+
+  NSString *inviterName = arguments[@"inviterName"];
+  NSString *inviterIcon = arguments[@"inviterIcon"];
+  NSString *inviterRoomId = arguments[@"inviterRoomId"];
+  if (inviterRoomId.length) {
+    self.inviterRoomId = inviterRoomId;
+    if (inviterName.length || inviterIcon.length) {
+      /// 说明当前是邀请状态
+      self.inviteView.name = inviterName;
+      self.inviteView.url = inviterIcon;
+      self.inviteView.hidden = NO;
+      [self.inviteView startAnimation];
+    }
+  }
 
   self.videoCallViewController = videoCallVC;
   AVPictureInPictureControllerContentSource *contentSource =
@@ -267,10 +304,13 @@ API_AVAILABLE(ios(15.0))
   }
   [self.roomContext.waitingRoomController removeListenerWithListener:self];
   [self.roomContext removeRoomListenerWithListener:self];
+  [[NERoomKit shared].messageChannelService removeMessageChannelListenerWithListener:self];
+  [[NERoomKit shared].messageChannelService removeSessionMessageListenerWithListener:self];
   self.currentUuid = nil;
   self.shareUuid = nil;
   self.shareRenderer = nil;
   self.roomContext = nil;
+  self.inviterRoomId = nil;
   [self.renderers removeAllObjects];
   self.isStopPIP = NO;
   if (!self.pipController.isPictureInPictureActive) {
@@ -285,6 +325,8 @@ API_AVAILABLE(ios(15.0))
   self.pipController = nil;
   self.shareDisplayView = nil;
   self.displayView = nil;
+  self.maskView = nil;
+  self.inviteView = nil;
   result(@(YES));
 }
 
@@ -382,6 +424,64 @@ API_AVAILABLE(ios(15.0))
     }
   }
   result([NEPIPResult code:0 desc:@"Successfully member incall."]);
+}
+
+- (void)onReceiveSessionMessageWithMessage:(NERoomCustomSessionMessage *)message {
+  NSData *jsonData = [message.data dataUsingEncoding:NSUTF8StringEncoding];
+  NSError *error = nil;
+  NSDictionary *jsonDictionary = [NSJSONSerialization JSONObjectWithData:jsonData
+                                                                 options:kNilOptions
+                                                                   error:&error];
+  NSString *tag = jsonDictionary[@"tag"];
+  if (![tag isEqualToString:@"MEETING_NOTIFY"]) {
+    return;
+  }
+  NSDictionary *data = jsonDictionary[@"data"];
+  NSString *type = data[@"type"];
+  if (![type isEqualToString:@"MEETING.INVITE"]) {
+    return;
+  }
+  NSDictionary *inviteInfo = data[@"inviteInfo"];
+  NSString *roomUuid = data[@"roomUuid"];
+  NSString *inviterName = inviteInfo[@"inviterName"];
+  NSString *inviterIcon = inviteInfo[@"inviterIcon"];
+  self.inviteView.hidden = NO;
+  self.inviteView.url = inviterIcon;
+  self.inviteView.name = inviterName;
+  self.inviterRoomId = roomUuid;
+  [self.inviteView startAnimation];
+}
+
+- (void)onReceiveCustomMessageWithMessage:(NECustomMessage *)message {
+  /// 只有在会议邀请状态中才需要来处理
+  if (!self.inviterRoomId.length) {
+    return;
+  }
+  NSData *jsonData = [message.data dataUsingEncoding:NSUTF8StringEncoding];
+  NSError *error = nil;
+  NSDictionary *jsonDictionary = [NSJSONSerialization JSONObjectWithData:jsonData
+                                                                 options:kNilOptions
+                                                                   error:&error];
+  NSString *roomUuid = jsonDictionary[@"roomUuid"];
+  if (![roomUuid isEqualToString:self.inviterRoomId]) {
+    return;
+  }
+
+  /// 判断被操作人是不是自己
+  BOOL isSelf = false;
+  NSString *userUuid = _roomContext.localMember.uuid;
+  if (message.commandId == 33) {
+    isSelf = [userUuid isEqualToString:jsonDictionary[@"members"][0][@"userUuid"]];
+  } else if (message.commandId == 51) {
+    isSelf = true;
+  } else if (message.commandId == 82) {
+    isSelf = [userUuid isEqualToString:jsonDictionary[@"member"][@"userUuid"]];
+  }
+  if ((message.commandId == 33 || message.commandId == 51 || message.commandId == 82) && isSelf) {
+    self.inviteView.hidden = YES;
+    [self.inviteView stopAnimation];
+    self.inviterRoomId = nil;
+  }
 }
 
 - (void)onMyWaitingRoomStatusChangedWithStatus:(enum NEWaitingRoomMemberStatus)status

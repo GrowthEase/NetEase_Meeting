@@ -166,13 +166,26 @@ class _MeetingImageMessageViewerState extends State<MeetingImageMessageViewer> {
     );
   }
 
-  void saveToGallery() async {
-    final path = await _imageFilePathCompleter.future;
-    bool result = await PermissionHelper.requestPermissionSingle(
+  Future<bool> ensureStoragePermission() async {
+    if (Platform.isAndroid) {
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      if (androidInfo.version.sdkInt >= 33) return true;
+    }
+    final hasPermission = await PermissionHelper.requestPermissionSingle(
         context, Permission.storage, '', '',
         useDialog: false);
+    if (mounted && !hasPermission) {
+      _toastResult(
+          false, NEMeetingUIKitLocalizations.of(context)!.globalNoPermission);
+    }
+    return hasPermission;
+  }
+
+  void saveToGallery() async {
+    final path = await _imageFilePathCompleter.future;
+    if (!mounted) return;
     final localizations = NEMeetingUIKitLocalizations.of(context)!;
-    if (result) {
+    if (await ensureStoragePermission() && mounted) {
       final result = await NEMeetingPlugin().imageGallerySaver.saveFile(
             path,
             extension: widget.message.extension,
@@ -182,8 +195,6 @@ class _MeetingImageMessageViewerState extends State<MeetingImageMessageViewer> {
       } else {
         _toastResult(false, localizations.globalOperationFail);
       }
-    } else {
-      _toastResult(false, localizations.chatOperationFailNoPermission);
     }
   }
 

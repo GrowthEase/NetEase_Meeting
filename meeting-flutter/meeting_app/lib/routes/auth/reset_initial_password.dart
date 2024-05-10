@@ -231,7 +231,7 @@ class ResetInitialPasswordState extends BaseState
         } else {
           LoadingUtil.cancelLoading();
           AuthManager().logout();
-          NavUtils.pushNamedAndRemoveUntil(context, RouterName.entrance);
+          NavUtils.toEntrance(context);
         }
       } else {
         LoadingUtil.cancelLoading();

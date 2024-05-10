@@ -503,7 +503,7 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute>
     } else if (errorCode == NEMeetingErrorCode.noAuth) {
       ToastUtils.showToast(context, meetingAppLocalizations.authNoAuth);
       AuthManager().logout();
-      NavUtils.pushNamedAndRemoveUntil(context, RouterName.entrance);
+      NavUtils.toEntrance(context);
     } else if (errorCode == NEMeetingErrorCode.alreadyInMeeting) {
       ToastUtils.showToast(context,
           meetingAppLocalizations.meetingOperationNotSupportedInMeeting);

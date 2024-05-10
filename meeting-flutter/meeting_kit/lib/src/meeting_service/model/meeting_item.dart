@@ -14,6 +14,10 @@ abstract class NEMeetingItem {
 
   String? get ownerUserUuid;
 
+  set ownerUserUuid(String? ownerUserUuid);
+
+  String? get ownerNickname;
+
   ///[NEMeetingType]
   int? get meetingType;
 
@@ -88,6 +92,9 @@ abstract class NEMeetingItem {
 
   String? get inviteUrl;
 
+  /// 预约指定成员列表,后台配置开启预定成员功能时有效
+  List<NEScheduledMember>? scheduledMemberList;
+
   ///
   /// 开启/关闭等候室
   ///
@@ -115,9 +122,22 @@ abstract class NEMeetingItem {
   ///
   void setEnableJoinBeforeHost(bool enable);
 
+  ///
+  /// 查询是否允许访客入会
+  ///
+  bool isEnableGuestJoin();
+
+  ///
+  /// 设置是否允许访客入会
+  ///
+  void setEnableGuestJoin(bool enable);
+
   Map toJson();
 
   Map request();
+
+  /// 深拷贝
+  NEMeetingItem copy();
 
   static NEMeetingItem fromJson(Map<dynamic, dynamic> map) {
     return _MeetingItemImpl._fromJson(map);
@@ -125,5 +145,70 @@ abstract class NEMeetingItem {
 
   static NEMeetingItem fromNativeJson(Map<dynamic, dynamic> map) {
     return _MeetingItemImpl._fromNativeJson(map);
+  }
+}
+
+class NEScheduledMember {
+  String userUuid;
+  String role;
+
+  /// 本地分页获取填充
+  NEContact? contact;
+
+  NEScheduledMember({required this.userUuid, required this.role, this.contact});
+
+  Map<String, dynamic> toJson() {
+    return {
+      'userUuid': userUuid,
+      'role': role,
+    };
+  }
+
+  factory NEScheduledMember.fromJson(Map<dynamic, dynamic> map) {
+    return NEScheduledMember(
+      userUuid: map['userUuid'],
+      role: map['role'],
+    );
+  }
+
+  /// copy函数
+  NEScheduledMember copy() {
+    return NEScheduledMember(
+      userUuid: userUuid,
+      role: role,
+      contact: contact,
+    );
+  }
+}
+
+extension NEScheduledMemberExt on NEScheduledMember {
+  /// 选择成员排序
+  static int compareMember(NEScheduledMember lhs, NEScheduledMember rhs,
+      String? myUserUuid, String? ownerUuid) {
+    if (myUserUuid == lhs.userUuid) {
+      return -1;
+    }
+    if (myUserUuid == rhs.userUuid) {
+      return 1;
+    }
+    if (ownerUuid == lhs.userUuid) {
+      return -1;
+    }
+    if (ownerUuid == rhs.userUuid) {
+      return 1;
+    }
+    if (lhs.role == MeetingRoles.kHost) {
+      return -1;
+    }
+    if (rhs.role == MeetingRoles.kHost) {
+      return 1;
+    }
+    if (lhs.role == MeetingRoles.kCohost) {
+      return -1;
+    }
+    if (rhs.role == MeetingRoles.kCohost) {
+      return 1;
+    }
+    return -1;
   }
 }

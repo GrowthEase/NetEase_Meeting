@@ -24,6 +24,7 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
   final isLocked = ValueNotifier<bool>(false);
   final meetingChatEnabled = ValueNotifier<bool>(false);
   final watermarkEnabled = ValueNotifier<bool>(false);
+  final guestJoinEnabled = ValueNotifier<bool>(false);
   final isBlackListEnabled = ValueNotifier<bool>(true);
 
   MeetingSecurityState(this._arguments);
@@ -34,6 +35,7 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
     _roomContext = _arguments.roomContext;
     isLocked.value = _roomContext.isRoomLocked;
     watermarkEnabled.value = _roomContext.watermark.isEnable();
+    guestJoinEnabled.value = _roomContext.isGuestJoinEnabled;
     isBlackListEnabled.value = _roomContext.isRoomBlackListEnabled;
     meetingChatEnabled.value =
         _roomContext.chatPermission != NEChatPermission.noChat;
@@ -77,12 +79,18 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
           ? NEMeetingUIKitLocalizations.of(context)!.meetingChatEnabled
           : NEMeetingUIKitLocalizations.of(context)!.meetingChatDisabled);
     }
+    if (properties.containsKey(GuestJoinProperty.key)) {
+      guestJoinEnabled.value = _roomContext.isGuestJoinEnabled;
+      showToast(guestJoinEnabled.value
+          ? NEMeetingUIKitLocalizations.of(context)!.meetingGuestJoinEnabled
+          : NEMeetingUIKitLocalizations.of(context)!.meetingGuestJoinDisabled);
+    }
   }
 
   void doIfNetworkAvailable(VoidCallback callback) async {
-    final result = await Connectivity().checkConnectivity();
+    final connected = await ConnectivityManager().isConnected();
     if (!mounted) return;
-    if (result == ConnectivityResult.none) {
+    if (!connected) {
       showToast(meetingKitLocalizations.networkUnavailableCheck);
       return;
     }
@@ -93,7 +101,9 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
   Widget build(BuildContext context) {
     final child = Scaffold(
       backgroundColor: _UIColors.globalBg,
-      appBar: buildAppBar(context),
+      appBar: TitleBar(
+        title: TitleBarTitle(meetingUiLocalizations.meetingSecurity),
+      ),
       body: _buildBody(),
     );
     return AutoPopScope(
@@ -102,29 +112,6 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
         return !_arguments.isMySelfManagerListenable.value;
       },
       child: child,
-    );
-  }
-
-  AppBar buildAppBar(BuildContext context) {
-    return AppBar(
-      title: Text(
-        meetingUiLocalizations.meetingSecurity,
-        style: TextStyle(color: _UIColors.color_222222, fontSize: 17),
-      ),
-      centerTitle: true,
-      backgroundColor: _UIColors.white,
-      elevation: 0.0,
-      leading: IconButton(
-        icon: const Icon(
-          NEMeetingIconFont.icon_yx_returnx,
-          size: 18,
-          color: _UIColors.color_666666,
-        ),
-        onPressed: () {
-          Navigator.maybePop(context);
-        },
-      ),
-      // systemOverlayStyle: SystemUiOverlayStyle.light,
     );
   }
 
@@ -145,6 +132,10 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
           _buildLockMeeting(),
           _buildSplit(),
           _buildBlackList(),
+          if (_arguments.isGuestJoinSupported) ...[
+            _buildSplit(),
+            _buildGuestJoin(),
+          ],
           _buildSubTitle(meetingUiLocalizations.meetingAllowMembersTo),
           _buildMeetingChat(),
         ],
@@ -216,6 +207,23 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
     });
   }
 
+  Widget _buildGuestJoin() {
+    return _buildItemManage(
+        key: MeetingUIValueKeys.meetingEnableGuestJoin,
+        title: meetingUiLocalizations.meetingGuestJoin,
+        contentBuilder: (enable) => Text(
+              enable
+                  ? meetingUiLocalizations.meetingGuestJoinSecurityNotice
+                  : meetingUiLocalizations.meetingGuestJoinEnableTip,
+              style: TextStyle(
+                fontSize: 12,
+                color: enable ? _UIColors.color_f29900 : _UIColors.color_999999,
+              ),
+            ),
+        valueNotifier: guestJoinEnabled,
+        onChanged: (newValue) => _handleGuestJoin(newValue));
+  }
+
   Widget _buildWatermark() {
     return _buildItemManage(
         key: MeetingUIValueKeys.watermarkSwitch,
@@ -260,6 +268,7 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
   Widget _buildItemManage({
     required String title,
     String? content,
+    Widget Function(bool enable)? contentBuilder,
     required ValueNotifier<bool> valueNotifier,
     required Function(bool newValue) onChanged,
     Key? key,
@@ -283,10 +292,16 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
                   title,
                   style: TextStyle(fontSize: 16, color: _UIColors.color_222222),
                 ),
-                if (content != null)
-                  Container(
+                if (content != null || contentBuilder != null)
+                  SizedBox(
                     height: 1,
                   ),
+                if (contentBuilder != null)
+                  ValueListenableBuilder<bool>(
+                      valueListenable: valueNotifier,
+                      builder: (context, value, child) {
+                        return contentBuilder(value);
+                      }),
                 if (content != null)
                   Container(
                     width: 250,
@@ -338,6 +353,30 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
               : meetingUiLocalizations.meetingUnLockMeetingByHostFail);
         }
       });
+    });
+  }
+
+  /// 点击访客入会开关处理
+  void _handleGuestJoin(bool enable) {
+    if (!enable) {
+      _enableGuestJoin(false);
+    } else {
+      DialogUtils.showCommonDialog(
+          context,
+          meetingUiLocalizations.meetingGuestJoinConfirm,
+          meetingUiLocalizations.meetingGuestJoinConfirmTip, () {
+        Navigator.of(context).pop();
+      }, () {
+        _enableGuestJoin(true);
+        Navigator.of(context).pop();
+      });
+    }
+  }
+
+  /// 设置是否支持访客入会
+  void _enableGuestJoin(bool enable) {
+    doIfNetworkAvailable(() {
+      lifecycleExecute(_roomContext.enableGuestJoin(enable));
     });
   }
 

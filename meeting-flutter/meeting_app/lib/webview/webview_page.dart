@@ -10,7 +10,7 @@ import 'package:flutter/widgets.dart';
 import '../uikit/state/meeting_base_state.dart';
 
 class WebViewArguments {
-  final String url;
+  final String? url;
 
   final String title;
 
@@ -45,7 +45,7 @@ class _WebViewState extends MeetingBaseState<WebViewPage> {
   Widget buildBody() {
     final controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadRequest(Uri.parse(arguments.url))
+      ..loadRequest(Uri.parse(arguments.url ?? ''))
       ..setNavigationDelegate(NavigationDelegate(onPageStarted: (url) {
         Alog.d(tag: _tag, content: 'onPageStarted $url');
       }, onPageFinished: (url) {

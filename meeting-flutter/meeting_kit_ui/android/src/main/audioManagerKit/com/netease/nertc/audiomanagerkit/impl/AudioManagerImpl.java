@@ -214,7 +214,8 @@ public class AudioManagerImpl implements AudioManagerKit {
     if (userSelectedRet != AudioDevice.NONE) {
       newAudioDevice = userSelectedRet;
     } else if (mBluetoothManager.getState() != BluetoothManagerWrapper.State.HEADSET_UNAVAILABLE
-        && mBluetoothManager.getState() != BluetoothManagerWrapper.State.UNINITIALIZED) {
+        && mBluetoothManager.getState() != BluetoothManagerWrapper.State.UNINITIALIZED
+        && mBluetoothManager.canConnectToDevice()) {
       newAudioDevice = AudioDevice.BLUETOOTH;
     } else if (mHasWiredHeadset) {
       newAudioDevice = AudioDevice.WIRED_HEADSET;
@@ -283,6 +284,12 @@ public class AudioManagerImpl implements AudioManagerKit {
     mScenario = scenario;
     UpdateAudioProfileConfig();
     return NERtcEx.getInstance().setAudioProfile(profile, scenario);
+  }
+
+  public void restartBluetooth() {
+    mBluetoothManager.stop();
+    mBluetoothManager = BluetoothManagerWrapper.create(mContext, this, 12000);
+    mBluetoothManager.start();
   }
 
   public void selectAudioDevice(int audioDevice) {

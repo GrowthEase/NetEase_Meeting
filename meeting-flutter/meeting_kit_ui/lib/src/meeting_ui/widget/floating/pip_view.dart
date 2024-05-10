@@ -70,10 +70,10 @@ class PIPViewState extends State<PIPView> with TickerProviderStateMixin {
 
   void stopFloating() {
     dismissKeyboard(context);
-    setState(() => {
-          _bottomWidget = null,
-          widget.onFloating(false),
-        });
+    setState(() {
+      _bottomWidget = null;
+      widget.onFloating(false);
+    });
   }
 
   @override

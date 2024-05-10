@@ -73,8 +73,10 @@ class NavUtils {
     String routeName, {
     String? utilRouteName,
     Object? arguments,
+    bool rootNavigator = false,
   }) {
-    return Navigator.of(context).pushNamedAndRemoveUntil(
+    return Navigator.of(context, rootNavigator: rootNavigator)
+        .pushNamedAndRemoveUntil(
       routeName,
       TextUtil.isEmpty(utilRouteName)
           ? (Route<dynamic> route) => false
@@ -114,4 +116,9 @@ class NavUtils {
   static const int clickTimes = 5;
   static const int duration = 2 * 1000;
   static var mHits = List<int>.filled(clickTimes, 0);
+
+  static void toEntrance(BuildContext context, {rootNavigator = false}) {
+    NavUtils.pushNamedAndRemoveUntil(context, RouterName.entrance,
+        rootNavigator: rootNavigator);
+  }
 }

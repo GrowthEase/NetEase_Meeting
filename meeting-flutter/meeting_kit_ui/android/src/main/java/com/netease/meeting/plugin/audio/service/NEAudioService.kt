@@ -66,7 +66,7 @@ class NEAudioHandler(
                 val devices = audioManager?.enumAudioDevices()
 
                 // 蓝牙耳机和有线耳机同时连接或者为pad设备时，忽略听筒
-                if (devices?.contains(AudioDevice.WIRED_HEADSET) == true && devices?.contains(AudioDevice.BLUETOOTH) == true ||
+                if (devices?.contains(AudioDevice.WIRED_HEADSET) == true && devices.contains(AudioDevice.BLUETOOTH) ||
                     isPad
                 ) {
                     devices?.remove(AudioDevice.EARPIECE)
@@ -91,6 +91,9 @@ class NEAudioHandler(
             "stop" -> {
                 audioManager?.stop()
                 audioManager = null
+            }
+            "restartBluetooth" -> {
+                audioManager?.restartBluetooth()
             }
             else -> result.notImplemented()
         }

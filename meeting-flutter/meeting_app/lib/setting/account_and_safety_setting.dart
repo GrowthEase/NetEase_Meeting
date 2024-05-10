@@ -16,6 +16,7 @@ import '../uikit/values/colors.dart';
 import '../uikit/values/dimem.dart';
 import '../uikit/values/fonts.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
+import 'package:yunxin_alog/yunxin_alog.dart';
 
 class AccountAndSafetySettingRoute extends StatefulWidget {
   AccountAndSafetySettingRoute();
@@ -29,6 +30,7 @@ class AccountAndSafetySettingRoute extends StatefulWidget {
 class _AccountAndSafetySettingState
     extends MeetingBaseState<AccountAndSafetySettingRoute>
     with MeetingAppLocalizationsMixin {
+  static const String TAG = 'AccountAndSafetySettingRoute';
   @override
   Widget buildBody() {
     final child = Column(
@@ -39,10 +41,6 @@ class _AccountAndSafetySettingState
         _buildEmailItem(),
         _buildWideSplit(),
         if (canModifyPwd()) _buildModifyPwd(),
-        if (canDeleteAccount()) ...[
-          _buildSplit(),
-          _buildDeleteAccount(),
-        ],
       ],
     );
     return ListenableBuilder(
@@ -66,30 +64,6 @@ class _AccountAndSafetySettingState
       arrowTip: AuthManager().email ?? meetingAppLocalizations.authUnavailable,
       isShowArrow: false,
     );
-  }
-
-  Widget _buildDeleteAccount() {
-    return _buildItem(
-        title: meetingAppLocalizations.settingDeleteAccount,
-        arrowTip: '',
-        isShowArrow: true,
-        onTap: () {
-          if (NEMeetingUIKit().getCurrentMeetingInfo() != null) {
-            ToastUtils.showToast(context,
-                meetingAppLocalizations.meetingOperationNotSupportedInMeeting);
-            return;
-          }
-          var uri = Uri.parse(Servers.deleteAccountWebServiceUrl);
-          uri = uri.replace(queryParameters: {
-            if (AuthManager().appKey != null) 'appKey': AuthManager().appKey!,
-            if (AuthManager().accountId != null) 'id': AuthManager().accountId!,
-            if (AuthManager().accountToken != null)
-              't': AuthManager().accountToken!,
-          });
-          NavUtils.pushNamed(context, RouterName.webview,
-              arguments: WebViewArguments(uri.toString(),
-                  meetingAppLocalizations.settingDeleteAccount));
-        });
   }
 
   Widget _buildModifyPwd() {

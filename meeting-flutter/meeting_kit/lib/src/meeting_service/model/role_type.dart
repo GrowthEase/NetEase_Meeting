@@ -23,5 +23,8 @@ enum NEMeetingRoleType {
   coHost,
 
   /// 成员
-  member
+  member,
+
+  /// 外部访客
+  guest
 }

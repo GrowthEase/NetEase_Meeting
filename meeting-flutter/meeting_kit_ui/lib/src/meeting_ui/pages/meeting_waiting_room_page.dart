@@ -45,7 +45,6 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
 
   int? disconnectingCode;
 
-  ValueNotifier<bool> _networkAvailable = ValueNotifier(true);
   StreamSubscription? _roomEndStreamSubscription;
   StreamSubscription? _waitingRoomStatusSubscription;
 
@@ -73,20 +72,8 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
         chatroomConfig:
             arguments.options.chatroomConfig ?? NEMeetingChatroomConfig());
     createHistoryMeetingItem();
-    handleNetworkStateChanged();
     handleAppLifecycleChangeEvent();
     _isInPIPView = ValueNotifier(widget.arguments.initialIsInPIPView);
-  }
-
-  void handleNetworkStateChanged() {
-    Connectivity().checkConnectivity().then(
-        (value) => _networkAvailable.value = value != ConnectivityResult.none);
-    final networkSubscription = Connectivity()
-        .onConnectivityChanged
-        .listen((ConnectivityResult result) {
-      _networkAvailable.value = result != ConnectivityResult.none;
-    });
-    streamSubscriptions.add(networkSubscription);
   }
 
   void handleAppLifecycleChangeEvent() {
@@ -337,7 +324,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
 
   @override
   Widget build(BuildContext context) {
-    final child = WillPopScope(
+    final child = PopScope(
       child: ValueListenableBuilder(
         valueListenable: _isInPIPView,
         builder: (_, bool isInPIPView, __) {
@@ -368,9 +355,10 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
               : _buildBody();
         },
       ),
-      onWillPop: () async {
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
         _finishPage();
-        return Future.value(false);
       },
     );
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -391,10 +379,6 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
       _isInPIPView.value = false;
       if (Platform.isIOS) {
         floating.disposePIP();
-      }
-      if (!_networkAvailable.value) {
-        Connectivity().checkConnectivity().then((value) =>
-            _networkAvailable.value = value != ConnectivityResult.none);
       }
     }
 
@@ -567,8 +551,9 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
   }
 
   void onChat() {
-    Navigator.of(context).push(MaterialMeetingPageRoute(
-        settings: RouteSettings(name: MeetingChatRoomPage.routeName),
+    showMeetingPopupPageRoute(
+        context: context,
+        routeSettings: RouteSettings(name: MeetingChatRoomPage.routeName),
         builder: (context) {
           return MeetingChatRoomPage(
             arguments: ChatRoomArguments(
@@ -577,7 +562,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
               chatRoomManager: chatRoomManager,
             ),
           );
-        }));
+        });
   }
 
   Widget _buildSplit() {
@@ -955,9 +940,8 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
   }
 
   Widget _buildNetworkNotice() {
-    return ValueListenableBuilder<bool>(
-        valueListenable: _networkAvailable,
-        builder: (_, value, __) => value
+    return ConnectivityChangedBuilder(
+        builder: (_, connected, __) => connected
             ? SizedBox.shrink()
             : Container(
                 padding: EdgeInsets.symmetric(vertical: 4, horizontal: 16),

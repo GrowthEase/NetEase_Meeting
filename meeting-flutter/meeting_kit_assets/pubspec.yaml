@@ -21,6 +21,7 @@ flutter:
     - assets/images/
     - assets/images/2.0x/
     - assets/images/3.0x/
+    - assets/sounds/
 
   fonts:
     - family: iconfont

@@ -7,7 +7,6 @@ import 'dart:io';
 
 import 'package:archive/archive_io.dart';
 import 'package:bot_toast/bot_toast.dart';
-import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -23,6 +22,7 @@ import '../service/auth/auth_state.dart';
 import '../uikit/utils/nav_utils.dart';
 import '../uikit/utils/router_name.dart';
 import 'application.dart';
+import 'base/util/global_preferences.dart';
 import 'language/localizations.dart';
 import 'language/meeting_localization/meeting_app_localizations.dart';
 import 'utils/nav_register.dart';
@@ -84,9 +84,17 @@ class MeetingApp extends StatefulWidget {
 }
 
 class _MeetingAppState extends State<MeetingApp> {
+  late NEMeetingStatusListener _meetingStatusListener;
+
+  final isInMinimizedMode = ValueNotifier<bool>(false);
+
   @override
   void initState() {
     super.initState();
+
+    /// 切换至用户选中的语言
+    switchLanguage();
+
     // 延迟首帧，待自动登录成功/失败后才展示
     WidgetsBinding.instance.deferFirstFrame();
     AuthState().authState().listen((event) {
@@ -99,6 +107,20 @@ class _MeetingAppState extends State<MeetingApp> {
         );
       }
     });
+
+    _meetingStatusListener = (status) {
+      switch (status.event) {
+        case NEMeetingEvent.inMeetingMinimized:
+          isInMinimizedMode.value = true;
+          break;
+        case NEMeetingEvent.inMeeting:
+          isInMinimizedMode.value = false;
+          break;
+        default:
+          break;
+      }
+    };
+    NEMeetingUIKit().addListener(_meetingStatusListener);
   }
 
   @override
@@ -106,8 +128,22 @@ class _MeetingAppState extends State<MeetingApp> {
     Application.context = context;
     final meetingAppLocalizations = MeetingAppLocalizations.of(context)!;
     final app = MaterialApp(
-      builder: BotToastInit(),
+      builder: (context, child) {
+        return BotToastInit()(
+            context,
+            ValueListenableBuilder(
+                valueListenable: isInMinimizedMode,
+                builder: (_, value, __) {
+                  return value
+                      ? child!
+                      : InComingInvite(
+                          child: child!,
+                          isInMinimizedMode: false,
+                        );
+                }));
+      },
       color: Colors.white,
+      debugShowCheckedModeBanner: false,
       title: meetingAppLocalizations.globalAppName,
       theme: ThemeData(
           useMaterial3: false,
@@ -117,7 +153,9 @@ class _MeetingAppState extends State<MeetingApp> {
           )),
       themeMode: ThemeMode.light,
       navigatorKey: NavUtils.navigatorKey,
-      home: WelcomePage(),
+      home: MeetingAppLocalizationsScope(
+        child: WelcomePage(),
+      ),
       navigatorObservers: [BotToastNavigatorObserver()],
       // 注册路由表
       routes: RoutesRegister.routes,
@@ -125,17 +163,39 @@ class _MeetingAppState extends State<MeetingApp> {
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
+        ...MeetingAppLocalizations.localizationsDelegates,
       ],
       supportedLocales: [
         const Locale('en', 'US'), // 美国英语
         const Locale('zh', 'CN'),
         const Locale('ja', 'JP'),
       ],
+      locale: NEMeetingUIKit().localeListenable.value,
     );
     return ScreenUtilInit(
       designSize: const Size(375, 812),
       child: app,
     );
+  }
+
+  /// 根据本地缓存切换语言
+  Future<void> switchLanguage() async {
+    final language = await GlobalPreferences().getLanguageCode();
+    if (language == null ||
+        language == NEMeetingLanguage.automatic.locale.languageCode) return;
+    if (language == NEMeetingLanguage.chinese.locale.languageCode) {
+      await NEMeetingUIKit().switchLanguage(NEMeetingLanguage.chinese);
+    } else if (language == NEMeetingLanguage.english.locale.languageCode) {
+      await NEMeetingUIKit().switchLanguage(NEMeetingLanguage.english);
+    } else if (language == NEMeetingLanguage.japanese.locale.languageCode) {
+      await NEMeetingUIKit().switchLanguage(NEMeetingLanguage.japanese);
+    }
+  }
+
+  @override
+  void dispose() {
+    NEMeetingUIKit().removeListener(_meetingStatusListener);
+    super.dispose();
   }
 }
 
@@ -145,6 +205,8 @@ class WelcomePage extends StatefulWidget {
 }
 
 class _WelcomePageState extends BaseState<WelcomePage> {
+  StreamSubscription? _connectivitySubscription;
+  bool loadLoginInfoSuccess = false;
   @override
   void initState() {
     super.initState();
@@ -169,11 +231,8 @@ class _WelcomePageState extends BaseState<WelcomePage> {
 
   void loadLoginInfo() {
     debugPrint("AppStartUp: loadLoginInfo start");
-    Connectivity()
-        .checkConnectivity()
-        .then((value) {
-          return value != ConnectivityResult.none;
-        })
+    ConnectivityManager()
+        .isConnected()
         .then((connected) =>
             connected ? AuthManager().autoLogin() : Future.value(false))
         .then((success) {

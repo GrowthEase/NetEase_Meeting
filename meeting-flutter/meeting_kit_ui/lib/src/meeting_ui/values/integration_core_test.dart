@@ -92,6 +92,7 @@ class MeetingUIValueKeys {
   ///会议安全页面
   static const waitingRoomSwitch = ValueKey('waitingRoomSwitch');
   static const watermarkSwitch = ValueKey('watermarkSwitch');
+  static const meetingEnableGuestJoin = ValueKey('meetingEnableGuestJoin');
   static const meetingLockSwitch = ValueKey('meetingLockSwitch');
   static const meetingChat = ValueKey('meetingChat');
 
