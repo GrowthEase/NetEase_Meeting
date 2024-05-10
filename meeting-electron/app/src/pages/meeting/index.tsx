@@ -36,7 +36,7 @@ export default function MeetingPage() {
   const accountInfoRef = useRef<any>();
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [meetingId, setMeetingId] = useState<string>('');
-  const joinTypeRef = useRef<'create' | 'join'>('create');
+  const joinTypeRef = useRef<'create' | 'join' | 'joinByInvite'>('create');
   const passwordRef = useRef<string>('');
   const settingRef = useRef<MeetingSetting | null>(null);
   const queryRef = useRef({
@@ -88,7 +88,8 @@ export default function MeetingPage() {
     if (!meetingNum) {
       joinTypeRef.current = 'create';
     } else {
-      joinTypeRef.current = (joinType as 'create' | 'join') || 'create';
+      joinTypeRef.current =
+        (joinType as 'create' | 'join' | 'joinByInvite') || 'create';
     }
     init();
     return () => {
@@ -132,7 +133,9 @@ export default function MeetingPage() {
         NEMeetingKit.actions.on('onMeetingStatusChanged', (status: number) => {
           // 密码输入框点击取消
           if (status === 3 || status === 2) {
-            eleIpcIns?.sendMessage('beforeEnterRoom');
+            setTimeout(() => {
+              eleIpcIns?.sendMessage('beforeEnterRoom');
+            }, 1000);
           } else if (status === 8) {
             // 到等候室
             setFeedbackModalOpen(false);
@@ -144,8 +147,10 @@ export default function MeetingPage() {
           setTimeout(() => {
             setInMeeting(false);
             if (eleIpcIns) {
-              eleIpcIns.sendMessage('beforeEnterRoom');
-              window.ipcRenderer?.send(IPCEvent.needOpenNPS);
+              setTimeout(() => {
+                eleIpcIns.sendMessage('beforeEnterRoom');
+                window.ipcRenderer?.send(IPCEvent.needOpenNPS);
+              }, 1000);
             } else {
               history.push('/');
             }
@@ -191,7 +196,10 @@ export default function MeetingPage() {
               createMeeting();
               break;
             case 'join':
-              joinMeeting();
+              joinMeeting('join');
+              break;
+            case 'joinByInvite':
+              joinMeeting('joinByInvite');
               break;
           }
         } else {
@@ -240,10 +248,11 @@ export default function MeetingPage() {
           settingRef.current?.videoSetting.enableVideoMirroring,
         showDurationTime: settingRef.current?.normalSetting.showDurationTime,
         showMeetingRemainingTip: true,
-        showCloudRecordingUI: MEETING_ENV !== 'production',
+        showCloudRecordingUI: true,
         watermarkConfig: {
           name: accountInfoRef.current.nickname,
         },
+        noSip: false,
         moreBarList: [
           { id: 29 },
           { id: 25 },
@@ -315,6 +324,7 @@ export default function MeetingPage() {
       storeMeetingInfo();
       // eleIpcIns?.sendMessage('enterRoom')
       setInMeeting(true);
+      eleIpcIns?.sendMessage('inMeeting');
     } else {
       console.log('>>>>', e);
       if (e.code === 1020 || e.code === 3100) {
@@ -338,7 +348,7 @@ export default function MeetingPage() {
     }
   }
 
-  function joinMeeting() {
+  function joinMeeting(type: 'join' | 'joinByInvite') {
     const video =
       queryRef.current.openCamera || settingRef.current?.normalSetting.openVideo
         ? 1
@@ -348,52 +358,67 @@ export default function MeetingPage() {
         ? 1
         : 2;
     return new Promise((resolve, reject) => {
-      NEMeetingKit.actions.join(
-        {
-          meetingNum: queryRef.current.meetingNum,
-          showCloudRecordingUI: MEETING_ENV !== 'production',
-          password: queryRef.current.password,
-          avatar: queryRef.current.avatar || '',
-          nickName:
-            queryRef.current.nickName || accountInfoRef.current.nickname,
-          enableVideoMirror:
-            settingRef.current?.videoSetting.enableVideoMirroring,
-          video,
-          audio,
-          showSpeaker: settingRef.current?.normalSetting.showSpeakerList,
-          enableUnmuteBySpace:
-            settingRef.current?.audioSetting.enableUnmuteBySpace,
-          showDurationTime: settingRef.current?.normalSetting.showDurationTime,
-          env: platform,
-          showMeetingRemainingTip: true,
-          watermarkConfig: {
-            name: accountInfoRef.current.nickname,
-          },
-          moreBarList: [
-            { id: 29 },
-            { id: 25 },
-            {
-              id: 1000,
-              btnConfig: {
-                icon: FeedbackImg,
-                lightIcon: LightFeedbackImg,
-                text: t('feedback'),
-              },
-              type: 'single',
-              injectItemClick: () => {
-                setMeetingId(NEMeetingKit.actions.NEMeetingInfo.meetingId);
-                setFeedbackModalOpen(true);
-              },
-            },
-          ],
+      const data: any = {
+        meetingNum: queryRef.current.meetingNum,
+        showCloudRecordingUI: true,
+        password: queryRef.current.password,
+        avatar: queryRef.current.avatar || '',
+        nickName: queryRef.current.nickName || accountInfoRef.current.nickname,
+        enableVideoMirror:
+          settingRef.current?.videoSetting.enableVideoMirroring,
+        video,
+        audio,
+        showSpeaker: settingRef.current?.normalSetting.showSpeakerList,
+        enableUnmuteBySpace:
+          settingRef.current?.audioSetting.enableUnmuteBySpace,
+        showDurationTime: settingRef.current?.normalSetting.showDurationTime,
+        env: platform,
+        showMeetingRemainingTip: true,
+        watermarkConfig: {
+          name: accountInfoRef.current.nickname,
         },
-        function (e: any) {
+        moreBarList: [
+          { id: 29 },
+          { id: 25 },
+          {
+            id: 1000,
+            btnConfig: {
+              icon: FeedbackImg,
+              lightIcon: LightFeedbackImg,
+              text: t('feedback'),
+            },
+            type: 'single',
+            injectItemClick: () => {
+              setMeetingId(NEMeetingKit.actions.NEMeetingInfo.meetingId);
+              setFeedbackModalOpen(true);
+            },
+          },
+        ],
+      };
+      console.warn('joinType', type);
+      if (type === 'joinByInvite') {
+        NEMeetingKit.actions.inviteService
+          ?.acceptInvite(data)
+          .then(() => {
+            setLocalRecentMeetingList(queryRef.current.meetingNum);
+            joinHandler(null);
+            resolve(null);
+          })
+          .catch((e) => {
+            joinHandler(e);
+            reject(e);
+          });
+      } else {
+        NEMeetingKit.actions.join(data, function (e: any) {
+          joinHandler(e);
           if (!e) {
             setLocalRecentMeetingList(queryRef.current.meetingNum);
+            resolve(null);
+          } else {
+            reject(e);
           }
-          joinHandler(e);
-        },
-      );
+        });
+      }
     });
   }
 
@@ -433,12 +458,13 @@ export default function MeetingPage() {
     }
     NEMeetingKit.actions.on('onScreenSharingStatusChange', setIsSharingScreen);
     window.ipcRenderer?.on('maximize-window', handleMaximizeWindow);
+    window.ipcRenderer?.on('open-meeting-feedback', () => {
+      setFeedbackModalOpen(true);
+    });
     return () => {
       window.ipcRenderer?.off('maximize-window', handleMaximizeWindow);
     };
   }, []);
-
-  console.log('isMaximized', isMaximized, isSharingScreen);
 
   const winCls =
     window.isElectronNative &&

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import './index.less'
 import Modal from '../../common/Modal'
-import { Button, Checkbox, Input, message } from 'antd'
+import { Button, Checkbox, Input } from 'antd'
 import { feedbackApi } from '../../../utils/feedbackApi'
 import Toast from '../../common/toast'
 import { NEMeetingKit } from '../../../types'
@@ -169,6 +169,7 @@ const Feedback: React.FC<FeedbackProps> = ({
       footer={null}
       width={375}
       onCancel={() => onClose()}
+      destroyOnClose
     >
       {isSubmitting ? (
         <>

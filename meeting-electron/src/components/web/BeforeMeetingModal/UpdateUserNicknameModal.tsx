@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 
 import './index.less'
 import Modal from '../../common/Modal'
 import { Button, Input, Form, ModalProps } from 'antd'
 import { useTranslation } from 'react-i18next'
-
-import { substringByByte3 } from '../../../utils'
+import { isLastCharacterEmoji } from '../../../utils'
 
 type SummitValue = {
   nickname: string
@@ -40,11 +39,6 @@ const UpdateUserNicknameModal: React.FC<UpdateUserNicknameModalProps> = ({
     form.validateFields().then((values) => {
       onSummit?.(values)
     })
-  }
-  function isLastCharacterEmoji(str: string) {
-    // 使用正则表达式匹配表情符号
-    const emojiRegex = /[\uD83C-\uDBFF\uDC00-\uDFFF]+$/
-    return emojiRegex.test(str)
   }
 
   function handleInputChange(value: string) {

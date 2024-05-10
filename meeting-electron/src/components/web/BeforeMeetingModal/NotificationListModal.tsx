@@ -5,14 +5,14 @@ import { useTranslation } from 'react-i18next'
 import EventEmitter from 'eventemitter3'
 import NEMeetingService from '../../../services/NEMeeting'
 import Modal from '../../common/Modal'
-import MeetingNotificationList from '../MeetingNotification/List'
+import MeetingNotificationList from '../../common/Notification/List'
 import './index.less'
 
 interface NotificationListModalProps extends ModalProps {
   neMeeting?: NEMeetingService
+  eventEmitter?: EventEmitter
   sessionId?: string
   onClick?: (action?: string) => void
-  eventEmitter?: EventEmitter
 }
 
 const NotificationListModal: React.FC<NotificationListModalProps> = ({

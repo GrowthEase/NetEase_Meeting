@@ -1,21 +1,14 @@
-import { ConfigProvider } from 'antd';
-import zhCN from 'antd/locale/zh_CN';
-import { useEffect, useMemo, useRef, useState } from 'react';
 import classNames from 'classnames';
+import { useEffect, useMemo, useRef, useState } from 'react';
+
 import AudioIcon from '../../../../src/components/common/AudioIcon';
-import {
-  EventType,
-  NEMeetingInfo,
-  NEMember,
-  WATERMARK_STRATEGY,
-} from '../../../../src/types';
-import SpeakerList from '../../../../src/components/web/SpeakerList';
-import {
-  drawWatermark,
-  stopDrawWatermark,
-} from '../../../../src/utils/watermark';
-import { worker } from '../../../../src/components/web/Meeting/Meeting';
 import UserAvatar from '../../../../src/components/common/Avatar';
+import SpeakerList from '../../../../src/components/web/SpeakerList';
+import useWatermark from '../../../../src/hooks/useWatermark';
+import { NEMeetingInfo, NEMember } from '../../../../src/types';
+
+import { worker } from '../../../../src/components/web/Meeting/Meeting';
+import './index.less';
 
 const VideoCard: React.FC<{
   member: NEMember;
@@ -23,6 +16,8 @@ const VideoCard: React.FC<{
   volume: number;
   isMySelf: boolean;
 }> = ({ member, volume, isMySelf }) => {
+  useWatermark({ offsetX: 30, offsetY: 50 });
+
   const viewRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -58,28 +53,31 @@ const VideoCard: React.FC<{
               args: ['', member.uuid],
             },
           },
-          '*',
+          parentWindow.origin,
         );
-        parentWindow?.postMessage({
-          event: 'rtcController',
-          payload: {
-            fnKey: 'subscribeRemoteVideoStream',
-            args: [member.uuid, 1],
+        parentWindow?.postMessage(
+          {
+            event: 'neMeeting',
+            payload: {
+              fnKey: 'subscribeRemoteVideoStream',
+              args: [member.uuid, 1],
+            },
           },
-        });
+          parentWindow.origin,
+        );
       }
 
       return () => {
         if (!isMySelf) {
           parentWindow?.postMessage(
             {
-              event: 'rtcController',
+              event: 'neMeeting',
               payload: {
                 fnKey: 'unsubscribeRemoteVideoStream',
                 args: [member.uuid],
               },
             },
-            '*',
+            parentWindow.origin,
           );
         }
       };
@@ -159,11 +157,7 @@ export default function VideoPage() {
     if (videoCount === 0) {
       return [];
     }
-    if (videoCount === 1) {
-      return [meetingInfo?.localMember];
-    }
-    if (videoCount === 4) {
-    }
+
     const memberListWithoutSelf = memberList.filter(
       (member) => member.uuid !== meetingInfo?.localMember.uuid,
     );
@@ -173,11 +167,35 @@ export default function VideoPage() {
     const memberListVideoOff = memberListWithoutSelf.filter(
       (member) => !member.isVideoOn,
     );
-    const sortMemberList = [
-      meetingInfo?.localMember,
-      ...memberListVideoOn,
-      ...memberListVideoOff,
-    ];
+    const sortMemberList = meetingInfo
+      ? [meetingInfo.localMember, ...memberListVideoOn, ...memberListVideoOff]
+      : [];
+    const viewOrder =
+      meetingInfo?.remoteViewOrder || meetingInfo?.localViewOrder;
+
+    if (viewOrder) {
+      const idOrder = viewOrder.split(',');
+      sortMemberList.sort((a, b) => {
+        // 获取 a 和 b 对象的 id 在 idOrder 数组中的索引位置
+        const indexA = idOrder.indexOf(a.uuid);
+        const indexB = idOrder.indexOf(b.uuid);
+        // 根据 id 在 idOrder 中的索引位置进行排序
+        if (indexA === -1 && indexB === -1) {
+          return 0; // 如果两个都不在给定的 UUID 数组中，则保持原顺序
+        } else if (indexA === -1) {
+          return 1; // 如果 a 不在数组中但 b 在，则 b 应该在前面
+        } else if (indexB === -1) {
+          return -1; // 如果 b 不在数组中但 a 在，则 a 应该在前面
+        } else {
+          return indexA - indexB; // 否则按照在给定数组中的位置排序
+        }
+      });
+    }
+
+    if (videoCount === 1) {
+      return [meetingInfo?.localMember];
+    }
+
     const res = sortMemberList.slice((pageNum - 1) * 4, pageNum * 4);
     if (res.length === 0) {
       setPageNum((prev) => prev - 1);

@@ -47,7 +47,7 @@
   .video-setting {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    // align-items: center;
   }
   .normal-setting-title {
     font-weight: 500;
@@ -57,10 +57,13 @@
   .normal-setting-item {
     margin-bottom: 16px;
     font-size: 14px;
+    &:last-child {
+      margin-bottom: 36px;
+    }
   }
   .video-setting-item {
-    display: flex;
-    padding-bottom: 45px;
+    // display: flex;
+    padding-bottom: 40px;
   }
   .more-setting-item {
     .voice-quality-content {
@@ -82,16 +85,18 @@
   }
   .video-setting-title {
     //width: 83px;
+    margin-bottom: 16px;
   }
   .video-canvas {
-    width: 452px;
-    height: 255px;
+    width: 540px;
+    height: 304px;
     background-color: #000;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     margin-top: -15px;
     overflow: hidden;
     position: relative;
     border-radius: 6px;
+    flex-shrink: 0;
   }
   .nemeeting-menu-item {
     display: flex;
@@ -120,9 +125,18 @@
     font-weight: 500;
     text-align: left;
     margin-right: 25px;
+    margin-bottom: 16px;
   }
   .video-setting-content {
     flex: 1;
+    color: #333333;
+    font-size: 14px;
+    .radio-title {
+      margin-bottom: 12px;
+    }
+    .radio-item {
+      margin-right: 48px;
+    }
   }
   .video-device-select {
     width: 320px;
@@ -233,7 +247,7 @@
   .beauty-setting-background-list {
     width: 470px;
     margin: 15px auto 0px;
-    height: 165px;
+    height: 270px;
     overflow-y: auto;
     .virtual-selected-item {
       border: 2px solid #337eff;
@@ -294,7 +308,7 @@
 }
 .nemeeting-setting-content {
   display: flex;
-  height: 510px;
+  height: 630px;
   color: #333333;
   .menu-wrap {
     width: 180px;

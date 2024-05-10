@@ -6,6 +6,7 @@ import {
   MenuProps,
   Popover,
   Progress,
+  Radio,
   Select,
   Slider,
   Tooltip,
@@ -108,6 +109,7 @@ interface VideoSettingProps {
   onDeviceChange: (value: string, deviceInfo: MeetingDeviceInfo) => void
   onResolutionChange: (value: number) => void
   onEnableVideoMirroringChange: (e: CheckboxChangeEvent) => void
+  onGalleryModeMaxCountChange: (value: number) => void
   videoDeviceList: (NEDeviceBaseInfo & { default?: boolean })[]
   startPreview: (canvas: HTMLElement) => void
   stopPreview: () => Promise<any>
@@ -117,6 +119,7 @@ interface VideoSettingProps {
     isDefaultDevice?: boolean
     resolution: number
     enableVideoMirroring: boolean
+    galleryModeMaxCount: number
   }
 }
 
@@ -178,6 +181,7 @@ const defaultSetting: MeetingSetting = {
     deviceId: '',
     resolution: 1080,
     enableVideoMirroring: true,
+    galleryModeMaxCount: 9,
   },
   audioSetting: {
     recordDeviceId: '',
@@ -240,71 +244,85 @@ const NormalSetting: React.FC<NormalSettingProps> = ({
 
   return (
     <div className="setting-wrap normal-setting w-full h-full">
-      <div className="normal-setting-title">{t('meeting')}</div>
-      <div className="normal-setting-item">
-        <Checkbox checked={setting.openVideo} onChange={onOpenVideoChange}>
-          {t('openCameraInMeeting')}
-        </Checkbox>
-      </div>
+      <div>
+        <div className="normal-setting-title">{t('meeting')}</div>
+        <div className="normal-setting-item">
+          <Checkbox checked={setting.openVideo} onChange={onOpenVideoChange}>
+            {t('openCameraInMeeting')}
+          </Checkbox>
+        </div>
 
-      <div className="normal-setting-item">
-        <Checkbox checked={setting.openAudio} onChange={onOpenAudioChange}>
-          {t('openMicInMeeting')}
-        </Checkbox>
-      </div>
+        <div className="normal-setting-item">
+          <Checkbox checked={setting.openAudio} onChange={onOpenAudioChange}>
+            {t('openMicInMeeting')}
+          </Checkbox>
+        </div>
 
-      <div className="normal-setting-item">
-        <Checkbox
-          checked={setting.showDurationTime}
-          onChange={onShowTimeChange}
-        >
-          {t('showMeetingTime')}
-        </Checkbox>
+        <div className="normal-setting-item">
+          <Checkbox
+            checked={setting.showDurationTime}
+            onChange={onShowTimeChange}
+          >
+            {t('showMeetingTime')}
+          </Checkbox>
+        </div>
+        <div className="normal-setting-item">
+          <Checkbox
+            checked={setting.showSpeakerList}
+            onChange={onShowSpeakerListChange}
+          >
+            {t('showCurrentSpeaker')}
+          </Checkbox>
+        </div>
+        <div className="normal-setting-item">
+          <Checkbox
+            checked={setting.showToolbar}
+            onChange={onShowToolbarChange}
+          >
+            <span>{t('alwaysDisplayToolbar')}</span>
+          </Checkbox>
+          <Popover
+            trigger={'hover'}
+            placement={'top'}
+            content={
+              <div className="toolbar-tip">{t('alwaysDisplayToolbarTip')}</div>
+            }
+          >
+            <svg
+              className="icon iconfont icona-45 nemeeting-blacklist-tip"
+              aria-hidden="true"
+            >
+              <use xlinkHref="#icona-45"></use>
+            </svg>
+          </Popover>
+        </div>
+        <div className="normal-setting-item">
+          <Checkbox
+            checked={setting.enableTransparentWhiteboard}
+            onChange={onEnableTransparentWhiteboardChange}
+          >
+            <span>{t('setWhiteboardTransparency')}</span>
+          </Checkbox>
+          <Popover
+            trigger={'hover'}
+            placement={'top'}
+            content={
+              <div className="toolbar-tip">
+                {t('setWhiteboardTransparencyTip')}
+              </div>
+            }
+          >
+            <svg
+              className="icon iconfont icona-45 nemeeting-blacklist-tip"
+              aria-hidden="true"
+            >
+              <use xlinkHref="#icona-45"></use>
+            </svg>
+          </Popover>
+        </div>
       </div>
-      <div className="normal-setting-item">
-        <Checkbox
-          checked={setting.showSpeakerList}
-          onChange={onShowSpeakerListChange}
-        >
-          {t('showCurrentSpeaker')}
-        </Checkbox>
-      </div>
-      <div className="normal-setting-item">
-        <Checkbox checked={setting.showToolbar} onChange={onShowToolbarChange}>
-          <span>{t('alwaysDisplayToolbar')}</span>
-        </Checkbox>
-        <Popover
-          trigger={'hover'}
-          placement={'top'}
-          content={
-            <div className="toolbar-tip">{t('alwaysDisplayToolbarTip')}</div>
-          }
-        >
-          <i className="iconfont icona-45 icon-color" />
-        </Popover>
-      </div>
-      <div className="normal-setting-item">
-        <Checkbox
-          checked={setting.enableTransparentWhiteboard}
-          onChange={onEnableTransparentWhiteboardChange}
-        >
-          <span>{t('setWhiteboardTransparency')}</span>
-        </Checkbox>
-        <Popover
-          trigger={'hover'}
-          placement={'top'}
-          content={
-            <div className="toolbar-tip">
-              {t('setWhiteboardTransparencyTip')}
-            </div>
-          }
-        >
-          <i className="iconfont icona-45 icon-color" />
-        </Popover>
-      </div>
-
       {setting.downloadPath && (
-        <>
+        <div>
           <div className="normal-setting-title">{t('file')}</div>
           <div className="normal-setting-item">
             {t('downloadPath')}
@@ -319,10 +337,10 @@ const NormalSetting: React.FC<NormalSettingProps> = ({
             <br />
             {setting.downloadPath}
           </div>
-        </>
+        </div>
       )}
       {inMeeting ? null : (
-        <>
+        <div>
           <div className="normal-setting-title">{t('language')}</div>
           <Select
             value={languageValue}
@@ -335,7 +353,7 @@ const NormalSetting: React.FC<NormalSettingProps> = ({
               { value: 'ja-JP', label: '日本語' },
             ]}
           />
-        </>
+        </div>
       )}
     </div>
   )
@@ -360,6 +378,7 @@ const VideoSetting: React.FC<VideoSettingProps> = ({
   videoDeviceList,
   startPreview,
   onEnableVideoMirroringChange,
+  onGalleryModeMaxCountChange,
   stopPreview,
   setting,
 }) => {
@@ -440,6 +459,24 @@ const VideoSetting: React.FC<VideoSettingProps> = ({
               </Popover>
             </Checkbox>
           </div>
+        </div>
+      </div>
+      <div className="video-setting-item">
+        <div className="video-setting-title setting-title camera-label">
+          {t('layoutSettings')}
+        </div>
+        <div className="video-setting-content">
+          <div className="radio-title">{t('galleryModeMaxCount')}</div>
+          <Radio.Group
+            value={setting.galleryModeMaxCount}
+            defaultValue={16}
+            onChange={(e) => onGalleryModeMaxCountChange(e.target.value)}
+          >
+            <Radio value={9} className="radio-item">
+              {t('galleryModeScreens', { count: 9 })}
+            </Radio>
+            <Radio value={16}>{t('galleryModeScreens', { count: 16 })}</Radio>
+          </Radio.Group>
         </div>
       </div>
       {/* <div className="video-setting-item">
@@ -952,6 +989,7 @@ const Setting: React.FC<SettingProps> = ({
       isDefaultDevice: false,
       resolution: 720,
       enableVideoMirroring: true,
+      galleryModeMaxCount: 9,
     }
   )
 
@@ -1813,6 +1851,12 @@ const Setting: React.FC<SettingProps> = ({
       return previewController?.stopPreview(videoSetting.enableVideoMirroring)
     }
   }
+  function onGalleryModeMaxCountChange(value: number) {
+    setVideoSetting({
+      ...videoSetting,
+      galleryModeMaxCount: value,
+    })
+  }
   function onEnableVideoMirroringChange(e: CheckboxChangeEvent) {
     setVideoSetting({
       ...videoSetting,
@@ -1904,6 +1948,7 @@ const Setting: React.FC<SettingProps> = ({
               normalSetting.enableTransparentWhiteboard
             }
             onEnableVideoMirroringChange={onEnableVideoMirroringChange}
+            onGalleryModeMaxCountChange={onGalleryModeMaxCountChange}
             setting={videoSetting}
             startPreview={startPreview}
             stopPreview={stopPreview}

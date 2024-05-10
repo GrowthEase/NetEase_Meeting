@@ -1,5 +1,6 @@
 import React, { ReactNode, useEffect, useState } from 'react'
 import './index.less'
+import { useTranslation } from 'react-i18next'
 
 interface DialogProps {
   visible: boolean
@@ -25,13 +26,14 @@ const Dialog: React.FC<DialogProps> = ({
   onConfirm,
   title,
   popupClassName,
-  cancelText = '否',
-  confirmText = '是',
+  cancelText,
+  confirmText,
   children,
   confirmDisabled = false,
   cancelClassName,
   confirmClassName,
 }) => {
+  const { t } = useTranslation()
   const [selfShow, setSelfShow] = useState(false)
 
   useEffect(() => {
@@ -62,7 +64,7 @@ const Dialog: React.FC<DialogProps> = ({
                     e.stopPropagation()
                   }}
                 >
-                  {cancelText}
+                  {cancelText || t('no')}
                 </span>
               )}
               <span
@@ -76,7 +78,7 @@ const Dialog: React.FC<DialogProps> = ({
                   e.stopPropagation()
                 }}
               >
-                {confirmText}
+                {confirmText || t('yes')}
               </span>
             </div>
           </div>

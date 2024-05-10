@@ -18,6 +18,9 @@ type windows =
   | 'chatWindow'
   | 'memberWindow'
   | 'monitoringWindow'
+  | 'addressBook'
+  | 'notificationCardWindow'
+  | 'scheduleMeetingWindow'
   | string
 
 const windowsUrl: {
@@ -36,6 +39,8 @@ const windowsUrl: {
   chatWindow: '#/chat',
   memberWindow: '#/member',
   monitoringWindow: '#/monitoring',
+  addressBook: '#/addressBook',
+  scheduleMeetingWindow: '#/scheduleMeeting',
 }
 
 const windowsClosed: {
@@ -70,6 +75,8 @@ function openWindow(
     windowsClosed[name] = true
     if (name === 'settingWindow') {
       closeWindow('monitoringWindow')
+    } else if (name === 'scheduleMeetingWindow') {
+      closeWindow('addressBook')
     }
     window.webFrame?.clearCache()
   })

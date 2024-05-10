@@ -1,58 +1,109 @@
-import React from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import { Button } from 'antd'
-import { useTranslation } from 'react-i18next'
 
 import './index.less'
 
 interface MeetingNotificationGlobalCardProps {
-  notifyCard: any
-  onClick?: (action: string) => void
+  messageList: any[]
+  onClick?: (action: string, message: any) => void
+  onClose?: () => void
+  showCloseIcon?: boolean
 }
 
 const MeetingNotificationGlobalCard: React.FC<
   MeetingNotificationGlobalCardProps
 > = (props) => {
-  const { notifyCard, onClick } = props
+  const { messageList, onClick, onClose } = props
+  const timerRef = useRef<any>(null)
 
-  return (
+  const message = useMemo(() => {
+    const len = messageList.length
+    if (len > 0) {
+      return messageList[len - 1]
+    } else {
+      return null
+    }
+  }, [messageList])
+  const notifyCard = useMemo(() => {
+    return message?.data?.data?.notifyCard
+  }, [message])
+
+  useEffect(() => {
+    // 信息60s后自动消失
+    if (message.messageId) {
+      const tmpDurationTime = message.data?.data?.timestamp
+        ? Date.now() - message.data?.data?.timestamp
+        : 0
+      const popupDuration =
+        message.data?.data?.popupDuration * 1000 || 60000 - tmpDurationTime
+      if (popupDuration <= 0) {
+        onClose?.()
+        return
+      }
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+      }
+      timerRef.current = setTimeout(() => {
+        timerRef.current = null
+        onClose?.()
+      }, popupDuration)
+    }
+  }, [message.messageId])
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+      }
+    }
+  }, [])
+  return notifyCard ? (
     <div className="notification-global-card-container">
-      <div className="header">
+      <div className="nemeeting-notify-header">
         <div className="info">
           {notifyCard.header?.icon ? (
             <img alt="" className="icon" src={notifyCard.header?.icon} />
           ) : null}
           <div className="label">{notifyCard.header?.subject}</div>
         </div>
-        <svg
-          className="icon iconfont close-icon"
-          onClick={() => window.close()}
-        >
-          <use xlinkHref="#iconyx-pc-closex"></use>
-        </svg>
+        {props.showCloseIcon === false ? null : (
+          <svg
+            className="icon iconfont close-icon"
+            onClick={() => props.onClose?.()}
+          >
+            <use xlinkHref="#iconyx-pc-closex"></use>
+          </svg>
+        )}
       </div>
       <div className="content">
         <div className="title">{notifyCard.body?.title}</div>
         <div className="description">{notifyCard.body?.content}</div>
       </div>
-      <div className="footer">
-        {notifyCard.popUpCardBottomButton?.map((item) => {
-          return (
-            <Button
-              key={item.name}
-              className="button"
-              ghost={item.action === 'meeting://no_more_remind'}
-              type="primary"
-              onClick={() => {
-                onClick?.(item.action)
-                window.close()
-              }}
-            >
-              {item.name}
-            </Button>
-          )
-        })}
+      <div className="nemeeting-notify-footer-wrapper">
+        <div className="nemeeting-notify-footer">
+          {notifyCard.popUpCardBottomButton?.map((item) => {
+            return (
+              <Button
+                key={item.name}
+                className="nemeeting-notify-footer-btn"
+                ghost={item.ghost || item.action === 'meeting://no_more_remind'}
+                type="primary"
+                onClick={() => {
+                  onClick?.(item.action, message)
+                }}
+              >
+                {item.name}
+              </Button>
+            )
+          })}
+        </div>
+
+        {notifyCard.footTip && (
+          <div className="nemeeting-notify-footer-tip">
+            {notifyCard.footTip}
+          </div>
+        )}
       </div>
     </div>
-  )
+  ) : null
 }
 export default MeetingNotificationGlobalCard

@@ -1,73 +1,27 @@
-import { useEffect, useRef, useState } from 'react';
-
-import MeetingNotificationList from '../../../../src/components/web/MeetingNotification/List';
-import NEMeetingService from '../../../../src/services/NEMeeting';
-import PCTopButtons from '../../../../src/components/common/PCTopButtons';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NEMeetingInfo } from '../../../../src/types';
-import './index.less';
-import { EventEmitter } from 'eventemitter3';
 
-const eventEmitter = new EventEmitter();
+import MeetingNotificationList from '../../../../src/components/common/Notification/List';
+import PCTopButtons from '../../../../src/components/common/PCTopButtons';
+import useWatermark from '../../../../src/hooks/useWatermark';
+
+import './index.less';
 
 const MeetingNotification: React.FC = () => {
+  useWatermark();
+
   const { t } = useTranslation();
 
   const [sessionId, setSessionId] = useState<string>('');
-  const [isInMeeting, setIsInMeeting] = useState<boolean>(false);
-
-  const [meetingInfo, setMeetingInfo] = useState<NEMeetingInfo>();
-
-  const replyCount = useRef(0);
-
-  const neMeeting = new Proxy(
-    {},
-    {
-      get: function (_, propKey) {
-        return function (...args: any) {
-          return new Promise((resolve, reject) => {
-            const parentWindow = window.parent;
-            const replyKey = `neMeetingReply_${replyCount.current++}`;
-            parentWindow?.postMessage(
-              {
-                event: 'neMeeting',
-                payload: {
-                  replyKey,
-                  fnKey: propKey,
-                  args: args,
-                },
-              },
-              '*',
-            );
-            const handleMessage = (e: MessageEvent) => {
-              const { event, payload } = e.data;
-              if (event === replyKey) {
-                const { result, error } = payload;
-                if (error) {
-                  reject(error);
-                } else {
-                  resolve(result);
-                }
-                window.removeEventListener('message', handleMessage);
-              }
-            };
-            window.addEventListener('message', handleMessage);
-          });
-        };
-      },
-    },
-  ) as NEMeetingService;
+  const [isInMeeting, setIsInMeeting] = useState<boolean>(true);
 
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data;
       if (event === 'windowOpen') {
-        const { meetingInfo, sessionId, isInMeeting } = payload;
-        setMeetingInfo(meetingInfo);
+        const { sessionId, isInMeeting } = payload;
         setSessionId(sessionId);
         setIsInMeeting(isInMeeting);
-      } else if (event === 'eventEmitter') {
-        eventEmitter.emit.apply(eventEmitter, [payload.key, ...payload.args]);
       }
     }
     window.addEventListener('message', handleMessage);
@@ -75,17 +29,6 @@ const MeetingNotification: React.FC = () => {
       window.removeEventListener('message', handleMessage);
     };
   }, []);
-
-  function dispatch(payload: any) {
-    const parentWindow = window.parent;
-    parentWindow?.postMessage(
-      {
-        event: 'meetingInfoDispatch',
-        payload: payload,
-      },
-      '*',
-    );
-  }
 
   function handleClick(action?: string) {
     const parentWindow = window.parent;
@@ -96,17 +39,15 @@ const MeetingNotification: React.FC = () => {
           action,
         },
       },
-      '*',
+      parentWindow.origin,
     );
   }
 
   useEffect(() => {
-    // 设置页面标题
     setTimeout(() => {
       document.title = t('notifyCenter');
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [t]);
 
   return (
     <>
@@ -123,11 +64,7 @@ const MeetingNotification: React.FC = () => {
         }}
       >
         <MeetingNotificationList
-          neMeeting={neMeeting}
           sessionIds={sessionId ? [sessionId] : []}
-          meetingInfo={meetingInfo}
-          eventEmitter={eventEmitter}
-          meetingInfoDispatch={dispatch}
           onClick={handleClick}
         />
       </div>

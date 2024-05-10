@@ -1,0 +1,100 @@
+
+.nemeeting-schedule-participant-add {
+  display: flex;
+  align-items: center;
+}
+.nemeeting-address-confirm-cancel {
+  margin-right: 20px;
+  span {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 100%;
+  }
+}
+.nemeeting-schedule-participant-add, .nemeeting-schedule-participant-preview {
+  .nemeeting-schedule-member-add {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #F2F2F5;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .nemeeting-schedule-member-item {
+    width: 32px;
+    height: 32px;
+    position: relative;
+    margin-right: 10px;
+  }
+  .nemeeting-schedule-member-item:last-child {
+    margin-right: 0;
+  }
+  .nemeeting-address-confirm-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 0;
+  }
+  
+
+  .nemeeting-modal-body {
+    padding: 0;
+  }
+  .nemeeting-schedule-mySelf-icon {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 1px solid #fff;
+    right: 0;
+    bottom: 0;
+    border-radius: 50%;
+  }
+}
+
+.nemeeting-schedule-participant-preview {
+  margin: 10px 0;  
+  flex-direction: column;
+  .nemeeting-schedule-participant-preview-header {
+    height: 24px;
+    display: flex;
+    font-size: 16px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .nemeeting-schedule-participant-preview-member {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    height: 44px;
+    box-sizing: border-box;
+  }
+  .nemeeting-schedule-participant-preview-info {
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    margin-left: 12px;
+  }
+  .nemeeting-schedule-participant-preview-name {
+    color: #333;
+  }
+  .nemeeting-schedule-participant-preview-dept {
+    font-size: 12px;
+    color: #999;
+  }
+  .nemeeting-schedule-participant-preview-content {
+    display: flex;
+    margin: 16px 0;
+  }
+  .nemeeting-schedule-participant-preview-content-h {
+    display: flex;
+    flex-direction: column;
+    max-height: 276px;
+    overflow-y: auto;
+    margin: 16px 0;
+  }
+  .nemeeting-schedule-participant-preview-count {
+    margin-left: 28px;
+    color: #999;
+  }
+}

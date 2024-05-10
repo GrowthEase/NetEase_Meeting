@@ -11,114 +11,115 @@ import image from '@rollup/plugin-image'
 import pkg from './package.json'
 import url from 'postcss-url'
 const path = require('path')
-const platform = process.env.PLATFORM
-const isUmd = process.env.TYPE === 'umd'
-const outputPath = path.resolve(
-  __dirname,
-  'dist',
-  platform === 'h5' ? '.' : platform
-)
 
-const plugins = [
-  alias({
-    entries: [{ find: '@', replacement: path.resolve(__dirname, 'src') }],
-  }),
-  resolve({
-    jsnext: true,
-    preferBuiltins: true,
-    browser: true,
-  }),
-  replace({
-    'process.env.NODE_ENV': JSON.stringify('production'),
-    'process.env.PLATFORM': JSON.stringify(platform),
-  }),
-  commonjs({
-    transformMixedEsModules: true,
-  }),
-  // babel({
-  //   babelHelpers: 'bundled',
-  //   exclude: ['node_modules/**', 'src/libs/3rd/**'],
-  // }),
-  typescript({
-    include: ['*.ts+(|x)', '**/*.ts+(|x)'],
-    tsconfig: './tsconfig.json',
-    useTsconfigDeclarationDir: true,
-  }),
-  image(),
-  json(),
-  postcss({
-    extract: false,
-    minimize: true,
-    plugins: [
-      url({
-        url: 'inline',
-      }),
-    ],
-    use: [
-      [
-        'less',
-        { javascriptEnabled: true, modifyVars: { 'ant-prefix': 'nemeeting' } },
+function buildConfig(platform) {
+  const outputPath = path.resolve(
+    __dirname,
+    'dist',
+    platform === 'h5' ? '.' : platform
+  )
+
+  const plugins = [
+    alias({
+      entries: [{ find: '@', replacement: path.resolve(__dirname, 'src') }],
+    }),
+    resolve({
+      jsnext: true,
+      preferBuiltins: true,
+      browser: true,
+    }),
+    commonjs({
+      transformMixedEsModules: true,
+    }),
+    typescript({
+      include: ['*.ts+(|x)', '**/*.ts+(|x)'],
+      tsconfig: './tsconfig.json',
+      useTsconfigDeclarationDir: true,
+    }),
+    replace({
+      'process.env.NODE_ENV': JSON.stringify('production'),
+      'process.env.PLATFORM': JSON.stringify(platform),
+    }),
+    image(),
+    json(),
+    postcss({
+      extract: false,
+      minimize: true,
+      plugins: [
+        url({
+          url: 'inline',
+        }),
       ],
-    ],
-  }),
-  terser({
-    format: {
-      comments: false,
-    },
-  }),
-]
-
-export default [
-  {
-    input: path.resolve(__dirname, 'src/index.tsx'),
-    output: [
-      {
-        file: `${outputPath}/index.umd.js`,
-        name: 'NEMeetingKit',
-        format: 'umd',
-        exports: 'default',
-      },
-    ],
-    plugins: [
-      alias({
-        entries: [
+      use: [
+        [
+          'less',
           {
-            find: 'react',
-            replacement: path.resolve(__dirname, '../../node_modules/react'),
-          },
-          {
-            find: 'react-dom',
-            replacement: path.resolve(
-              __dirname,
-              '../../node_modules/react-dom'
-            ),
+            javascriptEnabled: true,
+            modifyVars: { 'ant-prefix': 'nemeeting' },
           },
         ],
-      }),
-      ...plugins,
-    ],
-    // treeshake: {
-    //   moduleSideEffects: false,
-    // },
-  },
-  {
-    input: path.resolve(__dirname, 'src/index.tsx'),
-    output: [
-      {
-        file: `${outputPath}/index.cjs.js`,
-        format: 'cjs',
-        exports: 'default',
+      ],
+    }),
+    terser({
+      format: {
+        comments: false,
       },
-      {
-        file: `${outputPath}/index.esm.js`,
-        format: 'esm',
-        exports: 'default',
+    }),
+  ]
+  return [
+    {
+      input: path.resolve(__dirname, 'src/index.tsx'),
+      output: [
+        {
+          file: `${outputPath}/index.umd.js`,
+          name: 'NEMeetingKit',
+          format: 'umd',
+          exports: 'default',
+        },
+      ],
+      plugins: [
+        alias({
+          entries: [
+            {
+              find: 'react',
+              replacement: path.resolve(__dirname, '../../node_modules/react'),
+            },
+            {
+              find: 'react-dom',
+              replacement: path.resolve(
+                __dirname,
+                '../../node_modules/react-dom'
+              ),
+            },
+          ],
+        }),
+        ...plugins,
+      ],
+      treeshake: {
+        moduleSideEffects: false,
       },
-    ],
-    external: Object.keys(pkg.dependencies || {}),
-    plugins,
-    // treeshake: {
-    //   moduleSideEffects: false,
-    // },
-  },
-]
+    },
+    {
+      input: path.resolve(__dirname, 'src/index.tsx'),
+      output: [
+        {
+          file: `${outputPath}/index.cjs.js`,
+          format: 'cjs',
+          exports: 'default',
+        },
+        {
+          file: `${outputPath}/index.esm.js`,
+          format: 'esm',
+          exports: 'default',
+        },
+      ],
+      external: Object.keys(pkg.dependencies || {}),
+      plugins,
+      treeshake: {
+        moduleSideEffects: false,
+      },
+    },
+  ]
+}
+
+export default [...buildConfig('web')]

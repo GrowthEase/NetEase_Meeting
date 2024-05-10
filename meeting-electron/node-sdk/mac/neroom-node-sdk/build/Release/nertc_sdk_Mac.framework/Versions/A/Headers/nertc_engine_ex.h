@@ -235,7 +235,73 @@ public:
      */
     virtual int setAudioProfile(NERtcAudioProfileType profile, NERtcAudioScenarioType scenario) = 0;
 
-    /** 
+    /**
+     * @if Chinese
+     * 设置音频编码属性。
+     * <br>通过此接口可以实现设置音频编码的采样率、码率、编码模式、声道数等。
+     * @since V5.5.40
+     * @par 调用时机
+     * 请在引擎初始化之后调用此接口，且该方法在加入房间前后均可调用。
+     * @par 参数说明
+     * <table>
+     *  <tr>
+     *      <th>**参数名称**</th>
+     *      <th>**类型**</th>
+     *      <th>**描述**</th>
+     *  </tr>
+     *  <tr>
+     *      <td>profile</td>
+     *      <td> \ref nertc::NERtcAudioProfileType "NERtcAudioProfileType" </td>
+     *      <td>设置采样率、码率、编码模式和声道数。</td>
+     *  </tr>
+     * </table>
+     * @par 示例代码
+     * @code
+     * 设置profile为标准模式
+     * rtc_engine_->setAudioProfile(nertc::kNERtcAudioProfileStandard);
+     * @endcode
+     * @return
+     * - 0（kNERtcNoError）：方法调用成功。
+     * - 其他：方法调用失败。
+     *         - 30001（kNERtcErrFatal）：引擎尚未初始化或下发配置未更新。
+     * @endif
+     */
+    virtual int setAudioProfile(NERtcAudioProfileType profile) = 0;
+
+    /**
+     * @if Chinese
+     * 设置音频应用场景。
+     * <br>通过此接口可以实现设置音频属性的应用场景，包括聊天室场景、语音场景、音乐场景。也可以使用 通过 {@link INERtcEngine#setChannelProfile:} 设置其他场景，包括1v1呼叫场景、清晰度较高的1v1呼叫场景、语聊房场景、清晰度较高的语聊房场景、会议场景。
+     * @since V5.5.40
+     * @par 调用时机
+     * 请在引擎初始化之后调用此接口，且该方法在加入房间前后均可调用。
+     * @par 参数说明
+     * <table>
+     *  <tr>
+     *      <th>**参数名称**</th>
+     *      <th>**类型**</th>
+     *      <th>**描述**</th>
+     *  </tr>
+     *  <tr>
+     *      <td>scenario</td>
+     *      <td>{@link NERtcAudioScenarioType}</td>
+     *      <td>设置音频应用场景。</td>
+     *  </tr>
+     * </table>
+     * @par 示例代码
+     * @code
+     * //设置scenario为语音场景
+     * rtc_engine_->setAudioScenario(nertc::kNERtcAudioScenarioSpeech);
+     * @endcode
+     * @return
+     * - 0（kNERtcNoError）：方法调用成功。
+     * - 其他：方法调用失败。
+     *         - 30001（kNERtcErrFatal）：引擎尚未初始化或下发配置未更新。
+     * @endif
+     */
+    virtual int setAudioScenario(NERtcAudioScenarioType scenario) = 0;
+
+    /**
      * @if English
      * Sets the voice changer effect for the SDK-preset voice.
      * The method can add multiple preset audio effects to original human voices and change audio profiles. 

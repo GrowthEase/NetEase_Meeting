@@ -1,53 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { HistoryMeeting } from '../../../../src/components/web/BeforeMeetingModal/HistoryMeetingModal';
-import './index.less';
+
 import PCTopButtons from '../../../../src/components/common/PCTopButtons';
-import NEMeetingService from '../../../../src/services/NEMeeting';
+import { HistoryMeeting } from '../../../../src/components/web/BeforeMeetingModal/HistoryMeetingModal';
+import { useGlobalContext } from '../../../../src/store';
 
-export default function HistoryPage() {
+import './index.less';
+
+const HistoryPage: React.FC = () => {
   const { t } = useTranslation();
+  const { neMeeting } = useGlobalContext();
   const [meetingId, setMeetingId] = useState<string>();
-
-  const replyCount = useRef(0);
-
-  const neMeeting = new Proxy(
-    {},
-    {
-      get: function (_, propKey) {
-        return function (...args: any) {
-          return new Promise((resolve, reject) => {
-            const parentWindow = window.parent;
-            const replyKey = `neMeetingReply_${replyCount.current++}`;
-            parentWindow?.postMessage(
-              {
-                event: 'neMeeting',
-                payload: {
-                  replyKey,
-                  fnKey: propKey,
-                  args: args,
-                },
-              },
-              '*',
-            );
-            const handleMessage = (e: MessageEvent) => {
-              const { event, payload } = e.data;
-              if (event === replyKey) {
-                const { result, error } = payload;
-                if (error) {
-                  reject(error);
-                } else {
-                  resolve(result);
-                }
-                window.removeEventListener('message', handleMessage);
-              }
-            };
-            window.addEventListener('message', handleMessage);
-          });
-        };
-      },
-    },
-  ) as NEMeetingService;
 
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
@@ -65,19 +28,29 @@ export default function HistoryPage() {
     };
   }, []);
 
+  useEffect(() => {
+    setTimeout(() => {
+      document.title = t('historyMeeting');
+    });
+  }, [t]);
+
   return (
-    <div className="history-meeting-page">
-      <div className="electron-drag-bar">
-        <div className="drag-region" />
-        {t('historyMeeting')}
-        <PCTopButtons minimizable={false} maximizable={false} />
+    <>
+      <div className="history-meeting-page">
+        <div className="electron-drag-bar">
+          <div className="drag-region" />
+          {t('historyMeeting')}
+          <PCTopButtons minimizable={false} maximizable={false} />
+        </div>
+        <HistoryMeeting
+          open
+          neMeeting={neMeeting}
+          meetingId={meetingId}
+          onBack={() => setMeetingId(undefined)}
+        />
       </div>
-      <HistoryMeeting
-        open
-        neMeeting={neMeeting}
-        meetingId={meetingId}
-        onBack={() => setMeetingId(undefined)}
-      />
-    </div>
+    </>
   );
-}
+};
+
+export default HistoryPage;

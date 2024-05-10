@@ -5,12 +5,12 @@ import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMeetingInfoContext } from '../../../store'
 import { ActionType } from '../../../types'
+import MeetingNotificationList from '../../common/Notification/List'
+import MeetingPlugin from '../../common/PlugIn/MeetingPlugin'
+import useMeetingPlugin from '../../../hooks/useMeetingPlugin'
 import Chatroom from '../Chatroom/Chatroom'
-import MeetingNotificationList from '../MeetingNotification/List'
 import MemberList from '../MemberList'
 import './index.less'
-import MeetingPlugin from './MeetingPlugin'
-import useMeetingPlugin from './MeetingPlugin/useMeetingPlugin'
 
 // interface MeetingRightDrawerProps extends DrawerProps {}
 

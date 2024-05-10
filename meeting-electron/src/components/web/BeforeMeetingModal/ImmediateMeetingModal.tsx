@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Button, Checkbox, Form, Input, ModalProps, Tag } from 'antd'
 import EventEmitter from 'eventemitter3'
-import { NEDeviceBaseInfo, NEPreviewController } from 'neroom-web-sdk'
+import { NEPreviewController } from 'neroom-web-sdk'
 import YUVCanvas from '../../../libs/yuv-canvas'
 import {
   EventType,

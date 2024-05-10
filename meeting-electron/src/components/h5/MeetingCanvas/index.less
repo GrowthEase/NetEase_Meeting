@@ -1,48 +1,166 @@
-.meeting-canvas {
-  position: relative;
-  overflow: hidden;
-  .meeting-canvas-swiper {
-    background-color: #18181f;
-    .swiper-pagination-bullet-active {
-      background-color: #fff;
-    }
-    .swiper-pagination-bullets.swiper-pagination-horizontal {
-      background-color: rgb(102 102 102 / 0.5);
-      border-radius: 8px;
-      margin: auto;
-      width: auto;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 70px;
-      padding: 1px 2px;
-      line-height: 1;
-    }
-  }
-  .small-video-card {
-    position: absolute !important;
-    width: 20%;
-    height: 20%;
-    top: 80px;
-    right: 15px;
-    z-index: 10;
+.ne-meeting-app-h5 {
+  .meeting-canvas {
+    position: relative;
     overflow: hidden;
-    border: 1px solid #fff;
+
+    .small-video-card {
+      position: absolute !important;
+      width: 20%;
+      height: 20%;
+      top: 80px;
+      right: 15px;
+      z-index: 10;
+      overflow: hidden;
+
+    }
+    .meeting-canvas-swiper {
+      background-color: #18181f;
+
+      .swiper-pagination-bullet-active {
+        background-color: #fff;
+      }
+
+      .swiper-pagination-bullets.swiper-pagination-horizontal {
+        background-color: hsla(0,0%,40%,.5);
+        border-radius: 8px;
+        margin: auto;
+        width: auto;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 70px;
+        padding: 1px 2px;
+        line-height: 1;
+      }
+    }
+
+    .small-video-card {
+      position: absolute !important;
+      width: 20%;
+      height: 20%;
+      top: 80px;
+      right: 15px;
+      z-index: 10;
+      overflow: hidden;
+      border: 1px solid #fff;
+    }
+
+    .whiteboard-wrap {
+      height: 100%;
+      width: 100%;
+    }
+
+    .whiteboard-view {
+      height: 100%;
+      width: 100%;
+    }
+
+    .whiteboard-index {
+      z-index: 2;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .active-border {
+      border: 2px solid #59f20c;
+    }
+
+    .start-meeting-record-modal {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      width: 100%;
+
+      .record-message {
+        font-family: PingFang SC;
+        font-size: 14px;
+        font-weight: normal;
+        line-height: 16.38px;
+        text-align: center;
+        letter-spacing: 0px;
+        color: #666666;
+      }
+
+      .record-agree-message {
+        font-family: PingFang SC;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 16.38px;
+        text-align: center;
+        letter-spacing: 0px;
+        color: #333333;
+        margin: 15px 0 30px 0;
+      }
+    }
+
+    .end-meeting-record-modal {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      width: 100%;
+
+      .end-record-message {
+        font-family: PingFang SC;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 16.38px;
+        text-align: center;
+        letter-spacing: 0px;
+        color: #333333;
+        margin: 15px 0 30px 0;
+      }
+    }
   }
-  .whiteboard-wrap {
-    height: 100%;
+}
+.meeting-canvas-swiper {
+  background-color: #18181f;
+  .swiper-pagination-bullet-active {
+    background-color: #fff;
+  }
+  .swiper-pagination-bullets.swiper-pagination-horizontal {
+    background-color: rgba(102, 102, 102, 0.2);
+    border-radius: 8px;
+    margin: auto;
+    width: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 70px;
+    padding: 1px 2px;
+    line-height: 1;
+  }
+}
+.meeting-audio-mode-canvas-swiper {
+  height: 100%;
+  .swiper-pagination-bullets.swiper-pagination-horizontal {
+    bottom: 30px;
+  }
+}
+.nemeeting-audio-mode-wrap {
+  padding: 41px 38px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  background-color: #18181f;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  .swiper-wrapper {
+    align-items: center;
+  }
+  .nemeting-aduio-mode-swiper-btn {
+    background: linear-gradient(180deg, #33333f, #292933) !important;
+  }
+  .meeting-canvas-swiper-web {
     width: 100%;
   }
-  .whiteboard-view {
-    height: 100%;
-    width: 100%;
+  .nemeeting-swiper-slide {
+    flex-direction: column;
+    align-content: center;
   }
-  .whiteboard-index {
-    z-index: 2;
-    position: absolute;
-    top: 0;
-    left: 0;
-  }
-  .active-border {
-    border: 2px solid #59f20c;
+  .nemeeting-audio-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }

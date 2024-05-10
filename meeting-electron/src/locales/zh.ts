@@ -13,6 +13,7 @@ export default {
   globalAppName: '网易会议', // 顶部UI展示
   meetingJoin: `加入会议`, // 入会时密码弹窗输入文本
   meetingLeaveFull: `离开会议`, // 离开会议二次确认弹窗菜单按钮文本
+  meetingLeave: '离开',
   meetingQuit: '结束会议', // 结束会议菜单按钮文本
   leave: '离开会议', // 离开会议菜单按钮文本
   hostExitTips: `确定要结束这个${meeting}吗？`, // 结束会议二次确认弹窗消息
@@ -87,9 +88,12 @@ export default {
   participantFailedToUnassignActiveSpeaker: '取消焦点视频失败', //取消焦点视频失败提示
   participantFailedToLowerHand: '放下成员举手失败', //放下成员举手失败提示
   participantFailedToTransferHost: `移交${host}失败`, //移交主持人失败提示
+  participantOverRoleLimitCount: '分配角色超过人数限制',
   removeMemberSuccess: '移除成功', //移除成员成功提示
   participantFailedToRemove: '移除失败', //移除成员失败提示
   save: '保存', //通用功能按钮
+  saveSuccess: '保存成功', //保存成功提示
+  saveFail: '保存失败', //保存失败提示
   done: '完成', //通用功能按钮
   notify: '通知', //弹窗通用标题
   meetingSwitchOtherDevice: `因被${host}移出或切换至其他设备，您已退出${meeting}`, //从会议中被移除提示
@@ -101,6 +105,10 @@ export default {
   participantHostOpenMicroTips: `${host}已重新打开您的麦克风，确认打开？`, //主持人申请打开成员音频弹窗消息
   participantHostMuteVideo: '您已被停止视频', //主持人关闭成员视频提示消息
   participantHostMuteAudio: '您已被静音', //主持人关闭成员音频提示消息
+  participantSetHost: '设为主持人',
+  participantSetCoHost: '设为联席主持人',
+  participantCancelCoHost: '撤销联席主持人',
+
   screenShare: '共享屏幕', //共享屏幕功能菜单文本
   screenShareTips: '将开始截取您的屏幕上显示的所有内容。', //屏幕共享弹窗消息
   screenShareOverLimit: '已有人在共享，您无法共享', //超出共享人数限制提示消息
@@ -132,7 +140,7 @@ export default {
   // 聊天室相关
   // send: '发送', //通用
   // inputMessageHint: '输入消息...', //聊天室输入框hint
-  // newMessage: '新消息', //新消息提示
+  newMessage: '新消息', //新消息提示
   // chatRoomMessageSendFail: '聊天室消息发送失败', // 聊天室消息发送失败提示
   // cannotSendBlankLetter: '不支持发送空格', //聊天室消息发送失败提示
   chat: '聊天', //聊天功能菜单文本
@@ -401,6 +409,9 @@ export default {
   securitySettings: '安全设置',
   waitingMemberCount1: '当前等候室已有',
   waitingMemberCount2: '人等候',
+  waitingRoomJoinMeetingOption: '入会选项',
+  waitingRoomTurnOnMicrophone: '开启麦克风',
+  waitingRoomTurnOnVideo: '开启摄像头',
   notRemindMeAgain: '不再提醒',
   viewMessage: '查看消息',
   closeWaitingRoomTip: '等候室关闭后，新成员将直接进入会议室',
@@ -425,14 +436,14 @@ export default {
   moveToWaitingRoom: '移至等候室',
 
   networkReconnectSuccess: '网络重连成功',
-  networkErrorAndCheck: '网络异常,请检查网络设置',
+  networkErrorAndCheck: '网络异常，请检查网络设置',
   noMediaPermission: '没有摄像头/麦克风权限',
   getMediaPermission: '请在浏览器设置中打开摄像头/麦克风权限，并刷新页面',
   'errorCodes.10001': '10001 浏览器不支持，请使用HTTPS环境或者localhost环境',
   'errorCodes.10119': '10119 服务器认证失败',
   'errorCodes.10229': '10229 关闭麦克风失败',
   'errorCodes.10231': '10231 关闭摄像头失败',
-  'errorCodes.10212': '10212 没有有摄像头/麦克风权限',
+  'errorCodes.10212': '没有摄像头/麦克风权限',
   meetingNickname: '会议昵称',
   imageSizeLimit5: '图片大小不能超过5MB',
   openCameraInMeeting: '入会时打开摄像头',
@@ -601,7 +612,10 @@ export default {
   supportedMeetings: '您可召开：',
   meetingLimit: '{{maxCount}}人、限时{{maxMinutes}}分钟会议',
   meetingNoLimit: '{maxCount}人、单场不限时会议',
-  accountAndSecurity: '账户与安全',
+  settingServiceBundleExpirationDate: '服务到期：',
+  settingServiceBundleExpirationDateTip:
+    '服务已到期，如需延长时问，请联系企业管理员。',
+  accountAndSecurity: '账号与安全',
   newPwdNotMath: '新密码格式不符，请重新输入',
   newPwdNotMathReEnter: '新密码不一致，请重新输入',
   // 设置音频
@@ -731,12 +745,23 @@ export default {
   meetingLeaveEditTips2: '退出后，将无法保存当前会议的更改',
   meetingEditContinue: '继续编辑',
   meetingRepeatCancelEdit: '取消编辑',
+  meetingAttendees: '参会者',
   meetingRepeatUncheckTips: '当前日程为{{date}}，无法取消选择',
   settingAvatarTitle: '头像设置',
   settingAvatarUpdateSuccess: '头像更新成功',
   settingAvatarUpdateFail: '头像更新失败',
 
   // 私聊
+  messageLengthLimit: '消息长度不能超过5000',
+  fileTypeNotSupport: '文件格式暂不支持',
+  chatInputMessageHint: '输入消息...',
+  chatCannotSendBlankLetter: '不支持发送空消息',
+  chatFileSizeExceedTheLimit: '文件大小不能超过200MB',
+  chatImageSizeExceedTheLimit: '图片大小不能超过20MB',
+  chatRecall: '撤回',
+  chatYou: '你',
+  chatRecallAMessage: '撤回一条消息',
+  chatMessageRecalled: '消息已被撤回',
   chatPrivate: '私聊',
   chatPrivateInWaitingRoom: '等候室-私聊',
   chatISaidTo: '我对{{userName}}说',
@@ -748,6 +773,23 @@ export default {
   meetingChatEnabled: '会中聊天已开启',
   meetingChatDisabled: '会中聊天已关闭',
   chatMemberLeft: '参会者已离开会议',
+  chatSendTo: '发送至',
+  chatAllMembersInMeeting: '会议中所有人',
+  chatAllMembersInWaitingRoom: '等候室所有人',
+  chatAllMembers: '所有人',
+  chatPermission: '聊天权限',
+  chatFree: '允许自由聊天',
+  chatPublicOnly: '仅允许公开聊天',
+  chatPrivateHostOnly: '仅允许私聊主持人',
+  chatMuted: '全体成员禁言',
+  chatPermissionInMeeting: '会议中聊天权限',
+  chatPermissionInWaitingRoom: '等候室聊天权限',
+  chatWaitingRoomPrivateHostOnly: '允许等候室成员私聊主持人',
+  chatHostMutedEveryone: '主持人已设置为全员禁言',
+  chatHostLeft: '主持人已离会，无法发送私聊消息',
+  participantNotFound: '未找到相关成员',
+  chatWaitingRoomMuted: '主持人暂未开放等候室聊天',
+  participantSearchMember: '搜索成员',
 
   // 质量监控
   monitoring: '质量监控',
@@ -768,4 +810,96 @@ export default {
   frameRate: '帧率',
   moreMonitoring: '查看更多数据',
   networkState: '网络状况',
+  // 视频布局
+  layoutSettings: '布局设置',
+  galleryModeMaxCount: '画廊模式下单屏显示的最大画面数',
+  galleryModeScreens: '{{count}} 画面',
+  followGalleryLayout: '跟随主持人视频顺序',
+  resetGalleryLayout: '重置视频顺序',
+  followGalleryLayoutTips:
+    '将主持人画廊模式前25个视频顺序同步给所有参会者，且不允许参会者自行改变。',
+  followGalleryLayoutConfirm:
+    '主持人已设置“跟随主持人视频顺序”，无法移动视频。',
+  followGalleryLayoutResetConfirm:
+    '主持人已设置“跟随主持人视频顺序”，无法重置视频顺序。',
+  saveGalleryLayoutTitle: '保存视频顺序',
+  saveGalleryLayoutContent:
+    '将当前视频顺序保存到该预约会议，可供后续会议使用，确定保存？',
+  replaceGalleryLayoutContent:
+    '该预约会议已有一份旧的视频顺序，是否替换并保存为新的视频顺序？',
+  loadGalleryLayoutTitle: '加载视频顺序',
+  loadGalleryLayoutContent: '该预约会议已有一份视频顺序，是否加载？',
+  load: '加载',
+  noLoadGalleryLayout: '暂无可加载的视频顺序',
+  loadSuccess: '加载成功',
+  loadFail: '加载失败',
+  // sip外呼
+  sipCallByNumber: '拨号入会',
+  sipCall: '呼叫',
+  sipContacts: '会议通讯录',
+  sipNumberPlaceholder: '请输入手机号',
+  sipName: '受邀者名称',
+  sipNamePlaceholder: '名字将会在会议中展示',
+  sipCallNumber: '拨出号码',
+  sipNumberError: '请输入正确的手机号',
+  sipCallIsCalling: '该号码已在呼叫中',
+  sipLocalContacts: '本地通讯录',
+  sipContactsClear: '清空',
+  sipCalling: '呼叫中...',
+  sipCallTerm: '挂断',
+  sipCallOthers: '呼叫其他成员',
+  sipCallFailed: '呼叫失败',
+  sipCallAgain: '重新拨打',
+  sipSearch: '搜索',
+  sipSearchContacts: '搜索并添加参会人',
+  sipCallPhone: '电话呼叫',
+  participantNotJoined: '未入会',
+  sipCallCancel: '取消呼叫',
+  sipCallAgainEx: '再次呼叫',
+  sipCallStatusRejected: '已拒接',
+  sipCallStatusCanceled: '呼叫已取消',
+  sipCallStatusError: '呼叫异常',
+  sipCallStatusCalling: '电话呼叫中',
+  sipCallStatusWaiting: '等待呼叫中',
+  sipCallStatusTermed: '已挂断',
+  sipCallStatusUnaccepted: '未接听',
+  sipPhoneNumber: '电话号码',
+  sipCallMemberSelected: '选择：{{selectedCount}}',
+  sipContactsPrivacy: '请授权访问您的通讯录，用于呼叫联系人以电话方式入会',
+  sipContactNoNumber: '该成员无电话信息，暂不支持选择',
+  sipCallIsInMeeting: '该成员已在会议中',
+  sipCallIsInInviting: '该成员正在呼叫中',
+  sipCallIsInBlacklist:
+    '该成员已被标记不允许再次加入，如需邀请，请关闭会议黑名单',
+  sipCallByPhone: '电话呼叫',
+  sipKeypad: '拨号',
+  sipBatchCall: '批量呼叫',
+  sipCallMaxCount: '单次最多选择{{count}}人',
+  sipInviteInfo: '邀请信息',
+  sipAddressInvite: '通讯录邀请',
+  sipJoinOtherMeetingTip: '加入后将离开当前会议',
+  callStatusWaitingJoin: '待入会',
+  globalReject: '拒绝',
+  // todo
+  readyPlayOthersAudioAndVideo: '即将开始播放其他成员的音视频',
+  readyPlayOthersVideo: '即将开始播放其他成员的视频',
+  readyPlayOthersShare: '即将开始播放其他成员的共享画面',
+  unsupportedSwitchCamera: '该设备暂不支持切换摄像头',
+  // 访客入会
+  meetingGuestJoin: '访客入会',
+  meetingGuestJoinEnableTip: '开启后允许外部人员参会',
+  meetingGuestJoinSecurityNotice: '已开启访客入会，请注意会议信息安全',
+  meetingGuestJoinEnabled: '访客入会已开启',
+  meetingGuestJoinDisabled: '访客入会已关闭',
+  meetingGuestJoinConfirm: '确认开启访客入会？',
+  meetingGuestJoinConfirmTip: '开启后允许外部人员参会',
+  meetingGuestJoinSupported: '该会议支持外部访客入会',
+  meetingGuestJoinAuthTitle: '访客身份验证',
+  meetingGuestJoinAuthTip: '为保障会议安全，请输入手机号进行身份验证',
+  meetingGuestJoinNamePlaceholder: '请输入入会昵称',
+  meetingRoleGuest: '外部访客',
+
+  meetingOpen: '展开',
+  meetingClose: '收起',
+  meetingAttendeeCount: '{{count}}人',
 }

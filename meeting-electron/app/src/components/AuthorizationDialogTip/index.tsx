@@ -1,7 +1,6 @@
-import { use } from 'i18next';
 import Styles from './index.less';
-import { Button, ConfigProvider, Modal } from 'antd';
-import { useEffect, useState } from 'react';
+import { Button, ConfigProvider } from 'antd';
+import { useState } from 'react';
 import Authorization from '../Authorization';
 
 const antdPrefixCls = 'nemeeting';

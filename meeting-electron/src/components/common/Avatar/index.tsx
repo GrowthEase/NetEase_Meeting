@@ -1,8 +1,10 @@
-import { CSSProperties, useEffect, useRef, useState } from 'react'
 import EditOutlined from '@ant-design/icons/EditOutlined'
+import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
 import { AvatarSize } from '../../../types/innerType'
+import { NEMeetingInviteStatus } from '../../../types/type'
 import { getUserName } from '../../../utils'
 import './index.less'
+import { NERoomMemberInviteState } from 'neroom-web-sdk'
 
 interface AvatarProps {
   className?: string
@@ -15,6 +17,8 @@ interface AvatarProps {
   onMouseEnter?: (e: any) => void
   onFocus?: (e: any) => void
   onMouseLeave?: (e: any) => void
+  inviteState?: NEMeetingInviteStatus | NERoomMemberInviteState
+  onCallClick?: () => void
 }
 const UserAvatar: React.FC<AvatarProps> = ({
   nickname,
@@ -27,6 +31,8 @@ const UserAvatar: React.FC<AvatarProps> = ({
   onFocus,
   onMouseEnter,
   onMouseLeave,
+  inviteState,
+  onCallClick,
 }) => {
   const [canShowImg, setCanShowImg] = useState(true)
   const imgRef = useRef<HTMLImageElement>(null)
@@ -47,6 +53,31 @@ const UserAvatar: React.FC<AvatarProps> = ({
       }
     }
   }, [avatar])
+
+  const inviteStateContent = useMemo(() => {
+    switch (inviteState) {
+      case NEMeetingInviteStatus.waitingCall:
+      case NEMeetingInviteStatus.calling:
+      case NEMeetingInviteStatus.waitingJoin:
+        return <div className="invite-state-wrapper">...</div>
+      case NEMeetingInviteStatus.rejected:
+      case NEMeetingInviteStatus.noAnswer:
+      case NEMeetingInviteStatus.error:
+      case NEMeetingInviteStatus.canceled:
+        return (
+          <div className="invite-state-wrapper" onClick={() => onCallClick?.()}>
+            <svg
+              className="icon iconfont nemeeting-icon-phone"
+              aria-hidden="true"
+            >
+              <use xlinkHref="#icondianhua"></use>
+            </svg>
+          </div>
+        )
+      default:
+        return null
+    }
+  }, [inviteState])
   return (
     <div
       onClick={onClick}
@@ -60,6 +91,7 @@ const UserAvatar: React.FC<AvatarProps> = ({
       {avatar && canShowImg && (
         <img ref={imgRef} className="nemeeting-avatar-img" src={avatar} />
       )}
+      {inviteStateContent}
       {isEdit && <EditOutlined className="avatar-edit-icon" />}
     </div>
   )

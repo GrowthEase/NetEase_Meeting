@@ -1,5 +1,5 @@
 import React, { FC, useState, useEffect, useMemo } from 'react';
-import { Button, Checkbox } from 'antd';
+import { Button } from 'antd';
 import { BaseInput } from '../../../components/input';
 import styles from './index.less';
 import { useLocation } from 'umi';
@@ -10,15 +10,13 @@ import eleIpc from '../../../../../src/services/electron';
 import {
   DOMAIN_SERVER,
   LOCALSTORAGE_LOGIN_BACK,
-  SSO_APP_KEY,
   PROTOCOL,
   LOCALSTORAGE_SSO_APP_KEY,
 } from '../../../config';
 import LoginHeader from '../header';
 import { getEnterPriseInfoApi } from '../../../api';
-import { EnterPriseInfo } from '../../../types';
 import { getDeviceKey } from '../../../../../src/utils';
-import { NEClientType } from '../../../../../src/types';
+import { NEClientInnerType } from '../../../../../src/types';
 import { useTranslation } from 'react-i18next';
 
 // 一个简陋的方法，url拼接
@@ -64,7 +62,7 @@ export const LoginBySSOCom: FC<LoginBySSOComProps> = ({
     }
     const ssoCode = isEmail ? enterpriseEmail.value : enterpriseCode.value;
     const _enterpriseCode = ssoCode?.toLowerCase()?.trim();
-    let params: { email?: string; code?: string } = {};
+    const params: { email?: string; code?: string } = {};
     if (isEmail) {
       params.email = enterpriseEmail.value;
     } else {
@@ -123,9 +121,9 @@ export const LoginBySSOCom: FC<LoginBySSOComProps> = ({
       : `${window.encodeURIComponent(returnURL)}`;
     const clientType = window.isElectronNative
       ? window.isWins32
-        ? NEClientType.PC
-        : NEClientType.MAC
-      : NEClientType.WEB;
+        ? NEClientInnerType.PC
+        : NEClientInnerType.MAC
+      : NEClientInnerType.WEB;
     localStorage.setItem(LOCALSTORAGE_SSO_APP_KEY, appKey);
     const url = `${ssoUrl}?callback=${clientCallbackUrl}&idp=${ipdId}&key=${key}&clientType=${clientType}&appKey=${appKey}`;
     if (eleIpcIns) {

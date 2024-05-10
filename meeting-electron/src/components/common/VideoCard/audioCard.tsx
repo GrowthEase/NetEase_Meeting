@@ -4,7 +4,6 @@ import UserAvatar from '../Avatar'
 import AudioIcon from '../AudioIcon'
 import './index.less'
 import { useTranslation } from 'react-i18next'
-import errorHitImg from '../../../assets/hints-error.png'
 
 interface AudioCardProps {
   className?: string
@@ -14,9 +13,10 @@ interface AudioCardProps {
   onClick?: (e: any) => void
   ref?: any
   children?: React.ReactNode
+  onCallClick?: (member: NEMember) => void
 }
 const AudioCard: React.FC<AudioCardProps> = (props) => {
-  const { member, className, size, style, onClick, ref } = props
+  const { member, className, size, style, onClick, ref, onCallClick } = props
   const { t } = useTranslation()
   const isInPhone = useMemo(() => {
     return member.properties?.phoneState?.value == '1'
@@ -33,6 +33,8 @@ const AudioCard: React.FC<AudioCardProps> = (props) => {
           <UserAvatar
             nickname={member.name}
             avatar={member.avatar}
+            inviteState={member.inviteState}
+            onCallClick={() => onCallClick?.(member)}
             size={size || 64}
           />
           {isInPhone && (
@@ -50,7 +52,7 @@ const AudioCard: React.FC<AudioCardProps> = (props) => {
           <div className="nemeeting-audio-card-name nemeeting-ellipsis">
             {member.name}
           </div>
-          {member.isAudioConnected ? (
+          {!member.inviteState && member.isAudioConnected ? (
             <div className="nemeeting-audio-card-audio-icon">
               {member.isAudioOn ? (
                 <AudioIcon

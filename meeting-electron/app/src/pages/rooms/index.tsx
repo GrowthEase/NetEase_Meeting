@@ -1,7 +1,7 @@
 import NEMeetingKit from '../../../../src/index';
 
 import Styles from './index.less';
-import { ConfigProvider, message, Progress, Spin, Button } from 'antd';
+import { ConfigProvider, message, Progress, Button } from 'antd';
 import antd_zh_CH from 'antd/locale/zh_CN';
 
 import BeforeActivatePage from './BeforeActivatePage';
@@ -9,12 +9,11 @@ import RoomsBindPage from './RoomsBindPage';
 import RoomsHomePage from './RoomsHomePage';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import req, { QRCodeRes, RoomsInfo, Settings, domain } from './request';
-import { EventType, NERoomBeautyEffectType } from '../../../../src/types';
+import { EventType } from '../../../../src/types';
 import { useDevices } from './hooks';
 import { getDevices, reportDevices } from './utils';
 import axios from 'axios';
 import {
-  DeviceInfo,
   DevicesInfo,
   IPCEvent,
   ResUpdateInfo,
@@ -456,7 +455,7 @@ const RoomsPage: React.FC = () => {
   async function getSelectedDeviceInfoFromDevice(device: DevicesInfo) {
     const res = await getDevices();
     const { speakList, recordList, cameraList } = res;
-    let tmpDeviceInfo: SelectedDeviceInfo = { ...deviceInfo };
+    const tmpDeviceInfo: SelectedDeviceInfo = { ...deviceInfo };
     // 当下发的设备本端没有的情况下需要重新上报下设备并切换默认设备
     let needToReport = false;
     const videoDeviceList = device?.video?.in;

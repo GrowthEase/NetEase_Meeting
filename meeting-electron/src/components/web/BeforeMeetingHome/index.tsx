@@ -4,7 +4,16 @@ import CloseOutlined from '@ant-design/icons/CloseOutlined'
 import EditOutlined from '@ant-design/icons/EditOutlined'
 import ExclamationCircleFilled from '@ant-design/icons/ExclamationCircleFilled'
 import RightOutlined from '@ant-design/icons/RightOutlined'
-import { Badge, Button, Dropdown, Input, MenuProps, Spin, Tag } from 'antd'
+import {
+  Badge,
+  Button,
+  Dropdown,
+  Input,
+  MenuProps,
+  notification,
+  Spin,
+  Tag,
+} from 'antd'
 import dayjs from 'dayjs'
 import { useTranslation } from 'react-i18next'
 
@@ -16,7 +25,11 @@ import LightFeedbackImg from '../../../assets/light-feedback.png'
 import ScheduleMeetingImg from '../../../assets/schedule-meeting.jpg'
 import NEMeetingKit from '../../../index'
 
-import { copyElementValue, getMeetingDisplayId } from '../../../utils'
+import {
+  copyElementValue,
+  getLocalStorageSetting,
+  getMeetingDisplayId,
+} from '../../../utils'
 import AboutModal from '../BeforeMeetingModal/AboutModal'
 import HistoryMeetingModal from '../BeforeMeetingModal/HistoryMeetingModal'
 import ImmediateMeetingModal from '../BeforeMeetingModal/ImmediateMeetingModal'
@@ -50,10 +63,15 @@ import {
   MeetingRepeatType,
   MeetingSetting,
 } from '../../../types'
-import { NEMeetingStatus } from '../../../types/type'
-import { getWindow, openWindow } from '../../../utils/windowsProxy'
+import {
+  NEMeetingInviteInfo,
+  NEMeetingInviteStatus,
+  NEMeetingStatus,
+} from '../../../types/type'
+import { closeWindow, getWindow, openWindow } from '../../../utils/windowsProxy'
 import UserAvatar from '../../common/Avatar'
 import Modal from '../../common/Modal'
+import MeetingNotification from '../../common/Notification'
 import PCTopButtons from '../../common/PCTopButtons'
 import Toast from '../../common/toast'
 import ImageCropModal from '../BeforeMeetingModal/ImageCropModal'
@@ -133,6 +151,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     restore: t('restore'),
     uploadLoadingText: t('uploadLoadingText'),
     youCanOpen: t('supportedMeetings'),
+    settingServiceBundleExpirationDate: t('settingServiceBundleExpirationDate'),
   }
 
   const passwordRef = React.useRef<string>('')
@@ -179,6 +198,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
   }>()
   const [appLiveAvailable, setAppLiveAvailable] = useState<boolean>(false)
   const [showTipInfo, setShowTipInfo] = useState<boolean>(true)
+  const [showExpireTip, setShowExpireTip] = useState<boolean>(true)
   const [scheduleMeetingContainerHeight, setScheduleMeetingContainerHeight] =
     useState<number>(372)
   const [isOffLine, setIsOffLine] = useState<boolean>(false)
@@ -193,18 +213,70 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     version: string
     model: string
   }>()
-  const [globalConfig, setGlobalConfig] =
-    useState<GetMeetingConfigResponse | null>(null)
+  const [globalConfig, setGlobalConfig] = useState<GetMeetingConfigResponse>()
   const platform = eleIpcIns ? 'electron' : 'web'
   const previewRoomListenerRef = useRef<any>(null)
   const [invitationMeetingNum, setInvitationMeetingNum] = useState<string>('')
   const [notificationMessages, setNotificationMessages] = useState<
     NECustomSessionMessage[]
   >([])
+  const electronInMeetingRef = useRef<boolean>(false)
+
+  const [customMessage, setCustomMessage] =
+    useState<NECustomSessionMessage | null>(null)
+
+  // 用于被邀请端打开会议详情时候，邀请端取消会议，被邀请端关闭会议详情
+  const openMeetingDetailMeetingNumRef = useRef('')
   const { handlePostMessage } = usePostMessageHandle()
   function getMeetingIdFromUrl(url) {
     const match = url.match(/meetingId=([^&]+)/)
     return match ? match[1] : null
+  }
+  const [notificationApi, contextHolder] = notification.useNotification({
+    stack: false,
+    bottom: 60,
+    getContainer: () =>
+      document.getElementById('before-meeting-home') || document.body,
+  })
+
+  const joinRoomByInvite = (meetingNum: string) => {
+    setSubmitLoading(true)
+    const setting = getLocalStorageSetting()
+    joinMeeting(
+      {
+        meetingNum: meetingNum,
+        nickName: accountInfo?.nickname,
+        video: setting?.normalSetting.openAudio ? 1 : 2,
+        audio: setting?.normalSetting.openVideo ? 1 : 2,
+        avatar: accountInfo?.avatar,
+        showSpeaker: setting?.normalSetting.showSpeakerList,
+        enableUnmuteBySpace: setting?.audioSetting.enableUnmuteBySpace,
+        enableFixedToolbar: setting?.normalSetting.showToolbar,
+        enableVideoMirror: setting?.videoSetting.enableVideoMirroring,
+        showDurationTime: setting?.normalSetting.showDurationTime,
+      },
+      true
+    ).finally(() => {
+      setSubmitLoading(false)
+    })
+  }
+  const onNotificationClickHandler = (action: string, message?: any) => {
+    if (!message) return
+    const data = message.data?.data
+    console.log('onNotificationClickHandler', data)
+    const type = data?.type
+    if (type === 'MEETING.INVITE' || type === 'MEETING.SCHEDULE.START') {
+      setCustomMessage(null)
+      // 拒绝加入
+      if (action === 'reject') {
+        NEMeetingKit.actions.inviteService?.rejectInvite(data.meetingId)
+        notificationApi?.destroy(data?.meetingId)
+      } else if (action === 'join') {
+        Modal.destroyAll()
+        joinRoomByInvite(data.meetingNum)
+        notificationApi.destroy()
+      }
+    }
   }
 
   const imageCropValueRef = useRef<string>('')
@@ -236,6 +308,9 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     window.ipcRenderer?.on('electron-join-meeting', (e, url) => {
       handleInvitationUrl(url)
     })
+    window.ipcRenderer?.on('beforeMeeting', (e, beforeMeeting: boolean) => {
+      electronInMeetingRef.current = !beforeMeeting
+    })
   }, [])
 
   function handleInvitationUrl(url: string) {
@@ -245,6 +320,15 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     } else {
       const query = qs.parse(url.split('?')[1]?.split('#/')[0])
       meetingNum = query.meetingId as string
+      // 如果是处理一次后，删除url中的meetingId参数
+      if (meetingNum) {
+        delete query.meetingId
+        history.replaceState(
+          {},
+          '',
+          qs.stringify(query, { addQueryPrefix: true })
+        )
+      }
     }
     if (meetingNum) {
       setInvitationMeetingNum(meetingNum)
@@ -358,7 +442,17 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
           </div>
           {accountInfo?.serviceBundle && (
             <div className="nemeeting-open-meeting-info">
-              <div className="you-can-open">{i18n.youCanOpen}</div>
+              <div className="you-can-open">
+                <span>{i18n.youCanOpen}</span>
+                {accountInfo.serviceBundle.expireTimeStamp !== -1 ? (
+                  <span>
+                    {i18n.settingServiceBundleExpirationDate}
+                    {dayjs(accountInfo.serviceBundle.expireTimeStamp).format(
+                      'YYYY-MM-DD'
+                    )}
+                  </span>
+                ) : null}
+              </div>
               <div className="meeting-limit-info">
                 {accountInfo.serviceBundle.meetingMaxMinutes < 0 ||
                 !accountInfo.serviceBundle.meetingMaxMinutes
@@ -370,6 +464,11 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                       maxMinutes: accountInfo.serviceBundle.meetingMaxMinutes,
                     })}
               </div>
+              {accountInfo.serviceBundle.expireTimeStamp !== -1 ? (
+                <div className="expire-tip">
+                  {accountInfo.serviceBundle.expireTip}
+                </div>
+              ) : null}
             </div>
           )}
         </div>
@@ -525,7 +624,10 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       if (status === NEMeetingStatus.MEETING_STATUS_IN_WAITING_ROOM) {
         // 到等候室
         setFeedbackModalOpen(false)
-      } else if (status === NEMeetingStatus.MEETING_STATUS_FAILED) {
+      } else if (
+        status === NEMeetingStatus.MEETING_STATUS_FAILED ||
+        status === NEMeetingStatus.MEETING_STATUS_IDLE
+      ) {
         setInMeeting(false)
       }
     })
@@ -589,11 +691,12 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
         showDurationTime: setting?.normalSetting.showDurationTime,
         meetingIdDisplayOption: 0,
         showMeetingRemainingTip: true,
-        showCloudRecordingUI: false,
+        showCloudRecordingUI: true,
         avatar: options.avatar,
         watermarkConfig: {
           name: accountInfo.nickname,
         },
+        noSip: false,
         moreBarList: [
           { id: 29 },
           { id: 25 },
@@ -627,21 +730,63 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     )
   }
 
-  function scheduleMeeting({
-    subject,
-    startTime,
-    endTime,
-    password,
-    audioOff,
-    openLive,
-    meetingId,
-    liveOnlyEmployees,
-    attendeeAudioOffType,
-    enableWaitingRoom,
-    enableJoinBeforeHost,
-    recurringRule,
-  }) {
-    setSubmitLoading(true)
+  function joinScheduleMeeting(meetingId) {
+    joinMeeting({
+      meetingNum: meetingId,
+      nickName: accountInfo.nickname,
+      video: setting?.normalSetting.openVideo ? 1 : 2,
+      audio: setting?.normalSetting.openAudio ? 1 : 2,
+      showSpeaker: setting?.normalSetting.showSpeakerList,
+      avatar: accountInfo?.avatar,
+      enableUnmuteBySpace: setting?.audioSetting.enableUnmuteBySpace,
+      enableFixedToolbar: setting?.normalSetting.showToolbar,
+      enableVideoMirror: setting?.videoSetting.enableVideoMirroring,
+      showDurationTime: setting?.normalSetting.showDurationTime,
+    })
+  }
+
+  function cancelScheduleMeeting(
+    meetingId: string,
+    cancelRecurringMeeting?: boolean
+  ) {
+    setScheduleMeetingModalOpen(false)
+    if (window.isElectronNative) {
+      closeWindow('scheduleMeetingWindow')
+    }
+    NEMeetingKit.actions.neMeeting
+      ?.cancelMeeting(meetingId, cancelRecurringMeeting)
+      .then((res) => {
+        Toast.success(i18n.cancelScheduleMeetingSuccess)
+        getMeetingList()
+      })
+      .catch((error) => {
+        Toast.fail(
+          error.msg ||
+            (navigator.onLine
+              ? i18n.cancelScheduleMeetingFail
+              : i18n.networkError)
+        )
+      })
+  }
+
+  function createOrEditScheduleMeeting(value) {
+    const {
+      subject,
+      startTime,
+      endTime,
+      password,
+      audioOff,
+      openLive,
+      meetingId,
+      liveOnlyEmployees,
+      attendeeAudioOffType,
+      enableWaitingRoom,
+      enableJoinBeforeHost,
+      recurringRule,
+      scheduledMembers,
+      enableGuestJoin,
+    } = value
+
     setImmediateMeetingModalOpen(false)
     setJoinMeetingModalOpen(false)
 
@@ -657,10 +802,13 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
         attendeeAudioOff: audioOff,
         openLive: openLive,
         liveOnlyEmployees: liveOnlyEmployees,
+        noSip: false,
         attendeeAudioOffType,
         enableWaitingRoom,
         enableJoinBeforeHost,
         recurringRule,
+        scheduledMembers,
+        enableGuestJoin,
       })
       .then(() => {
         setScheduleMeetingModalOpen(false)
@@ -671,24 +819,45 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
         } else {
           Toast.success(i18n.scheduleMeetingSuccess)
         }
+        if (window.isElectronNative) {
+          closeWindow('scheduleMeetingWindow')
+        }
       })
       .catch((error) => {
-        // 会议已不存在则关闭弹窗
-        if (error.code === 3104) {
-          setScheduleMeetingModalOpen(false)
-        }
-        setSubmitLoading(false)
-        Toast.fail(
+        const errorMsg =
           error.msg ||
-            (navigator.onLine ? i18n.scheduleMeetingFail : i18n.networkError)
-        )
+          (navigator.onLine ? i18n.scheduleMeetingFail : i18n.networkError)
+        // 会议已不存在则关闭弹窗
+        if (window.isElectronNative) {
+          if (error.code === 3104) {
+            closeWindow('scheduleMeetingWindow')
+          }
+          const scheduleMeetingWindow = getWindow('scheduleMeetingWindow')
+          scheduleMeetingWindow?.postMessage(
+            {
+              event: 'createOrEditScheduleMeetingFail',
+              payload: {
+                errorMsg,
+              },
+            },
+            scheduleMeetingWindow.origin
+          )
+        } else {
+          if (error.code === 3104) {
+            setScheduleMeetingModalOpen(false)
+          }
+          setSubmitLoading(false)
+          Toast.fail(errorMsg)
+        }
       })
   }
 
-  async function joinMeeting(options: JoinOptions) {
+  async function joinMeeting(options: JoinOptions, joinByInvite?: boolean) {
     setSubmitLoading(true)
     setImmediateMeetingModalOpen(false)
     setScheduleMeetingModalOpen(false)
+    setNotificationListModalOpen(false)
+    console.warn('joinMeeting>>>>', joinByInvite)
     await NEMeetingKit.actions.neMeeting
       ?.getMeetingInfoByFetch(options.meetingNum)
       .catch((e) => {
@@ -715,7 +884,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       setJoinMeetingModalOpen(false)
       setSubmitLoading(false)
       window.ipcRenderer?.send(IPCEvent.enterRoom, {
-        joinType: 'join',
+        joinType: joinByInvite ? 'joinByInvite' : 'join',
         meetingNum: options.meetingNum,
         password: options.password,
         openCamera: options.video,
@@ -727,40 +896,50 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     }
     function fetchJoin(options: JoinOptions): Promise<void> {
       return new Promise((resolve, reject) => {
-        NEMeetingKit.actions.join(
-          {
-            ...options,
-            showCloudRecordingUI: false,
-            showMeetingRemainingTip: true,
-            env: platform,
-            watermarkConfig: {
-              name: accountInfo.nickname,
-            },
-            moreBarList: [
-              { id: 29 },
-              { id: 25 },
-              {
-                id: 1000,
-                btnConfig: {
-                  icon: FeedbackImg,
-                  lightIcon: LightFeedbackImg,
-                  text: i18n.feedback,
-                },
-                type: 'single',
-                injectItemClick: () => {
-                  setMeetingId(NEMeetingKit.actions.NEMeetingInfo.meetingId)
-                  setFeedbackModalOpen(true)
-                },
-              },
-            ],
+        const data: any = {
+          ...options,
+          showCloudRecordingUI: true,
+          showMeetingRemainingTip: true,
+          env: platform,
+          watermarkConfig: {
+            name: accountInfo.nickname,
           },
-          function (e: any) {
+          moreBarList: [
+            { id: 29 },
+            { id: 25 },
+            {
+              id: 1000,
+              btnConfig: {
+                icon: FeedbackImg,
+                lightIcon: LightFeedbackImg,
+                text: i18n.feedback,
+              },
+              type: 'single',
+              injectItemClick: () => {
+                setMeetingId(NEMeetingKit.actions.NEMeetingInfo.meetingId)
+                setFeedbackModalOpen(true)
+              },
+            },
+          ],
+        }
+        if (joinByInvite) {
+          NEMeetingKit.actions.inviteService
+            ?.acceptInvite(data)
+            .then(() => {
+              resolve()
+            })
+            .catch((e) => {
+              reject(e)
+            })
+        } else {
+          NEMeetingKit.actions.join(data, function (e: any) {
+            console.warn('join meeting callback', e)
             if (e) {
               reject(e)
             }
             resolve()
-          }
-        )
+          })
+        }
       })
     }
 
@@ -768,6 +947,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
 
     return fetchJoin(options)
       .then(() => {
+        console.warn('fetchJoin meeting callback')
         setJoinMeetingModalOpen(false)
         eleIpcIns?.sendMessage('enterRoom')
         setNPS()
@@ -848,6 +1028,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
             },
           })
         } else {
+          setInMeeting(false)
           throw e
         }
       })
@@ -911,13 +1092,27 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                 EventType.ReceiveScheduledMeetingUpdate,
                 (res) => {
                   console.log('收到房间状态变更', res)
+                  const data = res.data
                   // 账号受到限制
-                  if (res.data?.type === 200) {
+                  if (data?.type === 200) {
                     Toast.warning(i18n.tokenExpired, 3000)
                     setTimeout(() => {
                       logout()
                     }, 1000)
                   } else {
+                    // 房间被关闭或者取消 需要被邀请端判断当前是否打开该会议的会议详情。如果是则需要关闭弹窗
+                    if (
+                      data.type === 101 &&
+                      data.state === 4 &&
+                      openMeetingDetailMeetingNumRef.current == data.meetingNum
+                    ) {
+                      if (window.isElectronNative) {
+                        closeWindow('scheduleMeetingWindow')
+                      } else {
+                        setScheduleMeetingModalOpen(false)
+                      }
+                      openMeetingDetailMeetingNumRef.current = ''
+                    }
                     getMeetingList()
                   }
                 }
@@ -1091,7 +1286,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
               volume,
             },
           },
-          '*'
+          settingWindow.origin
         )
       },
       onRtcVirtualBackgroundSourceEnabled: (enabled, reason) => {
@@ -1104,7 +1299,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
               reason,
             },
           },
-          '*'
+          settingWindow.origin
         )
         window.ipcRenderer?.send('previewControllerListener', {
           method: EventType.rtcVirtualBackgroundSourceEnabled,
@@ -1139,7 +1334,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
               height,
             },
           },
-          '*',
+          settingWindow.origin,
           [data.bytes.buffer]
         )
         window.ipcRenderer?.send('previewControllerListener', {
@@ -1214,22 +1409,22 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     }
   }, [inMeeting, previewController])
 
-  useEffect(() => {
-    if (editMeeting) {
-      meetingListGroupByDate.forEach((item) => {
-        const meeting = item.list.find(
-          (i) => i.meetingId === editMeeting.meetingId
-        )
-        if (meeting) {
-          setEditMeeting(meeting)
-        }
-      })
-    }
-  }, [editMeeting, meetingListGroupByDate])
+  // useEffect(() => {
+  //   if (editMeeting) {
+  //     meetingListGroupByDate.forEach((item) => {
+  //       const meeting = item.list.find(
+  //         (i) => i.meetingId === editMeeting.meetingId
+  //       )
+  //       if (meeting) {
+  //         setEditMeeting(meeting)
+  //       }
+  //     })
+  //   }
+  // }, [editMeeting, meetingListGroupByDate])
 
   document.title = i18n.appTitle
 
-  function onSettingClick(type?: 'normal' | 'audio' | 'video' | 'beauty') {
+  function onSettingClick(type?: SettingTabType) {
     type = type || 'normal'
     // 非Electron
     setSettingOpen(true)
@@ -1257,8 +1452,9 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     const newWindow = openWindow(payload.name, payload.url)
     const postMessage = () => {
       payload.postMessageData &&
-        newWindow?.postMessage(payload.postMessageData, '*')
+        newWindow?.postMessage(payload.postMessageData, newWindow.origin)
     }
+    console.warn('firstOpen', newWindow?.firstOpen)
     // 不是第一次打开
     if (newWindow?.firstOpen === false) {
       postMessage()
@@ -1304,9 +1500,33 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
         Toast.success(t('settingAvatarUpdateSuccess'))
       } else if (event === 'openWindow') {
         openBeforeMeetingWindow(payload)
+      } else if (event === 'updateWindowData') {
+        const win = getWindow(payload.name)
+        win?.postMessage(payload.postMessageData, win.origin)
       } else if (event === 'notificationClick') {
-        console.log('notificationClick', payload)
-        handleNotificationClick(payload.action)
+        handleNotificationClick(payload.action, payload.message)
+      } else if (event === 'joinScheduleMeeting') {
+        const { meetingId } = payload
+        joinScheduleMeeting(meetingId)
+      } else if (event === 'createOrEditScheduleMeeting') {
+        const { value } = payload
+        createOrEditScheduleMeeting(value)
+      } else if (event === 'cancelScheduleMeeting') {
+        const { meetingId, cancelRecurringMeeting } = payload
+        cancelScheduleMeeting(meetingId, cancelRecurringMeeting)
+      } else if (
+        event === 'onMembersChangeHandler' ||
+        event === 'onRoleChange' ||
+        event === 'onAddressBookConfirmHandler' ||
+        event === 'onAddressBookCancelHandler'
+      ) {
+        if (e.target === getWindow('addressBook')) {
+          const scheduleMeetingWindow = getWindow('scheduleMeetingWindow')
+          scheduleMeetingWindow?.postMessage({
+            event,
+            payload,
+          })
+        }
       }
     }
     childWindow?.addEventListener('message', messageListener)
@@ -1370,28 +1590,51 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       setNotificationListModalOpen(true)
     }
   }
-  function handleNotificationClick(action?: string) {
-    if (action?.startsWith('meeting://meeting_history')) {
+  function handleNotificationClick(action?: string, message?: any) {
+    console.log('handleNotificationClick', action, message)
+    if (
+      action?.startsWith('meeting://meeting_history') ||
+      action?.startsWith('meeting://meeting_info')
+    ) {
       const urlObj = new URL(action)
       const searchParams = new URLSearchParams(urlObj.search)
       const meetingId = searchParams.get('meetingId')
       if (meetingId) {
-        setHistoryMeetingId(meetingId)
-        if (window.isElectronNative) {
-          openBeforeMeetingWindow({
-            name: 'historyWindow',
-            postMessageData: {
-              event: 'windowOpen',
-              payload: {
-                meetingId,
+        if (action?.startsWith('meeting://meeting_history')) {
+          setHistoryMeetingId(meetingId)
+          if (window.isElectronNative) {
+            openBeforeMeetingWindow({
+              name: 'historyWindow',
+              postMessageData: {
+                event: 'windowOpen',
+                payload: {
+                  meetingId,
+                },
               },
-            },
-          })
+            })
+          } else {
+            setHistoryMeetingModalOpen(true)
+          }
         } else {
-          setHistoryMeetingModalOpen(true)
+          openMeetingDetailInfo(meetingId)
         }
       }
+    } else {
+      action && onNotificationClickHandler(action, message)
     }
+  }
+
+  const onNotificationCardWinOpen = (message) => {
+    console.log('onNotificationCardWinOpen', message)
+    openBeforeMeetingWindow({
+      name: 'notificationCardWindow',
+      postMessageData: {
+        event: 'updateNotifyCard',
+        payload: {
+          message,
+        },
+      },
+    })
   }
 
   function openNPS() {
@@ -1424,6 +1667,26 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       localStorage.setItem('ne-meeting-nps', JSON.stringify(nps))
     }
   }
+
+  const expireTip = useMemo(() => {
+    if (
+      showExpireTip &&
+      accountInfo?.serviceBundle.expireTimeStamp &&
+      accountInfo.serviceBundle.expireTimeStamp !== -1 &&
+      accountInfo?.serviceBundle.expireTimeStamp < Date.now()
+    ) {
+      return (
+        <div className="before-meeting-home-alter">
+          <ExclamationCircleFilled />
+          <div className="before-meeting-home-alter-content">
+            {t('settingServiceBundleExpirationDateTip')}
+          </div>
+          <CloseOutlined onClick={() => setShowExpireTip(false)} />
+        </div>
+      )
+    }
+    return null
+  }, [accountInfo?.serviceBundle.expireTimeStamp, showExpireTip, t])
 
   const tipStrs = useMemo(() => {
     return tipInfo && showTipInfo && !isOffLine ? (
@@ -1466,6 +1729,9 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     window.ipcRenderer?.on('open-meeting-feedback', () => {
       setFeedbackModalOpen(true)
     })
+    window.ipcRenderer?.on('open-meeting-about', () => {
+      openBeforeMeetingWindow({ name: 'aboutWindow' })
+    })
     window.ipcRenderer?.on(IPCEvent.changeSetting, (event, setting) => {
       onSettingChange(setting)
     })
@@ -1480,6 +1746,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
   useEffect(() => {
     window.addEventListener('online', () => {
       setIsOffLine(false)
+      getMeetingList()
       if (window.ipcRenderer && !isLogin.current) {
         window.location.reload()
       }
@@ -1534,17 +1801,28 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     function onReceiveMessage(message?) {
       const sessionId = globalConfig?.appConfig.notifySenderAccid
       if (sessionId && message?.sessionId === sessionId) {
-        // 这里需要延迟查询，否则会出现消息获取不了的问题
-        setTimeout(
-          () => {
-            NEMeetingKit.actions.neMeeting
-              ?.queryUnreadMessageList(sessionId)
-              .then((res) => {
-                setNotificationMessages(res)
-              })
-          },
-          message.messageId ? 3000 : 0
-        )
+        if (message.data) {
+          const data =
+            Object.prototype.toString.call(message.data) === '[object Object]'
+              ? message.data
+              : JSON.parse(message.data)
+          message.data = data
+        }
+        if (notificationListModalOpen || getWindow('notificationListWindow')) {
+          NEMeetingKit.actions.neMeeting?.clearUnreadCount(sessionId)
+        } else {
+          // 这里需要延迟查询，否则会出现消息获取不了的问题
+          setTimeout(
+            () => {
+              NEMeetingKit.actions.neMeeting
+                ?.queryUnreadMessageList(sessionId)
+                .then((res) => {
+                  setNotificationMessages(res)
+                })
+            },
+            message.messageId ? 1000 : 0
+          )
+        }
       }
     }
     onReceiveMessage({ sessionId: globalConfig?.appConfig.notifySenderAccid })
@@ -1553,7 +1831,6 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       onReceiveMessage
     )
     function onChangeRecentSession(sessions) {
-      console.log('onChangeRecentSession', sessions)
       const sessionId = globalConfig?.appConfig.notifySenderAccid
       if (sessionId) {
         const session = sessions.find((s) => s.sessionId === sessionId)
@@ -1567,19 +1844,74 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       onChangeRecentSession
     )
     function onDeleteAllSessionMessage(sessionId, sessionType) {
-      console.log('onDeleteAllSessionMessage', sessionId, sessionType)
       const notificationListWindow = getWindow('notificationListWindow')
-      notificationListWindow?.postMessage({
-        event: 'eventEmitter',
-        payload: {
-          key: EventType.OnDeleteAllSessionMessage,
-          args: [sessionId, sessionType],
+      notificationListWindow?.postMessage(
+        {
+          event: 'eventEmitter',
+          payload: {
+            key: EventType.OnDeleteAllSessionMessage,
+            args: [sessionId, sessionType],
+          },
         },
-      })
+        notificationListWindow.origin
+      )
+    }
+    function onMeetingInviteStatusChange(
+      status: NEMeetingInviteStatus,
+      meetingId: string,
+      inviteInfo: NEMeetingInviteInfo,
+      message: NECustomSessionMessage
+    ) {
+      if (status === NEMeetingInviteStatus.calling) {
+        // 非会中显示的通知
+        const data = message.data?.data
+        // 如果当前时间大于接收到的消息时间60s则不处理
+        if (!data || Date.now() - data.timestamp > 60000) {
+          return
+        }
+        if (window.isElectronNative) {
+          console.warn(
+            'electronInMeetingRef',
+            electronInMeetingRef.current,
+            message
+          )
+          if (!electronInMeetingRef.current) {
+            setCustomMessage(message)
+          }
+        } else {
+          setCustomMessage(message)
+        }
+      } else if (
+        status === NEMeetingInviteStatus.rejected ||
+        status === NEMeetingInviteStatus.canceled ||
+        status === NEMeetingInviteStatus.removed
+      ) {
+        // 如果多端登录 邀请被拒绝需要同步关闭本端的
+        notificationApi.destroy(meetingId)
+        // electron 需要关闭多窗口
+        if (window.isElectronNative) {
+          const notificationCardWindow = getWindow('notificationCardWindow')
+          notificationCardWindow?.postMessage(
+            {
+              event: 'inviteStateChange',
+              payload: {
+                status,
+                meetingId,
+              },
+            },
+            notificationCardWindow.origin
+          )
+        }
+      }
     }
     NEMeetingKit.actions.neMeeting?.eventEmitter.on(
       EventType.OnDeleteAllSessionMessage,
       onDeleteAllSessionMessage
+    )
+    NEMeetingKit.actions.inviteService?.on(
+      EventType.OnMeetingInviteStatusChange,
+      //@ts-ignore
+      onMeetingInviteStatusChange
     )
     return () => {
       NEMeetingKit.actions.neMeeting?.eventEmitter.off(
@@ -1594,8 +1926,13 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
         EventType.OnDeleteAllSessionMessage,
         onDeleteAllSessionMessage
       )
+      NEMeetingKit.actions.inviteService?.off(
+        EventType.OnMeetingInviteStatusChange,
+        //@ts-ignore
+        onMeetingInviteStatusChange
+      )
     }
-  }, [globalConfig])
+  }, [globalConfig, inMeeting, notificationListModalOpen])
 
   useEffect(() => {
     NEMeetingKit.actions.neMeeting?.updateMeetingInfo({
@@ -1622,6 +1959,37 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       i18next.language || navigator.language
     )
   }, [t])
+
+  function openMeetingDetailInfo(meetingId: string) {
+    NEMeetingKit.actions.neMeeting
+      ?.getMeetingInfoByMeetingId(meetingId)
+      .then((res) => {
+        NEMeetingKit.actions.neMeeting
+          ?.getMeetingInfoByFetch(res.meetingNum)
+          .then((res) => {
+            setEditMeeting(res)
+            if (window.isElectronNative) {
+              openBeforeMeetingWindow({
+                name: 'scheduleMeetingWindow',
+                postMessageData: {
+                  event: 'windowOpen',
+                  payload: {
+                    nickname: accountInfo.nickname,
+                    appLiveAvailable,
+                    globalConfig,
+                    editMeeting: res,
+                  },
+                },
+              })
+            } else {
+              setScheduleMeetingModalOpen(true)
+            }
+          })
+      })
+      .catch((e) => {
+        Toast.fail(e.message || e.msg)
+      })
+  }
 
   return (
     <>
@@ -1700,7 +2068,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                   </div>
                 </div>
               ) : null}
-              {tipStrs}
+              {expireTip ? expireTip : tipStrs}
               <div className="before-meeting-home-buttons">
                 <div
                   className="meeting-button"
@@ -1722,7 +2090,21 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                   className="meeting-button"
                   onClick={() => {
                     setEditMeeting(undefined)
-                    setScheduleMeetingModalOpen(true)
+                    if (window.isElectronNative) {
+                      openBeforeMeetingWindow({
+                        name: 'scheduleMeetingWindow',
+                        postMessageData: {
+                          event: 'windowOpen',
+                          payload: {
+                            nickname: accountInfo.nickname,
+                            appLiveAvailable,
+                            globalConfig,
+                          },
+                        },
+                      })
+                    } else {
+                      setScheduleMeetingModalOpen(true)
+                    }
                   }}
                 >
                   <img src={ScheduleMeetingImg} alt="" />
@@ -1861,7 +2243,28 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                                         )
                                         .then((res) => {
                                           setEditMeeting(res)
-                                          setScheduleMeetingModalOpen(true)
+                                          openMeetingDetailMeetingNumRef.current =
+                                            meeting.meetingNum
+                                          if (window.isElectronNative) {
+                                            openBeforeMeetingWindow({
+                                              name: 'scheduleMeetingWindow',
+                                              postMessageData: {
+                                                event: 'windowOpen',
+                                                payload: {
+                                                  nickname:
+                                                    accountInfo.nickname,
+                                                  appLiveAvailable,
+                                                  globalConfig,
+                                                  editMeeting: res,
+                                                },
+                                              },
+                                            })
+                                          } else {
+                                            setScheduleMeetingModalOpen(true)
+                                          }
+                                        })
+                                        .catch((e) => {
+                                          Toast.fail(e.message || e.msg)
                                         })
                                     }}
                                     className="icon iconfont iconyx-tv-more1x"
@@ -1970,6 +2373,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
               }}
             />
             <ScheduleMeetingModal
+              neMeeting={NEMeetingKit.actions.neMeeting}
               nickname={accountInfo?.nickname}
               open={scheduleMeetingModalOpen}
               submitLoading={submitLoading}
@@ -1978,59 +2382,17 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
               eventEmitter={eventEmitter}
               meeting={editMeeting}
               onCancel={() => setScheduleMeetingModalOpen(false)}
-              onJoinMeeting={(meetingId) => {
-                joinMeeting({
-                  meetingNum: meetingId,
-                  nickName: accountInfo.nickname,
-                  video: setting?.normalSetting.openVideo ? 1 : 2,
-                  audio: setting?.normalSetting.openAudio ? 1 : 2,
-                  showSpeaker: setting?.normalSetting.showSpeakerList,
-                  avatar: accountInfo?.avatar,
-                  enableUnmuteBySpace:
-                    setting?.audioSetting.enableUnmuteBySpace,
-                  enableFixedToolbar: setting?.normalSetting.showToolbar,
-                  enableVideoMirror: setting?.videoSetting.enableVideoMirroring,
-                  showDurationTime: setting?.normalSetting.showDurationTime,
-                })
-              }}
-              onCancelMeeting={(cancelRecurringMeeting?: boolean) => {
-                setScheduleMeetingModalOpen(false)
+              onJoinMeeting={joinScheduleMeeting}
+              onCancelMeeting={(cancelRecurringMeeting) => {
                 editMeeting &&
-                  NEMeetingKit.actions.neMeeting
-                    ?.cancelMeeting(
-                      String(editMeeting.meetingId),
-                      cancelRecurringMeeting
-                    )
-                    .then((res) => {
-                      console.log(res)
-                      Toast.success(i18n.cancelScheduleMeetingSuccess)
-                      getMeetingList()
-                    })
-                    .catch((error) => {
-                      Toast.fail(
-                        error.msg ||
-                          (navigator.onLine
-                            ? i18n.cancelScheduleMeetingFail
-                            : i18n.networkError)
-                      )
-                    })
+                  cancelScheduleMeeting(
+                    String(editMeeting.meetingId),
+                    cancelRecurringMeeting
+                  )
               }}
               onSummit={(value) => {
                 setSubmitLoading(true)
-                scheduleMeeting({
-                  subject: value.subject,
-                  startTime: value.startTime,
-                  endTime: value.endTime,
-                  password: value.password,
-                  audioOff: value.audioOff,
-                  openLive: value.openLive,
-                  meetingId: value.meetingId,
-                  liveOnlyEmployees: value.liveOnlyEmployees,
-                  attendeeAudioOffType: value.attendeeAudioOffType,
-                  enableWaitingRoom: value.enableWaitingRoom,
-                  enableJoinBeforeHost: value.enableJoinBeforeHost,
-                  recurringRule: value.recurringRule,
-                })
+                createOrEditScheduleMeeting(value)
               }}
             />
             <HistoryMeetingModal
@@ -2088,6 +2450,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
           <PCTopButtons />
         </div>
       )}
+      {contextHolder}
       <div
         id="ne-web-meeting"
         style={
@@ -2132,6 +2495,15 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
         eventEmitter={NEMeetingKit.actions.neMeeting?.eventEmitter}
         onCancel={() => setNotificationListModalOpen(false)}
         onClick={handleNotificationClick}
+      />
+      <MeetingNotification
+        onClick={onNotificationClickHandler}
+        beforeMeeting={true}
+        beforeMeetingJoin={joinRoomByInvite}
+        notification={notificationApi}
+        customMessage={customMessage || undefined}
+        neMeeting={NEMeetingKit.actions.neMeeting}
+        onNotificationCardWinOpen={onNotificationCardWinOpen}
       />
       <ImageCropModal
         image={imageCropValueRef.current}

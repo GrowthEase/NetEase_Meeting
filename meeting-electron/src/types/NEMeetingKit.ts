@@ -1,10 +1,7 @@
 import {
-  CreateOptions,
-  CustomOptions,
   EventName,
   JoinOptions,
   LoginOptions,
-  LogName,
   MoreBarList,
   NEMeetingInitConfig,
   NEMember,
