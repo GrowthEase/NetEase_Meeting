@@ -47,7 +47,7 @@ import {
 import AudioIcon from '../../common/AudioIcon'
 import Modal from '../../common/Modal'
 import Toast from '../../common/toast'
-import Network from '../Network'
+import Network from '../../common/Network'
 import './index.less'
 
 import { useUpdateEffect } from 'ahooks'
@@ -58,8 +58,8 @@ import MuteVideoIcon from '../../../assets/mute-video.png'
 import { errorCodeMap } from '../../../config'
 import { getWindow } from '../../../utils/windowsProxy'
 import UserAvatar from '../../common/Avatar'
-import useMeetingPlugin from '../MeetingRightDrawer/MeetingPlugin/useMeetingPlugin'
 import MemberNotify, { MemberNotifyRef } from '../MemberNotify'
+import useMeetingPlugin from '../../../hooks/useMeetingPlugin'
 
 let closeModal
 
@@ -389,6 +389,28 @@ const ControlBar: React.FC<ControlBarProps> = ({
     }
     enableRoomBlackList(true)
   }
+  // 处理点击开关访客入会
+  async function handleEnableGuestJoin(event) {
+    event.stopPropagation()
+    // 如果是开启需要弹框二次确认
+    if (!meetingInfo.enableGuestJoin) {
+      Modal.confirm({
+        key: 'enableGuestJoin',
+        width: 370,
+        title: t('meetingGuestJoinConfirm'),
+        content: (
+          <>
+            <div>{t('meetingGuestJoinEnableTip')}</div>
+          </>
+        ),
+        onOk: async () => {
+          neMeeting?.sendHostControl(hostAction.changeGuestJoin, '', '1')
+        },
+      })
+      return
+    }
+    neMeeting?.sendHostControl(hostAction.changeGuestJoin, '', '0')
+  }
 
   async function handleVideo() {
     if (!deviceAccessStatusRef.current.camera && window.isElectronNative) {
@@ -428,7 +450,8 @@ const ControlBar: React.FC<ControlBarProps> = ({
               neMeeting?.muteLocalVideo()
             } else {
               Toast.fail(
-                e?.msg || t(errorCodeMap[e?.code] || 'unMuteVideoFail')
+                e?.msg ||
+                  t(errorCodeMap[e?.code] || 'participantUnMuteVideoFail')
               )
             }
           }
@@ -507,171 +530,204 @@ const ControlBar: React.FC<ControlBarProps> = ({
   const securityBtn = {
     id: 26,
     key: 'security',
-    icon: (
-      <Popover
-        destroyTooltipOnHide
-        align={
-          isElectronSharingScreen ? { offset: [0, 35] } : { offset: [0, -15] }
-        }
-        arrow={false}
-        trigger={['click']}
-        rootClassName="security-popover device-popover"
-        open={securityPopoverOpen}
-        getTooltipContainer={(node) => node}
-        autoAdjustOverflow={false}
-        placement={isElectronSharingScreen ? 'bottom' : 'top'}
-        content={
-          <>
-            <div className="device-list">
-              <div className="device-list-title">{t('securitySettings')}</div>
-              {globalConfig?.appConfig?.APP_ROOM_RESOURCE?.waitingRoom && (
-                <>
+    popover: (children) => {
+      return (
+        <Popover
+          destroyTooltipOnHide
+          align={
+            isElectronSharingScreen ? { offset: [0, 5] } : { offset: [0, -5] }
+          }
+          arrow={false}
+          trigger={['click']}
+          rootClassName="security-popover device-popover"
+          open={securityPopoverOpen}
+          getTooltipContainer={(node) => node}
+          onOpenChange={(open) => {
+            setSecurityPopoverOpen(open)
+          }}
+          autoAdjustOverflow={false}
+          placement={isElectronSharingScreen ? 'bottom' : 'top'}
+          content={
+            <>
+              <div className="device-list">
+                <div className="device-list-title">{t('securitySettings')}</div>
+                {globalConfig?.appConfig?.APP_ROOM_RESOURCE?.waitingRoom && (
+                  <>
+                    <div
+                      className="device-item"
+                      key="waitingRoom"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        handleWaitingRoom()
+                      }}
+                    >
+                      <div className="device-item-label">
+                        {t('waitingRoom')}
+                      </div>
+                      {meetingInfo.isWaitingRoomEnabled && (
+                        <svg className="icon iconfont" aria-hidden="true">
+                          <use xlinkHref="#iconcheck-line-regular1x"></use>
+                        </svg>
+                      )}
+                    </div>
+                  </>
+                )}
+                {meetingInfo.watermark?.videoStrategy ===
+                WATERMARK_STRATEGY.FORCE_OPEN ? null : (
                   <div
                     className="device-item"
-                    key="waitingRoom"
+                    key="meetingWatermark"
                     onClick={(event) => {
                       event.stopPropagation()
-                      handleWaitingRoom()
+                      const enable =
+                        meetingInfo.watermark?.videoStrategy ===
+                        WATERMARK_STRATEGY.OPEN
+                      const type = enable
+                        ? hostAction.closeWatermark
+                        : hostAction.openWatermark
+
+                      neMeeting?.sendHostControl(type, '')
                     }}
                   >
-                    <div className="device-item-label">{t('waitingRoom')}</div>
-                    {meetingInfo.isWaitingRoomEnabled && (
+                    <div className="device-item-label">
+                      {t('meetingWatermark')}
+                    </div>
+                    {meetingInfo.watermark?.videoStrategy ===
+                      WATERMARK_STRATEGY.OPEN && (
                       <svg className="icon iconfont" aria-hidden="true">
                         <use xlinkHref="#iconcheck-line-regular1x"></use>
                       </svg>
                     )}
                   </div>
-                </>
-              )}
-              {meetingInfo.watermark?.videoStrategy ===
-              WATERMARK_STRATEGY.FORCE_OPEN ? null : (
+                )}
                 <div
                   className="device-item"
-                  key="meetingWatermark"
+                  key="lockMeeting"
                   onClick={(event) => {
                     event.stopPropagation()
-                    const enable =
-                      meetingInfo.watermark?.videoStrategy ===
-                      WATERMARK_STRATEGY.OPEN
+                    const enable = !meetingInfo.isLocked
                     const type = enable
-                      ? hostAction.closeWatermark
-                      : hostAction.openWatermark
-
-                    neMeeting?.sendHostControl(type, '')
+                      ? hostAction.lockMeeting
+                      : hostAction.unlockMeeting
+                    const failMsg = enable
+                      ? t('meetingLockMeetingByHostFail')
+                      : t('meetingUnLockMeetingByHostFail')
+                    neMeeting
+                      ?.sendHostControl(type, '')
+                      .then(() => {
+                        // 通过判断 meetingInfo.isLocked  来显示
+                        // Toast.success(successMsg)
+                      })
+                      .catch((error) => {
+                        Toast.fail(failMsg)
+                        throw error
+                      })
                   }}
                 >
-                  <div className="device-item-label">
-                    {t('meetingWatermark')}
-                  </div>
-                  {meetingInfo.watermark?.videoStrategy ===
-                    WATERMARK_STRATEGY.OPEN && (
+                  <div className="device-item-label">{t('meetingLock')}</div>
+                  {meetingInfo.isLocked && (
                     <svg className="icon iconfont" aria-hidden="true">
                       <use xlinkHref="#iconcheck-line-regular1x"></use>
                     </svg>
                   )}
                 </div>
-              )}
-              <div
-                className="device-item"
-                key="lockMeeting"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  const enable = !meetingInfo.isLocked
-                  const type = enable
-                    ? hostAction.lockMeeting
-                    : hostAction.unlockMeeting
-                  const failMsg = enable
-                    ? t('meetingLockMeetingByHostFail')
-                    : t('meetingUnLockMeetingByHostFail')
-                  neMeeting
-                    ?.sendHostControl(type, '')
-                    .then(() => {
-                      // 通过判断 meetingInfo.isLocked  来显示
-                      // Toast.success(successMsg)
-                    })
-                    .catch((error) => {
-                      Toast.fail(failMsg)
-                      throw error
-                    })
-                }}
-              >
-                <div className="device-item-label">{t('meetingLock')}</div>
-                {meetingInfo.isLocked && (
-                  <svg className="icon iconfont" aria-hidden="true">
-                    <use xlinkHref="#iconcheck-line-regular1x"></use>
-                  </svg>
-                )}
-              </div>
-              <div
-                className="device-item"
-                key="blackList"
-                onClick={handleEnableBlackList}
-              >
-                <div className="device-item-label">
-                  {t('meetingBlacklist')}
-                  <Popover content={t('meetingBlacklistTip')}>
-                    <svg
-                      className="icon iconfont icona-45 nemeeting-blacklist-tip"
-                      aria-hidden="true"
-                    >
-                      <use xlinkHref="#icona-45"></use>
-                    </svg>
-                  </Popover>
-                </div>
+                <div
+                  className="device-item"
+                  key="blackList"
+                  onClick={handleEnableBlackList}
+                >
+                  <div className="device-item-label">
+                    {t('meetingBlacklist')}
+                    <Popover content={t('meetingBlacklistTip')}>
+                      <svg
+                        className="icon iconfont icona-45 nemeeting-blacklist-tip"
+                        aria-hidden="true"
+                      >
+                        <use xlinkHref="#icona-45"></use>
+                      </svg>
+                    </Popover>
+                  </div>
 
-                {meetingInfo.enableBlacklist && (
-                  <svg className="icon iconfont" aria-hidden="true">
-                    <use xlinkHref="#iconcheck-line-regular1x"></use>
-                  </svg>
-                )}
+                  {meetingInfo.enableBlacklist && (
+                    <svg className="icon iconfont" aria-hidden="true">
+                      <use xlinkHref="#iconcheck-line-regular1x"></use>
+                    </svg>
+                  )}
+                </div>
+                <div
+                  className="device-item"
+                  key="guestJoin"
+                  onClick={handleEnableGuestJoin}
+                >
+                  <div className="device-item-label">
+                    {t('meetingGuestJoin')}
+                    <Popover content={t('meetingGuestJoinEnableTip')}>
+                      <svg
+                        className="icon iconfont icona-45 nemeeting-blacklist-tip"
+                        aria-hidden="true"
+                      >
+                        <use xlinkHref="#icona-45"></use>
+                      </svg>
+                    </Popover>
+                  </div>
+
+                  {meetingInfo.enableGuestJoin && (
+                    <svg className="icon iconfont" aria-hidden="true">
+                      <use xlinkHref="#iconcheck-line-regular1x"></use>
+                    </svg>
+                  )}
+                </div>
               </div>
-            </div>
-            <div className="device-list">
-              <div className="device-list-title">
-                {t('meetingAllowMembersTo')}
+              <div className="device-list">
+                <div className="device-list-title">
+                  {t('meetingAllowMembersTo')}
+                </div>
+                <div
+                  className="device-item"
+                  key="lockMeeting"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    const chatPermission =
+                      meetingInfo.meetingChatPermission !== 4 ? 4 : 1
+                    neMeeting
+                      ?.sendHostControl(
+                        hostAction.changeChatPermission,
+                        '',
+                        chatPermission
+                      )
+                      .then(() => {
+                        if (chatPermission === 4) {
+                          Toast.info(t('meetingChatDisabled'))
+                        } else {
+                          Toast.success(t('meetingChatEnabled'))
+                        }
+                      })
+                      .catch((error) => {
+                        throw error
+                      })
+                  }}
+                >
+                  <div className="device-item-label">{t('meetingChat')}</div>
+                  {meetingInfo.meetingChatPermission !== 4 && (
+                    <svg className="icon iconfont" aria-hidden="true">
+                      <use xlinkHref="#iconcheck-line-regular1x"></use>
+                    </svg>
+                  )}
+                </div>
               </div>
-              <div
-                className="device-item"
-                key="lockMeeting"
-                onClick={(event) => {
-                  event.stopPropagation()
-                  const chatPermission =
-                    meetingInfo.meetingChatPermission !== 4 ? 4 : 1
-                  neMeeting
-                    ?.sendHostControl(
-                      hostAction.changeChatPermission,
-                      '',
-                      chatPermission
-                    )
-                    .then(() => {
-                      if (chatPermission === 4) {
-                        Toast.info(t('meetingChatDisabled'))
-                      } else {
-                        Toast.success(t('meetingChatEnabled'))
-                      }
-                    })
-                    .catch((error) => {
-                      throw error
-                    })
-                }}
-              >
-                <div className="device-item-label">{t('meetingChat')}</div>
-                {meetingInfo.meetingChatPermission !== 4 && (
-                  <svg className="icon iconfont" aria-hidden="true">
-                    <use xlinkHref="#iconcheck-line-regular1x"></use>
-                  </svg>
-                )}
-              </div>
-            </div>
-          </>
-        }
-      >
-        <div>
-          <svg className={classNames('icon iconfont')} aria-hidden="true">
-            <use xlinkHref="#iconanquan"></use>
-          </svg>
-        </div>
-      </Popover>
+            </>
+          }
+        >
+          {children}
+        </Popover>
+      )
+    },
+    icon: (
+      <div>
+        <svg className={classNames('icon iconfont')} aria-hidden="true">
+          <use xlinkHref="#iconanquan"></use>
+        </svg>
+      </div>
     ),
     label: t('security'),
     onClick: () => {
@@ -1012,7 +1068,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
           unReadChatroomMsgCount: 0,
         },
       })
-      onDefaultButtonClick?.('chat')
+      onDefaultButtonClick?.('chatroom')
     }, 300),
     hidden: localMember.hide || !meetingInfo.isSupportChatroom,
   }
@@ -1062,7 +1118,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
       })
       onDefaultButtonClick?.('notification')
     },
-    hidden: localMember.hide,
+    hidden: localMember.hide || meetingInfo.noNotifyCenter === true,
   }
 
   const liveBtn = {
@@ -1112,7 +1168,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
         21: chatBtn,
         20: inviteBtn,
         22: whiteBoardBtn,
-        26: securityBtn,
+        // 26: securityBtn,
         27: recordBtn,
         28: settingBtn,
         25: liveBtn,
@@ -1225,7 +1281,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
         27: recordBtn,
         28: settingBtn,
         25: liveBtn,
-        29: notificationBtn,
+        // 29: notificationBtn,
       }[item.id]
 
       const proxyItem = new Proxy(item, {
@@ -1297,67 +1353,77 @@ const ControlBar: React.FC<ControlBarProps> = ({
 
   const moreBtn = {
     key: 'more',
-    icon: (
-      <Popover
-        destroyTooltipOnHide
-        align={
-          isElectronSharingScreen ? { offset: [0, 35] } : { offset: [0, -15] }
-        }
-        arrow={false}
-        trigger={['click']}
-        rootClassName="more-button-popover"
-        open={moreBtnOpen}
-        getTooltipContainer={(node) => node}
-        autoAdjustOverflow={false}
-        placement={isElectronSharingScreen ? 'bottom' : 'top'}
-        content={
-          <div
-            className="more-button-list"
-            style={
-              moreButtons.length > 3
-                ? {
-                    flexWrap: 'wrap',
-                    width: 230,
-                  }
-                : undefined
-            }
-          >
-            {moreButtons.map((item) => {
-              return (
-                <div
-                  key={item.id}
-                  className="more-button-item"
-                  onClick={item.onClick}
-                >
-                  <Badge
-                    dot={
-                      meetingInfo.notificationMessages.filter(
-                        (msg) => msg.unRead && msg.sessionId === item.sessionId
-                      ).length > 0
+    popover: (children) => {
+      return (
+        <Popover
+          destroyTooltipOnHide
+          align={
+            isElectronSharingScreen ? { offset: [0, 5] } : { offset: [0, -5] }
+          }
+          arrow={false}
+          trigger={['click']}
+          rootClassName="more-button-popover"
+          open={moreBtnOpen}
+          getTooltipContainer={(node) => node}
+          onOpenChange={setMoreBtnOpen}
+          autoAdjustOverflow={false}
+          placement={isElectronSharingScreen ? 'bottom' : 'top'}
+          content={
+            <div
+              className="more-button-list"
+              style={
+                moreButtons.length > 3
+                  ? {
+                      flexWrap: 'wrap',
+                      width: 230,
                     }
+                  : undefined
+              }
+            >
+              {moreButtons.map((item) => {
+                return (
+                  <div
+                    key={item.id}
+                    className="more-button-item"
+                    onClick={() => {
+                      setMoreBtnOpen(false)
+                      item.onClick && item.onClick()
+                    }}
                   >
-                    {item.icon}
-                  </Badge>
-                  <div className="more-button-item-text">{item.label}</div>
-                </div>
-              )
-            })}
-          </div>
-        }
-      >
-        <div>
-          <Badge
-            dot={
-              meetingInfo.notificationMessages.filter((msg) => msg.unRead)
-                .length > 0
-            }
-          >
-            <svg className="icon iconfont" aria-hidden="true">
-              <use xlinkHref="#iconyx-tv-more1x"></use>
-            </svg>
-          </Badge>
-        </div>
-      </Popover>
+                    <Badge
+                      dot={
+                        meetingInfo.notificationMessages.filter(
+                          (msg) =>
+                            msg.unRead && msg.sessionId === item.sessionId
+                        ).length > 0
+                      }
+                    >
+                      {item.icon}
+                    </Badge>
+                    <div className="more-button-item-text">{item.label}</div>
+                  </div>
+                )
+              })}
+            </div>
+          }
+        >
+          {children}
+        </Popover>
+      )
+    },
+    icon: (
+      <div>
+        <Badge
+          dot={
+            meetingInfo.notificationMessages.filter((msg) => msg.unRead)
+              .length > 0
+          }
+        >
+          <svg className="icon iconfont" aria-hidden="true">
+            <use xlinkHref="#iconyx-tv-more1x"></use>
+          </svg>
+        </Badge>
+      </div>
     ),
     label: t('moreBtn'),
     hidden: localMember.hide || moreButtons.length === 0,
@@ -2694,25 +2760,32 @@ const ControlBar: React.FC<ControlBarProps> = ({
           {isElectronSharingScreen &&
           !isElectronSharingScreenToolsShow ? null : (
             <>
-              {buttons.map((button) => (
-                <div key={button.key} className="control-bar-button-item-box">
-                  <div
-                    className="control-bar-button-item"
-                    onClick={button.onClick}
-                  >
-                    {button.icon}
+              {buttons.map((button) => {
+                const content = (
+                  <>
                     <div
-                      className={classNames('control-bar-button-item-text', {
-                        ['audio-text']:
-                          button.key === 'audio' || button.key === 'record',
-                      })}
+                      className="control-bar-button-item"
+                      onClick={button.onClick}
                     >
-                      {button.label}
+                      {button.icon}
+                      <div
+                        className={classNames('control-bar-button-item-text', {
+                          ['audio-text']:
+                            button.key === 'audio' || button.key === 'record',
+                        })}
+                      >
+                        {button.label}
+                      </div>
                     </div>
+                  </>
+                )
+                return (
+                  <div key={button.key} className="control-bar-button-item-box">
+                    {button.popover ? button.popover(content) : content}
+                    {renderDevicePopoverContent(button.key)}
                   </div>
-                  {renderDevicePopoverContent(button.key)}
-                </div>
-              ))}
+                )
+              })}
               {isElectronSharingScreen ? (
                 <div className="control-bar-stop-sharing-button">
                   <span onClick={shareScreen}>{t('screenShareStop')}</span>

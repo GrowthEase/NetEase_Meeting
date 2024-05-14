@@ -293,6 +293,45 @@ typedef enum {
      * @endif
      */
     kNERtcChannelProfileLiveBroadcasting = 1,
+    /**
+     * @if Chinese
+     * 视频 1对1 呼叫场景。该场景会关闭视频大小流模式、自动打开视频、自动订阅视频、视频格式为 640x360/480 @ 15 fps、传输策略为保清晰度，高码流、音频编码采样率为16k，码率为20kbps。
+     * @since V5.5.40
+     * @endif
+     */
+    kNERtcChannelProfileVideoCall = 3,
+    
+    /**
+     * @if Chinese
+     * 清晰度较高的 1对1 呼叫场景。该场景会关闭视频大小流模式、自动打开视频、自动订阅视频、视频格式为 960x540 @ 15 fps、传输策略为保清晰度，高码流、音频编码采样率为24k，码率为48kbps。
+     * @since V5.5.40
+     * @endif
+     */
+    kNERtcChannelProfileHighQualityVideoCall = 4,
+    
+    /**
+     * @if Chinese
+     * 语聊房场景。该场景会关闭视频大小流模式、关闭自动打开视频、关闭自动订阅视频、视频格式为 640x360/480 @ 15 fps、传输策略为保清晰度，高码流、音频编码采样率为48k，码率为48kbps。
+     * @since V5.5.40
+     * @endif
+     */
+    kNERtcChannelProfileChatroom = 5,
+    
+    /**
+     * @if Chinese
+     * 高品质语聊房场景。该场景会关闭视频大小流模式、关闭自动打开视频、关闭自动订阅视频、视频格式为 640x360/480 @ 15 fps、传输策略为保清晰度，高码流、音频编码采样率为48k，码率为96kbps。
+     * @since V5.5.40
+     * @endif
+     */
+    kNERtcChannelProfileHighQualityChatroom = 6,
+    
+    /**
+     * @if Chinese
+     * 会议场景。该场景会打开视频大小流模式、关闭自动打开视频、关闭自动订阅视频、视频格式为 1280x720/ @ 30 fps、传输策略为清晰度和帧率平衡，低码流、音频编码采样率为24k，码率为48kbps。
+     * @since V5.5.40
+     * @endif
+     */
+    kNERtcChannelProfileMeeting = 7,
 } NERtcChannelProfileType;
 
 /**
@@ -1171,10 +1210,10 @@ typedef enum {
     kNERtcAudioProfileStandardExtend = 2,
     /**
      * @if English
-     * 3: Medium-quality audio encoding, 48000Hz, 64kbps.
+     * 3: Medium-quality audio encoding, 48000Hz, 48kbps.
      * @endif
      * @if Chinese
-     * 3: 中等质量的音频编码，48000Hz，64Kbps
+     * 3: 中等质量的音频编码，48000Hz，48Kbps
      * @endif
      */
     kNERtcAudioProfileMiddleQuality = 3,

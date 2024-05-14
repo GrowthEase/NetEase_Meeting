@@ -30,6 +30,7 @@ import {
   ActionType,
   EventType,
   hostAction,
+  NEClientType,
   NEMeetingInfo,
   NEMember,
   Role,
@@ -195,7 +196,7 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
         isViewHistory,
         nim: neMeeting?.imInfo?.nim,
         chatroomController: neMeeting?.chatController,
-        roomService: neMeeting?.roomService || roomService,
+        roomService: roomService || neMeeting?.roomService,
         roomArchiveId: meetingInfo.roomArchiveId || roomArchiveId,
         memberList: chatroomMemberList,
         waitingRoomMembers: chatroomWaitingRoomMemberList,
@@ -279,7 +280,7 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
               event: 'chatroomOnMsgs',
               payload: cacheMsgs,
             },
-            '*'
+            parentWindow.origin
           )
         },
         onPrivateChatMemberSelectOpen: (open) => {
@@ -386,7 +387,6 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
       })
     }
     eventEmitter?.on(EventType.ReceiveChatroomMessages, (messages) => {
-      console.log('ReceiveChatroomMessages', messages)
       messages.forEach((element) => {
         if (element.fromUserUuid && !element.from) {
           element.from = element.fromUserUuid
@@ -514,7 +514,11 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
     const other: NEMember[] = []
     const chatroomMemberList = isWaitingRoom ? hostOrCohostList : memberList
     chatroomMemberList
-      .filter((member) => member.uuid != meetingInfo.myUuid)
+      .filter(
+        (member) =>
+          member.uuid != meetingInfo.myUuid &&
+          member.clientType !== NEClientType.SIP
+      )
       .forEach((member) => {
         if (member.role === Role.host) {
           host.push(member)

@@ -319,10 +319,16 @@ public:
      * @if Chinese
      * 设置房间场景。
      * <br>
-     * 通过此接口可以实现设置房间场景为通话（默认）或直播场景。针对不同场景采取的优化策略不同，如通话场景侧重语音流畅度，直播场景侧重视频清晰度。
+     * 通过此接口可以实现设置房间场景为通话（默认）、直播场景、视频 1对1 呼叫场景、语聊房场景等。针对不同场景采取的优化策略不同，如通话场景侧重语音流畅度，直播场景侧重视频清晰度。
      * @since V3.6.0
+     * @note
+     * - 同一个房间内的用户建议使用同一种房间场景以获得最佳效果。
+     * - 设置场景会影响音视频码率、帧率、视频分辨率、视频大小流模式、自动打开视频、自动订阅视频、传输策略。
+     * - 调用此函数将覆盖上一次调用此函数设置的场景。
+     * - 调用此函数场景类型为视频 1对1 呼叫场景、清晰度较高的 1对1 呼叫场景等v5.5.40新增的房间场景将覆盖你通过 {@link setVideoConfig}, { @link  setAudioProfile} 等 API 设置的音视频相关配置，因此建议先第一时间设置场景再通过其他 API 调整音视频配置。
+     * - V5.5.40 之前就存在通信场景和直播场景，设置通信场景和直播场景，不会覆盖  {@link setVideoConfig}, { @link  setAudioProfile} 等 API 设置的音视频相关配置
      * @par 调用时机
-     * 请在初始化后调用该方法，且该方法仅可在加入房间前调用。
+     * 请在初始化后调用该方法，且该方法仅可在加入房间前调用。建议在初始化之后先调此方法，再调别的 API 设置的音视频相关配置。
      * @par 参数说明
      * <table>
      *  <tr>
@@ -333,7 +339,7 @@ public:
      *  <tr>
      *      <td>profile</td>
      *      <td> \ref nertc::NERtcChannelProfileType "NERtcChannelProfileType"</td>
-     *      <td>设置房间场景：<ul><li>kNERtcChannelProfileCommunication（0）：通话场景。<li>kNERtcChannelProfileLiveBroadcasting（1）：直播场景。</td>
+     *      <td>设置房间场景：<ul><li>kNERtcChannelProfileCommunication（0）：通话场景。<li>kNERtcChannelProfileLiveBroadcasting（1）：直播场景。<li>kNERtcChannelProfileVideoCall (3)：视频 1对1 呼叫场景。 <li>kNERtcChannelProfileHighQualityVideoCall (4)：清晰度较高的 1对1 呼叫场景。 <li>kNERtcChannelProfileChatroom (5)：语聊房场景。<li>kNERtcChannelProfileHighQualityChatroom (6)：高品质语聊房场景。<li>kNERtcChannelProfileMeeting (7)：会议场景。</td>
      *  </tr>
      * </table>
      * @par 示例代码

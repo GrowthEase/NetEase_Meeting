@@ -1,18 +1,19 @@
 import React, { FC, useEffect, useMemo, useState } from 'react';
 import BaseInput, { InputProps } from './baseInput';
-import styles from './index.less';
+import './index.less';
 import { sendVerifyCodeApi } from '../../api';
-import { message, Button } from 'antd';
+import { Button } from 'antd';
 import Toast from '../../../../src/components/common/toast';
 import { useTranslation } from 'react-i18next';
 
 interface VerifyCodeInputProps extends InputProps {
+  appKey?: string;
   scene: number; // 1-登录 2-注册 3-修改密码(新版本1：登录并注册)
 }
 
 const VerifyCodeInput: FC<InputProps> = (props) => {
   const { t } = useTranslation();
-  const { phone, scene, ...otherProps } = props;
+  const { phone, scene, appKey, ...otherProps } = props;
   const [count, setCount] = useState(60);
 
   const checkCode = (value: string) => {
@@ -32,6 +33,7 @@ const VerifyCodeInput: FC<InputProps> = (props) => {
     if (!phone) return;
     setCount(59);
     sendVerifyCodeApi({
+      appKey,
       mobile: phone,
       scene,
     }).catch((e) => {
@@ -40,7 +42,7 @@ const VerifyCodeInput: FC<InputProps> = (props) => {
   };
   const sendCodeStyle = {
     fontSize: '14px',
-    width: '70px',
+    // width: '70px',
     margin: 0,
     padding: 0,
     height: '30px',
@@ -48,7 +50,7 @@ const VerifyCodeInput: FC<InputProps> = (props) => {
   const suffix = useMemo(() => {
     return count < 60 ? (
       <span style={{ fontSize: 14, color: '#333' }}>
-        <span className={styles.countdown}>{count}s</span>
+        <span className="countdown">{count}s</span>
         {t('authResendCode')}
       </span>
     ) : (
@@ -65,7 +67,7 @@ const VerifyCodeInput: FC<InputProps> = (props) => {
 
   return (
     <BaseInput
-      className={`${styles.verifyCodeInput} ${styles.baseInputContent}`}
+      className={`verifyCodeInput baseInputContent`}
       validator={checkCode}
       hasClear={true}
       suffix={suffix}

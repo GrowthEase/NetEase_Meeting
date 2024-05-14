@@ -1,4 +1,8 @@
+declare module '*.jpg'
+declare module '*.png'
+
 interface Window {
+  h5App?: boolean
   systemPlatform?: 'win32' | 'darwin'
   isElectronNative?: boolean
   NERoom?: any

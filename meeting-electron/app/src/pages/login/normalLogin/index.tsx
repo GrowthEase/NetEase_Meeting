@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   PhoneInput,
   VerifyCodeInput,
@@ -17,6 +17,7 @@ import LoginHeader from '../header';
 import { useTranslation } from 'react-i18next';
 
 interface LoginComProps {
+  checkIsAgree: () => boolean;
   style?: Record<string, string>;
   onSSOLogin: () => void;
   goBack: () => void;
@@ -24,6 +25,7 @@ interface LoginComProps {
 }
 
 export const LoginCom: React.FC<LoginComProps> = ({
+  checkIsAgree,
   style = {},
   onSSOLogin,
   goBack,
@@ -61,6 +63,9 @@ export const LoginCom: React.FC<LoginComProps> = ({
   }, [loading]);
 
   const logins = () => {
+    if (!checkIsAgree()) {
+      return;
+    }
     setLoading(true);
     const payload = isCode
       ? {
@@ -138,25 +143,13 @@ export const LoginCom: React.FC<LoginComProps> = ({
         >
           {t('authLogin')}
         </Button>
-        <div className={styles.toggleLogin}>
-          <div className={classnames(styles.footer, 'login-footer')}>
-            <span
-              onClick={
-                () => {
-                  onSSOLogin();
-                }
-                // history.push({
-                //   pathname: newVersion ? '/login/sso/v2' : '/login/sso',
-                //   query: {
-                //     returnURL: history.location.query?.returnURL as string,
-                //     backUrl: history.location.query?.backUrl as string,
-                //   },
-                // })
-              }
-            >
-              {t('authLoginBySSO')}
-            </span>
-          </div>
+        <div
+          className={styles.toggleLogin}
+          onClick={() => {
+            onSSOLogin();
+          }}
+        >
+          {t('authLoginBySSO')}
         </div>
       </section>
       <Modal

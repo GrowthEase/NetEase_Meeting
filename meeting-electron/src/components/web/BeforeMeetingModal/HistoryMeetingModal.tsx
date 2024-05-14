@@ -491,7 +491,7 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
                           },
                         },
                       },
-                      '*'
+                      parentWindow.origin
                     )
                   } else {
                     setChatroomArchiveId(currentMeeting.roomArchiveId)
@@ -538,7 +538,7 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
                             },
                           },
                         },
-                        '*'
+                        parentWindow.origin
                       )
                     } else {
                       setCurrentPluginInfo({

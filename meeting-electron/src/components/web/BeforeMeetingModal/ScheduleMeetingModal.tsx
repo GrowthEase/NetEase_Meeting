@@ -1,4 +1,12 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 
 import {
   Button,
@@ -36,6 +44,11 @@ import en_US from 'antd/es/date-picker/locale/en_US'
 import ja_JP from 'antd/es/date-picker/locale/ja_JP'
 import zh_CN from 'antd/es/date-picker/locale/zh_CN'
 import EventEmitter from 'eventemitter3'
+import useUserInfo from '../../../hooks/useUserInfo'
+import NEMeetingService from '../../../services/NEMeeting'
+import { NEMeetingScheduledMember, Role } from '../../../types/type'
+import ParticipantAdd from './ParticipantAdd'
+import PreviewMemberList from './ParticipantAdd/PreviewMemberList'
 import PeriodicMeeting from './PeriodicMeeting'
 
 dayjs.extend(weekday)
@@ -157,7 +170,7 @@ const PasswordFormItem: React.FC<PasswordFormItemProps> = ({
           )}
         </div>
       )}
-      {enableWaitingRoom && (
+      {/* {enableWaitingRoom && (
         <div>
           <Checkbox
             disabled={disabled}
@@ -178,7 +191,7 @@ const PasswordFormItem: React.FC<PasswordFormItemProps> = ({
             </Popover>
           </Checkbox>
         </div>
-      )}
+      )} */}
     </div>
   )
 }
@@ -195,7 +208,9 @@ type SummitValue = {
   attendeeAudioOffType?: AttendeeOffType
   enableWaitingRoom?: boolean
   enableJoinBeforeHost?: boolean
+  enableGuestJoin?: boolean
   recurringRule?: any
+  scheduledMembers?: NEMeetingScheduledMember[]
 }
 
 interface ScheduleMeetingModalProps extends ModalProps {
@@ -206,23 +221,68 @@ interface ScheduleMeetingModalProps extends ModalProps {
   onCancelMeeting?: (cancelRecurringMeeting?: boolean) => void
   onJoinMeeting?: (meetingNum: string) => void
   onSummit?: (value: SummitValue) => void
-  globalConfig: GetMeetingConfigResponse | null
+  globalConfig?: GetMeetingConfigResponse
   onCancel?: () => void
   eventEmitter: EventEmitter
+  neMeeting?: NEMeetingService
 }
 
-const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
-  meeting,
-  nickname,
-  submitLoading,
-  appLiveAvailable,
-  onCancelMeeting,
-  onJoinMeeting,
-  onSummit,
-  globalConfig,
-  eventEmitter,
-  ...restProps
-}) => {
+const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = (props) => {
+  const {
+    meeting,
+    nickname,
+    submitLoading,
+    appLiveAvailable,
+    onCancelMeeting,
+    onJoinMeeting,
+    onSummit,
+    globalConfig,
+    eventEmitter,
+    neMeeting,
+    ...restProps
+  } = props
+  const { t } = useTranslation()
+  const scheduleMeetingRef = useRef<ScheduleMeetingRef>(null)
+
+  return (
+    <Modal
+      title={t('scheduleMeeting')}
+      width={375}
+      maskClosable={false}
+      destroyOnClose
+      wrapClassName="user-select-none"
+      footer={null}
+      {...restProps}
+      onCancel={(e) => {
+        scheduleMeetingRef.current?.handleCancelEditMeeting()
+      }}
+    >
+      <ScheduleMeeting ref={scheduleMeetingRef} {...props} />
+    </Modal>
+  )
+}
+
+export type ScheduleMeetingRef = {
+  handleCancelEditMeeting: () => void
+}
+
+const ScheduleMeeting = forwardRef<
+  ScheduleMeetingRef,
+  React.PropsWithChildren<ScheduleMeetingModalProps>
+>((props, ref) => {
+  const {
+    meeting,
+    nickname,
+    submitLoading,
+    appLiveAvailable,
+    onCancelMeeting,
+    onJoinMeeting,
+    onSummit,
+    globalConfig,
+    eventEmitter,
+    neMeeting,
+    ...restProps
+  } = props
   const { t } = useTranslation()
   const [editRecurringType, setEditRecurringType] = useState<
     'current' | 'all' | ''
@@ -262,6 +322,7 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
     meetingTitleError: t('subjectTitlePlaceholder'),
     autoMuteAllowOpen: t('autoMuteAllowOpen'),
     autoMuteNotAllowOpen: t('autoMuteNotAllowOpen'),
+    meetingAttendees: t('meetingAttendees'),
   }
 
   const [form] = Form.useForm()
@@ -270,8 +331,14 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
   const endTime = Form.useWatch('endTime', form)
   const openLive = Form.useWatch('openLive', form)
   const openAutoMute = Form.useWatch('audioOff', form)
+  const enableGuestJoin = Form.useWatch('enableGuestJoin', form)
+  const formScheduledMembers = Form.useWatch('scheduledMembers', form)
 
   const [isDetail, setIsDetail] = React.useState(false)
+  const [scheduledMembers, setScheduledMembers] = useState<
+    NEMeetingScheduledMember[] | undefined
+  >(undefined)
+  const { userInfo } = useUserInfo()
 
   function passwordValidator(rule: any, value: PasswordValue) {
     if (value?.enable && !/^\d{6}$/.test(value?.password)) {
@@ -392,8 +459,10 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
         endTime: values.endTime.startOf('minute').valueOf(),
         openLive: values.openLive,
         liveOnlyEmployees: values.liveOnlyEmployees,
-        enableWaitingRoom: values.meetingPassword?.enableWaitingRoom,
+        enableWaitingRoom: values.enableWaitingRoom,
+        enableGuestJoin: values.enableGuestJoin,
         enableJoinBeforeHost: values.enableJoinBeforeHost,
+        scheduledMembers: values.scheduledMembers,
       }
       if (values.audioOff) {
         data.audioOff = true
@@ -496,7 +565,21 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
       openLive: meeting?.settings.roomInfo.roomConfig.resource.live,
       enableJoinBeforeHost: meeting?.settings.roomInfo.enableJoinBeforeHost,
       liveOnlyEmployees: liveOnlyEmployees,
+      scheduledMembers: meeting.scheduledMembers,
+      enableWaitingRoom: meeting?.settings.roomInfo.openWaitingRoom,
+      enableGuestJoin:
+        meeting?.settings.roomInfo.roomProperties?.guest?.value === '1',
     })
+    if (meeting.scheduledMembers && meeting.scheduledMembers.length > 0) {
+      setScheduledMembers(meeting.scheduledMembers)
+    } else {
+      setScheduledMembers([
+        {
+          userUuid: meeting?.ownerUserUuid || '',
+          role: Role.host,
+        },
+      ])
+    }
     const audioOff = meeting.settings.roomInfo.roomProperties?.audioOff
     if (audioOff) {
       const audioOffValue = audioOff.value?.split('_')[0]
@@ -509,7 +592,6 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
     }
     const recurringRule = meeting.recurringRule
     let repeatInfo: any
-    console.log('recurringRule>>>>>>', recurringRule)
     if (recurringRule && recurringRule.type != MeetingRepeatType.NoRepeat) {
       repeatInfo = {
         enable: true,
@@ -563,8 +645,15 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
           audioOff: false,
           openLive: false,
           liveOnlyEmployees: false,
+          enableWaitingRoom: false,
+          enableGuestJoin: false,
+          scheduledMembers: [],
         })
       }
+
+      // 重置
+      setEditRecurringType('')
+      cancelRecurringRef.current = false
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restProps.open, meeting])
@@ -761,7 +850,7 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
     }
   }, [openRecurringModalType])
 
-  const handleCancelEditMeeting = (e) => {
+  const handleCancelEditMeeting = useCallback(() => {
     const recurringRule = meeting?.recurringRule
     // 当前编辑的是周期性会议
     if (
@@ -777,77 +866,26 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
         restProps.onCancel?.()
       }
     }
-  }
+  }, [isDetail, meeting?.recurringRule])
+
+  const showEditBtn = useMemo(() => {
+    if (meeting) {
+      return meeting?.ownerUserUuid === userInfo?.userUuid
+    } else {
+      return true
+    }
+  }, [meeting?.ownerUserUuid, userInfo?.userUuid])
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      handleCancelEditMeeting,
+    }),
+    [handleCancelEditMeeting]
+  )
+
   return (
-    <Modal
-      title={i18n.title}
-      width={375}
-      maskClosable={false}
-      destroyOnClose
-      afterClose={() => {
-        cancelRecurringRef.current = false
-        setOpenRecurringModalType('')
-      }}
-      wrapClassName="user-select-none"
-      footer={
-        <div className="before-meeting-modal-footer before-meeting-schedule-modal-footer">
-          {isDetail && meeting?.state === 1 && (
-            <Button
-              className="before-meeting-modal-footer-button"
-              onClick={() => {
-                setOpenRecurringModalType('cancel')
-              }}
-              danger
-            >
-              {i18n.cancelBtn}
-            </Button>
-          )}
-          {isDetail && meeting?.state === 1 && (
-            <Button
-              type="primary"
-              className="before-meeting-modal-footer-button"
-              ghost
-              onClick={() => handleEdit()}
-            >
-              {i18n.editBtn}
-            </Button>
-          )}
-          {isDetail && (
-            <Button
-              className="before-meeting-modal-footer-button"
-              type="primary"
-              onClick={() => meeting && onJoinMeeting?.(meeting.meetingNum)}
-            >
-              {i18n.joinBtn}
-            </Button>
-          )}
-          {!isDetail && (
-            <Button
-              className="before-meeting-modal-footer-button"
-              type="primary"
-              loading={submitLoading}
-              onClick={() => onFinish()}
-            >
-              {meeting ? i18n.saveBtn : i18n.submitBtn}
-            </Button>
-          )}
-          {/*是否编辑周期性会议弹窗*/}
-          <Modal
-            title={modalTile}
-            width={375}
-            className={'schedule-recurring-edit-modal'}
-            open={!!openRecurringModalType}
-            destroyOnClose
-            onCancel={() => setOpenRecurringModalType('')}
-            footer={modalFooter}
-          >
-            {modalContent}
-          </Modal>
-        </div>
-      }
-      {...restProps}
-      onCancel={handleCancelEditMeeting}
-    >
+    <>
       <div className="before-meeting-modal-content">
         <div className="schedule-meeting-container">
           <Form name="basic" autoComplete="off" layout="vertical" form={form}>
@@ -865,6 +903,31 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
                 disabled={isDetail}
               />
             </Form.Item>
+            {isDetail ? (
+              <PreviewMemberList
+                ownerUserUuid={meeting?.ownerUserUuid}
+                neMeeting={neMeeting}
+                members={scheduledMembers}
+                myUuid={userInfo?.userUuid}
+              />
+            ) : (
+              globalConfig?.appConfig?.MEETING_SCHEDULED_MEMBER_CONFIG
+                ?.enable && (
+                <Form.Item
+                  name="scheduledMembers"
+                  label={`${i18n.meetingAttendees}(${
+                    formScheduledMembers?.length || 1
+                  })`}
+                >
+                  <ParticipantAdd
+                    canEdit={!isDetail}
+                    neMeeting={neMeeting}
+                    globalConfig={globalConfig}
+                    ownerUserUuid={meeting?.ownerUserUuid}
+                  />
+                </Form.Item>
+              )
+            )}
             {meeting && isDetail && (
               <Form.Item name="meetingId" label={i18n.meetingId}>
                 <div className="schedule-detail-item">
@@ -957,13 +1020,57 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
               name="meetingPassword"
               label={i18n.meetingPassword}
               rules={[{ validator: passwordValidator }]}
+              style={{ marginBottom: 0 }}
             >
-              <PasswordFormItem
-                disabled={isDetail}
-                enableWaitingRoom={
-                  !!globalConfig?.appConfig?.APP_ROOM_RESOURCE.waitingRoom
-                }
-              />
+              {(!meeting?.ownerUserUuid ||
+                meeting?.ownerUserUuid == userInfo?.userUuid) && (
+                <PasswordFormItem
+                  disabled={isDetail}
+                  enableWaitingRoom={
+                    !!globalConfig?.appConfig?.APP_ROOM_RESOURCE.waitingRoom
+                  }
+                />
+              )}
+            </Form.Item>
+            <Form.Item
+              name="enableWaitingRoom"
+              valuePropName="checked"
+              style={{ marginBottom: 0 }}
+            >
+              <Checkbox disabled={isDetail}>
+                <span className="checkbox-item">
+                  {t('waitingRoom')}{' '}
+                  <Popover content={t('waitingRoomTip')}>
+                    <svg className="icon iconfont icona-45" aria-hidden="true">
+                      <use xlinkHref="#icona-45"></use>
+                    </svg>
+                  </Popover>
+                </span>
+              </Checkbox>
+            </Form.Item>
+            <Form.Item
+              name="enableGuestJoin"
+              valuePropName="checked"
+              extra={
+                enableGuestJoin ? (
+                  <span style={{ color: '#FF7903' }}>
+                    {t('meetingGuestJoinSecurityNotice')}
+                  </span>
+                ) : (
+                  ''
+                )
+              }
+            >
+              <Checkbox disabled={isDetail}>
+                <span className="checkbox-item">
+                  {t('meetingGuestJoin')}{' '}
+                  <Popover content={t('meetingGuestJoinEnableTip')}>
+                    <svg className="icon iconfont icona-45" aria-hidden="true">
+                      <use xlinkHref="#icona-45"></use>
+                    </svg>
+                  </Popover>
+                </span>
+              </Checkbox>
             </Form.Item>
             <div className="nemeeting-schedule-setting">
               {i18n.meetingSetting}
@@ -1047,7 +1154,65 @@ const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = ({
           </Form>
         </div>
       </div>
-    </Modal>
+      <div className="before-meeting-modal-footer before-meeting-schedule-modal-footer">
+        {isDetail && meeting?.state === 1 && showEditBtn && (
+          <Button
+            className="before-meeting-modal-footer-button"
+            onClick={() => {
+              setOpenRecurringModalType('cancel')
+            }}
+            danger
+          >
+            {i18n.cancelBtn}
+          </Button>
+        )}
+        {isDetail && meeting?.state === 1 && showEditBtn && (
+          <Button
+            type="primary"
+            className="before-meeting-modal-footer-button"
+            ghost
+            onClick={() => handleEdit()}
+          >
+            {i18n.editBtn}
+          </Button>
+        )}
+        {isDetail && (
+          <Button
+            className="before-meeting-modal-footer-button"
+            type="primary"
+            onClick={() => meeting && onJoinMeeting?.(meeting.meetingNum)}
+          >
+            {i18n.joinBtn}
+          </Button>
+        )}
+        {!isDetail && showEditBtn && (
+          <Button
+            className="before-meeting-modal-footer-button"
+            type="primary"
+            loading={submitLoading}
+            onClick={() => onFinish()}
+          >
+            {meeting ? i18n.saveBtn : i18n.submitBtn}
+          </Button>
+        )}
+      </div>
+      {/*是否编辑周期性会议弹窗*/}
+      <Modal
+        title={modalTile}
+        width={375}
+        className={'schedule-recurring-edit-modal'}
+        open={!!openRecurringModalType}
+        destroyOnClose
+        onCancel={() => setOpenRecurringModalType('')}
+        getContainer={false}
+        footer={modalFooter}
+      >
+        {modalContent}
+      </Modal>
+    </>
   )
-}
+})
+
+export { ScheduleMeeting }
+
 export default ScheduleMeetingModal

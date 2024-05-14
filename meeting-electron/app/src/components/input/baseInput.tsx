@@ -5,7 +5,7 @@
  *   - 错误信息展示
  */
 import React, { FC, FormEvent, useEffect, useState } from 'react';
-import styles from './index.less';
+import './index.less';
 import { Input } from 'antd';
 
 export interface InputProps {
@@ -71,10 +71,10 @@ const BaseInput: FC<InputProps> = (props) => {
   };
 
   return (
-    <div className={styles.baseInput}>
+    <div className={'baseInput'}>
       {otherProps.ispassword === 'true' ? (
         <Input.Password
-          className={styles.baseInputContent}
+          className={'baseInputContent'}
           size={otherProps.size || 'large'}
           allowClear={hasClear}
           onChange={inputChange}
@@ -83,7 +83,7 @@ const BaseInput: FC<InputProps> = (props) => {
         />
       ) : (
         <Input
-          className={styles.baseInputContent}
+          className={'baseInputContent'}
           size={otherProps.size || 'large'}
           allowClear={hasClear}
           onChange={inputChange}
@@ -92,7 +92,7 @@ const BaseInput: FC<InputProps> = (props) => {
         />
       )}
 
-      {!valid && <div className={styles.tip}>{errorTip}</div>}
+      {!valid && <div className={'tip'}>{errorTip}</div>}
     </div>
   );
 };

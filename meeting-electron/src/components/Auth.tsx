@@ -20,7 +20,6 @@ import {
   LoginOptions,
   MeetingEventType,
   MeetingInfoContextInterface,
-  MeetingSetting,
   StaticReportType,
 } from '../types'
 import {
@@ -38,6 +37,7 @@ import {
   Role,
   ToolBarList,
 } from '../types/type'
+import { getLocalStorageSetting } from '../utils'
 import { IntervalEvent } from '../utils/report'
 import Modal from './common/Modal'
 import Toast from './common/toast'
@@ -158,6 +158,18 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       )
     })
     eventEmitter?.on(
+      UserEventType.JoinOtherMeeting,
+      (data: JoinOptions, callback) => {
+        const options = { ...joinOptionRef.current, ...data }
+        setPasswordDialogShow(false)
+        joinMeetingHandler({
+          options,
+          callback,
+          isJoinOther: true,
+        })
+      }
+    )
+    eventEmitter?.on(
       UserEventType.RejoinMeeting,
       (data: { isAudioOn: boolean; isVideoOn: boolean }) => {
         if (joinOptionRef.current) {
@@ -168,7 +180,6 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
           ...joinOptionRef.current,
           password: passwordRef.current,
         }
-        console.log('optons>>>>>>', joinOptionRef)
         setPasswordDialogShow(false)
         if (isAnonymousLogin) {
           outEventEmitter?.emit(UserEventType.AnonymousJoinMeeting, {
@@ -193,38 +204,13 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
     )
     outEventEmitter?.on(
       UserEventType.JoinMeeting,
-      (data: { options: JoinOptions; callback: any; isRejoin?: boolean }) => {
-        setIsJoining(true)
-        const { options, callback } = data
-        callbackRef.current = callback
-        joinMeeting(options)
-          .then(() => {
-            if (data.isRejoin) {
-              return
-            }
-            callback && callback()
-          })
-          .catch((e) => {
-            if (data.isRejoin) {
-              // 会议已被锁定或者已结束、被加入黑名单
-              if (e.code === 1019 || e.code == 3102 || e.code === 601011) {
-                setTimeout(() => {
-                  outEventEmitter?.emit(
-                    UserEventType.onMeetingStatusChanged,
-                    NEMeetingStatus.MEETING_STATUS_FAILED
-                  )
-                }, 1000)
-
-                return
-              }
-              handleRejoinFailed()
-              return
-            }
-            callback && callback(e)
-          })
-          .finally(() => {
-            setIsJoining(false)
-          })
+      (data: {
+        options: JoinOptions
+        callback: any
+        isRejoin?: boolean
+        type: 'join' | 'joinByInvite'
+      }) => {
+        joinMeetingHandler(data)
       }
     )
     outEventEmitter?.on(
@@ -233,7 +219,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         setIsJoining(true)
         const { options, callback } = data
         callbackRef.current = callback
-        anonymousJoin(options)
+        anonymousJoin(options, data.isRejoin)
           .then(() => {
             // 断网重新入会不需要触发回调
             if (data.isRejoin) {
@@ -269,8 +255,57 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
     }
   }, [])
 
+  function joinMeetingHandler(data: {
+    options: JoinOptions
+    callback: any
+    isRejoin?: boolean
+    isJoinOther?: boolean
+  }) {
+    setIsJoining(true)
+    const { options, callback } = data
+    callbackRef.current = callback
+    dispatch?.({
+      type: ActionType.RESET_MEMBER,
+      data: null,
+    })
+    dispatch &&
+      dispatch({
+        type: ActionType.RESET_MEETING,
+        data: null,
+      })
+    joinMeeting(options, data.isJoinOther, data.isRejoin)
+      .then(() => {
+        if (data.isRejoin) {
+          return
+        }
+        callback && callback()
+      })
+      .catch((e) => {
+        if (data.isRejoin) {
+          // 会议已被锁定或者已结束、被加入黑名单
+          if (e.code === 1019 || e.code == 3102 || e.code === 601011) {
+            setTimeout(() => {
+              outEventEmitter?.emit(
+                UserEventType.onMeetingStatusChanged,
+                NEMeetingStatus.MEETING_STATUS_FAILED
+              )
+            }, 1000)
+
+            return
+          }
+          handleRejoinFailed()
+          return
+        }
+        callback && callback(e)
+      })
+      .finally(() => {
+        setIsJoining(false)
+      })
+  }
   function handleRejoinFailed() {
     rejoinCountRef.current += 1
+    console.log('rejoinCountRef.current', rejoinCountRef.current)
+
     if (rejoinCountRef.current > 3) {
       rejoinCountRef.current = 0
       eventEmitter?.emit(EventType.RoomEnded, 'LEAVE_BY_SELF')
@@ -280,6 +315,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       })
       return
     }
+
     globalDispatch?.({
       type: ActionType.UPDATE_GLOBAL_CONFIG,
       data: {
@@ -416,7 +452,6 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       UserEventType.onMeetingStatusChanged,
       NEMeetingStatus.MEETING_STATUS_INMEETING
     )
-
     joinOptionRef.current = options
 
     updateGlobalConfig({
@@ -424,6 +459,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       showMeetingRemainingTip: !!options.showMeetingRemainingTip,
       toolBarList: options.toolBarList || [],
       moreBarList: options.moreBarList || [],
+      waitingJoinOtherMeeting: false,
       // @ts-ignore
     })
 
@@ -446,12 +482,15 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       type: ActionType.UPDATE_GLOBAL_CONFIG,
       data: {
         waitingRejoinMeeting: false,
+        waitingJoinOtherMeeting: false,
         online: true,
         meetingIdDisplayOption: options.meetingIdDisplayOption
           ? options.meetingIdDisplayOption
           : 0,
         showCloudRecordingUI:
           options.showCloudRecordingUI === false ? false : true,
+        showScreenShareUserVideo:
+          options.showScreenShareUserVideo === false ? false : true,
         showCloudRecordMenuItem:
           options.showCloudRecordMenuItem === false ? false : true,
       },
@@ -465,19 +504,14 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
   }) {
     const options = joinOptionRef.current as JoinOptions
     const meeting = neMeeting?.getMeetingInfo()
-    const settingStr = localStorage.getItem('ne-meeting-setting')
-    let setting: MeetingSetting | null = null
-    if (settingStr) {
-      try {
-        setting = JSON.parse(settingStr) as MeetingSetting
-        dispatch &&
-          dispatch({
-            type: ActionType.UPDATE_MEETING_INFO,
-            data: {
-              setting,
-            },
-          })
-      } catch (error) {}
+    const setting = getLocalStorageSetting()
+    if (setting) {
+      dispatch?.({
+        type: ActionType.UPDATE_MEETING_INFO,
+        data: {
+          setting,
+        },
+      })
     }
     if (meeting && meeting.meetingInfo) {
       if (joinOptionRef.current) {
@@ -510,7 +544,13 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       }
       if (meetingInfo.localMember.role === Role.coHost) {
         Toast.info(t('participantAssignedCoHost'))
+      } else if (
+        meetingInfo.localMember.role === Role.host &&
+        neMeeting?._meetingInfo.ownerUserUuid !== meetingInfo.localMember.uuid
+      ) {
+        Toast.info(t('participantAssignedHost'))
       }
+
       const whiteboardUuid = meetingInfo.whiteboardUuid
       if (!whiteboardUuid && joinOptionRef.current?.defaultWindowMode === 2) {
         neMeeting?.roomContext
@@ -679,8 +719,8 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
 
         // 如果data存在则是等候室进入
         if (data) {
-          meetingInfo.isUnMutedVideo = data.isUnMutedVideo
-          meetingInfo.isUnMutedAudio = data.isUnMutedAudio
+          meeting.meetingInfo.isUnMutedVideo = data.isUnMutedVideo
+          meeting.meetingInfo.isUnMutedAudio = data.isUnMutedAudio
         } else {
           meeting.meetingInfo.isUnMutedAudio =
             options.audio === undefined
@@ -721,8 +761,13 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
               : options.enableTransparentWhiteboard,
         } as NEMeetingSDKInfo
       } else {
-        meeting.meetingInfo.isUnMutedAudio = options.audio === 1
-        meeting.meetingInfo.isUnMutedVideo = options.video === 1
+        if (data) {
+          meeting.meetingInfo.isUnMutedVideo = data.isUnMutedVideo
+          meeting.meetingInfo.isUnMutedAudio = data.isUnMutedAudio
+        } else {
+          meeting.meetingInfo.isUnMutedAudio = options.audio === 1
+          meeting.meetingInfo.isUnMutedVideo = options.video === 1
+        }
         meeting.meetingInfo = {
           ...options,
           ...meeting.meetingInfo,
@@ -788,7 +833,8 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
   // 加入失败
   const handleJoinFail = (
     err: { code: number | string; message: string; msg?: string },
-    options?: JoinOptions
+    options?: JoinOptions,
+    isRejoin?: boolean
   ) => {
     globalDispatch?.({
       type: ActionType.UPDATE_GLOBAL_CONFIG,
@@ -797,6 +843,13 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         online: true,
       },
     })
+    globalDispatch?.({
+      type: ActionType.UPDATE_GLOBAL_CONFIG,
+      data: {
+        waitingJoinOtherMeeting: false,
+      },
+    })
+
     switch (err.code) {
       // 创建会议 会议已经存在
       case 3100:
@@ -848,6 +901,13 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         Toast.info(
           errorCodeMap[err.code] || err.msg || err.message || 'join failed'
         )
+        if (!isRejoin) {
+          outEventEmitter?.emit(
+            UserEventType.onMeetingStatusChanged,
+            NEMeetingStatus.MEETING_STATUS_FAILED
+          )
+        }
+
         hideLoadingPage()
         console.log(err, '加入失败')
     }
@@ -859,6 +919,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
     showMeetingRemainingTip?: boolean
     toolBarList?: ToolBarList
     moreBarList?: MoreBarList
+    waitingJoinOtherMeeting?: boolean
   }) {
     globalDispatch &&
       globalDispatch({
@@ -881,7 +942,11 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
     // passwordRef.current = ''
   }
 
-  const joinMeeting = (options: JoinOptions): Promise<void> => {
+  const joinMeeting = (
+    options: JoinOptions,
+    isJoinOther?: boolean,
+    isRejoin?: boolean
+  ): Promise<void> => {
     if (!options.meetingId && !options.meetingNum) {
       Toast.info('请输入会议号')
       throw new Error('meetingNum is empty')
@@ -902,8 +967,11 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       })
     setIsAnonymousLogin(false)
     options.password = options.password || passwordRef.current
-    return (neMeeting as NEMeetingService)
-      .join({ ...options, joinMeetingReport })
+    const _neMeeting = neMeeting as NEMeetingService
+    const joinFunc = isJoinOther
+      ? _neMeeting.acceptInvite.bind(_neMeeting)
+      : _neMeeting.join.bind(_neMeeting)
+    return joinFunc({ ...options, joinMeetingReport })
       .then((res) => {
         try {
           joinMeetingReport.endWithSuccess()
@@ -931,12 +999,12 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
           })
           xkitReportRef.current?.reportEvent(joinMeetingReport)
         } catch (e) {}
-        handleJoinFail(err, options)
+        handleJoinFail(err, options, isRejoin)
         return Promise.reject(err)
       })
   }
 
-  const anonymousJoin = (options: JoinOptions) => {
+  const anonymousJoin = (options: JoinOptions, isRejoin?: boolean) => {
     if (!options.meetingId && !options.meetingNum) {
       Toast.info('请输入会议号')
       throw new Error('meetingId is empty')
@@ -992,7 +1060,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
           })
           xkitReportRef.current?.reportEvent(joinMeetingReport)
         } catch (e) {}
-        handleJoinFail(err, options)
+        handleJoinFail(err, options, isRejoin)
         return Promise.reject(err)
       })
   }

@@ -5,7 +5,7 @@ import CaretDownOutlined from '@ant-design/icons/CaretDownOutlined'
 import CaretUpOutlined from '@ant-design/icons/CaretUpOutlined'
 import { Button, Dropdown, Form, Input, MenuProps, ModalProps } from 'antd'
 import EventEmitter from 'eventemitter3'
-import { NEDeviceBaseInfo, NEPreviewController } from 'neroom-web-sdk'
+import { NEPreviewController } from 'neroom-web-sdk'
 import { useTranslation } from 'react-i18next'
 import YUVCanvas from '../../../libs/yuv-canvas'
 import {

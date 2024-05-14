@@ -1,42 +1,46 @@
+import { Badge } from 'antd-mobile/es'
 import React, {
   useCallback,
   useContext,
   useEffect,
   useImperativeHandle,
   useMemo,
-  useState,
   useRef,
+  useState,
 } from 'react'
-import MemberList from '../MemberList'
-import {
-  NERoomChatMessage,
-  EventType,
-  NEMenuIDs,
-  CustomButtonIdBoundaryValue,
-  NEMenuVisibility,
-} from '../../../types/innerType'
+import { defaultMenusInH5 } from '../../../services'
 import { GlobalContext, MeetingInfoContext } from '../../../store'
 import {
-  AttendeeOffType,
-  Role,
-  memberAction,
   ActionType,
+  AttendeeOffType,
   GlobalContext as GlobalContextInterface,
   MeetingInfoContextInterface,
+  memberAction,
+  Role,
 } from '../../../types'
-import './index.less'
-import NEChatRoom from '../NEChatRoom'
+import {
+  CustomButtonIdBoundaryValue,
+  EventType,
+  NEMenuIDs,
+  NEMenuVisibility,
+  NERoomChatMessage,
+} from '../../../types/innerType'
+import CustomButton from '../../common/CustomButton'
 import Toast from '../../common/toast'
+import MeetingNotificationListPopup from '../MeetingNotificationListPopup'
+import MemberList from '../MemberList'
+import NEChatRoom from '../NEChatRoom'
 import Dialog from '../ui/dialog'
-import { Popover } from 'antd-mobile'
 import {
   AudioButton,
   ChatButton,
   MemberButton,
   VideoButton,
 } from './builtInButton'
-import CustomButton from '../../common/CustomButton'
-import { defaultMenusInH5 } from '../../../services'
+import './index.less'
+import MoreButtonsPopup from './MoreButtonsPopup'
+import useMoreButtons from './MoreButtonsPopup/useMoreButtons'
+import { useTranslation } from 'react-i18next'
 
 interface MeetingControllerProps {
   className?: string
@@ -51,11 +55,9 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
   onClick,
   onRef,
 }) => {
-  const {
-    meetingInfo: { localMember, audioOff, videoOff, screenUuid },
-    memberList,
-    dispatch,
-  } = useContext<MeetingInfoContextInterface>(MeetingInfoContext)
+  const { meetingInfo, memberList, dispatch } =
+    useContext<MeetingInfoContextInterface>(MeetingInfoContext)
+  const { localMember, screenUuid, notificationMessages } = meetingInfo
   const { neMeeting, eventEmitter, toolBarList, moreBarList } =
     useContext<GlobalContextInterface>(GlobalContext)
   const [showMember, setShowMember] = useState(false)
@@ -63,9 +65,30 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
   const [unReadCount, setUnReadCount] = useState(0) // 聊天室未读消息
   const [receiveMsg, setReceiveMsg] = useState<NERoomChatMessage[]>() // 聊天室未读消息
   const [moreBtnVisible, setMoreBtnVisible] = useState<boolean>(false)
+  const [notificationPopupVisible, setNotificationPopupVisible] =
+    useState<boolean>(false)
   // const toolBarList = globalConfig?.toolBarList
   // const moreBarList = globalConfig?.moreBarList
   const meetingControllerRef = useRef<HTMLDivElement | null>(null)
+  const { t, i18n: i18next } = useTranslation()
+  const i18n = {
+    moreBtn: t('moreBtn'),
+    commonTitle: t('commonTitle'),
+  }
+  const notificationUnReadCount = notificationMessages.filter(
+    (msg) => msg.unRead
+  ).length
+
+  const meetingInfoRef = useRef(meetingInfo)
+  meetingInfoRef.current = meetingInfo
+
+  const moreButtons = useMoreButtons(onMoreButtonClick)
+
+  function onMoreButtonClick(key: string) {
+    if (key === 'notification') {
+      setNotificationPopupVisible(true)
+    }
+  }
 
   // 暴露外部ref能访问的属性
   useImperativeHandle(onRef, () => {
@@ -152,13 +175,13 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
     if (type === 'video') {
       // 当前房间不允许自己打开，非主持人，当前非共享用户
       if (
-        videoOff === AttendeeOffType.offNotAllowSelfOn &&
+        meetingInfoRef.current.videoOff === AttendeeOffType.offNotAllowSelfOn &&
         !isHost &&
         !isScreen
       ) {
         // 当前已经在举手中
         if (localMember.isHandsUp) {
-          Toast.info('您已举手，等待主持人处理')
+          Toast.info(t('handsUpSuccessAlready'))
         } else {
           setIsShowVideoHandsUpDialog(true)
         }
@@ -168,12 +191,12 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
     } else if (type === 'audio') {
       // 当前房间不允许自己打开，非主持人，当前非共享用户
       if (
-        audioOff === AttendeeOffType.offNotAllowSelfOn &&
+        meetingInfoRef.current.audioOff === AttendeeOffType.offNotAllowSelfOn &&
         !isHost &&
         !isScreen
       ) {
         if (localMember.isHandsUp) {
-          Toast.info('您已举手，等待主持人处理')
+          Toast.info(t('handsUpSuccessAlready'))
         } else {
           setIsShowAudioHandsUpDialog(true)
         }
@@ -221,9 +244,9 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
       ?.sendMemberControl(actionType, localMember.uuid)
       .then(() => {
         if (actionType === memberAction.handsUp) {
-          Toast.info('举手成功，等待主持人处理')
+          Toast.info(t('handsUpSuccess'))
         } else {
-          Toast.info('取消举手成功')
+          Toast.info(t('cancelHandUpSuccess'))
         }
         dispatch &&
           dispatch({
@@ -251,7 +274,6 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
    * @param type 0关闭1开启
    */
   const operateLocalVideo = async (type: 0 | 1) => {
-    console.log('操作本人视频 ', type)
     try {
       switch (type) {
         case 1:
@@ -385,60 +407,26 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
           </svg>
           <div onClick={toggleMuteAudio}>{localMember.isSharingScreen ? '取消共享' : '共享屏幕'}</div>
         </div> */}
-          {moreBarList && moreBarList?.length > 0 && (
-            <Popover
-              trigger="click"
-              visible={moreBtnVisible}
-              mode="dark"
-              getContainer={meetingControllerRef.current}
-              content={
-                <div
-                  className="more-controller meeting-controller"
-                  onClick={() => {
-                    setMoreBtnVisible(false)
-                  }}
-                >
-                  {moreBarList?.map((item) => {
-                    if (defaultMenusInH5?.some((menu) => menu.id === item.id)) {
-                      return getBuiltInButtonContent(item)
-                    } else if (item.id >= CustomButtonIdBoundaryValue) {
-                      if (btnVisible(item.visibility)) {
-                        return (
-                          <CustomButton
-                            key={item.id}
-                            customData={item}
-                            isSmallBtn={false}
-                          />
-                        )
-                      } else {
-                        return <></>
-                      }
-                    } else {
-                      return <></>
-                    }
-                  })}
-                </div>
-              }
-              placement="top-end"
+          {moreButtons.length > 0 && (
+            <div
+              className="controller-item"
+              onClick={(e) => {
+                e.stopPropagation()
+                setMoreBtnVisible(!moreBtnVisible)
+              }}
             >
-              <div
-                className="controller-item"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setMoreBtnVisible(!moreBtnVisible)
-                }}
-              >
+              <Badge content={notificationUnReadCount ? Badge.dot : null}>
                 <i className="icon-tool iconfont iconyx-tv-more1x"></i>
-                {<div className="custom-text">更多</div>}
-              </div>
-            </Popover>
+              </Badge>
+              {<div className="custom-text">{i18n.moreBtn}</div>}
+            </div>
           )}
         </div>
       )}
       {/* dialog的显示不受visible影响 */}
       <Dialog
         visible={isShowVideoHandsUpDialog}
-        title="提示"
+        title={i18n.commonTitle}
         onCancel={() => {
           setIsShowVideoHandsUpDialog(false)
         }}
@@ -447,12 +435,12 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
         }}
       >
         <div style={{ color: '#000', fontSize: '13px' }}>
-          主持人已将全体关闭视频，您可以举手申请发言
+          {t('muteAllVideoHandsUpTips')}
         </div>
       </Dialog>
       <Dialog
         visible={isShowAudioHandsUpDialog}
-        title="提示"
+        title={i18n.commonTitle}
         onCancel={() => {
           setIsShowAudioHandsUpDialog(false)
         }}
@@ -461,12 +449,12 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
         }}
       >
         <div style={{ color: '#000', fontSize: '13px' }}>
-          主持人已将全体关闭音频，您可以举手申请发言
+          {t('muteAllAudioHandsUpTips')}
         </div>
       </Dialog>
       <Dialog
         visible={isShowHandsDownDialog}
-        title="提示"
+        title={i18n.commonTitle}
         onCancel={() => {
           setIsShowHandsDownDialog(false)
         }}
@@ -475,7 +463,7 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
         }}
       >
         <div style={{ color: '#000', fontSize: '13px' }}>
-          确认取消举手申请吗？
+          {t('cancelHandUpTips')}
         </div>
       </Dialog>
       <NEChatRoom
@@ -486,8 +474,32 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
       />
       <MemberList
         visible={showMember}
+        onPrivateChatClick={() => {
+          setShowChatRoom(true)
+          // setShowMember(false)
+        }}
         onClose={() => {
           setShowMember(false)
+        }}
+      />
+      {/* more buttons */}
+      <MoreButtonsPopup
+        moreButtons={moreButtons}
+        visible={moreBtnVisible}
+        onMaskClick={() => {
+          setMoreBtnVisible(false)
+        }}
+        onClose={() => {
+          setMoreBtnVisible(false)
+        }}
+      />
+      <MeetingNotificationListPopup
+        visible={notificationPopupVisible}
+        onMaskClick={() => {
+          setNotificationPopupVisible(false)
+        }}
+        onClose={() => {
+          setNotificationPopupVisible(false)
         }}
       />
     </>

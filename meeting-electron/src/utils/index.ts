@@ -1,10 +1,12 @@
 import axios from 'axios'
 import { getI18n } from 'react-i18next'
 import { Md5 } from 'ts-md5/dist/md5'
-import { BrowserType } from '../types'
+import { BrowserType, MeetingSetting } from '../types'
 import DataReporter from './DataReporter'
 import LoggerStorage, { LogName } from './logStorage'
 import { Uploader } from './nosUploader'
+import { LoginUserInfo } from '../../app/src/types'
+import { LOCALSTORAGE_USER_INFO } from '../config'
 // import sha1 from 'sha1'
 const version = '1.0.0'
 
@@ -533,4 +535,91 @@ export function isPromiseCheck(obj): boolean {
     (typeof obj === 'object' || typeof obj === 'function') && // 初始promise 或 promise.then返回的
     typeof obj.then === 'function'
   )
+}
+
+/**
+ * 解析输入的文件大小
+ * @param size 文件大小，单位b
+ * @param level 递归等级，对应fileSizeMap
+ */
+export const parseFileSize = (size: number, level = 0): string => {
+  const fileSizeMap: { [key: number]: string } = {
+    0: 'B',
+    1: 'KB',
+    2: 'MB',
+    3: 'GB',
+    4: 'TB',
+  }
+
+  const handler = (size: number, level: number): string => {
+    if (level >= Object.keys(fileSizeMap).length) {
+      return 'the file is too big'
+    }
+    if (size < 1024) {
+      return `${size}${fileSizeMap[level]}`
+    }
+    return handler(Math.round(size / 1024), level + 1)
+  }
+  return handler(size, level)
+}
+/**
+ * 下载文件
+ * @param url
+ * @param fileName
+ */
+export function downloadFile(url: string, fileName: string): void {
+  // 使用 iframe 下载文件
+  const iframe = document.createElement('iframe')
+  document.body.appendChild(iframe)
+  iframe.src = url
+  setTimeout(() => {
+    document.body.removeChild(iframe)
+  }, 5000)
+}
+
+/**
+ * @description: 持续时间格式化 返回"xx:xx"
+ * @param startTime 开始时间
+ */
+export function meetingDuration(startTime: number): string {
+  const now = new Date().getTime()
+  const duration = now - startTime
+  const hours = Math.floor(duration / (1000 * 60 * 60))
+  const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60))
+  const seconds = Math.floor((duration % (1000 * 60)) / 1000)
+  let durationString = ''
+  if (hours >= 1) {
+    durationString += `${hours.toString().padStart(2, '0')}:`
+  }
+  durationString += `${minutes.toString().padStart(2, '0')}:${seconds
+    .toString()
+    .padStart(2, '0')}`
+  return durationString
+}
+
+// 最后是否为表情符号
+export function isLastCharacterEmoji(str: string) {
+  // 使用正则表达式匹配表情符号
+  const emojiRegex = /[\uD83C-\uDBFF\uDC00-\uDFFF]+$/
+  return emojiRegex.test(str)
+}
+
+export function getLocalStorageSetting(): MeetingSetting | null {
+  const settingStr = localStorage.getItem('ne-meeting-setting')
+  let setting: MeetingSetting | null = null
+  if (settingStr) {
+    try {
+      setting = JSON.parse(settingStr) as MeetingSetting
+    } catch (error) {}
+  }
+  return setting
+}
+
+export function getLocalUserInfo(): LoginUserInfo | null {
+  const userString = localStorage.getItem(LOCALSTORAGE_USER_INFO)
+  let userInfo: LoginUserInfo | null = null
+  if (userString) {
+    userInfo = JSON.parse(userString)
+  }
+  return userInfo
 }

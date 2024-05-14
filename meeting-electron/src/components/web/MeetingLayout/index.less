@@ -11,6 +11,11 @@
   background-color: rgba(49, 49, 56, 0.8);
   border-radius: 2px;
   box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  .iconfont {
+    font-size: 14px;
+  }
   .nemeeting-layout-button-text {
     margin: 0 4px;
   }
@@ -36,6 +41,12 @@
       background-image: @light-theme-background-image;
       color: @light-theme-color;
     }
+    .nemeeting-layout-header {
+      color: #3d3d3d;
+    }
+    .nemeeting-layout-footer {
+      color: @light-theme-color;
+    }
     .nemeeting-layout-list-content {
       color: #dceafd;
       .nemeeting-layout-group-item-text {
@@ -52,6 +63,50 @@
     background-color: transparent;
     border-radius: 2px;
   }
+  .nemeeting-layout-header {
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    font-size: 16px;
+    color: #fff;
+    font-weight: 500;
+    border-bottom: 1px solid rgba(164, 164, 164, 0.2);
+    .link-button {
+      cursor: pointer;
+      color: #337eff;
+      font-size: 14px;
+      .iconfont {
+        margin-right: 4px;
+      }
+    }
+  }
+  .nemeeting-layout-footer {
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #666;
+    padding: 0 24px;
+    color: #fff;
+    .link-button {
+      cursor: pointer;
+      color: #337eff;
+      font-size: 14px;
+    }
+    .nemeeting-layout-footer-left {
+      display: flex;
+      align-items: center;
+      .iconfont {
+        margin-right: 4px;
+        cursor: pointer;
+      }
+    }
+    .nemeeting-layout-footer-text {
+      margin: 0 4px 0 8px;
+    }
+  }
   .nemeeting-layout-list-content {
     padding: 20px;
     display: flex;
@@ -63,13 +118,13 @@
       display: flex;
     }
     .nemeeting-layout-group-line {
-      background: #666;
+      background: rgba(164, 164, 164, 0.2);
       height: 80px;
       margin-top: 18px;
     }
     .nemeeting-layout-group-item {
       cursor: pointer;
-      margin: 0 8px;
+      margin: 0 15px;
     }
     .nemeeting-layout-group-item-icon {
       font-size: 80px;

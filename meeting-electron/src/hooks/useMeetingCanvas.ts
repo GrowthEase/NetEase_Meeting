@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { useGlobalContext, useMeetingInfoContext } from '../store'
-import { groupMembersService } from '../components/h5/MeetingCanvas/service'
-import { ActionType, LayoutTypeEnum, NEMember } from '../types'
-import Toast from '../components/common/toast'
 import { useTranslation } from 'react-i18next'
+import Toast from '../components/common/toast'
+import { groupMembersService } from '../components/h5/MeetingCanvas/service'
+import { useGlobalContext, useMeetingInfoContext } from '../store'
+import { ActionType, LayoutTypeEnum, NEMember } from '../types'
+import { NEMeetingInviteStatus } from '../types/type'
 
 interface MeetingCanvasProps {
   isSpeaker?: boolean
@@ -11,6 +12,7 @@ interface MeetingCanvasProps {
   isAudioMode: boolean
   groupNum: number
   resizableWidth: number
+  groupType: 'h5' | 'web'
 }
 
 export default function useMeetingCanvas(data: MeetingCanvasProps) {
@@ -20,21 +22,33 @@ export default function useMeetingCanvas(data: MeetingCanvasProps) {
     isAudioMode,
     groupNum,
     resizableWidth,
+    groupType,
   } = data
   const { t } = useTranslation()
   const {
     meetingInfo,
-    memberList: originMemberList,
+    memberList: meetingMemberList,
+    inInvitingMemberList: meetingInInvitingMemberList,
     dispatch,
   } = useMeetingInfoContext()
   const { globalConfig, neMeeting } = useGlobalContext()
-  const isMounted = useRef(false)
   const preSpeakerLayoutInfo = useRef<'top' | 'right'>('top')
   const unsubscribeMembersTimerMap = useRef<Record<string, any>>({})
-  const toastIdRef = useRef<string>('')
 
   const hideNoVideoMembers =
     meetingInfo.localMember.properties?.hideNoVideoMembers?.value === '1'
+
+  const inInvitingMemberList = useMemo(() => {
+    return meetingInInvitingMemberList?.filter((member) => {
+      return member.inviteState !== NEMeetingInviteStatus.waitingJoin
+    })
+  }, [meetingInInvitingMemberList])
+
+  const originMemberList = useMemo(() => {
+    return inInvitingMemberList
+      ? meetingMemberList.concat(inInvitingMemberList)
+      : meetingMemberList
+  }, [meetingMemberList, inInvitingMemberList])
 
   const memberList = useMemo(() => {
     if (hideNoVideoMembers) {
@@ -60,26 +74,31 @@ export default function useMeetingCanvas(data: MeetingCanvasProps) {
   const groupMembers = useMemo(() => {
     if (isAudioMode) {
       // 如果是音频模式则所有成员都在一页不用分页;
-      return [memberList]
+      const list = inInvitingMemberList
+        ? meetingMemberList.concat(inInvitingMemberList)
+        : meetingMemberList
+      return [list]
     } else {
       return groupMembersService({
-        memberList,
-        groupNum: isSpeaker ? groupNum : 16,
+        memberList: meetingMemberList,
+        inInvitingMemberList: inInvitingMemberList,
+        groupNum: isSpeaker ? groupNum : meetingInfo.galleryModeMaxCount ?? 16,
         screenUuid: meetingInfo.screenUuid,
         focusUuid: meetingInfo.focusUuid,
         myUuid: meetingInfo.localMember.uuid,
         activeSpeakerUuid: meetingInfo.lastActiveSpeakerUuid || '',
-        groupType: 'web',
+        groupType,
         enableSortByVoice: !!meetingInfo.enableSortByVoice,
         layout: isSpeaker ? LayoutTypeEnum.Speaker : LayoutTypeEnum.Gallery,
         whiteboardUuid: meetingInfo.whiteboardUuid,
         isWhiteboardTransparent: meetingInfo.isWhiteboardTransparent,
         pinVideoUuid: meetingInfo.pinVideoUuid,
+        viewOrder: meetingInfo.remoteViewOrder || meetingInfo.localViewOrder,
       })
     }
   }, [
-    memberList,
-    memberList.length,
+    meetingMemberList,
+    inInvitingMemberList,
     meetingInfo.hostUuid,
     meetingInfo.focusUuid,
     meetingInfo.activeSpeakerUuid,
@@ -94,8 +113,15 @@ export default function useMeetingCanvas(data: MeetingCanvasProps) {
     isSpeakerLayoutPlacementRight,
     groupNum,
     isAudioMode,
+    meetingInfo.remoteViewOrder,
+    meetingInfo.localViewOrder,
+    meetingInfo.galleryModeMaxCount,
+    meetingInfo.enableSortByVoice,
+    groupType,
   ])
+
   function handleViewDoubleClick(member: NEMember) {
+    console.warn('handleViewDoubleClick>>>', member)
     if (
       member.isVideoOn &&
       !meetingInfo.focusUuid &&
@@ -118,30 +144,9 @@ export default function useMeetingCanvas(data: MeetingCanvasProps) {
             speakerLayoutPlacement: preSpeakerLayoutInfo.current,
           },
         })
-        t('meetingPinViewTip', {
-          corner: t('meetingTopLeftCorner'),
-        })
       }
     }
   }
-
-  useEffect(() => {
-    if (!isMounted.current) {
-      return
-    }
-    if (toastIdRef.current) {
-      Toast.destroy(toastIdRef.current)
-    }
-    if (meetingInfo.pinVideoUuid) {
-      toastIdRef.current = Toast.info(
-        t('meetingPinViewTip', {
-          corner: t('meetingTopLeftCorner'),
-        })
-      )
-    } else {
-      toastIdRef.current = Toast.info(t('meetingUnpinViewTip'))
-    }
-  }, [meetingInfo.pinVideoUuid])
 
   useEffect(() => {
     // 音频模式取消固定视频;
@@ -154,10 +159,6 @@ export default function useMeetingCanvas(data: MeetingCanvasProps) {
       })
     }
   }, [isAudioMode, meetingInfo.pinVideoUuid])
-
-  useEffect(() => {
-    isMounted.current = true
-  }, [])
 
   function handleUnsubscribeMembers(
     memberList: NEMember[][],
@@ -191,21 +192,21 @@ export default function useMeetingCanvas(data: MeetingCanvasProps) {
 
       // 需要取消订阅
       needUnsubscribeUuids.forEach((uuid) => {
-        if (!unsubscribeMembersTimerMap.current[uuid]) {
-          unsubscribeMembersTimerMap.current[uuid] = setTimeout(() => {
-            console.warn('取消订阅', uuid, mainUuid == uuid)
-            neMeeting?.unsubscribeRemoteVideoStream(uuid, 0)
-          }, 5000)
-        }
+        neMeeting?.unsubscribeRemoteVideoStream(uuid, 0)
       })
       // 需要恢复订阅
       currentVideoOnMemberUuids.forEach((uuid) => {
         const streamType =
-          mainUuid == uuid ? 0 : activeSpeakerList.includes(uuid) ? 0 : 1
+          mainUuid == uuid
+            ? 0
+            : canPreSubscribe
+            ? activeSpeakerList.includes(uuid)
+              ? 0
+              : 1
+            : 1
         if (neMeeting?.subscribeMembersMap[uuid] === streamType) {
           return
         }
-        clearUnsubscribeMembersTimer(uuid)
         neMeeting?.subscribeRemoteVideoStream(uuid, streamType)
       })
     }

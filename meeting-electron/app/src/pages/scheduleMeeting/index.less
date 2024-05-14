@@ -1,0 +1,34 @@
+.schedule-meeting-page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  background-color: #fff;
+  box-sizing: border-box;
+  height: 100%;
+  font-family: system-ui;
+  .electron-drag-bar {
+    .drag-region {
+      -webkit-app-region: drag;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 40px;
+    }
+    height: 40px;
+    font-weight: normal;
+    line-height: 40px;
+    text-align: center;
+    font-size: 18px;
+    border-bottom: 1px solid #ebedf0;
+    position: relative;
+  }
+  .schedule-meeting-page-content {
+    padding: 0 20px;
+    .schedule-meeting-container {
+      max-height: 540px;
+    }
+  }
+}

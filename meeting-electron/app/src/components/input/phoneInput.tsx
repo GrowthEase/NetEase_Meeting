@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import BaseInput, { InputProps } from './baseInput';
 // import { Icon } from 'antd';
-import styles from './index.less';
+import './index.less';
 import { useTranslation } from 'react-i18next';
 
 const PhoneInput: FC<InputProps> = (props) => {
@@ -27,11 +27,11 @@ const PhoneInput: FC<InputProps> = (props) => {
 
   return (
     <BaseInput
-      className={`${styles.phoneInput} ${styles.baseInputContent}`}
+      className={`phoneInput baseInputContent`}
       validator={checkPhone}
       onValueChange={getCheckedPhone}
       hasClear={true}
-      prefix={<div className={styles.phoneInputNumber}>+86</div>}
+      prefix={<div className={'phoneInputNumber'}>+86</div>}
       placeholder={t('authEnterMobile')}
       errorTip=""
       maxLength="11"

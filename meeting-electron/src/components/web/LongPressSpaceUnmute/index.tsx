@@ -113,7 +113,6 @@ const LongPressSpaceUnmute: React.FC = ({}) => {
         clearTimeout(keyDownTimer)
         keyDownTimer = null
         setLongPressSpaceAudio(false)
-        console.log('handleFocus')
         if (localMember.isAudioOn && longPressSpaceAudio) {
           await neMeeting?.muteLocalAudio()
         }

@@ -76,7 +76,7 @@ const MonitoringSetting: React.FC = () => {
           },
         },
       },
-      '*'
+      parentWindow.origin
     )
   }
 

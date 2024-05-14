@@ -1,6 +1,6 @@
-import React, { FC, useCallback, useState } from 'react';
+import React, { FC, useCallback } from 'react';
 import BaseInput, { InputProps } from './baseInput';
-import styles from './index.less';
+import './index.less';
 import { checkPassword } from '../../../../src/utils';
 import { useTranslation } from 'react-i18next';
 
@@ -29,7 +29,7 @@ const PwdInput: FC<InputProps & { needCheck?: boolean }> = (props) => {
   return (
     <BaseInput
       ispassword={'true'}
-      className={`${styles.pwdInput} ${styles.baseInputContent}`}
+      className={`pwdInput baseInputContent`}
       validator={props.needCheck ? checkPwd : undefined}
       iconRender={eyeIcon}
       placeholder={props.placeholder || t('authEnterPassword')}

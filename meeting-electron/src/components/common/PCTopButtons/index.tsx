@@ -1,7 +1,4 @@
 import React, { useEffect } from 'react'
-import CloseOutlined from '@ant-design/icons/CloseOutlined'
-import MinusOutlined from '@ant-design/icons/MinusOutlined'
-import { Button } from 'antd'
 import './index.less'
 
 interface PCTopButtonsProps {

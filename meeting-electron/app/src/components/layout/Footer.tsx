@@ -8,6 +8,8 @@ interface FooterProps {
 }
 
 const Content: React.FC<FooterProps> = ({ className = '', logo = true }) => {
+  const nowYear = new Date().getFullYear();
+
   return (
     <div
       className={classnames(
@@ -59,7 +61,8 @@ const Content: React.FC<FooterProps> = ({ className = '', logo = true }) => {
         </div>
       </div>
       <p className={styles.desc}>
-        &copy;&nbsp;1997-2023&nbsp;网易公司&nbsp;&nbsp;&nbsp;&nbsp;增值电信业务许可证B1-20180288&nbsp;&nbsp;&nbsp;&nbsp;浙B1.B2-20090185&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;网易公司&nbsp;&nbsp;版权所有
+        &copy;&nbsp;1997-{nowYear}
+        &nbsp;网易公司&nbsp;&nbsp;&nbsp;&nbsp;增值电信业务许可证B1-20180288&nbsp;&nbsp;&nbsp;&nbsp;浙B1.B2-20090185&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;网易公司&nbsp;&nbsp;版权所有
       </p>
     </div>
   );
