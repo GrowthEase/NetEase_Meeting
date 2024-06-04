@@ -43,8 +43,6 @@ dependencies:
 
 
 dev_dependencies:
-  hawk:
-    path: ../../auto_test/hawk
 dependency_overrides:
   # device_info_plus: ^8.0.0
   # yunxin_event_track:
