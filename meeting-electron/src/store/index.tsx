@@ -44,11 +44,15 @@ const globalReducer = (
 export const GlobalContextProvider: React.FC<GlobalProviderProps> = (props) => {
   const [notificationApi, contextHolder] = notification.useNotification({
     stack: false,
+    bottom: 60,
+    getContainer: () =>
+      document.getElementById('ne-web-meeting') || document.body,
   })
   const [global, dispatch] = useReducer(globalReducer, {
     eventEmitter: props.eventEmitter,
     outEventEmitter: props.outEventEmitter,
     neMeeting: props.neMeeting,
+    inviteService: props.inviteService,
     joinLoading: props.joinLoading,
     logger: props.logger,
     globalConfig: props.globalConfig,
@@ -76,6 +80,7 @@ export const MeetingInfoContext =
   React.createContext<MeetingInfoContextInterface>({
     meetingInfo: createMeetingInfoFactory(),
     memberList: [],
+    inInvitingMemberList: [],
   })
 export const WaitingRoomContext =
   React.createContext<WaitingRoomContextInterface>({
@@ -200,25 +205,50 @@ const meetingInfoReducer = (
     }
     case ActionType.ADD_MEMBER: {
       const { member } = (action as Action<ActionType.ADD_MEMBER>).data
-      const { memberList } = state
+      const { memberList, inInvitingMemberList } = state
       const meetingInfo = state.meetingInfo
       const index = memberList.findIndex((item) => item.uuid === member.uuid)
       if (index > -1) {
         memberList[index] = member
       } else {
         memberList.push(member)
+        const sipIndex = inInvitingMemberList?.findIndex(
+          (item) => item.uuid === member.uuid
+        )
+        // 如果邀请列表存在则需要删除邀请列表的
+        if (sipIndex != undefined && sipIndex > -1) {
+          inInvitingMemberList?.splice(sipIndex, 1)
+        }
       }
       // memberList = sortMembers(memberList, meetingInfo.localMember.uuid)
-      return { ...state, memberList: [...memberList] }
+      return {
+        ...state,
+        memberList: [...memberList],
+        inInvitingMemberList: [...(inInvitingMemberList || [])],
+      }
     }
     case ActionType.REMOVE_MEMBER: {
       const { uuids } = (action as Action<ActionType.REMOVE_MEMBER>).data
-      const { memberList } = state
+      const { memberList, inInvitingMemberList } = state
       uuids.forEach((uuid) => {
         const index = memberList.findIndex((member) => member.uuid === uuid)
-        index > -1 && memberList.splice(index, 1)
+        if (index > -1) {
+          memberList.splice(index, 1)
+        } else {
+          // 如果成员列表不存在，去邀请列表中删除
+          const sipIndex = inInvitingMemberList?.findIndex(
+            (item) => item.uuid === uuid
+          )
+          if (sipIndex != undefined && sipIndex > -1) {
+            state.inInvitingMemberList?.splice(sipIndex, 1)
+          }
+        }
       })
-      return { ...state, memberList: [...memberList] }
+      return {
+        ...state,
+        memberList: [...memberList],
+        inInvitingMemberList: [...(inInvitingMemberList || [])],
+      }
     }
     case ActionType.RESET_MEMBER: {
       return { ...state, memberList: [] }
@@ -284,6 +314,8 @@ const meetingInfoReducer = (
         localStorage.setItem('ne-meeting-setting', JSON.stringify(setting))
         meetingInfo.enableVideoMirror =
           setting.videoSetting.enableVideoMirroring
+        meetingInfo.galleryModeMaxCount =
+          setting.videoSetting.galleryModeMaxCount
         meetingInfo.showDurationTime = setting.normalSetting.showDurationTime
         meetingInfo.enableFixedToolbar = setting.normalSetting.showToolbar
         meetingInfo.showSpeaker = setting.normalSetting.showSpeakerList
@@ -345,7 +377,65 @@ const meetingInfoReducer = (
       return {
         memberList: [],
         meetingInfo: createMeetingInfoFactory(),
+        inInvitingMemberList: [],
       }
+    }
+    case ActionType.SIP_ADD_MEMBER: {
+      const { member } = (action as Action<ActionType.SIP_ADD_MEMBER>).data
+      const { inInvitingMemberList } = state
+      if (!inInvitingMemberList) {
+        return state
+      }
+      const index = inInvitingMemberList.findIndex(
+        (item) => item.uuid === member.uuid
+      )
+      if (index > -1) {
+        inInvitingMemberList[index] = member
+      } else {
+        inInvitingMemberList.push(member)
+      }
+      return { ...state, inInvitingMemberList: [...inInvitingMemberList] }
+    }
+    case ActionType.SIP_REMOVE_MEMBER: {
+      const { uuids } = (action as Action<ActionType.SIP_REMOVE_MEMBER>).data
+      const { inInvitingMemberList } = state
+      if (!inInvitingMemberList) {
+        return state
+      }
+      uuids.forEach((uuid) => {
+        const index = inInvitingMemberList.findIndex(
+          (member) => member.uuid === uuid
+        )
+        index > -1 && inInvitingMemberList.splice(index, 1)
+      })
+      return { ...state, inInvitingMemberList: [...inInvitingMemberList] }
+    }
+    case ActionType.SIP_UPDATE_MEMBER: {
+      const memberInfo = (action as Action<ActionType.SIP_UPDATE_MEMBER>).data
+      const meetingInfo = state.meetingInfo
+      const { inInvitingMemberList } = state
+      if (!inInvitingMemberList) {
+        return state
+      }
+      const index = inInvitingMemberList.findIndex(
+        (item) => item.uuid === memberInfo.uuid
+      )
+      if (index > -1) {
+        inInvitingMemberList[index] = {
+          ...inInvitingMemberList[index],
+          ...memberInfo.member,
+        }
+      } else {
+        return state
+      }
+      // 本端数据更新
+      // 成员列表进行排序
+      // memberList = sortMembers(memberList, meetingInfo.localMember.uuid)
+      return { ...state, inInvitingMemberList: [...inInvitingMemberList] }
+    }
+
+    case ActionType.SIP_RESET_MEMBER: {
+      return { ...state, inInvitingMemberList: [] }
     }
     default:
       return { ...state }
@@ -361,6 +451,7 @@ export const MeetingInfoContextProvider: React.FC<MeetingInfoProviderProps> = (
   const [meetingInfo, dispatch] = useReducer(meetingInfoReducer, {
     meetingInfo: props.meetingInfo,
     memberList: props.memberList,
+    inInvitingMemberList: props.inInvitingMemberList,
   })
   const [waitingRoomInfo, waitingRoomDispatch] = useReducer(
     waitingRoomReducer,

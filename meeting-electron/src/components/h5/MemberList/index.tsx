@@ -10,28 +10,50 @@ import {
   Role,
   MeetingInfoContextInterface,
   GlobalContext as GlobalContextInterface,
+  ActionType,
+  NEClientType,
 } from '../../../types'
-import { Switch, ActionSheet } from 'antd-mobile'
+import { ActionSheet, Input } from 'antd-mobile/es'
 import type { Action } from 'antd-mobile/es/components/action-sheet'
 import Dialog from '../ui/dialog'
 import Toast from '../../common/toast'
 import { GlobalContext, MeetingInfoContext } from '../../../store'
 import './index.less'
-import { hostAction, memberAction } from '../../../types/innerType'
+import {
+  NEChatPermission,
+  hostAction,
+  memberAction,
+} from '../../../types/innerType'
+import UserAvatar from '../../common/Avatar'
+import { useTranslation } from 'react-i18next'
+import { useUpdateEffect } from 'ahooks'
 
 interface MemberListProps {
   visible: boolean
+  memberList?: NEMember[]
+  isPrivateChat?: boolean
+  privateChatMemberId?: string
+  privateChatAll?: boolean
+  onPrivateChatClick?: () => void
   onClose: () => void
 }
 
 const MemberListUI: React.FC<MemberListProps> = ({
   visible = false,
+  isPrivateChat = false,
+  privateChatMemberId,
+  privateChatAll,
+  onPrivateChatClick,
   onClose,
+  ...restProps
 }) => {
+  const { t } = useTranslation()
+
   const [selfShow, setSelfShow] = useState(false)
   const {
-    meetingInfo: { localMember, hostUuid, myUuid },
-    memberList,
+    meetingInfo: { localMember, hostUuid, myUuid, meetingChatPermission },
+    memberList: memberListContext,
+    dispatch,
   } = useContext<MeetingInfoContextInterface>(MeetingInfoContext)
   const { neMeeting } = useContext<GlobalContextInterface>(GlobalContext)
   const [showOperation, setShowOperation] = useState(false)
@@ -42,7 +64,63 @@ const MemberListUI: React.FC<MemberListProps> = ({
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [newName, setNewName] = useState('')
   const [searchName, setSearchName] = useState('')
+  const [clickMember, setClickMember] = useState<NEMember>()
   const isComposingRef = React.useRef(false)
+
+  const memberList = useMemo(() => {
+    // 主持人->联席主持人->自己->举手->屏幕共享（白板）>音视频>视频->音频->昵称排序
+    const host: NEMember[] = []
+    const coHost: NEMember[] = []
+    const handsUp: NEMember[] = []
+    const sharingWhiteboardOrScreen: NEMember[] = []
+    const audioOn: NEMember[] = []
+    const videoOn: NEMember[] = []
+    const audioAndVideoOn: NEMember[] = []
+    const other: NEMember[] = []
+    const memberList = restProps.memberList || memberListContext
+
+    memberList.forEach((member) => {
+      if (member.role === Role.host) {
+        host.push(member)
+      } else if (member.role === Role.coHost) {
+        coHost.push(member)
+      } else if (member.uuid === localMember.uuid) {
+        // 本人永远排在主持和联席主持人之后
+        return
+      } else if (member.isHandsUp) {
+        handsUp.push(member)
+      } else if (member.isSharingWhiteboard || member.isSharingScreen) {
+        sharingWhiteboardOrScreen.push(member)
+      } else if (member.isAudioOn && member.isVideoOn) {
+        audioAndVideoOn.push(member)
+      } else if (member.isVideoOn) {
+        videoOn.push(member)
+      } else if (member.isAudioOn) {
+        audioOn.push(member)
+      } else {
+        other.push(member)
+      }
+    })
+    other.sort((a, b) => {
+      return a.name.localeCompare(b.name)
+    })
+    const hostOrCoHostWithMe =
+      [...host, ...coHost]?.findIndex(
+        (item) => item.uuid === localMember.uuid
+      ) > -1
+        ? [...host, ...coHost]
+        : [...host, ...coHost, localMember]
+    const res = [
+      ...hostOrCoHostWithMe,
+      ...handsUp,
+      ...sharingWhiteboardOrScreen,
+      ...audioAndVideoOn,
+      ...videoOn,
+      ...audioOn,
+      ...other,
+    ]
+    return res
+  }, [restProps.memberList, memberListContext, localMember])
 
   useEffect(() => {
     setSelfShow(visible)
@@ -56,195 +134,259 @@ const MemberListUI: React.FC<MemberListProps> = ({
   /**
    * 成员操作内容
    */
-  const displayMoreBtns = useCallback(
-    (item: NEMember, isHost: boolean) => {
-      console.log(item)
-      const displayBtns: Action[] = [] // 展示的action结构
-
-      // 所有人展示的操作
-      const normalBtns = [
-        {
-          id: memberAction.modifyMeetingNickName,
-          name: '改名',
-          isShow: item.uuid === localMember?.uuid,
-          // testName: (item, localInfo, isWhiteSharer, uid) => (item.avRoomUid === localInfo.avRoomUid && !localInfo?.noRename && 'member-update-meeting-nickname') + '-' + item.nickName, // 测试自动化使用
-          // needDialog: false,
+  const displayMoreBtns = (item: NEMember, isHost: boolean) => {
+    if (isPrivateChat) {
+      console.log('item', item)
+      dispatch?.({
+        type: ActionType.UPDATE_MEETING_INFO,
+        data: {
+          privateChatMemberId: item.uuid,
         },
-      ]
-      normalBtns.map((btn) => {
-        if (btn.isShow) {
-          if (btn.id === memberAction.modifyMeetingNickName) {
-            displayBtns.push({
-              text: btn.name,
-              key: btn.id,
-              onClick: async () => {
-                setNewName(localMember?.name)
-                setShowOperation(false)
-                setShowRenameDialog(true)
-              },
-            })
-          } else {
-            displayBtns.push({
-              text: btn.name,
-              key: btn.id,
-              onClick: async () => {
-                handleMemberMore(item, item?.uuid, btn.id)
-              },
-            })
-          }
-        }
       })
+      onClose?.()
+      return
+    }
+    const displayBtns: Action[] = [] // 展示的action结构
 
-      // 主持人和联席主持人展示的操作
-      const hostOrCohostBtns: any[] = []
-      // if (isHost) {
-      //   const hostBtns = [
-      //     // isShow 预留展示逻辑
-      //     {
-      //       id: hostAction.muteMemberAudio,
-      //       name: '静音',
-      //       isShow: item.isAudioOn,
-      //       // testName: (item) => (item.isHost ? 'mute-audio-control-host' : 'mute-audio-control-member') + '-' + item.nickName, // 测试自动化使用
-      //       // needDialog: false,
-      //     },
-      //     {
-      //       id: hostAction.unmuteMemberAudio,
-      //       name: '解除静音',
-      //       isShow: !item.isAudioOn,
-      //       // testName: (item) => (item.isHost ? 'unmute-audio-control-host' : 'unmute-audio-control-member') + '-' + item.nickName, // 测试自动化使用
-      //       // needDialog: false,
-      //     },
-      //     // {
-      //     //   id: hostAction.agreeHandsUp, // 举手逻辑后续执行解除静音
-      //     //   name: '解除静音',
-      //     //   isShow: (item, allowUnMuteAudio) => !allowUnMuteAudio && (item.audio === 3 || item.audio === 2),
-      //     //   needDialog: false,
-      //     // },
-      //     {
-      //       id: hostAction.muteMemberVideo,
-      //       name: '停止视频',
-      //       isShow: item.isVideoOn,
-      //       // testName: (item) => (item.isHost ? 'mute-video-control-host' : 'mute-video-control-member') + '-' + item.nickName, // 测试自动化使用
-      //       needDialog: false,
-      //     },
-      //     {
-      //       id: hostAction.unmuteMemberVideo,
-      //       name: '开启视频',
-      //       isShow: !item.isVideoOn,
-      //       // testName: (item) => (item.isHost ? 'unmute-video-control-host' : 'unmute-video-control-member') + '-' + item.nickName, // 测试自动化使用
-      //       needDialog: false,
-      //     },
-      //     {
-      //       id: hostAction.muteVideoAndAudio,
-      //       name: '关闭音视频',
-      //       isShow: item.isVideoOn && item.isAudioOn,
-      //       // testName: (item) => (item.isHost ? 'mute-video-and-audio-control-host' : 'mute-video-and-audio-control-member') + '-' + item.nickName, // 测试自动化使用
-      //       needDialog: false,
-      //     },
-      //     {
-      //       id: hostAction.unmuteVideoAndAudio,
-      //       name: '开启音视频',
-      //       isShow: !item.isVideoOn || !item.isAudioOn,
-      //       // testName: (item) => (item.isHost ? 'unmute-video-and-audio-control-host' : 'unmute-video-and-audio-control-member') + '-' + item.nickName, // 测试自动化使用
-      //       needDialog: false,
-      //     },
-      //     {
-      //       id: hostAction.setFocus,
-      //       name: '设为焦点视频',
-      //       isShow: false, // todo:设为焦点视频的逻辑
-      //       // isShow: (item) => !item.isFocus && !this.isScreen,
-      //       // testName: (item) => (!item.isHost && 'setfocus-control') + '-' + item.nickName, // 测试自动化使用
-      //       needDialog: false,
-      //     },
-      //     {
-      //       id: hostAction.unsetFocus,
-      //       name: '取消焦点视频',
-      //       isShow: false, // todo:取消焦点视频的逻辑
-      //       // isShow: (item) => item.isFocus && !this.isScreen,
-      //       // testName: (item) => (item.isFocus && 'unsetfocus-control') + '-' + item.nickName, // 测试自动化使用
-      //       needDialog: false,
-      //     },
-      //     {
-      //       id: hostAction.closeScreenShare,
-      //       name: '结束共享',
-      //       isShow: false, // todo:结束共享逻辑
-      //       // isShow: (item) => !item.isHost && item.screenSharing === 1,
-      //       // testName: (item) => (!item.isHost && item.screenSharing === 1 && 'close-screen-control') + '-' + item.nickName, // 测试自动化使用
-      //       needDialog: true,
-      //     },
-
-      //     {
-      //       id: hostAction.closeWhiteShare,
-      //       name: '退出白板',
-      //       isShow: false, // todo:退出白板逻辑
-      //       // isShow: (item, meetingInfo) => meetingInfo.whiteboardAvRoomUid.includes(item.avRoomUid.toString()) && !item.isHost,
-      //       // testName: (item, meetingInfo) => (meetingInfo.whiteboardAvRoomUid.includes(item.avRoomUid.toString()) && 'closewhiteboard-control') + '-' + item.nickName, // 测试自动化使用
-      //       needDialog: true,
-      //     },
-      //   ]
-      //   hostOrCohostBtns = hostOrCohostBtns.concat(hostBtns)
-      // }
-
-      // 仅主持人展示的操作
-      // if (isHost) {
-      //   const onlyHostBtns = [
-      //     {
-      //       id: hostAction.remove,
-      //       name: '移除', // todo: 移除需要二次弹窗确认
-      //       isShow: item.uuid !== hostUuid,
-      //       // testName: (item) => (!item.isHost && 'remove-member-control') + '-' + item.nickName, // 测试自动化使用
-      //       // needDialog: true,
-      //     },
-      //     {
-      //       id: hostAction.transferHost,
-      //       name: '移交主持人',
-      //       isShow: item.uuid !== hostUuid,
-      //       // testName: (item) => (!item.isHost && 'transferhost-control') + '-' + item.nickName, // 测试自动化使用
-      //       // needDialog: true,
-      //     },
-      //     {
-      //       id: hostAction.setCoHost, // 联席主持人
-      //       name: '设为联席主持人',
-      //       isShow: false, // todo: 联席主持人展示逻辑
-      //       // isShow: (item) => item.role !== Role.coHost && !item.isHost,
-      //       // testName: (item) => (!item.isHost && 'set-coHost-control') + '-' + item.nickName, // 测试自动化使用
-      //       // needDialog: true,
-      //     },
-      //     {
-      //       id: hostAction.unSetCoHost, // 取消联席主持人
-      //       name: '取消设为联席主持人',
-      //       isShow: false, // todo:取消联席主持人展示逻辑
-      //       // isShow: (item) => item.role === Role.coHost && !item.isHost,
-      //       // testName: (item) => (!item.isHost && 'unSet-coHost-control') + '-' + item.nickName, // 测试自动化使用
-      //       // needDialog: true,
-      //     },
-      //   ]
-      //   hostOrCohostBtns = hostOrCohostBtns.concat(onlyHostBtns)
-      // } else {
-      //   // 仅联席主持人展示的操作
-      // }
-
-      // hostOrCohostBtns.map((btn) => {
-      //   if (btn.isShow) {
-      //     displayBtns.push({
-      //       text: btn.name,
-      //       key: btn.id,
-      //       onClick: async () => {
-      //         handleMore(item, item?.uuid, btn.id)
-      //       },
-      //     })
-      //   }
-      // })
-
-      if (displayBtns.length > 0) {
-        setBeOperatedUser(item)
-        setUserActions(displayBtns)
-        setShowOperation(true)
-        console.log('diplayBtns ', displayBtns)
+    const getPrivateChatShow = () => {
+      // 点击的人是自己
+      if (item.uuid === myUuid) {
+        return false
       }
-    },
-    [localMember]
-  )
+      if (item.clientType === NEClientType.SIP) {
+        return false
+      }
+      // 自己是主持人或者联席主持人
+      if (localMember.role === Role.host || localMember.role === Role.coHost) {
+        return true
+      }
+      // 不可以聊天
+      if (meetingChatPermission === NEChatPermission.NO_CHAT) {
+        return false
+      }
+      // 点击的人是主持人或者联席主持人
+      if (item.role === Role.host || item.role === Role.coHost) {
+        return true
+      }
+      // 自由聊天
+      if (meetingChatPermission === NEChatPermission.FREE_CHAT) {
+        return true
+      }
+    }
+
+    // 所有人展示的操作
+    const normalBtns = [
+      {
+        id: memberAction.modifyMeetingNickName,
+        name: t('noRename'),
+        isShow: item.uuid === localMember?.uuid,
+        // testName: (item, localInfo, isWhiteSharer, uid) => (item.avRoomUid === localInfo.avRoomUid && !localInfo?.noRename && 'member-update-meeting-nickname') + '-' + item.nickName, // 测试自动化使用
+        // needDialog: false,
+      },
+      {
+        id: memberAction.privateChat,
+        name: t('chatPrivate'),
+        isShow: getPrivateChatShow(),
+        onClick: () => {
+          onPrivateChatClick?.()
+          setShowOperation(false)
+        },
+      },
+    ]
+    normalBtns.map((btn) => {
+      if (btn.isShow) {
+        if (btn.id === memberAction.modifyMeetingNickName) {
+          displayBtns.push({
+            text: btn.name,
+            key: btn.id,
+            onClick: async () => {
+              setNewName(localMember?.name)
+              setShowOperation(false)
+              setShowRenameDialog(true)
+            },
+          })
+        } else {
+          displayBtns.push({
+            text: btn.name,
+            key: btn.id,
+            onClick: async () => {
+              btn.onClick?.()
+              handleMemberMore(item, item?.uuid, btn.id)
+            },
+          })
+        }
+      }
+    })
+
+    // 主持人和联席主持人展示的操作
+    const hostOrCohostBtns: any[] = []
+    // if (isHost) {
+    //   const hostBtns = [
+    //     // isShow 预留展示逻辑
+    //     {
+    //       id: hostAction.muteMemberAudio,
+    //       name: '静音',
+    //       isShow: item.isAudioOn,
+    //       // testName: (item) => (item.isHost ? 'mute-audio-control-host' : 'mute-audio-control-member') + '-' + item.nickName, // 测试自动化使用
+    //       // needDialog: false,
+    //     },
+    //     {
+    //       id: hostAction.unmuteMemberAudio,
+    //       name: '解除静音',
+    //       isShow: !item.isAudioOn,
+    //       // testName: (item) => (item.isHost ? 'unmute-audio-control-host' : 'unmute-audio-control-member') + '-' + item.nickName, // 测试自动化使用
+    //       // needDialog: false,
+    //     },
+    //     // {
+    //     //   id: hostAction.agreeHandsUp, // 举手逻辑后续执行解除静音
+    //     //   name: '解除静音',
+    //     //   isShow: (item, allowUnMuteAudio) => !allowUnMuteAudio && (item.audio === 3 || item.audio === 2),
+    //     //   needDialog: false,
+    //     // },
+    //     {
+    //       id: hostAction.muteMemberVideo,
+    //       name: '停止视频',
+    //       isShow: item.isVideoOn,
+    //       // testName: (item) => (item.isHost ? 'mute-video-control-host' : 'mute-video-control-member') + '-' + item.nickName, // 测试自动化使用
+    //       needDialog: false,
+    //     },
+    //     {
+    //       id: hostAction.unmuteMemberVideo,
+    //       name: '开启视频',
+    //       isShow: !item.isVideoOn,
+    //       // testName: (item) => (item.isHost ? 'unmute-video-control-host' : 'unmute-video-control-member') + '-' + item.nickName, // 测试自动化使用
+    //       needDialog: false,
+    //     },
+    //     {
+    //       id: hostAction.muteVideoAndAudio,
+    //       name: '关闭音视频',
+    //       isShow: item.isVideoOn && item.isAudioOn,
+    //       // testName: (item) => (item.isHost ? 'mute-video-and-audio-control-host' : 'mute-video-and-audio-control-member') + '-' + item.nickName, // 测试自动化使用
+    //       needDialog: false,
+    //     },
+    //     {
+    //       id: hostAction.unmuteVideoAndAudio,
+    //       name: '开启音视频',
+    //       isShow: !item.isVideoOn || !item.isAudioOn,
+    //       // testName: (item) => (item.isHost ? 'unmute-video-and-audio-control-host' : 'unmute-video-and-audio-control-member') + '-' + item.nickName, // 测试自动化使用
+    //       needDialog: false,
+    //     },
+    //     {
+    //       id: hostAction.setFocus,
+    //       name: '设为焦点视频',
+    //       isShow: false, // todo:设为焦点视频的逻辑
+    //       // isShow: (item) => !item.isFocus && !this.isScreen,
+    //       // testName: (item) => (!item.isHost && 'setfocus-control') + '-' + item.nickName, // 测试自动化使用
+    //       needDialog: false,
+    //     },
+    //     {
+    //       id: hostAction.unsetFocus,
+    //       name: '取消焦点视频',
+    //       isShow: false, // todo:取消焦点视频的逻辑
+    //       // isShow: (item) => item.isFocus && !this.isScreen,
+    //       // testName: (item) => (item.isFocus && 'unsetfocus-control') + '-' + item.nickName, // 测试自动化使用
+    //       needDialog: false,
+    //     },
+    //     {
+    //       id: hostAction.closeScreenShare,
+    //       name: '结束共享',
+    //       isShow: false, // todo:结束共享逻辑
+    //       // isShow: (item) => !item.isHost && item.screenSharing === 1,
+    //       // testName: (item) => (!item.isHost && item.screenSharing === 1 && 'close-screen-control') + '-' + item.nickName, // 测试自动化使用
+    //       needDialog: true,
+    //     },
+
+    //     {
+    //       id: hostAction.closeWhiteShare,
+    //       name: '退出白板',
+    //       isShow: false, // todo:退出白板逻辑
+    //       // isShow: (item, meetingInfo) => meetingInfo.whiteboardAvRoomUid.includes(item.avRoomUid.toString()) && !item.isHost,
+    //       // testName: (item, meetingInfo) => (meetingInfo.whiteboardAvRoomUid.includes(item.avRoomUid.toString()) && 'closewhiteboard-control') + '-' + item.nickName, // 测试自动化使用
+    //       needDialog: true,
+    //     },
+    //   ]
+    //   hostOrCohostBtns = hostOrCohostBtns.concat(hostBtns)
+    // }
+
+    // 仅主持人展示的操作
+    // if (isHost) {
+    //   const onlyHostBtns = [
+    //     {
+    //       id: hostAction.remove,
+    //       name: '移除', // todo: 移除需要二次弹窗确认
+    //       isShow: item.uuid !== hostUuid,
+    //       // testName: (item) => (!item.isHost && 'remove-member-control') + '-' + item.nickName, // 测试自动化使用
+    //       // needDialog: true,
+    //     },
+    //     {
+    //       id: hostAction.transferHost,
+    //       name: '移交主持人',
+    //       isShow: item.uuid !== hostUuid,
+    //       // testName: (item) => (!item.isHost && 'transferhost-control') + '-' + item.nickName, // 测试自动化使用
+    //       // needDialog: true,
+    //     },
+    //     {
+    //       id: hostAction.setCoHost, // 联席主持人
+    //       name: '设为联席主持人',
+    //       isShow: false, // todo: 联席主持人展示逻辑
+    //       // isShow: (item) => item.role !== Role.coHost && !item.isHost,
+    //       // testName: (item) => (!item.isHost && 'set-coHost-control') + '-' + item.nickName, // 测试自动化使用
+    //       // needDialog: true,
+    //     },
+    //     {
+    //       id: hostAction.unSetCoHost, // 取消联席主持人
+    //       name: '取消设为联席主持人',
+    //       isShow: false, // todo:取消联席主持人展示逻辑
+    //       // isShow: (item) => item.role === Role.coHost && !item.isHost,
+    //       // testName: (item) => (!item.isHost && 'unSet-coHost-control') + '-' + item.nickName, // 测试自动化使用
+    //       // needDialog: true,
+    //     },
+    //   ]
+    //   hostOrCohostBtns = hostOrCohostBtns.concat(onlyHostBtns)
+    // } else {
+    //   // 仅联席主持人展示的操作
+    // }
+
+    // hostOrCohostBtns.map((btn) => {
+    //   if (btn.isShow) {
+    //     displayBtns.push({
+    //       text: btn.name,
+    //       key: btn.id,
+    //       onClick: async () => {
+    //         handleMore(item, item?.uuid, btn.id)
+    //       },
+    //     })
+    //   }
+    // })
+
+    if (displayBtns.length > 0) {
+      setBeOperatedUser(item)
+      setUserActions(displayBtns)
+      setShowOperation(true)
+    } else {
+      setShowOperation(false)
+      setClickMember(undefined)
+    }
+  }
+
+  useUpdateEffect(() => {
+    clickMember && displayMoreBtns(clickMember, localMember?.uuid === hostUuid)
+  }, [memberList, meetingChatPermission])
+
+  useUpdateEffect(() => {
+    setClickMember(undefined)
+  }, [visible])
+
+  // 成员离开，隐藏操作弹窗
+  useUpdateEffect(() => {
+    const index = memberList.findIndex(
+      (item) => item.uuid === clickMember?.uuid
+    )
+    if (index === -1) {
+      setShowOperation(false)
+      setClickMember(undefined)
+    }
+  }, [memberList])
 
   const operateAllOrMeeting = async (type: hostAction) => {
     await neMeeting?.sendHostControl(type, localMember?.uuid)
@@ -429,18 +571,24 @@ const MemberListUI: React.FC<MemberListProps> = ({
 
   const memberIdentityStr = (uuid: string, role: string) => {
     const identities: string[] = []
-    role === Role.host && identities.push('主持人')
-    role === Role.coHost && identities.push('联席主持人')
-    uuid === myUuid && identities.push('我')
+    role === Role.host && identities.push(t('host'))
+    role === Role.coHost && identities.push(t('coHost'))
+    role === Role.guest && identities.push(t('meetingRoleGuest'))
+    uuid === myUuid && identities.push(t('participantMe'))
     return '(' + identities.join('，') + ')'
   }
 
   const filteredMemberList = useMemo(() => {
-    const list = memberList.filter(
-      (member) => member.name.indexOf(searchName) > -1
-    )
+    const list = memberList
+      .filter((member) => {
+        if (isPrivateChat) {
+          return member.uuid !== myUuid
+        }
+        return true
+      })
+      .filter((member) => member.name.indexOf(searchName) > -1)
     return list
-  }, [memberList, searchName, memberList.length])
+  }, [memberList, searchName, isPrivateChat, myUuid])
 
   const isNickNameValid = useMemo(() => {
     if (!showRenameDialog) return
@@ -460,10 +608,12 @@ const MemberListUI: React.FC<MemberListProps> = ({
       ?.modifyNickName({ nickName: newName })
       .then(() => {
         setShowRenameDialog(false)
-        Toast.success('昵称修改成功')
+        Toast.success(t('reNameSuccessToast'))
       })
       .catch((e) => {
-        Toast.fail(e?.message === 'failure' ? '请求失败' : e?.message)
+        Toast.fail(
+          e?.message === 'failure' ? t('reNameFailureToast') : e?.message
+        )
       })
   }
   const handleInputChange = (value: string) => {
@@ -488,6 +638,53 @@ const MemberListUI: React.FC<MemberListProps> = ({
     setNewName(userInput)
   }
 
+  const renderPrivateMemberAllItem = () => {
+    if (!isPrivateChat || !privateChatAll) {
+      return null
+    }
+    const isHostOrCoHost =
+      localMember.role === Role.host || localMember.role === Role.coHost
+
+    if (
+      !isHostOrCoHost &&
+      meetingChatPermission === NEChatPermission.PRIVATE_CHAT_HOST_ONLY
+    ) {
+      return null
+    }
+
+    return (
+      <div
+        className={`nemeeting-member-item relative`}
+        key="meetingAll"
+        onClick={() => {
+          dispatch?.({
+            type: ActionType.UPDATE_MEETING_INFO,
+            data: {
+              privateChatMemberId: 'meetingAll',
+            },
+          })
+          onClose?.()
+        }}
+      >
+        <div className="member-info">
+          <svg className="icon iconfont icon-all" aria-hidden="true">
+            <use xlinkHref="#iconsuoyouren-24px"></use>
+          </svg>
+          <span className="nemeeting-member-name line-height-3 w-full truncate">
+            {t('chatAllMembers')}
+          </span>
+        </div>
+        {privateChatMemberId === 'meetingAll' ? (
+          <div className="member-status absolute line-height-3">
+            <svg className="icon iconfont icon-blue" aria-hidden="true">
+              <use xlinkHref="#iconcheck-line-regular1x"></use>
+            </svg>
+          </div>
+        ) : null}
+      </div>
+    )
+  }
+
   return (
     <>
       <div
@@ -504,7 +701,9 @@ const MemberListUI: React.FC<MemberListProps> = ({
         >
           <div className="member-list-title-wrap text-center">
             <span className="member-list-title">
-              参会者({memberList?.length})
+              {isPrivateChat
+                ? t('sendTo')
+                : `${t('memberListBtnForNormal')}(${memberList?.length})`}
             </span>
             <i
               onClick={(e) => {
@@ -514,31 +713,38 @@ const MemberListUI: React.FC<MemberListProps> = ({
             ></i>
           </div>
           <div className="search-member">
-            <input
+            <Input
+              clearable
               className="input-ele"
-              placeholder="搜索成员"
+              placeholder={t('participantSearchMember')}
               value={searchName}
-              onChange={(e) => {
-                setSearchName(e?.target?.value)
-              }}
+              onChange={setSearchName}
             />
           </div>
           <div
             className={`member-scroll text-left ${
               ['host', 'cohost'].includes(localMember?.role) &&
-              'member-scroll-forhost'
+              'member-scroll-for-host'
             }`}
           >
+            {renderPrivateMemberAllItem()}
             {filteredMemberList.map((member, index) => {
               return (
                 <div
-                  className={`member-item relative`}
+                  className={`nemeeting-member-item relative`}
                   key={member?.uuid + index}
                   onClick={() => {
                     displayMoreBtns(member, localMember?.uuid === hostUuid)
+                    setClickMember(member)
                   }}
                 >
                   <div className="member-info">
+                    <UserAvatar
+                      className="nemeeting-member-item-avatar"
+                      nickname={member.name}
+                      avatar={member.avatar}
+                      size={32}
+                    />
                     {member?.role === Role.coHost ||
                     member?.role === Role.host ||
                     member?.uuid === myUuid ? (
@@ -552,29 +758,57 @@ const MemberListUI: React.FC<MemberListProps> = ({
                       </>
                     ) : (
                       <>
-                        <span className="member-name line-height-3 w-full truncate">
+                        <span className="nemeeting-member-name line-height-3 w-full truncate">
                           {member?.name}
                         </span>
                       </>
                     )}
                   </div>
-                  <div className="member-status absolute line-height-3">
-                    {member?.isSharingScreen ? (
-                      <i className="iconfont icon-bule icongongxiangpingmu"></i>
-                    ) : (
-                      ''
-                    )}
-                    {member?.isVideoOn ? (
-                      <i className="iconfont iconyx-tv-video-onx"></i>
-                    ) : (
-                      <i className="icon-red iconfont iconyx-tv-video-offx"></i>
-                    )}
-                    {member?.isAudioOn ? (
-                      <i className="iconfont iconyx-tv-voice-onx"></i>
-                    ) : (
-                      <i className="icon-red iconfont iconyx-tv-voice-offx"></i>
-                    )}
-                  </div>
+                  {isPrivateChat ? (
+                    privateChatMemberId === member.uuid ? (
+                      <div className="member-status absolute line-height-3">
+                        <svg
+                          className="icon iconfont icon-blue"
+                          aria-hidden="true"
+                        >
+                          <use xlinkHref="#iconcheck-line-regular1x"></use>
+                        </svg>
+                      </div>
+                    ) : null
+                  ) : (
+                    <div className="member-status absolute line-height-3">
+                      {member?.isSharingWhiteboard ? (
+                        <i className="iconfont icon-blue iconyx-baiban"></i>
+                      ) : (
+                        ''
+                      )}
+                      {member?.isSharingScreen ? (
+                        <i className="iconfont icon-blue icongongxiangpingmu"></i>
+                      ) : (
+                        ''
+                      )}
+                      {member?.clientType === NEClientType.SIP ? (
+                        <svg
+                          className="icon iconfont iconSIPwaihudianhua icon-blue"
+                          aria-hidden="true"
+                        >
+                          <use xlinkHref="#iconSIPwaihudianhua" />
+                        </svg>
+                      ) : (
+                        ''
+                      )}
+                      {member?.isVideoOn ? (
+                        <i className="iconfont iconyx-tv-video-onx"></i>
+                      ) : (
+                        <i className="icon-red iconfont iconyx-tv-video-offx"></i>
+                      )}
+                      {member?.isAudioOn ? (
+                        <i className="iconfont iconyx-tv-voice-onx"></i>
+                      ) : (
+                        <i className="icon-red iconfont iconyx-tv-voice-offx"></i>
+                      )}
+                    </div>
+                  )}
                 </div>
               )
             })}
@@ -639,7 +873,7 @@ const MemberListUI: React.FC<MemberListProps> = ({
       </div>
       <ActionSheet
         extra={beOperatedUser?.name}
-        cancelText="取消"
+        cancelText={t('globalCancel')}
         visible={showOperation}
         actions={userActions}
         getContainer={null}
@@ -648,7 +882,7 @@ const MemberListUI: React.FC<MemberListProps> = ({
       />
       <Dialog
         visible={showDialog}
-        title="移交主持人"
+        title={t('participantTransferHost')}
         onCancel={() => {
           setShowDialog(false)
         }}
@@ -656,13 +890,13 @@ const MemberListUI: React.FC<MemberListProps> = ({
           // todo: 筛选
         }}
       >
-        确认移交主持人权限给小A？
+        {t('participantTransferHostConfirm', { userName: clickMember?.name })}
       </Dialog>
       <Dialog
         visible={showRenameDialog}
-        title="改名"
-        cancelText="取消"
-        confirmText="确认"
+        title={t('reName')}
+        cancelText={t('globalCancel')}
+        confirmText={t('globalSure')}
         onCancel={() => {
           setShowRenameDialog(false)
         }}
@@ -675,7 +909,7 @@ const MemberListUI: React.FC<MemberListProps> = ({
           <input
             className={'input-ele'}
             value={newName}
-            placeholder="输入名称"
+            placeholder={t('reNamePlaceholder')}
             required
             onChange={(e) => {
               handleInputChange(e.currentTarget.value)
@@ -686,9 +920,7 @@ const MemberListUI: React.FC<MemberListProps> = ({
               handleInputChange(e.currentTarget.value)
             }}
           />
-          <div className="change-name-tip">
-            不超过10个汉字或20个字母/数字/符号
-          </div>
+          <div className="change-name-tip">{t('reNameTips')}</div>
         </div>
       </Dialog>
     </>

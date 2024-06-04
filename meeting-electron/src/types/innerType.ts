@@ -12,6 +12,7 @@ import {
   NEMeeting,
   NEMeetingIdDisplayOption,
   NEMeetingInfo,
+  NEMeetingScheduledMember,
   NEMeetingSDK,
   NEMember,
   Role,
@@ -19,6 +20,7 @@ import {
   VideoFrameRate,
   VideoResolution,
 } from './type'
+import NEMeetingInviteService from '../services/NEMeetingInviteService'
 
 /**
  * 内部使用的类型不对外暴露
@@ -41,6 +43,7 @@ export interface CreateMeetingResponse {
   meetingAppKey?: string // 跨应用加入房间使用的appKey
   roomArchiveId: string
   ownerUserUuid: string
+  scheduledMembers?: NEMeetingScheduledMember[]
   settings: {
     roomInfo: {
       roomConfigId: number
@@ -59,6 +62,7 @@ export interface CreateMeetingResponse {
       }
       password?: string
       roomProperties?: Record<string, any>
+      viewOrder?: string
     }
     liveConfig?: {
       liveAddress: string
@@ -180,6 +184,9 @@ export enum EventType {
   WaitingRoomAllMembersKicked = 'waitingRoomAllMembersKicked',
   RoomLiveBackgroundInfoChanged = 'roomLiveBackgroundInfoChanged',
   RoomBlacklistStateChanged = 'onRoomBlacklistStateChanged',
+  MemberSipInviteStateChanged = 'onMemberSipInviteStateChanged',
+  MemberAppInviteStateChanged = 'onMemberAppInviteStateChanged',
+  AcceptInvite = 'acceptInvite',
 
   // 说话者列表相关
   ActiveSpeakerActiveChanged = 'OnActiveSpeakerActiveChanged',
@@ -187,12 +194,29 @@ export enum EventType {
   // 通知
   OnReceiveSessionMessage = 'onReceiveSessionMessage',
   OnChangeRecentSession = 'onChangeRecentSession',
+  OnMeetingInviteStatusChange = 'onMeetingInviteStatusChanged',
+  OnMeetingInvite = 'onMeetingInvite',
   OnDeleteSessionMessage = 'onDeleteSessionMessage',
   OnDeleteAllSessionMessage = 'onDeleteAllSessionMessage',
 
   ChangeDeviceFromSetting = 'changeDeviceFromSetting',
   // 私聊
   OnPrivateChatMemberIdSelected = 'onPrivateChatMemberIdSelected',
+}
+
+export interface GetAccountInfoListResponse {
+  meetingAccountListResp: SearchAccountInfo[]
+  notFindUserUuids: string[]
+}
+export interface SearchAccountInfo {
+  userUuid: string
+  name: string
+  avatar?: string
+  dept: string
+  phoneNumber: string
+  // 非服务端返回，端上用于通讯录设置
+  role?: Role
+  disabled?: boolean
 }
 
 export enum MeetingEventType {
@@ -218,6 +242,7 @@ export enum UserEventType {
   SetLeaveCallback = 'setLeaveCallback',
   onMeetingStatusChanged = 'onMeetingStatusChanged',
   RejoinMeeting = 'rejoinMeeting',
+  JoinOtherMeeting = 'joinOtherMeeting',
   CancelJoin = 'cancelJoin',
   SetScreenSharingSourceId = 'setScreenSharingSourceId',
   EndMeeting = 'endMeeting',
@@ -277,6 +302,7 @@ export enum hostAction {
   closeWatermark = 65,
   changeChatPermission = 70,
   changeWaitingRoomChatPermission = 71,
+  changeGuestJoin = 72,
 }
 
 export type NERoomChatMessageType =
@@ -294,6 +320,13 @@ export type NERoomChatMessageType =
  * 房间内聊天消息
  */
 export interface NERoomChatMessage {
+  /**
+   * 消息 id
+   */
+  messageUuid?: string
+  /**
+   * 客户端类型
+   */
   fromClientType: 'Android' | 'iOS' | 'PC' | 'Web' | 'Mac'
   /**
    * 消息类型
@@ -338,6 +371,8 @@ export interface NERoomChatMessage {
     toNick: string[]
     url: string
     name: string
+    msgId: string
+    msgTime: number
   }
   /**
    * 消息来源
@@ -355,11 +390,45 @@ export interface NERoomChatMessage {
    * 客户端唯一ID
    */
   idClient?: string
+  /**
+   * 文件
+   */
+  file?: {
+    name: string
+    ext: string
+    size: number
+    url: string
+  }
+  /**
+   * 自定义信息
+   */
+  custom?: string
+  /**
+   * 0: 会内聊天室；1: 等候室
+   */
+  chatroomType?: number
+  /**
+   *  临时文件，用于重发
+   */
+  tempFile?: File
+  /**
+   * 是否是私聊
+   */
+  isPrivate?: boolean
+  /**
+   * 发送给的昵称
+   */
+  toNickname?: string
+  /**
+   * 头像
+   */
+  fromAvatar?: string
 }
 export interface GlobalProviderProps {
   eventEmitter: Eventemitter
   outEventEmitter: Eventemitter
   neMeeting: NEMeetingService
+  inviteService: NEMeetingInviteService
   children: ReactNode
   globalConfig?: GetMeetingConfigResponse
   joinLoading?: boolean
@@ -369,6 +438,7 @@ export interface GlobalProviderProps {
 export interface MeetingInfoProviderProps {
   meetingInfo: NEMeetingInfo
   memberList: NEMember[]
+  inInvitingMemberList?: NEMember[]
   children: ReactNode
 }
 
@@ -381,15 +451,18 @@ export interface GlobalContext {
   eventEmitter?: Eventemitter
   outEventEmitter?: Eventemitter
   neMeeting?: NEMeetingService
+  inviteService?: NEMeetingInviteService
   dispatch?: Dispatch
   logger?: Logger
   globalConfig?: GetMeetingConfigResponse
   showMeetingRemainingTip?: boolean
   waitingRejoinMeeting?: boolean // 正在重新加入会议
+  waitingJoinOtherMeeting?: boolean // 正在加入其他会议
   online?: boolean
   meetingIdDisplayOption?: NEMeetingIdDisplayOption
   showCloudRecordMenuItem?: boolean
   showCloudRecordingUI?: boolean
+  showScreenShareUserVideo?: boolean
   toolBarList?: ToolBarList
   moreBarList?: MoreBarList
 }
@@ -456,6 +529,8 @@ export type GetMeetingConfigResponse = {
       record: boolean
       sip: boolean
       waitingRoom: boolean
+      sipInvite: boolean
+      appInvite: boolean
     }
     MEETING_BEAUTY?: {
       enable: boolean
@@ -486,6 +561,12 @@ export type GetMeetingConfigResponse = {
       userNameRegisterEnabled: boolean
       usernameAsPhoneNumber: boolean
     }
+    MEETING_SCHEDULED_MEMBER_CONFIG?: {
+      enable: boolean // 预约会议时是否支持选定成员，默认true
+      coHostLimit: number // 模版里配置的联席主持人人数限制，默认4 待定
+      max: number // 单会议人数限制
+    }
+    outboundPhoneNumber?: string
   }
 }
 
@@ -502,6 +583,7 @@ export interface WaitingRoomContextInterface {
 export interface MeetingInfoContextInterface {
   meetingInfo: NEMeetingInfo
   memberList: NEMember[]
+  inInvitingMemberList?: NEMember[]
   dispatch?: Dispatch
 }
 export interface Action<T extends ActionType> {
@@ -539,6 +621,11 @@ export interface ActionHandle {
   [ActionType.WAITING_ROOM_ADD_MEMBER_LIST]: {
     memberList: NEWaitingRoomMember[]
   }
+
+  [ActionType.SIP_ADD_MEMBER]: { member: NEMember }
+  [ActionType.SIP_REMOVE_MEMBER]: { uuids: string[] }
+  [ActionType.SIP_UPDATE_MEMBER]: { uuid: string; member: Partial<NEMember> }
+  [ActionType.SIP_RESET_MEMBER]: { uuids: string[] }
 }
 
 export type ActionHandleType<T extends ActionType> = ActionHandle[T]
@@ -564,6 +651,11 @@ export enum ActionType {
   WAITING_ROOM_UPDATE_INFO = 'waitingRoomUpdateInfo',
   WAITING_ROOM_SET_MEMBER_LIST = 'waitingRoomSetMemberList',
   WAITING_ROOM_ADD_MEMBER_LIST = 'waitingRoomAddMemberList',
+
+  SIP_ADD_MEMBER = 'sipAddMember',
+  SIP_REMOVE_MEMBER = 'sipRemoveMember',
+  SIP_UPDATE_MEMBER = 'sipUpdateMember',
+  SIP_RESET_MEMBER = 'sipResetMember',
 }
 
 export enum BrowserType {
@@ -592,6 +684,8 @@ export type MeetingAccountInfo = {
     name: string
     meetingMaxMinutes: number
     meetingMaxMembers: number
+    expireTimeStamp: number
+    expireTip: string
   }
 }
 
@@ -606,6 +700,7 @@ export interface NEMeetingLoginByTokenOptions {
   accountId: string
   accountToken: string
   loginType: LoginType.LoginByToken
+  authType?: string
   isTemporary?: boolean
   loginReport?: IntervalEvent
 }
@@ -636,9 +731,11 @@ export interface NEMeetingCreateOptions extends NEMeetingBaseOptions {
   endTime?: number
   createMeetingReport?: IntervalEvent
   enableWaitingRoom?: boolean
+  enableGuestJoin?: boolean
   attendeeAudioOffType?: AttendeeOffType
   enableJoinBeforeHost?: boolean
   recurringRule?: Record<string, any>
+  scheduledMembers?: NEMeetingScheduledMember[]
 }
 interface NEMeetingBaseOptions {
   meetingId?: number
@@ -770,6 +867,7 @@ export interface MeetingSetting {
     resolution: number
     // 是否开启视频镜像
     enableVideoMirroring: boolean
+    galleryModeMaxCount: number
   }
   audioSetting: {
     recordDeviceId: string
@@ -1062,7 +1160,7 @@ export interface ActiveSpeakerConfig {
   enableVideoPreSubscribe: boolean
 }
 
-export type AvatarSize = 64 | 48 | 36 | 32 | 24
+export type AvatarSize = 64 | 48 | 36 | 32 | 24 | 22
 
 export enum MeetingRepeatType {
   NoRepeat = 1,
@@ -1089,4 +1187,13 @@ export enum MeetingRepeatFrequencyType {
   Day = 1,
   Week = 2,
   Month = 3,
+}
+
+// 通讯录成员
+export interface MeetingConnectMember {
+  userUuid: string
+  name: string
+  avatar: string
+  dept: string
+  phoneNumber: string
 }

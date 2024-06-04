@@ -1,6 +1,6 @@
 import Styles from './index.less';
 import { useEffect, useState } from 'react';
-import req, { RoomsInfo } from '../request';
+import { RoomsInfo } from '../request';
 
 import RoomsIcon from '../../../assets/rooms-icon.png';
 

@@ -12,6 +12,7 @@ import useEventHandler from '../../../hooks/useEventHandler'
 import {
   GlobalContext,
   MeetingInfoContext,
+  useGlobalContext,
   useMeetingInfoContext,
   useWaitingRoomContext,
 } from '../../../store'
@@ -42,11 +43,15 @@ import MeetingRightDrawer from '../MeetingRightDrawer'
 
 import Modal from '../../common/Modal'
 
-import { useUpdateEffect } from 'ahooks'
+import { usePrevious, useUpdateEffect } from 'ahooks'
 import { Button, message } from 'antd'
 import { NEMemberVolumeInfo } from 'neroom-web-sdk/dist/types/platform/web/type'
 import { useTranslation } from 'react-i18next'
 import { IPCEvent } from '../../../../app/src/types'
+import { useIsAudioMode } from '../../../hooks/useAudioMode'
+import { useMeetingNotificationInMeeting } from '../../../hooks/useMeetingNotification'
+import useMeetingPlugin from '../../../hooks/useMeetingPlugin'
+import useNotificationHandle from '../../../hooks/useNotificationHandle'
 import usePostMessageHandle from '../../../hooks/usePostMessagehandle'
 import usePreviewHandler from '../../../hooks/usePreviewHandler'
 import eleIpc from '../../../services/electron/index'
@@ -58,7 +63,10 @@ import {
   getWindow,
   openWindow,
 } from '../../../utils/windowsProxy'
+import Network from '../../common/Network'
+import MeetingNotification from '../../common/Notification'
 import PCTopButtons from '../../common/PCTopButtons'
+import Record from '../../common/Record'
 import Toast from '../../common/toast'
 import ScreenShareListModal, {
   ScreenShareModalRef,
@@ -70,17 +78,15 @@ import Live from '../Live'
 import LongPressSpaceUnmute from '../LongPressSpaceUnmute'
 import MeetingDuration from '../MeetingDuration'
 import MeetingInfo from '../MeetingInfo'
-import MeetingLayout from '../MeetingLayout'
-import MeetingNotification from '../MeetingNotification'
-import { useMeetingNotificationInMeeting } from '../MeetingNotification/useMeetingNotification'
-import useMeetingPlugin from '../MeetingRightDrawer/MeetingPlugin/useMeetingPlugin'
-import Network from '../Network'
-import Record from '../Record'
+import MeetingLayout, { useMeetingViewOrder } from '../MeetingLayout'
 import RoomsHeader from '../RoomsHeader'
 import Setting from '../Setting'
 import { SettingTabType } from '../Setting/Setting'
 import SpeakerList from '../SpeakerList'
 import './index.less'
+import useWatermark from '../../../hooks/useWatermark'
+import { getLocalStorageSetting } from '../../../utils'
+import { NEMeetingInviteInfo, NEMeetingInviteStatus } from '../../../types/type'
 
 const worker = new Worker(
   new URL('../../../libs/yuv-canvas/worker.js', import.meta.url)
@@ -175,12 +181,14 @@ const SpeakerListWrap: React.FC<SpeakerListProps> = ({ isLocalScreen }) => {
 const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
   const { t } = useTranslation()
 
-  const { dispatch, meetingInfo, memberList } = useMeetingInfoContext()
+  const { dispatch, meetingInfo, memberList, inInvitingMemberList } =
+    useMeetingInfoContext()
   const { waitingRoomInfo, memberList: waitingRoomMemberList } =
     useWaitingRoomContext()
   const {
     eventEmitter,
     outEventEmitter,
+    inviteService,
     neMeeting,
     logger,
     waitingRejoinMeeting,
@@ -189,9 +197,16 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
     showCloudRecordingUI,
     globalConfig,
   } = useContext<GlobalContextInterface>(GlobalContext)
+  const { notificationApi } = useGlobalContext()
   const [showLiveModel, setShowLiveModel] = useState(false)
   const showCloudRecordingUIRef = useRef<boolean>(true)
   const cloudRecordModalRef = useRef<any>(null)
+
+  const remoteViewOrderPrevious = usePrevious(meetingInfo.remoteViewOrder)
+
+  useWatermark({
+    container: document.getElementById('ne-web-meeting') as HTMLElement,
+  })
 
   showCloudRecordingUIRef.current = showCloudRecordingUI !== false
 
@@ -232,6 +247,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
   const toastIdRef = useRef<string>('')
   const [isDarkMode, setIsDarkMode] = useState(true)
   const { onClickPlugin } = useMeetingPlugin()
+  useMeetingViewOrder()
 
   const handUpCount = useMemo(() => {
     return memberList.filter((item) => item.isHandsUp).length
@@ -247,6 +263,12 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
   const meetingInfoRef = useRef(meetingInfo)
   meetingInfoRef.current = meetingInfo
 
+  useNotificationHandle({
+    neMeeting,
+    notificationApi,
+    meetingNum: meetingInfo.meetingNum,
+    isLocalSharingScreen: localMember.isSharingScreen,
+  })
   const eleIpcIns = useMemo(() => eleIpc?.getInstance() || null, [])
   // 是否在预览
   const [isStartPreview, setIsStartPreview] = useState(false)
@@ -254,24 +276,19 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
   const openRightDrawer = useMemo(() => {
     return meetingInfo.rightDrawerTabs.length > 0
   }, [meetingInfo.rightDrawerTabs])
-
-  const isAudioMode = useMemo(() => {
-    // 如果都为开启过视频则为音频模式；
-    return (
-      !meetingInfo.screenUuid &&
-      !meetingInfo.whiteboardUuid &&
-      memberList.every(
-        (item) =>
-          !item.isVideoOn && !item.isSharingScreen && !item.isSharingWhiteboard
-      )
-    )
-  }, [memberList, meetingInfo.whiteboardUuid, meetingInfo.screenUuid])
+  const { isAudioMode } = useIsAudioMode({
+    memberList,
+    meetingInfo,
+  })
 
   const showLayout = useMemo(() => {
     if (isAudioMode) {
       return false
     }
-    if (memberList.length === 1) {
+    if (
+      memberList.length === 1 &&
+      (!inInvitingMemberList || inInvitingMemberList.length === 0)
+    ) {
       return false
     }
     if (localMember.isSharingScreen) {
@@ -283,6 +300,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
     return true
   }, [
     memberList.length,
+    inInvitingMemberList?.length,
     meetingInfo.whiteboardUuid,
     localMember.isSharingScreen,
     isAudioMode,
@@ -498,7 +516,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
     const newWindow = openWindow(payload.name, payload.url)
     const postMessage = () => {
       payload.postMessageData &&
-        newWindow?.postMessage(payload.postMessageData, '*')
+        newWindow?.postMessage(payload.postMessageData, newWindow.origin)
     }
     // 不是第一次打开
     if (newWindow?.firstOpen === false) {
@@ -508,6 +526,33 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
       newWindow?.addEventListener('load', () => {
         postMessage()
       })
+    }
+  }
+
+  async function onNotificationClickHandler(action: string, message: any) {
+    if (!message || !window.isElectronNative) return
+    const data = message.data?.data
+    const type = data?.type
+    if (type === 'MEETING.INVITE') {
+      if (action === 'reject') {
+        neMeeting?.rejectInvite(data.roomUuid)
+        notificationApi?.destroy(data?.roomUuid)
+      } else if (action === 'join') {
+        const setting = getLocalStorageSetting()
+        joinOtherMeeting(
+          {
+            meetingNum: data.meetingNum,
+            video: setting?.normalSetting.openAudio ? 1 : 2,
+            audio: setting?.normalSetting.openVideo ? 1 : 2,
+          },
+          (e: any) => {
+            // 房间已结束
+            if (e && e.code === 3101) {
+              leaveMeeting()
+            }
+          }
+        )
+      }
     }
   }
 
@@ -526,9 +571,12 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
       } else if (event === 'meetingInfoDispatch') {
         dispatch?.(payload)
       } else if (event === 'notificationClick') {
-        const { action } = payload
+        console.log('notificationClick', payload)
+        const { action, message } = payload
         if (action.startsWith('meeting://open_plugin')) {
           onClickPlugin(action)
+        } else {
+          onNotificationClickHandler(action, message)
         }
       } else if (event === 'previewContext' && previewController) {
         const { replyKey, fnKey, args } = payload
@@ -554,12 +602,24 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
         handlePostMessage(childWindow, result, replyKey)
       } else if (event === 'openWindow') {
         openMeetingWindow(payload)
+      } else if (event === 'openControllerBarWindow') {
+        handleControlBarDefaultButtonClick(payload)
       }
     }
     childWindow?.addEventListener('message', messageListener)
   }
 
   const handleControlBarDefaultButtonClick = async (key: string) => {
+    // 如果是全屏共享，则重置
+    if (meetingInfo.rightDrawerTabActiveKey && isElectronSharingScreen) {
+      dispatch?.({
+        type: ActionType.UPDATE_MEETING_INFO,
+        data: {
+          rightDrawerTabActiveKey: '',
+        },
+      })
+    }
+
     switch (key) {
       case 'memberList':
         if (isElectronSharingScreen) {
@@ -573,6 +633,9 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
                 waitingRoomInfo: JSON.parse(JSON.stringify(waitingRoomInfo)),
                 waitingRoomMemberList: JSON.parse(
                   JSON.stringify(waitingRoomMemberList)
+                ),
+                inSipInvitingMemberList: JSON.parse(
+                  JSON.stringify(inInvitingMemberList)
                 ),
               },
             },
@@ -608,7 +671,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
           }
         }
         break
-      case 'chat':
+      case 'chatroom':
         if (isElectronSharingScreen) {
           console.log('open chatWindow', cacheMsgs)
           openMeetingWindow({
@@ -700,13 +763,27 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
         break
       case 'invite':
         if (isElectronSharingScreen) {
+          let payload: any = {
+            meetingInfo: JSON.parse(JSON.stringify(meetingInfo)),
+          }
+          if (
+            localMember.role == Role.host ||
+            localMember.role == Role.coHost
+          ) {
+            payload = {
+              ...payload,
+              globalConfig: JSON.parse(JSON.stringify(globalConfig)),
+              memberList: JSON.parse(JSON.stringify(memberList)),
+              inSipInvitingMemberList: JSON.parse(
+                JSON.stringify(inInvitingMemberList)
+              ),
+            }
+          }
           openMeetingWindow({
             name: 'inviteWindow',
             postMessageData: {
               event: 'updateData',
-              payload: {
-                meetingInfo: JSON.parse(JSON.stringify(meetingInfo)),
-              },
+              payload: payload,
             },
           })
         } else {
@@ -766,46 +843,6 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
     window.ipcRenderer?.send(IPCEvent.noPermission)
   }
 
-  function handleDrawWatermark() {
-    const needDrawWatermark =
-      meetingInfo.meetingNum &&
-      meetingInfo.watermark &&
-      (meetingInfo.watermark.videoStrategy === WATERMARK_STRATEGY.OPEN ||
-        meetingInfo.watermark.videoStrategy === WATERMARK_STRATEGY.FORCE_OPEN)
-
-    if (
-      needDrawWatermark &&
-      meetingInfo.watermark &&
-      !isElectronSharingScreen
-    ) {
-      const { videoStyle, videoFormat } = meetingInfo.watermark
-      const supportInfo = {
-        name: meetingInfo.watermarkConfig?.name || localMember.name,
-        phone: meetingInfo.watermarkConfig?.phone || '',
-        email: meetingInfo.watermarkConfig?.email || '',
-        jobNumber: meetingInfo.watermarkConfig?.jobNumber || '',
-      }
-      // videoFormat: '{key}_{key2}'
-      function replaceFormat(format, info) {
-        const regex = /{([^}]+)}/g
-        const result = format?.replace(regex, (match, key) => {
-          const value = info[key]
-          return value ? value : match // 如果值存在，则返回对应的值，否则返回原字符串
-        })
-        return result
-      }
-      setTimeout(() => {
-        drawWatermark({
-          container: document.getElementById('ne-web-meeting') as HTMLElement,
-          content: replaceFormat(videoFormat, supportInfo),
-          type: videoStyle,
-        })
-      }, 0)
-    } else {
-      stopDrawWatermark()
-    }
-  }
-
   useUpdateEffect(() => {
     if (isHostOrCoHost) {
       const successMsg = meetingInfo.isLocked
@@ -828,17 +865,10 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
   }, [])
 
   useEffect(() => {
-    handleDrawWatermark()
-    window.addEventListener('resize', handleDrawWatermark)
-    return () => {
-      window.removeEventListener('resize', handleDrawWatermark)
+    if (!meetingInfo.meetingNum) {
+      setSettingOpen(false)
     }
-  }, [
-    meetingInfo?.meetingNum,
-    localMember?.name,
-    meetingInfo.watermark,
-    isElectronSharingScreen,
-  ])
+  }, [meetingInfo.meetingNum])
 
   useEffect(() => {
     const _setting = localStorage.getItem('ne-meeting-setting')
@@ -1030,6 +1060,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
         })
       }
     )
+    eventEmitter?.on(EventType.AcceptInvite, joinOtherMeeting)
     window.ipcRenderer?.on(IPCEvent.changeSetting, (event, setting) => {
       onSettingChange(setting)
     })
@@ -1044,6 +1075,9 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
     window.ipcRenderer?.on('set-theme-color', (_, isDark) => {
       setIsDarkMode(isDark)
     })
+    window.ipcRenderer?.on('open-meeting-about', () => {
+      openMeetingWindow({ name: 'aboutWindow' })
+    })
     window.ipcRenderer?.on(IPCEvent.alreadyInMeeting, () => {
       message.info(t('alreadyInMeeting'))
     })
@@ -1053,6 +1087,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
       eventEmitter?.off(MeetingEventType.noCameraPermission)
       eventEmitter?.off(MeetingEventType.noMicPermission)
       eventEmitter?.off(EventType.MeetingExits)
+      eventEmitter?.off(EventType.AcceptInvite, joinOtherMeeting)
       window.ipcRenderer?.removeAllListeners(IPCEvent.alreadyInMeeting)
     }
   }, [])
@@ -1068,6 +1103,61 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
       isVideoOn: localMember.isVideoOn,
     })
   }
+
+  const joinOtherMeeting = useCallback(
+    async (
+      options: CreateOptions | { meetingNum: string },
+      callback?: (e?: any) => void
+    ) => {
+      // 需要先离开当前会议
+      globalDispatch?.({
+        type: ActionType.UPDATE_GLOBAL_CONFIG,
+        data: {
+          waitingJoinOtherMeeting: true,
+          joinLoading: true,
+        },
+      })
+      // 在会中
+      if (meetingInfoRef.current?.meetingNum) {
+        // 如果是已在邀请的会议则不处理
+        if (options.meetingNum === meetingInfoRef.current.meetingNum) {
+          return
+        }
+        if (meetingInfoRef.current?.localMember.isSharingScreen) {
+          try {
+            await neMeeting?.muteLocalScreenShare()
+          } catch (error) {
+            console.warn('muteLocalScreenShare', error)
+          }
+        }
+        // 加入新的会议
+        setTimeout(async () => {
+          notificationApi?.destroy()
+          try {
+            await neMeeting?.leave()
+          } catch (e: any) {}
+          Modal.destroyAll()
+          globalDispatch?.({
+            type: ActionType.JOIN_LOADING,
+            data: false,
+          })
+          dispatch?.({
+            type: ActionType.RESET_MEMBER,
+            data: null,
+          })
+          dispatch &&
+            dispatch({
+              type: ActionType.RESET_MEETING,
+              data: null,
+            })
+          eventEmitter?.emit(UserEventType.JoinOtherMeeting, options, callback)
+        })
+      } else {
+        eventEmitter?.emit(UserEventType.JoinOtherMeeting, options, callback)
+      }
+    },
+    []
+  )
 
   useEffect(() => {
     if (!!waitingRejoinMeeting) {
@@ -1410,13 +1500,16 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
         }
       }
       const settingWindow = getWindow('settingWindow')
-      settingWindow?.postMessage({
-        event: IPCEvent.changeSettingDeviceFromControlBar,
-        payload: {
-          type,
-          deviceId,
+      settingWindow?.postMessage(
+        {
+          event: IPCEvent.changeSettingDeviceFromControlBar,
+          payload: {
+            type,
+            deviceId,
+          },
         },
-      })
+        settingWindow.origin
+      )
       onSettingChange(setting)
     }
   }
@@ -1466,6 +1559,18 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
         payload: {
           memberList: JSON.parse(JSON.stringify(memberList)),
           meetingInfo: JSON.parse(JSON.stringify(meetingInfo)),
+        },
+      },
+    })
+  }
+
+  const onNotificationCardWinOpen = (message) => {
+    openMeetingWindow({
+      name: 'notificationCardWindow',
+      postMessageData: {
+        event: 'updateNotifyCard',
+        payload: {
+          message,
         },
       },
     })
@@ -1551,18 +1656,24 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
 
   useEffect(() => {
     if (meetingInfo.screenUuid === localMember.uuid) {
-      getActiveWindows().forEach((window) => {
-        window.postMessage({
-          event: 'updateData',
-          payload: {
-            memberList: JSON.parse(JSON.stringify(memberList)),
-            meetingInfo: JSON.parse(JSON.stringify(meetingInfo)),
-            waitingRoomInfo: JSON.parse(JSON.stringify(waitingRoomInfo)),
-            waitingRoomMemberList: JSON.parse(
-              JSON.stringify(waitingRoomMemberList)
-            ),
+      getActiveWindows().forEach((activeWindow) => {
+        activeWindow.postMessage(
+          {
+            event: 'updateData',
+            payload: {
+              memberList: JSON.parse(JSON.stringify(memberList)),
+              meetingInfo: JSON.parse(JSON.stringify(meetingInfo)),
+              waitingRoomInfo: JSON.parse(JSON.stringify(waitingRoomInfo)),
+              waitingRoomMemberList: JSON.parse(
+                JSON.stringify(waitingRoomMemberList)
+              ),
+              inSipInvitingMemberList: inInvitingMemberList
+                ? JSON.parse(JSON.stringify(inInvitingMemberList))
+                : [],
+            },
           },
-        })
+          activeWindow.origin
+        )
       })
     }
   }, [
@@ -1570,6 +1681,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
     meetingInfo,
     waitingRoomInfo,
     waitingRoomMemberList,
+    inInvitingMemberList,
     localMember.uuid,
   ])
 
@@ -1589,7 +1701,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
               height,
             },
           },
-          '*',
+          settingWindow.origin,
           [data.bytes.buffer]
         )
       }
@@ -1607,7 +1719,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
               height,
             },
           },
-          '*',
+          shareVideoWindow.origin,
           [data.bytes.buffer]
         )
       } else {
@@ -1671,6 +1783,46 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
   }, [localMember.properties, dispatch, neMeeting])
 
   useEffect(() => {
+    if (window.isElectronNative && meetingInfo.meetingNum) {
+      function handleMeetingInviteStatusChanged(
+        status: NEMeetingInviteStatus,
+        meetingId: string,
+        inviteInfo: NEMeetingInviteInfo
+      ) {
+        console.warn('handleMeetingInviteStatusChanged>>>', status, inviteInfo)
+        if (
+          status === NEMeetingInviteStatus.rejected ||
+          status === NEMeetingInviteStatus.canceled ||
+          status === NEMeetingInviteStatus.removed
+        ) {
+          const notificationCardWindow = getWindow('notificationCardWindow')
+          console.warn('notificationCardWindow>>', notificationCardWindow)
+          notificationCardWindow?.postMessage(
+            {
+              event: 'inviteStateChange',
+              payload: {
+                status,
+                meetingId,
+              },
+            },
+            notificationCardWindow.origin
+          )
+        }
+      }
+      inviteService?.on(
+        EventType.OnMeetingInviteStatusChange,
+        handleMeetingInviteStatusChanged
+      )
+      return () => {
+        inviteService?.off(
+          EventType.OnMeetingInviteStatusChange,
+          handleMeetingInviteStatusChanged
+        )
+      }
+    }
+  }, [inviteService, meetingInfo.meetingNum])
+
+  useEffect(() => {
     if (!online) {
       setShowLiveModel(false)
     }
@@ -1730,14 +1882,6 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
     meetingInfo.isScreenSharingMeeting,
   ])
 
-  useEffect(() => {
-    if (isHostOrCoHost) {
-      neMeeting?.chatController?.joinChatroom(1)
-    } else {
-      neMeeting?.chatController?.leaveChatroom(1)
-    }
-  }, [isHostOrCoHost, neMeeting])
-
   // 举手状态下，先放下手
   useEffect(() => {
     if (localMember.isHandsUp && localMember.isSharingScreen) {
@@ -1751,16 +1895,16 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
   ])
 
   useUpdateEffect(() => {
-    const isLastChatroomTab =
+    const activeKey = meetingInfo.rightDrawerTabActiveKey
+    const isLastTab =
       meetingInfo.rightDrawerTabs.length === 1 &&
-      meetingInfo.rightDrawerTabs[0].key === 'chatroom'
+      meetingInfo.rightDrawerTabs[0].key === activeKey
 
-    if (
-      !isLastChatroomTab &&
-      meetingInfo.rightDrawerTabActiveKey === 'chatroom'
-    ) {
-      handleControlBarDefaultButtonClick('chat')
+    if (isLastTab) {
+      return
     }
+
+    activeKey && handleControlBarDefaultButtonClick(activeKey)
   }, [meetingInfo.rightDrawerTabActiveKey])
 
   // 通知组件是否正在共享屏幕
@@ -1836,6 +1980,7 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
                 <InviteModal
                   open={inviteModalVisible}
                   onCancel={() => setInviteModalVisible(false)}
+                  destroyOnClose={true}
                 />
                 {!waitingRejoinMeeting && (
                   <div className="nemeeting-top-right-wrap">
@@ -1846,7 +1991,10 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
                       />
                     )}
                     {showLayout && (
-                      <MeetingLayout className="nemeeting-top-right-item" />
+                      <MeetingLayout
+                        className="nemeeting-top-right-item"
+                        onSettingClick={() => onSettingClick('video')}
+                      />
                     )}
                   </div>
                 )}
@@ -1970,7 +2118,11 @@ const MeetingContent: React.FC<AppProps> = ({ height, width }) => {
           <p className={'nemeeint-online'}>{t('disconnected')}</p>
         </div>
       )}
-      <MeetingNotification />
+      <MeetingNotification
+        onClick={onNotificationClickHandler}
+        neMeeting={neMeeting}
+        onNotificationCardWinOpen={onNotificationCardWinOpen}
+      />
     </div>
   )
 }

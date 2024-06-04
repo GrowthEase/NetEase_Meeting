@@ -1,5 +1,5 @@
 import { Button, Checkbox } from 'antd';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import AppAboutLogoImage from '../../assets/app-about-logo.png';
 import MobLogo from '../../assets/mob-logo@2x.png';
 import Toast from '../../../../src/components/common/toast';
@@ -14,17 +14,6 @@ import { EnterPriseInfo } from '../../types';
 import { useTranslation } from 'react-i18next';
 
 export const CREATE_ACCOUNT_URL = process.env.CREATE_ACCOUNT_URL;
-
-const i18n = {
-  loginAndRegister: '注册/登录',
-  ssoLogin: 'SSO登录',
-  loginAgreement: '已阅读并同意网易会议',
-  and: '和',
-  privacyPolicy: '隐私政策',
-  userAgreement: '用户服务协议',
-  beforeLoginCheck: '请先勾选同意',
-  suggestChrome: '推荐使用Chrome浏览器',
-};
 
 type ShowType =
   | 'home'
@@ -47,15 +36,6 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogged }) => {
   });
   const [enterpriseLoading, setEnterpriseLoading] = useState(false);
   const [enterpriseInfo, setEnterpriseInfo] = useState<EnterPriseInfo>();
-
-  useEffect(() => {
-    const isChrome =
-      /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-    const isEdge = /Edge|Edg/.test(navigator.userAgent);
-    if (!isChrome || isEdge) {
-      Toast.info(t('authSuggestChrome'));
-    }
-  }, []);
 
   function login(type: ShowType) {
     setType(type);
@@ -109,7 +89,7 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogged }) => {
   }
 
   return (
-    <div className="before-login-wrap">
+    <div className={'before-login-wrap'}>
       {window.isElectronNative && (
         <div className="electron-drag-bar">
           <div className="drag-region" />
@@ -118,102 +98,55 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogged }) => {
         </div>
       )}
       <div className="before-login">
-        {type === 'home' && (
-          <>
-            <img
-              className={`logo ${
-                window.isElectronNative ? 'logo-electron' : ''
-              }`}
-              src={AppAboutLogoImage}
-            />
-            <BaseInput
-              style={{ width: '100%', paddingLeft: 0 }}
-              size="middle"
-              value={enterpriseCode.value}
-              placeholder={t('authEnterCorpCode')}
-              set={setEnterpriseCode}
-            />
-            <div className="no-enterprise-tip">
-              <div>
-                {t('authNoCorpCode')}
+        <div className="before-login-content">
+          {type === 'home' && (
+            <>
+              <img
+                className={`${
+                  window.isElectronNative ? 'logo-electron' : ''
+                } ${'logo'}`}
+                src={AppAboutLogoImage}
+              />
+              <BaseInput
+                style={{ width: '100%', paddingLeft: 0 }}
+                size="middle"
+                value={enterpriseCode.value}
+                placeholder={t('authEnterCorpCode')}
+                set={setEnterpriseCode}
+              />
+              <div className="no-enterprise-tip">
+                <div>
+                  {t('authNoCorpCode')}
+                  <Button
+                    className="create-count"
+                    type="link"
+                    onClick={onCreateAccount}
+                  >
+                    {t('authCreateNow')}
+                  </Button>
+                </div>
                 <Button
-                  className="create-count"
                   type="link"
-                  onClick={onCreateAccount}
+                  className="to-demo"
+                  onClick={() => {
+                    goType('register');
+                  }}
                 >
-                  {t('authCreateNow')}
+                  {t('authLoginToTrialEdition')}
                 </Button>
               </div>
               <Button
-                type="link"
-                className="to-demo"
+                type="primary"
+                disabled={!enterpriseCode.value}
+                loading={enterpriseLoading}
+                className="login-button"
                 onClick={() => {
-                  goType('register');
+                  goEnterprise();
                 }}
               >
-                {t('authLoginToTrialEdition')}
+                {t('authNextStep')}
               </Button>
-            </div>
-            <Button
-              type="primary"
-              disabled={!enterpriseCode.value}
-              loading={enterpriseLoading}
-              className="login-button"
-              onClick={() => {
-                goEnterprise();
-              }}
-            >
-              {t('authNextStep')}
-            </Button>
-            <Button
-              type="link"
-              onClick={() => {
-                onClickLogin('sso');
-              }}
-            >
-              {t('authLoginBySSO')}
-            </Button>
-          </>
-        )}
-        {type === 'enterpriseLogin' && (
-          <EnterpriseLogin
-            enterpriseInfo={enterpriseInfo}
-            checkIsAgree={checkIsAgree}
-            onLogged={onLogged}
-            goBack={goBack}
-            onSSOLogin={() => login('sso')}
-          />
-        )}
-        {type === 'register' && (
-          <>
-            <img
-              className={`logo ${
-                window.isElectronNative ? 'logo-electron' : ''
-              }`}
-              src={AppAboutLogoImage}
-            />
-            <Button
-              type="primary"
-              className="login-button login-and-register-btn"
-              onClick={() => {
-                onClickLogin('login');
-              }}
-            >
-              {t('authRegisterAndLogin')}
-            </Button>
-            <div className="no-enterprise-tip">
-              <div>
-                {t('authHasCorpCode')}
-                <Button
-                  onClick={() => goType('home')}
-                  className="create-count"
-                  type="link"
-                >
-                  {t('authLoginToCorpEdition')}
-                </Button>
-              </div>
               <Button
-                className="create-count"
                 type="link"
                 onClick={() => {
                   onClickLogin('sso');
@@ -221,24 +154,74 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogged }) => {
               >
                 {t('authLoginBySSO')}
               </Button>
-            </div>
-          </>
-        )}
-        {type === 'sso' && (
-          <LoginBySSO
-            checkIsAgree={checkIsAgree}
-            goBack={goBack}
-            code={enterpriseCode.value}
-          />
-        )}
-        {type === 'login' && (
-          <NormalLogin
-            onSSOLogin={() => login('sso')}
-            goBack={goBack}
-            onLogged={onLogged}
-          />
-        )}
-        <div className="footer">
+            </>
+          )}
+          {type === 'enterpriseLogin' && (
+            <EnterpriseLogin
+              enterpriseInfo={enterpriseInfo}
+              checkIsAgree={checkIsAgree}
+              onLogged={onLogged}
+              goBack={goBack}
+              onSSOLogin={() => login('sso')}
+            />
+          )}
+          {type === 'register' && (
+            <>
+              <img
+                className={`${
+                  window.isElectronNative ? 'logo-electron' : ''
+                } ${'logo'}`}
+                src={AppAboutLogoImage}
+              />
+              <Button
+                type="primary"
+                className={`login-button  ${'login-and-register-btn'}`}
+                onClick={() => {
+                  onClickLogin('login');
+                }}
+              >
+                {t('authRegisterAndLogin')}
+              </Button>
+              <div className="no-enterprise-tip">
+                <div>
+                  {t('authHasCorpCode')}
+                  <Button
+                    onClick={() => goType('home')}
+                    className="create-count"
+                    type="link"
+                  >
+                    {t('authLoginToCorpEdition')}
+                  </Button>
+                </div>
+                <Button
+                  className="create-count"
+                  type="link"
+                  onClick={() => {
+                    onClickLogin('sso');
+                  }}
+                >
+                  {t('authLoginBySSO')}
+                </Button>
+              </div>
+            </>
+          )}
+          {type === 'sso' && (
+            <LoginBySSO
+              checkIsAgree={checkIsAgree}
+              goBack={goBack}
+              code={enterpriseCode.value}
+            />
+          )}
+          {type === 'login' && (
+            <NormalLogin
+              checkIsAgree={checkIsAgree}
+              onSSOLogin={() => login('sso')}
+              goBack={goBack}
+              onLogged={onLogged}
+            />
+          )}
+        </div>
+        <div className={'footer'}>
           <div className="footer-agreement">
             <Checkbox
               onChange={(e) => {

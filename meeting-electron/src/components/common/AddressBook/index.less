@@ -1,0 +1,91 @@
+.nemeeting-address-book {
+  display: flex;
+  .nemeeting-connect-member-list-check {
+    flex-direction: column;
+  }
+  .nemeeting-batch-call-content {
+    display: flex;
+  }
+  .nemeeting-address-book-more {
+    height: 22px;
+    width: 44px;
+    border-radius: 2px;
+    background-color: #337EFF;
+    color: #fff;
+    display: none;
+    position: absolute;
+    right: 30px;
+    top: 50%;
+    font-size: 12px;
+    transform: translateY(-50%);
+    text-align: center;
+    line-height: 22px;
+  }
+  .nemeeting-schedule-mySelf-icon {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 1px solid #fff;
+    right: 0;
+    bottom: 0;
+    border-radius: 50%;
+  }
+  .nemeeting-batch-left {
+    flex: 1;
+    border-right: 1px solid #F0F1F5;
+    box-sizing: border-box;
+    .nemeeting-connect-member-item-title-tip {
+      max-width: 130px;
+    }
+  }
+  .nemeeting-checkbox-wrapper {
+    margin-top: 16px;
+    width: 100%;
+  }
+  .nemeeting-checkbox-group-item {
+    margin-top: 16px;
+  }
+  .nemeeting-batch-left-list {
+    height: 260px;
+    overflow-y: auto;
+    padding-left: 24px;
+    padding-right: 16px;
+  }
+  .nemeeting-batch-right {
+    flex: 1;
+    .nemeeting-connect-member-item {
+      margin-top: 16px;
+      position: relative;
+      &:hover {
+        .nemeeting-address-book-more {
+          display: block;
+        } 
+      }
+    }
+    .nemeeting-connect-member-item-title-tip {
+      max-width: 130px;
+    }
+    .nemeeting-batch-left-list {
+      padding-left: 16px;
+      padding-right: 24px;
+    }
+  }
+  .nemeeting-connect-member-item-avatar {
+    display: flex;
+    position: relative;
+  }
+  .nemeeting-batch-selected-count {
+    color: #B3B7BC;
+    line-height: 32px;
+    margin-left: 16px;
+  }
+  .nemeeting-connect-member-empty-img {
+    width: 112px;
+  }
+  .nemeeting-connect-member-list-empty {
+    text-align: center;
+    margin-top: 43px;
+    color: #666666;
+    font-size: 12px;
+  }
+}

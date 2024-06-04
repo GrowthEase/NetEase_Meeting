@@ -2,8 +2,8 @@ import { ModalProps } from 'antd'
 import React from 'react'
 import Modal from '../../common/Modal'
 
-import MeetingPlugin from '../MeetingRightDrawer/MeetingPlugin'
 import './index.less'
+import MeetingPlugin from '../../common/PlugIn/MeetingPlugin'
 
 interface PluginAppModalProps extends ModalProps {
   pluginInfo: any

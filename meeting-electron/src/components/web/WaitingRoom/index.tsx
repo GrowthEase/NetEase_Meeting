@@ -22,6 +22,7 @@ import {
   MeetingDeviceInfo,
   MeetingEventType,
   MeetingSetting,
+  UserEventType,
 } from '../../../types/innerType'
 import { NEMeetingLeaveType } from '../../../types/type'
 import {
@@ -41,6 +42,8 @@ import Chatroom from '../Chatroom/Chatroom'
 import Setting from '../Setting'
 import { SettingTabType } from '../Setting/Setting'
 import './index.less'
+import { useWaitingRoom } from '../../../hooks/useWaitingRoom'
+import useElectronInvite from '../../../hooks/useElectronInvite'
 interface WaitRoomProps {
   className?: string
 }
@@ -49,36 +52,22 @@ const WAITING_ROOM_MEMBER_MSG_KEY = 'WAITING_ROOM_MEMBER_MSG_KEY'
 let closeModal: any
 const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
   const { t } = useTranslation()
-  const [openAudio, setOpenAudio] = useState<boolean>(false)
-  const [openVideo, setOpenVideo] = useState<boolean>(false)
-  const [videoPopoverVisible, setVideoPopoverVisible] = useState<boolean>(false)
   const [audioPopoverVisible, setAudioPopoverVisible] = useState<boolean>(false)
   const [selectedMicrophone, setSelectedMicrophone] = useState<string>('')
   const [selectedCamera, setSelectedCamera] = useState<string>('')
   const [selectedSpeaker, setSelectedSpeaker] = useState<string>('')
-  const [openChatRoom, setOpenChatRoom] = useState<boolean>(false)
-  const [setting, setSetting] = useState<MeetingSetting | null>(null)
-  const [unReadMsgCount, setUnReadMsgCount] = useState<number>(0)
-  const [isOffLine, setIsOffLine] = useState<boolean>(false)
-  const [nickname, setNickname] = useState('')
-  const previewRoomListenerRef = useRef<any>(null)
-
   const [videoDeviceList, setVideoDeviceList] = useState<NEDeviceBaseInfo[]>([])
   const [recordDeviceList, setRecordDeviceList] = useState<NEDeviceBaseInfo[]>(
     []
   )
-  const videoCanvasWrapRef = useRef<HTMLDivElement>(null)
   const yuvRef = useRef<any>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [playoutDeviceList, setPlayoutDeviceList] = useState<
     NEDeviceBaseInfo[]
   >([])
   const [isDarkMode, setIsDarkMode] = useState(true)
-  const [recordVolume, setRecordVolume] = useState<number>(0)
-  const { meetingInfo, dispatch } = useMeetingInfoContext()
+  const { dispatch } = useMeetingInfoContext()
   const [settingOpen, setSettingOpen] = useState(false)
-  const [meetingState, setMeetingState] = useState(1)
-  const [showChatRoom, setShowChatRoom] = useState(false)
   const [settingModalTab, setSettingModalTab] =
     useState<SettingTabType>('normal')
   const {
@@ -90,15 +79,100 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
     notificationApi,
   } = useGlobalContext()
   const { waitingRoomInfo } = useWaitingRoomContext()
-  const meetingInfoRef = useRef<NEMeetingInfo>(meetingInfo)
   const closeModalRef = useRef<any>(null)
   const closeTimerRef = useRef<any>(null)
   const meetingCanvasDomWidthResizeTimer = useRef<number | NodeJS.Timeout>()
   const { handlePostMessage } = usePostMessageHandle()
+
+  useElectronInvite({
+    needOpenWindow: true,
+  })
   usePreviewHandler()
   // useEventHandler()
-  meetingInfoRef.current = meetingInfo
-
+  function closeModalHandle(data: {
+    title: string
+    content: string
+    closeText: string
+    reason: any
+    notNeedAutoClose?: boolean
+  }) {
+    const { title, content, closeText, reason, notNeedAutoClose } = data
+    let remainTime = 3
+    closeModalRef.current = Modal.confirm({
+      className: 'waiting-room-close-modal',
+      title: title,
+      width: 236,
+      content: <div className="waiting-room-close-content">{content}</div>,
+      footer: (
+        <div
+          onClick={() => handleCloseModal(reason)}
+          className="waiting-room-footer"
+        >
+          {closeText}
+          {!notNeedAutoClose && remainTime ? '(' + remainTime + 's)' : ''}
+        </div>
+      ),
+    })
+    if (notNeedAutoClose) {
+      return
+    }
+    if (closeTimerRef.current) {
+      clearInterval(closeTimerRef.current)
+    }
+    closeTimerRef.current = setInterval(() => {
+      remainTime -= 1
+      if (remainTime <= 0) {
+        closeTimerRef.current && clearInterval(closeTimerRef.current)
+        closeTimerRef.current = null
+        closeModalRef.current?.destroy()
+        closeModalRef.current = null
+        handleCloseModal(reason)
+        // setShowRecordTip(false)
+        return
+      }
+      closeModalRef.current?.update((prevConfig) => ({
+        ...prevConfig,
+        footer: (
+          <div
+            onClick={() => handleCloseModal(reason)}
+            className="waiting-room-footer"
+          >
+            {t('globalClose')}
+            {remainTime ? '(' + remainTime + 's)' : ''}
+          </div>
+        ),
+      }))
+    }, 1000)
+  }
+  const {
+    openAudio,
+    openVideo,
+    setOpenVideo,
+    setOpenAudio,
+    setting,
+    unReadMsgCount,
+    isOffLine,
+    nickname,
+    recordVolume,
+    meetingInfo,
+    meetingState,
+    showChatRoom,
+    handleOpenAudio,
+    handleOpenVideo,
+    handleOpenChatRoom,
+    startPreview,
+    stopPreview,
+    openChatRoom,
+    setSetting,
+    formatMeetingTime,
+    videoCanvasWrapRef,
+    setOpenChatRoom,
+    setUnReadMsgCount,
+    setRecordVolume,
+  } = useWaitingRoom({
+    closeModalHandle,
+    handleVideoFrameData,
+  })
   const getDevices = useCallback(() => {
     let _setting = meetingInfo.setting
     const tmpSetting = localStorage.getItem('ne-meeting-setting')
@@ -303,43 +377,22 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
       }
       if (window.isElectronNative) {
         const settingWindow = getWindow('settingWindow')
-        settingWindow?.postMessage({
-          event: IPCEvent.changeSettingDeviceFromControlBar,
-          payload: {
-            type,
-            deviceId,
+        settingWindow?.postMessage(
+          {
+            event: IPCEvent.changeSettingDeviceFromControlBar,
+            payload: {
+              type,
+              deviceId,
+            },
           },
-        })
+          settingWindow.origin
+        )
       }
 
       onSettingChange(setting)
     }
   }
 
-  function handleOpenAudio(openAudio: boolean) {
-    dispatch?.({
-      type: ActionType.UPDATE_MEETING_INFO,
-      data: {
-        isUnMutedAudio: !openAudio,
-      },
-    })
-    const previewController = neMeeting?.previewController
-    if (previewController) {
-      if (openAudio) {
-        previewController?.stopRecordDeviceTest().finally(() => {
-          setOpenAudio(false)
-        })
-      } else {
-        previewController
-          ?.startRecordDeviceTest((level: number) => {
-            setRecordVolume((level as number) * 10)
-          })
-          .then(() => {
-            setOpenAudio(true)
-          })
-      }
-    }
-  }
   function windowLoadListener(childWindow) {
     const previewController = neMeeting?.previewController
     const previewContext = neMeeting?.roomService?.getPreviewRoomContext()
@@ -368,10 +421,10 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
         },
       }
       if (settingWindow?.firstOpen === false) {
-        settingWindow.postMessage(openSettingData, '*')
+        settingWindow.postMessage(openSettingData, settingWindow.origin)
       } else {
         settingWindow?.addEventListener('load', () => {
-          settingWindow?.postMessage(openSettingData, '*')
+          settingWindow?.postMessage(openSettingData, settingWindow.origin)
         })
       }
     } else {
@@ -380,125 +433,8 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
       setSettingModalTab(type)
     }
   }
-  function handleOpenVideo(openVideo: boolean) {
-    dispatch?.({
-      type: ActionType.UPDATE_MEETING_INFO,
-      data: {
-        isUnMutedVideo: !openVideo,
-      },
-    })
-    const previewController = neMeeting?.previewController
-    if (previewController) {
-      if (openVideo) {
-        if (window.isElectronNative) {
-          const code = stopPreview()
-          //@ts-ignore
-          if (code === 0) {
-            setOpenVideo(false)
-          }
-        } else {
-          stopPreview()?.finally(() => {
-            setOpenVideo(false)
-          })
-        }
-      } else {
-        if (window.isElectronNative) {
-          const code = startPreview(videoCanvasWrapRef.current as HTMLElement)
-          console.log('code>>>', code)
-          // @ts-ignore
-          if (code === 0) {
-            setOpenVideo(true)
-          }
-        } else {
-          stopPreview()?.finally(() => {
-            startPreview(videoCanvasWrapRef.current as HTMLElement)?.then(
-              () => {
-                setOpenVideo(true)
-              }
-            )
-          })
-        }
-      }
-    }
-  }
-
-  function addPreviewRoomListener() {
-    if (!window.isElectronNative) {
-      return
-    }
-    const previewConText = neMeeting?.roomService?.getPreviewRoomContext()
-    if (!previewConText) {
-      return
-    }
-    previewRoomListenerRef.current = {
-      onLocalAudioVolumeIndication: (volume: number) => {
-        // console.log('onLocalAudioVolumeIndication>>>', volume)
-        setRecordVolume(volume)
-      },
-      onRtcVirtualBackgroundSourceEnabled: (
-        enabled: boolean,
-        reason: string
-      ) => {
-        const settingWindow = getWindow('settingWindow')
-        settingWindow?.postMessage(
-          {
-            event: EventType.rtcVirtualBackgroundSourceEnabled,
-            payload: {
-              enabled,
-              reason,
-            },
-          },
-          '*'
-        )
-        // window.ipcRenderer?.send('previewControllerListener', {
-        //   method: EventType.rtcVirtualBackgroundSourceEnabled,
-        //   args: [
-        //     {
-        //       enabled,
-        //       reason,
-        //     },
-        //   ],
-        // })
-      },
-      //@ts-ignore
-      onVideoFrameData: (uuid, bSubVideo, data, type, width, height) => {
-        handleVideoFrameData(uuid, bSubVideo, data, type, width, height)
-        const settingWindow = getWindow('settingWindow')
-        settingWindow?.postMessage(
-          {
-            event: 'onVideoFrameData',
-            payload: {
-              uuid,
-              bSubVideo,
-              data,
-              type,
-              width,
-              height,
-            },
-          },
-          '*',
-          [data.bytes.buffer]
-        )
-        // window.ipcRenderer?.send('previewControllerListener', {
-        //   method: EventType.previewVideoFrameData,
-        //   args: [uuid, bSubVideo, data, type, width, height],
-        // })
-      },
-    }
-    //@ts-ignore
-    previewConText?.addPreviewRoomListener(previewRoomListenerRef.current)
-  }
-
-  function removePreviewRoomListener() {
-    if (previewRoomListenerRef.current) {
-      const previewConText = neMeeting?.roomService?.getPreviewRoomContext()
-      //@ts-ignore
-      previewConText?.removePreviewRoomListener(previewRoomListenerRef.current)
-    }
-  }
 
   useEffect(() => {
-    setNickname(meetingInfo?.localMember?.name || '')
     window.ipcRenderer?.invoke('get-theme-color').then((isDark) => {
       setIsDarkMode(isDark)
     })
@@ -512,22 +448,6 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
       navigator.mediaDevices.removeEventListener('devicechange', debounceHandle)
     }
   }, [getDevices])
-
-  useEffect(() => {
-    window.ipcRenderer?.on(IPCEvent.changeSetting, (event, setting) => {
-      setSetting(setting)
-    })
-    const tmpSetting = localStorage.getItem('ne-meeting-setting')
-    if (tmpSetting) {
-      try {
-        const _setting = JSON.parse(tmpSetting) as MeetingSetting
-        setSetting(_setting)
-      } catch (e) {
-        console.log('parse setting error', e)
-      }
-    }
-    neMeeting?._meetingInfo && setMeetingState(neMeeting?._meetingInfo.state)
-  }, [])
 
   useEffect(() => {
     if (setting?.videoSetting.deviceId) {
@@ -565,19 +485,6 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
       }
     }
   }, [])
-  function startPreview(view: HTMLElement) {
-    const previewController = neMeeting?.previewController
-    if (window.ipcRenderer) {
-      previewController?.setupLocalVideoCanvas(view)
-      return previewController?.startPreview()
-    } else {
-      return previewController?.startPreview(view)
-    }
-  }
-  function stopPreview() {
-    const previewController = neMeeting?.previewController
-    return previewController?.stopPreview()
-  }
 
   function leaveMeeting() {
     const handleLeave = async () => {
@@ -668,209 +575,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
     closeModalRef.current?.destroy?.()
     outEventEmitter?.emit(EventType.RoomEnded, reason)
   }
-  const handleNameChange = useCallback((memberId, name) => {
-    const localMember = meetingInfo.localMember
-    if (localMember && localMember.uuid === memberId) {
-      setNickname(name)
-      const value = meetingInfo.shortMeetingNum
-        ? {
-            [meetingInfo.meetingNum]: name,
-            [meetingInfo.shortMeetingNum]: name,
-          }
-        : {
-            [meetingInfo.meetingNum]: name,
-          }
-      localStorage.setItem(
-        'ne-meeting-nickname-' + localMember.uuid,
-        JSON.stringify(value)
-      )
-    }
-  }, [])
 
-  const handleMeetingUpdate = useCallback((res) => {
-    console.log('handleMeetingUpdate', res)
-    if (res.data) {
-      if (res.data?.type === 200) {
-        window.isElectronNative && Toast.warning(t('tokenExpired'), 5000)
-      } else {
-        setMeetingState(res.data.state)
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    if (meetingState === 2) {
-      setShowChatRoom(true)
-    }
-  }, [meetingState])
-
-  const getWaitingRoomConfig = useCallback(() => {
-    neMeeting?.getWaitingRoomConfig(meetingInfo.meetingNum).then((data) => {
-      dispatch?.({
-        type: ActionType.UPDATE_MEETING_INFO,
-        data: {
-          waitingRoomChatPermission: data.wtPrChat,
-        },
-      })
-    })
-  }, [meetingInfo.meetingNum, neMeeting, dispatch])
-
-  const handleWaitingRoomEvent = useCallback(() => {
-    eventEmitter?.on(
-      EventType.RoomPropertiesChanged,
-      (properties: Record<string, any>) => {
-        console.log('onRoomPropertiesChanged: %o %o %t', properties)
-        if (properties.wtPrChat) {
-          const waitingRoomChatPermission = Number(properties.wtPrChat.value)
-          console.log('waitingRoomChatPermission', waitingRoomChatPermission)
-          dispatch?.({
-            type: ActionType.UPDATE_MEETING_INFO,
-            data: {
-              waitingRoomChatPermission,
-            },
-          })
-        }
-      }
-    )
-    eventEmitter?.on(EventType.MyWaitingRoomStatusChanged, (status, reason) => {
-      console.log('MyWaitingRoomStatusChanged', status, reason)
-      // 被准入
-      if (status === 2) {
-        globalDispatch?.({
-          type: ActionType.JOIN_LOADING,
-          data: true,
-        })
-        dispatch?.({
-          type: ActionType.RESET_MEETING,
-          data: null,
-        })
-        neMeeting?.rejoinAfterAdmittedToRoom().then(() => {
-          // 使用eventEmitter auth组件无法监听到
-          outEventEmitter?.emit(MeetingEventType.rejoinAfterAdmittedToRoom, {
-            isUnMutedVideo: meetingInfoRef.current.isUnMutedVideo,
-            isUnMutedAudio: meetingInfoRef.current.isUnMutedAudio,
-          })
-          if (window.isElectronNative) {
-            const meeting = neMeeting?.getMeetingInfo()
-            meeting &&
-              dispatch?.({
-                type: ActionType.SET_MEETING,
-                data: meeting,
-              })
-          }
-          dispatch?.({
-            type: ActionType.UPDATE_MEETING_INFO,
-            data: {
-              inWaitingRoom: false,
-            },
-          })
-        })
-      } else if (status === 3) {
-        console.log('MyWaitingRoomStatusChanged', status, reason)
-        // 被主持人移除 或者全部被移除
-        if (reason === 3 || reason === 6) {
-          closeModalHandle({
-            title: t('removedFromMeeting'),
-            content: t('removeFromMeetingByHost'),
-            closeText: t('globalClose'),
-            reason,
-            notNeedAutoClose: true,
-          })
-        } else {
-          // 不是加入房间
-          if (reason !== 5) {
-            if (reason === 2) {
-              Toast.info(t('meetingSwitchOtherDevice'))
-              setTimeout(() => {
-                outEventEmitter?.emit(EventType.RoomEnded, reason)
-              }, 2000)
-            } else {
-              outEventEmitter?.emit(EventType.RoomEnded, reason)
-            }
-          }
-        }
-      }
-    })
-    eventEmitter?.on(EventType.MemberNameChangedInWaitingRoom, handleNameChange)
-    eventEmitter?.on(EventType.RoomEnded, handleRoomEnd)
-
-    eventEmitter?.on(
-      EventType.ReceiveScheduledMeetingUpdate,
-      handleMeetingUpdate
-    )
-  }, [])
-  function closeModalHandle(data: {
-    title: string
-    content: string
-    closeText: string
-    reason: any
-    notNeedAutoClose?: boolean
-  }) {
-    const { title, content, closeText, reason, notNeedAutoClose } = data
-    let remainTime = 3
-    closeModalRef.current = Modal.confirm({
-      className: 'waiting-room-close-modal',
-      title: title,
-      width: 236,
-      content: <div className="waiting-room-close-content">{content}</div>,
-      footer: (
-        <div
-          onClick={() => handleCloseModal(reason)}
-          className="waiting-room-footer"
-        >
-          {closeText}
-          {!notNeedAutoClose && remainTime ? '(' + remainTime + 's)' : ''}
-        </div>
-      ),
-    })
-    if (notNeedAutoClose) {
-      return
-    }
-    if (closeTimerRef.current) {
-      clearInterval(closeTimerRef.current)
-    }
-    closeTimerRef.current = setInterval(() => {
-      remainTime -= 1
-      if (remainTime <= 0) {
-        closeTimerRef.current && clearInterval(closeTimerRef.current)
-        closeTimerRef.current = null
-        closeModalRef.current?.destroy()
-        closeModalRef.current = null
-        handleCloseModal(reason)
-        // setShowRecordTip(false)
-        return
-      }
-      closeModalRef.current?.update((prevConfig) => ({
-        ...prevConfig,
-        footer: (
-          <div
-            onClick={() => handleCloseModal(reason)}
-            className="waiting-room-footer"
-          >
-            {t('globalClose')}
-            {remainTime ? '(' + remainTime + 's)' : ''}
-          </div>
-        ),
-      }))
-    }, 1000)
-  }
-  function removeWaitingRoomEvent() {
-    eventEmitter?.off(EventType.MyWaitingRoomStatusChanged)
-    eventEmitter?.off(
-      EventType.MemberNameChangedInWaitingRoom,
-      handleNameChange
-    )
-    eventEmitter?.off(EventType.RoomEnded, handleRoomEnd)
-    eventEmitter?.off(
-      EventType.ReceiveScheduledMeetingUpdate,
-      handleMeetingUpdate
-    )
-    // eventEmitter?.off(EventType.MemberJoinWaitingRoom)
-    // eventEmitter?.off(EventType.MemberLeaveWaitingRoom)
-    // eventEmitter?.off(EventType.MemberAdmitted)
-    // eventEmitter?.off(EventType.MemberNameChangedInWaitingRoom)
-    // eventEmitter?.off(EventType.WaitingRoomInfoUpdated)
-  }
   function formateMsg(message) {
     if (message?.type === 'text') {
       return message.text
@@ -902,10 +607,6 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
     }
   }, [openChatRoom])
 
-  function handleOpenChatRoom(openChatRoom) {
-    setUnReadMsgCount(0)
-    setOpenChatRoom(openChatRoom)
-  }
   function handleCloseSetting() {
     setSettingOpen(false)
     if (openVideo) {
@@ -981,46 +682,11 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
     },
     [openChatRoom, unReadMsgCount]
   )
-  function formatMeetingTime(startTime: number) {
-    return startTime ? formatDate(startTime, 'yyyy.MM.dd_hh:mm') : '--'
-  }
-  const handleRoomEnd = useCallback((reason: string) => {
-    const langMap: Record<string, string> = {
-      UNKNOWN: t('UNKNOWN'), // 未知异常
-      LOGIN_STATE_ERROR: t('LOGIN_STATE_ERROR'), // 账号异常
-      CLOSE_BY_BACKEND: meetingInfoRef.current.isScreenSharingMeeting
-        ? t('screenShareStop')
-        : t('CLOSE_BY_BACKEND'), // 后台关闭
-      ALL_MEMBERS_OUT: t('ALL_MEMBERS_OUT'), // 所有成员退出
-      END_OF_LIFE: t('END_OF_LIFE'), // 房间到期
-      CLOSE_BY_MEMBER: t('meetingEnded'), // 会议已结束
-      KICK_OUT: t('KICK_OUT'), // 被管理员踢出
-      SYNC_DATA_ERROR: t('SYNC_DATA_ERROR'), // 数据同步错误
-      LEAVE_BY_SELF: t('LEAVE_BY_SELF'), // 成员主动离开房间
-      OTHER: t('OTHER'), // 其他
-    }
-    if (reason === 'CLOSE_BY_MEMBER') {
-      closeModalHandle({
-        title: t('meetingEnded'),
-        content: t('closeAutomatically'),
-        closeText: t('globalSure'),
-        reason,
-      })
-    } else {
-      langMap[reason] && Toast.info(langMap[reason])
-      let leaveType: NEMeetingLeaveType = NEMeetingLeaveType[reason]
-      if (!leaveType && leaveType !== 0) {
-        leaveType = NEMeetingLeaveType.UNKNOWN
-      }
-      outEventEmitter?.emit(EventType.RoomEnded, reason)
-    }
-  }, [])
   useEffect(() => {
     const canvas = canvasRef.current
     if (canvas) {
       yuvRef.current = YUVCanvas.attach(canvas)
     }
-    addPreviewRoomListener()
     function closeWindowHandle() {
       if (closeModal) {
         closeModal.destroy()
@@ -1031,20 +697,15 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
     if (window.isElectronNative) {
       window.ipcRenderer?.on('main-close-before', closeWindowHandle)
       window.ipcRenderer?.send(IPCEvent.inWaitingRoom, true)
+      closeWindow('settingWindow')
     }
-    neMeeting?.chatController?.leaveChatroom(0)
-    neMeeting?.chatController?.joinChatroom(1)
     return () => {
-      stopPreview()
-      removePreviewRoomListener()
-      closeTimerRef.current && clearInterval(closeTimerRef.current)
       if (window.isElectronNative) {
         window.ipcRenderer?.off('main-close-before', closeWindowHandle)
         window.ipcRenderer?.send(IPCEvent.inWaitingRoom, false)
         closeWindow('settingWindow')
       }
       closeModal && closeModal.destroy?.()
-      neMeeting?.previewController?.stopRecordDeviceTest()
     }
   }, [])
   useEffect(() => {
@@ -1053,32 +714,25 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
       eventEmitter?.off(EventType.ReceiveChatroomMessages, handleNewMessage)
     }
   }, [handleNewMessage])
-  useEffect(() => {
-    handleWaitingRoomEvent()
-    return () => {
-      removeWaitingRoomEvent()
-    }
-  }, [])
 
   useEffect(() => {
-    getWaitingRoomConfig()
-    function onlineHandle() {
-      setIsOffLine(false)
-      // 延迟请求
-      setTimeout(() => {
-        getWaitingRoomConfig()
-      }, 1000)
+    function handleAcceptInvite(options, callback) {
+      // 需要先离开当前会议
+      globalDispatch?.({
+        type: ActionType.UPDATE_GLOBAL_CONFIG,
+        data: {
+          waitingJoinOtherMeeting: true,
+          joinLoading: true,
+        },
+      })
+      // 在会中
+      eventEmitter?.emit(UserEventType.JoinOtherMeeting, options, callback)
     }
-    function offlineHandle() {
-      setIsOffLine(true)
-    }
-    window.addEventListener('online', onlineHandle)
-    window.addEventListener('offline', offlineHandle)
+    eventEmitter?.on(EventType.AcceptInvite, handleAcceptInvite)
     return () => {
-      window.removeEventListener('online', onlineHandle)
-      window.removeEventListener('offline', offlineHandle)
+      eventEmitter?.off(EventType.AcceptInvite, handleAcceptInvite)
     }
-  }, [getWaitingRoomConfig, openChatRoom])
+  }, [])
 
   return (
     <div
@@ -1179,9 +833,12 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
                         />
                       ) : (
                         <svg
-                          className={classNames('icon iconfont', {
-                            'icon-red': !openAudio,
-                          })}
+                          className={classNames(
+                            'icon iconfont iconfont-operate',
+                            {
+                              'icon-red': !openAudio,
+                            }
+                          )}
                           aria-hidden="true"
                         >
                           <use xlinkHref="#iconyx-tv-voice-offx"></use>

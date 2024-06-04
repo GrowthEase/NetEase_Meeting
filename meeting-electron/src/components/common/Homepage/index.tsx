@@ -1,34 +1,36 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Button, ConfigProvider, Progress, Spin } from 'antd'
-import zhCN from 'antd/locale/zh_CN'
-import qs from 'qs'
-import './index.less'
-import BeforeMeetingHome from '../../web/BeforeMeetingHome/index'
-import BeforeLogin from '../../../../app/src/pages/login'
-import Header from '../../../../app/src/components/layout/Header'
-import Footer from '../../../../app/src/components/layout/Footer'
-import eleIpc from '../../../services/electron/index'
-import { IPCEvent } from '../../../../app/src/types'
-import {
-  LOCALSTORAGE_USER_INFO,
-  WEBSITE_URL,
-  LOCALSTORAGE_LOGIN_BACK,
-  UPDATE_URL,
-  DOMAIN_SERVER,
-  LOCALSTORAGE_SSO_APP_KEY,
-  LOCALSTORAGE_INVITE_MEETING_URL,
-} from '../../../../app/src/config'
+import { useUpdateEffect } from 'ahooks'
+import { Button, Progress } from 'antd'
 import axios from 'axios'
-import { ClientType, ResUpdateInfo, UpdateType } from '../../../types/innerType'
-import Modal from '../Modal'
-import { getDeviceKey } from '../../../utils'
-import Toast from '../toast'
+import qs from 'qs'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import Footer from '../../../../app/src/components/layout/Footer'
+import Header from '../../../../app/src/components/layout/Header'
+import {
+  DOMAIN_SERVER,
+  LOCALSTORAGE_INVITE_MEETING_URL,
+  LOCALSTORAGE_LOGIN_BACK,
+  LOCALSTORAGE_SSO_APP_KEY,
+  LOCALSTORAGE_USER_INFO,
+  UPDATE_URL,
+  WEBSITE_URL,
+} from '../../../../app/src/config'
+import BeforeLogin from '../../../../app/src/pages/login'
+import { IPCEvent } from '../../../../app/src/types'
+import eleIpc from '../../../services/electron/index'
+import { ClientType, ResUpdateInfo, UpdateType } from '../../../types/innerType'
+import { getDeviceKey } from '../../../utils'
+import H5BeforeMeetingHome from '../../h5/BeforeMeetingHome/index'
+import BeforeMeetingHome from '../../web/BeforeMeetingHome/index'
+import GuestBeforeMeeting from '../GuestBeforeMeeting'
+import Modal from '../Modal'
+import Toast from '../toast'
+import './index.less'
 
 let appKey = ''
 
 const Homepage = () => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [isLogined, setIsLogined] = useState<boolean>(true)
   const [loginLoading, setLoginLoading] = useState(true)
   const eleIpcIns = useMemo(() => eleIpc.getInstance(), [])
@@ -36,6 +38,7 @@ const Homepage = () => {
   const [showUpdateDialog, setShowUpdateDialog] = useState(false)
   const [showExitApp, setShowExitApp] = useState(false)
   const [updateProgress, setUpdateProgress] = useState(0)
+  const [goGuest, setGoGuest] = useState(true) // 是否跳转到访客页面
   const [updateInfo, setUpdateInfo] = useState({
     title: '',
     description: '',
@@ -53,6 +56,8 @@ const Homepage = () => {
     versionCode: -1,
     platform: 'darwin',
   })
+
+  const isH5 = process.env.PLATFORM === 'h5' || window.h5App
 
   useEffect(() => {
     // electron环境
@@ -187,6 +192,10 @@ const Homepage = () => {
       } else {
         appKey = user.appKey || user.appId
         setIsLogined(true)
+        // 处理访客登录，需要在登录后 destroy 现有的 NEMeetingKit
+        // if (!window.isElectronNative) {
+        //   NEMeetingKit.actions.destroy()
+        // }
       }
     } else {
       setIsLogined(false)
@@ -386,8 +395,23 @@ const Homepage = () => {
     if (loginLoading) return
     if (isLogined) {
       // window.ipcRenderer?.sendSync('NERoomNodeProxyInit')
-      return <BeforeMeetingHome onLogout={logout} />
+      return isH5 ? (
+        <H5BeforeMeetingHome onLogout={logout} />
+      ) : (
+        <BeforeMeetingHome onLogout={logout} />
+      )
     }
+    if (!window.isElectronNative && goGuest) {
+      // 创建URL对象
+      const qsObj = qs.parse(window.location.href.split('?')[1]?.split('#/')[0])
+      const guestJoinType = qsObj?.guestJoinType
+      if (guestJoinType === '1' || guestJoinType === '2') {
+        return (
+          <GuestBeforeMeeting onLogin={() => setGoGuest(false)} isH5={isH5} />
+        )
+      }
+    }
+
     return (
       <>
         {!window.isElectronNative && <Header />}
@@ -397,165 +421,157 @@ const Homepage = () => {
         )}
       </>
     )
-  }, [eleIpcIns, isLogined, loginLoading])
+  }, [eleIpcIns, isLogined, loginLoading, goGuest])
+
+  useUpdateEffect(() => {
+    const isChrome =
+      /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor)
+    const isEdge = /Edge|Edg/.test(navigator.userAgent)
+    if (!isChrome || isEdge) {
+      Toast.info(t('authSuggestChrome'))
+    }
+  }, [i18n.language])
 
   return (
     <>
-      <ConfigProvider
-        prefixCls="nemeeting"
-        locale={zhCN}
-        theme={{
-          token: {
-            colorPrimary: '#337eff',
-          },
-          hashed: false,
-        }}
+      <Modal
+        className="nemeeting-update"
+        open={updateError.showUpdateError}
+        width={350}
+        title=""
+        closable={false}
+        footer={null}
       >
-        <>
-          <Modal
-            className="nemeeting-update"
-            open={updateError.showUpdateError}
-            width={350}
-            title=""
-            closable={false}
-            footer={null}
-          >
-            <div className="nemeeting-update-content">
-              <div className="icon-wrap">
-                <img
-                  className="nemeeting-icon"
-                  src={require('../../../../app/src/assets/error.png')}
-                />
-              </div>
-              <div className="meeting-update-title">
-                {t('settingUpdateFailed')}
-              </div>
-              <div className="version-info error-info">{updateError.msg}</div>
-              <div className="button-wrap">
-                {needUpdateType !== UpdateType.forceUpdate && (
-                  <Button
-                    className="not-update-btn"
-                    onClick={() => {
-                      setUpdateError({
-                        showUpdateError: false,
-                        msg: '',
-                      })
-                    }}
-                  >
-                    {t('settingTryAgainLater')}
-                  </Button>
-                )}
+        <div className="nemeeting-update-content">
+          <div className="icon-wrap">
+            <img
+              className="nemeeting-icon"
+              src={require('../../../../app/src/assets/error.png')}
+            />
+          </div>
+          <div className="meeting-update-title">{t('settingUpdateFailed')}</div>
+          <div className="version-info error-info">{updateError.msg}</div>
+          <div className="button-wrap">
+            {needUpdateType !== UpdateType.forceUpdate && (
+              <Button
+                className="not-update-btn"
+                onClick={() => {
+                  setUpdateError({
+                    showUpdateError: false,
+                    msg: '',
+                  })
+                }}
+              >
+                {t('settingTryAgainLater')}
+              </Button>
+            )}
 
-                <Button
-                  className="update-btn"
-                  type="primary"
-                  onClick={onClickUpdate}
-                >
-                  {t('settingRetryNow')}
+            <Button
+              className="update-btn"
+              type="primary"
+              onClick={onClickUpdate}
+            >
+              {t('settingRetryNow')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+      <Modal
+        className="nemeeting-update"
+        open={showUpdateDialog}
+        width={350}
+        title=""
+        closable={false}
+        footer={null}
+      >
+        <div className="nemeeting-update-content">
+          <div className="icon-wrap">
+            <img
+              className="nemeeting-icon"
+              src={require('../../../../app/src/assets/rooms-icon.png')}
+            />
+          </div>
+          <div className="meeting-update-title">
+            {t('settingFindNewVersion')}V{updateInfo.version}
+          </div>
+          <pre className="version-info">{updateInfo.description}</pre>
+          {startUpdate ? (
+            <>
+              <Progress
+                className="update-progress"
+                percent={updateProgress}
+                showInfo={false}
+              />
+              <div className="progress-percent">
+                {t('settingUpdating')} {updateProgress}%
+              </div>
+              <div className="button-wrap">
+                <Button onClick={cancelDownload}>
+                  {t('settingCancelUpdate')}
                 </Button>
               </div>
-            </div>
-          </Modal>
-          <Modal
-            className="nemeeting-update"
-            open={showUpdateDialog}
-            width={350}
-            title=""
-            closable={false}
-            footer={null}
-          >
-            <div className="nemeeting-update-content">
-              <div className="icon-wrap">
-                <img
-                  className="nemeeting-icon"
-                  src={require('../../../../app/src/assets/rooms-icon.png')}
-                />
-              </div>
-              <div className="meeting-update-title">
-                {t('settingFindNewVersion')}V{updateInfo.version}
-              </div>
-              <pre className="version-info">{updateInfo.description}</pre>
-              {startUpdate ? (
-                <>
-                  <Progress
-                    className="update-progress"
-                    percent={updateProgress}
-                    showInfo={false}
-                  />
-                  <div className="progress-percent">
-                    {t('settingUpdating')} {updateProgress}%
-                  </div>
-                  <div className="button-wrap">
-                    <Button onClick={cancelDownload}>
-                      {t('settingCancelUpdate')}
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <div className="button-wrap">
-                  {needUpdateType == UpdateType.forceUpdate ? (
-                    <Button
-                      className="not-update-btn"
-                      onClick={() => {
-                        setShowUpdateDialog(false)
-                        setShowExitApp(true)
-                      }}
-                    >
-                      {t('settingExitApp')}
-                    </Button>
-                  ) : (
-                    <Button
-                      className="not-update-btn"
-                      onClick={() => {
-                        cancelUpdate()
-                      }}
-                    >
-                      {t('settingNotUpdate')}
-                    </Button>
-                  )}
-
-                  <Button
-                    className="update-btn"
-                    type="primary"
-                    onClick={onClickUpdate}
-                  >
-                    {t('settingUPdateNow')}
-                  </Button>
-                </div>
-              )}
-            </div>
-          </Modal>
-          <Modal
-            className="nemeeting-update"
-            open={showExitApp}
-            width={350}
-            title=""
-            closable={false}
-            footer={null}
-          >
-            <div className="nemeeting-update-content">
-              <div className="exit-app-title">
-                {t('settingConfirmExitApp')}？
-              </div>
-              <div className="button-wrap">
+            </>
+          ) : (
+            <div className="button-wrap">
+              {needUpdateType == UpdateType.forceUpdate ? (
                 <Button
                   className="not-update-btn"
                   onClick={() => {
-                    setShowUpdateDialog(true)
-                    setShowExitApp(false)
+                    setShowUpdateDialog(false)
+                    setShowExitApp(true)
                   }}
                 >
-                  {t('globalCancel')}
+                  {t('settingExitApp')}
                 </Button>
-                <Button className="update-btn" type="primary" onClick={exitApp}>
-                  {t('globalSure')}
+              ) : (
+                <Button
+                  className="not-update-btn"
+                  onClick={() => {
+                    cancelUpdate()
+                  }}
+                >
+                  {t('settingNotUpdate')}
                 </Button>
-              </div>
+              )}
+
+              <Button
+                className="update-btn"
+                type="primary"
+                onClick={onClickUpdate}
+              >
+                {t('settingUPdateNow')}
+              </Button>
             </div>
-          </Modal>
-          {pageContent()}
-        </>
-      </ConfigProvider>
+          )}
+        </div>
+      </Modal>
+      <Modal
+        className="nemeeting-update"
+        open={showExitApp}
+        width={350}
+        title=""
+        closable={false}
+        footer={null}
+      >
+        <div className="nemeeting-update-content">
+          <div className="exit-app-title">{t('settingConfirmExitApp')}？</div>
+          <div className="button-wrap">
+            <Button
+              className="not-update-btn"
+              onClick={() => {
+                setShowUpdateDialog(true)
+                setShowExitApp(false)
+              }}
+            >
+              {t('globalCancel')}
+            </Button>
+            <Button className="update-btn" type="primary" onClick={exitApp}>
+              {t('globalSure')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+      {pageContent()}
     </>
   )
 }

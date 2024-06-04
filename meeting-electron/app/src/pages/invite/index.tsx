@@ -1,28 +1,53 @@
-import { ConfigProvider } from 'antd';
-import zhCN from 'antd/locale/zh_CN';
-import { useEffect, useState } from 'react';
-import { Invite } from '../../../../src/components/web/InviteModal';
-import './index.less';
+import { EventEmitter } from 'eventemitter3';
+import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
-export default function InvitePage() {
+import { InviteContent } from '../../../../src/components/web/InviteModal';
+import useUserInfo from '../../../../src/hooks/useUserInfo';
+import {
+  useGlobalContext,
+  useMeetingInfoContext,
+  useWaitingRoomContext,
+} from '../../../../src/store';
+import { ActionType } from '../../../../src/types';
+
+import './index.less';
+
+const eventEmitter = new EventEmitter();
+
+const InvitePage: React.FC = () => {
   const { t } = useTranslation();
+  const { neMeeting } = useGlobalContext();
+  const {
+    meetingInfo,
+    memberList,
+    inInvitingMemberList,
+    dispatch,
+  } = useMeetingInfoContext();
+  const { userInfo } = useUserInfo();
 
-  const [meetingInfo, setMeetingInfo] = useState();
-
-  useEffect(() => {
-    function handleMessage(e: MessageEvent) {
-      const { event, payload } = e.data;
-      if (event === 'updateData') {
-        const { meetingInfo } = payload;
-        setMeetingInfo(meetingInfo);
-      }
+  /*
+  const dispatch = useCallback((payload: any) => {
+    const parentWindow = window.parent;
+    if (payload.type === ActionType.UPDATE_MEETING_INFO) {
+      parentWindow?.postMessage(
+        {
+          event: 'openControllerBarWindow',
+          payload: 'memberList',
+        },
+        parentWindow.origin,
+      );
+    } else {
+      parentWindow?.postMessage(
+        {
+          event: 'meetingInfoDispatch',
+          payload: payload,
+        },
+        parentWindow.origin,
+      );
     }
-    window.addEventListener('message', handleMessage);
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
   }, []);
+  */
 
   useEffect(() => {
     setTimeout(() => {
@@ -32,7 +57,20 @@ export default function InvitePage() {
 
   return (
     <div className="invite-page">
-      <Invite meetingInfo={meetingInfo} />
+      {neMeeting && (
+        <InviteContent
+          meetingInfo={meetingInfo}
+          neMeeting={neMeeting}
+          inSipInvitingMemberList={inInvitingMemberList}
+          memberList={memberList}
+          myUuid={userInfo?.userUuid || ''}
+          meetingInfoDispatch={dispatch}
+          onCancel={() => window.close()}
+          eventEmitter={eventEmitter}
+        />
+      )}
     </div>
   );
-}
+};
+
+export default InvitePage;

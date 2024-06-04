@@ -55,7 +55,6 @@ const MemberItem: React.FC<MemberItemProps> = ({
   const isElectronSharingScreen = useMemo(() => {
     return window.ipcRenderer && localMember.isSharingScreen
   }, [localMember.isSharingScreen])
-
   const name = useMemo(() => {
     const nickName = substringByByte3(data.name, 20)
     const remarks: string[] = []
@@ -68,6 +67,9 @@ const MemberItem: React.FC<MemberItemProps> = ({
     if (data.role === Role.coHost) {
       remarks.push(t('coHost'))
     }
+    if (data.role === Role.guest) {
+      remarks.push(t('meetingRoleGuest'))
+    }
     if (localMember.uuid === data.uuid) {
       remarks.push(t('participantMe'))
     }
@@ -77,6 +79,9 @@ const MemberItem: React.FC<MemberItemProps> = ({
   const privateChatItemShow = useMemo(() => {
     // 自己不显示私聊
     if (data.uuid === localMember.uuid) {
+      return false
+    }
+    if (data.clientType === NEClientType.SIP) {
       return false
     }
     if (isHost || isCoHost) {
@@ -335,7 +340,8 @@ const MemberItem: React.FC<MemberItemProps> = ({
               }
             } catch (error: any) {
               Toast.fail(
-                error?.msg || t(errorCodeMap[error?.code] || 'unMuteVideoFail')
+                error?.msg ||
+                  t(errorCodeMap[error?.code] || 'participantUnMuteVideoFail')
               )
             }
           },
@@ -594,10 +600,18 @@ const MemberItem: React.FC<MemberItemProps> = ({
         )}
         {data.properties.phoneState?.value === '1' && (
           <svg
-            className="icon iconfont icon-blue icon-green icondianhua-copy"
+            className="icon iconfont icon-green icondianhua-copy"
             aria-hidden="true"
           >
             <use xlinkHref="#icondianhua-copy" />
+          </svg>
+        )}
+        {data.clientType === NEClientType.SIP && (
+          <svg
+            className="icon iconfont iconSIPwaihudianhua icon-blue"
+            aria-hidden="true"
+          >
+            <use xlinkHref="#iconSIPwaihudianhua" />
           </svg>
         )}
         {data.isSharingScreen && (

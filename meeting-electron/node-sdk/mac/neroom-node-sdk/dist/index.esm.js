@@ -1235,7 +1235,7 @@ var NERoomRtcController = /** @class */ (function () {
         return new Promise(function (resolve, reject) {
             _this._rtcController.stopShare(function (code, message) {
                 if (code === 0) {
-                    return SuccessBody(null);
+                    return resolve(SuccessBody(null));
                 }
                 else {
                     return reject(FailureBodySync(null, message, code));
@@ -2199,6 +2199,231 @@ var NEWaitingRoomController = /** @class */ (function () {
     return NEWaitingRoomController;
 }());
 
+var NERoomSipController = /** @class */ (function () {
+    function NERoomSipController(initOptions) {
+        this._sipController = initOptions.sipController;
+    }
+    Object.defineProperty(NERoomSipController.prototype, "isSupported", {
+        get: function () {
+            var _a, _b;
+            return ((_b = (_a = this._sipController) === null || _a === void 0 ? void 0 : _a.isSupported) === null || _b === void 0 ? void 0 : _b.call(_a)) || false;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    // 根据手机号码进行呼叫
+    NERoomSipController.prototype.callByNumber = function (number, countryCode, name) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._sipController.callByNumber(number, countryCode, name, function (code, message, data) {
+                if (code === 0) {
+                    resolve(SuccessBody(data));
+                }
+                else {
+                    reject(FailureBodySync(null, message, code));
+                }
+            });
+        });
+    };
+    /**
+     * 根据用户uuid进行呼叫(可多个同时呼叫)
+     * @param userUuids
+     */
+    NERoomSipController.prototype.callByUserUuids = function (userUuids) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._sipController.callByUserUuids(userUuids, function (code, message, data) {
+                if (code === 0) {
+                    resolve(SuccessBody(data));
+                }
+                else {
+                    reject(FailureBodySync(null, message, code));
+                }
+            });
+        });
+    };
+    /**
+     * 根据用户id进行呼叫
+     * @param userUuid
+     */
+    NERoomSipController.prototype.callByUserUuid = function (userUuid) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                return [2 /*return*/, new Promise(function (resolve, reject) {
+                        _this._sipController.callByUserUuid(userUuid, function (code, message, data) {
+                            if (code === 0) {
+                                resolve(SuccessBody(data));
+                            }
+                            else {
+                                reject(FailureBodySync(null, message, code));
+                            }
+                        });
+                    })];
+            });
+        });
+    };
+    /**
+     * 移除呼叫
+     * @param userUuid
+     */
+    NERoomSipController.prototype.removeCall = function (userUuid) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                return [2 /*return*/, new Promise(function (resolve, reject) {
+                        _this._sipController.removeCall(userUuid, function (code, message, data) {
+                            if (code === 0) {
+                                resolve(SuccessBody(data));
+                            }
+                            else {
+                                reject(FailureBodySync(null, message, code));
+                            }
+                        });
+                    })];
+            });
+        });
+    };
+    /**
+     * 取消正在进行的呼叫，无论是正在响铃还是等待响铃都可以使用
+     * @param userUuid
+     */
+    NERoomSipController.prototype.cancelCall = function (userUuid) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                return [2 /*return*/, new Promise(function (resolve, reject) {
+                        _this._sipController.cancelCall(userUuid, function (code, message, data) {
+                            if (code === 0) {
+                                resolve(SuccessBody(data));
+                            }
+                            else {
+                                reject(FailureBodySync(null, message, code));
+                            }
+                        });
+                    })];
+            });
+        });
+    };
+    /**
+     * 挂断通话，挂断后成员将被踢出会议并移除列表
+     * @param userUuid
+     */
+    NERoomSipController.prototype.hangUpCall = function (userUuid) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                return [2 /*return*/, new Promise(function (resolve, reject) {
+                        _this._sipController.hangUpCall(userUuid, function (code, message, data) {
+                            if (code === 0) {
+                                resolve(SuccessBody(data));
+                            }
+                            else {
+                                reject(FailureBodySync(null, message, code));
+                            }
+                        });
+                    })];
+            });
+        });
+    };
+    return NERoomSipController;
+}());
+
+var NERoomAppInviteController = /** @class */ (function () {
+    function NERoomAppInviteController(initOptions) {
+        this._appInviteController = initOptions.appInviteController;
+    }
+    Object.defineProperty(NERoomAppInviteController.prototype, "isSupported", {
+        get: function () {
+            var _a, _b;
+            return ((_b = (_a = this._appInviteController) === null || _a === void 0 ? void 0 : _a.isSupported) === null || _b === void 0 ? void 0 : _b.call(_a)) || false;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    /**
+     * 根据用户uuid进行呼叫(可多个同时呼叫)
+     * @param userUuids
+     */
+    NERoomAppInviteController.prototype.callByUserUuids = function (userUuids) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._appInviteController.callByUserUuids(userUuids, function (code, message, data) {
+                if (code === 0) {
+                    resolve(SuccessBody(data));
+                }
+                else {
+                    reject(FailureBodySync(null, message, code));
+                }
+            });
+        });
+    };
+    /**
+     * 根据用户id进行呼叫
+     * @param userUuid
+     */
+    NERoomAppInviteController.prototype.callByUserUuid = function (userUuid) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                return [2 /*return*/, new Promise(function (resolve, reject) {
+                        _this._appInviteController.callByUserUuid(userUuid, function (code, message, data) {
+                            if (code === 0) {
+                                resolve(SuccessBody(data));
+                            }
+                            else {
+                                reject(FailureBodySync(null, message, code));
+                            }
+                        });
+                    })];
+            });
+        });
+    };
+    /**
+     * 移除呼叫
+     * @param userUuid
+     */
+    NERoomAppInviteController.prototype.removeCall = function (userUuid) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                return [2 /*return*/, new Promise(function (resolve, reject) {
+                        _this._appInviteController.removeCall(userUuid, function (code, message, data) {
+                            if (code === 0) {
+                                resolve(SuccessBody(data));
+                            }
+                            else {
+                                reject(FailureBodySync(null, message, code));
+                            }
+                        });
+                    })];
+            });
+        });
+    };
+    /**
+     * 取消正在进行的呼叫，无论是正在响铃还是等待响铃都可以使用
+     * @param userUuid
+     */
+    NERoomAppInviteController.prototype.cancelCall = function (userUuid) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                return [2 /*return*/, new Promise(function (resolve, reject) {
+                        _this._appInviteController.cancelCall(userUuid, function (code, message, data) {
+                            if (code === 0) {
+                                resolve(SuccessBody(data));
+                            }
+                            else {
+                                reject(FailureBodySync(null, message, code));
+                            }
+                        });
+                    })];
+            });
+        });
+    };
+    return NERoomAppInviteController;
+}());
+
 var NERoomContext = /** @class */ (function () {
     // private _eventEmitter: EventEmitter
     function NERoomContext(initOptions) {
@@ -2248,6 +2473,22 @@ var NERoomContext = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
+    Object.defineProperty(NERoomContext.prototype, "inSIPInvitingMembers", {
+        get: function () {
+            var members = this._roomContext.getInSIPInvitingMembers();
+            return members;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(NERoomContext.prototype, "inAppInvitingMembers", {
+        get: function () {
+            var members = this._roomContext.getInAppInvitingMembers();
+            return members;
+        },
+        enumerable: false,
+        configurable: true
+    });
     Object.defineProperty(NERoomContext.prototype, "roomProperties", {
         get: function () {
             var obj = this._roomContext.getRoomProperties();
@@ -2278,6 +2519,13 @@ var NERoomContext = /** @class */ (function () {
     Object.defineProperty(NERoomContext.prototype, "password", {
         get: function () {
             return this._roomContext.getPassword();
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(NERoomContext.prototype, "maxMembers", {
+        get: function () {
+            return this._roomContext.getMaxMembers();
         },
         enumerable: false,
         configurable: true
@@ -2338,6 +2586,30 @@ var NERoomContext = /** @class */ (function () {
                 });
             }
             return this._rtcController;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(NERoomContext.prototype, "SIPController", {
+        get: function () {
+            if (!this._sipController) {
+                this._sipController = new NERoomSipController({
+                    sipController: this._roomContext.getSIPController(),
+                });
+            }
+            return this._sipController;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(NERoomContext.prototype, "appInviteController", {
+        get: function () {
+            if (!this._appInviteController) {
+                this._appInviteController = new NERoomAppInviteController({
+                    appInviteController: this._roomContext.getAppInviteController(),
+                });
+            }
+            return this._appInviteController;
         },
         enumerable: false,
         configurable: true
@@ -3057,28 +3329,10 @@ var NERoomService = /** @class */ (function () {
         return this._roomContext;
     };
     NERoomService.prototype.joinRoom = function (params, options) {
-        var _this = this;
-        if (params.initialProperties) {
-            // initialProperties: Record<string,string>
-            Object.keys(params.initialProperties).forEach(function (key) {
-                if (typeof params.initialProperties[key] === 'object') {
-                    params.initialProperties[key] = JSON.stringify(params.initialProperties[key]);
-                }
-            });
-        }
-        if (typeof params.password === 'undefined') {
-            params.password = '';
-        }
-        return new Promise(function (resolve, reject) {
-            _this._roomService.joinRoom(params, __assign(__assign({}, options), { enableMyAudioDeviceOnJoinRtc: true }), function (code, message, roomContext) {
-                if (code === 0) {
-                    resolve({ code: code, message: null, data: roomContext });
-                }
-                else {
-                    reject({ code: code, message: message, data: null });
-                }
-            });
-        });
+        return this._joinRoomHandler(params, options, 'joinRoom');
+    };
+    NERoomService.prototype.joinRoomByInvite = function (params, options) {
+        return this._joinRoomHandler(params, options, 'joinRoomByInvite');
     };
     NERoomService.prototype.previewRoom = function (params, options) {
         var _this = this;
@@ -3143,8 +3397,48 @@ var NERoomService = /** @class */ (function () {
             });
         });
     };
+    NERoomService.prototype.rejectInvite = function (roomUuid) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            roomUuid = String(roomUuid);
+            _this._roomService.rejectInvite(roomUuid, function (code, message, data) {
+                if (code === 0) {
+                    resolve({ code: code, message: null, data: data });
+                }
+                else {
+                    reject({ code: code, message: message, data: null });
+                }
+            });
+        });
+    };
     NERoomService.prototype.destroy = function () {
         return this._roomService.destroy();
+    };
+    NERoomService.prototype._joinRoomHandler = function (params, options, type) {
+        if (params.initialProperties) {
+            // initialProperties: Record<string,string>
+            Object.keys(params.initialProperties).forEach(function (key) {
+                if (typeof params.initialProperties[key] === 'object') {
+                    params.initialProperties[key] = JSON.stringify(params.initialProperties[key]);
+                }
+            });
+        }
+        if (typeof params.password === 'undefined') {
+            params.password = '';
+        }
+        var func = type === 'joinRoom'
+            ? this._roomService.joinRoom.bind(this._roomService)
+            : this._roomService.joinRoomByInvite.bind(this._roomService);
+        return new Promise(function (resolve, reject) {
+            func(params, __assign(__assign({}, options), { enableMyAudioDeviceOnJoinRtc: true }), function (code, message, roomContext) {
+                if (code === 0) {
+                    resolve({ code: code, message: null, data: roomContext });
+                }
+                else {
+                    reject({ code: code, message: message, data: null });
+                }
+            });
+        });
     };
     return NERoomService;
 }());

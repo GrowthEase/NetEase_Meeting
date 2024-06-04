@@ -1,20 +1,7 @@
-const drawWatermark = ({
-  container = document.body,
-  type = 2,
-  width = container.offsetWidth,
-  height = container.offsetHeight,
-  textAlign = 'center' as CanvasTextAlign,
-  textBaseline = 'middle' as CanvasTextBaseline,
-  fontSize = type === 1 ? 30 : 12,
-  fontOpacity = 0.16,
-  color = '#C2C2C2',
-  content = 'This is a watermark ',
-  rotate = -15,
-  zIndex = 999,
-  offsetX = 150,
-  offsetY = 100,
-}: {
-  container?: HTMLElement
+import React from 'react'
+
+export type WatermarkParams = {
+  container?: React.RefObject<HTMLElement> | HTMLElement | null
   type?: 1 | 2 // 1: 单条居中，2：全屏多条
   width?: number
   height?: number
@@ -28,51 +15,79 @@ const drawWatermark = ({
   zIndex?: number
   offsetX?: number
   offsetY?: number
-}) => {
+  bottom?: number
+}
+
+const drawWatermark = (params: WatermarkParams) => {
+  const {
+    type = 2,
+    textAlign = 'center' as CanvasTextAlign,
+    textBaseline = 'middle' as CanvasTextBaseline,
+    fontSize = type === 1 ? 30 : 12,
+    fontOpacity = 0.16,
+    color = '#C2C2C2',
+    content = 'This is a watermark ',
+    rotate = -15,
+    zIndex = 999,
+    offsetX = 150,
+    offsetY = 100,
+    bottom = 0,
+  } = params
+
+  let container = params.container
+  if (container === undefined || container === null) {
+    container = document.body
+  }
+  if (!(container instanceof HTMLElement)) {
+    container = container.current
+  }
+  if (container === null) return
+
+  const width = container.offsetWidth
+  const height = container.offsetHeight
+
   const contentMaxWidth = type === 1 ? 344 : 192
   const lineHeight = type === 1 ? 32 : 18
 
-  // 统一获取参数
-  const args = {
-    container,
-    type,
-    width,
-    height,
-    textAlign,
-    textBaseline,
-    fontSize,
-    color,
-    content,
-    rotate,
-    zIndex,
-  }
-  const canvas = document.createElement('canvas')
-  canvas.setAttribute('width', width + 'px')
-  canvas.setAttribute('height', height + 'px')
-  let __wm = document.querySelector('.__wm')
-  if (__wm) {
-    __wm.remove()
-  }
-  __wm = canvas
+  let __wm = container.querySelector('.__wm') as HTMLCanvasElement
 
-  const styleStr = `
+  if (!__wm) {
+    // 统一获取参数
+    const args = {
+      container,
+      type,
+      width,
+      height,
+      textAlign,
+      textBaseline,
+      fontSize,
+      color,
+      content,
+      rotate,
+      zIndex,
+    }
+    const canvas = document.createElement('canvas')
+    canvas.setAttribute('width', width + 'px')
+    canvas.setAttribute('height', height + 'px')
+    __wm = canvas
+    const styleStr = `
     position:absolute;
     top:0;
     left:0;
-    bottom:0;
+    bottom:${bottom}px;
     right:0;
     width:100%;
-    height:100%;
+    height: calc(100% - ${bottom}px);
     z-index:${zIndex};
     pointer-events:none;
   `
+    __wm.setAttribute('style', styleStr)
+    __wm.classList.add('__wm')
+    container.style.position = 'relative'
+    container.appendChild(__wm)
+  }
 
-  __wm.setAttribute('style', styleStr)
-  __wm.classList.add('__wm')
-  container.style.position = 'relative'
-  container.appendChild(__wm)
-
-  const ctx = canvas.getContext('2d')
+  const ctx = __wm.getContext('2d')
   if (!ctx) return
   ctx.textAlign = textAlign
   ctx.textBaseline = textBaseline
@@ -121,34 +136,21 @@ const drawWatermark = ({
       }
     }
   }
-  // 监听dom及属性变化，变化时重新绘制
-  const MutationObserver =
-    // @ts-ignore
-    window.MutationObserver || window?.WebKitMutationObserver
-  if (MutationObserver) {
-    let mo: MutationObserver | null = new MutationObserver(function () {
-      const __wm = document.querySelector('.__wm')
-      // 只在__wm元素变动才重新调用 __canvasWM
-      if ((__wm && __wm.getAttribute('style') !== styleStr) || !__wm) {
-        // 避免一直触发
-        mo?.disconnect()
-        mo = null
-        drawWatermark(args)
-      }
-    })
-
-    mo?.observe(container, {
-      attributes: true,
-      subtree: true,
-      childList: true,
-    })
-  }
 }
 
-const stopDrawWatermark = (container = document.body) => {
-  const __wm = document.querySelector('canvas.__wm') as HTMLCanvasElement
+function stopDrawWatermark(
+  container: WatermarkParams['container'] = document.body
+): void {
+  if (container === undefined || container === null) return
+  if (!(container instanceof HTMLElement)) {
+    container = container.current
+  }
+  if (container === null) return
+
+  const __wm = container.querySelector('canvas.__wm') as HTMLCanvasElement
   if (__wm) {
-    __wm.getContext('2d')?.clearRect(0, 0, __wm.offsetWidth, __wm.offsetHeight)
+    __wm.parentNode?.removeChild(__wm)
+    // __wm.getContext('2d')?.clearRect(0, 0, __wm.offsetWidth, __wm.offsetHeight)
   }
 }
 

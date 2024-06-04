@@ -1,29 +1,60 @@
-import React, { useMemo, useRef } from 'react'
+import React, {
+  Dispatch,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 
-import Modal from '../../common/Modal'
 import { Button, ModalProps } from 'antd'
+import Modal from '../../common/Modal'
 
-import './index.less'
+import EventEmitter from 'eventemitter3'
 import { useTranslation } from 'react-i18next'
-import { useMeetingInfoContext } from '../../../store'
+import NEMeetingService from '../../../services/NEMeeting'
+import { useGlobalContext, useMeetingInfoContext } from '../../../store'
+import {
+  GetMeetingConfigResponse,
+  NEMeetingInfo,
+  NEMember,
+  Role,
+} from '../../../types'
 import { formatDate } from '../../../utils'
 import Toast from '../../common/toast'
-import { NEMeetingInfo } from '../../../types'
+import AddressInvitation from './AddressInvitation'
+import './index.less'
+import SIP from './SIP'
+import useWatermark from '../../../hooks/useWatermark'
 
 const InviteModal: React.FC<ModalProps> = ({ onCancel, ...restProps }) => {
   const { t } = useTranslation()
-  const { meetingInfo } = useMeetingInfoContext()
-
+  const { meetingInfo, memberList, inInvitingMemberList, dispatch } =
+    useMeetingInfoContext()
+  const { globalConfig, neMeeting } = useGlobalContext()
+  const SIPNumber = globalConfig?.appConfig.outboundPhoneNumber
+  const localMember = meetingInfo?.localMember
   return (
     <Modal
       title={t('inviteBtn')}
       footer={null}
       onCancel={onCancel}
-      width={400}
+      width={498}
       wrapClassName="invite-modal"
       {...restProps}
     >
-      <Invite meetingInfo={meetingInfo} onCancel={onCancel} />
+      {neMeeting && (
+        <InviteContent
+          myUuid={localMember.uuid || ''}
+          memberList={memberList}
+          inSipInvitingMemberList={inInvitingMemberList}
+          neMeeting={neMeeting}
+          onCancel={onCancel}
+          meetingInfo={meetingInfo}
+          SIPNumber={SIPNumber}
+          meetingInfoDispatch={dispatch}
+        />
+      )}
     </Modal>
   )
 }
@@ -31,9 +62,58 @@ const InviteModal: React.FC<ModalProps> = ({ onCancel, ...restProps }) => {
 interface InviteInfoProps {
   meetingInfo?: NEMeetingInfo
   onCancel?: (e: React.MouseEvent<HTMLButtonElement>) => void
+  className?: string
 }
 
-const Invite: React.FC<InviteInfoProps> = ({ meetingInfo, onCancel }) => {
+interface TabsProps {
+  activeTab?: string
+  changeTab: (tab: string) => void
+  className?: string
+  globalConfig?: GetMeetingConfigResponse
+}
+const Tabs: React.FC<TabsProps> = ({
+  changeTab,
+  className,
+  activeTab,
+  globalConfig,
+}) => {
+  const { t } = useTranslation()
+
+  const config = globalConfig?.appConfig?.APP_ROOM_RESOURCE
+  return config?.appInvite || config?.sipInvite ? (
+    <div className={`nemeeting-local-tabs ${className || ''}`}>
+      <div
+        className={`nemeeting-local-tab ${
+          activeTab == 'invite' ? 'nemeeting-tab-selected' : ''
+        }`}
+        onClick={() => changeTab('invite')}
+      >
+        {t('sipInviteInfo')}
+      </div>
+      {config?.appInvite && (
+        <div
+          className={`nemeeting-local-tab ${
+            activeTab == 'contact' ? 'nemeeting-tab-selected' : ''
+          }`}
+          onClick={() => changeTab('contact')}
+        >
+          {t('sipAddressInvite')}
+        </div>
+      )}
+      {config.sipInvite && (
+        <div
+          className={`nemeeting-local-tab ${
+            activeTab == 'SIP' ? 'nemeeting-tab-selected' : ''
+          }`}
+          onClick={() => changeTab('SIP')}
+        >
+          {t('sipCallByPhone')}
+        </div>
+      )}
+    </div>
+  ) : null
+}
+const Invite: React.FC<InviteInfoProps> = ({ meetingInfo, className }) => {
   const { t } = useTranslation()
 
   const inviteInfoContentRef = useRef<HTMLDivElement>(null)
@@ -87,6 +167,7 @@ const Invite: React.FC<InviteInfoProps> = ({ meetingInfo, onCancel }) => {
     },
     {
       label: `${t('meetingNumber')}：${displayId}`,
+      key: 'displayId',
       isShow: true,
     },
     {
@@ -110,7 +191,10 @@ const Invite: React.FC<InviteInfoProps> = ({ meetingInfo, onCancel }) => {
 
   return (
     <>
-      <div className="invite-info-content" ref={inviteInfoContentRef}>
+      <div
+        className={`invite-info-content ${className || ''}`}
+        ref={inviteInfoContentRef}
+      >
         {inviteInfoItems.map((item) => (
           <div
             className={`invite-info-item ${item.className || ''}`}
@@ -127,6 +211,11 @@ const Invite: React.FC<InviteInfoProps> = ({ meetingInfo, onCancel }) => {
                     index === item.label?.split('：')?.length - 1 && (
                       <span className="tag">{t('internalOnly')}</span>
                     )}
+                  {item.key === 'displayId' &&
+                    index === item.label?.split('：')?.length - 1 &&
+                    meetingInfo?.enableGuestJoin && (
+                      <div>{t('meetingGuestJoinSupported')}</div>
+                    )}
                 </div>
               )
             })}
@@ -137,6 +226,8 @@ const Invite: React.FC<InviteInfoProps> = ({ meetingInfo, onCancel }) => {
         <Button
           className="invite-info-copy-button"
           type="primary"
+          shape="round"
+          size="large"
           onClick={handleCopy}
         >
           {t('meetingCopyInvite')}
@@ -146,6 +237,92 @@ const Invite: React.FC<InviteInfoProps> = ({ meetingInfo, onCancel }) => {
   )
 }
 
-export { Invite }
+interface InviteContentProps {
+  className?: string
+  onCancel?: (...args: any[]) => any
+  meetingInfo?: NEMeetingInfo
+  neMeeting: NEMeetingService
+  SIPNumber?: string
+  memberList: NEMember[]
+  inSipInvitingMemberList?: NEMember[]
+  myUuid: string
+  eventEmitter?: EventEmitter
+  meetingInfoDispatch?: Dispatch<any>
+}
+
+const InviteContent: React.FC<InviteContentProps> = ({
+  onCancel,
+  meetingInfo,
+  neMeeting,
+  SIPNumber,
+  inSipInvitingMemberList,
+  memberList,
+  myUuid,
+  eventEmitter,
+  meetingInfoDispatch,
+}) => {
+  const [activeTab, setActiveTab] = useState<string>('invite')
+  const { globalConfig } = useGlobalContext()
+  const domRef = useRef<HTMLDivElement>(null)
+  useWatermark({ container: domRef })
+
+  const onTableChange = (tab: string) => {
+    setActiveTab(tab)
+  }
+  const isHostOrCoHost = useMemo(() => {
+    const role = meetingInfo?.localMember.role
+    return role === Role.host || role === Role.coHost
+  }, [meetingInfo?.localMember.role])
+  useEffect(() => {
+    if (!isHostOrCoHost) {
+      setActiveTab('invite')
+    }
+  }, [isHostOrCoHost])
+
+  return (
+    <div className={'nemeeting-invite-content'} ref={domRef}>
+      {isHostOrCoHost && (
+        <Tabs
+          changeTab={onTableChange}
+          className={'nemeeting-SIP-tab'}
+          activeTab={activeTab}
+          globalConfig={globalConfig}
+        />
+      )}
+
+      {activeTab === 'invite' && (
+        <Invite
+          className={'nemeeting-tab-content nemeeting-tab-content-small'}
+          meetingInfo={meetingInfo}
+          onCancel={onCancel}
+        />
+      )}
+      {activeTab === 'contact' && isHostOrCoHost && (
+        <AddressInvitation
+          neMeeting={neMeeting}
+          memberList={memberList}
+          inSipInvitingMemberList={inSipInvitingMemberList}
+          myUuid={myUuid}
+          onClose={onCancel}
+          dispatch={meetingInfoDispatch}
+        />
+      )}
+      {activeTab === 'SIP' && isHostOrCoHost && (
+        <SIP
+          myUuid={myUuid}
+          inSipInvitingMemberList={inSipInvitingMemberList}
+          memberList={memberList}
+          className={'nemeeting-tab-content'}
+          onCancel={onCancel}
+          neMeeting={neMeeting}
+          SIPNumber={SIPNumber}
+          eventEmitter={eventEmitter}
+          meetingInfoDispatch={meetingInfoDispatch}
+        />
+      )}
+    </div>
+  )
+}
+export { InviteContent }
 
 export default InviteModal

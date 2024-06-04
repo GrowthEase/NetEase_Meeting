@@ -1,3 +1,36 @@
+## v4.5.0(2024-04-02)
+
+### New Features
+
+* 支持配置入会是否拉取和展示小应用
+* 支持配置入会是否展示通知中心菜单
+* 预约会议支持设置是否允许访客入会
+* 预约会议支持预选参会者列表并指定身份
+* 支持通讯录邀请入会
+
+### Bug Fixes
+修复离开会议未销毁情况下重新入会聊天室监听事件重复添加问题
+### Api Changes
+ * 新增`noWebApps`属性,表示入会是否拉取和展示小应用
+ * 新增`showScreenShareUserVideo`属性,h5端是否显示共享者的摄像头画面
+ * 新增`noNotifyCenter`属性,表示入会是否展示通知中心菜单
+ * 新增`setEnableGuestJoin` 和 `isGuestJoinEnabled` 接口,设置是否允许访客入会
+ * 新增`scheduledMemberList`属性,表示预选参会者列表并指定身份，配置预约成员开启时有效
+ * 新增`getScheduledMembers`属性,表示预选参会者列表并指定身份，配置预约成员开启时有效
+ * 新增`getScheduledMembers`接口,获取预约会议成员列表
+ * 新增`searchAccount`接口,用于通讯录搜索
+ * 新增`getAccountInfoList`接口,用于通讯录成员信息查询
+ * 新增`NEMeetingInviteService`
+    * 新增`acceptInvite`接口,用于通过邀请 加入一个当前正在进行中的会议，只有完成SDK的登录鉴权操作才允许加入会议。
+    * 新增`rejectInvite`接口,拒绝邀请
+    * 新增`addEventListener`接口,添加邀请消息监听
+    * 新增`removeEventListener`接口,移除邀请消息监听
+    * 新增`onMeetingInviteStatusChanged`邀请状态变更时会回调该方法，该方法在UI线程调用
+### Compatibility
+
+- **room-kit:** ⚙️ Compatible with `NERTC` version `5.5.40`
+- **room-kit:** ⚙️ Compatible with `NIM` version `9.15.1`
+- **room-kit:** ⚙️ Compatible with `NERoomKit` version `1.28.0`
 ## v4.4.0(2024-04-02)
 
 ### New Features

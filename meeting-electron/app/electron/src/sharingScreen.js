@@ -58,7 +58,7 @@ function createNotifyWindow(mainWindow) {
   });
   const notifyWindow = sharingScreen.memberNotifyWindow;
   if (isLocal) {
-    notifyWindow.loadURL('http://localhost:8000/#/memberNotify');
+    notifyWindow.loadURL('https://localhost:8000/#/memberNotify');
   } else {
     notifyWindow.loadFile(path.join(__dirname, '../build/index.html'), {
       hash: 'memberNotify',
@@ -241,6 +241,7 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
           if (!data?.immediately) {
             mainWindow.setOpacity(0);
             setTimeout(() => {
+              if (mainWindow.isDestroyed()) return;
               mainWindow.setOpacity(1);
               !isWin32 && mainWindow.setBackgroundColor('#ffffff');
             }, 600);

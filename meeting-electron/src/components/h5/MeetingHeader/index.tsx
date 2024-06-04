@@ -1,6 +1,11 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
-import { GlobalContext, MeetingInfoContext } from '../../../store'
-import { ActionSheet } from 'antd-mobile'
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  GlobalContext,
+  MeetingInfoContext,
+  useGlobalContext,
+  useMeetingInfoContext,
+} from '../../../store'
+import { ActionSheet } from 'antd-mobile/es'
 import type { Action } from 'antd-mobile/es/components/action-sheet'
 import MeetingInfoPopUp from './meetingInfo'
 import {
@@ -10,8 +15,9 @@ import {
   Role,
 } from '../../../types'
 import { DeviceType, NEDeviceBaseInfo } from 'neroom-web-sdk'
+import classNames from 'classnames'
 import Toast from '../../common/toast'
-
+import Network from '../../common/Network'
 // 移动端摄像头类型
 enum MobileCameraType {
   FRONT = 'front', // 前置摄像头
@@ -25,8 +31,8 @@ enum MobileMicrophoneType {
   EARPIECE = 'earpiece', // 听筒
 }
 import './index.less'
-import { member } from 'typedoc/dist/lib/output/themes/default/partials/member'
-
+import { useTranslation } from 'react-i18next'
+import Dialog from '../ui/dialog'
 interface MeetingHeaderProps {
   className?: string
   visible?: boolean
@@ -38,6 +44,8 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
   visible = false,
   onClick,
 }) => {
+  const { meetingInfo } = useMeetingInfoContext()
+  const { showCloudRecordingUI } = useGlobalContext()
   const [showMeetingInfo, setShowMeetingInfo] = useState(false)
   const [showExitAction, setShowExitAction] = useState(false)
   const {
@@ -50,7 +58,11 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
     showSubject,
   } = useContext<GlobalContextInterface>(GlobalContext)
   const [actions, setActions] = useState<Action[]>([])
+  // 开始录制弹窗提醒
+  const [startMeetingRecordingModal, setStartMeetingRecordingModal] =
+    useState(false)
   const isSwitchingRef = useRef<boolean>(false)
+
   const [mobileDeviceType, setMobileDeviceType] = useState<{
     cameraType: MobileCameraType // 前置或后置摄像头
     // microType: MobileMicrophoneType
@@ -62,7 +74,6 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
     cameras: NEDeviceBaseInfo[]
     cameraItem: any
   }>()
-
   const isHost =
     localMember.role == Role.host || localMember.role == Role.coHost
   const possibleCameraField = {
@@ -70,18 +81,30 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
     [MobileCameraType.BACK]: ['back', '后置'],
   }
 
+  const { t, i18n: i18next } = useTranslation()
+  const i18n = {
+    leave: t('leave'),
+    meetingQuit: t('meetingQuit'),
+    meetingLeave: t('meetingLeave'),
+    globalCancel: t('globalCancel'),
+    unsupportedSwitchCamera: t('unsupportedSwitchCamera'),
+    meetingRepeatEnd: t('meetingRepeatEnd'),
+    end: t('meetingQuit'),
+    globalAppName: t('globalAppName'),
+  }
+
   // 点击离开/结束按钮
   const onExitClick = () => {
     const actions: Action[] = [
       {
-        text: '离开会议',
+        text: i18n.leave,
         key: 'leave',
         onClick: async () => {
           await leaveMeetingRoom()
         },
       },
       {
-        text: '结束会议',
+        text: i18n.meetingQuit,
         key: 'end',
         danger: true,
         onClick: async () => {
@@ -89,7 +112,7 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
         },
       },
       {
-        text: '取消',
+        text: i18n.globalCancel,
         key: 'cancel',
         onClick: async () => {
           setShowExitAction(false)
@@ -163,8 +186,6 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
         cameras,
         cameraItem,
       }
-      console.log('-------------device---------------')
-      console.log(deviceInfo)
       let cameraType = MobileCameraType.FRONT
       if (cameraItem) {
         const back_flag = possibleCameraField[MobileCameraType.BACK].includes(
@@ -237,7 +258,7 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
               isSwitchingRef.current = false
             })
         } else {
-          Toast.info('该设备暂不支持切换摄像头')
+          Toast.info(i18n.unsupportedSwitchCamera)
         }
       }
     }
@@ -248,25 +269,37 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
     onClick?.(event)
   }
 
+  useEffect(() => {
+    if (meetingInfo?.isCloudRecording && showCloudRecordingUI) {
+      setStartMeetingRecordingModal(true)
+    } else {
+      setStartMeetingRecordingModal(false)
+    }
+  }, [showCloudRecordingUI, meetingInfo?.isCloudRecording])
+
   return (
     <>
-      {visible && (
-        <div
-          className={`meeting-header-wrap ${className || ''} ${
+      <div
+        className={classNames(
+          `meeting-header-wrap ${className || ''} ${
             showMeetingInfo ? 'h-full' : ''
-          }`}
-          onClick={(e) => {
-            e.stopPropagation()
-          }}
+          }`,
+          {
+            ['meeting-header-wrap-visible']: visible,
+          }
+        )}
+        onClick={(e) => {
+          e.stopPropagation()
+        }}
+      >
+        <div
+          onClick={(e) => onHeaderClick(e)}
+          className="meeting-header bg-zinc-900"
         >
-          <div
-            onClick={(e) => onHeaderClick(e)}
-            className="meeting-header bg-zinc-900"
-          >
-            <div className="absolute flex meeting-header-icons">
-              {/* todo: icon颜色问题 */}
-              {/* todo: 目前android10、所有ios扬声器列表都为空，不支持切换听筒及扬声器，暂不展示 */}
-              {/* { localMember?.isAudioOn &&
+          <div className="absolute flex meeting-header-icons">
+            {/* todo: icon颜色问题 */}
+            {/* todo: 目前android10、所有ios扬声器列表都为空，不支持切换听筒及扬声器，暂不展示 */}
+            {/* { localMember?.isAudioOn &&
                 <>
                   {
                     mobileDeviceType.microType === MobileMicrophoneType.HEADSET && (
@@ -295,54 +328,80 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
                   }
                 </>
               } */}
-              {localMember?.isVideoOn && (
-                <>
-                  <i
-                    className="iconfont icon-white iconyx-tv-filpx"
-                    onClick={() => {
-                      switchDevice('camera', mobileDeviceType.cameraType)
-                    }}
-                  ></i>
-                </>
-              )}
-            </div>
-            <div className="header-title">
-              <span
-                className={'meeting-name text-base'}
-                onClick={() => {
-                  setShowMeetingInfo(!showMeetingInfo)
-                }}
-              >
-                {showSubject ? subject : '网易会议'}
-              </span>
-              <i
-                onClick={() => {
-                  setShowMeetingInfo(!showMeetingInfo)
-                }}
-                className="iconfont icona-45"
-              ></i>
+            {localMember?.isVideoOn && (
+              <>
+                <i
+                  className="iconfont icon-white iconyx-tv-filpx"
+                  onClick={() => {
+                    switchDevice('camera', mobileDeviceType.cameraType)
+                  }}
+                ></i>
+              </>
+            )}
+          </div>
+          <div className="header-title">
+            <span
+              className={'meeting-name text-base'}
+              onClick={() => {
+                setShowMeetingInfo(!showMeetingInfo)
+              }}
+            >
+              {showSubject ? subject : i18n.globalAppName}
+            </span>
+            <i
+              onClick={() => {
+                setShowMeetingInfo(!showMeetingInfo)
+              }}
+              className="iconfont icona-45"
+            ></i>
+          </div>
+
+          <div className="header-right">
+            <div className="nemeeting-signal-wrapper">
+              <Network />
             </div>
             <button
-              className="exit-btn bg-red-500 text-white rounded h-6 text-xs absolute top-5 right-4 button-ele"
+              className="exit-btn bg-red-500 text-white rounded h-6 text-xs button-ele"
               onClick={onExitClick}
             >
-              {isHost ? '结束' : '离开'}
+              {isHost ? i18n.end : i18n.meetingLeave}
             </button>
           </div>
-          <MeetingInfoPopUp
-            visible={showMeetingInfo}
-            onClose={() => {
-              setShowMeetingInfo(false)
-            }}
-          />
-          <ActionSheet
-            visible={showExitAction}
-            actions={actions}
-            getContainer={null}
-            onClose={() => setShowExitAction(false)}
-          />
         </div>
-      )}
+        <MeetingInfoPopUp
+          visible={showMeetingInfo}
+          onClose={() => {
+            setShowMeetingInfo(false)
+          }}
+        />
+      </div>
+      <ActionSheet
+        visible={showExitAction}
+        actions={actions}
+        getContainer={null}
+        onClose={() => setShowExitAction(false)}
+      />
+      <Dialog
+        visible={startMeetingRecordingModal}
+        title={t('beingMeetingRecorded')}
+        cancelText={t('meetingLeaveFull')}
+        confirmText={t('gotIt')}
+        width={305}
+        onCancel={() => {
+          setStartMeetingRecordingModal(false)
+          onExitClick()
+        }}
+        onConfirm={() => {
+          setStartMeetingRecordingModal(false)
+        }}
+      >
+        <div className="start-meeting-record-modal">
+          <div className="record-message">{t('startRecordTipByMember')}</div>
+          <div className="record-agree-message">
+            {t('agreeInRecordMeeting')}
+          </div>
+        </div>
+      </Dialog>
     </>
   )
 }

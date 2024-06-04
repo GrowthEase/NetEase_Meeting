@@ -1,14 +1,13 @@
 import React, { FC, useEffect, useState } from 'react';
-import { history, useLocation } from 'umi';
+import { history } from 'umi';
 import styles from './index.less';
-import { MenuProps } from 'antd';
-import { Dropdown, Space, Button } from 'antd';
-import { Link } from 'react-router-dom';
+import { Button, Dropdown, Space } from 'antd';
 import {
   LOCALSTORAGE_LOGIN_BACK,
   LOCALSTORAGE_USER_INFO,
   WEBSITE_URL,
 } from '../../config';
+import { useTranslation } from 'react-i18next';
 
 // const newVersion =
 //   window.location.href.indexOf('/v2') > -1 ||
@@ -16,7 +15,13 @@ import {
 
 const newVersion = true;
 
-const Header: FC = (props) => {
+interface HeaderProps {
+  onLogin?: () => void;
+}
+
+const Header: FC<HeaderProps> = (props) => {
+  const { onLogin } = props;
+  const { t } = useTranslation();
   const [userinfo, setUserInfo] = useState<any>();
 
   const logout = () => {
@@ -90,7 +95,11 @@ const Header: FC = (props) => {
         </Space>
       ) : (
         <div className={styles.loginPanel}>
-          {/* <Button>登录</Button> */}
+          {onLogin ? (
+            <Button onClick={() => onLogin?.()} type="primary">
+              {t('authLogin')}
+            </Button>
+          ) : null}
           {/* 当前版本暂不开放注册 */}
           {/* <Button
             type="primary"

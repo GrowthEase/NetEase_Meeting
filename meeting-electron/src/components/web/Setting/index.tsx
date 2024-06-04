@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React from 'react'
 import Modal from '../../common/Modal'
 import { ModalProps } from 'antd'
 import { NEPreviewController } from 'neroom-web-sdk'

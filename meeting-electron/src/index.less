@@ -30,7 +30,28 @@ div.dialog-com {
 .nemeeting-password-join-disabled {
   opacity: 0.5;
 }
-
+.nemeeting-local-tabs {
+  height: 32px;
+  background-color: #eef0f3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  position: relative;
+}
+.nemeeting-local-tab {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  height: 100%;
+}
+.nemeeting-tab-selected {
+  background-color: #337eff;
+  border-radius: 5px;
+  color: #fff;
+}
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
@@ -138,11 +159,11 @@ code {
   transform: translate(-50%, -50%);
 }
 .nemeeing-waiting-room-notify {
-  overflow: visible!important;
+  overflow: visible !important;
   .nemeeting-waiting-room-member-manager {
     width: 24px;
     height: 24px;
-    background: #317CFF;
+    background: #317cff;
     color: #fff;
     font-size: 17px;
     display: flex;
@@ -175,7 +196,8 @@ code {
     color: #666;
     border-radius: 50%;
     display: flex;
-    box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08),
+      0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
     visibility: hidden;
     transition: all 0.2s;
   }
@@ -189,24 +211,23 @@ code {
   }
   .nemeeting-notification-notice {
     padding: 16px;
-    overflow: visible!important;
+    overflow: visible !important;
   }
   .nemeeting-notification-notice-message {
-    padding-right: 0!important;
+    padding-right: 0 !important;
   }
   .nemeeting-notification-notice-description {
-    margin-left: 0!important;
+    margin-left: 0 !important;
   }
   .nemeeting-notification-notice-close {
-    width: 28px!important;
-    height: 28px!important;
-    top: -12px!important;
-    left: -12px!important;
-    border-radius: 50%!important;
+    width: 28px !important;
+    height: 28px !important;
+    top: -12px !important;
+    left: -12px !important;
+    border-radius: 50% !important;
   }
   .notify-description {
     font-size: 14px;
     color: #333;
   }
 }
-

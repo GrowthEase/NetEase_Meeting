@@ -46,6 +46,7 @@ Modal.confirm = (props) => {
       await props.onCancel?.(...args)
     },
     afterClose: () => {
+      props.key && modalMaps.delete(props.key)
       props.afterClose?.()
       window.ipcRenderer?.send('nemeeting-sharing-screen', {
         method: 'closeModal',
@@ -73,6 +74,13 @@ Modal.warning = (props) => {
     cancelText: i18n.t('globalCancel'),
     okText: i18n.t('globalSure'),
     ...props,
+    afterClose: () => {
+      props.key && modalMaps.delete(props.key)
+      props.afterClose?.()
+      window.ipcRenderer?.send('nemeeting-sharing-screen', {
+        method: 'closeModal',
+      })
+    },
   })
   if (props.key) {
     modalMaps.set(props.key, modal)

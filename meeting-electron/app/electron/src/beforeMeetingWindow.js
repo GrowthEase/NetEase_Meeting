@@ -32,7 +32,7 @@ function createBeforeMeetingWindow() {
   });
   if (isLocal) {
     beforeMeetingWindow.loadURL('http://localhost:8000/');
-    // beforeMeetingWindow.webContents.openDevTools();
+    beforeMeetingWindow.webContents.openDevTools();
   } else {
     beforeMeetingWindow.loadFile(path.join(__dirname, '../build/index.html'));
   }
@@ -44,6 +44,11 @@ function createBeforeMeetingWindow() {
       newWins[url] = newWin;
       // 通过 openWindow 打开的窗口，需要在关闭时通知主窗口
       newWin.on('close', (event) => {
+        event.preventDefault();
+        if (url.includes('scheduleMeeting')) {
+          newWin.webContents.send('scheduleMeetingWindow:close');
+          return;
+        }
         beforeMeetingWindow.webContents.send(`windowClosed:${url}`);
         if (url.includes('setting')) {
           beforeMeetingWindow?.webContents.send('previewController', {
@@ -51,10 +56,11 @@ function createBeforeMeetingWindow() {
             args: [],
           });
         }
-        // 通过隐藏处理关闭，关闭有一定概率崩溃
         newWin.hide();
-        event.preventDefault();
       });
+      if (url.includes('notification/card')) {
+        newWin.setWindowButtonVisibility?.(false);
+      }
 
       newWin.webContents.session.removeAllListeners('will-download');
       newWin.webContents.session.on('will-download', (event, item) => {
@@ -82,6 +88,10 @@ function createBeforeMeetingWindow() {
         maximizable: false,
         minimizable: false,
         resizable: false,
+        trafficLightPosition: {
+          x: 10,
+          y: 13,
+        },
         webPreferences: {
           contextIsolation: false,
           nodeIntegration: true,
@@ -150,17 +160,70 @@ function createBeforeMeetingWindow() {
           overrideBrowserWindowOptions: {
             ...commonOptions,
             width: 800,
-            height: 560,
+            height: 680,
             trafficLightPosition: {
               x: 10,
               y: 13,
             },
           },
         };
+      } else if (url.includes('#/addressBook')) {
+        return {
+          action: 'allow',
+          overrideBrowserWindowOptions: {
+            ...commonOptions,
+            width: 498,
+            height: 456,
+            trafficLightPosition: {
+              x: 10,
+              y: 13,
+            },
+          },
+        };
+      } else if (url.includes('#/notification/card')) {
+        const nowDisplay = screen.getPrimaryDisplay();
+        const { width, height } = nowDisplay.workArea;
+        const notifyWidth = 360;
+        const notifyHeight = 260;
+        return {
+          action: 'allow',
+          overrideBrowserWindowOptions: {
+            ...commonOptions,
+            maximizable: false,
+            titleBarStyle: 'hidden',
+            minimizable: false,
+            fullscreenable: false,
+            alwaysOnTop: 'screen-saver',
+            resizable: false,
+            skipTaskbar: true,
+            width: 360,
+            height: 260,
+            x: Math.round(width - notifyWidth - 60),
+            y: Math.round(height - notifyHeight - 20),
+          },
+        };
+      } else if (url.includes('#/scheduleMeeting')) {
+        return {
+          action: 'allow',
+          overrideBrowserWindowOptions: {
+            ...commonOptions,
+          },
+        };
       }
       return { action: 'deny' };
     },
   );
+
+  function getKeyByValue(obj, value) {
+    return Object.keys(obj).find((key) => obj[key] === value);
+  }
+
+  ipcMain.on('childWindow:closed', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const url = getKeyByValue(newWins, win);
+    url && beforeMeetingWindow.webContents.send(`windowClosed:${url}`);
+    win?.hide();
+  });
 
   return beforeMeetingWindow;
 }

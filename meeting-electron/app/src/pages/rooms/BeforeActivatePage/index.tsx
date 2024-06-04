@@ -1,9 +1,7 @@
 import Styles from './index.less';
-import { ConfigProvider, Input } from 'antd';
-import { useRef } from 'react';
+import { ConfigProvider } from 'antd';
 import { useEffect, useState } from 'react';
 import QRCode from 'react-qr-code';
-import req, { QRCodeRes } from '../request';
 
 const antdPrefixCls = 'nemeeting';
 

@@ -1,0 +1,128 @@
+.nemeeting-notification {
+  .nemeeting-notification-notice-wrapper {
+    .nemeeting-invite-notify {
+      padding: 0;
+    }
+    .meeting-notification-h5-card-wrapper.nemeeting-notification-notice-closable {
+      .nemeeting-notification-notice-message {
+        padding-inline-end: 0;
+      }
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        .info {
+          display: flex;
+          align-items: center;
+          .icon {
+            margin-right: 8px;
+            width: 24px;
+            height: 24px;
+          }
+          .label {
+            font-size: 12px;
+            font-weight: 400;
+            color: #666666;
+          }
+        }
+      }
+      .buttons {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        margin-top: 14px;
+        .button {
+          margin-left: 8px;
+        }
+      }
+      .title {
+        font-size: 14px;
+        font-weight: 500;
+        color: #333333;
+        line-height: 24px;
+      }
+      .description {
+        font-size: 14px;
+        font-weight: 400;
+        color: #666666;
+        line-height: 24px;
+        white-space: pre-wrap;
+      }
+    }
+  }
+}
+
+.nemeeting-notification {
+  .nemeeting-notification-notice-wrapper {
+    .meeting-notification-card-wrapper.nemeeting-notification-notice-closable {
+      &:hover {
+        .nemeeting-notification-notice-close {
+          display: block;
+        }
+      }
+      .nemeeting-notification-notice-close {
+        width: 28px;
+        height: 28px;
+        top: -12px;
+        left: -12px;
+        border-radius: 50%;
+        display: none;
+      }
+      .nemeeting-notification-notice-message {
+        padding-inline-end: 0;
+      }
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        .info {
+          display: flex;
+          align-items: center;
+          .icon {
+            margin-right: 8px;
+            width: 24px;
+            height: 24px;
+          }
+          .label {
+            font-size: 12px;
+            font-weight: 400;
+            color: #666666;
+          }
+        }
+        .buttons {
+          display: flex;
+          align-items: center;
+          .button {
+            margin-left: 8px;
+          }
+        }
+      }
+      .title {
+        font-size: 14px;
+        font-weight: 500;
+        color: #333333;
+        line-height: 24px;
+      }
+      .description {
+        font-size: 14px;
+        font-weight: 400;
+        color: #666666;
+        line-height: 24px;
+        white-space: pre-wrap;
+      }
+      .close-icon {
+        width: 28px;
+        height: 28px;
+        align-items: center;
+        justify-content: center;
+        background-color: #fff;
+        color: #666;
+        border-radius: 50%;
+        display: flex;
+        box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08),
+          0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s;
+      }
+    }
+  }
+}

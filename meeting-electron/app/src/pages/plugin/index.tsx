@@ -1,14 +1,15 @@
-import { ConfigProvider } from 'antd';
-import zhCN from 'antd/locale/zh_CN';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import MeetingPlugin from '../../../../src/components/web/MeetingRightDrawer/MeetingPlugin';
-import './index.less';
-import { useLocation } from 'umi';
-import { NEMeetingInfo } from '../../../../src/types';
-import NEMeetingService from '../../../../src/services/NEMeeting';
-import PCTopButtons from '../../../../src/components/common/PCTopButtons';
+import { useEffect, useMemo, useState } from 'react';
 
-export default function MeetingPluginPage() {
+import PCTopButtons from '../../../../src/components/common/PCTopButtons';
+import MeetingPlugin from '../../../../src/components/common/PlugIn/MeetingPlugin';
+import { useMeetingInfoContext } from '../../../../src/store';
+import useWatermark from '../../../../src/hooks/useWatermark';
+
+import './index.less';
+
+const MeetingPluginPage: React.FC = () => {
+  useWatermark();
+  const { meetingInfo } = useMeetingInfoContext();
   const [pluginInfo, setPluginInfo] = useState<{
     title: string;
     url: string;
@@ -17,54 +18,12 @@ export default function MeetingPluginPage() {
     isInMeeting: boolean;
   }>();
 
-  const replyCount = useRef(0);
-
-  const [meetingInfo, setMeetingInfo] = useState<NEMeetingInfo>();
-
   const showMeetingPlugin = useMemo(() => {
     if (!pluginInfo?.isInMeeting) {
       return true;
     }
     return meetingInfo?.meetingNum ? true : false;
   }, [pluginInfo?.isInMeeting, meetingInfo?.meetingNum]);
-
-  const neMeeting = new Proxy(
-    {},
-    {
-      get: function (_, propKey) {
-        return function (...args: any) {
-          return new Promise((resolve, reject) => {
-            const parentWindow = window.parent;
-            const replyKey = `neMeetingReply_${replyCount.current++}`;
-            parentWindow?.postMessage(
-              {
-                event: 'neMeeting',
-                payload: {
-                  replyKey,
-                  fnKey: propKey,
-                  args: args,
-                },
-              },
-              '*',
-            );
-            const handleMessage = (e: MessageEvent) => {
-              const { event, payload } = e.data;
-              if (event === replyKey) {
-                const { result, error } = payload;
-                if (error) {
-                  reject(error);
-                } else {
-                  resolve(result);
-                }
-                window.removeEventListener('message', handleMessage);
-              }
-            };
-            window.addEventListener('message', handleMessage);
-          });
-        };
-      },
-    },
-  ) as NEMeetingService;
 
   useEffect(() => {
     // 设置页面标题
@@ -77,15 +36,7 @@ export default function MeetingPluginPage() {
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data;
       if (event === 'updateData') {
-        const {
-          meetingInfo,
-          pluginId,
-          url,
-          roomArchiveId,
-          isInMeeting,
-          title,
-        } = payload;
-        setMeetingInfo(meetingInfo);
+        const { pluginId, url, roomArchiveId, isInMeeting, title } = payload;
         pluginId &&
           setPluginInfo({
             title,
@@ -121,11 +72,11 @@ export default function MeetingPluginPage() {
             isInMeeting={pluginInfo.isInMeeting}
             pluginId={pluginInfo.pluginId}
             roomArchiveId={pluginInfo.roomArchiveId}
-            neMeeting={neMeeting}
-            meetingInfo={meetingInfo}
           />
         ) : null}
       </div>
     </>
   );
-}
+};
+
+export default MeetingPluginPage;
