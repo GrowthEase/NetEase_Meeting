@@ -24,12 +24,6 @@
 @import device_info_plus;
 #endif
 
-#if __has_include(<device_information/DeviceInformationPlugin.h>)
-#import <device_information/DeviceInformationPlugin.h>
-#else
-@import device_information;
-#endif
-
 #if __has_include(<file_picker/FilePickerPlugin.h>)
 #import <file_picker/FilePickerPlugin.h>
 #else
@@ -52,12 +46,6 @@
 #import <image_picker_ios/FLTImagePickerPlugin.h>
 #else
 @import image_picker_ios;
-#endif
-
-#if __has_include(<integration_test/IntegrationTestPlugin.h>)
-#import <integration_test/IntegrationTestPlugin.h>
-#else
-@import integration_test;
 #endif
 
 #if __has_include(<marvelflutter/MarvelflutterPlugin.h>)
@@ -162,12 +150,10 @@
   [AudioplayersDarwinPlugin registerWithRegistrar:[registry registrarForPlugin:@"AudioplayersDarwinPlugin"]];
   [ConnectivityPlusPlugin registerWithRegistrar:[registry registrarForPlugin:@"ConnectivityPlusPlugin"]];
   [FPPDeviceInfoPlusPlugin registerWithRegistrar:[registry registrarForPlugin:@"FPPDeviceInfoPlusPlugin"]];
-  [DeviceInformationPlugin registerWithRegistrar:[registry registrarForPlugin:@"DeviceInformationPlugin"]];
   [FilePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FilePickerPlugin"]];
   [FlutterContactsPlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterContactsPlugin"]];
   [FlutterTimezonePlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterTimezonePlugin"]];
   [FLTImagePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTImagePickerPlugin"]];
-  [IntegrationTestPlugin registerWithRegistrar:[registry registrarForPlugin:@"IntegrationTestPlugin"]];
   [MarvelflutterPlugin registerWithRegistrar:[registry registrarForPlugin:@"MarvelflutterPlugin"]];
   [MeetingPlugin registerWithRegistrar:[registry registrarForPlugin:@"MeetingPlugin"]];
   [RoomKitPlugin registerWithRegistrar:[registry registrarForPlugin:@"RoomKitPlugin"]];
