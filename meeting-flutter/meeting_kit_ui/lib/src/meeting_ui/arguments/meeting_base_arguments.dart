@@ -21,7 +21,7 @@ class MeetingBaseArguments {
   Widget? backgroundWidget;
 
   /// show Meeting time
-  bool get showMeetingTime => options.showMeetingTime;
+  bool? get showMeetingTime => options.showMeetingTime;
 
   /// 邀请
   bool get noInvite => options.noInvite;
@@ -71,15 +71,15 @@ class MeetingBaseArguments {
     if (title != null && title.isNotEmpty) {
       return title;
     }
-    title = NEMeetingUIKit().uiConfig?.appName;
+    title = NEMeetingUIKit.instance.uiConfig?.appName;
     if (title != null && title.isNotEmpty) {
       return title;
     }
-    return NEMeetingUIKit().ofLocalizations().meetingDefalutTitle;
+    return NEMeetingUIKit.instance.getUIKitLocalizations().meetingDefalutTitle;
   }
 
   String? get iosBroadcastAppGroup =>
-      NEMeetingUIKit().uiConfig?.iosBroadcastAppGroup;
+      NEMeetingUIKit.instance.uiConfig?.iosBroadcastAppGroup;
 
   /// 本地配置
   bool get videoMute => _videoMuteListenable.value;

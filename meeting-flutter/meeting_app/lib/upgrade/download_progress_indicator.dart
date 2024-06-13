@@ -4,7 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:nemeeting/upgrade/download_progress_notifier.dart';
-import '../language/meeting_localization/meeting_app_localizations.dart';
+import '../language/localizations.dart';
 import '../uikit/values/colors.dart';
 
 class DownloadProgressIndicator extends AnimatedWidget {
@@ -19,7 +19,6 @@ class DownloadProgressIndicator extends AnimatedWidget {
 
   @override
   Widget build(BuildContext context) {
-    final meetingAppLocalizations = MeetingAppLocalizations.of(context)!;
     return PopScope(
       canPop: false,
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -37,7 +36,7 @@ class DownloadProgressIndicator extends AnimatedWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                meetingAppLocalizations.settingVersionUpgrade,
+                getAppLocalizations().settingVersionUpgrade,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     color: Colors.black,
@@ -81,7 +80,7 @@ class DownloadProgressIndicator extends AnimatedWidget {
                           bottomRight: Radius.circular(14))),
                   constraints: const BoxConstraints(minHeight: 44),
                   child: Text(
-                    meetingAppLocalizations.globalCancel,
+                    getAppLocalizations().globalCancel,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         color: Colors.black,

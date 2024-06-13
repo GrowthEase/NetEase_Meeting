@@ -19,7 +19,7 @@ class SwitchItem extends StatelessWidget {
     this.summary,
     this.summaryColor,
     required this.value,
-    required this.onChange,
+    this.onChange,
   }) : super(key: key);
 
   @override

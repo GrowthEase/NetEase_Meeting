@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:netease_common/netease_common.dart';
+import 'package:uuid/uuid.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import 'package:netease_roomkit/netease_roomkit.dart'
@@ -31,21 +32,20 @@ import 'meeting_service.dart';
 export 'package:netease_meeting_core/meeting_service.dart'
     show
         NEMeetingItem,
-        NEMeetingState,
-        NEMeetingItemSettings,
+        NEMeetingItemStatus,
+        NEMeetingItemSetting,
         NEPreRoomLiveInfo,
-        NELiveAuthLevel,
+        NEMeetingLiveAuthLevel,
         NERoomItemLiveState,
         NEMeetingRoleConfiguration,
         NEWatermarkConfig,
         NERoomInvitation,
-        NERoomControl,
-        NERoomAudioControl,
-        NERoomVideoControl,
+        NEMeetingControl,
+        NEMeetingAudioControl,
+        NEMeetingVideoControl,
         NEAccountInfo,
-        NERoomAttendeeOffType,
+        NEMeetingAttendeeOffType,
         NEMeetingWebAppItem,
-        NEMeetingWebAppList,
         NEMeetingRecurringRuleType,
         NEMeetingFrequencyUnitType,
         NEMeetingRecurringEndRuleType,
@@ -57,7 +57,16 @@ export 'package:netease_meeting_core/meeting_service.dart'
         NEContact,
         MeetingRoles,
         NEScheduledMember,
-        NEScheduledMemberExt;
+        NEScheduledMemberExt,
+        NEMeetingCorpInfo,
+        NEMeetingIdpInfo,
+        NERemoteHistoryMeeting,
+        NEChatroomInfo,
+        NERemoteHistoryMeetingDetail,
+        NEMeetingAppNoticeTips,
+        NEMeetingAppNoticeTipType,
+        NELoginInfo,
+        NEMeetingAppNoticeTip;
 export 'package:netease_roomkit/netease_roomkit.dart'
     show
         NEServerConfig,
@@ -74,19 +83,23 @@ part 'src/meeting_kit/impl/screen_sharing_service_impl.dart';
 part 'src/meeting_kit/impl/meeting_account_service_impl.dart';
 part 'src/meeting_kit/impl/meeting_kit_impl.dart';
 part 'src/meeting_kit/impl/meeting_service_impl.dart';
+part 'src/meeting_kit/impl/meeting_message_channel_service_impl.dart';
 part 'src/meeting_kit/meeting_invite_service.dart';
 part 'src/meeting_kit/impl/meeting_invite_service_impl.dart';
 part 'src/meeting_kit/impl/pre_meeting_service_impl.dart';
 part 'src/meeting_kit/impl/settings_service_impl.dart';
 part 'src/meeting_kit/values/meeting_kit_strings.dart';
 part 'src/meeting_kit/meeting_service.dart';
+part 'src/meeting_kit/meeting_message_channel_service.dart';
 part 'src/meeting_kit/pre_meeting_service.dart';
 part 'src/meeting_kit/settings_service.dart';
 part 'src/meeting_kit/live_meeting_service.dart';
 part 'src/meeting_kit/impl/live_meeting_service_impl.dart';
 part 'src/meeting_kit/module_name.dart';
 part 'src/meeting_kit/log/log_service.dart';
+part 'src/meeting_kit/manager/local_history_meeting_manager.dart';
 part 'src/meeting_kit/utils/rtc_utils.dart';
+part 'src/meeting_kit/utils/meeting_service_util.dart';
 part 'src/meeting_kit/utils/session_message_notify_card_data.dart';
 part 'src/meeting_kit/utils/network_task_executor.dart';
 part 'src/meeting_kit/utils/connectivity_manager.dart';
@@ -95,8 +108,8 @@ part 'src/meeting_kit/meeting_context.dart';
 part 'src/meeting_kit/report/meeting_report.dart';
 part 'src/meeting_kit/screen_sharing_service.dart';
 part 'src/meeting_kit/meeting_web_app_bridge.dart';
-part 'src/meeting_kit/meeting_nos_service.dart';
-part 'src/meeting_kit/impl/meeting_nos_service_impl.dart';
+part 'src/meeting_kit/contacts_service.dart';
+part 'src/meeting_kit/impl/contacts_service_impl.dart';
 
 class NEMeetingServerConfig {
   static const _serverUrlKey = 'serverUrl';
@@ -136,27 +149,50 @@ class NEMeetingKitServerConfig {
       };
 }
 
+///
 /// 提供会议SDK初始化时必要的参数和配置信息
+///
 class NEMeetingKitConfig {
-  /// 房间App Key，不能为空
-  final String appKey;
+  ///
+  /// 会议AppKey
+  ///
+  final String? appKey;
 
-  NEMeetingKitServerConfig? serverConfig;
+  /// 企业码，如果填写则会使用企业码进行初始化
+  ///
+  final String? corpCode;
 
+  ///
+  /// 企业邮箱，如果填写则会使用企业邮箱进行初始化
+  ///
+  final String? corpEmail;
+
+  ///
+  /// 默认语言
+  ///
+  final NEMeetingLanguage? language;
+
+  ///
+  /// 私有化地址
+  ///
   final String? serverUrl;
 
-  /// 日志参数配置
-  final ALoggerConfig aLoggerConfig;
+  final NEMeetingKitServerConfig? serverConfig;
 
+  ///
+  /// 额外字段
+  ///
   final Map<String, dynamic>? extras;
 
   NEMeetingKitConfig({
-    required this.appKey,
+    this.appKey,
+    this.corpCode,
+    this.corpEmail,
     this.serverConfig,
     this.serverUrl,
     this.extras,
-    ALoggerConfig? aLoggerConfig,
-  }) : aLoggerConfig = aLoggerConfig ?? const ALoggerConfig();
+    this.language,
+  });
 
   @override
   bool operator ==(other) {
@@ -164,24 +200,30 @@ class NEMeetingKitConfig {
       return false;
     }
     return appKey == other.appKey &&
+        corpCode == other.corpCode &&
+        corpEmail == other.corpEmail &&
         serverConfig == other.serverConfig &&
         serverUrl == other.serverUrl &&
-        aLoggerConfig == other.aLoggerConfig &&
+        language == other.language &&
         mapEquals(extras, other.extras);
   }
 
   @override
   int get hashCode => Object.hash(
         appKey,
+        corpCode,
+        corpEmail,
         serverUrl,
         serverConfig,
-        aLoggerConfig,
+        language,
         extras,
       );
 
+  String? get _initializeKey => appKey ?? corpCode ?? corpEmail;
+
   @override
   String toString() {
-    return 'NEMeetingKitConfig{$appKey, $serverUrl}';
+    return 'NEMeetingKitConfig{$_initializeKey, $serverUrl}';
   }
 }
 
@@ -189,98 +231,137 @@ class NEMeetingKitConfig {
 abstract class NEMeetingKit {
   static final NEMeetingKit _instance = _NEMeetingKitImpl();
 
+  ///
   /// 获取会议SDK实例
+  ///
   static NEMeetingKit get instance => _instance;
 
+  // todo
   ValueNotifier<bool> get loginStatusChangeNotifier;
 
+  // todo
   NEMeetingKitConfig? get config;
 
-  /// 初始化SDK
+  ///
+  /// 初始化会议组件，只有在完成初始化后才能调用会议组件的其他接口。
+  /// 可通过 [NEMeetingKitConfig.appKey] 初始化。也可以
+  /// 通过企业代码[NEMeetingKitConfig.corpCode]或企业邮箱
+  /// [NEMeetingKitConfig.corpEmail] 进行初始化，
+  /// 通过企业信息初始化成功后会返回 [NEMeetingCorpInfo]。
+  ///
   /// * [config]   初始化配置对象
-  Future<NEResult<void>> initialize(NEMeetingKitConfig config);
+  Future<NEResult<NEMeetingCorpInfo?>> initialize(NEMeetingKitConfig config);
 
-  ///
-  /// 切换语言
-  ///
-  Future<NEResult<void>> switchLanguage(NEMeetingLanguage? language);
-
-  ///
-  /// 当前语言
-  ///
-  NEMeetingLanguage get currentLanguage;
-
-  ValueListenable<Locale> get localeListenable;
-
-  NEMeetingKitLocalizations get localizations =>
-      NEMeetingKitLocalizations.ofLocale(localeListenable.value);
-
-  /// 注册登录状态监听器
-  ///
-  /// [listener] 监听器.
-  void addAuthListener(NEMeetingAuthListener listener);
-
-  /// 注销登录状态监听器
-  ///
-  /// [listener] 监听器.
-  void removeAuthListener(NEMeetingAuthListener listener);
-
-  /// 注册session监听器
-  ///
-  /// [listener] 监听器.
-  void addReceiveSessionMessageListener(
-      NEMeetingMessageSessionListener listener);
-
-  /// 注销session状态监听器
-  ///
-  /// [listener] 监听器.
-  void removeReceiveSessionMessageListener(
-      NEMeetingMessageSessionListener listener);
-
-  /// 获取指定会话的未读消息列表
-  /// sessionId 会话id
-  /// sessionType 会话类型
-  /// 消息列表
-  ///
-  Future<NEResult<List<NEMeetingCustomSessionMessage>>> queryUnreadMessageList(
-      String sessionId,
-      {NEMeetingSessionTypeEnum sessionType = NEMeetingSessionTypeEnum.P2P});
-
-  ///使用前提：
-  ///已在云信控制台[开启动态查询历史消息功能](https://doc.yunxin.163.com/messaging/docs/TI3NTU1NDA?platform=android#开启动态查询历史消息功能d)。
-  /// [param] 查询参数
-  /// 消息列表
-  ///
-  Future<NEResult<List<NEMeetingCustomSessionMessage>>>
-      getSessionMessagesHistory(NEMeetingGetMessagesHistoryParam param);
-
-  ///  sessionId 会话id
-  ///  sessionType 会话类型
-  ///  清理未读消息数
-  ///
-  Future<VoidResult> clearUnreadCount(String sessionId,
-      {NEMeetingSessionTypeEnum sessionType = NEMeetingSessionTypeEnum.P2P});
-
-  ///  sessionId 会话id
-  ///  sessionType 会话类型
-  ///  删除所有消息
-  ///
-  Future<VoidResult> deleteAllSessionMessage(String sessionId,
-      {NEMeetingSessionTypeEnum sessionType = NEMeetingSessionTypeEnum.P2P});
-
-  /// 登录鉴权。在已登录状态下可以创建和加入会议，但在未登录状态下只能加入会议
-  ///
-  /// * [accountId]   登录accountId
-  /// * [token]     登录令牌
-  Future<NEResult<void>> loginWithToken(String accountId, String token,
-      {int? startTime});
+  /// 查询会议SDK当前是否已经完成初始化
+  bool get isInitialized;
 
   /// 登录鉴权。在已登录状态下可以创建和加入会议，但在未登录状态下只能加入会议
   ///
   /// * [username]   登录账号
   /// * [password]   登录密码
-  Future<NEResult<void>> loginWithNEMeeting(String username, String password,
-      {int? startTime});
+  ///
+  @Deprecated('请使用[NEAccountService.loginByPassword]代替')
+  Future<NEResult<void>> loginWithNEMeeting(String username, String password);
+
+  /// 登录鉴权。在已登录状态下可以创建和加入会议，但在未登录状态下只能加入会议
+  ///
+  /// * [accountId]   登录账号
+  /// * [token]     登录令牌
+  @Deprecated('请使用[NEAccountService.loginByToken]代替')
+  Future<NEResult<void>> loginWithToken(String accountId, String token);
+
+  ///
+  /// 自动登录鉴权
+  ///
+  @Deprecated('请使用[NEAccountService.tryAutoLogin]代替')
+  Future<NEResult<void>> tryAutoLogin();
+
+  ///
+  /// 登出当前已登录的账号
+  ///
+  @Deprecated('请使用[NEAccountService.logout]代替')
+  Future<NEResult<void>> logout();
+
+  ///
+  /// 获取用于创建或加入会议的会议服务。
+  ///
+  NEMeetingService getMeetingService();
+
+  ///
+  /// 获取用于登录登出、查询账号信息的账号服务。
+  ///
+  NEAccountService getAccountService();
+
+  ///
+  /// 获取会议设置服务。
+  ///
+  NESettingsService getSettingsService();
+
+  ///
+  /// 获取会前服务。
+  ///
+  NEPreMeetingService getPreMeetingService();
+
+  ///
+  /// 获取会议外投屏服务。
+  ///
+  NEScreenSharingService getScreenSharingService();
+
+  ///
+  /// 获取会议邀请服务。
+  ///
+  NEMeetingInviteService getMeetingInviteService();
+
+  ///
+  /// 获取会议消息通知服务。
+  ///
+  NEMeetingMessageChannelService getMeetingMessageChannelService();
+
+  ///
+  /// 获取通讯录服务。
+  ///
+  NEContactsService getContactsService();
+
+  /// 添加登录状态监听器
+  ///
+  /// [listener] 监听器
+  @Deprecated('请使用[NEAccountService.addListener]代替')
+  void addAuthListener(NEAuthListener listener);
+
+  /// 移除登录状态监听器
+  ///
+  /// [listener] 监听器
+  @Deprecated('请使用[NEAccountService.removeListener]代替')
+  void removeAuthListener(NEAuthListener listener);
+
+  ///
+  /// 切换语言
+  /// * [language] 目标语言，类型为[NEMeetingLanguage]。如果设置为空，则使用当前系统语言。
+  ///
+  Future<NEResult<void>> switchLanguage(NEMeetingLanguage? language);
+
+  ///
+  /// 获取组件日志目录
+  ///
+  Future<String?> getSDKLogPath();
+
+  ///
+  /// 获取公告提示
+  ///
+  Future<NEResult<NEMeetingAppNoticeTips>> getAppNoticeTips();
+
+  ///
+  /// 当前语言
+  ///
+  //todo remove
+  NEMeetingLanguage get currentLanguage;
+
+  // todo
+  ValueListenable<Locale> get localeListenable;
+
+  // todo
+  NEMeetingKitLocalizations get localizations =>
+      NEMeetingKitLocalizations.ofLocale(localeListenable.value);
 
   ///
   /// 匿名登录。该方法可支持在不登录正式账号的情况下，临时加入会议。
@@ -289,40 +370,13 @@ abstract class NEMeetingKit {
   ///
   Future<NEResult<void>> anonymousLogin();
 
-  Future<NEResult<void>> tryAutoLogin();
-
-  /// 获取用于创建或加入会议的会议服务。
-  NEMeetingService getMeetingService();
-
-  /// 获取用于邀请服务服务。
-  NEMeetingInviteService getMeetingInviteService();
-
-  /// 获取用于屏幕共享的会议服务。
-  NEScreenSharingService getScreenSharingService();
-
-  /// 获取用于查询账号信息的账号服务
-  NEMeetingAccountService getAccountService();
-
-  /// 获取会议设置服务
-  NESettingsService getSettingsService();
-
-  /// 获取会议前服务
-  NEPreMeetingService getPreMeetingService();
-
-  /// 获取会议直播服务
-  NELiveMeetingService getLiveMeetingService();
-
-  /// 获取文件服务
-  NEMeetingNosService getNosService();
-
-  /// 注销当前已登录的账号
-  Future<NEResult<void>> logout();
-
+  ///
   /// 上传日志并返回日志下载地址
+  ///
   Future<NEResult<String?>> uploadLog();
 
   ///
-  /// 获取设备Id
+  /// 获取设备 ID
   ///
   Future<String> get deviceId;
 
@@ -364,6 +418,15 @@ class NEMeetingErrorCode {
   /// 开启了IM复用，IM账号不匹配
   static const int reuseIMAccountNotMatch = NEErrorCode.reuseIMAccountNotMatch;
 
+  /// 企业不存在
+  static const int corpNotFound = 1834;
+
+  /// 账号需要重置密码才能允许登录
+  static const int accountPasswordNeedReset = 3426;
+
+  /// 企业不支持 SSO 登录
+  static const int corpNotSupportSSO = 112002;
+
   /// IM复用不支持匿名加入会议
   static const int reuseIMNotSupportAnonymousLogin = 112001;
 
@@ -388,34 +451,6 @@ class NEMeetingErrorCode {
 
   /// 聊天室不存在
   static const int chatroomNotExists = 110001;
-}
-
-/// 房间登陆状态回调
-abstract class NEMeetingAuthListener {
-  /// 被踢出
-  void onKickOut();
-
-  /// 账号信息过期通知，原因为用户修改了密码，应用层随后应该重新登录
-  void onAuthInfoExpired();
-
-  /// 断线重连成功
-  void onReconnected();
-}
-
-/// 自定义会话监听器
-abstract mixin class NEMeetingMessageSessionListener {
-  /// 接收到自定义消息
-  void onReceiveSessionMessage(NEMeetingCustomSessionMessage message) {}
-
-  /// 最近会话聊天记录变更
-  void onChangeRecentSession(List<NEMeetingRecentSession> messages) {}
-
-  /// 自定义消息被删除
-  void onDeleteSessionMessage(NEMeetingCustomSessionMessage message) {}
-
-  /// 自定义消息全部被删除
-  void onDeleteAllSessionMessage(
-      String sessionId, NEMeetingSessionTypeEnum sessionType) {}
 }
 
 ///
@@ -447,14 +482,16 @@ class NEMeetingLanguage {
   int get hashCode => locale.hashCode;
 }
 
-class NEMeetingCustomSessionMessage {
+class NEMeetingSessionMessage {
   late final String? sessionId;
   late final NEMeetingSessionTypeEnum? sessionType;
   late final String? messageId;
   late final NotifyCardData? data;
+
+  /// 时间戳，单位为ms
   late final int time;
 
-  NEMeetingCustomSessionMessage({
+  NEMeetingSessionMessage({
     this.sessionId,
     this.sessionType,
     this.messageId,
@@ -462,29 +499,36 @@ class NEMeetingCustomSessionMessage {
     int? time,
   }) : time = time ?? 0;
 
-  NEMeetingCustomSessionMessage.fromMap(Map<String, dynamic> json) {
+  NEMeetingSessionMessage.fromMap(Map<String, dynamic> json) {
     sessionId = json['sessionId'];
     sessionType = NEMeetingSessionTypeEnumExtension.toType(json['sessionType']);
     messageId = json['messageId'];
     time = json['time'] ?? 0;
     data = json['data'] != null ? NotifyCardData.fromMap(json['data']) : null;
   }
+
+  toMap() {
+    final Map<String, dynamic> dataMap = Map<String, dynamic>();
+    dataMap['sessionId'] = sessionId;
+    dataMap['sessionType'] = sessionType?.value;
+    dataMap['messageId'] = messageId;
+    dataMap['time'] = time;
+    if (data != null) {
+      dataMap['data'] = data!.toMap();
+    }
+    return dataMap;
+  }
 }
 
-/// 查询消息的参数
-class NEMeetingGetMessagesHistoryParam {
-  /// 会话ID
+/// 查询自定义消息历史的参数
+class NEMeetingGetMessageHistoryParams {
+  /// 获取聊天对象的Id（好友帐号，群ID等） 会话Id
   final String sessionId;
 
-  // /**
-  //  * 会话类型
-  //  */
-  // final NEMeetingSessionTypeEnum sessionType;
-
-  /// 开始时间（时间戳小）
+  /// 查询开启时间点
   int? fromTime;
 
-  /// 结束时间（时间戳大）
+  /// 查询截止时间点
   int? toTime;
 
   /// 条数限制
@@ -494,33 +538,58 @@ class NEMeetingGetMessagesHistoryParam {
   /// 查询方向,默认从大到小排序
   NEMeetingMessageSearchOrder? order = NEMeetingMessageSearchOrder.kDesc;
 
-  NEMeetingGetMessagesHistoryParam(
+  NEMeetingGetMessageHistoryParams(
       {required this.sessionId,
       this.fromTime,
       this.toTime,
       this.limit,
       this.order});
+
+  NEMeetingGetMessageHistoryParams.fromMap(Map<String, dynamic> json)
+      : sessionId = json['sessionId'] ?? '',
+        fromTime = json['fromTime'] ?? 0,
+        toTime = json['toTime'] ?? 0,
+        limit = json['limit'] ?? 0,
+        order = NEMeetingMessageSearchOrderExtension.toType(
+            json['order'] ?? NEMeetingMessageSearchOrder.kDesc);
+}
+
+extension NEMeetingMessageSearchOrderExtension on NEMessageSearchOrder {
+  static NEMeetingMessageSearchOrder toType(int? type) =>
+      (NEMeetingMessageSearchOrder.values.firstWhere(
+        (element) => element.index == type,
+        orElse: () => NEMeetingMessageSearchOrder.kDesc,
+      ));
 }
 
 /// 会话消息类型
 ///
 enum NEMeetingSessionTypeEnum {
   /// 未知
-  None,
+  None(-1),
 
-  /// 通话场景
-  P2P
+  /// 个人会话
+  P2P(0);
+
+  final int value;
+  const NEMeetingSessionTypeEnum(this.value);
 }
 
-/// 会话消息类型
+/// 消息查询方向
 ///
-enum NEMeetingMessageSearchOrder { kDesc, kAsc }
+enum NEMeetingMessageSearchOrder {
+  /// 从小到大,降序
+  kDesc,
+
+  /// 从大到小,升序
+  kAsc,
+}
 
 /// 会议消息类型
 extension NEMeetingSessionTypeEnumExtension on NEMeetingSessionTypeEnum {
   static NEMeetingSessionTypeEnum toType(int? type) =>
       (NEMeetingSessionTypeEnum.values.firstWhere(
-        (element) => element.index - 1 == type,
+        (element) => element.value == type,
         orElse: () => NEMeetingSessionTypeEnum.None,
       ));
 }
@@ -528,7 +597,7 @@ extension NEMeetingSessionTypeEnumExtension on NEMeetingSessionTypeEnum {
 /// 最近联系人消息变更
 class NEMeetingRecentSession {
   ///  获取聊天对象的Id（好友帐号，群ID等）
-  /// [sessionId] 最近联系人帐号
+  /// [sessionId] 会话Id
   ///
   final String? sessionId;
 
@@ -541,25 +610,21 @@ class NEMeetingRecentSession {
   ///
   final String? fromNick;
 
-  /// 获取会话类型
+  /// 会话类型
   ///
   final NEMeetingSessionTypeEnum? sessionType;
 
   /// 最近一条消息的UUID
   final String? recentMessageId;
 
-  /// 获取该联系人的未读消息条数
+  /// 该联系人的未读消息条数
   /// 未读数
   final int unreadCount;
 
-  /// 获取最近一条消息的缩略内容。<br></br>
-  /// 对于文本消息，返回文本内容。<br></br>
-  /// 对于其他消息，返回一个简单的说明内容。如需展示更详细，或其他需求，可根据[.getAttachment]生成。
-  /// 缩略内容
-  ///
+  /// 最近一条消息的缩略内容
   final String? content;
 
-  /// 获取最近一条消息的时间，单位为ms
+  /// 最近一条消息的时间，单位为ms
   ///
   final int time;
 
@@ -572,4 +637,17 @@ class NEMeetingRecentSession {
       this.unreadCount,
       this.content,
       this.time);
+
+  toMap() {
+    final Map<String, dynamic> data = Map<String, dynamic>();
+    data['sessionId'] = sessionId;
+    data['fromAccount'] = fromAccount;
+    data['fromNick'] = fromNick;
+    data['sessionType'] = sessionType?.value;
+    data['recentMessageId'] = recentMessageId;
+    data['unreadCount'] = unreadCount;
+    data['content'] = content;
+    data['time'] = time;
+    return data;
+  }
 }

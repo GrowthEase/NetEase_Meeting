@@ -105,6 +105,14 @@ extension NEMeetingContext on NERoomContext {
     );
   }
 
+  /// 允许或关闭成员批注权限
+  Future<NEResult<void>> enableAnnotationPermission(bool enable) {
+    return updateRoomProperty(
+      AnnotationProperty.key,
+      enable ? AnnotationProperty.enable : AnnotationProperty.disable,
+    );
+  }
+
   void setupMeetingEnv(MeetingInfo meetingInfo) {
     _stateHolder[this] = _MeetingStates(meetingInfo);
 
@@ -140,6 +148,10 @@ extension NEMeetingContext on NERoomContext {
 
   bool get isGuestJoinEnabled =>
       roomProperties[GuestJoinProperty.key] == GuestJoinProperty.enable;
+
+  /// 是否允许成员批注
+  bool get isAnnotationPermissionEnabled =>
+      roomProperties[AnnotationProperty.key] != AnnotationProperty.disable;
 
   /// 设置是否允许访客入会
   Future<NEResult<void>> enableGuestJoin(bool enable) {
@@ -184,6 +196,7 @@ extension NEMeetingContext on NERoomContext {
   /// 获取所有用户
   Iterable<NERoomMember> getAllUsers(
       {bool sort = true,
+      bool enableSpeakerSpotlight = true,
       bool isViewOrder = false,
       bool isIncludeInviteMember = false,
       bool isIncludeInviteWaitingJoinMember = true}) {
@@ -200,7 +213,8 @@ extension NEMeetingContext on NERoomContext {
     members.addAll(remoteMembers);
     members.add(localMember);
     if (sort) {
-      members.sort(compareUser);
+      members.sort((lhs, rhs) => compareUser(lhs, rhs,
+          enableSpeakerSpotlight: enableSpeakerSpotlight));
     }
     if (isViewOrder &&
         hostVideoOrderList.isNotEmpty &&
@@ -214,13 +228,7 @@ extension NEMeetingContext on NERoomContext {
       members.removeWhere((member) => sortedRemoteMembers.contains(member));
       members = [...sortedRemoteMembers, ...members];
     }
-    members = members.toSet().toList();
-    if (isIncludeInviteMember) {
-      return members
-          .where((member) => member.isVisible || member.uuid == myUuid);
-    }
-    return members.where((member) =>
-        member.isVisible && (member.isInRtcChannel || member.uuid == myUuid));
+    return members.where((member) => member.isVisible).toSet().toList();
   }
 
   /// 获取主持人和联席主持人
@@ -345,16 +353,8 @@ extension NEMeetingContext on NERoomContext {
   }
 
   /// 获取小应用列表
-  Future<NEResult<NEMeetingWebAppList>> getWebAppList() {
+  Future<NEResult<List<NEMeetingWebAppItem>>> getWebAppList() {
     return WebAppRepository.getWebAppList();
-  }
-
-  /// 获取会议主持人信息
-  Future<List<NERoomMember>?> getHostAndCoHostList() {
-    return MeetingRepository.getHostAndCoHostList(meetingInfo.roomUuid).then(
-        (list) => list.data
-          ?..sort((NERoomMember lhs, NERoomMember rhs) =>
-              rhs.role.name == MeetingRoles.kHost ? 1 : -1));
   }
 
   /// 获取最新的等候室属性配置
@@ -367,7 +367,8 @@ extension NEMeetingContext on NERoomContext {
   /// 主持人->联席主持人->自己->举手->屏幕共享（白板）->音视频->视频->音频-> 邀请 -> 昵称排序
   /// 优先处理如果是邀请状态就不向前排序
   ///
-  int compareUser(NERoomMember lhs, NERoomMember rhs) {
+  int compareUser(NERoomMember lhs, NERoomMember rhs,
+      {bool enableSpeakerSpotlight = true}) {
     final isLhsInvite = lhs.isInSIPInviting || lhs.isInAppInviting;
     final isRhsInvite = rhs.isInSIPInviting || rhs.isInAppInviting;
 
@@ -425,11 +426,13 @@ extension NEMeetingContext on NERoomContext {
     if (rhs.isVideoOn) {
       return 1;
     }
-    if (lhs.isAudioOn) {
-      return -1;
-    }
-    if (rhs.isAudioOn) {
-      return 1;
+    if (enableSpeakerSpotlight) {
+      if (lhs.isAudioOn) {
+        return -1;
+      }
+      if (rhs.isAudioOn) {
+        return 1;
+      }
     }
     return lhs.name.compareTo(rhs.name);
   }

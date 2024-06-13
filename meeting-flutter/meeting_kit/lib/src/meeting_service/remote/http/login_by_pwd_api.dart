@@ -14,10 +14,7 @@ class NEAccountInfo {
   /// 用户 Token
   late final String userToken;
 
-  /// 用户账号
-  late final String? account;
-
-  /// 用户名
+  /// 用户昵称
   late final String nickname;
 
   /// 用户头像
@@ -35,11 +32,14 @@ class NEAccountInfo {
   /// 个人会议短号
   late final String? privateShortMeetingNum;
 
-  /// 其他设置
-  late final AccountSettings? settings;
+  /// 是否为初始密码
+  late final bool isInitialPassword;
 
   /// 会议套餐信息
-  late final ServiceBundle? serviceBundle;
+  late final NEServiceBundle? serviceBundle;
+
+  /// 是否是匿名账号
+  late final bool isAnonymous;
 
   NEAccountInfo({
     required this.userUuid,
@@ -48,18 +48,18 @@ class NEAccountInfo {
     this.nickname = '',
     this.privateMeetingNum = '',
     this.privateShortMeetingNum,
-    this.account,
     this.avatar,
     this.phoneNumber,
     this.email,
-    this.settings,
+    this.isInitialPassword = false,
     this.serviceBundle,
+    this.isAnonymous = false,
   });
 
-  NEAccountInfo.fromMap(Map map, {String? userUuid, String? userToken}) {
+  NEAccountInfo.fromMap(Map map,
+      {String? userUuid, String? userToken, bool? isAnonymous}) {
     this.userUuid = userUuid ?? map['userUuid'] as String;
     this.userToken = userToken ?? map['userToken'] as String;
-    account = map['username'] as String?;
     corpName = map['corpName'] as String?;
     nickname = map['nickname'] as String;
     avatar = map['avatar'] as String?;
@@ -67,7 +67,7 @@ class NEAccountInfo {
     email = map['email'] as String?;
     privateMeetingNum = map['privateMeetingNum'] as String;
     privateShortMeetingNum = map['shortMeetingNum'] as String?;
-    settings = AccountSettings.fromMap(map as Map<String, dynamic>);
+    isInitialPassword = map['initialPassword'] as bool? ?? false;
 
     serviceBundle = switch (map['serviceBundle']) {
       {
@@ -77,7 +77,7 @@ class NEAccountInfo {
         'expireTimeStamp': int expireTimestamp,
         'expireTip': String expireTip,
       } =>
-        ServiceBundle(
+        NEServiceBundle(
           name: name,
           maxMinutes: maxMinutes,
           maxMembers: maxMembers,
@@ -86,6 +86,8 @@ class NEAccountInfo {
         ),
       _ => null,
     };
+
+    this.isAnonymous = isAnonymous ?? false;
   }
 }
 
@@ -144,16 +146,92 @@ class _FetchAccountInfoApi extends HttpApi<NEAccountInfo> {
   bool enableLog() => false;
 }
 
+class _FetchAccountInfoByPwdApi extends HttpApi<NEAccountInfo> {
+  final String? username;
+  final String? mobile;
+  final String? email;
+  final String password;
+
+  _FetchAccountInfoByPwdApi.username({
+    required this.username,
+    required this.password,
+  })  : mobile = null,
+        email = null;
+
+  _FetchAccountInfoByPwdApi.mobile({
+    required this.mobile,
+    required this.password,
+  })  : username = null,
+        email = null;
+
+  _FetchAccountInfoByPwdApi.email({
+    required this.email,
+    required this.password,
+  })  : username = null,
+        mobile = null;
+
+  @override
+  Map data() => {
+        if (username != null) 'username': username,
+        if (mobile != null) 'phone': mobile,
+        if (email != null) 'email': email,
+        'password': '$password@yiyong.im'.md5,
+      };
+
+  @override
+  String path() {
+    String type;
+    if (email != null) {
+      type = 'email';
+    } else if (mobile != null) {
+      type = 'phone';
+    } else {
+      type = 'username';
+    }
+    return 'scene/meeting/v1/login-$type';
+  }
+
+  @override
+  NEAccountInfo result(Map map) => NEAccountInfo.fromMap(map);
+
+  @override
+  String get method => 'POST';
+
+  @override
+  bool checkLoginState() => false;
+
+  @override
+  bool enableLog() => false;
+}
+
 /// 会议套餐信息
-/// {"name":"免费版","meetingMaxMinutes":1440,"meetingMaxMembers":500}
-class ServiceBundle {
+class NEServiceBundle {
+  ///
+  /// 套餐名称
+  ///
   final String name;
+
+  ///
+  /// 套餐支持的单会议最大时长，以分钟为单位，小于0或为空表示不限时长
+  ///
   final int? maxMinutes;
+
+  ///
+  /// 套餐支持的单会议最大成员数
+  ///
   final int maxMembers;
+
+  ///
+  /// 套餐过期时间戳，-1表示永不过期
+  ///
   final int expireTimestamp;
+
+  ///
+  /// 套餐过期提示
+  ///
   final String expireTip;
 
-  ServiceBundle({
+  NEServiceBundle({
     required this.name,
     required this.maxMinutes,
     required this.maxMembers,
@@ -161,9 +239,20 @@ class ServiceBundle {
     this.expireTip = '',
   });
 
+  toJson() {
+    return {
+      'name': name,
+      'maxMinutes': maxMinutes,
+      'maxMembers': maxMembers,
+      'expireTimestamp': expireTimestamp,
+      'expireTip': expireTip,
+    };
+  }
+
+  /// 是否不限时长
   bool get isUnlimited => maxMinutes == null || maxMinutes! < 0;
 
-  /// 是否永不已过期
+  /// 是否永不过期
   bool get isNeverExpired => expireTimestamp == -1;
 
   /// 是否已过期

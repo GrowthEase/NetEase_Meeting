@@ -17,8 +17,6 @@ public class NEVolumeListener: NSObject, FlutterStreamHandler {
   public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
     eventSink = events
     registerVolumeObserver()
-    eventSink?(audioSession.outputVolume)
-
     return nil
   }
 

@@ -54,10 +54,16 @@ class FloatingService(
             }
             "updatePIPParams" -> result.success(updatePIPParams(call, activity))
             "exitPIPMode" -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && activity.isInPictureInPictureMode) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                    !activity.isFinishing &&
+                    activity.isInPictureInPictureMode
+                ) {
                     val intent = Intent(activity, activity::class.java)
 //                    intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
                     activity.startActivity(intent)
+                    result.success(true)
+                } else {
+                    result.success(false)
                 }
             }
             else -> result.notImplemented()

@@ -118,7 +118,6 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
         memberRoleChanged: memberRoleChanged,
         memberLeaveRoom: memberLeaveRoom,
       ));
-      chatRoomManager?.updateHostAndCoHostInWaitingRoom();
     }
     _contentController = TextEditingController();
     lifecycleListen(_arguments.messageSource.messageStream,
@@ -739,13 +738,17 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
   String? getTargetRole(NEBaseRoomMember user) {
     if (roomContext == null) return null;
     var roles = <String>[];
+    String? role;
     if (user is NERoomMember) {
-      switch (user.role.name) {
-        case MeetingRoles.kHost:
-          roles.add(meetingUiLocalizations.participantHost);
-        case MeetingRoles.kCohost:
-          roles.add(meetingUiLocalizations.participantCoHost);
-      }
+      role = user.role.name;
+    } else if (user is NEWaitingRoomHost) {
+      role = user.role;
+    }
+    switch (role) {
+      case MeetingRoles.kHost:
+        roles.add(meetingUiLocalizations.participantHost);
+      case MeetingRoles.kCohost:
+        roles.add(meetingUiLocalizations.participantCoHost);
     }
     return roles.isNotEmpty ? '(${roles.join(',')})' : null;
   }
@@ -868,10 +871,8 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
     if (roomContext == null || _isShowSelectTargetDialog) return;
     _isShowSelectTargetDialog = true;
 
-    /// 打开列表刷新主持人信息(下期优化成实时刷新逻辑)
-    if (roomContext!.isInWaitingRoom()) {
-      chatRoomManager?.updateHostAndCoHostInWaitingRoom();
-    }
+    /// 点击刷新主持人信息
+    _arguments.waitingRoomManager?.tryLoadHostAndCoHost();
     await showMeetingPopupPageRoute(
       context: context,
       builder: (context) => MeetingChatRoomMemberPage(
@@ -1036,7 +1037,13 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
           .whereType<MessageState>()
           .toList();
     } else {
-      showToast(result.msg!);
+      var msg = result.msg;
+
+      /// 聊天室历史记录历史功能未开启
+      if (result.code == 403) {
+        msg = meetingUiLocalizations.chatHistoryNotEnabled;
+      }
+      if (msg != null) showToast(msg);
       return [];
     }
   }

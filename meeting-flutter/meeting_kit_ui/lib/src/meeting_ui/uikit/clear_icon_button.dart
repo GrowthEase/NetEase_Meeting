@@ -7,17 +7,22 @@ part of meeting_ui;
 class ClearIconButton extends StatelessWidget {
   final double size;
   final VoidCallback? onPressed;
+  final EdgeInsetsGeometry? padding;
 
-  ClearIconButton({super.key, this.size = 17, this.onPressed});
+  ClearIconButton({super.key, this.size = 16, this.onPressed, this.padding});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onPressed,
-      child: Icon(
-        NEMeetingIconFont.icon_yx_input_clearx,
-        size: size,
-        color: _UIColors.color_60_3C3C43,
+      child: Container(
+        padding: padding,
+        child: Icon(
+          NEMeetingIconFont.icon_yx_input_clearx,
+          size: size,
+          color: _UIColors.color8D90A0,
+        ),
       ),
     );
   }

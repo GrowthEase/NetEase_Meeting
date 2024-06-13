@@ -17,68 +17,72 @@ abstract class NEMeetingInviteService {
       NEJoinMeetingParams param, NEJoinMeetingOptions opts);
 
   ///
-  /// 拒绝邀请
+  /// 拒绝一个邀请，只有完成SDK的登录鉴权操作才允许该操作。 挂断正在进行的呼叫，无论是正在响铃还是等待响铃都可以使用
   /// [meetingId] 会议ID
   ///
-  Future<NEResult<VoidResult>> rejectInvite(String meetingId);
+  Future<NEResult<VoidResult>> rejectInvite(int meetingId);
 
-  /**
-   * @brief 添加消息监听
-   * @param listener 消息监听对象 {@link NEMeetingInviteListener}
-   */
-  void addEventListener(NEMeetingInviteListener listener);
+  ///
+  /// 添加邀请状态监听实例，用于接收邀请状态变更通知
+  ///  [listener] 要添加的监听实例
+  ///
+  void addMeetingInviteStatusListener(NEMeetingInviteStatusListener listener);
 
-  /**
-   * @brief 移除消息监听
-   * @param listener 消息监听对象 {@link NEMeetingInviteListener}
-   */
-  void removeEventListener(NEMeetingInviteListener listener);
+  ///
+  /// 移除对应的邀请状态监听实例
+  /// [listener] 要移除的监听实例
+  ///
+  void removeMeetingInviteStatusListener(
+      NEMeetingInviteStatusListener listener);
 }
 
-/// 会议邀请状态变更回调
-/// [status] 邀请状态
-/// [meetingId] 会议ID
-/// [inviteInfo] 邀请信息
 ///
-abstract class NEMeetingInviteListener {
-  // 房间呼出状态改变的回调事件。
+/// 会议邀请状态监听器，用于监听邀请状态变更事件
+///
+mixin class NEMeetingInviteStatusListener {
+  ///
+  /// 会议邀请状态变更通知
+  /// [status] 邀请状态
+  /// [meetingId] 会议ID
+  /// [inviteInfo] 邀请对象信息
+  ///
   void onMeetingInviteStatusChanged(NEMeetingInviteStatus status,
-      String? meetingId, NEMeetingInviteInfo inviteInfo);
+      String? meetingId, NEMeetingInviteInfo inviteInfo) {}
 }
 
 /// 房间邀请信息
 class NEMeetingInviteInfo {
-  /// 邀请者名称
-  String? inviterName;
-
   /// 会议号
   String? meetingNum;
 
-  /// 邀请者头像
-  String? inviterIcon;
+  /// 邀请者名称
+  String? inviterName;
 
-  /// 邀请者主题
+  /// 邀请者头像
+  String? inviterAvatar;
+
+  /// 会议主题
   String? subject;
 
-  /// 是否是预约会议指定成员
-  bool? outOfMeeting;
+  /// 会前邀请，当在预约会议被添加时触发，则为true；会中主动邀请，则为false
+  bool? preMeetingInvitation;
 
   /// fromMap 解析
   NEMeetingInviteInfo.fromMap(Map? map) {
     meetingNum = map?['meetingNum'] ?? '';
     inviterName = map?['inviterName'] ?? '';
-    inviterIcon = map?['inviterIcon'] ?? '';
+    inviterAvatar = map?['inviterIcon'] ?? '';
     subject = map?['subject'] ?? '';
-    outOfMeeting = map?['outOfMeeting'] ?? false;
+    preMeetingInvitation = map?['outOfMeeting'] ?? false;
   }
 
   toMap() {
     return {
       'meetingNum': meetingNum,
       'inviterName': inviterName,
-      'inviterIcon': inviterIcon,
+      'inviterIcon': inviterAvatar,
       'subject': subject,
-      'outOfMeeting': outOfMeeting
+      'outOfMeeting': preMeetingInvitation
     };
   }
 }
@@ -126,4 +130,9 @@ enum NEMeetingInviteStatus {
   /// 已取消
   ///
   canceled,
+
+  ///
+  /// 待入会
+  ///
+  waitingJoined,
 }

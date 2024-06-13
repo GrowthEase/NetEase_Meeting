@@ -13,6 +13,7 @@ class ToastUtils {
   static void showBotToast(String text, {bool isError = false}) {
     BotToast.showText(
         text: text,
+        align: Alignment.center,
         textStyle: TextStyle(
           color: isError ? Color(0xffFF4742) : Colors.white,
           fontSize: 14.0,
@@ -199,6 +200,7 @@ class ToastManager {
             decoration: TextDecoration.none,
             fontWeight: FontWeight.w400,
           ),
+          textAlign: TextAlign.center,
         ),
       ),
     );

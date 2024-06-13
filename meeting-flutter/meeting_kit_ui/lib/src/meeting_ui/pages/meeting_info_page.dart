@@ -13,9 +13,10 @@ class MeetingInfoPage extends StatefulWidget {
   final NEMeetingUIOptions options;
 
   final Stream roomInfoUpdatedEventStream;
+  final ValueNotifier<int> maxMembersNotifier;
 
   MeetingInfoPage(this.roomContext, this.meetingInfo, this.options,
-      this.roomInfoUpdatedEventStream);
+      this.roomInfoUpdatedEventStream, this.maxMembersNotifier);
 
   @override
   State<StatefulWidget> createState() {
@@ -75,6 +76,7 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
             buildCopyItem(
                 NEMeetingUIKitLocalizations.of(context)!.meetingInviteUrl,
                 widget.meetingInfo.inviteUrl!),
+          _buildMaxMembers(),
           ...buildDebugView(),
         ],
       ),
@@ -267,6 +269,44 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
         ],
       ),
     );
+  }
+
+  Widget _buildMaxMembers() {
+    return SafeValueListenableBuilder(
+        valueListenable: widget.maxMembersNotifier,
+        builder: (context, maxMemberCount, _) {
+          return Container(
+            height: 32,
+            color: Colors.white,
+            alignment: Alignment.center,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                    width: titleWidth,
+                    child: Text(
+                        NEMeetingUIKitLocalizations.of(context)!
+                            .meetingMaxMembers,
+                        style: TextStyle(
+                            fontSize: 14,
+                            color: _UIColors.color_94979A,
+                            decoration: TextDecoration.none,
+                            fontWeight: FontWeight.w400))),
+                Expanded(
+                  child: Text(maxMemberCount.toString(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontSize: 14,
+                          color: _UIColors.black_222222,
+                          decoration: TextDecoration.none,
+                          fontWeight: FontWeight.w400)),
+                ),
+                // Spacer(),
+              ],
+            ),
+          );
+        });
   }
 
   Widget _buildHost() {

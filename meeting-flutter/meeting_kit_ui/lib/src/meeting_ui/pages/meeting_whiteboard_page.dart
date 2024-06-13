@@ -7,19 +7,29 @@ part of meeting_ui;
 typedef WhiteBoardPageStatusCallback = void Function(bool isEditStatus);
 
 class WhiteBoardWebPage extends StatefulWidget {
-  final WhiteBoardPageStatusCallback whiteBoardPageStatusCallback;
-  final ValueNotifier<bool> valueNotifier;
+  final WhiteBoardPageStatusCallback? whiteBoardPageStatusCallback;
+  final ValueNotifier<bool>? valueNotifier;
   final NERoomContext roomContext;
   final Color? backgroundColor;
   final bool? isMinimized;
 
+  /// 是否允许编辑
+  final bool Function() isDrawWhiteboardEnabled;
+  final Function()? applyWhiteboardConfig;
+  final NERoomWhiteboardBaseController whiteBoardController;
+  final bool wrapSafeArea;
+
   WhiteBoardWebPage({
     Key? key,
-    required this.whiteBoardPageStatusCallback,
-    required this.valueNotifier,
+    this.whiteBoardPageStatusCallback,
+    this.valueNotifier,
     required this.roomContext,
     this.backgroundColor,
     this.isMinimized,
+    required this.isDrawWhiteboardEnabled,
+    required this.whiteBoardController,
+    this.applyWhiteboardConfig,
+    this.wrapSafeArea = true,
   }) : super(key: key);
 
   @override
@@ -31,7 +41,6 @@ class WhiteBoardWebPage extends StatefulWidget {
 class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
     with AutomaticKeepAliveClientMixin {
   bool isEditing = false;
-  late NERoomWhiteboardController whiteBoardController;
   late NERoomEventCallback callback;
 
   @override
@@ -40,12 +49,11 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
   @override
   void initState() {
     super.initState();
-    whiteBoardController = widget.roomContext.whiteboardController;
-    widget.valueNotifier.addListener(() {
+    widget.valueNotifier?.addListener(() {
       ///没有权限则无法编辑
       if (mounted) {
         setState(() {
-          isEditing = widget.valueNotifier.value;
+          isEditing = widget.valueNotifier!.value;
         });
       }
     });
@@ -63,9 +71,8 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
     widget.roomContext.addEventCallback(callback);
 
     ///有权限默认开启
-    updateEditWhiteBoardStatus(
-        whiteBoardController.isDrawWhiteboardEnabled(), false);
-    whiteBoardController.applyWhiteboardConfig();
+    updateEditWhiteBoardStatus(widget.isDrawWhiteboardEnabled(), false);
+    widget.applyWhiteboardConfig?.call();
   }
 
   @override
@@ -79,66 +86,60 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
       _ConditionalEagerGestureRecognizer(condition: () => isEditing);
 
   Widget _buildBody() {
-    return SafeArea(
-      child: Stack(
-        ///扩展到stack大小
-        children: <Widget>[
-          Positioned(
-            child: Container(
-              alignment: Alignment.center,
-              child: whiteBoardController.createWhiteboardView(
-                gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>[
-                  new Factory<OneSequenceGestureRecognizer>(
-                    () => _whiteboardViewGestureRecognizer,
-                  ),
-                ].toSet(),
-                backgroundColor: widget.backgroundColor,
-              ),
+    Widget body = Stack(
+      ///扩展到stack大小
+      children: <Widget>[
+        widget.whiteBoardController.createWhiteboardView(
+          gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>[
+            new Factory<OneSequenceGestureRecognizer>(
+              () => _whiteboardViewGestureRecognizer,
             ),
-          ),
-          Positioned(
-            right: 10,
-            bottom: 150,
-            width: 80,
-            child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Visibility(
-                  visible: whiteBoardController.isDrawWhiteboardEnabled(),
-                  child: Center(
-                    child: ElevatedButton(
-                      style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.resolveWith<
-                              Color>((states) {
-                            if (states.contains(MaterialState.disabled)) {
-                              return _UIColors.color_337eff;
-                            }
+          ].toSet(),
+          backgroundColor: widget.backgroundColor,
+        ),
+        Positioned(
+          right: 10,
+          bottom: 150,
+          width: 80,
+          child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Visibility(
+                visible: widget.isDrawWhiteboardEnabled.call(),
+                child: Center(
+                  child: ElevatedButton(
+                    style: ButtonStyle(
+                        backgroundColor:
+                            MaterialStateProperty.resolveWith<Color>((states) {
+                          if (states.contains(MaterialState.disabled)) {
                             return _UIColors.color_337eff;
-                          }),
-                          padding: MaterialStateProperty.all(
-                              EdgeInsets.symmetric(vertical: 4)),
-                          shape: MaterialStateProperty.all(
-                              RoundedRectangleBorder(
-                                  side:
-                                      BorderSide(color: _UIColors.color_337eff),
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(25))))),
-                      onPressed: () => updateEditWhiteBoardStatus(!isEditing),
-                      child: Text(
-                        isEditing
-                            ? NEMeetingUIKitLocalizations.of(context)!
-                                .whiteBoardPackUp
-                            : NEMeetingUIKitLocalizations.of(context)!
-                                .globalEdit,
-                        style: TextStyle(color: Colors.white, fontSize: 14),
-                        textAlign: TextAlign.center,
-                      ),
+                          }
+                          return _UIColors.color_337eff;
+                        }),
+                        padding: MaterialStateProperty.all(
+                            EdgeInsets.symmetric(vertical: 4)),
+                        shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                            side: BorderSide(color: _UIColors.color_337eff),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(25))))),
+                    onPressed: () => updateEditWhiteBoardStatus(!isEditing),
+                    child: Text(
+                      isEditing
+                          ? NEMeetingUIKitLocalizations.of(context)!
+                              .whiteBoardPackUp
+                          : NEMeetingUIKitLocalizations.of(context)!.globalEdit,
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                      textAlign: TextAlign.center,
                     ),
                   ),
-                )),
-          ),
-        ],
-      ),
+                ),
+              )),
+        ),
+      ],
     );
+    if (widget.wrapSafeArea) {
+      body = SafeArea(child: body);
+    }
+    return body;
   }
 
   @override
@@ -151,9 +152,9 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
   void updateEditWhiteBoardStatus(bool drawable, [bool update = true]) {
     Alog.i(tag: 'WhiteBoardWebPageState', content: 'switch drawable=$drawable');
     isEditing = drawable;
-    whiteBoardController.showWhiteboardTools(drawable);
+    widget.whiteBoardController.showWhiteboardTools(drawable);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      widget.whiteBoardPageStatusCallback.call(drawable);
+      widget.whiteBoardPageStatusCallback?.call(drawable);
     });
     if (update) {
       setState(() {});
@@ -165,14 +166,12 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
         context: context,
         builder: (_) {
           return NEMeetingUIKitLocalizationsScope(
-            builder: (context) {
+            builder: (context, localizations, _) {
               return CupertinoAlertDialog(
-                content: Text(NEMeetingUIKitLocalizations.of(context)!
-                    .whiteBoardNoAuthority),
+                content: Text(localizations.whiteBoardNoAuthority),
                 actions: <Widget>[
                   CupertinoDialogAction(
-                    child: Text(
-                        NEMeetingUIKitLocalizations.of(context)!.globalGotIt),
+                    child: Text(localizations.globalGotIt),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },

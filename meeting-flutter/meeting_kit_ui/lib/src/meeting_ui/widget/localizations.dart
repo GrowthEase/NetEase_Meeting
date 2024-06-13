@@ -6,7 +6,7 @@ part of meeting_ui;
 
 class NEMeetingUIKitLocalizationsScope extends StatelessWidget {
   final Widget? child;
-  final WidgetBuilder? builder;
+  final ValueWidgetBuilder<NEMeetingUIKitLocalizations>? builder;
 
   const NEMeetingUIKitLocalizationsScope({
     Key? key,
@@ -18,7 +18,7 @@ class NEMeetingUIKitLocalizationsScope extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
-      valueListenable: NEMeetingUIKit().localeListenable,
+      valueListenable: NEMeetingUIKit.instance.localeListenable,
       child: child,
       builder: (BuildContext context, Locale value, Widget? child) {
         return Localizations(
@@ -29,13 +29,35 @@ class NEMeetingUIKitLocalizationsScope extends StatelessWidget {
           ],
           child: Builder(
             builder: (ctx) {
-              return builder != null ? builder!(ctx) : child!;
+              return builder != null
+                  ? builder!(ctx, NEMeetingUIKitLocalizations.of(ctx)!, child)
+                  : child!;
             },
           ),
         );
       },
     );
   }
+}
+
+mixin MeetingKitLocalizationsMixin<T extends StatefulWidget> on State<T> {
+  late NEMeetingUIKitLocalizations meetingUiLocalizations;
+  late NEMeetingKitLocalizations meetingKitLocalizations;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    meetingUiLocalizations = NEMeetingUIKitLocalizations.of(context)!;
+    meetingKitLocalizations = NEMeetingKitLocalizations.of(context)!;
+  }
+}
+
+extension MeetingKitLocalizationsExtension on BuildContext {
+  NEMeetingUIKitLocalizations get meetingUiLocalizations =>
+      NEMeetingUIKitLocalizations.of(this)!;
+
+  NEMeetingKitLocalizations get meetingKitLocalizations =>
+      NEMeetingKitLocalizations.of(this)!;
 }
 
 class MaterialMeetingPageRoute<T> extends MaterialPageRoute<T> {
@@ -47,7 +69,7 @@ class MaterialMeetingPageRoute<T> extends MaterialPageRoute<T> {
   }) : super(
           builder: (BuildContext context) {
             return NEMeetingUIKitLocalizationsScope(
-              builder: builder,
+              builder: (ctx, _, __) => builder(ctx),
             );
           },
           settings: settings,

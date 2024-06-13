@@ -568,6 +568,20 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get meetingVideoJoinAction => 'Video';
 
   @override
+  String get meetingMaxMembers => 'Maximum participants';
+
+  @override
+  String get speakerVolumeMuteTips =>
+      'The speaker device is silent. Please check whether the system speakers have been unmuted and adjusted to the appropriate volume.';
+
+  @override
+  String get meetingAnnotationPermissionEnabled => 'Annotate';
+
+  @override
+  String get meetingMemberMaxTip =>
+      'The maximum number of participants has been reached';
+
+  @override
   String get screenShare => 'Share';
 
   @override
@@ -670,6 +684,12 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   @override
   String get virtualBackgroundSelectTip =>
       'Effective when the image is selected';
+
+  @override
+  String get virtualDefaultBackground => 'Default';
+
+  @override
+  String get virtualCustom => 'Custom';
 
   @override
   String get live => 'Live';
@@ -1036,6 +1056,9 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get participantNotJoined => 'Not joined';
 
   @override
+  String get participantJoining => 'Be joining';
+
+  @override
   String get participantAttendees => 'Attendees';
 
   @override
@@ -1075,12 +1098,24 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get participantRemoveAttendee => 'Delete';
 
   @override
+  String get participantUpperLimitWaitingRoomTip =>
+      'The number of participants has reached  the limit , it is recommended to use the waiting room.';
+
+  @override
+  String get participantUpperLimitReleaseSeatsTip =>
+      'The number of participants has reached  the limit , and new participants will not be able to join the meeting.You can try removing not-joined members or releasing a seat in the meeting.';
+
+  @override
+  String get participantUpperLimitTipAdmitOtherTip =>
+      'The number of participants has reached  the limit . Please remove an unjoined member or release a seat in the meeting before admitting a member to the waiting room.';
+
+  @override
   String get cloudRecordingEnabledTitle =>
       'Are you sure you want to start a cloud recording?';
 
   @override
   String get cloudRecordingEnabledMessage =>
-      'After the recording starts, all attendees will be informed and the meeting audio, video and shared screen view will be recorded to the cloud';
+      'After the recording starts, all participants will be informed and the meeting audio, video and shared screen view will be recorded to the cloud';
 
   @override
   String get cloudRecordingEnabledMessageWithoutNotice =>
@@ -1285,6 +1320,10 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get chatWaitingRoomMuted => 'The host has not opened the chat';
 
   @override
+  String get chatHistoryNotEnabled =>
+      'Chat history is not enabled. Please contact your administrator';
+
+  @override
   String get waitingRoomJoinMeeting => 'Join';
 
   @override
@@ -1360,6 +1399,9 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
 
   @override
   String get waiting => 'Waiting';
+
+  @override
+  String get waitingRoomEnable => 'Enable Waiting Room';
 
   @override
   String get deviceSpeaker => 'Speaker';
@@ -1554,6 +1596,10 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get sipCallIsInMeeting => 'The user is already in a meeting.';
 
   @override
+  String get callInWaitingMeeting =>
+      'The member is already in the waiting room';
+
+  @override
   String get sipCallIsInInviting => 'The user is inviting.';
 
   @override
@@ -1709,4 +1755,277 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
 
   @override
   String get loadFail => 'Failed to load';
+
+  @override
+  String get globalUpdate => 'Update';
+
+  @override
+  String get globalLang => 'Language';
+
+  @override
+  String get globalView => 'View';
+
+  @override
+  String get interpretation => 'Interpretation';
+
+  @override
+  String get interpInterpreter => 'Interpreter';
+
+  @override
+  String get interpSelectInterpreter => 'Select interpreter';
+
+  @override
+  String get interpInterpreterAlreadyExists =>
+      'The user has been selected as a interpreter and cannot be selected again';
+
+  @override
+  String get interpInfoIncompleteTitle =>
+      'Interpreter information is incomplete';
+
+  @override
+  String get interpInfoIncompleteMsg =>
+      'Quitting will remove interpreters with incomplete information';
+
+  @override
+  String get interpStart => 'Start';
+
+  @override
+  String get interpStartNotification =>
+      'The host has started simultaneous interpretation';
+
+  @override
+  String get interpStop => 'Stop interpretation';
+
+  @override
+  String get interpStopNotification =>
+      'The host has turned off simultaneous interpretation';
+
+  @override
+  String get interpConfirmStopMsg =>
+      'Turning off simultaneous interpretation will turn off all listening channels. Do you want to turn it off?';
+
+  @override
+  String get interpConfirmUpdateMsg => 'Update?';
+
+  @override
+  String get interpConfirmCancelEditMsg =>
+      'Are you sure to cancel the settings ?';
+
+  @override
+  String get interpSelectListenLanguage => 'Please select a listening language';
+
+  @override
+  String get interpSelectLanguage => 'Select language';
+
+  @override
+  String get interpAddLanguage => 'Add';
+
+  @override
+  String get interpInputLanguage => 'Input';
+
+  @override
+  String get interpLanguageAlreadyExists => 'Language already exists';
+
+  @override
+  String get interpListenMajorAudioMeanwhile => 'Listen to the original sound';
+
+  @override
+  String get interpManagement => 'Manage interpretation';
+
+  @override
+  String get interpSettings => 'Set up';
+
+  @override
+  String get interpMajorAudio => 'Original sound';
+
+  @override
+  String get interpMajorChannel => 'Main';
+
+  @override
+  String get interpMajorAudioVolume => 'Original volume';
+
+  @override
+  String get interpAddInterpreter => 'Add interpreter';
+
+  @override
+  String get interpJoinChannelErrorMsg =>
+      'Failed to join the interpretation channel. Do you want to rejoin?';
+
+  @override
+  String get interpReJoinChannel => 'Rejoin';
+
+  @override
+  String get interpAssignInterpreter =>
+      'You have become the interpreter of this meeting';
+
+  @override
+  String get interpAssignLanguage => 'Language';
+
+  @override
+  String get interpAssignInterpreterTip =>
+      'You can set the listening language and translation language in \"Interpretation\"';
+
+  @override
+  String get interpUnassignInterpreter =>
+      'You have been removed from interpreters by the host';
+
+  @override
+  String interpLanguageRemoved(Object language) {
+    return 'The host has deleted the listening language \"$language\"';
+  }
+
+  @override
+  String get interpInterpreterOffline =>
+      'All the interpreters have left the channel you are listening to . Would you like to switch back to the original sound ?';
+
+  @override
+  String get interpDontSwitch => 'Not Now';
+
+  @override
+  String get interpSwitchToMajorAudio => 'Switch back';
+
+  @override
+  String get interpAudioShareIsForbiddenDesktop =>
+      'As an interpreter, you will not be able to share your computer voice when sharing the screen';
+
+  @override
+  String get interpAudioShareIsForbiddenMobile =>
+      'As an interpreter, you will not be able to share device audio when sharing the screen';
+
+  @override
+  String get interpInterpreterInMeetingStatusChanged =>
+      'Interpreter participation status has changed';
+
+  @override
+  String interpSpeakerTip(Object language1, Object language2) {
+    return 'You are listening to $language1 and saying $language2';
+  }
+
+  @override
+  String get interpOutputLanguage => 'Translation language';
+
+  @override
+  String get interpRemoveInterpreterOnly => 'Only delete interpreter';
+
+  @override
+  String get interpRemoveInterpreterInMembers => 'Delete from participants';
+
+  @override
+  String get interpRemoveMemberInInterpreters =>
+      'The participant is also assigned as an interpreter. Deleting the participant will cancel the interpreter assignment at the same time.';
+
+  @override
+  String get interpListeningChannelDisconnect =>
+      'The listening language channel has been disconnected, trying to reconnect';
+
+  @override
+  String get interpSpeakingChannelDisconnect =>
+      'The interpreter language channel has been disconnected, trying to reconnect';
+
+  @override
+  String get langChinese => 'Chinese';
+
+  @override
+  String get langEnglish => 'English';
+
+  @override
+  String get langJapanese => 'Japanese';
+
+  @override
+  String get langKorean => 'Korean';
+
+  @override
+  String get langFrench => 'French';
+
+  @override
+  String get langGerman => 'German';
+
+  @override
+  String get langSpanish => 'Spanish';
+
+  @override
+  String get langRussian => 'Russian';
+
+  @override
+  String get langPortuguese => 'Portuguese';
+
+  @override
+  String get langItalian => 'Italian';
+
+  @override
+  String get langTurkish => 'Turkish';
+
+  @override
+  String get langVietnamese => 'Vietnamese';
+
+  @override
+  String get langThai => 'Thai';
+
+  @override
+  String get langIndonesian => 'Indonesian';
+
+  @override
+  String get langMalay => 'Malay';
+
+  @override
+  String get langArabic => 'Arabic';
+
+  @override
+  String get langHindi => 'Hindi';
+
+  @override
+  String get annotation => 'Annotate';
+
+  @override
+  String get annotationEnabled => 'Annotation enabled';
+
+  @override
+  String get annotationDisabled => 'Annotation disabled';
+
+  @override
+  String get startAnnotation => 'Annotate';
+
+  @override
+  String get stopAnnotation => 'Exit annotation';
+
+  @override
+  String get inAnnotation => 'Annotating';
+
+  @override
+  String get saveAnnotation => 'Save annotations';
+
+  @override
+  String get cancelAnnotation => 'Cancel annotation';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get settingAudio => 'Audio';
+
+  @override
+  String get settingVideo => 'Video';
+
+  @override
+  String get settingCommon => 'General';
+
+  @override
+  String get settingAudioAINS => 'Smart Noise Reduction';
+
+  @override
+  String get settingEnableTransparentWhiteboard =>
+      'Set the whiteboard to transparent';
+
+  @override
+  String get settingEnableFrontCameraMirror => 'Front camera mirroring';
+
+  @override
+  String get settingShowMeetDuration => 'Show Meeting Duration';
+
+  @override
+  String get settingSpeakerSpotlight => 'Speaker Spotlight';
+
+  @override
+  String get settingSpeakerSpotlightTip =>
+      'When turned on, the participants who are speaking will be displayed first.';
 }

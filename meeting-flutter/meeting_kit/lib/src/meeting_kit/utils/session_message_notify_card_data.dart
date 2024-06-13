@@ -150,8 +150,8 @@ class Body {
   Body({title, content});
 
   Body.fromMap(Map<String, dynamic> json) {
-    title = json['title'];
-    content = json['content'];
+    title = json['title'] ?? '';
+    content = json['content'] ?? '';
   }
 
   Map<String, dynamic> toMap() {

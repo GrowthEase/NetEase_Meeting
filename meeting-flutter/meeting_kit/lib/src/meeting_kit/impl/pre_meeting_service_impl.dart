@@ -4,9 +4,6 @@
 
 part of meeting_kit;
 
-typedef ScheduledRoomStatusListener<T> = void Function(
-    T data, bool incremental);
-
 /// 预定会议实现类
 class _NEPreMeetingServiceImpl extends NEPreMeetingService with _AloggerMixin {
   static const kTypeMeetingInfoChanged = 100;
@@ -20,7 +17,8 @@ class _NEPreMeetingServiceImpl extends NEPreMeetingService with _AloggerMixin {
 
   _NEPreMeetingServiceImpl._() {
     NERoomKit.instance.messageChannelService.addMessageChannelCallback(
-        NEMessageChannelCallback(onReceiveCustomMessage: (message) async {
+        NEMessageChannelCallback(
+            onCustomMessageReceiveCallback: (message) async {
       try {
         commonLogger.i('scheduleMeeting ,message ${message.data}');
         List<NEMeetingItem> changeItems = [];
@@ -28,30 +26,31 @@ class _NEPreMeetingServiceImpl extends NEPreMeetingService with _AloggerMixin {
         var data = jsonDecode(message.data);
         final type = data['type'] as int?;
         final meetingType = data['meetingType'] as int?;
-        final state = data['state'] as int? ?? NEMeetingState.invalid.index;
+        final state =
+            data['state'] as int? ?? NEMeetingItemStatus.invalid.index;
         final preState =
-            data['preState'] as int? ?? NEMeetingState.invalid.index;
+            data['preState'] as int? ?? NEMeetingItemStatus.invalid.index;
 
         if ((type == kTypeMeetingInfoChanged &&
                 meetingType == NEMeetingType.kReservation.type) ||
             (type == kTypeMeetingStateChanged &&
                 state != preState &&
-                state <= NEMeetingState.ended.index)) {
+                state <= NEMeetingItemStatus.ended.index)) {
           final result =
               await getMeetingItemByNum(data['meetingNum'] as String);
           if (result.isSuccess() &&
-              result.nonNullData.meetingType ==
-                  NEMeetingType.kReservation.type) {
+              result.nonNullData.meetingType == NEMeetingType.kReservation) {
             changeItems.add(result.nonNullData);
           }
         } else if (type == kTypeMeetingStateChanged &&
-            state > NEMeetingState.ended.index) {
+            state > NEMeetingItemStatus.ended.index) {
           // 已经结束的会议查询会议信息会失败，所以不能走getMeetingItemById接口增量查询，需要全量查询一次
           changeItems.add(NEMeetingItem.fromJson({
             'roomUuid': data['meetingNum'],
             'meetingNum': data['meetingNum'],
             'meetingId': data['meetingId'],
             'state': state,
+            'type': meetingType,
           }));
         }
 
@@ -61,13 +60,14 @@ class _NEPreMeetingServiceImpl extends NEPreMeetingService with _AloggerMixin {
             'roomUuid': data['meetingNum'],
             'meetingNum': data['meetingNum'],
             'meetingId': data['meetingId'],
-            'state': NEMeetingState.cancel.index,
+            'type': meetingType,
+            'state': NEMeetingItemStatus.cancel.index,
           }));
         }
 
         if (changeItems.isNotEmpty) {
           for (var listener in _listeners.toList()) {
-            listener(changeItems, true);
+            listener.onMeetingItemInfoChanged(changeItems);
           }
         }
       } catch (e) {
@@ -76,8 +76,46 @@ class _NEPreMeetingServiceImpl extends NEPreMeetingService with _AloggerMixin {
     }));
   }
 
-  final List<ScheduleCallback<List<NEMeetingItem>>> _listeners =
-      <ScheduledRoomStatusListener<List<NEMeetingItem>>>[];
+  final _listeners = <NEPreMeetingListener>{};
+
+  @override
+  Future<NEResult<List<NERemoteHistoryMeeting>>> getFavoriteMeetingList(
+      int? anchorId, int limit) {
+    apiLogger.i('getFavoriteMeetings $anchorId $limit');
+    return PreRoomRepository.getFavoriteMeetings(anchorId, limit);
+  }
+
+  @override
+  Future<NEResult<int>> addFavoriteMeeting(int meetingId) {
+    apiLogger.i('addFavoriteMeeting $meetingId');
+    return PreRoomRepository.addFavoriteMeeting(meetingId);
+  }
+
+  @override
+  Future<VoidResult> removeFavoriteMeeting(int meetingId) {
+    apiLogger.i('removeFavoriteMeeting $meetingId');
+    return PreRoomRepository.removeFavoriteMeetingByRoomArchiveId(meetingId);
+  }
+
+  @override
+  Future<NEResult<List<NERemoteHistoryMeeting>>> getHistoryMeetingList(
+      int anchorId, int limit) {
+    apiLogger.i('getHistoryMeetingList $anchorId $limit');
+    return PreRoomRepository.getHistoryMeetings(anchorId, limit);
+  }
+
+  @override
+  Future<NEResult<NERemoteHistoryMeetingDetail>> getHistoryMeetingDetail(
+      int meetingId) {
+    apiLogger.i('getHistoryMeetingDetail $meetingId');
+    return PreRoomRepository.getHistoryMeetingDetail(meetingId);
+  }
+
+  @override
+  Future<NEResult<NERemoteHistoryMeeting>> getHistoryMeeting(int meetingId) {
+    apiLogger.i('getHistoryMeeting $meetingId');
+    return PreRoomRepository.getHistoryMeeting(meetingId);
+  }
 
   @override
   Future<NEResult<NEMeetingItem>> scheduleMeeting(NEMeetingItem item) {
@@ -106,41 +144,34 @@ class _NEPreMeetingServiceImpl extends NEPreMeetingService with _AloggerMixin {
   }
 
   @override
-  Future<NEResult<List<NEMeetingItem>>> getMeetingList(
-      List<NEMeetingState> status) {
-    apiLogger.i('getMeetingList ,status${status.toString()}');
-    return PreRoomRepository.getRoomList(status);
-  }
-
-  @override
-  void registerScheduleMeetingStatusChange(
-      ScheduleCallback<List<NEMeetingItem>> callback) {
-    apiLogger.i('registerScheduleMeetingStatusChange');
-    if (_listeners.contains(callback)) {
-      return;
-    }
-    _listeners.add(callback);
-  }
-
-  @override
-  void unRegisterScheduleMeetingStatusChange(
-      ScheduleCallback<List<NEMeetingItem>> callback) {
-    apiLogger.i('unRegisterScheduleMeetingStatusChange');
-    if (_listeners.contains(callback)) {
-      _listeners.remove(callback);
-    }
-  }
-
-  @override
   Future<NEResult<NEMeetingItem>> getMeetingItemById(int meetingId) {
     apiLogger.i('getMeetingItemById $meetingId');
     return PreRoomRepository.getMeetingItemById(meetingId);
   }
 
   @override
-  Future<NEResult<List<NEScheduledMember>>> getScheduledMembers(
+  Future<NEResult<List<NEMeetingItem>>> getMeetingList(
+      List<NEMeetingItemStatus> status) {
+    apiLogger.i('getMeetingList ,status${status.toString()}');
+    return PreRoomRepository.getRoomList(status);
+  }
+
+  @override
+  Future<NEResult<List<NEScheduledMember>>> getScheduledMeetingMemberList(
       String meetingNum) {
-    apiLogger.i('getScheduledMembers $meetingNum');
+    apiLogger.i('getScheduledMeetingMemberList $meetingNum');
     return PreRoomRepository.getScheduledMembers(meetingNum);
+  }
+
+  @override
+  void addListener(NEPreMeetingListener listener) {
+    apiLogger.i('addListener');
+    _listeners.add(listener);
+  }
+
+  @override
+  void removeListener(NEPreMeetingListener listener) {
+    apiLogger.i('removeListener');
+    _listeners.remove(listener);
   }
 }

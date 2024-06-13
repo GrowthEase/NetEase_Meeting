@@ -42,7 +42,7 @@ class MeetingArguments extends MeetingBaseArguments {
         ) {
     requestTimeStamp = DateTime.now().millisecondsSinceEpoch;
     _isWhiteboardTransparent =
-        ValueNotifier(options.enableTransparentWhiteboard);
+        ValueNotifier(options.enableTransparentWhiteboard ?? false);
   }
 
   MeetingArguments copyWith({

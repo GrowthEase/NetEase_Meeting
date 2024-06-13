@@ -5,7 +5,8 @@
 part of meeting_kit;
 
 /// 回调接口，用于监听共享屏幕状态变更事件
-/// * [status] 共享屏幕状态事件对象
+/// [status] 共享屏幕状态事件对象
+///
 typedef NEScreenSharingStatusListener = void Function(
     NEScreenSharingEvent event);
 
@@ -20,6 +21,16 @@ class NEScreenSharingEvent {
   NEScreenSharingEvent(this.event, {this.arg = -1});
 }
 
+/// [NERoomEndReason] 会议结束原因
+// extension NEMeetingCode on NERoomEndReason {
+//   static const MEETING_DISCONNECTING_BY_SELF = NERoomEndReason.kLeaveBySelf;
+//   static const MEETING_DISCONNECTING_REMOVED_BY_HOST = NERoomEndReason.kKickOut;
+//   static const MEETING_DISCONNECTING_CLOSED_BY_HOST = NERoomEndReason.kCloseByMember;
+//   static const MEETING_DISCONNECTING_LOGIN_ON_OTHER_DEVICE = NERoomEndReason.kKickBySelf;
+//   static const MEETING_DISCONNECTING_AUTH_INFO_EXPIRED = NERoomEndReason.kLoginStateError;
+// }
+
+/// 共享屏幕时的状态枚举
 enum NEScreenSharingStatus {
   /// 未开始
   idle,
@@ -41,6 +52,8 @@ class NEScreenSharingParams {
 
   /// 分享昵称
   final String displayName;
+
+  /// iOS平台的AppGroup
   String? iosAppGroup;
 
   IntervalEvent? trackingEvent;
@@ -76,34 +89,36 @@ class NEScreenSharingOptions {
         );
 }
 
-/// 提供会议相关的服务接口，诸如创建会议、加入会议、添加会议状态监听等。可通过 [NEMeetingKit.getMeetingService] 获取对应的服务实例
+/// 屏幕共享服务接口，用于创建和管理屏幕共享、添加共享状态监听等。可通过 [NEMeetingKit.getMeetingService] 获取对应的服务实例
 abstract class NEScreenSharingService {
-  /// 加入一个当前正在进行中的会议，已登录或未登录均可加入会议。
-  /// 加入会议成功后，SDK会拉起会议页面，调用方不用做其他操作
+  /// 开启一个开启屏幕共享，只有完成SDK的登录鉴权操作才允许开启屏幕共享。
   ///
-  /// * [param] 会议参数对象，不能为空
-  /// * [opts]  会议选项对象，可空；当未指定时，会使用默认的选项
+  /// * [param] 屏幕共享参数对象，不能为空
+  /// * [opts]  屏幕共享选项对象，可空；当未指定时，会使用默认的选项
   ///
   Future<NEResult<String>> startScreenShare(
     NEScreenSharingParams param,
     NEScreenSharingOptions opts,
   );
 
-  /// 停止共享
-  Future<NEResult<void>> stopScreenShare(
-      {NERoomEndReason reason = NERoomEndReason.kLeaveBySelf});
+  ///
+  /// 停止屏幕共享
+  /// 回调接口。该回调不会返回额外的结果数据
+  ///
+  Future<NEResult<void>> stopScreenShare();
 
   ///
   /// 添加共享屏幕状态监听实例，用于接收共享屏幕状态变更通知
   ///
-  /// * [listener] 要添加的监听实例
+  /// [listener] 要添加的监听实例
   ///
-  void addListener(NEScreenSharingStatusListener listener);
+  void addScreenSharingStatusListener(NEScreenSharingStatusListener listener);
 
   ///
   /// 移除对应的会议共享屏幕状态的监听实例
   ///
-  /// * [listener] 要移除的监听实例
+  /// [listener] 要移除的监听实例
   ///
-  void removeListener(NEScreenSharingStatusListener listener);
+  void removeScreenSharingStatusListener(
+      NEScreenSharingStatusListener listener);
 }

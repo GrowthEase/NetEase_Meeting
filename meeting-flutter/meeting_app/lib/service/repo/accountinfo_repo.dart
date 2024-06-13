@@ -20,14 +20,4 @@ class AccountInfoRepo extends IRepo {
   Future<Result<AccountAppInfo>> getAccountAppInfo() {
     return appService.getAccountAppInfo();
   }
-
-  ///获取当前用户所属的公司列表
-  Future<Result<AccountApps>> getAccountApps() {
-    return appService.getAccountApps();
-  }
-
-  ///切换公司
-  Future<Result<LoginInfo>> switchApp() {
-    return appService.switchApp();
-  }
 }

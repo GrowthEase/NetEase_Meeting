@@ -63,13 +63,8 @@ class MeetingValueKey {
   ///会议设置模板[MeetingSetting]
   static const openCameraMeeting = ValueKey('openCameraMeeting');
   static const openMicrophone = ValueKey('openMicrophone');
-  static const openShowMeetTime = ValueKey('openShowMeetTime');
-  static const audioAINS = ValueKey('audioAINS');
-  static const showShareUserVideo = ValueKey('showShareUserVideo');
-  static const enableTransparentWhiteboard =
-      ValueKey('enableTransparentWhiteboard');
-  static const enableFrontCameraMirror = ValueKey('enableFrontCameraMirror');
   static const enableAudioDeviceSwitch = ValueKey('enableAudioDeviceSwitch');
+  static const showShareUserVideo = ValueKey('showShareUserVideo');
 
   ///会议创建模板[MeetCreateRoute]
   static const userSelfMeetingNumCreateMeeting =
@@ -108,6 +103,8 @@ class MeetingValueKey {
   static const scheduleEnableJoinBeforeHost =
       ValueKey('scheduleEnableJoinBeforeHost');
   static const scheduleEnableGuestJoin = ValueKey('scheduleEnableGuestJoin');
+  static const scheduleEnableInterpretation =
+      ValueKey('scheduleEnableInterpretation');
   static const scheduleAttendeeAudio = ValueKey('scheduleAttendeeAudio');
   static const scheduleAttendeeAudioAllow =
       ValueKey('scheduleAttendeeAudioAllow');

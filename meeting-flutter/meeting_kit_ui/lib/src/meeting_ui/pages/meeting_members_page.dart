@@ -4,12 +4,6 @@
 
 part of meeting_ui;
 
-typedef ActionTextButton = Widget Function(String text,
-    {Color? textColor,
-    Color? backgroundColor,
-    VoidCallback? onPressed,
-    Color? borderColor});
-
 /// 参会者界面
 class MeetMemberPage extends StatefulWidget {
   final MembersArguments arguments;
@@ -97,11 +91,11 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
                 page.filteredUserList as List<NERoomMember>);
           } else if (page.type == _MembersPageType.waitingRoom) {
             return WaitingRoomMemberList(
-                waitingRoomManager,
-                page.filteredUserList as List<NEWaitingRoomMember>,
-                arguments.isMySelfManagerListenable,
-                onMemberItemClick,
-                buildActionTextButton);
+              waitingRoomManager,
+              page.filteredUserList as List<NEWaitingRoomMember>,
+              arguments.isMySelfManagerListenable,
+              onMemberItemClick,
+            );
           } else if (page.type == _MembersPageType.notYetJoined &&
               isSelfHostOrCoHost()) {
             return InviteMemberList(
@@ -161,8 +155,8 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: SizedBox(
                 width: double.infinity,
-                child: buildActionTextButton(
-                  meetingUiLocalizations.meetingReclaimHost,
+                child: MeetingTextButton.outlined(
+                  text: meetingUiLocalizations.meetingReclaimHost,
                   onPressed: () => reclaimHost(roomContext.getHostMember()),
                 ),
               ),
@@ -231,15 +225,15 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
         child: Row(
           children: <Widget>[
             Expanded(
-              child: buildActionTextButton(
-                meetingUiLocalizations.participantTurnOffVideos,
+              child: MeetingTextButton.outlined(
+                text: meetingUiLocalizations.participantTurnOffVideos,
                 onPressed: _onMuteAllVideo,
               ),
             ),
             SizedBox(width: 9),
             Expanded(
-              child: buildActionTextButton(
-                meetingUiLocalizations.participantTurnOnVideos,
+              child: MeetingTextButton.outlined(
+                text: meetingUiLocalizations.participantTurnOnVideos,
                 onPressed: unMuteAllVideo2Server,
               ),
             ),
@@ -258,42 +252,20 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
         child: Row(
           children: <Widget>[
             Expanded(
-              child: buildActionTextButton(
-                meetingUiLocalizations.participantMuteAudioAll,
+              child: MeetingTextButton.outlined(
+                text: meetingUiLocalizations.participantMuteAudioAll,
                 onPressed: _onMuteAllAudio,
               ),
             ),
             SizedBox(width: 9),
             Expanded(
-              child: buildActionTextButton(
-                meetingUiLocalizations.participantUnmuteAll,
+              child: MeetingTextButton.outlined(
+                text: meetingUiLocalizations.participantUnmuteAll,
                 onPressed: unMuteAllAudio2Server,
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  /// 构建底部文本按钮，统一风格
-  Widget buildActionTextButton(String text,
-      {Color? textColor,
-      Color? backgroundColor,
-      VoidCallback? onPressed,
-      Color? borderColor}) {
-    return TextButton(
-      child: Text(text),
-      onPressed: onPressed,
-      style: ButtonStyle(
-        fixedSize: MaterialStateProperty.all(const Size.fromHeight(50)),
-        textStyle: MaterialStateProperty.all(TextStyle(fontSize: 16)),
-        shape: MaterialStateProperty.all(StadiumBorder(
-          side: BorderSide(color: borderColor ?? _UIColors.greyCCCCCC),
-        )),
-        backgroundColor: MaterialStateProperty.all(backgroundColor),
-        foregroundColor:
-            MaterialStateProperty.all(textColor ?? _UIColors.color_333333),
       ),
     );
   }
@@ -381,6 +353,40 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
   }
 
   Widget buildMemberItem(NERoomMember user) {
+    /// 未加入 RTC 的成员也展示在列表中
+    if (!user.isInRtcChannel) {
+      return GestureDetector(
+        key: MeetingUIValueKeys.memberItem,
+        behavior: HitTestBehavior.opaque,
+        onTap: () => handleInMeetingMemberItemClick(user),
+        child: Container(
+          height: 48,
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              NEMeetingAvatar.medium(
+                name: user.name,
+                url: user.avatar,
+              ),
+              SizedBox(width: 6),
+              Expanded(
+                child: _memberItemNick(user),
+              ),
+              Spacer(),
+              Text(
+                meetingUiLocalizations.participantJoining,
+                style: TextStyle(
+                  color: Color(0xFF53576A),
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return GestureDetector(
       key: MeetingUIValueKeys.memberItem,
       behavior: HitTestBehavior.opaque,
@@ -1004,20 +1010,20 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
       context: context,
       builder: (_) {
         return NEMeetingUIKitLocalizationsScope(
-          builder: (BuildContext context) {
+          builder: (BuildContext context, localizations, _) {
             return CupertinoAlertDialog(
-              title: Text(meetingUiLocalizations.participantTransferHost),
-              content: Text(meetingUiLocalizations
-                  .participantTransferHostConfirm(user.name)),
+              title: Text(localizations.participantTransferHost),
+              content:
+                  Text(localizations.participantTransferHostConfirm(user.name)),
               actions: <Widget>[
                 CupertinoDialogAction(
-                  child: Text(meetingUiLocalizations.globalNo),
+                  child: Text(localizations.globalNo),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
                 ),
                 CupertinoDialogAction(
-                  child: Text(meetingUiLocalizations.globalYes),
+                  child: Text(localizations.globalYes),
                   onPressed: () {
                     Navigator.of(context).pop();
                     changeHost2Server(user);
@@ -1070,6 +1076,9 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     }
     if (user.clientType == NEClientType.sip) {
       subtitle.add(meetingUiLocalizations.meetingSip);
+    }
+    if (meetingUIState.interpretationController.isUserInterpreter(user.uuid)) {
+      subtitle.add(meetingUiLocalizations.interpInterpreter);
     }
     if (arguments.options.showMemberTag &&
         user.tag != null &&
@@ -1180,10 +1189,9 @@ class WaitingRoomMemberList extends StatefulWidget {
   final void Function(dynamic actionType, NEBaseRoomMember user)?
       onMemberItemClick;
   final ValueListenable<bool> isMySelfManagerListenable;
-  final ActionTextButton textButton;
 
   const WaitingRoomMemberList(this.waitingRoomManager, this.userList,
-      this.isMySelfManagerListenable, this.onMemberItemClick, this.textButton,
+      this.isMySelfManagerListenable, this.onMemberItemClick,
       {super.key});
 
   @override
@@ -1195,6 +1203,7 @@ class _WaitingRoomMemberListState extends State<WaitingRoomMemberList>
   StreamController? oneMinuteTick;
   StreamSubscription? oneMinuteTickSubscription;
   final userAutoPopListenable = <String, ValueNotifier<bool>>{};
+  bool isShowMaxMembersTipDialog = false;
 
   @override
   void initState() {
@@ -1286,19 +1295,15 @@ class _WaitingRoomMemberListState extends State<WaitingRoomMemberList>
               child: Row(
                 children: [
                   Expanded(
-                    child: widget.textButton(
-                      meetingUiLocalizations.waitingRoomAdmitAll,
-                      textColor: _UIColors.white,
-                      backgroundColor: _UIColors.color_337eff,
+                    child: MeetingTextButton.fill(
+                      text: meetingUiLocalizations.waitingRoomAdmitAll,
                       onPressed: admitAllMembers,
-                      borderColor: _UIColors.color_337eff,
                     ),
                   ),
                   SizedBox(width: 9),
                   Expanded(
-                    child: widget.textButton(
-                      meetingUiLocalizations.waitingRoomRemoveAll,
-                      textColor: _UIColors.black_333333,
+                    child: MeetingTextButton.outlined(
+                      text: meetingUiLocalizations.waitingRoomRemoveAll,
                       onPressed: expelAllMembers,
                     ),
                   ),
@@ -1509,27 +1514,51 @@ class _WaitingRoomMemberListState extends State<WaitingRoomMemberList>
   }
 
   void admitMember(String uuid, {bool autoAdmit = false}) {
-    widget.waitingRoomManager.admitMember(uuid, autoAdmit: autoAdmit);
+    if (checkMaxMember(false) && !isShowMaxMembersTipDialog) {
+      isShowMaxMembersTipDialog = !isShowMaxMembersTipDialog;
+      DialogUtils.showMaxMembersTipDialog(
+        context,
+        title: NEMeetingUIKitLocalizations.of(context)!.meetingMemberMaxTip,
+        content: NEMeetingUIKitLocalizations.of(context)!
+            .participantUpperLimitTipAdmitOtherTip,
+        cancelTitle: NEMeetingUIKitLocalizations.of(context)!.globalIKnow,
+        onCancel: () => isShowMaxMembersTipDialog = false,
+      ).whenComplete(() => isShowMaxMembersTipDialog = false);
+    } else {
+      widget.waitingRoomManager.admitMember(uuid, autoAdmit: autoAdmit);
+    }
   }
 
   void admitAllMembers() async {
-    final result = await showConfirmDialog(
-      title: meetingUiLocalizations.waitingRoomAdmitMember,
-      message: meetingUiLocalizations.waitingRoomAdmitAllMembersTip,
-      cancelLabel: meetingUiLocalizations.globalCancel,
-      okLabel: meetingUiLocalizations.waitingRoomAdmitAll,
-      contentWrapperBuilder: (child) {
-        return AutoPopScope(
-          listenable: widget.isMySelfManagerListenable,
-          onWillAutoPop: (_) {
-            return !widget.isMySelfManagerListenable.value;
-          },
-          child: child,
-        );
-      },
-    );
-    if (!mounted || result != true) return;
-    widget.waitingRoomManager.admitAllMembers();
+    if (checkMaxMember(true) && !isShowMaxMembersTipDialog) {
+      isShowMaxMembersTipDialog = !isShowMaxMembersTipDialog;
+      DialogUtils.showMaxMembersTipDialog(
+        context,
+        onCancel: () => isShowMaxMembersTipDialog = false,
+        title: NEMeetingUIKitLocalizations.of(context)!.meetingMemberMaxTip,
+        content: NEMeetingUIKitLocalizations.of(context)!
+            .participantUpperLimitTipAdmitOtherTip,
+        cancelTitle: NEMeetingUIKitLocalizations.of(context)!.globalIKnow,
+      ).whenComplete(() => isShowMaxMembersTipDialog = false);
+    } else {
+      final result = await showConfirmDialog(
+        title: meetingUiLocalizations.waitingRoomAdmitMember,
+        message: meetingUiLocalizations.waitingRoomAdmitAllMembersTip,
+        cancelLabel: meetingUiLocalizations.globalCancel,
+        okLabel: meetingUiLocalizations.waitingRoomAdmitAll,
+        contentWrapperBuilder: (child) {
+          return AutoPopScope(
+            listenable: widget.isMySelfManagerListenable,
+            onWillAutoPop: (_) {
+              return !widget.isMySelfManagerListenable.value;
+            },
+            child: child,
+          );
+        },
+      );
+      if (!mounted || result != true) return;
+      widget.waitingRoomManager.admitAllMembers();
+    }
   }
 
   void expelAllMembers() async {
@@ -1611,6 +1640,34 @@ class _WaitingRoomMemberListState extends State<WaitingRoomMemberList>
         Navigator.pop(context, WaitingRoomMemberAction(user, memberActionType));
       },
     );
+  }
+
+  /// 检查是否达到最大人数
+  bool checkMaxMember(bool admitAllMembers) {
+    NERoomContext? currentRoomContext =
+        NEMeetingUIKit.instance.getCurrentRoomContext();
+    int waitingRoomMemberCount = 0;
+    if (admitAllMembers) {
+      waitingRoomMemberCount = currentRoomContext?.waitingRoomController
+              .getWaitingRoomInfo()
+              .memberCount ??
+          0;
+    } else {
+      waitingRoomMemberCount = currentRoomContext!.waitingRoomController
+                  .getWaitingRoomInfo()
+                  .memberCount >
+              0
+          ? 1
+          : 0;
+    }
+    return currentRoomContext != null &&
+        currentRoomContext
+                    .getAllUsers(
+                        isIncludeInviteMember: true,
+                        isIncludeInviteWaitingJoinMember: false)
+                    .length +
+                waitingRoomMemberCount >
+            currentRoomContext.maxMembers;
   }
 }
 

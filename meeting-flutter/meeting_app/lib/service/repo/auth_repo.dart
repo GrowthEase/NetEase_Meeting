@@ -4,16 +4,17 @@
 
 import 'dart:async';
 
+import 'package:nemeeting/service/config/app_config.dart';
+import 'package:netease_common/netease_common.dart';
 import 'package:netease_meeting_core/meeting_kit.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/auth/auth_state.dart';
 import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/service/config/login_type.dart';
 import 'package:nemeeting/service/model/login_info.dart';
-import 'package:nemeeting/service/model/parse_sso_token.dart';
-import 'package:nemeeting/service/proto/app_http_proto/login_proto.dart';
 import 'package:nemeeting/service/repo/i_repo.dart';
 import 'package:nemeeting/service/response/result.dart';
+import 'package:netease_meeting_ui/meeting_ui.dart';
 
 /// 登录注册,
 class AuthRepo extends IRepo {
@@ -24,92 +25,74 @@ class AuthRepo extends IRepo {
   factory AuthRepo() => _singleton;
 
   /// 请求验证码
-  Future<Result<void>> getMobileCheckCode(String appKey, String mobile) async {
-    return appService.getMobileCheckCode(appKey, mobile);
+  Future<VoidResult> getMobileCheckCode(String appKey, String mobile) async {
+    /// 请求验证码前要先初始化
+    await AuthManager().initialize(appKey: appKey);
+    return NEMeetingKit.instance
+        .getAccountService()
+        .requestSmsCodeForLogin(mobile);
   }
 
-  /// 登录
-  Future<Result<LoginInfo>> login(LoginProto loginProto) {
-    return appService.login(loginProto).then((result) async {
-      if (result.code == HttpCode.success) {
-        AuthState().updateState(state: AuthState.authed);
-        var sdkLoginResult = await AuthManager().loginMeetingKitWithToken(
-            loginProto.loginType, result.data as LoginInfo);
-        return result.copy(
-          code: sdkLoginResult.code == NEMeetingErrorCode.success
-              ? HttpCode.success
-              : HttpCode.meetingSDKLoginError,
-          msg: sdkLoginResult.msg,
-        );
-      } else if (result.code == HttpCode.verifyError ||
-          result.code == HttpCode.tokenError ||
-          result.code == HttpCode.passwordError ||
-          result.code == HttpCode.accountNotExist ||
-          result.code == HttpCode.loginPasswordError) {
-        AuthState().updateState(state: AuthState.init);
-
-        /// reset
-        AuthManager().logout();
-      }
-      return result;
-    });
-  }
-
-  /// 密码登录
   Future<Result<LoginInfo>> loginByPwd(
-      String appKey, String username, String password) {
-    return login(PasswordLoginProto(appKey, username, password));
-  }
-
-  /// 自动登录
-  Future<Result<void>> loginByToken(LoginType loginType, String accountId,
-      String accountToken, String appKey) {
-    var loginInfo = LoginInfo(
-        accountId: accountId, accountToken: accountToken, appKey: appKey);
+      String appKey, Future<NEResult<NEAccountInfo>> action()) async {
     return AuthManager()
-        .loginMeetingKitWithToken(loginType, loginInfo)
+        .loginProcedure(
+      LoginType.password,
+      action,
+      appKey: appKey,
+    )
         .then((sdkLoginResult) {
       if (sdkLoginResult.code == HttpCode.success) {
         AuthState().updateState(state: AuthState.authed);
       } else {
-        AuthState().updateState(state: AuthState.init);
         AuthManager().logout();
+        AuthState().updateState(state: AuthState.init);
       }
-      return Result(code: sdkLoginResult.code, msg: sdkLoginResult.msg);
+      return sdkLoginResult;
     });
   }
 
   /// 验证码登录
   Future<Result<LoginInfo>> loginByMobileCheckCode(
       String appKey, String mobile, String checkCode) {
-    return login(MobileCheckCodeLoginProto(appKey, mobile, checkCode));
+    return AuthManager().loginProcedure(LoginType.verify, appKey: appKey,
+        () async {
+      return NEMeetingKit.instance
+          .getAccountService()
+          .loginBySmsCode(mobile, checkCode);
+    }).then((sdkLoginResult) {
+      if (sdkLoginResult.code == HttpCode.success) {
+        AuthState().updateState(state: AuthState.authed);
+      } else {
+        AuthManager().logout();
+        AuthState().updateState(state: AuthState.init);
+      }
+      return sdkLoginResult;
+    });
   }
 
-  /// 验证码登录
-  Future<Result<LoginInfo>> loginByThird(String account, String password) {
-    return login(ThirdPartyLoginProto(account, password));
-  }
-
-  /// 解析ssoToken
-  Future<Result<ParseSSOToken>> parseSSOToken(String ssoToken) {
-    return appService.parseSSOToken(ssoToken);
-  }
-
-  /// 密码验证
-  /// TODO:
-  Future<Result<String>> passwordVerify(String userId, String oldPassword) {
-    return appService.passwordVerify(userId, oldPassword);
-  }
-
-  /// 登录后密码重置
-  Future<Result<void>> passwordResetAfterLogin(String newPassWord) {
-    return appService.passwordReset(newPassWord);
-  }
-
-  /// 登录前密码重置
-  Future<Result<void>> passwordResetByMobileCode(
-      String mobile, String newPassWord, String exchangeCode) {
-    return appService.passwordResetByMobileCode(
-        mobile, newPassWord, exchangeCode);
+  Future<Result<LoginInfo>> loginBySSOUri(
+    String uri, {
+    String? appKey,
+    String? corpCode,
+    String? corpEmail,
+  }) {
+    return AuthManager().loginProcedure(
+      LoginType.sso,
+      () async {
+        return NEMeetingKit.instance.getAccountService().loginBySSOUri(uri);
+      },
+      appKey: appKey,
+      corpCode: corpCode,
+      corpEmail: corpEmail,
+    ).then((sdkLoginResult) {
+      if (sdkLoginResult.code == HttpCode.success) {
+        AuthState().updateState(state: AuthState.authed);
+      } else {
+        AuthManager().logout();
+        AuthState().updateState(state: AuthState.init);
+      }
+      return sdkLoginResult;
+    });
   }
 }

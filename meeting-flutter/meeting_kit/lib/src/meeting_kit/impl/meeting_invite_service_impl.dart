@@ -10,11 +10,11 @@ class _NEMeetingInviteServiceImpl extends NEMeetingInviteService
       _NEMeetingInviteServiceImpl._();
 
   factory _NEMeetingInviteServiceImpl() => _instance;
-  late final _meetingService = NEMeetingKit.instance.getMeetingService();
 
-  final List<NEMeetingInviteListener> _listeners = <NEMeetingInviteListener>[];
+  final List<NEMeetingInviteStatusListener> _listeners =
+      <NEMeetingInviteStatusListener>[];
 
-  List<NEMeetingInviteListener> get listeners => _listeners;
+  List<NEMeetingInviteStatusListener> get listeners => _listeners;
 
   static const kTypeMeetingInviteStatusChanged = 82;
 
@@ -22,9 +22,12 @@ class _NEMeetingInviteServiceImpl extends NEMeetingInviteService
   static const kTypeMeetingSelfLeaveByRoomClosed = 33;
   static const kTypeMeetingByRoomClosed = 51;
 
+  NEMeetingInviteStatus _inviteStatus = NEMeetingInviteStatus.unknown;
+
   _NEMeetingInviteServiceImpl._() {
     NERoomKit.instance.messageChannelService.addMessageChannelCallback(
-        NEMessageChannelCallback(onReceiveCustomMessage: (message) async {
+        NEMessageChannelCallback(
+            onCustomMessageReceiveCallback: (message) async {
       try {
         commonLogger.i('invite ,message ${message.data}');
 
@@ -68,17 +71,17 @@ class _NEMeetingInviteServiceImpl extends NEMeetingInviteService
                 currentInviteData?.inviteInfo?.toMap());
             inviteInfoObj.meetingNum = currentInviteData?.meetingNum ?? '';
             final meetingId = currentInviteData?.meetingId ?? '';
-            NEMeetingInviteStatus status = NEMeetingInviteStatus.unknown;
+
             if (message.commandId == kTypeMeetingInviteStatusChanged ||
                 message.commandId == kTypeMeetingByRoomClosed) {
-              status = NEMeetingInviteStatus.canceled;
+              _inviteStatus = NEMeetingInviteStatus.canceled;
             }
             if (message.commandId == kTypeMeetingSelfLeaveByRoomClosed ||
                 message.commandId == kTypeMeetingSelfJoinRoom) {
-              status = NEMeetingInviteStatus.removed;
+              _inviteStatus = NEMeetingInviteStatus.removed;
             }
             element.onMeetingInviteStatusChanged(
-                status, meetingId.toString(), inviteInfoObj);
+                _inviteStatus, meetingId.toString(), inviteInfoObj);
           });
         }
       } catch (e) {
@@ -90,16 +93,21 @@ class _NEMeetingInviteServiceImpl extends NEMeetingInviteService
   @override
   Future<NEResult<NERoomContext>> acceptInvite(
       NEJoinMeetingParams param, NEJoinMeetingOptions opts) async {
-    apiLogger.i('joinMeetingByInvite param: $param, opts: $opts');
-    return _meetingService.joinMeeting(param, opts, isInvite: true);
+    apiLogger.i('acceptInvite param: $param, opts: $opts');
+    return MeetingServiceUtil.joinMeetingInternal(
+      param,
+      opts,
+      localizations: localizations,
+      isInvite: true,
+    );
   }
 
   @override
-  Future<NEResult<VoidResult>> rejectInvite(String meetingId) {
+  Future<NEResult<VoidResult>> rejectInvite(int meetingId) {
     apiLogger.i('rejectInvite meetingId: $meetingId');
     final currentInviteData = InviteQueueUtil.instance.currentInviteData.value;
     if (currentInviteData?.meetingId != null &&
-        currentInviteData?.meetingId!.toString() == meetingId &&
+        currentInviteData?.meetingId == meetingId &&
         currentInviteData?.roomUuid != null) {
       return NERoomKit.instance.roomService
           .rejectInvite(currentInviteData!.roomUuid!);
@@ -109,8 +117,8 @@ class _NEMeetingInviteServiceImpl extends NEMeetingInviteService
   }
 
   @override
-  void addEventListener(NEMeetingInviteListener listener) {
-    apiLogger.i('addEventListener, listener: $listener');
+  void addMeetingInviteStatusListener(NEMeetingInviteStatusListener listener) {
+    apiLogger.i('addMeetingInviteStatusListener, listener: $listener');
     if (_listeners.contains(listener)) {
       return;
     }
@@ -118,8 +126,9 @@ class _NEMeetingInviteServiceImpl extends NEMeetingInviteService
   }
 
   @override
-  void removeEventListener(NEMeetingInviteListener listener) {
-    apiLogger.i('removeEventListener, listener: $listener');
+  void removeMeetingInviteStatusListener(
+      NEMeetingInviteStatusListener listener) {
+    apiLogger.i('removeMeetingInviteStatusListener, listener: $listener');
     if (_listeners.contains(listener)) {
       _listeners.remove(listener);
     }

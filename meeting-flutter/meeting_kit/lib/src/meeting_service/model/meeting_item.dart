@@ -4,39 +4,44 @@
 
 part of meeting_service;
 
+class NEMeetingGroup {
+  int time;
+  List<NEMeetingItem> meetings;
+
+  NEMeetingGroup(this.time, this.meetings);
+}
+
 ///  预定房间item
 abstract class NEMeetingItem {
-  factory NEMeetingItem.createScheduleRoomItem() => _MeetingItemImpl();
+  factory NEMeetingItem.createScheduleMeetingItem() => _MeetingItemImpl();
 
   factory NEMeetingItem() => _MeetingItemImpl();
 
   NEMeetingItem._();
 
-  String? get ownerUserUuid;
+  /// 会议短号
+  String? shortMeetingNum;
 
-  set ownerUserUuid(String? ownerUserUuid);
+  /// 创建人id
+  String? ownerUserUuid;
 
-  String? get ownerNickname;
+  /// 创建人昵称
+  String? ownerNickname;
 
-  ///[NEMeetingType]
-  int? get meetingType;
+  /// 房间号
+  String? get roomUuid;
 
-  set meetingType(int? meetingType);
+  /// 会议邀请链接
+  String? get inviteUrl;
+
+  /// 会议类型
+  NEMeetingType? get meetingType;
+
+  /// 会议唯一标识
+  int? get meetingId;
 
   /// 会议号
   String? get meetingNum;
-
-  /// 会议短号
-  String? get shortMeetingNum;
-
-  /// 模版id
-  int? get roomConfigId;
-
-  /// 预定成功后会议号
-  String? get roomUuid;
-
-  /// 会议id,取消会议，编辑会议使用
-  int? get meetingId;
 
   /// 设置会议主题
   set subject(String? subject);
@@ -47,14 +52,38 @@ abstract class NEMeetingItem {
   /// 设置会议开始时间，单位毫秒。在编辑预约会议时，如果设置为0，则不调整会议开始时间
   set startTime(int start);
 
-  /// 获取会议开始时间
+  /// 获取会议开始时间戳（标准UNIX时间戳格式，单位为ms）
   int get startTime;
 
   /// 设置会议结束时间，单位毫秒。在编辑预约会议时，如果设置为0，则不调整会议结束时间
   set endTime(int end);
 
-  /// 获取会议结束时间
+  /// 获取会议结束时间戳（标准UNIX时间戳格式，单位为ms）
   int get endTime;
+
+  /// 开启sip功能, 默认为 true
+  set noSip(bool? enable);
+
+  /// 获取会议是否支持sip，默认为 true
+  bool get noSip;
+
+  /// 开启/关闭等候室
+  void setWaitingRoomEnabled(bool enabled);
+
+  /// 等候室是否开启
+  bool get waitingRoomEnabled;
+
+  /// 查询是否允许成员在主持人入会前加入，默认为 true
+  bool get enableJoinBeforeHost;
+
+  /// 设置是否允许成员在主持人入会前加入
+  void setEnableJoinBeforeHost(bool enable);
+
+  /// 查询是否允许访客入会
+  bool get enableGuestJoin;
+
+  /// 设置是否允许访客入会
+  void setEnableGuestJoin(bool enable);
 
   /// 设置会议密码， 为空表示不设置密码
   set password(String? password);
@@ -63,74 +92,58 @@ abstract class NEMeetingItem {
   String? get password;
 
   /// 预定会议参数设置
-  set settings(NEMeetingItemSettings setting);
+  set settings(NEMeetingItemSetting setting);
 
   /// 获取会议参数设置
-  NEMeetingItemSettings get settings;
+  NEMeetingItemSetting get settings;
+
+  /// 设置会议状态
+  set status(NEMeetingItemStatus status);
 
   /// 会议状态
-  NEMeetingState get state;
+  NEMeetingItemStatus get status;
+
+  /// 获取会议直播信息设置
+  NEMeetingItemLive? get live;
+
+  /// 会议直播信息设置
+  set live(NEMeetingItemLive? live);
 
   /// 扩展字段
   String? get extraData;
 
+  /// 设置扩展字段
   set extraData(String? extraData);
 
-  NEMeetingItemLive? get live;
-
-  set live(NEMeetingItemLive? live);
-
+  /// 设置角色
   set roleBinds(Map<String, NEMeetingRoleType>? roleBinds);
 
+  /// 获取角色
   Map<String, NEMeetingRoleType>? get roleBinds;
 
-  /// 开启sip功能, 默认为关闭[enable]:true
-  set noSip(bool? enable);
-
-  /// 获取会议是否支持sip,[noSip]默认为 true
-  bool get noSip;
-
-  String? get inviteUrl;
-
-  /// 预约指定成员列表,后台配置开启预定成员功能时有效
-  List<NEScheduledMember>? scheduledMemberList;
-
-  ///
-  /// 开启/关闭等候室
-  ///
-  void setWaitingRoomEnabled(bool enabled);
-
-  ///
-  /// 等候室是否开启
-  ///
-  bool get isWaitingRoomEnabled;
-
-  ///
-  /// 周期性会议规则
-  ///
+  /// 获取周期性会议规则
   NEMeetingRecurringRule get recurringRule;
 
+  /// 设置周期性会议规则
   set recurringRule(NEMeetingRecurringRule recurringRule);
 
-  ///
-  /// 查询是否允许成员在主持人入会前加入，默认为 true
-  ///
-  bool isEnableJoinBeforeHost();
+  /// 预约指定成员列表,后台配置开启预定成员功能时有效
+  List<NEScheduledMember>? get scheduledMemberList;
 
-  ///
-  /// 设置是否允许成员在主持人入会前加入
-  ///
-  void setEnableJoinBeforeHost(bool enable);
+  /// 获取预约指定成员列表
+  set scheduledMemberList(List<NEScheduledMember>? list);
 
-  ///
-  /// 查询是否允许访客入会
-  ///
-  bool isEnableGuestJoin();
+  /// 获取时区ID
+  String? get timezoneId;
 
-  ///
-  /// 设置是否允许访客入会
-  ///
-  void setEnableGuestJoin(bool enable);
+  /// 设置时区ID
+  set timezoneId(String? timezoneId);
+
+  /// 获取同声传译设置。为空或译员列表为空表示关闭同声传译
+  NEMeetingInterpretationSettings? get interpretationSettings;
+
+  /// 设置同声传译设置。如果设置为null或译员列表为空，则表示关闭同声传译
+  set interpretationSettings(NEMeetingInterpretationSettings? value);
 
   Map toJson();
 
@@ -148,8 +161,12 @@ abstract class NEMeetingItem {
   }
 }
 
+/// 用于预约会议时设置预选成员
 class NEScheduledMember {
+  /// 用户id
   String userUuid;
+
+  /// 用户角色
   String role;
 
   /// 本地分页获取填充

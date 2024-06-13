@@ -10,8 +10,6 @@ class UserPreferences extends Preferences {
   static const String localSetting = 'localSetting';
   static const String serverSetting = 'serverSettings';
   static const String showShareUserVideo = 'showShareUserVideo';
-  static const String transparentWB = 'transparentWB';
-  static const String frontCameraMirror = 'frontCameraMirror';
   static const String audioDeviceSwitch = 'audioDeviceSwitch';
   static const String _keyMeetingInfo = "meetingInfo";
 
@@ -30,15 +28,6 @@ class UserPreferences extends Preferences {
     setBoolSp(_wrapperKey(showShareUserVideo), value);
   }
 
-  Future<bool> isTransparentWhiteboardEnabled() async {
-    final value = await getBoolSp(_wrapperKey(transparentWB));
-    return value ?? false;
-  }
-
-  Future<void> setTransparentWhiteboardEnabled(bool value) async {
-    setBoolSp(_wrapperKey(transparentWB), value);
-  }
-
   void enableAudioDeviceSwitch(bool enable) {
     setBoolSp(_wrapperKey(audioDeviceSwitch), enable);
   }
@@ -46,15 +35,6 @@ class UserPreferences extends Preferences {
   Future<bool> isAudioDeviceSwitchEnabled() async {
     return getBoolSp(_wrapperKey(audioDeviceSwitch))
         .then((value) => value ?? SDKConfig.current.isAudioDeviceSwitchEnabled);
-  }
-
-  Future<bool> isFrontCameraMirrorEnabled() async {
-    final value = await getBoolSp(_wrapperKey(frontCameraMirror));
-    return value ?? true;
-  }
-
-  Future<void> setFrontCameraMirrorEnabled(bool value) async {
-    setBoolSp(_wrapperKey(frontCameraMirror), value);
   }
 
   Future<void> setMeetingInfo(String value) async {

@@ -17,13 +17,12 @@ class NetworkNotAvailableRoute extends StatefulWidget {
 }
 
 class _NetworkNotAvailableRouteState
-    extends MeetingBaseState<NetworkNotAvailableRoute>
-    with MeetingAppLocalizationsMixin {
+    extends AppBaseState<NetworkNotAvailableRoute> {
   _NetworkNotAvailableRouteState();
 
   @override
   String getTitle() {
-    return meetingAppLocalizations.globalNetworkNotAvailableTitle;
+    return getAppLocalizations().globalNetworkNotAvailableTitle;
   }
 
   @override
@@ -50,25 +49,25 @@ class _NetworkNotAvailableRouteState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(meetingAppLocalizations.globalNetworkNotAvailablePart1,
+              Text(getAppLocalizations().globalNetworkNotAvailablePart1,
                   style: titleTextStyle),
               tipBetween,
-              Text(meetingAppLocalizations.globalNetworkNotAvailableTip1,
+              Text(getAppLocalizations().globalNetworkNotAvailableTip1,
                   style: tipTextStyle),
               partBetween,
-              Text(meetingAppLocalizations.globalNetworkNotAvailablePart2,
+              Text(getAppLocalizations().globalNetworkNotAvailablePart2,
                   style: titleTextStyle),
               tipBetween,
-              Text(meetingAppLocalizations.globalNetworkNotAvailableTip2,
+              Text(getAppLocalizations().globalNetworkNotAvailableTip2,
                   style: tipTextStyle),
               tipBetween,
-              Text(meetingAppLocalizations.globalNetworkNotAvailableTip3,
+              Text(getAppLocalizations().globalNetworkNotAvailableTip3,
                   style: tipTextStyle),
               partBetween,
-              Text(meetingAppLocalizations.globalNetworkNotAvailablePart3,
+              Text(getAppLocalizations().globalNetworkNotAvailablePart3,
                   style: titleTextStyle),
               tipBetween,
-              Text(meetingAppLocalizations.globalNetworkNotAvailableTip4,
+              Text(getAppLocalizations().globalNetworkNotAvailableTip4,
                   style: tipTextStyle),
             ],
           ),

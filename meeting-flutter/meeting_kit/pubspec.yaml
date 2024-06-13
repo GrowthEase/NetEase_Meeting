@@ -22,7 +22,7 @@ dependencies:
   webview_flutter: ^4.7.0
   intl: ^0.18.1
   yunxin_alog: ^2.0.0
-  netease_roomkit: 1.28.0
+  netease_roomkit: ^1.29.0
 
 dev_dependencies:
   flutter_test:

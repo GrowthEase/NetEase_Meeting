@@ -12,13 +12,25 @@ extension NEMeetingUIRtcController on NERoomRtcController {
             context, true, title)
         .then((enable) async {
       if (enable) {
-        final result = unmuteMyAudio();
+        var enableMediaPub = true;
+        final interpController =
+            Provider.of<MeetingUIState?>(context, listen: false)
+                ?.interpretationController;
+        if (interpController != null &&
+            interpController.speakLanguage != null) {
+          // 如果同声传译语言不为空，则打开麦克风时不允许开启主频道的音频pub
+          enableMediaPub = false;
+        }
+        final result = unmuteMyAudio(enableMediaPub);
         return needAwaitResult
             ? result
             : Future.value(const VoidResult.success());
       }
       return NEResult<void>(
-          code: -1, msg: NEMeetingUIKit().ofLocalizations().globalNoPermission);
+          code: -1,
+          msg: NEMeetingUIKit.instance
+              .getUIKitLocalizations()
+              .globalNoPermission);
     });
   }
 
@@ -35,7 +47,10 @@ extension NEMeetingUIRtcController on NERoomRtcController {
             : Future.value(const VoidResult.success());
       }
       return NEResult<void>(
-          code: -1, msg: NEMeetingUIKit().ofLocalizations().globalNoPermission);
+          code: -1,
+          msg: NEMeetingUIKit.instance
+              .getUIKitLocalizations()
+              .globalNoPermission);
     });
   }
 }

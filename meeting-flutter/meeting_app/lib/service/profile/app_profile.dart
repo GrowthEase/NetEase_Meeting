@@ -14,7 +14,7 @@ class AppProfile {
   /// is in meeting
   static bool inMeeting = false;
 
-  static String? deepLinkMeetingId;
+  static String? deepLinkMeetingNum;
 
   /// last av room cname
   // static int lastChannelId;

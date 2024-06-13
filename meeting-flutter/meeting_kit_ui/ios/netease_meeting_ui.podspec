@@ -41,9 +41,9 @@ A new flutter plugin project.
     # 非测试阶段，版本不使用环境变量，只需要在迭代开始时修改一次就行了
     # 支持NERoomKit的Special_All，不指定NIMSDK版本
     if Pod.const_defined?(:SPECIAL_VERSION) && SPECIAL_VERSION
-        s.dependency "NERoomKit/Special_All", "1.28.0"
+        s.dependency "NERoomKit/Special_All", "1.29.0"
     else
-        s.dependency "NERoomKit", "1.28.0"
+        s.dependency "NERoomKit", "1.29.0"
     end
   end
 

@@ -5,9 +5,6 @@
 import CoreTelephony
 import Flutter
 import Foundation
-import YXAlog_iOS
-
-let telephoneServerTag: String = "TelephoneServer"
 
 @objcMembers
 public class TelephoneServer: NSObject {
@@ -16,26 +13,20 @@ public class TelephoneServer: NSObject {
 
 extension TelephoneServer: FlutterStreamHandler {
   public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
-    let set = callCenter.currentCalls?.filter { $0.callState == CTCallStateConnected || $0.callState == CTCallStateIncoming || $0.callState == CTCallStateDialing }
-    if let set = set {
-      MeetingUILog.infoLog(telephoneServerTag, desc: "☎️ CurrentCalls -> Call in progress.")
-      set.forEach { call in
-        MeetingUILog.infoLog(telephoneServerTag, desc: "☎️ CallID: \(call.callID). CallState: \(call.callState)")
-      }
-    } else {
-      MeetingUILog.infoLog(telephoneServerTag, desc: "☎️ CurrentCalls -> Call not made.")
-    }
-    events(["isInCall": false])
-    callCenter.callEventHandler = { call in
-      MeetingUILog.infoLog(telephoneServerTag, desc: "☎️ Call callback -> CallID: \(call.callID) -> CallState: \(call.callState)")
-      switch call.callState {
-      case CTCallStateConnected, CTCallStateIncoming, CTCallStateDialing:
-        events(["isInCall": true])
-      default:
-        events(["isInCall": false])
+    events(["isInCall": hasCall()])
+    callCenter.callEventHandler = { [weak self] call in
+      MeetingUILog.infoLog("TelephoneServer", desc: "callEventHandler")
+      if let self = self {
+        events(["isInCall": self.hasCall()])
       }
     }
     return nil
+  }
+
+  func hasCall() -> Bool {
+    let hasCall = callCenter.currentCalls?.contains(where: { $0.callState == CTCallStateConnected || $0.callState == CTCallStateIncoming || $0.callState == CTCallStateDialing }) == true
+    MeetingUILog.infoLog("TelephoneServer", desc: "hasCall: \(hasCall)")
+    return hasCall
   }
 
   public func onCancel(withArguments arguments: Any?) -> FlutterError? {

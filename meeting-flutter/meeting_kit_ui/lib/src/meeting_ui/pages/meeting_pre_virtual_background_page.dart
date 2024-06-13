@@ -4,19 +4,8 @@
 
 part of meeting_ui;
 
-class NEPreVirtualBackgroundPage extends StatelessWidget {
-  const NEPreVirtualBackgroundPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return NEMeetingUIKitLocalizationsScope(
-      child: PreVirtualBackgroundPage(),
-    );
-  }
-}
-
-class PreVirtualBackgroundPage extends StatefulWidget {
-  PreVirtualBackgroundPage({Key? key});
+class NEPreVirtualBackgroundPage extends StatefulWidget {
+  NEPreVirtualBackgroundPage({Key? key});
 
   @override
   _PreVirtualBackgroundPageState createState() =>
@@ -24,15 +13,9 @@ class PreVirtualBackgroundPage extends StatefulWidget {
 }
 
 class _PreVirtualBackgroundPageState
-    extends BaseState<PreVirtualBackgroundPage> {
+    extends _VirtualBackgroundPageState<NEPreVirtualBackgroundPage> {
   NERtcVideoRenderer? renderer;
-  NEPreviewRoomRtcController? previewRoomRtcController;
-  List<String> sourceList = <String>[virtualNone];
-  List<String>? addExternalVirtualList;
-  int currentSelected = 0;
-  final _settingsService = NEMeetingKit.instance.getSettingsService();
-  bool allowedDeleteAll = false;
-  bool bCanPress = true;
+  NEPreviewRoomRtcController? rtcController;
   NEPreviewRoomContext? previewRoomContext;
   late final NEPreviewRoomEventCallback eventCallback;
 
@@ -46,10 +29,11 @@ class _PreVirtualBackgroundPageState
         .then((value) {
       previewRoomContext = value.nonNullData;
       previewRoomContext?.addEventCallback(eventCallback);
-      previewRoomRtcController = previewRoomContext?.previewController;
-      _checkPermission().then((granted) {
-        if (granted) {
-          _initRenderer();
+      rtcController = previewRoomContext?.previewController;
+      checkPermission().then((granted) async {
+        if (granted && mounted) {
+          await _initRenderer();
+          await _initVirtualBackgroundPictures();
         }
       });
     });
@@ -57,185 +41,15 @@ class _PreVirtualBackgroundPageState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        body: Container(
-      color: Colors.white,
-      child: buildBeautyPreViewWidget(context),
-    ));
+    return Scaffold(body: buildBeautyPreViewWidget(context));
   }
 
   Widget buildBeautyPreViewWidget(BuildContext context) {
     return Stack(children: <Widget>[
       buildCallingVideoViewWidget(context),
-      Positioned(
-        bottom: 0,
-        right: 0,
-        left: 0,
-        child: Container(
-          padding: EdgeInsets.only(
-              bottom: MediaQuery.maybeViewPaddingOf(context)?.bottom ?? 0),
-          color: Colors.white,
-          child: buildAction(),
-        ),
-      )
+      buildBottomDialog(),
+      buildReturnIcon(),
     ]);
-  }
-
-  Widget buildAction() {
-    return Column(
-      children: <Widget>[
-        Container(
-          alignment: Alignment.center,
-          color: Colors.white,
-          height: 78,
-          width: MediaQuery.of(context).size.width,
-          child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: sourceList.length,
-              itemBuilder: (BuildContext context, int index) {
-                return GestureDetector(
-                  key: MeetingUIValueKeys.virtualBackgroundItem,
-                  child: Container(
-                      width: 68,
-                      // height: 48,
-                      margin: EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Color.fromARGB(33, 33, 41, 1),
-                        border: Border.all(
-                            color: currentSelected == index
-                                ? _UIColors.color_007AFF
-                                : _UIColors.white,
-                            width: 2,
-                            style: BorderStyle.solid),
-                        borderRadius: BorderRadius.circular(4), // 设置四周圆角
-                      ),
-                      // color: UIColors.grey_8F8F8F,
-                      child: buildItem(context, index, sourceList)),
-                  onTap: () async {
-                    bool selected = true;
-                    if (index < sourceList.length - 1) {
-                    } else {
-                      if (addExternalVirtualList != null &&
-                          addExternalVirtualList!.length >=
-                              addExternalVirtualMax) {
-                        ToastUtils.showToast(
-                            context,
-                            NEMeetingUIKitLocalizations.of(context)!
-                                .virtualBackgroundImageMax);
-                        setState(() {});
-                        return;
-                      }
-                      selected = await pickFiles(
-                          context,
-                          sourceList,
-                          _settingsService,
-                          addExternalVirtualList, (List<String>? list) {
-                        addExternalVirtualList = list;
-                      });
-                    }
-                    if (selected) {
-                      currentSelected = index;
-                      _settingsService
-                          .setCurrentVirtualBackgroundSelected(currentSelected);
-                      enableVirtualBackground(previewRoomRtcController,
-                          index != 0, sourceList[index]);
-                      setState(() {});
-                    }
-                  },
-                );
-              }),
-        ),
-        Container(
-          height: 48,
-          alignment: Alignment.bottomCenter,
-          color: Colors.white,
-          child: Row(children: <Widget>[
-            Opacity(
-              opacity: (currentSelected > virtualListMax &&
-                          currentSelected < sourceList.length - 1) ||
-                      allowedDeleteAll
-                  ? 1.0
-                  : 0.0,
-              child: GestureDetector(
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 16),
-                    child: Text(
-                        NEMeetingUIKitLocalizations.of(context)!.globalDelete,
-                        style: TextStyle(color: Colors.grey)),
-                  ),
-                  onTap: () async {
-                    if (bCanPress) {
-                      bCanPress = false;
-                      Future.delayed(Duration(milliseconds: 200), () {
-                        bCanPress = true;
-                        if (currentSelected > virtualListMax) {
-                          try {
-                            sourceList.removeAt(currentSelected);
-                            int addExternalVirtualListIndex =
-                                currentSelected - virtualListMax - 1;
-                            if (addExternalVirtualListIndex <
-                                    (addExternalVirtualList?.length ?? 0) &&
-                                addExternalVirtualListIndex >= 0) {
-                              addExternalVirtualList
-                                  ?.removeAt(addExternalVirtualListIndex);
-                            }
-                          } catch (e) {
-                            Alog.e(
-                              tag: _tag,
-                              moduleName: _moduleName,
-                              content: '==== BuiltinVirtualBackgrounds$e ',
-                            );
-                          }
-                          _settingsService
-                              .setCurrentVirtualBackgroundSelected(0);
-                          currentSelected = 0;
-                          if (addExternalVirtualList != null) {
-                            _settingsService.setExternalVirtualBackgrounds(
-                                addExternalVirtualList!);
-                          }
-                          enableVirtualBackground(
-                              previewRoomRtcController, false, '');
-                        }
-                        setState(() {});
-                      });
-                    }
-                  }),
-            ),
-            Expanded(
-              child: Center(
-                child: Text(
-                    NEMeetingUIKitLocalizations.of(context)!
-                        .virtualBackgroundSelectTip,
-                    style: TextStyle(color: Colors.black)),
-              ),
-            ),
-            GestureDetector(
-              child: Padding(
-                padding: EdgeInsets.only(right: 16),
-                child: Text(
-                  NEMeetingUIKitLocalizations.of(context)!.globalSure,
-                  style: TextStyle(color: Colors.blue),
-                ),
-              ),
-              onTap: () => Navigator.of(context).pop(),
-            ),
-          ]),
-        ),
-      ],
-    );
-  }
-
-  Future<bool> _checkPermission() async {
-    var granted = (await Permission.camera.status) == PermissionStatus.granted;
-    if (!granted) {
-      granted = await PermissionHelper.requestPermissionSingle(
-          context,
-          Permission.camera,
-          '',
-          NEMeetingUIKitLocalizations.of(context)!.meetingCamera);
-      if (!granted) UINavUtils.pop(context, rootNavigator: true);
-    }
-    return granted;
   }
 
   Widget buildCallingVideoViewWidget(BuildContext context) {
@@ -246,55 +60,16 @@ class _PreVirtualBackgroundPageState
     renderer = await NERtcVideoRendererFactory.createVideoRenderer('');
     await renderer!.attachToLocalVideo();
     renderer!.setMirror(true);
-    await previewRoomRtcController?.startPreview();
-    Directory? cache;
-    if (Platform.isAndroid) {
-      cache = await getExternalStorageDirectory();
-    } else {
-      cache = await getApplicationDocumentsDirectory();
+    await rtcController?.startPreview();
+    if (mounted) {
+      setState(() {});
     }
-
-    var list = await _settingsService.getBuiltinVirtualBackgrounds();
-    await previewRoomRtcController?.startBeauty();
-    await previewRoomRtcController?.enableBeauty(true);
-
-    if (list.isNotEmpty && list.length > 0) {
-      for (var element in list) {
-        sourceList.add(element.path);
-      }
-      sourceList = replaceBundleId(cache!.path, sourceList);
-      allowedDeleteAll = true;
-    } else {
-      for (var i = 1; i <= 9; ++i) {
-        String filePath = '${cache?.path}/virtual/$i.png';
-        File file = File(filePath);
-        var exist = await file.exists();
-        if (exist) {
-          sourceList.add(filePath);
-        }
-      }
-    }
-    addExternalVirtualList =
-        await _settingsService.getExternalVirtualBackgrounds();
-    if (addExternalVirtualList != null && addExternalVirtualList!.length > 0) {
-      addExternalVirtualList =
-          replaceBundleId(cache!.path, addExternalVirtualList!);
-      sourceList.addAll(addExternalVirtualList!);
-    }
-    sourceList.add('+');
-    currentSelected =
-        await _settingsService.getCurrentVirtualBackgroundSelected();
-    if (currentSelected != 0) {
-      enableVirtualBackground(
-          previewRoomRtcController, true, sourceList[currentSelected]);
-    }
-    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
-    previewRoomRtcController?.stopPreview();
-    enableVirtualBackground(previewRoomRtcController, false, '');
+    rtcController?.stopPreview();
+    enableVirtualBackground(false, '');
     previewRoomContext?.removeEventCallback(eventCallback);
     renderer?.dispose();
     super.dispose();
@@ -327,142 +102,4 @@ class _PreVirtualBackgroundPageState
         break;
     }
   }
-}
-
-List<String> replaceBundleId(String replaceStr, List<String> list) {
-  if (Platform.isIOS) {
-    List<String> convertList = [];
-    for (var e in list) {
-      if (e == virtualNone) {
-        convertList.add(virtualNone);
-      } else {
-        convertList.add(replaceBundleIdByStr(e, replaceStr));
-      }
-    }
-    return convertList;
-  }
-  return list;
-}
-
-String replaceBundleIdByStr(String e, String replaceStr) {
-  String str = '';
-  if (Platform.isIOS) {
-    List<String> patterns = e.split('/');
-    patterns[6] = replaceStr.split('/')[6];
-    for (var element in patterns) {
-      if (element.isNotEmpty) {
-        str = str + '/' + element;
-      }
-    }
-    return str;
-  }
-  return e;
-}
-
-void enableVirtualBackground(NERoomBaseRtcController? previewRoomRtcController,
-    bool enable, String path) async {
-  final result = await previewRoomRtcController?.enableVirtualBackground(
-      enable,
-      NERoomVirtualBackgroundSource(
-          backgroundSourceType: NERoomVirtualBackgroundType.kBackgroundImg,
-          source: path,
-          color: 0,
-          blurDegree: NERoomVirtualBackgroundType.kBlurDegreeHigh));
-  debugPrint('enableVirtualBackground result:$result');
-}
-
-Future<bool> pickFiles(
-    BuildContext context,
-    List<String> sourceList,
-    NESettingsService settingsService,
-    List<String>? addExternalVirtualList,
-    void Function(List<String>?) callback) async {
-  bool selected = false;
-  FilePickerResult? result = await FilePicker.platform.pickFiles(
-    type: FileType.image,
-    allowMultiple: false,
-  );
-  if (result != null && result.files.length > 0) {
-    final file = result.files.first;
-    String originPath = file.path!;
-    String originName = file.name;
-    if (!(const {'jpg', 'png', 'jpeg'}.contains(file.extension))) {
-      ToastUtils.showToast(
-          context,
-          NEMeetingUIKitLocalizations.of(context)!
-              .virtualBackgroundImageFormatNotSupported);
-      return false;
-    }
-    File originFile = File(originPath);
-    int size = await originFile.length();
-    int mb = 1024 * 1024;
-
-    ///定义MB的计算常量
-    if (size >= 5 * mb) {
-      ToastUtils.showToast(context,
-          NEMeetingUIKitLocalizations.of(context)!.virtualBackgroundImageLarge);
-      return false;
-    }
-    Directory? directory;
-    if (Platform.isAndroid) {
-      directory = await getExternalStorageDirectory();
-    } else if (Platform.isIOS) {
-      directory = await getApplicationDocumentsDirectory();
-    }
-    String path = '${directory!.path}/virtual/$originName';
-    final contents = await originFile.readAsBytes();
-    File('$path')
-      ..createSync(recursive: true)
-      ..writeAsBytes(contents);
-    sourceList.removeLast();
-    sourceList.add(path);
-
-    addExternalVirtualList =
-        await settingsService.getExternalVirtualBackgrounds();
-    if (addExternalVirtualList.length <= 0) {
-      addExternalVirtualList = <String>[];
-    }
-    addExternalVirtualList.add(path);
-    settingsService.setExternalVirtualBackgrounds(addExternalVirtualList);
-    sourceList.add('+');
-    selected = true;
-  } else {
-    Alog.i(
-        tag: _tag,
-        moduleName: _moduleName,
-        content: 'User canceled the picker');
-    // User canceled the picker
-    selected = false;
-  }
-  callback(addExternalVirtualList);
-  return selected;
-}
-
-Widget buildItem(BuildContext context, int index, List<String> sourceList) {
-  Widget view = Container();
-  final density = MediaQuery.of(context).devicePixelRatio.ceil();
-  if (index == 0) {
-    view = Container(
-      alignment: Alignment.center,
-      child: Text(
-        NEMeetingUIKitLocalizations.of(context)!.globalNothing,
-        style: TextStyle(color: Colors.black),
-      ),
-    );
-  } else if (index > 0 && index < sourceList.length - 1) {
-    view = Center(
-        child: Image.file(
-      File(sourceList[index]),
-      width: 68,
-      height: 68,
-      fit: BoxFit.fill,
-      cacheWidth: 68 * density,
-      cacheHeight: 68 * density,
-    ));
-  } else if (index == sourceList.length - 1) {
-    view = Container(
-      child: Icon(NEMeetingIconFont.icon_unfold, color: _UIColors.black_333333),
-    );
-  }
-  return view;
 }

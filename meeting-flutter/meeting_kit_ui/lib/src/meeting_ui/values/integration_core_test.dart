@@ -93,8 +93,19 @@ class MeetingUIValueKeys {
   static const waitingRoomSwitch = ValueKey('waitingRoomSwitch');
   static const watermarkSwitch = ValueKey('watermarkSwitch');
   static const meetingEnableGuestJoin = ValueKey('meetingEnableGuestJoin');
+  static const meetingAnnotationPermissionEnabled =
+      ValueKey('meetingAnnotationPermissionEnabled');
   static const meetingLockSwitch = ValueKey('meetingLockSwitch');
+  static const meetingBlacklist = ValueKey('meetingBlacklist');
   static const meetingChat = ValueKey('meetingChat');
+
+  /// 会中设置页面
+  static const openShowMeetTime = ValueKey('openShowMeetTime');
+  static const audioAINS = ValueKey('audioAINS');
+  static const enableTransparentWhiteboard =
+      ValueKey('enableTransparentWhiteboard');
+  static const enableFrontCameraMirror = ValueKey('enableFrontCameraMirror');
+  static const enableSpeakerSpotlight = ValueKey('enableSpeakerSpotlight');
 
   /// 聊天权限界面
   static const waitingChatPermissionSwitch =

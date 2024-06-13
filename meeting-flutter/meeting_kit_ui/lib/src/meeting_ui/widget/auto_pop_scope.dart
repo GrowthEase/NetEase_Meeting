@@ -6,7 +6,7 @@ part of meeting_ui;
 
 class AutoPopScope extends StatefulWidget {
   final Widget? child;
-  final WidgetBuilder? builder;
+  final TransitionBuilder? builder;
   final Listenable? listenable;
   final bool Function(Listenable) onWillAutoPop;
 
@@ -80,6 +80,6 @@ class _AutoPopScopeState extends State<AutoPopScope> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.child ?? Builder(builder: widget.builder!);
+    return widget.builder?.call(context, widget.child) ?? widget.child!;
   }
 }

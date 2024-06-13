@@ -6,7 +6,7 @@ part of meeting_service;
 
 class WebAppRepository {
   /// 获取小应用列表
-  static Future<NEResult<NEMeetingWebAppList>> getWebAppList() {
+  static Future<NEResult<List<NEMeetingWebAppItem>>> getWebAppList() {
     return HttpApiHelper.getWebAppList();
   }
 

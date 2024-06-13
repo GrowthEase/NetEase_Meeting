@@ -2,12 +2,14 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/widgets.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/routes/home_page.dart';
 import 'package:nemeeting/utils/meeting_string_util.dart';
-import 'package:nemeeting/widget/switch_item.dart';
+import 'package:nemeeting/widget/ne_widget.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 import 'package:nemeeting/pre_meeting/schedule_meeting_edit.dart';
 import 'package:nemeeting/utils/const_config.dart';
@@ -18,10 +20,9 @@ import 'package:nemeeting/service/auth/auth_manager.dart';
 import '../language/localizations.dart';
 import '../uikit/state/meeting_base_state.dart';
 import '../uikit/utils/nav_utils.dart';
-import '../uikit/values/borders.dart';
+import '../uikit/values/asset_name.dart';
 import '../uikit/values/colors.dart';
 import '../uikit/values/dimem.dart';
-import '../uikit/values/fonts.dart';
 
 class ScheduleMeetingDetailRoute extends StatefulWidget {
   static final routeName = '/scheduleMeetingDetail';
@@ -36,19 +37,19 @@ class ScheduleMeetingDetailRoute extends StatefulWidget {
 }
 
 class _ScheduleMeetingDetailRouteState
-    extends MeetingBaseState<ScheduleMeetingDetailRoute>
-    with MeetingAppLocalizationsMixin {
+    extends AppBaseState<ScheduleMeetingDetailRoute> with NEPreMeetingListener {
   NEMeetingItem item;
 
   _ScheduleMeetingDetailRouteState(this.item);
 
-  late ScheduleCallback<List<NEMeetingItem>> scheduleCallback;
-
   bool cancelByMySelf = false;
+
+  bool isLoading = false;
 
   final preMetingService = NEMeetingKit.instance.getPreMeetingService();
 
   List<NEScheduledMember>? _scheduledMemberList;
+
   List<NEScheduledMember> get scheduledMemberList {
     if (_scheduledMemberList == null) {
       if (item.scheduledMemberList?.isNotEmpty == true) {
@@ -87,58 +88,13 @@ class _ScheduleMeetingDetailRouteState
   ScrollController _scrollController = ScrollController();
   int _pageSize = 20;
 
+  ValueNotifier<NETimezone?> timezoneNotifier = ValueNotifier(null);
+
   @override
   void initState() {
     super.initState();
-    scheduleCallback = (List<NEMeetingItem> data, bool incremental) {
-      if (!mounted) return;
-      data.forEach((element) {
-        if (element.meetingId == item.meetingId) {
-          if (element.state.index >= NEMeetingState.init.index &&
-              element.state.index <= NEMeetingState.ended.index) {
-            setState(() {
-              _scheduledMemberList = null;
-              item = element;
-              if (item.scheduledMemberList?.isNotEmpty != true) {
-                _updateMeetingInfo(item);
-              }
-            });
-          } else {
-            if (element.state == NEMeetingState.cancel) {
-              /// 会议被创建者取消了
-              if (item.ownerUserUuid != AuthManager().accountId) {
-                ToastUtils.showToast(context,
-                    meetingAppLocalizations.meetingHasBeenCanceledByOwner);
-              }
-
-              /// 会议被其他端销毁，会议取消
-              else if (!cancelByMySelf) {
-                ToastUtils.showToast(
-                    context, meetingAppLocalizations.meetingHasBeenCanceled);
-              }
-            }
-
-            /// 会议无效时，返回首页
-            else if (element.state == NEMeetingState.invalid ||
-                element.state == NEMeetingState.recycled) {
-              ToastUtils.showToast(context, meetingAppLocalizations.meetingEnd);
-            }
-
-            /// 退回首页
-            if (Navigator.canPop(context)) {
-              Navigator.popUntil(context,
-                  ModalRoute.withName(ScheduleMeetingDetailRoute.routeName));
-              Navigator.maybePop(context);
-            }
-          }
-        }
-      });
-    };
-    preMetingService.registerScheduleMeetingStatusChange(scheduleCallback);
-
-    if (item.scheduledMemberList?.isNotEmpty != true) {
-      _updateMeetingInfo(item);
-    }
+    preMetingService.addListener(this);
+    _updateMeetingInfo(item);
     _scrollController = ScrollController()
       ..addListener(() {
         if (_scrollController.position.pixels ==
@@ -149,8 +105,74 @@ class _ScheduleMeetingDetailRouteState
   }
 
   @override
+  void onMeetingItemInfoChanged(List<NEMeetingItem> data) {
+    if (!mounted) return;
+    data.forEach((newItem) {
+      if (newItem.meetingId == item.meetingId) {
+        if (newItem.status.index >= NEMeetingItemStatus.init.index &&
+            newItem.status.index <= NEMeetingItemStatus.ended.index) {
+          _updateMeetingInfo(newItem);
+        } else {
+          if (newItem.status == NEMeetingItemStatus.cancel) {
+            /// 会议被创建者取消了
+            if (item.ownerUserUuid != AuthManager().accountId) {
+              ToastUtils.showToast(
+                  context, getAppLocalizations().meetingHasBeenCanceledByOwner);
+            }
+
+            /// 会议被其他端销毁，会议取消
+            else if (!cancelByMySelf) {
+              ToastUtils.showToast(
+                  context, getAppLocalizations().meetingHasBeenCanceled);
+            }
+          }
+
+          /// 会议无效时，返回首页
+          else if (newItem.status == NEMeetingItemStatus.invalid ||
+              newItem.status == NEMeetingItemStatus.recycled) {
+            ToastUtils.showToast(context, getAppLocalizations().meetingEnd);
+          }
+
+          /// 退回首页
+          if (Navigator.canPop(context)) {
+            Navigator.popUntil(context,
+                ModalRoute.withName(ScheduleMeetingDetailRoute.routeName));
+            Navigator.maybePop(context);
+          }
+        }
+      }
+    });
+  }
+
+  @override
   String getTitle() {
-    return meetingAppLocalizations.meetingDetail;
+    return getAppLocalizations().meetingDetail;
+  }
+
+  @override
+  Color getAppBarBackgroundColor() => Colors.transparent;
+
+  @override
+  Color get backgroundColor => AppColors.white;
+
+  @override
+  Widget? buildCustomAppBar() {
+    return Container(
+      decoration: BoxDecoration(
+          image: DecorationImage(
+        image: AssetImage(
+          AssetName.headerBackground,
+        ),
+        fit: BoxFit.cover, // 图片适应容器尺寸
+      )),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          buildAppBar(),
+          buildMeetingTheme(),
+        ],
+      ),
+    );
   }
 
   /// 是不是我的会议
@@ -162,21 +184,21 @@ class _ScheduleMeetingDetailRouteState
   @override
   List<Widget> buildActions() {
     return <Widget>[
-      if (item.state == NEMeetingState.init && isMyMeeting)
+      if (item.status == NEMeetingItemStatus.init && isMyMeeting)
         TextButton(
           child: Text(
-            meetingAppLocalizations.globalEdit,
+            getAppLocalizations().globalEdit,
             style: TextStyle(
               color: AppColors.color_337eff,
               fontSize: 16.0,
             ),
           ),
           onPressed: () {
+            if (isLoading) return;
             if (item.recurringRule.type != NEMeetingRecurringRuleType.no) {
               showEditActionSheet();
             } else {
-              Navigator.of(context)
-                  .push(MaterialMeetingAppPageRoute(builder: (context) {
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) {
                 return ScheduleMeetingEditRoute(item, isEditAll: true);
               }));
             }
@@ -190,40 +212,39 @@ class _ScheduleMeetingDetailRouteState
         context: context,
         builder: (BuildContext context) => CupertinoActionSheet(
               title: Text(
-                meetingAppLocalizations.meetingRepeatEditing,
+                getAppLocalizations().meetingRepeatEditing,
                 style: TextStyle(color: AppColors.grey_8F8F8F, fontSize: 13),
               ),
               actions: <Widget>[
                 CupertinoActionSheetAction(
-                    child: Text(
-                        meetingAppLocalizations.meetingRepeatEditCurrent,
+                    child: Text(getAppLocalizations().meetingRepeatEditCurrent,
                         style: TextStyle(color: AppColors.color_007AFF)),
                     onPressed: () {
                       Navigator.pop(
-                          context, meetingAppLocalizations.globalCancel);
+                          context, getAppLocalizations().globalCancel);
                       Navigator.of(context)
-                          .push(MaterialMeetingAppPageRoute(builder: (context) {
+                          .push(MaterialPageRoute(builder: (context) {
                         return ScheduleMeetingEditRoute(item, isEditAll: false);
                       }));
                     }),
                 CupertinoActionSheetAction(
-                    child: Text(meetingAppLocalizations.meetingRepeatEditAll,
+                    child: Text(getAppLocalizations().meetingRepeatEditAll,
                         style: TextStyle(color: AppColors.color_007AFF)),
                     onPressed: () {
                       Navigator.pop(
-                          context, meetingAppLocalizations.globalCancel);
+                          context, getAppLocalizations().globalCancel);
                       Navigator.of(context)
-                          .push(MaterialMeetingAppPageRoute(builder: (context) {
+                          .push(MaterialPageRoute(builder: (context) {
                         return ScheduleMeetingEditRoute(item, isEditAll: true);
                       }));
                     }),
               ],
               cancelButton: CupertinoActionSheetAction(
                 isDefaultAction: true,
-                child: Text(meetingAppLocalizations.globalCancel,
+                child: Text(getAppLocalizations().globalCancel,
                     style: TextStyle(color: AppColors.color_007AFF)),
                 onPressed: () {
-                  Navigator.pop(context, meetingAppLocalizations.globalCancel);
+                  Navigator.pop(context, getAppLocalizations().globalCancel);
                 },
               ),
             ));
@@ -231,111 +252,75 @@ class _ScheduleMeetingDetailRouteState
 
   @override
   Widget buildBody() {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          buildSpace(height: 1),
-          buildMeetingTheme(),
-          if (item.recurringRule.type != NEMeetingRecurringRuleType.no)
-            buildRecurringRule(),
-          buildSpace(),
-          buildOwner(),
-          _buildSplit(),
-          buildScheduleAttendees(),
-          buildSpace(),
-          buildMeetingNum(),
-          if (item.inviteUrl?.isNotEmpty ?? false) _buildSplit(),
-          if (item.inviteUrl?.isNotEmpty ?? false) buildInviteUrl(),
-          buildSpace(),
-          if (!TextUtil.isEmpty(item.password)) buildSpace(),
-          if (!TextUtil.isEmpty(item.password)) buildPwd(),
-          if (item.isWaitingRoomEnabled) ...[
-            buildSpace(),
-            SwitchItem(
-              key: MeetingValueKey.scheduleWaitingRoom,
-              value: true,
-              title: meetingAppLocalizations.meetingEnableWaitingRoom,
-              summary: meetingAppLocalizations.meetingWaitingRoomHint,
-              onChange: null,
+    final audioList = buildAudioList();
+    final liveList = buildLiveList();
+    return Column(
+      children: [
+        Expanded(
+            child: Container(
+          color: AppColors.globalBg,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                if (item.recurringRule.type != NEMeetingRecurringRuleType.no)
+                  MeetingSettingGroup(children: [buildRecurringRule()]),
+                MeetingSettingGroup(children: buildCreateMeetingInfoList()),
+                MeetingSettingGroup(children: buildMeetingInfoList()),
+                buildWaitingRoomEnabled(),
+                buildGuestJoin(),
+                if (audioList.isNotEmpty)
+                  MeetingSettingGroup(children: audioList),
+                if (liveList.isNotEmpty)
+                  MeetingSettingGroup(children: liveList),
+                SizedBox(height: 24),
+              ],
             ),
-          ],
-          if (item.isEnableGuestJoin()) ...[
-            buildSpace(),
-            SwitchItem(
-              key: MeetingValueKey.scheduleEnableGuestJoin,
-              value: true,
-              title: meetingAppLocalizations.meetingGuestJoin,
-              summary: meetingAppLocalizations.meetingGuestJoinSecurityNotice,
-              summaryColor: AppColors.color_f29900,
-              onChange: null,
-            ),
-          ],
-          if (item.settings.isAudioOffAllowSelfOn ||
-              item.settings.isAudioOffNotAllowSelfOn) ...[
-            buildSpace(),
-            SwitchItem(
-              key: MeetingValueKey.scheduleAttendeeAudio,
-              value: true,
-              title: meetingAppLocalizations.meetingAttendeeAudioOff,
-              onChange: null,
-            ),
-            _buildSplit(),
-            buildRadio(
-              value: item.settings.isAudioOffAllowSelfOn,
-              padding:
-                  EdgeInsets.only(left: 20, right: 16, top: 17, bottom: 12),
-              title: meetingAppLocalizations.meetingAttendeeAudioOffAllowOn,
-              groupValue: true,
-              onChanged: null,
-            ),
-            buildRadio(
-              value: item.settings.isAudioOffNotAllowSelfOn,
-              padding: EdgeInsets.only(left: 20, right: 16, bottom: 17),
-              title: meetingAppLocalizations.meetingAttendeeAudioOffNotAllowOn,
-              groupValue: true,
-              onChanged: null,
-            ),
-          ],
-          buildSpace(),
-          if (item.live?.liveUrl != null && item.live?.enable == true)
-            buildLiveUrl(),
-          if (item.live?.liveWebAccessControlLevel ==
-                  NELiveAuthLevel.appToken.index &&
-              item.live?.enable == true) ...[
-            _buildSplit(),
-            buildLiveAuthLevel()
-          ],
-          buildBtn(),
-        ],
-      ),
+          ),
+        )),
+        Container(height: 0.5, color: AppColors.color_F0F1F5),
+        buildBtn(),
+      ],
     );
   }
 
   /// 构建周期性会议规则
   Widget buildRecurringRule() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildCommonItem(
-            meetingAppLocalizations.meetingFrequency,
-            MeetingStringUtil.getRepeatTypeString(item.recurringRule.type,
-                item.startTime, meetingAppLocalizations)),
-        if (item.recurringRule.type == NEMeetingRecurringRuleType.custom) ...[
-          _buildSplit(),
-          _buildCommonItem(
-              meetingAppLocalizations.meetingRepeatEndAt,
-              MeetingStringUtil.getCustomRepeatDesc(
-                  item.recurringRule, item.startTime, meetingAppLocalizations)),
-        ],
-      ],
+    bool hasCustom =
+        item.recurringRule.type == NEMeetingRecurringRuleType.custom;
+    return ValueListenableBuilder(
+      valueListenable: timezoneNotifier,
+      builder: (context, value, child) {
+        final transferStartTime =
+            TimezonesUtil.convertTimezoneDateTime(item.startTime, value);
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            MeetingListCopyable(
+              justTopCorner: true,
+              justBottomCorner: !hasCustom,
+              title: getAppLocalizations().meetingFrequency,
+              content: MeetingStringUtil.getRepeatTypeString(
+                  item.recurringRule.type, transferStartTime),
+              enableCopyNotifier: ValueNotifier(false),
+            ),
+            if (hasCustom)
+              MeetingListCopyable.withBottomCorner(
+                title: getAppLocalizations().meetingRepeatEndAt,
+                content: MeetingStringUtil.getCustomRepeatDesc(
+                    item.recurringRule, transferStartTime),
+                enableCopyNotifier: ValueNotifier(false),
+              ),
+          ],
+        );
+      },
     );
   }
 
   Widget buildMeetingTheme() {
     return Container(
-      color: Colors.white,
-      padding: EdgeInsets.only(left: 20, right: 20, top: 24, bottom: 20),
+      color: Colors.transparent,
+      padding: EdgeInsets.only(left: 20, right: 20, bottom: 20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,62 +339,155 @@ class _ScheduleMeetingDetailRouteState
               buildDuration(),
               buildEndTime(),
             ],
-          )
+          ),
         ],
       ),
     );
   }
 
-  Widget buildMeetingNum() {
-    return buildCopyItem(meetingAppLocalizations.meetingNum,
-        TextUtil.applyMask(item.meetingNum!, '000-000-0000'),
-        transform: true);
+  Widget buildMeetingNum(
+    bool justTopCorner,
+    bool justBottomCorner,
+  ) {
+    return MeetingListCopyable(
+      justTopCorner: justTopCorner,
+      justBottomCorner: justBottomCorner,
+      title: getAppLocalizations().meetingNum,
+      content: TextUtil.applyMask(item.meetingNum!, '000-000-0000'),
+      transformNotifier: ValueNotifier(true),
+    );
   }
 
-  Widget buildInviteUrl() {
-    final inviteUrl = item.inviteUrl;
-    if (inviteUrl == null || inviteUrl.isEmpty) {
+  Widget buildInviteUrl(
+    bool justTopCorner,
+    bool justBottomCorner,
+  ) {
+    return MeetingListCopyable(
+      justTopCorner: justTopCorner,
+      justBottomCorner: justBottomCorner,
+      title: getAppLocalizations().meetingInviteUrl,
+      content: item.inviteUrl,
+    );
+  }
+
+  Widget buildPwd() {
+    return MeetingListCopyable.withBottomCorner(
+      title: getAppLocalizations().meetingPassword,
+      content: item.password,
+    );
+  }
+
+  Widget buildLiveUrl(
+    bool justTopCorner,
+    bool justBottomCorner,
+  ) {
+    return MeetingListCopyable(
+      title: getAppLocalizations().meetingLiveUrl,
+      content: item.live?.liveUrl ?? '',
+      justTopCorner: justTopCorner,
+      justBottomCorner: justBottomCorner,
+    );
+  }
+
+  Widget buildLiveAuthLevel(
+    bool justTopCorner,
+    bool justBottomCorner,
+  ) {
+    return MeetingListCopyable(
+      title: getAppLocalizations().meetingLiveLevel,
+      content: getAppLocalizations().meetingLiveLevelTip,
+      enableCopyNotifier: ValueNotifier(false),
+      justTopCorner: justTopCorner,
+      justBottomCorner: justBottomCorner,
+    );
+  }
+
+  /// 构建等候室
+  ///
+  Widget buildWaitingRoomEnabled() {
+    if (item.waitingRoomEnabled) {
+      return MeetingSettingGroup(children: [
+        MeetingSwitchItem(
+          key: MeetingValueKey.scheduleWaitingRoom,
+          valueNotifier: ValueNotifier(true),
+          title:
+              NEMeetingUIKit.instance.getUIKitLocalizations().waitingRoomEnable,
+          content: getAppLocalizations().meetingWaitingRoomHint,
+          onChanged: null,
+        ),
+      ]);
+    } else {
       return Container();
     }
-    return buildCopyItem(
-      meetingAppLocalizations.meetingInviteUrl,
-      inviteUrl,
-    );
   }
 
-  Widget buildLiveUrl() {
-    return buildCopyItem(
-        meetingAppLocalizations.meetingLiveUrl, item.live?.liveUrl ?? '');
+  /// 构建嘉宾加入
+  ///
+  Widget buildGuestJoin() {
+    if (item.enableGuestJoin) {
+      return MeetingSettingGroup(children: [
+        MeetingSwitchItem(
+          key: MeetingValueKey.scheduleEnableGuestJoin,
+          valueNotifier: ValueNotifier(true),
+          title: getAppLocalizations().meetingGuestJoin,
+          contentBuilder: (enable) => Text(
+            getAppLocalizations().meetingGuestJoinSecurityNotice,
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.color_f29900,
+            ),
+          ),
+          onChanged: null,
+        ),
+      ]);
+    } else {
+      return Container();
+    }
   }
 
-  Widget buildLiveAuthLevel() {
-    return _buildCommonItem(meetingAppLocalizations.meetingLiveLevel,
-        meetingAppLocalizations.meetingLiveLevelTip);
+  /// 构建直播相关信息
+  List<Widget> buildLiveList() {
+    List<Widget> widgets = [];
+    bool hasLiveUrl = item.live?.liveUrl != null && item.live?.enable == true;
+    bool hasLiveWebAccessControlLevel = item.live?.liveWebAccessControlLevel ==
+            NEMeetingLiveAuthLevel.appToken.index &&
+        item.live?.enable == true;
+    if (hasLiveUrl) {
+      widgets.add(buildLiveUrl(hasLiveUrl, !hasLiveWebAccessControlLevel));
+    }
+    if (hasLiveWebAccessControlLevel) {
+      widgets
+          .add(buildLiveAuthLevel(!hasLiveUrl, hasLiveWebAccessControlLevel));
+    }
+    return widgets;
   }
 
-  Widget _buildCommonItem(String itemTitle, String des) {
-    return Container(
-      height: Dimen.primaryItemHeight,
-      color: Colors.white,
-      padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
-      child: Row(
-        children: <Widget>[
-          Text(itemTitle,
-              style: TextStyle(fontSize: 16, color: AppColors.black_222222)),
-          SizedBox(width: 10),
-          Expanded(
-              child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    des,
-                    style:
-                        TextStyle(fontSize: 14, color: AppColors.black_333333),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ))),
-        ],
-      ),
-    );
+  /// 构建音频相关信息
+  List<Widget> buildAudioList() {
+    List<Widget> widgets = [];
+
+    if (item.settings.isAudioOffAllowSelfOn ||
+        item.settings.isAudioOffNotAllowSelfOn) {
+      widgets.add(MeetingSwitchItem(
+        key: MeetingValueKey.scheduleAttendeeAudio,
+        valueNotifier: ValueNotifier(true),
+        title: getAppLocalizations().meetingAttendeeAudioOff,
+        onChanged: null,
+      ));
+      widgets.add(buildRadio(
+        value: item.settings.isAudioOffAllowSelfOn,
+        title: getAppLocalizations().meetingAttendeeAudioOffAllowOn,
+        groupValue: true,
+        onChanged: null,
+      ));
+      widgets.add(buildRadio(
+        value: item.settings.isAudioOffNotAllowSelfOn,
+        title: getAppLocalizations().meetingAttendeeAudioOffNotAllowOn,
+        groupValue: true,
+        onChanged: null,
+      ));
+    }
+    return widgets;
   }
 
   Widget buildCopyItem(String? itemTitle, String? itemDetail,
@@ -417,7 +495,7 @@ class _ScheduleMeetingDetailRouteState
     return Container(
       height: Dimen.primaryItemHeight,
       color: Colors.white,
-      padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
+      padding: Dimen.horizontalPadding20,
       alignment: Alignment.center,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -437,9 +515,9 @@ class _ScheduleMeetingDetailRouteState
                   softWrap: false,
                   overflow: TextOverflow.fade)),
           if (enableCopy)
-            GestureDetector(
+            NEGestureDetector(
               key: MeetingValueKey.copy,
-              child: Text(' ${meetingAppLocalizations.globalCopy}',
+              child: Text(' ${getAppLocalizations().globalCopy}',
                   style: TextStyle(fontSize: 14, color: AppColors.blue_337eff)),
               onTap: () {
                 if (itemDetail == null) return;
@@ -448,7 +526,7 @@ class _ScheduleMeetingDetailRouteState
                     : itemDetail;
                 Clipboard.setData(ClipboardData(text: value));
                 ToastUtils.showBotToast(
-                    meetingAppLocalizations.globalCopySuccess);
+                    getAppLocalizations().globalCopySuccess);
               },
             ),
         ],
@@ -465,35 +543,43 @@ class _ScheduleMeetingDetailRouteState
   }
 
   Widget buildTime(DateTime showTime) {
-    final date = MeetingTimeUtil.getTimeFormat(
-        showTime, meetingAppLocalizations.globalDateFormat);
-    final time = MeetingTimeUtil.getTimeFormat(showTime, 'HH:mm');
-    return Expanded(
-        child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Text(time,
-            style: TextStyle(
-                fontSize: 32,
-                color: AppColors.black_222222,
-                fontWeight: FontWeight.w500)),
-        SizedBox(height: 6),
-        Text(date,
-            style: TextStyle(
-                fontSize: 12,
-                color: AppColors.color_3D3D3D,
-                fontWeight: FontWeight.w400)),
-      ],
-    ));
+    return ValueListenableBuilder(
+        valueListenable: timezoneNotifier,
+        builder: (context, value, child) {
+          final transferTime = TimezonesUtil.convertTimezoneDateTime(
+              showTime.millisecondsSinceEpoch, value);
+          final transferDate =
+              DateTime.fromMillisecondsSinceEpoch(transferTime);
+          final date = MeetingTimeUtil.getTimeFormat(
+              transferDate, getAppLocalizations().globalDateFormat);
+          final time = MeetingTimeUtil.getTimeFormat(transferDate, 'HH:mm');
+          return Expanded(
+              child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text(time,
+                  style: TextStyle(
+                      fontSize: 36.sp,
+                      color: AppColors.color_1E1E27,
+                      fontWeight: FontWeight.w600)),
+              SizedBox(height: 10),
+              Text(date,
+                  style: TextStyle(
+                      fontSize: 12.sp,
+                      color: AppColors.color_1E1E27,
+                      fontWeight: FontWeight.w400)),
+            ],
+          ));
+        });
   }
 
-  Color getItemStateColor(NEMeetingState status) {
+  Color getItemStateColor(NEMeetingItemStatus status) {
     switch (status) {
-      case NEMeetingState.init:
+      case NEMeetingItemStatus.init:
         return AppColors.color_FF7903;
-      case NEMeetingState.started:
+      case NEMeetingItemStatus.started:
         return AppColors.color_337eff;
-      case NEMeetingState.ended:
+      case NEMeetingItemStatus.ended:
         return AppColors.color_999999;
       default:
         return AppColors.color_337eff;
@@ -508,11 +594,10 @@ class _ScheduleMeetingDetailRouteState
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            MeetingStringUtil.getItemStatus(
-                item.state, meetingAppLocalizations),
+            MeetingStringUtil.getItemStatus(item.status),
             style: TextStyle(
               fontSize: 12,
-              color: getItemStateColor(item.state),
+              color: getItemStateColor(item.status),
               fontWeight: FontWeight.w400,
             ),
           ),
@@ -545,7 +630,19 @@ class _ScheduleMeetingDetailRouteState
                 color: AppColors.color_D8D8D8,
               ),
             ],
-          )
+          ),
+          SizedBox(height: 18),
+          ValueListenableBuilder(
+              valueListenable: timezoneNotifier,
+              builder: (context, value, child) {
+                return Text(
+                  value?.time ?? '',
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.color_53576A,
+                      fontWeight: FontWeight.w400),
+                );
+              }),
         ],
       ),
     );
@@ -557,15 +654,15 @@ class _ScheduleMeetingDetailRouteState
     int minute = (duration % 3600000) ~/ 60000;
     var result = '';
     if (hour > 0) {
-      result += '$hour${meetingAppLocalizations.globalHours}';
+      result += '$hour${getAppLocalizations().globalHours}';
     }
 
     /// 英文文案中间需要间隔
-    if (hour > 0 && minute > 0 && meetingAppLocalizations.localeName == 'en') {
+    if (hour > 0 && minute > 0 && getAppLocalizations().localeName == 'en') {
       result += ' ';
     }
     if (minute > 0) {
-      result += '$minute${meetingAppLocalizations.globalMinutes}';
+      result += '$minute${getAppLocalizations().globalMinutes}';
     }
     return result;
   }
@@ -575,88 +672,83 @@ class _ScheduleMeetingDetailRouteState
     final myUserUuid =
         NEMeetingKit.instance.getAccountService().getAccountInfo()?.userUuid ??
             '';
-    return GestureDetector(
+    return NEGestureDetector(
       onTap: () => DialogUtils.showContactsPopup(
         context: context,
         titleBuilder: (int size) =>
-            '${meetingAppLocalizations.meetingAttendees}（$size）',
+            '${getAppLocalizations().meetingAttendees}（$size）',
         scheduledMemberList: scheduledMemberList,
         myUserUuid: myUserUuid,
         ownerUuid: item.ownerUserUuid,
         editable: false,
         loadMoreContacts: loadMoreContacts,
+        getMemberSubTitles: (NEScheduledMember member) {
+          if (item.interpretationSettings
+                  ?.getInterpreterList()
+                  .any((element) => element.userId == member.userUuid) ==
+              true) {
+            return [
+              NEMeetingUIKit.instance.getUIKitLocalizations().interpInterpreter,
+            ];
+          }
+          return [];
+        },
       ).then((value) {
-        setState(() {});
+        if (mounted) setState(() {});
       }),
-      child: Container(
-        color: Colors.white,
-        padding:
-            EdgeInsets.symmetric(horizontal: Dimen.globalPadding, vertical: 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Text(
-                  meetingAppLocalizations.meetingAttendees,
-                  style: TextStyle(
-                      color: AppColors.color_222222,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400),
-                ),
-                Expanded(child: SizedBox.shrink()),
-                Text(
-                    meetingAppLocalizations
-                        .meetingAttendeeCount('${scheduledMemberList.length}'),
-                    style: TextStyle(
-                        color: AppColors.color_999999,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400)),
-                SizedBox(width: 8),
-                Icon(IconFont.iconyx_allowx,
-                    size: 14, color: AppColors.greyCCCCCC)
-              ],
-            ),
-            SizedBox(height: 16),
-            buildAttendeesList(),
-          ],
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          MeetingArrowItem(
+            padding: const EdgeInsets.only(left: 16.0, right: 16),
+            title: getAppLocalizations().meetingAttendees,
+            content: getAppLocalizations()
+                .meetingAttendeeCount('${scheduledMemberList.length}'),
+          ),
+          buildAttendeesList(),
+        ],
       ),
     );
   }
 
   /// 构建参会者列表widget
   Widget buildAttendeesList() {
-    return Row(
-      children: [
-        Expanded(
-            child: Container(
-          height: 32,
-          child: ListView.separated(
-            itemCount: contactList.length,
-            scrollDirection: Axis.horizontal,
-            controller: _scrollController,
-            itemBuilder: (context, index) {
-              return NEMeetingAvatar.medium(
-                name: contactList[index].name,
-                url: contactList[index].avatar,
-                showRoleIcon: isMeetingOwner(contactList[index].userUuid),
-              );
-            },
-            separatorBuilder: (context, index) {
-              return const SizedBox(width: 10);
-            },
-          ),
-        ))
-      ],
+    return Container(
+      height: 48,
+      padding: EdgeInsets.only(left: 16, right: 16),
+      child: Row(
+        children: [
+          Expanded(
+              child: Container(
+            height: 32,
+            child: ListView.separated(
+              itemCount: contactList.length,
+              scrollDirection: Axis.horizontal,
+              controller: _scrollController,
+              itemBuilder: (context, index) {
+                return NEMeetingAvatar.medium(
+                  name: contactList[index].name,
+                  url: contactList[index].avatar,
+                  showRoleIcon: isMeetingOwner(contactList[index].userUuid),
+                );
+              },
+              separatorBuilder: (context, index) {
+                return const SizedBox(width: 14);
+              },
+            ),
+          ))
+        ],
+      ),
     );
   }
 
   /// 构建会议创建人
   Widget buildOwner() {
-    return buildCopyItem(
-        meetingAppLocalizations.historyMeetingOwner, item.ownerNickname,
-        enableCopy: false);
+    return MeetingListCopyable.withTopCorner(
+      title: getAppLocalizations().historyMeetingOwner,
+      content: item.ownerNickname,
+      enableCopyNotifier: ValueNotifier(false),
+    );
   }
 
   /// 本地分页加载通讯录成员
@@ -670,12 +762,12 @@ class _ScheduleMeetingDetailRouteState
 
     /// 加载更多
     final result = await NEMeetingKit.instance
-        .getAccountService()
+        .getContactsService()
         .getContactsInfo(userUuids);
 
     scheduledMemberList.removeWhere((element) =>
-        result.data?.notFindUserUuids.contains(element.userUuid) == true);
-    result.data?.meetingAccountListResp.forEach((contact) {
+        result.data?.notFoundList.contains(element.userUuid) == true);
+    result.data?.foundList.forEach((contact) {
       scheduledMemberList.forEach((element) {
         if (element.userUuid == contact.userUuid) {
           element.contact = contact;
@@ -684,45 +776,42 @@ class _ScheduleMeetingDetailRouteState
     });
   }
 
-  Widget buildPwd() {
-    return buildCopyItem(
-        meetingAppLocalizations.meetingPassword, item.password);
-  }
-
   Widget buildBtn() {
-    if (item.state == NEMeetingState.invalid ||
-        item.state == NEMeetingState.cancel ||
-        item.state == NEMeetingState.recycled) {
-      return Container();
-    } else if (item.state == NEMeetingState.init && isMyMeeting) {
-      return Row(
+    Widget child = SizedBox.shrink();
+    if (item.status == NEMeetingItemStatus.invalid ||
+        item.status == NEMeetingItemStatus.cancel ||
+        item.status == NEMeetingItemStatus.recycled) {
+      return child;
+    } else if (item.status == NEMeetingItemStatus.init && isMyMeeting) {
+      child = Row(
         children: [
-          Expanded(child: buildCancel(right: 5)),
-          Expanded(child: buildJoin(left: 5))
+          Expanded(child: buildCancel()),
+          SizedBox(width: 16),
+          Expanded(child: buildJoin())
         ],
       );
     } else {
-      return buildJoin();
+      child = buildJoin();
     }
+    return SafeArea(
+        top: false,
+        child: Container(
+            color: AppColors.white,
+            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            child: child));
   }
 
-  Widget buildJoin(
-      {double left = 20,
-      double right = 20,
-      double top = 20,
-      double bottom = 20}) {
-    return GestureDetector(
+  Widget buildJoin() {
+    return NEGestureDetector(
       key: MeetingValueKey.scheduleJoin,
       child: Container(
-        height: 50,
-        margin:
-            EdgeInsets.only(left: left, right: right, top: top, bottom: bottom),
+        height: 48,
         decoration: BoxDecoration(
-          color: AppColors.accentElement,
-          borderRadius: BorderRadius.all(Radius.circular(25.0)),
+          color: AppColors.blue_337eff,
+          borderRadius: BorderRadius.all(Radius.circular(8.0)),
         ),
         alignment: Alignment.center,
-        child: Text(meetingAppLocalizations.meetingJoin,
+        child: Text(getAppLocalizations().meetingJoin,
             textAlign: TextAlign.center,
             style: TextStyle(
                 color: AppColors.secondaryText,
@@ -734,24 +823,20 @@ class _ScheduleMeetingDetailRouteState
     );
   }
 
-  Widget buildCancel(
-      {double left = 20,
-      double right = 20,
-      double top = 20,
-      double bottom = 20}) {
-    return GestureDetector(
+  Widget buildCancel() {
+    return NEGestureDetector(
       key: MeetingValueKey.scheduleCancel,
       child: Container(
-        height: 50,
-        margin:
-            EdgeInsets.only(left: left, right: right, top: top, bottom: bottom),
+        height: 48,
         decoration: BoxDecoration(
-          border: Border.fromBorderSide(Borders.secondaryBorder),
-          borderRadius: BorderRadius.all(Radius.circular(25.0)),
+          // border: Border.fromBorderSide(Borders.secondaryBorder),
+          color: AppColors.white,
+          borderRadius: BorderRadius.all(Radius.circular(8.0)),
+          border: Border.all(color: AppColors.blue_337eff, width: 1.0),
         ),
         alignment: Alignment.center,
         child: Text(
-          meetingAppLocalizations.meetingCancel,
+          getAppLocalizations().meetingCancel,
           textAlign: TextAlign.center,
           style: TextStyle(
               color: AppColors.blue_337eff,
@@ -765,15 +850,14 @@ class _ScheduleMeetingDetailRouteState
   }
 
   Future<void> joinMeeting() async {
-    var historyItem = await NEMeetingKit.instance
-        .getSettingsService()
-        .getHistoryMeetingItem();
+    var historyItem = LocalHistoryMeetingManager()
+        .localHistoryMeetingList
+        .where((historyItem) => (historyItem.meetingNum == item.meetingNum ||
+            historyItem.shortMeetingNum == item.meetingNum))
+        .firstOrNull;
     String? lastUsedNickname;
-    if (historyItem != null &&
-        historyItem.isNotEmpty &&
-        (historyItem.first.meetingNum == item.meetingNum ||
-            historyItem.first.shortMeetingNum == item.meetingNum)) {
-      lastUsedNickname = historyItem.first.nickname;
+    if (historyItem != null) {
+      lastUsedNickname = historyItem.nickname;
     }
     _onJoinMeeting(nickname: lastUsedNickname);
   }
@@ -781,9 +865,9 @@ class _ScheduleMeetingDetailRouteState
   /// 加入会议
   void _onJoinMeeting({String? nickname}) async {
     /// 解决加入会议和取消会议的状态监听并发问题
-    preMetingService.unRegisterScheduleMeetingStatusChange(scheduleCallback);
+    preMetingService.removeListener(this);
     LoadingUtil.showLoading();
-    final result = await NEMeetingUIKit().joinMeetingUI(
+    final result = await NEMeetingUIKit.instance.joinMeeting(
       context,
       NEJoinMeetingUIParams(
         meetingNum: item.meetingNum!,
@@ -800,42 +884,41 @@ class _ScheduleMeetingDetailRouteState
       onPasswordPageRouteWillPush: () async {
         LoadingUtil.cancelLoading();
       },
-      backgroundWidget: MeetingAppLocalizationsScope(child: HomePageRoute()),
+      backgroundWidget: HomePageRoute(),
     );
     final errorCode = result.code;
     final errorMessage = result.msg;
     LoadingUtil.cancelLoading();
     if (errorCode == NEMeetingErrorCode.success) {
-      return;
     } else if (errorCode == NEMeetingErrorCode.noNetwork) {
       ToastUtils.showBotToast(
-          meetingAppLocalizations.globalNetworkUnavailableCheck);
+          getAppLocalizations().globalNetworkUnavailableCheck);
     } else if (errorCode == NEMeetingErrorCode.noAuth) {
-      ToastUtils.showBotToast(meetingAppLocalizations.authLoginOnOtherDevice);
+      ToastUtils.showBotToast(getAppLocalizations().authLoginOnOtherDevice);
       AuthManager().logout();
       NavUtils.toEntrance(context);
       return;
     } else if (errorCode == NEMeetingErrorCode.alreadyInMeeting) {
       ToastUtils.showBotToast(
-          meetingAppLocalizations.meetingOperationNotSupportedInMeeting);
+          getAppLocalizations().meetingOperationNotSupportedInMeeting);
     } else if (errorCode == NEMeetingErrorCode.cancelled) {
       /// 暂不处理
     } else {
-      var errorTips = HttpCode.getMsg(
-          errorMessage, meetingAppLocalizations.meetingJoinFail);
+      var errorTips =
+          HttpCode.getMsg(errorMessage, getAppLocalizations().meetingJoinFail);
       ToastUtils.showBotToast(errorTips);
     }
-    preMetingService.registerScheduleMeetingStatusChange(scheduleCallback);
+    preMetingService.addListener(this);
   }
 
   void _cancelMeeting() {
     if (item.recurringRule.type != NEMeetingRecurringRuleType.no) {
       showConfirmDialogWithCheckbox(
-        title: meetingAppLocalizations.meetingCancelConfirm,
-        checkboxMessage: meetingAppLocalizations.meetingRepeatCancelAll,
+        title: getAppLocalizations().meetingCancelConfirm,
+        checkboxMessage: getAppLocalizations().meetingRepeatCancelAll,
         initialChecked: false,
-        cancelLabel: meetingAppLocalizations.meetingNotCancel,
-        okLabel: meetingAppLocalizations.meetingCancel,
+        cancelLabel: getAppLocalizations().meetingNotCancel,
+        okLabel: getAppLocalizations().meetingCancel,
         cancelTextColor: AppColors.color_337eff,
         okTextColor: AppColors.color_F24957,
       ).then((result) {
@@ -848,12 +931,12 @@ class _ScheduleMeetingDetailRouteState
           useRootNavigator: false,
           builder: (BuildContext context) => CupertinoActionSheet(
                 title: Text(
-                  meetingAppLocalizations.meetingCancelConfirm,
+                  getAppLocalizations().meetingCancelConfirm,
                   style: TextStyle(color: AppColors.grey_8F8F8F, fontSize: 13),
                 ),
                 actions: <Widget>[
                   CupertinoActionSheetAction(
-                      child: Text(meetingAppLocalizations.meetingCancel,
+                      child: Text(getAppLocalizations().meetingCancel,
                           style: TextStyle(color: AppColors.colorFE3B30)),
                       onPressed: () {
                         _onCancel(false);
@@ -861,7 +944,7 @@ class _ScheduleMeetingDetailRouteState
                 ],
                 cancelButton: CupertinoActionSheetAction(
                   isDefaultAction: true,
-                  child: Text(meetingAppLocalizations.meetingNotCancel,
+                  child: Text(getAppLocalizations().meetingNotCancel,
                       style: TextStyle(color: AppColors.color_007AFF)),
                   onPressed: () {
                     Navigator.pop(context);
@@ -894,26 +977,24 @@ class _ScheduleMeetingDetailRouteState
     );
   }
 
-  Widget _buildSplit() {
-    return Container(
-      color: AppColors.white,
-      padding: EdgeInsets.only(left: 20),
-      height: 0.5,
-      child: Divider(height: 0.5),
-    );
-  }
-
   Widget buildRadio({
     required String title,
     required bool value,
     required bool groupValue,
     required Function(bool?)? onChanged,
-    EdgeInsetsGeometry? padding,
   }) {
-    return GestureDetector(
+    return NEGestureDetector(
       child: Container(
-        padding: padding,
-        color: Colors.white,
+        padding: EdgeInsets.only(left: 32, top: 9, bottom: 9),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(0),
+            topRight: Radius.circular(0),
+            bottomLeft: Radius.circular(7),
+            bottomRight: Radius.circular(7),
+          ),
+          color: Colors.white,
+        ),
         child: Row(
           children: [
             Container(
@@ -929,7 +1010,7 @@ class _ScheduleMeetingDetailRouteState
                       states.contains(MaterialState.disabled) ? 0.5 : 1.0,
                     );
                   }
-                  return null;
+                  return AppColors.color_CDCFD7;
                 }),
               ),
             ),
@@ -951,24 +1032,68 @@ class _ScheduleMeetingDetailRouteState
   /// 更新参会者列表至会议信息中
   void _updateMeetingInfo(NEMeetingItem meetingItem) {
     if (meetingItem.meetingNum == null) return;
+
+    /// 解决快速编辑保存会议，预约成员列表未更新问题
+    LoadingUtil.showLoading();
+    isLoading = true;
     preMetingService
-        .getScheduledMembers(meetingItem.meetingNum!)
+        .getScheduledMeetingMemberList(meetingItem.meetingNum!)
         .then((value) async {
-      if (value.code == HttpCode.success) {
-        meetingItem.scheduledMemberList = value.data;
-        if (meetingItem.scheduledMemberList?.isNotEmpty != true) {
-          meetingItem.scheduledMemberList = [defaultScheduleMySelf];
-        }
-        _scheduledMemberList = null;
-        await loadMoreContacts();
-        setState(() {});
-      }
-    });
+          if (value.code == HttpCode.success) {
+            meetingItem.scheduledMemberList = value.data;
+            if (meetingItem.scheduledMemberList?.isNotEmpty != true) {
+              meetingItem.scheduledMemberList = [defaultScheduleMySelf];
+            }
+            item = meetingItem;
+            _scheduledMemberList = null;
+            await loadMoreContacts();
+            if (mounted) setState(() {});
+          }
+        })
+        .timeout(Duration(seconds: 5))
+        .whenComplete(() {
+          isLoading = false;
+          LoadingUtil.cancelLoading();
+        });
+    TimezonesUtil.getTimezoneById(item.timezoneId)
+        .then((value) => timezoneNotifier.value = value);
   }
 
   @override
   void dispose() {
-    preMetingService.unRegisterScheduleMeetingStatusChange(scheduleCallback);
+    preMetingService.removeListener(this);
     super.dispose();
+  }
+
+  /// 构建会议信息列表
+  List<Widget> buildMeetingInfoList() {
+    List<Widget> widgets = [];
+    bool hasInviteUrl = item.inviteUrl?.isNotEmpty == true;
+    bool hasPassword = !TextUtil.isEmpty(item.password);
+    widgets.add(buildMeetingNum(true, !hasInviteUrl && !hasPassword));
+    if (hasInviteUrl) {
+      widgets.add(buildInviteUrl(false, !hasPassword));
+    }
+    if (hasPassword) {
+      widgets.add(buildPwd());
+    }
+    return widgets;
+  }
+
+  /// 构建创建会议信息列表
+  ///
+  List<Widget> buildCreateMeetingInfoList() {
+    List<Widget> widgets = [];
+    widgets.add(buildOwner());
+    widgets.add(buildScheduleAttendees());
+    if (item.interpretationSettings?.isEmpty == false)
+      widgets.add(MeetingListCopyable.withBottomCorner(
+        title:
+            NEMeetingUIKit.instance.getUIKitLocalizations().interpInterpreter,
+        content: getAppLocalizations().meetingAttendeeCount(
+            '${item.interpretationSettings!.getInterpreterList().length}'),
+        enableCopyNotifier: ValueNotifier(false),
+      ));
+    return widgets;
   }
 }

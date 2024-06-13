@@ -4,11 +4,13 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:nemeeting/uikit/values/fonts.dart';
+import 'package:nemeeting/widget/ne_widget.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 import '../language/localizations.dart';
 import '../uikit/state/meeting_base_state.dart';
-import '../uikit/values/asset_name.dart';
 import '../uikit/values/colors.dart';
+import '../utils/meeting_string_util.dart';
 
 class ScheduleMeetingRepeatCustomRoute extends StatefulWidget {
   final NEMeetingRecurringRule recurringRule;
@@ -26,8 +28,8 @@ class ScheduleMeetingRepeatCustomRoute extends StatefulWidget {
 }
 
 class _ScheduleMeetingRepeatCustomRouteState
-    extends MeetingBaseState<ScheduleMeetingRepeatCustomRoute>
-    with SingleTickerProviderStateMixin, MeetingAppLocalizationsMixin {
+    extends AppBaseState<ScheduleMeetingRepeatCustomRoute>
+    with SingleTickerProviderStateMixin {
   get _shouldShowWeek =>
       _customizedFrequency.stepUnit == NEMeetingFrequencyUnitType.weekday;
 
@@ -45,6 +47,7 @@ class _ScheduleMeetingRepeatCustomRouteState
   var _maxUnit = 12;
 
   /// 临时记录设置，只有点完成才会同步到item
+  late NEMeetingRecurringRule recurringRule;
   late NEMeetingCustomizedFrequency _customizedFrequency;
 
   late FixedExtentScrollController _stepSizeController;
@@ -54,6 +57,10 @@ class _ScheduleMeetingRepeatCustomRouteState
   void initState() {
     super.initState();
 
+    recurringRule = NEMeetingRecurringRule(
+      type: NEMeetingRecurringRuleType.custom,
+      startTime: DateTime.fromMillisecondsSinceEpoch(widget.startTime),
+    );
     _customizedFrequency = NEMeetingCustomizedFrequency(
         stepSize: 0, stepUnit: NEMeetingFrequencyUnitType.day);
 
@@ -104,6 +111,7 @@ class _ScheduleMeetingRepeatCustomRouteState
     _stepUnitController = FixedExtentScrollController(
       initialItem: stepUnit,
     );
+    recurringRule.customizedFrequency = _customizedFrequency;
   }
 
   @override
@@ -111,7 +119,7 @@ class _ScheduleMeetingRepeatCustomRouteState
     return <Widget>[
       TextButton(
         child: Text(
-          meetingAppLocalizations.globalComplete,
+          getAppLocalizations().globalComplete,
           style: TextStyle(
             color: AppColors.color_337eff,
             fontSize: 16.0,
@@ -120,8 +128,6 @@ class _ScheduleMeetingRepeatCustomRouteState
         onPressed: () {
           widget.recurringRule.type = NEMeetingRecurringRuleType.custom;
           widget.recurringRule.customizedFrequency = _customizedFrequency;
-          widget.recurringRule.customizedFrequency?.recurringRule =
-              WeakReference(widget.recurringRule);
           widget.recurringRule.customizedFrequency?.updateTarget();
           Navigator.maybePop(context);
         },
@@ -131,38 +137,44 @@ class _ScheduleMeetingRepeatCustomRouteState
 
   @override
   Widget buildBody() {
-    return LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints viewportConstraints) {
-      return SingleChildScrollView(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: viewportConstraints.maxHeight,
-          ),
-          child: IntrinsicHeight(
-            child: Column(children: [
-              buildSpace(),
-              buildDatePicker(),
-              if (_shouldShowWeek || _shouldShowMonth) buildSpace(),
-              if (_shouldShowWeek) buildWeekCalendar(),
-              if (_shouldShowMonth) buildCalendar(),
-            ]),
+    return SingleChildScrollView(
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Container(
+          alignment: Alignment.centerLeft,
+          padding: EdgeInsets.only(left: 16, top: 16, right: 16),
+          child: Text(
+            MeetingStringUtil.getCustomRepeatDesc(
+                recurringRule, widget.startTime),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+                fontSize: 14,
+                color: AppColors.color_1E1F27,
+                fontWeight: FontWeight.w500),
           ),
         ),
-      );
-    });
+        MeetingSettingGroup(children: [buildDatePicker()]),
+        if (_shouldShowWeek)
+          MeetingSettingGroup(children: [buildWeekCalendar()]),
+        if (_shouldShowMonth) MeetingSettingGroup(children: [buildCalendar()]),
+        SizedBox(height: 16),
+      ]),
+    );
   }
 
   @override
   String getTitle() {
-    return meetingAppLocalizations.meetingRepeatCustom;
+    return getAppLocalizations().meetingRepeatCustom;
   }
 
   Widget buildDatePicker() {
+    final textStyle = TextStyle(
+        fontSize: 16,
+        color: AppColors.color_1E1E27,
+        fontWeight: FontWeight.w500);
     return Column(children: <Widget>[
-      buildSplit(),
       Container(
-        color: AppColors.white,
-        height: 200.0,
+        height: 144,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -172,12 +184,13 @@ class _ScheduleMeetingRepeatCustomRouteState
                 onSelectedItemChanged: (int selectedItem) {
                   setState(() {});
                 },
-                selectionOverlay: CupertinoPickerDefaultSelectionOverlay(
-                    capEndEdge: false, capStartEdge: true),
+                selectionOverlay: null,
                 children: List<Widget>.generate(1, (int index) {
                   return Center(
-                      child:
-                          Text(meetingAppLocalizations.meetingRepeatUnitEvery));
+                      child: Text(
+                    getAppLocalizations().meetingRepeatUnitEvery,
+                    style: textStyle,
+                  ));
                 }),
               ),
             ),
@@ -192,10 +205,13 @@ class _ScheduleMeetingRepeatCustomRouteState
                     _customizedFrequency.stepSize = selectedItem + 1;
                   });
                 },
-                selectionOverlay: CupertinoPickerDefaultSelectionOverlay(
-                    capEndEdge: false, capStartEdge: false),
+                selectionOverlay: null,
                 children: List<Widget>.generate(_maxUnit, (int index) {
-                  return Center(child: Text((index + 1).toString()));
+                  return Center(
+                      child: Text(
+                    (index + 1).toString(),
+                    style: textStyle,
+                  ));
                 }),
               ),
             ),
@@ -220,16 +236,18 @@ class _ScheduleMeetingRepeatCustomRouteState
                     _stepSizeController.jumpToItem(0);
                   });
                 },
-                selectionOverlay: CupertinoPickerDefaultSelectionOverlay(
-                    capEndEdge: true, capStartEdge: false),
+                selectionOverlay: null,
                 children: List<Widget>.generate(3, (int index) {
                   return Center(
-                      child: Text([
-                    meetingAppLocalizations.meetingRepeatUnitDay,
-                    meetingAppLocalizations.meetingRepeatUnitWeek,
-                    meetingAppLocalizations.meetingRepeatUnitMonth
-                  ][index]
-                          .toString()));
+                      child: Text(
+                    [
+                      getAppLocalizations().meetingRepeatUnitDay,
+                      getAppLocalizations().meetingRepeatUnitWeek,
+                      getAppLocalizations().meetingRepeatUnitMonth
+                    ][index]
+                        .toString(),
+                    style: textStyle,
+                  ));
                 }),
               ),
             ),
@@ -253,17 +271,6 @@ class _ScheduleMeetingRepeatCustomRouteState
     }
   }
 
-  Widget buildSplit({double left = 0}) {
-    return Container(
-      padding: EdgeInsets.only(left: left),
-      color: AppColors.white,
-      child: Container(
-        height: 0.5,
-        color: AppColors.colorE8E9EB,
-      ),
-    );
-  }
-
   Widget buildSpace({double height = 16}) {
     return Container(
       color: AppColors.globalBg,
@@ -281,7 +288,6 @@ class _ScheduleMeetingRepeatCustomRouteState
     final List<Widget> weeks = [];
     NEMeetingRecurringWeekday.values.forEach((element) {
       if (element != NEMeetingRecurringWeekday.undefine) {
-        weeks.add(buildSplit(left: 20));
         weeks.add(buildCheckableItem(element));
       }
     });
@@ -291,27 +297,30 @@ class _ScheduleMeetingRepeatCustomRouteState
   Widget buildCheckableItem(NEMeetingRecurringWeekday weekday) {
     final title = getWeekdayEx(weekday);
     final checked = _customizedFrequency.daysOfWeek?.contains(weekday);
-    return GestureDetector(
+    return NEGestureDetector(
       child: Container(
           padding: EdgeInsets.only(left: 20),
-          height: 50,
-          color: Colors.white,
+          height: 48,
           alignment: Alignment.center,
           child: Row(
             children: [
-              Image(
-                image: AssetImage(
-                  checked == true
-                      ? AssetName.iconChecked
-                      : AssetName.iconUncheck,
-                ),
+              Icon(
+                checked == true
+                    ? IconFont.icon_checked
+                    : IconFont.icon_unchecked,
+                size: 16,
+                color: checked == true
+                    ? AppColors.blue_337eff
+                    : AppColors.color_CDCFD7,
               ),
               SizedBox(
                 width: 12,
               ),
               Text(title,
-                  style:
-                      TextStyle(fontSize: 16, color: AppColors.black_222222)),
+                  style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.color_1E1E27,
+                      fontWeight: FontWeight.w500)),
             ],
           )),
       onTap: () {
@@ -341,7 +350,7 @@ class _ScheduleMeetingRepeatCustomRouteState
               } else {
                 ToastUtils.showToast(
                     context,
-                    meetingAppLocalizations
+                    getAppLocalizations()
                         .meetingRepeatUncheckTips(getWeekday(now)));
               }
             }
@@ -355,118 +364,116 @@ class _ScheduleMeetingRepeatCustomRouteState
 
   Widget buildCalendar() {
     return Container(
-        color: Colors.white,
         child: Column(
-          children: [
-            buildSplit(),
-            Container(
-              height: 56,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  SizedBox(
-                      width: 80,
-                      child: TextButton(
-                          child: Text(meetingAppLocalizations.meetingRepeatDate,
-                              style: _selectedCalendarType == 0
-                                  ? TextStyle(
-                                      color: AppColors.color_337eff,
-                                      fontSize: 16)
-                                  : TextStyle(
-                                      color: Colors.black, fontSize: 16)),
-                          onPressed: () {
-                            setState(() {
-                              _customizedFrequency.stepUnit =
-                                  NEMeetingFrequencyUnitType.dayOfMonth;
-                            });
-                          })),
-                  Container(
-                    width: 1,
-                    height: 32,
-                    color: AppColors.colorE8E9EB,
-                  ),
-                  SizedBox(
-                      width: 80,
-                      child: TextButton(
-                          child: Text(
-                              meetingAppLocalizations.meetingRepeatWeekday,
-                              style: _selectedCalendarType == 0
-                                  ? TextStyle(color: Colors.black, fontSize: 16)
-                                  : TextStyle(
-                                      color: AppColors.color_337eff,
-                                      fontSize: 16)),
-                          onPressed: () {
-                            setState(() {
-                              _customizedFrequency.stepUnit =
-                                  NEMeetingFrequencyUnitType.weekdayOfMonth;
-                            });
-                          })),
-                ],
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          height: 48,
+          child: Row(
+            children: [
+              Expanded(
+                  child: TextButton(
+                      child: Text(getAppLocalizations().meetingRepeatDate,
+                          style: _selectedCalendarType == 0
+                              ? TextStyle(
+                                  color: AppColors.color_337eff, fontSize: 16)
+                              : TextStyle(color: Colors.black, fontSize: 16)),
+                      onPressed: () {
+                        setState(() {
+                          _customizedFrequency.stepUnit =
+                              NEMeetingFrequencyUnitType.dayOfMonth;
+                        });
+                      })),
+              Container(
+                width: 1,
+                height: 24,
+                color: AppColors.colorE6E7EB,
               ),
-            ),
-            buildSplit(),
-            if (_selectedCalendarType == 0) SizedBox(height: 10),
-            if (_selectedCalendarType == 0) buildMonth(),
-            if (_selectedCalendarType == 1) buildWeek(),
-            buildSplit(),
-          ],
-        ));
+              Expanded(
+                  child: TextButton(
+                      child: Text(getAppLocalizations().meetingRepeatWeekday,
+                          style: _selectedCalendarType == 0
+                              ? TextStyle(color: Colors.black, fontSize: 16)
+                              : TextStyle(
+                                  color: AppColors.color_337eff, fontSize: 16)),
+                      onPressed: () {
+                        setState(() {
+                          _customizedFrequency.stepUnit =
+                              NEMeetingFrequencyUnitType.weekdayOfMonth;
+                        });
+                      })),
+            ],
+          ),
+        ),
+        Container(
+          height: 1,
+          color: AppColors.colorE6E7EB,
+        ),
+        if (_selectedCalendarType == 0) buildMonth(),
+        if (_selectedCalendarType == 1) buildWeek(),
+      ],
+    ));
   }
 
   Widget buildMonth() {
-    return SizedBox(
-      height: 190,
-      width: 308,
-      child: GridView.count(
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisCount: 7,
-        childAspectRatio: 44 / 38,
-        children: List.generate(31, (index) {
-          return GestureDetector(
-            child: buildDay(index),
-            onTap: () {
-              setState(() {
-                if (_customizedFrequency.daysOfMonth == null) {
-                  _customizedFrequency.daysOfMonth = [];
-                }
-                if (_customizedFrequency.daysOfMonth!.contains(index + 1)) {
-                  if (widget.isEdit) {
-                    if (_customizedFrequency.daysOfMonth!.length != 1) {
-                      _customizedFrequency.daysOfMonth!.remove(index + 1);
-                    }
-                  } else {
-                    /// 非编辑模式不能取消startTime
-                    if (index !=
-                        DateTime.fromMillisecondsSinceEpoch(widget.startTime)
-                                .day -
-                            1) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      width: MediaQuery.of(context).size.width - 32,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 16),
+        child: GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 7,
+          childAspectRatio: 1,
+          crossAxisSpacing: 14,
+          mainAxisSpacing: 8,
+          children: List.generate(31, (index) {
+            return NEGestureDetector(
+              child: buildDay(index),
+              onTap: () {
+                setState(() {
+                  if (_customizedFrequency.daysOfMonth == null) {
+                    _customizedFrequency.daysOfMonth = [];
+                  }
+                  if (_customizedFrequency.daysOfMonth!.contains(index + 1)) {
+                    if (widget.isEdit) {
                       if (_customizedFrequency.daysOfMonth!.length != 1) {
                         _customizedFrequency.daysOfMonth!.remove(index + 1);
                       }
                     } else {
-                      ToastUtils.showToast(
-                          context,
-                          meetingAppLocalizations.meetingRepeatUncheckTips(
-                              meetingAppLocalizations.meetingDayInMonth(
-                                  DateTime.fromMillisecondsSinceEpoch(
-                                          widget.startTime)
-                                      .day)));
+                      /// 非编辑模式不能取消startTime
+                      if (index !=
+                          DateTime.fromMillisecondsSinceEpoch(widget.startTime)
+                                  .day -
+                              1) {
+                        if (_customizedFrequency.daysOfMonth!.length != 1) {
+                          _customizedFrequency.daysOfMonth!.remove(index + 1);
+                        }
+                      } else {
+                        ToastUtils.showToast(
+                            context,
+                            getAppLocalizations().meetingRepeatUncheckTips(
+                                getAppLocalizations().meetingDayInMonth(
+                                    DateTime.fromMillisecondsSinceEpoch(
+                                            widget.startTime)
+                                        .day)));
+                      }
                     }
+                  } else {
+                    _customizedFrequency.daysOfMonth!.add(index + 1);
                   }
-                } else {
-                  _customizedFrequency.daysOfMonth!.add(index + 1);
-                }
-              });
-            },
-          );
-        }),
+                });
+              },
+            );
+          }),
+        ),
       ),
     );
   }
 
   Widget buildWeek() {
     return Container(
-      color: Colors.white,
       height: 56,
       alignment: Alignment.center,
       child: Text(getDayOfWeekInMonth(widget.startTime),
@@ -492,7 +499,7 @@ class _ScheduleMeetingRepeatCustomRouteState
     } else {
       currentWeekOfMonth = (day + dayOfWeek - 2) ~/ 7;
     }
-    return meetingAppLocalizations.meetingRepeatOrderWeekday(
+    return getAppLocalizations().meetingRepeatOrderWeekday(
         currentWeekOfMonth, getWeekday(currentWeekDay));
   }
 
@@ -510,25 +517,25 @@ class _ScheduleMeetingRepeatCustomRouteState
     String weekdayStr = '';
     switch (day) {
       case 1:
-        weekdayStr = meetingAppLocalizations.globalMonday;
+        weekdayStr = getAppLocalizations().globalMonday;
         break;
       case 2:
-        weekdayStr = meetingAppLocalizations.globalTuesday;
+        weekdayStr = getAppLocalizations().globalTuesday;
         break;
       case 3:
-        weekdayStr = meetingAppLocalizations.globalWednesday;
+        weekdayStr = getAppLocalizations().globalWednesday;
         break;
       case 4:
-        weekdayStr = meetingAppLocalizations.globalThursday;
+        weekdayStr = getAppLocalizations().globalThursday;
         break;
       case 5:
-        weekdayStr = meetingAppLocalizations.globalFriday;
+        weekdayStr = getAppLocalizations().globalFriday;
         break;
       case 6:
-        weekdayStr = meetingAppLocalizations.globalSaturday;
+        weekdayStr = getAppLocalizations().globalSaturday;
         break;
       case 7:
-        weekdayStr = meetingAppLocalizations.globalSunday;
+        weekdayStr = getAppLocalizations().globalSunday;
         break;
     }
     return weekdayStr;
@@ -539,11 +546,11 @@ class _ScheduleMeetingRepeatCustomRouteState
         _customizedFrequency.daysOfMonth!.contains(index + 1)) {
       return Center(
         child: Container(
-          width: 32,
-          height: 32,
+          width: 28,
+          height: 28,
           decoration: const BoxDecoration(
-            shape: BoxShape.circle,
             color: AppColors.color_337eff,
+            borderRadius: BorderRadius.all(Radius.circular(3)),
           ),
           child: Center(
             child: Text(

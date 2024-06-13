@@ -2,14 +2,14 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/service/util/user_preferences.dart';
-import 'package:netease_meeting_core/meeting_kit.dart';
+import 'package:nemeeting/uikit/state/meeting_base_state.dart';
+import 'package:nemeeting/uikit/values/colors.dart';
+import 'package:nemeeting/uikit/values/fonts.dart';
 import 'package:nemeeting/utils/integration_test.dart';
+import 'package:netease_meeting_ui/meeting_ui.dart';
 import '../language/localizations.dart';
-import '../uikit/state/meeting_base_state.dart';
-import '../uikit/values/colors.dart';
 
 class MeetingSetting extends StatefulWidget {
   @override
@@ -18,159 +18,208 @@ class MeetingSetting extends StatefulWidget {
   }
 }
 
-class _MeetingSettingState extends MeetingBaseState<MeetingSetting>
-    with MeetingAppLocalizationsMixin {
+class _MeetingSettingState extends AppBaseState {
   final settings = NEMeetingKit.instance.getSettingsService();
+
   @override
   Widget buildBody() {
-    return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          SizedBox(height: 20),
-          buildSplit(),
-          buildMicrophoneItem(),
-          buildSplit(),
-          buildCameraItem(),
-          buildSplit(),
-          buildMeetTimeItem(),
-          buildSplit(),
-          buildSwitchItem(
-            MeetingValueKey.audioAINS,
-            meetingAppLocalizations.settingAudioAINS,
-            true,
-            NEMeetingKit.instance.getSettingsService().isAudioAINSEnabled(),
-            (value) => NEMeetingKit.instance
-                .getSettingsService()
-                .enableAudioAINS(value),
-          ),
-          buildSplit(),
-          buildSwitchItem(
-            MeetingValueKey.showShareUserVideo,
-            meetingAppLocalizations.settingShowShareUserVideo,
-            true,
-            UserPreferences().getShowShareUserVideo(),
-            (value) => UserPreferences().setShowShareUserVideo(value),
-          ),
-          buildSplit(),
-          buildSwitchItem(
-            MeetingValueKey.enableTransparentWhiteboard,
-            meetingAppLocalizations.settingEnableTransparentWhiteboard,
-            false,
-            UserPreferences().isTransparentWhiteboardEnabled(),
-            UserPreferences().setTransparentWhiteboardEnabled,
-          ),
-          buildSplit(),
-          buildSwitchItem(
-              MeetingValueKey.enableFrontCameraMirror,
-              meetingAppLocalizations.settingEnableFrontCameraMirror,
-              true,
-              UserPreferences().isFrontCameraMirrorEnabled(),
-              UserPreferences().setFrontCameraMirrorEnabled),
-          buildSplit(),
-          buildSwitchItem(
-              MeetingValueKey.enableAudioDeviceSwitch,
-              meetingAppLocalizations.settingEnableAudioDeviceSwitch,
-              false,
-              UserPreferences().isAudioDeviceSwitchEnabled(), (value) {
-            UserPreferences().enableAudioDeviceSwitch(value);
-          }),
-        ]);
+    final settingAudioItems = getSettingAudioItems();
+    final settingVideoItems = getSettingVideoItems();
+    final settingCommonItems = getSettingCommonItems();
+    return SingleChildScrollView(
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            if (settingAudioItems.isNotEmpty)
+              MeetingSettingGroup(
+                title: NEMeetingUIKit.instance
+                    .getUIKitLocalizations()
+                    .settingAudio,
+                iconData: IconFont.icon_audio,
+                iconColor: AppColors.color_1BB650,
+                children: settingAudioItems,
+              ),
+            if (settingVideoItems.isNotEmpty)
+              MeetingSettingGroup(
+                title: NEMeetingUIKit.instance
+                    .getUIKitLocalizations()
+                    .settingVideo,
+                iconData: IconFont.icon_camera,
+                iconColor: AppColors.color_1BB650,
+                children: getSettingVideoItems(),
+              ),
+            if (settingCommonItems.isNotEmpty)
+              MeetingSettingGroup(
+                title: NEMeetingUIKit.instance
+                    .getUIKitLocalizations()
+                    .settingCommon,
+                iconData: IconFont.icon_settings,
+                iconColor: AppColors.color_8D90A0,
+                children: getSettingCommonItems(),
+              ),
+            SizedBox(height: 16),
+          ]),
+    );
   }
 
   @override
   String getTitle() {
-    return meetingAppLocalizations.settingMeeting;
+    return getAppLocalizations().settingMeeting;
   }
 
-  Container buildSplit() {
-    return Container(
-      color: AppColors.white,
-      padding: EdgeInsets.only(left: 20),
-      height: 0.5,
-      child: Divider(height: 0.5),
+  /// 构建音频智能降噪选项
+  MeetingSwitchItem buildAudioAINS() {
+    return buildSwitchItem(
+      key: MeetingUIValueKeys.audioAINS,
+      label: NEMeetingUIKit.instance.getUIKitLocalizations().settingAudioAINS,
+      asyncData: settings.isAudioAINSEnabled(),
+      onDataChanged: (value) => settings.enableAudioAINS(value),
     );
   }
 
-  Widget buildSwitchItem(
-    ValueKey<String> key,
-    String label,
-    bool initialData,
-    Future<bool> asyncData,
-    ValueChanged<bool> onDataChanged,
-  ) {
-    var data = initialData;
-    return FutureBuilder<bool>(
-      future: asyncData,
-      initialData: initialData,
-      builder: (context, snapshot) {
-        data = snapshot.requireData;
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return Container(
-              height: 56,
-              color: AppColors.white,
-              padding: EdgeInsets.only(left: 20, right: 16),
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    flex: 1,
-                    child: Text(
-                      label,
-                      style: TextStyle(
-                          color: AppColors.black_222222, fontSize: 16),
-                    ),
-                  ),
-                  MeetingValueKey.addTextWidgetTest(
-                    valueKey: key,
-                    value: data,
-                  ),
-                  CupertinoSwitch(
-                    key: key,
-                    value: data,
-                    onChanged: (newValue) {
-                      setState(() {
-                        data = newValue;
-                        onDataChanged(newValue);
-                      });
-                    },
-                    activeColor: AppColors.blue_337eff,
-                  ),
-                ],
-              ),
-            );
-          },
-        );
+  /// 构建语音激励选项
+  MeetingSwitchItem buildSpeakerSpotlight() {
+    return buildSwitchItem(
+        key: MeetingUIValueKeys.enableSpeakerSpotlight,
+        label: NEMeetingUIKit.instance
+            .getUIKitLocalizations()
+            .settingSpeakerSpotlight,
+        content: NEMeetingUIKit.instance
+            .getUIKitLocalizations()
+            .settingSpeakerSpotlightTip,
+        asyncData: settings.isSpeakerSpotlightEnabled(),
+        onDataChanged: (value) {
+          settings.enableSpeakerSpotlight(value);
+        });
+  }
+
+  /// 前置摄像头镜像
+  MeetingSwitchItem buildFrontCameraMirror() {
+    return buildSwitchItem(
+      key: MeetingUIValueKeys.enableFrontCameraMirror,
+      label: NEMeetingUIKit.instance
+          .getUIKitLocalizations()
+          .settingEnableFrontCameraMirror,
+      asyncData: settings.isFrontCameraMirrorEnabled(),
+      onDataChanged: settings.enableFrontCameraMirror,
+    );
+  }
+
+  /// 通用开关选项
+  MeetingSwitchItem buildSwitchItem({
+    required ValueKey<String> key,
+    required String label,
+    required Future<bool> asyncData,
+    required ValueChanged<bool> onDataChanged,
+    String? content,
+  }) {
+    final valueNotifier = ValueNotifier<bool>(false);
+    asyncData.then((value) {
+      valueNotifier.value = value;
+    });
+    return MeetingSwitchItem(
+      key: key,
+      title: label,
+      valueNotifier: valueNotifier,
+      content: content,
+      onChanged: (value) {
+        onDataChanged(value);
+        valueNotifier.value = value;
       },
     );
   }
 
-  Widget buildCameraItem() {
+  /// 白板透明
+  MeetingSwitchItem buildWhiteboardTransparent() {
     return buildSwitchItem(
-      MeetingValueKey.openCameraMeeting,
-      meetingAppLocalizations.settingOpenCameraMeeting,
-      false,
-      settings.isTurnOnMyVideoWhenJoinMeetingEnabled(),
-      (value) => settings.setTurnOnMyVideoWhenJoinMeeting(value),
+      key: MeetingUIValueKeys.enableTransparentWhiteboard,
+      label: NEMeetingUIKit.instance
+          .getUIKitLocalizations()
+          .settingEnableTransparentWhiteboard,
+      asyncData: settings.isTransparentWhiteboardEnabled(),
+      onDataChanged: settings.enableTransparentWhiteboard,
     );
   }
 
-  Widget buildMicrophoneItem() {
+  /// 显示会议持续事件
+  MeetingSwitchItem buildMeetTimeItem() {
     return buildSwitchItem(
-      MeetingValueKey.openMicrophone,
-      meetingAppLocalizations.settingOpenMicroMeeting,
-      false,
-      settings.isTurnOnMyAudioWhenJoinMeetingEnabled(),
-      (value) => settings.setTurnOnMyAudioWhenJoinMeeting(value),
+      key: MeetingUIValueKeys.openShowMeetTime,
+      label: NEMeetingUIKit.instance
+          .getUIKitLocalizations()
+          .settingShowMeetDuration,
+      asyncData: settings.isShowMyMeetingElapseTimeEnabled(),
+      onDataChanged: (value) => settings.enableShowMyMeetingElapseTime(value),
     );
   }
 
-  Widget buildMeetTimeItem() {
+  /// 音频模块
+  List<MeetingSwitchItem> getSettingAudioItems() {
+    return [
+      buildMicrophoneItem(),
+      buildAudioDeviceSwitch(),
+      buildAudioAINS(),
+      buildSpeakerSpotlight(),
+    ];
+  }
+
+  /// 视频模块
+  List<MeetingSwitchItem> getSettingVideoItems() {
+    return [
+      buildCameraItem(),
+      buildFrontCameraMirror(),
+      buildShowShareUserVideo(),
+    ];
+  }
+
+  /// 通用模块
+  List<MeetingSwitchItem> getSettingCommonItems() {
+    return [
+      buildMeetTimeItem(),
+      buildWhiteboardTransparent(),
+    ];
+  }
+
+  /// 构建音频设备切换选项
+  MeetingSwitchItem buildAudioDeviceSwitch() {
     return buildSwitchItem(
-      MeetingValueKey.openShowMeetTime,
-      meetingAppLocalizations.settingShowMeetDuration,
-      false,
-      settings.isShowMyMeetingElapseTimeEnabled(),
-      (value) => settings.enableShowMyMeetingElapseTime(value),
+        key: MeetingValueKey.enableAudioDeviceSwitch,
+        label: getAppLocalizations().settingEnableAudioDeviceSwitch,
+        asyncData: UserPreferences().isAudioDeviceSwitchEnabled(),
+        onDataChanged: (value) {
+          UserPreferences().enableAudioDeviceSwitch(value);
+        });
+  }
+
+  /// 共享时开启摄像头
+  MeetingSwitchItem buildShowShareUserVideo() {
+    return buildSwitchItem(
+      key: MeetingValueKey.showShareUserVideo,
+      label: getAppLocalizations().settingShowShareUserVideo,
+      asyncData: UserPreferences().getShowShareUserVideo(),
+      onDataChanged: (value) => UserPreferences().setShowShareUserVideo(value),
+    );
+  }
+
+  /// 构建摄像头选项
+  MeetingSwitchItem buildCameraItem() {
+    return buildSwitchItem(
+      key: MeetingValueKey.openCameraMeeting,
+      label: getAppLocalizations().settingOpenCameraMeeting,
+      asyncData: settings.isTurnOnMyVideoWhenJoinMeetingEnabled(),
+      onDataChanged: (value) =>
+          settings.enableTurnOnMyVideoWhenJoinMeeting(value),
+    );
+  }
+
+  /// 构建麦克风选项
+  MeetingSwitchItem buildMicrophoneItem() {
+    return buildSwitchItem(
+      key: MeetingValueKey.openMicrophone,
+      label: getAppLocalizations().settingOpenMicroMeeting,
+      asyncData: settings.isTurnOnMyAudioWhenJoinMeetingEnabled(),
+      onDataChanged: (value) =>
+          settings.enableTurnOnMyAudioWhenJoinMeeting(value),
     );
   }
 }

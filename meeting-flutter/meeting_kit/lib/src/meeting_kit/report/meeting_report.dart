@@ -13,6 +13,9 @@ const _kLoginStepAccountInfo = "account_info";
 const _kLoginStepRoomKitLogin = "roomkit_login";
 const _kLoginTypeToken = "token";
 const _kLoginTypePassword = "password";
+const _kLoginTypePhoneNumber = "phoneNumber";
+const _kLoginTypeSmsCode = "smsCode";
+const _kLoginTypeEmail = "email";
 const _kLoginTypeAnonymous = "anonymous";
 
 const kEventStartMeeting = "${_kComponent}_start_meeting";

@@ -36,6 +36,8 @@ class InternalMenuIDs {
   static const int sip = 57;
 
   static const int virtualBackground = 58;
+
+  static const int interpretation = 59;
 }
 
 class InternalMenuItems {
@@ -45,6 +47,7 @@ class InternalMenuItems {
     beauty,
     live,
     virtualBackground,
+    interpretation,
   ];
 
   /// 更多菜单
@@ -76,6 +79,12 @@ class InternalMenuItems {
 
   static final virtualBackground = NESingleStateMenuItem(
     itemId: InternalMenuIDs.virtualBackground,
+    visibility: NEMenuVisibility.visibleAlways,
+    singleStateItem: NEMenuItemInfo.undefine,
+  );
+
+  static final interpretation = NESingleStateMenuItem(
+    itemId: InternalMenuIDs.interpretation,
     visibility: NEMenuVisibility.visibleAlways,
     singleStateItem: NEMenuItemInfo.undefine,
   );
@@ -215,6 +224,10 @@ final _builtinMenuItemIcons = <int, Map<int, Icon>>{
     _noneState: const Icon(NEMeetingIconFont.icon_virtual_background,
         color: _UIColors.colorECEDEF),
   },
+  InternalMenuIDs.interpretation: {
+    _noneState: const Icon(NEMeetingIconFont.icon_interpretation,
+        color: _UIColors.colorECEDEF),
+  },
   NEMenuIDs.cloudRecord: {
     _uncheckState: const Icon(NEMeetingIconFont.icon_cloud_record_start,
         color: _UIColors.colorECEDEF),
@@ -227,6 +240,10 @@ final _builtinMenuItemIcons = <int, Map<int, Icon>>{
   },
   NEMenuIDs.sipCall: {
     _noneState: const Icon(NEMeetingIconFont.icon_call_out,
+        color: _UIColors.colorECEDEF),
+  },
+  NEMenuIDs.settings: {
+    _noneState: const Icon(NEMeetingIconFont.icon_setting,
         color: _UIColors.colorECEDEF),
   },
   NEMenuIDs.notifyCenter: {
@@ -459,6 +476,8 @@ String? _getDefaultMenuTitle(
       return localizations!.meetingSecurity;
     case NEMenuIDs.sipCall:
       return localizations!.sipCall;
+    case NEMenuIDs.settings:
+      return localizations!.settings;
     case NEMenuIDs.notifyCenter:
       return localizations!.globalNotify;
     case InternalMenuIDs.more:
@@ -469,6 +488,8 @@ String? _getDefaultMenuTitle(
       return localizations!.live;
     case InternalMenuIDs.virtualBackground:
       return localizations!.virtualBackground;
+    case InternalMenuIDs.interpretation:
+      return localizations!.interpretation;
     case NEMenuIDs.disconnectAudio:
       return checked
           ? localizations!.meetingReconnectAudio

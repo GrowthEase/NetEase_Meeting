@@ -4,7 +4,8 @@
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import '../../language/meeting_localization/meeting_app_localizations.dart';
+import 'package:nemeeting/uikit/values/fonts.dart';
+import '../../language/localizations.dart';
 import '../values/colors.dart';
 
 class MeetingProtocols extends StatefulWidget {
@@ -43,9 +44,8 @@ class MeetingProtocolsState extends State<MeetingProtocols> {
   @override
   Widget build(BuildContext context) {
     _value = widget.value ?? false;
-    final meetingAppLocalizations = MeetingAppLocalizations.of(context)!;
-    final tips = meetingAppLocalizations.authHasReadAndAgreeToPolicy(
-        '##privacy##', '##userProtocol##');
+    final tips = getAppLocalizations()
+        .authHasReadAndAgreeToPolicy('##privacy##', '##userProtocol##');
     final tipList = tips.split('##');
     return Container(
         alignment: Alignment.center,
@@ -62,41 +62,46 @@ class MeetingProtocolsState extends State<MeetingProtocols> {
                     }
                   },
                   child: Container(
-                    // width: 100,
-                    // height: 100,
                     color: Colors.white,
-                    padding: EdgeInsets.only(right: 2),
+                    padding: EdgeInsets.only(right: 8),
                     alignment: Alignment.centerRight,
                     child: checkIcon(),
                   ))),
           Flexible(
-            child: Text.rich(TextSpan(children: [
-              for (int i = 0; i < tipList.length; i++)
-                if ('privacy' == tipList[i])
-                  TextSpan(
-                      text: ' ${meetingAppLocalizations.authPrivacy} ',
-                      style: buildTextStyle(AppColors.blue_337eff),
-                      recognizer: _tapPrivacy
-                        ..onTap = () {
-                          if (widget.tapPrivacy != null) {
-                            widget.tapPrivacy!();
-                          }
-                        })
-                else if ('userProtocol' == tipList[i])
-                  TextSpan(
-                      text: ' ${meetingAppLocalizations.authServiceAgreement}',
-                      style: buildTextStyle(AppColors.blue_337eff),
-                      recognizer: _tapUserProtocol
-                        ..onTap = () {
-                          if (widget.tapUserProtocol != null) {
-                            widget.tapUserProtocol!();
-                          }
-                        })
-                else
-                  TextSpan(
-                      text: tipList[i],
-                      style: buildTextStyle(AppColors.color_999999)),
-            ])),
+            child: Text.rich(
+              TextSpan(children: [
+                for (int i = 0; i < tipList.length; i++)
+                  if ('privacy' == tipList[i])
+                    TextSpan(
+                        text: ' ${getAppLocalizations().authPrivacy} ',
+                        style: buildTextStyle(AppColors.blue_337eff),
+                        recognizer: _tapPrivacy
+                          ..onTap = () {
+                            if (widget.tapPrivacy != null) {
+                              widget.tapPrivacy!();
+                            }
+                          })
+                  else if ('userProtocol' == tipList[i])
+                    TextSpan(
+                        text: ' ${getAppLocalizations().authServiceAgreement}',
+                        style: buildTextStyle(AppColors.blue_337eff),
+                        recognizer: _tapUserProtocol
+                          ..onTap = () {
+                            if (widget.tapUserProtocol != null) {
+                              widget.tapUserProtocol!();
+                            }
+                          })
+                  else
+                    TextSpan(
+                        text: tipList[i],
+                        style: buildTextStyle(AppColors.color_999999)),
+              ]),
+              // 解决中文垂直不居中问题
+              strutStyle: StrutStyle(
+                forceStrutHeight: true,
+                height: 1,
+              ),
+            ),
           )
         ]));
   }
@@ -119,14 +124,14 @@ class MeetingProtocolsState extends State<MeetingProtocols> {
   Widget checkIcon() {
     return _value
         ? Icon(
-            Icons.check_box_outlined,
+            IconFont.icon_checked,
             color: AppColors.blue_337eff,
-            size: 18,
+            size: 16,
           )
         : Icon(
-            Icons.check_box_outline_blank,
-            color: AppColors.color_999999,
-            size: 18,
+            IconFont.icon_unchecked,
+            color: AppColors.greyCCCCCC,
+            size: 16,
           );
   }
 }

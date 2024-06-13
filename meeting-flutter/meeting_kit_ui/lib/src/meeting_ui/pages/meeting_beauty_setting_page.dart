@@ -15,72 +15,51 @@ class BeautySettingPage extends StatefulWidget {
   }
 }
 
-class _BeautySettingPageState extends BaseState<BeautySettingPage> {
+class _BeautySettingPageState extends LifecycleBaseState<BeautySettingPage> {
   NERtcVideoRenderer? renderer;
   late int beautyLevel;
   NEPreviewRoomRtcController? previewRoomRtcController;
+  bool isInitMeetingUiLocalizations = false;
 
   @override
   void initState() {
     super.initState();
     beautyLevel = widget.beautyLevel;
-    _checkPermission().then((granted) {
-      if (granted) {
-        NERoomKit.instance.roomService
-            .previewRoom(NEPreviewRoomParams(), NEPreviewRoomOptions())
-            .then((value) {
-          previewRoomRtcController = value.nonNullData.previewController;
-          _initRenderer();
-        });
-      }
-    });
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light.copyWith(
+      statusBarColor: Colors.transparent, // 设置状态栏颜色为透明
+      statusBarIconBrightness: Brightness.light, // 设置状态栏文字颜色为白色
+    ));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!isInitMeetingUiLocalizations) {
+      isInitMeetingUiLocalizations = true;
+      _checkPermission(
+              NEMeetingUIKit.instance.getUIKitLocalizations().meetingCamera)
+          .then((granted) {
+        if (mounted && granted) {
+          NERoomKit.instance.roomService
+              .previewRoom(NEPreviewRoomParams(), NEPreviewRoomOptions())
+              .then((value) {
+            previewRoomRtcController = value.nonNullData.previewController;
+            _initRenderer();
+          });
+        }
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return NEMeetingUIKitLocalizationsScope(builder: (context) {
-      return PopScope(
-          child: Scaffold(
-              appBar: AppBar(
-                  title: Text(
-                    NEMeetingUIKitLocalizations.of(context)!.meetingBeauty,
-                    style: TextStyle(
-                        color: _UIColors.color_222222,
-                        fontSize: 19,
-                        decoration: TextDecoration.none,
-                        fontWeight: FontWeight.w500),
-                  ),
-                  centerTitle: true,
-                  backgroundColor: Colors.white,
-                  elevation: 0.0,
-                  systemOverlayStyle: AppStyle.systemUiOverlayStyleDark,
-                  leading: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    key: ValueKey('back'),
-                    child: Container(
-                        width: 150,
-                        height: 40,
-                        alignment: Alignment.center,
-                        padding: EdgeInsets.only(top: 20, bottom: 10),
-                        child: Text(
-                          NEMeetingUIKitLocalizations.of(context)!.globalSave,
-                          style: TextStyle(
-                              color: Color(0xff2575FF),
-                              fontSize: 14,
-                              decoration: TextDecoration.none,
-                              fontWeight: FontWeight.w500),
-                        )),
-                    onTap: () {
-                      UINavUtils.pop(context, rootNavigator: true);
-                    },
-                  )),
-              body: buildBeautyPreViewWidget(context)),
-          onPopInvoked: (didPop) async {
-            NEMeetingKit.instance
-                .getSettingsService()
-                .setBeautyFaceValue(beautyLevel);
-          });
-    });
+    return PopScope(
+        child: Scaffold(body: buildBeautyPreViewWidget(context)),
+        onPopInvoked: (didPop) async {
+          NEMeetingKit.instance
+              .getSettingsService()
+              .setBeautyFaceValue(beautyLevel);
+        });
   }
 
   Widget buildBeautyPreViewWidget(BuildContext context) {
@@ -90,13 +69,35 @@ class _BeautySettingPageState extends BaseState<BeautySettingPage> {
         bottom: 0,
         right: 0,
         left: 0,
-        child: SliderWidget(
-            onChange: (value) {
-              _setBeautyParams(value);
-            },
-            level: beautyLevel.toInt(),
-            isShowClose: false),
+        child: Container(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).padding.bottom,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(8), topRight: Radius.circular(8)),
+            color: _UIColors.black.withOpacity(0.8),
+          ),
+          child: SliderWidget(
+              onChange: (value) {
+                _setBeautyParams(value);
+              },
+              level: beautyLevel.toInt(),
+              isShowClose: false),
+        ),
       ),
+      Positioned(
+          top: MediaQuery.of(context).padding.top + 10,
+          left: 20,
+          child: IconButton(
+            padding: EdgeInsets.all(5),
+            key: MeetingUIValueKeys.back,
+            icon: Icon(NEMeetingIconFont.icon_yx_returnx,
+                color: _UIColors.white, size: 14),
+            onPressed: () {
+              UINavUtils.pop(context, rootNavigator: true);
+            },
+          )),
     ]);
   }
 
@@ -104,15 +105,12 @@ class _BeautySettingPageState extends BaseState<BeautySettingPage> {
     return renderer != null ? NERtcVideoView(renderer!) : Container();
   }
 
-  Future<bool> _checkPermission() async {
+  Future<bool> _checkPermission(String meetingCamera) async {
     var granted = (await Permission.camera.status) == PermissionStatus.granted;
-    if (!granted) {
+    if (!granted && mounted) {
       granted = await PermissionHelper.requestPermissionSingle(
-          context,
-          Permission.camera,
-          '',
-          NEMeetingUIKitLocalizations.of(context)!.meetingCamera);
-      if (!granted) UINavUtils.pop(context, rootNavigator: true);
+          context, Permission.camera, '', meetingCamera);
+      if (!granted && mounted) UINavUtils.pop(context, rootNavigator: true);
     }
     return granted;
   }

@@ -85,14 +85,27 @@ final class ActiveSpeakerManager with _AloggerMixin {
     this.onActiveSpeakerListChanged,
   }) {
     roomContext.rtcController.enableAudioVolumeIndication(
-        true, config.volumeIndicationInterval, true);
+        true, config.volumeIndicationInterval,
+        vad: true);
     roomContext.addEventCallback(roomEventCallback);
+    EnableAudioVolumeIndicationController.setCallback(
+        enableAudioVolumeIndicationCallback);
+  }
+
+  void enableAudioVolumeIndicationCallback(String? channel, bool enable) {
+    roomContext.rtcController.enableAudioVolumeIndication(
+      enable,
+      config.volumeIndicationInterval,
+      vad: true,
+      channel: channel,
+    );
   }
 
   void dispose() {
     _activeSpeakers.clear();
     _volumeIndications.clear();
     roomContext.removeEventCallback(roomEventCallback);
+    EnableAudioVolumeIndicationController.setCallback(null);
   }
 
   /// 获取当前“正在讲话”列表
@@ -100,7 +113,9 @@ final class ActiveSpeakerManager with _AloggerMixin {
 
   /// 收到远端用户音量事件，更新音量窗口列表，并更新“正在讲话”成员列表
   void _onRemoteAudioVolumeIndication(
-      List<NEMemberVolumeInfo> value, int total) {
+      String? channel, List<NEMemberVolumeInfo> value, int total) {
+    /// 语音激励只适用于主频道，其他子频道不开启（同声传译场景）， channel == null 为主频道
+    if (channel != null) return;
     if (kDebugLog)
       debugPrint(
           '${DateTime.now()} add volume: ${value.map((e) => e.toJson())}');
@@ -213,4 +228,18 @@ final class _UserVolume {
   String toString() {
     return '_UserVolume{volume: $totalVolume, samples: $samples}';
   }
+}
+
+typedef void EnableAudioVolumeIndicationCallback(String? channel, bool enable);
+
+class EnableAudioVolumeIndicationController {
+  static void setCallback(EnableAudioVolumeIndicationCallback? callback) {
+    _enableAudioVolumeIndication = callback;
+  }
+
+  static void enableAudioVolumeIndication(String? channel, bool enable) {
+    _enableAudioVolumeIndication?.call(channel, enable);
+  }
+
+  static EnableAudioVolumeIndicationCallback? _enableAudioVolumeIndication;
 }

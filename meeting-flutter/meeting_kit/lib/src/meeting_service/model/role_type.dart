@@ -26,5 +26,5 @@ enum NEMeetingRoleType {
   member,
 
   /// 外部访客
-  guest
+  guest,
 }

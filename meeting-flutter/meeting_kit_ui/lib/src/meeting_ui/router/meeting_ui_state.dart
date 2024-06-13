@@ -11,7 +11,14 @@ class MeetingUINavigator extends ChangeNotifier with _AloggerMixin {
   void pop({Object? result, int? disconnectingCode}) {
     commonLogger.i('pop');
     popHandler?.call(result: result, disconnectingCode: disconnectingCode);
+    if (_isActive) {
+      _isActive = false;
+      notifyListeners();
+    }
   }
+
+  bool _isActive = true;
+  bool get isActive => _isActive;
 
   void initMeeting(MeetingArguments arguments) {
     commonLogger.i('initMeeting');
@@ -24,7 +31,7 @@ class MeetingUINavigator extends ChangeNotifier with _AloggerMixin {
   }
 
   bool _isInWaitingRoom = false;
-  bool get isInWaitingRoom => _isInWaitingRoom;
+  bool get isInWaitingRoom => _isInWaitingRoom && _isActive;
   void navigateToWaitingRoomFromInMeeting(
       {required MeetingArguments arguments}) {
     commonLogger.i('navigateToWaitingRoomFromInMeeting');
@@ -35,7 +42,7 @@ class MeetingUINavigator extends ChangeNotifier with _AloggerMixin {
   }
 
   bool _isInMeeting = false;
-  bool get isInMeeting => _isInMeeting;
+  bool get isInMeeting => _isInMeeting && _isActive;
   void navigateToInMeetingFromWaitingRoom(
       {required MeetingArguments arguments}) {
     commonLogger.i('navigateToInMeetingFromWaitingRoom');
@@ -102,6 +109,8 @@ class MeetingLifecycleState extends ChangeNotifier
       _roomEndStreamController.add(reason);
     },
   );
+
+  bool get roomEnded => _roomEndReason != null;
 
   NERoomEndReason? _roomEndReason;
   final _roomEndStreamController =
@@ -221,11 +230,11 @@ class MeetingUIState extends ChangeNotifier with _AloggerMixin {
       : _roomContext = _arguments?.roomContext {
     if (_roomContext != null) {
       _inMeetingChatroom =
-          RealChatroomInstance(_roomContext!, NEChatroomType.common);
-      _inMeetingChatroom.addListener(notifyListeners);
+          RealChatroomInstance(_roomContext!, NEChatroomType.common)
+            ..addListener(notifyListeners);
       _waitingRoomChatroom =
-          RealChatroomInstance(_roomContext!, NEChatroomType.waitingRoom);
-      _waitingRoomChatroom.addListener(notifyListeners);
+          RealChatroomInstance(_roomContext!, NEChatroomType.waitingRoom)
+            ..addListener(notifyListeners);
     }
   }
 
@@ -258,10 +267,35 @@ class MeetingUIState extends ChangeNotifier with _AloggerMixin {
     }
   }
 
+  /// 同声传译控制器
+  NEInterpretationController? _interpretationController;
+  NEInterpretationController get interpretationController {
+    _interpretationController ??= NEInterpretationController(
+      roomContext,
+      sdkConfig.interpretationConfig,
+    );
+    return _interpretationController!;
+  }
+
+  SDKConfig? _crossAppSDKConfig;
+  SDKConfig get sdkConfig {
+    if (roomContext.isCrossAppJoining) {
+      if (_crossAppSDKConfig == null) {
+        _crossAppSDKConfig =
+            SDKConfig(roomContext.crossAppAuthorization!.appKey);
+        _crossAppSDKConfig!.initialize();
+      }
+      return _crossAppSDKConfig!;
+    }
+    return SDKConfig.current;
+  }
+
   @override
   void dispose() {
     inMeetingChatroom.dispose();
     waitingRoomChatroom.dispose();
+    _interpretationController?.dispose();
+    _crossAppSDKConfig?.dispose();
     super.dispose();
   }
 }
@@ -287,4 +321,6 @@ mixin MeetingStateScope<T extends StatefulWidget> on State<T> {
         Provider.of<MeetingLifecycleState?>(context) ?? MeetingLifecycleState();
     meetingUIState = Provider.of<MeetingUIState?>(context) ?? MeetingUIState();
   }
+
+  NERoomContext getRoomContext() => meetingUIState.roomContext;
 }

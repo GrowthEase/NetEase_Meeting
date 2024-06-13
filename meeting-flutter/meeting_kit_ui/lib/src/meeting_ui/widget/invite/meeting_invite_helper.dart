@@ -15,7 +15,7 @@ class MeetingInviteHelper {
       if (cardData?.meetingId != null) {
         NEMeetingKit.instance
             .getMeetingInviteService()
-            .rejectInvite(cardData!.meetingId!.toString());
+            .rejectInvite(cardData!.meetingId!);
       }
       InviteQueueUtil.instance.disposeInvite(cardData);
     }

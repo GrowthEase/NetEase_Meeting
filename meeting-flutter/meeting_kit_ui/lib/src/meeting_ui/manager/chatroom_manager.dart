@@ -4,12 +4,12 @@
 
 part of meeting_ui;
 
-class ChatRoomManager with _AloggerMixin {
+class ChatRoomManager with NEPreMeetingListener, _AloggerMixin {
   final NERoomContext roomContext;
-  final WaitingRoomManager? waitingRoomManager;
+  final WaitingRoomManager waitingRoomManager;
   late final NERoomEventCallback _roomEventCallback;
 
-  ChatRoomManager(this.roomContext, {this.waitingRoomManager}) {
+  ChatRoomManager(this.roomContext, this.waitingRoomManager) {
     roomContext.addEventCallback(_roomEventCallback = NERoomEventCallback(
       memberRoleChanged: memberRoleChanged,
       memberJoinRoom: memberJoinRoom,
@@ -17,21 +17,18 @@ class ChatRoomManager with _AloggerMixin {
       roomPropertiesChanged: roomPropertiesChanged,
       memberNameChanged: memberNameChanged,
     ));
-    NEMeetingKit.instance
-        .getPreMeetingService()
-        .registerScheduleMeetingStatusChange(onMeetingStatusChange);
-    waitingRoomManager?.userListChanged
-        .listen((event) => waitingRoomUserListChanged());
-    updateSendTarget();
-    updateHostAndCoHostInWaitingRoom();
+    NEMeetingKit.instance.getPreMeetingService().addListener(this);
+    subscriptions.add(waitingRoomManager.userListChanged
+        .listen((event) => waitingRoomUserListChanged()));
+    subscriptions.add(waitingRoomManager.hostAndCoHostListChanged
+        .listen(hostAndCoHostListChanged));
     updateWaitingRoomConfig();
     initConnectivityStatus();
   }
 
-  final _waitingRoomHostAndCoHost = <NEBaseRoomMember>[];
   List<NEBaseRoomMember> get hostAndCoHost {
     return roomContext.isInWaitingRoom()
-        ? _waitingRoomHostAndCoHost
+        ? waitingRoomManager.hostAndCoHostList
         : roomContext.getHostAndCoHost().toList();
   }
 
@@ -46,51 +43,36 @@ class ChatRoomManager with _AloggerMixin {
   Stream<NEWaitingRoomChatPermission> get waitingRoomChatPermissionChanged =>
       _waitingRoomChatPermissionChanged.stream;
 
-  /// 等候室成员调用接口更新主持人信息事件流
-  final _waitingRoomHostAndCoHostUpdated = StreamController.broadcast();
-  Stream get waitingRoomHostAndCoHostUpdated =>
-      _waitingRoomHostAndCoHostUpdated.stream;
-
   /// 消息发送对象，支持NERoomChatroomType和NEBaseRoomMember，null代表禁言状态
   final _sendToTarget = ValueNotifier<dynamic>(null);
   ValueListenable<dynamic> get sendToTarget => _sendToTarget;
 
   /// 记录用户选中的发送对象，作为默认值，用于切换权限时恢复
-  NEBaseRoomMember? userSelectedTarget;
+  dynamic userSelectedTarget;
 
   bool _isDisposed = false;
 
-  StreamSubscription? _connectivitySubscription;
+  final subscriptions = <StreamSubscription?>[];
 
   /// 网络恢复时，刷新发送对象和等候室聊天权限配置
   void initConnectivityStatus() {
-    _connectivitySubscription =
-        ConnectivityManager().onReconnected.listen((event) {
-      updateHostAndCoHostInWaitingRoom();
-      updateWaitingRoomConfig();
+    final _connectivitySubscription =
+        ConnectivityManager().onReconnected.listen((connected) {
+      if (connected) {
+        updateWaitingRoomConfig();
+      }
     });
+    subscriptions.add(_connectivitySubscription);
   }
 
   /// 会议状态变更时，刷新等候室主持人信息
-  void onMeetingStatusChange(List<NEMeetingItem> items, _) {
+  @override
+  void onMeetingItemInfoChanged(List<NEMeetingItem> items) {
     for (var item in items) {
       if (item.roomUuid == roomContext.roomUuid) {
-        updateHostAndCoHostInWaitingRoom();
+        waitingRoomManager.tryLoadHostAndCoHost();
       }
     }
-  }
-
-  Future<void> updateHostAndCoHostInWaitingRoom() async {
-    if (_isDisposed) return;
-    if (roomContext.isInWaitingRoom()) {
-      final result = await roomContext.getHostAndCoHostList();
-      _waitingRoomHostAndCoHost.clear();
-      _waitingRoomHostAndCoHost.addAll(result ?? []);
-      if (!_waitingRoomHostAndCoHostUpdated.isClosed) {
-        _waitingRoomHostAndCoHostUpdated.add(null);
-      }
-    }
-    updateSendTarget();
   }
 
   Future<void> updateWaitingRoomConfig() async {
@@ -118,13 +100,18 @@ class ChatRoomManager with _AloggerMixin {
       _sendToTarget.value = null;
       _sendToTarget.value = newTarget;
     }
+    if (userSelectedTarget is NEBaseRoomMember &&
+        newTarget is NEBaseRoomMember &&
+        userSelectedTarget.uuid == newTarget.uuid) {
+      userSelectedTarget = newTarget;
+    }
 
     /// 用户选择的用户对象,选择发送至全部人时恢复默认
     if (userSelected) {
-      userSelectedTarget = newTarget is NEBaseRoomMember ? newTarget : null;
+      userSelectedTarget =
+          newTarget != NEChatroomType.common ? newTarget : null;
     }
-    newTarget ??= userSelectedTarget;
-    _sendToTarget.value = newTarget ?? _sendToTarget.value;
+    _sendToTarget.value = userSelectedTarget ?? newTarget;
 
     /// 根据身份权限配置，不在范围内，则切换为默认对象
     _updateSendTargetBasedOnUserRole();
@@ -172,7 +159,7 @@ class ChatRoomManager with _AloggerMixin {
 
   /// 成员是否在等候室内
   bool isMemberInWaitingRoom(NEWaitingRoomMember user) {
-    return waitingRoomManager?.userList.contains(user) == true;
+    return waitingRoomManager.userList.contains(user) == true;
   }
 
   /// 成员是否在会议内(不包含本端)
@@ -180,7 +167,7 @@ class ChatRoomManager with _AloggerMixin {
     return roomContext.remoteMembers.contains(user);
   }
 
-  bool get _isWaitingRoomEmpty => waitingRoomManager?.userList.isEmpty == true;
+  bool get _isWaitingRoomEmpty => waitingRoomManager.userList.isEmpty == true;
 
   /// 根据等候室聊天权限，处理等候室成员
   void _handleWaitingRoomMember() {
@@ -253,44 +240,50 @@ class ChatRoomManager with _AloggerMixin {
   }
 
   void memberRoleChanged(
-      NERoomMember member, NERoomRole before, NERoomRole after) {
-    /// 等候室成员收到主持人信息变更事件
-    if (roomContext.isInWaitingRoom()) {
-      updateHostAndCoHostInWaitingRoom();
-      return;
-    }
-
+      NERoomMember member, NERoomRole before, NERoomRole after) async {
     /// 如果是自己的身份变更或者用户选中的对象身份变更，刷新发送对象
     if (roomContext.isMySelf(member.uuid)) {
       updateSendTarget();
     }
 
+    /// 解决收回主持人事件顺序问题
+    if (before.name == MeetingRoles.kHost &&
+        after.name == MeetingRoles.kMember) {
+      await ensureNewHostActive();
+    }
+
     /// 如果用户选中的对象身份变更，刷新发送对象
-    if (userSelectedTarget != null && userSelectedTarget!.uuid == member.uuid) {
-      userSelectedTarget = member;
-      updateSendTarget(newTarget: member);
+    if (userSelectedTarget is NERoomMember &&
+        userSelectedTarget!.uuid == member.uuid) {
+      updateSendTarget(newTarget: member, userSelected: true);
+      return;
     }
 
     /// 如果是当前对象身份变更，刷新选中对象
     if (sendToTarget.value is NERoomMember &&
         (sendToTarget.value as NERoomMember).uuid == member.uuid) {
-      updateSendTarget(newTarget: member);
+      updateSendTarget();
+    }
+  }
+
+  /// 被收回主持人、转移主持人后，确保新的主持人生效
+  /// 事件可能乱序到达，需要延迟等待新主持人生效
+  Future ensureNewHostActive() async {
+    for (var i = 0; i < 3; i++) {
+      final nowHost = roomContext.getHostMember(refresh: true);
+      if (nowHost == null) {
+        await Future.delayed(const Duration(seconds: 1));
+      }
     }
   }
 
   void memberLeaveRoom(List<NERoomMember> members) {
     /// 如果用户选择的对象离开了
-    if (userSelectedTarget != null &&
+    if (userSelectedTarget is NERoomMember &&
         members
             .where((element) => element.uuid == userSelectedTarget!.uuid)
             .isNotEmpty) {
       userSelectedTarget = null;
-    }
-
-    /// 等候室成员收到主持人离开的消息
-    if (roomContext.isInWaitingRoom()) {
-      updateHostAndCoHostInWaitingRoom();
-      return;
     }
 
     /// 如果当前选择的对象离开了，重置发送对象
@@ -300,12 +293,6 @@ class ChatRoomManager with _AloggerMixin {
   }
 
   void memberJoinRoom(List<NERoomMember> members) {
-    /// 等候室成员收到主持人加入的消息
-    if (roomContext.isInWaitingRoom()) {
-      updateHostAndCoHostInWaitingRoom();
-      return;
-    }
-
     /// 仅允许私聊主持人的情况下，如果主持人或联席主持人入会，自动切换到私聊主持人
     if (roomContext.chatPermission == NEChatPermission.privateChatHostOnly &&
         members
@@ -331,12 +318,6 @@ class ChatRoomManager with _AloggerMixin {
 
   void memberNameChanged(
       NERoomMember member, String name, NERoomMember? operateBy) {
-    /// 等候室成员收到主持人改名消息
-    if (roomContext.isInWaitingRoom()) {
-      updateHostAndCoHostInWaitingRoom();
-      return;
-    }
-
     /// 选中对象的名称变更，刷新选中对象
     if (sendToTarget.value is NERoomMember &&
         (sendToTarget.value as NERoomMember).uuid == member.uuid) {
@@ -364,9 +345,28 @@ class ChatRoomManager with _AloggerMixin {
     updateSendTarget();
   }
 
+  /// 等候室主持人信息变更时
+  void hostAndCoHostListChanged(List<NEWaitingRoomHost> members) {
+    /// 如果用户选择的对象离开了
+    if (userSelectedTarget is NEWaitingRoomHost &&
+        members.where((e) => e.uuid == userSelectedTarget!.uuid).isEmpty) {
+      userSelectedTarget = null;
+    }
+
+    /// 用户选择的对象变更时，选中对象
+    final newOne = members
+        .where((element) => element.uuid == userSelectedTarget?.uuid)
+        .firstOrNull;
+    if (newOne != null) {
+      updateSendTarget(newTarget: newOne);
+      return;
+    }
+    updateSendTarget();
+  }
+
   /// 获取等候室成员
   NEWaitingRoomMember? getWaitingRoomMember(String uuid) {
-    return waitingRoomManager?.userList
+    return waitingRoomManager.userList
         .where((element) => element.uuid == uuid)
         .firstOrNull;
   }
@@ -374,15 +374,11 @@ class ChatRoomManager with _AloggerMixin {
   dispose() {
     if (_isDisposed) return;
     _isDisposed = true;
-    _waitingRoomHostAndCoHost.clear();
-    _connectivitySubscription?.cancel();
-    NEMeetingKit.instance
-        .getPreMeetingService()
-        .unRegisterScheduleMeetingStatusChange(onMeetingStatusChange);
+    subscriptions.forEach((element) => element?.cancel());
+    NEMeetingKit.instance.getPreMeetingService().removeListener(this);
     roomContext.removeEventCallback(_roomEventCallback);
     _sendToTarget.dispose();
     _chatPermissionChanged.close();
     _waitingRoomChatPermissionChanged.close();
-    _waitingRoomHostAndCoHostUpdated.close();
   }
 }

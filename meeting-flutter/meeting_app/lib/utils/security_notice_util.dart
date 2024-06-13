@@ -6,7 +6,6 @@ import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
-import 'package:nemeeting/service/model/security_notice_info.dart';
 
 import 'package:nemeeting/service/repo/user_repo.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
@@ -24,11 +23,12 @@ class AppNotificationManager {
 
   int _state = _stateInitial;
 
-  AppNotification? _currentNotification;
+  NEMeetingAppNoticeTip? _currentNotification;
 
-  final _appNotificationStream = StreamController<AppNotification?>.broadcast();
+  final _appNotificationStream =
+      StreamController<NEMeetingAppNoticeTip?>.broadcast();
 
-  Stream<AppNotification?> get appNotification {
+  Stream<NEMeetingAppNoticeTip?> get appNotification {
     _doFetch();
     return _appNotificationStream.stream;
   }
@@ -53,17 +53,14 @@ class AppNotificationManager {
 
   void _doFetch() async {
     debugPrint('$_tag: doFetch, state=$_state');
-    final appKey = AuthManager().appKey;
-    if (_state == _stateInitial && appKey != null && appKey.length > 0) {
+    if (_state == _stateInitial) {
       _state = _stateFetching;
-      final result = await UserRepo().getSecurityNoticeConfigs(
-          appKey, DateTime.now().millisecondsSinceEpoch.toString());
+      final result = await UserRepo().getSecurityNoticeConfigs();
       if (result.code == 0) {
         _state = _stateDone;
         final appNotifications = result.data;
-        if (appNotifications != null &&
-            appNotifications.notifications.isNotEmpty) {
-          _currentNotification = appNotifications.notifications.first;
+        if (appNotifications != null && appNotifications.tips.isNotEmpty) {
+          _currentNotification = appNotifications.tips.first;
         }
       } else {
         _state = _stateInitial;

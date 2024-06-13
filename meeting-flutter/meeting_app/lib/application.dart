@@ -4,15 +4,12 @@
 
 import 'dart:async';
 
-import 'package:flutter/widgets.dart';
 import 'package:nemeeting/constants.dart';
 import 'package:nemeeting/service/config/app_config.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 import 'package:netease_common/netease_common.dart';
 
 class Application {
-  static late BuildContext context;
-
   static Completer<bool>? _initializedCompleter;
 
   static Alogger _logger = Alogger.normal('Application', Constants.moduleName);

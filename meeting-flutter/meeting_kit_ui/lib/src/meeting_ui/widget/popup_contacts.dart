@@ -4,6 +4,9 @@
 
 part of meeting_ui;
 
+typedef List<String> GetMemberSubTitles(NEScheduledMember member);
+typedef Future<bool> OnWillRemoveAttendee(String userId);
+
 class ContactsPopup extends StatefulWidget {
   final String Function(int size) titleBuilder;
   final List<NEScheduledMember> scheduledMemberList;
@@ -11,6 +14,8 @@ class ContactsPopup extends StatefulWidget {
   final String? ownerUuid;
   final Future Function()? addActionClick;
   final Future Function()? loadMoreContacts;
+  final GetMemberSubTitles? getMemberSubTitles;
+  final OnWillRemoveAttendee? onWillRemoveAttendee;
   final bool editable;
 
   const ContactsPopup({
@@ -22,6 +27,8 @@ class ContactsPopup extends StatefulWidget {
     required this.editable,
     this.addActionClick,
     this.loadMoreContacts,
+    this.getMemberSubTitles,
+    this.onWillRemoveAttendee,
   });
 
   @override
@@ -142,6 +149,7 @@ class _ContactsPopupState extends PopupBaseState<ContactsPopup>
     if (member.role == MeetingRoles.kCohost) {
       subtitle.add(meetingUiLocalizations.participantCoHost);
     }
+    subtitle.addAll(widget.getMemberSubTitles?.call(member) ?? []);
     if (member.userUuid == widget.myUserUuid) {
       subtitle.add(meetingUiLocalizations.participantMe);
     }
@@ -284,7 +292,10 @@ class _ContactsPopupState extends PopupBaseState<ContactsPopup>
   }
 
   /// 删除参会者
-  void removeAttendee(String userUuid) {
+  void removeAttendee(String userUuid) async {
+    final willRemove =
+        await widget.onWillRemoveAttendee?.call(userUuid) == true;
+    if (!willRemove || !mounted) return;
     contactList.removeWhere((element) => element.userUuid == userUuid);
     scheduledMemberList.removeWhere((element) => element.userUuid == userUuid);
     setState(() {});

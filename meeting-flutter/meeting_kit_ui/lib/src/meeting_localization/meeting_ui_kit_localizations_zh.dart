@@ -543,6 +543,19 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get meetingVideoJoinAction => '视频入会';
 
   @override
+  String get meetingMaxMembers => '最多参会人数';
+
+  @override
+  String get speakerVolumeMuteTips =>
+      '当前选中的扬声器设备暂无声音效果，请检查系统扬声器是否已解除静音并调至合适音量。';
+
+  @override
+  String get meetingAnnotationPermissionEnabled => '互动批注';
+
+  @override
+  String get meetingMemberMaxTip => '会议人数达到上限';
+
+  @override
   String get screenShare => '共享屏幕';
 
   @override
@@ -632,6 +645,12 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get virtualBackgroundSelectTip => '所选背景立即生效';
+
+  @override
+  String get virtualDefaultBackground => '默认背景';
+
+  @override
+  String get virtualCustom => '自定义';
 
   @override
   String get live => '直播';
@@ -968,6 +987,9 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get participantNotJoined => '未入会';
 
   @override
+  String get participantJoining => '正在加入中...';
+
+  @override
   String get participantAttendees => '成员管理';
 
   @override
@@ -1006,11 +1028,21 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get participantRemoveAttendee => '删除参会者';
 
   @override
+  String get participantUpperLimitWaitingRoomTip => '当前会议已达人数上限，建议开启等候室。';
+
+  @override
+  String get participantUpperLimitReleaseSeatsTip =>
+      '当前会议已达到人数上限，新参会者将无法加入会议，您可以尝试移除未入会成员或释放会议中的一个席位。';
+
+  @override
+  String get participantUpperLimitTipAdmitOtherTip =>
+      '当前会议已达到人数上限，请先移除未入会成员或释放会议中的一个席位，然后再准入等候室成员。';
+
+  @override
   String get cloudRecordingEnabledTitle => '是否开启云录制';
 
   @override
-  String get cloudRecordingEnabledMessage =>
-      '开启后，将录制会议过程中的音视频与共享屏幕内容到云端，同时告知所有参会成员';
+  String get cloudRecordingEnabledMessage => '开启后，所有参会成员将收到录制开始提醒';
 
   @override
   String get cloudRecordingEnabledMessageWithoutNotice =>
@@ -1207,6 +1239,9 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get chatWaitingRoomMuted => '主持人暂未开放等候室聊天';
 
   @override
+  String get chatHistoryNotEnabled => '聊天历史记录功能尚未开通，请联系管理员';
+
+  @override
   String get waitingRoomJoinMeeting => '加入会议';
 
   @override
@@ -1276,6 +1311,9 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get waiting => '等候中';
+
+  @override
+  String get waitingRoomEnable => '开启等候室';
 
   @override
   String get deviceSpeaker => '扬声器';
@@ -1464,6 +1502,9 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get sipCallIsInMeeting => '该成员已在会议中';
 
   @override
+  String get callInWaitingMeeting => '该成员已在等候室中';
+
+  @override
   String get sipCallIsInInviting => '该成员正在呼叫中';
 
   @override
@@ -1610,4 +1651,257 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get loadFail => '加载失败';
+
+  @override
+  String get globalUpdate => '更新';
+
+  @override
+  String get globalLang => '语言';
+
+  @override
+  String get globalView => '查看';
+
+  @override
+  String get interpretation => '同声传译';
+
+  @override
+  String get interpInterpreter => '译员';
+
+  @override
+  String get interpSelectInterpreter => '选择译员';
+
+  @override
+  String get interpInterpreterAlreadyExists => '用户已被选为译员，无法重复选择';
+
+  @override
+  String get interpInfoIncompleteTitle => '译员信息不完整';
+
+  @override
+  String get interpInfoIncompleteMsg => '退出将删除信息不完整的译员';
+
+  @override
+  String get interpStart => '开始同声传译';
+
+  @override
+  String get interpStartNotification => '主持人已开启同声传译';
+
+  @override
+  String get interpStop => '关闭同声传译';
+
+  @override
+  String get interpStopNotification => '主持人已关闭同声传译';
+
+  @override
+  String get interpConfirmStopMsg => '关闭同声传译将关闭所有收听的频道，是否关闭？';
+
+  @override
+  String get interpConfirmUpdateMsg => '是否更新？';
+
+  @override
+  String get interpConfirmCancelEditMsg => '确定取消同声传译设置吗？';
+
+  @override
+  String get interpSelectListenLanguage => '请选择收听语言';
+
+  @override
+  String get interpSelectLanguage => '选择语言';
+
+  @override
+  String get interpAddLanguage => '添加语言';
+
+  @override
+  String get interpInputLanguage => '输入语言';
+
+  @override
+  String get interpLanguageAlreadyExists => '语言已存在';
+
+  @override
+  String get interpListenMajorAudioMeanwhile => '同时收听原声';
+
+  @override
+  String get interpManagement => '管理同声传译';
+
+  @override
+  String get interpSettings => '设置同声传译';
+
+  @override
+  String get interpMajorAudio => '原声';
+
+  @override
+  String get interpMajorChannel => '主频道';
+
+  @override
+  String get interpMajorAudioVolume => '原声音量';
+
+  @override
+  String get interpAddInterpreter => '添加译员';
+
+  @override
+  String get interpJoinChannelErrorMsg => '加入传译频道失败，是否重新加入？';
+
+  @override
+  String get interpReJoinChannel => '重新加入';
+
+  @override
+  String get interpAssignInterpreter => '您已成为本场会议的同传译员';
+
+  @override
+  String get interpAssignLanguage => '当前语言';
+
+  @override
+  String get interpAssignInterpreterTip => '您可以在“同声传译”中设置收听语言与传译语言';
+
+  @override
+  String get interpUnassignInterpreter => '您已被主持人从同传译员中移除';
+
+  @override
+  String interpLanguageRemoved(Object language) {
+    return '主持人已删除收听语言“$language”';
+  }
+
+  @override
+  String get interpInterpreterOffline => '当前收听的频道中，译员已全部离开，是否为您切换回原声？';
+
+  @override
+  String get interpDontSwitch => '暂不切换';
+
+  @override
+  String get interpSwitchToMajorAudio => '切回原声';
+
+  @override
+  String get interpAudioShareIsForbiddenDesktop => '作为译员，您共享屏幕时将无法同时共享电脑声音';
+
+  @override
+  String get interpAudioShareIsForbiddenMobile => '作为译员，您共享屏幕时将无法同时共享设备音频';
+
+  @override
+  String get interpInterpreterInMeetingStatusChanged => '译员参会状态已变更';
+
+  @override
+  String interpSpeakerTip(Object language1, Object language2) {
+    return '您正在收听$language1，说$language2';
+  }
+
+  @override
+  String get interpOutputLanguage => '传译语言';
+
+  @override
+  String get interpRemoveInterpreterOnly => '仅删除译员';
+
+  @override
+  String get interpRemoveInterpreterInMembers => '同时从参会人中删除';
+
+  @override
+  String get interpRemoveMemberInInterpreters => '该参会人同时被指派为译员，删除参会者将会同时取消译员指派';
+
+  @override
+  String get interpListeningChannelDisconnect => '收听语言频道已断开，正在尝试重连';
+
+  @override
+  String get interpSpeakingChannelDisconnect => '传译语言频道已断开，正在尝试重连';
+
+  @override
+  String get langChinese => '中文';
+
+  @override
+  String get langEnglish => '英语';
+
+  @override
+  String get langJapanese => '日语';
+
+  @override
+  String get langKorean => '韩语';
+
+  @override
+  String get langFrench => '法语';
+
+  @override
+  String get langGerman => '德语';
+
+  @override
+  String get langSpanish => '西班牙语';
+
+  @override
+  String get langRussian => '俄语';
+
+  @override
+  String get langPortuguese => '葡萄牙语';
+
+  @override
+  String get langItalian => '意大利语';
+
+  @override
+  String get langTurkish => '土耳其语';
+
+  @override
+  String get langVietnamese => '越南语';
+
+  @override
+  String get langThai => '泰语';
+
+  @override
+  String get langIndonesian => '印尼语';
+
+  @override
+  String get langMalay => '马来语';
+
+  @override
+  String get langArabic => '阿拉伯语';
+
+  @override
+  String get langHindi => '印地语';
+
+  @override
+  String get annotation => '互动批注';
+
+  @override
+  String get annotationEnabled => '互动批注已开启';
+
+  @override
+  String get annotationDisabled => '互动批注已关闭';
+
+  @override
+  String get startAnnotation => '批注';
+
+  @override
+  String get stopAnnotation => '退出批注';
+
+  @override
+  String get inAnnotation => '正在批注中';
+
+  @override
+  String get saveAnnotation => '保存当前批注';
+
+  @override
+  String get cancelAnnotation => '取消批注';
+
+  @override
+  String get settings => '设置';
+
+  @override
+  String get settingAudio => '音频';
+
+  @override
+  String get settingVideo => '视频';
+
+  @override
+  String get settingCommon => '通用';
+
+  @override
+  String get settingAudioAINS => '智能降噪';
+
+  @override
+  String get settingEnableTransparentWhiteboard => '设置白板透明';
+
+  @override
+  String get settingEnableFrontCameraMirror => '前置摄像头镜像';
+
+  @override
+  String get settingShowMeetDuration => '显示会议持续时间';
+
+  @override
+  String get settingSpeakerSpotlight => '语音激励';
+
+  @override
+  String get settingSpeakerSpotlightTip => '开启后，将优先显示正在说话的参会成员';
 }

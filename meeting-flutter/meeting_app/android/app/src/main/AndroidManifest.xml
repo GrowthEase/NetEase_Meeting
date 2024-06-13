@@ -31,12 +31,8 @@
     <!-- 8.0 系统上需要-->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
-    <!--易盾风控-->
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.MAIN"/>
-        </intent>
-    </queries>
+    <!--震动-->
+    <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
         android:name=".MeetingApplication"

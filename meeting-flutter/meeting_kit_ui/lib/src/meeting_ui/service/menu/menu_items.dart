@@ -41,6 +41,7 @@ class NEMenuIDs {
     security,
     disconnectAudio,
     sipCall,
+    settings,
   };
 
   /// 内置"音频"菜单ID，使用该ID的菜单可添加至Toolbar菜单列表中的任意位置。
@@ -86,6 +87,9 @@ class NEMenuIDs {
 
   /// 内置"呼叫"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
   static const int sipCall = 27;
+
+  /// 内置"设置"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
+  static const int settings = 28;
 }
 
 class NEMenuItems {
@@ -107,6 +111,7 @@ class NEMenuItems {
         security,
         disconnectAudio,
         sipCall,
+        settings,
       ];
 
   static final NEMeetingMenuItem microphone = NECheckableMenuItem(
@@ -201,6 +206,13 @@ class NEMenuItems {
   static final sipCall = NESingleStateMenuItem(
     itemId: NEMenuIDs.sipCall,
     visibility: NEMenuVisibility.visibleToHostOnly,
+    singleStateItem: NEMenuItemInfo.undefine,
+  );
+
+  /// 设置
+  static final settings = NESingleStateMenuItem(
+    itemId: NEMenuIDs.settings,
+    visibility: NEMenuVisibility.visibleAlways,
     singleStateItem: NEMenuItemInfo.undefine,
   );
 }

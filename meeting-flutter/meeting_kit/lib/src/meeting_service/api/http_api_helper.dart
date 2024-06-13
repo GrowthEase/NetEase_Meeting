@@ -78,7 +78,7 @@ class HttpApiHelper {
 
   ///根据会议状态查询会议信息列表
   static Future<NEResult<List<NEMeetingItem>>> _getRoomList(
-      List<NEMeetingState> status) {
+      List<NEMeetingItemStatus> status) {
     return execute(_GetMeetingListByStatusApi(status));
   }
 
@@ -93,7 +93,7 @@ class HttpApiHelper {
   }
 
   /// 获取小应用列表
-  static Future<NEResult<NEMeetingWebAppList>> getWebAppList() {
+  static Future<NEResult<List<NEMeetingWebAppItem>>> getWebAppList() {
     return execute(_GetWebAppListApi());
   }
 
@@ -106,12 +106,6 @@ class HttpApiHelper {
   /// 获取授权码
   static Future<NEResult<AuthCodeModel>> getAuthCode(String pluginId) {
     return execute(_GetAuthCodeApi(pluginId));
-  }
-
-  /// 获取主持人和联席主持人列表
-  static Future<NEResult<List<NERoomMember>>> _getHostAndCoHostList(
-      String roomUuid) {
-    return execute(_GetHostAndCoHostListApi(roomUuid));
   }
 
   /// 获取等候室属性
@@ -127,7 +121,7 @@ class HttpApiHelper {
   }
 
   /// 通讯录用户信息获取, userUuids最大长度50
-  static Future<NEResult<NEContactsInfoResponse>> _getContactsInfo(
+  static Future<NEResult<NEContactsInfoResult>> _getContactsInfo(
       List<String> userUuids) {
     return execute(_GetContactsInfoApi(userUuids));
   }
@@ -136,5 +130,51 @@ class HttpApiHelper {
   static Future<NEResult<List<NEScheduledMember>>> _getScheduledMembers(
       String meetingNum) {
     return execute(_GetScheduledMembersApi(meetingNum));
+  }
+
+  static Future<NEResult<List<NERemoteHistoryMeeting>>> _getFavoriteMeetings(
+      int? startId, int limit) {
+    return execute(_GetFavoriteMeetingsApi(startId, limit));
+  }
+
+  static Future<NEResult<int>> _addFavoriteMeeting(int roomArchiveId) {
+    return execute(_AddFavoriteMeetingApi(roomArchiveId));
+  }
+
+  static Future<VoidResult> _removeFavoriteMeetingByFavoriteId(int favoriteId) {
+    return execute(_RemoveFavoriteMeetingApi(null, favoriteId));
+  }
+
+  static Future<VoidResult> _removeFavoriteMeetingByRoomArchiveId(
+      int roomArchiveId) {
+    return execute(_RemoveFavoriteMeetingApi(roomArchiveId, null));
+  }
+
+  static Future<NEResult<List<NERemoteHistoryMeeting>>> _getHistoryMeetings(
+      int? startId, int limit) {
+    return execute(_GetHistoryMeetingsApi(startId, limit));
+  }
+
+  static Future<NEResult<NERemoteHistoryMeetingDetail>>
+      _getHistoryMeetingDetail(int roomArchiveId) {
+    return execute(_GetHistoryMeetingDetailApi(roomArchiveId));
+  }
+
+  static Future<NEResult<NERemoteHistoryMeeting>> _getHistoryMeeting(
+      int meetingId) {
+    return execute(_GetHistoryMeetingApi(meetingId));
+  }
+
+  static Future<NEResult<NEMeetingAppNoticeTips>> _getSecurityNotice(
+      String time) {
+    return execute(_GetSecurityNoticeApi(time));
+  }
+
+  static Future<VoidResult> _updateAvatar(String url) {
+    return execute(_UpdateAvatarApi(url));
+  }
+
+  static Future<VoidResult> _updateNickname(String nickname) {
+    return execute(_UpdateNicknameApi(nickname));
   }
 }

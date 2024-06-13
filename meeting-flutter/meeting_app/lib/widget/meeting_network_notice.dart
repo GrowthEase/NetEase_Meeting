@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:nemeeting/language/localizations.dart';
+import 'package:nemeeting/widget/ne_widget.dart';
 
 import '../uikit/utils/nav_utils.dart';
 import '../uikit/utils/router_name.dart';
@@ -22,11 +23,10 @@ class MeetingNetworkNotificationBar extends StatefulWidget {
 }
 
 class _MeetingNetworkNotificationBarState
-    extends State<MeetingNetworkNotificationBar>
-    with MeetingAppLocalizationsMixin {
+    extends State<MeetingNetworkNotificationBar> {
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return NEGestureDetector(
       onTap: () => NavUtils.pushNamed(context, RouterName.networkNotAvailable),
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 4, horizontal: 16),
@@ -41,7 +41,7 @@ class _MeetingNetworkNotificationBarState
             SizedBox(width: 6),
             Expanded(
               child: Text(
-                meetingAppLocalizations.globalNetworkNotAvailable,
+                getAppLocalizations().globalNetworkNotAvailable,
                 style: TextStyle(
                   fontSize: 12,
                   color: AppColors.color_ED2E24,

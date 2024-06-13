@@ -24,7 +24,7 @@ class NEMeetingUIOptions {
   late final Map<String, dynamic> extras;
 
   /// 配置是否在会议界面中显示会议时长
-  late final bool showMeetingTime;
+  late final bool? showMeetingTime;
 
   /// 配置是否在会议界面中显示聊天入口
   late final bool noChat;
@@ -59,10 +59,10 @@ class NEMeetingUIOptions {
   ///
   /// 是否开启透明白板模式
   ///
-  late final bool enableTransparentWhiteboard;
+  late final bool? enableTransparentWhiteboard;
 
   /// 配置会议中是否开启前置摄像头视频镜像，默认开启
-  late final bool enableFrontCameraMirror;
+  late final bool? enableFrontCameraMirror;
 
   /// 配置会议中是否显示"改名"菜单
   late final bool noRename;
@@ -157,6 +157,9 @@ class NEMeetingUIOptions {
   /// 允许音频设备切换
   late final bool enableAudioDeviceSwitch;
 
+  /// 开启/关闭语音激励
+  late final bool? enableSpeakerSpotlight;
+
   ///
   /// 是否允许SDK请求电话权限，默认允许。在获取电话权限后，SDK会监听系统电话状态，在接听来电或拨打电话时，
   /// 会自动断开会议内的音视频（不会退出会议），并在系统电话结束后，自动重新连接会议的音视频。
@@ -181,7 +184,7 @@ class NEMeetingUIOptions {
     noAudio = (json['noAudio'] ?? true) as bool;
     noMuteAllVideo = (json['noMuteAllVideo'] ?? true) as bool;
     noMuteAllAudio = (json['noMuteAllAudio'] ?? false) as bool;
-    showMeetingTime = (json['showMeetingTime'] ?? true) as bool;
+    showMeetingTime = json['showMeetingTime'] as bool?;
     noChat = (json['noChat'] ?? false) as bool;
     noLive = (json['noLive'] ?? false) as bool;
     noInvite = (json['noInvite'] ?? false) as bool;
@@ -222,14 +225,14 @@ class NEMeetingUIOptions {
     showWhiteboardShareUserVideo =
         (json['showWhiteboardShareUserVideo'] ?? false) as bool;
     showFloatingMicrophone = (json['showFloatingMicrophone'] ?? true) as bool;
-    enableTransparentWhiteboard =
-        (json['enableTransparentWhiteboard'] ?? false) as bool;
-    enableFrontCameraMirror = (json['enableFrontCameraMirror'] ?? true) as bool;
+    enableTransparentWhiteboard = json['enableTransparentWhiteboard'] as bool?;
+    enableFrontCameraMirror = json['enableFrontCameraMirror'] as bool?;
     enableAudioShare = (json['enableAudioShare'] ?? false) as bool;
     showCloudRecordMenuItem = (json['showCloudRecordMenuItem'] ?? true) as bool;
     showCloudRecordingUI = (json['showCloudRecordingUI'] ?? true) as bool;
     enableWaitingRoom = (json['enableWaitingRoom'] ?? false) as bool;
     enableAudioDeviceSwitch = (json['enableAudioDeviceSwitch'] ?? true) as bool;
+    enableSpeakerSpotlight = json['enableSpeakerSpotlight'] as bool?;
     noReadPhoneState = (json['noReadPhoneState'] ?? false) as bool;
     noWebApps = (json['noWebApps'] ?? false) as bool;
     noNotifyCenter = (json['noNotifyCenter'] ?? false) as bool;
@@ -242,7 +245,7 @@ class NEMeetingUIOptions {
     this.noAudio = true,
     this.noMuteAllVideo = true,
     this.noMuteAllAudio = false,
-    this.showMeetingTime = true,
+    this.showMeetingTime,
     this.noChat = false,
     this.noInvite = false,
     this.noSip = false,
@@ -265,8 +268,8 @@ class NEMeetingUIOptions {
     this.showScreenShareUserVideo = true,
     this.showWhiteboardShareUserVideo = false,
     this.showFloatingMicrophone = true,
-    this.enableTransparentWhiteboard = false,
-    this.enableFrontCameraMirror = true,
+    this.enableTransparentWhiteboard,
+    this.enableFrontCameraMirror,
     this.enableAudioShare = false,
     this.noLive = false,
     this.extras = const <String, dynamic>{},
@@ -276,6 +279,7 @@ class NEMeetingUIOptions {
     this.showCloudRecordingUI = true,
     this.enableWaitingRoom = false,
     this.enableAudioDeviceSwitch = true,
+    this.enableSpeakerSpotlight,
     this.noReadPhoneState = false,
     this.noWebApps = false,
     this.noNotifyCenter = false,
@@ -339,6 +343,7 @@ class NEMeetingUIOptions {
       enableAudioShare: enableAudioShare,
       enableWaitingRoom: enableWaitingRoom,
       enableAudioDeviceSwitch: enableAudioDeviceSwitch,
+      enableSpeakerSpotlight: enableSpeakerSpotlight,
       noReadPhoneState: noReadPhoneState,
       noWebApps: noWebApps,
       noNotifyCenter: noNotifyCenter,

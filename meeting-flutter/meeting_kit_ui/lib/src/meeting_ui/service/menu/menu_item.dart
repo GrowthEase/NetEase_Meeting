@@ -119,6 +119,11 @@ class NEStatefulMenuClickInfo extends NEMenuClickInfo {
 
 /// 会议自定义菜单项
 /// 通过 NEMeetingOptions.injectedMoreMenuItems 添加自定义菜单项
+/// 菜单项基类。菜单通过ID来唯一标识，大于等于 [firstInjectedItemId] 的菜单为自定义菜单，小于为SDK内置菜单。
+/// 目前SDK提供了单状态菜单
+/// [NESingleStateMenuItem]与双状态菜单
+/// [NECheckableMenuItem]实现可供使用。单状态菜单始终展示相同的标题与图标；多状态的菜单包含与状态数一一对应的标题与图标，在菜单状态变更时会触发UI更新。
+/// <p>通过注册 ,回调可监听自定义注入菜单的点击事件(SDK内置菜单不会触发回调)。
 abstract class NEMeetingMenuItem {
   static const int firstInjectedItemId = firstInjectableMenuId;
 

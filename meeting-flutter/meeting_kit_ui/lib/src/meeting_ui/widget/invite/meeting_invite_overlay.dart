@@ -26,7 +26,7 @@ class _InComingInviteState extends State<InComingInvite> {
   @override
   Widget build(BuildContext context) {
     final bool Function() isInMeeting =
-        () => NEMeetingUIKit().getCurrentMeetingInfo() != null;
+        () => NEMeetingUIKit.instance.getCurrentMeetingInfo() != null;
     return Stack(
       alignment: Alignment.center,
       children: [

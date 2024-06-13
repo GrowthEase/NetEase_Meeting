@@ -236,14 +236,4 @@ class MeetingChatPermissionState
       ),
     );
   }
-
-  void doIfNetworkAvailable(VoidCallback callback) async {
-    final connected = await ConnectivityManager().isConnected();
-    if (!mounted) return;
-    if (!connected) {
-      showToast(meetingKitLocalizations.networkUnavailableCheck);
-      return;
-    }
-    callback();
-  }
 }

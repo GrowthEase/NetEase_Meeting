@@ -20,13 +20,14 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
     with
         _AloggerMixin,
         NEWaitingRoomListener,
+        NEPreMeetingListener,
         MeetingKitLocalizationsMixin,
         MeetingStateScope,
         MeetingNavigatorScope,
         FirstBuildScope {
   late final NERoomContext roomContext;
   late final MeetingInfo meetingInfo;
-  late NEMeetingState meetingState;
+  late NEMeetingItemStatus meetingState;
   late bool showChatroomEntrance = false;
   late bool audioMute, videoMute;
   MeetingArguments arguments;
@@ -36,7 +37,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
   SDKConfig? crossAppSDKConfig;
 
   _MeetingWaitingRoomPageState(this.arguments);
-  NEHistoryMeetingItem? historyMeetingItem;
+  NELocalHistoryMeeting? localHistoryMeeting;
   final streamSubscriptions = <StreamSubscription>[];
 
   /// 画中画判断
@@ -62,9 +63,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
       chatroomMessagesReceived: chatroomMessagesReceived,
     ));
     roomContext.waitingRoomController.addListener(this);
-    NEMeetingKit.instance
-        .getPreMeetingService()
-        .registerScheduleMeetingStatusChange(onMeetingStatusChange);
+    NEMeetingKit.instance.getPreMeetingService().addListener(this);
     handleToggleVideoPreview();
 
     _messageSource = ChatRoomMessageSource(
@@ -107,10 +106,10 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
   }
 
   void createHistoryMeetingItem() {
-    if (historyMeetingItem == null) {
+    if (localHistoryMeeting == null) {
       final meetingInfo = arguments.meetingInfo;
       final self = roomContext.localMember;
-      historyMeetingItem = NEHistoryMeetingItem(
+      localHistoryMeeting = NELocalHistoryMeeting(
         meetingId: meetingInfo.meetingId,
         meetingNum: meetingInfo.meetingNum,
         shortMeetingNum: meetingInfo.shortMeetingNum,
@@ -137,7 +136,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
   bool get isChatSupport =>
       !arguments.noChat &&
       roomContext.chatController.isSupported &&
-      meetingState == NEMeetingState.started;
+      meetingState == NEMeetingItemStatus.started;
 
   @override
   void onFirstBuild() {
@@ -180,11 +179,10 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
     if (videoPreviewStarted) {
       roomContext.rtcController.stopPreview();
     }
-    NEMeetingKit.instance
-        .getPreMeetingService()
-        .unRegisterScheduleMeetingStatusChange(onMeetingStatusChange);
+    NEMeetingKit.instance.getPreMeetingService().removeListener(this);
     crossAppSDKConfig?.dispose();
-    InMeetingService()._updateHistoryMeetingItem(historyMeetingItem);
+    InMeetingService()._updateLocalHistoryMeeting(localHistoryMeeting);
+    cancelObserveWidgetsBinding();
   }
 
   @override
@@ -240,17 +238,18 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
   @override
   void onMemberNameChanged(String member, String name) {
     if (member == roomContext.myUuid) {
-      historyMeetingItem?.nickname = name;
-      InMeetingService()._updateHistoryMeetingItem(historyMeetingItem);
+      localHistoryMeeting?.nickname = name;
+      InMeetingService()._updateLocalHistoryMeeting(localHistoryMeeting);
       setState(() {});
     }
   }
 
-  void onMeetingStatusChange(List<NEMeetingItem> items, _) {
+  @override
+  void onMeetingItemInfoChanged(List<NEMeetingItem> items) {
     for (var item in items) {
       if (item.meetingId == meetingInfo.meetingId) {
         setState(() {
-          meetingState = item.state;
+          meetingState = item.status;
           setupChatRoom();
         });
         return;
@@ -266,7 +265,6 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
         disconnectingCode = NEMeetingCode.loginOnOtherDevice;
         break;
       case NERoomEndReason.kKickOut:
-        disconnectingCode = NEMeetingCode.removedByHost;
         if (!_isInPIPView.value) {
           showEndDialog(
             meetingUiLocalizations.meetingBeKickedOut,
@@ -274,10 +272,10 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
             meetingUiLocalizations.globalClose,
             NEMeetingCode.removedByHost,
           );
+          return;
         } else {
-          setState(() {});
+          disconnectingCode = NEMeetingCode.removedByHost;
         }
-        return;
       case NERoomEndReason.kCloseByMember:
       case NERoomEndReason.kCloseByBackend:
       case NERoomEndReason.kAllMemberOut:
@@ -300,9 +298,13 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
         // do nothing
         break;
     }
-    if (!_isInPIPView.value) {
+
+    /// 非画中画模式或当前为组件 sdk，则直接退出，否则展示“已中断”
+    if (!_isInPIPView.value || arguments.backgroundWidget == null) {
       meetingNavigator.pop(disconnectingCode: disconnectingCode);
+      cancelObserveWidgetsBinding();
     } else {
+      /// 会议应用，只有一个 Activity，停留在画中画模式，并提示会议中断
       setState(() {});
     }
   }
@@ -385,6 +387,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
     /// 非小窗模式会议关闭状态
     if (_isInPIPView.value != true && disconnectingCode != null) {
       meetingNavigator.pop(disconnectingCode: disconnectingCode);
+      cancelObserveWidgetsBinding();
     }
   }
 
@@ -544,9 +547,15 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
     );
   }
 
+  WaitingRoomManager? _waitingRoomManager;
+  WaitingRoomManager get waitingRoomManager {
+    _waitingRoomManager ??= WaitingRoomManager(roomContext);
+    return _waitingRoomManager!;
+  }
+
   ChatRoomManager? _chatRoomManager;
   ChatRoomManager get chatRoomManager {
-    _chatRoomManager ??= ChatRoomManager(roomContext);
+    _chatRoomManager ??= ChatRoomManager(roomContext, waitingRoomManager);
     return _chatRoomManager!;
   }
 
@@ -560,6 +569,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
               roomContext: roomContext,
               messageSource: _messageSource,
               chatRoomManager: chatRoomManager,
+              waitingRoomManager: waitingRoomManager,
             ),
           );
         });
@@ -582,7 +592,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            meetingState == NEMeetingState.started
+            meetingState == NEMeetingItemStatus.started
                 ? localizations.waitingRoomWaitHostToInviteJoinMeeting
                 : localizations.waitingRoomWaitMeetingToStart,
             style: TextStyle(
@@ -603,7 +613,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
           _buildMeetingInfoItem(
               NEMeetingIconFont.icon_nickname,
               '${localizations.meetingNickname}: ',
-              historyMeetingItem?.nickname ?? ''),
+              localHistoryMeeting?.nickname ?? ''),
         ],
       ),
     );

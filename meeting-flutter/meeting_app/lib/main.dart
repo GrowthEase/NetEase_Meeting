@@ -5,16 +5,15 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:archive/archive_io.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nemeeting/error_handler/error_handler.dart';
 import 'package:nemeeting/uikit/values/colors.dart';
+import 'package:nemeeting/utils/virtual_background_util.dart';
 import 'package:netease_common/netease_common.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:yunxin_alog/yunxin_alog.dart';
 
 import '../service/auth/auth_manager.dart';
@@ -35,45 +34,13 @@ void main() {
     ErrorHandler.instance().install();
     await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     await Application.ensureInitialized();
-    runApp(MeetingAppLocalizationsScope(child: MeetingApp()));
-    copyBeautyRes();
+    runApp(MeetingApp());
   }, (Object error, StackTrace stack) {
     Alog.e(
         tag: 'flutter-crash',
         content: 'crash exception: $error \ncrash stack: $stack');
     ErrorHandler.instance().recordError(error, stack);
   });
-}
-
-Future<void> copyBeautyRes() async {
-  Directory? cache;
-  if (Platform.isAndroid) {
-    cache = await getExternalStorageDirectory();
-  } else {
-    cache = await getApplicationDocumentsDirectory();
-  }
-  // Read the Zip file from disk.
-  final value =
-      await rootBundle.load('assets/virtual_background_images/images.zip');
-  // Decode the Zip file
-  var bytes =
-      value.buffer.asUint8List(value.offsetInBytes, value.lengthInBytes);
-  final archive = ZipDecoder().decodeBytes(bytes);
-
-  // Extract the contents of the Zip archive to disk.
-  for (final file in archive) {
-    final filename = file.name;
-    if (!filename.contains('.DS_Store')) {
-      if (file.isFile) {
-        final data = file.content as List<int>;
-        File('${cache?.path}/$filename')
-          ..createSync(recursive: true)
-          ..writeAsBytesSync(data);
-      } else {
-        await Directory('${cache?.path}/' + filename).create(recursive: true);
-      }
-    }
-  }
 }
 
 class MeetingApp extends StatefulWidget {
@@ -93,7 +60,7 @@ class _MeetingAppState extends State<MeetingApp> {
     super.initState();
 
     /// 切换至用户选中的语言
-    switchLanguage();
+    switchLanguage().then((value) => setState(() {}));
 
     // 延迟首帧，待自动登录成功/失败后才展示
     WidgetsBinding.instance.deferFirstFrame();
@@ -105,6 +72,8 @@ class _MeetingAppState extends State<MeetingApp> {
           'entrance',
           ModalRoute.withName('/'),
         );
+      } else if (event.state == AuthState.authed) {
+        VirtualBackgroundManager().ensureInit();
       }
     });
 
@@ -120,58 +89,61 @@ class _MeetingAppState extends State<MeetingApp> {
           break;
       }
     };
-    NEMeetingUIKit().addListener(_meetingStatusListener);
+    NEMeetingUIKit.instance.addMeetingStatusListener(_meetingStatusListener);
   }
 
   @override
   Widget build(BuildContext context) {
-    Application.context = context;
-    final meetingAppLocalizations = MeetingAppLocalizations.of(context)!;
-    final app = MaterialApp(
-      builder: (context, child) {
-        return BotToastInit()(
-            context,
-            ValueListenableBuilder(
-                valueListenable: isInMinimizedMode,
-                builder: (_, value, __) {
-                  return value
-                      ? child!
-                      : InComingInvite(
-                          child: child!,
-                          isInMinimizedMode: false,
-                        );
-                }));
-      },
-      color: Colors.white,
-      debugShowCheckedModeBanner: false,
-      title: meetingAppLocalizations.globalAppName,
-      theme: ThemeData(
-          useMaterial3: false,
-          brightness: Brightness.light,
-          appBarTheme: AppBarTheme(
-            systemOverlayStyle: AppStyle.systemUiOverlayStyleDark,
-          )),
-      themeMode: ThemeMode.light,
-      navigatorKey: NavUtils.navigatorKey,
-      home: MeetingAppLocalizationsScope(
-        child: WelcomePage(),
-      ),
-      navigatorObservers: [BotToastNavigatorObserver()],
-      // 注册路由表
-      routes: RoutesRegister.routes,
-      localizationsDelegates: [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        ...MeetingAppLocalizations.localizationsDelegates,
-      ],
-      supportedLocales: [
-        const Locale('en', 'US'), // 美国英语
-        const Locale('zh', 'CN'),
-        const Locale('ja', 'JP'),
-      ],
-      locale: NEMeetingUIKit().localeListenable.value,
-    );
+    final app = ValueListenableBuilder(
+        valueListenable: NEMeetingUIKit.instance.localeListenable,
+        builder: (context, locale, child) {
+          return MaterialApp(
+            builder: (context, child) {
+              return BotToastInit()(
+                  context,
+                  ValueListenableBuilder(
+                      valueListenable: isInMinimizedMode,
+                      builder: (_, value, __) {
+                        return value
+                            ? child!
+                            : InComingInvite(
+                                child: child!,
+                                isInMinimizedMode: false,
+                              );
+                      }));
+            },
+            color: Colors.white,
+            debugShowCheckedModeBanner: false,
+            title: getAppLocalizations().globalAppName,
+            theme: ThemeData(
+                fontFamily: Platform.isIOS ? 'PingFang SC' : null,
+                useMaterial3: false,
+                brightness: Brightness.light,
+                appBarTheme: AppBarTheme(
+                  systemOverlayStyle: AppStyle.systemUiOverlayStyleDark,
+                )),
+            themeMode: ThemeMode.light,
+            navigatorKey: NavUtils.navigatorKey,
+            home: WelcomePage(),
+            navigatorObservers: [BotToastNavigatorObserver()],
+            // 注册路由表
+            routes: RoutesRegister.routes,
+            localizationsDelegates: [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+              ...MeetingAppLocalizations.localizationsDelegates,
+              ...NEMeetingUIKitLocalizations.localizationsDelegates,
+              NEMeetingKitLocalizations.delegate,
+            ],
+            supportedLocales: [
+              const Locale('en', 'US'), // 美国英语
+              const Locale('zh', 'CN'),
+              const Locale('ja', 'JP'),
+            ],
+            locale: locale,
+          );
+        });
     return ScreenUtilInit(
       designSize: const Size(375, 812),
       child: app,
@@ -184,24 +156,26 @@ class _MeetingAppState extends State<MeetingApp> {
     if (language == null ||
         language == NEMeetingLanguage.automatic.locale.languageCode) return;
     if (language == NEMeetingLanguage.chinese.locale.languageCode) {
-      await NEMeetingUIKit().switchLanguage(NEMeetingLanguage.chinese);
+      await NEMeetingUIKit.instance.switchLanguage(NEMeetingLanguage.chinese);
     } else if (language == NEMeetingLanguage.english.locale.languageCode) {
-      await NEMeetingUIKit().switchLanguage(NEMeetingLanguage.english);
+      await NEMeetingUIKit.instance.switchLanguage(NEMeetingLanguage.english);
     } else if (language == NEMeetingLanguage.japanese.locale.languageCode) {
-      await NEMeetingUIKit().switchLanguage(NEMeetingLanguage.japanese);
+      await NEMeetingUIKit.instance.switchLanguage(NEMeetingLanguage.japanese);
     }
   }
 
   @override
   void dispose() {
-    NEMeetingUIKit().removeListener(_meetingStatusListener);
+    NEMeetingUIKit.instance.removeMeetingStatusListener(_meetingStatusListener);
     super.dispose();
   }
 }
 
 class WelcomePage extends StatefulWidget {
   @override
-  State<StatefulWidget> createState() => _WelcomePageState();
+  State<StatefulWidget> createState() {
+    return _WelcomePageState();
+  }
 }
 
 class _WelcomePageState extends BaseState<WelcomePage> {

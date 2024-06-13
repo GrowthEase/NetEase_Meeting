@@ -24,19 +24,19 @@ class NERoomAudioProfile {
   /// index of [NERtcAudioScenario] or -1 for unspecified
   final int scenario;
 
-  final bool enableAINS;
+  final bool? enableAINS;
 
   const NERoomAudioProfile({
     required this.profile,
     required this.scenario,
-    this.enableAINS = true,
+    this.enableAINS,
   });
 
   factory NERoomAudioProfile.fromJson(Map<String, dynamic> json) {
     return NERoomAudioProfile(
       profile: json['profile'] as int,
       scenario: json['scenario'] as int,
-      enableAINS: json['enableAINS'] as bool,
+      enableAINS: json['enableAINS'] as bool?,
     );
   }
 

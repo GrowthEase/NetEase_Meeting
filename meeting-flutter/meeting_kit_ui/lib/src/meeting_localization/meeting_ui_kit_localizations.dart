@@ -1129,6 +1129,30 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'视频入会'**
   String get meetingVideoJoinAction;
 
+  /// No description provided for @meetingMaxMembers.
+  ///
+  /// In zh, this message translates to:
+  /// **'最多参会人数'**
+  String get meetingMaxMembers;
+
+  /// No description provided for @speakerVolumeMuteTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前选中的扬声器设备暂无声音效果，请检查系统扬声器是否已解除静音并调至合适音量。'**
+  String get speakerVolumeMuteTips;
+
+  /// No description provided for @meetingAnnotationPermissionEnabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'互动批注'**
+  String get meetingAnnotationPermissionEnabled;
+
+  /// No description provided for @meetingMemberMaxTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'会议人数达到上限'**
+  String get meetingMemberMaxTip;
+
   /// No description provided for @screenShare.
   ///
   /// In zh, this message translates to:
@@ -1302,6 +1326,18 @@ abstract class NEMeetingUIKitLocalizations {
   /// In zh, this message translates to:
   /// **'所选背景立即生效'**
   String get virtualBackgroundSelectTip;
+
+  /// No description provided for @virtualDefaultBackground.
+  ///
+  /// In zh, this message translates to:
+  /// **'默认背景'**
+  String get virtualDefaultBackground;
+
+  /// No description provided for @virtualCustom.
+  ///
+  /// In zh, this message translates to:
+  /// **'自定义'**
+  String get virtualCustom;
 
   /// No description provided for @live.
   ///
@@ -1963,6 +1999,12 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'未入会'**
   String get participantNotJoined;
 
+  /// No description provided for @participantJoining.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在加入中...'**
+  String get participantJoining;
+
   /// No description provided for @participantAttendees.
   ///
   /// In zh, this message translates to:
@@ -2035,6 +2077,24 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'删除参会者'**
   String get participantRemoveAttendee;
 
+  /// No description provided for @participantUpperLimitWaitingRoomTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前会议已达人数上限，建议开启等候室。'**
+  String get participantUpperLimitWaitingRoomTip;
+
+  /// No description provided for @participantUpperLimitReleaseSeatsTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前会议已达到人数上限，新参会者将无法加入会议，您可以尝试移除未入会成员或释放会议中的一个席位。'**
+  String get participantUpperLimitReleaseSeatsTip;
+
+  /// No description provided for @participantUpperLimitTipAdmitOtherTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前会议已达到人数上限，请先移除未入会成员或释放会议中的一个席位，然后再准入等候室成员。'**
+  String get participantUpperLimitTipAdmitOtherTip;
+
   /// No description provided for @cloudRecordingEnabledTitle.
   ///
   /// In zh, this message translates to:
@@ -2044,7 +2104,7 @@ abstract class NEMeetingUIKitLocalizations {
   /// No description provided for @cloudRecordingEnabledMessage.
   ///
   /// In zh, this message translates to:
-  /// **'开启后，将录制会议过程中的音视频与共享屏幕内容到云端，同时告知所有参会成员'**
+  /// **'开启后，所有参会成员将收到录制开始提醒'**
   String get cloudRecordingEnabledMessage;
 
   /// No description provided for @cloudRecordingEnabledMessageWithoutNotice.
@@ -2419,6 +2479,12 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'主持人暂未开放等候室聊天'**
   String get chatWaitingRoomMuted;
 
+  /// No description provided for @chatHistoryNotEnabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'聊天历史记录功能尚未开通，请联系管理员'**
+  String get chatHistoryNotEnabled;
+
   /// No description provided for @waitingRoomJoinMeeting.
   ///
   /// In zh, this message translates to:
@@ -2556,6 +2622,12 @@ abstract class NEMeetingUIKitLocalizations {
   /// In zh, this message translates to:
   /// **'等候中'**
   String get waiting;
+
+  /// No description provided for @waitingRoomEnable.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启等候室'**
+  String get waitingRoomEnable;
 
   /// No description provided for @deviceSpeaker.
   ///
@@ -2923,6 +2995,12 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'该成员已在会议中'**
   String get sipCallIsInMeeting;
 
+  /// No description provided for @callInWaitingMeeting.
+  ///
+  /// In zh, this message translates to:
+  /// **'该成员已在等候室中'**
+  String get callInWaitingMeeting;
+
   /// No description provided for @sipCallIsInInviting.
   ///
   /// In zh, this message translates to:
@@ -3210,6 +3288,504 @@ abstract class NEMeetingUIKitLocalizations {
   /// In zh, this message translates to:
   /// **'加载失败'**
   String get loadFail;
+
+  /// No description provided for @globalUpdate.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新'**
+  String get globalUpdate;
+
+  /// No description provided for @globalLang.
+  ///
+  /// In zh, this message translates to:
+  /// **'语言'**
+  String get globalLang;
+
+  /// No description provided for @globalView.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看'**
+  String get globalView;
+
+  /// No description provided for @interpretation.
+  ///
+  /// In zh, this message translates to:
+  /// **'同声传译'**
+  String get interpretation;
+
+  /// No description provided for @interpInterpreter.
+  ///
+  /// In zh, this message translates to:
+  /// **'译员'**
+  String get interpInterpreter;
+
+  /// No description provided for @interpSelectInterpreter.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择译员'**
+  String get interpSelectInterpreter;
+
+  /// No description provided for @interpInterpreterAlreadyExists.
+  ///
+  /// In zh, this message translates to:
+  /// **'用户已被选为译员，无法重复选择'**
+  String get interpInterpreterAlreadyExists;
+
+  /// No description provided for @interpInfoIncompleteTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'译员信息不完整'**
+  String get interpInfoIncompleteTitle;
+
+  /// No description provided for @interpInfoIncompleteMsg.
+  ///
+  /// In zh, this message translates to:
+  /// **'退出将删除信息不完整的译员'**
+  String get interpInfoIncompleteMsg;
+
+  /// No description provided for @interpStart.
+  ///
+  /// In zh, this message translates to:
+  /// **'开始同声传译'**
+  String get interpStart;
+
+  /// No description provided for @interpStartNotification.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人已开启同声传译'**
+  String get interpStartNotification;
+
+  /// No description provided for @interpStop.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭同声传译'**
+  String get interpStop;
+
+  /// No description provided for @interpStopNotification.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人已关闭同声传译'**
+  String get interpStopNotification;
+
+  /// No description provided for @interpConfirmStopMsg.
+  ///
+  /// In zh, this message translates to:
+  /// **'关闭同声传译将关闭所有收听的频道，是否关闭？'**
+  String get interpConfirmStopMsg;
+
+  /// No description provided for @interpConfirmUpdateMsg.
+  ///
+  /// In zh, this message translates to:
+  /// **'是否更新？'**
+  String get interpConfirmUpdateMsg;
+
+  /// No description provided for @interpConfirmCancelEditMsg.
+  ///
+  /// In zh, this message translates to:
+  /// **'确定取消同声传译设置吗？'**
+  String get interpConfirmCancelEditMsg;
+
+  /// No description provided for @interpSelectListenLanguage.
+  ///
+  /// In zh, this message translates to:
+  /// **'请选择收听语言'**
+  String get interpSelectListenLanguage;
+
+  /// No description provided for @interpSelectLanguage.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择语言'**
+  String get interpSelectLanguage;
+
+  /// No description provided for @interpAddLanguage.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加语言'**
+  String get interpAddLanguage;
+
+  /// No description provided for @interpInputLanguage.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入语言'**
+  String get interpInputLanguage;
+
+  /// No description provided for @interpLanguageAlreadyExists.
+  ///
+  /// In zh, this message translates to:
+  /// **'语言已存在'**
+  String get interpLanguageAlreadyExists;
+
+  /// No description provided for @interpListenMajorAudioMeanwhile.
+  ///
+  /// In zh, this message translates to:
+  /// **'同时收听原声'**
+  String get interpListenMajorAudioMeanwhile;
+
+  /// No description provided for @interpManagement.
+  ///
+  /// In zh, this message translates to:
+  /// **'管理同声传译'**
+  String get interpManagement;
+
+  /// No description provided for @interpSettings.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置同声传译'**
+  String get interpSettings;
+
+  /// No description provided for @interpMajorAudio.
+  ///
+  /// In zh, this message translates to:
+  /// **'原声'**
+  String get interpMajorAudio;
+
+  /// No description provided for @interpMajorChannel.
+  ///
+  /// In zh, this message translates to:
+  /// **'主频道'**
+  String get interpMajorChannel;
+
+  /// No description provided for @interpMajorAudioVolume.
+  ///
+  /// In zh, this message translates to:
+  /// **'原声音量'**
+  String get interpMajorAudioVolume;
+
+  /// No description provided for @interpAddInterpreter.
+  ///
+  /// In zh, this message translates to:
+  /// **'添加译员'**
+  String get interpAddInterpreter;
+
+  /// No description provided for @interpJoinChannelErrorMsg.
+  ///
+  /// In zh, this message translates to:
+  /// **'加入传译频道失败，是否重新加入？'**
+  String get interpJoinChannelErrorMsg;
+
+  /// No description provided for @interpReJoinChannel.
+  ///
+  /// In zh, this message translates to:
+  /// **'重新加入'**
+  String get interpReJoinChannel;
+
+  /// No description provided for @interpAssignInterpreter.
+  ///
+  /// In zh, this message translates to:
+  /// **'您已成为本场会议的同传译员'**
+  String get interpAssignInterpreter;
+
+  /// No description provided for @interpAssignLanguage.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前语言'**
+  String get interpAssignLanguage;
+
+  /// No description provided for @interpAssignInterpreterTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'您可以在“同声传译”中设置收听语言与传译语言'**
+  String get interpAssignInterpreterTip;
+
+  /// No description provided for @interpUnassignInterpreter.
+  ///
+  /// In zh, this message translates to:
+  /// **'您已被主持人从同传译员中移除'**
+  String get interpUnassignInterpreter;
+
+  /// No description provided for @interpLanguageRemoved.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人已删除收听语言“{language}”'**
+  String interpLanguageRemoved(Object language);
+
+  /// No description provided for @interpInterpreterOffline.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前收听的频道中，译员已全部离开，是否为您切换回原声？'**
+  String get interpInterpreterOffline;
+
+  /// No description provided for @interpDontSwitch.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂不切换'**
+  String get interpDontSwitch;
+
+  /// No description provided for @interpSwitchToMajorAudio.
+  ///
+  /// In zh, this message translates to:
+  /// **'切回原声'**
+  String get interpSwitchToMajorAudio;
+
+  /// No description provided for @interpAudioShareIsForbiddenDesktop.
+  ///
+  /// In zh, this message translates to:
+  /// **'作为译员，您共享屏幕时将无法同时共享电脑声音'**
+  String get interpAudioShareIsForbiddenDesktop;
+
+  /// No description provided for @interpAudioShareIsForbiddenMobile.
+  ///
+  /// In zh, this message translates to:
+  /// **'作为译员，您共享屏幕时将无法同时共享设备音频'**
+  String get interpAudioShareIsForbiddenMobile;
+
+  /// No description provided for @interpInterpreterInMeetingStatusChanged.
+  ///
+  /// In zh, this message translates to:
+  /// **'译员参会状态已变更'**
+  String get interpInterpreterInMeetingStatusChanged;
+
+  /// No description provided for @interpSpeakerTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'您正在收听{language1}，说{language2}'**
+  String interpSpeakerTip(Object language1, Object language2);
+
+  /// No description provided for @interpOutputLanguage.
+  ///
+  /// In zh, this message translates to:
+  /// **'传译语言'**
+  String get interpOutputLanguage;
+
+  /// No description provided for @interpRemoveInterpreterOnly.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅删除译员'**
+  String get interpRemoveInterpreterOnly;
+
+  /// No description provided for @interpRemoveInterpreterInMembers.
+  ///
+  /// In zh, this message translates to:
+  /// **'同时从参会人中删除'**
+  String get interpRemoveInterpreterInMembers;
+
+  /// No description provided for @interpRemoveMemberInInterpreters.
+  ///
+  /// In zh, this message translates to:
+  /// **'该参会人同时被指派为译员，删除参会者将会同时取消译员指派'**
+  String get interpRemoveMemberInInterpreters;
+
+  /// No description provided for @interpListeningChannelDisconnect.
+  ///
+  /// In zh, this message translates to:
+  /// **'收听语言频道已断开，正在尝试重连'**
+  String get interpListeningChannelDisconnect;
+
+  /// No description provided for @interpSpeakingChannelDisconnect.
+  ///
+  /// In zh, this message translates to:
+  /// **'传译语言频道已断开，正在尝试重连'**
+  String get interpSpeakingChannelDisconnect;
+
+  /// No description provided for @langChinese.
+  ///
+  /// In zh, this message translates to:
+  /// **'中文'**
+  String get langChinese;
+
+  /// No description provided for @langEnglish.
+  ///
+  /// In zh, this message translates to:
+  /// **'英语'**
+  String get langEnglish;
+
+  /// No description provided for @langJapanese.
+  ///
+  /// In zh, this message translates to:
+  /// **'日语'**
+  String get langJapanese;
+
+  /// No description provided for @langKorean.
+  ///
+  /// In zh, this message translates to:
+  /// **'韩语'**
+  String get langKorean;
+
+  /// No description provided for @langFrench.
+  ///
+  /// In zh, this message translates to:
+  /// **'法语'**
+  String get langFrench;
+
+  /// No description provided for @langGerman.
+  ///
+  /// In zh, this message translates to:
+  /// **'德语'**
+  String get langGerman;
+
+  /// No description provided for @langSpanish.
+  ///
+  /// In zh, this message translates to:
+  /// **'西班牙语'**
+  String get langSpanish;
+
+  /// No description provided for @langRussian.
+  ///
+  /// In zh, this message translates to:
+  /// **'俄语'**
+  String get langRussian;
+
+  /// No description provided for @langPortuguese.
+  ///
+  /// In zh, this message translates to:
+  /// **'葡萄牙语'**
+  String get langPortuguese;
+
+  /// No description provided for @langItalian.
+  ///
+  /// In zh, this message translates to:
+  /// **'意大利语'**
+  String get langItalian;
+
+  /// No description provided for @langTurkish.
+  ///
+  /// In zh, this message translates to:
+  /// **'土耳其语'**
+  String get langTurkish;
+
+  /// No description provided for @langVietnamese.
+  ///
+  /// In zh, this message translates to:
+  /// **'越南语'**
+  String get langVietnamese;
+
+  /// No description provided for @langThai.
+  ///
+  /// In zh, this message translates to:
+  /// **'泰语'**
+  String get langThai;
+
+  /// No description provided for @langIndonesian.
+  ///
+  /// In zh, this message translates to:
+  /// **'印尼语'**
+  String get langIndonesian;
+
+  /// No description provided for @langMalay.
+  ///
+  /// In zh, this message translates to:
+  /// **'马来语'**
+  String get langMalay;
+
+  /// No description provided for @langArabic.
+  ///
+  /// In zh, this message translates to:
+  /// **'阿拉伯语'**
+  String get langArabic;
+
+  /// No description provided for @langHindi.
+  ///
+  /// In zh, this message translates to:
+  /// **'印地语'**
+  String get langHindi;
+
+  /// No description provided for @annotation.
+  ///
+  /// In zh, this message translates to:
+  /// **'互动批注'**
+  String get annotation;
+
+  /// No description provided for @annotationEnabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'互动批注已开启'**
+  String get annotationEnabled;
+
+  /// No description provided for @annotationDisabled.
+  ///
+  /// In zh, this message translates to:
+  /// **'互动批注已关闭'**
+  String get annotationDisabled;
+
+  /// No description provided for @startAnnotation.
+  ///
+  /// In zh, this message translates to:
+  /// **'批注'**
+  String get startAnnotation;
+
+  /// No description provided for @stopAnnotation.
+  ///
+  /// In zh, this message translates to:
+  /// **'退出批注'**
+  String get stopAnnotation;
+
+  /// No description provided for @inAnnotation.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在批注中'**
+  String get inAnnotation;
+
+  /// No description provided for @saveAnnotation.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存当前批注'**
+  String get saveAnnotation;
+
+  /// No description provided for @cancelAnnotation.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消批注'**
+  String get cancelAnnotation;
+
+  /// No description provided for @settings.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置'**
+  String get settings;
+
+  /// No description provided for @settingAudio.
+  ///
+  /// In zh, this message translates to:
+  /// **'音频'**
+  String get settingAudio;
+
+  /// No description provided for @settingVideo.
+  ///
+  /// In zh, this message translates to:
+  /// **'视频'**
+  String get settingVideo;
+
+  /// No description provided for @settingCommon.
+  ///
+  /// In zh, this message translates to:
+  /// **'通用'**
+  String get settingCommon;
+
+  /// No description provided for @settingAudioAINS.
+  ///
+  /// In zh, this message translates to:
+  /// **'智能降噪'**
+  String get settingAudioAINS;
+
+  /// No description provided for @settingEnableTransparentWhiteboard.
+  ///
+  /// In zh, this message translates to:
+  /// **'设置白板透明'**
+  String get settingEnableTransparentWhiteboard;
+
+  /// No description provided for @settingEnableFrontCameraMirror.
+  ///
+  /// In zh, this message translates to:
+  /// **'前置摄像头镜像'**
+  String get settingEnableFrontCameraMirror;
+
+  /// No description provided for @settingShowMeetDuration.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示会议持续时间'**
+  String get settingShowMeetDuration;
+
+  /// No description provided for @settingSpeakerSpotlight.
+  ///
+  /// In zh, this message translates to:
+  /// **'语音激励'**
+  String get settingSpeakerSpotlight;
+
+  /// No description provided for @settingSpeakerSpotlightTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启后，将优先显示正在说话的参会成员'**
+  String get settingSpeakerSpotlightTip;
 }
 
 class _NEMeetingUIKitLocalizationsDelegate

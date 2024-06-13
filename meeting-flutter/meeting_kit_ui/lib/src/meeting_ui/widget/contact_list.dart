@@ -25,8 +25,11 @@ class ContactList extends StatefulWidget {
   /// 选中添加成员的缓存数据
   final List<NEContact> selectedContactsCache;
 
-  /// 搜索框
-  final TextEditingController searchTextEditingController;
+  /// 是否为单选模式。如果为单选模式，则在选择一个成员后，自动退出页面
+  final bool singleMode;
+
+  /// 是否展示搜索提示，默认展示
+  final bool showSearchHint;
 
   ContactList({
     super.key,
@@ -34,7 +37,8 @@ class ContactList extends StatefulWidget {
     this.alreadySelectedUserUuids = const [],
     this.selectedContactsCache = const [],
     this.onSelectedContactListChanged,
-    required this.searchTextEditingController,
+    this.singleMode = false,
+    this.showSearchHint = true,
   });
 
   @override
@@ -55,8 +59,7 @@ class _ContactListState extends State<ContactList>
   /// 当前页码数，用于分页加载
   var _currentPage = 1;
 
-  TextEditingController get _searchTextEditingController =>
-      widget.searchTextEditingController;
+  final _searchTextEditingController = TextEditingController();
 
   final _focusNode = FocusNode();
 
@@ -65,6 +68,9 @@ class _ContactListState extends State<ContactList>
     super.initState();
 
     _selectedContacts.addAll(widget.selectedContactsCache);
+    if (widget.singleMode) {
+      _searchedContacts.addAll(widget.selectedContactsCache);
+    }
 
     /// 通讯录搜索框
     _searchTextEditingController
@@ -80,10 +86,9 @@ class _ContactListState extends State<ContactList>
             _scrollController.position.maxScrollExtent) {
           /// 加载更多
           NEMeetingKit.instance
-              .getAccountService()
-              .searchContacts(
-                  name: _searchTextEditingController.text,
-                  pageNum: ++_currentPage)
+              .getContactsService()
+              .searchContactListByName(
+                  _searchTextEditingController.text, 20, ++_currentPage)
               .then((value) => {
                     setState(() {
                       _searchedContacts.addAll(value.data ?? []);
@@ -91,6 +96,9 @@ class _ContactListState extends State<ContactList>
                   });
         }
       });
+    _focusNode.addListener(() {
+      setState(() {});
+    });
   }
 
   /// 搜索通讯录
@@ -99,13 +107,16 @@ class _ContactListState extends State<ContactList>
     if (text.isEmpty) {
       setState(() {
         _searchedContacts.clear();
+        if (widget.singleMode) {
+          _searchedContacts.addAll(widget.selectedContactsCache);
+        }
       });
     } else {
       /// 变换关键字之后重新搜索
       _currentPage = 1;
       NEMeetingKit.instance
-          .getAccountService()
-          .searchContacts(name: text, pageNum: _currentPage)
+          .getContactsService()
+          .searchContactListByName(text, 20, _currentPage)
           .then((value) {
         /// 解决请求时序返回问题
         if (text == _searchTextEditingController.text) {
@@ -139,8 +150,10 @@ class _ContactListState extends State<ContactList>
         children: [
           SizedBox(height: 12),
           _buildSearch(),
-          if (_selectedContacts.isNotEmpty) SizedBox(height: 12),
-          if (_selectedContacts.isNotEmpty) _buildSelected(),
+          if (_selectedContacts.isNotEmpty && !widget.singleMode)
+            SizedBox(height: 12),
+          if (_selectedContacts.isNotEmpty && !widget.singleMode)
+            _buildSelected(),
           SizedBox(height: 12),
           Expanded(
             child: Container(
@@ -155,6 +168,10 @@ class _ContactListState extends State<ContactList>
 
   /// 未搜索到通讯录成员
   Widget _buildEmptyContacts() {
+    final searchTextEmpty = _searchTextEditingController.text.isEmpty;
+    if (searchTextEmpty && !widget.showSearchHint) {
+      return Container();
+    }
     return Container(
       alignment: Alignment.topCenter,
       margin: EdgeInsets.only(top: 100),
@@ -165,7 +182,7 @@ class _ContactListState extends State<ContactList>
               package: NEMeetingImages.package),
           SizedBox(height: 10),
           Text(
-              _searchTextEditingController.text.isEmpty
+              searchTextEmpty
                   ? meetingUiLocalizations.sipSearchContacts
                   : meetingUiLocalizations.meetingSearchNotFound,
               style: TextStyle(fontSize: 14, color: _UIColors.color_666666)),
@@ -180,7 +197,6 @@ class _ContactListState extends State<ContactList>
       color: Colors.white,
       child: Container(
           margin: EdgeInsets.only(left: 20, right: 20),
-          padding: EdgeInsets.only(right: 16),
           decoration: BoxDecoration(
               color: _UIColors.colorF7F8FA,
               borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -210,7 +226,8 @@ class _ContactListState extends State<ContactList>
                 ),
                 prefixIconConstraints: BoxConstraints(
                     minWidth: 32, minHeight: 32, maxHeight: 32, maxWidth: 32),
-                suffixIcon: TextUtils.isEmpty(_searchTextEditingController.text)
+                suffixIcon: !_focusNode.hasFocus ||
+                        TextUtils.isEmpty(_searchTextEditingController.text)
                     ? null
                     : ClearIconButton(
                         onPressed: () {
@@ -288,14 +305,30 @@ class _ContactListState extends State<ContactList>
       return MediaQuery.removePadding(
           removeTop: true,
           context: context,
-          child: ListView.builder(
+          child: ListView.separated(
             controller: _scrollController,
+            separatorBuilder: (context, index) {
+              return Container(
+                height: 1,
+                color: _UIColors.colorF2F3F5,
+              );
+            },
             itemBuilder: (context, index) {
               final contact = _searchedContacts[index];
               return GestureDetector(
                   onTap: () {
                     if (widget.alreadySelectedUserUuids
                         .contains(contact.userUuid)) {
+                      return;
+                    }
+
+                    /// 单选模式
+                    if (widget.singleMode) {
+                      if (widget.itemClickCallback
+                              ?.call(contact, _selectedContacts.length, null) !=
+                          false) {
+                        Navigator.of(context).pop(contact);
+                      }
                       return;
                     }
 
@@ -363,6 +396,8 @@ class _ContactListState extends State<ContactList>
   @override
   void dispose() {
     _scrollController.dispose();
+    _searchTextEditingController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 }

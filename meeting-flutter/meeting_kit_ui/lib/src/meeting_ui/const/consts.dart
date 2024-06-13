@@ -4,9 +4,6 @@
 
 part of meeting_ui;
 
-const int virtualListMax = 9;
-const int virtualListKitMax = 6;
-const int addExternalVirtualMax = 5;
 const String virtualNone = '-';
 
 const String RecallMessageNotify = 'RecallMessageNotify';

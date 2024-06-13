@@ -2,12 +2,14 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/service/repo/user_repo.dart';
+import 'package:nemeeting/widget/ne_widget.dart';
 import '../language/localizations.dart';
 import '../uikit/state/meeting_base_state.dart';
 import '../uikit/values/colors.dart';
@@ -24,12 +26,12 @@ class NickSetting extends StatefulWidget {
   }
 }
 
-class _NickSettingState extends MeetingBaseState<NickSetting>
-    with MeetingAppLocalizationsMixin {
+class _NickSettingState extends AppBaseState<NickSetting> {
   late TextEditingController _textController;
 
   bool enable = false;
   late String originalNickname;
+  final nickNameFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -37,75 +39,90 @@ class _NickSettingState extends MeetingBaseState<NickSetting>
     originalNickname = MeetingUtil.getNickName();
     _textController = TextEditingController(text: originalNickname);
     enable = _textController.text.isNotEmpty;
+    nickNameFocusNode.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
   void dispose() {
     _textController.dispose();
+    nickNameFocusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget buildBody() {
-    return GestureDetector(
-        behavior: HitTestBehavior.opaque,
+    return NEGestureDetector(
         onTap: () {
           FocusScope.of(context).unfocus();
         },
-        child: Column(
-          children: <Widget>[
-            Container(
-              color: AppColors.globalBg,
-              height: Dimen.globalPadding,
-            ),
-            Container(
-              height: Dimen.primaryItemHeight,
-              color: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
-              alignment: Alignment.center,
-              child: TextField(
-                key: MeetingValueKey.editNickName,
-                autofocus: false,
-                controller: _textController,
-                keyboardAppearance: Brightness.light,
-                textAlignVertical: TextAlignVertical.bottom,
-                onChanged: (value) {
-                  enable = _textController.text.isNotEmpty;
-                  setState(() {});
-                },
-                inputFormatters: [
-                  MeetingLengthLimitingTextInputFormatter(nickLengthMax),
-                ],
-                decoration: InputDecoration(
-                    fillColor: Colors.white,
-                    focusedBorder: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    suffixIcon: TextUtil.isEmpty(_textController.text)
-                        ? null
-                        : ClearIconButton(
-                            key: MeetingValueKey.clearEdit,
-                            onPressed: () {
-                              _textController.clear();
-                              enable = _textController.text.isNotEmpty;
-                              setState(() {});
-                            },
-                          )),
-                style: TextStyle(color: AppColors.color_222222, fontSize: 16),
-              ),
-            ),
-            Expanded(
-              flex: 1,
-              child: Container(
+        child: Container(
+          padding: EdgeInsets.only(left: 16.w, right: 16.w),
+          child: Column(
+            children: <Widget>[
+              Container(
                 color: AppColors.globalBg,
+                height: Dimen.globalHeightPadding,
               ),
-            )
-          ],
+              NESettingItemGroup(children: [
+                Container(
+                  height: 48.h,
+                  // padding: EdgeInsets.only(left: Dimen.globalWidthPadding),
+                  alignment: Alignment.centerLeft,
+                  child: TextField(
+                    key: MeetingValueKey.editNickName,
+                    autofocus: false,
+                    controller: _textController,
+                    keyboardAppearance: Brightness.light,
+                    textAlignVertical: TextAlignVertical.center,
+                    onChanged: (value) {
+                      enable = _textController.text.isNotEmpty;
+                      setState(() {});
+                    },
+                    inputFormatters: [
+                      MeetingLengthLimitingTextInputFormatter(nickLengthMax),
+                    ],
+                    focusNode: nickNameFocusNode,
+                    decoration: InputDecoration(
+                        fillColor: Colors.white,
+                        filled: true,
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide.none, // 确保无边框
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide.none, // 确保无边框
+                        ),
+                        suffixIcon: !nickNameFocusNode.hasFocus ||
+                                TextUtil.isEmpty(_textController.text)
+                            ? null
+                            : ClearIconButton(
+                                key: MeetingValueKey.clearEdit,
+                                onPressed: () {
+                                  _textController.clear();
+                                  enable = _textController.text.isNotEmpty;
+                                  setState(() {});
+                                },
+                              )),
+                    style: TextStyle(
+                        color: AppColors.color_333333, fontSize: 14.spMin),
+                  ),
+                ),
+              ]),
+              Expanded(
+                flex: 1,
+                child: Container(
+                  color: AppColors.globalBg,
+                ),
+              )
+            ],
+          ),
         ));
   }
 
   @override
   String getTitle() {
-    return meetingAppLocalizations.settingNick;
+    return getAppLocalizations().settingRename;
   }
 
   @override
@@ -113,10 +130,10 @@ class _NickSettingState extends MeetingBaseState<NickSetting>
     return <Widget>[
       TextButton(
         child: Text(
-          meetingAppLocalizations.globalComplete,
+          getAppLocalizations().globalComplete,
           style: TextStyle(
             color: enable ? AppColors.color_337eff : AppColors.blue_50_337eff,
-            fontSize: 16.0,
+            fontSize: 16.spMin,
           ),
         ),
         onPressed: enable ? _commit : null,
@@ -128,7 +145,7 @@ class _NickSettingState extends MeetingBaseState<NickSetting>
     final nick = _textController.text;
     // if (!StringUtil.isLetterOrDigitalOrZh(nick)) {
     //   _textController.text = '';
-    //   ToastUtils.showToast(context, meetingAppLocalizations.validatorNickTip);
+    //   ToastUtils.showToast(context, getAppLocalizations().validatorNickTip);
     //   setState(() {});
     //   return;
     // }
@@ -138,31 +155,26 @@ class _NickSettingState extends MeetingBaseState<NickSetting>
       if (result.code == HttpCode.success) {
         AuthManager().saveNick(nick);
         ToastUtils.showToast(
-            context, meetingAppLocalizations.settingModifySuccess);
+            context, getAppLocalizations().settingModifySuccess);
         updateHistoryMeetingItem(originalNickname, nick);
         Navigator.maybePop(context);
       } else {
         ToastUtils.showToast(
-            context, result.msg ?? meetingAppLocalizations.settingModifyFailed);
+            context, result.msg ?? getAppLocalizations().settingModifyFailed);
       }
     });
   }
 
+  /// 更新历史会议记录中的昵称
   void updateHistoryMeetingItem(String original, String current) {
     if (current != original) {
-      NEMeetingKit.instance
-          .getSettingsService()
-          .getHistoryMeetingItem()
-          .then((value) {
-        if (value?.isNotEmpty ?? false) {
-          final item = value![0];
-          if (item.nickname == originalNickname) {
-            NEMeetingKit.instance
-                .getSettingsService()
-                .updateHistoryMeetingItem(null);
-          }
+      LocalHistoryMeetingManager().localHistoryMeetingList.forEach((item) {
+        if (item.nickname == originalNickname) {
+          item.nickname = current;
         }
       });
+      LocalHistoryMeetingManager().saveLocalHistoryMeeting(
+          LocalHistoryMeetingManager().localHistoryMeetingList);
     }
   }
 }

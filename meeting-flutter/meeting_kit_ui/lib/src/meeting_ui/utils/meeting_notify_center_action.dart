@@ -27,7 +27,7 @@ class MeetingNotifyCenterActionUtil {
         context: context,
         routeSettings: RouteSettings(name: MeetingWebAppPage.routeName),
         builder: (context) {
-          return wrapWithWatermark(
+          return MeetingWatermark(
               child: MeetingWebAppPage(
             roomArchiveId: roomContext.meetingInfo.roomArchiveId!,
             homeUrl: item.singleStateItem.customObject!.homeUrl,

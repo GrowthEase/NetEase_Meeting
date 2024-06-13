@@ -7,22 +7,24 @@ import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nemeeting/language/localizations.dart';
 import 'package:nemeeting/routes/home_page.dart';
+import 'package:nemeeting/uikit/state/meeting_base_state.dart';
 import 'package:nemeeting/utils/const_config.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/service/config/app_config.dart';
+import 'package:nemeeting/widget/ne_widget.dart';
 import '../uikit/utils/nav_utils.dart';
-import '../uikit/utils/router_name.dart';
-import '../uikit/values/dimem.dart';
 import '../uikit/values/fonts.dart';
 import '../uikit/values/colors.dart';
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 import 'package:nemeeting/utils/integration_test.dart';
 import '../uikit/const/consts.dart';
+import '../widget/meeting_text_field.dart';
 
 class MeetCreateRoute extends StatefulWidget {
   @override
@@ -31,23 +33,24 @@ class MeetCreateRoute extends StatefulWidget {
   }
 }
 
-class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute>
-    with MeetingAppLocalizationsMixin {
-  bool userSelfMeetingNum = false;
+class _MeetCreateRouteState extends AppBaseState<MeetCreateRoute> {
+  ValueNotifier<bool> userSelfMeetingNum = ValueNotifier(false);
 
-  bool openCamera = true;
+  ValueNotifier<bool> openCamera = ValueNotifier(true);
 
-  bool openMicrophone = true;
+  ValueNotifier<bool> openMicrophone = ValueNotifier(true);
 
-  bool openRecord = !kNoCloudRecord;
+  ValueNotifier<bool> openRecord = ValueNotifier(!kNoCloudRecord);
 
   bool showMeetingRecord = false;
 
-  bool meetingPwdSwitch = false;
+  ValueNotifier<bool> meetingPwdSwitch = ValueNotifier(false);
 
   final _meetingPasswordController = TextEditingController();
 
-  var _createEnable = true;
+  ValueNotifier<bool> _createEnable = ValueNotifier(true);
+
+  FocusNode passwordFocusNode = FocusNode();
 
   final NESettingsService settingsService =
       NEMeetingKit.instance.getSettingsService();
@@ -59,410 +62,278 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute>
     Future.wait([
       settingsService.isTurnOnMyVideoWhenJoinMeetingEnabled(),
       settingsService.isTurnOnMyAudioWhenJoinMeetingEnabled(),
-      settingsService.isMeetingCloudRecordEnabled(),
+      settingsService.isMeetingCloudRecordSupported(),
     ]).then((values) {
-      setState(() {
-        openCamera = values[0];
-        openMicrophone = values[1];
-        // showMeetingRecord = values[3];
-      });
+      openCamera.value = values[0];
+      openMicrophone.value = values[1];
+      // showMeetingRecord = values[3];
+    });
+    passwordFocusNode.addListener(() {
+      setState(() {});
     });
   }
 
   @override
   void dispose() {
     _meetingPasswordController.dispose();
+    passwordFocusNode.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+  String getTitle() {
+    return getAppLocalizations().meetingHold;
+  }
+
+  @override
+  Widget buildBody() {
+    return NEGestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        backgroundColor: AppColors.globalBg,
-        appBar: AppBar(
-          leading: Builder(
-            builder: (BuildContext context) {
-              return IconButton(
-                icon: const Icon(
-                  key: MeetingValueKey.back,
-                  IconFont.iconyx_returnx,
-                  size: 18,
-                  color: AppColors.black_333333,
-                ),
-                onPressed: () {
-                  Navigator.maybePop(context);
-                },
-              );
-            },
-          ),
-          elevation: 0,
-          centerTitle: true,
-          backgroundColor: Colors.white,
-          title: Text(meetingAppLocalizations.meetingCreate,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: AppColors.black_222222,
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold)),
-          // systemOverlayStyle: SystemUiOverlayStyle.dark,
-        ),
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            SizedBox(height: 10),
-            buildUseSelfMeetingItem(),
-            if (!TextUtil.isEmpty(MeetingUtil.getShortMeetingNum()))
-              ...buildShortMeetingIdItem(),
-            ...buildMeetingIdItem(),
-            Container(
-              color: AppColors.globalBg,
-              height: Dimen.globalPadding,
-            ),
-            buildPwd(),
-            if (meetingPwdSwitch) buildSplit(),
-            if (meetingPwdSwitch) buildPwdInput(),
-            Container(
-              color: AppColors.globalBg,
-              height: Dimen.globalPadding,
-            ),
-            buildMicrophoneItem(),
-            buildSplit(),
-            buildCameraItem(),
-            if (showMeetingRecord) buildRecordItem(),
-            buildCreate()
-          ],
-        ),
-      ),
-    );
-  }
-
-  Container buildSplit() {
-    return Container(
-      color: AppColors.white,
-      padding: EdgeInsets.only(left: 20),
-      height: 0.5,
-      child: Divider(height: 0.5),
-    );
-  }
-
-  Container buildUseSelfMeetingItem() {
-    return Container(
-      height: 56,
-      color: Colors.white,
-      padding: EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Expanded(
-            flex: 1,
-            child: Text(
-              meetingAppLocalizations.meetingUsePersonalMeetId,
-              style: TextStyle(color: AppColors.black_222222, fontSize: 17),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  MeetingSettingGroup(children: [
+                    buildUseSelfMeetingItem(),
+                    if (!TextUtil.isEmpty(MeetingUtil.getShortMeetingNum()))
+                      buildShortMeetingIdItem(),
+                    buildMeetingIdItem(),
+                  ]),
+                  MeetingSettingGroup(children: [
+                    buildPwd(),
+                    ValueListenableBuilder(
+                        valueListenable: meetingPwdSwitch,
+                        builder: (context, value, child) {
+                          return Visibility(
+                            visible: value,
+                            child: buildPwdInput(),
+                          );
+                        }),
+                  ]),
+                  MeetingSettingGroup(children: [
+                    buildMicrophoneItem(),
+                    buildCameraItem(),
+                    if (showMeetingRecord) buildRecordItem(),
+                  ]),
+                  SizedBox(height: 16.h),
+                ],
+              ),
             ),
           ),
-          CupertinoSwitch(
-              key: MeetingValueKey.userSelfMeetingNumCreateMeeting,
-              value: userSelfMeetingNum,
-              onChanged: (bool value) {
-                setState(() {
-                  userSelfMeetingNum = value;
-                });
-              },
-              activeColor: AppColors.blue_337eff)
+          buildCreate()
         ],
       ),
     );
   }
 
-  List<Widget> buildShortMeetingIdItem() {
-    return [
-      buildSplit(),
-      Container(
-        height: 56,
-        color: Colors.white,
-        padding: EdgeInsets.symmetric(horizontal: 20),
-        child: Row(
-          children: <Widget>[
-            Text(
-              meetingAppLocalizations.meetingPersonalShortMeetingID,
-              style: TextStyle(fontSize: 16, color: AppColors.black_222222),
-            ),
-            Container(
-              margin: EdgeInsets.only(left: 6),
-              padding: EdgeInsets.only(left: 6, right: 6, bottom: 2),
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(2),
-                  color: AppColors.color_1a337eff,
-                  border: Border.all(color: AppColors.color_33337eff)),
-              child: Text(
-                meetingAppLocalizations.settingInternalDedicated,
-                style: TextStyle(fontSize: 12, color: AppColors.color_337eff),
-              ),
-            ),
-            Spacer(),
-            Text(
-              MeetingUtil.getShortMeetingNum(),
-              style: TextStyle(fontSize: 14, color: AppColors.color_999999),
-            ),
-          ],
-        ),
-      ),
-    ];
+  Widget buildUseSelfMeetingItem() {
+    return MeetingSwitchItem(
+        title: getAppLocalizations().meetingUsePersonalMeetId,
+        valueNotifier: userSelfMeetingNum,
+        onChanged: (bool value) {
+          userSelfMeetingNum.value = value;
+        });
   }
 
-  List<Widget> buildMeetingIdItem() {
-    return [
-      buildSplit(),
-      Container(
-        height: 56,
-        color: Colors.white,
-        padding: EdgeInsets.symmetric(horizontal: 20),
-        child: Row(
-          children: <Widget>[
-            Text(
-              meetingAppLocalizations.meetingPersonalMeetingID,
-              style: TextStyle(fontSize: 16, color: AppColors.black_222222),
-            ),
-            Spacer(),
-            Text(
-              TextUtil.applyMask(MeetingUtil.getMeetingNum(), '000-000-0000'),
-              key: MeetingValueKey.personalMeetingId,
-              style: TextStyle(fontSize: 14, color: AppColors.color_999999),
-            ),
-          ],
+  Widget buildShortMeetingIdItem() {
+    return MeetingArrowItem(
+      title: getAppLocalizations().meetingPersonalShortMeetingID,
+      showArrow: false,
+      tag: Container(
+        margin: EdgeInsets.only(left: 6.w),
+        padding: EdgeInsets.only(left: 6.w, right: 6.w, bottom: 2.h),
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(2),
+            color: AppColors.color_1a337eff,
+            border: Border.all(color: AppColors.color_33337eff)),
+        child: Text(
+          getAppLocalizations().settingInternalDedicated,
+          style: TextStyle(fontSize: 12, color: AppColors.color_337eff),
         ),
       ),
-    ];
+      content: MeetingUtil.getShortMeetingNum(),
+    );
+  }
+
+  Widget buildMeetingIdItem() {
+    return MeetingArrowItem(
+      key: MeetingValueKey.personalMeetingId,
+      title: getAppLocalizations().meetingPersonalMeetingID,
+      content: TextUtil.applyMask(MeetingUtil.getMeetingNum(), '000-000-0000'),
+      showArrow: false,
+    );
   }
 
   Widget buildPwd() {
-    return Container(
-      height: 56,
-      color: AppColors.white,
-      padding: EdgeInsets.only(left: 20, right: 16),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            flex: 1,
-            child: Text(
-              meetingAppLocalizations.meetingPassword,
-              style: TextStyle(color: AppColors.black_222222, fontSize: 16),
-            ),
-          ),
-          CupertinoSwitch(
-              key: MeetingValueKey.schedulePwdSwitch,
-              value: meetingPwdSwitch,
-              onChanged: (bool value) {
-                setState(() {
-                  meetingPwdSwitch = value;
-                  if (meetingPwdSwitch &&
-                      TextUtil.isEmpty(_meetingPasswordController.text)) {
-                    _meetingPasswordController.text =
-                        (Random().nextInt(900000) + 100000).toString();
-                  }
-                  _createEnable = _updateCreateEnableState();
-                });
-              },
-              activeColor: AppColors.blue_337eff)
-        ],
-      ),
-    );
+    return MeetingSwitchItem(
+        key: MeetingValueKey.schedulePwdSwitch,
+        title: getAppLocalizations().meetingPassword,
+        valueNotifier: meetingPwdSwitch,
+        onChanged: (bool value) {
+          meetingPwdSwitch.value = value;
+          if (meetingPwdSwitch.value &&
+              TextUtil.isEmpty(_meetingPasswordController.text)) {
+            _meetingPasswordController.text =
+                (Random().nextInt(900000) + 100000).toString();
+          }
+          _createEnable.value = _updateCreateEnableState();
+        });
   }
 
   Widget buildPwdInput() {
     return Container(
-      height: Dimen.primaryItemHeight,
-      color: Colors.white,
-      padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
-      alignment: Alignment.center,
-      child: TextField(
-        key: MeetingValueKey.schedulePwdInput,
-        autofocus: false,
-        keyboardAppearance: Brightness.light,
-        controller: _meetingPasswordController,
-        keyboardType: TextInputType.number,
-        inputFormatters: [
-          LengthLimitingTextInputFormatter(meetingPasswordLengthMax),
-          FilteringTextInputFormatter.allow(RegExp(r'\d+')),
-        ],
-        onChanged: (value) {
-          setState(() {
-            _createEnable = _updateCreateEnableState();
-          });
-        },
-        decoration: InputDecoration(
-            hintText: '${meetingAppLocalizations.meetingEnterPassword}',
-            hintStyle: TextStyle(fontSize: 14, color: AppColors.color_999999),
-            border: InputBorder.none,
-            suffixIcon: TextUtil.isEmpty(_meetingPasswordController.text)
-                ? null
-                : ClearIconButton(
-                    key: MeetingValueKey.clearInputMeetingPassword,
-                    onPressed: () {
-                      setState(() {
-                        _meetingPasswordController.clear();
-                        _createEnable = _updateCreateEnableState();
-                      });
-                    })),
-        style: TextStyle(color: AppColors.color_222222, fontSize: 16),
+      height: 48,
+      margin: EdgeInsets.symmetric(horizontal: 16),
+      alignment: Alignment.centerLeft,
+      child: Container(
+        height: 36,
+        decoration: BoxDecoration(
+          border: Border.all(
+              color: passwordFocusNode.hasFocus
+                  ? AppColors.color_337eff
+                  : AppColors.colorE6E7EB,
+              width: 1),
+          borderRadius: BorderRadius.circular(4.r),
+        ),
+        padding: EdgeInsets.only(left: 12.w),
+        child: Row(children: [
+          Expanded(
+              child: TextField(
+            key: MeetingValueKey.schedulePwdInput,
+            autofocus: false,
+            focusNode: passwordFocusNode,
+            keyboardAppearance: Brightness.light,
+            controller: _meetingPasswordController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(meetingPasswordLengthMax),
+              FilteringTextInputFormatter.allow(RegExp(r'\d+')),
+            ],
+            textAlignVertical: TextAlignVertical.center,
+            onChanged: (value) {
+              _createEnable.value = _updateCreateEnableState();
+            },
+            decoration: InputDecoration(
+              hintText: '${getAppLocalizations().meetingEnterPassword}',
+              hintStyle: TextStyle(fontSize: 14, color: AppColors.color_999999),
+              isCollapsed: true,
+              border: InputBorder.none,
+            ),
+            style: TextStyle(color: AppColors.color_1E1E27, fontSize: 14),
+          )),
+          TextUtil.isEmpty(_meetingPasswordController.text) ||
+                  !passwordFocusNode.hasFocus
+              ? SizedBox.shrink()
+              : ClearIconButton(
+                  key: MeetingValueKey.clearInputMeetingPassword,
+                  padding:
+                      EdgeInsets.only(right: 12, top: 6, bottom: 6, left: 6),
+                  onPressed: () {
+                    _meetingPasswordController.clear();
+                    _createEnable.value = _updateCreateEnableState();
+                  })
+        ]),
       ),
     );
   }
 
   bool _updateCreateEnableState() {
-    return !meetingPwdSwitch || _meetingPasswordController.text.length == 6;
+    return !meetingPwdSwitch.value ||
+        _meetingPasswordController.text.length == 6;
   }
 
-  Container buildCameraItem() {
-    return Container(
-      height: 56,
-      color: Colors.white,
-      padding: EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            flex: 1,
-            child: Text(
-              meetingAppLocalizations.meetingJoinCameraOn,
-              style: TextStyle(color: AppColors.black_222222, fontSize: 16),
+  Widget buildCameraItem() {
+    return MeetingSwitchItem(
+      key: MeetingValueKey.openCameraCreateMeeting,
+      title: getAppLocalizations().meetingJoinCameraOn,
+      valueNotifier: openCamera,
+      onChanged: (bool value) {
+        openCamera.value = value;
+        settingsService.enableTurnOnMyVideoWhenJoinMeeting(value);
+      },
+    );
+  }
+
+  Widget buildRecordItem() {
+    return MeetingSwitchItem(
+      key: MeetingValueKey.openRecordEnterMeeting,
+      title: getAppLocalizations().meetingJoinCloudRecordOn,
+      valueNotifier: openRecord,
+      onChanged: (bool value) {
+        openRecord.value = value;
+      },
+    );
+  }
+
+  Widget buildMicrophoneItem() {
+    return MeetingSwitchItem(
+      key: MeetingValueKey.openMicrophoneCreateMeeting,
+      title: getAppLocalizations().meetingJoinMicrophoneOn,
+      valueNotifier: openMicrophone,
+      onChanged: (bool value) {
+        openMicrophone.value = value;
+        settingsService.enableTurnOnMyAudioWhenJoinMeeting(value);
+      },
+    );
+  }
+
+  Widget buildCreate() {
+    return ValueListenableBuilder(
+        valueListenable: _createEnable,
+        builder: (context, value, child) {
+          return SafeArea(
+              child: Container(
+            padding: EdgeInsets.symmetric(vertical: 12.h),
+            margin: EdgeInsets.symmetric(horizontal: 16.w),
+            child: MeetingActionButton(
+              key: MeetingValueKey.createMeetingBtn,
+              onTap: value ? createMeeting : null,
+              text: getAppLocalizations().meetingCreate,
             ),
-          ),
-          CupertinoSwitch(
-              key: MeetingValueKey.openCameraCreateMeeting,
-              value: openCamera,
-              onChanged: (bool value) {
-                setState(() {
-                  openCamera = value;
-                  settingsService.setTurnOnMyVideoWhenJoinMeeting(value);
-                });
-              },
-              activeColor: AppColors.blue_337eff)
-        ],
-      ),
-    );
-  }
-
-  Container buildRecordItem() {
-    return Container(
-      height: 56,
-      color: Colors.white,
-      padding: EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            flex: 1,
-            child: Text(
-              meetingAppLocalizations.meetingJoinCloudRecordOn,
-              style: TextStyle(color: AppColors.black_222222, fontSize: 16),
-            ),
-          ),
-          CupertinoSwitch(
-              key: MeetingValueKey.openRecordEnterMeeting,
-              value: openRecord,
-              onChanged: (bool value) {
-                setState(() {
-                  openRecord = value;
-                });
-              },
-              activeColor: AppColors.blue_337eff)
-        ],
-      ),
-    );
-  }
-
-  Container buildMicrophoneItem() {
-    return Container(
-      height: 56,
-      color: Colors.white,
-      padding: EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            flex: 1,
-            child: Text(
-              meetingAppLocalizations.meetingJoinMicrophoneOn,
-              style: TextStyle(color: AppColors.black_222222, fontSize: 16),
-            ),
-          ),
-          CupertinoSwitch(
-              key: MeetingValueKey.openMicrophoneCreateMeeting,
-              value: openMicrophone,
-              onChanged: (bool value) {
-                setState(() {
-                  openMicrophone = value;
-                  settingsService.setTurnOnMyAudioWhenJoinMeeting(value);
-                });
-              },
-              activeColor: AppColors.blue_337eff)
-        ],
-      ),
-    );
-  }
-
-  Container buildCreate() {
-    return Container(
-      padding: EdgeInsets.all(30),
-      child: ElevatedButton(
-        key: MeetingValueKey.createMeetingBtn,
-        style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
-              if (states.contains(MaterialState.disabled)) {
-                return AppColors.blue_50_337eff;
-              }
-              return AppColors.blue_337eff;
-            }),
-            padding:
-                MaterialStateProperty.all(EdgeInsets.symmetric(vertical: 13)),
-            shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                side: BorderSide(color: AppColors.blue_337eff, width: 0),
-                borderRadius: BorderRadius.all(Radius.circular(25))))),
-        onPressed: _createEnable ? createMeeting : null,
-        child: Text(
-          meetingAppLocalizations.meetingCreate,
-          style: TextStyle(color: Colors.white, fontSize: 16),
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
+          ));
+        });
   }
 
   Future<void> createMeeting() async {
     var historyItem = await NEMeetingKit.instance
-        .getSettingsService()
-        .getHistoryMeetingItem();
+        .getMeetingService()
+        .getLocalHistoryMeetingList()
+        .where((historyItem) => (historyItem.meetingNum ==
+                (userSelfMeetingNum.value ? MeetingUtil.getMeetingNum() : '') ||
+            historyItem.shortMeetingNum ==
+                (userSelfMeetingNum.value
+                    ? MeetingUtil.getShortMeetingNum()
+                    : '')))
+        .firstOrNull;
     String? lastUsedNickname;
-    if (historyItem != null &&
-        historyItem.isNotEmpty &&
-        (historyItem.first.meetingNum ==
-                (userSelfMeetingNum ? MeetingUtil.getMeetingNum() : '') ||
-            historyItem.first.shortMeetingNum ==
-                (userSelfMeetingNum ? MeetingUtil.getShortMeetingNum() : ''))) {
-      lastUsedNickname = historyItem.first.nickname;
+    if (historyItem != null) {
+      lastUsedNickname = historyItem.nickname;
     }
     onCreateMeeting(nickname: lastUsedNickname);
   }
 
   void onCreateMeeting({String? nickname}) async {
-    final useSelfNum = userSelfMeetingNum;
-    final openCamera = this.openCamera;
-    final openMicrophone = this.openMicrophone;
+    final useSelfNum = userSelfMeetingNum.value;
 
     var meetingNum = useSelfNum ? MeetingUtil.getMeetingNum() : null;
     LoadingUtil.showLoading();
-    final result = await NEMeetingUIKit().startMeetingUI(
+    final result = await NEMeetingUIKit.instance.startMeeting(
       context,
       NEStartMeetingUIParams(
         meetingNum: meetingNum,
-        password: meetingPwdSwitch ? _meetingPasswordController.text : null,
+        password:
+            meetingPwdSwitch.value ? _meetingPasswordController.text : null,
         displayName: nickname ?? MeetingUtil.getNickName(),
         watermarkConfig: NEWatermarkConfig(name: MeetingUtil.getNickName()),
       ),
       await buildMeetingUIOptions(
-        noVideo: !openCamera,
-        noAudio: !openMicrophone,
-        noCloudRecord: !openRecord,
+        noVideo: !openCamera.value,
+        noAudio: !openMicrophone.value,
+        noCloudRecord: !openRecord.value,
         context: context,
       ),
       onMeetingPageRouteWillPush: () async {
@@ -471,14 +342,13 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute>
           NavUtils.pop(context);
         }
       },
-      backgroundWidget: MeetingAppLocalizationsScope(child: HomePageRoute()),
+      backgroundWidget: HomePageRoute(),
     );
     LoadingUtil.cancelLoading();
     if (!mounted) return;
     final errorCode = result.code;
     final errorMessage = result.msg;
     if (errorCode == NEMeetingErrorCode.success) {
-      //do nothing
     } else if (errorCode == NEMeetingErrorCode.meetingAlreadyExist &&
         useSelfNum) {
       //shareScreenTips 屏幕共享弹窗提示文案
@@ -492,64 +362,65 @@ class _MeetCreateRouteState extends LifecycleBaseState<MeetCreateRoute>
           ),
         ),
         await buildMeetingUIOptions(
-          noVideo: !openCamera,
-          noAudio: !openMicrophone,
+          noVideo: !openCamera.value,
+          noAudio: !openMicrophone.value,
           context: context,
         ),
       );
     } else if (errorCode == NEMeetingErrorCode.noNetwork) {
       ToastUtils.showToast(
-          context, meetingAppLocalizations.globalNetworkUnavailableCheck);
+          context, getAppLocalizations().globalNetworkUnavailableCheck);
     } else if (errorCode == NEMeetingErrorCode.noAuth) {
-      ToastUtils.showToast(context, meetingAppLocalizations.authNoAuth);
+      ToastUtils.showToast(context, getAppLocalizations().authNoAuth);
       AuthManager().logout();
       NavUtils.toEntrance(context);
     } else if (errorCode == NEMeetingErrorCode.alreadyInMeeting) {
-      ToastUtils.showToast(context,
-          meetingAppLocalizations.meetingOperationNotSupportedInMeeting);
+      ToastUtils.showToast(
+          context, getAppLocalizations().meetingOperationNotSupportedInMeeting);
     } else if (errorCode == NEMeetingErrorCode.cancelled) {
       /// 暂不处理
     } else {
       var errorTips = HttpCode.getMsg(
-          errorMessage, meetingAppLocalizations.meetingCreateFail);
+          errorMessage, getAppLocalizations().meetingCreateFail);
       ToastUtils.showToast(context, errorTips);
     }
   }
 
   void switchToJoin(BuildContext context, NEJoinMeetingUIParams param,
       NEMeetingUIOptions opts) {
-    showDialog(
+    showDialog<bool>(
         context: context,
         builder: (BuildContext dialogContext) {
           return CupertinoAlertDialog(
-            content: Text(meetingAppLocalizations.meetingCreateAlreadyInTip),
+            content: Text(getAppLocalizations().meetingCreateAlreadyInTip),
             actions: <Widget>[
               CupertinoDialogAction(
-                child: Text(meetingAppLocalizations.globalNo),
+                child: Text(getAppLocalizations().globalNo),
                 onPressed: () {
                   Navigator.of(dialogContext).pop();
                 },
               ),
               CupertinoDialogAction(
-                child: Text(meetingAppLocalizations.globalYes),
+                child: Text(getAppLocalizations().globalYes),
                 onPressed: () {
-                  Navigator.of(dialogContext).pop();
-                  NEMeetingUIKit().joinMeetingUI(context, param, opts,
-                      backgroundWidget:
-                          MeetingAppLocalizationsScope(child: HomePageRoute()),
-                      onMeetingPageRouteWillPush: () async {
-                    NavUtils.pop(context);
-                  }).then((value) {
-                    if (!value.isSuccess()) {
-                      var errorTips = HttpCode.getMsg(
-                          value.msg, meetingAppLocalizations.meetingJoinFail);
-                      ToastUtils.showToast(context, errorTips);
-                    }
-                  });
+                  Navigator.of(dialogContext).pop(true);
                 },
               ),
             ],
           );
-        });
+        }).then((ok) {
+      if (!context.mounted || ok != true) return;
+      NEMeetingUIKit.instance
+          .joinMeeting(context, param, opts, backgroundWidget: HomePageRoute(),
+              onMeetingPageRouteWillPush: () async {
+        NavUtils.pop(context);
+      }).then((value) {
+        if (!value.isSuccess() && context.mounted) {
+          var errorTips =
+              HttpCode.getMsg(value.msg, getAppLocalizations().meetingJoinFail);
+          ToastUtils.showToast(context, errorTips);
+        }
+      });
+    });
   }
 }

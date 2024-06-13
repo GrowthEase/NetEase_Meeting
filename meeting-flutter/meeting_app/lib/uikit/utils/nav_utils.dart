@@ -57,9 +57,9 @@ class NavUtils {
     bool? pageRoute,
   }) {
     return (pageRoute ??
-            NEMeetingUIKit().getMeetingStatus().event ==
+            NEMeetingUIKit.instance.getMeetingStatus().event ==
                     NEMeetingEvent.inMeetingMinimized ||
-                NEMeetingUIKit().getMeetingStatus().event ==
+                NEMeetingUIKit.instance.getMeetingStatus().event ==
                     NEMeetingEvent.inMeeting)
         ? Navigator.push(
             context,

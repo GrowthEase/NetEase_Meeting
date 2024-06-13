@@ -59,11 +59,6 @@ class MeetingRepository {
     return HttpApiHelper._anonymousLogin();
   }
 
-  /// 获取会议主持人信息
-  static Future<NEResult<List<NERoomMember>>> getHostAndCoHostList(roomUuid) {
-    return HttpApiHelper._getHostAndCoHostList(roomUuid);
-  }
-
   /// 获取最新的房间属性
   static Future<NEResult<Map<String, dynamic>>> getWaitingRoomProperties(
       roomUuid) {
@@ -77,8 +72,14 @@ class MeetingRepository {
   }
 
   /// 通讯录用户信息获取, userUuids最大长度50
-  static Future<NEResult<NEContactsInfoResponse>> getContactsInfo(
+  static Future<NEResult<NEContactsInfoResult>> getContactsInfo(
       List<String> userUuids) {
     return HttpApiHelper._getContactsInfo(userUuids);
+  }
+
+  /// 获取安全提示
+  static Future<NEResult<NEMeetingAppNoticeTips>> getSecurityNotice(
+      String time) {
+    return HttpApiHelper._getSecurityNotice(time);
   }
 }

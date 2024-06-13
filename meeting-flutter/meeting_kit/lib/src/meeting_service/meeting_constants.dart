@@ -80,6 +80,19 @@ class WatermarkProperty {
 }
 
 ///
+/// 批注属性Key
+///
+class AnnotationProperty {
+  static const key = 'annotationPermission';
+
+  /// 未启用
+  static const disable = '0';
+
+  /// 启用
+  static const enable = '1';
+}
+
+///
 /// 访客入会开关属性Key
 ///
 class GuestJoinProperty {
@@ -164,6 +177,9 @@ class MeetingRoles {
         break;
       case 1:
         roleType = NEMeetingRoleType.coHost;
+        break;
+      case 3:
+        roleType = NEMeetingRoleType.guest;
         break;
     }
     return roleType;
