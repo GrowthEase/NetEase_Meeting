@@ -21,6 +21,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
   MeetingLiveState(this._arguments);
 
   final FocusNode _focusNode = FocusNode();
+  final FocusNode _passwordFocusNode = FocusNode();
 
   late TextEditingController _liveTitleController, _livePasswordController;
 
@@ -62,6 +63,12 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
     lifecycleListen(_arguments.roomInfoUpdatedEventStream, (_) {
       filterLiveUids();
       viewChange = !listEquals(_liveInfo.userUuidList, liveUids);
+      setState(() {});
+    });
+    _focusNode.addListener(() {
+      setState(() {});
+    });
+    _passwordFocusNode.addListener(() {
       setState(() {});
     });
     _roomContext.addEventCallback(roomEventCallback = NERoomEventCallback(
@@ -358,6 +365,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
         keyboardAppearance: Brightness.light,
         controller: _livePasswordController,
         keyboardType: TextInputType.number,
+        focusNode: _passwordFocusNode,
         inputFormatters: [
           LengthLimitingTextInputFormatter(6),
           FilteringTextInputFormatter.allow(RegExp(r'\d+')),
@@ -370,7 +378,8 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
                 '${NEMeetingUIKitLocalizations.of(context)!.liveEnterLiveSixDigitPassword}',
             hintStyle: TextStyle(fontSize: 14, color: _UIColors.color_999999),
             border: InputBorder.none,
-            suffixIcon: TextUtils.isEmpty(_livePasswordController.text)
+            suffixIcon: !_passwordFocusNode.hasFocus ||
+                    TextUtils.isEmpty(_livePasswordController.text)
                 ? null
                 : ClearIconButton(
                     key: MeetingUIValueKeys.clearInputLivePassword,
@@ -725,32 +734,15 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
     } else {
       return Container(
         margin: EdgeInsets.only(top: 35, bottom: 35, left: 20, right: 20),
-        child: ElevatedButton(
+        child: MeetingTextButton.fill(
           key: MeetingUIValueKeys.liveStartBtn,
-          style: ButtonStyle(
-              backgroundColor:
-                  MaterialStateProperty.resolveWith<Color>((states) {
-                if (states.contains(MaterialState.disabled)) {
-                  return _UIColors.blue_50_337eff;
-                }
-                return _UIColors.blue_337eff;
-              }),
-              padding:
-                  MaterialStateProperty.all(EdgeInsets.symmetric(vertical: 13)),
-              shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(25))))),
+          text: NEMeetingUIKitLocalizations.of(context)!.liveStart,
           onPressed:
               (TextUtils.isEmpty(_liveTitleController.text) || liveUids.isEmpty)
                   ? null
                   : () {
                       updateLiveParams(NERoomLiveState.init, checkParams: true);
                     },
-          child: Text(
-            NEMeetingUIKitLocalizations.of(context)!.liveStart,
-            style: TextStyle(
-                color: Colors.white, fontSize: 16, fontWeight: FontWeight.w400),
-            textAlign: TextAlign.center,
-          ),
         ),
       );
     }
@@ -759,30 +751,14 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
   Widget buildUpdate() {
     return Container(
       margin: EdgeInsets.only(top: 35, bottom: 35, left: 20),
-      child: ElevatedButton(
+      child: MeetingTextButton.fill(
         key: MeetingUIValueKeys.liveUpdateBtn,
-        style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
-              if (states.contains(MaterialState.disabled)) {
-                return _UIColors.blue_50_337eff;
-              }
-              return _UIColors.blue_337eff;
-            }),
-            padding:
-                MaterialStateProperty.all(EdgeInsets.symmetric(vertical: 13)),
-            shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(25))))),
         onPressed: isStateDirty()
             ? () {
                 updateLiveParams(NERoomLiveState.started, checkParams: true);
               }
             : null,
-        child: Text(
-          NEMeetingUIKitLocalizations.of(context)!.liveUpdate,
-          style: TextStyle(
-              color: Colors.white, fontSize: 16, fontWeight: FontWeight.w400),
-          textAlign: TextAlign.center,
-        ),
+        text: NEMeetingUIKitLocalizations.of(context)!.liveUpdate,
       ),
     );
   }
@@ -799,25 +775,13 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
   Widget buildStop() {
     return Container(
       padding: EdgeInsets.only(top: 35, bottom: 35, right: 20),
-      child: ElevatedButton(
+      child: MeetingTextButton.fill(
         key: MeetingUIValueKeys.liveStopBtn,
-        style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
-              return _UIColors.colorE6352B;
-            }),
-            padding:
-                MaterialStateProperty.all(EdgeInsets.symmetric(vertical: 13)),
-            shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(25))))),
+        backgroundColor: _UIColors.colorE6352B,
         onPressed: () {
           updateLiveParams(NERoomLiveState.ended);
         },
-        child: Text(
-          NEMeetingUIKitLocalizations.of(context)!.liveStop,
-          style: TextStyle(
-              color: Colors.white, fontSize: 16, fontWeight: FontWeight.w400),
-          textAlign: TextAlign.center,
-        ),
+        text: NEMeetingUIKitLocalizations.of(context)!.liveStop,
       ),
     );
   }
@@ -918,6 +882,7 @@ class MeetingLiveState extends LifecycleBaseState<MeetingLivePage> {
     _liveTitleController.dispose();
     _livePasswordController.dispose();
     _focusNode.dispose();
+    _passwordFocusNode.dispose();
     _roomContext.removeEventCallback(roomEventCallback!);
     super.dispose();
   }

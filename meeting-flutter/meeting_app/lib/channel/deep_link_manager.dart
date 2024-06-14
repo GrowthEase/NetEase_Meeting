@@ -22,8 +22,6 @@ import 'package:intl/intl.dart';
 import 'package:yunxin_alog/yunxin_alog.dart';
 import 'package:netease_meeting_assets/netease_meeting_assets.dart';
 
-import '../language/meeting_localization/meeting_app_localizations.dart';
-
 class DeepLinkManager {
   static final _instance = DeepLinkManager._internal();
   String _deepLinkUri = '';
@@ -90,7 +88,8 @@ class DeepLinkManager {
   void _handlePendingRequest() {
     if (!isEnabled ||
         WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed ||
-        NEMeetingUIKit().getMeetingStatus().event != NEMeetingEvent.idle) {
+        NEMeetingUIKit.instance.getMeetingStatus().event !=
+            NEMeetingEvent.idle) {
       return;
     }
 
@@ -169,6 +168,9 @@ class DeepLinkManager {
         needConfirm: false, type: _kTypeMeetingId);
   }
 
+  bool isLoggedIn() =>
+      NEMeetingKit.instance.getAccountService().getAccountInfo() != null;
+
   Future<bool> _checkMeeting(String? meetingKey,
       {required bool needConfirm, required int type}) async {
     Alog.i(
@@ -204,36 +206,35 @@ class DeepLinkManager {
       _pendingCheckRequest = request;
       return true;
     }
-    final meetingAppLocalizations = MeetingAppLocalizations.of(_context!)!;
     if (!_isMeetingIdle) {
       assert(() {
         print('$_TAG: in meeting');
         return true;
       }());
       if (!needConfirm) {
-        final currentMeeting = NEMeetingUIKit().getCurrentMeetingInfo();
+        final currentMeeting = NEMeetingUIKit.instance.getCurrentMeetingInfo();
         if (currentMeeting?.meetingNum == meetingKey ||
             currentMeeting?.inviteCode == meetingKey) {
           ToastUtils.showToast(_context!,
-              meetingAppLocalizations.meetingDeepLinkTipAlreadyInMeeting);
+              getAppLocalizations().meetingDeepLinkTipAlreadyInMeeting);
         } else {
           ToastUtils.showToast(
               _context!,
-              meetingAppLocalizations
+              getAppLocalizations()
                   .meetingDeepLinkTipAlreadyInDifferentMeeting);
         }
       }
       _lastCheckedMeetingKey = meetingKey;
       return true;
     }
-    if (!NEMeetingKit.instance.getAccountService().isLoggedIn) {
+    if (!isLoggedIn()) {
       assert(() {
         print('$_TAG: not login');
         return true;
       }());
       if (!needConfirm) {
         ToastUtils.showToast(
-            _context!, meetingAppLocalizations.authPleaseLoginFirst);
+            _context!, getAppLocalizations().authPleaseLoginFirst);
       }
       _pendingCheckRequest = request;
       return true;
@@ -255,8 +256,8 @@ class DeepLinkManager {
         return true;
       }());
       if (meetingInfo == null ||
-          meetingInfo.state == NEMeetingState.cancel ||
-          meetingInfo.state == NEMeetingState.recycled) {
+          meetingInfo.state == NEMeetingItemStatus.cancel ||
+          meetingInfo.state == NEMeetingItemStatus.recycled) {
         _checkingMeetingKey = null;
         return true;
       }
@@ -271,12 +272,12 @@ class DeepLinkManager {
       // needConfirm：如果为true就是剪切板入会，如果为false就是链接入会
       if (!needConfirm) {
         // 新需求：如果是链接入会，需要跳到加入会议页面，手动加入会议
-        final meetingId = meetingInfo?.meetingNum ?? meetingKey;
-        if (AppProfile.deepLinkMeetingId == meetingId) {
+        final meetingNum = meetingInfo?.meetingNum ?? meetingKey;
+        if (AppProfile.deepLinkMeetingNum == meetingNum) {
           /// 主动查询和被动上报会连续触发这个回调，所以需要判断是否已经处理过
           return true;
         }
-        AppProfile.deepLinkMeetingId = meetingId;
+        AppProfile.deepLinkMeetingNum = meetingNum;
         NavUtils.pushNamedAndRemoveUntil(_context!, RouterName.meetJoin,
             utilRouteName: RouterName.homePage);
         _checkingMeetingKey = null;
@@ -303,20 +304,16 @@ class DeepLinkManager {
   }
 
   bool get _isMeetingIdle =>
-      NEMeetingUIKit().getMeetingStatus().event == NEMeetingEvent.idle;
+      NEMeetingUIKit.instance.getMeetingStatus().event == NEMeetingEvent.idle;
 
   Future<DialogResult?> _showJoinMeetingConfirmDialog(BuildContext context,
       MeetingSetting meetingSetting, MeetingInfo meetingInfo) async {
     return showDialog<DialogResult>(
         context: context,
         builder: (ctx) {
-          return MeetingAppLocalizationsScope(
-            builder: (context) {
-              return _MeetingInfoDialog(
-                meetingSetting: meetingSetting,
-                meetingInfo: meetingInfo,
-              );
-            },
+          return _MeetingInfoDialog(
+            meetingSetting: meetingSetting,
+            meetingInfo: meetingInfo,
           );
         });
   }
@@ -324,7 +321,7 @@ class DeepLinkManager {
   Future _joinMeetingWithDefaultSettings(BuildContext context,
       String meetingNum, DialogResult? dialogResult) async {
     LoadingUtil.showLoading();
-    final result = await NEMeetingUIKit().joinMeetingUI(
+    final result = await NEMeetingUIKit.instance.joinMeeting(
       context,
       NEJoinMeetingUIParams(
         meetingNum: meetingNum,
@@ -344,29 +341,28 @@ class DeepLinkManager {
       onMeetingPageRouteWillPush: () async {
         LoadingUtil.cancelLoading();
       },
-      backgroundWidget: MeetingAppLocalizationsScope(child: HomePageRoute()),
+      backgroundWidget: HomePageRoute(),
     );
     final errorCode = result.code;
     final errorMessage = result.msg;
     LoadingUtil.cancelLoading();
-    final meetingAppLocalizations = MeetingAppLocalizations.of(context)!;
     if (errorCode == NEMeetingErrorCode.success) {
     } else if (errorCode == NEMeetingErrorCode.noNetwork) {
       ToastUtils.showToast(
-          context, meetingAppLocalizations.globalNetworkUnavailableCheck);
+          context, getAppLocalizations().globalNetworkUnavailableCheck);
     } else if (errorCode == NEMeetingErrorCode.noAuth) {
       ToastUtils.showToast(
-          context, meetingAppLocalizations.authLoginOnOtherDevice);
+          context, getAppLocalizations().authLoginOnOtherDevice);
       AuthManager().logout();
       NavUtils.toEntrance(context);
     } else if (errorCode == NEMeetingErrorCode.alreadyInMeeting) {
-      ToastUtils.showToast(context,
-          meetingAppLocalizations.meetingOperationNotSupportedInMeeting);
+      ToastUtils.showToast(
+          context, getAppLocalizations().meetingOperationNotSupportedInMeeting);
     } else if (errorCode == NEMeetingErrorCode.cancelled) {
       /// 暂不处理
     } else {
-      var errorTips = HttpCode.getMsg(
-          errorMessage, meetingAppLocalizations.meetingJoinFail);
+      var errorTips =
+          HttpCode.getMsg(errorMessage, getAppLocalizations().meetingJoinFail);
       ToastUtils.showToast(context, errorTips);
     }
   }
@@ -405,8 +401,7 @@ class _MeetingInfoDialog extends StatefulWidget {
   }
 }
 
-class _MeetingInfoDialogState extends State<_MeetingInfoDialog>
-    with MeetingAppLocalizationsMixin {
+class _MeetingInfoDialogState extends State<_MeetingInfoDialog> {
   bool isAudioOn = false;
   bool isVideoOn = false;
 
@@ -426,7 +421,6 @@ class _MeetingInfoDialogState extends State<_MeetingInfoDialog>
             ? widget.meetingInfo.endTime
             : widget.meetingInfo.startTime +
                 const Duration(hours: 1).inMilliseconds);
-    final meetingAppLocalizations = MeetingAppLocalizations.of(context)!;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -451,7 +445,7 @@ class _MeetingInfoDialogState extends State<_MeetingInfoDialog>
                     TableRow(
                       children: [
                         Text(
-                          '${meetingAppLocalizations.meetingInfoDialogMeetingTitle}',
+                          '${getAppLocalizations().meetingInfoDialogMeetingTitle}',
                           style: TextStyle(
                             fontSize: 14,
                             color: AppColors.color_333333,
@@ -481,7 +475,7 @@ class _MeetingInfoDialogState extends State<_MeetingInfoDialog>
                     TableRow(
                       children: [
                         Text(
-                          meetingAppLocalizations.meetingId,
+                          getAppLocalizations().meetingId,
                           style: TextStyle(
                             fontSize: 14,
                             color: AppColors.color_333333,
@@ -511,7 +505,7 @@ class _MeetingInfoDialogState extends State<_MeetingInfoDialog>
                                 Clipboard.setData(ClipboardData(
                                     text: widget.meetingInfo.meetingNum));
                                 ToastUtils.showToast(context,
-                                    meetingAppLocalizations.globalCopySuccess);
+                                    getAppLocalizations().globalCopySuccess);
                               },
                             ),
                           ],
@@ -545,7 +539,7 @@ class _MeetingInfoDialogState extends State<_MeetingInfoDialog>
                             ),
                           ),
                           Text(
-                            DateFormat(meetingAppLocalizations
+                            DateFormat(getAppLocalizations()
                                     .meetingInfoDialogMeetingDateFormat)
                                 .format(startTime),
                             style: TextStyle(
@@ -574,7 +568,7 @@ class _MeetingInfoDialogState extends State<_MeetingInfoDialog>
                             ),
                           ),
                           Text(
-                            DateFormat(meetingAppLocalizations
+                            DateFormat(getAppLocalizations()
                                     .meetingInfoDialogMeetingDateFormat)
                                 .format(endTime),
                             style: TextStyle(
@@ -600,7 +594,7 @@ class _MeetingInfoDialogState extends State<_MeetingInfoDialog>
                         });
                         NEMeetingKit.instance
                             .getSettingsService()
-                            .setTurnOnMyAudioWhenJoinMeeting(isAudioOn);
+                            .enableTurnOnMyAudioWhenJoinMeeting(isAudioOn);
                       },
                       child: Column(
                         children: [
@@ -613,7 +607,7 @@ class _MeetingInfoDialogState extends State<_MeetingInfoDialog>
                               size: 20),
                           SizedBox(height: 8),
                           Text(
-                            meetingAppLocalizations.meetingMicrophone,
+                            getAppLocalizations().meetingMicrophone,
                             style: TextStyle(
                               fontSize: 12,
                               color: AppColors.color_333333,
@@ -632,7 +626,7 @@ class _MeetingInfoDialogState extends State<_MeetingInfoDialog>
                         });
                         NEMeetingKit.instance
                             .getSettingsService()
-                            .setTurnOnMyVideoWhenJoinMeeting(isVideoOn);
+                            .enableTurnOnMyVideoWhenJoinMeeting(isVideoOn);
                       },
                       child: Column(children: [
                         Icon(
@@ -643,7 +637,7 @@ class _MeetingInfoDialogState extends State<_MeetingInfoDialog>
                             size: 20),
                         SizedBox(height: 8),
                         Text(
-                          meetingAppLocalizations.meetingCamera,
+                          getAppLocalizations().meetingCamera,
                           style: TextStyle(
                             fontSize: 12,
                             color: AppColors.color_333333,
@@ -669,7 +663,7 @@ class _MeetingInfoDialogState extends State<_MeetingInfoDialog>
                     )),
                   ),
                   child: Text(
-                    meetingAppLocalizations.meetingJoin,
+                    getAppLocalizations().meetingJoin,
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.white,

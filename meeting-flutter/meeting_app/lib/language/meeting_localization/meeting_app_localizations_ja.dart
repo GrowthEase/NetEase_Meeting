@@ -150,6 +150,42 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get globalDateFormat => 'yyyy-MM-dd';
 
   @override
+  String get globalMonthJan => '1月';
+
+  @override
+  String get globalMonthFeb => '2月';
+
+  @override
+  String get globalMonthMar => '3月';
+
+  @override
+  String get globalMonthApr => '4月';
+
+  @override
+  String get globalMonthMay => '5月';
+
+  @override
+  String get globalMonthJun => '6月';
+
+  @override
+  String get globalMonthJul => '7月';
+
+  @override
+  String get globalMonthAug => '8月';
+
+  @override
+  String get globalMonthSept => '9月';
+
+  @override
+  String get globalMonthOct => '10月';
+
+  @override
+  String get globalMonthNov => '11月';
+
+  @override
+  String get globalMonthDec => '12月';
+
+  @override
   String get authImmediatelyRegister => '登録します';
 
   @override
@@ -362,7 +398,52 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get authLoggingIn => '会議登録中';
 
   @override
+  String get authHowToGetCorpCode => '企業コードを取得する方法？';
+
+  @override
+  String get authGetCorpCodeFromAdmin => '企業管理者から入手できます。';
+
+  @override
+  String get authIKnowCorpCode => '企業コード';
+
+  @override
+  String get authIDontKnowCorpCode => '企業メール';
+
+  @override
+  String get authTypeAccountPwd => 'アカウント';
+
+  @override
+  String get authLoginByAccountPwd => 'パスワード';
+
+  @override
+  String get authLoginByMobilePwd => '電話 パスワード';
+
+  @override
+  String get authLoginByEmailPwd => 'メールアカウント';
+
+  @override
+  String get authOtherLoginTypes => 'その他のオプション';
+
+  @override
+  String get authEnterEmail => '電子メールアドレスを入力します';
+
+  @override
+  String get authEmail => '電子メール';
+
+  @override
+  String get oldPassword => '元のパスワード';
+
+  @override
+  String get newPassword => '新しいパスワード';
+
+  @override
+  String get confirmPassword => '再度入力する';
+
+  @override
   String get meetingCreate => '会議を開始';
+
+  @override
+  String get meetingHold => '会議を開始';
 
   @override
   String get meetingNetworkAbnormalityCheckAndRejoin =>
@@ -378,7 +459,7 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get meetingSchedule => '会議を予約';
 
   @override
-  String get meetingScheduleListEmpty => '会議がない';
+  String get meetingScheduleListEmpty => 'しばらく会議がない';
 
   @override
   String get meetingToday => '今日';
@@ -468,9 +549,6 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
 
   @override
   String get meetingSecurity => '安全';
-
-  @override
-  String get meetingEnableWaitingRoom => '待合室できる';
 
   @override
   String get meetingWaitingRoomHint => '参加者は会議に参加する時にまず待合室に入る';
@@ -776,6 +854,21 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get meetingClose => '折り畳み';
 
   @override
+  String get meetingClearRecord => '空にする';
+
+  @override
+  String get meetingPickTimezone => 'タイムゾーン';
+
+  @override
+  String get meetingTimezone => 'タイムゾーン';
+
+  @override
+  String get meetingName => '会議の名前';
+
+  @override
+  String get meetingTime => '時間';
+
+  @override
   String get historyMeeting => '歴史会議';
 
   @override
@@ -884,25 +977,13 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get settingSwitchCompanyFail => '企業の切り替えに失敗します。ネットワークのチェックをお願いします。';
 
   @override
-  String get settingAudioAINS => 'インテリジェント・ノイズリダクション';
-
-  @override
   String get settingShowShareUserVideo => '共有するときは共有者のカメラをオンにします';
-
-  @override
-  String get settingEnableTransparentWhiteboard => 'ホワイトボードを透明に設定';
-
-  @override
-  String get settingEnableFrontCameraMirror => '前面カメラミラーリング';
 
   @override
   String get settingOpenCameraMeeting => 'デフォルトでカメラオン';
 
   @override
   String get settingOpenMicroMeeting => 'マイクはデフォルトでオン';
-
-  @override
-  String get settingShowMeetDuration => '会議時間の表示';
 
   @override
   String get settingEnableAudioDeviceSwitch => 'オーディオ機器の切り替えを許可する';
@@ -1121,7 +1202,10 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
       '質問を説明してください。「他に質問があります」を選択した場合、提出する前に具体的な説明を記入する必要があります';
 
   @override
-  String get evaluationTitle => '同僚やパートナーに「網易会議」を推薦する可能性はどれくらいありますか？';
+  String get evaluationTitle => '評価';
+
+  @override
+  String get evaluationContent => '同僚やパートナーに「網易会議」を推薦する可能性はどれくらいありますか？';
 
   @override
   String get evaluationCoreZero => '0-絶対にしない';

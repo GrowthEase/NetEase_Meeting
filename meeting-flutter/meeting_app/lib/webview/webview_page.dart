@@ -28,7 +28,7 @@ class WebViewPage extends StatefulWidget {
   }
 }
 
-class _WebViewState extends MeetingBaseState<WebViewPage> {
+class _WebViewState extends AppBaseState<WebViewPage> {
   static const _tag = 'WebViewPage';
 
   WebViewArguments? _arguments;

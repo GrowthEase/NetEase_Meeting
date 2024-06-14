@@ -4,8 +4,9 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:nemeeting/language/meeting_localization/meeting_app_localizations.dart';
 import 'package:nemeeting/uikit/values/colors.dart';
+
+import '../language/localizations.dart';
 
 bool _isEmpty(String? text) {
   return text == null || text.length == 0;
@@ -18,9 +19,8 @@ class AppDialogUtils {
       String? acceptText,
       bool canBack = true,
       bool isContentCenter = true}) {
-    final meetingAppLocalizations = MeetingAppLocalizations.of(context)!;
-    cancelText ??= meetingAppLocalizations.globalCancel;
-    acceptText ??= meetingAppLocalizations.globalSure;
+    cancelText ??= getAppLocalizations().globalCancel;
+    acceptText ??= getAppLocalizations().globalSure;
     return showDialog(
         context: context,
         useRootNavigator: false,
@@ -53,8 +53,7 @@ class AppDialogUtils {
   static Future showOneButtonCommonDialog(
       BuildContext context, String title, String content, VoidCallback callback,
       {String? acceptText, bool canBack = true, bool isContentCenter = true}) {
-    final meetingAppLocalizations = MeetingAppLocalizations.of(context)!;
-    acceptText ??= meetingAppLocalizations.globalIKnow;
+    acceptText ??= getAppLocalizations().globalIKnow;
     return showDialog(
         context: context,
         useRootNavigator: false,

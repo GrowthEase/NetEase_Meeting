@@ -2,11 +2,13 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
+import 'package:nemeeting/widget/ne_widget.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 import '../language/localizations.dart';
 import '../uikit/state/meeting_base_state.dart';
@@ -14,7 +16,6 @@ import '../uikit/utils/nav_utils.dart';
 import '../uikit/utils/router_name.dart';
 import '../uikit/values/colors.dart';
 import '../uikit/values/dimem.dart';
-import '../uikit/values/fonts.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
 
 import '../utils/integration_test.dart';
@@ -31,8 +32,7 @@ class PersonalSetting extends StatefulWidget {
   }
 }
 
-class _PersonalSettingState extends MeetingBaseState<PersonalSetting>
-    with MeetingAppLocalizationsMixin {
+class _PersonalSettingState extends AppBaseState<PersonalSetting> {
   @override
   void initState() {
     super.initState();
@@ -43,51 +43,62 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting>
 
   @override
   Widget buildBody() {
-    return Column(
-      children: <Widget>[
-        Container(
-          color: AppColors.globalBg,
-          height: Dimen.globalPadding,
-        ),
-        buildHead(),
-        _buildSplit(),
-        buildPersonItem(
-            title: meetingAppLocalizations.settingNick,
-            arrowTip: MeetingUtil.getNickName(),
-            isShowArrow: canModifyNick(),
-            onTap: () {
-              if (canModifyNick()) {
-                NavUtils.pushNamed(context, RouterName.nickSetting);
-              }
-            }),
-        Container(
-          color: AppColors.globalBg,
-          height: Dimen.globalPadding,
-        ),
-        if (!TextUtil.isEmpty(MeetingUtil.getShortMeetingNum()))
-          ...buildShortMeetingId(),
-        buildMeetingId(),
-        Container(
-          color: AppColors.globalBg,
-          height: Dimen.globalPadding,
-        ),
-        buildPersonItem(
-            title: meetingAppLocalizations.settingAccountAndSafety,
-            arrowTip: '',
-            isShowArrow: true,
-            onTap: () {
-              NavUtils.pushNamed(
-                context,
-                RouterName.accountAndSafety,
-              );
-            }),
-        Container(
-          color: AppColors.globalBg,
-          height: Dimen.globalPadding,
-        ),
-        buildLogout(),
-      ],
-    );
+    return Column(children: <Widget>[
+      Expanded(
+          child: SingleChildScrollView(
+              child: Container(
+                  padding: EdgeInsets.only(left: 16.w, right: 16.w),
+                  child: Column(
+                    children: <Widget>[
+                      NESettingItemGap(),
+                      NESettingItemGroup(children: [
+                        buildHead(),
+                        NESettingItem(getAppLocalizations().settingNick,
+                            arrowTip: MeetingUtil.getNickName(),
+                            showArrow: canModifyNick(), onTap: () {
+                          if (canModifyNick()) {
+                            NavUtils.pushNamed(context, RouterName.nickSetting);
+                          }
+                        }),
+                      ]),
+                      NESettingItemGap(),
+                      NESettingItemGroup(children: [
+                        if (!TextUtil.isEmpty(MeetingUtil.getShortMeetingNum()))
+                          NESettingItem(
+                              getAppLocalizations()
+                                  .meetingPersonalShortMeetingID,
+                              tag: getAppLocalizations()
+                                  .settingInternalDedicated,
+                              arrowTip: MeetingUtil.getShortMeetingNum(),
+                              showArrow: false),
+                        NESettingItem(
+                          getAppLocalizations().meetingPersonalMeetingID,
+                          arrowTip: TextUtil.applyMask(
+                              NEMeetingKit.instance
+                                      .getAccountService()
+                                      .getAccountInfo()
+                                      ?.privateMeetingNum ??
+                                  '',
+                              '000-000-0000'),
+                          showArrow: false,
+                          onTap: () {},
+                        ),
+                      ]),
+                      NESettingItemGap(),
+                      NESettingItemGroup(children: [
+                        NESettingItem(
+                            getAppLocalizations().settingAccountAndSafety,
+                            showArrow: true, onTap: () {
+                          NavUtils.pushNamed(
+                            context,
+                            RouterName.accountAndSafety,
+                          );
+                        }),
+                      ]),
+                    ],
+                  )))),
+      buildLogout(),
+    ]);
   }
 
   Container buildEmail() {
@@ -98,8 +109,11 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting>
       child: Row(
         children: <Widget>[
           Text(
-            meetingAppLocalizations.settingEmail,
-            style: TextStyle(fontSize: 16, color: AppColors.black_222222),
+            getAppLocalizations().settingEmail,
+            style: TextStyle(
+                fontSize: 16.spMin,
+                color: AppColors.black_222222,
+                fontWeight: FontWeight.w500),
           ),
           Spacer(),
           // Text(
@@ -111,152 +125,47 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting>
     );
   }
 
-  GestureDetector buildLogout() {
-    return GestureDetector(
+  Widget buildLogout() {
+    return SafeArea(
+        child: NEGestureDetector(
       child: Container(
-        height: Dimen.primaryItemHeight,
-        color: Colors.white,
-        padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
+        height: 48.h,
+        margin: EdgeInsets.only(left: 16.w, right: 16.w, bottom: 16.h),
+        decoration: ShapeDecoration(
+          color: AppColors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(7.w),
+          ),
+        ),
+        padding: EdgeInsets.symmetric(horizontal: Dimen.globalWidthPadding),
         alignment: Alignment.center,
         child: Text(
-          meetingAppLocalizations.settingLogout,
-          style: TextStyle(fontSize: 17, color: AppColors.colorFE3B30),
+          getAppLocalizations().settingLogout,
+          style: TextStyle(
+              fontSize: 16.spMin,
+              color: AppColors.color_F51D45,
+              fontWeight: FontWeight.w400),
         ),
       ),
       onTap: () => showLogoutActionSheet(),
-    );
-  }
-
-  Container buildMeetingId() {
-    return Container(
-      height: Dimen.primaryItemHeight,
-      color: Colors.white,
-      padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
-      child: Row(
-        children: <Widget>[
-          Text(
-            meetingAppLocalizations.meetingPersonalMeetingID,
-            style: TextStyle(fontSize: 16, color: AppColors.black_222222),
-          ),
-          Spacer(),
-          Text(
-            TextUtil.applyMask(
-                NEMeetingKit.instance
-                        .getAccountService()
-                        .getAccountInfo()
-                        ?.privateMeetingNum ??
-                    '',
-                '000-000-0000'),
-            style: TextStyle(fontSize: 14, color: AppColors.color_999999),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> buildShortMeetingId() {
-    return [
-      Container(
-        height: Dimen.primaryItemHeight,
-        color: Colors.white,
-        padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
-        child: Row(
-          children: <Widget>[
-            Text(
-              meetingAppLocalizations.meetingPersonalShortMeetingID,
-              style: TextStyle(fontSize: 16, color: AppColors.black_222222),
-            ),
-            Container(
-              margin: EdgeInsets.only(left: 6),
-              padding: EdgeInsets.only(left: 6, right: 6, bottom: 2),
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(2),
-                  color: AppColors.color_1a337eff,
-                  border: Border.all(color: AppColors.color_33337eff)),
-              child: Text(
-                meetingAppLocalizations.settingInternalDedicated,
-                style: TextStyle(fontSize: 12, color: AppColors.color_337eff),
-              ),
-            ),
-            Spacer(),
-            Text(
-              MeetingUtil.getShortMeetingNum(),
-              style: TextStyle(fontSize: 14, color: AppColors.color_999999),
-            ),
-          ],
-        ),
-      ),
-      _buildSplit(),
-    ];
-  }
-
-  GestureDetector buildPersonItem(
-      {required String title,
-      required String arrowTip,
-      bool isShowArrow = true,
-      VoidCallback? onTap}) {
-    return GestureDetector(
-      child: Container(
-        height: Dimen.primaryItemHeight,
-        color: Colors.white,
-        padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
-        child: Row(
-          children: <Widget>[
-            Text(
-              title,
-              style: TextStyle(fontSize: 16, color: AppColors.black_222222),
-            ),
-            Spacer(),
-            Expanded(
-              child: Container(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  arrowTip,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 14, color: AppColors.color_999999),
-                ),
-              ),
-            ),
-            SizedBox(
-              width: 8,
-            ),
-            if (isShowArrow)
-              Icon(
-                IconFont.iconyx_allowx,
-                size: 14,
-                color: AppColors.greyCCCCCC,
-              )
-          ],
-        ),
-      ),
-      onTap: onTap,
-    );
+    ));
   }
 
   Widget buildHead() {
-    return GestureDetector(
+    return NEGestureDetector(
         onTap: showCropImageActionSheet,
         child: Container(
           height: Dimen.primaryItemHeight,
-          color: Colors.white,
-          padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
+          padding: EdgeInsets.symmetric(horizontal: Dimen.globalWidthPadding),
           child: Row(
             children: <Widget>[
-              Text(
-                meetingAppLocalizations.settingAvatar,
-                style: TextStyle(fontSize: 16, color: AppColors.black_222222),
-              ),
+              NESettingItemTitle(getAppLocalizations().settingAvatar),
               Spacer(),
-              ListenableBuilder(
-                listenable: NEMeetingKit.instance.getAccountService(),
-                builder: (context, child) {
-                  final accountInfo = NEMeetingKit.instance
-                      .getAccountService()
-                      .getAccountInfo();
+              NEAccountInfoBuilder(
+                builder: (context, accountInfo, _) {
                   return NEMeetingAvatar.medium(
-                    name: accountInfo?.nickname,
-                    url: accountInfo?.avatar,
+                    name: accountInfo.nickname,
+                    url: accountInfo.avatar,
                   );
                 },
               ),
@@ -284,66 +193,69 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting>
     if (!canModifyAvatar()) {
       return;
     }
-    final isInMeeting = NEMeetingUIKit().getMeetingStatus().event ==
+    final isInMeeting = NEMeetingUIKit.instance.getMeetingStatus().event ==
             NEMeetingEvent.inMeetingMinimized ||
-        NEMeetingUIKit().getMeetingStatus().event == NEMeetingEvent.inMeeting;
+        NEMeetingUIKit.instance.getMeetingStatus().event ==
+            NEMeetingEvent.inMeeting;
     if (isInMeeting) {
-      ToastUtils.showToast(context,
-          meetingAppLocalizations.meetingOperationNotSupportedInMeeting);
+      ToastUtils.showToast(
+          context, getAppLocalizations().meetingOperationNotSupportedInMeeting);
       return;
     }
     showCupertinoModalPopup<String>(
         context: context,
         builder: (BuildContext context) => CupertinoActionSheet(
               title: Text(
-                meetingAppLocalizations.settingAvatarTitle,
-                style: TextStyle(color: AppColors.grey_8F8F8F, fontSize: 13),
+                getAppLocalizations().settingAvatarTitle,
+                style:
+                    TextStyle(color: AppColors.grey_8F8F8F, fontSize: 13.spMin),
               ),
               actions: <Widget>[
                 CupertinoActionSheetAction(
-                    child: Text(meetingAppLocalizations.settingTakePicture,
+                    child: Text(getAppLocalizations().settingTakePicture,
                         style: TextStyle(color: AppColors.color_007AFF)),
                     onPressed: () {
                       Navigator.pop(
-                          context, meetingAppLocalizations.globalCancel);
+                          context, getAppLocalizations().globalCancel);
                       _pickImage(ImageSource.camera);
                     }),
                 CupertinoActionSheetAction(
-                    child: Text(meetingAppLocalizations.settingChoosePicture,
+                    child: Text(getAppLocalizations().settingChoosePicture,
                         style: TextStyle(color: AppColors.color_007AFF)),
                     onPressed: () {
                       Navigator.pop(
-                          context, meetingAppLocalizations.globalCancel);
+                          context, getAppLocalizations().globalCancel);
                       _pickImage(ImageSource.gallery);
                     }),
               ],
               cancelButton: CupertinoActionSheetAction(
                 isDefaultAction: true,
-                child: Text(meetingAppLocalizations.globalCancel,
+                child: Text(getAppLocalizations().globalCancel,
                     style: TextStyle(color: AppColors.color_007AFF)),
                 onPressed: () {
-                  Navigator.pop(context, meetingAppLocalizations.globalCancel);
+                  Navigator.pop(context, getAppLocalizations().globalCancel);
                 },
               ),
             ));
   }
 
   void showLogoutActionSheet() {
-    if (NEMeetingUIKit().getCurrentMeetingInfo() != null) {
-      ToastUtils.showToast(context,
-          meetingAppLocalizations.meetingOperationNotSupportedInMeeting);
+    if (NEMeetingUIKit.instance.getCurrentMeetingInfo() != null) {
+      ToastUtils.showToast(
+          context, getAppLocalizations().meetingOperationNotSupportedInMeeting);
       return;
     }
     showCupertinoModalPopup<String>(
         context: context,
         builder: (BuildContext context) => CupertinoActionSheet(
               title: Text(
-                meetingAppLocalizations.settingLogoutConfirm,
-                style: TextStyle(color: AppColors.grey_8F8F8F, fontSize: 13),
+                getAppLocalizations().settingLogoutConfirm,
+                style:
+                    TextStyle(color: AppColors.grey_8F8F8F, fontSize: 13.spMin),
               ),
               actions: <Widget>[
                 CupertinoActionSheetAction(
-                    child: Text(meetingAppLocalizations.settingLogout,
+                    child: Text(getAppLocalizations().settingLogout,
                         key: MeetingValueKey.logoutByDialog,
                         style: TextStyle(color: AppColors.colorFE3B30)),
                     onPressed: () {
@@ -352,10 +264,10 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting>
               ],
               cancelButton: CupertinoActionSheetAction(
                 isDefaultAction: true,
-                child: Text(meetingAppLocalizations.globalCancel,
+                child: Text(getAppLocalizations().globalCancel,
                     style: TextStyle(color: AppColors.color_007AFF)),
                 onPressed: () {
-                  Navigator.pop(context, meetingAppLocalizations.globalCancel);
+                  Navigator.pop(context, getAppLocalizations().globalCancel);
                 },
               ),
             ));
@@ -366,17 +278,17 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting>
         context: context,
         builder: (BuildContext context) {
           return CupertinoAlertDialog(
-            title: Text(meetingAppLocalizations.settingLogoutConfirm),
-//            content: Text(meetingAppLocalizations.confirmLogout),
+            title: Text(getAppLocalizations().settingLogoutConfirm),
+//            content: Text(getAppLocalizations().confirmLogout),
             actions: <Widget>[
               CupertinoDialogAction(
-                child: Text(meetingAppLocalizations.globalCancel),
+                child: Text(getAppLocalizations().globalCancel),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               CupertinoDialogAction(
-                child: Text(meetingAppLocalizations.settingLogout),
+                child: Text(getAppLocalizations().settingLogout),
                 onPressed: () {
                   _logout();
                 },
@@ -391,18 +303,9 @@ class _PersonalSettingState extends MeetingBaseState<PersonalSetting>
     NavUtils.toEntrance(context);
   }
 
-  Container _buildSplit() {
-    return Container(
-      color: AppColors.white,
-      padding: EdgeInsets.only(left: 20),
-      height: 0.5,
-      child: Divider(height: 0.5),
-    );
-  }
-
   @override
   String getTitle() {
-    return meetingAppLocalizations.settingPersonalCenter;
+    return getAppLocalizations().settingPersonalCenter;
   }
 
   bool canModifyNick() {

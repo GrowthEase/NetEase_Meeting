@@ -12,6 +12,7 @@ class RouterName {
   static const String homePage = 'homePage';
   static const String meetCreate = 'meetCreate';
   static const String meetJoin = 'meetJoin';
+  static const String appSetting = 'meetSetting';
   static const String historyMeet = 'historyMeeting';
   static const String verifyMobileCheckCode = 'verifyMobileCheckCode';
   static const String meetingSetting = 'meetingSetting';

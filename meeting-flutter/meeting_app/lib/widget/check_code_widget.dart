@@ -27,8 +27,7 @@ class CheckCodeWidget extends StatefulWidget {
   }
 }
 
-class _CheckCodeState extends LifecycleBaseState<CheckCodeWidget>
-    with MeetingAppLocalizationsMixin {
+class _CheckCodeState extends LifecycleBaseState<CheckCodeWidget> {
   static const _tag = 'CheckCodeWidget';
   Timer? _countDownTimer;
   String _countDownText = countDownTime.toString();
@@ -42,7 +41,7 @@ class _CheckCodeState extends LifecycleBaseState<CheckCodeWidget>
 
   @override
   Widget build(BuildContext context) {
-    final reSendSuf = meetingAppLocalizations.authResendCode('##time##');
+    final reSendSuf = getAppLocalizations().authResendCode('##time##');
     final resendTextList = reSendSuf.split('##');
     return Center(
         child: _showCountDown
@@ -51,19 +50,23 @@ class _CheckCodeState extends LifecycleBaseState<CheckCodeWidget>
                   resendTextList[i] == 'time'
                       ? TextSpan(
                           text: _countDownText,
-                          style: TextStyle(color: AppColors.color_2953ff),
+                          style: TextStyle(
+                            color: AppColors.blue_337eff,
+                            fontSize: 12,
+                          ),
                         )
                       : TextSpan(
                           text: resendTextList[i],
                           style: TextStyle(
                             color: AppColors.black_333333,
+                            fontSize: 12,
                           ),
                         ),
               ]))
             : GestureDetector(
                 child: Text(
-                  meetingAppLocalizations.authResend,
-                  style: TextStyle(color: AppColors.blue),
+                  getAppLocalizations().authResend,
+                  style: TextStyle(color: AppColors.blue_337eff),
                 ),
                 onTap: () {
                   Alog.d(tag: _tag, content: '_tapGestureRecognizer onTap');
@@ -90,7 +93,7 @@ class _CheckCodeState extends LifecycleBaseState<CheckCodeWidget>
           _countDownText = '${countDownTime - t.tick}s';
           _showCountDown = true;
         } else {
-          _countDownText = meetingAppLocalizations.authGetCheckCode;
+          _countDownText = getAppLocalizations().authGetCheckCode;
           _countDownTimer?.cancel();
           _countDownTimer = null;
           _showCountDown = false;

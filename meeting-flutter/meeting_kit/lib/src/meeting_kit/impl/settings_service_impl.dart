@@ -51,35 +51,40 @@ class _NESettingsServiceImpl extends NESettingsService {
 
   @override
   void enableShowMyMeetingElapseTime(bool show) =>
-      _writeSettings(Keys.keyShowMeetTimeOpen, show);
+      _writeSettings(Keys.isShowMyMeetingElapseTimeEnabled, show);
 
   @override
-  Future<bool> isShowMyMeetingElapseTimeEnabled() => _ensureSettings().then(
-      (settings) => (settings[Keys.keyShowMeetTimeOpen] ?? false) as bool);
+  Future<bool> isShowMyMeetingElapseTimeEnabled() =>
+      _ensureSettings().then((settings) =>
+          (settings[Keys.isShowMyMeetingElapseTimeEnabled] ?? false) as bool);
 
   @override
-  void setTurnOnMyAudioWhenJoinMeeting(bool enabled) =>
-      _writeSettings(Keys.keyMicroOpen, enabled);
+  void enableTurnOnMyAudioWhenJoinMeeting(bool enable) =>
+      _writeSettings(Keys.isTurnOnMyAudioWhenJoinMeetingEnabled, enable);
 
   @override
-  Future<bool> isTurnOnMyAudioWhenJoinMeetingEnabled() => _ensureSettings()
-      .then((settings) => (settings[Keys.keyMicroOpen] ?? false) as bool);
+  Future<bool> isTurnOnMyAudioWhenJoinMeetingEnabled() =>
+      _ensureSettings().then((settings) =>
+          (settings[Keys.isTurnOnMyAudioWhenJoinMeetingEnabled] ?? false)
+              as bool);
 
   @override
-  void setTurnOnMyVideoWhenJoinMeeting(bool enabled) =>
-      _writeSettings(Keys.keyCameraOpen, enabled);
+  void enableTurnOnMyVideoWhenJoinMeeting(bool enable) =>
+      _writeSettings(Keys.isTurnOnMyVideoWhenJoinMeetingEnabled, enable);
 
   @override
-  Future<bool> isTurnOnMyVideoWhenJoinMeetingEnabled() => _ensureSettings()
-      .then((settings) => (settings[Keys.keyCameraOpen] ?? false) as bool);
+  Future<bool> isTurnOnMyVideoWhenJoinMeetingEnabled() =>
+      _ensureSettings().then((settings) =>
+          (settings[Keys.isTurnOnMyVideoWhenJoinMeetingEnabled] ?? false)
+              as bool);
 
   @override
   Future<bool> isAudioAINSEnabled() => _ensureSettings()
-      .then((settings) => (settings[Keys.keyAudioAINSEnabled] ?? true) as bool);
+      .then((settings) => (settings[Keys.isAudioAINSEnabled] ?? true) as bool);
 
   @override
   void enableAudioAINS(bool enable) {
-    _writeSettings(Keys.keyAudioAINSEnabled, enable);
+    _writeSettings(Keys.isAudioAINSEnabled, enable);
   }
 
   void _writeSettings(String key, dynamic value, {bool commit = true}) async {
@@ -118,193 +123,178 @@ class _NESettingsServiceImpl extends NESettingsService {
 
   @override
   Future<int> getBeautyFaceValue() async {
-    _beautyFaceValue ??= max(
-        NEMeetingKit.instance
-                .getAccountService()
-                .getAccountInfo()
-                ?.settings
-                ?.beauty
-                ?.beauty
-                .level ??
-            0,
-        0);
+    _beautyFaceValue ??=
+        max(_settingsCache[Keys.beautyFaceValue] as int? ?? 0, 0);
     return _beautyFaceValue!;
   }
 
   @override
-  Future<bool> isBeautyFaceEnabled() =>
+  Future<bool> isBeautyFaceSupported() =>
       Future.value(sdkConfig.isBeautyFaceSupported);
 
   @override
   Future<void> setBeautyFaceValue(int value) async {
     if (_beautyFaceValue != value) {
+      _beautyFaceValue = value;
       if (NEMeetingKit.instance.getAccountService().isAnonymous) {
-        _beautyFaceValue = value;
         return;
       }
-      final result = await SettingsRepository.saveBeautyFaceValue(value);
-      if (result.isSuccess()) {
-        _beautyFaceValue = value;
-        _writeSettings(Keys.keySetBeautyFaceValue, value);
-      }
+      _writeSettings(Keys.beautyFaceValue, value);
     }
   }
 
-  /// 查询会议是否拥有直播权限
-  ///
   @override
-  Future<bool> isMeetingLiveEnabled() =>
+  Future<bool> isMeetingLiveSupported() =>
       Future.value(sdkConfig.isLiveSupported);
 
   @override
-  Future<bool> isWaitingRoomEnabled() =>
+  Future<bool> isWaitingRoomSupported() =>
       Future.value(sdkConfig.isWaitingRoomSupported);
 
   /// update global config
   Future updateTransientStates() async {
     _transientStates.clear();
-    _transientStates[Keys.keyMeetingLiveEnabled] = sdkConfig.isLiveSupported;
-    _transientStates[Keys.keyBeautyFaceEnabled] =
+    _transientStates[Keys.isMeetingLiveSupported] = sdkConfig.isLiveSupported;
+    _transientStates[Keys.isBeautyFaceSupported] =
         sdkConfig.isBeautyFaceSupported;
-    _transientStates[Keys.keyWhiteboardEnabled] =
+    _transientStates[Keys.isMeetingWhiteboardSupported] =
         sdkConfig.isWhiteboardSupported;
-    _transientStates[Keys.keyMeetingRecordEnabled] =
+    _transientStates[Keys.isMeetingCloudRecordSupported] =
         sdkConfig.isCloudRecordSupported;
-    _transientStates[Keys.enableVirtualBackground] =
+    _transientStates[Keys.isVirtualBackgroundEnabled] =
         await isVirtualBackgroundEnabled();
   }
 
   @override
-  Future<List<NEHistoryMeetingItem>?> getHistoryMeetingItem() async {
-    var settings = await _ensureSettings();
-    final item = NEHistoryMeetingItem.fromJson(
-        settings[Keys.keyHistoryMeetingItem] as Map?);
-    if (item != null) {
-      return [item];
-    }
-    return null;
-  }
-
-  @override
-  void updateHistoryMeetingItem(NEHistoryMeetingItem? item) async {
-    _writeSettings(Keys.keyHistoryMeetingItem, item?.toJson());
-  }
-
-  @override
-  Future<bool> isMeetingCloudRecordEnabled() =>
+  Future<bool> isMeetingCloudRecordSupported() =>
       Future.value(sdkConfig.isCloudRecordSupported);
 
   @override
-  Future<bool> isMeetingWhiteboardEnabled() =>
+  Future<bool> isMeetingWhiteboardSupported() =>
       Future.value(sdkConfig.isWhiteboardSupported);
 
   @override
-  Stream<bool> get sdkConfigChangeStream => sdkConfig.onConfigUpdated;
-
-  @override
   void enableVirtualBackground(bool enable) {
-    _writeSettings(Keys.enableVirtualBackground, enable);
+    _writeSettings(Keys.isVirtualBackgroundEnabled, enable);
   }
 
   @override
   Future<bool> isVirtualBackgroundEnabled() async {
     await _ensureSettings();
     var isVirtualBackgroundEnabled =
-        ((_settingsCache[Keys.enableVirtualBackground] as bool?) ?? true) &&
+        ((_settingsCache[Keys.isVirtualBackgroundEnabled] as bool?) ?? true) &&
             sdkConfig.isVirtualBackgroundSupported;
     return Future.value(isVirtualBackgroundEnabled);
   }
 
   @override
-  bool shouldUnpubOnAudioMute() {
-    return sdkConfig.unpubAudioOnMuteConfig.enable;
+  void setBuiltinVirtualBackgroundList(List<String> pathList) {
+    _writeSettings(Keys.builtinVirtualBackgroundList, pathList);
   }
 
   @override
-  void setBuiltinVirtualBackgrounds(
-      List<NEMeetingVirtualBackground> virtualBackgrounds) {
-    var str = virtualBackgrounds.map((e) => e.toJson()).toList();
-    _writeSettings(Keys.builtinVirtualBackgrounds, str);
-  }
-
-  @override
-  Future<List<NEMeetingVirtualBackground>> getBuiltinVirtualBackgrounds() {
+  Future<List<String>> getBuiltinVirtualBackgroundList() async {
+    await _ensureSettings();
     var builtinVirtualBackgroundJson =
-        _settingsCache[Keys.builtinVirtualBackgrounds];
-    var builtinVirtualBackgrounds = (builtinVirtualBackgroundJson as List?)
-        ?.map((e) => NEMeetingVirtualBackground.fromMap(e))
-        .toList();
+        _settingsCache[Keys.builtinVirtualBackgroundList];
+    var builtinVirtualBackgrounds =
+        (builtinVirtualBackgroundJson as List?)?.whereType<String>().toList();
     return Future.value(builtinVirtualBackgrounds ?? []);
   }
 
   @override
-  void setCurrentVirtualBackgroundSelected(int index) {
-    _writeSettings(Keys.currentVirtualSelected, index);
+  void setCurrentVirtualBackground(String? path) {
+    _writeSettings(Keys.currentVirtualBackground, path);
   }
 
   @override
-  Future<int> getCurrentVirtualBackgroundSelected() {
+  Future<String?> getCurrentVirtualBackground() async {
+    await _ensureSettings();
     return Future.value(
-        (_settingsCache[Keys.currentVirtualSelected] as int?) ?? 0);
+        _settingsCache[Keys.currentVirtualBackground] as String?);
   }
 
   @override
-  void setExternalVirtualBackgrounds(List<String> virtualBackgrounds) {
-    _writeSettings(Keys.addExternalVirtualList, virtualBackgrounds);
+  void setExternalVirtualBackgroundList(List<String> virtualBackgrounds) {
+    _writeSettings(Keys.externalVirtualBackgroundList, virtualBackgrounds);
   }
 
   @override
-  Future<List<String>> getExternalVirtualBackgrounds() {
+  Future<List<String>> getExternalVirtualBackgroundList() async {
+    await _ensureSettings();
     var externalVirtualBackgrounds =
-        _settingsCache[Keys.addExternalVirtualList] as List?;
+        _settingsCache[Keys.externalVirtualBackgroundList] as List?;
     return Future.value(externalVirtualBackgrounds?.cast<String>() ?? []);
+  }
+
+  @override
+  void enableSpeakerSpotlight(bool enable) {
+    _writeSettings(Keys.isSpeakerSpotlightEnabled, enable);
+  }
+
+  @override
+  Future<bool> isSpeakerSpotlightEnabled() async {
+    await _ensureSettings();
+    return Future.value(_settingsCache[Keys.isSpeakerSpotlightEnabled] ?? true);
+  }
+
+  @override
+  Future<bool> isFrontCameraMirrorEnabled() async {
+    await _ensureSettings();
+    return Future.value(
+        (_settingsCache[Keys.isFrontCameraMirrorEnabled] as bool?) ?? true);
+  }
+
+  @override
+  Future<void> enableFrontCameraMirror(bool enable) async {
+    _writeSettings(Keys.isFrontCameraMirrorEnabled, enable);
+  }
+
+  @override
+  Future<bool> isTransparentWhiteboardEnabled() async {
+    await _ensureSettings();
+    return Future.value(
+        (_settingsCache[Keys.isTransparentWhiteboardEnabled] as bool?) ??
+            false);
+  }
+
+  @override
+  Future<void> enableTransparentWhiteboard(bool enable) async {
+    _writeSettings(Keys.isTransparentWhiteboardEnabled, enable);
+  }
+
+  @override
+  Future<bool> isVirtualBackgroundSupported() {
+    return Future.value(sdkConfig.isVirtualBackgroundSupported);
   }
 }
 
 class Keys {
-  static const String keyCameraOpen = 'cameraOpen';
-
-  static const String keyMicroOpen = 'microphoneOpen';
-
-  static const String keyShowMeetTimeOpen = 'showMeetingTime';
-
-  /// 音频智能降噪
-  static const String keyAudioAINSEnabled = 'audioAINSEnabled';
-
-  static const String keyMeetingLiveEnabled = 'meetingLiveEnabled';
-
-  /// 开关组件美颜UI界面预览
-  static const String keyOpenBeautyUI = 'openBeautyUI';
-
-  /// 查询美颜服务是否可用接口
-  static const String keyBeautyFaceEnabled = 'isBeautyFaceEnabled';
-
-  /// 漫游美颜等级，美颜等级配置（0-10）
-  static const String keySetBeautyFaceValue = 'setBeautyFaceValue';
-
-  /// 获取美颜当前配置接口
-  static const String keyGetBeautyFaceValue = 'getBeautyFaceValue';
-
-  static const String keyHistoryMeetingItem = 'historyMeetingItem';
-
-  /// 查询白板服务是否可用接口
-  static const String keyWhiteboardEnabled = 'isMeetingWhiteboardEnabled';
-
-  /// 查询录制服务是否可用接口
-  static const String keyMeetingRecordEnabled = 'isMeetingRecordEnabled';
-
-  /// 虚拟背景 是否开启
-  static const String enableVirtualBackground = "enableVirtualBackground";
-
-  /// 设置虚拟背景
-  static const String builtinVirtualBackgrounds = "builtinVirtualBackgrounds";
-
-  /// 最近选择的虚拟背景
-  static const String currentVirtualSelected = 'currentVirtualSelected';
-
-  /// 添加外部虚拟背景列表
-  static const String addExternalVirtualList = 'addExternalVirtualList';
-
-  /// 是否允许切换音频设备
-  static const String enableAudioDeviceSwitch = 'enableAudioDeviceSwitch';
+  static const String isShowMyMeetingElapseTimeEnabled =
+      "isShowMyMeetingElapseTimeEnabled";
+  static const String isTurnOnMyVideoWhenJoinMeetingEnabled =
+      "isTurnOnMyVideoWhenJoinMeetingEnabled";
+  static const String isTurnOnMyAudioWhenJoinMeetingEnabled =
+      "isTurnOnMyAudioWhenJoinMeetingEnabled";
+  static const String isMeetingLiveSupported = "isMeetingLiveSupported";
+  static const String isMeetingWhiteboardSupported =
+      "isMeetingWhiteboardSupported";
+  static const String isMeetingCloudRecordSupported =
+      "isMeetingCloudRecordSupported";
+  static const String isAudioAINSEnabled = "isAudioAINSEnabled";
+  static const String isVirtualBackgroundEnabled = "isVirtualBackgroundEnabled";
+  static const String builtinVirtualBackgroundList =
+      "builtinVirtualBackgroundList";
+  static const String externalVirtualBackgroundList =
+      "externalVirtualBackgroundList";
+  static const String currentVirtualBackground = "currentVirtualBackground";
+  static const String isSpeakerSpotlightEnabled = "isSpeakerSpotlightEnabled";
+  static const String isFrontCameraMirrorEnabled = "isFrontCameraMirrorEnabled";
+  static const String isTransparentWhiteboardEnabled =
+      "isTransparentWhiteboardEnabled";
+  static const String isBeautyFaceSupported = "isBeautyFaceSupported";
+  static const String beautyFaceValue = "beautyFaceValue";
+  static const String isWaitingRoomSupported = "isWaitingRoomSupported";
+  static const String isVirtualBackgroundSupported =
+      "isVirtualBackgroundSupported";
 }

@@ -82,21 +82,22 @@ import SDWebImage
 
   override public init(frame: CGRect) {
     super.init(frame: frame)
-
-    let gradientLayer = CAGradientLayer()
-    gradientLayer.frame = frame
-    gradientLayer.colors = [UIColor(red: 89 / 255, green: 150 / 255, blue: 255 / 255, alpha: 1.0).cgColor, UIColor(red: 37 / 255, green: 117 / 255, blue: 255 / 255, alpha: 1.0).cgColor]
-    gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)
-    gradientLayer.endPoint = CGPoint(x: 0.5, y: 1.0)
-
     layer.insertSublayer(gradientLayer, at: 0)
-
     addSubview(imageView)
     addSubview(label)
   }
 
+  lazy var gradientLayer: CAGradientLayer = {
+    let gradientLayer = CAGradientLayer()
+    gradientLayer.colors = [UIColor(red: 89 / 255, green: 150 / 255, blue: 255 / 255, alpha: 1.0).cgColor, UIColor(red: 37 / 255, green: 117 / 255, blue: 255 / 255, alpha: 1.0).cgColor]
+    gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)
+    gradientLayer.endPoint = CGPoint(x: 0.5, y: 1.0)
+    return gradientLayer
+  }()
+
   override public var frame: CGRect {
     didSet {
+      gradientLayer.frame = bounds
       imageView.frame = bounds
       label.frame = bounds
       /// 更新一下fontsize

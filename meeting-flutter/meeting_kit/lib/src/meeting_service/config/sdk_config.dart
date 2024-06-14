@@ -10,11 +10,10 @@ part of meeting_service;
 class SDKConfig with _AloggerMixin {
   ///android version修改对应packages/meeting_sdk_android/gradle.properties的内容
   ///iOS version修改packages/meeting_sdk_ios/NEMeetingScript/spec/NEMeetingSDK.podspec的内容
-  static const String sdkVersionName = '4.5.0';
-  static const int sdkVersionCode = 40500;
+  static const String sdkVersionName = '4.6.0';
+  static const int sdkVersionCode = 40600;
   static const String sdkType = 'official'; //pub
 
-  // static const _tag = 'SDKConfig';
   static const int getSdkConfigRetryTime = 3; // 请求sdkConfig失败重试最大次数
   static const periodicRefreshConfigTime =
       const Duration(hours: 1); // 定时刷新sdkConfig时间
@@ -143,6 +142,10 @@ class SDKConfig with _AloggerMixin {
   /// 是否支持访客入会，默认打开
   bool get isGuestJoinSupported => _appRoomResConfig.guest;
 
+  /// 是否支持同声传译
+  InterpretationConfig get interpretationConfig =>
+      _appRoomResConfig.interpretation;
+
   /// 是否支持预约会议指定成员
   bool get isScheduledMembersEnabled =>
       (configs['appConfig']?['MEETING_SCHEDULED_MEMBER_CONFIG']?['enable'] ??
@@ -235,17 +238,35 @@ class _SDKGlobalConfig {
 /// https://office.netease.com/doc/?identity=67f6ea157eae470c9c2f9a7ebd09ee38
 /// GET https://{domain}/scene/meeting/{appId}/v1/config HTTP/1.1
 class AppRoomResConfig {
+  /// 白板功能开关
   late final bool whiteboard;
+
+  /// 聊天室功能开关
   late final bool chatRoom;
+
+  /// 直播功能开关
   late final bool live;
   late final bool rtc;
+
+  /// 云录制功能开关
   late final bool record;
+
+  /// sip 功能开关
   late final bool sip;
+
+  /// 等候室功能开关
   late final bool waitingRoom;
+
+  /// sip 邀请功能开关
   late final bool sipInvite;
+
+  /// 访客入会功能开关
   late final bool guest;
 
-  ///
+  /// 同声传译功能开关
+  late final InterpretationConfig interpretation;
+
+  /// 应用开关配置
   AppRoomResConfig.fromJson(Map<String, dynamic>? json) {
     whiteboard = (json?['whiteboard'] ?? false) as bool;
     chatRoom = (json?['chatroom'] ?? true) as bool;
@@ -256,6 +277,10 @@ class AppRoomResConfig {
     waitingRoom = (json?['waitingRoom'] ?? false) as bool;
     sipInvite = (json?['sipInvite'] ?? false) as bool;
     guest = (json?['guest'] ?? true) as bool;
+    interpretation = switch (json?['interpretation']) {
+      Map interpretation => InterpretationConfig.fromJson(interpretation),
+      _ => const InterpretationConfig(),
+    };
   }
 }
 
@@ -419,4 +444,35 @@ class WhiteBoardConfig extends BaseConfig {
   Map<String, dynamic> toJson() => {
         'version': version,
       };
+}
+
+/// 同声传译应用配置
+class InterpretationConfig {
+  final bool enable;
+  final int maxInterpreters;
+  final bool enableCustomLang;
+  final int maxCustomLangNameLen;
+  final int defMajorAudioVolume;
+
+  const InterpretationConfig({
+    bool? enable,
+    int? maxInterpreters,
+    bool? enableCustomLang,
+    int? maxCustomLangNameLen,
+    int? defMajorAudioVolume,
+  })  : enable = enable ?? false,
+        maxInterpreters = maxInterpreters ?? 10,
+        maxCustomLangNameLen = maxCustomLangNameLen ?? 20,
+        defMajorAudioVolume = defMajorAudioVolume ?? 20,
+        enableCustomLang = enableCustomLang ?? false;
+
+  factory InterpretationConfig.fromJson(Map map) {
+    return InterpretationConfig(
+      enable: map['enable'] ?? false,
+      maxInterpreters: map['maxInterpreters'],
+      enableCustomLang: map['enableCustomLang'],
+      defMajorAudioVolume: map['defMajorAudioVolume'],
+      maxCustomLangNameLen: map['maxCustomLanguageLength'],
+    );
+  }
 }

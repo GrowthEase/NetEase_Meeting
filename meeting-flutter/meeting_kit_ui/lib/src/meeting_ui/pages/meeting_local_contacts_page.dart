@@ -90,6 +90,9 @@ class _MeetingLocalContactsPageState
         _handleList(_contacts);
       });
     _loadContacts();
+    _focusNode.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
@@ -277,7 +280,7 @@ class _MeetingLocalContactsPageState
                 children: <Widget>[
                   Container(
                     margin: EdgeInsets.only(top: 5, bottom: 5, right: 10),
-                    child: NEMeetingAvatar.xlarge(
+                    child: NEMeetingAvatar.xxlarge(
                         name: model.displayName, url: null),
                   ),
                   Expanded(
@@ -344,7 +347,8 @@ class _MeetingLocalContactsPageState
                 ),
                 prefixIconConstraints: BoxConstraints(
                     minWidth: 32, minHeight: 32, maxHeight: 32, maxWidth: 32),
-                suffixIcon: TextUtils.isEmpty(_searchTextEditingController.text)
+                suffixIcon: !_focusNode.hasFocus ||
+                        TextUtils.isEmpty(_searchTextEditingController.text)
                     ? null
                     : ClearIconButton(
                         onPressed: () {

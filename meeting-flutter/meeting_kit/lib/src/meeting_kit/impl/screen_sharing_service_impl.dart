@@ -74,7 +74,7 @@ class _NEScreenSharingServiceImpl extends NEScreenSharingService
       NERoomMember member, bool isSharing, NERoomMember? operator) {
     if (member.uuid == _roomContext.localMember.uuid) {
       if (!isSharing) {
-        stopScreenShare(
+        _stopScreenShareInterner(
             reason: operator?.uuid == member.uuid
                 ? NERoomEndReason.kLeaveBySelf
                 : NERoomEndReason.kKickOut);
@@ -86,7 +86,7 @@ class _NEScreenSharingServiceImpl extends NEScreenSharingService
       apiLogger.i(
           'Screen share changed: member: ${member.uuid}, isSharing: $isSharing');
       if (isSharing) {
-        stopScreenShare(reason: NERoomEndReason.kKickOut);
+        _stopScreenShareInterner(reason: NERoomEndReason.kKickOut);
       }
     }
   }
@@ -104,7 +104,7 @@ class _NEScreenSharingServiceImpl extends NEScreenSharingService
               .then((value) {
             if (!value.isSuccess()) {
               apiLogger.i('startScreenShare fail  value: ${value.code}');
-              stopScreenShare(reason: NERoomEndReason.kUnknown);
+              _stopScreenShareInterner(reason: NERoomEndReason.kUnknown);
             } else {
               if (_enableAudioShare) {
                 _roomContext.rtcController.enableLoopbackRecording(true);
@@ -202,9 +202,11 @@ class _NEScreenSharingServiceImpl extends NEScreenSharingService
     return null;
   }
 
-  @override
-  Future<NEResult<void>> stopScreenShare(
-      {NERoomEndReason reason = NERoomEndReason.kLeaveBySelf}) async {
+  ///
+  /// 停止屏幕共享, 会自动离开房间,内部接口
+  ///
+  Future<NEResult<void>> _stopScreenShareInterner(
+      {required NERoomEndReason reason}) async {
     apiLogger.i('stopScreenShare');
     await _roomContext.rtcController.stopScreenShare();
     _roomContext.removeEventCallback(roomEventCallback);
@@ -223,12 +225,21 @@ class _NEScreenSharingServiceImpl extends NEScreenSharingService
   }
 
   @override
-  void addListener(NEScreenSharingStatusListener listener) {
+  Future<NEResult<void>> stopScreenShare() async {
+    apiLogger.i('stopScreenShare');
+    return _stopScreenShareInterner(reason: NERoomEndReason.kLeaveBySelf);
+  }
+
+  @override
+  void addScreenSharingStatusListener(NEScreenSharingStatusListener listener) {
+    apiLogger.i('addScreenSharingStatusListener');
     _screenSharingListenerSet.add(listener);
   }
 
   @override
-  void removeListener(NEScreenSharingStatusListener listener) {
+  void removeScreenSharingStatusListener(
+      NEScreenSharingStatusListener listener) {
+    apiLogger.i('removeScreenSharingStatusListener');
     _screenSharingListenerSet.remove(listener);
   }
 }

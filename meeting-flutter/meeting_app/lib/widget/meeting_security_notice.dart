@@ -7,11 +7,14 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:nemeeting/service/model/security_notice_info.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nemeeting/uikit/utils/nav_utils.dart';
 import 'package:nemeeting/uikit/utils/router_name.dart';
+import 'package:nemeeting/uikit/values/fonts.dart';
 import 'package:nemeeting/utils/security_notice_util.dart';
 import 'package:nemeeting/webview/webview_page.dart';
+import 'package:nemeeting/widget/ne_widget.dart';
+import 'package:netease_meeting_ui/meeting_ui.dart';
 
 import '../uikit/values/asset_name.dart';
 import '../uikit/values/borders.dart';
@@ -19,7 +22,7 @@ import '../uikit/values/colors.dart';
 
 class MeetingAppNotificationBar extends StatefulWidget {
   final VoidCallback? onClose;
-  final AppNotification? notification;
+  final NEMeetingAppNoticeTip? notification;
 
   MeetingAppNotificationBar({
     Key? key,
@@ -33,9 +36,10 @@ class MeetingAppNotificationBar extends StatefulWidget {
   }
 }
 
-class MeetingAppNotificationBarState extends State<MeetingAppNotificationBar> {
+class MeetingAppNotificationBarState
+    extends PlatformAwareLifecycleBaseState<MeetingAppNotificationBar> {
   final TapGestureRecognizer _tap = TapGestureRecognizer();
-  AppNotification? _notification;
+  NEMeetingAppNoticeTip? _notification;
   StreamSubscription? _subscription;
 
   @override
@@ -60,7 +64,7 @@ class MeetingAppNotificationBarState extends State<MeetingAppNotificationBar> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildWithPlatform(BuildContext context) {
     final notification = _notification;
     if (notification == null) {
       return Container();
@@ -75,17 +79,15 @@ class MeetingAppNotificationBarState extends State<MeetingAppNotificationBar> {
             padding: EdgeInsets.only(left: 13, right: 13, top: 10, bottom: 10),
             decoration: BoxDecoration(
               color: AppColors.noticeBg,
-              border: Border.fromBorderSide(Borders.noticeBorder),
-              borderRadius: BorderRadius.all(Radius.circular(4.0)),
             ),
             child: Row(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  buildIconBy(AssetName.iconWarning),
+                  buildWarning(),
                   SizedBox(
-                    width: 4,
+                    width: 6,
                   ),
                   Expanded(
                     child: RichText(
@@ -94,11 +96,11 @@ class MeetingAppNotificationBarState extends State<MeetingAppNotificationBar> {
                         TextSpan(children: [
                           TextSpan(
                             text: notification.title,
-                            style: buildTextStyle(AppColors.color_666666),
+                            style: buildTextStyle(AppColors.color_f29900),
                           ),
                           TextSpan(
                               text: notification.content,
-                              style: buildTextStyle(AppColors.color_666666),
+                              style: buildTextStyle(AppColors.color_f29900),
                               recognizer: _tap
                                 ..onTap =
                                     () => onNotificationTap(notification)),
@@ -106,7 +108,8 @@ class MeetingAppNotificationBarState extends State<MeetingAppNotificationBar> {
                       ]),
                     ),
                   ),
-                  buildIconBy(AssetName.iconClose, paddingLeft: 2)
+                  SizedBox(width: 6),
+                  buildClose(),
                 ])),
       ],
     );
@@ -115,34 +118,52 @@ class MeetingAppNotificationBarState extends State<MeetingAppNotificationBar> {
   TextStyle buildTextStyle(Color color) {
     return TextStyle(
         color: color,
-        fontSize: 14,
+        fontSize: 12.sp,
         fontWeight: FontWeight.w400,
         decoration: TextDecoration.none);
   }
 
-  Align buildIconBy(String assetName,
-      {double paddingLeft = 0, double paddingRight = 0}) {
+  Align buildWarning() {
     return Align(
         alignment: Alignment.topCenter,
         child: Container(
-          padding:
-              EdgeInsets.only(top: 3, right: paddingRight, left: paddingLeft),
-          child: GestureDetector(
+          height: 14.w,
+          width: 14.w,
+          child: NEGestureDetector(
+              onTap: () {
+                AppNotificationManager().hideNotification();
+                widget.onClose?.call();
+              },
+              child: Image.asset(
+                AssetName.iconWarning,
+                fit: BoxFit.fill,
+              )),
+        ));
+  }
+
+  Align buildClose() {
+    return Align(
+        alignment: Alignment.topCenter,
+        child: Container(
+          // padding: EdgeInsets.only(top: 3, left: 2),
+          height: 12.w,
+          width: 12.w,
+          child: NEGestureDetector(
             onTap: () {
               AppNotificationManager().hideNotification();
               widget.onClose?.call();
             },
-            child: Image.asset(
-              assetName,
-              //package: AssetName.package,
-              fit: BoxFit.fill,
+            child: Icon(
+              IconFont.icon_close,
+              size: 10,
+              color: AppColors.color_f29900,
             ),
           ),
         ));
   }
 
-  void onNotificationTap(AppNotification notification) {
-    if (notification.type == AppNotification.kTypeUrl) {
+  void onNotificationTap(NEMeetingAppNoticeTip notification) {
+    if (notification.type == NEMeetingAppNoticeTipType.kUrl) {
       if (notification.url != null && notification.url!.isNotEmpty) {
         NavUtils.pushNamed(
           context,

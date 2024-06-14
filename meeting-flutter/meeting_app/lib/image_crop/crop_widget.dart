@@ -5,7 +5,7 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import '../language/meeting_localization/meeting_app_localizations.dart';
+import '../language/localizations.dart';
 import '../uikit/values/colors.dart';
 import 'crop_const.dart';
 import 'crop_controller.dart';
@@ -45,7 +45,7 @@ class ImageCropper extends StatelessWidget {
                   onPressed: () {
                     ctrl.cancel();
                   },
-                  child: Text(MeetingAppLocalizations.of(context)!.globalCancel,
+                  child: Text(getAppLocalizations().globalCancel,
                       style: TextStyle(fontSize: 18, color: Colors.white)),
                 ),
               ),
@@ -55,8 +55,7 @@ class ImageCropper extends StatelessWidget {
                   onPressed: () {
                     ctrl.crop(devicePixelRatio);
                   },
-                  child: Text(
-                      MeetingAppLocalizations.of(context)!.globalComplete,
+                  child: Text(getAppLocalizations().globalComplete,
                       style: TextStyle(fontSize: 18, color: Colors.white)),
                 ),
               ),

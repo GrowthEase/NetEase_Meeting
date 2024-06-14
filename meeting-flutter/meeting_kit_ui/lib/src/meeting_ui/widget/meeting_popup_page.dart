@@ -5,19 +5,29 @@
 part of meeting_ui;
 
 class TitleBarCloseIcon extends StatelessWidget {
-  const TitleBarCloseIcon({super.key});
+  final IconData? icon;
+  final VoidCallback? onPressed;
+  final double height;
+
+  const TitleBarCloseIcon({
+    super.key,
+    this.icon,
+    this.onPressed,
+    this.height = 48.0,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () {
-        Navigator.of(context).pop();
-      },
+      onTap: onPressed ??
+          () {
+            Navigator.of(context).pop();
+          },
       child: SizedBox.square(
-        dimension: TitleBar.height,
+        dimension: height,
         child: Icon(
-          NEMeetingIconFont.icon_yx_tv_duankaix,
+          icon ?? NEMeetingIconFont.icon_yx_tv_duankaix,
           color: _UIColors.color_666666,
           size: 16,
           key: MeetingUIValueKeys.close,
@@ -28,7 +38,7 @@ class TitleBarCloseIcon extends StatelessWidget {
 }
 
 class TitleBar extends StatelessWidget implements PreferredSizeWidget {
-  static const height = 48.0;
+  final double height;
 
   final Widget? title;
 
@@ -42,6 +52,7 @@ class TitleBar extends StatelessWidget implements PreferredSizeWidget {
     super.key,
     this.title,
     this.leading,
+    this.height = 48.0,
     this.trailing = const TitleBarCloseIcon(),
     this.showBottomDivider = false,
   });
@@ -51,7 +62,7 @@ class TitleBar extends StatelessWidget implements PreferredSizeWidget {
     Widget child = Container(
       color: Colors.white,
       child: SizedBox(
-        height: TitleBar.height,
+        height: height,
         child: Row(
           children: [
             Expanded(
@@ -183,6 +194,7 @@ Future<T?> showMeetingPopupPageRoute<T>({
   required BuildContext context,
   required WidgetBuilder builder,
   bool isDismissible = true,
+  bool enableDrag = true,
   RouteSettings? routeSettings,
   Color? barrierColor,
 }) {
@@ -201,6 +213,7 @@ Future<T?> showMeetingPopupPageRoute<T>({
     isScrollControlled: true,
     clipBehavior: Clip.antiAlias,
     isDismissible: isDismissible,
+    enableDrag: enableDrag,
     constraints: BoxConstraints.tightFor(height: max(shortestSide, maxHeight)),
     builder: (context) {
       return OrientationBuilder(
@@ -213,8 +226,9 @@ Future<T?> showMeetingPopupPageRoute<T>({
           );
 
           /// 如果是切换为横屏模式，则隐藏状态栏
+          /// 补充SafeArea，避免导航栏遮挡关闭按钮
           return AutoHideStatusBar(
-            child: child,
+            child: SafeArea(child: child, bottom: false),
             hide: !isPortrait,
           );
         },

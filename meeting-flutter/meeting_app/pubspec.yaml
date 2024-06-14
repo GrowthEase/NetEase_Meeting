@@ -2,7 +2,7 @@ name: nemeeting
 description: A new Flutter application.
 publish_to: none
 
-version: 4.5.1+40501
+version: 4.6.0+40600
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -10,6 +10,8 @@ environment:
 
 dependencies:
   flutter:
+    sdk: flutter
+  integration_test:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
@@ -25,10 +27,11 @@ dependencies:
   dio: ^5.4.2+1
   pin_input_text_field: ^4.5.1
   url_launcher: ^6.2.6
+  crypto: ^3.0.3
 
   netease_meeting_ui:
     path: ../meeting_kit_ui
-  netease_common: ^1.0.5
+  netease_common: ^1.0.6
   file_picker: ^8.0.0+1
   marvelflutter: ^0.0.2
 
@@ -39,10 +42,15 @@ dependencies:
   cached_network_image: ^3.3.1
   lottie: ^3.1.0
   mask_text_input_formatter: ^2.9.0
+  device_info_plus: ^10.1.0
+  device_information: ^0.0.4
+  sticky_headers: ^0.3.0
 #  yunxin_integration_test: 0^0.0.1-rc.7
 
 
-dev_dependencies:
+# dev_dependencies:
+#  hawk:
+#    path: ../../auto_test/hawk
 dependency_overrides:
   # device_info_plus: ^8.0.0
   # yunxin_event_track:

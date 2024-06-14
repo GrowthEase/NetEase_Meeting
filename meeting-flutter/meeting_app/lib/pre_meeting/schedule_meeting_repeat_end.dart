@@ -4,11 +4,11 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:nemeeting/widget/ne_widget.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 import '../uikit/state/meeting_base_state.dart';
 import '../language/localizations.dart';
 import '../uikit/values/colors.dart';
-import '../uikit/values/fonts.dart';
 import 'package:intl/intl.dart';
 
 class ScheduleMeetingRepeatEndRoute extends StatefulWidget {
@@ -22,8 +22,7 @@ class ScheduleMeetingRepeatEndRoute extends StatefulWidget {
 }
 
 class _ScheduleMeetingRepeatEndRouteState
-    extends MeetingBaseState<ScheduleMeetingRepeatEndRoute>
-    with MeetingAppLocalizationsMixin {
+    extends AppBaseState<ScheduleMeetingRepeatEndRoute> {
   late TextEditingController _inputController;
 
   @override
@@ -35,100 +34,68 @@ class _ScheduleMeetingRepeatEndRouteState
 
   @override
   String getTitle() {
-    return meetingAppLocalizations.meetingRepeatStop;
+    return getAppLocalizations().meetingRepeatStop;
   }
 
   @override
   Widget buildBody() {
-    return GestureDetector(
-        behavior: HitTestBehavior.opaque,
+    return NEGestureDetector(
         onTap: () {
           FocusScope.of(context).unfocus();
         },
-        child: LayoutBuilder(builder:
-            (BuildContext context, BoxConstraints viewportConstraints) {
-          return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: viewportConstraints.maxHeight,
-              ),
-              child: IntrinsicHeight(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    buildSpace(height: 16),
-                    buildCheckableItem(NEMeetingRecurringEndRuleType.date),
-                    buildSplit(15),
-                    if (widget.recurringRule.endRule?.type ==
-                        NEMeetingRecurringEndRuleType.date)
-                      buildArrowItem(
-                          '${meetingAppLocalizations.meetingRepeatEndAt} ${widget.recurringRule.endRule?.date?.replaceAll('/', '-')}'),
-                    if (widget.recurringRule.endRule?.type ==
-                        NEMeetingRecurringEndRuleType.date)
-                      buildSplit(31),
-                    buildCheckableItem(NEMeetingRecurringEndRuleType.times),
-                    if (widget.recurringRule.endRule?.type ==
-                        NEMeetingRecurringEndRuleType.times)
-                      buildSplit(15),
-                    if (widget.recurringRule.endRule?.type ==
-                        NEMeetingRecurringEndRuleType.times)
-                      buildMeetingCount(),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }));
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              MeetingSettingGroup(children: [
+                buildCheckableItem(NEMeetingRecurringEndRuleType.date),
+                if (widget.recurringRule.endRule?.type ==
+                    NEMeetingRecurringEndRuleType.date)
+                  buildArrowItem(
+                      '${getAppLocalizations().meetingRepeatEndAt} ${widget.recurringRule.endRule?.date?.replaceAll('/', '-')}'),
+                buildCheckableItem(NEMeetingRecurringEndRuleType.times),
+                if (widget.recurringRule.endRule?.type ==
+                    NEMeetingRecurringEndRuleType.times)
+                  buildMeetingCount(),
+              ]),
+            ],
+          ),
+        ));
   }
 
   Widget buildCheckableItem(NEMeetingRecurringEndRuleType type) {
     final title;
     if (type == NEMeetingRecurringEndRuleType.date) {
-      title = meetingAppLocalizations.meetingRepeatEndAtOneday;
+      title = getAppLocalizations().meetingRepeatEndAtOneday;
     } else {
-      title = meetingAppLocalizations.meetingRepeatTimes;
+      title = getAppLocalizations().meetingRepeatTimes;
     }
     final checked = widget.recurringRule.endRule?.type == type;
-    return GestureDetector(
-      child: Container(
-          height: 56,
-          color: Colors.white,
-          alignment: Alignment.center,
-          child: ListTile(
-            title: Text(title,
-                style: TextStyle(fontSize: 16, color: AppColors.black_222222)),
-            trailing: checked
-                ? Icon(
-                    Icons.check,
-                    size: 16,
-                    color: AppColors.blue_337eff,
-                  )
-                : null,
-          )),
-      onTap: () {
-        if (type != widget.recurringRule.endRule?.type) {
-          setState(() {
-            widget.recurringRule.isEndTypeLocked = true;
-            widget.recurringRule.endRule?.type = type;
-          });
-        }
-      },
-    );
+    return MeetingCheckItem(
+        title: title,
+        isSelected: checked,
+        onTap: () {
+          if (type != widget.recurringRule.endRule?.type) {
+            setState(() {
+              widget.recurringRule.isEndTypeLocked = true;
+              widget.recurringRule.endRule?.type = type;
+            });
+          }
+        });
   }
 
   Widget buildArrowItem(String title) {
-    return GestureDetector(
-      child: Container(
-          padding: EdgeInsets.only(left: 16),
-          height: 56,
-          color: Colors.white,
-          alignment: Alignment.center,
-          child: ListTile(
-            title: Text(title,
-                style: TextStyle(fontSize: 16, color: AppColors.color_999999)),
-            trailing: Icon(IconFont.iconyx_allowx,
-                size: 14, color: AppColors.greyCCCCCC),
-          )),
+    return MeetingArrowItem(
+      title: title,
+      minHeight: 40,
+      padding: EdgeInsets.only(
+        left: 32,
+        right: 16,
+      ),
+      titleTextStyle: TextStyle(
+          color: AppColors.color_53576A,
+          fontSize: 14,
+          fontWeight: FontWeight.w400),
       onTap: () {
         widget.recurringRule.isEndTypeLocked = true;
         _showCupertinoDatePicker();
@@ -170,7 +137,7 @@ class _ScheduleMeetingRepeatEndRouteState
                 )),
           ]);
         }).then((value) {
-      if (value == 'done') {
+      if (mounted && value == 'done') {
         setState(() {
           widget.recurringRule.endRule!.date =
               DateFormat('yyyy/MM/dd').format(_time);
@@ -200,16 +167,18 @@ class _ScheduleMeetingRepeatEndRouteState
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text(meetingAppLocalizations.globalCancel,
-                  style:
-                      TextStyle(fontSize: 14, color: AppColors.color_1f2329))),
-          Text(meetingAppLocalizations.meetingChooseDate,
+              child: Text(getAppLocalizations().globalCancel,
+                  style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.color_1f2329,
+                      fontWeight: FontWeight.normal))),
+          Text(getAppLocalizations().meetingChooseDate,
               style: TextStyle(fontSize: 17, color: AppColors.color_1f2329)),
           TextButton(
               onPressed: () {
                 Navigator.pop(context, 'done');
               },
-              child: Text(meetingAppLocalizations.globalComplete,
+              child: Text(getAppLocalizations().globalComplete,
                   style: TextStyle(
                       fontSize: 14,
                       color: AppColors.blue_337eff,
@@ -239,18 +208,15 @@ class _ScheduleMeetingRepeatEndRouteState
 
   Widget buildMeetingCount() {
     return Container(
-      height: 50,
-      color: AppColors.white,
-      padding: EdgeInsets.only(left: 36, right: 16),
-      child: Container(
-        child: Row(
-          children: [
-            Text(meetingAppLocalizations.meetingRepeatTimes,
-                style: TextStyle(fontSize: 16, color: AppColors.color_999999)),
-            Expanded(child: SizedBox()),
-            buildMeetingCounter(),
-          ],
-        ),
+      height: 40,
+      padding: EdgeInsets.only(left: 32, right: 16),
+      child: Row(
+        children: [
+          Text(getAppLocalizations().meetingRepeatTimes,
+              style: TextStyle(fontSize: 14, color: AppColors.color_53576A)),
+          Expanded(child: SizedBox()),
+          buildMeetingCounter(),
+        ],
       ),
     );
   }
@@ -268,11 +234,15 @@ class _ScheduleMeetingRepeatEndRouteState
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        GestureDetector(
+        NEGestureDetector(
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.color_F7F8FA,
               border: Border.fromBorderSide(borderSide),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(2),
+                bottomLeft: Radius.circular(2),
+              ),
             ),
             width: 32,
             height: 32,
@@ -282,7 +252,7 @@ class _ScheduleMeetingRepeatEndRouteState
               style: TextStyle(
                   fontSize: 20,
                   color: subEnable
-                      ? AppColors.color_222222
+                      ? AppColors.color_53576A
                       : AppColors.color_999999),
             ),
           ),
@@ -299,15 +269,21 @@ class _ScheduleMeetingRepeatEndRouteState
               bottom: borderSide,
             ),
           ),
-          width: 50,
+          width: 52,
           height: 32,
+          alignment: Alignment.center,
           child: TextField(
             controller: _inputController,
             decoration: InputDecoration(
               border: InputBorder.none,
+              isCollapsed: true,
             ),
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.color_53576A,
+            ),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
             ],
@@ -331,11 +307,15 @@ class _ScheduleMeetingRepeatEndRouteState
             },
           ),
         ),
-        GestureDetector(
+        NEGestureDetector(
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.color_F7F8FA,
               border: Border.fromBorderSide(borderSide),
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(2),
+                bottomRight: Radius.circular(2),
+              ),
             ),
             width: 32,
             height: 32,
@@ -345,7 +325,7 @@ class _ScheduleMeetingRepeatEndRouteState
               style: TextStyle(
                   fontSize: 20,
                   color: addEnable
-                      ? AppColors.color_222222
+                      ? AppColors.color_53576A
                       : AppColors.color_999999),
             ),
           ),

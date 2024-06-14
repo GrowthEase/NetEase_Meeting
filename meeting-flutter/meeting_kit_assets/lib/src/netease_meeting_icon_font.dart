@@ -147,4 +147,30 @@ class NEMeetingIconFont {
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_system_call_in = IconData(0xe6fe,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_interpretation = IconData(0xe702,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_volume_up = IconData(0xe7c0,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_volume_down = IconData(0xe7d4,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_switch = IconData(0xe703,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_setting = IconData(0xe76d,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_camera = IconData(0xe727,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_settings = IconData(0xe726,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_audio = IconData(0xe725,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_members = IconData(0xe72a,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_copy = IconData(0xe71d,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_forbidden = IconData(0xe72c,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_add_picture = IconData(0xe72b,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_pop_window_back = IconData(0xe60d,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
 }

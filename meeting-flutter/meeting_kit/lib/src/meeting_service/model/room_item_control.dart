@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 part of meeting_service;
 
-class NERoomControl {
+class NEMeetingControl {
   static const controlTypeUnknown = -1;
 
   static const controlTypeAudio = 0;
@@ -21,48 +21,48 @@ class NERoomControl {
         if (controlType == controlTypeVideo) 'type': _controlTypeVideoKey,
       };
 
-  NERoomControl(this.controlType);
+  NEMeetingControl(this.controlType);
 
-  factory NERoomControl.fromJson(Map<String, dynamic> json) {
+  factory NEMeetingControl.fromJson(Map<String, dynamic> json) {
     final type = json['type'] as String?;
-    final offType = NERoomAttendeeOffType.values.firstWhere(
+    final offType = NEMeetingAttendeeOffType.values.firstWhere(
       (element) =>
           element.index ==
-          (json['attendeeOff'] as int? ?? NERoomAttendeeOffType.none.index),
+          (json['attendeeOff'] as int? ?? NEMeetingAttendeeOffType.none.index),
     );
     final enabled = (json['state'] as int?) == 1;
     final allowSelfOn = (json['allowSelfOn'] as bool?) == true;
     switch (type) {
       case _controlTypeAudioKey:
         return json.containsKey('state')
-            ? NEInRoomAudioControl(
+            ? NEInMeetingAudioControl(
                 enabled: enabled,
                 allowSelfOn: allowSelfOn,
                 attendeeOff: offType,
               )
-            : NERoomAudioControl(offType);
+            : NEMeetingAudioControl(offType);
       case _controlTypeVideoKey:
         return json.containsKey('state')
-            ? NEInRoomVideoControl(
+            ? NEInMeetingVideoControl(
                 enabled: enabled,
                 allowSelfOn: allowSelfOn,
                 attendeeOff: offType,
               )
-            : NERoomVideoControl(offType);
+            : NEMeetingVideoControl(offType);
       default:
-        return NERoomControl(controlTypeUnknown);
+        return NEMeetingControl(controlTypeUnknown);
     }
   }
 }
 
-class NERoomAudioControl extends NERoomControl {
+class NEMeetingAudioControl extends NEMeetingControl {
   ///
   /// 音频控制类型
   ///
-  var attendeeOff = NERoomAttendeeOffType.none;
+  var attendeeOff = NEMeetingAttendeeOffType.none;
 
-  NERoomAudioControl([this.attendeeOff = NERoomAttendeeOffType.none])
-      : super(NERoomControl.controlTypeAudio);
+  NEMeetingAudioControl([this.attendeeOff = NEMeetingAttendeeOffType.none])
+      : super(NEMeetingControl.controlTypeAudio);
 
   @override
   Map<String, dynamic> toJson() => {
@@ -73,7 +73,7 @@ class NERoomAudioControl extends NERoomControl {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is NERoomAudioControl &&
+      other is NEMeetingAudioControl &&
           runtimeType == other.runtimeType &&
           controlType == other.controlType &&
           attendeeOff == other.attendeeOff;
@@ -82,14 +82,14 @@ class NERoomAudioControl extends NERoomControl {
   int get hashCode => controlType.hashCode ^ attendeeOff.hashCode;
 }
 
-class NERoomVideoControl extends NERoomControl {
+class NEMeetingVideoControl extends NEMeetingControl {
   ///
   /// 视频控制类型
   ///
-  var attendeeOff = NERoomAttendeeOffType.none;
+  var attendeeOff = NEMeetingAttendeeOffType.none;
 
-  NERoomVideoControl([this.attendeeOff = NERoomAttendeeOffType.none])
-      : super(NERoomControl.controlTypeVideo);
+  NEMeetingVideoControl([this.attendeeOff = NEMeetingAttendeeOffType.none])
+      : super(NEMeetingControl.controlTypeVideo);
 
   @override
   Map<String, dynamic> toJson() => {
@@ -100,7 +100,7 @@ class NERoomVideoControl extends NERoomControl {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is NERoomVideoControl &&
+      other is NEMeetingVideoControl &&
           runtimeType == other.runtimeType &&
           controlType == other.controlType &&
           attendeeOff == other.attendeeOff;
@@ -109,7 +109,7 @@ class NERoomVideoControl extends NERoomControl {
   int get hashCode => controlType.hashCode ^ attendeeOff.hashCode;
 }
 
-enum NERoomAttendeeOffType {
+enum NEMeetingAttendeeOffType {
   ///
   /// 无操作
   ///
@@ -127,7 +127,7 @@ enum NERoomAttendeeOffType {
 }
 
 /// 房间内音频控制
-class NEInRoomAudioControl extends NERoomAudioControl {
+class NEInMeetingAudioControl extends NEMeetingAudioControl {
   ///
   /// 当前是否开启音频控制
   ///
@@ -138,36 +138,36 @@ class NEInRoomAudioControl extends NERoomAudioControl {
   ///
   final bool allowSelfOn;
 
-  NEInRoomAudioControl.none()
+  NEInMeetingAudioControl.none()
       : this(
-          attendeeOff: NERoomAttendeeOffType.none,
+          attendeeOff: NEMeetingAttendeeOffType.none,
           enabled: false,
           allowSelfOn: true,
         );
 
-  factory NEInRoomAudioControl.fromJson(Map<dynamic, dynamic>? json) {
+  factory NEInMeetingAudioControl.fromJson(Map<dynamic, dynamic>? json) {
     bool allowSelfOn = true;
     bool enabled = false;
-    NERoomAttendeeOffType attendeeOff = NERoomAttendeeOffType.none;
+    NEMeetingAttendeeOffType attendeeOff = NEMeetingAttendeeOffType.none;
     if (json != null && json['value'] != null) {
       final value = json['value'] as String;
       if (value.startsWith(RegExp('${AudioControlProperty.offAllowSelfOn}'))) {
         allowSelfOn = true;
         enabled = true;
-        attendeeOff = NERoomAttendeeOffType.offAllowSelfOn;
+        attendeeOff = NEMeetingAttendeeOffType.offAllowSelfOn;
       } else if (value
           .startsWith(RegExp('${AudioControlProperty.offNotAllowSelfOn}'))) {
         allowSelfOn = false;
         enabled = true;
-        attendeeOff = NERoomAttendeeOffType.offNotAllowSelfOn;
+        attendeeOff = NEMeetingAttendeeOffType.offNotAllowSelfOn;
       }
     }
-    return NEInRoomAudioControl(
+    return NEInMeetingAudioControl(
         attendeeOff: attendeeOff, enabled: enabled, allowSelfOn: allowSelfOn);
   }
 
-  NEInRoomAudioControl({
-    required NERoomAttendeeOffType attendeeOff,
+  NEInMeetingAudioControl({
+    required NEMeetingAttendeeOffType attendeeOff,
     required this.enabled,
     required this.allowSelfOn,
   }) : super(attendeeOff);
@@ -183,7 +183,7 @@ class NEInRoomAudioControl extends NERoomAudioControl {
   bool operator ==(Object other) =>
       identical(this, other) ||
       super == other &&
-          other is NEInRoomAudioControl &&
+          other is NEInMeetingAudioControl &&
           runtimeType == other.runtimeType &&
           enabled == other.enabled &&
           allowSelfOn == other.allowSelfOn;
@@ -193,7 +193,7 @@ class NEInRoomAudioControl extends NERoomAudioControl {
 }
 
 /// 房间内视频控制
-class NEInRoomVideoControl extends NERoomVideoControl {
+class NEInMeetingVideoControl extends NEMeetingVideoControl {
   ///
   /// 当前是否开启视频控制
   ///
@@ -204,36 +204,36 @@ class NEInRoomVideoControl extends NERoomVideoControl {
   ///
   final bool allowSelfOn;
 
-  NEInRoomVideoControl.none()
+  NEInMeetingVideoControl.none()
       : this(
-          attendeeOff: NERoomAttendeeOffType.none,
+          attendeeOff: NEMeetingAttendeeOffType.none,
           enabled: false,
           allowSelfOn: true,
         );
 
-  factory NEInRoomVideoControl.fromJson(Map<dynamic, dynamic>? json) {
+  factory NEInMeetingVideoControl.fromJson(Map<dynamic, dynamic>? json) {
     bool allowSelfOn = true;
     bool enabled = false;
-    NERoomAttendeeOffType attendeeOff = NERoomAttendeeOffType.none;
+    NEMeetingAttendeeOffType attendeeOff = NEMeetingAttendeeOffType.none;
     if (json != null && json['value'] != null) {
       final value = json['value'] as String;
       if (value.startsWith(RegExp('${VideoControlProperty.offAllowSelfOn}'))) {
         allowSelfOn = true;
         enabled = true;
-        attendeeOff = NERoomAttendeeOffType.offAllowSelfOn;
+        attendeeOff = NEMeetingAttendeeOffType.offAllowSelfOn;
       } else if (value
           .startsWith(RegExp('${VideoControlProperty.offNotAllowSelfOn}'))) {
         allowSelfOn = false;
         enabled = true;
-        attendeeOff = NERoomAttendeeOffType.offNotAllowSelfOn;
+        attendeeOff = NEMeetingAttendeeOffType.offNotAllowSelfOn;
       }
     }
-    return NEInRoomVideoControl(
+    return NEInMeetingVideoControl(
         attendeeOff: attendeeOff, enabled: enabled, allowSelfOn: allowSelfOn);
   }
 
-  NEInRoomVideoControl({
-    required NERoomAttendeeOffType attendeeOff,
+  NEInMeetingVideoControl({
+    required NEMeetingAttendeeOffType attendeeOff,
     required this.enabled,
     required this.allowSelfOn,
   }) : super(attendeeOff);
@@ -249,7 +249,7 @@ class NEInRoomVideoControl extends NERoomVideoControl {
   bool operator ==(Object other) =>
       identical(this, other) ||
       super == other &&
-          other is NEInRoomVideoControl &&
+          other is NEInMeetingVideoControl &&
           runtimeType == other.runtimeType &&
           enabled == other.enabled &&
           allowSelfOn == other.allowSelfOn;

@@ -44,6 +44,7 @@ class _MeetingAppInvitingState extends State<MeetingAppInviting>
   Timer? _inviteTimer;
   Offset? _startDragOffset;
   Offset? _dragOffset;
+  Timer? _vibrationTimer;
 
   @override
   void initState() {
@@ -85,7 +86,25 @@ class _MeetingAppInvitingState extends State<MeetingAppInviting>
     final data = await rootBundle.load(fromAsset);
     final bytes = data.buffer.asUint8List();
     final source = BytesSource(bytes, mimeType: 'audio/mpeg');
-    _player.play(source, volume: 1.0);
+    final isInMeeting = NEMeetingUIKit.instance.getCurrentMeetingInfo() != null;
+    if (isInMeeting) {
+      /// 在会议中使用RTC的Category
+      _player.play(source, volume: 1.0);
+    } else {
+      /// 非会议中使用ambient，确保静音模式下不会播放
+      _player.play(source,
+          volume: 1.0,
+          ctx: AudioContext(
+              iOS: AudioContextIOS(category: AVAudioSessionCategory.ambient)));
+    }
+    // 是否有震动的能力
+    final hasVibrator = await Vibration.hasVibrator();
+    if (hasVibrator == true) {
+      _vibrationTimer = Timer.periodic(Duration(seconds: 2), (timer) {
+        Vibration.vibrate(duration: 1000, amplitude: 128);
+        if (_inviteTimer == null) timer.cancel();
+      });
+    }
   }
 
   @override
@@ -252,7 +271,7 @@ class _MeetingAppInvitingState extends State<MeetingAppInviting>
   Widget buildTitleWithUser(String userName, String? userAvatar) {
     return Row(
       children: [
-        NEMeetingAvatar.xlarge(url: userAvatar, name: userName),
+        NEMeetingAvatar.xxlarge(url: userAvatar, name: userName),
         SizedBox(width: 12),
         Expanded(
             child: Column(
@@ -526,7 +545,7 @@ class _MeetingAppInvitingState extends State<MeetingAppInviting>
         child: RippleAnimation(
           size: 80,
           centerSize: 48,
-          child: NEMeetingAvatar.xlarge(name: userName, url: userAvatar),
+          child: NEMeetingAvatar.xxlarge(name: userName, url: userAvatar),
         ),
       )
     ]);
@@ -536,10 +555,12 @@ class _MeetingAppInvitingState extends State<MeetingAppInviting>
   void dispose() {
     if (widget.ring) {
       _player.stop();
+      Vibration.cancel();
     }
     _player.release();
     _inviteTimer?.cancel();
     _scaleAnimation.dispose();
+    _vibrationTimer?.cancel();
     super.dispose();
   }
 }

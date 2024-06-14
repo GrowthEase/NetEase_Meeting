@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nemeeting/widget/ne_widget.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 import '../uikit/values/colors.dart';
 import '../uikit/values/fonts.dart';
@@ -11,33 +12,41 @@ import '../uikit/values/fonts.dart';
 class MeetingTextField extends StatefulWidget {
   final double? width;
   final double? height;
+  final double? fontSize;
+  final double? hintFontSize;
   final TextEditingController controller;
   final String? hintText;
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onSubmitted;
   final bool obscureText;
+  final bool showUnderline;
   final List<TextInputFormatter>? inputFormatters;
   final TextInputType? keyboardType;
   final FocusNode? focusNode;
   final GestureTapCallback? onTap;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onEditingComplete;
+  final Widget? prefixIcon;
 
   const MeetingTextField({
     super.key,
     this.width,
     this.height,
+    this.fontSize = 16,
+    this.hintFontSize = 16,
     required this.controller,
     this.hintText,
     this.textInputAction,
     this.onSubmitted,
     this.inputFormatters,
     this.obscureText = false,
+    this.showUnderline = true,
     this.keyboardType,
     this.focusNode,
     this.onTap,
     this.onChanged,
     this.onEditingComplete,
+    this.prefixIcon,
   });
 
   @override
@@ -70,7 +79,7 @@ class _MeetingTextFieldState extends State<MeetingTextField> {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (widget.obscureText) ...[
-              GestureDetector(
+              NEGestureDetector(
                 onTap: () {
                   setState(() {
                     _obscureText = !_obscureText;
@@ -89,7 +98,8 @@ class _MeetingTextFieldState extends State<MeetingTextField> {
                   width: 10.w,
                 ),
             ],
-            if (widget.controller.text.isNotEmpty)
+            if (widget.focusNode?.hasFocus == true &&
+                widget.controller.text.isNotEmpty)
               ClearIconButton(
                 size: 20.r,
                 onPressed: widget.controller.clear,
@@ -107,25 +117,40 @@ class _MeetingTextFieldState extends State<MeetingTextField> {
         hintText: widget.hintText,
         hintStyle: TextStyle(
           color: AppColors.greyB0B6BE,
-          fontSize: 16.spMin,
+          fontSize: widget.hintFontSize ?? 16.spMin,
         ),
-        border: MaterialStateUnderlineInputBorder.resolveWith(
-          (states) {
-            final focused = states.hasFocused;
-            return UnderlineInputBorder(
-              borderSide: BorderSide(
-                width: 1.h,
-                color: focused ? AppColors.blue_337eff : AppColors.colorDCDFE5,
-              ),
-            );
-          },
-        ),
+        border: widget.showUnderline
+            ? MaterialStateUnderlineInputBorder.resolveWith(
+                (states) {
+                  final focused = states.hasFocused;
+                  return UnderlineInputBorder(
+                    borderSide: BorderSide(
+                      width: 1.h,
+                      color: focused
+                          ? AppColors.blue_337eff
+                          : AppColors.colorDCDFE5,
+                    ),
+                  );
+                },
+              )
+            : InputBorder.none,
+        prefixIcon: widget.prefixIcon,
+        prefixIconConstraints: widget.prefixIcon != null
+            ? BoxConstraints.tight(
+                Size.square(24.r),
+              )
+            : null,
+        prefix: widget.prefixIcon != null
+            ? SizedBox(
+                width: 8.w,
+              )
+            : null,
         suffix: suffixIcon,
       ),
       textInputAction: widget.textInputAction,
       style: TextStyle(
         color: AppColors.color_333333,
-        fontSize: 16.spMin,
+        fontSize: widget.fontSize ?? 16.spMin,
       ),
       maxLines: 1,
       focusNode: widget.focusNode,
@@ -152,13 +177,15 @@ class MeetingActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double opacity = onTap != null ? 1 : 0.5;
-    return GestureDetector(
+    double opacity = onTap != null ? 1 : 0.6;
+    return NEGestureDetector(
       child: Container(
-        height: 50.h,
+        height: 48,
         decoration: ShapeDecoration(
           color: AppColors.accentElement.withOpacity(opacity),
-          shape: StadiumBorder(),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.r),
+          ),
         ),
         alignment: Alignment.center,
         child: Text(
@@ -172,7 +199,9 @@ class MeetingActionButton extends StatelessWidget {
           ),
         ),
       ),
-      onTap: onTap,
+      onTap: () {
+        onTap?.call();
+      },
     );
   }
 }

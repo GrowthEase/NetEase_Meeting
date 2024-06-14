@@ -18,10 +18,14 @@ class AppConfig {
 
   AppConfig._internal();
 
+  String? _corpCode;
+
   String? _appKey;
 
   String? _serverUrl;
 
+  /// 会议解决方案如何设置企业代码链接
+  String? _corpCodeIntroductionUrl;
   String? _privacyUrl;
   String? _userProtocolUrl;
 
@@ -31,10 +35,16 @@ class AppConfig {
 
   static var _debugMode = false;
 
+  String? get corpCode => _corpCode;
   String? get appKey => _appKey;
   String get serverUrl => _serverUrl ?? '';
   String get privacyUrl => _privacyUrl ?? '';
   String get userProtocolUrl => _userProtocolUrl ?? '';
+  String get corpCodeIntroductionUrl =>
+      _corpCodeIntroductionUrl ??
+      'https://doc.yunxin.163.com/meeting/concept/DI1MDY1ODg?platform=console';
+  String get deleteAccountWebServiceUrl => '';
+  String get registryUrl => '';
 
   static bool get isInDebugMode {
     return _debugMode;

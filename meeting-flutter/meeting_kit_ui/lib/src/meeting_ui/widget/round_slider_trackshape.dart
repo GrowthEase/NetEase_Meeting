@@ -110,3 +110,60 @@ class RoundSliderTrackShape extends SliderTrackShape {
     context.canvas.drawRRect(rightTrackSegment, rightTrackPaint);
   }
 }
+
+class RoundBorderSliderThumbShape extends RoundSliderThumbShape {
+  const RoundBorderSliderThumbShape({
+    super.enabledThumbRadius,
+    super.disabledThumbRadius,
+    super.elevation,
+    super.pressedElevation,
+    this.border,
+  });
+
+  final BorderSide? border;
+
+  @override
+  void paint(
+    PaintingContext context,
+    Offset center, {
+    required Animation<double> activationAnimation,
+    required Animation<double> enableAnimation,
+    required bool isDiscrete,
+    required TextPainter labelPainter,
+    required RenderBox parentBox,
+    required SliderThemeData sliderTheme,
+    required TextDirection textDirection,
+    required double value,
+    required double textScaleFactor,
+    required Size sizeWithOverflow,
+  }) {
+    super.paint(
+      context,
+      center,
+      activationAnimation: activationAnimation,
+      enableAnimation: enableAnimation,
+      isDiscrete: isDiscrete,
+      labelPainter: labelPainter,
+      parentBox: parentBox,
+      sliderTheme: sliderTheme,
+      textDirection: textDirection,
+      value: value,
+      textScaleFactor: textScaleFactor,
+      sizeWithOverflow: sizeWithOverflow,
+    );
+    if (border != null) {
+      final Canvas canvas = context.canvas;
+      final paint = border!.toPaint();
+      final Tween<double> radiusTween = Tween<double>(
+        begin: disabledThumbRadius ?? enabledThumbRadius,
+        end: enabledThumbRadius,
+      );
+      final double radius = radiusTween.evaluate(enableAnimation);
+      canvas.drawCircle(
+        center,
+        radius,
+        paint,
+      );
+    }
+  }
+}

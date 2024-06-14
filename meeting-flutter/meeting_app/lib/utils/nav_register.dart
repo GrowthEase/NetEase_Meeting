@@ -4,23 +4,23 @@
 
 import 'package:flutter/material.dart';
 import 'package:nemeeting/about/about.dart';
+import 'package:nemeeting/auth/login_corp_account.dart';
+import 'package:nemeeting/auth/login_mobile.dart';
+import 'package:nemeeting/auth/login_sso.dart';
+import 'package:nemeeting/auth/modify_password.dart';
+import 'package:nemeeting/auth/reset_initial_password.dart';
+import 'package:nemeeting/auth/verify_mobile_check_code.dart';
+import 'package:nemeeting/setting/app_setting.dart';
 import 'package:nemeeting/meeting/history_meeting.dart';
 import 'package:nemeeting/meeting/meeting_create.dart';
 import 'package:nemeeting/meeting/meeting_join.dart';
 import 'package:nemeeting/pre_meeting/schedule_meeting.dart';
-import 'package:nemeeting/routes/auth/login_corp_account.dart';
-import 'package:nemeeting/routes/auth/login_sso.dart';
-import 'package:nemeeting/routes/auth/modify_password.dart';
-import 'package:nemeeting/routes/auth/verify_mobile_check_code.dart';
 import 'package:nemeeting/routes/entrance.dart';
 import 'package:nemeeting/routes/home_page.dart';
-import 'package:nemeeting/routes/auth/login_mobile.dart';
 import 'package:nemeeting/routes/network_not_available_page.dart';
 import 'package:nemeeting/setting/account_and_safety_setting.dart';
 import 'package:nemeeting/setting/avatar_setting.dart';
 import 'package:nemeeting/routes/qr_scan_page.dart';
-import '../routes/auth/reset_initial_password.dart';
-import '../language/localizations.dart';
 import '../setting/language_setting.dart';
 import '../uikit/utils/router_name.dart';
 import 'package:nemeeting/setting/meeting_setting.dart';
@@ -39,6 +39,7 @@ class RoutesRegister {
     RouterName.homePage: (context) => HomePageRoute(isPipMode: false),
     RouterName.meetCreate: (context) => MeetCreateRoute(),
     RouterName.meetJoin: (context) => MeetJoinRoute(),
+    RouterName.appSetting: (context) => AppSettingRoute(),
     RouterName.historyMeet: (context) => HistoryMeetingRoute(),
     RouterName.meetingSetting: (context) => MeetingSetting(),
     RouterName.nickSetting: (context) => NickSetting(),
@@ -54,8 +55,7 @@ class RoutesRegister {
   };
 
   static Map<String, Widget Function(dynamic)> get routes {
-    return _routes.map((key, value) => MapEntry(
-        key, (context) => MeetingAppLocalizationsScope(builder: value)));
+    return _routes;
   }
 
   static MaterialPageRoute getPageRoute(String routeName, BuildContext context,

@@ -5,7 +5,7 @@
 part of meeting_service;
 
 /// 获取用户信息配置
-class _GetWebAppListApi extends HttpApi<NEMeetingWebAppList> {
+class _GetWebAppListApi extends HttpApi<List<NEMeetingWebAppItem>> {
   @override
   String get method => 'GET';
 
@@ -13,8 +13,10 @@ class _GetWebAppListApi extends HttpApi<NEMeetingWebAppList> {
   String path() => 'plugin_sdk/v1/list';
 
   @override
-  NEMeetingWebAppList result(Map map) {
-    return NEMeetingWebAppList.fromMap(map as Map<String, dynamic>);
+  List<NEMeetingWebAppItem> result(Map map) {
+    final pluginInfos =
+        (map['pluginInfos'] as List).cast<Map<String, dynamic>>();
+    return pluginInfos.map((ret) => NEMeetingWebAppItem.fromMap(ret)).toList();
   }
 
   @override

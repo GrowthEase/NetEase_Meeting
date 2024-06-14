@@ -8,7 +8,7 @@ class MeetingUINotifyMessagePage extends StatefulWidget {
   static const String routeName = "/meetingNotifyCenter";
   final void Function() onClearAllMessage;
   final List<String> sessionIdList;
-  final ValueListenable<List<NEMeetingCustomSessionMessage>> messageList;
+  final ValueListenable<List<NEMeetingSessionMessage>> messageList;
   final NERoomContext roomContext;
   final List<NESingleStateMenuItem<NEMeetingWebAppItem>>? webAppList;
 
@@ -100,8 +100,9 @@ class MeetingUINotifyMessagePageState
                     onPressed: () {
                       Navigator.of(context).pop();
                       isShowClearDialogDialog = false;
-                      _sessionIdList.forEach(
-                          NEMeetingKit.instance.deleteAllSessionMessage);
+                      _sessionIdList.forEach(NEMeetingKit.instance
+                          .getMeetingMessageChannelService()
+                          .deleteAllSessionMessage);
                       widget.onClearAllMessage.call();
                     })
               ],
@@ -109,7 +110,7 @@ class MeetingUINotifyMessagePageState
   }
 
   Widget buildNotifyMessageItem(
-      BuildContext context, NEMeetingCustomSessionMessage item) {
+      BuildContext context, NEMeetingSessionMessage item) {
     int? timeStamp = item.data?.data?.timestamp;
     CardData? cardData = item.data?.data;
     NotifyCard? notifyCard = cardData?.notifyCard;
@@ -165,21 +166,22 @@ class MeetingUINotifyMessagePageState
                   ],
                 ),
               ),
-              Container(
-                alignment: Alignment.centerLeft,
-                padding:
-                    EdgeInsets.only(left: 16, top: 6, bottom: 2, right: 16),
-                child: Text(
-                  '${notifyCard?.body?.title}',
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 3,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 14,
-                      color: _UIColors.black_333333,
-                      fontWeight: FontWeight.bold),
+              if (notifyCard?.body?.title?.isNotEmpty == true)
+                Container(
+                  alignment: Alignment.centerLeft,
+                  padding:
+                      EdgeInsets.only(left: 16, top: 6, bottom: 2, right: 16),
+                  child: Text(
+                    '${notifyCard?.body?.title}',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 3,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 14,
+                        color: _UIColors.black_333333,
+                        fontWeight: FontWeight.bold),
+                  ),
                 ),
-              ),
               Container(
                 alignment: Alignment.centerLeft,
                 padding:
@@ -249,12 +251,14 @@ class MeetingUINotifyMessagePageState
     toTime = 0;
     // 退出时清空未读消息数
     _sessionIdList.forEach((element) {
-      NEMeetingKit.instance.clearUnreadCount(element);
+      NEMeetingKit.instance
+          .getMeetingMessageChannelService()
+          .clearUnreadCount(element);
     });
     super.dispose();
   }
 
-  Widget _buildBody(List<NEMeetingCustomSessionMessage> messageList) {
+  Widget _buildBody(List<NEMeetingSessionMessage> messageList) {
     messageList.sort((a, b) => b.time.compareTo(a.time));
     return messageList.isEmpty
         ? Container(
@@ -304,7 +308,9 @@ class MeetingUINotifyMessagePageState
             NEMeetingUIKitLocalizations.of(context)!.networkAbnormality);
       } else {
         _sessionIdList.forEach((element) {
-          NEMeetingKit.instance.clearUnreadCount(element);
+          NEMeetingKit.instance
+              .getMeetingMessageChannelService()
+              .clearUnreadCount(element);
         });
       }
     });

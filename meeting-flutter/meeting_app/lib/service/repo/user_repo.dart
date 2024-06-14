@@ -2,7 +2,9 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
-import '../model/security_notice_info.dart';
+import 'package:netease_common/netease_common.dart';
+import 'package:netease_meeting_ui/meeting_ui.dart';
+
 import '../repo/i_repo.dart';
 import '../response/result.dart';
 
@@ -15,18 +17,17 @@ class UserRepo extends IRepo {
   factory UserRepo() => _singleton;
 
   /// 昵称修改
-  Future<Result<void>> updateNickname(String nickName) {
-    return appService.updateNickname(nickName);
+  Future<VoidResult> updateNickname(String nickname) {
+    return NEMeetingKit.instance.getAccountService().updateNickname(nickname);
   }
 
   /// 更新头像
-  Future<Result<void>> updateAvatar(String url) {
-    return appService.updateAvatar(url);
+  Future<VoidResult> updateAvatar(String imagePath) {
+    return NEMeetingKit.instance.getAccountService().updateAvatar(imagePath);
   }
 
   /// 安全提示接口
-  Future<Result<AppNotifications>> getSecurityNoticeConfigs(
-      String appKey, String time) {
-    return appService.getSecurityNoticeConfigs(appKey, time);
+  Future<NEResult<NEMeetingAppNoticeTips>> getSecurityNoticeConfigs() {
+    return NEMeetingKit.instance.getAppNoticeTips();
   }
 }

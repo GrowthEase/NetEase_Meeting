@@ -38,12 +38,6 @@ class MeetingChatRoomMembersPageState
     this.chatRoomManager,
     this.roomInfoUpdatedEventStream,
   );
-
-  static const _radius = Radius.circular(8);
-
-  bool allowSelfAudioOn = false;
-  bool allowSelfVideoOn = false;
-
   final NERoomContext roomContext;
   final WaitingRoomManager? waitingRoomManager;
   final ChatRoomManager chatRoomManager;
@@ -248,20 +242,22 @@ class MeetingChatRoomMembersPageState
     );
   }
 
+  /// 昵称和头衔
   Widget _memberItemNick(NEBaseRoomMember user) {
     var subtitle = <String>[];
+    String? hostName;
     if (user is NERoomMember) {
-      switch (user.role.name) {
-        case MeetingRoles.kHost:
-          subtitle.add(meetingUiLocalizations.participantHost);
-          break;
-        case MeetingRoles.kCohost:
-          subtitle.add(meetingUiLocalizations.participantCoHost);
-          break;
-      }
+      hostName = user.role.name;
+    } else if (user is NEWaitingRoomHost) {
+      hostName = user.role;
     }
-    if (roomContext.isMySelf(user.uuid)) {
-      subtitle.add(meetingUiLocalizations.participantMe);
+    switch (hostName) {
+      case MeetingRoles.kHost:
+        subtitle.add(meetingUiLocalizations.participantHost);
+        break;
+      case MeetingRoles.kCohost:
+        subtitle.add(meetingUiLocalizations.participantCoHost);
+        break;
     }
     final subTitleTextStyle = TextStyle(
       fontSize: 13,

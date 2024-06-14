@@ -27,6 +27,18 @@ class NEMeetingWatermark {
       'videoFormat': videoFormat,
     };
   }
+
+  @override
+  int get hashCode => Object.hash(videoStrategy, videoStyle, videoFormat);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is NEMeetingWatermark &&
+        other.videoStrategy == videoStrategy &&
+        other.videoStyle == videoStyle &&
+        other.videoFormat == videoFormat;
+  }
 }
 
 /// 水印文本占位符类型

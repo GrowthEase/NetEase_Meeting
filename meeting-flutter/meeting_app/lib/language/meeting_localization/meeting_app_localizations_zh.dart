@@ -147,6 +147,42 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get globalDateFormat => 'yyyy年MM月dd日';
 
   @override
+  String get globalMonthJan => '1月';
+
+  @override
+  String get globalMonthFeb => '2月';
+
+  @override
+  String get globalMonthMar => '3月';
+
+  @override
+  String get globalMonthApr => '4月';
+
+  @override
+  String get globalMonthMay => '5月';
+
+  @override
+  String get globalMonthJun => '6月';
+
+  @override
+  String get globalMonthJul => '7月';
+
+  @override
+  String get globalMonthAug => '8月';
+
+  @override
+  String get globalMonthSept => '9月';
+
+  @override
+  String get globalMonthOct => '10月';
+
+  @override
+  String get globalMonthNov => '11月';
+
+  @override
+  String get globalMonthDec => '12月';
+
+  @override
   String get authImmediatelyRegister => '立即注册';
 
   @override
@@ -359,7 +395,52 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get authLoggingIn => '正在登录会议';
 
   @override
+  String get authHowToGetCorpCode => '如何获取企业代码？';
+
+  @override
+  String get authGetCorpCodeFromAdmin => '可与企业管理员咨询您的企业代码';
+
+  @override
+  String get authIKnowCorpCode => '我知道企业代码';
+
+  @override
+  String get authIDontKnowCorpCode => '我不知道企业代码';
+
+  @override
+  String get authTypeAccountPwd => '账号密码';
+
+  @override
+  String get authLoginByAccountPwd => '账号密码登录';
+
+  @override
+  String get authLoginByMobilePwd => '手机密码登录';
+
+  @override
+  String get authLoginByEmailPwd => '邮箱密码登录';
+
+  @override
+  String get authOtherLoginTypes => '其他登录方式';
+
+  @override
+  String get authEnterEmail => '请输入邮箱';
+
+  @override
+  String get authEmail => '邮箱';
+
+  @override
+  String get oldPassword => '旧密码';
+
+  @override
+  String get newPassword => '新密码';
+
+  @override
+  String get confirmPassword => '再次输入';
+
+  @override
   String get meetingCreate => '即刻会议';
+
+  @override
+  String get meetingHold => '发起会议';
 
   @override
   String get meetingNetworkAbnormalityCheckAndRejoin => '网络异常，请检查网络连接后重新入会';
@@ -374,7 +455,7 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get meetingSchedule => '预约会议';
 
   @override
-  String get meetingScheduleListEmpty => '当前暂无即将召开的会议';
+  String get meetingScheduleListEmpty => '暂无会议';
 
   @override
   String get meetingToday => '今天';
@@ -464,9 +545,6 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
 
   @override
   String get meetingSecurity => '安全';
-
-  @override
-  String get meetingEnableWaitingRoom => '开启等候室';
 
   @override
   String get meetingWaitingRoomHint => '参会者加入会议时先进入等候室';
@@ -769,6 +847,21 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get meetingClose => '收起';
 
   @override
+  String get meetingClearRecord => '清空记录';
+
+  @override
+  String get meetingPickTimezone => '选择时区';
+
+  @override
+  String get meetingTimezone => '时区';
+
+  @override
+  String get meetingName => '会议名称';
+
+  @override
+  String get meetingTime => '时间';
+
+  @override
   String get historyMeeting => '历史会议';
 
   @override
@@ -877,25 +970,13 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get settingSwitchCompanyFail => '切换企业失败，请检查当前网络';
 
   @override
-  String get settingAudioAINS => '智能降噪';
-
-  @override
   String get settingShowShareUserVideo => '共享时开启共享人摄像头';
-
-  @override
-  String get settingEnableTransparentWhiteboard => '设置白板透明';
-
-  @override
-  String get settingEnableFrontCameraMirror => '前置摄像头镜像';
 
   @override
   String get settingOpenCameraMeeting => '默认打开摄像头';
 
   @override
   String get settingOpenMicroMeeting => '默认打开麦克风';
-
-  @override
-  String get settingShowMeetDuration => '显示会议持续时间';
 
   @override
   String get settingEnableAudioDeviceSwitch => '允许音频设备切换';
@@ -1112,7 +1193,10 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get feedbackOtherTip => '请描述您的问题，（当您选中\"存在其他问题\"时），需填写具体描述才可进行提交';
 
   @override
-  String get evaluationTitle => '您有多大的可能向同事或合作伙伴推荐网易会议？';
+  String get evaluationTitle => '评分';
+
+  @override
+  String get evaluationContent => '您有多大的可能向同事或合作伙伴推荐网易会议？';
 
   @override
   String get evaluationCoreZero => '0-肯定不会';

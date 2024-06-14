@@ -21,7 +21,7 @@ class MeetingMemberPageView extends StatefulWidget {
     required this.roomContext,
     this.waitingRoomManager,
     this.chatRoomManager,
-    required this.roomInfoUpdatedEventStream,
+    this.roomInfoUpdatedEventStream,
     required this.pageBuilder,
     this.memberSize,
     this.initialPageType,
@@ -123,9 +123,8 @@ class _MeetingMemberPageViewState
 
     if (!roomContext.isInWaitingRoom()) {
       pageDataManager.inMeeting.userList = roomContext.getAllUsers().toList();
-    } else if (chatRoomManager != null) {
-      pageDataManager.waitingRoom.userList = chatRoomManager!.hostAndCoHost;
-      lifecycleListen(chatRoomManager!.waitingRoomHostAndCoHostUpdated, (_) {
+    } else if (waitingRoomManager != null) {
+      lifecycleListen(waitingRoomManager!.hostAndCoHostListChanged, (_) {
         setState(() {
           pageDataManager.waitingRoom.userList = chatRoomManager!.hostAndCoHost;
         });
@@ -144,6 +143,9 @@ class _MeetingMemberPageViewState
         _pageIndex.value = 0;
       }
       _pageController.jumpToPage(_pageIndex.value);
+    });
+    _focusNode.addListener(() {
+      setState(() {});
     });
   }
 
@@ -279,7 +281,6 @@ class _MeetingMemberPageViewState
       color: Colors.white,
       child: Container(
           margin: EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
-          padding: EdgeInsets.only(right: 16),
           decoration: BoxDecoration(
               color: _UIColors.colorF7F8FA,
               borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -309,7 +310,8 @@ class _MeetingMemberPageViewState
                 ),
                 prefixIconConstraints: BoxConstraints(
                     minWidth: 32, minHeight: 32, maxHeight: 32, maxWidth: 32),
-                suffixIcon: TextUtils.isEmpty(_searchTextEditingController.text)
+                suffixIcon: !_focusNode.hasFocus ||
+                        TextUtils.isEmpty(_searchTextEditingController.text)
                     ? null
                     : ClearIconButton(
                         onPressed: () {

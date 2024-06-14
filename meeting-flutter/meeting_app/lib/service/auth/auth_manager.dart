@@ -5,6 +5,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:nemeeting/application.dart';
+import 'package:nemeeting/constants.dart';
 import 'package:nemeeting/service/config/app_config.dart';
 import 'package:nemeeting/service/values/app_constants.dart';
 import 'package:nemeeting/base/util/text_util.dart';
@@ -21,17 +22,13 @@ import 'package:netease_meeting_ui/meeting_ui.dart';
 import '../../language/localizations.dart';
 import '../../utils/meeting_util.dart';
 import '../config/servers.dart';
-import '../module_name.dart' as module;
 import '../util/user_preferences.dart';
 
-class AuthManager {
-  static final String _tag = 'AuthManager';
-
+class AuthManager with AppLogger {
   factory AuthManager() => _instance ??= AuthManager._internal();
 
   static AuthManager? _instance;
   LoginInfo? _loginInfo;
-  bool _autoRegistered = false;
 
   final StreamController<LoginInfo?> _authInfoChanged =
       StreamController.broadcast();
@@ -40,22 +37,19 @@ class AuthManager {
 
   final NEMeetingKit _neMeetingKit = NEMeetingKit.instance;
 
-  Future<void> _init() async {
+  Future<LoginInfo?> _loadLoginInfoCache() async {
     final loginInfo = await GlobalPreferences().loginInfo;
-    if (TextUtil.isEmpty(loginInfo)) return;
+    if (TextUtil.isEmpty(loginInfo)) return null;
     try {
       final cachedLoginInfo =
           LoginInfo.fromJson(jsonDecode(loginInfo as String) as Map);
       cachedLoginInfo.nickname = null;
-      _authInfoChanged.add(cachedLoginInfo);
-      _loginInfo = cachedLoginInfo;
+      return cachedLoginInfo;
     } catch (e) {
-      Alog.d(
-          moduleName: module.moduleName,
-          tag: 'AuthManager',
-          content: 'LoginInfo.fromJson(jsonDecode(loginInfo) exception = ' +
-              e.toString());
+      logger.d('LoginInfo.fromJson(jsonDecode(loginInfo) exception = ' +
+          e.toString());
     }
+    return null;
   }
 
   String? get accountId => _loginInfo?.accountId;
@@ -72,73 +66,54 @@ class AuthManager {
 
   int? get loginType => _loginInfo?.loginType;
 
-  bool? get autoRegistered => _autoRegistered;
-
   NEAccountInfo? get accountInfo =>
       _neMeetingKit.getAccountService().getAccountInfo();
 
   Future<bool> autoLogin() async {
     AuthState().updateState(state: AuthState.init);
-    await _init();
     final result = await _autoLoginMeetingKit();
+    if (result.isSuccess()) {
+      AuthState().updateState(state: AuthState.authed);
+    }
     return Future.value(result.code == NEMeetingErrorCode.success);
   }
 
-  Future<Result<void>> loginMeetingKitWithToken(
-      LoginType loginType, LoginInfo loginInfo) async {
-    Alog.i(
-      moduleName: module.moduleName,
-      tag: _tag,
-      content: 'loginMeetingKitWithToken loginType = $loginType',
-    );
-    loginInfo.loginType = loginType.index;
-    _loginInfo = loginInfo;
-    _autoRegistered = loginInfo.autoRegistered;
-    return loginProcedure(
-      appKey,
-      () => _neMeetingKit.loginWithToken(
-          loginInfo.accountId, loginInfo.accountToken),
-    );
-  }
-
   Future<Result<void>> _autoLoginMeetingKit() async {
-    Alog.i(
-      moduleName: module.moduleName,
-      tag: _tag,
-      content: '_autoLoginMeetingKit loginType = $loginType',
-    );
-    final id = accountId;
-    final token = accountToken;
-    if (id == null || token == null || id.isEmpty || token.isEmpty) {
+    final loginInfo = await _loadLoginInfoCache();
+    if (loginInfo == null) {
       return Result(code: NEMeetingErrorCode.failed);
     }
+    logger.i('_autoLoginMeetingKit loginType = ${loginInfo.loginType}');
+    final id = loginInfo.accountId;
+    final token = loginInfo.accountToken;
     return loginProcedure(
-      appKey,
-      () => _neMeetingKit.loginWithToken(id, token),
+      LoginType.token,
+      () => _neMeetingKit.getAccountService().loginByToken(id, token),
+      appKey: loginInfo.appKey,
     );
   }
 
-  Future<Result<void>> loginProcedure(
+  Future<NEResult<NEMeetingCorpInfo?>> initialize({
     String? appKey,
-    Future<NEResult<void>> Function() loginAction,
-  ) async {
-    if (appKey == null || appKey.isEmpty) {
-      return Result(code: NEMeetingErrorCode.failed, msg: 'appKey is empty');
-    }
+    String? corpCode,
+    String? corpEmail,
+  }) async {
+    assert(appKey != null || corpCode != null || corpEmail != null);
     await Application.ensureInitialized();
-    final meetingAppLocalizations = getAppLocalizations();
     final foregroundServiceConfig = NEForegroundServiceConfig(
-      contentTitle: meetingAppLocalizations.globalAppName,
-      contentText: meetingAppLocalizations.meetingForegroundContentText,
-      ticker: meetingAppLocalizations.globalAppName,
+      contentTitle: getAppLocalizations().globalAppName,
+      contentText: getAppLocalizations().meetingForegroundContentText,
+      ticker: getAppLocalizations().globalAppName,
       channelId: 'netease_meeting_channel',
-      channelName: meetingAppLocalizations.globalAppName,
-      channelDesc: meetingAppLocalizations.globalAppName,
+      channelName: getAppLocalizations().globalAppName,
+      channelDesc: getAppLocalizations().globalAppName,
     );
-    final initializeResult = await NEMeetingUIKit().initialize(
+    return NEMeetingUIKit.instance.initialize(
       NEMeetingUIKitConfig(
         appKey: appKey,
-        appName: meetingAppLocalizations.globalAppName,
+        corpCode: corpCode,
+        corpEmail: corpEmail,
+        appName: getAppLocalizations().globalAppName,
 
         /// 使用asset资源目录下的服务器配置文件
         useAssetServerConfig: true,
@@ -153,49 +128,58 @@ class AuthManager {
         foregroundServiceConfig: foregroundServiceConfig,
       ),
     );
-    Alog.i(
-      moduleName: module.moduleName,
-      tag: _tag,
-      content: 'MeetingSDK initialize result=$initializeResult',
-    );
+  }
+
+  Future<Result<LoginInfo>> loginProcedure(
+    LoginType loginType,
+    Future<NEResult<NEAccountInfo>> Function() loginAction, {
+    String? appKey,
+    String? corpCode,
+    String? corpEmail,
+  }) async {
+    final initializeResult = await initialize(
+        appKey: appKey, corpCode: corpCode, corpEmail: corpEmail);
+    logger.i('MeetingSDK initialize result=$initializeResult');
     if (!initializeResult.isSuccess()) {
       return Result(code: initializeResult.code, msg: initializeResult.msg);
     }
-    final loginResult = await loginAction();
-    Alog.i(
-      moduleName: module.moduleName,
-      tag: _tag,
-      content: 'MeetingSDK login result=$loginResult',
-    );
+    appKey ??= initializeResult.data?.appKey;
+    final loginResult = await loginAction().map((accountInfo) {
+      return LoginInfo(
+        appKey: appKey!,
+        accountId: accountInfo.userUuid,
+        accountToken: accountInfo.userToken,
+        isInitialPassword: accountInfo.isInitialPassword,
+        loginType: loginType.index,
+      );
+    });
+    logger.i('MeetingSDK login result=$loginResult');
     if (loginResult.isSuccess()) {
-      loginResultSuccess();
+      final loginInfo = loginResult.nonNullData;
+      loginResultSuccess(loginInfo);
       assert(() {
-        debugPrint('loginProcedure: loginType=$loginType');
+        debugPrint('loginProcedure: loginType=${loginInfo.loginType}');
         return true;
       }());
     }
-    return Result(code: loginResult.code, msg: loginResult.msg);
+    return Result(
+        code: loginResult.code, msg: loginResult.msg, data: loginResult.data);
   }
 
   void saveNick(String nick) {
     final loginInfo = _loginInfo;
     if (loginInfo != null) {
       loginInfo.nickname = nick;
-      _autoRegistered = false;
       _syncAuthInfo(loginInfo);
     }
   }
 
-  void updateAppKey(String appKey) {
-    final loginInfo = _loginInfo;
-    if (loginInfo != null) {
-      loginInfo.appKey = appKey;
-      _syncAuthInfo(loginInfo);
-    }
-  }
+  void loginResultSuccess(LoginInfo loginInfo) {
+    _loginInfo = loginInfo;
+    _syncAuthInfo(loginInfo);
 
-  void loginResultSuccess() {
-    _syncAuthInfo(_loginInfo as LoginInfo);
+    /// 登录成功后重新加载用户本地会议记录
+    LocalHistoryMeetingManager().ensureInit();
   }
 
   void loginResultFailed() {}
@@ -207,13 +191,13 @@ class AuthManager {
   }
 
   void logout() {
-    _neMeetingKit.logout();
+    _neMeetingKit.getAccountService().logout();
     AppProfile.clear();
     _loginInfo = null;
     GlobalPreferences().setLoginInfo('{}');
     UserPreferences().setMeetingInfo('');
     MeetingUtil.setUnreadNotifyMessageListenable(0);
-    _authInfoChanged.add(_loginInfo);
+    _authInfoChanged.add(null);
   }
 
   Stream<LoginInfo?> authInfoStream() {

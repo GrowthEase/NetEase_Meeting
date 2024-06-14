@@ -91,7 +91,7 @@ class _NEMeetingKitLocalizationsZh extends NEMeetingKitLocalizations {
 class _NEMeetingKitLocalizationsEn extends NEMeetingKitLocalizations {
   @override
   String get networkUnavailableCheck =>
-      'Network connection failed. Check your network connectivity.';
+      'Network connection failed, please check your network connection!';
 
   @override
   String get cancelled => 'Canceled';
@@ -129,7 +129,8 @@ class _NEMeetingKitLocalizationsEn extends NEMeetingKitLocalizations {
 
 class _NEMeetingKitLocalizationsJa extends NEMeetingKitLocalizations {
   @override
-  String get networkUnavailableCheck => 'ネットワーク接続に失敗しました。ネットワーク接続を確認してください! ';
+  String get networkUnavailableCheck =>
+      'ネットワーク接続に失敗しました、あなたのネットワーク接続をチェックしてください!';
 
   @override
   String get cancelled => 'キャンセル';

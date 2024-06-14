@@ -6,11 +6,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:nemeeting/service/model/history_meeting.dart';
 import 'package:nemeeting/service/repo/history_repo.dart';
+import 'package:nemeeting/widget/ne_widget.dart';
 import 'package:netease_common/netease_common.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
-import '../language/localizations.dart';
 import '../meeting/history_meeting_detail.dart';
 import '../pre_meeting/schedule_meeting_detail.dart';
 import '../uikit/state/meeting_base_state.dart';
@@ -30,36 +29,36 @@ class MeetingAppNotifyCenter extends StatefulWidget {
   }
 }
 
-class MeetingAppNotifyCenterState
-    extends MeetingBaseState<MeetingAppNotifyCenter>
-    with NEMeetingMessageSessionListener {
-  ValueNotifier<List<NEMeetingCustomSessionMessage>> _messageListListenable =
+class MeetingAppNotifyCenterState extends AppBaseState<MeetingAppNotifyCenter>
+    with NEMeetingMessageChannelListener {
+  ValueNotifier<List<NEMeetingSessionMessage>> _messageListListenable =
       ValueNotifier([]);
 
-  ValueListenable<List<NEMeetingCustomSessionMessage>>
-      get messageListListenable => _messageListListenable;
+  ValueListenable<List<NEMeetingSessionMessage>> get messageListListenable =>
+      _messageListListenable;
   bool isShowClearDialogDialog = false;
   ScrollController _scrollController = ScrollController();
-  int toTime = 0;
-
+  int? toTime;
+  final NEMeetingMessageChannelService _messageChannelService =
+      NEMeetingKit.instance.getMeetingMessageChannelService();
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
           _scrollController.position.maxScrollExtent) {
-        _loadMoreData(toTime);
+        _loadMoreData();
       }
     });
-    lifecycleExecuteUI(NEMeetingKit.instance
+    lifecycleExecuteUI(_messageChannelService
         .clearUnreadCount(widget.sessionId)
         .then((result) async {
       if (result.isSuccess()) {
         widget.onClearAllMessage?.call();
       }
     }));
-    _loadMoreData(toTime);
-    NEMeetingKit.instance.addReceiveSessionMessageListener(this);
+    _loadMoreData();
+    _messageChannelService.addMeetingMessageChannelListener(this);
   }
 
   @override
@@ -69,8 +68,8 @@ class MeetingAppNotifyCenterState
     return NotificationListener<ScrollNotification>(
         child: SafeValueListenableBuilder(
             valueListenable: messageListListenable,
-            builder: (BuildContext context,
-                List<NEMeetingCustomSessionMessage> value, Widget? child) {
+            builder: (BuildContext context, List<NEMeetingSessionMessage> value,
+                Widget? child) {
               return value.length > 0
                   ? Container(
                       padding: EdgeInsets.all(16),
@@ -79,7 +78,7 @@ class MeetingAppNotifyCenterState
                         separatorBuilder: (context, index) =>
                             SizedBox(height: 6),
                         itemBuilder: (context, index) {
-                          return GestureDetector(
+                          return NEGestureDetector(
                             child: buildNotifyMessageItem(context, index),
                             onTap: () {
                               pushPage(index);
@@ -126,12 +125,11 @@ class MeetingAppNotifyCenterState
     return <Widget>[
       _messageListListenable.value.isNotEmpty
           ? TextButton(
-              child: Image(
-                  image: AssetImage(
-                    AssetName.iconNotificationDelete,
-                  ),
-                  width: 24,
-                  height: 24),
+              child: Icon(
+                IconFont.icon_delete,
+                size: 24,
+                color: AppColors.color_53576A,
+              ),
               onPressed: _messageListListenable.value.isNotEmpty
                   ? showClearDialog
                   : null,
@@ -143,7 +141,7 @@ class MeetingAppNotifyCenterState
   /// 显示清空对话框
   Future<void> showClearDialog() async {
     /// 会议中不支持操作
-    if (NEMeetingUIKit().getCurrentMeetingInfo() != null) {
+    if (NEMeetingUIKit.instance.getCurrentMeetingInfo() != null) {
       ToastUtils.showToast(context,
           NEMeetingUIKitLocalizations.of(context)!.globalOperationFail);
       return;
@@ -173,7 +171,7 @@ class MeetingAppNotifyCenterState
                     child: Text(
                         NEMeetingUIKitLocalizations.of(context)!.globalSure),
                     onPressed: () {
-                      lifecycleExecuteUI(NEMeetingKit.instance
+                      lifecycleExecuteUI(_messageChannelService
                           .deleteAllSessionMessage(widget.sessionId)
                           .then((result) {
                         if (!mounted) return;
@@ -211,20 +209,21 @@ class MeetingAppNotifyCenterState
         mainAxisSize: MainAxisSize.max,
         children: [
           buildHeader(icon, header, timeStamp),
-          Container(
-            alignment: Alignment.centerLeft,
-            padding: EdgeInsets.only(left: 16, top: 6, bottom: 2, right: 16),
-            child: Text(
-              '${body?.title}',
-              overflow: TextOverflow.ellipsis,
-              maxLines: 3,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.black_333333,
-                  fontWeight: FontWeight.bold),
+          if (body?.title?.isNotEmpty == true)
+            Container(
+              alignment: Alignment.centerLeft,
+              padding: EdgeInsets.only(left: 16, top: 6, bottom: 2, right: 16),
+              child: Text(
+                '${body?.title}',
+                overflow: TextOverflow.ellipsis,
+                maxLines: 3,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.black_333333,
+                    fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
           Container(
             alignment: Alignment.centerLeft,
             padding: EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
@@ -257,7 +256,7 @@ class MeetingAppNotifyCenterState
 
   Widget buildDetailItem(String title, VoidCallback voidCallback,
       {String iconTip = ''}) {
-    return GestureDetector(
+    return NEGestureDetector(
       child: Container(
         padding: EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
         child: Row(
@@ -284,17 +283,18 @@ class MeetingAppNotifyCenterState
     );
   }
 
-  void _loadMoreData(int time) {
-    var param = NEMeetingGetMessagesHistoryParam(
+  void _loadMoreData() {
+    var param = NEMeetingGetMessageHistoryParams(
       sessionId: widget.sessionId,
+      fromTime: 0,
       limit: 20,
-      toTime: time,
+      toTime: toTime,
     );
     lifecycleExecuteUI(
-        NEMeetingKit.instance.getSessionMessagesHistory(param).then((value) {
+        _messageChannelService.getSessionMessagesHistory(param).then((value) {
       if (value.isSuccess() && value.data != null && value.data!.isNotEmpty) {
         setState(() {
-          toTime = value.data?.last.time ?? 0;
+          toTime = value.data?.last.time;
           _messageListListenable.value.addAll(value.data!);
         });
       }
@@ -303,7 +303,7 @@ class MeetingAppNotifyCenterState
 
   /// 收到新的会话消息
   @override
-  void onReceiveSessionMessage(NEMeetingCustomSessionMessage message) {
+  void onSessionMessageReceived(NEMeetingSessionMessage message) {
     if (message.sessionId == widget.sessionId) {
       setState(() {
         final index = _messageListListenable.value.firstIndexOf((element) {
@@ -326,8 +326,8 @@ class MeetingAppNotifyCenterState
 
   @override
   void dispose() {
-    NEMeetingKit.instance
-      ..removeReceiveSessionMessageListener(this)
+    _messageChannelService
+      ..removeMeetingMessageChannelListener(this)
       ..clearUnreadCount(widget.sessionId);
     _scrollController.dispose();
     _messageListListenable.value.clear();
@@ -359,9 +359,9 @@ class MeetingAppNotifyCenterState
         .getHistoryMeetingDetailsByMeetingId(data!.meetingId!)
         .then((value) {
       if (value.isSuccess() && value.data != null) {
-        Navigator.of(context).push(MaterialMeetingAppPageRoute(
-            builder: (context) =>
-                HistoryMeetingDetailRoute(value.data as HistoryMeeting)));
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => HistoryMeetingDetailRoute(
+                value.data as NERemoteHistoryMeeting)));
       } else {
         ToastUtils.showToast(
             context,
@@ -379,7 +379,7 @@ class MeetingAppNotifyCenterState
         .getMeetingItemById(data!.meetingId!)
         .then((value) {
       if (value.isSuccess() && value.data != null) {
-        Navigator.of(context).push(MaterialMeetingAppPageRoute(
+        Navigator.of(context).push(MaterialPageRoute(
             settings: RouteSettings(name: ScheduleMeetingDetailRoute.routeName),
             builder: (context) => ScheduleMeetingDetailRoute(value.data!)));
       } else {
@@ -447,7 +447,7 @@ class MeetingAppNotifyCenterState
 
 class NotifyCenterCardType {
   /// 录制文件生成通知
-  static const String meetingNewRecordFile = 'MEETING.NEW_RECORD_FILE ';
+  static const String meetingNewRecordFile = 'MEETING.NEW_RECORD_FILE';
 
   /// 预约会议更新通知
   static const String meetingScheduleInfoUpdate =

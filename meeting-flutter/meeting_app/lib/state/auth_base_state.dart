@@ -4,15 +4,15 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nemeeting/widget/ne_widget.dart';
 import '../uikit/state/meeting_base_state.dart';
 import '../uikit/values/colors.dart';
 
-abstract class AuthBaseState<T extends StatefulWidget>
-    extends MeetingBaseState<T> {
+abstract class AuthBaseState<T extends StatefulWidget> extends AppBaseState<T> {
   @override
   Widget buildBody() {
-    return GestureDetector(
-        behavior: HitTestBehavior.opaque,
+    return NEGestureDetector(
         onTap: () {
           FocusScope.of(context).unfocus();
         },
@@ -31,7 +31,7 @@ abstract class AuthBaseState<T extends StatefulWidget>
                       style: TextStyle(
                         color: AppColors.black_222222,
                         fontWeight: FontWeight.w500,
-                        fontSize: 28,
+                        fontSize: 28.sp,
                       ),
                     ),
                   ),
@@ -40,6 +40,11 @@ abstract class AuthBaseState<T extends StatefulWidget>
                 Spacer(),
               ]),
         ));
+  }
+
+  @override
+  bool isShowBackBtn() {
+    return true;
   }
 
   @override

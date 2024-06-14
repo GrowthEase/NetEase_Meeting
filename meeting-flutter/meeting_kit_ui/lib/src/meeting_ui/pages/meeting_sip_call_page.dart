@@ -78,8 +78,8 @@ class _MeetingSipCallPageState extends LifecycleBaseState<MeetingSipCallPage>
 
           /// 手机号输完整之后进行通讯录搜索
           NEMeetingKit.instance
-              .getAccountService()
-              .searchContacts(phoneNumber: number)
+              .getContactsService()
+              .searchContactListByPhoneNumber(number, 20, 0)
               .then((value) {
             if (value.isSuccess() &&
                 value.data != null &&
@@ -192,7 +192,7 @@ class _MeetingSipCallPageState extends LifecycleBaseState<MeetingSipCallPage>
         title: TitleBarTitle(meetingUiLocalizations.sipCall),
         showBottomDivider: true,
       ),
-      body: wrapWithWatermark(child: _buildBody()),
+      body: MeetingWatermark(child: _buildBody()),
     );
     return AutoPopScope(
         listenable: arguments.isMySelfManagerListenable,
@@ -367,7 +367,8 @@ class _MeetingSipCallPageState extends LifecycleBaseState<MeetingSipCallPage>
                                   fontSize: 17, color: _UIColors.greyB0B6BE),
                               suffixIconConstraints: BoxConstraints(
                                   minWidth: 0, minHeight: 0, maxHeight: 20),
-                              suffixIcon: _mobileController.text.isEmpty
+                              suffixIcon: !_focusNode.hasFocus ||
+                                      _mobileController.text.isEmpty
                                   ? null
                                   : ClearIconButton(
                                       onPressed: () {
@@ -424,26 +425,10 @@ class _MeetingSipCallPageState extends LifecycleBaseState<MeetingSipCallPage>
                   ),
                 ),
                 SizedBox(height: 50),
-                ElevatedButton(
-                    style: ButtonStyle(
-                        splashFactory: NoSplash.splashFactory,
-                        minimumSize: MaterialStateProperty.all(Size(0, 50)),
-                        backgroundColor:
-                            MaterialStateProperty.resolveWith<Color>((states) {
-                          final disabled =
-                              states.contains(MaterialState.disabled);
-                          return Color.fromRGBO(
-                              51, 126, 255, disabled ? 0.6 : 1);
-                        }),
-                        shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(28))))),
-                    onPressed: _isCallBtnEnabled ? _onCall : null,
-                    child: Text(
-                      meetingUiLocalizations.sipCall,
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                      textAlign: TextAlign.center,
-                    )),
+                MeetingTextButton.fill(
+                  text: meetingUiLocalizations.sipCall,
+                  onPressed: _isCallBtnEnabled ? _onCall : null,
+                ),
               ]),
               Text(
                   '${meetingUiLocalizations.sipCallNumber} ${arguments.outboundPhoneNumber ?? ''}',
@@ -528,7 +513,7 @@ class _MeetingSipCallPageState extends LifecycleBaseState<MeetingSipCallPage>
       children: [
         /// 只有来自通讯录匹配的成员才显示头像
         if (_currentContact != null)
-          NEMeetingAvatar.xxlarge(
+          NEMeetingAvatar.xxxlarge(
               name: _currentCall?.name ?? (_currentCall?.phoneNumber ?? ''),
               url: _currentCall?.avatar),
         if (_currentContact != null) SizedBox(height: 8),
@@ -620,7 +605,7 @@ class _MeetingSipCallPageState extends LifecycleBaseState<MeetingSipCallPage>
     if (granted) {
       showMeetingPopupPageRoute(
         context: context,
-        builder: (context) => wrapWithWatermark(
+        builder: (context) => MeetingWatermark(
           child: MeetingLocalContactsPage(
               onContactItemClick: (contact) {
                 setState(() {
@@ -743,8 +728,6 @@ class _MeetingSipCallPageState extends LifecycleBaseState<MeetingSipCallPage>
   /// 电话呼叫按钮是否展示，只有当有选中成员的时候才会展示
   get _sipCallBtnVisible => _selectedContacts.isNotEmpty;
 
-  final TextEditingController _searchController = TextEditingController();
-
   /// 通讯录页面
   Widget _buildContacts() {
     return Container(
@@ -754,7 +737,6 @@ class _MeetingSipCallPageState extends LifecycleBaseState<MeetingSipCallPage>
             children: [
               Expanded(
                   child: ContactList(
-                searchTextEditingController: _searchController,
                 selectedContactsCache: _selectedContacts,
                 itemClickCallback: (contact, selectedSize, maxSelectedSizeTip) {
                   if (TextUtils.isEmpty(contact.phoneNumber)) {
@@ -797,28 +779,10 @@ class _MeetingSipCallPageState extends LifecycleBaseState<MeetingSipCallPage>
                 child: Container(
                   width: double.infinity,
                   margin: EdgeInsets.only(bottom: 20, left: 30, right: 30),
-                  child: ElevatedButton(
-                      style: ButtonStyle(
-                          splashFactory: NoSplash.splashFactory,
-                          minimumSize: MaterialStateProperty.all(Size(0, 50)),
-                          backgroundColor:
-                              MaterialStateProperty.resolveWith<Color>(
-                                  (states) {
-                            final disabled =
-                                states.contains(MaterialState.disabled);
-                            return Color.fromRGBO(
-                                51, 126, 255, disabled ? 0.6 : 1);
-                          }),
-                          shape: MaterialStateProperty.all(
-                              RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(28))))),
-                      onPressed: _onSipCall,
-                      child: Text(
-                        meetingUiLocalizations.sipCallPhone,
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                        textAlign: TextAlign.center,
-                      )),
+                  child: MeetingTextButton.fill(
+                    text: meetingUiLocalizations.sipCallPhone,
+                    onPressed: _onSipCall,
+                  ),
                 ),
               )),
         ],
@@ -864,8 +828,12 @@ class _MeetingSipCallPageState extends LifecycleBaseState<MeetingSipCallPage>
     if (userUuids.isNotEmpty) {
       arguments.roomContext.sipController
           .callByUserUuids(userUuids)
-          .onSuccess(() {
-        if (mounted) Navigator.of(context).pop();
+          .then((value) {
+        if (value.isSuccess()) {
+          if (mounted) Navigator.of(context).pop();
+        } else {
+          handleInviteCodeError(context, value.code, meetingUiLocalizations);
+        }
       });
     }
   }

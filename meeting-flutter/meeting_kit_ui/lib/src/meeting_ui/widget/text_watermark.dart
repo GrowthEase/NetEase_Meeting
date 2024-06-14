@@ -101,7 +101,7 @@ class TextWatermarkConfiguration {
   }
 }
 
-class TextWaterMark extends StatelessWidget {
+class TextWatermark extends StatelessWidget {
   /// 水印配置
   final TextWatermarkConfiguration? configuration;
 
@@ -111,7 +111,7 @@ class TextWaterMark extends StatelessWidget {
   /// 子组件
   final Widget child;
 
-  const TextWaterMark({
+  const TextWatermark({
     super.key,
     required this.configuration,
     this.onForeground = true,

@@ -155,6 +155,42 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String get globalDateFormat => 'yyyy-MM-dd';
 
   @override
+  String get globalMonthJan => 'Jan.';
+
+  @override
+  String get globalMonthFeb => 'Feb.';
+
+  @override
+  String get globalMonthMar => 'Mar.';
+
+  @override
+  String get globalMonthApr => 'Apr.';
+
+  @override
+  String get globalMonthMay => 'May.';
+
+  @override
+  String get globalMonthJun => 'Jun.';
+
+  @override
+  String get globalMonthJul => 'Jul.';
+
+  @override
+  String get globalMonthAug => 'Aug.';
+
+  @override
+  String get globalMonthSept => 'Sept.';
+
+  @override
+  String get globalMonthOct => 'Oct.';
+
+  @override
+  String get globalMonthNov => 'Nov.';
+
+  @override
+  String get globalMonthDec => 'Dec.';
+
+  @override
   String get authImmediatelyRegister => 'Register Now';
 
   @override
@@ -329,7 +365,7 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String get authResetInitialPasswordDialogOKLabel => 'Go to Settings';
 
   @override
-  String get authMobileNum => 'Mobile phone number';
+  String get authMobileNum => 'Mobile';
 
   @override
   String get authUnavailable => 'None';
@@ -374,7 +410,53 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String get authLoggingIn => 'Logging in to Meeting';
 
   @override
+  String get authHowToGetCorpCode => 'How to get the enterprise code?';
+
+  @override
+  String get authGetCorpCodeFromAdmin =>
+      'You can obtain it from your enterprise administrator.';
+
+  @override
+  String get authIKnowCorpCode => 'Enterprise code';
+
+  @override
+  String get authIDontKnowCorpCode => 'Enterprise email';
+
+  @override
+  String get authTypeAccountPwd => 'Account';
+
+  @override
+  String get authLoginByAccountPwd => 'Password';
+
+  @override
+  String get authLoginByMobilePwd => 'Phone Account';
+
+  @override
+  String get authLoginByEmailPwd => 'Email Account';
+
+  @override
+  String get authOtherLoginTypes => 'More options';
+
+  @override
+  String get authEnterEmail => 'Enter email address';
+
+  @override
+  String get authEmail => 'Email';
+
+  @override
+  String get oldPassword => 'Old password';
+
+  @override
+  String get newPassword => 'New password';
+
+  @override
+  String get confirmPassword => 'Enter again';
+
+  @override
   String get meetingCreate => 'Start';
+
+  @override
+  String get meetingHold => 'Start';
 
   @override
   String get meetingNetworkAbnormalityCheckAndRejoin =>
@@ -485,9 +567,6 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
 
   @override
   String get meetingSecurity => 'Security';
-
-  @override
-  String get meetingEnableWaitingRoom => 'Enable Waiting Room';
 
   @override
   String get meetingWaitingRoomHint =>
@@ -805,6 +884,21 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String get meetingClose => 'Fold';
 
   @override
+  String get meetingClearRecord => 'Clear All';
+
+  @override
+  String get meetingPickTimezone => 'Time Zone';
+
+  @override
+  String get meetingTimezone => 'Time Zone';
+
+  @override
+  String get meetingName => 'Meeting Name';
+
+  @override
+  String get meetingTime => 'Time';
+
+  @override
   String get historyMeeting => 'Meeting history';
 
   @override
@@ -921,27 +1015,14 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
       'Failed to switch the enterprise. Check the network';
 
   @override
-  String get settingAudioAINS => 'Smart Noise Reduction';
-
-  @override
   String get settingShowShareUserVideo =>
       'Enable the shared person camera when sharing';
-
-  @override
-  String get settingEnableTransparentWhiteboard =>
-      'Set the whiteboard to transparent';
-
-  @override
-  String get settingEnableFrontCameraMirror => 'Front camera mirroring';
 
   @override
   String get settingOpenCameraMeeting => 'Camera on by default';
 
   @override
   String get settingOpenMicroMeeting => 'Microphone on by default';
-
-  @override
-  String get settingShowMeetDuration => 'Show Meeting Duration';
 
   @override
   String get settingEnableAudioDeviceSwitch => 'Allow audio device switching';
@@ -1165,7 +1246,10 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
       'Please describe your problem (when you select \"There are other problems\"), you need to fill in a specific description before submitting';
 
   @override
-  String get evaluationTitle =>
+  String get evaluationTitle => 'Evaluation';
+
+  @override
+  String get evaluationContent =>
       'How likely are you to recommend NetEase Meeting to colleagues or partners?';
 
   @override

@@ -51,7 +51,6 @@ API_AVAILABLE(ios(15.0))
 @interface NEPIPServer () <AVPictureInPictureControllerDelegate,
                            NERoomListener,
                            NEWaitingRoomListener,
-                           NERoomMessageSessionListener,
                            NEMessageChannelListener>
 @property(nonatomic, strong) AVPictureInPictureVideoCallViewController *videoCallViewController;
 @property(nonatomic, strong) AVPictureInPictureController *pipController;
@@ -140,7 +139,6 @@ API_AVAILABLE(ios(15.0))
   self.roomEnded = NO;
 
   [[NERoomKit shared].messageChannelService addMessageChannelListenerWithListener:self];
-  [[NERoomKit shared].messageChannelService addSessionMessageListenerWithListener:self];
 
   AVPictureInPictureVideoCallViewController *videoCallVC =
       [[AVPictureInPictureVideoCallViewController alloc] init];
@@ -305,7 +303,6 @@ API_AVAILABLE(ios(15.0))
   [self.roomContext.waitingRoomController removeListenerWithListener:self];
   [self.roomContext removeRoomListenerWithListener:self];
   [[NERoomKit shared].messageChannelService removeMessageChannelListenerWithListener:self];
-  [[NERoomKit shared].messageChannelService removeSessionMessageListenerWithListener:self];
   self.currentUuid = nil;
   self.shareUuid = nil;
   self.shareRenderer = nil;
@@ -426,7 +423,7 @@ API_AVAILABLE(ios(15.0))
   result([NEPIPResult code:0 desc:@"Successfully member incall."]);
 }
 
-- (void)onReceiveSessionMessageWithMessage:(NERoomCustomSessionMessage *)message {
+- (void)onSessionMessageReceivedWithMessage:(NERoomSessionMessage *)message {
   NSData *jsonData = [message.data dataUsingEncoding:NSUTF8StringEncoding];
   NSError *error = nil;
   NSDictionary *jsonDictionary = [NSJSONSerialization JSONObjectWithData:jsonData
@@ -502,6 +499,8 @@ API_AVAILABLE(ios(15.0))
   _maskView.hidden = NO;
   _maskView.name = _roomContext.localMember.name;
   _maskView.content = self.interruptedTips;
+  [_pipController stopPictureInPicture];
+  _pipController = nil;
 }
 
 - (void)onMemberNameChangedWithMember:(id)member

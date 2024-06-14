@@ -17,7 +17,7 @@ class QrScanPage extends StatefulWidget {
   QrScanState createState() => QrScanState();
 }
 
-class QrScanState extends MeetingBaseState<QrScanPage> {
+class QrScanState extends AppBaseState<QrScanPage> {
   Barcode? result;
   QRViewController? controller;
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
@@ -203,7 +203,7 @@ class QrScanState extends MeetingBaseState<QrScanPage> {
                 AppUtil.parseURLParameters(result)['roomArchiveId'] ?? '',
             homeUrl: result,
             title: '',
-            roomContext: NEMeetingUIKit().getCurrentRoomContext(),
+            roomContext: NEMeetingUIKit.instance.getCurrentRoomContext(),
           );
         }));
   }

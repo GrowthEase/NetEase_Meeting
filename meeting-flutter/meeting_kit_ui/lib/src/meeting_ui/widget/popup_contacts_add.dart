@@ -34,8 +34,6 @@ class _ContactsAddPopupState extends PopupBaseState<ContactsAddPopup>
   @override
   String get title => widget.titleBuilder.call(newContactList.length);
 
-  final TextEditingController _searchController = TextEditingController();
-
   @override
   List<Widget> buildActions() {
     return [
@@ -76,7 +74,6 @@ class _ContactsAddPopupState extends PopupBaseState<ContactsAddPopup>
   @override
   Widget buildBody() {
     return ContactList(
-      searchTextEditingController: _searchController,
       alreadySelectedUserUuids:
           widget.scheduledMemberList.map((e) => e.userUuid).toList(),
       onSelectedContactListChanged: (selectedContacts) {

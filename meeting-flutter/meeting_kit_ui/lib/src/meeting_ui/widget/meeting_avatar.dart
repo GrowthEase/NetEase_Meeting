@@ -51,12 +51,18 @@ const _largeTextStyle = AvatarTextStyle(
 );
 
 const _xlargeTextStyle = AvatarTextStyle(
+  fontSizeOneChinese: 20,
+  fontSizeTwoChinese: 16,
+  fontSizeLetter: 18,
+);
+
+const _xxlargeTextStyle = AvatarTextStyle(
   fontSizeOneChinese: 22,
   fontSizeTwoChinese: 18,
   fontSizeLetter: 20,
 );
 
-const _xxlargeTextStyle = AvatarTextStyle(
+const _xxxlargeTextStyle = AvatarTextStyle(
   fontSizeOneChinese: 28,
   fontSizeTwoChinese: 24,
   fontSizeLetter: 26,
@@ -124,7 +130,7 @@ class NEMeetingAvatar extends StatelessWidget {
     this.name,
     this.url,
     this.showRoleIcon,
-  })  : size = 48,
+  })  : size = 40,
         textStyle = _xlargeTextStyle;
 
   NEMeetingAvatar.xxlarge({
@@ -132,8 +138,16 @@ class NEMeetingAvatar extends StatelessWidget {
     this.name,
     this.url,
     this.showRoleIcon,
-  })  : size = 64,
+  })  : size = 48,
         textStyle = _xxlargeTextStyle;
+
+  NEMeetingAvatar.xxxlarge({
+    super.key,
+    this.name,
+    this.url,
+    this.showRoleIcon,
+  })  : size = 64,
+        textStyle = _xxxlargeTextStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -172,19 +186,25 @@ class NEMeetingAvatar extends StatelessWidget {
 
     final url = this.url;
 
+    final border = Border.all(
+      color: _UIColors.black.withOpacity(0.08),
+      width: 1.0,
+    );
     Widget icon = ClipOval(
       child: Container(
         height: size,
         width: size,
-        decoration: ShapeDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: <Color>[_UIColors.blue_5996FF, _UIColors.blue_2575FF],
           ),
-          shape: CircleBorder(),
+          shape: BoxShape.circle,
+          border: border,
         ),
         foregroundDecoration: url != null &&
+                url.isNotEmpty &&
                 (url.startsWith('http://') || url.startsWith('https://'))
             ? BoxDecoration(
                 image: DecorationImage(
@@ -192,6 +212,7 @@ class NEMeetingAvatar extends StatelessWidget {
                   fit: BoxFit.cover,
                 ),
                 shape: BoxShape.circle,
+                border: border,
               )
             : null,
         alignment: Alignment.center,

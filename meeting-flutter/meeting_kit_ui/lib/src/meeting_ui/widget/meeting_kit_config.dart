@@ -8,11 +8,15 @@ part of meeting_ui;
 /// 会议功能配置开关
 ///
 class NEMeetingKitFeatureConfig extends StatefulWidget {
-  final Widget child;
+  final Widget? child;
+  final TransitionBuilder? builder;
+  final SDKConfig? config;
   const NEMeetingKitFeatureConfig({
     super.key,
-    required this.child,
-  });
+    this.child,
+    this.builder,
+    this.config,
+  }) : assert(child != null || builder != null);
 
   @override
   State<NEMeetingKitFeatureConfig> createState() =>
@@ -28,20 +32,28 @@ class _NEMeetingKitFeatureConfigState extends State<NEMeetingKitFeatureConfig> {
   @override
   void initState() {
     super.initState();
-    config = configChangeNotifier.value;
-    configChangeNotifier.addListener(onConfigChange);
+    if (widget.config == null) {
+      configChangeNotifier.addListener(globalConfigChanged);
+      updateConfig(configChangeNotifier.value);
+    } else {
+      updateConfig(widget.config!);
+    }
   }
 
   @override
   void dispose() {
-    configChangeNotifier.removeListener(onConfigChange);
+    configChangeNotifier.removeListener(globalConfigChanged);
     subscription?.cancel();
     super.dispose();
   }
 
-  void onConfigChange() {
+  void globalConfigChanged() {
+    updateConfig(configChangeNotifier.value);
+  }
+
+  void updateConfig(SDKConfig config) {
     subscription?.cancel();
-    config = configChangeNotifier.value;
+    this.config = config;
     subscription = config.onConfigUpdated.listen((event) {
       if (mounted)
         setState(() {
@@ -60,7 +72,7 @@ class _NEMeetingKitFeatureConfigState extends State<NEMeetingKitFeatureConfig> {
       version: version,
       child: Builder(
         builder: (context) {
-          return widget.child;
+          return widget.builder?.call(context, widget.child) ?? widget.child!;
         },
       ),
     );
@@ -77,30 +89,32 @@ class _SDKConfigScope extends InheritedWidget {
     required Widget child,
   }) : super(child: child);
 
-  static _SDKConfigScope of(BuildContext context) {
+  static _SDKConfigScope? of(BuildContext context) {
     final _SDKConfigScope? result =
         context.dependOnInheritedWidgetOfExactType<_SDKConfigScope>();
-    assert(result != null, 'No _SDKConfigScope found in context');
-    return result!;
+    return result;
   }
 
   @override
   bool updateShouldNotify(_SDKConfigScope old) {
-    return old.version != version;
+    return old.config != config || old.version != version;
   }
 }
 
 extension NEMeetingKitConfigExtension on BuildContext {
-  SDKConfig get _sdkConfig => _SDKConfigScope.of(this).config;
+  SDKConfig? get sdkConfig => _SDKConfigScope.of(this)?.config;
 
-  bool get isBeautyFaceEnabled => _sdkConfig.isBeautyFaceSupported;
+  bool get isBeautyFaceEnabled => sdkConfig!.isBeautyFaceSupported;
 
-  bool get isMeetingLiveEnabled => _sdkConfig.isLiveSupported;
+  bool get isMeetingLiveEnabled => sdkConfig!.isLiveSupported;
 
-  bool get isWaitingRoomEnabled => _sdkConfig.isWaitingRoomSupported;
+  bool get isWaitingRoomEnabled => sdkConfig!.isWaitingRoomSupported;
 
-  bool get isGuestJoinEnabled => _sdkConfig.isGuestJoinSupported;
+  bool get isGuestJoinEnabled => sdkConfig!.isGuestJoinSupported;
 
   bool get isVirtualBackgroundEnabled =>
-      _sdkConfig.isVirtualBackgroundSupported;
+      sdkConfig!.isVirtualBackgroundSupported;
+
+  InterpretationConfig get interpretationConfig =>
+      sdkConfig!.interpretationConfig;
 }

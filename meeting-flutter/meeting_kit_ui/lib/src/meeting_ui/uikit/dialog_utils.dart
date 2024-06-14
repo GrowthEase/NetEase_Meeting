@@ -8,13 +8,14 @@ typedef DismissCallback = bool Function();
 
 class DialogUtils {
   static Future showCommonDialog(BuildContext context, String title,
-      String content, VoidCallback cancelCallback, VoidCallback acceptCallback,
+      String? content, VoidCallback cancelCallback, VoidCallback acceptCallback,
       {String? cancelText,
       String? acceptText,
       Color? cancelTextColor,
       Color? acceptTextColor,
       bool canBack = true,
       bool isContentCenter = true,
+      ContentWrapperBuilder? contentWrapperBuilder,
       ValueNotifier<BuildContext?>? contextNotifier}) {
     return showDialog(
         context: context,
@@ -24,25 +25,25 @@ class DialogUtils {
         builder: (BuildContext buildContext) {
           contextNotifier?.value = buildContext;
           return NEMeetingUIKitLocalizationsScope(
-              builder: (BuildContext context) {
-            return PopScope(
+              builder: (BuildContext context, localizations, _) {
+            Widget child = PopScope(
               canPop: canBack,
               child: CupertinoAlertDialog(
                 title: TextUtils.isEmpty(title) ? null : Text(title),
-                content: Text(content,
-                    textAlign:
-                        isContentCenter ? TextAlign.center : TextAlign.left),
+                content: content != null
+                    ? Text(content,
+                        textAlign:
+                            isContentCenter ? TextAlign.center : TextAlign.left)
+                    : null,
                 actions: <Widget>[
                   CupertinoDialogAction(
-                    child: Text(cancelText ??
-                        NEMeetingUIKitLocalizations.of(context)!.globalCancel),
+                    child: Text(cancelText ?? localizations.globalCancel),
                     onPressed: cancelCallback,
                     textStyle: TextStyle(
                         color: cancelTextColor ?? _UIColors.color_666666),
                   ),
                   CupertinoDialogAction(
-                    child: Text(acceptText ??
-                        NEMeetingUIKitLocalizations.of(context)!.globalSure),
+                    child: Text(acceptText ?? localizations.globalSure),
                     onPressed: acceptCallback,
                     textStyle: TextStyle(
                         color: acceptTextColor ?? _UIColors.color_337eff),
@@ -50,21 +51,31 @@ class DialogUtils {
                 ],
               ),
             );
+            return contentWrapperBuilder != null
+                ? contentWrapperBuilder(child)
+                : child;
           });
         }).whenComplete(() => contextNotifier?.value = null);
   }
 
-  static Future showOneButtonCommonDialog(BuildContext context, String title,
-      String? content, VoidCallback callback,
-      {String? acceptText, bool canBack = true, bool isContentCenter = true}) {
+  static Future showOneButtonCommonDialog(
+    BuildContext context,
+    String title,
+    String? content,
+    VoidCallback? callback, {
+    String? acceptText,
+    bool canBack = true,
+    bool isContentCenter = true,
+    ContentWrapperBuilder? contentWrapperBuilder,
+  }) {
     return showDialog(
         context: context,
         useRootNavigator: false,
         barrierDismissible: canBack,
         routeSettings: RouteSettings(name: title),
         builder: (_) {
-          return NEMeetingUIKitLocalizationsScope(
-              builder: (BuildContext context) {
+          Widget child = NEMeetingUIKitLocalizationsScope(
+              builder: (BuildContext context, localizations, _) {
             return PopScope(
               canPop: canBack,
               child: CupertinoAlertDialog(
@@ -76,14 +87,19 @@ class DialogUtils {
                     : null,
                 actions: <Widget>[
                   CupertinoDialogAction(
-                    child: Text(acceptText ??
-                        NEMeetingUIKitLocalizations.of(context)!.globalIKnow),
-                    onPressed: callback,
+                    child: Text(acceptText ?? localizations.globalIKnow),
+                    onPressed: callback ??
+                        () {
+                          Navigator.pop(context);
+                        },
                   ),
                 ],
               ),
             );
           });
+          return contentWrapperBuilder != null
+              ? contentWrapperBuilder(child)
+              : child;
         });
   }
 
@@ -104,7 +120,7 @@ class DialogUtils {
         routeSettings: routeSettings ?? RouteSettings(name: title),
         builder: (_) {
           return NEMeetingUIKitLocalizationsScope(
-              builder: (BuildContext context) {
+              builder: (BuildContext context, localizations, _) {
             return PopScope(
               canPop: canBack,
               child: CupertinoAlertDialog(
@@ -116,8 +132,7 @@ class DialogUtils {
                     : null,
                 actions: <Widget>[
                   CupertinoDialogAction(
-                    child: Text(acceptText ??
-                        NEMeetingUIKitLocalizations.of(context)!.globalIKnow),
+                    child: Text(acceptText ?? localizations.globalIKnow),
                     onPressed: callback,
                   ),
                 ],
@@ -180,24 +195,68 @@ class DialogUtils {
       barrierDismissible: true,
       routeSettings: RouteSettings(name: 'InviteDialog'),
       builder: (_) {
-        return NEMeetingUIKitLocalizationsScope(builder: (context) {
+        return NEMeetingUIKitLocalizationsScope(
+            builder: (context, localizations, _) {
           final content = contentBuilder(context);
           return _InviteDialog(
-            title: NEMeetingUIKitLocalizations.of(context)!
-                .meetingInviteDialogTitle,
+            title: localizations.meetingInviteDialogTitle,
             content: content,
             onOK: () async {
               Clipboard.setData(ClipboardData(text: content));
               ToastUtils.showToast(
-                  context,
-                  NEMeetingUIKitLocalizations.of(context)!
-                      .meetingInviteContentCopySuccess);
+                  context, localizations.meetingInviteContentCopySuccess);
               Navigator.pop(context);
             },
           );
         });
       },
     );
+  }
+
+  /// 展示Dialog并返回关闭回调
+  ///
+  static Future<dynamic> showMaxMembersTipDialog(
+    BuildContext context, {
+    required String title,
+    required String cancelTitle,
+    required String content,
+    required VoidCallback? onCancel,
+    String? okTitle,
+    VoidCallback? onOK,
+  }) {
+    return showDialog(
+        context: context,
+        useRootNavigator: false,
+        routeSettings: RouteSettings(name: 'MaxMemberTipDialog'),
+        builder: (_) {
+          return NEMeetingUIKitLocalizationsScope(
+            builder: (context, localizations, _) {
+              return CupertinoAlertDialog(
+                title: Text(title),
+                content: Text(content),
+                actions: <Widget>[
+                  CupertinoDialogAction(
+                    child: Text(cancelTitle,
+                        style: TextStyle(color: _UIColors.color_333333)),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      if (onCancel != null) onCancel();
+                    },
+                  ),
+                  if (okTitle != null)
+                    CupertinoDialogAction(
+                      child: Text(okTitle),
+                      onPressed: () async {
+                        if (onOK != null) {
+                          onOK();
+                        }
+                      },
+                    ),
+                ],
+              );
+            },
+          );
+        });
   }
 
   /// 打开企业通讯录底部弹窗
@@ -210,6 +269,8 @@ class DialogUtils {
     bool editable = true,
     Future Function()? addActionClick,
     Future Function()? loadMoreContacts,
+    GetMemberSubTitles? getMemberSubTitles,
+    OnWillRemoveAttendee? onWillRemoveAttendee,
   }) {
     return showMeetingPopupPageRoute(
       context: context,
@@ -222,6 +283,8 @@ class DialogUtils {
           editable: editable,
           ownerUuid: ownerUuid,
           loadMoreContacts: loadMoreContacts,
+          getMemberSubTitles: getMemberSubTitles,
+          onWillRemoveAttendee: onWillRemoveAttendee,
         ),
       ),
       routeSettings: RouteSettings(name: 'ContactsPopup'),
@@ -299,24 +362,19 @@ class DialogUtils {
         useRootNavigator: false,
         builder: (_) {
           return NEMeetingUIKitLocalizationsScope(
-            builder: (context) {
-              final meetingAppLocalizations =
-                  NEMeetingUIKitLocalizations.of(context)!;
+            builder: (context, localizations, _) {
               return CupertinoAlertDialog(
-                title: Text(meetingAppLocalizations.meetingStopSharing),
-                content:
-                    Text(meetingAppLocalizations.meetingStopSharingConfirm),
+                title: Text(localizations.meetingStopSharing),
+                content: Text(localizations.meetingStopSharingConfirm),
                 actions: <Widget>[
                   CupertinoDialogAction(
-                    child: Text(
-                        NEMeetingUIKitLocalizations.of(context)!.globalCancel),
+                    child: Text(localizations.globalCancel),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
                   ),
                   CupertinoDialogAction(
-                    child: Text(
-                        NEMeetingUIKitLocalizations.of(context)!.globalSure),
+                    child: Text(localizations.globalSure),
                     onPressed: () => Navigator.of(context).pop(true),
                   ),
                 ],
@@ -327,32 +385,28 @@ class DialogUtils {
   }
 
   static void showShareScreenDialog(
-      BuildContext context,
-      String title,
-      String content,
-      VoidCallback acceptCallback,
-      bool isShowOpenScreenShareDialog) {
+      BuildContext context, String title, String content,
+      {required VoidCallback acceptCallback,
+      required bool isShowOpenScreenShareDialog}) {
     showDialog(
         context: context,
         useRootNavigator: false,
         routeSettings: RouteSettings(name: title),
         builder: (_) {
           return NEMeetingUIKitLocalizationsScope(
-            builder: (context) {
+            builder: (context, localizations, _) {
               return CupertinoAlertDialog(
                 title: Text(title),
                 content: Text(content),
                 actions: <Widget>[
                   CupertinoDialogAction(
-                    child:
-                        Text(NEMeetingUIKitLocalizations.of(context)!.globalNo),
+                    child: Text(localizations.globalNo),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
                   ),
                   CupertinoDialogAction(
-                    child: Text(
-                        NEMeetingUIKitLocalizations.of(context)!.globalYes),
+                    child: Text(localizations.globalYes),
                     onPressed: acceptCallback,
                   ),
                 ],
@@ -371,7 +425,7 @@ class DialogUtils {
         routeSettings: routeSettings,
         builder: (BuildContext context) {
           return NEMeetingUIKitLocalizationsScope(
-            builder: (context) => builder(context),
+            builder: (context, _, __) => builder(context),
           );
         });
   }
@@ -385,7 +439,7 @@ class DialogUtils {
         routeSettings: routeSettings,
         builder: (BuildContext context) {
           return NEMeetingUIKitLocalizationsScope(
-            builder: (context) => builder(context),
+            builder: (context, _, __) => builder(context),
           );
         });
   }
@@ -408,7 +462,7 @@ class DialogUtils {
       useRootNavigator: false,
       builder: (_) {
         return NEMeetingUIKitLocalizationsScope(
-          builder: (context) {
+          builder: (context, localizations, _) {
             return CupertinoAlertDialog(
               title: Text(title),
               content: contentWidget ??
@@ -417,15 +471,13 @@ class DialogUtils {
                           isContentCenter ? TextAlign.center : TextAlign.left),
               actions: <Widget>[
                 CupertinoDialogAction(
-                  child: Text(cancelText ??
-                      NEMeetingUIKitLocalizations.of(context)!.globalCancel),
+                  child: Text(cancelText ?? localizations.globalCancel),
                   onPressed: cancelCallback,
                   textStyle: TextStyle(
                       color: cancelTextColor ?? _UIColors.color_666666),
                 ),
                 CupertinoDialogAction(
-                  child: Text(acceptText ??
-                      NEMeetingUIKitLocalizations.of(context)!.globalSure),
+                  child: Text(acceptText ?? localizations.globalSure),
                   onPressed: acceptCallback,
                   textStyle: TextStyle(
                       color: acceptTextColor ?? _UIColors.color_337eff),
@@ -451,7 +503,7 @@ class DialogUtils {
       useRootNavigator: false,
       builder: (_) {
         return NEMeetingUIKitLocalizationsScope(
-          builder: (context) {
+          builder: (context, localizations, _) {
             return CupertinoAlertDialog(
               title: Text(title),
               content: Text(content,
@@ -460,8 +512,7 @@ class DialogUtils {
               actions: <Widget>[
                 CountdownButton(
                   countdownDuration: 3,
-                  buttonText:
-                      NEMeetingUIKitLocalizations.of(context)!.globalIKnow,
+                  buttonText: localizations.globalIKnow,
                   onPressed: callback,
                   closeDialog: callback,
                 ),
@@ -484,25 +535,49 @@ class InputDialogResult {
   InputDialogResult(this.value);
 }
 
+typedef String StringGetter(BuildContext context);
+
 typedef ContentWrapperBuilder = Widget Function(Widget child);
 
 extension MeetingUIDialogUtils on State {
   Future<bool?> showConfirmDialog({
-    required String title,
+    String? title,
     String? message,
     required String cancelLabel,
     required String okLabel,
     ContentWrapperBuilder? contentWrapperBuilder,
   }) {
+    return showConfirmDialog2(
+      title: title != null ? (context) => title : null,
+      message: message != null ? (context) => message : null,
+      cancelLabel: (context) => cancelLabel,
+      okLabel: (context) => okLabel,
+      contentWrapperBuilder: contentWrapperBuilder,
+      routeSettings: RouteSettings(name: title),
+    );
+  }
+
+  Future<bool?> showConfirmDialog2({
+    StringGetter? title,
+    StringGetter? message,
+    required StringGetter cancelLabel,
+    Color? cancelLabelColor,
+    required StringGetter okLabel,
+    Color? okLabelColor,
+    ContentWrapperBuilder? contentWrapperBuilder,
+    RouteSettings? routeSettings,
+  }) {
     return DialogUtils.showChildNavigatorDialog<bool>(
       context,
       (context) {
         final child = CupertinoAlertDialog(
-          title:
-              Text(title, style: TextStyle(color: Colors.black, fontSize: 17)),
+          title: title != null
+              ? Text(title.call(context),
+                  style: TextStyle(color: Colors.black, fontSize: 17))
+              : null,
           content: message != null
               ? Text(
-                  message,
+                  message.call(context),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 13,
@@ -512,18 +587,20 @@ extension MeetingUIDialogUtils on State {
               : null,
           actions: <Widget>[
             CupertinoDialogAction(
-              child: Text(cancelLabel),
+              child: Text(cancelLabel(context)),
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              textStyle: TextStyle(color: _UIColors.color_333333),
+              textStyle:
+                  TextStyle(color: cancelLabelColor ?? _UIColors.color_333333),
             ),
             CupertinoDialogAction(
-              child: Text(okLabel),
+              child: Text(okLabel(context)),
               onPressed: () {
                 Navigator.of(context).pop(true);
               },
-              textStyle: TextStyle(color: _UIColors.color_337eff),
+              textStyle:
+                  TextStyle(color: okLabelColor ?? _UIColors.color_337eff),
             ),
           ],
         );
@@ -531,7 +608,7 @@ extension MeetingUIDialogUtils on State {
             ? contentWrapperBuilder(child)
             : child;
       },
-      routeSettings: RouteSettings(name: title),
+      routeSettings: routeSettings,
     );
   }
 
@@ -629,8 +706,8 @@ extension MeetingUIDialogUtils on State {
 
   Future<InputDialogResult?> showInputDialog({
     required String title,
-    required String cancelLabel,
-    required String okLabel,
+    String? cancelLabel,
+    String? okLabel,
     String? initialInput,
     String? hintText,
     List<TextInputFormatter>? inputFormatters,
@@ -652,8 +729,8 @@ extension MeetingUIDialogUtils on State {
       useRootNavigator: false,
       builder: (context) {
         return StatefulBuilder(
-          builder: (_, setState) =>
-              NEMeetingUIKitLocalizationsScope(builder: (BuildContext context) {
+          builder: (_, setState) => NEMeetingUIKitLocalizationsScope(
+              builder: (BuildContext context, localizations, _) {
             final child = CupertinoAlertDialog(
               title: Text(title),
               content: Container(
@@ -684,13 +761,11 @@ extension MeetingUIDialogUtils on State {
                   )),
               actions: <Widget>[
                 CupertinoDialogAction(
-                  child: Text(
-                      NEMeetingUIKitLocalizations.of(context)!.globalCancel),
+                  child: Text(cancelLabel ?? localizations.globalCancel),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 CupertinoDialogAction(
-                  child:
-                      Text(NEMeetingUIKitLocalizations.of(context)!.globalDone),
+                  child: Text(okLabel ?? localizations.globalDone),
                   onPressed: isInputValid()
                       ? () => Navigator.of(context)
                           .pop(InputDialogResult(controller.text))

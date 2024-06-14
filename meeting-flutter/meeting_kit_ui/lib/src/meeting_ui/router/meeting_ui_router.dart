@@ -47,23 +47,16 @@ class _MeetingUIRouterState extends State<MeetingUIRouter> with _AloggerMixin {
   @override
   void dispose() {
     commonLogger.i('dispose');
-    WakelockPlus.disable().catchError((e) {
-      commonLogger.i('Wakelock error $e');
-    });
     uiNavigator.dispose();
     routerDelegate.dispose();
-    MeetingCore().notifyStatusChange(
-        NEMeetingStatus(NEMeetingEvent.disconnecting, arg: disconnectingCode));
-    MeetingCore().notifyStatusChange(NEMeetingStatus(NEMeetingEvent.idle));
-    EventBus().emit(NEMeetingUIEvents.flutterPageDisposed);
-    AppStyle.setSystemUIOverlayStyleDark();
+    updateMeetingStatus();
     super.dispose();
   }
 
   void pop({Object? result, int? disconnectingCode}) {
     debugPrintStack(
         label:
-            'Pop meeting ui router: isCurrent=${myselfRoute.isCurrent}, disconnectingCode=$disconnectingCode');
+            'Pop meeting ui router: isCurrent=${myselfRoute.isCurrent}, disconnectingCode=$disconnectingCode, frameEnabled=${WidgetsBinding.instance.framesEnabled}');
     assert(!hasRequestPop, 'Duplicated request pop meeting ui router');
 
     /// 如果是加入另外一个会议，不处理
@@ -82,6 +75,24 @@ class _MeetingUIRouterState extends State<MeetingUIRouter> with _AloggerMixin {
     } else {
       Navigator.of(context).removeRoute(myselfRoute);
     }
+    WakelockPlus.disable().catchError((e) {
+      commonLogger.i('Wakelock error $e');
+    });
+    AppStyle.setSystemUIOverlayStyleDark();
+    if (!WidgetsBinding.instance.framesEnabled) {
+      /// 处于后台，则直接更新会议状态
+      updateMeetingStatus();
+    }
+  }
+
+  bool statusUpdated = false;
+  void updateMeetingStatus() {
+    if (statusUpdated) return;
+    statusUpdated = true;
+    MeetingCore().notifyStatusChange(
+        NEMeetingStatus(NEMeetingEvent.disconnecting, arg: disconnectingCode));
+    MeetingCore().notifyStatusChange(NEMeetingStatus(NEMeetingEvent.idle));
+    EventBus().emit(NEMeetingUIEvents.flutterPageDisposed);
   }
 
   @override
@@ -104,10 +115,9 @@ class MeetingUIRouterDelegate extends RouterDelegate<Object>
         PopNavigatorRouterDelegateMixin<Object>,
         ChangeNotifier,
         _AloggerMixin {
-  static final key = GlobalKey<NavigatorState>();
-
   @override
-  GlobalKey<NavigatorState> navigatorKey = key;
+  GlobalKey<NavigatorState> get navigatorKey =>
+      GlobalObjectKey(uiNavigator.roomContext);
 
   final MeetingUINavigator uiNavigator;
 
@@ -117,7 +127,7 @@ class MeetingUIRouterDelegate extends RouterDelegate<Object>
   MeetingUIRouterDelegate(this.uiNavigator) {
     uiNavigator.addListener(notifyListeners);
     callback ??= (arg) {
-      var meetingContext = NEMeetingUIKit().getCurrentRoomContext();
+      var meetingContext = NEMeetingUIKit.instance.getCurrentRoomContext();
       final CardData? cardData = arg.cardData;
       if (meetingContext != null && arg.type != InviteJoinActionType.reject) {
         handleEvent(cardData, arg.type == InviteJoinActionType.audioAccept);
@@ -148,6 +158,23 @@ class MeetingUIRouterDelegate extends RouterDelegate<Object>
       ],
       onPopPage: _handlePopPagedRoute,
       pages: [
+        if (!uiNavigator.isActive)
+          MaterialPage(
+            name: Navigator.defaultRouteName,
+            key: ValueKey(Navigator.defaultRouteName),
+            child: Builder(
+              builder: (context) => Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    tileMode: TileMode.clamp,
+                    colors: [_UIColors.grey_292933, _UIColors.grey_1E1E25],
+                  ),
+                ),
+              ),
+            ),
+          ),
         if (uiNavigator.isInWaitingRoom)
           MaterialPage(
             name: _RouterName.waitingRoom,
@@ -161,9 +188,15 @@ class MeetingUIRouterDelegate extends RouterDelegate<Object>
           MaterialPage(
             name: _RouterName.inMeeting,
             key: ValueKey((_RouterName.inMeeting, uiNavigator.roomContext)),
-            child: Builder(
-              builder: (context) => MeetingPage(uiNavigator.meetingArguments),
-            ),
+            child: Builder(builder: (context) {
+              final key = GlobalObjectKey<MeetingNotificationManagerState>(
+                  uiNavigator.roomContext);
+              MeetingNotificationManager.globalKey = key;
+              return MeetingNotificationManager(
+                  key: key,
+                  enable: !uiNavigator.meetingLifecycleState.isMinimized,
+                  child: MeetingPage(uiNavigator.meetingArguments));
+            }),
           ),
       ],
     );
@@ -179,7 +212,14 @@ class MeetingUIRouterDelegate extends RouterDelegate<Object>
           value: uiNavigator.meetingUIState,
         ),
       ],
-      child: navigator,
+      child: NEMeetingKitFeatureConfig(
+        config: uiNavigator.meetingUIState.sdkConfig,
+        child: NEWatermarkConfigurationManager(
+          roomContext: uiNavigator.roomContext,
+          watermarkConfig: uiNavigator.meetingArguments.watermarkConfig,
+          child: navigator,
+        ),
+      ),
     );
   }
 
@@ -206,6 +246,12 @@ class MeetingUIRouterDelegate extends RouterDelegate<Object>
     if (uiNavigator.isInMeeting) {
       await uiNavigator.roomContext.leaveRoom();
     }
+
+    /// 如果当前在等候室中，则确保销毁rtc
+    else {
+      await uiNavigator.roomContext.rtcController.leaveRtcChannel();
+    }
+
     final newRoomResult =
         await NEMeetingKit.instance.getMeetingInviteService().acceptInvite(
               NEJoinMeetingParams(

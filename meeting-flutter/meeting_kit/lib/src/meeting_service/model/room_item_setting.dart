@@ -4,14 +4,17 @@
 
 part of meeting_service;
 
-class NEMeetingItemSettings {
-  List<NERoomControl>? controls;
+/// 会议信息选项
+class NEMeetingItemSetting {
+  /// 成员音视频控制
+  List<NEMeetingControl>? controls;
 
+  /// 入会时云端录制开关
   bool cloudRecordOn = false;
 
   bool get isAudioOffAllowSelfOn {
-    for (NERoomControl control in controls ?? []) {
-      if (control is NEInRoomAudioControl) {
+    for (NEMeetingControl control in controls ?? []) {
+      if (control is NEInMeetingAudioControl) {
         return control.enabled && control.allowSelfOn;
       }
     }
@@ -19,8 +22,8 @@ class NEMeetingItemSettings {
   }
 
   bool get isAudioOffNotAllowSelfOn {
-    for (NERoomControl control in controls ?? []) {
-      if (control is NEInRoomAudioControl) {
+    for (NEMeetingControl control in controls ?? []) {
+      if (control is NEInMeetingAudioControl) {
         return control.enabled && !control.allowSelfOn;
       }
     }
@@ -28,13 +31,13 @@ class NEMeetingItemSettings {
   }
 
   /// native 传递到flutter页面解析
-  static NEMeetingItemSettings fromNativeJson(Map<dynamic, dynamic>? map) {
-    var setting = NEMeetingItemSettings();
+  static NEMeetingItemSetting fromNativeJson(Map<dynamic, dynamic>? map) {
+    var setting = NEMeetingItemSetting();
     if (map != null) {
       setting.cloudRecordOn = (map['cloudRecordOn'] ?? false) as bool;
       setting.controls = (map['controls'] as List?)
           ?.map((e) =>
-              NERoomControl.fromJson(Map<String, dynamic>.from(e as Map)))
+              NEMeetingControl.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList();
     }
     return setting;

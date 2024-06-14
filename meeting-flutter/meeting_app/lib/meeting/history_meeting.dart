@@ -3,18 +3,18 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:nemeeting/service/repo/history_repo.dart';
+import 'package:nemeeting/uikit/state/meeting_base_state.dart';
 import 'package:nemeeting/uikit/values/asset_name.dart';
 import 'package:nemeeting/uikit/values/colors.dart';
+import 'package:nemeeting/widget/ne_widget.dart';
+import 'package:netease_common/netease_common.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 import '../language/localizations.dart';
-import '../service/response/result.dart';
+import '../service/repo/history_repo.dart';
 import '../uikit/values/fonts.dart';
 import '../uikit/values/Ints.dart';
 import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/base/util/text_util.dart';
-import 'package:netease_meeting_assets/netease_meeting_assets.dart';
-import '../service/model/history_meeting.dart';
 import '../utils/integration_test.dart';
 import 'history_meeting_detail.dart';
 
@@ -25,16 +25,15 @@ class HistoryMeetingRoute extends StatefulWidget {
   }
 }
 
-class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
-    with MeetingAppLocalizationsMixin {
+class _HistoryMeetingRouteState extends AppBaseState<HistoryMeetingRoute> {
   int _currentIndex = 0;
   late PageController _pageController;
 
   /// 全部会议p
-  List<HistoryMeeting> allMeetingList = <HistoryMeeting>[];
+  List<NERemoteHistoryMeeting> allMeetingList = <NERemoteHistoryMeeting>[];
 
   /// 收藏会议
-  List<HistoryMeeting> favoriteMeetingList = <HistoryMeeting>[];
+  List<NERemoteHistoryMeeting> favoriteMeetingList = <NERemoteHistoryMeeting>[];
 
   ScrollController _allMeetingScrollController = ScrollController();
   ScrollController _favoriteMeetingScrollController = ScrollController();
@@ -64,7 +63,7 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
         !_allMeetingScrollController.position.outOfRange) {
       var lastMeeting = allMeetingList.last;
       LoadingUtil.showLoading();
-      await updateAllMeetings(startId: lastMeeting.attendeeId, isAppend: true);
+      await updateAllMeetings(startId: lastMeeting.anchorId, isAppend: true);
       LoadingUtil.cancelLoading();
     }
   }
@@ -82,48 +81,22 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.globalBg,
-      appBar: AppBar(
-        leading: Builder(
-          builder: (BuildContext context) {
-            return IconButton(
-              key: MeetingValueKey.back,
-              icon: const Icon(
-                IconFont.iconyx_returnx,
-                size: 18,
-                color: AppColors.black_333333,
-              ),
-              onPressed: () {
-                Navigator.maybePop(context);
-              },
-            );
-          },
-        ),
-        elevation: 0,
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        title: Text(
-          meetingAppLocalizations.historyMeeting,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-              color: AppColors.black_222222,
-              fontSize: 17,
-              fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[buildSelectionBoxes(), buildDataListViews()],
-      ),
+  String getTitle() {
+    return getAppLocalizations().historyMeeting;
+  }
+
+  @override
+  Widget buildBody() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: <Widget>[buildSelectionBoxes(), buildDataListViews()],
     );
   }
 
   Future<void> updateAllMeetings({int? startId, bool isAppend = false}) async {
     if (!await ConnectivityManager().isConnected()) {
       ToastUtils.showToast(
-          context, meetingAppLocalizations.globalNetworkUnavailableCheck);
+          context, getAppLocalizations().globalNetworkUnavailableCheck);
       return;
     }
     final result = await HistoryRepo().getAllHistoryMeetings(startId);
@@ -155,8 +128,8 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
     sortAndGroupFavoriteData(favoriteMeetingList);
   }
 
-  void sortAndGroupData(List<HistoryMeeting> list) {
-    var temp = <HistoryMeeting>[];
+  void sortAndGroupData(List<NERemoteHistoryMeeting> list) {
+    var temp = <NERemoteHistoryMeeting>[];
 
     /// step 1, filter meetingId is null, self insert data
     list.removeWhere((element) => element.meetingNum == "");
@@ -174,7 +147,7 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
           list.add(element);
         } else {
           last = itemDay;
-          list.add(HistoryMeeting.group(last));
+          list.add(NERemoteHistoryMeeting(roomEntryTime: last));
           list.add(element);
         }
       });
@@ -184,8 +157,8 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
     }
   }
 
-  void sortAndGroupFavoriteData(List<HistoryMeeting> list) {
-    var temp = <HistoryMeeting>[];
+  void sortAndGroupFavoriteData(List<NERemoteHistoryMeeting> list) {
+    var temp = <NERemoteHistoryMeeting>[];
 
     /// step 1, filter meetingId is null, self insert data
     list.removeWhere((element) => element.meetingNum == "");
@@ -203,7 +176,7 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
           list.add(element);
         } else {
           last = itemDay;
-          list.add(HistoryMeeting.group(last));
+          list.add(NERemoteHistoryMeeting(roomEntryTime: last));
           list.add(element);
         }
       });
@@ -215,40 +188,37 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
 
   Widget buildSelectionBoxes() {
     return Container(
-      height: 45,
       color: Colors.white,
       child: Row(
         children: <Widget>[
           buildSelectedItem(
-              0, _currentIndex == 0, meetingAppLocalizations.historyAllMeeting),
+              0, _currentIndex == 0, getAppLocalizations().historyAllMeeting),
           buildSelectedItem(1, _currentIndex == 1,
-              meetingAppLocalizations.historyCollectMeeting)
+              getAppLocalizations().historyCollectMeeting)
         ],
       ),
     );
   }
 
-  Widget buildSelectedItem(int index, bool selected, String titile) {
+  Widget buildSelectedItem(int index, bool selected, String title) {
     return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
+      child: NEGestureDetector(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Container(
                 alignment: Alignment.center,
-                height: 43,
+                height: 48,
                 child: Text(
-                  titile,
+                  title,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                      color: selected
-                          ? AppColors.black_333333
-                          : AppColors.color_666666,
-                      fontSize: 15),
+                      color: AppColors.color_1E1E27,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500),
                 )),
             Container(
-                color: selected ? AppColors.color_007AFF : AppColors.white,
+                color: selected ? AppColors.color_337eff : AppColors.white,
                 height: 2),
           ],
         ),
@@ -286,7 +256,7 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
 
   Widget buildAllMeetingUI() {
     if (allMeetingList.isEmpty) {
-      return buildEmptyView(meetingAppLocalizations.historyMeetingListEmpty);
+      return buildEmptyView(getAppLocalizations().historyMeetingListEmpty);
     }
     return ListView.builder(
         itemCount: allMeetingList.length,
@@ -308,7 +278,7 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
   Widget buildCollectMeetingUI() {
     if (favoriteMeetingList.isEmpty) {
       return buildEmptyView(
-          meetingAppLocalizations.historyCollectMeetingListEmpty);
+          getAppLocalizations().historyCollectMeetingListEmpty);
     }
     return ListView.builder(
         itemCount: favoriteMeetingList.length,
@@ -331,15 +301,13 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
   Widget buildTimeTitle(int time) {
     var dateTime = DateTime.fromMillisecondsSinceEpoch(time);
     return Container(
-        padding: EdgeInsets.only(left: 20, bottom: 8),
+        padding: EdgeInsets.only(left: 20, top: 5, bottom: 5),
         color: AppColors.globalBg,
-        height: 44,
-        alignment: Alignment.bottomLeft,
         child: Text(
           DateTime.now().year > dateTime.year
-              ? "${dateTime.year}${meetingAppLocalizations.globalYear}${dateTime.month}${meetingAppLocalizations.globalMonth}${dateTime.day}${meetingAppLocalizations.globalDay}  ${dateTime.weekday.toWeekday(context)}"
-              : "${dateTime.month}${meetingAppLocalizations.globalMonth}${dateTime.day}${meetingAppLocalizations.globalDay}  ${dateTime.weekday.toWeekday(context)}",
-          style: TextStyle(fontSize: 14, color: AppColors.color_666666),
+              ? "${dateTime.year}${getAppLocalizations().globalYear}${dateTime.month}${getAppLocalizations().globalMonth}${dateTime.day}${getAppLocalizations().globalDay}  ${dateTime.weekday.toWeekday(context)}"
+              : "${dateTime.month}${getAppLocalizations().globalMonth}${dateTime.day}${getAppLocalizations().globalDay}  ${dateTime.weekday.toWeekday(context)}",
+          style: TextStyle(fontSize: 14, color: AppColors.color_53576A),
         ));
   }
 
@@ -365,163 +333,90 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
   }
 
   Widget buildMeetingItem({
-    required HistoryMeeting item,
+    required NERemoteHistoryMeeting item,
     bool isInFavoritePage = false,
     bool showBottomDivider = true,
   }) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: EdgeInsets.only(left: 20),
-        height: 72,
-        color: AppColors.white,
-        // color:Color.fromRGBO(Random().nextInt(256), Random().nextInt(256), Random().nextInt(256), 1),
-        child: Stack(
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+    final spanBetween = TextSpan(
+        text: " | ",
+        style: TextStyle(color: AppColors.color_CDCFD7, fontSize: 14));
+    final spanTextStyle =
+        TextStyle(color: AppColors.color_3D3D3D, fontSize: 14);
+    return NEGestureDetector(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 84,
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            color: AppColors.white,
+            child: Row(
               children: [
-                Image(
-                    image: AssetImage(AssetName.iconCalendar),
-                    width: 24,
-                    height: 24),
-                SizedBox(width: 26),
                 Expanded(
-                    child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text.rich(
-                            key: MeetingValueKey.historyMeetingItemTitle,
-                            TextSpan(children: [
-                              TextSpan(
-                                text:
-                                    '${MeetingTimeUtil.timeFormatHourMinute(DateTime.fromMillisecondsSinceEpoch(item.roomEntryTime))}',
-                                style: TextStyle(
-                                    color: AppColors.black_222222,
-                                    fontSize: 12),
-                              ),
-                              TextSpan(
-                                  text:
-                                      " | ${meetingAppLocalizations.meetingNum}:${TextUtil.applyMask(item.meetingNum, "000-000-0000")}",
-                                  style: TextStyle(
-                                      color: AppColors.color_999999,
-                                      fontSize: 12))
-                            ])),
-                        SizedBox(width: 10),
-                        GestureDetector(
-                          key: MeetingValueKey.scheduleMeetingIdCopy,
-                          behavior: HitTestBehavior.opaque,
-                          child: Icon(NEMeetingIconFont.icon_copy1x,
-                              size: 11, color: AppColors.color_337eff),
-                          onTap: () {
-                            Clipboard.setData(
-                                ClipboardData(text: item.meetingNum));
-                            ToastUtils.showToast(context,
-                                meetingAppLocalizations.globalCopySuccess);
-                          },
-                        )
-                      ],
-                    ),
-                    SizedBox(height: 4),
-                    Container(
-                      margin: EdgeInsets.only(right: 50),
-                      child: Text(
-                        item.subject,
-                        style: TextStyle(
-                            fontSize: 16, color: AppColors.black_222222),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        child: Text(
+                          item.subject,
+                          style: TextStyle(
+                              fontSize: 16,
+                              color: AppColors.color_1E1E27,
+                              fontWeight: FontWeight.w500),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
-                ))
+                      SizedBox(height: 8),
+                      Text.rich(
+                          key: MeetingValueKey.historyMeetingItemTitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          TextSpan(children: [
+                            TextSpan(
+                              text:
+                                  '${MeetingTimeUtil.timeFormatHourMinute(DateTime.fromMillisecondsSinceEpoch(item.roomStartTime))}-${MeetingTimeUtil.timeFormatHourMinute(DateTime.fromMillisecondsSinceEpoch(item.roomEndTime))}',
+                              style: spanTextStyle,
+                            ),
+                            spanBetween,
+                            TextSpan(
+                              text:
+                                  '${TextUtil.applyMask(item.meetingNum, "000-000-0000")}',
+                              style: spanTextStyle,
+                            ),
+                            spanBetween,
+                            TextSpan(
+                              text: '${item.ownerNickname}',
+                              style: spanTextStyle,
+                            ),
+                          ])),
+                    ],
+                  ),
+                ),
+                buildFavoriteStar(item, isInFavoritePage),
               ],
             ),
-            if (showBottomDivider)
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Container(
-                  margin: EdgeInsets.only(left: 50),
-                  height: 0.5,
-                  color: AppColors.color_999999,
-                ),
-              ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: GestureDetector(
-                  child: Container(
-                    margin: EdgeInsets.only(right: 25),
-                    child: Image(
-                        key: MeetingValueKey.scheduleFavorite,
-                        image: AssetImage(item.isFavorite == true
-                            ? AssetName.iconHistoryCollected
-                            : AssetName.iconHistoryUncollected),
-                        width: 21,
-                        height: 20),
-                  ),
-                  onTap: () async {
-                    if (!await isNetworkConnect()) return;
-                    LoadingUtil.showLoading();
-
-                    /// 取消收藏
-                    if (item.isFavorite == true) {
-                      final result = await cancelFavorite(item.roomArchiveId);
-                      if (result.isSuccess()) {
-                        allMeetingList.forEach((element) {
-                          if (element.roomArchiveId == item.roomArchiveId) {
-                            element.isFavorite = null;
-                            element.favoriteId = null;
-                          }
-                        });
-                        sortAndGroupData(allMeetingList);
-
-                        /// 如果在收藏页面直接移除，否则刷新收藏列表
-                        if (isInFavoritePage) {
-                          favoriteMeetingList.removeWhere(
-                              (e) => e.roomArchiveId == item.roomArchiveId);
-                          sortAndGroupFavoriteData(favoriteMeetingList);
-                          LoadingUtil.cancelLoading();
-                        } else {
-                          await updateFavoriteMeetings();
-                          LoadingUtil.cancelLoading();
-                        }
-                      }
-                    }
-
-                    /// 点击收藏
-                    else {
-                      final result = await favouriteMeeting(item.roomArchiveId);
-                      if (result.isSuccess() && result.data != null) {
-                        allMeetingList.forEach((element) {
-                          if (element.roomArchiveId == item.roomArchiveId) {
-                            element.favoriteId = result.data;
-                            element.isFavorite = true;
-                          }
-                        });
-                        sortAndGroupData(allMeetingList);
-                        await updateFavoriteMeetings();
-                        LoadingUtil.cancelLoading();
-                      }
-                    }
-                  }),
-            )
-          ],
-        ),
+          ),
+          if (showBottomDivider)
+            Container(
+              width: 20,
+              height: 1,
+              color: AppColors.white,
+            ),
+        ],
       ),
       onTap: () {
         final isFavorite = item.isFavorite;
         Navigator.of(context)
-            .push(MaterialMeetingAppPageRoute(
+            .push(MaterialPageRoute(
                 builder: (context) => HistoryMeetingDetailRoute(item)))
             .then((value) {
           /// 收藏状态变更，则刷新收藏列表
           if (item.isFavorite != isFavorite) {
             allMeetingList.forEach((element) {
-              if (element.roomArchiveId == item.roomArchiveId) {
-                element.isFavorite = item.isFavorite;
+              if (element.meetingId == item.meetingId) {
+                element.favoriteId = item.favoriteId;
               }
             });
             updateFavoriteMeetings();
@@ -531,20 +426,77 @@ class _HistoryMeetingRouteState extends LifecycleBaseState<HistoryMeetingRoute>
     );
   }
 
+  Widget buildFavoriteStar(NERemoteHistoryMeeting item, bool isInFavoritePage) {
+    return NEGestureDetector(
+        child: Container(
+          child: Icon(
+            key: MeetingValueKey.scheduleFavorite,
+            IconFont.icon_collect,
+            size: 22,
+            color: item.isFavorite == true
+                ? AppColors.color_FF7903
+                : AppColors.colorE6E7EB,
+          ),
+        ),
+        onTap: () async {
+          if (!await isNetworkConnect()) return;
+          LoadingUtil.showLoading();
+
+          /// 取消收藏
+          if (item.isFavorite == true) {
+            final result = await cancelFavorite(item.meetingId);
+            if (result.isSuccess()) {
+              allMeetingList.forEach((element) {
+                if (element.meetingId == item.meetingId) {
+                  element.favoriteId = null;
+                }
+              });
+              sortAndGroupData(allMeetingList);
+
+              /// 如果在收藏页面直接移除，否则刷新收藏列表
+              if (isInFavoritePage) {
+                favoriteMeetingList
+                    .removeWhere((e) => e.meetingId == item.meetingId);
+                sortAndGroupFavoriteData(favoriteMeetingList);
+                LoadingUtil.cancelLoading();
+              } else {
+                await updateFavoriteMeetings();
+                LoadingUtil.cancelLoading();
+              }
+            }
+          }
+
+          /// 点击收藏
+          else {
+            final result = await favouriteMeeting(item.meetingId);
+            if (result.isSuccess()) {
+              allMeetingList.forEach((element) {
+                if (element.meetingId == item.meetingId) {
+                  element.favoriteId = result.data;
+                }
+              });
+              sortAndGroupData(allMeetingList);
+              await updateFavoriteMeetings();
+              LoadingUtil.cancelLoading();
+            }
+          }
+        });
+  }
+
   Future<bool> isNetworkConnect() async {
     if (!await ConnectivityManager().isConnected()) {
       ToastUtils.showToast(
-          context, meetingAppLocalizations.globalNetworkUnavailableCheck);
+          context, getAppLocalizations().globalNetworkUnavailableCheck);
       return false;
     }
     return true;
   }
 
-  Future<Result<int?>> favouriteMeeting(int roomArchiveId) {
-    return HistoryRepo().favoriteMeeting(roomArchiveId);
+  Future<NEResult<int>> favouriteMeeting(int meetingId) {
+    return HistoryRepo().favoriteMeeting(meetingId);
   }
 
-  Future<Result<void>> cancelFavorite(int roomArchiveId) {
-    return HistoryRepo().cancelFavoriteByRoomArchiveId(roomArchiveId);
+  Future<NEResult<void>> cancelFavorite(int meetingId) {
+    return HistoryRepo().cancelFavoriteByRoomArchiveId(meetingId);
   }
 }

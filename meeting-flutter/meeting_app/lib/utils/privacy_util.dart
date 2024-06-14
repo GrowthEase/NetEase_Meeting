@@ -10,7 +10,7 @@ import 'package:nemeeting/base/util/global_preferences.dart';
 import 'package:nemeeting/service/config/servers.dart';
 import 'package:nemeeting/uikit/values/colors.dart';
 import 'package:nemeeting/webview/webview_page.dart';
-import '../language/meeting_localization/meeting_app_localizations.dart';
+import '../language/localizations.dart';
 import '../uikit/utils/nav_utils.dart';
 import '../uikit/utils/router_name.dart';
 import '../uikit/widget/meeting_protocols.dart';
@@ -51,7 +51,6 @@ class PrivacyUtil {
   static Widget protocolTips() {
     return ValueListenableBuilder(
       builder: (BuildContext context, bool value, Widget? child) {
-        final meetingAppLocalizations = MeetingAppLocalizations.of(context)!;
         return MeetingProtocols(
           value: value,
           onChanged: (bool value) {
@@ -61,7 +60,7 @@ class PrivacyUtil {
             if (Servers().userProtocol?.isNotEmpty ?? false) {
               NavUtils.pushNamed(context, RouterName.webview,
                   arguments: WebViewArguments(Servers().userProtocol!,
-                      meetingAppLocalizations.authServiceAgreement));
+                      getAppLocalizations().authServiceAgreement));
             } else {
               Alog.e(tag: TAG, content: "privacy is empty");
             }
@@ -70,7 +69,7 @@ class PrivacyUtil {
             if (Servers().privacy?.isNotEmpty ?? false) {
               NavUtils.pushNamed(context, RouterName.webview,
                   arguments: WebViewArguments(
-                      Servers().privacy!, meetingAppLocalizations.authPrivacy));
+                      Servers().privacy!, getAppLocalizations().authPrivacy));
             } else {
               Alog.e(tag: TAG, content: "privacy is empty");
             }
@@ -83,8 +82,6 @@ class PrivacyUtil {
 
   static Future<bool> showPrivacyDialog(BuildContext context,
       {bool exitIfNotOk = true}) async {
-    MeetingAppLocalizations meetingAppLocalizations =
-        MeetingAppLocalizations.of(context)!;
     TextSpan buildTextSpan(String text, WebViewArguments? arguments) {
       return TextSpan(
         text: text,
@@ -102,28 +99,28 @@ class PrivacyUtil {
     }
 
     final userArguments = WebViewArguments(
-        Servers().userProtocol, meetingAppLocalizations.authServiceAgreement);
-    final privacyArguments = WebViewArguments(
-        Servers().privacy, meetingAppLocalizations.authPrivacy);
-    final message = meetingAppLocalizations.authPrivacyDialogMessage(
+        Servers().userProtocol, getAppLocalizations().authServiceAgreement);
+    final privacyArguments =
+        WebViewArguments(Servers().privacy, getAppLocalizations().authPrivacy);
+    final message = getAppLocalizations().authPrivacyDialogMessage(
         '##neteasePrivacy##', '##neteaseUserProtocol##');
     final messageList = message.split('##');
     return showCupertinoDialog(
         context: context,
         builder: (context) {
           return CupertinoAlertDialog(
-            title: Text(meetingAppLocalizations.authPrivacyDialogTitle),
+            title: Text(getAppLocalizations().authPrivacyDialogTitle),
             content: Text.rich(
               TextSpan(
                 children: [
                   for (var item in messageList)
                     item == 'neteasePrivacy'
                         ? buildTextSpan(
-                            meetingAppLocalizations.authNeteasePrivacy,
+                            getAppLocalizations().authNeteasePrivacy,
                             privacyArguments)
                         : item == 'neteaseUserProtocol'
                             ? buildTextSpan(
-                                meetingAppLocalizations
+                                getAppLocalizations()
                                     .authNetEaseServiceAgreement,
                                 userArguments)
                             : buildTextSpan(item, null),
@@ -133,14 +130,14 @@ class PrivacyUtil {
             actions: <Widget>[
               CupertinoDialogAction(
                 child: Text(exitIfNotOk
-                    ? meetingAppLocalizations.globalQuit
-                    : meetingAppLocalizations.globalCancel),
+                    ? getAppLocalizations().globalQuit
+                    : getAppLocalizations().globalCancel),
                 onPressed: () {
                   Navigator.of(context).pop(false);
                 },
               ),
               CupertinoDialogAction(
-                child: Text(meetingAppLocalizations.globalAgree),
+                child: Text(getAppLocalizations().globalAgree),
                 onPressed: () {
                   Navigator.of(context).pop(true);
                 },

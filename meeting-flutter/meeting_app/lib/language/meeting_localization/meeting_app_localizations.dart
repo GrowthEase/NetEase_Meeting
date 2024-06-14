@@ -373,6 +373,78 @@ abstract class MeetingAppLocalizations {
   /// **'yyyy年MM月dd日'**
   String get globalDateFormat;
 
+  /// No description provided for @globalMonthJan.
+  ///
+  /// In zh, this message translates to:
+  /// **'1月'**
+  String get globalMonthJan;
+
+  /// No description provided for @globalMonthFeb.
+  ///
+  /// In zh, this message translates to:
+  /// **'2月'**
+  String get globalMonthFeb;
+
+  /// No description provided for @globalMonthMar.
+  ///
+  /// In zh, this message translates to:
+  /// **'3月'**
+  String get globalMonthMar;
+
+  /// No description provided for @globalMonthApr.
+  ///
+  /// In zh, this message translates to:
+  /// **'4月'**
+  String get globalMonthApr;
+
+  /// No description provided for @globalMonthMay.
+  ///
+  /// In zh, this message translates to:
+  /// **'5月'**
+  String get globalMonthMay;
+
+  /// No description provided for @globalMonthJun.
+  ///
+  /// In zh, this message translates to:
+  /// **'6月'**
+  String get globalMonthJun;
+
+  /// No description provided for @globalMonthJul.
+  ///
+  /// In zh, this message translates to:
+  /// **'7月'**
+  String get globalMonthJul;
+
+  /// No description provided for @globalMonthAug.
+  ///
+  /// In zh, this message translates to:
+  /// **'8月'**
+  String get globalMonthAug;
+
+  /// No description provided for @globalMonthSept.
+  ///
+  /// In zh, this message translates to:
+  /// **'9月'**
+  String get globalMonthSept;
+
+  /// No description provided for @globalMonthOct.
+  ///
+  /// In zh, this message translates to:
+  /// **'10月'**
+  String get globalMonthOct;
+
+  /// No description provided for @globalMonthNov.
+  ///
+  /// In zh, this message translates to:
+  /// **'11月'**
+  String get globalMonthNov;
+
+  /// No description provided for @globalMonthDec.
+  ///
+  /// In zh, this message translates to:
+  /// **'12月'**
+  String get globalMonthDec;
+
   /// No description provided for @authImmediatelyRegister.
   ///
   /// In zh, this message translates to:
@@ -777,11 +849,101 @@ abstract class MeetingAppLocalizations {
   /// **'正在登录会议'**
   String get authLoggingIn;
 
+  /// No description provided for @authHowToGetCorpCode.
+  ///
+  /// In zh, this message translates to:
+  /// **'如何获取企业代码？'**
+  String get authHowToGetCorpCode;
+
+  /// No description provided for @authGetCorpCodeFromAdmin.
+  ///
+  /// In zh, this message translates to:
+  /// **'可与企业管理员咨询您的企业代码'**
+  String get authGetCorpCodeFromAdmin;
+
+  /// No description provided for @authIKnowCorpCode.
+  ///
+  /// In zh, this message translates to:
+  /// **'我知道企业代码'**
+  String get authIKnowCorpCode;
+
+  /// No description provided for @authIDontKnowCorpCode.
+  ///
+  /// In zh, this message translates to:
+  /// **'我不知道企业代码'**
+  String get authIDontKnowCorpCode;
+
+  /// No description provided for @authTypeAccountPwd.
+  ///
+  /// In zh, this message translates to:
+  /// **'账号密码'**
+  String get authTypeAccountPwd;
+
+  /// No description provided for @authLoginByAccountPwd.
+  ///
+  /// In zh, this message translates to:
+  /// **'账号密码登录'**
+  String get authLoginByAccountPwd;
+
+  /// No description provided for @authLoginByMobilePwd.
+  ///
+  /// In zh, this message translates to:
+  /// **'手机密码登录'**
+  String get authLoginByMobilePwd;
+
+  /// No description provided for @authLoginByEmailPwd.
+  ///
+  /// In zh, this message translates to:
+  /// **'邮箱密码登录'**
+  String get authLoginByEmailPwd;
+
+  /// No description provided for @authOtherLoginTypes.
+  ///
+  /// In zh, this message translates to:
+  /// **'其他登录方式'**
+  String get authOtherLoginTypes;
+
+  /// No description provided for @authEnterEmail.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入邮箱'**
+  String get authEnterEmail;
+
+  /// No description provided for @authEmail.
+  ///
+  /// In zh, this message translates to:
+  /// **'邮箱'**
+  String get authEmail;
+
+  /// No description provided for @oldPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'旧密码'**
+  String get oldPassword;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'新密码'**
+  String get newPassword;
+
+  /// No description provided for @confirmPassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'再次输入'**
+  String get confirmPassword;
+
   /// No description provided for @meetingCreate.
   ///
   /// In zh, this message translates to:
   /// **'即刻会议'**
   String get meetingCreate;
+
+  /// No description provided for @meetingHold.
+  ///
+  /// In zh, this message translates to:
+  /// **'发起会议'**
+  String get meetingHold;
 
   /// No description provided for @meetingNetworkAbnormalityCheckAndRejoin.
   ///
@@ -810,7 +972,7 @@ abstract class MeetingAppLocalizations {
   /// No description provided for @meetingScheduleListEmpty.
   ///
   /// In zh, this message translates to:
-  /// **'当前暂无即将召开的会议'**
+  /// **'暂无会议'**
   String get meetingScheduleListEmpty;
 
   /// No description provided for @meetingToday.
@@ -986,12 +1148,6 @@ abstract class MeetingAppLocalizations {
   /// In zh, this message translates to:
   /// **'安全'**
   String get meetingSecurity;
-
-  /// No description provided for @meetingEnableWaitingRoom.
-  ///
-  /// In zh, this message translates to:
-  /// **'开启等候室'**
-  String get meetingEnableWaitingRoom;
 
   /// No description provided for @meetingWaitingRoomHint.
   ///
@@ -1552,6 +1708,36 @@ abstract class MeetingAppLocalizations {
   /// **'收起'**
   String get meetingClose;
 
+  /// No description provided for @meetingClearRecord.
+  ///
+  /// In zh, this message translates to:
+  /// **'清空记录'**
+  String get meetingClearRecord;
+
+  /// No description provided for @meetingPickTimezone.
+  ///
+  /// In zh, this message translates to:
+  /// **'选择时区'**
+  String get meetingPickTimezone;
+
+  /// No description provided for @meetingTimezone.
+  ///
+  /// In zh, this message translates to:
+  /// **'时区'**
+  String get meetingTimezone;
+
+  /// No description provided for @meetingName.
+  ///
+  /// In zh, this message translates to:
+  /// **'会议名称'**
+  String get meetingName;
+
+  /// No description provided for @meetingTime.
+  ///
+  /// In zh, this message translates to:
+  /// **'时间'**
+  String get meetingTime;
+
   /// No description provided for @historyMeeting.
   ///
   /// In zh, this message translates to:
@@ -1768,29 +1954,11 @@ abstract class MeetingAppLocalizations {
   /// **'切换企业失败，请检查当前网络'**
   String get settingSwitchCompanyFail;
 
-  /// No description provided for @settingAudioAINS.
-  ///
-  /// In zh, this message translates to:
-  /// **'智能降噪'**
-  String get settingAudioAINS;
-
   /// No description provided for @settingShowShareUserVideo.
   ///
   /// In zh, this message translates to:
   /// **'共享时开启共享人摄像头'**
   String get settingShowShareUserVideo;
-
-  /// No description provided for @settingEnableTransparentWhiteboard.
-  ///
-  /// In zh, this message translates to:
-  /// **'设置白板透明'**
-  String get settingEnableTransparentWhiteboard;
-
-  /// No description provided for @settingEnableFrontCameraMirror.
-  ///
-  /// In zh, this message translates to:
-  /// **'前置摄像头镜像'**
-  String get settingEnableFrontCameraMirror;
 
   /// No description provided for @settingOpenCameraMeeting.
   ///
@@ -1803,12 +1971,6 @@ abstract class MeetingAppLocalizations {
   /// In zh, this message translates to:
   /// **'默认打开麦克风'**
   String get settingOpenMicroMeeting;
-
-  /// No description provided for @settingShowMeetDuration.
-  ///
-  /// In zh, this message translates to:
-  /// **'显示会议持续时间'**
-  String get settingShowMeetDuration;
 
   /// No description provided for @settingEnableAudioDeviceSwitch.
   ///
@@ -2228,8 +2390,14 @@ abstract class MeetingAppLocalizations {
   /// No description provided for @evaluationTitle.
   ///
   /// In zh, this message translates to:
-  /// **'您有多大的可能向同事或合作伙伴推荐网易会议？'**
+  /// **'评分'**
   String get evaluationTitle;
+
+  /// No description provided for @evaluationContent.
+  ///
+  /// In zh, this message translates to:
+  /// **'您有多大的可能向同事或合作伙伴推荐网易会议？'**
+  String get evaluationContent;
 
   /// No description provided for @evaluationCoreZero.
   ///

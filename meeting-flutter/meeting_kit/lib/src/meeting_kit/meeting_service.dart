@@ -33,7 +33,7 @@ class NEStartMeetingParams {
   final String? extraData;
 
   /// 音视频控制
-  final List<NERoomControl>? controls;
+  final List<NEMeetingControl>? controls;
 
   /// 设置会议成员角色
   final Map<String, NEMeetingRoleType>? roleBinds;
@@ -163,10 +163,11 @@ class NEJoinMeetingOptions {
 
 /// 提供会议相关的服务接口，诸如创建会议、加入会议、添加会议状态监听等。可通过 [NEMeetingKit.getMeetingService] 获取对应的服务实例
 abstract class NEMeetingService {
-  /// 创建一个新的会议，只有完成SDK的登录鉴权操作才允许创建会议。创建会议成功后，SDK会拉起会议页面，调用方不用做其他操作
+  /// 开始一个新的会议，只有完成SDK的登录鉴权操作才允许创建会议。
+  /// 开始会议成功后，SDK会拉起会议页面，调用方不用做其他操作
   ///
-  /// * [param] 会议参数对象，不能为空
-  /// * [opts]  会议选项对象，可空；当未指定时，会使用默认的选项
+  /// [param] 会议参数对象，不能为空
+  /// [opts]  会议选项对象，可空；当未指定时，会使用默认的选项
   ///
   /// 该回调会返回一个[NERoomContext]房间上下文实例，该实例支持会议相关扩展 [NEMeetingContext]
   Future<NEResult<NERoomContext>> startMeeting(
@@ -177,20 +178,20 @@ abstract class NEMeetingService {
   /// 加入一个当前正在进行中的会议，只有完成SDK的登录鉴权操作才允许加入会议。
   /// 加入会议成功后，SDK会拉起会议页面，调用方不用做其他操作
   ///
-  /// * [param] 会议参数对象，不能为空
-  /// * [opts]  会议选项对象，可空；当未指定时，会使用默认的选项
-  /// * [isInvite] 是否为邀请入会
+  /// [param] 会议参数对象，不能为空
+  /// [opts]  会议选项对象，可空；当未指定时，会使用默认的选项
   ///
   /// 该回调会返回一个[NERoomContext]房间上下文实例，该实例支持会议相关扩展 [NEMeetingContext]
   Future<NEResult<NERoomContext>> joinMeeting(
-      NEJoinMeetingParams param, NEJoinMeetingOptions opts,
-      {bool isInvite = false});
+    NEJoinMeetingParams param,
+    NEJoinMeetingOptions opts,
+  );
 
   ///  加入一个当前正在进行中的会议，已登录或未登录均可加入会议。
   ///<p>加入会议成功后，SDK会拉起会议页面，调用方不用做其他操作。
   ///
-  /// * [param] 会议参数对象，不能为空
-  /// * [opts]  会议选项对象，可空；当未指定时，会使用默认的选项
+  /// [param] 会议参数对象，不能为空
+  /// [opts]  会议选项对象，可空；当未指定时，会使用默认的选项
   Future<NEResult<NERoomContext>> anonymousJoinMeeting(
     NEJoinMeetingParams param,
     NEJoinMeetingOptions opts,
@@ -209,6 +210,11 @@ abstract class NEMeetingService {
   ///
   ///   * [messageUuid] 消息id
   Future<NEResult<void>> downloadAttachment(String messageUuid);
+
+  /// 获取本地历史会议记录列表，不支持漫游保存，默认保存最近10条记录
+  ///
+  /// 结果，数据类型为[NELocalHistoryMeeting]列表
+  List<NELocalHistoryMeeting> getLocalHistoryMeetingList();
 }
 
 /// 会议信息
@@ -272,6 +278,11 @@ class NEMeetingInfo {
 
   final List<NEInMeetingUserInfo> userList;
 
+  ///
+  /// 会议时区
+  ///
+  final String? timezoneId;
+
   NEMeetingInfo({
     required this.meetingId,
     required this.meetingNum,
@@ -292,6 +303,7 @@ class NEMeetingInfo {
     required this.hostUserId,
     required this.userList,
     this.extraData,
+    this.timezoneId,
   });
 
   Map<String, dynamic> toMap() => {
@@ -312,11 +324,12 @@ class NEMeetingInfo {
         'hostUserId': hostUserId,
         if (extraData != null) 'extraData': extraData,
         'userList': userList.map((e) => e.toMap()).toList(growable: false),
+        'timezoneId': timezoneId,
       };
 
   @override
   String toString() {
-    return 'NEMeetingInfo{meetingId: $meetingId, meetingNum: $meetingNum, shortMeetingNum: $shortMeetingNum, sipCid: $sipCid, type: $type, subject: $subject, password: $password, startTime: $startTime, scheduleStartTime: $scheduleStartTime, scheduleEndTime: $scheduleEndTime, duration: $duration, isHost: $isHost, isLocked: $isLocked, hostUserId: $hostUserId, userList: $userList}';
+    return 'NEMeetingInfo{meetingId: $meetingId, meetingNum: $meetingNum, shortMeetingNum: $shortMeetingNum, sipCid: $sipCid, type: $type, subject: $subject, password: $password, startTime: $startTime, scheduleStartTime: $scheduleStartTime, scheduleEndTime: $scheduleEndTime, duration: $duration, isHost: $isHost, isLocked: $isLocked, hostUserId: $hostUserId, userList: $userList, timezoneId: $timezoneId}';
   }
 }
 

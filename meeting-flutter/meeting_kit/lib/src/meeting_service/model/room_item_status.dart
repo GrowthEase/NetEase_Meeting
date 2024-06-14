@@ -5,7 +5,7 @@
 part of meeting_service;
 
 /// 会议状态
-enum NEMeetingState {
+enum NEMeetingItemStatus {
   /// 无效状态
   invalid,
 
@@ -25,21 +25,21 @@ enum NEMeetingState {
   recycled,
 }
 
-extension _MeetingStateExtension on NEMeetingState {
-  static NEMeetingState fromState(int state) {
+extension _MeetingStateExtension on NEMeetingItemStatus {
+  static NEMeetingItemStatus fromState(int state) {
     switch (state) {
       case 1:
-        return NEMeetingState.init;
+        return NEMeetingItemStatus.init;
       case 2:
-        return NEMeetingState.started;
+        return NEMeetingItemStatus.started;
       case 3:
-        return NEMeetingState.ended;
+        return NEMeetingItemStatus.ended;
       case 4:
-        return NEMeetingState.cancel;
+        return NEMeetingItemStatus.cancel;
       case 5:
-        return NEMeetingState.recycled;
+        return NEMeetingItemStatus.recycled;
       default:
-        return NEMeetingState.invalid;
+        return NEMeetingItemStatus.invalid;
     }
   }
 }

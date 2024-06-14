@@ -7,8 +7,11 @@ import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nemeeting/pre_meeting/schedule_meeting_repeat.dart';
 import 'package:nemeeting/pre_meeting/schedule_meeting_repeat_end.dart';
+import 'package:nemeeting/routes/timezone_page.dart';
+import 'package:nemeeting/widget/ne_widget.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 
 import '../base/util/text_util.dart';
@@ -17,25 +20,22 @@ import '../service/auth/auth_manager.dart';
 import '../uikit/const/consts.dart';
 import '../uikit/state/meeting_base_state.dart';
 import '../uikit/values/colors.dart';
-import '../uikit/values/dimem.dart';
 import '../uikit/values/fonts.dart';
 import '../utils/const_config.dart';
 import '../utils/integration_test.dart';
 
-import '../widget/switch_item.dart';
-
 abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
-    extends MeetingBaseState<T> with MeetingAppLocalizationsMixin {
-  bool meetingPwdSwitch = false;
-  bool enableWaitingRoom = false;
+    extends AppBaseState<T> {
+  final meetingPwdSwitch = ValueNotifier(false);
+  final enableWaitingRoom = ValueNotifier(false);
 
-  bool enableJoinBeforeHost = true;
+  final enableJoinBeforeHost = ValueNotifier(true);
 
-  bool attendeeAudioAutoOff = false;
+  final attendeeAudioAutoOff = ValueNotifier(false);
   bool attendeeAudioAutoOffNotAllowSelfOn = false;
 
-  bool liveSwitch = false;
-  bool liveLevelSwitch = false;
+  final liveSwitch = ValueNotifier(false);
+  final liveLevelSwitch = ValueNotifier(false);
 
   bool scheduling = false;
 
@@ -47,20 +47,31 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
 
   late DateTime startTime, endTime;
 
+  ValueNotifier<NETimezone?> timezoneNotifier = ValueNotifier(null);
+
   /// 周期性会议规则
   late NEMeetingRecurringRule recurringRule;
 
   late TextEditingController meetingSubjectController,
       meetingPasswordController;
-  final FocusNode focusNode = FocusNode();
+  final FocusNode subjectFocusNode = FocusNode();
+  final FocusNode passwordFocusNode = FocusNode();
 
   bool isLiveEnabled = false;
 
   bool attendeeRecordOn = !kNoCloudRecord;
 
-  bool showMeetingRecord = false;
+  final enableGuestJoin = ValueNotifier(false);
 
-  bool enableGuestJoin = false;
+  final enableInterpretation = ValueNotifier(false);
+  InterpreterListController? interpreterListController;
+
+  BoxDecoration _boxDecoration = BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.all(
+      Radius.circular(7.r),
+    ),
+  );
 
   List<NEContact> get contactList => scheduledMemberList
       .where((element) => element.contact != null)
@@ -89,18 +100,23 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
     scheduledMemberList
         .addAll(meetingItem.scheduledMemberList!.map((e) => e.copy()));
   }
+
   late final int _maxMembers;
+
   @override
   void initState() {
     super.initState();
-    focusNode.addListener(() {
+    subjectFocusNode.addListener(() {
+      setState(() {});
+    });
+    passwordFocusNode.addListener(() {
       setState(() {});
     });
     meetingPasswordController = TextEditingController();
     var settingsService = NEMeetingKit.instance.getSettingsService();
     Future.wait([
-      settingsService.isMeetingLiveEnabled(),
-      settingsService.isMeetingCloudRecordEnabled(),
+      settingsService.isMeetingLiveSupported(),
+      settingsService.isMeetingCloudRecordSupported(),
     ]).then((values) {
       setState(() {
         isLiveEnabled = values[0];
@@ -120,167 +136,206 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
 
   @override
   Widget buildBody() {
-    return GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () {
-          FocusScope.of(context).unfocus();
-        },
-        child: LayoutBuilder(builder:
-            (BuildContext context, BoxConstraints viewportConstraints) {
-          return SingleChildScrollView(
-              child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: viewportConstraints.maxHeight,
-                  ),
-                  child: IntrinsicHeight(
-                      child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      buildPartTitle(meetingAppLocalizations.meetingInfo),
-                      buildSubject(
-                          focusNode: focusNode,
-                          controller: meetingSubjectController),
-                      buildSpace(),
-                      buildStartTime(
-                          startTime: startTime,
-                          endTime: endTime,
-                          selectTimeCallback: (dateTime) {
-                            setState(() {
-                              startTime = dateTime;
-                              recurringRule.startTime = dateTime;
-                              if (startTime.millisecondsSinceEpoch >=
-                                  endTime.millisecondsSinceEpoch) {
-                                endTime = startTime.add(Duration(minutes: 30));
-                              } else if (endTime.millisecondsSinceEpoch -
-                                      startTime.millisecondsSinceEpoch >
-                                  oneDay) {
-                                endTime = startTime.add(Duration(minutes: 30));
-                              }
-                            });
-                          }),
-                      buildSplit(),
-                      buildEndTime(
-                          startTime: startTime,
-                          endTime: endTime,
-                          selectTimeCallback: (dateTime) {
-                            setState(() {
-                              endTime = dateTime;
-                            });
-                          }),
-                      buildSplit(),
-                      if (isEditAll() != false) buildRepeat(),
-                      if (isEditAll() != false) buildSplit(),
-                      if (recurringRule.type != NEMeetingRecurringRuleType.no &&
-                          isEditAll() != false)
-                        buildRepeatEndDate(),
+    return NEMeetingKitFeatureConfig(
+        // 使用最近的 sdk config，如果在会议中，可以查询到会议中使用的实例
+        config: context.sdkConfig,
+        builder: (context, child) => NEGestureDetector(
+            onTap: () {
+              FocusScope.of(context).unfocus();
+            },
+            child: SingleChildScrollView(
+                child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                /// 构建会议信息模块
+                buildSubject(
+                    focusNode: subjectFocusNode,
+                    controller: meetingSubjectController),
+                buildMeetingInfoPart(context),
 
-                      /// 单次周期性会议修改要有提示
-                      if (recurringRule.type != NEMeetingRecurringRuleType.no &&
-                          isEditAll() == false)
-                        buildEditRepeatMeetingTips(),
-                      if (SDKConfig.current.isScheduledMembersEnabled) ...[
-                        buildSpace(),
-                        buildScheduleAttendees(),
-                      ],
-                      buildPartTitle(meetingAppLocalizations.meetingSecurity),
-                      buildPwd(),
-                      if (meetingPwdSwitch) buildSplit(),
-                      if (meetingPwdSwitch) buildPwdInput(),
-                      if (context.isWaitingRoomEnabled) buildSpace(),
-                      if (context.isWaitingRoomEnabled)
-                        SwitchItem(
-                            key: MeetingValueKey.scheduleWaitingRoom,
-                            value: enableWaitingRoom,
-                            title: meetingAppLocalizations
-                                .meetingEnableWaitingRoom,
-                            summary:
-                                meetingAppLocalizations.meetingWaitingRoomHint,
-                            onChange: (value) {
-                              setState(() {
-                                enableWaitingRoom = value;
-                              });
-                            }),
-                      if (context.isGuestJoinEnabled) ...[
-                        buildSpace(),
-                        SwitchItem(
-                            key: MeetingValueKey.scheduleEnableGuestJoin,
-                            value: enableGuestJoin,
-                            title: meetingAppLocalizations.meetingGuestJoin,
-                            summary: enableGuestJoin
-                                ? meetingAppLocalizations
-                                    .meetingGuestJoinSecurityNotice
-                                : meetingAppLocalizations
-                                    .meetingGuestJoinEnableTip,
-                            summaryColor:
-                                enableGuestJoin ? AppColors.color_f29900 : null,
-                            onChange: (value) {
-                              setState(() {
-                                enableGuestJoin = value;
-                              });
-                            }),
-                      ],
-                      buildPartTitle(meetingAppLocalizations.settingMeeting),
-                      SwitchItem(
-                          key: MeetingValueKey.scheduleAttendeeAudio,
-                          value: attendeeAudioAutoOff,
-                          title:
-                              meetingAppLocalizations.meetingAttendeeAudioOff,
-                          onChange: (value) {
-                            setState(() {
-                              attendeeAudioAutoOff = value;
-                            });
-                          }),
-                      if (attendeeAudioAutoOff) ...[
-                        buildSplit(),
-                        buildRadio(
-                            value: false,
-                            padding: EdgeInsets.only(
-                                left: 20, right: 16, top: 17, bottom: 12),
-                            title: meetingAppLocalizations
-                                .meetingAttendeeAudioOffAllowOn,
-                            groupValue: attendeeAudioAutoOffNotAllowSelfOn,
-                            onChanged: (_) {
-                              attendeeAudioAutoOffNotAllowSelfOn = false;
-                              setState(() {});
-                            }),
-                        buildRadio(
-                            value: true,
-                            padding: EdgeInsets.only(
-                                left: 20, right: 16, bottom: 17),
-                            title: meetingAppLocalizations
-                                .meetingAttendeeAudioOffNotAllowOn,
-                            groupValue: attendeeAudioAutoOffNotAllowSelfOn,
-                            onChanged: (_) {
-                              attendeeAudioAutoOffNotAllowSelfOn = true;
-                              setState(() {});
-                            }),
-                      ],
-                      buildSpace(),
-                      SwitchItem(
-                        key: MeetingValueKey.scheduleEnableJoinBeforeHost,
-                        value: enableJoinBeforeHost,
-                        title: meetingAppLocalizations.meetingJoinBeforeHost,
-                        onChange: (value) {
-                          setState(() {
-                            enableJoinBeforeHost = value;
-                          });
-                        },
-                      ),
-                      buildSpace(),
-                      if (isLiveEnabled) buildLive(),
-                      if (isLiveEnabled && liveSwitch) buildSplit(),
-                      if (isLiveEnabled && liveSwitch) buildLiveLevel(),
-                      if (showMeetingRecord) buildSpace(),
-                      if (showMeetingRecord) buildRecord(),
-                      Expanded(
-                        flex: 1,
-                        child: Container(
-                          color: AppColors.globalBg,
-                        ),
-                      ),
-                    ],
-                  ))));
-        }));
+                /// 单次周期性会议修改要有提示
+                if (recurringRule.type != NEMeetingRecurringRuleType.no &&
+                    isEditAll() == false)
+                  buildEditRepeatMeetingTips(),
+                if (SDKConfig.current.isScheduledMembersEnabled) ...[
+                  buildScheduleAttendees(),
+                ],
+                buildSecurityPart(context),
+                buildSettingPart(context),
+                SizedBox(height: 30),
+              ],
+            ))));
+  }
+
+  Widget buildMeetingInfoPart(BuildContext context) {
+    return MeetingSettingGroup(
+      title: getAppLocalizations().meetingTime,
+      iconColor: AppColors.color_337eff,
+      iconData: IconFont.icon_time,
+      children: [
+        buildStartTime(
+            startTime: startTime,
+            endTime: endTime,
+            selectTimeCallback: (dateTime) {
+              setState(() {
+                startTime = dateTime;
+                recurringRule.startTime = dateTime;
+                if (startTime.millisecondsSinceEpoch >=
+                    endTime.millisecondsSinceEpoch) {
+                  endTime = startTime.add(Duration(minutes: 30));
+                } else if (endTime.millisecondsSinceEpoch -
+                        startTime.millisecondsSinceEpoch >
+                    oneDay) {
+                  endTime = startTime.add(Duration(minutes: 30));
+                }
+              });
+            }),
+        buildEndTime(
+            startTime: startTime,
+            endTime: endTime,
+            selectTimeCallback: (dateTime) {
+              setState(() {
+                endTime = dateTime;
+              });
+            }),
+        buildTimezone(),
+        if (isEditAll() != false) buildRepeat(),
+        if (recurringRule.type != NEMeetingRecurringRuleType.no &&
+            isEditAll() != false)
+          buildRepeatEndDate(),
+      ],
+    );
+  }
+
+  /// 构建安全模块
+  Widget buildSecurityPart(BuildContext context) {
+    return MeetingSettingGroup(
+      title: getAppLocalizations().meetingSecurity,
+      iconData: IconFont.icon_security,
+      iconColor: AppColors.color_1BB650,
+      children: [
+        buildPwd(),
+        ValueListenableBuilder(
+            valueListenable: meetingPwdSwitch,
+            builder: (context, value, child) =>
+                Visibility(child: buildPwdInput(), visible: value)),
+        if (context.isWaitingRoomEnabled)
+          MeetingSwitchItem(
+              key: MeetingValueKey.scheduleWaitingRoom,
+              title: NEMeetingUIKit.instance
+                  .getUIKitLocalizations()
+                  .waitingRoomEnable,
+              content: getAppLocalizations().meetingWaitingRoomHint,
+              valueNotifier: enableWaitingRoom,
+              onChanged: (value) {
+                enableWaitingRoom.value = value;
+              }),
+        if (context.isGuestJoinEnabled)
+          MeetingSwitchItem(
+              key: MeetingValueKey.scheduleEnableGuestJoin,
+              title: getAppLocalizations().meetingGuestJoin,
+              valueNotifier: enableGuestJoin,
+              contentBuilder: (enable) => Text(
+                    enable
+                        ? getAppLocalizations().meetingGuestJoinSecurityNotice
+                        : getAppLocalizations().meetingGuestJoinEnableTip,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: enable
+                          ? AppColors.color_f29900
+                          : AppColors.color_8D90A0,
+                    ),
+                  ),
+              onChanged: (value) => enableGuestJoin.value = value),
+      ],
+    );
+  }
+
+  /// 构建设置模块
+  Widget buildSettingPart(BuildContext context) {
+    return MeetingSettingGroup(
+      title: NEMeetingUIKit.instance.getUIKitLocalizations().settings,
+      iconColor: AppColors.color_8D90A0,
+      iconData: IconFont.icon_setting,
+      children: [
+        MeetingSwitchItem(
+          key: MeetingValueKey.scheduleAttendeeAudio,
+          title: getAppLocalizations().meetingAttendeeAudioOff,
+          valueNotifier: attendeeAudioAutoOff,
+          onChanged: (value) => attendeeAudioAutoOff.value = value,
+        ),
+        ValueListenableBuilder(
+            valueListenable: attendeeAudioAutoOff,
+            builder: (context, value, child) {
+              if (value) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    buildRadio(
+                        value: false,
+                        padding: EdgeInsets.only(left: 32, right: 16),
+                        title: getAppLocalizations()
+                            .meetingAttendeeAudioOffAllowOn,
+                        groupValue: attendeeAudioAutoOffNotAllowSelfOn,
+                        onChanged: (_) {
+                          attendeeAudioAutoOffNotAllowSelfOn = false;
+                          setState(() {});
+                        }),
+                    buildRadio(
+                        value: true,
+                        padding: EdgeInsets.only(
+                            left: 32, right: 16, top: 9, bottom: 9),
+                        title: getAppLocalizations()
+                            .meetingAttendeeAudioOffNotAllowOn,
+                        groupValue: attendeeAudioAutoOffNotAllowSelfOn,
+                        onChanged: (_) {
+                          attendeeAudioAutoOffNotAllowSelfOn = true;
+                          setState(() {});
+                        }),
+                  ],
+                );
+              }
+              return SizedBox.shrink();
+            }),
+        MeetingSwitchItem(
+          key: MeetingValueKey.scheduleEnableJoinBeforeHost,
+          title: getAppLocalizations().meetingJoinBeforeHost,
+          valueNotifier: enableJoinBeforeHost,
+          onChanged: (value) => enableJoinBeforeHost.value = value,
+        ),
+        if (isLiveEnabled)
+          MeetingSwitchItem(
+            key: MeetingValueKey.scheduleLiveSwitch,
+            title: getAppLocalizations().meetingLiveOn,
+            valueNotifier: liveSwitch,
+            onChanged: (value) => liveSwitch.value = value,
+          ),
+        ValueListenableBuilder(
+            valueListenable: liveSwitch,
+            builder: (context, value, child) {
+              if (value) {
+                return buildLiveLevel();
+              }
+              return SizedBox.shrink();
+            }),
+        if (context.interpretationConfig.enable)
+          MeetingSwitchItem(
+            key: MeetingValueKey.scheduleEnableInterpretation,
+            title:
+                NEMeetingUIKit.instance.getUIKitLocalizations().interpretation,
+            valueNotifier: enableInterpretation,
+            onChanged: (value) => enableInterpretation.value = value,
+          ),
+        ValueListenableBuilder(
+            valueListenable: enableInterpretation,
+            builder: (context, value, child) {
+              if (value) {
+                return buildInterpreters();
+              }
+              return SizedBox.shrink();
+            }),
+      ],
+    );
   }
 
   /// 是不是自己
@@ -291,11 +346,13 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
     required bool value,
     required bool groupValue,
     required Function(bool?)? onChanged,
+    double height = 40,
     EdgeInsetsGeometry? padding,
   }) {
-    return GestureDetector(
+    return NEGestureDetector(
       child: Container(
         padding: padding,
+        height: height,
         color: Colors.white,
         child: Row(
           children: [
@@ -308,20 +365,20 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
                 onChanged: onChanged,
                 fillColor: MaterialStateProperty.resolveWith((states) {
                   if (states.contains(MaterialState.selected)) {
-                    return AppColors.blue_337eff.withOpacity(
+                    return AppColors.color_337EFF.withOpacity(
                       states.contains(MaterialState.disabled) ? 0.5 : 1.0,
                     );
                   }
-                  return null;
+                  return AppColors.colorE6E7EB;
                 }),
               ),
             ),
-            SizedBox(width: 8),
+            SizedBox(width: 12),
             Expanded(
                 child: Text(title,
                     style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.black_333333,
+                        color: AppColors.color_53576A,
                         fontWeight: FontWeight.w400,
                         decoration: TextDecoration.none))),
           ],
@@ -331,76 +388,55 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
     );
   }
 
-  Widget buildPartTitle(String title) {
-    return Container(
-      color: AppColors.globalBg,
-      padding: EdgeInsets.only(left: 20, top: 16, bottom: 8),
-      child: Text(
-        title,
-        style: TextStyle(
-          color: AppColors.color_999999,
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-          decoration: TextDecoration.none,
-        ),
-      ),
-    );
-  }
-
-  Widget buildSpace({double height = 10}) {
-    return Container(
-      color: AppColors.globalBg,
-      height: height,
-    );
-  }
-
-  Widget buildSplit() {
-    return Container(
-      color: AppColors.white,
-      padding: EdgeInsets.only(left: 20),
-      child: Container(
-        height: 0.5,
-        color: AppColors.colorE8E9EB,
-      ),
-    );
-  }
-
+  /// 会议标题
   Widget buildSubject(
-      {FocusNode? focusNode, TextEditingController? controller}) {
-    return Container(
-      height: Dimen.primaryItemHeight,
-      color: Colors.white,
-      alignment: Alignment.center,
-      padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
-      child: TextField(
-        key: MeetingValueKey.scheduleSubject,
-        autofocus: false,
-        focusNode: focusNode,
-        controller: controller,
-        keyboardAppearance: Brightness.light,
-        textAlign: TextAlign.left,
-        inputFormatters: [
-          LengthLimitingTextInputFormatter(meetingSubjectLengthMax),
+      {required FocusNode focusNode, TextEditingController? controller}) {
+    return MeetingSettingGroup(children: [
+      Row(
+        children: [
+          SizedBox(width: 16),
+          Text(
+            getAppLocalizations().meetingName,
+            style: TextStyle(
+                color: AppColors.color_1E1E27,
+                fontSize: 14,
+                fontWeight: FontWeight.w500),
+          ),
+          SizedBox(width: 26.w),
+          Expanded(
+              child: TextField(
+            key: MeetingValueKey.scheduleSubject,
+            autofocus: false,
+            focusNode: focusNode,
+            controller: controller,
+            keyboardAppearance: Brightness.light,
+            textAlign: TextAlign.left,
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(meetingSubjectLengthMax),
+            ],
+            onChanged: (value) {
+              setState(() {});
+            },
+            decoration: InputDecoration(
+                hintText: '${getAppLocalizations().meetingEnterTopic}',
+                hintStyle:
+                    TextStyle(fontSize: 14, color: AppColors.color_53576A),
+                border: InputBorder.none,
+                suffixIcon: focusNode.hasFocus == true &&
+                        !TextUtil.isEmpty(controller?.text)
+                    ? ClearIconButton(
+                        key: MeetingValueKey.clearInputMeetingSubject,
+                        onPressed: () {
+                          controller?.clear();
+                          setState(() {});
+                        })
+                    : SizedBox.shrink()),
+            textAlignVertical: TextAlignVertical.center,
+            style: TextStyle(color: AppColors.color_53576A, fontSize: 14),
+          )),
         ],
-        onChanged: (value) {
-          setState(() {});
-        },
-        decoration: InputDecoration(
-            hintText: '${meetingAppLocalizations.meetingEnterTopic}',
-            hintStyle: TextStyle(fontSize: 16, color: AppColors.color_999999),
-            border: InputBorder.none,
-            suffixIcon: focusNode?.hasFocus == true &&
-                    !TextUtil.isEmpty(controller?.text)
-                ? ClearIconButton(
-                    key: MeetingValueKey.clearInputMeetingSubject,
-                    onPressed: () {
-                      controller?.clear();
-                      setState(() {});
-                    })
-                : null),
-        style: TextStyle(color: AppColors.color_222222, fontSize: 16),
-      ),
-    );
+      )
+    ]);
   }
 
   /// 构建会议参会者
@@ -408,56 +444,48 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
     final myUserUuid =
         NEMeetingKit.instance.getAccountService().getAccountInfo()?.userUuid ??
             '';
-    return GestureDetector(
+    return NEGestureDetector(
       onTap: () => DialogUtils.showContactsPopup(
         context: context,
         titleBuilder: (int size) =>
-            '${meetingAppLocalizations.meetingAttendees}（$size）',
+            '${getAppLocalizations().meetingAttendees}（$size）',
         scheduledMemberList: scheduledMemberList,
         myUserUuid: myUserUuid,
         ownerUuid: meetingItem.ownerUserUuid,
         addActionClick: () => DialogUtils.showContactsAddPopup(
           context: context,
           titleBuilder: (int size) =>
-              '${meetingAppLocalizations.meetingAddAttendee}${size > 0 ? '（$size）' : ''}',
+              '${getAppLocalizations().meetingAddAttendee}${size > 0 ? '（$size）' : ''}',
           scheduledMemberList: scheduledMemberList,
           myUserUuid: myUserUuid,
           itemClickCallback: handleClickCallback,
         ),
         loadMoreContacts: loadMoreContacts,
+        getMemberSubTitles: (NEScheduledMember member) {
+          if (enableInterpretation.value &&
+              interpreterListController?.hasInterpreter(member.userUuid) ==
+                  true) {
+            return [
+              NEMeetingUIKit.instance.getUIKitLocalizations().interpInterpreter,
+            ];
+          }
+          return [];
+        },
+        onWillRemoveAttendee: handleOnWillRemoveAttendee,
       ).then((value) {
-        setState(() {});
+        if (mounted) setState(() {});
       }),
       child: Container(
-        color: Colors.white,
-        padding:
-            EdgeInsets.symmetric(horizontal: Dimen.globalPadding, vertical: 16),
+        margin: EdgeInsets.only(left: 16, right: 16, top: 16),
+        decoration: _boxDecoration,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              children: [
-                Text(
-                  meetingAppLocalizations.meetingAttendees,
-                  style: TextStyle(
-                      color: AppColors.color_222222,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400),
-                ),
-                Expanded(child: SizedBox.shrink()),
-                Text(
-                    meetingAppLocalizations
-                        .meetingAttendeeCount('${scheduledMemberList.length}'),
-                    style: TextStyle(
-                        color: AppColors.color_999999,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400)),
-                SizedBox(width: 8),
-                Icon(IconFont.iconyx_allowx,
-                    size: 14, color: AppColors.greyCCCCCC)
-              ],
-            ),
-            SizedBox(height: 16),
+            MeetingArrowItem(
+                padding: EdgeInsets.only(left: 16, right: 16),
+                title: getAppLocalizations().meetingAttendees,
+                content: getAppLocalizations()
+                    .meetingAttendeeCount('${scheduledMemberList.length}')),
             buildAttendeesList(),
           ],
         ),
@@ -465,55 +493,81 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
     );
   }
 
+  /// 删除成员时，检查是否为译员，如果是译员，需要二次确认
+  Future<bool> handleOnWillRemoveAttendee(String userId) async {
+    if (enableInterpretation.value &&
+        interpreterListController?.hasInterpreter(userId) == true) {
+      final willRemove = await showConfirmDialog2(
+            message: (context) =>
+                context.meetingUiLocalizations.interpRemoveMemberInInterpreters,
+            cancelLabel: (context) =>
+                context.meetingUiLocalizations.globalCancel,
+            okLabel: (context) => context.meetingUiLocalizations.globalDelete,
+            okLabelColor: AppColors.colorFE3B30,
+          ) ==
+          true;
+      if (willRemove) {
+        interpreterListController?.removeInterpreterByUserId(userId);
+      }
+      return willRemove;
+    }
+    return true;
+  }
+
   /// 构建参会者列表widget
   Widget buildAttendeesList() {
-    return Row(
-      children: [
-        GestureDetector(
-          onTap: () => DialogUtils.showContactsAddPopup(
-            context: context,
-            titleBuilder: (int size) =>
-                '${meetingAppLocalizations.meetingAddAttendee}${size > 0 ? '（$size）' : ''}',
-            scheduledMemberList: scheduledMemberList,
-            myUserUuid: NEMeetingKit.instance
-                    .getAccountService()
-                    .getAccountInfo()
-                    ?.userUuid ??
-                '',
-            itemClickCallback: handleClickCallback,
-          ).then((value) {
-            setState(() {});
-          }),
-          child: Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.colorF2F2F5,
-              ),
-              child: Icon(Icons.add, size: 16, color: AppColors.color_999999)),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
+    return Container(
+      height: 48,
+      padding: EdgeInsets.only(left: 16, right: 16),
+      child: Row(
+        children: [
+          NEGestureDetector(
+            onTap: () => DialogUtils.showContactsAddPopup(
+              context: context,
+              titleBuilder: (int size) =>
+                  '${getAppLocalizations().meetingAddAttendee}${size > 0 ? '（$size）' : ''}',
+              scheduledMemberList: scheduledMemberList,
+              myUserUuid: NEMeetingKit.instance
+                      .getAccountService()
+                      .getAccountInfo()
+                      ?.userUuid ??
+                  '',
+              itemClickCallback: handleClickCallback,
+            ).then((value) {
+              if (mounted) setState(() {});
+            }),
             child: Container(
-          height: 32,
-          child: ListView.separated(
-            itemCount: contactList.length,
-            scrollDirection: Axis.horizontal,
-            controller: _scrollController,
-            itemBuilder: (context, index) {
-              return NEMeetingAvatar.medium(
-                name: contactList[index].name,
-                url: contactList[index].avatar,
-                showRoleIcon: isMySelf(contactList[index].userUuid),
-              );
-            },
-            separatorBuilder: (context, index) {
-              return const SizedBox(width: 10);
-            },
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.colorF2F2F5,
+                ),
+                child:
+                    Icon(Icons.add, size: 16, color: AppColors.color_999999)),
           ),
-        ))
-      ],
+          const SizedBox(width: 14),
+          Expanded(
+              child: Container(
+            height: 32,
+            child: ListView.separated(
+              itemCount: contactList.length,
+              scrollDirection: Axis.horizontal,
+              controller: _scrollController,
+              itemBuilder: (context, index) {
+                return NEMeetingAvatar.medium(
+                  name: contactList[index].name,
+                  url: contactList[index].avatar,
+                  showRoleIcon: isMySelf(contactList[index].userUuid),
+                );
+              },
+              separatorBuilder: (context, index) {
+                return const SizedBox(width: 14);
+              },
+            ),
+          ))
+        ],
+      ),
     );
   }
 
@@ -524,7 +578,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
     var now = DateTime.now();
     var initDate = DateTime(now.year, now.month, now.day,
         now.minute > 30 ? now.hour + 1 : now.hour, now.minute <= 30 ? 30 : 0);
-    return buildTime(meetingAppLocalizations.meetingStartTime, startTime,
+    return buildTime(getAppLocalizations().meetingStartTime, startTime,
         initDate, null, MeetingValueKey.scheduleStartTime, selectTimeCallback);
   }
 
@@ -533,7 +587,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
       required DateTime endTime,
       required Function(DateTime dateTime) selectTimeCallback}) {
     return buildTime(
-        meetingAppLocalizations.meetingEndTime,
+        getAppLocalizations().meetingEndTime,
         endTime,
         startTime.add(Duration(minutes: _minuteInterval)),
         startTime.add(Duration(days: 1)),
@@ -548,58 +602,70 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
       DateTime? maxTime,
       ValueKey key,
       Function(DateTime dateTime) selectTimeCallback) {
-    return GestureDetector(
-      key: key,
-      child: Container(
-        height: Dimen.primaryItemHeight,
-        color: Colors.white,
-        padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
-        child: Row(
-          children: <Widget>[
-            Text(itemTitle,
-                style: TextStyle(fontSize: 16, color: AppColors.black_222222)),
-            Spacer(),
-            Text(MeetingTimeUtil.timeFormatWithMinute(showTime),
-                style: TextStyle(fontSize: 14, color: AppColors.color_999999)),
-            SizedBox(
-              width: 8,
-            ),
-            Icon(IconFont.iconyx_allowx, size: 14, color: AppColors.greyCCCCCC)
-          ],
-        ),
-      ),
-      onTap: () {
-        _showCupertinoDatePicker(
-            minTime, maxTime, showTime, selectTimeCallback);
-      },
-    );
+    return ValueListenableBuilder(
+        valueListenable: timezoneNotifier,
+        builder: (context, timezone, child) {
+          final transferDate = convertTimezoneDateTime(showTime, timezone);
+          final transferMinTime = convertTimezoneDateTime(minTime, timezone);
+          DateTime? transferMaxTime;
+          if (maxTime != null) {
+            transferMaxTime = convertTimezoneDateTime(maxTime, timezone);
+          }
+          return MeetingArrowItem(
+            key: key,
+            title: itemTitle,
+            content: MeetingTimeUtil.timeFormatWithMinute(transferDate),
+            onTap: () {
+              _showCupertinoDatePicker(
+                  transferMinTime,
+                  transferMaxTime,
+                  transferDate,
+                  (dateTime) => selectTimeCallback
+                      .call(convertToCurrentDateTime(dateTime, timezone)));
+            },
+          );
+        });
+  }
+
+  /// 将本地时间转化为时区时间
+  DateTime convertTimezoneDateTime(DateTime dateTime, NETimezone? timezone) {
+    final transferTime = TimezonesUtil.convertTimezoneDateTime(
+        dateTime.millisecondsSinceEpoch, timezone);
+    return DateTime.fromMillisecondsSinceEpoch(transferTime);
+  }
+
+  /// 将时区时间转化为本地时间
+  DateTime convertToCurrentDateTime(DateTime dateTime, NETimezone? timezone) {
+    final transferTime = TimezonesUtil.convertToLocalDateTime(
+        dateTime.millisecondsSinceEpoch, timezone);
+    return DateTime.fromMillisecondsSinceEpoch(transferTime);
+  }
+
+  /// 构建时区选择
+  Widget buildTimezone() {
+    return ValueListenableBuilder(
+        valueListenable: timezoneNotifier,
+        builder: (context, NETimezone? timezone, child) {
+          return MeetingArrowItem(
+            title: getAppLocalizations().meetingTimezone,
+            content: '${timezone?.time ?? ''} ${timezone?.zone ?? ''}',
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+                return TimezonePage(timezoneNotifier: timezoneNotifier);
+              }));
+            },
+          );
+        });
   }
 
   Widget buildRepeat() {
-    return GestureDetector(
-      child: Container(
-        height: Dimen.primaryItemHeight,
-        color: Colors.white,
-        padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
-        child: Row(
-          children: <Widget>[
-            Text(meetingAppLocalizations.meetingRepeat,
-                style: TextStyle(fontSize: 16, color: AppColors.black_222222)),
-            Spacer(),
-            Text(getRepeatText(),
-                style: TextStyle(fontSize: 14, color: AppColors.color_999999)),
-            SizedBox(
-              width: 8,
-            ),
-            Icon(IconFont.iconyx_allowx, size: 14, color: AppColors.greyCCCCCC)
-          ],
-        ),
-      ),
+    return MeetingArrowItem(
+      title: getAppLocalizations().meetingRepeat,
+      content: getRepeatText(),
       onTap: () {
         Navigator.of(context).push(MaterialPageRoute(builder: (context) {
-          return MeetingAppLocalizationsScope(
-              child: ScheduleMeetingRepeatRoute(recurringRule,
-                  startTime.millisecondsSinceEpoch, isEditAll() != null));
+          return ScheduleMeetingRepeatRoute(recurringRule,
+              startTime.millisecondsSinceEpoch, isEditAll() != null);
         })).then((value) => setState(() {}));
       },
     );
@@ -608,84 +674,63 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
   String getRepeatText() {
     switch (recurringRule.type) {
       case NEMeetingRecurringRuleType.no:
-        return meetingAppLocalizations.meetingNoRepeat;
+        return getAppLocalizations().meetingNoRepeat;
       case NEMeetingRecurringRuleType.day:
-        return meetingAppLocalizations.meetingRepeatEveryday;
+        return getAppLocalizations().meetingRepeatEveryday;
       case NEMeetingRecurringRuleType.weekday:
-        return meetingAppLocalizations.meetingRepeatEveryWeekday;
+        return getAppLocalizations().meetingRepeatEveryWeekday;
       case NEMeetingRecurringRuleType.week:
-        return meetingAppLocalizations.meetingRepeatEveryWeek;
+        return getAppLocalizations().meetingRepeatEveryWeek;
       case NEMeetingRecurringRuleType.twoWeeks:
-        return meetingAppLocalizations.meetingRepeatEveryTwoWeek;
+        return getAppLocalizations().meetingRepeatEveryTwoWeek;
       case NEMeetingRecurringRuleType.dayOfMonth:
-        return meetingAppLocalizations.meetingRepeatEveryMonth;
+        return getAppLocalizations().meetingRepeatEveryMonth;
       case NEMeetingRecurringRuleType.undefine:
-        return meetingAppLocalizations.meetingNoRepeat;
+        return getAppLocalizations().meetingNoRepeat;
       case NEMeetingRecurringRuleType.custom:
-        return meetingAppLocalizations.meetingRepeatCustom;
+        return getAppLocalizations().meetingRepeatCustom;
     }
   }
 
   Widget buildEditRepeatMeetingTips() {
     return Container(
       padding: EdgeInsets.only(top: 16),
-      color: Colors.transparent,
-      alignment: Alignment.center,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(
-              flex: 1,
-              child: Container(
-                margin: EdgeInsets.only(left: 20, right: 8),
-                height: 1,
-                color: AppColors.color_f29900,
-              )),
-          Expanded(
-            flex: 4,
-            child: Text(
-              meetingAppLocalizations.meetingRepeatEditTips,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: AppColors.color_f29900),
-              softWrap: true,
+          Flexible(
+            child: Container(
+              margin: EdgeInsets.only(left: 24, right: 8),
+              height: 1,
+              color: AppColors.color_f29900,
             ),
           ),
-          Expanded(
-              flex: 1,
-              child: Container(
-                margin: EdgeInsets.only(left: 8, right: 20),
-                height: 1,
-                color: AppColors.color_f29900,
-              )),
+          Align(
+            alignment: Alignment.center,
+            child: Text(
+              getAppLocalizations().meetingRepeatEditTips,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: AppColors.color_f29900),
+            ),
+          ),
+          Flexible(
+            child: Container(
+              margin: EdgeInsets.only(left: 8, right: 24),
+              height: 1,
+              color: AppColors.color_f29900,
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget buildRepeatEndDate() {
-    return GestureDetector(
-      child: Container(
-        height: Dimen.primaryItemHeight,
-        color: Colors.white,
-        padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
-        child: Row(
-          children: <Widget>[
-            Text(meetingAppLocalizations.meetingRepeatEndAt,
-                style: TextStyle(fontSize: 16, color: AppColors.black_222222)),
-            Spacer(),
-            Text(getRepeatEndText(),
-                style: TextStyle(fontSize: 14, color: AppColors.color_999999)),
-            SizedBox(
-              width: 8,
-            ),
-            Icon(IconFont.iconyx_allowx, size: 14, color: AppColors.greyCCCCCC)
-          ],
-        ),
-      ),
+    return MeetingArrowItem(
+      title: getAppLocalizations().meetingRepeatEndAt,
+      content: getRepeatEndText(),
       onTap: () {
         Navigator.of(context).push(MaterialPageRoute(builder: (context) {
-          return MeetingAppLocalizationsScope(
-              child: ScheduleMeetingRepeatEndRoute(recurringRule));
+          return ScheduleMeetingRepeatEndRoute(recurringRule);
         })).then((value) => setState(() {}));
       },
     );
@@ -696,7 +741,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
       case NEMeetingRecurringEndRuleType.date:
         return (recurringRule.endRule?.date ?? '').replaceAll('/', '-');
       case NEMeetingRecurringEndRuleType.times:
-        return meetingAppLocalizations
+        return getAppLocalizations()
             .meetingRepeatLimitTimes(recurringRule.endRule?.times ?? 0);
       case NEMeetingRecurringEndRuleType.undefine:
         return '';
@@ -761,7 +806,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
     return Container(
       height: 44,
       decoration: ShapeDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           shape: RoundedRectangleBorder(
               side: BorderSide(
                 color: AppColors.colorF2F2F5,
@@ -776,16 +821,16 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text(meetingAppLocalizations.globalCancel,
+              child: Text(getAppLocalizations().globalCancel,
                   style:
                       TextStyle(fontSize: 14, color: AppColors.color_1f2329))),
-          Text(meetingAppLocalizations.meetingChooseDate,
+          Text(getAppLocalizations().meetingChooseDate,
               style: TextStyle(fontSize: 17, color: AppColors.color_1f2329)),
           TextButton(
               onPressed: () {
                 Navigator.pop(context, 'done');
               },
-              child: Text(meetingAppLocalizations.globalComplete,
+              child: Text(getAppLocalizations().globalComplete,
                   style: TextStyle(
                       fontSize: 14,
                       color: AppColors.blue_337eff,
@@ -801,161 +846,183 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
   }
 
   Widget buildPwd() {
-    return Container(
-      height: 56,
-      color: AppColors.white,
-      padding: EdgeInsets.only(left: 20, right: 16),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            flex: 1,
-            child: Text(
-              meetingAppLocalizations.meetingPassword,
-              style: TextStyle(color: AppColors.black_222222, fontSize: 16),
-            ),
-          ),
-          MeetingValueKey.addTextWidgetTest(
-              valueKey: MeetingValueKey.schedulePwdSwitch,
-              value: meetingPwdSwitch),
-          CupertinoSwitch(
-              key: MeetingValueKey.schedulePwdSwitch,
-              value: meetingPwdSwitch,
-              onChanged: (bool value) {
-                setState(() {
-                  meetingPwdSwitch = value;
-                  if (meetingPwdSwitch &&
-                      TextUtil.isEmpty(meetingPasswordController.text)) {
-                    _generatePassword();
-                  }
-                });
-              },
-              activeColor: AppColors.blue_337eff)
-        ],
-      ),
-    );
+    return MeetingSwitchItem(
+        key: MeetingValueKey.schedulePwdSwitch,
+        title: getAppLocalizations().meetingPassword,
+        valueNotifier: meetingPwdSwitch,
+        onChanged: (bool value) {
+          setState(() {
+            meetingPwdSwitch.value = value;
+            if (meetingPwdSwitch.value &&
+                TextUtil.isEmpty(meetingPasswordController.text)) {
+              _generatePassword();
+            }
+          });
+        });
   }
 
   Widget buildPwdInput() {
     return Container(
-      height: Dimen.primaryItemHeight,
-      color: Colors.white,
-      padding: EdgeInsets.symmetric(horizontal: Dimen.globalPadding),
-      alignment: Alignment.center,
-      child: TextField(
-        key: MeetingValueKey.schedulePwdInput,
-        autofocus: false,
-        keyboardAppearance: Brightness.light,
-        controller: meetingPasswordController,
-        keyboardType: TextInputType.number,
-        inputFormatters: [
-          LengthLimitingTextInputFormatter(meetingPasswordLengthMax),
-          FilteringTextInputFormatter.allow(RegExp(r'\d+')),
-        ],
-        onChanged: (value) {
-          setState(() {});
-        },
-        decoration: InputDecoration(
-            hintText: '${meetingAppLocalizations.meetingEnterSixDigitPassword}',
-            hintStyle: TextStyle(fontSize: 14, color: AppColors.color_999999),
-            border: InputBorder.none,
-            suffixIcon: TextUtil.isEmpty(meetingPasswordController.text)
-                ? null
-                : ClearIconButton(
-                    key: MeetingValueKey.clearInputMeetingPassword,
-                    onPressed: () {
-                      meetingPasswordController.clear();
-                    })),
-        style: TextStyle(color: AppColors.color_222222, fontSize: 16),
+      height: 36,
+      margin: EdgeInsets.only(left: 16, right: 16, bottom: 12),
+      decoration: BoxDecoration(
+        border: Border.all(
+            color: passwordFocusNode.hasFocus
+                ? AppColors.blue_337eff
+                : AppColors.colorE6E7EB,
+            width: 1),
+        borderRadius: BorderRadius.all(Radius.circular(4)),
       ),
-    );
-  }
-
-  Widget buildLive() {
-    return Container(
-      height: 56,
-      color: AppColors.white,
-      padding: EdgeInsets.only(left: 20, right: 16),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            flex: 1,
-            child: Text(
-              meetingAppLocalizations.meetingLiveOn,
-              style: TextStyle(color: AppColors.black_222222, fontSize: 16),
+      child: Row(children: [
+        Expanded(
+          child: TextField(
+            key: MeetingValueKey.schedulePwdInput,
+            autofocus: false,
+            keyboardAppearance: Brightness.light,
+            controller: meetingPasswordController,
+            keyboardType: TextInputType.number,
+            focusNode: passwordFocusNode,
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(meetingPasswordLengthMax),
+              FilteringTextInputFormatter.allow(RegExp(r'\d+')),
+            ],
+            onChanged: (value) {
+              setState(() {});
+            },
+            decoration: InputDecoration(
+                contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                hintText:
+                    '${getAppLocalizations().meetingEnterSixDigitPassword}',
+                hintStyle:
+                    TextStyle(fontSize: 14, color: AppColors.color_999999),
+                // 文字垂直居中
+                isCollapsed: true,
+                border: OutlineInputBorder(
+                  borderSide: BorderSide.none,
+                )),
+            style: TextStyle(
+              color: AppColors.color_1E1F27,
+              fontSize: 14,
+              decoration: TextDecoration.none,
             ),
           ),
-          MeetingValueKey.addTextWidgetTest(
-              valueKey: MeetingValueKey.scheduleLiveSwitch, value: liveSwitch),
-          CupertinoSwitch(
-              key: MeetingValueKey.scheduleLiveSwitch,
-              value: liveSwitch,
-              onChanged: (bool value) {
-                setState(() {
-                  liveSwitch = value;
-                });
-              },
-              activeColor: AppColors.blue_337eff)
-        ],
-      ),
+        ),
+        !passwordFocusNode.hasFocus ||
+                TextUtil.isEmpty(meetingPasswordController.text)
+            ? SizedBox.shrink()
+            : ClearIconButton(
+                key: MeetingValueKey.clearInputMeetingPassword,
+                padding: EdgeInsets.only(right: 16, top: 6, bottom: 6, left: 6),
+                onPressed: () {
+                  meetingPasswordController.clear();
+                })
+      ]),
     );
   }
 
   Widget buildLiveLevel() {
-    return Container(
-      height: 56,
-      color: AppColors.white,
-      padding: EdgeInsets.only(left: 20, right: 16),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            flex: 1,
-            child: Text(
-              meetingAppLocalizations.meetingLiveLevelTip,
-              style: TextStyle(color: AppColors.black_222222, fontSize: 16),
-            ),
-          ),
-          // MeetingValueKey.addTextWidgetTest(valueKey: MeetingValueKey.scheduleLiveSwitch, value: liveSwitch),
-          CupertinoSwitch(
-              key: MeetingValueKey.scheduleLiveLevel,
-              value: liveLevelSwitch,
-              onChanged: (bool value) {
-                setState(() {
-                  liveLevelSwitch = value;
-                });
-              },
-              activeColor: AppColors.blue_337eff)
-        ],
-      ),
-    );
+    return MeetingSwitchItem(
+        key: MeetingValueKey.scheduleLiveLevel,
+        title: getAppLocalizations().meetingLiveLevelTip,
+        valueNotifier: liveLevelSwitch,
+        padding: EdgeInsets.only(
+          left: 32,
+          right: 10,
+        ),
+        minHeight: 40,
+        titleTextStyle: TextStyle(
+            fontSize: 14,
+            color: AppColors.color_53576A,
+            fontWeight: FontWeight.w400),
+        onChanged: (bool value) {
+          liveLevelSwitch.value = value;
+        });
   }
 
-  Widget buildRecord() {
-    return Container(
-      height: 56,
-      color: AppColors.white,
-      padding: EdgeInsets.only(left: 20, right: 16),
-      child: Row(
-        children: <Widget>[
-          Expanded(
-            flex: 1,
-            child: Text(
-              meetingAppLocalizations.meetingRecordOn,
-              style: TextStyle(color: AppColors.black_222222, fontSize: 16),
-            ),
-          ),
-          // MeetingValueKey.addTextWidgetTest(valueKey: MeetingValueKey.scheduleLiveSwitch, value: liveSwitch),
-          CupertinoSwitch(
-              // key: MeetingValueKey.scheduleLiveSwitch,
-              value: attendeeRecordOn,
-              onChanged: (bool value) {
-                setState(() {
-                  attendeeRecordOn = value;
-                });
-              },
-              activeColor: AppColors.blue_337eff)
-        ],
-      ),
-    );
+  Widget buildInterpreters() {
+    interpreterListController ??= InterpreterListController();
+    return ListenableBuilder(
+        listenable: interpreterListController!,
+        builder: (context, _) {
+          return MeetingArrowItem(
+            minHeight: 40,
+            padding: EdgeInsets.only(left: 32, right: 16),
+            title: NEMeetingUIKit.instance
+                .getUIKitLocalizations()
+                .interpInterpreter,
+            titleTextStyle: TextStyle(
+                fontSize: 14,
+                color: AppColors.color_53576A,
+                fontWeight: FontWeight.w400),
+            content: getAppLocalizations()
+                .meetingAttendeeCount('${interpreterListController!.size}'),
+            onTap: () {
+              if (interpreterListController!.capacity == 0) {
+                interpreterListController!.addInterpreter(InterpreterInfo());
+              }
+              PreMeetingInterpreterListPage.show(
+                context,
+                interpreterListController!,
+                onWillRemoveInterpreter: handleOnWillRemoveInterpreter,
+              );
+            },
+          );
+        });
+  }
+
+  /// 删除译员时，如果参会者列表存在该用户，弹窗询问是否一并移除
+  Future<bool> handleOnWillRemoveInterpreter(
+      InterpreterInfo interpreter) async {
+    const _kRemoveOnce = 0, _kRemoveTwice = 1;
+    final userId = interpreter.userId;
+    int? type = _kRemoveOnce;
+    if (userId != null &&
+        scheduledMemberList.any((element) => element.userUuid == userId)) {
+      type = await showCupertinoModalPopup<int>(
+        context: context,
+        routeSettings: RouteSettings(name: 'RemoveInterpreterAsMember'),
+        builder: (context) {
+          return NEMeetingUIKitLocalizationsScope(
+              builder: (context, localizations, _) {
+            return CupertinoActionSheet(
+              actions: [
+                CupertinoActionSheetAction(
+                  child: Text(
+                    localizations.interpRemoveInterpreterOnly,
+                    style: TextStyle(color: AppColors.color_337eff),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context, _kRemoveOnce);
+                  },
+                ),
+                CupertinoActionSheetAction(
+                  child: Text(localizations.interpRemoveInterpreterInMembers,
+                      style: TextStyle(color: AppColors.colorFE3B30)),
+                  onPressed: () {
+                    Navigator.pop(context, _kRemoveTwice);
+                  },
+                ),
+              ],
+              cancelButton: CupertinoActionSheetAction(
+                isDefaultAction: true,
+                child: Text(
+                  localizations.globalCancel,
+                  style: TextStyle(color: AppColors.color_337eff),
+                ),
+                onPressed: () => Navigator.pop(context),
+              ),
+            );
+          });
+        },
+      );
+    }
+    if (type == _kRemoveTwice && mounted) {
+      setState(() {
+        scheduledMemberList
+            .removeWhere((element) => element.userUuid == userId);
+      });
+    }
+    return type != null;
   }
 
   @override
@@ -964,18 +1031,18 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
         context: context,
         builder: (context) {
           return CupertinoAlertDialog(
-            title: Text(meetingAppLocalizations.meetingLeaveEditTips),
-            content: Text(meetingAppLocalizations.meetingLeaveEditTips2),
+            title: Text(getAppLocalizations().meetingLeaveEditTips),
+            content: Text(getAppLocalizations().meetingLeaveEditTips2),
             actions: [
               CupertinoDialogAction(
-                child: Text(meetingAppLocalizations.meetingEditContinue,
+                child: Text(getAppLocalizations().meetingEditContinue,
                     style: TextStyle(color: AppColors.black_333333)),
                 onPressed: () {
                   Navigator.of(context).pop(false);
                 },
               ),
               CupertinoDialogAction(
-                child: Text(meetingAppLocalizations.meetingEditLeave,
+                child: Text(getAppLocalizations().meetingEditLeave,
                     style: TextStyle(color: AppColors.blue_337eff)),
                 onPressed: () {
                   Navigator.of(context).pop(true);
@@ -1011,15 +1078,15 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
 
     /// 加载更多
     final result = await NEMeetingKit.instance
-        .getAccountService()
+        .getContactsService()
         .getContactsInfo(userUuids);
 
     /// 移除找不到通讯录信息的用户
     scheduledMemberList.removeWhere(
-        (uuid) => result.data?.notFindUserUuids.contains(uuid) == true);
+        (uuid) => result.data?.notFoundList.contains(uuid) == true);
 
     /// 更新通讯录信息
-    result.data?.meetingAccountListResp.forEach((contact) {
+    result.data?.foundList.forEach((contact) {
       final scheduleMember = scheduledMemberList
           .where((element) => element.userUuid == contact.userUuid)
           .firstOrNull;
@@ -1031,7 +1098,9 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
   void dispose() {
     meetingPasswordController.dispose();
     meetingSubjectController.dispose();
-    focusNode.dispose();
+    interpreterListController?.dispose();
+    subjectFocusNode.dispose();
+    passwordFocusNode.dispose();
     super.dispose();
   }
 

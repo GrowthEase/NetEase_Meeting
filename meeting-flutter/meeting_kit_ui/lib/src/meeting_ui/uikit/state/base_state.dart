@@ -34,7 +34,13 @@ abstract class BaseState<T extends StatefulWidget> extends State<T>
     onAppLifecycleState(state);
   }
 
+  @protected
   void onAppLifecycleState(AppLifecycleState state) {}
+
+  @protected
+  void cancelObserveWidgetsBinding() {
+    WidgetsBinding.instance.removeObserver(this);
+  }
 }
 
 mixin FirstBuildScope<T extends StatefulWidget> on State<T> {
@@ -48,5 +54,6 @@ mixin FirstBuildScope<T extends StatefulWidget> on State<T> {
   }
 
   bool _firstBuild = true;
+  @protected
   void onFirstBuild() {}
 }

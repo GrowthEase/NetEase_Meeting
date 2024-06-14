@@ -18,16 +18,21 @@ class _MeetingInvitePageState extends State<MeetingInvitePage> {
       sipHost = TextEditingController();
 
   final invitations = <NERoomInvitation>[];
+  final sipNumberFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
     updateInviteList();
+    sipNumberFocusNode.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
   void dispose() {
     super.dispose();
+    sipNumberFocusNode.dispose();
   }
 
   void updateInviteList() {
@@ -116,10 +121,7 @@ class _MeetingInvitePageState extends State<MeetingInvitePage> {
               : MeetingUIValueKeys.sipHost,
           autofocus: true,
           style: TextStyle(color: _UIColors.color_333333, fontSize: 17),
-          // inputFormatters: [
-          //   FilteringTextInputFormatter.allow(RegExp(r'\d[-\d]*')),
-          // ],
-          // keyboardType: TextInputType.number,
+          focusNode: sipNumberFocusNode,
           cursorColor: _UIColors.blue_337eff,
           controller: controller,
           textAlign: TextAlign.left,
@@ -138,7 +140,8 @@ class _MeetingInvitePageState extends State<MeetingInvitePage> {
                     width: 1,
                     style: BorderStyle.solid),
               ),
-              suffixIcon: TextUtils.isEmpty(controller.text)
+              suffixIcon: !sipNumberFocusNode.hasFocus ||
+                      TextUtils.isEmpty(controller.text)
                   ? null
                   : ClearIconButton(
                       onPressed: () {

@@ -38,4 +38,14 @@ abstract class Preferences {
     await prepare();
     return instance!.getBool(key);
   }
+
+  Future<bool?> setStringList(String key, List<String> value) async {
+    await prepare();
+    return instance!.setStringList(key, value);
+  }
+
+  Future<List<String>?> getStringList(String key) async {
+    await prepare();
+    return instance!.getStringList(key);
+  }
 }

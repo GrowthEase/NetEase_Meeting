@@ -23,8 +23,7 @@ class ScheduleMeetingRoute extends StatefulWidget {
 }
 
 class _ScheduleMeetingRouteState
-    extends ScheduleMeetingBaseState<ScheduleMeetingRoute>
-    with MeetingAppLocalizationsMixin {
+    extends ScheduleMeetingBaseState<ScheduleMeetingRoute> {
   _ScheduleMeetingRouteState() : super();
 
   @override
@@ -35,6 +34,8 @@ class _ScheduleMeetingRouteState
     recurringRule = NEMeetingRecurringRule(
         type: NEMeetingRecurringRuleType.no, startTime: startTime);
     addMyselfToDefaultAttendee();
+    TimezonesUtil.getTimezoneById(null)
+        .then((timezone) => timezoneNotifier.value = timezone);
   }
 
   // 是否被初始化
@@ -46,7 +47,7 @@ class _ScheduleMeetingRouteState
     if (!isInit) {
       isInit = true;
       meetingSubjectController.text =
-          meetingAppLocalizations.meetingSubject(MeetingUtil.getNickName());
+          getAppLocalizations().meetingSubject(MeetingUtil.getNickName());
     }
   }
 
@@ -61,7 +62,7 @@ class _ScheduleMeetingRouteState
 
   @override
   String getTitle() {
-    return meetingAppLocalizations.meetingSchedule;
+    return getAppLocalizations().meetingSchedule;
   }
 
   @override
@@ -69,7 +70,7 @@ class _ScheduleMeetingRouteState
     return <Widget>[
       TextButton(
         child: Text(
-          meetingAppLocalizations.globalComplete,
+          getAppLocalizations().globalComplete,
           style: TextStyle(
             color: AppColors.color_337eff,
             fontSize: 16.0,
@@ -84,25 +85,25 @@ class _ScheduleMeetingRouteState
     if (scheduling) return;
     var subject = meetingSubjectController.text.trim();
     // if (TextUtil.isEmpty(subject)) {
-    //   ToastUtils.showToast(context, meetingAppLocalizations.pleaseInputMeetingSubject);
+    //   ToastUtils.showToast(context, getAppLocalizations().pleaseInputMeetingSubject);
     //   return;
     // }
     var password = meetingPasswordController.text.trim();
-    if (meetingPwdSwitch == true) {
+    if (meetingPwdSwitch.value) {
       if (TextUtil.isEmpty(password)) {
         ToastUtils.showToast(
-            context, meetingAppLocalizations.meetingEnterPassword);
+            context, getAppLocalizations().meetingEnterPassword);
         return;
       } else if (password.length != 6) {
         ToastUtils.showToast(
-            context, meetingAppLocalizations.meetingEnterSixDigitPassword);
+            context, getAppLocalizations().meetingEnterSixDigitPassword);
         return;
       }
     }
     if (startTime.millisecondsSinceEpoch <
         DateTime.now().millisecondsSinceEpoch) {
       ToastUtils.showToast(
-          context, meetingAppLocalizations.meetingScheduleTimeIllegal);
+          context, getAppLocalizations().meetingScheduleTimeIllegal);
       return;
     }
     scheduling = true;
@@ -112,14 +113,15 @@ class _ScheduleMeetingRouteState
     meetingItem.scheduledMemberList = scheduledMemberList;
     meetingItem.startTime = startTime.millisecondsSinceEpoch;
     meetingItem.endTime = endTime.millisecondsSinceEpoch;
-    meetingItem.password = meetingPwdSwitch ? password : null;
-    var setting = NEMeetingItemSettings();
-    if (attendeeAudioAutoOff) {
+    meetingItem.password = meetingPwdSwitch.value ? password : null;
+    meetingItem.timezoneId = timezoneNotifier.value?.id;
+    var setting = NEMeetingItemSetting();
+    if (attendeeAudioAutoOff.value) {
       setting.controls = [
         if (attendeeAudioAutoOffNotAllowSelfOn)
-          NERoomAudioControl(NERoomAttendeeOffType.offNotAllowSelfOn)
+          NEMeetingAudioControl(NEMeetingAttendeeOffType.offNotAllowSelfOn)
         else
-          NERoomAudioControl(NERoomAttendeeOffType.offAllowSelfOn)
+          NEMeetingAudioControl(NEMeetingAttendeeOffType.offAllowSelfOn)
       ];
     } else {
       setting.controls = null;
@@ -127,15 +129,26 @@ class _ScheduleMeetingRouteState
     setting.cloudRecordOn = attendeeRecordOn;
     meetingItem.settings = setting;
     var live = NEMeetingItemLive();
-    live.enable = liveSwitch;
-    live.liveWebAccessControlLevel = liveSwitch && liveLevelSwitch
-        ? NELiveAuthLevel.appToken.index
-        : NELiveAuthLevel.token.index;
+    live.enable = liveSwitch.value;
+    live.liveWebAccessControlLevel = liveSwitch.value && liveLevelSwitch.value
+        ? NEMeetingLiveAuthLevel.appToken
+        : NEMeetingLiveAuthLevel.token;
     meetingItem.live = live;
     meetingItem.noSip = kNoSip;
-    meetingItem.setWaitingRoomEnabled(enableWaitingRoom);
-    meetingItem.setEnableJoinBeforeHost(enableJoinBeforeHost);
-    meetingItem.setEnableGuestJoin(enableGuestJoin);
+    meetingItem.setWaitingRoomEnabled(enableWaitingRoom.value);
+    meetingItem.setEnableJoinBeforeHost(enableJoinBeforeHost.value);
+    meetingItem.setEnableGuestJoin(enableGuestJoin.value);
+
+    /// 同声传译
+    meetingItem.interpretationSettings = null;
+    if (enableInterpretation.value) {
+      final interpreters = interpreterListController?.getInterpreterList();
+      if (interpreters != null) {
+        meetingItem.interpretationSettings =
+            NEMeetingInterpretationSettings(interpreters);
+      }
+    }
+
     NEMeetingKit.instance
         .getPreMeetingService()
         .scheduleMeeting(meetingItem)
@@ -147,12 +160,12 @@ class _ScheduleMeetingRouteState
             context,
             !MeetingValueKey.inProduction
                 ? '${result.data!.meetingId}&${result.data!.meetingNum}'
-                : meetingAppLocalizations.meetingScheduleSuccess,
+                : getAppLocalizations().meetingScheduleSuccess,
             key: MeetingValueKey.scheduleMeetingSuccessToast);
         Navigator.pop(context, result.data);
       } else if (result.code == HttpCode.meetingDurationTooLong) {
         ToastUtils.showToast(
-            context, meetingAppLocalizations.meetingDurationTooLong);
+            context, getAppLocalizations().meetingDurationTooLong);
       } else {
         var errorMsg = result.msg;
         errorMsg = HttpCode.getMsg(errorMsg);

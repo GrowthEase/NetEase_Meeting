@@ -47,7 +47,7 @@ class InMeetingService with _AloggerMixin {
 
   InMeetingService._();
 
-  final StreamController<NEHistoryMeetingItem> _historyMeetingItemStream =
+  final StreamController<NELocalHistoryMeeting> _localHistoryMeetingStream =
       StreamController.broadcast();
 
   AudioManager? _audioDelegate;
@@ -62,18 +62,18 @@ class InMeetingService with _AloggerMixin {
   MeetingMenuItemManager? _menuItemDelegate;
   MeetingMenuItemManager? get menuItemDelegate => _menuItemDelegate;
 
-  void _updateHistoryMeetingItem(NEHistoryMeetingItem? item) {
-    if (item != null) {
-      _historyMeetingItemStream.add(item);
+  void _updateLocalHistoryMeeting(NELocalHistoryMeeting? localHistoryMeeting) {
+    if (localHistoryMeeting != null) {
+      _localHistoryMeetingStream.add(localHistoryMeeting);
     }
   }
 
-  Stream<NEHistoryMeetingItem> get historyMeetingItemStream =>
-      _historyMeetingItemStream.stream;
+  Stream<NELocalHistoryMeeting> get localHistoryMeetingStream =>
+      _localHistoryMeetingStream.stream;
 
   void rememberMeetingUIState(MeetingUIState state) {
-    assert(_currentMeetingUIState == null || state == _currentMeetingUIState,
-        'Current meeting ui state is not null');
+    // assert(_currentMeetingUIState == null || state == _currentMeetingUIState,
+    //     'Current meeting ui state is not null');
     _currentMeetingUIState = state;
   }
 
@@ -114,6 +114,7 @@ class InMeetingService with _AloggerMixin {
           .map((e) => NEInMeetingUserInfo(
               e.uuid, e.name, e.tag, e.role.name, context.isMySelf(e.uuid)))
           .toList(growable: false),
+      timezoneId: meetingInfo.timezoneId,
     );
   }
 

@@ -2,58 +2,33 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../utils/integration_test.dart';
 import '../values/colors.dart';
 import '../values/fonts.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 
-abstract class MeetingBaseState<T extends StatefulWidget>
-    extends LifecycleBaseState<T> {
+abstract class AppBaseState<T extends StatefulWidget>
+    extends PlatformAwareLifecycleBaseState<T> {
   @protected
   Color get backgroundColor => AppColors.globalBg;
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildWithPlatform(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        title: Text(
-          getTitle(),
-          style: TextStyle(
-              color: AppColors.color_222222,
-              fontSize: 17,
-              fontWeight: FontWeight.w500),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0.0,
-        leading: isShowBackBtn()
-            ? IconButton(
-                key: MeetingValueKey.back,
-                icon: const Icon(
-                  IconFont.iconyx_returnx,
-                  size: 18,
-                  color: AppColors.black_333333,
-                ),
-                onPressed: () {
-                  shouldPop().then((value) {
-                    if (value != false) Navigator.maybePop(context);
-                  });
-                },
-              )
-            : null,
-        actions: buildActions(),
-        // systemOverlayStyle: SystemUiOverlayStyle.light,
-      ),
-      body: SafeArea(
-        top: false,
-        left: false,
-        right: false,
-        child: NEMeetingKitFeatureConfig(
-          child: buildBody(),
-        ),
+      appBar: buildCustomAppBar() != null ? null : buildAppBar(),
+      body: Column(
+        children: [
+          if (buildCustomAppBar() != null) buildCustomAppBar()!,
+          Expanded(
+            child: NEMeetingKitFeatureConfig(
+              child: buildBody(),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -66,11 +41,52 @@ abstract class MeetingBaseState<T extends StatefulWidget>
     return true;
   }
 
+  Color getAppBarBackgroundColor() {
+    return Colors.white;
+  }
+
   Future<bool?> shouldPop() {
     return Future.value(true);
   }
 
   List<Widget> buildActions() {
     return [];
+  }
+
+  Widget? buildCustomAppBar() => null;
+
+  /// 构建appBar
+  ///
+  AppBar buildAppBar() {
+    return AppBar(
+      title: Text(
+        getTitle(),
+        style: TextStyle(
+            color: AppColors.color_1E1E27,
+            fontSize: 16,
+            fontWeight: FontWeight.w500),
+      ),
+      centerTitle: true,
+      backgroundColor: getAppBarBackgroundColor(),
+      elevation: 0.0,
+      leading: isShowBackBtn()
+          ? IconButton(
+              key: MeetingValueKey.back,
+              icon: const Icon(
+                IconFont.iconyx_returnx,
+                size: 14,
+                color: AppColors.color_1E1E27,
+              ),
+              padding: EdgeInsets.all(5),
+              onPressed: () {
+                shouldPop().then((value) {
+                  if (value != false) Navigator.maybePop(context);
+                });
+              },
+            )
+          : null,
+      actions: buildActions(),
+      // systemOverlayStyle: SystemUiOverlayStyle.light,
+    );
   }
 }

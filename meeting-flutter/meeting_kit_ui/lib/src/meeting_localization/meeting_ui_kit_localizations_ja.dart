@@ -550,6 +550,19 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get meetingVideoJoinAction => 'ビデオ';
 
   @override
+  String get meetingMaxMembers => '最大参加人数';
+
+  @override
+  String get speakerVolumeMuteTips =>
+      '現在のスピーカ設備は音が出ません。システムのスピーカが音を消して適切な音量に調整したかどうかチェックしてください。';
+
+  @override
+  String get meetingAnnotationPermissionEnabled => '注解';
+
+  @override
+  String get meetingMemberMaxTip => '会議人数上限に達しました';
+
+  @override
   String get screenShare => '画面共有';
 
   @override
@@ -641,6 +654,12 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
 
   @override
   String get virtualBackgroundSelectTip => '画像選択時に有効';
+
+  @override
+  String get virtualDefaultBackground => 'デフォルト';
+
+  @override
+  String get virtualCustom => 'カスタム';
 
   @override
   String get live => '生放送';
@@ -980,6 +999,9 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get participantNotJoined => '未入会';
 
   @override
+  String get participantJoining => '加入中...';
+
+  @override
   String get participantAttendees => '参加者';
 
   @override
@@ -1019,11 +1041,22 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get participantRemoveAttendee => '参加者の削除';
 
   @override
+  String get participantUpperLimitWaitingRoomTip =>
+      '参会者数が上限に達しました。待合室を有効にすることをお勧めします。';
+
+  @override
+  String get participantUpperLimitReleaseSeatsTip =>
+      '参加者の数が上限に達したため、新規参加者は参加できません。参加していないメンバーを削除したり、会議の席を外したりすることができます。';
+
+  @override
+  String get participantUpperLimitTipAdmitOtherTip =>
+      '参加人数が上限に達しました。未入会メンバーを外すか、会議の席を一人外してから控え室メンバーに入るようお願いします。';
+
+  @override
   String get cloudRecordingEnabledTitle => 'クラウド録画を有効にするかどうか';
 
   @override
-  String get cloudRecordingEnabledMessage =>
-      'オンにすると、会議中の音声ビデオと共有画面のコンテンツをクラウドに録画し、参加メンバー全員に通知します';
+  String get cloudRecordingEnabledMessage => 'オンにすると、参加者全員に録画開始のアラートが届きます。';
 
   @override
   String get cloudRecordingEnabledMessageWithoutNotice =>
@@ -1223,6 +1256,9 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get chatWaitingRoomMuted => '司会者はチャット機能を開放していない';
 
   @override
+  String get chatHistoryNotEnabled => 'チャット履歴機能は未公開ですので、管理者に連絡してください';
+
+  @override
   String get waitingRoomJoinMeeting => 'ミーティングに参加';
 
   @override
@@ -1293,6 +1329,9 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
 
   @override
   String get waiting => '待合室';
+
+  @override
+  String get waitingRoomEnable => '待合室できる';
 
   @override
   String get deviceSpeaker => 'スピーカー';
@@ -1483,6 +1522,9 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get sipCallIsInMeeting => 'ユーザーは会議中です';
 
   @override
+  String get callInWaitingMeeting => 'メンバーは待合室にいます';
+
+  @override
   String get sipCallIsInInviting => 'ユーザーが招待中';
 
   @override
@@ -1635,4 +1677,262 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
 
   @override
   String get loadFail => 'ロードに失敗しました';
+
+  @override
+  String get globalUpdate => '更新';
+
+  @override
+  String get globalLang => '言語';
+
+  @override
+  String get globalView => '表示する';
+
+  @override
+  String get interpretation => '同時通訳';
+
+  @override
+  String get interpInterpreter => '通訳者';
+
+  @override
+  String get interpSelectInterpreter => '通訳者を選ぶ';
+
+  @override
+  String get interpInterpreterAlreadyExists => 'ユーザーは通訳者に選ばれました。繰り返し選択できません';
+
+  @override
+  String get interpInfoIncompleteTitle => '通訳者の情報が不完全です';
+
+  @override
+  String get interpInfoIncompleteMsg => '情報の不完全な翻訳者は削除されます';
+
+  @override
+  String get interpStart => 'スタート';
+
+  @override
+  String get interpStartNotification => '司会者はすでに同時通訳を始めた';
+
+  @override
+  String get interpStop => '閉じる';
+
+  @override
+  String get interpStopNotification => '司会者はすでに同時通訳をオフにした';
+
+  @override
+  String get interpConfirmStopMsg =>
+      '同時通訳をオフにすると、聞いているすべてのチャンネルがオフになります。オフにしますか？';
+
+  @override
+  String get interpConfirmUpdateMsg => '更新しますか？';
+
+  @override
+  String get interpConfirmCancelEditMsg => '同時通訳の設定をキャンセルしてもよろしいですか？';
+
+  @override
+  String get interpSelectListenLanguage => '聴く言語を選択してください';
+
+  @override
+  String get interpSelectLanguage => '言語を選択する';
+
+  @override
+  String get interpAddLanguage => '言語を追加する';
+
+  @override
+  String get interpInputLanguage => '言語を入力する';
+
+  @override
+  String get interpLanguageAlreadyExists => '言語はすでに存在する';
+
+  @override
+  String get interpListenMajorAudioMeanwhile => '原音を同時に聞く';
+
+  @override
+  String get interpManagement => '同時通訳管理';
+
+  @override
+  String get interpSettings => '同時通訳設置';
+
+  @override
+  String get interpMajorAudio => '原音';
+
+  @override
+  String get interpMajorChannel => 'マスタチャネル';
+
+  @override
+  String get interpMajorAudioVolume => 'サウンドトラック';
+
+  @override
+  String get interpAddInterpreter => '通訳者を追加';
+
+  @override
+  String get interpJoinChannelErrorMsg => '翻訳チャンネルへの加入に失敗しました。再加入しますか？';
+
+  @override
+  String get interpReJoinChannel => '追加し直す';
+
+  @override
+  String get interpAssignInterpreter => 'あなたは本場会議の通訳者になりました';
+
+  @override
+  String get interpAssignLanguage => '現在の言語';
+
+  @override
+  String get interpAssignInterpreterTip => '「同時通訳」でリスニング言語と通訳言語を設定できます';
+
+  @override
+  String get interpUnassignInterpreter => 'あなたは司会者から通訳者から削除されました';
+
+  @override
+  String interpLanguageRemoved(Object language) {
+    return '司会者はリスニング言語「$language」を削除しました';
+  }
+
+  @override
+  String get interpInterpreterOffline =>
+      '現在聞いているチャンネルでは、通訳者は全員去っています。あなたのために原音に切り替えましたか？';
+
+  @override
+  String get interpDontSwitch => '切り替えない';
+
+  @override
+  String get interpSwitchToMajorAudio => '原音に戻す';
+
+  @override
+  String get interpAudioShareIsForbiddenDesktop =>
+      '通訳者として、画面を共有するときにコンピューターの音声を同時に共有することはできません';
+
+  @override
+  String get interpAudioShareIsForbiddenMobile =>
+      '通訳者として、画面を共有するときにデバイスオーディオを同時に共有することはできません';
+
+  @override
+  String get interpInterpreterInMeetingStatusChanged => '通訳者の参加状況が変更されました';
+
+  @override
+  String interpSpeakerTip(Object language1, Object language2) {
+    return '$language1を聴いていて、$language2と言っています';
+  }
+
+  @override
+  String get interpOutputLanguage => '言語を翻訳する';
+
+  @override
+  String get interpRemoveInterpreterOnly => '通訳者のみを削除';
+
+  @override
+  String get interpRemoveInterpreterInMembers => '参加者からも削除';
+
+  @override
+  String get interpRemoveMemberInInterpreters =>
+      '参加者は通訳者としても割り当てられ、参加者を削除すると通訳者の割り当ても解除されます';
+
+  @override
+  String get interpListeningChannelDisconnect => '聴取言語チャネルが切断され、再接続を試みている';
+
+  @override
+  String get interpSpeakingChannelDisconnect => '翻訳言語チャンネルが切断され、再接続を試みています';
+
+  @override
+  String get langChinese => '中国語';
+
+  @override
+  String get langEnglish => '英語';
+
+  @override
+  String get langJapanese => '日本語';
+
+  @override
+  String get langKorean => '韓国語';
+
+  @override
+  String get langFrench => 'フランス語';
+
+  @override
+  String get langGerman => 'ドイツ語';
+
+  @override
+  String get langSpanish => 'スペイン語';
+
+  @override
+  String get langRussian => 'ロシア語';
+
+  @override
+  String get langPortuguese => 'ポルトガル語';
+
+  @override
+  String get langItalian => 'イタリア語';
+
+  @override
+  String get langTurkish => 'トルコ語';
+
+  @override
+  String get langVietnamese => 'ベトナム語';
+
+  @override
+  String get langThai => 'タイ語';
+
+  @override
+  String get langIndonesian => 'インドネシア語';
+
+  @override
+  String get langMalay => 'マレー語';
+
+  @override
+  String get langArabic => 'アラビア語';
+
+  @override
+  String get langHindi => 'ヒンディー語';
+
+  @override
+  String get annotation => '注釈';
+
+  @override
+  String get annotationEnabled => '注釈が開きました';
+
+  @override
+  String get annotationDisabled => '注釈は停止されています';
+
+  @override
+  String get startAnnotation => '注釈';
+
+  @override
+  String get stopAnnotation => '退出注釈';
+
+  @override
+  String get inAnnotation => '注釈中';
+
+  @override
+  String get saveAnnotation => '注釈を保存し';
+
+  @override
+  String get cancelAnnotation => '注釈を取り消し';
+
+  @override
+  String get settings => 'セット';
+
+  @override
+  String get settingAudio => 'オーディオ';
+
+  @override
+  String get settingVideo => 'ビデオ';
+
+  @override
+  String get settingCommon => '一般';
+
+  @override
+  String get settingAudioAINS => 'インテリジェント・ノイズリダクション';
+
+  @override
+  String get settingEnableTransparentWhiteboard => 'ホワイトボードを透明に設定';
+
+  @override
+  String get settingEnableFrontCameraMirror => '前面カメラミラーリング';
+
+  @override
+  String get settingShowMeetDuration => '会議時間の表示';
+
+  @override
+  String get settingSpeakerSpotlight => '音声励振';
+
+  @override
+  String get settingSpeakerSpotlightTip => 'オンにすると、会話中の参加メンバーが優先的に表示されます';
 }

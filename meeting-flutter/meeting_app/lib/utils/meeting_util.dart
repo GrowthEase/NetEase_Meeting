@@ -53,10 +53,6 @@ class MeetingUtil {
     return AuthManager().mobilePhone ?? '';
   }
 
-  static bool getAutoRegistered() {
-    return AuthManager().autoRegistered ?? false;
-  }
-
   /// 未读消息数
   static ValueNotifier<int> _unreadNotifyMessageListenable = ValueNotifier(0);
 

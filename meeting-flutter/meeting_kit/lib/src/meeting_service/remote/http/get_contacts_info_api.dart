@@ -5,7 +5,7 @@
 part of meeting_service;
 
 /// 通讯录用户信息获取
-class _GetContactsInfoApi extends HttpApi<NEContactsInfoResponse> {
+class _GetContactsInfoApi extends HttpApi<NEContactsInfoResult> {
   /// 需要查询的userUuid
   List<String> userUuids;
 
@@ -19,8 +19,8 @@ class _GetContactsInfoApi extends HttpApi<NEContactsInfoResponse> {
   String get method => 'POST';
 
   @override
-  NEContactsInfoResponse parseResult(dynamic data) {
-    return NEContactsInfoResponse.fromJson(data);
+  NEContactsInfoResult parseResult(dynamic data) {
+    return NEContactsInfoResult._fromServer(data);
   }
 
   @override

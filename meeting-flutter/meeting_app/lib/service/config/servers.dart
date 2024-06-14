@@ -30,6 +30,14 @@ class Servers {
   String? get userProtocol {
     return AppConfig().userProtocolUrl;
   }
+
+  String? get deleteAccountWebServiceUrl {
+    return AppConfig().deleteAccountWebServiceUrl;
+  }
+
+  String? get appRegistryDetailUrl {
+    return AppConfig().registryUrl;
+  }
 }
 
 final servers = Servers();

@@ -19,6 +19,7 @@ class GlobalPreferences extends Preferences {
   static const String _keyCorpCode = 'corpCode';
   static const String keyShakeAndOpenQrScan = 'shakeAndOpenQrScan';
   static const String languageCode = 'languageCode';
+  static const String _keyVirtualBackgroundResMd5 = 'virtualBackgroundResMd5';
 
   GlobalPreferences._internal();
 
@@ -138,5 +139,15 @@ class GlobalPreferences extends Preferences {
 
   Future<void> setLanguageCode(String value) async {
     setSp(languageCode, value);
+  }
+
+  /// 设置虚拟背景资源md5值
+  Future<bool> setVirtualBackgroundResMd5(String md5) async {
+    return setSp(_keyVirtualBackgroundResMd5, md5);
+  }
+
+  /// 获取虚拟背景资源md5值，用于比对是否需要重新解压
+  Future<String?> getVirtualBackgroundResMd5() {
+    return getSp(_keyVirtualBackgroundResMd5);
   }
 }

@@ -5,11 +5,11 @@
 part of meeting_service;
 
 ///登录 web 直播页的鉴权级别，0：不需要鉴权，1：需要登录，2：需要登录并且账号要与直播应用绑定。不填的话表示不需要鉴权
-enum NELiveAuthLevel {
+enum NEMeetingLiveAuthLevel {
   /// 不需要鉴权
   normal,
 
-  /// 需要登录
+  /// 需要登录并且账号要与直播应用绑定
   token,
 
   /// 需要登录并且账号要与直播应用绑定
@@ -20,30 +20,30 @@ const normal = 0;
 const token = 1;
 const appToken = 2;
 
-extension LiveAuthLevelExtension on NELiveAuthLevel {
+extension LiveAuthLevelExtension on NEMeetingLiveAuthLevel {
   int get value {
     switch (this) {
-      case NELiveAuthLevel.normal:
+      case NEMeetingLiveAuthLevel.normal:
         return normal;
-      case NELiveAuthLevel.token:
+      case NEMeetingLiveAuthLevel.token:
         return token;
-      case NELiveAuthLevel.appToken:
+      case NEMeetingLiveAuthLevel.appToken:
         return appToken;
       default:
         return normal;
     }
   }
 
-  static NELiveAuthLevel get(int mode) {
+  static NEMeetingLiveAuthLevel get(int mode) {
     switch (mode) {
       case normal:
-        return NELiveAuthLevel.normal;
+        return NEMeetingLiveAuthLevel.normal;
       case token:
-        return NELiveAuthLevel.token;
+        return NEMeetingLiveAuthLevel.token;
       case appToken:
-        return NELiveAuthLevel.appToken;
+        return NEMeetingLiveAuthLevel.appToken;
       default:
-        return NELiveAuthLevel.normal;
+        return NEMeetingLiveAuthLevel.normal;
     }
   }
 }

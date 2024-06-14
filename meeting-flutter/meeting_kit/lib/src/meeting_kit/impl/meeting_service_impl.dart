@@ -13,6 +13,8 @@ class _NEMeetingServiceImpl extends NEMeetingService
   final _roomService = NERoomKit.instance.roomService;
   late final _accountService = NEMeetingKit.instance.getAccountService();
 
+  final _localHistoryMeetingManager = LocalHistoryMeetingManager();
+
   _NEMeetingServiceImpl._();
 
   @override
@@ -23,7 +25,8 @@ class _NEMeetingServiceImpl extends NEMeetingService
     apiLogger.i('startMeeting');
     final trackingEvent = param.trackingEvent;
 
-    final checkParamsResult = checkParameters(param);
+    final checkParamsResult =
+        MeetingServiceUtil.checkParameters(param, localizations);
     if (checkParamsResult != null) {
       return checkParamsResult.cast();
     }
@@ -48,21 +51,21 @@ class _NEMeetingServiceImpl extends NEMeetingService
 
     final roomProperties = {};
     param.controls?.forEach((control) {
-      if (control is NERoomAudioControl) {
-        roomProperties[AudioControlProperty.key] =
-            control.attendeeOff == NERoomAttendeeOffType.none
-                ? AudioControlProperty.disable
-                : (control.attendeeOff == NERoomAttendeeOffType.offAllowSelfOn
-                    ? AudioControlProperty.offAllowSelfOn
-                    : AudioControlProperty.offNotAllowSelfOn);
+      if (control is NEMeetingAudioControl) {
+        roomProperties[AudioControlProperty.key] = control.attendeeOff ==
+                NEMeetingAttendeeOffType.none
+            ? AudioControlProperty.disable
+            : (control.attendeeOff == NEMeetingAttendeeOffType.offAllowSelfOn
+                ? AudioControlProperty.offAllowSelfOn
+                : AudioControlProperty.offNotAllowSelfOn);
       }
-      if (control is NERoomVideoControl) {
-        roomProperties[VideoControlProperty.key] =
-            control.attendeeOff == NERoomAttendeeOffType.none
-                ? VideoControlProperty.disable
-                : (control.attendeeOff == NERoomAttendeeOffType.offAllowSelfOn
-                    ? VideoControlProperty.offAllowSelfOn
-                    : VideoControlProperty.offNotAllowSelfOn);
+      if (control is NEMeetingVideoControl) {
+        roomProperties[VideoControlProperty.key] = control.attendeeOff ==
+                NEMeetingAttendeeOffType.none
+            ? VideoControlProperty.disable
+            : (control.attendeeOff == NEMeetingAttendeeOffType.offAllowSelfOn
+                ? VideoControlProperty.offAllowSelfOn
+                : VideoControlProperty.offNotAllowSelfOn);
       }
     });
     roomProperties[GuestJoinProperty.key] = opts.enableGuestJoin
@@ -97,7 +100,7 @@ class _NEMeetingServiceImpl extends NEMeetingService
       ),
     ).thenEndStep(trackingEvent).map<NERoomContext>((meetingInfo) {
       _meetingInfo = meetingInfo.copyWith(
-        state: NEMeetingState.started,
+        state: NEMeetingItemStatus.started,
       );
       trackingEvent?.beginStep(kMeetingStepJoinRoom);
       return _roomService
@@ -131,68 +134,12 @@ class _NEMeetingServiceImpl extends NEMeetingService
 
   @override
   Future<NEResult<NERoomContext>> joinMeeting(
-      NEJoinMeetingParams param, NEJoinMeetingOptions opts,
-      {bool isInvite = false}) async {
+    NEJoinMeetingParams param,
+    NEJoinMeetingOptions opts,
+  ) async {
     apiLogger.i('joinMeeting');
-    final trackingEvent = param.trackingEvent;
-
-    final checkParamsResult = checkParameters(param);
-    if (checkParamsResult != null) {
-      return checkParamsResult.cast();
-    }
-    if (await Connectivity().checkConnectivity() == ConnectivityResult.none) {
-      return _handleMeetingResultCode(MeetingErrorCode.networkError).cast();
-    }
-
-    trackingEvent?.beginStep(kMeetingStepMeetingInfo);
-    final meetingInfoResult =
-        await MeetingRepository.getMeetingInfo(param.meetingNum);
-    trackingEvent?.endStepWithResult(meetingInfoResult);
-    if (!meetingInfoResult.isSuccess()) {
-      return _handleMeetingResultCode(
-              meetingInfoResult.code, meetingInfoResult.msg)
-          .cast();
-    }
-
-    trackingEvent?.beginStep(kMeetingStepJoinRoom);
-    final meetingInfo = meetingInfoResult.nonNullData;
-    final authorization = meetingInfo.authorization;
-    final _params = NEJoinRoomParams(
-      roomUuid: meetingInfo.roomUuid,
-      userName: param.displayName,
-      role: MeetingRoles.kUndefined,
-      password: param.password,
-      avatar: param.avatar ?? _accountService.getAccountInfo()?.avatar,
-      injectedAuthorization: authorization != null
-          ? NEInjectedAuthorization(
-              appKey: authorization.appKey,
-              user: authorization.user,
-              token: authorization.token)
-          : null,
-      initialMyProperties: param.tag != null && param.tag!.isNotEmpty
-          ? {
-              MeetingPropertyKeys.kMemberTag: param.tag!,
-            }
-          : null,
-    );
-    final _options = NEJoinRoomOptions(
-      enableMyAudioDeviceOnJoinRtc: opts.enableMyAudioDeviceOnJoinRtc,
-    );
-    var joinRoomResult = await _roomService.joinRoom(
-      _params,
-      _options,
-      isInvite: isInvite,
-    );
-    trackingEvent?.endStepWithResult(joinRoomResult);
-    if (joinRoomResult.code == MeetingErrorCode.success &&
-        joinRoomResult.data != null) {
-      final roomContext = joinRoomResult.nonNullData;
-      roomContext.setupMeetingEnv(meetingInfo);
-      return NEResult(code: NEMeetingErrorCode.success, data: roomContext);
-    } else {
-      return _handleMeetingResultCode(joinRoomResult.code, joinRoomResult.msg)
-          .cast();
-    }
+    return MeetingServiceUtil.joinMeetingInternal(param, opts,
+        localizations: localizations, isInvite: false);
   }
 
   @override
@@ -204,63 +151,20 @@ class _NEMeetingServiceImpl extends NEMeetingService
       return joinMeeting(param, opts);
     } else {
       apiLogger.i('anonymousJoinMeeting');
-      var result = await MeetingRepository.anonymousLogin();
-      if (result.isSuccess()) {
-        var anonymousLoginInfo = result.data;
-        var roomLoginResult = await NERoomKit.instance.authService
-            .login(anonymousLoginInfo!.userUuid, anonymousLoginInfo.userToken);
-        if (roomLoginResult.isSuccess()) {
-          final accountInfo = NEAccountInfo(
-            userUuid: anonymousLoginInfo.userUuid,
-            userToken: anonymousLoginInfo.userToken,
-          );
-          NEMeetingKit.instance
-              .getAccountService()
-              ._setAccountInfo(accountInfo, true);
-          return joinMeeting(
-            param,
-            opts,
-          ).onFailure((p0, p1) => NEMeetingKit.instance.logout());
-        } else {
-          return NEResult(
-            code: roomLoginResult.code,
-            msg: roomLoginResult.msg ?? 'anonymous login error',
-          );
-        }
+      var anonymousLoginResult =
+          await NEMeetingKit.instance.getAccountService().anonymousLogin();
+      if (anonymousLoginResult.isSuccess()) {
+        return joinMeeting(
+          param,
+          opts,
+        ).onFailure((p0, p1) => NEMeetingKit.instance.logout());
       } else {
-        return NEResult(code: result.code, msg: result.msg);
+        return NEResult(
+          code: anonymousLoginResult.code,
+          msg: anonymousLoginResult.msg ?? 'anonymous login error',
+        );
       }
     }
-  }
-
-  /// 统一参数校验
-  NEResult<void>? checkParameters(Object param) {
-    if ((param is NEStartMeetingParams && param.displayName.isEmpty) ||
-        (param is NEJoinMeetingParams && param.displayName.isEmpty)) {
-      return NEResult<void>(
-          code: NEMeetingErrorCode.paramError,
-          msg: localizations.displayNameShouldNotBeEmpty);
-    }
-
-    if (param is NEStartMeetingParams &&
-        (param.password != null &&
-            (param.password!.length >
-                    NEMeetingConstants.meetingPasswordMaxLen ||
-                param.password!.length <
-                    NEMeetingConstants.meetingPasswordMinLen ||
-                !TextUtils.isLetterOrDigital(param.password!)))) {
-      return NEResult<void>(
-          code: NEMeetingErrorCode.paramError,
-          msg: localizations.meetingPasswordNotValid);
-    }
-
-    if (param is NEJoinMeetingParams && param.meetingNum.isEmpty) {
-      return NEResult<void>(
-          code: NEMeetingErrorCode.paramError,
-          msg: localizations.meetingIdShouldNotBeEmpty);
-    }
-
-    return null;
   }
 
   @override
@@ -279,5 +183,10 @@ class _NEMeetingServiceImpl extends NEMeetingService
   @override
   Future<NEResult<VoidResult>> downloadAttachment(String messageUuid) {
     return NERoomKit.instance.roomService.downloadAttachment(messageUuid);
+  }
+
+  @override
+  List<NELocalHistoryMeeting> getLocalHistoryMeetingList() {
+    return _localHistoryMeetingManager.localHistoryMeetingList;
   }
 }

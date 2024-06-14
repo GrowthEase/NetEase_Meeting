@@ -26,6 +26,7 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
   final watermarkEnabled = ValueNotifier<bool>(false);
   final guestJoinEnabled = ValueNotifier<bool>(false);
   final isBlackListEnabled = ValueNotifier<bool>(true);
+  final isAnnotationPermissionEnabled = ValueNotifier<bool>(false);
 
   MeetingSecurityState(this._arguments);
 
@@ -37,6 +38,8 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
     watermarkEnabled.value = _roomContext.watermark.isEnable();
     guestJoinEnabled.value = _roomContext.isGuestJoinEnabled;
     isBlackListEnabled.value = _roomContext.isRoomBlackListEnabled;
+    isAnnotationPermissionEnabled.value =
+        _roomContext.isAnnotationPermissionEnabled;
     meetingChatEnabled.value =
         _roomContext.chatPermission != NEChatPermission.noChat;
     _roomContext.addEventCallback(roomEventCallback = NERoomEventCallback(
@@ -85,16 +88,10 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
           ? NEMeetingUIKitLocalizations.of(context)!.meetingGuestJoinEnabled
           : NEMeetingUIKitLocalizations.of(context)!.meetingGuestJoinDisabled);
     }
-  }
-
-  void doIfNetworkAvailable(VoidCallback callback) async {
-    final connected = await ConnectivityManager().isConnected();
-    if (!mounted) return;
-    if (!connected) {
-      showToast(meetingKitLocalizations.networkUnavailableCheck);
-      return;
+    if (properties.containsKey(AnnotationProperty.key)) {
+      isAnnotationPermissionEnabled.value =
+          _roomContext.isAnnotationPermissionEnabled;
     }
-    callback();
   }
 
   @override
@@ -120,31 +117,43 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildSubTitle(meetingUiLocalizations.meetingManagement),
-          if (_arguments.waitingRoomManager.isFeatureSupported) ...[
-            _buildWaitingRoom(),
-            _buildSplit(),
-          ],
-          if (!_roomContext.watermark.isForce()) ...[
-            _buildWatermark(),
-            _buildSplit(),
-          ],
-          _buildLockMeeting(),
-          _buildSplit(),
-          _buildBlackList(),
-          if (_arguments.isGuestJoinSupported) ...[
-            _buildSplit(),
-            _buildGuestJoin(),
-          ],
-          _buildSubTitle(meetingUiLocalizations.meetingAllowMembersTo),
-          _buildMeetingChat(),
+          /// 管理成员模块
+          MeetingSettingGroup(
+              title: meetingUiLocalizations.meetingManagement,
+              iconData: NEMeetingIconFont.icon_settings,
+              iconColor: _UIColors.color8D90A0,
+              children: [
+                if (_arguments.waitingRoomManager.isFeatureSupported) ...[
+                  _buildWaitingRoom(),
+                ],
+                if (!_roomContext.watermark.isForce()) ...[
+                  _buildWatermark(),
+                ],
+                _buildLockMeeting(),
+                _buildBlackList(),
+                if (_arguments.isGuestJoinSupported) ...[
+                  _buildGuestJoin(),
+                ]
+              ]),
+
+          /// 允许成员
+          MeetingSettingGroup(
+            title: meetingUiLocalizations.meetingAllowMembersTo,
+            iconData: NEMeetingIconFont.icon_members,
+            iconColor: _UIColors.color_337eff,
+            children: [
+              _buildMeetingChat(),
+              _buildAnnotationPermission(),
+            ],
+          ),
+          SizedBox(height: 16),
         ],
       ),
     );
   }
 
-  Widget _buildWaitingRoom() {
-    return _buildItemManage(
+  MeetingSwitchItem _buildWaitingRoom() {
+    return MeetingSwitchItem(
       key: MeetingUIValueKeys.waitingRoomSwitch,
       title: meetingUiLocalizations.waitingRoom,
       valueNotifier:
@@ -207,8 +216,8 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
     });
   }
 
-  Widget _buildGuestJoin() {
-    return _buildItemManage(
+  MeetingSwitchItem _buildGuestJoin() {
+    return MeetingSwitchItem(
         key: MeetingUIValueKeys.meetingEnableGuestJoin,
         title: meetingUiLocalizations.meetingGuestJoin,
         contentBuilder: (enable) => Text(
@@ -224,116 +233,45 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
         onChanged: (newValue) => _handleGuestJoin(newValue));
   }
 
-  Widget _buildWatermark() {
-    return _buildItemManage(
+  MeetingSwitchItem _buildAnnotationPermission() {
+    return MeetingSwitchItem(
+        key: MeetingUIValueKeys.meetingAnnotationPermissionEnabled,
+        title: meetingUiLocalizations.meetingAnnotationPermissionEnabled,
+        valueNotifier: isAnnotationPermissionEnabled,
+        onChanged: (newValue) => _enableAnnotationPermission(newValue));
+  }
+
+  MeetingSwitchItem _buildWatermark() {
+    return MeetingSwitchItem(
         key: MeetingUIValueKeys.watermarkSwitch,
         title: meetingUiLocalizations.meetingWatermark,
         valueNotifier: watermarkEnabled,
         onChanged: (newValue) => _updateWatermarkState(newValue));
   }
 
-  Widget _buildLockMeeting() {
-    return _buildItemManage(
+  MeetingSwitchItem _buildLockMeeting() {
+    return MeetingSwitchItem(
         key: MeetingUIValueKeys.meetingLockSwitch,
         title: meetingUiLocalizations.meetingLock,
         valueNotifier: isLocked,
         onChanged: (newValue) => _updateLockState(newValue));
   }
 
-  Widget _buildBlackList() {
-    return _buildItemManage(
-        key: MeetingUIValueKeys.meetingLockSwitch,
+  MeetingSwitchItem _buildBlackList() {
+    return MeetingSwitchItem(
+        key: MeetingUIValueKeys.meetingBlacklist,
         title: meetingUiLocalizations.meetingBlacklist,
         content: meetingUiLocalizations.meetingBlacklistDetail,
         valueNotifier: isBlackListEnabled,
         onChanged: (newValue) => _updateBlackListState(newValue));
   }
 
-  Widget _buildMeetingChat() {
-    return _buildItemManage(
+  MeetingSwitchItem _buildMeetingChat() {
+    return MeetingSwitchItem(
         key: MeetingUIValueKeys.meetingChat,
         title: meetingUiLocalizations.meetingChat,
         valueNotifier: meetingChatEnabled,
         onChanged: (newValue) => _updateMeetingChatState(newValue));
-  }
-
-  Widget _buildSubTitle(String subTitle) {
-    return Container(
-      child: Text(subTitle,
-          style: TextStyle(fontSize: 14, color: _UIColors.color_999999)),
-      padding: EdgeInsets.only(left: 20, top: 16, bottom: 8),
-    );
-  }
-
-  Widget _buildItemManage({
-    required String title,
-    String? content,
-    Widget Function(bool enable)? contentBuilder,
-    required ValueNotifier<bool> valueNotifier,
-    required Function(bool newValue) onChanged,
-    Key? key,
-  }) {
-    return Container(
-      color: _UIColors.white,
-      constraints: BoxConstraints(minHeight: 56),
-      padding: EdgeInsets.symmetric(
-        vertical: 6,
-        horizontal: 20,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(fontSize: 16, color: _UIColors.color_222222),
-                ),
-                if (content != null || contentBuilder != null)
-                  SizedBox(
-                    height: 1,
-                  ),
-                if (contentBuilder != null)
-                  ValueListenableBuilder<bool>(
-                      valueListenable: valueNotifier,
-                      builder: (context, value, child) {
-                        return contentBuilder(value);
-                      }),
-                if (content != null)
-                  Container(
-                    width: 250,
-                    child: Text(
-                      content,
-                      style: TextStyle(
-                          fontSize: 12, color: _UIColors.color_999999),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          ValueListenableBuilder<bool>(
-              valueListenable: valueNotifier,
-              builder: (context, value, child) {
-                return CupertinoSwitch(
-                    key: key,
-                    value: value,
-                    onChanged: (newValue) => onChanged.call(newValue),
-                    activeColor: _UIColors.blue_337eff);
-              }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSplit() {
-    return Container(
-      color: _UIColors.globalBg,
-      padding: EdgeInsets.only(left: 20),
-      child: Divider(height: 0.5),
-    );
   }
 
   /// 锁定会议
@@ -353,6 +291,13 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
               : meetingUiLocalizations.meetingUnLockMeetingByHostFail);
         }
       });
+    });
+  }
+
+  /// 设置是否允许成员批注
+  void _enableAnnotationPermission(bool enabled) {
+    doIfNetworkAvailable(() {
+      lifecycleExecute(_roomContext.enableAnnotationPermission(enabled));
     });
   }
 
@@ -383,10 +328,7 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
   /// 开关会议水印
   void _updateWatermarkState(bool watermark) {
     doIfNetworkAvailable(() {
-      lifecycleExecute(_roomContext.enableConfidentialWatermark(watermark))
-          .then((result) {
-        if (!mounted) return;
-      });
+      lifecycleExecute(_roomContext.enableConfidentialWatermark(watermark));
     });
   }
 
@@ -425,17 +367,5 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
         if (!mounted) return;
       });
     });
-  }
-}
-
-mixin MeetingKitLocalizationsMixin<T extends StatefulWidget> on State<T> {
-  late NEMeetingUIKitLocalizations meetingUiLocalizations;
-  late NEMeetingKitLocalizations meetingKitLocalizations;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    meetingUiLocalizations = NEMeetingUIKitLocalizations.of(context)!;
-    meetingKitLocalizations = NEMeetingKitLocalizations.of(context)!;
   }
 }

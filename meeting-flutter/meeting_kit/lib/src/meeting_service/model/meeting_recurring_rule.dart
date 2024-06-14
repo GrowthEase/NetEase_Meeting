@@ -150,12 +150,24 @@ class NEMeetingRecurringRule {
     }
   }
 
+  NEMeetingCustomizedFrequency? _customizedFrequency;
+  set customizedFrequency(NEMeetingCustomizedFrequency? value) {
+    _customizedFrequency = value;
+    _customizedFrequency?.recurringRule = WeakReference(this);
+  }
+
   /// 自定义频率
   /// 当[type]为[NEMeetingRecurringRuleType.custom]时有效
-  NEMeetingCustomizedFrequency? customizedFrequency;
+  NEMeetingCustomizedFrequency? get customizedFrequency => _customizedFrequency;
+
+  NEMeetingRecurringEndRule? _endRule;
+  set endRule(NEMeetingRecurringEndRule? value) {
+    _endRule = value;
+    _endRule?.recurringRule = WeakReference(this);
+  }
 
   /// 周期结束配置
-  NEMeetingRecurringEndRule? endRule;
+  NEMeetingRecurringEndRule? get endRule => _endRule;
 
   get maxRepeatTimes {
     switch (type) {
@@ -185,8 +197,6 @@ class NEMeetingRecurringRule {
 
   NEMeetingRecurringRule({
     required NEMeetingRecurringRuleType type,
-    this.customizedFrequency,
-    this.endRule,
     startTime,
   }) {
     this.type = type;
@@ -203,16 +213,18 @@ class NEMeetingRecurringRule {
 
   static fromJson(Map<dynamic, dynamic>? map, {DateTime? startTime}) {
     if (map != null) {
-      return NEMeetingRecurringRule(
+      final rule = NEMeetingRecurringRule(
         type: NEMeetingRecurringRuleType.values[map['type']],
-        customizedFrequency: map['customizedFrequency'] != null
-            ? NEMeetingCustomizedFrequency.fromJson(map['customizedFrequency'])
-            : null,
-        endRule: map['endRule'] != null
-            ? NEMeetingRecurringEndRule.fromJson(map['endRule'])
-            : null,
         startTime: startTime,
       );
+      if (map['customizedFrequency'] != null) {
+        rule.customizedFrequency =
+            NEMeetingCustomizedFrequency.fromJson(map['customizedFrequency']);
+      }
+      if (map['endRule'] != null) {
+        rule.endRule = NEMeetingRecurringEndRule.fromJson(map['endRule']);
+      }
+      return rule;
     } else {
       return NEMeetingRecurringRule(
           type: NEMeetingRecurringRuleType.no, startTime: startTime);
@@ -221,12 +233,13 @@ class NEMeetingRecurringRule {
 
   // 深拷贝
   NEMeetingRecurringRule copy() {
-    return NEMeetingRecurringRule(
+    final rule = NEMeetingRecurringRule(
       type: type,
-      customizedFrequency: customizedFrequency,
-      endRule: endRule,
       startTime: startTime,
     );
+    rule.customizedFrequency = customizedFrequency;
+    rule.endRule = endRule;
+    return rule;
   }
 }
 
@@ -676,10 +689,10 @@ class NEMeetingRecurringEndRule {
     if (recurringRule?.target?.type == NEMeetingRecurringRuleType.no) {
       return;
     }
-    _date = value;
 
     /// 根据最大次数判断是否超出最远时间，联动修改times
     if (recurringRule?.target != null && value != null) {
+      _date = value;
       var startTime = recurringRule?.target?.startTime;
       if (startTime == null) startTime = DateTime.now();
       var endTime = DateFormat('yyyy/MM/dd').parse(value);

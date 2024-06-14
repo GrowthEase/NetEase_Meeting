@@ -18,6 +18,7 @@ import 'package:flutter/foundation.dart';
 import 'package:netease_roomkit/netease_roomkit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart';
 
 export 'package:netease_common/netease_common.dart' show NEResult, VoidResult;
 
@@ -44,6 +45,7 @@ part 'src/meeting_service/model/room_item_live.dart';
 part 'src/meeting_service/model/room_item_control.dart';
 part 'src/meeting_service/model/member_info.dart';
 part 'src/meeting_service/model/room_invitation.dart';
+part 'src/meeting_service/model/meeting_interpretation.dart';
 part 'src/meeting_service/model/request/create_meeting_req.dart';
 part 'src/meeting_service/model/request/login_by_pwd_req.dart';
 part 'src/meeting_service/model/request/js_api_permission_req.dart';
@@ -57,7 +59,6 @@ part 'src/meeting_service/remote/http/delete_meeting_api.dart';
 part 'src/meeting_service/remote/http/edit_meeting_api.dart';
 part 'src/meeting_service/remote/http/get_config_api.dart';
 part 'src/meeting_service/remote/http/get_contacts_info_api.dart';
-part 'src/meeting_service/remote/http/get_host_and_cohost_list_api.dart';
 part 'src/meeting_service/remote/http/get_waiting_room_properties_api.dart';
 part 'src/meeting_service/remote/http/get_meeting_by_sharing_code_api.dart';
 part 'src/meeting_service/remote/http/get_meeting_item_by_id_api.dart';
@@ -87,6 +88,7 @@ part 'src/meeting_service/model/whiteboard_status.dart';
 part 'src/meeting_service/model/room_item_live_status.dart';
 part 'src/meeting_service/model/role_type.dart';
 part 'src/meeting_service/model/live_level.dart';
+part 'src/meeting_service/model/live_status.dart';
 part 'src/meeting_service/module_name.dart';
 part 'src/meeting_service/model/request/generic_http_api_req.dart';
 part 'src/meeting_service/model/room_role_configuration.dart';
@@ -101,6 +103,26 @@ part 'src/meeting_service/model/encryption_config.dart';
 part 'src/meeting_service/model/meeting_watermark.dart';
 part 'src/meeting_service/model/meeting_web_app_item.dart';
 part 'src/meeting_service/model/meeting_recurring_rule.dart';
+part 'src/meeting_service/model/meeting_corp_info.dart';
+part 'src/meeting_service/model/meeting_security_notice_info.dart';
+part 'src/meeting_service/model/history_meeting_detail.dart';
+part 'src/meeting_service/model/chatroom_info.dart';
+part 'src/meeting_service/model/history_meeting.dart';
+part 'src/meeting_service/remote/http/get_favorite_meetings_api.dart';
+part 'src/meeting_service/remote/http/add_favorite_meeting_api.dart';
+part 'src/meeting_service/remote/http/get_history_meeting_detail_api.dart';
+part 'src/meeting_service/remote/http/get_history_meetings_api.dart';
+part 'src/meeting_service/remote/http/remove_favorite_meeting_api.dart';
+part 'src/meeting_service/remote/http/get_history_meeting_api.dart';
+part 'src/meeting_service/remote/http/get_security_noticeProto_api.dart';
+part 'src/meeting_service/remote/http/update_avatar_api.dart';
+part 'src/meeting_service/remote/http/update_nickname_api.dart';
+part 'src/meeting_service/remote/http/get_app_info_api.dart';
+part 'src/meeting_service/remote/http/get_sms_code_api.dart';
+part 'src/meeting_service/remote/http/get_sso_account_info_api.dart';
+part 'src/meeting_service/remote/http/login_by_sms_api.dart';
+part 'src/meeting_service/remote/http/reset_password_api.dart';
+part 'src/meeting_service/model/meeting_login_info.dart';
 
 /// https://office.netease.com/doc/?identity=3963dc2ced7a48259860289c5d8970af
 class MeetingErrorCode {

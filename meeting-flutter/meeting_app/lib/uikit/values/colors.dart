@@ -11,7 +11,7 @@ class AppColors {
   static const Color primaryText = Color.fromARGB(255, 51, 51, 51);
   static const Color secondaryText = Color.fromARGB(255, 255, 255, 255);
   static const Color accentText = Color.fromARGB(255, 34, 34, 34);
-  static const Color noticeBg = Color.fromRGBO(255, 247, 224, 1);
+  static const Color noticeBg = Color.fromRGBO(255, 242, 209, 1);
   static const Color shadow = Color.fromRGBO(224, 228, 232, 0.4);
   static const Color globalBg = Color(0xffF2F3F5);
 
@@ -45,6 +45,7 @@ class AppColors {
   static const Color color_60_3C3C43 = Color(0x993C3C43);
   static const Color grey_292933 = Color(0xff292933);
   static const Color grey_1E1E25 = Color(0xff1E1E25);
+  static const Color color_1E1E27 = Color(0xff1E1F27);
   static const Color grey_8F8F8F = Color(0xff8F8F8F);
   static const Color color_007AFF = Color(0xff007AFF);
   static const Color colorFE3B30 = Color(0xffFE3B30);
@@ -91,5 +92,15 @@ class AppColors {
   static const Color color_3D3D3D = Color(0xff3D3D3D);
   static const Color color_D8D8D8 = Color(0xffD8D8D8);
   static const Color color_F2F2F5 = Color(0xffF2F2F5);
+  static const Color color_F5F6FA = Color(0xffF5F6FA);
   static const Color color_FF7903 = Color(0xffFF7903);
+  static const Color color_1E1F27 = Color(0xff1E1F27);
+  static const Color color_53576A = Color(0xff53576A);
+  static const Color color_CDCFD7 = Color(0xffCDCFD7);
+  static const Color color_8D90A0 = Color(0xff8D90A0);
+  static const Color color_1BB650 = Color(0xff1BB650);
+  static const Color color_337EFF = Color(0xff337EFF);
+  static const Color color_F0F1F5 = Color(0xffF0F1F5);
+  static const Color color_F51D45 = Color(0xffF51D45);
+  static const Color color_002BEC = Color(0xff002BEC);
 }

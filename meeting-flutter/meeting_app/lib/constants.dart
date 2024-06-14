@@ -8,6 +8,12 @@ class Constants {
   static const moduleName = 'meeting_app';
 }
 
+class AppLoggerFactory {
+  static Alogger get(String tag) {
+    return Alogger.normal(tag, Constants.moduleName);
+  }
+}
+
 mixin class AppLogger {
   Alogger? _logger;
 

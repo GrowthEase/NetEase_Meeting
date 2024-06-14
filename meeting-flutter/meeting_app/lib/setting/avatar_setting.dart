@@ -21,8 +21,7 @@ class AvatarSetting extends StatefulWidget {
   State<AvatarSetting> createState() => _AvatarSettingState();
 }
 
-class _AvatarSettingState extends State<AvatarSetting>
-    with MeetingAppLocalizationsMixin {
+class _AvatarSettingState extends State<AvatarSetting> {
   FileImage? _fileImage;
 
   @override
@@ -61,24 +60,16 @@ class _AvatarSettingState extends State<AvatarSetting>
     LoadingUtil.showLoading();
     final filePath = await _saveImage(img);
     final ret =
-        await NEMeetingKit.instance.getNosService().uploadResource(filePath);
+        await NEMeetingKit.instance.getAccountService().updateAvatar(filePath);
 
     /// 上传完成后删除本地文件
     File(filePath).delete();
-
-    var isSuccess = ret.isSuccess() && ret.data != null;
-
-    /// 更新头像
-    if (isSuccess) {
-      final updateRet = await UserRepo().updateAvatar(ret.data!);
-      isSuccess = updateRet.isSuccess();
-    }
     LoadingUtil.cancelLoading();
     ToastUtils.showToast(
         context,
-        isSuccess
-            ? meetingAppLocalizations.settingAvatarUpdateSuccess
-            : meetingAppLocalizations.settingAvatarUpdateFail);
+        ret.isSuccess()
+            ? getAppLocalizations().settingAvatarUpdateSuccess
+            : getAppLocalizations().settingAvatarUpdateFail);
     Navigator.of(context).pop();
   }
 

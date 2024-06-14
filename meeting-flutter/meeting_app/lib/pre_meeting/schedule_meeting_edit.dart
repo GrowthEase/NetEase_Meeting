@@ -28,8 +28,7 @@ class ScheduleMeetingEditRoute extends StatefulWidget {
 }
 
 class _ScheduleMeetingEditRouteState
-    extends ScheduleMeetingBaseState<ScheduleMeetingEditRoute>
-    with MeetingAppLocalizationsMixin {
+    extends ScheduleMeetingBaseState<ScheduleMeetingEditRoute> {
   _ScheduleMeetingEditRouteState(NEMeetingItem item) : super(item: item);
 
   bool cloudRecordOn = !kNoCloudRecord;
@@ -43,18 +42,18 @@ class _ScheduleMeetingEditRouteState
   void initState() {
     super.initState();
     meetingPasswordController.text = meetingItem.password ?? '';
-    meetingPwdSwitch = !TextUtil.isEmpty(meetingItem.password);
+    meetingPwdSwitch.value = !TextUtil.isEmpty(meetingItem.password);
     cloudRecordOn = meetingItem.settings.cloudRecordOn;
-    enableWaitingRoom = meetingItem.isWaitingRoomEnabled;
-    enableJoinBeforeHost = meetingItem.isEnableJoinBeforeHost();
-    enableGuestJoin = meetingItem.isEnableGuestJoin();
-    attendeeAudioAutoOff = meetingItem.settings.isAudioOffAllowSelfOn ||
+    enableWaitingRoom.value = meetingItem.waitingRoomEnabled;
+    enableJoinBeforeHost.value = meetingItem.enableJoinBeforeHost;
+    enableGuestJoin.value = meetingItem.enableGuestJoin;
+    attendeeAudioAutoOff.value = meetingItem.settings.isAudioOffAllowSelfOn ||
         meetingItem.settings.isAudioOffNotAllowSelfOn;
     attendeeAudioAutoOffNotAllowSelfOn =
         meetingItem.settings.isAudioOffNotAllowSelfOn;
-    liveSwitch = meetingItem.live?.enable ?? false;
-    liveLevelSwitch = meetingItem.live?.liveWebAccessControlLevel ==
-        NELiveAuthLevel.appToken.index;
+    liveSwitch.value = meetingItem.live?.enable ?? false;
+    liveLevelSwitch.value = meetingItem.live?.liveWebAccessControlLevel ==
+        NEMeetingLiveAuthLevel.appToken.index;
 
     meetingSubjectController =
         TextEditingController(text: '${meetingItem.subject}');
@@ -80,6 +79,14 @@ class _ScheduleMeetingEditRouteState
         times: meetingItem.recurringRule.endRule!.times,
       );
     }
+
+    /// 同声传译
+    enableInterpretation.value =
+        meetingItem.interpretationSettings?.isEmpty == false;
+    interpreterListController = InterpreterListController.withInterpreters(
+        meetingItem.interpretationSettings?.getInterpreterList());
+    TimezonesUtil.getTimezoneById(meetingItem.timezoneId)
+        .then((value) => timezoneNotifier.value = value);
   }
 
   void callTime() {
@@ -89,7 +96,7 @@ class _ScheduleMeetingEditRouteState
 
   @override
   String getTitle() {
-    return meetingAppLocalizations.meetingEdit;
+    return getAppLocalizations().meetingEdit;
   }
 
   @override
@@ -98,7 +105,7 @@ class _ScheduleMeetingEditRouteState
       TextButton(
         key: MeetingValueKey.scheduleBtn,
         child: Text(
-          meetingAppLocalizations.globalSave,
+          getAppLocalizations().globalSave,
           style: TextStyle(
             color: AppColors.color_337eff,
             fontSize: 16.0,
@@ -113,18 +120,18 @@ class _ScheduleMeetingEditRouteState
     final requestMeetingItem = meetingItem.copy();
     var subject = meetingSubjectController.text.trim();
     if (TextUtil.isEmpty(subject)) {
-      ToastUtils.showToast(context, meetingAppLocalizations.meetingEnterTopic);
+      ToastUtils.showToast(context, getAppLocalizations().meetingEnterTopic);
       return;
     }
     var password = meetingPasswordController.text.trim();
-    if (meetingPwdSwitch == true) {
+    if (meetingPwdSwitch.value) {
       if (TextUtil.isEmpty(password)) {
         ToastUtils.showToast(
-            context, meetingAppLocalizations.meetingEnterPassword);
+            context, getAppLocalizations().meetingEnterPassword);
         return;
       } else if (password.length != 6) {
         ToastUtils.showToast(
-            context, meetingAppLocalizations.meetingEnterSixDigitPassword);
+            context, getAppLocalizations().meetingEnterSixDigitPassword);
         return;
       }
     }
@@ -136,7 +143,7 @@ class _ScheduleMeetingEditRouteState
         startTime.millisecondsSinceEpoch <
             DateTime.now().millisecondsSinceEpoch) {
       ToastUtils.showToast(
-          context, meetingAppLocalizations.meetingScheduleTimeIllegal);
+          context, getAppLocalizations().meetingScheduleTimeIllegal);
       return;
     }
     LoadingUtil.showLoading();
@@ -146,17 +153,18 @@ class _ScheduleMeetingEditRouteState
         startTimeChanged ? startTime.millisecondsSinceEpoch : 0;
     requestMeetingItem.endTime =
         endTimeChanged ? endTime.millisecondsSinceEpoch : 0;
-    requestMeetingItem.setWaitingRoomEnabled(enableWaitingRoom);
-    requestMeetingItem.setEnableJoinBeforeHost(enableJoinBeforeHost);
-    requestMeetingItem.setEnableGuestJoin(enableGuestJoin);
-    requestMeetingItem.password = meetingPwdSwitch == true ? password : '';
-    var setting = NEMeetingItemSettings();
-    if (attendeeAudioAutoOff) {
+    requestMeetingItem.setWaitingRoomEnabled(enableWaitingRoom.value);
+    requestMeetingItem.setEnableJoinBeforeHost(enableJoinBeforeHost.value);
+    requestMeetingItem.setEnableGuestJoin(enableGuestJoin.value);
+    requestMeetingItem.password = meetingPwdSwitch.value ? password : '';
+    requestMeetingItem.timezoneId = timezoneNotifier.value?.id;
+    var setting = NEMeetingItemSetting();
+    if (attendeeAudioAutoOff.value) {
       setting.controls = [
         if (attendeeAudioAutoOffNotAllowSelfOn)
-          NERoomAudioControl(NERoomAttendeeOffType.offNotAllowSelfOn)
+          NEMeetingAudioControl(NEMeetingAttendeeOffType.offNotAllowSelfOn)
         else
-          NERoomAudioControl(NERoomAttendeeOffType.offAllowSelfOn)
+          NEMeetingAudioControl(NEMeetingAttendeeOffType.offAllowSelfOn)
       ];
     } else {
       setting.controls = null;
@@ -164,14 +172,24 @@ class _ScheduleMeetingEditRouteState
     setting.cloudRecordOn = cloudRecordOn;
     requestMeetingItem.settings = setting;
     var live = NEMeetingItemLive();
-    live.enable = liveSwitch;
-    live.liveWebAccessControlLevel = (liveSwitch && liveLevelSwitch)
-        ? NELiveAuthLevel.appToken.index
-        : NELiveAuthLevel.token.index;
+    live.enable = liveSwitch.value;
+    live.liveWebAccessControlLevel = (liveSwitch.value && liveLevelSwitch.value)
+        ? NEMeetingLiveAuthLevel.appToken
+        : NEMeetingLiveAuthLevel.token;
     requestMeetingItem.live = live;
     final editRecurringMeeting = widget.isEditAll &&
         requestMeetingItem.recurringRule.type != NEMeetingRecurringRuleType.no;
     requestMeetingItem.recurringRule = recurringRule;
+
+    requestMeetingItem.interpretationSettings = null;
+    if (enableInterpretation.value) {
+      final interpreters = interpreterListController?.getInterpreterList();
+      if (interpreters != null) {
+        requestMeetingItem.interpretationSettings =
+            NEMeetingInterpretationSettings(interpreters);
+      }
+    }
+
     NEMeetingKit.instance
         .getPreMeetingService()
         .editMeeting(requestMeetingItem, editRecurringMeeting)
@@ -182,12 +200,12 @@ class _ScheduleMeetingEditRouteState
             context,
             !MeetingValueKey.inProduction
                 ? '${requestMeetingItem.meetingId}&${requestMeetingItem.meetingNum}'
-                : meetingAppLocalizations.meetingScheduleEditSuccess,
+                : getAppLocalizations().meetingScheduleEditSuccess,
             key: MeetingValueKey.scheduleMeetingEditSuccessToast);
         Navigator.pop(context);
       } else if (result.code == HttpCode.meetingDurationTooLong) {
         ToastUtils.showToast(
-            context, meetingAppLocalizations.meetingDurationTooLong);
+            context, getAppLocalizations().meetingDurationTooLong);
       } else {
         var errorMsg = result.msg;
         errorMsg = HttpCode.getMsg(errorMsg);

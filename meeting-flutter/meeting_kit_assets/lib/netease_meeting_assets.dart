@@ -7,5 +7,6 @@ library netease_meeting_assets;
 export 'src/netease_meeting_images.dart';
 export 'src/netease_meeting_icon_font.dart';
 export 'src/netease_meeting_sounds.dart';
+export 'src/netease_meeting_timezones.dart';
 
 const String meetingAssetsPackageName = 'netease_meeting_assets';

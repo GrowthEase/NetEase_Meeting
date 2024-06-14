@@ -17,7 +17,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:intl/intl.dart' as MeetingDateFormat show DateFormat;
 import 'package:netease_common/netease_common.dart';
@@ -34,6 +33,7 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 import 'package:netease_meeting_assets/netease_meeting_assets.dart';
 import 'package:netease_roomkit/netease_roomkit.dart';
@@ -53,6 +53,8 @@ import 'package:azlistview_plus/azlistview_plus.dart';
 import 'package:lpinyin/lpinyin.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import 'package:vibration/vibration.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 
 export 'package:netease_meeting_core/meeting_kit.dart';
 export 'package:netease_meeting_ui/meeting_plugin.dart'
@@ -71,6 +73,7 @@ part 'src/meeting_ui/pages/meeting_members_page.dart';
 part 'src/meeting_ui/pages/meeting_chatroom_members_page.dart';
 part 'src/meeting_ui/pages/meeting_page.dart';
 part 'src/meeting_ui/pages/meeting_security_page.dart';
+part 'src/meeting_ui/pages/meeting_setting_page.dart';
 part 'src/meeting_ui/pages/meeting_chat_permission_page.dart';
 part 'src/meeting_ui/pages/meeting_chatroom_page.dart';
 part 'src/meeting_ui/pages/meeting_info_page.dart';
@@ -82,18 +85,24 @@ part 'src/meeting_ui/manager/active_speaker_manager.dart';
 part 'src/meeting_ui/manager/chatroom_manager.dart';
 part 'src/meeting_ui/manager/chatroom_instance_manager.dart';
 part 'src/meeting_ui/manager/local_settings.dart';
+part 'src/meeting_ui/manager/interpretation_controller.dart';
 part 'src/meeting_ui/state/meeting_state.dart';
 part 'src/meeting_ui/values/colors.dart';
 part 'src/meeting_ui/widget/text_watermark.dart';
 part 'src/meeting_ui/widget/meeting_duration.dart';
 part 'src/meeting_ui/widget/slider_widget.dart';
 part 'src/meeting_ui/widget/round_slider_trackshape.dart';
+part 'src/meeting_ui/widget/meeting_setting_group.dart';
 part 'src/meeting_ui/widget/popup_contacts.dart';
 part 'src/meeting_ui/widget/popup_contacts_add.dart';
 part 'src/meeting_ui/widget/dots_indicator.dart';
 part 'src/meeting_ui/widget/contact_list.dart';
 part 'src/meeting_ui/widget/pointer_event_aware.dart';
+part 'src/meeting_ui/widget/list_tiles.dart';
 part 'src/meeting_ui/service/meeting_ui_kit.dart';
+part 'src/meeting_ui/service/meeting_ui_kit_invite_service.dart';
+part 'src/meeting_ui/service/meeting_ui_kit_screensharing_service.dart';
+part 'src/meeting_ui/utils/meeting_ui_service_helper.dart';
 part 'src/meeting_ui/pages/meeting_verify_password_page.dart';
 part 'src/meeting_ui/pages/meeting_waiting_room_page.dart';
 part 'src/meeting_ui/arguments/meeting_waiting_arguments.dart';
@@ -107,6 +116,8 @@ part 'src/meeting_ui/pages/meeting_live_setting_page.dart';
 part 'src/meeting_ui/pages/meeting_pre_virtual_background_page.dart';
 part 'src/meeting_ui/pages/meeting_chat_message_detail.dart';
 part 'src/meeting_ui/pages/meeting_sip_call_page.dart';
+part 'src/meeting_ui/pages/meeting_interpretation.dart';
+part 'src/meeting_ui/pages/meeting_notification_manager.dart';
 part 'src/meeting_ui/arguments/live_arguments.dart';
 part 'src/meeting_ui/menu/meeting_menus.dart';
 part 'src/meeting_ui/menu/base_widgets.dart';
@@ -117,6 +128,7 @@ part 'src/meeting_ui/widget/localizations.dart';
 part 'src/meeting_ui/widget/draggable_positioned.dart';
 part 'src/meeting_ui/widget/meeting_kit_config.dart';
 part 'src/meeting_ui/widget/meeting_avatar.dart';
+part 'src/meeting_ui/widget/meeting_biz_widgets.dart';
 part 'src/meeting_ui/widget/invite/meeting_app_inviting.dart';
 part 'src/meeting_ui/widget/invite/meeting_invite_helper.dart';
 part 'src/meeting_ui/widget/ripple_animation.dart';
@@ -141,7 +153,9 @@ part 'src/meeting_ui/uikit/state/base_state.dart';
 part 'src/meeting_ui/uikit/loading.dart';
 part 'src/meeting_ui/uikit/nav_utils.dart';
 part 'src/meeting_ui/uikit/dialog_utils.dart';
+part 'src/meeting_ui/uikit/max_member_tip_dialog.dart';
 part 'src/meeting_ui/uikit/clear_icon_button.dart';
+part 'src/meeting_ui/uikit/dropdown_icon_button.dart';
 part 'src/meeting_ui/uikit/toast_utils.dart';
 part 'src/meeting_ui/uikit/bottom_sheet_utils.dart';
 part 'src/meeting_ui/uikit/invite_dialog.dart';
@@ -150,6 +164,8 @@ part 'src/meeting_ui/uikit/style/app_style_util.dart';
 part 'src/meeting_ui/uikit/permission/permission_helper.dart';
 part 'src/meeting_ui/uikit/helpers.dart';
 part 'src/meeting_ui/uikit/timer_button.dart';
+part 'src/meeting_ui/uikit/state/platform_aware_lifecycle_base_state.dart';
+part 'src/meeting_ui/widget/meeting_base_widget.dart';
 part 'src/meeting_ui/widget/invite/meeting_invite_overlay.dart';
 part 'src/meeting_ui/widget/invite/meeting_invite_wrapper.dart';
 
@@ -162,6 +178,7 @@ part 'src/meeting_ui/utils/utils.dart';
 part 'src/meeting_ui/utils/meeting_time_util.dart';
 part 'src/meeting_ui/utils/meeting_string_util.dart';
 part 'src/meeting_ui/utils/rtc_utils.dart';
+part 'src/meeting_ui/utils/timezone_util.dart';
 part 'src/meeting_ui/utils/length_text_input_formatter.dart';
 part 'src/meeting_ui/utils/meeting_notify_center_action.dart';
 part 'src/meeting_ui/widget/auto_pop_scope.dart';
@@ -195,21 +212,14 @@ class MeetingCore {
           .then((value) => value.version.sdkInt);
       // // Android Q以上屏幕共享需要一个前台Service
       if (sdkInt >= 29) {
+        var localizations = NEMeetingUIKit.instance.getUIKitLocalizations();
         return NEForegroundServiceConfig(
-          contentTitle: NEMeetingUIKit()
-              .ofLocalizations()
-              .meetingNotificationContentTitle,
-          contentText:
-              NEMeetingUIKit().ofLocalizations().meetingNotificationContentText,
-          ticker: NEMeetingUIKit()
-              .ofLocalizations()
-              .meetingNotificationContentTicker,
-          channelId:
-              NEMeetingUIKit().ofLocalizations().meetingNotificationChannelId,
-          channelName:
-              NEMeetingUIKit().ofLocalizations().meetingNotificationChannelName,
-          channelDesc:
-              NEMeetingUIKit().ofLocalizations().meetingNotificationChannelDesc,
+          contentTitle: localizations.meetingNotificationContentTitle,
+          contentText: localizations.meetingNotificationContentText,
+          ticker: localizations.meetingNotificationContentTicker,
+          channelId: localizations.meetingNotificationChannelId,
+          channelName: localizations.meetingNotificationChannelName,
+          channelDesc: localizations.meetingNotificationChannelDesc,
         );
       }
     }

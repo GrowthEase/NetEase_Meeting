@@ -8,11 +8,13 @@ class NEHttpApiRequest {
   final String path;
   final Map<String, dynamic>? headers;
   final Map? body;
+  final String method;
 
   NEHttpApiRequest({
     required this.path,
     this.headers,
     this.body,
+    this.method = 'POST',
   });
 }
 
@@ -26,6 +28,9 @@ class _GenericHttpApiRequest extends HttpApi<Map> {
 
   @override
   String path() => request.path;
+
+  @override
+  String get method => request.method;
 
   @override
   Map<String, dynamic>? header() => request.headers;

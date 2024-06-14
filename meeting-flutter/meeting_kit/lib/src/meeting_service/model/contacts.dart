@@ -5,9 +5,6 @@
 part of meeting_service;
 
 class NEContact {
-  /// 账号id
-  final int? accountId;
-
   /// 用户id
   final String userUuid;
 
@@ -24,7 +21,6 @@ class NEContact {
   final String? phoneNumber;
 
   NEContact({
-    this.accountId,
     required this.userUuid,
     this.name,
     this.avatar,
@@ -34,7 +30,6 @@ class NEContact {
 
   factory NEContact.fromJson(Map json) {
     return NEContact(
-      accountId: json['accountId'],
       userUuid: json['userUuid'],
       name: json['name'],
       avatar: json['avatar'],
@@ -46,7 +41,6 @@ class NEContact {
   /// toJson
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    data['accountId'] = accountId;
     data['userUuid'] = userUuid;
     data['name'] = name;
     data['avatar'] = avatar;
@@ -56,19 +50,36 @@ class NEContact {
   }
 }
 
-class NEContactsInfoResponse {
-  final List<NEContact> meetingAccountListResp;
-  final List<String> notFindUserUuids;
+///
+/// 企业通讯录成员列表查询结果
+///
+class NEContactsInfoResult {
+  ///
+  /// 查询到的成员列表
+  ///
+  final List<NEContact> foundList;
 
-  NEContactsInfoResponse(this.meetingAccountListResp, this.notFindUserUuids);
+  ///
+  /// 未查询到的成员列表
+  ///
+  final List<String> notFoundList;
 
-  factory NEContactsInfoResponse.fromJson(Map json) {
-    List<NEContact> meetingAccountListResp = [];
-    List<String> notFindUserUuids = [];
+  NEContactsInfoResult(this.foundList, this.notFoundList);
+
+  Map toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['foundList'] = foundList.map((e) => e.toJson()).toList();
+    data['notFoundList'] = notFoundList;
+    return data;
+  }
+
+  factory NEContactsInfoResult._fromServer(Map json) {
+    List<NEContact> foundList = [];
+    List<String> notFoundList = [];
     if (json['meetingAccountListResp'] != null) {
       List list = json['meetingAccountListResp'] as List;
       if (list.isNotEmpty) {
-        meetingAccountListResp = list.map((e) {
+        foundList = list.map((e) {
           assert(e is Map);
           final item = e as Map<String, dynamic>;
           return NEContact.fromJson(item);
@@ -78,12 +89,12 @@ class NEContactsInfoResponse {
     if (json['notFindUserUuids'] != null) {
       List list = json['notFindUserUuids'] as List;
       if (list.isNotEmpty) {
-        notFindUserUuids = list.map((e) {
+        notFoundList = list.map((e) {
           assert(e is String);
           return e as String;
         }).toList();
       }
     }
-    return NEContactsInfoResponse(meetingAccountListResp, notFindUserUuids);
+    return NEContactsInfoResult(foundList, notFoundList);
   }
 }

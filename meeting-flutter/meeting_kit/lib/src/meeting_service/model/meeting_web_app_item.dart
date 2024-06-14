@@ -4,22 +4,7 @@
 
 part of meeting_service;
 
-class NEMeetingWebAppList {
-  /// 应用列表
-  List<NEMeetingWebAppItem>? pluginInfos;
-
-  NEMeetingWebAppList();
-
-  factory NEMeetingWebAppList.fromMap(Map<String, dynamic> map) {
-    final list = NEMeetingWebAppList();
-    final pluginInfos =
-        (map['pluginInfos'] as List).cast<Map<String, dynamic>>();
-    list.pluginInfos =
-        pluginInfos.map((ret) => NEMeetingWebAppItem.fromMap(ret)).toList();
-    return list;
-  }
-}
-
+/// 小应用对象
 class NEMeetingWebAppItem {
   /// 应用Id
   final String pluginId;
@@ -27,7 +12,7 @@ class NEMeetingWebAppItem {
   /// 应用名称
   final String name;
 
-  /// 应用图标url
+  /// 应用图标
   final NEMeetingWebAppIconItem icon;
 
   /// 应用描述
@@ -63,11 +48,26 @@ class NEMeetingWebAppItem {
       sessionId: map['notifySenderAccid'] as String,
     );
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'pluginId': pluginId,
+      'name': name,
+      'icon': icon.toMap(),
+      'description': description,
+      'type': type.index,
+      'homeUrl': homeUrl,
+      'sessionId': sessionId,
+    };
+  }
 }
 
+/// 小应用图标
 class NEMeetingWebAppIconItem {
   /// 应用图标url
   final String defaultIcon;
+
+  /// 通知图标url
   final String? notifyIcon;
 
   NEMeetingWebAppIconItem({
@@ -80,6 +80,13 @@ class NEMeetingWebAppIconItem {
       defaultIcon: map['defaultIcon'] as String,
       notifyIcon: map['notifyIcon'] as String?,
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'defaultIcon': defaultIcon,
+      'notifyIcon': notifyIcon,
+    };
   }
 }
 

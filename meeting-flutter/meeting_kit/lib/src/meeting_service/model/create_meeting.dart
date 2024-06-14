@@ -137,7 +137,7 @@ class MeetingInfo {
   ///
   /// 会议状态
   ///
-  late final NEMeetingState state;
+  late final NEMeetingItemStatus state;
 
   ///
   /// 会议短号
@@ -160,6 +160,9 @@ class MeetingInfo {
   /// 房间拥有者的用户uuid
   late final String? ownerUserUuid;
 
+  /// 时区Id
+  late final String? timezoneId;
+
   MeetingInfo({
     required this.meetingId,
     required this.meetingNum,
@@ -177,6 +180,7 @@ class MeetingInfo {
     this.authorization,
     this.settings,
     this.ownerUserUuid,
+    this.timezoneId,
   });
 
   MeetingInfo.fromMap(Map map) {
@@ -205,10 +209,11 @@ class MeetingInfo {
     }
 
     settings = MeetingSettings.fromMap(map['settings'] as Map?);
+    timezoneId = map['timezoneId'] as String?;
   }
 
   MeetingInfo copyWith({
-    NEMeetingState? state,
+    NEMeetingItemStatus? state,
   }) {
     return MeetingInfo(
       meetingId: meetingId,
@@ -227,6 +232,7 @@ class MeetingInfo {
       authorization: authorization,
       settings: settings,
       ownerUserUuid: ownerUserUuid,
+      timezoneId: timezoneId,
     );
   }
 }

@@ -32,6 +32,32 @@ class WaitingRoomManager with NEWaitingRoomListener, _AloggerMixin {
   final _userListChangeController = StreamController<Object>.broadcast();
   Stream<Object> get userListChanged => _userListChangeController.stream;
 
+  List<NEWaitingRoomHost>? _hostAndCoHostList;
+  List<NEWaitingRoomHost> get hostAndCoHostList {
+    _ensureInit();
+    return _hostAndCoHostList ?? [];
+  }
+
+  final _hostAndCoHostListChangeController =
+      StreamController<List<NEWaitingRoomHost>>.broadcast();
+  Stream<List<NEWaitingRoomHost>> get hostAndCoHostListChanged {
+    if (_hostAndCoHostList == null) {
+      tryLoadHostAndCoHost();
+    }
+    return _hostAndCoHostListChangeController.stream
+        .addInitial(hostAndCoHostList);
+  }
+
+  int compareHost(NEWaitingRoomHost lhs, NEWaitingRoomHost rhs) {
+    if (lhs.role == MeetingRoles.kHost) {
+      return -1;
+    }
+    if (rhs.role == MeetingRoles.kHost) {
+      return 1;
+    }
+    return lhs.name.compareTo(rhs.name);
+  }
+
   final _unreadMemberUuids = <String>{};
   final _unreadMemberCountNotify = ValueNotifier(0);
   ValueNotifier<int> get unreadMemberCountListenable =>
@@ -54,10 +80,14 @@ class WaitingRoomManager with NEWaitingRoomListener, _AloggerMixin {
     if (!_hasInit) {
       _hasInit = true;
       _connectivitySubscription =
-          ConnectivityManager().onReconnected.listen((event) {
-        tryLoadMoreUser(reset: true);
+          ConnectivityManager().onReconnected.listen((connected) {
+        if (connected) {
+          tryLoadMoreUser(reset: true);
+          tryLoadHostAndCoHost();
+        }
       });
       tryLoadMoreUser(reset: true);
+      tryLoadHostAndCoHost();
     }
   }
 
@@ -77,6 +107,7 @@ class WaitingRoomManager with NEWaitingRoomListener, _AloggerMixin {
     _ensureInit();
     if (isMySelfManager && _hasInit) {
       tryLoadMoreUser(reset: true);
+      tryLoadHostAndCoHost();
     }
   }
 
@@ -138,6 +169,11 @@ class WaitingRoomManager with NEWaitingRoomListener, _AloggerMixin {
     }
   }
 
+  @override
+  void onManagersUpdated(List<NEWaitingRoomHost> updatedHosts) {
+    updateHostAndCoHostList(updatedHosts);
+  }
+
   void onMyWaitingRoomStatusChanged(int status, int reason) {
     waitingRoomStatusChangedHandler?.call(status, reason);
   }
@@ -153,6 +189,22 @@ class WaitingRoomManager with NEWaitingRoomListener, _AloggerMixin {
         });
     }
     return _userList!;
+  }
+
+  /// 等候室成员更新主持人和联席主持人列表
+  Future<void> tryLoadHostAndCoHost() async {
+    if (!roomContext.isInWaitingRoom()) return;
+    final result = await waitingRoomController.getHostAndCoHostList();
+    if (!_disposed && result.isSuccess()) {
+      updateHostAndCoHostList(result.data ?? []);
+    }
+  }
+
+  /// 更新主持人和联席主持人列表
+  void updateHostAndCoHostList(List<NEWaitingRoomHost> updatedHosts) {
+    _hostAndCoHostList = updatedHosts;
+    _hostAndCoHostList?.sort(compareHost);
+    _hostAndCoHostListChangeController.add(updatedHosts);
   }
 
   void tryLoadMoreUser({bool reset = false}) async {

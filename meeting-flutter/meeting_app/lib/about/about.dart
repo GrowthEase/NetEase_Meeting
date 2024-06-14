@@ -6,6 +6,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nemeeting/uikit/values/dimem.dart';
+import 'package:nemeeting/widget/ne_widget.dart';
 import 'package:netease_meeting_ui/meeting_ui.dart';
 import 'package:nemeeting/service/config/app_config.dart';
 import 'package:nemeeting/service/config/servers.dart';
@@ -27,8 +29,7 @@ class About extends StatefulWidget {
   }
 }
 
-class _AboutState extends MeetingBaseState<About>
-    with MeetingAppLocalizationsMixin {
+class _AboutState extends AppBaseState<About> {
   static const String TAG = 'About';
   bool newVersionTips = false;
 
@@ -44,59 +45,63 @@ class _AboutState extends MeetingBaseState<About>
 
   @override
   String getTitle() {
-    return meetingAppLocalizations.settingAbout;
+    return getAppLocalizations().settingAbout;
   }
 
   Color get backgroundColor => AppColors.white;
 
   @override
   Widget buildBody() {
-    return ListView(
-      children: <Widget>[
-        SizedBox(
-          height: 40.h,
-        ),
-        buildIcon(),
-        SizedBox(
-          height: 12.h,
-        ),
-        buildVersion(),
-        SizedBox(
-          height: 40.h,
-        ),
-        buildSplit(),
-        buildProtocol(),
-        buildSplit(),
-        buildPrivacy(),
-        buildSplit(),
-        ...[
+    return Container(
+      padding:
+          EdgeInsets.symmetric(horizontal: Dimen.settingItemHorizontalPadding),
+      color: AppColors.globalBg,
+      child: ListView(
+        children: <Widget>[
           SizedBox(
-            height: 56.h,
+            height: 40.h,
           ),
+          buildIcon(),
+          SizedBox(
+            height: 12.h,
+          ),
+          buildVersion(),
+          SizedBox(
+            height: 40.h,
+          ),
+          NESettingItemGroup(children: [
+            buildProtocol(),
+            buildPrivacy(),
+            SizedBox(
+              height: 56.h,
+            ),
+          ]),
+          SizedBox(
+            height: 216.h,
+          ),
+          buildAppRegistryNO(),
+          SizedBox(
+            height: 10.h,
+          ),
+          buildCopyright(),
         ],
-        SizedBox(
-          height: 216.h,
-        ),
-        buildAppRegistryNO(),
-        SizedBox(
-          height: 10.h,
-        ),
-        buildCopyright(),
-      ],
+      ),
     );
   }
 
   Widget buildUpgrade() {
-    return GestureDetector(
+    return NEGestureDetector(
       child: Container(
-        height: 56.h,
-        color: Colors.white,
-        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        height: 48.h,
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
         child: Row(
           children: <Widget>[
             Text(
-              meetingAppLocalizations.settingCheckUpdate,
-              style: TextStyle(fontSize: 16, color: AppColors.black_222222),
+              getAppLocalizations().settingCheckUpdate,
+              style: TextStyle(
+                  fontSize: 14.spMin,
+                  color: AppColors.black_222222,
+                  fontWeight: FontWeight.w500),
             ),
             Spacer(),
             if (newVersionTips)
@@ -107,21 +112,18 @@ class _AboutState extends MeetingBaseState<About>
               ),
             if (newVersionTips)
               Text(
-                meetingAppLocalizations.settingFindNewVersion,
-                style: TextStyle(fontSize: 16, color: AppColors.color_999999),
+                getAppLocalizations().settingFindNewVersion,
+                style: TextStyle(
+                    fontSize: 16.spMin, color: AppColors.color_999999),
               ),
-            Icon(
-              IconFont.iconyx_allowx,
-              size: 14,
-              color: AppColors.greyCCCCCC,
-            )
+            NESettingItemArrow(),
           ],
         ),
       ),
       onTap: () async {
-        if (NEMeetingUIKit().getCurrentMeetingInfo() != null) {
+        if (NEMeetingUIKit.instance.getCurrentMeetingInfo() != null) {
           ToastUtils.showToast(context,
-              meetingAppLocalizations.meetingOperationNotSupportedInMeeting);
+              getAppLocalizations().meetingOperationNotSupportedInMeeting);
           return;
         }
       },
@@ -142,79 +144,46 @@ class _AboutState extends MeetingBaseState<About>
 
   Widget buildVersion() {
     return Text(
-      '${meetingAppLocalizations.settingVersion}${AppConfig().versionName}.${AppConfig().versionCode}',
-      style: TextStyle(color: AppColors.color_999999, fontSize: 12),
+      '${getAppLocalizations().settingVersion}${AppConfig().versionName}.${AppConfig().versionCode}',
+      style: TextStyle(color: AppColors.color_999999, fontSize: 12.spMin),
       textAlign: TextAlign.center,
     );
   }
 
   Widget buildProtocol() {
-    return buildItem(
-        meetingAppLocalizations.authServiceAgreement,
-        () => Navigator.push(
+    return NESettingItem(getAppLocalizations().authServiceAgreement, onTap: () {
+      if (Servers().userProtocol?.isNotEmpty ?? false) {
+        Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => MeetingAppLocalizationsScope(
-                    child: WebViewPage(WebViewArguments(Servers().userProtocol,
-                        meetingAppLocalizations.authServiceAgreement))))));
+                builder: (context) => WebViewPage(WebViewArguments(
+                    Servers().userProtocol,
+                    getAppLocalizations().authServiceAgreement))));
+      } else {
+        Alog.e(tag: TAG, content: "userProtocol is empty");
+      }
+    });
   }
 
   Widget buildPrivacy() {
-    return buildItem(meetingAppLocalizations.authPrivacy, () {
+    return NESettingItem(getAppLocalizations().authPrivacy, onTap: () {
       if (Servers().privacy?.isNotEmpty ?? false) {
         Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => MeetingAppLocalizationsScope(
-                    child: WebViewPage(WebViewArguments(Servers().privacy,
-                        meetingAppLocalizations.authPrivacy)))));
+                builder: (context) => WebViewPage(WebViewArguments(
+                    Servers().privacy, getAppLocalizations().authPrivacy))));
       } else {
         Alog.e(tag: TAG, content: "privacy is empty");
       }
     });
   }
 
-  Container buildSplit() {
-    return Container(
-      padding: EdgeInsets.only(left: 20.w),
-      color: AppColors.white,
-      child: Container(
-        color: AppColors.globalBg,
-      ),
-      height: 0.5,
-    );
-  }
-
-  Widget buildItem(String title, VoidCallback fun) {
-    return GestureDetector(
-      child: Container(
-        height: 56.h,
-        color: Colors.white,
-        padding: EdgeInsets.symmetric(horizontal: 20.w),
-        child: Row(
-          children: <Widget>[
-            Text(
-              title,
-              style: TextStyle(fontSize: 16, color: AppColors.black_222222),
-            ),
-            Spacer(),
-            Icon(
-              IconFont.iconyx_allowx,
-              size: 14,
-              color: AppColors.greyCCCCCC,
-            )
-          ],
-        ),
-      ),
-      onTap: fun,
-    );
-  }
-
   Widget buildCopyright() {
     return Text(
-      meetingAppLocalizations.globalCopyright,
+      getAppLocalizations().globalCopyright,
       textAlign: TextAlign.center,
-      style: TextStyle(color: AppColors.color_999999, fontSize: 12),
+      style: TextStyle(color: AppColors.color_999999, fontSize: 12.spMin),
     );
   }
 
@@ -223,14 +192,14 @@ class _AboutState extends MeetingBaseState<About>
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        GestureDetector(
+        NEGestureDetector(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
-              meetingAppLocalizations.globalAppRegistryNO,
+              getAppLocalizations().globalAppRegistryNO,
               style: TextStyle(
                 color: AppColors.color_333333,
-                fontSize: 12,
+                fontSize: 12.spMin,
               ),
             ),
           ),
@@ -239,9 +208,14 @@ class _AboutState extends MeetingBaseState<About>
         Icon(
           IconFont.iconyx_allowx,
           size: 10,
-          color: AppColors.color_333333,
+          color: AppColors.color_8D90A0,
         ),
       ],
     );
+  }
+
+  @override
+  Color getAppBarBackgroundColor() {
+    return AppColors.globalBg;
   }
 }

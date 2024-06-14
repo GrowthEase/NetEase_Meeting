@@ -68,7 +68,7 @@ class PermissionHelper {
         useRootNavigator: useRootNavigator,
         builder: (_) {
           return NEMeetingUIKitLocalizationsScope(
-            builder: (ctx) {
+            builder: (ctx, _, __) {
               return _buildPermissionDialog(
                   ctx, title, permissionName, message);
             },

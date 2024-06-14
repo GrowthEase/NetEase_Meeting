@@ -6,7 +6,7 @@ part of meeting_service;
 
 /// 删除预约会议
 class _GetMeetingListByStatusApi extends HttpApi<List<NEMeetingItem>> {
-  List<NEMeetingState> status;
+  List<NEMeetingItemStatus> status;
 
   _GetMeetingListByStatusApi(this.status);
 
@@ -30,7 +30,7 @@ class _GetMeetingListByStatusApi extends HttpApi<List<NEMeetingItem>> {
         .map<NEMeetingItem>((e) => NEMeetingItem.fromJson(e as Map))
         .toList();
     list.removeWhere(
-        (element) => element.meetingType != NEMeetingType.kReservation.type);
+        (element) => element.meetingType != NEMeetingType.kReservation);
     return list;
   }
 

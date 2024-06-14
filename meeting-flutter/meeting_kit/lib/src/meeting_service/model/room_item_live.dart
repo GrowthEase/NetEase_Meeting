@@ -19,11 +19,11 @@ class NEPreRoomLiveInfo {
   bool get enable => delegate.enable;
 
   /// 获取直播级别
-  NELiveAuthLevel get webAccessControlLevel =>
+  NEMeetingLiveAuthLevel get webAccessControlLevel =>
       LiveAuthLevelExtension.get(delegate.liveWebAccessControlLevel);
 
   /// 设置直播级别
-  set webAccessControlLevel(NELiveAuthLevel level) =>
+  set webAccessControlLevel(NEMeetingLiveAuthLevel level) =>
       delegate.liveWebAccessControlLevel = level.index;
 
   String? get liveUrl => delegate.liveUrl;
@@ -41,7 +41,7 @@ class NERoomItemLive {
   bool enable = false;
 
   ///登录 web 直播页的鉴权级别，0：不需要鉴权，1：需要登录，2：需要登录并且账号要与直播应用绑定。不填的话表示不需要鉴权
-  int liveWebAccessControlLevel = NELiveAuthLevel.token.index;
+  int liveWebAccessControlLevel = NEMeetingLiveAuthLevel.token.index;
 
   /// 直播标题
   String? title;
@@ -126,7 +126,7 @@ class NERoomItemLive {
     if (map != null) {
       enable = map['enable'] as bool;
       liveWebAccessControlLevel = (map['liveWebAccessControlLevel'] ??
-          NELiveAuthLevel.token.index) as int;
+          NEMeetingLiveAuthLevel.token.index) as int;
       hlsPullUrl = map['hlsPullUrl'] as String?;
       httpPullUrl = map['httpPullUrl'] as String?;
       rtmpPullUrl = map['rtmpPullUrl'] as String?;
