@@ -10,4 +10,6 @@
 [创建应用并获取 AppKey](https://doc.yunxin.163.com/console/guide/TIzMDE4NTA?platform=console)
 ### 配置AppKey
 [Android配置路径](./android/app/src/main/assets/xkit_server.config)
+
+
 [iOS配置路径](./ios/Runner/xkit_server.config)
