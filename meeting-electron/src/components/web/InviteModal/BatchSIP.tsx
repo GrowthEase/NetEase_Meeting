@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button, Checkbox, Input } from 'antd'
+import { Button } from 'antd'
 import Toast from '../../common/toast'
 import AddressBook from '../../common/AddressBook'
 import NEMeetingService from '../../../services/NEMeeting'
@@ -39,12 +39,15 @@ const BatchSIP: React.FC<SIPBatchCallProps> = ({
     try {
       await neMeeting?.callByUserUuids(selectedMemberUuids)
       onCalled?.()
-    } catch (e: any) {
-      Toast.fail(e.message)
+    } catch (err: unknown) {
+      const knownError = err as { message: string; msg: string }
+
+      Toast.fail(knownError.message)
     } finally {
       setCallLoading(false)
     }
   }
+
   const onMembersChange = (member: SearchAccountInfo, isChecked) => {
     if (isChecked && selectedMembers.length >= 10) {
       Toast.fail(
@@ -54,7 +57,9 @@ const BatchSIP: React.FC<SIPBatchCallProps> = ({
       )
       return
     }
+
     const tmpSelectedMembers = [...selectedMembers]
+
     if (inSipInvitingMemberList && isChecked) {
       // 判断选中的人是否有在呼叫中的且是等待呼叫或者呼叫中的状态 有的话不允许选中
       const index = inSipInvitingMemberList.findIndex(
@@ -62,25 +67,30 @@ const BatchSIP: React.FC<SIPBatchCallProps> = ({
           item.uuid === member.userUuid &&
           (item.inviteState === 1 || item.inviteState === 2)
       )
+
       if (index > -1) {
         Toast.fail(t('sipCallIsInInviting'))
         return
       }
     }
+
     if (isChecked && memberList) {
       // 判断选中的人是否有在会议中的 有的话不允许选中
       const index = memberList.findIndex(
         (item) => item.uuid === member.userUuid
       )
+
       if (index > -1) {
         Toast.fail(t('sipCallIsInMeeting'))
         return
       }
     }
+
     if (isChecked && !member.phoneNumber) {
       Toast.fail(t('sipContactNoNumber'))
       return
     }
+
     // 添加
     if (isChecked) {
       tmpSelectedMembers.push(member)
@@ -89,6 +99,7 @@ const BatchSIP: React.FC<SIPBatchCallProps> = ({
       const index = tmpSelectedMembers.findIndex(
         (item) => item.userUuid === member.userUuid
       )
+
       if (index > -1) {
         tmpSelectedMembers.splice(index, 1)
       }
@@ -96,6 +107,7 @@ const BatchSIP: React.FC<SIPBatchCallProps> = ({
 
     setSelectedMembers(tmpSelectedMembers)
   }
+
   // 添加disabled字段
   const memberSelectedList = useMemo(() => {
     return selectedMembers.map((item) => {
@@ -105,6 +117,7 @@ const BatchSIP: React.FC<SIPBatchCallProps> = ({
       }
     })
   }, [selectedMembers])
+
   // @ts-ignore
   return (
     <div className={`nemeeting-batch-call ${className || ''}`}>

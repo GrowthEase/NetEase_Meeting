@@ -23,28 +23,29 @@ interface LoginComProps {
   goBack: () => void;
   onLogged: () => void;
 }
+const isCode = true; // 是否为验证码登录
+const newVersion = false;
 
 export const LoginCom: React.FC<LoginComProps> = ({
   checkIsAgree,
   style = {},
-  onSSOLogin,
   goBack,
   onLogged,
 }) => {
   const { t } = useTranslation();
-  const [isCode, setType] = useState(true); // 是否为验证码登录
+  // const [isCode] = useState(true); // 是否为验证码登录
   // const [loginType, setLoginType] = useState(''); // 是否为显示密码登录（只有特殊客户需要显示这个按钮，一般不提供）
   const [phone, setPhone] = useState({ value: '', valid: false });
   const [code, setCode] = useState({ value: '', valid: false });
   const [pwd, setPwd] = useState({ value: '', valid: false });
   const [loading, setLoading] = useState(false);
-  const [newVersion, setNewVersion] = useState<boolean>(false);
 
   useEffect(() => {
     if (loading) {
       const container = document.getElementById(
         'loading-modal-svg',
       ) as HTMLElement;
+
       lottie.loadAnimation({
         name: 'loading-modal-svg',
         container,
@@ -57,6 +58,7 @@ export const LoginCom: React.FC<LoginComProps> = ({
     } else {
       lottie.destroy('loading-modal-svg');
     }
+
     return () => {
       lottie.destroy('loading-modal-svg');
     };
@@ -66,6 +68,7 @@ export const LoginCom: React.FC<LoginComProps> = ({
     if (!checkIsAgree()) {
       return;
     }
+
     setLoading(true);
     const payload = isCode
       ? {
@@ -78,10 +81,12 @@ export const LoginCom: React.FC<LoginComProps> = ({
             ? Md5.hashStr(pwd.value + '@yiyong.im')
             : Md5.hashStr(pwd.value + '@163'),
         };
+
     loginApi(payload)
       .then((data) => {
         console.log('res..', data);
         let userInfo = data;
+
         userInfo = Object.assign(
           {
             appKey: APP_KEY,
@@ -101,6 +106,7 @@ export const LoginCom: React.FC<LoginComProps> = ({
         setLoading(false);
       });
   };
+
   // 账号密码登录时不需要校验格式
   // 验证码登录时需要校验手机号和验证码格式
   const btnValid = isCode
@@ -135,7 +141,6 @@ export const LoginCom: React.FC<LoginComProps> = ({
         </div>
         <Button
           type="primary"
-          shape="round"
           disabled={!phone.valid || !code.valid}
           className={`login-button ${btnValid ? '' : 'inactive'}`}
           onClick={logins}
@@ -143,14 +148,14 @@ export const LoginCom: React.FC<LoginComProps> = ({
         >
           {t('authLogin')}
         </Button>
-        <div
+        {/* <div
           className={styles.toggleLogin}
           onClick={() => {
             onSSOLogin();
           }}
         >
           {t('authLoginBySSO')}
-        </div>
+        </div> */}
       </section>
       <Modal
         title=""

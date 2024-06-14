@@ -6,13 +6,17 @@ import DataReporter from './DataReporter'
 import LoggerStorage, { LogName } from './logStorage'
 import { Uploader } from './nosUploader'
 import { LoginUserInfo } from '../../app/src/types'
-import { LOCALSTORAGE_USER_INFO } from '../config'
+import { LOCALSTORAGE_CUSTOM_LANGS, LOCALSTORAGE_USER_INFO } from '../config'
+import { NEDeviceBaseInfo } from 'neroom-web-sdk'
+import dayjs from 'dayjs'
+import { NEMeetingPrivateConfig } from '../types/type'
+
 // import sha1 from 'sha1'
 const version = '1.0.0'
 
-const salt = '021cc0370d824a51b7c8180485c27b38'
 const reporter = DataReporter.getInstance()
 const logger = LoggerStorage.getInstance()
+
 export type LogType = 'error' | 'warn' | 'info' | 'log' | 'debug'
 
 /**
@@ -22,29 +26,41 @@ export type LogType = 'error' | 'warn' | 'info' | 'log' | 'debug'
  * @param {*} end
  * @return {*}
  */
-export async function getLog(logName: LogName, start = 0, end = Date.now()) {
+export async function getLog(
+  logName: LogName,
+  start = 0,
+  end = Date.now()
+): Promise<string> {
   const logInfo = await logger.getLog(logName, start, end)
   let result = ''
+
   for (const ele of logInfo) {
     result += `[${formatDate(ele.time, 'yyyy-MM-dd hh:mm:ss')}]${
       ele?.logStr
     }\r\n`
   }
+
   return result
 }
-let timeout: any
-export function throttle(fn: (...args: any) => void, delay = 1000) {
+
+export function throttle<T extends (...args: any) => void>(
+  fn: T,
+  delay = 1000
+): T {
   let prev = Date.now()
+
   return function (...args: any) {
     // @ts-ignore
     const context = this as any
     const now = Date.now()
+
     if (now - prev >= delay) {
       fn.apply(context, args)
       prev = Date.now()
     }
-  }
+  } as unknown as T
 }
+
 /**
  * @description: 防抖
  * @param {*} fn
@@ -66,6 +82,15 @@ export function debounce<T>(fn: T, wait: any = 300): T {
     }, wait)
   } as unknown as T
 }
+
+export function getDateFormatString(language: string) {
+  if (language.startsWith('zh') || language.startsWith('ja')) {
+    return 'YYYY[年]MM[月]DD[日]'
+  }
+
+  return 'MMMM DD, YYYY'
+}
+
 /**
  * @description: 时间格式化
  * @param {*} time
@@ -73,35 +98,73 @@ export function debounce<T>(fn: T, wait: any = 300): T {
  * @return {*}
  */
 export function formatDate(
-  time: Date | number,
-  fmt: any = 'yyyy/MM/dd hh:mm'
-): any {
-  const date = new Date(time)
-  const o: Record<string, string> = {
-    'M+': date.getMonth() + 1 + '', //月份
-    'd+': date.getDate() + '', //日
-    'h+': date.getHours() + '', //小时
-    'm+': date.getMinutes() + '', //分
-    's+': date.getSeconds() + '', //秒
-    'q+': Math.floor((date.getMonth() + 3) / 3) + '', //季度
-    S: date.getMilliseconds() + '', //毫秒
-  }
-  if (/(y+)/.test(fmt))
-    fmt = fmt.replace(
-      RegExp.$1,
-      (date.getFullYear() + '').substr(4 - RegExp.$1.length)
-    )
-  for (const k in o)
-    if (new RegExp('(' + k + ')').test(fmt))
+  time: Date | number | string,
+  fmt: string = 'yyyy/MM/dd hh:mm',
+  timezone?: string,
+  language?: string
+): string {
+  if (timezone) {
+    return language
+      ? dayjs(time).locale(language).tz(timezone).format(fmt)
+      : dayjs(time).tz(timezone).format(fmt)
+  } else {
+    const date = new Date(time)
+    const o: Record<string, string> = {
+      'M+': date.getMonth() + 1 + '', //月份
+      'd+': date.getDate() + '', //日
+      'h+': date.getHours() + '', //小时
+      'm+': date.getMinutes() + '', //分
+      's+': date.getSeconds() + '', //秒
+      'q+': Math.floor((date.getMonth() + 3) / 3) + '', //季度
+      S: date.getMilliseconds() + '', //毫秒
+    }
+
+    if (/(y+)/.test(fmt))
       fmt = fmt.replace(
         RegExp.$1,
-        RegExp.$1.length == 1 ? o[k] : ('00' + o[k]).substr(('' + o[k]).length)
+        (date.getFullYear() + '').substr(4 - RegExp.$1.length)
       )
+    for (const k in o)
+      if (new RegExp('(' + k + ')').test(fmt))
+        fmt = fmt.replace(
+          RegExp.$1,
+          RegExp.$1.length == 1
+            ? o[k]
+            : ('00' + o[k]).substr(('' + o[k]).length)
+        )
+  }
+
   return fmt
 }
 
-export function copyElementValue(value: any, callback: () => void) {
+/**
+ * @description: 获取当前时间
+ */
+export function getCurrentDateTime(): { time: string; date: string } {
+  const now = new Date()
+  const time = `${now.getHours().toString().padStart(2, '0')}:${now
+    .getMinutes()
+    .toString()
+    .padStart(2, '0')}`
+  const date = now.toISOString().slice(0, 10)
+
+  return { time, date }
+}
+
+export function formatTimestamp(timestamp: number): string {
+  const date = new Date(timestamp)
+  const year = date.getFullYear()
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const day = date.getDate().toString().padStart(2, '0')
+  const hours = date.getHours().toString().padStart(2, '0')
+  const minutes = date.getMinutes().toString().padStart(2, '0')
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`
+}
+
+export function copyElementValue(value: any, callback: () => void): void {
   const input = document.createElement('input')
+
   input.setAttribute('readonly', 'readonly')
   input.setAttribute('value', value)
   document.body.appendChild(input)
@@ -112,8 +175,10 @@ export function copyElementValue(value: any, callback: () => void) {
     console.log('复制成功')
     callback()
   }
+
   document.body.removeChild(input)
 }
+
 /**
  * @description: 上传日志
  * @param {*} start
@@ -127,15 +192,18 @@ export async function uploadLog(
   end = Date.now()
 ) {
   const arr: Array<Promise<any>> = []
+
   if (!logNames || logNames?.length === 0) {
     logNames = ['meetingLog', 'imLog', 'rtcLog']
   }
+
   for (const ele of logNames) {
     if (!['meetingLog', 'imLog', 'rtcLog'].includes(ele)) {
       throw new Error(
         `${ele} is not a right arguments, please use right arguments：meetingLog, imLog, rtcLog`
       )
     }
+
     const logInfo = await getLog(ele, start, end)
     const data = {
       ext: 'log',
@@ -164,6 +232,7 @@ export async function uploadLog(
           const file = new File([logInfo], `${CurTime}.log`, {
             type: 'application/json',
           })
+
           uploader.addFile(file)
           uploader.upload(
             {
@@ -184,10 +253,13 @@ export async function uploadLog(
           )
         })
     })
+
     arr.push(fileUploadReq)
   }
+
   try {
     const result = await Promise.all(arr)
+
     reporter.sendLog({
       action_name: 'meeting-log-upload',
       log: result.toString(),
@@ -196,6 +268,27 @@ export async function uploadLog(
   } catch (e) {
     console.error('upload error', e)
     throw e
+  }
+}
+
+/**
+ * @description: 格式化当前时间
+ */
+export function formatTimeWithLanguage(
+  timestamp: number,
+  language: string
+): string {
+  const date = new Date(timestamp)
+  const isEnUS = language === 'en-US'
+  const month = date.toLocaleString(isEnUS ? 'en-US' : 'ja-JP', {
+    month: 'long',
+  })
+  const day = date.getDate()
+
+  if (isEnUS) {
+    return `${month} ${day}`
+  } else {
+    return `${date.getMonth() + 1}月${day}日`
   }
 }
 
@@ -214,17 +307,21 @@ export async function downloadLog(
   if (!logNames || logNames?.length === 0) {
     logNames = ['meetingLog', 'imLog', 'rtcLog']
   }
+
   for (const ele of logNames) {
     if (!['meetingLog', 'imLog', 'rtcLog'].includes(ele)) {
       throw new Error(
         `${ele} is not a right arguments, please use right arguments：meetingLog, imLog, rtcLog`
       )
     }
+
     const logInfo = await getLog(ele, start, end)
     const logBlob = new Blob([logInfo], { type: 'application/json' })
     const a = document.createElement('a')
+
     a.download = `${ele}-${start}-${end}.log`
     const href = window.URL.createObjectURL(logBlob)
+
     a.href = href
     document.body.appendChild(a)
     a.click()
@@ -233,11 +330,22 @@ export async function downloadLog(
   }
 }
 
+export function filterDate(time: number) {
+  const date = new Date(time)
+  const Y = date.getFullYear()
+  const M =
+    date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1
+  const D = date.getDate()
+
+  return `${Y}年${M}月${D}日`
+}
+
 // 判断系统
 export function getClientType(): 'Android' | 'IOS' | 'PC' {
   const u = navigator.userAgent
   const isAndroid = u.indexOf('Android') > -1 || u.indexOf('Adr') > -1 //判断是否是 android终端
   const isIOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/) //判断是否是 iOS终端
+
   if (isAndroid) {
     return 'Android'
   } else if (isIOS) {
@@ -250,9 +358,11 @@ export function getClientType(): 'Android' | 'IOS' | 'PC' {
 //获取判断浏览器类型
 export function getBrowserType(): BrowserType {
   const ua = navigator.userAgent.toLowerCase()
+
   if (!ua) {
     return BrowserType.UNKNOWN
   }
+
   if (ua.match(/MicroMessenger/i)) {
     return BrowserType.WX
   } else if (navigator.userAgent.indexOf('UCBrowser') > -1) {
@@ -271,6 +381,7 @@ export function getIosVersion(): string {
 
   // 使用正则表达式提取 iOS 版本号
   const match = userAgent.match(/(iPhone|iPad|iPod)\s+OS\s+([\d_]+)/)
+
   return match && match[2] ? match[2].replace(/_/g, '.') : ''
 }
 
@@ -284,6 +395,7 @@ export function getMeetingDisplayId(meetingNum: string | undefined): string {
   if (!meetingNum) {
     return ''
   }
+
   return (
     meetingNum.slice(0, 3) +
     '-' +
@@ -291,15 +403,17 @@ export function getMeetingDisplayId(meetingNum: string | undefined): string {
     (meetingNum?.length > 6 ? `-${meetingNum.slice(6)}` : '')
   )
 }
+
 /**
  * @description: 深拷贝
  * @param {object} target
  * @return {*}
  */
-export function deepClone(target: any) {
+export function deepClone(target: any): any {
   if (target === null) return null
   if (typeof target !== 'object') return target
   const cloneTarget = Array.isArray(target) ? [] : {}
+
   for (const prop in target) {
     // Object.prototype.hasOwnProperty() 方法会返回一个布尔值，指示对象自身属性中是否具有指定的属性（也就是，是否有指定的键）
     // eslint-disable-next-line no-prototype-builtins
@@ -307,6 +421,7 @@ export function deepClone(target: any) {
       cloneTarget[prop] = deepClone(target[prop])
     }
   }
+
   return cloneTarget
 }
 
@@ -316,7 +431,7 @@ export function deepClone(target: any) {
  * @param {*} itemName
  * @return {*}
  */
-export function hasOwnType(obj, itemName) {
+export function hasOwnType(obj, itemName): boolean {
   return Object.prototype.hasOwnProperty.call(obj, itemName)
 }
 
@@ -325,7 +440,7 @@ export function hasOwnType(obj, itemName) {
  * @param param
  * @returns
  */
-export function isLegalParam(param: string) {
+export function isLegalParam(param: string): boolean {
   return param !== undefined && param !== null && param !== ''
 }
 
@@ -335,7 +450,7 @@ export function isLegalParam(param: string) {
  * @param {*} type
  * @return {*}
  */
-export function checkType(val: any, type?: string) {
+export function checkType(val: any, type?: string): boolean | string {
   // 检测类型
   if (type)
     return (
@@ -345,15 +460,19 @@ export function checkType(val: any, type?: string) {
   return Object.prototype.toString.call(val).slice(8, -1).toLowerCase()
 }
 
-export function setDefaultDevice(devices: any[]): any[] {
+export function setDefaultDevice(
+  devices: NEDeviceBaseInfo[]
+): NEDeviceBaseInfo[] {
   //  c++Electron环境才需要
   if (window.isElectronNative) {
     if (devices) {
       const index = devices.findIndex((device) => {
         return device.defaultDevice
       })
+
       if (index > -1) {
         const device = { ...devices[index] }
+
         device.originDeviceId = device.deviceId
         device.deviceId = `default$${device.deviceId}`
         device.deviceName =
@@ -363,6 +482,7 @@ export function setDefaultDevice(devices: any[]): any[] {
       }
     }
   }
+
   return devices
 }
 
@@ -370,7 +490,9 @@ export function getDefaultDeviceId(deviceId: string): string {
   if (!deviceId) {
     return deviceId
   }
+
   const match = deviceId.match(/default\$(.*)/)
+
   return match ? match[1] : deviceId
 }
 
@@ -378,12 +500,14 @@ export function checkIsDefaultDevice(deviceId: string | undefined): boolean {
   if (!deviceId) {
     return false
   }
+
   const match = deviceId.match(/default\$(.*)/)
+
   return !!match
 }
 
 /* 通过文字二进制得到文字字节数 */
-function getByteByBinary(binaryCode: any) {
+function getByteByBinary(binaryCode: string) {
   /**
    * 二进制 Binary system,es6表示时以0b开头
    * 八进制 Octal number system,es5表示时以0开头,es6表示时以0o开头
@@ -392,31 +516,40 @@ function getByteByBinary(binaryCode: any) {
    */
   const byteLengthDatas = [0, 1, 2, 3, 4]
   const len = byteLengthDatas[Math.ceil(binaryCode.length / 8)]
+
   return len
 }
+
 /* 通过文字十六进制得到文字字节数 */
 function getByteByHex(hexCode: string) {
   return getByteByBinary(parseInt(hexCode, 16).toString(2))
 }
 
-export function substringByByte3(str: string, maxLength: number) {
+export function substringByByte3(
+  str: string,
+  maxLength: number
+): string | undefined {
   if (!str || str.length <= maxLength) return str
   let result = ''
   let flag = false
   let len = 0
   let length = 0
   let length2 = 0
+
   for (let i = 0; i < str.length; i++) {
     const code = str.codePointAt(i)?.toString(16)
+
     if (!code) {
       return
     }
+
     if (code.length > 4) {
       i++
       if (i + 1 < str.length) {
         flag = str.codePointAt(i + 1)?.toString(16) == '200d'
       }
     }
+
     if (flag) {
       len += getByteByHex(code)
       if (i == str.length - 1) {
@@ -437,9 +570,11 @@ export function substringByByte3(str: string, maxLength: number) {
         } else {
           break
         }
+
         len = 0
         continue
       }
+
       length += getByteByHex(code)
       if (length <= maxLength) {
         if (code.length <= 4) {
@@ -447,12 +582,14 @@ export function substringByByte3(str: string, maxLength: number) {
         } else {
           result += str[i - 1] + str[i]
         }
+
         length2 = i + 1
       } else {
         break
       }
     }
   }
+
   return result
 }
 
@@ -461,21 +598,26 @@ export function getUUID(): string {
   let date = new Date().getTime()
   const uuid = 'xxxxxxxx-xxxx-xxxx-xxxx'.replace(/[xy]/g, function (c) {
     const r = (date + Math.random() * 16) % 16 | 0
+
     date = Math.floor(date / 16)
     return (c == 'x' ? r : (r & 0x3) | 0x8).toString(16)
   })
+
   return uuid
 }
 
 const ROOMKIT_UUID = 'NERoomkit-uuid'
+
 export function getDeviceKey() {
   let uuid = window.sessionStorage.getItem(ROOMKIT_UUID)
+
   if (uuid) {
     return uuid
   } else {
     uuid = getUUID()
     window.sessionStorage.setItem(ROOMKIT_UUID, uuid)
   }
+
   return uuid
 }
 
@@ -490,13 +632,17 @@ export function md5Password(password: string) {
  * @param obj
  * @returns {string}
  */
-export function objectToQueryString(obj: Record<string, any>): string {
+export function objectToQueryString(
+  obj: Record<string, string | number>
+): string {
   const keys = Object.keys(obj)
   const keyValuePairs = keys.map((key) => {
     return encodeURIComponent(key) + '=' + encodeURIComponent(obj[key])
   })
+
   return keyValuePairs.join('&')
 }
+
 //获取昵称方法
 /**
  * 中文（最多两位，取最后两位） 》 英文 （最多两位，取前面两位）》 数字（最多两位，取最后两位） 》* 号
@@ -505,6 +651,7 @@ export function getUserName(name: string): string {
   if (!name) {
     return '*'
   }
+
   const chineseMatch = name.match(/[\u4e00-\u9fff]+/g) // 匹配中文字符
   const allChinese = chineseMatch ? chineseMatch.join('') : '' // 将所有中文字符连接在一起
 
@@ -529,7 +676,7 @@ export function checkPassword(pwd: string): boolean {
   return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d\S]{6,18}$/.test(pwd)
 }
 
-export function isPromiseCheck(obj): boolean {
+export function isPromiseCheck(obj: any): boolean {
   return (
     !!obj && //有实际含义的变量才执行方法，变量null，undefined和''空串都为false
     (typeof obj === 'object' || typeof obj === 'function') && // 初始promise 或 promise.then返回的
@@ -555,21 +702,26 @@ export const parseFileSize = (size: number, level = 0): string => {
     if (level >= Object.keys(fileSizeMap).length) {
       return 'the file is too big'
     }
+
     if (size < 1024) {
       return `${size}${fileSizeMap[level]}`
     }
+
     return handler(Math.round(size / 1024), level + 1)
   }
+
   return handler(size, level)
 }
+
 /**
  * 下载文件
  * @param url
  * @param fileName
  */
-export function downloadFile(url: string, fileName: string): void {
+export function downloadFile(url: string): void {
   // 使用 iframe 下载文件
   const iframe = document.createElement('iframe')
+
   document.body.appendChild(iframe)
   iframe.src = url
   setTimeout(() => {
@@ -588,9 +740,11 @@ export function meetingDuration(startTime: number): string {
   const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60))
   const seconds = Math.floor((duration % (1000 * 60)) / 1000)
   let durationString = ''
+
   if (hours >= 1) {
     durationString += `${hours.toString().padStart(2, '0')}:`
   }
+
   durationString += `${minutes.toString().padStart(2, '0')}:${seconds
     .toString()
     .padStart(2, '0')}`
@@ -598,28 +752,130 @@ export function meetingDuration(startTime: number): string {
 }
 
 // 最后是否为表情符号
-export function isLastCharacterEmoji(str: string) {
+export function isLastCharacterEmoji(str: string): boolean {
   // 使用正则表达式匹配表情符号
-  const emojiRegex = /[\uD83C-\uDBFF\uDC00-\uDFFF]+$/
+  const emojiRegex = /[\uD83C-\uDBFF\uDC00-\uDFFF]+$/u
+
   return emojiRegex.test(str)
 }
 
 export function getLocalStorageSetting(): MeetingSetting | null {
   const settingStr = localStorage.getItem('ne-meeting-setting')
   let setting: MeetingSetting | null = null
+
   if (settingStr) {
     try {
       setting = JSON.parse(settingStr) as MeetingSetting
-    } catch (error) {}
+    } catch (error) {
+      console.log('getLocalStorageSetting err', error)
+    }
   }
+
   return setting
+}
+
+export function getLocalStorageCustomLangs(): string[] {
+  let customLangs: string[] = []
+  let customLangsStr = ''
+
+  if (window.isElectronNative) {
+    customLangsStr = localStorage.getItem(LOCALSTORAGE_CUSTOM_LANGS) || ''
+  } else {
+    customLangsStr = sessionStorage.getItem(LOCALSTORAGE_CUSTOM_LANGS) || ''
+  }
+
+  if (customLangsStr) {
+    try {
+      customLangs = JSON.parse(customLangsStr)
+    } catch (error) {
+      console.log('LOCALSTORAGE_CUSTOM_LANGS err', error)
+    }
+  }
+
+  return customLangs
+}
+
+export function setLocalStorageCustomLangs(customLangs?: string[]): void {
+  if (!customLangs && window.isElectronNative) {
+    localStorage.removeItem(LOCALSTORAGE_CUSTOM_LANGS)
+    return
+  }
+
+  const customLangsStr = JSON.stringify(customLangs)
+
+  if (window.isElectronNative) {
+    localStorage.setItem(LOCALSTORAGE_CUSTOM_LANGS, customLangsStr)
+  } else {
+    sessionStorage.setItem(LOCALSTORAGE_CUSTOM_LANGS, customLangsStr)
+  }
 }
 
 export function getLocalUserInfo(): LoginUserInfo | null {
   const userString = localStorage.getItem(LOCALSTORAGE_USER_INFO)
   let userInfo: LoginUserInfo | null = null
+
   if (userString) {
     userInfo = JSON.parse(userString)
   }
+
   return userInfo
+}
+
+// 解析配置文件私有化参数
+export function parsePrivateConfig(privateConfig: NEMeetingPrivateConfig) {
+  const imConfig = privateConfig.im
+  const rtcConfig = privateConfig.rtc
+  const whiteboardConfig = privateConfig.whiteboard
+  const im = {
+    ...imConfig,
+    handShakeType: imConfig?.hand_shake_type,
+    negoKeyNeca: imConfig?.nego_key_neca,
+    commNeca: imConfig?.comm_enca,
+    lbs: imConfig?.lbs,
+    nosLbs: imConfig?.nos_lbs,
+    link: imConfig?.link,
+    nosUploader: imConfig?.nos_uploader,
+    nosUploaderHost: imConfig?.nos_uploader_host,
+    negoKeyNecaKeyParta: imConfig?.nego_key_enca_key_parta,
+    negoKeyNecaKeyPartb: imConfig?.nego_key_enca_key_partb,
+    negoKeyNecaKeyVersion: imConfig?.nego_key_enca_key_version,
+    nosDownloader: imConfig?.nos_downloader,
+    nosAccelerateHostList: imConfig?.nos_accelerate_host || [],
+    nosAccelerate: imConfig?.nos_accelerate,
+  }
+  const rtc = {
+    ...rtcConfig,
+    channelServer: rtcConfig?.channelServer,
+    statisticsServer: rtcConfig?.statisticsServer,
+    roomServer: rtcConfig?.roomServer,
+    compatServer: rtcConfig?.compatServer,
+    nosLbsServer: rtcConfig?.nosLbsServer,
+    nosUploadSever: rtcConfig?.nosUploadSever,
+    nosTokenServer: rtcConfig?.nosTokenServer,
+    useIPv6: rtcConfig?.useIPv6,
+  }
+  const whiteboard = {
+    ...whiteboardConfig,
+    webServer: whiteboardConfig?.webServer,
+    roomServer: whiteboardConfig?.roomServer,
+    sdkLogNosServer: whiteboardConfig?.sdkLogNosServer,
+    dataReportServer: whiteboardConfig?.dataReportServer,
+    directNosServer: whiteboardConfig?.directNosServer,
+    mediaUploadServer: whiteboardConfig?.mediaUploadServer,
+    docTransServer: whiteboardConfig?.docTransServer,
+    fontDownloadServer: whiteboardConfig?.fontDownloadServer,
+  }
+  const options: any = {
+    imPrivateConf: im,
+    neRtcServerAddresses: rtc,
+    whiteboardConfig: whiteboard,
+  }
+  const roomServer = privateConfig.roomkit.roomServer
+
+  roomServer &&
+    (options.roomKitServerConfig = {
+      roomServer: privateConfig.roomkit.roomServer,
+    })
+
+  return options
 }

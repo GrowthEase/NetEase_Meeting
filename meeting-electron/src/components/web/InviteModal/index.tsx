@@ -1,11 +1,4 @@
-import React, {
-  Dispatch,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import React, { Dispatch, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Button, ModalProps } from 'antd'
 import Modal from '../../common/Modal'
@@ -26,6 +19,8 @@ import AddressInvitation from './AddressInvitation'
 import './index.less'
 import SIP from './SIP'
 import useWatermark from '../../../hooks/useWatermark'
+import timezones_zh from '../../../locales/timezones/timezones_zh'
+import dayjs from 'dayjs'
 
 const InviteModal: React.FC<ModalProps> = ({ onCancel, ...restProps }) => {
   const { t } = useTranslation()
@@ -34,6 +29,7 @@ const InviteModal: React.FC<ModalProps> = ({ onCancel, ...restProps }) => {
   const { globalConfig, neMeeting } = useGlobalContext()
   const SIPNumber = globalConfig?.appConfig.outboundPhoneNumber
   const localMember = meetingInfo?.localMember
+
   return (
     <Modal
       title={t('inviteBtn')}
@@ -80,6 +76,7 @@ const Tabs: React.FC<TabsProps> = ({
   const { t } = useTranslation()
 
   const config = globalConfig?.appConfig?.APP_ROOM_RESOURCE
+
   return config?.appInvite || config?.sipInvite ? (
     <div className={`nemeeting-local-tabs ${className || ''}`}>
       <div
@@ -113,6 +110,7 @@ const Tabs: React.FC<TabsProps> = ({
     </div>
   ) : null
 }
+
 const Invite: React.FC<InviteInfoProps> = ({ meetingInfo, className }) => {
   const { t } = useTranslation()
 
@@ -121,19 +119,24 @@ const Invite: React.FC<InviteInfoProps> = ({ meetingInfo, className }) => {
   const displayId = useMemo(() => {
     if (meetingInfo?.meetingNum) {
       const id = meetingInfo.meetingNum
+
       return id.slice(0, 3) + '-' + id.slice(3, 6) + '-' + id.slice(6)
     }
+
     return ''
   }, [meetingInfo?.meetingNum])
 
-  function handleCopy(e) {
+  function handleCopy() {
     const textarea = document.createElement('textarea')
     let msg = ''
+
     for (const child of (inviteInfoContentRef.current as HTMLElement)
       .children) {
       const item = child as HTMLElement
+
       msg = msg.concat(item.innerText + '\r\n\n')
     }
+
     textarea.setAttribute('readonly', 'readonly')
     msg = msg.slice(0, -3)
     textarea.innerHTML = msg
@@ -144,6 +147,7 @@ const Invite: React.FC<InviteInfoProps> = ({ meetingInfo, className }) => {
       document.execCommand('copy')
       Toast.success(t('copySuccess'))
     }
+
     document.body.removeChild(textarea)
     // onCancel?.(e) // 复制成功后不需要关闭弹窗
   }
@@ -161,8 +165,16 @@ const Invite: React.FC<InviteInfoProps> = ({ meetingInfo, className }) => {
     {
       label: `${t('inviteTime')}：${formatDate(
         meetingInfo?.startTime || 0,
-        'yyyy-MM-dd hh:mm'
-      )} - ${formatDate(meetingInfo?.endTime || 0, 'yyyy-MM-dd hh:mm')}`,
+        'YYYY-MM-DD HH:mm',
+        meetingInfo?.timezoneId
+      )} - ${formatDate(
+        meetingInfo?.endTime || 0,
+        'YYYY-MM-DD HH:mm',
+        meetingInfo?.timezoneId
+      )}
+      ${
+        timezones_zh[meetingInfo?.timezoneId || dayjs.tz.guess()].split(' ')[0]
+      }`,
       isShow: meetingInfo?.type === 3,
     },
     {
@@ -204,7 +216,11 @@ const Invite: React.FC<InviteInfoProps> = ({ meetingInfo, className }) => {
               return (
                 <div
                   key={text}
-                  className={`${index === 0 ? 'invite-info-item-key' : ''}`}
+                  className={`${
+                    index === 0
+                      ? 'invite-info-item-key'
+                      : 'invite-info-item-content'
+                  }`}
                 >
                   {text}
                   {item.key === 'shortMeetingNum' &&
@@ -264,15 +280,19 @@ const InviteContent: React.FC<InviteContentProps> = ({
   const [activeTab, setActiveTab] = useState<string>('invite')
   const { globalConfig } = useGlobalContext()
   const domRef = useRef<HTMLDivElement>(null)
+
   useWatermark({ container: domRef })
 
   const onTableChange = (tab: string) => {
     setActiveTab(tab)
   }
+
   const isHostOrCoHost = useMemo(() => {
     const role = meetingInfo?.localMember.role
+
     return role === Role.host || role === Role.coHost
   }, [meetingInfo?.localMember.role])
+
   useEffect(() => {
     if (!isHostOrCoHost) {
       setActiveTab('invite')
@@ -323,6 +343,7 @@ const InviteContent: React.FC<InviteContentProps> = ({
     </div>
   )
 }
+
 export { InviteContent }
 
 export default InviteModal

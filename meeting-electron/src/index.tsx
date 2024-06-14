@@ -8,6 +8,7 @@ import AppH5 from './components/h5/Meeting'
 import App from './components/web/Meeting'
 import './index.less'
 import i18n from './locales/i18n'
+
 import {
   createMeetingInfoFactory,
   defaultMenus,
@@ -30,6 +31,8 @@ import { UserEventType } from './types/innerType'
 import { NEMeetingInfo, NEMeetingLanguage } from './types/type'
 import { checkType, getDefaultLanguage } from './utils'
 import { Logger } from './utils/Logger'
+import React from 'react'
+
 // import { LogName } from './utils/logStorage'
 // import { downloadLog, uploadLog } from './utils'
 // 入参
@@ -47,11 +50,14 @@ const eventEmitter = new Eventemitter()
 const outEventEmitter = new Eventemitter()
 
 let roomkit
+
+/*
 if (window.isElectronNative && window.NERoom) {
   roomkit = new window.NERoom()
 } else {
   roomkit = NERoom.getInstance()
 }
+*/
 
 const joinLoading = undefined
 
@@ -68,38 +74,11 @@ const LanguageMap = {
 function getLanguage(locale: string): 'zh-CN' | 'en-US' | 'ja-JP' {
   return LanguageMap[locale] || getDefaultLanguage()
 }
-/**
- * @description: 加载iconfont
- * @param {*} url
- * @param {*} callback
- * @return {*}
- */
-function loadAsyncScript(url: string, callback?: () => void) {
-  const script = document.createElement('script') as any
-  script.type = 'text/javascript'
-  if (script.readyState) {
-    // 兼容IE浏览器
-    // 脚本加载完成事件
-    script.onreadystatechange = function () {
-      if (script.readyState === 'complete' || script.readyState === 'loaded') {
-        callback && callback()
-      }
-    }
-  } else {
-    // Chrome, Safari, FireFox, Opera可执行
-    // 脚本加载完成事件
-    script.onload = function () {
-      callback && callback()
-    }
-  }
-  script.src = url //将src属性放在后面，保证监听函数能够起作用
-  document.head.appendChild(script)
-}
 
 // 设置自定义菜单配置
 const setCustomList = async (obj: JoinOptions) => {
   // @ts-ignore
-  const isH5 = process.env.PLATFORM === 'h5' || window.h5App
+  const isH5 = window.h5App
   // 工具栏菜单
   const _defaultMenus = isH5 ? defaultMenusInH5 : defaultMenus
   const _customMenus = checkType(obj.toolBarList, 'array')
@@ -112,6 +91,7 @@ const setCustomList = async (obj: JoinOptions) => {
     ? obj.moreBarList
     : _defaultMoreMenus
   const _moreBarList = new BaseCustomBtnConfig(_customMoreMenus || [], false)
+
   // 检验自定义菜单格式
   await _toolBarList.checkList()
   await _moreBarList.checkList(_toolBarList.getList())
@@ -120,6 +100,7 @@ const setCustomList = async (obj: JoinOptions) => {
     toolBarList: _toolBarList.getList(),
     moreBarList: _moreBarList.getList(),
   }
+
   return result
 }
 
@@ -129,17 +110,20 @@ const render = async (
   callback?: () => void
 ) => {
   const neMeeting = props.neMeeting
+
   await neMeeting.init({
     ...props,
     appKey: props.appKey,
     meetingServerDomain: props.meetingServerDomain,
   })
   let globalConfig
+
   try {
     globalConfig = await neMeeting.getGlobalConfig()
   } catch (e) {
     console.warn('getGlobalConfig', e)
   }
+
   ReactDOM.render(
     <GlobalContextProvider
       outEventEmitter={outEventEmitter}
@@ -155,7 +139,7 @@ const render = async (
         meetingInfo={createMeetingInfoFactory()}
       >
         <Auth renderCallback={callback} />
-        {process.env.PLATFORM === 'h5' || window.h5App ? (
+        {window.h5App ? (
           <AppH5 width={props.width} height={props.height} />
         ) : (
           <App width={props.width} height={props.height} />
@@ -165,6 +149,7 @@ const render = async (
     view
   )
 }
+
 const NEMeetingKit: NEMeetingKitInterface = new Proxy<any>(
   {
     view: null,
@@ -232,34 +217,47 @@ const NEMeetingKit: NEMeetingKitInterface = new Proxy<any>(
         console.warn('已初始化过')
         return
       }
+
+      if (window.isElectronNative && window.NERoom) {
+        roomkit = new window.NERoom()
+      } else {
+        roomkit = NERoom.getInstance()
+      }
+
       if (!config || !config.appKey) {
         throw new Error('init failed: appKey is empty')
       }
+
       const view = document.getElementById('ne-web-meeting')
+
       if (!view) {
         throw new Error('init failed: not found #ne-web-meeting')
       }
+
       const debug = config.debug !== false
       const logger = new Logger('Meeting-NeMeeting', debug)
 
       if (NEMeetingKit.globalEventListener) {
         roomkit.addGlobalEventListener(NEMeetingKit.globalEventListener)
       }
+
       const neMeeting = new NEMeetingService({
         roomkit,
         eventEmitter,
         outEventEmitter,
         logger,
       })
+
       NEMeetingKit.roomkit = roomkit
       NEMeetingKit.neMeeting = neMeeting
       const inviteService = new NEMeetingInviteService({
         neMeeting,
         eventEmitter: outEventEmitter,
       })
+
       NEMeetingKit.inviteService = inviteService
       const locale = getLanguage(config.locale || 'zh-CN')
-      console.log('locale', locale)
+
       i18n.changeLanguage(locale)
       neMeeting.switchLanguage(locale)
       NEMeetingKit.view = view
@@ -278,7 +276,6 @@ const NEMeetingKit: NEMeetingKitInterface = new Proxy<any>(
         callback
       )
       outEventEmitter?.on('roomEnded', (reason: number) => {
-        console.log('收到afterLeave', NEMeetingKit.afterLeaveCallback)
         NEMeetingKit.afterLeaveCallback?.(reason)
       })
       NEMeetingKit.isInitialized = true
@@ -327,7 +324,7 @@ const NEMeetingKit: NEMeetingKitInterface = new Proxy<any>(
           callback?.(e)
         })
     },
-    getRoomCloudRecordList: (roomArchiveId: string) => {
+    getRoomCloudRecordList: (roomArchiveId: number) => {
       return NEMeetingKit.neMeeting?.getRoomCloudRecordList(roomArchiveId)
     },
     afterLeave: (callback: (reason: number) => void) => {
@@ -346,12 +343,12 @@ const NEMeetingKit: NEMeetingKitInterface = new Proxy<any>(
       })
     },
     destroy: () => {
-      console.log('destroy')
       eventEmitter.emit('destroy')
       if (!window.isElectronNative) {
         NEMeetingKit.view &&
           ReactDOM.unmountComponentAtNode(NEMeetingKit.view as HTMLElement)
       }
+
       NEMeetingKit.afterLeaveCallback = null
       NEMeetingKit.view = null
       NEMeetingKit.neMeeting?.release()
@@ -360,9 +357,6 @@ const NEMeetingKit: NEMeetingKitInterface = new Proxy<any>(
       NEMeetingKit.neMeeting = undefined
       NEMeetingKit.isInitialized = false
       outEventEmitter.removeAllListeners()
-      if (window.isElectronNative) {
-        window.location.reload()
-      }
     },
     on: (eventName: EventName, callback: (...args: any) => void) => {
       outEventEmitter.on(eventName, callback)
@@ -372,6 +366,7 @@ const NEMeetingKit: NEMeetingKitInterface = new Proxy<any>(
       if (!eventName) {
         throw new Error('please add your eventName when you use off')
       }
+
       callback
         ? outEventEmitter.off(eventName, callback)
         : outEventEmitter.off(eventName)
@@ -387,6 +382,7 @@ const NEMeetingKit: NEMeetingKitInterface = new Proxy<any>(
       if (!sourceId) {
         console.log('set sourceId failed ', sourceId)
       }
+
       outEventEmitter.emit('setScreenSharingSourceId', sourceId)
     },
     switchLanguage(language: NEMeetingLanguage): void {
@@ -399,6 +395,7 @@ const NEMeetingKit: NEMeetingKitInterface = new Proxy<any>(
         | 'zh-CN'
         | 'en-US'
         | 'ja-JP'
+
       i18n.changeLanguage(locale)
 
       NEMeetingKit.neMeeting?.switchLanguage(locale)
@@ -410,6 +407,7 @@ const NEMeetingKit: NEMeetingKitInterface = new Proxy<any>(
       if (!NEMeetingKit.neMeeting?.roomContext) {
         throw new Error('please join first')
       }
+
       return NEMeetingKit.neMeeting.imInfo
     },
     reuseIM(im: any) {
@@ -438,18 +436,23 @@ const NEMeetingKit: NEMeetingKitInterface = new Proxy<any>(
       switch (propKey) {
         case 'accountInfo':
           return NEMeetingKit.neMeeting?.accountInfo
-        case 'memberInfo':
+        case 'memberInfo': {
           let memberInfo: any = null
           const member = NEMeetingKit.neMeeting?.roomContext?.localMember
+
           if (member) {
             memberInfo = { ...member, role: member.role?.name }
           }
+
           return memberInfo
-        case 'joinMemberInfo':
+        }
+
+        case 'joinMemberInfo': {
           const remoteMemberList =
             NEMeetingKit.neMeeting?.roomContext?.remoteMembers
           const localMember = NEMeetingKit.neMeeting?.roomContext?.localMember
           const joinMemberInfo: any = {}
+
           if (remoteMemberList && Array.isArray(remoteMemberList)) {
             remoteMemberList.forEach((member) => {
               if (member.isInRtcChannel || member.uuid === localMember?.uuid) {
@@ -460,18 +463,24 @@ const NEMeetingKit: NEMeetingKitInterface = new Proxy<any>(
               }
             })
           }
+
           if (localMember) {
             joinMemberInfo[localMember.uuid] = {
               ...localMember,
               role: localMember.role?.name,
             }
           }
+
           return joinMemberInfo
+        }
+
         case 'meetingInfo':
         case 'NEMeetingInfo': {
           const meeting = NEMeetingKit.neMeeting?.getMeetingInfo()
+
           if (meeting) {
             const { meetingInfo } = meeting
+
             return {
               isHost: meetingInfo.hostUuid
                 ? meetingInfo.hostUuid === meetingInfo.localMember.uuid
@@ -488,12 +497,12 @@ const NEMeetingKit: NEMeetingKitInterface = new Proxy<any>(
             return {}
           }
         }
+
         default:
           return target[propKey]
       }
     },
   }
 )
-// loadAsyncScript('//at.alicdn.com/t/font_2183559_zbxov2d0djl.js')
 
 export default { actions: NEMeetingKit }

@@ -34,6 +34,7 @@ export function useDevices(
         const device = speakList.find(
           (item) => item.id === deviceInfo?.selectedSpeakerDeviceId,
         );
+
         if (device) {
           message.info('当前扬声器设备：' + device.name);
         }
@@ -57,6 +58,7 @@ export function useDevices(
         const device = recordList.find(
           (item) => item.id === deviceInfo?.selectedMicDeviceId,
         );
+
         if (device) {
           message.info('当前麦克风设备：' + device.name);
         }
@@ -80,6 +82,7 @@ export function useDevices(
         const device = cameraList.find(
           (item) => item.id === deviceInfo?.selectedVideoDeviceId,
         );
+
         if (device) {
           message.info('当前摄像头设备：' + device.name);
         }

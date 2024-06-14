@@ -3,6 +3,7 @@ import React, { useEffect } from 'react'
 import './index.less'
 
 import { useTranslation } from 'react-i18next'
+import { IPCEvent } from '../../../../app/src/types'
 
 const MonitoringSetting: React.FC = () => {
   const { t } = useTranslation()
@@ -11,6 +12,8 @@ const MonitoringSetting: React.FC = () => {
   const onLocalVideoStatsTimerRef = React.useRef<NodeJS.Timeout>()
   const onRemoteAudioStats = React.useRef<NodeJS.Timeout>()
   const onRemoteVideoStats = React.useRef<NodeJS.Timeout>()
+  const [needMemoryWarning, setNeedMemoryWarning] = React.useState(false)
+
   const [tab, setTab] = React.useState<'overall' | 'av'>('overall')
   const [sysInfo, setSysInfo] = React.useState({
     cpu: {
@@ -65,6 +68,7 @@ const MonitoringSetting: React.FC = () => {
 
   function openMonitoringWindow(type: string) {
     const parentWindow = window.parent
+
     parentWindow?.postMessage(
       {
         event: 'openWindow',
@@ -87,6 +91,7 @@ const MonitoringSetting: React.FC = () => {
    */
   function handlePostMessage(e: MessageEvent) {
     const { event, payload } = e.data
+
     if (event === 'onRtcStats') {
       setSysInfo((prev) => {
         return {
@@ -117,6 +122,7 @@ const MonitoringSetting: React.FC = () => {
       const maxRecordVolume = payload.reduce((prev, current) => {
         return prev > current.capVolume ? prev : current.capVolume
       }, 0)
+
       setSysInfo((prev) => {
         return {
           ...prev,
@@ -142,10 +148,12 @@ const MonitoringSetting: React.FC = () => {
       }, 3000)
     } else if (event === 'onRemoteAudioStats') {
       const arr = Object.values(payload).flat() as Array<{ volume: number }>
+
       console.log('onRemoteAudioStats', arr)
       const maxPlayVolume = arr.reduce((prev, current) => {
         return prev > current.volume ? prev : current.volume
       }, 0)
+
       setSysInfo((prev) => {
         return {
           ...prev,
@@ -171,6 +179,7 @@ const MonitoringSetting: React.FC = () => {
     } else if (event === 'onLocalVideoStats') {
       const video = payload.find((item) => item.layerType === 1)
       const screen = payload.find((item) => item.layerType === 2)
+
       if (video) {
         setSysInfo((prev) => {
           return {
@@ -183,6 +192,7 @@ const MonitoringSetting: React.FC = () => {
           }
         })
       }
+
       if (screen) {
         setSysInfo((prev) => {
           return {
@@ -196,6 +206,7 @@ const MonitoringSetting: React.FC = () => {
           }
         })
       }
+
       onLocalVideoStatsTimerRef.current &&
         clearTimeout(onLocalVideoStatsTimerRef.current)
       onLocalVideoStatsTimerRef.current = setTimeout(() => {
@@ -226,6 +237,7 @@ const MonitoringSetting: React.FC = () => {
         receivedBitRate: number
       }>
       let maxVideo
+
       if (videos.length > 0) {
         videos.forEach((video) => {
           if (video.layerType !== 1) return
@@ -238,7 +250,9 @@ const MonitoringSetting: React.FC = () => {
           }
         })
       }
+
       const screen = videos.find((item) => item.layerType === 2)
+
       if (maxVideo) {
         setSysInfo((prev) => {
           return {
@@ -251,6 +265,7 @@ const MonitoringSetting: React.FC = () => {
           }
         })
       }
+
       if (screen) {
         setSysInfo((prev) => {
           return {
@@ -264,6 +279,7 @@ const MonitoringSetting: React.FC = () => {
           }
         })
       }
+
       onRemoteVideoStats.current && clearTimeout(onRemoteVideoStats.current)
       onRemoteVideoStats.current = setTimeout(() => {
         setSysInfo((prev) => {
@@ -304,6 +320,17 @@ const MonitoringSetting: React.FC = () => {
       1000 /
       2
 
+    console.log(
+      'memoryApp',
+      memoryApp,
+      'memoryTotal * 1024',
+      memoryTotal * 1024
+    )
+
+    if (memoryApp / (memoryTotal * 1024) > 0.8) {
+      setNeedMemoryWarning(true)
+    }
+
     const cpuAppPercent = data.appMetrics.reduce((prev, curr) => {
       return prev + curr.cpu.percentCPUUsage
     }, 0)
@@ -342,14 +369,16 @@ const MonitoringSetting: React.FC = () => {
   }, [])
 
   useEffect(() => {
+    let timer
+
+    function getMonitoringInfo() {
+      window.ipcRenderer?.invoke(IPCEvent.getMonitoringInfo).then((data) => {
+        handleSysInfo('monitoring', data)
+        timer = setTimeout(getMonitoringInfo, 2000)
+      })
+    }
+
     if (tab === 'overall') {
-      let timer
-      function getMonitoringInfo() {
-        window.ipcRenderer?.invoke('getMonitoringInfo').then((data) => {
-          handleSysInfo('monitoring', data)
-          timer = setTimeout(getMonitoringInfo, 2000)
-        })
-      }
       getMonitoringInfo()
       return () => {
         timer && clearTimeout(timer)
@@ -410,6 +439,13 @@ const MonitoringSetting: React.FC = () => {
               <use xlinkHref="#iconneicun"></use>
             </svg>
             <span>{t('memory')}</span>
+            {needMemoryWarning && (
+              <div className="warning">
+                <svg className={'icon iconfont'} aria-hidden="true">
+                  <use xlinkHref="#iconjinggao2"></use>
+                </svg>
+              </div>
+            )}
           </div>
           <div className="value">{sysInfo.memory.total.toFixed(0)} GB</div>
         </div>
@@ -544,14 +580,14 @@ const MonitoringSetting: React.FC = () => {
           <div className="content-item">
             <span className="title">{t('bitrate')}</span>
             <span>
-              <div>
-                <svg className="icon iconfont " aria-hidden="true">
+              <div className="content-item-line">
+                <svg className="icon iconfont arrow" aria-hidden="true">
                   <use xlinkHref="#icona-Frame341"></use>
                 </svg>
                 {sysInfo.audio.txKBitRate} kbps
               </div>
               <div>
-                <svg className="icon iconfont" aria-hidden="true">
+                <svg className="icon iconfont arrow" aria-hidden="true">
                   <use xlinkHref="#icona-Frame340"></use>
                 </svg>
                 {sysInfo.audio.rxKBitRate} kbps
@@ -575,14 +611,14 @@ const MonitoringSetting: React.FC = () => {
     const title =
       type === 'video' ? (
         <div className="title">
-          <svg className={'icon iconfont'} aria-hidden="true">
+          <svg className={'icon iconfont arrow'} aria-hidden="true">
             <use xlinkHref="#iconshipin1"></use>
           </svg>
           <span>{t('video')}</span>
         </div>
       ) : (
         <div className="title">
-          <svg className={'icon iconfont'} aria-hidden="true">
+          <svg className={'icon iconfont arrow'} aria-hidden="true">
             <use xlinkHref="#iconzhiliangjiance"></use>
           </svg>
           <span>{t('screenShare')}</span>
@@ -619,14 +655,14 @@ const MonitoringSetting: React.FC = () => {
           <div className="content-item">
             <span className="title">{t('resolution')}</span>
             <span>
-              <div>
-                <svg className="icon iconfont" aria-hidden="true">
+              <div className="content-item-line">
+                <svg className="icon iconfont arrow" aria-hidden="true">
                   <use xlinkHref="#icona-Frame341"></use>
                 </svg>
                 {txResolutionLabel}
               </div>
               <div>
-                <svg className="icon iconfont" aria-hidden="true">
+                <svg className="icon iconfont arrow" aria-hidden="true">
                   <use xlinkHref="#icona-Frame340"></use>
                 </svg>
                 {rxResolutionLabel}
@@ -636,14 +672,14 @@ const MonitoringSetting: React.FC = () => {
           <div className="content-item">
             <span className="title">{t('frameRate')}</span>
             <span>
-              <div>
-                <svg className="icon iconfont" aria-hidden="true">
+              <div className="content-item-line">
+                <svg className="icon iconfont arrow" aria-hidden="true">
                   <use xlinkHref="#icona-Frame341"></use>
                 </svg>
                 {txHzLabel}
               </div>
               <div>
-                <svg className="icon iconfont" aria-hidden="true">
+                <svg className="icon iconfont arrow" aria-hidden="true">
                   <use xlinkHref="#icona-Frame340"></use>
                 </svg>
                 {rxHzLabel}
@@ -653,14 +689,14 @@ const MonitoringSetting: React.FC = () => {
           <div className="content-item">
             <span className="title">{t('bitrate')}</span>
             <span>
-              <div>
-                <svg className="icon iconfont" aria-hidden="true">
+              <div className="content-item-line">
+                <svg className="icon iconfont arrow" aria-hidden="true">
                   <use xlinkHref="#icona-Frame341"></use>
                 </svg>
                 {txKBitRateLabel}
               </div>
               <div>
-                <svg className="icon iconfont" aria-hidden="true">
+                <svg className="icon iconfont arrow" aria-hidden="true">
                   <use xlinkHref="#icona-Frame340"></use>
                 </svg>
                 {rxKBitRateLabel}

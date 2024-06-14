@@ -33,9 +33,11 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
       destroyOnClose
       getContainer={() => {
         const dom = document.getElementById('ne-web-meeting') as HTMLElement
+
         if (dom && dom.style.display !== 'none') {
           return dom
         }
+
         return document.body
       }}
       footer={null}
@@ -52,4 +54,5 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({
     </Modal>
   )
 }
+
 export default ImageCropModal

@@ -1,4 +1,10 @@
-const { BrowserWindow, screen, shell, ipcMain } = require('electron');
+const {
+  BrowserWindow,
+  screen,
+  shell,
+  ipcMain,
+  globalShortcut,
+} = require('electron');
 const path = require('path');
 
 const isLocal = process.env.MODE === 'local';
@@ -12,17 +18,18 @@ function createBeforeMeetingWindow() {
   const { x, y, width, height } = nowDisplay.workArea;
   const beforeMeetingWindow = new BrowserWindow({
     titleBarStyle: 'hidden',
-    width: 375,
-    height: 670,
-    x: Math.round(x + (width - 375) / 2),
-    y: Math.round(y + (height - 670) / 2),
+    width: 720,
+    height: 480,
+    x: Math.round(x + (width - 720) / 2),
+    y: Math.round(y + (height - 480) / 2),
     trafficLightPosition: {
-      x: 10,
-      y: 13,
+      x: 6,
+      y: 6,
     },
     resizable: false,
     maximizable: false,
     backgroundColor: '#fff',
+    show: false,
     webPreferences: {
       contextIsolation: false,
       nodeIntegration: true,
@@ -30,6 +37,10 @@ function createBeforeMeetingWindow() {
       preload: path.join(__dirname, './preload.js'),
     },
   });
+
+  const homeWindowHeight = 480;
+  const homeWindowWidth = 720;
+
   if (isLocal) {
     beforeMeetingWindow.loadURL('http://localhost:8000/');
     beforeMeetingWindow.webContents.openDevTools();
@@ -41,6 +52,7 @@ function createBeforeMeetingWindow() {
     'did-create-window',
     (newWin, { url: originalUrl }) => {
       const url = originalUrl.replace(/.*?(?=#)/, '');
+
       newWins[url] = newWin;
       // 通过 openWindow 打开的窗口，需要在关闭时通知主窗口
       newWin.on('close', (event) => {
@@ -48,14 +60,13 @@ function createBeforeMeetingWindow() {
         if (url.includes('scheduleMeeting')) {
           newWin.webContents.send('scheduleMeetingWindow:close');
           return;
+        } else if (url.includes('interpreterSetting')) {
+          newWin.webContents.send('interpreterSettingWindow:close');
+          return;
         }
+
         beforeMeetingWindow.webContents.send(`windowClosed:${url}`);
-        if (url.includes('setting')) {
-          beforeMeetingWindow?.webContents.send('previewController', {
-            method: 'stopPreview',
-            args: [],
-          });
-        }
+
         newWin.hide();
       });
       if (url.includes('notification/card')) {
@@ -67,6 +78,7 @@ function createBeforeMeetingWindow() {
         item.on('done', (event, state) => {
           if (state === 'completed') {
             const path = event.sender.getSavePath();
+
             shell.showItemInFolder(path);
           }
         });
@@ -98,6 +110,7 @@ function createBeforeMeetingWindow() {
           preload: path.join(__dirname, './ipc.js'),
         },
       };
+
       if (url.includes('#/notification/list')) {
         return {
           action: 'allow',
@@ -112,6 +125,14 @@ function createBeforeMeetingWindow() {
           action: 'allow',
           overrideBrowserWindowOptions: {
             ...commonOptions,
+            trafficLightPosition: {
+              x: 19,
+              y: 19,
+            },
+            width: 375,
+            height: 664,
+            x: Math.round(x + (homeWindowWidth - 375) / 2),
+            y: Math.round(y + (homeWindowHeight - 664) / 2),
           },
         };
       } else if (url.includes('#/imageCrop')) {
@@ -128,7 +149,12 @@ function createBeforeMeetingWindow() {
           action: 'allow',
           overrideBrowserWindowOptions: {
             ...commonOptions,
-            height: 460,
+            trafficLightPosition: {
+              x: 19,
+              y: 19,
+            },
+            width: 375,
+            height: 731,
           },
         };
       } else if (url.includes('#/nps')) {
@@ -136,8 +162,12 @@ function createBeforeMeetingWindow() {
           action: 'allow',
           overrideBrowserWindowOptions: {
             ...commonOptions,
-            width: 800,
-            height: 380,
+            width: 601,
+            height: 395,
+            trafficLightPosition: {
+              x: 16,
+              y: 19,
+            },
           },
         };
       } else if (url.includes('#/plugin')) {
@@ -160,10 +190,10 @@ function createBeforeMeetingWindow() {
           overrideBrowserWindowOptions: {
             ...commonOptions,
             width: 800,
-            height: 680,
+            height: 600,
             trafficLightPosition: {
-              x: 10,
-              y: 13,
+              x: 16,
+              y: 19,
             },
           },
         };
@@ -173,10 +203,10 @@ function createBeforeMeetingWindow() {
           overrideBrowserWindowOptions: {
             ...commonOptions,
             width: 498,
-            height: 456,
+            height: 449,
             trafficLightPosition: {
-              x: 10,
-              y: 13,
+              x: 16,
+              y: 19,
             },
           },
         };
@@ -185,6 +215,7 @@ function createBeforeMeetingWindow() {
         const { width, height } = nowDisplay.workArea;
         const notifyWidth = 360;
         const notifyHeight = 260;
+
         return {
           action: 'allow',
           overrideBrowserWindowOptions: {
@@ -207,9 +238,74 @@ function createBeforeMeetingWindow() {
           action: 'allow',
           overrideBrowserWindowOptions: {
             ...commonOptions,
+            trafficLightPosition: {
+              x: 19,
+              y: 19,
+            },
+            width: 375,
+            height: 664,
+            x: Math.round(x + (homeWindowWidth - 375) / 2),
+            y: Math.round(y + (homeWindowHeight - 664) / 2),
+          },
+        };
+      } else if (url.includes('#/joinMeeting')) {
+        return {
+          action: 'allow',
+          overrideBrowserWindowOptions: {
+            ...commonOptions,
+            width: 375,
+            height: 402,
+            trafficLightPosition: {
+              x: 16,
+              y: 19,
+            },
+            x: Math.round(x + (homeWindowWidth - 375) / 2),
+            y: Math.round(y + (homeWindowHeight - 402) / 2),
+          },
+        };
+      } else if (url.includes('#/immediateMeeting')) {
+        return {
+          action: 'allow',
+          overrideBrowserWindowOptions: {
+            ...commonOptions,
+            width: 375,
+            height: 594,
+            trafficLightPosition: {
+              x: 16,
+              y: 19,
+            },
+            x: Math.round(x + (homeWindowWidth - 375) / 2),
+            y: Math.round(y + (homeWindowHeight - 594) / 2),
+          },
+        };
+      } else if (url.includes('#/interpreterSetting')) {
+        return {
+          action: 'allow',
+          overrideBrowserWindowOptions: {
+            ...commonOptions,
+            width: 520,
+            height: 533,
+            trafficLightPosition: {
+              x: 10,
+              y: 13,
+            },
+          },
+        };
+      } else if (url.includes('#/feedback')) {
+        return {
+          action: 'allow',
+          overrideBrowserWindowOptions: {
+            ...commonOptions,
+            width: 375,
+            height: 731,
+            trafficLightPosition: {
+              x: 16,
+              y: 19,
+            },
           },
         };
       }
+
       return { action: 'deny' };
     },
   );
@@ -218,9 +314,54 @@ function createBeforeMeetingWindow() {
     return Object.keys(obj).find((key) => obj[key] === value);
   }
 
+  ipcMain.on('focusWindow', (event, url) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+
+    if (win === beforeMeetingWindow) {
+      if (newWins[url] && !newWins[url].isDestroyed()) {
+        newWins[url].show();
+      }
+    }
+  });
+
+  ipcMain.on('changeSetting', (event, setting) => {
+    if (beforeMeetingWindow && !beforeMeetingWindow.isDestroyed()) {
+      beforeMeetingWindow.webContents.send('changeSetting', setting);
+    }
+
+    Object.values(newWins).forEach((win) => {
+      if (win && !win.isDestroyed()) {
+        win.webContents.send('changeSetting', setting);
+      }
+    });
+  });
+
+  beforeMeetingWindow.on('focus', () => {
+    globalShortcut.register('f5', function () {
+      console.log('f5 is pressed');
+      //mainWindow.reload()
+    });
+    globalShortcut.register('CommandOrControl+R', function () {
+      console.log('CommandOrControl+R is pressed');
+      //mainWindow.reload()
+    });
+  });
+
+  beforeMeetingWindow.on('blur', () => {
+    globalShortcut.unregister('f5', function () {
+      console.log('f5 is pressed');
+      //mainWindow.reload()
+    });
+    globalShortcut.unregister('CommandOrControl+R', function () {
+      console.log('CommandOrControl+R is pressed');
+      //mainWindow.reload()
+    });
+  });
+
   ipcMain.on('childWindow:closed', (event) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     const url = getKeyByValue(newWins, win);
+
     url && beforeMeetingWindow.webContents.send(`windowClosed:${url}`);
     win?.hide();
   });

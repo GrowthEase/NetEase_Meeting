@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import AudioIcon from '../../../../src/components/common/AudioIcon';
 import UserAvatar from '../../../../src/components/common/Avatar';
@@ -9,6 +9,7 @@ import { NEMeetingInfo, NEMember } from '../../../../src/types';
 
 import { worker } from '../../../../src/components/web/Meeting/Meeting';
 import './index.less';
+import { IPCEvent } from '@/types';
 
 const VideoCard: React.FC<{
   member: NEMember;
@@ -27,10 +28,12 @@ const VideoCard: React.FC<{
 
   useEffect(() => {
     const canvas = canvasRef.current;
+
     if (canvas && viewRef.current) {
       canvas.style.height = `${viewRef.current.clientHeight}px`;
       // @ts-ignore
       const offscreen = canvas.transferControlToOffscreen();
+
       worker.postMessage(
         {
           canvas: offscreen,
@@ -44,6 +47,7 @@ const VideoCard: React.FC<{
   useEffect(() => {
     if (member.isVideoOn) {
       const parentWindow = window.parent;
+
       if (!isMySelf) {
         parentWindow?.postMessage(
           {
@@ -150,7 +154,7 @@ export default function VideoPage() {
   memberListRef.current = memberList;
 
   const pageTotal = useMemo(() => {
-    return Math.ceil(memberList.length / 4);
+    return memberList ? Math.ceil(memberList.length / 4) : 0;
   }, [memberList]);
 
   const memberListFilter = useMemo(() => {
@@ -175,10 +179,12 @@ export default function VideoPage() {
 
     if (viewOrder) {
       const idOrder = viewOrder.split(',');
+
       sortMemberList.sort((a, b) => {
         // 获取 a 和 b 对象的 id 在 idOrder 数组中的索引位置
         const indexA = idOrder.indexOf(a.uuid);
         const indexB = idOrder.indexOf(b.uuid);
+
         // 根据 id 在 idOrder 中的索引位置进行排序
         if (indexA === -1 && indexB === -1) {
           return 0; // 如果两个都不在给定的 UUID 数组中，则保持原顺序
@@ -197,6 +203,7 @@ export default function VideoPage() {
     }
 
     const res = sortMemberList.slice((pageNum - 1) * 4, pageNum * 4);
+
     if (res.length === 0) {
       setPageNum((prev) => prev - 1);
       return [];
@@ -225,12 +232,14 @@ export default function VideoPage() {
 
   useEffect(() => {
     let height = 35;
+
     if (videoCount === 1) {
       height = 120;
     } else if (videoCount === 4) {
       height = 120 * memberListFilter.length;
     }
-    window.ipcRenderer?.send('nemeeting-sharing-screen', {
+
+    window.ipcRenderer?.send(IPCEvent.sharingScreen, {
       method: 'videoWindowHeightChange',
       data: {
         height,
@@ -241,8 +250,10 @@ export default function VideoPage() {
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data;
+
       if (event === 'onVideoFrameData') {
         const { uuid, data, width, height } = payload;
+
         worker.postMessage(
           {
             frame: {
@@ -256,12 +267,14 @@ export default function VideoPage() {
         );
       } else if (event === 'updateData') {
         const { meetingInfo, memberList } = payload;
-        setMeetingInfo(meetingInfo);
-        setMemberList(memberList);
+
+        meetingInfo && setMeetingInfo(meetingInfo);
+        memberList && setMemberList(memberList);
       }
     }
+
     window.addEventListener('message', handleMessage);
-    window.ipcRenderer?.send('nemeeting-sharing-screen', {
+    window.ipcRenderer?.send(IPCEvent.sharingScreen, {
       method: 'videoWindowOpen',
     });
     return () => {
@@ -272,6 +285,7 @@ export default function VideoPage() {
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data;
+
       if (event === 'audioVolumeIndication') {
         setVolumeMap({
           ...volumeMap,
@@ -279,6 +293,7 @@ export default function VideoPage() {
         });
       }
     }
+
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);

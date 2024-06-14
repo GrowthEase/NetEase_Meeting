@@ -15,7 +15,7 @@ import {
 
 import { errorCodeMap } from '../../../../config'
 import NEMeetingService from '../../../../services/NEMeeting'
-import { useGlobalContext, useMeetingInfoContext } from '../../../../store'
+import { useMeetingInfoContext } from '../../../../store'
 import { substringByByte3 } from '../../../../utils'
 import AudioIcon from '../../../common/AudioIcon'
 import UserAvatar from '../../../common/Avatar'
@@ -41,7 +41,6 @@ const MemberItem: React.FC<MemberItemProps> = ({
   handleUpdateUserNickname,
 }) => {
   const { t } = useTranslation()
-  const { eventEmitter } = useGlobalContext()
   const { dispatch } = useMeetingInfoContext()
 
   const { localMember } = meetingInfo
@@ -55,25 +54,35 @@ const MemberItem: React.FC<MemberItemProps> = ({
   const isElectronSharingScreen = useMemo(() => {
     return window.ipcRenderer && localMember.isSharingScreen
   }, [localMember.isSharingScreen])
+  const nickName = useMemo(() => {
+    return substringByByte3(data.name, 20)
+  }, [data.name])
   const name = useMemo(() => {
-    const nickName = substringByByte3(data.name, 20)
     const remarks: string[] = []
+
     if (meetingInfo.showMemberTag && data.properties.tag?.value) {
       remarks.push(data.properties.tag.value)
     }
+
     if (data.role === Role.host) {
       remarks.push(t('host'))
-    }
-    if (data.role === Role.coHost) {
+    } else if (data.role === Role.coHost) {
       remarks.push(t('coHost'))
-    }
-    if (data.role === Role.guest) {
+    } else if (data.role === Role.guest) {
       remarks.push(t('meetingRoleGuest'))
     }
+
+    const interpreters = meetingInfo.interpretation?.interpreters
+
+    if (interpreters && interpreters[data.uuid]) {
+      remarks.push(t('interpInterpreter'))
+    }
+
     if (localMember.uuid === data.uuid) {
       remarks.push(t('participantMe'))
     }
-    return `${nickName} ${remarks.length ? `(${remarks.join(',')})` : ''}`
+
+    return `${remarks.length ? `${remarks.join(',')}` : ''}`
   }, [localMember, meetingInfo, data, t])
 
   const privateChatItemShow = useMemo(() => {
@@ -81,22 +90,28 @@ const MemberItem: React.FC<MemberItemProps> = ({
     if (data.uuid === localMember.uuid) {
       return false
     }
+
     if (data.clientType === NEClientType.SIP) {
       return false
     }
+
     if (isHost || isCoHost) {
       return true
     }
+
     // 会议中的聊天权限
     if (meetingInfo.meetingChatPermission === 4) {
       return false
     }
+
     if (data.role === Role.host || data.role === Role.coHost) {
       return true
     }
+
     if (meetingInfo.meetingChatPermission === 1) {
       return true
     }
+
     return false
   }, [localMember, meetingInfo, data, isCoHost, isHost])
 
@@ -121,7 +136,10 @@ const MemberItem: React.FC<MemberItemProps> = ({
     {
       key: memberAction.shareWhiteShare,
       label: t('whiteBoardInteract'),
-      isShow: isWhiteSharer && data.properties.wbDrawable?.value !== '1',
+      isShow:
+        isWhiteSharer &&
+        data.properties.wbDrawable?.value !== '1' &&
+        data.clientType !== NEClientType.SIP,
       onClick: async () => {
         try {
           await neMeeting?.sendMemberControl(
@@ -164,9 +182,10 @@ const MemberItem: React.FC<MemberItemProps> = ({
       onClick: async () => {
         try {
           await neMeeting?.putInWaitingRoom(data.uuid)
-        } catch (e: any) {
-          console.log('putInWaitingRoom error', e)
-          Toast.fail(t(e?.message || e?.msg || e?.code))
+        } catch (err: unknown) {
+          const knownError = err as { message: string; msg: string }
+
+          Toast.fail(knownError?.msg || knownError?.message)
         }
       },
     },
@@ -216,6 +235,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
 
   const removeDialog = () => {
     let isChecked = false
+
     Modal.confirm({
       title: t('participantRemove'),
       width: 270,
@@ -239,9 +259,14 @@ const MemberItem: React.FC<MemberItemProps> = ({
             data.uuid,
             isChecked
           )
-        } catch (e: any) {
-          console.log('remove error', e)
-          Toast.fail(e.message || e.msg || t('participantFailedToRemove'))
+        } catch (err: unknown) {
+          const knownError = err as { message: string; msg: string }
+
+          Toast.fail(
+            knownError?.msg ||
+              knownError?.message ||
+              t('participantFailedToRemove')
+          )
         }
       },
     })
@@ -298,9 +323,16 @@ const MemberItem: React.FC<MemberItemProps> = ({
                   data.uuid
                 )
               }
-            } catch (error: any) {
+            } catch (err: unknown) {
+              const knownError = err as {
+                message: string
+                msg: string
+                code: number
+              }
+
               Toast.fail(
-                error?.msg || t(errorCodeMap[error?.code] || 'unMuteAudioFail')
+                knownError?.msg ||
+                  t(errorCodeMap[knownError?.code] || 'unMuteAudioFail')
               )
             }
           },
@@ -338,10 +370,19 @@ const MemberItem: React.FC<MemberItemProps> = ({
                   data.uuid
                 )
               }
-            } catch (error: any) {
+            } catch (err: unknown) {
+              const knownError = err as {
+                message: string
+                msg: string
+                code: number
+              }
+
               Toast.fail(
-                error?.msg ||
-                  t(errorCodeMap[error?.code] || 'participantUnMuteVideoFail')
+                knownError?.msg ||
+                  t(
+                    errorCodeMap[knownError?.code] ||
+                      'participantUnMuteVideoFail'
+                  )
               )
             }
           },
@@ -376,10 +417,16 @@ const MemberItem: React.FC<MemberItemProps> = ({
                   data.uuid
                 )
               }
-            } catch (error: any) {
-              // TODO:
+            } catch (error: unknown) {
+              const knownError = error as {
+                message: string
+                msg: string
+                code: number
+              }
+
               Toast.fail(
-                error?.msg || t(errorCodeMap[error?.code] || error?.code)
+                knownError?.msg ||
+                  t(errorCodeMap[knownError?.code] || knownError?.code)
               )
             }
           },
@@ -459,6 +506,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
       ]
     )
   }
+
   if (isHost) {
     items.push(
       ...[
@@ -496,11 +544,17 @@ const MemberItem: React.FC<MemberItemProps> = ({
           onClick: async () => {
             try {
               await neMeeting?.sendHostControl(hostAction.setCoHost, data.uuid)
-            } catch (e: any) {
-              if (e.code === 1002) {
+            } catch (err: unknown) {
+              const knownError = err as {
+                message: string
+                msg: string
+                code: number
+              }
+
+              if (knownError.code === 1002) {
                 Toast.fail(t('coHostLimit'))
               } else {
-                Toast.fail(e.message || e.msg || e.code)
+                Toast.fail(knownError.message || knownError.msg)
               }
             }
           },
@@ -516,8 +570,10 @@ const MemberItem: React.FC<MemberItemProps> = ({
                 hostAction.unSetCoHost,
                 data.uuid
               )
-            } catch (e: any) {
-              Toast.fail(e.message || e.msg || e.code)
+            } catch (err: unknown) {
+              const knownError = err as { message: string; msg: string }
+
+              Toast.fail(knownError.message || knownError.msg)
             }
           },
         },
@@ -534,6 +590,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
       ]
     )
   }
+
   if (isCoHost) {
     items.push(
       ...whiteBoardItems,
@@ -550,9 +607,11 @@ const MemberItem: React.FC<MemberItemProps> = ({
       ]
     )
   }
+
   if (!isCoHost && !isHost) {
     items.push(...privateChatItems, ...pinViewItems, ...whiteBoardItems)
   }
+
   // 收回主持人，
   if (!isHost) {
     items.push({
@@ -576,114 +635,130 @@ const MemberItem: React.FC<MemberItemProps> = ({
 
   items = items.filter((item) => {
     const { isShow } = item
+
     delete item.isShow
     return Boolean(isShow)
   })
 
   return (
-    <div className="member-item">
+    <div className="nemeeting-member-item">
       <UserAvatar
         className="member-item-avatar"
         nickname={data.name}
         avatar={data.avatar}
         size={24}
       />
-      <div className="member-item-name">{name}</div>
-      <div className={classNames('member-item-actions')}>
-        {data.isHandsUp && (isHost || isCoHost) && (
-          <svg
-            className="icon iconfont icon-blue iconraisehands1x"
-            aria-hidden="true"
-          >
-            <use xlinkHref="#iconraisehands1x" />
-          </svg>
-        )}
-        {data.properties.phoneState?.value === '1' && (
-          <svg
-            className="icon iconfont icon-green icondianhua-copy"
-            aria-hidden="true"
-          >
-            <use xlinkHref="#icondianhua-copy" />
-          </svg>
-        )}
-        {data.clientType === NEClientType.SIP && (
-          <svg
-            className="icon iconfont iconSIPwaihudianhua icon-blue"
-            aria-hidden="true"
-          >
-            <use xlinkHref="#iconSIPwaihudianhua" />
-          </svg>
-        )}
-        {data.isSharingScreen && (
-          <svg
-            className="icon iconfont icon-blue icon-blue iconyx-tv-sharescreen1x"
-            aria-hidden="true"
-          >
-            <use xlinkHref="#iconyx-tv-sharescreen1x" />
-          </svg>
-        )}
-        {data.isSharingWhiteboard && (
-          <svg
-            className="icon iconfont icon-blue iconyx-baiban"
-            aria-hidden="true"
-          >
-            <use xlinkHref="#iconyx-baiban" />
-          </svg>
-        )}
-        {meetingInfo.focusUuid === data.uuid && (
-          <svg className="icon iconfont" aria-hidden="true">
-            <use xlinkHref="#iconjiaodian1" />
-          </svg>
-        )}
-        <svg
-          className={classNames('icon iconfont', {
-            'icon-red': !data.isVideoOn,
-          })}
-          aria-hidden="true"
-        >
-          <use
-            xlinkHref={`${
-              data.isVideoOn ? '#iconyx-tv-video-onx' : '#iconyx-tv-video-offx'
-            }`}
-          />
-        </svg>
-        {data.isAudioConnected ? (
-          data.isAudioOn ? (
-            <AudioIcon memberId={data.uuid} className="icon iconfont" dark />
-          ) : (
+      <div className="nemeeting-member-item-user">
+        <div className="member-item-name">{nickName}</div>
+        <div className="member-item-name nemeeting-item-member-role">
+          {name}
+        </div>
+      </div>
+      {data.isInRtcChannel ? (
+        <div className={classNames('member-item-actions')}>
+          {data.isHandsUp && (isHost || isCoHost) && (
             <svg
-              className={classNames('icon iconfont', {
-                'icon-red': !data.isAudioOn,
-              })}
+              className="icon iconfont icon-blue iconraisehands1x"
               aria-hidden="true"
             >
-              <use
-                xlinkHref={`${
-                  data.isAudioOn
-                    ? '#iconyx-tv-voice-onx'
-                    : '#iconyx-tv-voice-offx'
-                }`}
-              />
+              <use xlinkHref="#iconraisehands1x" />
             </svg>
-          )
-        ) : null}
-        {items.length > 0 ? (
-          <Dropdown menu={{ items }} trigger={['click']}>
-            <svg className="icon iconfont iconyx-tv-more1x" aria-hidden="true">
+          )}
+          {data.properties.phoneState?.value === '1' && (
+            <svg
+              className="icon iconfont icon-green icondianhua-copy"
+              aria-hidden="true"
+            >
+              <use xlinkHref="#icondianhua-copy" />
+            </svg>
+          )}
+          {data.clientType === NEClientType.SIP && (
+            <svg
+              className="icon iconfont iconSIPwaihudianhua icon-blue"
+              aria-hidden="true"
+            >
+              <use xlinkHref="#iconSIPwaihudianhua" />
+            </svg>
+          )}
+          {data.isSharingScreen && (
+            <svg
+              className="icon iconfont icon-blue icon-blue iconyx-tv-sharescreen1x"
+              aria-hidden="true"
+            >
+              <use xlinkHref="#iconyx-tv-sharescreen1x" />
+            </svg>
+          )}
+          {data.isSharingWhiteboard && (
+            <svg
+              className="icon iconfont icon-blue iconyx-baiban"
+              aria-hidden="true"
+            >
+              <use xlinkHref="#iconyx-baiban" />
+            </svg>
+          )}
+          {meetingInfo.focusUuid === data.uuid && (
+            <svg className="icon iconfont" aria-hidden="true">
+              <use xlinkHref="#iconjiaodian1" />
+            </svg>
+          )}
+          <svg
+            className={classNames('icon iconfont', {
+              'icon-red': !data.isVideoOn,
+            })}
+            aria-hidden="true"
+          >
+            <use
+              xlinkHref={`${
+                data.isVideoOn
+                  ? '#iconyx-tv-video-onx'
+                  : '#iconyx-tv-video-offx'
+              }`}
+            />
+          </svg>
+          {data.isAudioConnected ? (
+            data.isAudioOn ? (
+              <AudioIcon memberId={data.uuid} className="icon iconfont" dark />
+            ) : (
+              <svg
+                className={classNames('icon iconfont', {
+                  'icon-red': !data.isAudioOn,
+                })}
+                aria-hidden="true"
+              >
+                <use
+                  xlinkHref={`${
+                    data.isAudioOn
+                      ? '#iconyx-tv-voice-onx'
+                      : '#iconyx-tv-voice-offx'
+                  }`}
+                />
+              </svg>
+            )
+          ) : null}
+          {items.length > 0 ? (
+            <Dropdown menu={{ items }} trigger={['click']}>
+              <svg
+                className="icon iconfont iconyx-tv-more1x"
+                aria-hidden="true"
+              >
+                <use xlinkHref="#iconyx-tv-more1x" />
+              </svg>
+            </Dropdown>
+          ) : (
+            <svg
+              className="icon iconfont iconyx-tv-more1x"
+              aria-hidden="true"
+              style={{ opacity: 0 }}
+            >
               <use xlinkHref="#iconyx-tv-more1x" />
             </svg>
-          </Dropdown>
-        ) : (
-          <svg
-            className="icon iconfont iconyx-tv-more1x"
-            aria-hidden="true"
-            style={{ opacity: 0 }}
-          >
-            <use xlinkHref="#iconyx-tv-more1x" />
-          </svg>
-        )}
-      </div>
+          )}
+        </div>
+      ) : (
+        <div className="member-item-actions">{t('participantJoining')}</div>
+      )}
     </div>
   )
 }
+
 export default MemberItem

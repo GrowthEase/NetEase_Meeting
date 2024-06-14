@@ -28,12 +28,15 @@ class DataReporter {
     if (options.appkey) {
       this._appkey = options.appKey
     }
+
     if (options.nickName) {
       this._nickname = options.nickName
     }
+
     if (options.uid) {
       this._uid = options.uid
     }
+
     if (options.meetingId) {
       this._meetingId = options.meetingId
     }
@@ -75,7 +78,7 @@ class DataReporter {
           },
         }
       )
-      .then((res) => {
+      .then(() => {
         //console.log('send(), response: %o', res)
       })
       .catch((e) => {
@@ -119,7 +122,7 @@ class DataReporter {
           },
         }
       )
-      .then((res) => {
+      .then(() => {
         //console.log('sendLog(), response: %o', res)
       })
       .catch((e) => {
@@ -135,47 +138,58 @@ class DataReporter {
       navigator.platform == 'MacPPC' ||
       navigator.platform == 'Macintosh' ||
       navigator.platform == 'MacIntel'
+
     if (isMac) return 'Mac'
     const isUnix = navigator.platform == 'X11' && !isWin && !isMac
+
     if (isUnix) return 'Unix'
     const isLinux = String(navigator.platform).indexOf('Linux') > -1
+
     if (isLinux) return 'Linux'
     if (isWin) {
       const isWin2K =
         operatingInfo.indexOf('Windows NT 5.0') > -1 ||
         operatingInfo.indexOf('Windows 2000') > -1
+
       if (isWin2K) return 'Win2000'
       const isWinXP =
         operatingInfo.indexOf('Windows NT 5.1') > -1 ||
         operatingInfo.indexOf('Windows XP') > -1
+
       if (isWinXP) return 'WinXP'
       const isWin2003 =
         operatingInfo.indexOf('Windows NT 5.2') > -1 ||
         operatingInfo.indexOf('Windows 2003') > -1
+
       if (isWin2003) return 'Win2003'
       const isWinVista =
         operatingInfo.indexOf('Windows NT 6.0') > -1 ||
         operatingInfo.indexOf('Windows Vista') > -1
+
       if (isWinVista) return 'WinVista'
       const isWin7 =
         operatingInfo.indexOf('Windows NT 6.1') > -1 ||
         operatingInfo.indexOf('Windows 7') > -1
+
       if (isWin7) return 'Win7'
       const isWin10 = operatingInfo.indexOf('Windows NT 10') != -1
+
       if (isWin10) return 'Win10'
     }
+
     return 'other'
   }
 }
 
 export default {
-  getInstance(options?: any) {
+  getInstance(options?: any): DataReporter {
     if (!reporter) {
       reporter = new DataReporter(options)
     }
+
     return reporter
   },
-  destroy() {
+  destroy(): void {
     reporter = null
   },
 }

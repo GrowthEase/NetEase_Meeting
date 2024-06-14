@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ConfigProvider } from 'antd';
@@ -22,10 +22,10 @@ import useMeetingInfoPageContext from '../hooks/useMeetingInfoPageContext';
 import useWaitingRoomPageContext from '../hooks/useWaitingRoomPageContext';
 
 import '../../../src/locales/i18n';
+import globalErrorCatch from '../../../src/utils/globalErrorCatch';
 
 const Layout: React.FC = (props) => {
-  const hash = window.location.hash;
-  const { i18n, t } = useTranslation();
+  const { i18n } = useTranslation();
   const [windowOpen, setWindowOpen] = React.useState(true);
   const {
     meetingInfo,
@@ -42,6 +42,8 @@ const Layout: React.FC = (props) => {
     neMeeting,
     eventEmitter,
     globalConfig,
+    interpretationSetting,
+    dispatch: globalDispatch,
   } = useGlobalContextPageContext();
 
   useEffect(() => {
@@ -53,17 +55,22 @@ const Layout: React.FC = (props) => {
           ja: 'ja-JP',
         }[navigator.language.split('-')[0]] || 'en-US';
       const appLanguage = data?.normalSetting.language || defaultLanguage;
+
       // 如果当前语言和应用语言一致，则不需要切换
       if (i18n.language === appLanguage) return;
       i18n.changeLanguage(appLanguage);
     }
 
     const settingStr = localStorage.getItem('ne-meeting-setting');
+
     if (settingStr) {
       try {
         const setting = JSON.parse(settingStr);
+
         changeLanguage(null, setting);
-      } catch {}
+      } catch (error) {
+        console.error('parse setting error', error);
+      }
     } else {
       changeLanguage();
     }
@@ -79,6 +86,7 @@ const Layout: React.FC = (props) => {
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
       const { event } = e.data;
+
       // 关闭统一处理页面重置逻辑
       switch (event) {
         case 'windowClosed':
@@ -91,7 +99,11 @@ const Layout: React.FC = (props) => {
           break;
       }
     }
+
     window.addEventListener('message', handleMessage);
+
+    globalErrorCatch();
+
     return () => {
       window.removeEventListener('message', handleMessage);
     };
@@ -111,7 +123,13 @@ const Layout: React.FC = (props) => {
     >
       {windowOpen && (
         <GlobalContext.Provider
-          value={{ neMeeting, eventEmitter, globalConfig }}
+          value={{
+            neMeeting,
+            eventEmitter,
+            globalConfig,
+            interpretationSetting,
+            dispatch: globalDispatch,
+          }}
         >
           <MeetingInfoContext.Provider
             value={{

@@ -1,0 +1,84 @@
+.about-content {
+  width: 100%;
+  height: 681px;
+  overflow: hidden;
+  background: #f0f1f5;
+  .app-about-logo-wrap {
+    height: 273px;
+    padding-top: 88px;
+    box-sizing: border-box;
+    .app-about-logo-image {
+      width: 118px;
+      display: block;
+      margin: 0 auto;
+    }
+    .app-about-version {
+      width: 106px;
+      height: 15px;
+      text-align: center;
+
+      /* 文字颜色Text/次要信息 */
+      color: #8d90a0;
+      margin: 0 auto;
+      margin-top: 12px;
+      font-size: 12px;
+    }
+  }
+  .app-about-item-wrap {
+    width: 343px;
+    height: 96px;
+    border-radius: 8px;
+    opacity: 1;
+    background: #ffffff;
+    margin: 0 auto;
+    cursor: pointer;
+    .app-about-item {
+      width: 343px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-sizing: border-box;
+      padding: 13px 16px;
+      .app-about-item-title {
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 22px;
+        letter-spacing: 0em;
+        /* 文字颜色 Text/强调&正文标题 */
+        color: #1e1f27;
+      }
+      .iconyoujiantou {
+        display: inline-block;
+        width: 12px;
+        height: 24px;
+        color: #8d90a0;
+        .iconyoujiantou-16px-2 {
+          font-size: 24px;
+        }
+      }
+    }
+    .app-about-item:first-child:hover {
+      /* 填充颜色 Fill/深&灰底悬浮 */
+      background: #e6e7eb;
+      border-radius: 8px 8px 0px 0px;
+    }
+    .app-about-item:last-child:hover {
+      /* 填充颜色 Fill/深&灰底悬浮 */
+      background: #e6e7eb;
+      border-radius: 0px 0px 8px 8px;
+    }
+  }
+}
+
+.copy-right-content {
+  position: absolute;
+  bottom: 24px;
+  text-align: center;
+  letter-spacing: 0px;
+  color: #999999;
+  width: 250px;
+  transform: translate(-50%, 0);
+  left: 50%;
+  font-size: 12px;
+}

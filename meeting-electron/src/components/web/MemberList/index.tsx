@@ -27,7 +27,6 @@ import UpdateUserNicknameModal from '../BeforeMeetingModal/UpdateUserNicknameMod
 import './index.less'
 import InSipInvitingMemberItem from './InSipInvitingMemberItem'
 import WaitingRoomMemberItem from './WaitingRoomMemberItem'
-import { useUpdateEffect } from 'ahooks'
 
 interface MemberListFooterProps {
   meetingInfo: NEMeetingInfo
@@ -47,9 +46,12 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
   tab,
 }) => {
   const { t } = useTranslation()
+  const { inInvitingMemberList, memberList } = useMeetingInfoContext()
+  const { waitingRoomInfo } = useWaitingRoomContext()
   const meetingInfoRef = useRef<NEMeetingInfo | null>(null)
   const muteAllAudioModalRef = useRef<any>(null)
   const notAllowJoinRef = useRef(false)
+
   meetingInfoRef.current = meetingInfo
 
   const allowUnMuteVideoBySelfRef = useRef(true)
@@ -73,6 +75,7 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
     if (muteAllAudioModalRef.current) {
       return
     }
+
     muteAllAudioModalRef.current = Modal.confirm({
       title: t('participantMuteVideoAllDialogTips'),
       content: (
@@ -103,6 +106,7 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
       },
     })
   }
+
   function unmuteVideo() {
     neMeeting
       ?.sendHostControl(hostAction.unmuteAllVideo, '')
@@ -114,6 +118,7 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
         throw error
       })
   }
+
   function muteAudio() {
     Modal.confirm({
       title: t('participantMuteAudioAllDialogTips'),
@@ -132,6 +137,7 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
         const type = allowUnMuteAudioBySelfRef.current
           ? hostAction.muteAllAudio
           : hostAction.forceMuteAllAudio
+
         return neMeeting
           ?.sendHostControl(type, '')
           .then(() => {
@@ -144,6 +150,7 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
       },
     })
   }
+
   function unmuteAudio() {
     neMeeting
       ?.sendHostControl(hostAction.unmuteAllAudio, '')
@@ -211,6 +218,24 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
   const items: MenuProps['items'] = buttons
 
   const handleAdmitAll = () => {
+    const maxMembers = meetingInfo.maxMembers || 0
+    const inInvitingMemberListLength = inInvitingMemberList?.length || 0
+    const memberListLength = memberList.length
+    const waitingRoomMemberListLength = waitingRoomInfo.memberCount
+
+    if (
+      memberListLength +
+        inInvitingMemberListLength +
+        waitingRoomMemberListLength >
+      maxMembers
+    ) {
+      Modal.warning({
+        title: t('commonTitle'),
+        content: t('participantUpperLimitTipAdmitOtherTip'),
+      })
+      return
+    }
+
     Modal.confirm({
       title: t('waitingRoomAdmitMember'),
       width: 270,
@@ -224,8 +249,10 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
       onOk: async () => {
         try {
           await neMeeting?.admitAllMembers()
-        } catch (e: any) {
-          Toast.fail(e?.msg || e?.message)
+        } catch (err) {
+          const knownError = err as { message: string; msg: string }
+
+          Toast.fail(knownError?.msg || knownError?.message)
         }
       },
     })
@@ -255,8 +282,10 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
       onOk: async () => {
         try {
           await neMeeting?.expelAllMembers(notAllowJoinRef.current)
-        } catch (e: any) {
-          Toast.fail(e?.msg || e?.message)
+        } catch (err: unknown) {
+          const knownError = err as { message: string; msg: string }
+
+          Toast.fail(knownError?.msg || knownError?.message)
         }
       },
     })
@@ -413,7 +442,7 @@ const MemberList: React.FC = () => {
         activeMemberManageTab: 'room',
       })
     }
-  }, [isHostOrCoHost, localMember])
+  }, [isHostOrCoHost, localMember, neMeeting])
 
   const [showMemberList, setShowMemberList] = useState<NEMember[]>([])
 
@@ -468,6 +497,7 @@ const MemberList: React.FC = () => {
       ...audioOn,
       ...other,
     ]
+
     setShowMemberList(res)
   }, [memberList, localMember])
 
@@ -490,10 +520,12 @@ const MemberList: React.FC = () => {
     if (!inSipInvitingMemberList) {
       return []
     }
+
     const calling: NEMember[] = []
     const waiting: NEMember[] = []
     const notAnswered: NEMember[] = []
     const toBeInvited: NEMember[] = []
+
     inSipInvitingMemberList.forEach((member) => {
       if (member.inviteState === NEMeetingInviteStatus.calling) {
         calling.push(member)
@@ -515,6 +547,7 @@ const MemberList: React.FC = () => {
     if (!inSipInvitingMemberListSort) {
       return []
     }
+
     return searchName
       ? inSipInvitingMemberListSort?.filter((member) =>
           member.name.toLowerCase().includes(searchName.toLowerCase())
@@ -552,15 +585,17 @@ const MemberList: React.FC = () => {
     if (meetingInfo.activeMemberManageTab === 'waitingRoom') {
       neMeeting?.updateWaitingRoomUnReadCount(0)
     }
-  }, [meetingInfo.activeMemberManageTab])
+  }, [meetingInfo.activeMemberManageTab, neMeeting])
 
   useEffect(() => {
     if (meetingInfo.activeMemberManageTab === 'waitingRoom') {
       const scrollElement = scrollRef.current
+
       if (!scrollElement) {
         return
       }
-      function handleScroll() {
+
+      const handleScroll = () => {
         //@ts-ignore
         if (
           scrollElement &&
@@ -573,11 +608,14 @@ const MemberList: React.FC = () => {
           ) {
             return
           }
+
           const lastMember =
             waitingRoomMemberList[waitingRoomMemberList.length - 1]
+
           if (!lastMember) {
             return
           }
+
           getWaitingRoomMemberRef.current = true
           neMeeting
             ?.waitingRoomGetMemberList?.(lastMember?.joinTime, 20, true)
@@ -600,9 +638,10 @@ const MemberList: React.FC = () => {
           )
         }
       }
-      scrollRef.current?.addEventListener('scroll', handleScroll)
+
+      scrollElement.addEventListener('scroll', handleScroll)
       return () => {
-        scrollRef.current?.removeEventListener('scroll', handleScroll)
+        scrollElement.removeEventListener('scroll', handleScroll)
       }
     }
   }, [meetingInfo.activeMemberManageTab, waitingRoomMemberList.length])
@@ -619,9 +658,11 @@ const MemberList: React.FC = () => {
     })
     setUpdateUserNicknameModalOpen(true)
   }
+
   const roomRowRenderer = useCallback(
-    ({ index, key, parent, style }) => {
+    ({ index, key, style }) => {
       const member = memberListFilter[index]
+
       return (
         <div style={style} key={key}>
           <MemberItem
@@ -634,17 +675,17 @@ const MemberList: React.FC = () => {
         </div>
       )
     },
-    [memberListFilter, meetingInfo]
+    [memberListFilter, meetingInfo, neMeeting]
   )
 
   const waitingRoomRowRenderer = useCallback(
-    ({ index, key, parent, style }) => {
+    ({ index, key, style }) => {
       const member = waitingRoomMemberListFilter[index]
+
       return (
         <div style={style} key={key}>
           <WaitingRoomMemberItem
             neMeeting={neMeeting}
-            meetingInfo={meetingInfo}
             key={member.uuid}
             data={member}
             handleUpdateUserNickname={handleUpdateUserNickname}
@@ -652,15 +693,18 @@ const MemberList: React.FC = () => {
         </div>
       )
     },
+
     [waitingRoomMemberListFilter, meetingInfo.enableBlacklist]
   )
 
   const inSipInvitingRowRenderer = useCallback(
-    ({ index, key, parent, style }) => {
+    ({ index, key, style }) => {
       if (!inSipInvitingMemberListFilter) {
         return <div style={style} key={key}></div>
       }
+
       const member = inSipInvitingMemberListFilter[index]
+
       console.log('inSipInvitingRowRenderer', member)
       return (
         <div style={style} key={key}>
@@ -672,7 +716,7 @@ const MemberList: React.FC = () => {
         </div>
       )
     },
-    [inSipInvitingMemberListFilter]
+    [inSipInvitingMemberListFilter, neMeeting]
   )
   const showWaitingTab = useMemo(() => {
     return waitingRoomMemberList.length > 0 && waitingRoomInfo.memberCount > 0
@@ -852,16 +896,6 @@ const MemberList: React.FC = () => {
                 })
                 .then(() => {
                   Toast.success(t('reNameSuccessToast'))
-                  if (updateUserNicknameInfo.uuid === localMember.uuid) {
-                    //修改自己昵称 保存昵称，会议逻辑
-                    localStorage.setItem(
-                      'ne-meeting-nickname-' + localMember.uuid,
-                      JSON.stringify({
-                        [neMeeting.meetingNum]: values.nickname,
-                        [neMeeting.shortMeetingNum]: values.nickname,
-                      })
-                    )
-                  }
                 })
                 .catch((error) => {
                   Toast.fail(
@@ -899,4 +933,5 @@ const MemberList: React.FC = () => {
     </div>
   )
 }
+
 export default MemberList

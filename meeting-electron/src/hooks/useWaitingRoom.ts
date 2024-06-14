@@ -6,11 +6,7 @@ import {
   MeetingSetting,
   NEMeetingInfo,
 } from '../types'
-import {
-  useGlobalContext,
-  useMeetingInfoContext,
-  useWaitingRoomContext,
-} from '../store'
+import { useGlobalContext, useMeetingInfoContext } from '../store'
 import { useTranslation } from 'react-i18next'
 import usePreviewHandler from './usePreviewHandler'
 import { formatDate } from '../utils'
@@ -19,8 +15,12 @@ import { IPCEvent } from '../../app/src/types'
 import Toast from '../components/common/toast'
 import { NEMeetingLeaveType } from '../types/type'
 import { errorCodeMap } from '../config'
+import { NEResult } from 'neroom-web-sdk'
 
-export function formateMsg(message, t) {
+export function formateMsg(
+  message: { type: string; text: string } | undefined,
+  t: any
+): string {
   if (message?.type === 'text') {
     return message.text
   } else if (message?.type === 'image') {
@@ -29,6 +29,7 @@ export function formateMsg(message, t) {
     return t('fileMsg')
   }
 }
+
 interface WaitingRoomProps {
   closeModalHandle: (data: {
     title: string
@@ -40,8 +41,34 @@ interface WaitingRoomProps {
   handleVideoFrameData?: (uuid, bSubVideo, data, type, width, height) => void
 }
 
-const WAITING_ROOM_MEMBER_MSG_KEY = 'WAITING_ROOM_MEMBER_MSG_KEY'
-export function useWaitingRoom(data: WaitingRoomProps) {
+type WaitingRoomReturn = {
+  openAudio: boolean
+  openVideo: boolean
+  setOpenVideo: (openVideo: boolean) => void
+  setOpenAudio: (openAudio: boolean) => void
+  setting: MeetingSetting | null
+  unReadMsgCount: number
+  isOffLine: boolean
+  nickname: string
+  recordVolume: number
+  meetingInfo: NEMeetingInfo
+  meetingState: number
+  showChatRoom: boolean
+  handleOpenAudio: (openAudio: boolean) => void
+  handleOpenVideo: (openVideo: boolean) => void
+  handleOpenChatRoom: (openChatRoom: boolean) => void
+  startPreview: (view: HTMLElement) => Promise<NEResult<null>> | undefined
+  stopPreview: () => void
+  openChatRoom: boolean
+  formatMeetingTime: (startTime: number) => string
+  videoCanvasWrapRef: React.RefObject<HTMLDivElement>
+  setSetting: (setting: MeetingSetting) => void
+  setOpenChatRoom: (openChatRoom: boolean) => void
+  setUnReadMsgCount: (unReadMsgCount: number) => void
+  setRecordVolume: (recordVolume: number) => void
+}
+
+export function useWaitingRoom(data: WaitingRoomProps): WaitingRoomReturn {
   const { handleVideoFrameData, closeModalHandle } = data
 
   const { t } = useTranslation()
@@ -67,6 +94,7 @@ export function useWaitingRoom(data: WaitingRoomProps) {
   } = useGlobalContext()
   const meetingInfoRef = useRef<NEMeetingInfo>(meetingInfo)
   const closeTimerRef = useRef<any>(null)
+
   usePreviewHandler()
   // useEventHandler()
   meetingInfoRef.current = meetingInfo
@@ -79,6 +107,7 @@ export function useWaitingRoom(data: WaitingRoomProps) {
       },
     })
     const previewController = neMeeting?.previewController
+
     if (previewController) {
       if (openAudio) {
         previewController?.stopRecordDeviceTest().finally(() => {
@@ -103,6 +132,7 @@ export function useWaitingRoom(data: WaitingRoomProps) {
               //@ts-ignore
               Toast.fail(t(errorCodeMap['10212']))
             }
+
             throw e
           })
       }
@@ -117,10 +147,12 @@ export function useWaitingRoom(data: WaitingRoomProps) {
       },
     })
     const previewController = neMeeting?.previewController
+
     if (previewController) {
       if (openVideo) {
         if (window.isElectronNative) {
           const code = stopPreview()
+
           //@ts-ignore
           if (code === 0) {
             setOpenVideo(false)
@@ -135,6 +167,7 @@ export function useWaitingRoom(data: WaitingRoomProps) {
       } else {
         if (window.isElectronNative) {
           const code = startPreview(videoCanvasWrapRef.current as HTMLElement)
+
           console.log('code>>>', code)
           // @ts-ignore
           if (code === 0) {
@@ -156,10 +189,13 @@ export function useWaitingRoom(data: WaitingRoomProps) {
     if (!window.isElectronNative) {
       return
     }
+
     const previewConText = neMeeting?.roomService?.getPreviewRoomContext()
+
     if (!previewConText) {
       return
     }
+
     previewRoomListenerRef.current = {
       onLocalAudioVolumeIndication: (volume: number) => {
         // console.log('onLocalAudioVolumeIndication>>>', volume)
@@ -170,6 +206,7 @@ export function useWaitingRoom(data: WaitingRoomProps) {
         reason: string
       ) => {
         const settingWindow = getWindow('settingWindow')
+
         settingWindow?.postMessage(
           {
             event: EventType.rtcVirtualBackgroundSourceEnabled,
@@ -180,20 +217,12 @@ export function useWaitingRoom(data: WaitingRoomProps) {
           },
           settingWindow.origin
         )
-        // window.ipcRenderer?.send('previewControllerListener', {
-        //   method: EventType.rtcVirtualBackgroundSourceEnabled,
-        //   args: [
-        //     {
-        //       enabled,
-        //       reason,
-        //     },
-        //   ],
-        // })
       },
       //@ts-ignore
       onVideoFrameData: (uuid, bSubVideo, data, type, width, height) => {
         handleVideoFrameData?.(uuid, bSubVideo, data, type, width, height)
         const settingWindow = getWindow('settingWindow')
+
         settingWindow?.postMessage(
           {
             event: 'onVideoFrameData',
@@ -209,10 +238,6 @@ export function useWaitingRoom(data: WaitingRoomProps) {
           '*',
           [data.bytes.buffer]
         )
-        // window.ipcRenderer?.send('previewControllerListener', {
-        //   method: EventType.previewVideoFrameData,
-        //   args: [uuid, bSubVideo, data, type, width, height],
-        // })
       },
     }
     //@ts-ignore
@@ -222,6 +247,7 @@ export function useWaitingRoom(data: WaitingRoomProps) {
   function removePreviewRoomListener() {
     if (previewRoomListenerRef.current) {
       const previewConText = neMeeting?.roomService?.getPreviewRoomContext()
+
       //@ts-ignore
       previewConText?.removePreviewRoomListener(previewRoomListenerRef.current)
     }
@@ -229,21 +255,24 @@ export function useWaitingRoom(data: WaitingRoomProps) {
 
   useEffect(() => {
     setNickname(meetingInfo?.localMember?.name || '')
-  }, [])
+  }, [meetingInfo?.localMember?.name])
 
   useEffect(() => {
     window.ipcRenderer?.on(IPCEvent.changeSetting, (event, setting) => {
       setSetting(setting)
     })
     const tmpSetting = localStorage.getItem('ne-meeting-setting')
+
     if (tmpSetting) {
       try {
         const _setting = JSON.parse(tmpSetting) as MeetingSetting
+
         setSetting(_setting)
       } catch (e) {
         console.log('parse setting error', e)
       }
     }
+
     neMeeting?._meetingInfo && setMeetingState(neMeeting?._meetingInfo.state)
   }, [])
 
@@ -251,10 +280,12 @@ export function useWaitingRoom(data: WaitingRoomProps) {
     if (meetingInfo.isUnMutedAudio) {
       handleOpenAudio(false)
     }
+
     if (neMeeting?.alreadyJoin) {
       if (meetingInfo.localMember.isVideoOn) {
         handleOpenVideo(false)
       }
+
       if (meetingInfo.localMember.isAudioOn) {
         handleOpenAudio(false)
       }
@@ -262,6 +293,7 @@ export function useWaitingRoom(data: WaitingRoomProps) {
       if (meetingInfo.isUnMutedVideo) {
         handleOpenVideo(false)
       }
+
       return () => {
         setOpenChatRoom(false)
       }
@@ -269,6 +301,7 @@ export function useWaitingRoom(data: WaitingRoomProps) {
   }, [])
   function startPreview(view: HTMLElement) {
     const previewController = neMeeting?.previewController
+
     if (window.ipcRenderer) {
       previewController?.setupLocalVideoCanvas(view)
       return previewController?.startPreview()
@@ -283,17 +316,21 @@ export function useWaitingRoom(data: WaitingRoomProps) {
           //@ts-ignore
           Toast.fail(t(errorCodeMap['10212']))
         }
+
         throw e
       })
     }
   }
+
   function stopPreview() {
     const previewController = neMeeting?.previewController
+
     return previewController?.stopPreview()
   }
 
   const handleNameChange = useCallback((memberId, name) => {
     const localMember = meetingInfo.localMember
+
     if (localMember && localMember.uuid === memberId) {
       setNickname(name)
       const value = meetingInfo.shortMeetingNum
@@ -304,6 +341,7 @@ export function useWaitingRoom(data: WaitingRoomProps) {
         : {
             [meetingInfo.meetingNum]: name,
           }
+
       localStorage.setItem(
         'ne-meeting-nickname-' + localMember.uuid,
         JSON.stringify(value)
@@ -311,16 +349,18 @@ export function useWaitingRoom(data: WaitingRoomProps) {
     }
   }, [])
 
-  const handleMeetingUpdate = useCallback((res) => {
-    console.log('handleMeetingUpdate', res)
-    if (res.data) {
-      if (res.data?.type === 200) {
-        window.isElectronNative && Toast.warning(t('tokenExpired'), 5000)
-      } else {
-        setMeetingState(res.data.state)
+  const handleMeetingUpdate = useCallback(
+    (res) => {
+      if (res.data) {
+        if (res.data?.type === 200) {
+          window.isElectronNative && Toast.warning(t('tokenExpired'), 5000)
+        } else {
+          setMeetingState(res.data.state)
+        }
       }
-    }
-  }, [])
+    },
+    [t]
+  )
 
   useEffect(() => {
     if (meetingState === 2) {
@@ -348,6 +388,7 @@ export function useWaitingRoom(data: WaitingRoomProps) {
         console.log('onRoomPropertiesChanged: %o %o %t', properties)
         if (properties.wtPrChat) {
           const waitingRoomChatPermission = Number(properties.wtPrChat.value)
+
           console.log('waitingRoomChatPermission', waitingRoomChatPermission)
           dispatch?.({
             type: ActionType.UPDATE_MEETING_INFO,
@@ -379,12 +420,14 @@ export function useWaitingRoom(data: WaitingRoomProps) {
           })
           if (window.isElectronNative) {
             const meeting = neMeeting?.getMeetingInfo()
+
             meeting &&
               dispatch?.({
                 type: ActionType.SET_MEETING,
                 data: meeting,
               })
           }
+
           dispatch?.({
             type: ActionType.UPDATE_MEETING_INFO,
             data: {
@@ -453,6 +496,7 @@ export function useWaitingRoom(data: WaitingRoomProps) {
   function formatMeetingTime(startTime: number) {
     return startTime ? formatDate(startTime, 'yyyy.MM.dd_hh:mm') : '--'
   }
+
   const handleRoomEnd = useCallback((reason: string) => {
     const langMap: Record<string, string> = {
       UNKNOWN: t('UNKNOWN'), // 未知异常
@@ -468,6 +512,7 @@ export function useWaitingRoom(data: WaitingRoomProps) {
       LEAVE_BY_SELF: t('LEAVE_BY_SELF'), // 成员主动离开房间
       OTHER: t('OTHER'), // 其他
     }
+
     if (reason === 'CLOSE_BY_MEMBER') {
       closeModalHandle({
         title: t('meetingEnded'),
@@ -478,9 +523,11 @@ export function useWaitingRoom(data: WaitingRoomProps) {
     } else {
       langMap[reason] && Toast.info(langMap[reason])
       let leaveType: NEMeetingLeaveType = NEMeetingLeaveType[reason]
+
       if (!leaveType && leaveType !== 0) {
         leaveType = NEMeetingLeaveType.UNKNOWN
       }
+
       outEventEmitter?.emit(EventType.RoomEnded, reason)
     }
   }, [])
@@ -489,10 +536,12 @@ export function useWaitingRoom(data: WaitingRoomProps) {
     addPreviewRoomListener()
     neMeeting?.chatController?.leaveChatroom(0)
     neMeeting?.chatController?.joinChatroom(1)
+    const closeTimer = closeTimerRef.current
+
     return () => {
       stopPreview()
       removePreviewRoomListener()
-      closeTimerRef.current && clearInterval(closeTimerRef.current)
+      closeTimer && clearInterval(closeTimer)
       neMeeting?.previewController?.stopRecordDeviceTest()
     }
   }, [])
@@ -513,9 +562,11 @@ export function useWaitingRoom(data: WaitingRoomProps) {
         getWaitingRoomConfig()
       }, 1000)
     }
+
     function offlineHandle() {
       setIsOffLine(true)
     }
+
     window.addEventListener('online', onlineHandle)
     window.addEventListener('offline', offlineHandle)
     return () => {

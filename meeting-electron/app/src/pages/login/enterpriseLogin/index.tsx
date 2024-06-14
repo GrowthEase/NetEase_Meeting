@@ -1,9 +1,9 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import classnames from 'classnames';
 import './index.less';
-import BaseInput, { PwdInput } from '../../../components/input';
-import { Button } from 'antd';
-import { loginApi, modifyPasswordApi } from '../../../api';
+import BaseInput, { PhoneInput, PwdInput } from '../../../components/input';
+import { Button, Checkbox, Divider } from 'antd';
+import { modifyPasswordApi, loginApiNew } from '../../../api';
 import { LOCALSTORAGE_USER_INFO } from '../../../config';
 import { useTranslation } from 'react-i18next';
 import LoginHeader from '../header';
@@ -11,32 +11,70 @@ import Toast from '../../../../../src/components/common/toast';
 import { EnterPriseInfo, LoginUserInfo } from '@/types';
 import Modal from '../../../../../src/components/common/Modal';
 import { md5Password } from '../../../../../src/utils';
+import LoginTypeIcon from '../loginTypeIcon';
+
 interface EnterpriseLoginProps {
   goBack?: () => void;
   onSSOLogin: () => void;
-  checkIsAgree: () => boolean;
   enterpriseInfo?: EnterPriseInfo;
   onLogged: () => void;
 }
 
 type ShowType = 'enterpriseLogin' | 'newPassword';
 
+type EnterpriseLoginType = 'account' | 'phone' | 'email';
+
 const EnterpriseLogin: React.FC<EnterpriseLoginProps> = ({
   goBack,
-  checkIsAgree,
   enterpriseInfo,
   onSSOLogin,
   onLogged,
 }) => {
   const { t } = useTranslation();
+  const [isAgree, setIsAgree] = useState<boolean>(true);
   const [pwd, setPwd] = useState({ value: '', valid: false });
   const [newPwd, setNewPwd] = useState({ value: '', valid: false });
   const [newSecondPwd, setNewSecondPwd] = useState({ value: '', valid: false });
   const [account, setAccount] = useState({ value: '', valid: false });
+  const [phone, setPhone] = useState({ value: '', valid: false });
+  const [email, setEmail] = useState({ value: '', valid: false });
   const [loading, setLoading] = useState(false);
   const [errorTip, setErrorTip] = useState('');
   const userInfoRef = useRef<LoginUserInfo | null>(null);
   const [currentType, setCurrentType] = useState<ShowType>('enterpriseLogin');
+  const [enterpriseLoginType, setEnterpriseLoginType] =
+    useState<EnterpriseLoginType>('account');
+
+  const pageTitle = useMemo(() => {
+    switch (enterpriseLoginType) {
+      case 'account':
+        return t('authLoginByAccountPwd');
+      case 'phone':
+        return t('authLoginByMobilePwd');
+      case 'email':
+        return t('authLoginByEmailPwd');
+    }
+  }, [enterpriseLoginType, t]);
+
+  const loginButtonDisabled = useMemo(() => {
+    if (enterpriseLoginType === 'account') {
+      return !account.valid || pwd.value.length < 6;
+    } else if (enterpriseLoginType === 'phone') {
+      return !phone.valid || pwd.value.length < 6;
+    } else {
+      return !email.valid || pwd.value.length < 6;
+    }
+  }, [account.valid, email.valid, enterpriseLoginType, phone.valid, pwd.value]);
+
+  const checkIsAgree = useCallback(() => {
+    if (!isAgree) {
+      Toast.info(t('authPrivacyCheckedTips'));
+      return false;
+    }
+
+    return true;
+  }, [isAgree, t]);
+
   const handleGoBack = () => {
     if (currentType === 'enterpriseLogin') {
       goBack?.();
@@ -49,13 +87,17 @@ const EnterpriseLogin: React.FC<EnterpriseLoginProps> = ({
     if (!checkIsAgree()) {
       return;
     }
+
     setLoading(true);
     const payload = {
-      username: account.value,
+      username: enterpriseLoginType === 'account' ? account.value : undefined,
+      email: enterpriseLoginType === 'email' ? email.value : undefined,
+      phone: enterpriseLoginType === 'phone' ? phone.value : undefined,
       password: md5Password(pwd.value),
       appKey: enterpriseInfo?.appKey,
     };
-    loginApi(payload)
+
+    loginApiNew(payload)
       .then((data) => {
         userInfoRef.current = data;
         setLoading(false);
@@ -63,6 +105,7 @@ const EnterpriseLogin: React.FC<EnterpriseLoginProps> = ({
           showPwdModal();
           return;
         }
+
         loginHandle(data);
       })
       .catch((e) => {
@@ -72,12 +115,14 @@ const EnterpriseLogin: React.FC<EnterpriseLoginProps> = ({
         } else {
           Toast.fail(e.message || e.msg);
         }
+
         setLoading(false);
       });
   };
 
   const loginHandle = (data: LoginUserInfo) => {
     let userInfo = data;
+
     userInfo = Object.assign(
       {
         appKey: enterpriseInfo?.appKey,
@@ -121,6 +166,7 @@ const EnterpriseLogin: React.FC<EnterpriseLoginProps> = ({
       setErrorTip(t('settingPasswordDifferent'));
       return;
     }
+
     modifyPasswordApi({
       password: md5Password(pwd.value),
       newPassword: md5Password(newPwd.value),
@@ -144,6 +190,7 @@ const EnterpriseLogin: React.FC<EnterpriseLoginProps> = ({
     setErrorTip('');
     return value;
   };
+
   const loginValid = useMemo(() => {
     return account.value && pwd.value;
   }, [pwd.value, account.value]);
@@ -155,19 +202,75 @@ const EnterpriseLogin: React.FC<EnterpriseLoginProps> = ({
   return (
     <div className="enterprise-login">
       <section className={classnames('content', 'login-content')}>
-        <LoginHeader title={title} goBack={() => handleGoBack()} />
+        <LoginHeader
+          subTitle={title}
+          title={pageTitle}
+          goBack={() => handleGoBack()}
+        />
         {currentType === 'enterpriseLogin' ? (
           <>
             <div className="input-container">
-              <BaseInput
-                style={{ paddingLeft: 0, marginBottom: '20px' }}
-                placeholder={t('authEnterAccount')}
-                value={account.value}
-                hasClear={true}
-                set={setAccount}
-                errorTip=""
-              />
+              {enterpriseLoginType === 'account' && (
+                <BaseInput
+                  prefix={
+                    <svg
+                      className="icon iconfont input-prefix-icon"
+                      aria-hidden="true"
+                    >
+                      <use xlinkHref="#iconzhanghao"></use>
+                    </svg>
+                  }
+                  style={{ paddingLeft: 0, marginBottom: '20px' }}
+                  placeholder={t('authEnterAccount')}
+                  value={account.value}
+                  hasClear={true}
+                  set={setAccount}
+                  errorTip=""
+                />
+              )}
+              {enterpriseLoginType === 'phone' && (
+                <PhoneInput
+                  prefix={
+                    <svg
+                      className="icon iconfont input-prefix-icon"
+                      aria-hidden="true"
+                    >
+                      <use xlinkHref="#iconshouji"></use>
+                    </svg>
+                  }
+                  style={{ paddingLeft: 0, marginBottom: '20px' }}
+                  value={phone.value}
+                  set={setPhone}
+                  errorTip=""
+                />
+              )}
+              {enterpriseLoginType === 'email' && (
+                <BaseInput
+                  prefix={
+                    <svg
+                      className="icon iconfont input-prefix-icon"
+                      aria-hidden="true"
+                    >
+                      <use xlinkHref="#iconqiyeyouxiang"></use>
+                    </svg>
+                  }
+                  style={{ paddingLeft: 0, marginBottom: '20px' }}
+                  placeholder={t('authEnterCorpMail')}
+                  value={email.value}
+                  hasClear={true}
+                  set={setEmail}
+                  errorTip=""
+                />
+              )}
               <PwdInput
+                prefix={
+                  <svg
+                    className="icon iconfont input-prefix-icon"
+                    aria-hidden="true"
+                  >
+                    <use xlinkHref="#iconmima"></use>
+                  </svg>
+                }
                 style={{ paddingLeft: 0 }}
                 value={pwd.value}
                 set={setPwd}
@@ -175,21 +278,9 @@ const EnterpriseLogin: React.FC<EnterpriseLoginProps> = ({
                 errorTip=""
               />
             </div>
-            <div className="enterprise-sso-login">
-              <Button
-                className="enterprise-sso-login-btn"
-                type="link"
-                onClick={() => {
-                  onSSOLogin();
-                }}
-              >
-                {t('authLoginBySSO')}
-              </Button>
-            </div>
             <Button
               type="primary"
-              shape="round"
-              disabled={!account.valid || pwd.value.length < 6}
+              disabled={loginButtonDisabled}
               className={`login-btn login-button ${
                 loginValid ? '' : 'inactive'
               }`}
@@ -198,6 +289,104 @@ const EnterpriseLogin: React.FC<EnterpriseLoginProps> = ({
             >
               {t('authLogin')}
             </Button>
+            <div className="agreement">
+              <Checkbox
+                onChange={(e) => {
+                  setIsAgree(e.target.checked);
+                }}
+                checked={isAgree}
+              />
+              <span className="text">
+                {t('authHasReadAndAgreeMeeting')}
+                <a
+                  href="https://meeting.163.com/privacy/agreement_mobile_ysbh_wap.shtml"
+                  target="_blank"
+                  title={t('authPrivacy')}
+                  onClick={(e) => {
+                    if (window.ipcRenderer) {
+                      window.ipcRenderer.send(
+                        'open-browser-window',
+                        'https://meeting.163.com/privacy/agreement_mobile_ysbh_wap.shtml',
+                      );
+                      e.preventDefault();
+                    }
+                  }}
+                  rel="noreferrer"
+                >
+                  {t('authPrivacy')}
+                </a>
+                {t('authAnd')}
+                <a
+                  href="https://netease.im/meeting/clauses?serviceType=0"
+                  target="_blank"
+                  title={t('authUserProtocol')}
+                  onClick={(e) => {
+                    if (window.ipcRenderer) {
+                      window.ipcRenderer.send(
+                        'open-browser-window',
+                        'https://netease.im/meeting/clauses?serviceType=0',
+                      );
+                      e.preventDefault();
+                    }
+                  }}
+                  rel="noreferrer"
+                >
+                  {t('authUserProtocol')}
+                </a>
+              </span>
+            </div>
+            <div className="enterprise-login-type">
+              <Divider plain className="other-login-type-divider">
+                <span className="line"></span>
+                <span className="other-login-type-divider-text">
+                  {t('authOtherLoginTypes')}
+                </span>
+                <span className="line"></span>
+              </Divider>
+              <div className="enterprise-login-type-group">
+                {enterpriseLoginType === 'phone' ? (
+                  <LoginTypeIcon
+                    title={t('authTypeAccountPwd')}
+                    icon="iconzhanghao"
+                    onClick={() => {
+                      setEnterpriseLoginType('account');
+                    }}
+                  />
+                ) : (
+                  <LoginTypeIcon
+                    title={t('authMobileNum')}
+                    icon="iconshouji"
+                    onClick={() => {
+                      setEnterpriseLoginType('phone');
+                    }}
+                  />
+                )}
+                {enterpriseLoginType === 'email' ? (
+                  <LoginTypeIcon
+                    title={t('authTypeAccountPwd')}
+                    icon="iconzhanghao"
+                    onClick={() => {
+                      setEnterpriseLoginType('account');
+                    }}
+                  />
+                ) : (
+                  <LoginTypeIcon
+                    title={t('settingEmail')}
+                    icon="iconqiyeyouxiang"
+                    onClick={() => {
+                      setEnterpriseLoginType('email');
+                    }}
+                  />
+                )}
+                <LoginTypeIcon
+                  title={t('authLoginBySSO')}
+                  icon="iconSSO1"
+                  onClick={() => {
+                    onSSOLogin();
+                  }}
+                />
+              </div>
+            </div>
           </>
         ) : (
           <>

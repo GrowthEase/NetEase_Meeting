@@ -3,29 +3,41 @@ import { LoginUserInfo } from '../../../../app/src/types'
 import { LOCALSTORAGE_USER_INFO } from '../../../config'
 import { EventType } from '../../../types'
 import { worker } from '../Meeting/Meeting'
+import EventEmitter from 'eventemitter3'
 
-export function useCanvasSetting(data?: { eventEmitter: any }): any {
+type CanvasSettingReturnType = {
+  getUserInfo: () => LoginUserInfo | undefined
+  videoCanvas: React.RefObject<HTMLDivElement>
+  canvasRef: React.RefObject<HTMLCanvasElement>
+}
+
+export function useCanvasSetting(data?: {
+  eventEmitter: EventEmitter
+}): CanvasSettingReturnType {
   const videoCanvas = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  function getUserInfo(): LoginUserInfo {
-    let userInfo: any = localStorage.getItem(LOCALSTORAGE_USER_INFO)
-    if (userInfo) {
-      try {
-        userInfo = JSON.parse(userInfo || '{}')
-        console.log('userInfo', userInfo)
-      } catch (error) {
-        console.log('parseUserInfoError', error)
-      }
+
+  function getUserInfo(): LoginUserInfo | undefined {
+    try {
+      const userInfo = JSON.parse(
+        localStorage.getItem(LOCALSTORAGE_USER_INFO) || '{}'
+      )
+
+      return userInfo as LoginUserInfo
+    } catch (error) {
+      console.log('parseUserInfoError', error)
     }
-    return userInfo
   }
+
   useEffect(() => {
     const userInfo = getUserInfo()
     const canvas = canvasRef.current
+
     if (canvas && videoCanvas.current && window.isElectronNative) {
       canvas.style.height = `${videoCanvas.current.clientHeight}px`
       // @ts-ignore
       const offscreen = canvas.transferControlToOffscreen()
+
       worker.postMessage(
         {
           canvas: offscreen,
@@ -34,10 +46,13 @@ export function useCanvasSetting(data?: { eventEmitter: any }): any {
         [offscreen]
       )
     }
+
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data
+
       if (event === 'onVideoFrameData') {
         const { data, width, height } = payload
+
         worker.postMessage(
           {
             frame: {
@@ -45,12 +60,13 @@ export function useCanvasSetting(data?: { eventEmitter: any }): any {
               height,
               data,
             },
-            uuid: userInfo.userUuid,
+            uuid: userInfo?.userUuid,
           },
           [data.bytes.buffer]
         )
       } else if (event === EventType.rtcVirtualBackgroundSourceEnabled) {
         const { enabled, reason } = payload
+
         data?.eventEmitter?.emit(EventType.rtcVirtualBackgroundSourceEnabled, {
           enabled,
           reason,
@@ -62,13 +78,14 @@ export function useCanvasSetting(data?: { eventEmitter: any }): any {
         )
       }
     }
+
     if (window.isElectronNative) {
       window.addEventListener('message', handleMessage)
       return () => {
         window.removeEventListener('message', handleMessage)
       }
     }
-  }, [])
+  }, [data?.eventEmitter])
 
   return {
     getUserInfo,
@@ -77,12 +94,14 @@ export function useCanvasSetting(data?: { eventEmitter: any }): any {
   }
 }
 
-export function useAudioSetting(eventEmitter: any): void {
+export function useAudioSetting(eventEmitter: EventEmitter): void {
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data
+
       if (event === EventType.rtcVirtualBackgroundSourceEnabled) {
         const { enabled, reason } = payload
+
         eventEmitter?.emit(EventType.rtcVirtualBackgroundSourceEnabled, {
           enabled,
           reason,
@@ -94,11 +113,12 @@ export function useAudioSetting(eventEmitter: any): void {
         )
       }
     }
+
     if (window.isElectronNative) {
       window.addEventListener('message', handleMessage)
       return () => {
         window.removeEventListener('message', handleMessage)
       }
     }
-  }, [])
+  }, [eventEmitter])
 }

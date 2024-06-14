@@ -15,9 +15,11 @@ function uuidv4() {
   ) {
     return crypto.randomUUID();
   }
+
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     const r = (Math.random() * 16) | 0,
       v = c == 'x' ? r : (r & 0x3) | 0x8;
+
     return v.toString(16);
   });
 }
@@ -25,11 +27,13 @@ function uuidv4() {
 function getDeviceId() {
   const STORE_KEY = 'NetEase-Rooms-DeviceId';
   let deviceId = localStorage.getItem(STORE_KEY);
+
   if (!deviceId) {
     deviceId = uuidv4();
     localStorage.setItem(STORE_KEY, deviceId);
     window.ipcRenderer?.send('flushStorageData');
   }
+
   return deviceId;
 }
 
@@ -44,12 +48,14 @@ const APP_USER_ACCOUNT_INFO_KEY = 'NetEase-Rooms-User-Account-Info';
 export function setAccountInfo(info: AccountInfo): void {
   localStorage.setItem(APP_USER_ACCOUNT_INFO_KEY, JSON.stringify(info));
 }
+
 export function removeAccountInfo(): void {
   localStorage.removeItem(APP_USER_ACCOUNT_INFO_KEY);
 }
 
 export function getAccountInfo(): AccountInfo | undefined {
   const accountInfo = localStorage.getItem(APP_USER_ACCOUNT_INFO_KEY);
+
   if (accountInfo) {
     return JSON.parse(accountInfo);
   }
@@ -57,6 +63,7 @@ export function getAccountInfo(): AccountInfo | undefined {
 
 function getHeaders() {
   const account = getAccountInfo();
+
   if (account) {
     return {
       AppKey: account.appKey,
@@ -64,6 +71,7 @@ function getHeaders() {
       token: account.userToken,
     };
   }
+
   return undefined;
 }
 
@@ -87,14 +95,17 @@ request.interceptors.response.use(
       return response.data.data;
     } else {
       let msg = response.data.msg;
+
       if (response.config.url === '/rooms_sdk/v1/activate') {
         if (response.data.code === 1602) {
           msg = '激活码错误，请重新输入激活码';
         }
+
         if (response.data.code === 1603) {
           msg = '激活码已被使用，请联系管理员解除绑定';
         }
       }
+
       message.error(msg);
       throw response.data.msg;
     }
@@ -118,16 +129,19 @@ export interface QRCodeRes extends AccountInfo {
 
 export function getRoomsQRCode(): Promise<QRCodeRes> {
   const url = '/rooms_sdk/v1/qrcode';
+
   return request.get(url);
 }
 
 export function activateRooms(code: string): Promise<AccountInfo> {
   const url = '/rooms_sdk/v1/activate';
+
   return request.post(url, { code });
 }
 
 export function deactivateRooms(): Promise<RoomsInfo> {
   const url = `/rooms_sdk/v1/deactivate`;
+
   return request.post(
     url,
     {},
@@ -220,6 +234,7 @@ export interface RoomsInfo {
 
 export function getRoomsInfo(): Promise<RoomsInfo> {
   const url = `/rooms_sdk/v1/node_info`;
+
   return request
     .get<any, RoomsInfo>(url, {
       headers: getHeaders(),
@@ -235,6 +250,7 @@ export function getRoomsInfo(): Promise<RoomsInfo> {
 
 export function reportDevices(params: DevicesInfo): Promise<void> {
   const url = `/rooms_sdk/v1/hb_node_device`;
+
   return request.post(url, params, {
     headers: getHeaders(),
   });
@@ -249,6 +265,7 @@ interface CustomMessageParams {
 export function sendCustomMessage(params: CustomMessageParams): Promise<void> {
   const { appKey } = getAccountInfo() || {};
   const url = `/scene/apps/${appKey}/v1/${params.toUserUuid}/send`;
+
   return request.post(url, params, {
     headers: getHeaders(),
   });

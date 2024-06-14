@@ -24,6 +24,7 @@ import LivePreview from './LivePreview'
 
 import { message, Spin, Upload } from 'antd'
 import arrowImg from '../../../assets/arrow.png'
+import { IPCEvent } from '../../../../app/src/types'
 
 type Model = '' | 'gallery' | 'focus' | 'shareScreen'
 interface LiveProps {
@@ -99,6 +100,7 @@ const LiveTitleInfo: React.FC<LiveTitleInfoProps> = (props) => {
   const onTitleChange = (event) => {
     setLiveTitle(event.target.value)
   }
+
   return (
     <div className="nemeeint-live-info">
       <div className="form-item">
@@ -140,6 +142,7 @@ const LiveTitleInfo: React.FC<LiveTitleInfoProps> = (props) => {
     </div>
   )
 }
+
 const LiveBgPreviewImg: React.FC<LiveBgPreviewImgProps> = ({
   url,
   onClose,
@@ -150,6 +153,7 @@ const LiveBgPreviewImg: React.FC<LiveBgPreviewImgProps> = ({
     event.stopPropagation()
     onClose?.()
   }
+
   return (
     <div className="nemeeting-live-bg-preview-img-wrap">
       <div className="nemeeting-live-bg-preview-img-container">
@@ -187,11 +191,13 @@ const LiveBgPreviewImg: React.FC<LiveBgPreviewImgProps> = ({
     </div>
   )
 }
+
 const LiveBgPreviewItem: React.FC<LiveBgPreviewItemProps> = ({
   onClick,
   isStarted,
 }) => {
   const { t } = useTranslation()
+
   return (
     <div
       className={`nemeeting-live-bg-preview ${
@@ -256,6 +262,7 @@ const LiveInfo: React.FC<LiveInfoProps> = (props) => {
         }
       />
     ),
+
     [
       liveBackgroundInfo?.thumbnailBackgroundUrl,
       liveBackgroundInfo?.backgroundUrl,
@@ -273,12 +280,14 @@ const LiveInfo: React.FC<LiveInfoProps> = (props) => {
         }
       />
     ),
+
     [
       liveBackgroundInfo?.coverUrl,
       liveBackgroundInfo?.thumbnailCoverUrl,
       isStarted,
     ]
   )
+
   return (
     <div className="nemeeint-live-info">
       <div className="form-wrap">
@@ -456,6 +465,7 @@ const LiveView: React.FC<LiveViewProps> = (props) => {
     onChangeModel,
   } = props
   const { t, i18n } = useTranslation()
+
   return (
     <div className="form-wrap live-setting">
       <div className="live-content">
@@ -463,7 +473,7 @@ const LiveView: React.FC<LiveViewProps> = (props) => {
         <div className="live-setting-wrap ">
           <div>
             <div className="live-member-list">
-              {localMembers.map((member, index) => {
+              {localMembers.map((member) => {
                 return (
                   <div
                     className={`nemeeting-member-item ${
@@ -611,7 +621,7 @@ const LiveView: React.FC<LiveViewProps> = (props) => {
 
 const MODEL_GALLERY = 'gallery'
 const Live: React.FC<LiveProps> = (props) => {
-  const { members, className, title, state, randomPassword } = props
+  const { members, title, state, randomPassword } = props
   const { meetingInfo } = useContext(MeetingInfoContext)
   const { neMeeting } = useGlobalContext()
   const { dispatch } = useMeetingInfoContext()
@@ -657,6 +667,7 @@ const Live: React.FC<LiveProps> = (props) => {
     if (memberCount === 0) {
       return
     }
+
     setModel(_model)
     handleUpdateView({ model: _model, membersSelected })
   }
@@ -675,12 +686,14 @@ const Live: React.FC<LiveProps> = (props) => {
     const isSameEnableChat =
       (options.enableChat !== undefined ? options.enableChat : enableChat) ===
       originEnableChat
+
     if (isStarted) {
       if (isSameUser && isSameModel) {
         setShowLayoutChangeTip(false)
       } else {
         setShowLayoutChangeTip(true)
       }
+
       if (isSameEnableChat && isSameModel && isSameUser) {
         setCanUpdate(false)
       } else {
@@ -688,10 +701,11 @@ const Live: React.FC<LiveProps> = (props) => {
       }
     }
   }
+
   function handleSelectFile() {
-    window.ipcRenderer?.removeAllListeners('nemeeting-choose-file-done')
+    window.ipcRenderer?.removeAllListeners(IPCEvent.choseFileDone)
     window.ipcRenderer?.once(
-      'nemeeting-choose-file-done',
+      IPCEvent.choseFileDone,
       (_, { type, file, extendedData }) => {
         if (navigator.onLine) {
           console.log(type, file, extendedData)
@@ -699,15 +713,18 @@ const Live: React.FC<LiveProps> = (props) => {
           if (type !== 'image') {
             return
           }
+
           if (type === 'image' && file.size > IMAGE_SIZE_LIMIT) {
             message.error(t('imageSizeLimit5'))
             return
           }
+
           if (extendedData.type === 'background') {
             setUploadBackgroundLoading(true)
           } else {
             setUploadCoverLoading(true)
           }
+
           neMeeting?.nosService
             ?.uploadResource(file.url)
             .then((res) => {
@@ -716,9 +733,10 @@ const Live: React.FC<LiveProps> = (props) => {
               const data: LiveBackgroundInfo = {
                 ...liveBackgroundInfoRef.current,
               }
+
               if (extendedData.type === 'background') {
-                ;(data.backgroundUrl = res.data),
-                  (data.thumbnailBackgroundUrl = thumbnailUrl)
+                data.backgroundUrl = res.data
+                data.thumbnailBackgroundUrl = thumbnailUrl
                 data.coverUrl = liveBackgroundInfoRef.current?.coverUrl || ''
                 data.thumbnailCoverUrl =
                   liveBackgroundInfoRef.current?.thumbnailCoverUrl || ''
@@ -730,6 +748,7 @@ const Live: React.FC<LiveProps> = (props) => {
                 data.thumbnailBackgroundUrl =
                   liveBackgroundInfoRef.current?.thumbnailBackgroundUrl || ''
               }
+
               liveBackgroundInfoRef.current = data
               neMeeting?.liveController
                 ?.updateBackgroundInfo(data)
@@ -784,10 +803,12 @@ const Live: React.FC<LiveProps> = (props) => {
   useEffect(() => {
     // 直播中若已选中的直播成员关闭再开启视频，则需要重新更新选中项
     const extraHistoryMembers: string[] = []
+
     members?.map((member) => {
       const index = membersFromLiveInfo?.findIndex(
         (uuid) => uuid === member.accountId
       )
+
       if (index > -1) {
         extraHistoryMembers.push(member.accountId)
       }
@@ -804,12 +825,14 @@ const Live: React.FC<LiveProps> = (props) => {
       const index = membersSelected.findIndex(
         (uuid) => uuid === member.accountId
       )
+
       return {
         ...member,
         isSelected: index > -1,
         index: index + 1,
       }
     })
+
     handleUpdateView({
       model,
       membersSelected: membersSelected,
@@ -821,6 +844,7 @@ const Live: React.FC<LiveProps> = (props) => {
   const isSelectedInSharing = useMemo(() => {
     if (meetingInfo.screenUuid) {
       const sharingId = meetingInfo.screenUuid
+
       return membersSelected.includes(sharingId)
     } else {
       return false
@@ -832,14 +856,17 @@ const Live: React.FC<LiveProps> = (props) => {
     // 表示可选成员减少
     if (preLen > localMembers.length) {
       const tmpMembersSelected = [...membersSelected]
+
       tmpMembersSelected.forEach((accountId) => {
         const index = members.findIndex(
           (member) => member.accountId === accountId
         )
+
         // 未找到表示已删除
         if (index < 0) {
           const _membersSelected = [...membersSelected]
           const delIndex = _membersSelected.findIndex((id) => id === accountId)
+
           _membersSelected.splice(delIndex, 1)
           setMembersSelected(_membersSelected)
           handleUpdateView({ model, membersSelected: _membersSelected })
@@ -891,9 +918,11 @@ const Live: React.FC<LiveProps> = (props) => {
       ?.getBackgroundInfo()
       .then((res) => {
         const { data } = res
+
         if (!data) {
           return
         }
+
         dispatch?.({
           type: ActionType.UPDATE_MEETING_INFO,
           data: {
@@ -925,6 +954,7 @@ const Live: React.FC<LiveProps> = (props) => {
 
   function getLiveInfo() {
     const liveInfo = neMeeting?.getLiveInfo()
+
     if (liveInfo) {
       setModel(layout2model(liveInfo.liveLayout))
       setOriginModel(layout2model(liveInfo.liveLayout))
@@ -936,6 +966,7 @@ const Live: React.FC<LiveProps> = (props) => {
       if (liveInfo.extensionConfig) {
         try {
           const config = JSON.parse(liveInfo.extensionConfig)
+
           setEnableChat(config.liveChatRoomEnable)
           setOriginEnableChat(config.liveChatRoomEnable)
           setOnlyEmployeesAllow(config.onlyEmployeesAllow)
@@ -943,27 +974,33 @@ const Live: React.FC<LiveProps> = (props) => {
           console.warn('parse liveChatRoomEnabled failed', e)
         }
       }
+
       const _userUuidList = Array.from(liveInfo.userUuidList || [])
+
       remoteUserUuidListRef.current = _userUuidList
       // 结束直播了则使用当前本地选择的成员
       if (state === 2) {
         setMembersSelected([..._userUuidList])
       }
+
       setOriginMembersSelected(_userUuidList)
       setMembersFromLiveInfo([..._userUuidList])
       if (_userUuidList?.length && state === 2) {
         if (members.length > 0) {
           let initMembersSelected = [..._userUuidList]
-          _userUuidList?.forEach((accountId, index) => {
+
+          _userUuidList?.forEach((accountId) => {
             const idx = members.findIndex(
               (member) => member.accountId == accountId
             )
+
             // 远端获取到的数据与目前最新数据对比，如果当前这个人已经关闭视频或者共享了则删除
             if (idx < 0) {
               const _membersSelected = [...initMembersSelected]
               const delIndex = _membersSelected.findIndex(
                 (id) => id == accountId
               )
+
               _membersSelected.splice(delIndex, 1)
               setMembersSelected(_membersSelected)
               initMembersSelected = [..._membersSelected]
@@ -998,13 +1035,16 @@ const Live: React.FC<LiveProps> = (props) => {
     // 如果已经存在则表示删除
     if (membersSelected.includes(member.accountId)) {
       const index = membersSelected.findIndex((id) => member.accountId === id)
+
       // 如果删除的人是共享的则删除对应
       if (member.isSharingScreen) {
         // this.isSelectedSharingScreen = false
         // 如果这个时候剩余一项则表示即将清空
         setModel(membersSelected.length === 1 ? '' : MODEL_GALLERY)
       }
+
       const _membersSelected = [...membersSelected]
+
       _membersSelected.splice(index, 1)
       setMembersSelected(_membersSelected)
       handleUpdateView({ model, membersSelected: _membersSelected })
@@ -1012,6 +1052,7 @@ const Live: React.FC<LiveProps> = (props) => {
       if (membersSelected.length >= 4) {
         return
       }
+
       // if(member.isSharingScreen) {
       //   // this.isSelectedSharingScreen = true
       //   this.model = 'shareScreen'
@@ -1019,9 +1060,11 @@ const Live: React.FC<LiveProps> = (props) => {
       //   this.model = 'gallery'
       // }
       const _members = [...membersSelected]
+
       if (_members?.findIndex((item) => item == member.accountId) === -1) {
         _members.push(member.accountId)
       }
+
       setMembersSelected(_members)
       handleUpdateView({ model, membersSelected: _members })
     }
@@ -1033,6 +1076,7 @@ const Live: React.FC<LiveProps> = (props) => {
       focus: 2,
       shareScreen: 4,
     }
+
     return layoutMap[model] || 0
   }
 
@@ -1040,16 +1084,19 @@ const Live: React.FC<LiveProps> = (props) => {
     if (!canStart) {
       return
     }
+
     if (!liveTitle) {
       Toast.info(t('liveSubjectTip'))
       return
     }
+
     if (enablePassword) {
       if (!livePassword || !/\d{6}/.test(livePassword)) {
         Toast.info(t('livePasswordTip'))
         return
       }
     }
+
     const options: NERoomLiveRequest = {
       title: liveTitle,
       liveLayout: mapLayout(model),
@@ -1060,9 +1107,11 @@ const Live: React.FC<LiveProps> = (props) => {
         onlyEmployeesAllow: onlyEmployeesAllow,
       }),
     }
+
     if (enablePassword) {
       options.password = livePassword
     }
+
     neMeeting
       ?.startLive?.(options)
       ?.then(() => {
@@ -1089,6 +1138,7 @@ const Live: React.FC<LiveProps> = (props) => {
     if (!canUpdate) {
       return
     }
+
     const options: NERoomLiveRequest = {
       title: liveTitle,
       liveLayout: mapLayout(model),
@@ -1099,13 +1149,16 @@ const Live: React.FC<LiveProps> = (props) => {
         onlyEmployeesAllow: onlyEmployeesAllow,
       }),
     }
+
     if (enablePassword) {
       options.password = livePassword
     }
+
     if (membersSelected?.length === 0) {
       Toast.info(t('liveNeedMemberHint'))
       return
     }
+
     neMeeting
       ?.updateLive(options)
       ?.then(() => {
@@ -1120,6 +1173,7 @@ const Live: React.FC<LiveProps> = (props) => {
         Toast.info(e.msg || e.message)
       })
   }
+
   const onStopLive = () => {
     neMeeting
       ?.stopLive?.()
@@ -1141,6 +1195,7 @@ const Live: React.FC<LiveProps> = (props) => {
   const onPasswordChange = (event: any) => {
     if (/^[0-9]*$/.test(event.target.value)) {
       const value = String(event.target.value)
+
       if (value.length > 6) {
         setLivePassword(value.slice(0, 6))
       } else {
@@ -1153,19 +1208,23 @@ const Live: React.FC<LiveProps> = (props) => {
     if (!layout) {
       return ''
     }
+
     const modelMap = {
       0: 'gallery',
       1: 'gallery',
       2: 'focus',
       4: 'shareScreen',
     }
+
     return (modelMap[layout] || '') as Model
   }
+
   function onClickDeleteBackground() {
     if (liveBackgroundInfoRef.current) {
       liveBackgroundInfoRef.current.backgroundUrl = ''
       liveBackgroundInfoRef.current.thumbnailBackgroundUrl = ''
     }
+
     neMeeting?.liveController
       ?.updateBackgroundInfo({
         backgroundUrl: '',
@@ -1192,11 +1251,13 @@ const Live: React.FC<LiveProps> = (props) => {
         Toast.fail(e.message || e.msg || e.code)
       })
   }
+
   function onClickDeleteCover() {
     if (liveBackgroundInfoRef.current) {
       liveBackgroundInfoRef.current.coverUrl = ''
       liveBackgroundInfoRef.current.thumbnailCoverUrl = ''
     }
+
     neMeeting?.liveController
       ?.updateBackgroundInfo({
         backgroundUrl: liveBackgroundInfoRef.current?.backgroundUrl || '',
@@ -1223,12 +1284,14 @@ const Live: React.FC<LiveProps> = (props) => {
         Toast.fail(e.message || e.msg || e.code)
       })
   }
+
   function onClickUploadBackground() {
     if (isStarted) {
       return
     }
+
     handleSelectFile()
-    window.ipcRenderer?.send('nemeeting-choose-file', {
+    window.ipcRenderer?.send(IPCEvent.choseFile, {
       type: 'image',
       extensions: ['jpg', 'png', 'jpeg'],
       extendedData: {
@@ -1236,14 +1299,18 @@ const Live: React.FC<LiveProps> = (props) => {
       },
     })
   }
+
   function onBackgroundChange(info) {
     console.log('onBackgroundChange', info)
   }
+
   function onCoverChange(info) {
     console.log('onCoverChange', info)
   }
+
   function getThumbnailUrl(url: string): string {
     let result = url
+
     if (url) {
       // 判断url是否有?
       result =
@@ -1251,22 +1318,28 @@ const Live: React.FC<LiveProps> = (props) => {
         (url.indexOf('?') > -1 ? '&' : '?') +
         'imageView&thumbnail=100x56&quality=50&tostatic=0'
     }
+
     return result
   }
+
   function uploadWebFile(file: any, type: 'background' | 'cover') {
     const ext = file.name && file.name.split('.').pop().toLowerCase()
+
     if (file.size > IMAGE_SIZE_LIMIT) {
       message.error(t('imageSizeLimit5'))
       return
     }
+
     if (!['jpg', 'png', 'jpeg'].includes(ext?.toLowerCase())) {
       return
     }
+
     if (type === 'background') {
       setUploadBackgroundLoading(true)
     } else {
       setUploadCoverLoading(true)
     }
+
     neMeeting?.nosService
       ?.uploadResource({
         blob: file,
@@ -1276,6 +1349,7 @@ const Live: React.FC<LiveProps> = (props) => {
         const url = res.data
         const thumbnailUrl = getThumbnailUrl(url)
         let data = liveBackgroundInfoRef.current
+
         if (type === 'background') {
           data = {
             ...data,
@@ -1289,6 +1363,7 @@ const Live: React.FC<LiveProps> = (props) => {
             thumbnailCoverUrl: thumbnailUrl,
           }
         }
+
         liveBackgroundInfoRef.current = {
           ...liveBackgroundInfoRef.current,
           ...data,
@@ -1337,20 +1412,24 @@ const Live: React.FC<LiveProps> = (props) => {
         }
       })
   }
-  function backgroundBeforeUpload(file, fileList): boolean {
+
+  function backgroundBeforeUpload(file): boolean {
     uploadWebFile(file, 'background')
     return false
   }
-  function coverBeforeUpload(file, fileList): boolean {
+
+  function coverBeforeUpload(file): boolean {
     uploadWebFile(file, 'cover')
     return false
   }
+
   function onClickUploadCover() {
     if (isStarted) {
       return
     }
+
     handleSelectFile()
-    window.ipcRenderer?.send('nemeeting-choose-file', {
+    window.ipcRenderer?.send(IPCEvent.choseFile, {
       type: 'image',
       extensions: ['jpg', 'png', 'jpeg'],
       extendedData: {

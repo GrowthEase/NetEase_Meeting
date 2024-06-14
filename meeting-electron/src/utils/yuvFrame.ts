@@ -1,6 +1,45 @@
-function getYuvFrame(data, width, height) {
+type YuvFrame = {
+  format: {
+    width: number
+    height: number
+    chromaWidth: number
+    chromaHeight: number
+    cropLeft: number
+    cropTop: number
+    cropHeight: number
+    cropWidth: number
+    displayWidth: number
+    displayHeight: number
+    pixelStorei: number
+  }
+  y: {
+    bytes: Uint8Array
+    stride: number
+  }
+  u: {
+    bytes: Uint8Array
+    stride: number
+  }
+  v: {
+    bytes: Uint8Array
+    stride: number
+  }
+}
+
+type Data = {
+  bytes: Uint8Array
+  yOffset: number
+  yStride: number
+  uOffset: number
+  uStride: number
+  vOffset: number
+  vStride: number
+}
+
+function getYuvFrame(data: Data, width: number, height: number): YuvFrame {
   const uvWidth = width / 2
   let pixelStorei = 1
+
   if (uvWidth % 8 === 0) {
     pixelStorei = 8
   } else if (uvWidth % 4 === 0) {
@@ -8,6 +47,7 @@ function getYuvFrame(data, width, height) {
   } else if (uvWidth % 2 === 0) {
     pixelStorei = 2
   }
+
   return {
     format: {
       width,

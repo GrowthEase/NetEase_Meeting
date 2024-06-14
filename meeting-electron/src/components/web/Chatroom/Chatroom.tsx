@@ -64,7 +64,7 @@ export interface ChatroomProps {
   }
   neMeeting?: NEMeetingService
   eventEmitter?: EventEmitter
-  roomArchiveId?: string
+  roomArchiveId?: number
   roomService?: NERoomService
   // 会前预览历史
   isViewHistory?: boolean
@@ -78,7 +78,6 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
     memberList: initMemberList,
     meetingInfo: initMeetingInfo,
     neMeeting: initNeMeeting,
-    waitingRoomInfo: initWaitingRoomInfo,
     waitingRoomMemberList: initWaitingRoomMemberList,
     eventEmitter: initEventEmitter,
     initMsgs,
@@ -94,10 +93,7 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
   const { t } = useTranslation()
   const { neMeeting: neMeetingContext, eventEmitter: eventEmitterContext } =
     useGlobalContext()
-  const {
-    waitingRoomInfo: waitingRoomInfoContext,
-    memberList: waitingRoomMemberListContext,
-  } = useWaitingRoomContext()
+  const { memberList: waitingRoomMemberListContext } = useWaitingRoomContext()
   const {
     memberList: memberListContext,
     meetingInfo: meetingInfoContext,
@@ -115,6 +111,7 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
   const [hostOrCohostList, setHostOrCohostList] = useState<NEMember[]>([])
 
   let language = 'en' as 'en' | 'zh' | 'ja'
+
   if (i18n.language.startsWith('zh')) {
     language = 'zh'
   } else if (i18n.language.startsWith('ja')) {
@@ -143,6 +140,7 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
     if (!isHostOrCohost) {
       return []
     }
+
     return (
       waitingRoomMemberList.map((member) => ({
         tags: [],
@@ -162,10 +160,8 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
   }, [visible])
 
   const getHostAndCohostList = useCallback(() => {
-    neMeeting
-      ?.getHostAndCohostList(meetingInfo.meetingNum)
-      .then(setHostOrCohostList)
-  }, [meetingInfo.meetingNum, neMeeting])
+    neMeeting?.getHostAndCohostList().then(setHostOrCohostList)
+  }, [neMeeting])
 
   useEffect(() => {
     if (isWaitingRoom && visible) {
@@ -179,6 +175,7 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
     const stopPropagationFn = (e) => {
       e.stopPropagation()
     }
+
     if (
       ((isWaitingRoom || neMeeting?.chatController?.isSupported) &&
         !meetingInfo.localMember.hide) ||
@@ -215,18 +212,20 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
         nickName: meetingInfo.localMember.name,
         imPrivateConf: {},
         ...meetingInfo.chatroomConfig,
-        onFocus: (e) => {
+        onFocus: () => {
           if (!meetingInfo.enableUnmuteBySpace) {
             return
           }
+
           // 获取焦点后阻止长安空格的监听事件
           document.addEventListener('keydown', handleFocused, true)
           document.addEventListener('keyup', handleFocused, true)
         },
-        onBlur: (e) => {
+        onBlur: () => {
           if (!meetingInfo.enableUnmuteBySpace) {
             return
           }
+
           // 移除阻止长安空格的监听事件
           document.removeEventListener('keydown', handleFocused, true)
           document.removeEventListener('keyup', handleFocused, true)
@@ -244,9 +243,11 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
           // 隐藏聊天室的情况增加未读数
           const isOpen =
             !!getWindow('chatWindow') && isElectronSharingScreenRef.current
+
           if (isOpen) {
             return
           }
+
           if (!visibleRef.current) {
             if (msgs && msgs.length > 0) {
               const _msgs = msgs.filter((msg) => {
@@ -255,11 +256,14 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
                   ['text', 'image', 'audio', 'video', 'file'].includes(msg.type)
                 )
               })
+
               _msgs.length > 0 && eventEmitter?.emit('newMsgs', _msgs)
             }
+
             const filterMsgs = msgs
               .filter((item) => ['text', 'image', 'file'].includes(item.type))
               .filter((item) => Date.now() - item.time < 3000)
+
             if (filterMsgs.length) {
               dispatch?.({
                 type: ActionType.UPDATE_MEETING_INFO,
@@ -275,6 +279,7 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
         onMsgs: (msgs) => {
           cacheMsgs = msgs
           const parentWindow = window.parent
+
           parentWindow?.postMessage(
             {
               event: 'chatroomOnMsgs',
@@ -290,6 +295,7 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
           const member =
             memberListRef.current?.find((item) => item.uuid === id) ||
             waitingRoomMemberListRef.current?.find((item) => item.uuid === id)
+
           // 等候室
           if (member || id === 'meetingAll' || id === 'waitingRoomAll') {
             dispatch?.({
@@ -355,6 +361,7 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
               },
             })
           }
+
           if (waitingRoomMember) {
             Modal.confirm({
               title: t('participantExpelWaitingMemberDialogTitle'),
@@ -386,15 +393,24 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
         isChangeTimePosition: true,
       })
     }
+
+    eventEmitter?.on(
+      EventType.WaitingRoomOnManagersUpdated,
+      (data: NEMember[]) => {
+        setHostOrCohostList(data)
+      }
+    )
     eventEmitter?.on(EventType.ReceiveChatroomMessages, (messages) => {
       messages.forEach((element) => {
         if (element.fromUserUuid && !element.from) {
           element.from = element.fromUserUuid
         }
+
         element.isPrivate = false
         if (element.custom) {
           try {
             const custom = JSON.parse(element.custom)
+
             if (custom.toAccounts?.length > 0) {
               element.isPrivate = true
             }
@@ -402,6 +418,7 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
             element.custom = {}
           }
         }
+
         if (element.toUserUuidList?.length > 0) {
           element.isPrivate = true
         }
@@ -409,12 +426,15 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
         if (element.messageType && !element.type) {
           element.type = element.messageType
         }
+
         if (element.messageUuid && !element.idClient) {
           element.idClient = element.messageUuid
         }
+
         if (element.fromUserUuid && !element.from) {
           element.from = element.fromUserUuid
         }
+
         if (
           (element.type === 'file' || element.type === 'image') &&
           !element.file
@@ -429,6 +449,7 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
             h: element.height,
           }
         }
+
         if (element.attachStr) {
           element.attach = JSON.parse(element.attachStr)
           switch (element.attach.id) {
@@ -440,14 +461,17 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
               break
             default:
           }
+
           element.attach.from = element.attach.operator
         }
+
         if (element.type === 'notification' && element.attach) {
           if (!element.attach.fromNick) {
             element.attach.fromNick = memberListRef.current?.find(
               (item) => item.uuid === element.attach.from
             )?.name
           }
+
           element.attach.isMe =
             element.attach.from === meetingInfoRef.current?.localMember.uuid
           if (
@@ -463,6 +487,7 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
             })
           }
         }
+
         if (!element.status) {
           element.status = 'success'
         }
@@ -475,6 +500,7 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
             item.attach?.type === 'deleteChatroomMsg')
         )
       })
+
       filterMsgs.length > 0 &&
         (ChatroomHelper as any).getInstance().emit('onMessage', filterMsgs)
     })
@@ -488,17 +514,21 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
             (item) => item !== messageUuid
           )
         }
+
         ;(ChatroomHelper as any)
           .getInstance()
           .emit('onMessageAttachmentProgress', messageUuid, transferred, total)
       }
     )
     isMountedRef.current = true
+    const chatroomRefDom = chatroomRef.current
 
     return () => {
       eventEmitter?.off(EventType.ReceiveChatroomMessages)
       eventEmitter?.off(EventType.ChatroomMessageAttachmentProgress)
-      chatroomRef.current && unmountComponentAtNode(chatroomRef.current)
+      if (chatroomRefDom) {
+        unmountComponentAtNode(chatroomRefDom)
+      }
     }
   }, [])
 
@@ -513,6 +543,7 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
     const audioAndVideoOn: NEMember[] = []
     const other: NEMember[] = []
     const chatroomMemberList = isWaitingRoom ? hostOrCohostList : memberList
+
     chatroomMemberList
       .filter(
         (member) =>
@@ -580,6 +611,10 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
       )
     }
   }, [meetingInfo.localMember.role])
+
+  useEffect(() => {
+    cacheMsgs = []
+  }, [isWaitingRoom])
 
   useEffect(() => {
     // 更新聊天室内本端昵称
@@ -669,6 +704,7 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
 
   const handleFocused = useCallback((e) => {
     const keyNum = window.event ? e.keyCode : e.which
+
     if (keyNum === 32) {
       e.stopPropagation()
     }
@@ -687,6 +723,7 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
       if (ChatroomHelper.instance && isMountedRef.current) {
         ChatroomHelper.instance.emit('onMessagesClear')
       }
+
       dispatch?.({
         type: ActionType.UPDATE_MEETING_INFO,
         data: {
@@ -694,8 +731,9 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
         },
       })
     }
+
     handle()
-  }, [meetingInfo.roomArchiveId])
+  }, [meetingInfo.roomArchiveId, dispatch])
 
   useEffect(() => {
     function handle() {
@@ -708,8 +746,18 @@ const Chatroom: React.FC<ChatroomProps> = (props) => {
         ChatroomHelper.instance.emit('initMessages', initMsgs)
       }
     }
+
     handle()
   }, [initMsgs])
+
+  useEffect(() => {
+    if (isWaitingRoom) {
+      window.addEventListener('online', getHostAndCohostList)
+      return () => {
+        window.removeEventListener('online', getHostAndCohostList)
+      }
+    }
+  }, [getHostAndCohostList, isWaitingRoom])
 
   return <div ref={chatroomRef} className="nemeeting-chatroom-wrapper" />
 }

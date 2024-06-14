@@ -22,10 +22,7 @@ const SettingWeb: React.FC<SettingWebProps> = ({
   inMeeting,
   defaultTab = 'normal',
 }) => {
-  const [settingModalTab, setSettingModalTab] =
-    useState<SettingTabType>('normal')
   const [setting, setSetting] = useState<MeetingSetting | null>(null)
-  const [showSetting, setShowSetting] = useState(true)
   const settingRef = useRef<MeetingSetting | null>()
 
   const eleIpcIns = useMemo(
@@ -35,46 +32,30 @@ const SettingWeb: React.FC<SettingWebProps> = ({
 
   useEffect(() => {
     const settingStr = localStorage.getItem(LOCALSTORAGE_MEETING_SETTING)
+
     console.log('settingStr', settingStr)
     if (settingStr) {
       try {
         settingRef.current = JSON.parse(settingStr) as MeetingSetting
         console.log('settingStrRef', settingRef.current)
         setSetting(settingRef.current)
-      } catch (error) {}
+      } catch (error) {
+        console.log('settingStr parse error', error)
+      }
     } else {
       setSetting(createDefaultSetting())
     }
 
-    // window.ipcRenderer?.on(
-    //   IPCEvent.showSettingWindow,
-    //   (event, { isShow, type, inMeeting }) => {
-    //     console.log('showSettingWindow', { isShow, type })
-    //     const settingStr = localStorage.getItem(LOCALSTORAGE_MEETING_SETTING)
-    //     console.log('settingStr', settingStr)
-    //     if (settingStr) {
-    //       try {
-    //         settingRef.current = JSON.parse(settingStr) as MeetingSetting
-    //         console.log('settingStrRef', settingRef.current)
-    //         setSetting(settingRef.current)
-    //       } catch (error) {}
-    //     }
-    //     setShowSetting(isShow)
-    //     if (isShow) {
-    //       setSettingModalTab(type)
-    //     } else {
-    //       setSettingModalTab('normal')
-    //     }
-    //   }
-    // )
-
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data
+
       if (event === IPCEvent.changeSettingDeviceFromControlBar) {
         const { type, deviceId } = payload
+
         if (!settingRef.current) {
           return
         }
+
         switch (type) {
           case 'video':
             settingRef.current.videoSetting.deviceId = deviceId
@@ -86,6 +67,7 @@ const SettingWeb: React.FC<SettingWebProps> = ({
             settingRef.current.audioSetting.recordDeviceId = deviceId
             break
         }
+
         setSetting({ ...settingRef.current })
       }
     }
@@ -106,6 +88,7 @@ const SettingWeb: React.FC<SettingWebProps> = ({
       eleIpcIns.sendMessage(IPCEvent.changeSetting, setting)
     }
   }
+
   function onDeviceChange(
     type: 'video' | 'speaker' | 'microphone',
     deviceId: string,
@@ -120,6 +103,7 @@ const SettingWeb: React.FC<SettingWebProps> = ({
       })
     }
   }
+
   return (
     <div className="nemeeting-setting">
       {previewController && setting && (

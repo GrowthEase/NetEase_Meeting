@@ -43,8 +43,10 @@ const UpdateUserNicknameModal: React.FC<UpdateUserNicknameModalProps> = ({
 
   function handleInputChange(value: string) {
     let userInput = value
+
     if (!isComposingRef.current) {
       let inputLength = 0
+
       for (let i = 0; i < userInput.length; i++) {
         // 检测字符是否为中文字符
         if (userInput.charCodeAt(i) > 127) {
@@ -52,6 +54,7 @@ const UpdateUserNicknameModal: React.FC<UpdateUserNicknameModalProps> = ({
         } else {
           inputLength += 1
         }
+
         // 判断当前字符长度是否超过限制，如果超过则终止 for 循环
         if (inputLength > 20) {
           if (isLastCharacterEmoji(userInput)) {
@@ -59,10 +62,12 @@ const UpdateUserNicknameModal: React.FC<UpdateUserNicknameModalProps> = ({
           } else {
             userInput = userInput.slice(0, i)
           }
+
           break
         }
       }
     }
+
     form.setFieldValue('nickname', userInput)
   }
 
@@ -72,7 +77,6 @@ const UpdateUserNicknameModal: React.FC<UpdateUserNicknameModalProps> = ({
         nickname,
       })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restProps.open])
 
   return (
@@ -81,11 +85,14 @@ const UpdateUserNicknameModal: React.FC<UpdateUserNicknameModalProps> = ({
       width={375}
       maskClosable={false}
       destroyOnClose
+      wrapClassName="update-nick-name-modal"
       getContainer={() => {
         const dom = document.getElementById('ne-web-meeting') as HTMLElement
+
         if (dom && dom.style.display !== 'none') {
           return dom
         }
+
         return document.body
       }}
       footer={
@@ -113,6 +120,17 @@ const UpdateUserNicknameModal: React.FC<UpdateUserNicknameModalProps> = ({
               className="nickname-input"
               placeholder={i18n.inputPlaceholder}
               onChange={(e) => handleInputChange(e.currentTarget.value)}
+              prefix={
+                <span
+                  style={{
+                    fontWeight:
+                      window.systemPlatform === 'win32' ? 'bold' : '500',
+                  }}
+                  className="nick-name-label"
+                >
+                  {t('nickname')}
+                </span>
+              }
               allowClear
               onCompositionStart={() => (isComposingRef.current = true)}
               onCompositionEnd={(e) => {
@@ -126,4 +144,5 @@ const UpdateUserNicknameModal: React.FC<UpdateUserNicknameModalProps> = ({
     </Modal>
   )
 }
+
 export default UpdateUserNicknameModal

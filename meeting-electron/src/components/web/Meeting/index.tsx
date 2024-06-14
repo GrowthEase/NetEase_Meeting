@@ -23,10 +23,12 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
   useEffect(() => {
     let timer: any = null
     let count = 0
+
     document.addEventListener('click', () => {
       if (timer) {
         clearTimeout(timer)
       }
+
       timer = setTimeout(() => {
         count = 0
       }, 1000)
@@ -40,7 +42,7 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
         })
       }
     })
-  }, [])
+  }, [dispatch])
 
   return meetingInfo?.inWaitingRoom ? (
     meetingInfo.meetingNum ? (

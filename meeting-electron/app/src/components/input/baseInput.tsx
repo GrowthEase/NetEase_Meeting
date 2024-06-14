@@ -18,19 +18,20 @@ export interface InputProps {
   hasClear?: boolean;
   onValueChange?: (value: string) => string;
   defaultValue?: string;
+  prefix?: React.ReactNode;
   [key: string]: any;
 }
 
 const BaseInput: FC<InputProps> = (props) => {
   const {
     required = true,
-    validator = (value) => true,
-    onChangeValidator = (value) => true,
+    validator = () => true,
+    onChangeValidator = () => true,
     set,
     errorTip,
-    format,
     hasClear = false,
     defaultValue = '',
+    prefix,
     onValueChange,
     ...otherProps
   } = props;
@@ -43,12 +44,15 @@ const BaseInput: FC<InputProps> = (props) => {
 
   const inputChange = (e: FormEvent<HTMLInputElement>) => {
     let value = e.currentTarget.value;
+
     if (onValueChange) {
       value = onValueChange(value);
     }
+
     if (!onChangeValidator(value)) return;
     if (!checkFormat(value)) return;
     const tempValid = checkVaild(value);
+
     setBaseValue(value);
     set({
       value,
@@ -56,6 +60,7 @@ const BaseInput: FC<InputProps> = (props) => {
     });
     setValid(tempValid);
   };
+
   const checkVaild = (value: string) => {
     if (value) {
       return validator ? validator(value) : true;
@@ -63,10 +68,12 @@ const BaseInput: FC<InputProps> = (props) => {
       return !required;
     }
   };
+
   const checkFormat = (value: string) => {
     if (props.format === 'number' && !(+value >= 0)) {
       return false;
     }
+
     return true;
   };
 
@@ -74,6 +81,7 @@ const BaseInput: FC<InputProps> = (props) => {
     <div className={'baseInput'}>
       {otherProps.ispassword === 'true' ? (
         <Input.Password
+          prefix={prefix}
           className={'baseInputContent'}
           size={otherProps.size || 'large'}
           allowClear={hasClear}
@@ -83,6 +91,7 @@ const BaseInput: FC<InputProps> = (props) => {
         />
       ) : (
         <Input
+          prefix={prefix}
           className={'baseInputContent'}
           size={otherProps.size || 'large'}
           allowClear={hasClear}

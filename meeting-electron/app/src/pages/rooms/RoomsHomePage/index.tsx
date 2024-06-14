@@ -1,5 +1,5 @@
 import Styles from './index.less';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { RoomsInfo } from '../request';
 
 import RoomsIcon from '../../../assets/rooms-icon.png';

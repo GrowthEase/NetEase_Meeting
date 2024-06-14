@@ -37,12 +37,14 @@ async function checkUpdate(
   global.tempPath = path.join(app.getPath('temp'), tmpCacheFileName);
   const cacheFileName = getCacheFileName(fileUrl);
   const filePath = path.join(global.tempPath, cacheFileName);
+
   console.log('filePath>>>>>>', filePath);
   const tempUpdateFileName = await createTempUpdateFile(
     `temp-${cacheFileName}`,
     global.tempPath,
   );
   const tempUpdateFile = path.join(global.tempPath, tempUpdateFileName);
+
   console.log('tempUpdateFile>>>>>', tempUpdateFile);
   downloadUpdateFile({
     window,
@@ -57,14 +59,17 @@ async function checkUpdate(
           window.send('update-progress', 0);
           window.send('update-error', e);
         }
+
         removeCacheFile(global.tempPath);
         return;
       }
+
       try {
         await rename(tempUpdateFile, filePath);
       } catch (e) {
         removeCacheFile(global.tempPath);
       }
+
       window.send('update-progress', 100);
       if (isWin32) {
         spawnLog(path.join(process.resourcesPath, 'elevate.exe'), [
@@ -91,6 +96,7 @@ async function checkUpdate(
           if (neroom && neroom.isInitialized) {
             neroom.release();
           }
+
           autoUpdater.quitAndInstall();
           // app.exit(0);
           // removeCacheFile(global.tempPath);
@@ -112,6 +118,7 @@ async function createTempUpdateFile(name, cacheDir) {
   let nameCounter = 0;
   let result = name;
   let resultPath = path.join(cacheDir, result);
+
   for (let i = 0; i < 3; i++) {
     try {
       await unlink(resultPath);
@@ -120,10 +127,12 @@ async function createTempUpdateFile(name, cacheDir) {
       if (e.code === 'ENOENT') {
         return result;
       }
+
       result = `${nameCounter++}-${name}`;
       resultPath = path.join(cacheDir, result);
     }
   }
+
   console.log('result>>>>>', result);
   return result;
 }
@@ -133,6 +142,7 @@ async function spawnLog(cmd, args) {
     try {
       const params = { detached: true };
       const p = spawn(cmd, args, params);
+
       p.on('error', (error) => {
         reject(error);
       });
@@ -146,27 +156,34 @@ async function spawnLog(cmd, args) {
     }
   });
 }
+
 function getVersionCode(version) {
   if (!version) {
     return 0;
   }
+
   const verArr = version.split('.');
   let versionCode = 0;
+
   if (verArr[0]) {
     versionCode += parseInt(verArr[0]) * 10000;
   }
+
   if (verArr[1]) {
     versionCode += parseInt(verArr[1]) * 100;
   }
+
   if (verArr[2]) {
     versionCode += parseInt(verArr[2]);
   }
+
   return parseInt(versionCode);
 }
 
 function initUpdateListener(mainWindow, neroom, appName) {
   ipcMain.handle('get-local-update-info', () => {
     const currentVersion = app.getVersion();
+
     return {
       versionName: currentVersion,
       versionCode: getVersionCode(currentVersion),
@@ -175,6 +192,7 @@ function initUpdateListener(mainWindow, neroom, appName) {
   });
   ipcMain.handle('get-check-update-info', () => {
     const currentVersion = app.getVersion();
+
     return {
       versionCode: getVersionCode(currentVersion),
       clientAppCode: 2,

@@ -22,7 +22,7 @@
     "types": ["node"]
   },
   "typedocOptions": {
-    "entryPoints": ["./src/types/typeH5.ts"],
+    "entryPoints": ["./src/types/type.ts"],
     "out": "docs",
     "name": "NEMeetingKit",
     "hideGenerator": true,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import ImageCrop from '../../../../src/components/common/ImageCrop';
@@ -14,6 +14,7 @@ const ImageCropPage: React.FC = () => {
 
   function handleOk(url?: string) {
     const parentWindow = window.parent;
+
     parentWindow?.postMessage(
       {
         event: 'updateUserAvatar',
@@ -29,11 +30,13 @@ const ImageCropPage: React.FC = () => {
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data;
+
       console.log('setAvatarImage', event, payload);
       if (event === 'setAvatarImage') {
         setImage(payload.image);
       }
     }
+
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);

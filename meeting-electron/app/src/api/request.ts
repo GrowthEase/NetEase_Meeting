@@ -25,6 +25,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => {
     const code = response.data.code;
+
     if (code === 0) {
       return response.data.data;
     } else {

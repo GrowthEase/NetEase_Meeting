@@ -1,12 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createMeetingInfoFactory } from '../../../src/services';
-import { NEMeetingInfo, NEMember } from '../../../src/types';
+import {
+  Action,
+  ActionType,
+  Dispatch,
+  NEMeetingInfo,
+  NEMember,
+} from '../../../src/types';
 
 type MeetingInfoPageContextValue = {
   meetingInfo: NEMeetingInfo;
   memberList: NEMember[];
   inInvitingMemberList?: NEMember[];
-  dispatch: React.Dispatch<any>;
+  dispatch: Dispatch;
 };
 
 function useMeetingInfoPageContext(): MeetingInfoPageContextValue {
@@ -14,12 +20,12 @@ function useMeetingInfoPageContext(): MeetingInfoPageContextValue {
     createMeetingInfoFactory(),
   );
   const [memberList, setMemberList] = useState<NEMember[]>([]);
-  const [inInvitingMemberList, setInInvitingMemberList] = useState<
-    NEMember[]
-  >();
+  const [inInvitingMemberList, setInInvitingMemberList] =
+    useState<NEMember[]>();
 
-  function dispatch(payload: any) {
+  const dispatch = useCallback((payload: Action<ActionType>) => {
     const parentWindow = window.parent;
+
     parentWindow?.postMessage(
       {
         event: 'meetingInfoDispatch',
@@ -27,23 +33,28 @@ function useMeetingInfoPageContext(): MeetingInfoPageContextValue {
       },
       parentWindow.origin,
     );
-  }
+  }, []);
 
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data;
+
       switch (event) {
         case 'windowOpen':
         case 'updateData':
+          console.warn('updateData', payload);
           payload.meetingInfo && setMeetingInfo(payload.meetingInfo);
           payload.memberList && setMemberList(payload.memberList);
           payload.inSipInvitingMemberList &&
             setInInvitingMemberList(payload.inSipInvitingMemberList);
+          payload.inInvitingMemberList &&
+            setInInvitingMemberList(payload.inInvitingMemberList);
           break;
         default:
           break;
       }
     }
+
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);

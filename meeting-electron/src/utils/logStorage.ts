@@ -13,6 +13,7 @@ export type LogName = 'meetingLog' | 'rtcLog' | 'imLog'
 export type LogType = 'error' | 'warn' | 'info' | 'log' | 'debug'
 
 let logger: LoggerWithStorage | null
+
 class LoggerWithStorage {
   public meetingLog: LogStorage
   public rtcLog: LogStorage
@@ -78,13 +79,14 @@ class LoggerWithStorage {
 }
 
 export default {
-  getInstance() {
+  getInstance(): LoggerWithStorage {
     if (!logger) {
       logger = new LoggerWithStorage()
     }
+
     return logger
   },
-  destroy() {
+  destroy(): void {
     logger = null
   },
 }

@@ -2,7 +2,7 @@ import './index.less'
 import { Button, Form, Input } from 'antd'
 import React, { useEffect, useState } from 'react'
 
-import { LoginUserInfo } from '../../../../app/src/types'
+import { IPCEvent, LoginUserInfo } from '../../../../app/src/types'
 import Modal from '../../common/Modal'
 import { useTranslation } from 'react-i18next'
 import { modifyPasswordApi } from '../../../../app/src/api'
@@ -26,12 +26,15 @@ const SecuritySetting: React.FC = () => {
   const oldPwd = Form.useWatch('oldPwd', form)
   const newPwd = Form.useWatch('newPwd', form)
   const confirmPwd = Form.useWatch('confirmPwd', form)
+
   useEffect(() => {
     // 从localstroage中获取用户信息
     const userInfoStr = localStorage.getItem(LOCALSTORAGE_USER_INFO)
+
     if (userInfoStr) {
       try {
         const userInfo = JSON.parse(userInfoStr || '{}')
+
         console.log('userInfo', userInfo)
         setUserInfo(userInfo)
       } catch (error) {
@@ -64,11 +67,14 @@ const SecuritySetting: React.FC = () => {
       </svg>
     )
   }
+
   const onClickModifyPassword = () => {
     setOpenModifyPwd(true)
   }
+
   const onHandleModifyPwd = () => {
     const { oldPwd, newPwd, confirmPwd } = form.getFieldsValue()
+
     if (!checkPassword(confirmPwd)) {
       setErrorTip(t('newPwdNotMath'))
       return
@@ -76,20 +82,21 @@ const SecuritySetting: React.FC = () => {
       setErrorTip(t('newPwdNotMathReEnter'))
       return
     }
+
     modifyPasswordApi({
       password: md5Password(oldPwd),
       newPassword: md5Password(confirmPwd),
       username: userInfo?.username as string,
       appKey: userInfo?.appKey as string,
     })
-      .then((res) => {
+      .then(() => {
         localStorage.removeItem(LOCALSTORAGE_USER_INFO)
         localStorage.removeItem(LOCALSTORAGE_LOGIN_BACK)
         // 官网登录信息也干掉
         localStorage.removeItem('loginWayV2')
         localStorage.removeItem('loginAppNameSpaceV2')
         if (window.isElectronNative) {
-          window.ipcRenderer?.send('relaunch')
+          window.ipcRenderer?.send(IPCEvent.relaunch)
         } else {
           window.location.reload()
         }
@@ -98,6 +105,7 @@ const SecuritySetting: React.FC = () => {
         setErrorTip(e.msg)
       })
   }
+
   return (
     <div className="nemeeting-security-and-account">
       <section>
@@ -147,7 +155,7 @@ const SecuritySetting: React.FC = () => {
               （{t('settingChangePasswordTip')}）
             </span>
           </div>
-          <Button shape="round" onClick={onClickModifyPassword} type="primary">
+          <Button shape="round" onClick={onClickModifyPassword}>
             {t('settingChangePassword')}
           </Button>
         </div>
@@ -155,7 +163,8 @@ const SecuritySetting: React.FC = () => {
       <Modal
         open={openModifyPwd}
         title={t('settingChangePassword')}
-        width={400}
+        width={375}
+        wrapClassName="security-meeting-modal-wrap"
         getContainer={false}
         maskClosable={false}
         afterClose={() => {

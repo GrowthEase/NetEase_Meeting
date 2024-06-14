@@ -4,13 +4,14 @@ import React, { forwardRef, useImperativeHandle } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useGlobalContext } from '../../../store'
 import './index.less'
+import { NotificationInstance } from 'antd/es/notification/interface'
 
 interface MemberNotifyProps {
   handleViewMsg: () => void
   style?: Record<string, string | number>
   onClose?: () => void
   onNotNotify?: () => void
-  notificationApi?: any
+  notificationApi?: NotificationInstance
 }
 export interface MemberNotifyRef {
   notify: (memberCount: number) => void
@@ -26,7 +27,6 @@ const MemberNotify = forwardRef<
 
   const { notificationApi: notificationApiContext } = useGlobalContext()
   const { t } = useTranslation()
-  const [count, setCount] = React.useState(0)
 
   const notificationApi = props.notificationApi || notificationApiContext
 
@@ -106,5 +106,7 @@ const MemberNotify = forwardRef<
 
   return <></>
 })
+
+MemberNotify.displayName = 'MemberNotify'
 
 export default React.memo(MemberNotify)

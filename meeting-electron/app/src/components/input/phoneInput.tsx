@@ -17,13 +17,6 @@ const PhoneInput: FC<InputProps> = (props) => {
   const getCheckedPhone = (str: string) => {
     return str.replace(/\D/g, '');
   };
-  const closeIcon = (
-    // <Icon
-    //   type="close-circle-fill"
-    //   onClick={() => props.set({ value: '', valid: false })}
-    // />
-    <div>{'<'}</div>
-  );
 
   return (
     <BaseInput
@@ -31,7 +24,12 @@ const PhoneInput: FC<InputProps> = (props) => {
       validator={checkPhone}
       onValueChange={getCheckedPhone}
       hasClear={true}
-      prefix={<div className={'phoneInputNumber'}>+86</div>}
+      prefix={
+        <div className="phone-input-number-wrap">
+          <div className={'phoneInputNumber'}>+86</div>
+          <div className="line"></div>
+        </div>
+      }
       placeholder={t('authEnterMobile')}
       errorTip=""
       maxLength="11"

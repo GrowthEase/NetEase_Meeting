@@ -39,10 +39,17 @@ import {
   UserEventType,
   WatermarkInfo,
 } from '../types'
-import { NEMeetingLeaveType, NEMeetingStatus } from '../types/type'
+import {
+  InterpretationRes,
+  NEMeetingInterpretationSettings,
+  NEMeetingLeaveType,
+  NEMeetingStatus,
+} from '../types/type'
 import { debounce, getBrowserType, throttle } from '../utils'
 import DataReporter from '../utils/DataReporter'
 import { Logger } from '../utils/Logger'
+import { IPCEvent } from '../../app/src/types'
+import { MAJOR_AUDIO } from '../config'
 
 const logger = new Logger('Meeting-NeMeeting', true)
 const reporter = DataReporter.getInstance()
@@ -78,7 +85,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
     showMeetingRemainingTip,
     waitingRejoinMeeting,
     waitingJoinOtherMeeting,
-    online,
+    interpretationSetting,
   } = useContext<GlobalContextInterface>(GlobalContext)
   const { dispatch: waitingRoomDispatch } = useWaitingRoomContext()
   const { eventEmitter, outEventEmitter } =
@@ -126,17 +133,20 @@ export default function useEventHandler(): UseEventHandlerInterface {
   const isReplayedVideoRef = useRef<boolean>(false)
   const isReplayedScreenRef = useRef<boolean>(false)
   const activeSpeakerTimerRef = useRef<number | null>(null)
+  const interpretationSettingRef = useRef<
+    NEMeetingInterpretationSettings | undefined
+  >(undefined)
+
+  interpretationSettingRef.current = interpretationSetting
   const { t } = useTranslation()
 
   const { localMember } = meetingInfo
 
   useEffect(() => {
-    console.log('添加监听事件')
     // if (meetingInfo.meetingNum) {
     //   addEventListener()
     // }
     return () => {
-      console.log('移除监听事件')
       // removeEventListener()
       // outEventEmitter?.removeAllListeners()
       // roomEndedHandler()
@@ -144,6 +154,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
     }
   }, [meetingInfo.meetingNum])
   useEffect(() => {
+    logger.debug('添加监听事件')
     addEventListener()
     return () => {
       removeEventListener()
@@ -154,6 +165,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
     if (!meetingInfo.remainingSeconds || meetingInfo.remainingSeconds <= 0) {
       return
     }
+
     handleRemainingTime(meetingInfo.remainingSeconds)
   }, [meetingInfo.remainingSeconds])
 
@@ -227,10 +239,29 @@ export default function useEventHandler(): UseEventHandlerInterface {
         if (meetingInfoRef.current.localMember.uuid !== member.uuid) {
           return
         }
+
         // 静音
         if (mute) {
           if (member.uuid !== operator.uuid) {
             Toast.info(t('participantHostMuteAudio'))
+            // 如果被管理员静音且是译员 则需要同声unpub对应翻译频道
+            if (
+              meetingInfoRef.current.interpretation?.started &&
+              meetingInfoRef.current.isInterpreter
+            ) {
+              const speakerLanguage =
+                interpretationSettingRef.current?.speakerLanguage
+
+              if (speakerLanguage && speakerLanguage !== MAJOR_AUDIO) {
+                const channelName =
+                  meetingInfoRef.current.interpretation?.channelNames[
+                    speakerLanguage
+                  ]
+
+                channelName &&
+                  neMeeting?.enableAndPubAudio(false, channelName, false)
+              }
+            }
           }
         } else {
           // 开启声音
@@ -241,6 +272,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
           ) {
             Toast.info(t('hostAgreeAudioHandsUp'))
           }
+
           // 如果当前在举手状态，则放下手
           if (
             meetingInfoRef.current.localMember.isHandsUp &&
@@ -259,6 +291,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
       const index = members.findIndex(
         (member) => member.uuid === meetingInfoRef.current.localMember.uuid
       )
+
       if (index > 0) {
         return
       }
@@ -281,9 +314,25 @@ export default function useEventHandler(): UseEventHandlerInterface {
               },
             })
         }
+
         if (!dispatch) {
           return
         }
+
+        // 判断是否译员加入
+        const interpretation = meetingInfoRef.current.interpretation
+
+        if (
+          interpretation?.started &&
+          interpretation?.interpreters[member.uuid]
+        ) {
+          const role = meetingInfoRef.current.localMember.role
+
+          if (role === Role.host || role === Role.coHost) {
+            eventEmitter.emit(EventType.OnInterpreterLeave)
+          }
+        }
+
         console.log('用户加入完成', member)
         dispatch({
           type: ActionType.ADD_MEMBER,
@@ -312,6 +361,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
           name: member.name,
         }
       })
+
       if (
         meetingInfoRef.current.localMember.role === Role.host ||
         meetingInfoRef.current.localMember.role === Role.coHost
@@ -325,6 +375,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
           }
         })
       }
+
       outEventEmitter?.emit('peerJoin', _Members)
     })
     eventEmitter?.on(
@@ -349,6 +400,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
               },
             })
         }
+
         if (member.uuid === meetingInfoRef.current.localMember.uuid) {
           //修改自己昵称 保存昵称，会议逻辑
           localStorage.setItem(
@@ -365,12 +417,14 @@ export default function useEventHandler(): UseEventHandlerInterface {
     eventEmitter?.on(EventType.MemberLeaveRoom, (members: NERoomMember[]) => {
       logger.debug('用户离开: %o %t', members)
       const uuids: string[] = []
+
       members.forEach((member) => {
         delete neMeeting?.subscribeMembersMap[member.uuid]
         // 本端不处理，如果离开走roomEnd
         if (member.uuid !== meetingInfoRef.current.localMember.uuid) {
           uuids.push(member.uuid)
         }
+
         if (member.uuid === meetingInfoRef.current.pinVideoUuid) {
           dispatch &&
             dispatch({
@@ -380,6 +434,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
               },
             })
         }
+
         if (member.uuid === meetingInfoRef.current.privateChatMemberId) {
           dispatch?.({
             type: ActionType.UPDATE_MEETING_INFO,
@@ -388,10 +443,46 @@ export default function useEventHandler(): UseEventHandlerInterface {
             },
           })
         }
+
+        // 判断是否译员离开
+        const interpretation = meetingInfoRef.current.interpretation
+
+        if (
+          interpretation?.started &&
+          interpretation?.interpreters[member.uuid]
+        ) {
+          // 如果离开的译员是当前收听语言的唯一译员则提示是否切换到主频道
+          const listeningLanguage =
+            interpretationSettingRef.current?.listenLanguage
+
+          const role = meetingInfoRef.current.localMember.role
+
+          if (role === Role.host || role === Role.coHost) {
+            eventEmitter.emit(EventType.OnInterpreterLeave)
+          }
+
+          if (!listeningLanguage || listeningLanguage === MAJOR_AUDIO) {
+            return
+          }
+
+          let keys = Object.keys(interpretation.interpreters)
+
+          keys = keys.filter((key) => {
+            return interpretation.interpreters[key].includes(listeningLanguage)
+          })
+          // 只有当前离开的译员翻译该语言
+          if (keys.length <= 1) {
+            const listeningChannel =
+              interpretation?.channelNames[listeningLanguage]
+
+            eventEmitter.emit(EventType.OnInterpreterLeaveAll, listeningChannel)
+          }
+        }
       })
       const originMemberList = memberListRef.current
         ? [...memberListRef.current]
         : []
+
       dispatch &&
         dispatch({
           type: ActionType.REMOVE_MEMBER,
@@ -402,9 +493,11 @@ export default function useEventHandler(): UseEventHandlerInterface {
 
       // 主持人离开
       const hostInfo = members.find((member) => member.role.name === Role.host)
+
       if (hostInfo) {
         // 互踢本端是host
         const localMember = meetingInfoRef.current.localMember
+
         if (localMember.role === Role.host) {
           dispatch &&
             dispatch({
@@ -439,6 +532,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
         const index = uuids.findIndex(
           (uuid) => uuid === meetingInfoRef.current.screenUuid
         )
+
         if (index > -1) {
           dispatch &&
             dispatch({
@@ -449,6 +543,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
             })
         }
       }
+
       if (
         meetingInfoRef.current.localMember.role === Role.host ||
         meetingInfoRef.current.localMember.role === Role.coHost
@@ -492,6 +587,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
               const nowHost = memberListRef.current.find(
                 (member) => member.role === Role.host
               )
+
               if (nowHost) {
                 Toast.info(t('meetingUserIsNowTheHost', { user: nowHost.name }))
               }
@@ -517,12 +613,14 @@ export default function useEventHandler(): UseEventHandlerInterface {
               const oldMember = memberListRef.current.find(
                 (_member) => _member.uuid === member.uuid
               )
+
               if (oldMember && oldMember.role === Role.coHost) {
                 Toast.info(`${member.name}${t('participantUnassignedCoHost')}`)
               }
             }
           }
         }
+
         dispatch &&
           dispatch({
             type: ActionType.UPDATE_MEMBER,
@@ -548,23 +646,37 @@ export default function useEventHandler(): UseEventHandlerInterface {
       EventType.MemberScreenShareStateChanged,
       (member: NEMember, isSharing: boolean, operator: NEMember) => {
         logger.debug('onMemberScreenShareStateChanged: %o %t', member)
+        const isMySelf = member.uuid === meetingInfoRef.current.localMember.uuid
+
         if (dispatch) {
-          dispatch({
-            type: ActionType.UPDATE_MEMBER,
-            data: {
-              uuid: member.uuid,
-              member: { isSharingScreen: isSharing },
-            },
-          })
+          if (isMySelf && window.isElectronNative) {
+            window.ipcRenderer?.send(IPCEvent.sharingScreen, {
+              method: isSharing ? 'start' : 'stop',
+            })
+            // 由于electron端的延迟，需要延迟一段时间再更新状态，避免窗口画面闪烁
+            dispatch({
+              type: ActionType.UPDATE_MEMBER,
+              data: {
+                uuid: member.uuid,
+                member: { isSharingScreen: isSharing },
+              },
+            })
+          } else {
+            dispatch({
+              type: ActionType.UPDATE_MEMBER,
+              data: {
+                uuid: member.uuid,
+                member: { isSharingScreen: isSharing },
+              },
+            })
+          }
         }
 
         if (!isSharing) {
-          if (
-            operator.uuid !== member.uuid &&
-            member.uuid === meetingInfoRef.current.localMember.uuid
-          ) {
+          if (operator.uuid !== member.uuid && isMySelf) {
             Toast.info(t('participantHostStoppedShare'))
           }
+
           reporter.send({
             action_name: 'member_screen_share_stop',
             member_uid: member.uuid,
@@ -598,6 +710,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
           if (mute && member.uuid !== operator.uuid) {
             Toast.info(t('participantHostMuteVideo'))
           }
+
           if (!mute) {
             if (
               meetingInfoRef.current.localMember.isHandsUp &&
@@ -635,6 +748,10 @@ export default function useEventHandler(): UseEventHandlerInterface {
             )
           }
         } else if (member) {
+          const _member = memberListRef.current.find(
+            (item) => item.uuid == member.uuid
+          )
+
           dispatch &&
             dispatch({
               type: ActionType.UPDATE_MEMBER,
@@ -642,6 +759,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
                 uuid: member.uuid,
                 member: {
                   properties: {
+                    ..._member?.properties,
                     wbDrawable: { value: isOpen ? '1' : '0' },
                   },
                   isSharingWhiteboard: isOpen,
@@ -660,6 +778,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
                 meetingInfoRef.current.localMember.uuid
               )
             }
+
             if (
               member.uuid === meetingInfoRef.current.localMember.uuid &&
               operator.uuid === meetingInfoRef.current.hostUuid &&
@@ -668,6 +787,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
             ) {
               Toast.info(t('hostCloseWhiteShareToast'))
             }
+
             // 本端白板关闭
             if (member.uuid === meetingInfoRef.current.localMember.uuid) {
               !isOpen && neMeeting?.whiteboardController?.setEnableDraw(false)
@@ -682,6 +802,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
         logger.debug('onRoomPropertiesChanged: %o %o %t', properties)
         if (properties.focus) {
           const focus = properties.focus
+
           if (focus.value) {
             if (meetingInfoRef.current.localMember.uuid === focus.value) {
               // todo 需要添加焦点分辨率设置逻辑
@@ -692,6 +813,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
             ) {
               // todo 需要添加焦点分辨率设置逻辑
             }
+
             // 焦点成员已不在房间，解决极端情况下成员刚离开 设置成功焦点，造成成员入会后还是焦点
             if (
               meetingInfoRef.current.localMember.role === Role.host ||
@@ -700,6 +822,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
               const index = memberListRef.current.findIndex(
                 (member) => member.uuid == focus.value
               )
+
               if (index < 0) {
                 neMeeting?.sendHostControl(hostAction.unsetFocus, focus.value)
               }
@@ -707,6 +830,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
           } else {
             cancelFocus()
           }
+
           dispatch &&
             dispatch({
               type: ActionType.UPDATE_MEETING_INFO,
@@ -716,6 +840,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
             })
         } else if (properties.audioOff) {
           const value = properties.audioOff.value?.split('_')[0]
+
           dispatch &&
             dispatch({
               type: ActionType.UPDATE_MEETING_INFO,
@@ -736,12 +861,14 @@ export default function useEventHandler(): UseEventHandlerInterface {
               )
             }
           }
+
           switch (value) {
             case AttendeeOffType.offNotAllowSelfOn:
             case AttendeeOffType.offAllowSelfOn:
               if (!meetingInfoRef.current.localMember.isAudioConnected) {
                 return
               }
+
               setIsOpenAudioByHost(false)
               if (
                 meetingInfoRef.current.localMember.role !== Role.host &&
@@ -750,6 +877,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
               ) {
                 Toast.info(t('participantHostMuteAllAudio'))
               }
+
               if (
                 !meetingInfoRef.current.localMember.isAudioOn ||
                 meetingInfoRef.current.localMember.role === Role.host ||
@@ -758,15 +886,18 @@ export default function useEventHandler(): UseEventHandlerInterface {
                 // 已开启视频则不操作
                 return
               }
+
               if (meetingInfoRef.current.localMember.role === Role.observer) {
                 return
               }
+
               neMeeting?.muteLocalAudio()
               break
             case AttendeeOffType.disable: // 解除静音
               if (!meetingInfoRef.current.localMember.isAudioConnected) {
                 return
               }
+
               setIsOpenAudioByHost(true)
               neMeeting?.sendMemberControl(
                 memberAction.handsDown,
@@ -780,15 +911,18 @@ export default function useEventHandler(): UseEventHandlerInterface {
                 // 已开启视频则不操作
                 return
               }
+
               if (meetingInfoRef.current.localMember.hide) {
                 return
               }
+
               unmuteMyAudio()
               break
           }
         } else if (properties.videoOff) {
           // 全体视频操作
           const value = properties.videoOff.value?.split('_')[0]
+
           dispatch &&
             dispatch({
               type: ActionType.UPDATE_MEETING_INFO,
@@ -811,6 +945,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
               )
             }
           }
+
           // 根据不同类型执行对应逻辑
           switch (value) {
             case AttendeeOffType.offNotAllowSelfOn:
@@ -823,6 +958,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
               ) {
                 Toast.info(t('participantHostMuteAllVideo'))
               }
+
               if (
                 !meetingInfoRef.current.localMember.isVideoOn ||
                 meetingInfoRef.current.localMember.role === Role.host ||
@@ -831,9 +967,11 @@ export default function useEventHandler(): UseEventHandlerInterface {
                 // 已开启视频则不操作
                 return
               }
+
               if (meetingInfoRef.current.localMember.role === Role.observer) {
                 return
               }
+
               neMeeting?.muteLocalVideo()
               break
             case AttendeeOffType.disable: // 解除静音
@@ -850,18 +988,24 @@ export default function useEventHandler(): UseEventHandlerInterface {
                 // 已开启视频则不操作
                 return
               }
+
               if (meetingInfoRef.current.localMember.role === Role.observer) {
                 return
               }
+
               unmuteMyVideo()
               break
           }
         } else if (properties.whiteboardConfig) {
           const config = properties.whiteboardConfig.value
           let isTransparent = false
+
           try {
             isTransparent = JSON.parse(config).isTransparent
-          } catch (e) {}
+          } catch (e) {
+            console.warn('解析白板透明度失败', e)
+          }
+
           dispatch?.({
             type: ActionType.UPDATE_MEETING_INFO,
             data: {
@@ -871,6 +1015,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
         } else if (properties.rooms_screen_share_mode) {
           const isScreenSharingMeeting =
             properties.rooms_screen_share_mode.value === '1'
+
           dispatch?.({
             type: ActionType.UPDATE_MEETING_INFO,
             data: {
@@ -879,6 +1024,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
           })
         } else if (properties.watermark) {
           const watermark = properties.watermark.value
+
           dispatch?.({
             type: ActionType.UPDATE_MEETING_INFO,
             data: {
@@ -887,6 +1033,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
           })
         } else if (properties.crPerm) {
           const meetingChatPermission = Number(properties.crPerm.value)
+
           dispatch?.({
             type: ActionType.UPDATE_MEETING_INFO,
             data: {
@@ -895,6 +1042,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
           })
         } else if (properties.wtPrChat) {
           const waitingRoomChatPermission = Number(properties.wtPrChat.value)
+
           console.log('waitingRoomChatPermission', waitingRoomChatPermission)
           dispatch?.({
             type: ActionType.UPDATE_MEETING_INFO,
@@ -904,6 +1052,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
           })
         } else if (properties.viewOrder) {
           const viewOrder = properties.viewOrder.value
+
           dispatch?.({
             type: ActionType.UPDATE_MEETING_INFO,
             data: {
@@ -913,6 +1062,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
         } else if (properties.guest) {
           const guest = properties.guest.value
           const enableGuestJoin = guest === '1'
+
           dispatch?.({
             type: ActionType.UPDATE_MEETING_INFO,
             data: {
@@ -920,6 +1070,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
             },
           })
           const localMember = meetingInfoRef.current.localMember
+
           if (
             localMember.role === Role.host ||
             localMember.role === Role.coHost
@@ -930,6 +1081,60 @@ export default function useEventHandler(): UseEventHandlerInterface {
               Toast.info(t('meetingGuestJoinDisabled'))
             }
           }
+        } else if (properties.interpretation) {
+          // 同声传译
+          const valueStr = properties.interpretation.value
+
+          if (
+            valueStr &&
+            Object.prototype.toString.call(valueStr) === '[object String]'
+          ) {
+            const value: InterpretationRes = JSON.parse(valueStr)
+
+            // 如果关闭同声传译提示
+            if (
+              !value.started &&
+              meetingInfoRef.current.interpretation?.started &&
+              !meetingInfoRef.current.openInterpretationBySelf
+            ) {
+              Toast.info(t('interpStopNotification'))
+            }
+
+            // 如果本端被删除译员需要弹窗提醒
+            if (
+              meetingInfoRef.current.isInterpreter &&
+              !value.interpreters[meetingInfoRef.current.localMember.uuid]
+            ) {
+              eventEmitter.emit(EventType.MyInterpreterRemoved)
+            }
+
+            dispatch?.({
+              type: ActionType.UPDATE_MEETING_INFO,
+              data: {
+                interpretation: value,
+              },
+            })
+            // 需要等待下个轮训再设置，否则本端开启同声传译后并设置自己为一样，会有成员译员弹窗。
+            setTimeout(() => {
+              dispatch?.({
+                type: ActionType.UPDATE_MEETING_INFO,
+                data: {
+                  openInterpretationBySelf: false,
+                },
+              })
+            })
+          }
+        } else if (properties.annotationPermission) {
+          const annotationPermission = Number(
+            properties.annotationPermission.value
+          )
+
+          dispatch?.({
+            type: ActionType.UPDATE_MEETING_INFO,
+            data: {
+              annotationPermission,
+            },
+          })
         }
       }
     )
@@ -959,6 +1164,25 @@ export default function useEventHandler(): UseEventHandlerInterface {
           })
       }
     )
+    eventEmitter?.on(EventType.MemberJoinRtcChannel, (members) => {
+      members.forEach((member) => {
+        const nowMember = memberListRef.current.find(
+          (item) => item.uuid === member.uuid
+        )
+
+        if (nowMember && nowMember.isInRtcChannel !== member.isInRtcChannel) {
+          dispatch?.({
+            type: ActionType.UPDATE_MEMBER,
+            data: {
+              uuid: member.uuid,
+              member: {
+                isInRtcChannel: member.isInRtcChannel,
+              },
+            },
+          })
+        }
+      })
+    })
     eventEmitter?.on(
       EventType.MemberPropertiesChanged,
       (userUuid: string, properties: Record<string, any>) => {
@@ -967,6 +1191,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
         if (properties.handsUp) {
           // handsup 1表示举手，2表示被放下
           const handsUp = properties.handsUp
+
           dispatch &&
             dispatch({
               type: ActionType.UPDATE_MEMBER,
@@ -1027,13 +1252,16 @@ export default function useEventHandler(): UseEventHandlerInterface {
         if (!dispatch) {
           return
         }
+
         const member = memberListRef.current?.find(
           (member) => member.uuid === userUuid
         )
+
         if (!member) {
           logger.warn('member not found', userUuid)
           return
         }
+
         keys.forEach((key) => {
           if (key === 'handsUp') {
             // 举手
@@ -1133,6 +1361,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
           },
         })
       }
+
       canShowNetworkToastRef.current = false
       setTimeout(() => {
         setNetworkQuality({
@@ -1159,7 +1388,11 @@ export default function useEventHandler(): UseEventHandlerInterface {
     //   }
     // )
     eventEmitter?.on(EventType.RoomEnded, (reason: string) => {
-      logger.debug('onRoomEnded: %o %t', reason)
+      logger.debug(
+        'onRoomEnded: %o %t',
+        reason,
+        waitingRejoinMeetingRef.current
+      )
       canShowNetworkToastRef.current = true
       if (reason === 'RTC_CHANNEL_ERROR') {
         eventEmitter.emit(MeetingEventType.rtcChannelError)
@@ -1182,6 +1415,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
         // })
         return
       }
+
       if (
         waitingRejoinMeetingRef.current ||
         waitingJoinOtherMeetingRef.current
@@ -1205,9 +1439,14 @@ export default function useEventHandler(): UseEventHandlerInterface {
         OTHER: t('OTHER'), // 其他
       }
       const localMember = meetingInfoRef.current.localMember
-      if (localMember.role != Role.host && localMember.role != Role.coHost) {
+
+      if (
+        (localMember.role != Role.host && localMember.role != Role.coHost) ||
+        reason !== 'CLOSE_BY_MEMBER'
+      ) {
         langMap[reason] && Toast.info(langMap[reason])
       }
+
       roomEndedHandler(reason)
     })
     eventEmitter?.on(
@@ -1218,6 +1457,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
         ) {
           return
         }
+
         dispatch &&
           dispatch({
             type: ActionType.UPDATE_MEETING_INFO,
@@ -1230,6 +1470,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
           clearTimeout(activeSpeakerTimerRef.current)
           activeSpeakerTimerRef.current = null
         }
+
         // 不再清空，现在逻辑是主画面停留在最后一个者
         // 4s未收到新数据表示没人说话 情况当前说话，保留最后一个说话者用户主画面显示
         activeSpeakerTimerRef.current = window.setTimeout(() => {
@@ -1266,6 +1507,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
       } catch (e) {
         logger.warn('leaveCallback failed', e)
       }
+
       neMeeting?.destroy()
     })
     eventEmitter?.on(EventType.NetworkError, () => {
@@ -1288,10 +1530,12 @@ export default function useEventHandler(): UseEventHandlerInterface {
       if (!window.isElectronNative) {
         neMeeting && updateMeetingService(neMeeting, dispatch as Dispatch)
       }
+
       neMeeting?.waitingRoomController
         ?.getMemberList(0, 20, true)
         .then((res) => {
           const memberList = res.data
+
           waitingRoomDispatch?.({
             type: ActionType.WAITING_ROOM_SET_MEMBER_LIST,
             data: { memberList },
@@ -1299,6 +1543,55 @@ export default function useEventHandler(): UseEventHandlerInterface {
           neMeeting?.updateWaitingRoomUnReadCount(memberList.length)
         })
     })
+
+    eventEmitter?.on(
+      EventType.RtcChannelDisconnect,
+      async (channel: string) => {
+        // 如果开启同传，且是当前收听语言则toast
+        if (meetingInfoRef.current.interpretation?.started) {
+          const listenLanguage =
+            interpretationSettingRef.current?.listenLanguage
+
+          if (!listenLanguage || listenLanguage === MAJOR_AUDIO) {
+            return
+          }
+
+          const listenChannel =
+            meetingInfoRef.current.interpretation?.channelNames[listenLanguage]
+
+          if (listenChannel === channel) {
+            Toast.info(t('interpListeningChannelDisconnect'))
+            // await neMeeting?.leaveRtcChannel(channel)
+            // await neMeeting?.joinRtcChannel(channel)
+            return
+          }
+
+          // 当前是译员
+          if (meetingInfoRef.current.isInterpreter) {
+            const speakerLangs =
+              meetingInfoRef.current.interpretation.interpreters[
+                meetingInfoRef.current.localMember.uuid
+              ]
+            const speakerChannel = speakerLangs.map((lang) => {
+              return meetingInfoRef.current.interpretation?.channelNames[lang]
+            })
+
+            if (speakerChannel && speakerChannel.includes(channel)) {
+              Toast.info(t('interpSpeakingChannelDisconnect'))
+              // try {
+              //   await neMeeting?.enableAndPubAudio(false, channel)
+              //   await neMeeting?.leaveRtcChannel(channel)
+              // } catch (error) {
+              //   logger.debug('RtcChannelDisconnect error', error)
+              // }
+
+              // await neMeeting?.joinRtcChannel(channel)
+              // await neMeeting?.enableAndPubAudio(true, channel)
+            }
+          }
+        }
+      }
+    )
 
     eventEmitter?.on(EventType.RoomLiveStateChanged, (state) => {
       console.log('RoomLiveStateChanged', state)
@@ -1311,6 +1604,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
           },
         })
       }
+
       dispatch?.({
         type: ActionType.UPDATE_MEETING_INFO,
         data: {
@@ -1323,10 +1617,13 @@ export default function useEventHandler(): UseEventHandlerInterface {
       const { body } = res.data
       const senderUuid = res.senderUuid
       const localMember = meetingInfoRef.current.localMember
+
       if (localMember.isHandsUp) {
         neMeeting?.sendMemberControl(memberAction.handsDown, localMember.uuid)
       }
+
       const isMySelf = senderUuid === localMember.uuid
+
       switch (
         body.type // 主持人可开启
       ) {
@@ -1336,7 +1633,8 @@ export default function useEventHandler(): UseEventHandlerInterface {
             // 非主持人或者联席主持人打开自己的
             Toast.info(t('hostAgreeAudioHandsUp'))
           }
-          unmuteMyAudio(isMySelf)
+
+          unmuteMyAudio()
           break
         case 2:
           logger.debug('开启camera请求 %t')
@@ -1349,8 +1647,9 @@ export default function useEventHandler(): UseEventHandlerInterface {
             // 非主持人或者联席主持人打开自己的
             Toast.info(t('hostAgreeAudioHandsUp'))
           }
+
           // this.$neMeeting.sendMemberControl(memberAction.handsDown, [this.localInfo.avRoomUid]);
-          unmuteMyAudio(isMySelf)
+          unmuteMyAudio()
           unmuteMyVideo(isMySelf)
           break
       }
@@ -1359,6 +1658,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
       EventType.roomCloudRecordStateChanged,
       (recordState, operatorMember) => {
         const isCloudRecording = recordState === 0
+
         dispatch?.({
           type: ActionType.UPDATE_MEETING_INFO,
           data: {
@@ -1481,6 +1781,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
           },
         })
       }
+
       waitingRoomDispatch?.({
         type: ActionType.WAITING_ROOM_REMOVE_MEMBER,
         data: { uuid: memberId },
@@ -1520,10 +1821,15 @@ export default function useEventHandler(): UseEventHandlerInterface {
     eventEmitter?.on(EventType.MemberNameChangedInWaitingRoom, handleNameChange)
     eventEmitter?.on(EventType.MyWaitingRoomStatusChanged, (status, reason) => {
       console.log('MyWaitingRoomStatusChanged', status, reason)
+      if (waitingRejoinMeetingRef.current) {
+        return
+      }
+
       // 被准入
       if (status === 2) {
         neMeeting?.rejoinAfterAdmittedToRoom().then(() => {
           const meeting = neMeeting?.getMeetingInfo()
+
           console.log('getMeetingInfo>>>>>', meeting)
           meeting &&
             dispatch?.({
@@ -1562,6 +1868,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
             member: { isSharingScreen: false },
           },
         })
+
         // 需要延迟防止共享时候窗口未恢复
         setTimeout(() => {
           dispatch?.({
@@ -1588,6 +1895,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
         if (newAddMembers.length === 0) {
           return
         }
+
         waitingRoomDispatch?.({
           type: ActionType.WAITING_ROOM_ADD_MEMBER_LIST,
           data: { memberList: newAddMembers },
@@ -1634,20 +1942,36 @@ export default function useEventHandler(): UseEventHandlerInterface {
       }
     )
     eventEmitter?.on(
-      EventType.ReceiveScheduledMeetingUpdate,
-      handleMeetingUpdate
-    )
-    eventEmitter?.on(
-      EventType.RoomLiveBackgroundInfoChanged,
+      EventType.RoomAnnotationEnableChanged,
       (enable: boolean) => {
         dispatch?.({
           type: ActionType.UPDATE_MEETING_INFO,
           data: {
-            enableBlacklist: enable,
+            annotationEnabled: enable,
           },
         })
       }
     )
+    eventEmitter?.on(EventType.RoomMaxMembersChanged, (maxMembers: number) => {
+      dispatch?.({
+        type: ActionType.UPDATE_MEETING_INFO,
+        data: {
+          maxMembers,
+        },
+      })
+    })
+    eventEmitter?.on(
+      EventType.ReceiveScheduledMeetingUpdate,
+      handleMeetingUpdate
+    )
+    eventEmitter?.on(EventType.RoomBlacklistStateChanged, (enable: boolean) => {
+      dispatch?.({
+        type: ActionType.UPDATE_MEETING_INFO,
+        data: {
+          enableBlacklist: enable,
+        },
+      })
+    })
 
     eventEmitter?.on(EventType.OnPrivateChatMemberIdSelected, (id) => {
       if (meetingInfoRef.current.rightDrawerTabActiveKey === 'chatroom') {
@@ -1658,6 +1982,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
           },
         })
       }
+
       // 强制更新
       setTimeout(() => {
         dispatch?.({
@@ -1670,39 +1995,50 @@ export default function useEventHandler(): UseEventHandlerInterface {
       })
     })
   }, [])
-  const handleMemberSipInviteStateChanged = useCallback((member) => {
-    console.log('handleMemberSipInviteStateChanged', member)
-    // 更新当前邀请列表列表
-    dispatch?.({
-      type: ActionType.SIP_ADD_MEMBER,
-      data: {
-        member: { ...member },
-      },
-    })
-  }, [])
-  const handleMeetingUpdate = useCallback((res) => {
-    if (res.data) {
-      if (res.data?.type === 200) {
-        window.isElectronNative && Toast.warning(t('tokenExpired'), 4000)
-      }
-    }
-  }, [])
-  const handleNameChange = useCallback((memberId, name) => {
-    console.log('MemberNameChangedInWaitingRoom', memberId, name)
-    waitingRoomDispatch?.({
-      type: ActionType.WAITING_ROOM_UPDATE_MEMBER,
-      data: { uuid: memberId, member: { name } },
-    })
-    const localMember = meetingInfoRef.current.localMember
-    // 如果是本端则表示，被修改昵称的同事被准入
-    if (localMember.uuid === memberId) {
-      neMeeting?.modifyNickName({
-        nickName: name,
+  const handleMemberSipInviteStateChanged = useCallback(
+    (member) => {
+      console.log('handleMemberSipInviteStateChanged', member)
+      // 更新当前邀请列表列表
+      dispatch?.({
+        type: ActionType.SIP_ADD_MEMBER,
+        data: {
+          member: { ...member },
+        },
       })
-    }
-  }, [])
+    },
+    [dispatch]
+  )
+  const handleMeetingUpdate = useCallback(
+    (res) => {
+      if (res.data) {
+        if (res.data?.type === 200) {
+          window.isElectronNative && Toast.warning(t('tokenExpired'), 4000)
+        }
+      }
+    },
+    [t]
+  )
+  const handleNameChange = useCallback(
+    (memberId, name) => {
+      console.log('MemberNameChangedInWaitingRoom', memberId, name)
+      waitingRoomDispatch?.({
+        type: ActionType.WAITING_ROOM_UPDATE_MEMBER,
+        data: { uuid: memberId, member: { name } },
+      })
+      const localMember = meetingInfoRef.current.localMember
+
+      // 如果是本端则表示，被修改昵称的同事被准入
+      if (localMember.uuid === memberId) {
+        neMeeting?.modifyNickName({
+          nickName: name,
+        })
+      }
+    },
+    [neMeeting, waitingRoomDispatch]
+  )
 
   const removeEventListener = () => {
+    logger.debug('移除监听事件')
     // eventEmitter?.off(UserEventType.SetLeaveCallback)
     eventEmitter?.off(EventType.MemberAudioMuteChanged)
     eventEmitter?.off(EventType.MemberJoinRtcChannel)
@@ -1749,6 +2085,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
     eventEmitter?.off(MeetingEventType.updateWaitingRoomUnReadCount)
     eventEmitter?.off(MeetingEventType.updateMeetingInfo)
     eventEmitter?.off(EventType.RoomLiveBackgroundInfoChanged)
+    eventEmitter?.off(EventType.RoomAnnotationEnableChanged)
     eventEmitter?.off(
       EventType.ReceiveScheduledMeetingUpdate,
       handleMeetingUpdate
@@ -1762,9 +2099,11 @@ export default function useEventHandler(): UseEventHandlerInterface {
       EventType.MemberAppInviteStateChanged,
       handleMemberSipInviteStateChanged
     )
+    eventEmitter?.off(EventType.MemberJoinRtcChannel)
     // eventEmitter?.off(EventType.RtcLocalAudioVolumeIndication)
     // eventEmitter?.off(EventType.RtcAudioVolumeIndication)
   }
+
   const handleCheckTime = (time: number, preTime: number) => {
     //5分钟到10分钟，并且上一秒是大于600秒则表示第一次进入10分钟。需要进行提示
     if (preTime > 600 && 300 < time && time <= 600) {
@@ -1778,6 +2117,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
       setTimeTipContent(t('meetingTime1Tips'))
       setShowTimeTip(true)
     }
+
     // 离开会议也不在
     if (time <= 0 || !meetingInfoRef.current.meetingNum) {
       remainingTimer.current && clearInterval(remainingTimer.current)
@@ -1796,6 +2136,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
       remainingTimer.current && clearInterval(remainingTimer.current)
       const showTimeTipByGlobalConfig =
         globalConfig?.appConfig?.ROOM_END_TIME_TIP?.enable
+
       if (
         !time ||
         !showTimeTipByGlobalConfig ||
@@ -1803,15 +2144,18 @@ export default function useEventHandler(): UseEventHandlerInterface {
       ) {
         return
       }
+
       setShowTimeTip(false)
       remainingSeconds.current = Math.max(time - 1, -1)
       handleCheckTime(remainingSeconds.current, time)
       remainingTimer.current = setInterval(() => {
         const preTime = remainingSeconds.current
+
         remainingSeconds.current = Math.max(preTime - 1, -1)
         handleCheckTime(remainingSeconds.current, preTime)
       }, 1000)
     },
+
     [globalConfig?.appConfig?.ROOM_END_TIME_TIP?.enable]
   )
 
@@ -1825,6 +2169,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
     } else {
       setShowReplayDialog(false)
     }
+
     memberListRef.current?.forEach((item) => {
       neMeeting?.replayRemoteStream({
         userUuid: item.uuid,
@@ -1832,6 +2177,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
       })
     })
   }
+
   const cancelFocus = () => {
     if (
       meetingInfoRef.current.localMember.uuid ===
@@ -1840,11 +2186,14 @@ export default function useEventHandler(): UseEventHandlerInterface {
       Toast.info(t('participantUnassignedActiveSpeaker'))
     }
   }
-  const unmuteMyAudio = (isOpenByMySelf = false) => {
+
+  const unmuteMyAudio = () => {
     const localMember = meetingInfoRef.current.localMember
+
     if (localMember.isAudioOn) {
       return
     }
+
     eventEmitter?.emit(EventType.NeedAudioHandsUp, false)
     // 主持人或者联席主持人直接开声音
     if (localMember.role === Role.host || localMember.role === Role.coHost) {
@@ -1862,6 +2211,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
       })
       return
     }
+
     if (localMember.isAudioConnected) {
       if (!localMember.isHandsUp) {
         setIsOpenAudioByHost(true)
@@ -1884,11 +2234,14 @@ export default function useEventHandler(): UseEventHandlerInterface {
       }
     }
   }
+
   const unmuteMyVideo = (isMySelf = false) => {
     const localMember = meetingInfoRef.current.localMember
+
     if (localMember.isVideoOn) {
       return
     }
+
     eventEmitter?.emit(EventType.NeedVideoHandsUp, false)
     if (
       (localMember.role === Role.host || localMember.role === Role.coHost) &&
@@ -1912,6 +2265,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
       setIsShowVideoDialog(true)
     }
   }
+
   const roomEndedHandler = (reason = 'OTHER') => {
     dispatch?.({
       type: ActionType.RESET_MEMBER,
@@ -1941,17 +2295,20 @@ export default function useEventHandler(): UseEventHandlerInterface {
     } catch (e) {
       console.log('destroy error', e)
     }
+
     globalDispatch &&
       globalDispatch({
         type: ActionType.JOIN_LOADING,
         data: false,
       })
     let leaveType: NEMeetingLeaveType = NEMeetingLeaveType[reason]
+
     if (!leaveType && leaveType !== 0) {
       leaveType = NEMeetingLeaveType.UNKNOWN
     }
+
     outEventEmitter?.emit(EventType.RoomEnded, leaveType)
-    eventEmitter?.removeAllListeners()
+    // eventEmitter?.removeAllListeners()
     try {
       leaveCallback && leaveCallback(leaveType)
     } catch (e) {
@@ -1964,9 +2321,11 @@ export default function useEventHandler(): UseEventHandlerInterface {
     const isHost =
       localMember.role === Role.host || localMember.role === Role.coHost
     const isScreen = !!screenUuid && screenUuid === localMember.uuid
+
     if (localMember.isAudioOn) {
       return
     }
+
     // 收到弹窗后未操作，主持人又关闭了全体音频的情况
     // 当前房间不允许自己打开，非主持人，当前非共享用户
     if (
@@ -1982,6 +2341,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
       })
       return
     }
+
     isOpenAudioByHostRef.current = false
     neMeeting
       ?.unmuteLocalAudio()
@@ -1993,6 +2353,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
             meetingInfoRef.current.localMember.uuid
           )
         }
+
         dispatch &&
           dispatch({
             type: ActionType.UPDATE_MEMBER,
@@ -2016,9 +2377,11 @@ export default function useEventHandler(): UseEventHandlerInterface {
     const isHost =
       localMember.role === Role.host || localMember.role === Role.coHost
     const isScreen = !!screenUuid && screenUuid === localMember.uuid
+
     if (localMember.isVideoOn) {
       return
     }
+
     // 收到弹窗后未操作，主持人又关闭了全体视频的情况
     // 当前房间不允许自己打开，非主持人，当前非共享用户
     if (
@@ -2034,6 +2397,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
       })
       return
     }
+
     isOpenVideoByHostRef.current = false
     neMeeting
       ?.unmuteLocalVideo()
@@ -2045,6 +2409,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
             meetingInfoRef.current.localMember.uuid
           )
         }
+
         dispatch &&
           dispatch({
             type: ActionType.UPDATE_MEMBER,

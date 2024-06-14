@@ -1,6 +1,8 @@
+import { PLAYOUT_DEFAULT_VOLUME, RECORD_DEFAULT_VOLUME } from '../config'
 import {
   AttendeeOffType,
   LayoutTypeEnum,
+  MeetingSetting,
   NEClientType,
   NEMeetingInfo,
   NEMenuIDs,
@@ -27,6 +29,8 @@ export const defaultMoreMenus = [
   { id: NEMenuIDs.sip },
   { id: NEMenuIDs.live },
   { id: NEMenuIDs.notification },
+  { id: NEMenuIDs.interpretation },
+  { id: NEMenuIDs.annotation },
 ]
 
 // H5默认主区
@@ -38,7 +42,10 @@ export const defaultMenusInH5 = [
 ]
 
 // H5默认更多区域
-export const defaultMoreMenusInH5 = [{ id: NEMenuIDs.notification }]
+export const defaultMoreMenusInH5 = [
+  { id: NEMenuIDs.notification },
+  { id: NEMenuIDs.interpretation },
+]
 
 export const defaultSmallMenus = [
   { id: NEMenuIDs.mic },
@@ -75,7 +82,7 @@ export const defaultSmallMenus = [
   // }
 ]
 
-export function createDefaultSetting() {
+export function createDefaultSetting(): MeetingSetting {
   return {
     normalSetting: {
       openVideo: false,
@@ -84,6 +91,7 @@ export function createDefaultSetting() {
       showSpeakerList: true,
       showToolbar: true,
       enableTransparentWhiteboard: false,
+      enableVoicePriorityDisplay: true,
       downloadPath: '',
       language: '',
     },
@@ -103,8 +111,8 @@ export function createDefaultSetting() {
       enableUnmuteBySpace: true,
       recordVolume: 0,
       playoutVolume: 0,
-      recordOutputVolume: 75,
-      playouOutputtVolume: 25,
+      recordOutputVolume: RECORD_DEFAULT_VOLUME,
+      playouOutputtVolume: PLAYOUT_DEFAULT_VOLUME,
       enableAudioAI: true,
       enableMusicMode: false,
       enableAudioEchoCancellation: true,
@@ -136,11 +144,12 @@ export function createMeetingInfoFactory(): NEMeetingInfo {
     },
     ownerUserUuid: '',
     meetingNum: '',
-    roomArchiveId: '',
+    roomArchiveId: 0,
     hostUuid: '',
     hostName: '',
     screenUuid: '',
     whiteboardUuid: '',
+    annotationEnabled: false,
     isSupportChatroom: true,
     focusUuid: '',
     activeSpeakerUuid: '',

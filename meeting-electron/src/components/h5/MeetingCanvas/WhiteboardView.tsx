@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useMemo, useRef } from 'react'
+import React, { useContext, useEffect } from 'react'
 import { GlobalContext as GlobalContextInterface } from '../../../types'
-import { GlobalContext, MeetingInfoContext } from '../../../store'
+import { GlobalContext } from '../../../store'
 import { useWhiteboard } from '../../../hooks/useWhiteboard'
 
 interface WhiteboardProps {
@@ -10,6 +10,7 @@ const WhiteboardView: React.FC<WhiteboardProps> = ({ className }) => {
   const { neMeeting } = useContext<GlobalContextInterface>(GlobalContext)
   const { dealTransparentWhiteboard, viewRef, enableDraw, isSetCanvasRef } =
     useWhiteboard()
+
   useEffect(() => {
     setTimeout(() => {
       if (viewRef.current) {

@@ -15,12 +15,10 @@ import {
   useMeetingInfoContext,
   useWaitingRoomContext,
 } from '../../../store'
-import { NEMeetingInfo } from '../../../types'
 import {
   ActionType,
   EventType,
   MeetingDeviceInfo,
-  MeetingEventType,
   MeetingSetting,
   UserEventType,
 } from '../../../types/innerType'
@@ -28,28 +26,27 @@ import { NEMeetingLeaveType } from '../../../types/type'
 import {
   checkIsDefaultDevice,
   debounce,
-  formatDate,
   getDefaultDeviceId,
   setDefaultDevice,
 } from '../../../utils'
 import { closeWindow, getWindow, openWindow } from '../../../utils/windowsProxy'
 import { getYuvFrame } from '../../../utils/yuvFrame'
 import AudioIcon from '../../common/AudioIcon'
-import Modal from '../../common/Modal'
+import Modal, { ConfirmModal } from '../../common/Modal'
 import PCTopButtons from '../../common/PCTopButtons'
-import Toast from '../../common/toast'
 import Chatroom from '../Chatroom/Chatroom'
 import Setting from '../Setting'
 import { SettingTabType } from '../Setting/Setting'
 import './index.less'
 import { useWaitingRoom } from '../../../hooks/useWaitingRoom'
 import useElectronInvite from '../../../hooks/useElectronInvite'
+
 interface WaitRoomProps {
   className?: string
 }
 
 const WAITING_ROOM_MEMBER_MSG_KEY = 'WAITING_ROOM_MEMBER_MSG_KEY'
-let closeModal: any
+let closeModal: ConfirmModal | null = null
 const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
   const { t } = useTranslation()
   const [audioPopoverVisible, setAudioPopoverVisible] = useState<boolean>(false)
@@ -79,8 +76,8 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
     notificationApi,
   } = useGlobalContext()
   const { waitingRoomInfo } = useWaitingRoomContext()
-  const closeModalRef = useRef<any>(null)
-  const closeTimerRef = useRef<any>(null)
+  const closeModalRef = useRef<ConfirmModal | null>(null)
+  const closeTimerRef = useRef<NodeJS.Timeout | null>(null)
   const meetingCanvasDomWidthResizeTimer = useRef<number | NodeJS.Timeout>()
   const { handlePostMessage } = usePostMessageHandle()
 
@@ -93,11 +90,12 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
     title: string
     content: string
     closeText: string
-    reason: any
+    reason: string
     notNeedAutoClose?: boolean
   }) {
     const { title, content, closeText, reason, notNeedAutoClose } = data
     let remainTime = 3
+
     closeModalRef.current = Modal.confirm({
       className: 'waiting-room-close-modal',
       title: title,
@@ -116,9 +114,11 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
     if (notNeedAutoClose) {
       return
     }
+
     if (closeTimerRef.current) {
       clearInterval(closeTimerRef.current)
     }
+
     closeTimerRef.current = setInterval(() => {
       remainTime -= 1
       if (remainTime <= 0) {
@@ -130,6 +130,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
         // setShowRecordTip(false)
         return
       }
+
       closeModalRef.current?.update((prevConfig) => ({
         ...prevConfig,
         footer: (
@@ -144,11 +145,10 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
       }))
     }, 1000)
   }
+
   const {
     openAudio,
     openVideo,
-    setOpenVideo,
-    setOpenAudio,
     setting,
     unReadMsgCount,
     isOffLine,
@@ -163,7 +163,6 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
     startPreview,
     stopPreview,
     openChatRoom,
-    setSetting,
     formatMeetingTime,
     videoCanvasWrapRef,
     setOpenChatRoom,
@@ -176,6 +175,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
   const getDevices = useCallback(() => {
     let _setting = meetingInfo.setting
     const tmpSetting = localStorage.getItem('ne-meeting-setting')
+
     if (tmpSetting) {
       try {
         _setting = JSON.parse(tmpSetting) as MeetingSetting
@@ -183,7 +183,9 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
         console.log('parse setting error', e)
       }
     }
+
     const previewController = neMeeting?.previewController
+
     if (previewController) {
       //@ts-ignore
       previewController.enumCameraDevices().then(({ data }) => {
@@ -192,12 +194,14 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
         const deviceId = _setting?.videoSetting.deviceId
         let isDefaultDevice = _setting?.videoSetting.isDefaultDevice
         let selectedDeviceId = deviceId as string
+
         if (data.length > 0) {
           if (!deviceId) {
             selectedDeviceId = data[0].deviceId
             isDefaultDevice = data[0].default
           } else {
-            let currentDevice: MeetingDeviceInfo
+            let currentDevice: MeetingDeviceInfo | undefined
+
             // 如果当前选择的是默认设备,则需要根据当前系统设备
             if (isDefaultDevice) {
               currentDevice = data.find((item) => !!item.defaultDevice)
@@ -206,14 +210,15 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
                 (item) => item.deviceId == deviceId && !item.default
               )
             }
+
             if (currentDevice) {
               selectedDeviceId = currentDevice.deviceId
             } else {
-              const deviceId = data[0].deviceId
               // 如果当前正在播放视频，则判断移除的设备是否是当前选择的
               selectedDeviceId = data[0].deviceId
             }
           }
+
           // if (selectedDeviceId != _setting?.videoSetting.deviceId) {
           setSelectedCamera(selectedDeviceId)
           previewController
@@ -236,7 +241,8 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
           // }
         }
       })
-      let _audioSetting = { ..._setting!.audioSetting }
+      let _audioSetting = { ..._setting.audioSetting }
+
       //@ts-ignore
       previewController.enumRecordDevices().then(({ data }) => {
         data = setDefaultDevice(data)
@@ -244,13 +250,15 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
         const recordDeviceId = _setting?.audioSetting.recordDeviceId
         const isDefaultDevice = checkIsDefaultDevice(recordDeviceId)
         let selectedDeviceId = recordDeviceId as string
+
         if (data.length > 0) {
           if (!recordDeviceId) {
             selectedDeviceId = data[0].deviceId
             _audioSetting.recordDeviceId = selectedDeviceId
             _audioSetting.isDefaultRecordDevice = data[0].defaultDevice
           } else {
-            let currentDevice: MeetingDeviceInfo
+            let currentDevice: MeetingDeviceInfo | undefined
+
             // 如果当前选择的是默认设备,则需要根据当前系统设备
             if (isDefaultDevice) {
               currentDevice = data.find((item) => !!item.defaultDevice)
@@ -259,6 +267,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
                 (item) => item.deviceId == recordDeviceId && !item.default
               )
             }
+
             if (currentDevice) {
               selectedDeviceId = currentDevice.deviceId
               _audioSetting.recordDeviceId = selectedDeviceId
@@ -273,6 +282,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
               _audioSetting.isDefaultRecordDevice = data[0].defaultDevice
             }
           }
+
           // if (selectedDeviceId != _audioSetting.recordDeviceId) {
           setSelectedMicrophone(selectedDeviceId)
           previewController?.switchDevice({
@@ -301,13 +311,15 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
             _setting?.audioSetting.playoutDeviceId
           )
           let selectedDeviceId = playoutDeviceId as string
+
           if (data.length > 0) {
             if (!playoutDeviceId) {
               selectedDeviceId = data[0].deviceId
               _audioSetting.playoutDeviceId = selectedDeviceId
               _audioSetting.isDefaultPlayoutDevice = data[0].defaultDevice
             } else {
-              let currentDevice: MeetingDeviceInfo
+              let currentDevice: MeetingDeviceInfo | undefined
+
               // 如果当前选择的是默认设备,则需要根据当前系统设备
               if (isDefaultDevice) {
                 currentDevice = data.find((item) => !!item.defaultDevice)
@@ -317,6 +329,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
                   (item) => item.deviceId == playoutDeviceId && !item.default
                 )
               }
+
               if (currentDevice) {
                 selectedDeviceId = currentDevice.deviceId
                 _audioSetting.playoutDeviceId = playoutDeviceId
@@ -331,6 +344,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
                 _audioSetting.isDefaultPlayoutDevice = data[0].defaultDevice
               }
             }
+
             // if (selectedDeviceId != _audioSetting.playoutDeviceId) {
             console.log('设置当前扬声器', selectedDeviceId)
             setSelectedSpeaker(selectedDeviceId)
@@ -358,6 +372,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
     isDefault?: boolean
   ) {
     const setting = { ...meetingInfo.setting } as MeetingSetting | undefined
+
     if (setting) {
       if (type === 'video') {
         if (setting.videoSetting) {
@@ -375,8 +390,10 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
           setting.audioSetting.isDefaultPlayoutDevice = isDefault
         }
       }
+
       if (window.isElectronNative) {
         const settingWindow = getWindow('settingWindow')
+
         settingWindow?.postMessage(
           {
             event: IPCEvent.changeSettingDeviceFromControlBar,
@@ -396,23 +413,30 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
   function windowLoadListener(childWindow) {
     const previewController = neMeeting?.previewController
     const previewContext = neMeeting?.roomService?.getPreviewRoomContext()
+
     function messageListener(e) {
       const { event, payload } = e.data
+
       if (event === 'previewContext' && previewController) {
         const { replyKey, fnKey, args } = payload
         const result = previewContext?.[fnKey]?.(...args)
+
         handlePostMessage(childWindow, result, replyKey)
       } else if (event === 'previewController' && previewController) {
         const { replyKey, fnKey, args } = payload
         const result = previewController[fnKey]?.(...args)
+
         handlePostMessage(childWindow, result, replyKey)
       }
     }
+
     childWindow?.addEventListener('message', messageListener)
   }
+
   function onSettingClick(type: SettingTabType) {
     if (window.isElectronNative) {
       const settingWindow = openWindow('settingWindow')
+
       windowLoadListener(settingWindow)
       const openSettingData = {
         event: 'openSetting',
@@ -420,6 +444,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
           type,
         },
       }
+
       if (settingWindow?.firstOpen === false) {
         settingWindow.postMessage(openSettingData, settingWindow.origin)
       } else {
@@ -435,7 +460,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
   }
 
   useEffect(() => {
-    window.ipcRenderer?.invoke('get-theme-color').then((isDark) => {
+    window.ipcRenderer?.invoke(IPCEvent.getThemeColor).then((isDark) => {
       setIsDarkMode(isDark)
     })
     getDevices()
@@ -443,6 +468,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
 
   useEffect(() => {
     const debounceHandle = debounce(getDevices, 1000)
+
     navigator.mediaDevices.addEventListener('devicechange', debounceHandle)
     return () => {
       navigator.mediaDevices.removeEventListener('devicechange', debounceHandle)
@@ -469,10 +495,12 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
     if (meetingInfo.isUnMutedAudio) {
       handleOpenAudio(false)
     }
+
     if (neMeeting?.alreadyJoin) {
       if (meetingInfo.localMember.isVideoOn) {
         handleOpenVideo(false)
       }
+
       if (meetingInfo.localMember.isAudioOn) {
         handleOpenAudio(false)
       }
@@ -480,6 +508,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
       if (meetingInfo.isUnMutedVideo) {
         handleOpenVideo(false)
       }
+
       return () => {
         setOpenChatRoom(false)
       }
@@ -488,7 +517,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
 
   function leaveMeeting() {
     const handleLeave = async () => {
-      closeModal.destroy()
+      closeModal?.destroy()
       closeModal = null
       try {
         await neMeeting?.leave()
@@ -503,6 +532,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
         )
       }
     }
+
     closeModal = Modal.confirm({
       title: t('leave'),
       content: t('meetingLeaveConfirm'),
@@ -514,7 +544,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
         <div className="nemeeting-modal-confirm-btns">
           <Button
             onClick={() => {
-              closeModal.destroy()
+              closeModal?.destroy()
               closeModal = null
             }}
           >
@@ -531,9 +561,11 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
   //@ts-ignore
   function handleVideoFrameData(uuid, bSubVideo, data, type, width, height) {
     const canvas = canvasRef.current
+
     if (canvas && videoCanvasWrapRef.current) {
       canvas.style.height = `${videoCanvasWrapRef.current.clientHeight}px`
     }
+
     yuvRef.current?.drawFrame(getYuvFrame(data, width, height))
   }
 
@@ -562,6 +594,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
         break
     }
   }
+
   function onSettingChange(setting: MeetingSetting) {
     localStorage.setItem('ne-meeting-setting', JSON.stringify(setting))
     dispatch?.({
@@ -571,6 +604,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
       },
     })
   }
+
   function handleCloseModal(reason: string) {
     closeModalRef.current?.destroy?.()
     outEventEmitter?.emit(EventType.RoomEnded, reason)
@@ -585,11 +619,14 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
       return t('fileMsg')
     }
   }
+
   function handleOpenChatroomOrMemberList(open: boolean) {
     window.ipcRenderer?.send(IPCEvent.openChatroomOrMemberList, open)
     const wrapDom = document.getElementById('nemeetingWaitingRoomWrapper')
+
     if (wrapDom) {
       const width = open ? wrapDom.clientWidth + 320 : wrapDom.clientWidth - 320
+
       wrapDom.style.width = `${width}px`
       wrapDom.style.flex = 'none'
       meetingCanvasDomWidthResizeTimer.current &&
@@ -614,6 +651,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
         startPreview(videoCanvasWrapRef.current as HTMLElement)
       }, 300)
     }
+
     if (openAudio) {
       setTimeout(() => {
         neMeeting?.previewController?.startRecordDeviceTest((level: number) => {
@@ -622,15 +660,19 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
       }, 300)
     }
   }
+
   const handleNewMessage = useCallback(
     (messages) => {
       if (openChatRoom || messages.length === 0) {
         return
       }
+
       const message = messages[0]
+
       if (!['text', 'file', 'image'].includes(message?.type)) {
         return
       }
+
       setUnReadMsgCount(unReadMsgCount + 1)
       notificationApi?.destroy(WAITING_ROOM_MEMBER_MSG_KEY)
       notificationApi?.info({
@@ -680,40 +722,53 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
         ),
       })
     },
+
     [openChatRoom, unReadMsgCount]
   )
+
   useEffect(() => {
     const canvas = canvasRef.current
+
     if (canvas) {
       yuvRef.current = YUVCanvas.attach(canvas)
     }
+
     function closeWindowHandle() {
       if (closeModal) {
         closeModal.destroy()
         closeModal = null
       }
+
       leaveMeeting()
     }
+
     if (window.isElectronNative) {
-      window.ipcRenderer?.on('main-close-before', closeWindowHandle)
+      // 先要通过ipc通知主进程关闭屏幕共享，恢复窗口大小
+      window.ipcRenderer?.send(IPCEvent.sharingScreen, {
+        method: 'stop',
+      })
+      window.ipcRenderer?.on(IPCEvent.mainCloseBefore, closeWindowHandle)
       window.ipcRenderer?.send(IPCEvent.inWaitingRoom, true)
       closeWindow('settingWindow')
     }
+
     return () => {
       if (window.isElectronNative) {
-        window.ipcRenderer?.off('main-close-before', closeWindowHandle)
+        window.ipcRenderer?.off(IPCEvent.mainCloseBefore, closeWindowHandle)
         window.ipcRenderer?.send(IPCEvent.inWaitingRoom, false)
         closeWindow('settingWindow')
       }
+
       closeModal && closeModal.destroy?.()
     }
   }, [])
+
   useEffect(() => {
     eventEmitter?.on(EventType.ReceiveChatroomMessages, handleNewMessage)
     return () => {
       eventEmitter?.off(EventType.ReceiveChatroomMessages, handleNewMessage)
     }
-  }, [handleNewMessage])
+  }, [handleNewMessage, eventEmitter])
 
   useEffect(() => {
     function handleAcceptInvite(options, callback) {
@@ -728,11 +783,12 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
       // 在会中
       eventEmitter?.emit(UserEventType.JoinOtherMeeting, options, callback)
     }
+
     eventEmitter?.on(EventType.AcceptInvite, handleAcceptInvite)
     return () => {
       eventEmitter?.off(EventType.AcceptInvite, handleAcceptInvite)
     }
-  }, [])
+  }, [eventEmitter, globalDispatch])
 
   return (
     <div
@@ -828,7 +884,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
                     >
                       {openAudio ? (
                         <AudioIcon
-                          className="icon iconfont"
+                          className="icon"
                           audioLevel={recordVolume || 0}
                         />
                       ) : (
@@ -864,6 +920,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
                             {playoutDeviceList.map((item) => {
                               const isSelected =
                                 item.deviceId == selectedSpeaker
+
                               return (
                                 <div
                                   className={`device-item ${
@@ -915,6 +972,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
                             {recordDeviceList.map((item) => {
                               const isSelected =
                                 item.deviceId == selectedMicrophone
+
                               return (
                                 <div
                                   className={`device-item ${
@@ -1012,6 +1070,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
                             {videoDeviceList.map((item) => {
                               const isSelected =
                                 selectedCamera === item.deviceId
+
                               return (
                                 <div
                                   className={`device-item ${

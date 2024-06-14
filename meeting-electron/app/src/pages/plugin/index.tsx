@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import PCTopButtons from '../../../../src/components/common/PCTopButtons';
 import MeetingPlugin from '../../../../src/components/common/PlugIn/MeetingPlugin';
@@ -22,6 +22,7 @@ const MeetingPluginPage: React.FC = () => {
     if (!pluginInfo?.isInMeeting) {
       return true;
     }
+
     return meetingInfo?.meetingNum ? true : false;
   }, [pluginInfo?.isInMeeting, meetingInfo?.meetingNum]);
 
@@ -35,8 +36,10 @@ const MeetingPluginPage: React.FC = () => {
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data;
+
       if (event === 'updateData') {
         const { pluginId, url, roomArchiveId, isInMeeting, title } = payload;
+
         pluginId &&
           setPluginInfo({
             title,
@@ -47,6 +50,7 @@ const MeetingPluginPage: React.FC = () => {
           });
       }
     }
+
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);

@@ -1,9 +1,7 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useMeetingInfoContext } from '../../../store'
 import WaitingRoom from '../WaitingRoom'
 import MeetingContent from './Meeting'
-import { drawWatermark, stopDrawWatermark } from '../../../utils/watermark'
-import { WATERMARK_STRATEGY } from '../../../types'
 
 interface AppProps {
   height: number

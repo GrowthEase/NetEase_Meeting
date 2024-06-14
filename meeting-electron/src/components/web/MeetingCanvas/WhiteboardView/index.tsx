@@ -1,9 +1,6 @@
-import React, { useContext, useEffect, useMemo, useRef } from 'react'
-import { GlobalContext, MeetingInfoContext } from '../../../../store'
-import {
-  GlobalContext as GlobalContextInterface,
-  NEMeetingInfo,
-} from '../../../../types'
+import React, { useContext, useEffect } from 'react'
+import { GlobalContext } from '../../../../store'
+import { GlobalContext as GlobalContextInterface } from '../../../../types'
 import './index.less'
 import { useWhiteboard } from '../../../../hooks/useWhiteboard'
 
@@ -16,7 +13,7 @@ const WhiteBoardView: React.FC<WhiteboardProps> = ({ className, isEnable }) => {
 
   const { neMeeting } = useContext<GlobalContextInterface>(GlobalContext)
 
-  const [whiteboardUrl, setWhiteboardUrl] = React.useState<string>('')
+  const [whiteboardUrl, setWhiteboardUrl] = React.useState<string>()
 
   const { viewRef, enableDraw, isSetCanvasRef, dealTransparentWhiteboard } =
     useWhiteboard()
@@ -25,6 +22,7 @@ const WhiteBoardView: React.FC<WhiteboardProps> = ({ className, isEnable }) => {
     const iframeDom = document.getElementById(
       'nemeeting-whiteboard-iframe'
     ) as HTMLIFrameElement
+
     if (iframeDom) {
       iframeDom.contentWindow?.postMessage(
         `{"action":"jsDirectCall","param":{"action":"setColor","params":["${color}"],"target":"drawPlugin"}}`,
@@ -38,6 +36,7 @@ const WhiteBoardView: React.FC<WhiteboardProps> = ({ className, isEnable }) => {
     const iframeDom = document.getElementById(
       'nemeeting-whiteboard-iframe'
     ) as HTMLIFrameElement
+
     if (iframeDom) {
       iframeDom.contentWindow?.postMessage(
         `{"action":"jsDirectCall","param":{"action":"addOrSetTool","params":[{"position":"left","insertAfterTool":"image","item":{"tool":"uploadCenter","hint":"上传文档","supportPptToH5":true,"supportDocToPic":true,"supportUploadMedia":false,"supportTransMedia":false}}],"target":"toolCollection"}}`,
@@ -49,6 +48,7 @@ const WhiteBoardView: React.FC<WhiteboardProps> = ({ className, isEnable }) => {
   useEffect(() => {
     // 添加一个延迟，否则如果入会时候其他端已经开启白板，则执行显示白板的时候工具栏样式有问题
     const whiteboardController = neMeeting?.whiteboardController
+
     if (!isElectronNode) {
       setTimeout(() => {
         if (viewRef.current) {
@@ -63,17 +63,20 @@ const WhiteBoardView: React.FC<WhiteboardProps> = ({ className, isEnable }) => {
         }
       })
     } else {
-      function postMessage(webJsBridge: string) {
+      const postMessage = (webJsBridge: string) => {
+        console.log('--------webJsBridge--------', webJsBridge)
         const paramString = webJsBridge
           .replace('WebJSBridge(', '')
           .replace(');', '')
         const iframeDom = document.getElementById(
           'nemeeting-whiteboard-iframe'
         ) as HTMLIFrameElement
+
         if (iframeDom) {
           iframeDom.contentWindow?.postMessage(paramString, '*')
         }
       }
+
       whiteboardController?.setupWhiteboardCanvas({
         // @ts-ignore
         onLogin: postMessage,
@@ -89,6 +92,7 @@ const WhiteBoardView: React.FC<WhiteboardProps> = ({ className, isEnable }) => {
       window.addEventListener('message', (e) => {
         try {
           const data = JSON.parse(e.data)
+
           switch (data.action) {
             case 'webPageLoaded':
               // @ts-ignore
@@ -111,10 +115,13 @@ const WhiteBoardView: React.FC<WhiteboardProps> = ({ className, isEnable }) => {
             default:
               break
           }
-        } catch {}
+        } catch (error) {
+          console.error('error', error)
+        }
       })
-      // @ts-ignore
-      const whiteboardUrl = whiteboardController?.getWhiteboardUrl()
+      const whiteboardUrl = whiteboardController?.getWhiteboardUrl?.()
+
+      console.log('--------whiteboardUrl--------', whiteboardUrl)
       setWhiteboardUrl(whiteboardUrl)
     }
   }, [])

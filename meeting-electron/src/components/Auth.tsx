@@ -1,6 +1,6 @@
 import { EventPriority, XKitReporter } from '@xkit-yx/utils'
 import WebRoomkit from 'neroom-web-sdk'
-import { useContext, useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { IPCEvent } from '../../app/src/types'
 import { errorCodeMap } from '../config'
@@ -24,7 +24,6 @@ import {
 } from '../types'
 import {
   memberAction,
-  NERoomBeautyEffectType,
   tagNERoomRtcAudioProfileType,
   tagNERoomRtcAudioScenarioType,
   UserEventType,
@@ -42,6 +41,8 @@ import { IntervalEvent } from '../utils/report'
 import Modal from './common/Modal'
 import Toast from './common/toast'
 import Dialog from './h5/ui/dialog'
+import { createDefaultSetting } from '../services'
+
 interface AuthProps {
   renderCallback?: () => void
 }
@@ -82,6 +83,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
     } catch (e) {
       console.warn('xkit', e)
     }
+
     outEventEmitter?.on(
       UserEventType.LoginWithPassword,
       (data: {
@@ -89,6 +91,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         callback: (e?: any) => void
       }) => {
         const { options, callback } = data
+
         callbackRef.current = callback
         loginWithPassword(options.username, options.password)
           .then(() => {
@@ -104,6 +107,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       UserEventType.Login,
       (data: { options: LoginOptions; callback: (e?: any) => void }) => {
         const { options, callback } = data
+
         login(options)
           .then(() => {
             callback && callback()
@@ -118,6 +122,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       UserEventType.Logout,
       (data: { callback: (e?: any) => void }) => {
         const { callback } = data
+
         logout()
           .then(() => {
             callback && callback()
@@ -140,6 +145,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       UserEventType.CreateMeeting,
       (data: { options: CreateOptions; callback: (e?: any) => void }) => {
         const { options, callback } = data
+
         callbackRef.current = callback
         joinOptionRef.current = options
         createMeeting(options)
@@ -161,6 +167,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       UserEventType.JoinOtherMeeting,
       (data: JoinOptions, callback) => {
         const options = { ...joinOptionRef.current, ...data }
+
         setPasswordDialogShow(false)
         joinMeetingHandler({
           options,
@@ -176,10 +183,12 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
           joinOptionRef.current.audio = data.isAudioOn ? 1 : 2
           joinOptionRef.current.video = data.isVideoOn ? 1 : 2
         }
+
         const options = {
           ...joinOptionRef.current,
           password: passwordRef.current,
         }
+
         setPasswordDialogShow(false)
         if (isAnonymousLogin) {
           outEventEmitter?.emit(UserEventType.AnonymousJoinMeeting, {
@@ -218,6 +227,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       (data: { options: JoinOptions; callback: any; isRejoin?: boolean }) => {
         setIsJoining(true)
         const { options, callback } = data
+
         callbackRef.current = callback
         anonymousJoin(options, data.isRejoin)
           .then(() => {
@@ -225,6 +235,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
             if (data.isRejoin) {
               return
             }
+
             callback && callback()
           })
           .catch((e) => {
@@ -232,6 +243,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
               handleRejoinFailed()
               return
             }
+
             callback && callback(e)
           })
           .finally(() => {
@@ -263,6 +275,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
   }) {
     setIsJoining(true)
     const { options, callback } = data
+
     callbackRef.current = callback
     dispatch?.({
       type: ActionType.RESET_MEMBER,
@@ -278,6 +291,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         if (data.isRejoin) {
           return
         }
+
         callback && callback()
       })
       .catch((e) => {
@@ -293,15 +307,18 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
 
             return
           }
+
           handleRejoinFailed()
           return
         }
+
         callback && callback(e)
       })
       .finally(() => {
         setIsJoining(false)
       })
   }
+
   function handleRejoinFailed() {
     rejoinCountRef.current += 1
     console.log('rejoinCountRef.current', rejoinCountRef.current)
@@ -334,16 +351,20 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       eventId: StaticReportType.MeetingKit_login,
       priority: EventPriority.HIGH,
     })
+
     try {
       loginReport.addParams({ type: 'token' })
-    } catch (e) {}
+    } catch (e) {
+      console.log('addParams error', e)
+    }
+
     return (neMeeting as NEMeetingService)
       .login({
         loginType: 1,
         loginReport: loginReport,
         ...options,
       })
-      .then((res) => {
+      .then(() => {
         try {
           loginReport.endWithSuccess()
           xkitReportRef.current?.reportEvent(loginReport)
@@ -355,7 +376,9 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
             .catch((e) => {
               console.log('getGlobalConfig error', e)
             })
-        } catch (e) {}
+        } catch (e) {
+          console.log('endWithSuccess error', e)
+        }
       })
       .catch((e) => {
         loginReport.endWith({
@@ -380,9 +403,13 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       eventId: StaticReportType.MeetingKit_login,
       priority: EventPriority.HIGH,
     })
+
     try {
       loginReport.addParams({ type: 'password' })
-    } catch (e) {}
+    } catch (e) {
+      console.log('addParams error', e)
+    }
+
     return (neMeeting as NEMeetingService)
       .login({
         username,
@@ -390,11 +417,13 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         loginType: 2,
         loginReport,
       })
-      .then((res) => {
+      .then(() => {
         try {
           loginReport.endWithSuccess()
           xkitReportRef.current?.reportEvent(loginReport)
-        } catch (e) {}
+        } catch (e) {
+          console.log('endWithSuccess error', e)
+        }
       })
       .catch((e) => {
         loginReport.endWith({
@@ -406,11 +435,13 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         throw e
       })
   }
+
   const createMeeting = (options: CreateOptions): Promise<void> => {
     const createMeetingReport = new IntervalEvent({
       eventId: StaticReportType.MeetingKit_start_meeting,
       priority: EventPriority.HIGH,
     })
+
     globalDispatch?.({
       type: ActionType.JOIN_LOADING,
       data: true,
@@ -425,7 +456,10 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         try {
           createMeetingReport.endWithSuccess()
           xkitReportRef.current?.reportEvent(createMeetingReport)
-        } catch (e) {}
+        } catch (e) {
+          console.log('endWithSuccess error', e)
+        }
+
         handleJoinSuccess(options)
       })
       .catch((e) => {
@@ -504,7 +538,8 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
   }) {
     const options = joinOptionRef.current as JoinOptions
     const meeting = neMeeting?.getMeetingInfo()
-    const setting = getLocalStorageSetting()
+    const setting = getLocalStorageSetting() || createDefaultSetting()
+
     if (setting) {
       dispatch?.({
         type: ActionType.UPDATE_MEETING_INFO,
@@ -513,13 +548,16 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         },
       })
     }
+
     if (meeting && meeting.meetingInfo) {
       if (joinOptionRef.current) {
         joinOptionRef.current.meetingNum = meeting.meetingInfo.meetingNum
       }
+
       const meetingInfo = meeting.meetingInfo
       const memberList = meeting.memberList
       const hostMember = memberList.find((member) => member.role === Role.host)
+
       if (
         hostMember &&
         hostMember?.uuid !== meetingInfo.localMember.uuid &&
@@ -527,7 +565,8 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       ) {
         Modal.confirm({
           key: 'takeBackTheHost',
-          title: t('meetingReclaimHostTip', { user: hostMember.name }),
+          title: t('meetingReclaimHost'),
+          content: t('meetingReclaimHostTip', { user: hostMember.name }),
           okText: t('meetingReclaimHost'),
           cancelText: t('meetingReclaimHostCancel'),
           onOk: async () => {
@@ -542,6 +581,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
           },
         })
       }
+
       if (meetingInfo.localMember.role === Role.coHost) {
         Toast.info(t('participantAssignedCoHost'))
       } else if (
@@ -552,6 +592,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       }
 
       const whiteboardUuid = meetingInfo.whiteboardUuid
+
       if (!whiteboardUuid && joinOptionRef.current?.defaultWindowMode === 2) {
         neMeeting?.roomContext
           ?.updateRoomProperty(
@@ -569,10 +610,12 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
           neMeeting?.whiteboardController?.stopWhiteboardShare()
           meeting.meetingInfo.whiteboardUuid = ''
         }
+
         if (joinOptionRef.current?.defaultWindowMode === 2) {
           Toast.info(t('screenShareNotAllow'))
         }
       }
+
       // 入会如果房间不允许开启视频则需要提示
       if (
         (meetingInfo.videoOff.startsWith(AttendeeOffType.offNotAllowSelfOn) ||
@@ -584,6 +627,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       ) {
         Toast.info(t('participantHostMuteAllVideo'))
       }
+
       if (
         (meetingInfo.audioOff.startsWith(AttendeeOffType.offNotAllowSelfOn) ||
           meetingInfo.audioOff.startsWith(AttendeeOffType.offAllowSelfOn)) &&
@@ -594,51 +638,13 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       ) {
         Toast.info(t('participantHostMuteAllAudio'))
       }
+
       // @ts-ignore
       neMeeting?.rtcController?.enableAudioVolumeIndication?.(true, 200)
       // 如果存在设置缓存则外部没有传入情况下使用设置选项
       if (setting) {
-        const { normalSetting, audioSetting, videoSetting, beautySetting } =
-          setting
-        if (beautySetting && beautySetting.beautyLevel > 0) {
-          const beautyLevel = beautySetting.beautyLevel
-          // @ts-ignore
-          neMeeting?.previewController?.startBeauty?.()
-          // @ts-ignore
-          neMeeting?.previewController?.enableBeauty?.(true)
-          // @ts-ignore
-          neMeeting?.previewController?.setBeautyEffect?.(
-            NERoomBeautyEffectType.kNERoomBeautyWhiten,
-            beautyLevel / 10
-          )
-          // @ts-ignore
-          neMeeting?.previewController?.setBeautyEffect?.(
-            NERoomBeautyEffectType.kNERoomBeautySmooth,
-            (beautyLevel / 10) * 0.8
-          )
-          // @ts-ignore
-          neMeeting?.previewController?.setBeautyEffect?.(
-            NERoomBeautyEffectType.kNERoomBeautyFaceRuddy,
-            beautyLevel / 10
-          )
-          // @ts-ignore
-          neMeeting?.previewController?.setBeautyEffect?.(
-            NERoomBeautyEffectType.kNERoomBeautyFaceSharpen,
-            beautyLevel / 10
-          )
-          // @ts-ignore
-          neMeeting?.previewController?.setBeautyEffect?.(
-            NERoomBeautyEffectType.kNERoomBeautyThinFace,
-            (beautyLevel / 10) * 0.8
-          )
-        }
-        if (beautySetting && beautySetting.virtualBackgroundPath) {
-          // @ts-ignore
-          neMeeting?.previewController?.enableVirtualBackground?.(
-            true,
-            beautySetting.virtualBackgroundPath
-          )
-        }
+        const { normalSetting, audioSetting, videoSetting } = setting
+
         if (window.isElectronNative) {
           //@ts-ignore
           neMeeting?.rtcController?.adjustPlaybackSignalVolume(
@@ -657,14 +663,18 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
               neMeeting?.rtcController?.adjustPlaybackSignalVolume(
                 audioSetting.playouOutputtVolume
               )
-            } catch (e) {}
+            } catch (e) {
+              console.log('调节播放音量error', e)
+            }
           }
+
           if (audioSetting.recordOutputVolume !== undefined) {
             neMeeting?.rtcController?.adjustRecordingSignalVolume(
               audioSetting.recordOutputVolume
             )
           }
         }
+
         audioSetting.recordDeviceId &&
           neMeeting?.changeLocalAudio(audioSetting.recordDeviceId)
         audioSetting.playoutDeviceId &&
@@ -707,6 +717,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
           } catch (e) {
             console.log('处理高级音频设置error', e)
           }
+
           try {
             // @ts-ignore
             neMeeting?.enableAudioVolumeAutoAdjust(
@@ -768,6 +779,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
           meeting.meetingInfo.isUnMutedAudio = options.audio === 1
           meeting.meetingInfo.isUnMutedVideo = options.video === 1
         }
+
         meeting.meetingInfo = {
           ...options,
           ...meeting.meetingInfo,
@@ -776,11 +788,13 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         } as NEMeetingSDKInfo
       }
     }
+
     // if (window.isElectronNative) {
     //   window.ipcRenderer?.send(IPCEvent.changeMeetingStatus, true)
     // }
     if (meeting) {
       const meetingInfo = meeting.meetingInfo
+
       // 入会判断是正在录制，如果在录制则弹框提醒
       if (
         meetingInfo.isCloudRecording &&
@@ -791,33 +805,40 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       ) {
         eventEmitter?.emit(MeetingEventType.needShowRecordTip, true)
       }
+
       // 存在如果两个端同时入会，本端入会成功获取到的成员列表可能还未有另外一个端。但是本端会有收到memberJoin事件
       if (memberList && memberList.length > 0) {
         memberList.forEach((member) => {
           const index = meeting.memberList.findIndex((m) => {
             return member.uuid == m.uuid
           })
+
           if (index < 0) {
             console.log('存在未同步>>', member)
             meeting.memberList.push(member)
           }
         })
       }
+
       // 获取初始化直播状态
       const liveInfo = neMeeting?.getLiveInfo()
+
       if (liveInfo) {
         meeting.meetingInfo.liveState = liveInfo.state
       }
+
       dispatch &&
         dispatch({
           type: ActionType.SET_MEETING,
           data: meeting,
         })
     }
+
     neMeeting?.getWaitingRoomInfo().then((res) => {
       if (!res) {
         return
       }
+
       neMeeting?.updateWaitingRoomUnReadCount(res.memberList.length)
       waitingRoomDispatch?.({
         type: ActionType.WAITING_ROOM_UPDATE_INFO,
@@ -868,6 +889,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         if (window.isElectronNative) {
           window.ipcRenderer?.send(IPCEvent.changeMeetingStatus, false)
         }
+
         passwordRef.current && setErrorText(t('meetingWrongPassword'))
         joinOptionRef.current = options
         // 会议状态回调：会议状态为等待，原因是需要输入密码
@@ -906,6 +928,11 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
             UserEventType.onMeetingStatusChanged,
             NEMeetingStatus.MEETING_STATUS_FAILED
           )
+        }
+
+        // 重新加入，人数上限就直接退出
+        if (isRejoin && err.code === 1022) {
+          eventEmitter?.emit(EventType.RoomEnded, 'LEAVE_BY_SELF')
         }
 
         hideLoadingPage()
@@ -951,11 +978,13 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       Toast.info('请输入会议号')
       throw new Error('meetingNum is empty')
     }
+
     joinOptionRef.current = options
     const joinMeetingReport = new IntervalEvent({
       eventId: StaticReportType.MeetingKit_join_meeting,
       priority: EventPriority.HIGH,
     })
+
     joinMeetingReport.addParams({
       type: 'normal',
       meetingNum: options.meetingNum,
@@ -971,12 +1000,16 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
     const joinFunc = isJoinOther
       ? _neMeeting.acceptInvite.bind(_neMeeting)
       : _neMeeting.join.bind(_neMeeting)
+
     return joinFunc({ ...options, joinMeetingReport })
-      .then((res) => {
+      .then(() => {
         try {
           joinMeetingReport.endWithSuccess()
           xkitReportRef.current?.reportEvent(joinMeetingReport)
-        } catch (e) {}
+        } catch (e) {
+          console.log('endWithSuccess error', e)
+        }
+
         handleJoinSuccess(options)
       })
       .catch((err) => {
@@ -988,17 +1021,24 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
           try {
             joinMeetingReport.endWithSuccess()
             xkitReportRef.current?.reportEvent(joinMeetingReport)
-          } catch (e) {}
+          } catch (e) {
+            console.log('endWithSuccess error', e)
+          }
+
           handleJoinSuccess(options)
           return Promise.resolve()
         }
+
         try {
           joinMeetingReport.endWith({
             code: err.code || -1,
             msg: err.msg || err.message || 'Failure',
           })
           xkitReportRef.current?.reportEvent(joinMeetingReport)
-        } catch (e) {}
+        } catch (e) {
+          console.log('endWith error', e)
+        }
+
         handleJoinFail(err, options, isRejoin)
         return Promise.reject(err)
       })
@@ -1009,16 +1049,21 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       Toast.info('请输入会议号')
       throw new Error('meetingId is empty')
     }
+
     const joinMeetingReport = new IntervalEvent({
       eventId: StaticReportType.MeetingKit_join_meeting,
       priority: EventPriority.HIGH,
     })
+
     try {
       joinMeetingReport.addParams({
         type: 'anonymous',
         meetingNum: options.meetingNum,
       })
-    } catch (e) {}
+    } catch (e) {
+      console.log('addParams error', e)
+    }
+
     globalDispatch &&
       globalDispatch({
         type: ActionType.JOIN_LOADING,
@@ -1033,13 +1078,18 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         if ([-101, -102].includes(res?.code)) {
           throw res
         }
+
         try {
           joinMeetingReport.endWithSuccess()
           xkitReportRef.current?.reportEvent(joinMeetingReport)
-        } catch (e) {}
+        } catch (e) {
+          console.log('endWithSuccess error', e)
+        }
+
         handleJoinSuccess(options)
       })
       .catch((err) => {
+        console.log('anonymousJoin error', err)
         if (
           err.data &&
           (err.data.message?.includes('mediaDevices is not support') ||
@@ -1049,17 +1099,24 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
           try {
             joinMeetingReport.endWithSuccess()
             xkitReportRef.current?.reportEvent(joinMeetingReport)
-          } catch (e) {}
+          } catch (e) {
+            console.log('endWithSuccess error', e)
+          }
+
           handleJoinSuccess(options)
           return Promise.resolve()
         }
+
         try {
           joinMeetingReport.endWith({
             code: err.code || -1,
             msg: err.msg || err.message || 'Failure',
           })
           xkitReportRef.current?.reportEvent(joinMeetingReport)
-        } catch (e) {}
+        } catch (e) {
+          console.log('endWith error', e)
+        }
+
         handleJoinFail(err, options, isRejoin)
         return Promise.reject(err)
       })
@@ -1071,11 +1128,13 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       setErrorText(t('meetingEnterPassword'))
       return
     }
+
     outEventEmitter?.emit(
       UserEventType.onMeetingStatusChanged,
       NEMeetingStatus.MEETING_STATUS_CONNECTING
     )
     const options = { ...joinOptionRef.current, password }
+
     joinOptionRef.current = options as JoinOptions
     if (isAnonymousLogin) {
       outEventEmitter?.emit(UserEventType.AnonymousJoinMeeting, {
@@ -1118,6 +1177,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
           if (window.isElectronNative) {
             window.ipcRenderer?.send(IPCEvent.changeMeetingStatus, true)
           }
+
           setPasswordDialogShow(false)
           if (isJoining) return
           joinMeetingWithPsw()
@@ -1137,6 +1197,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
             required
             onChange={(e) => {
               let val = e.target.value
+
               val = val.replace(/[^\d]/g, '').slice(0, 6)
               setPassword(val)
               passwordRef.current = val

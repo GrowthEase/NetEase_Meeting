@@ -12,6 +12,7 @@ import {
   NEMeeting,
   NEMeetingIdDisplayOption,
   NEMeetingInfo,
+  NEMeetingInterpretationSettings,
   NEMeetingScheduledMember,
   NEMeetingSDK,
   NEMember,
@@ -44,6 +45,7 @@ export interface CreateMeetingResponse {
   roomArchiveId: string
   ownerUserUuid: string
   scheduledMembers?: NEMeetingScheduledMember[]
+  timezoneId?: string
   settings: {
     roomInfo: {
       roomConfigId: number
@@ -78,7 +80,7 @@ export interface CreateMeetingResponse {
     }
     endRule: {
       type: number
-      date: number
+      date: string
       times: number
     }
   }
@@ -182,6 +184,7 @@ export enum EventType {
   MyWaitingRoomStatusChanged = 'myWaitingRoomStatusChanged',
   WaitingRoomInfoUpdated = 'waitingRoomInfoUpdated',
   WaitingRoomAllMembersKicked = 'waitingRoomAllMembersKicked',
+  WaitingRoomOnManagersUpdated = 'WaitingRoomOnManagersUpdated',
   RoomLiveBackgroundInfoChanged = 'roomLiveBackgroundInfoChanged',
   RoomBlacklistStateChanged = 'onRoomBlacklistStateChanged',
   MemberSipInviteStateChanged = 'onMemberSipInviteStateChanged',
@@ -192,16 +195,38 @@ export enum EventType {
   ActiveSpeakerActiveChanged = 'OnActiveSpeakerActiveChanged',
   ActiveSpeakerListChanged = 'OnActiveSpeakerListChanged',
   // 通知
-  OnReceiveSessionMessage = 'onReceiveSessionMessage',
-  OnChangeRecentSession = 'onChangeRecentSession',
+  onSessionMessageReceived = 'onSessionMessageReceived',
+  onSessionMessageRecentChanged = 'onSessionMessageRecentChanged',
   OnMeetingInviteStatusChange = 'onMeetingInviteStatusChanged',
   OnMeetingInvite = 'onMeetingInvite',
-  OnDeleteSessionMessage = 'onDeleteSessionMessage',
+  onSessionMessageDeleted = 'onSessionMessageDeleted',
   OnDeleteAllSessionMessage = 'onDeleteAllSessionMessage',
+  onInterpretationSettingChange = 'onInterpretationSettingChange',
 
   ChangeDeviceFromSetting = 'changeDeviceFromSetting',
   // 私聊
   OnPrivateChatMemberIdSelected = 'onPrivateChatMemberIdSelected',
+  // 预约会议页面模式
+  OnScheduledMeetingPageModeChanged = 'onScheduledMeetingPageModeChanged',
+  // 历史会议页面模式
+  OnHistoryMeetingPageModeChanged = 'onHistoryMeetingPageModeChanged',
+  // 批注
+  RoomAnnotationEnableChanged = 'onRoomAnnotationEnableChanged',
+  RoomAnnotationWebJsBridge = 'roomAnnotationWebJsBridge',
+  AuthEvent = 'AuthEvent',
+  RtcScreenShareVideoResize = 'rtcScreenShareVideoResize',
+  // 最大人数变更
+  RoomMaxMembersChanged = 'roomMaxMembersChanged',
+
+  // 译员全部离开事件
+  OnInterpreterLeaveAll = 'onInterpreterLeaveAll',
+
+  // 对应频道译员离开
+  OnInterpreterLeave = 'onInterpreterLeave',
+  // 本端被移除译员
+  MyInterpreterRemoved = 'MyInterpreterRemoved',
+
+  RtcChannelDisconnect = 'RtcChannelDisconnect',
 }
 
 export interface GetAccountInfoListResponse {
@@ -217,10 +242,11 @@ export interface SearchAccountInfo {
   // 非服务端返回，端上用于通讯录设置
   role?: Role
   disabled?: boolean
+  inInviting?: boolean
 }
 
 export enum MeetingEventType {
-  rtcChannelError = 'rtcChannelError',
+  rtcChannelError = 'meetingRtcChannelError',
   needShowRecordTip = 'needShowRecordTip',
   leaveOrEndRoom = 'leaveOrEndRoom',
   noCameraPermission = 'noCameraPermission',
@@ -303,6 +329,7 @@ export enum hostAction {
   changeChatPermission = 70,
   changeWaitingRoomChatPermission = 71,
   changeGuestJoin = 72,
+  annotationPermission = 73,
 }
 
 export type NERoomChatMessageType =
@@ -465,6 +492,7 @@ export interface GlobalContext {
   showScreenShareUserVideo?: boolean
   toolBarList?: ToolBarList
   moreBarList?: MoreBarList
+  interpretationSetting?: NEMeetingInterpretationSettings
 }
 export enum RecordState {
   NotStart = 'notStart',
@@ -531,6 +559,13 @@ export type GetMeetingConfigResponse = {
       waitingRoom: boolean
       sipInvite: boolean
       appInvite: boolean
+      interpretation?: {
+        enable: boolean
+        maxInterpreters: number
+        enableCustomLang: boolean
+        maxCustomLanguageLength: number
+        maxLanguagesPerInterpreter: number
+      }
     }
     MEETING_BEAUTY?: {
       enable: boolean
@@ -675,20 +710,6 @@ export interface IMInfo {
   chatRoomId: string
 }
 
-export type MeetingAccountInfo = {
-  nickname: string
-  privateMeetingNum: string
-  shortMeetingNum: string // 个人会议短号
-  avatar?: string
-  serviceBundle?: {
-    name: string
-    meetingMaxMinutes: number
-    meetingMaxMembers: number
-    expireTimeStamp: number
-    expireTip: string
-  }
-}
-
 export interface NEMeetingLoginByPasswordOptions {
   username: string
   password: string
@@ -710,8 +731,9 @@ export enum LoginType {
 }
 
 export interface NEMeetingGetListOptions {
-  startTime: number
-  endTime: number
+  startTime?: number
+  endTime?: number
+  states?: number[]
 }
 
 export interface NEMeetingCreateOptions extends NEMeetingBaseOptions {
@@ -736,6 +758,13 @@ export interface NEMeetingCreateOptions extends NEMeetingBaseOptions {
   enableJoinBeforeHost?: boolean
   recurringRule?: Record<string, any>
   scheduledMembers?: NEMeetingScheduledMember[]
+  timezoneId?: string
+  interpretation?: {
+    interpreters?: {
+      [key: string]: string[]
+    }
+    started: boolean
+  }
 }
 interface NEMeetingBaseOptions {
   meetingId?: number
@@ -819,6 +848,8 @@ export enum NEMenuIDs { // 菜单项ID
   record = 27,
   setting = 28,
   notification = 29,
+  interpretation = 31,
+  annotation = 30,
 }
 
 export enum SingleMeunIds { // 单状态按钮
@@ -858,6 +889,7 @@ export interface MeetingSetting {
     showSpeakerList: boolean
     showToolbar: boolean
     enableTransparentWhiteboard: boolean
+    enableVoicePriorityDisplay: boolean
     downloadPath: string
     language: string
   }
@@ -1196,4 +1228,17 @@ export interface MeetingConnectMember {
   avatar: string
   dept: string
   phoneNumber: string
+}
+
+export interface ServerError {
+  msg: string
+  message: string
+  code: number
+}
+
+export interface InterpreterSettingRef {
+  getNeedUpdate(): void
+  getNeedSave(): void
+  handleCloseBeforeMeetingWindow(): void
+  handleCloseInMeetingWindow(): void
 }

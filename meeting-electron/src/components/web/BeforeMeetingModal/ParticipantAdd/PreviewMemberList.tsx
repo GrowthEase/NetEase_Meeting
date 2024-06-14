@@ -1,16 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { SearchAccountInfo } from '../../../../types'
 import { NEMeetingScheduledMember, Role } from '../../../../types/type'
 import UserAvatar from '../../../common/Avatar'
 import useMembers from './useMembers'
 import { Button } from 'antd'
-import useUserInfo from '../../../../hooks/useUserInfo'
 import { LOCALSTORAGE_USER_INFO } from '../../../../config'
 import { useTranslation } from 'react-i18next'
 import NEMeetingService from '../../../../services/NEMeeting'
-import { LoginUserInfo } from '../../../../../app/src/types'
 import { getLocalUserInfo } from '../../../../utils'
-import { getDefaultConfig } from 'antd-mobile/es/components/config-provider'
 
 interface PreviewMemberListProps {
   members?: NEMeetingScheduledMember[]
@@ -43,14 +40,17 @@ const PreviewMemberList: React.FC<PreviewMemberListProps> = ({
     if (members && members.length > 0) {
       getAccountInfoListByPage(1, pageSize, members).then((res) => {
         const userString = localStorage.getItem(LOCALSTORAGE_USER_INFO)
+
         if (userString) {
           const user = JSON.parse(userString)
           const membersBySort = sortMembers(res, user.userUuid || '')
+
           setSelectedMembers(membersBySort)
         }
       })
     } else {
       const userInfo = getLocalUserInfo()
+
       userInfo && setSelectedMembers(getDefaultMembers(userInfo))
     }
   }, [members])
@@ -60,6 +60,7 @@ const PreviewMemberList: React.FC<PreviewMemberListProps> = ({
       host: t('host'),
       cohost: t('coHost'),
     }
+
     return role ? roleMap[role] : ''
   }
 
@@ -69,9 +70,11 @@ const PreviewMemberList: React.FC<PreviewMemberListProps> = ({
 
   useEffect(() => {
     const scrollElement = scrollRef.current
+
     if (!scrollElement) {
       return
     }
+
     function handleScroll() {
       //@ts-ignore
       if (
@@ -94,10 +97,11 @@ const PreviewMemberList: React.FC<PreviewMemberListProps> = ({
           })
       }
     }
+
     if (isOpen) {
-      scrollRef.current?.addEventListener('scroll', handleScroll)
+      scrollElement.addEventListener('scroll', handleScroll)
       return () => {
-        scrollRef.current?.removeEventListener('scroll', handleScroll)
+        scrollElement.removeEventListener('scroll', handleScroll)
       }
     }
   }, [selectedMembers, isOpen])
@@ -105,24 +109,26 @@ const PreviewMemberList: React.FC<PreviewMemberListProps> = ({
   return (
     <div className="nemeeting-schedule-participant-preview">
       <div className="nemeeting-schedule-participant-preview-header">
-        <div>
+        <div className="nemeeting-schedule-participant-meeting-attendees">
           <span>{t('meetingAttendees')}</span>
+        </div>
+        <div>
           <span className="nemeeting-schedule-participant-preview-count">
             {t('meetingAttendeeCount', {
-              count: members?.length,
+              count: members?.length || 1,
             })}
           </span>
+          <Button style={{ padding: '0' }} type="link" onClick={onOpenHandler}>
+            {isOpen ? t('meetingClose') : t('meetingOpen')}
+          </Button>
         </div>
-        <Button type="link" onClick={onOpenHandler}>
-          {isOpen ? t('meetingClose') : t('meetingOpen')}
-        </Button>
       </div>
       {isOpen ? (
         <div
           className="nemeeting-schedule-participant-preview-content-h"
           ref={scrollRef}
         >
-          {selectedMembers.map((item, index) => {
+          {selectedMembers.map((item) => {
             return (
               <div
                 className="nemeeting-schedule-participant-preview-member"
@@ -165,7 +171,7 @@ const PreviewMemberList: React.FC<PreviewMemberListProps> = ({
         <div className="nemeeting-schedule-participant-preview-content">
           {
             // 获取selectedMembers前面7个进展展示
-            selectedMembers.slice(0, 8).map((item, index) => {
+            selectedMembers.slice(0, 8).map((item) => {
               return (
                 <PreviewMemberItem
                   key={item.userUuid}
@@ -180,6 +186,7 @@ const PreviewMemberList: React.FC<PreviewMemberListProps> = ({
     </div>
   )
 }
+
 interface PreviewMemberItemProps {
   member: SearchAccountInfo
   ownerUserUuid: string

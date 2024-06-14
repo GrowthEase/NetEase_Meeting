@@ -7,6 +7,13 @@
     left: 0;
     right: 40px;
   }
+  .title {
+    font-size: 16px;
+    line-height: 24px;
+    text-align: center;
+    letter-spacing: 0em;
+    color: #333333;
+  }
   height: 40px;
   font-weight: normal;
   line-height: 40px;
@@ -15,7 +22,13 @@
   border-bottom: 1px solid #ebedf0;
   position: relative;
 }
-
+.beauty-setting .nemeeting-radio-button-wrapper:last-child {
+  display: inline-block;
+  width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .monitoring-wrapper {
   display: flex;
   flex-direction: column;
@@ -23,6 +36,38 @@
   align-items: center;
   padding: 16px 40px;
   font-size: 14px;
+  .nemeeting-radio-group {
+    display: flex;
+    align-items: center;
+    height: 28px;
+  }
+  .nemeeting-radio-button-wrapper {
+    width: 100px;
+    height: 28px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .nemeeting-radio-button-wrapper:first-child {
+    border-start-start-radius: 4px;
+    border-end-start-radius: 4px;
+    line-height: 28px;
+  }
+  .nemeeting-radio-button-wrapper:last-child {
+    border-start-end-radius: 4px;
+    border-end-end-radius: 4px;
+    line-height: 28px;
+  }
+  .nemeeting-radio-button-wrapper > span:last-child {
+    display: inline-block;
+    width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    height: 26px;
+  }
   .chart-tips {
     width: 100%;
     color: #999999;

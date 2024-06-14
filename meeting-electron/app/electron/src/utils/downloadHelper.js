@@ -11,6 +11,7 @@ let downloadItem = null;
 function hashFile(file, algorithm = 'md5', encoding = 'hex', options) {
   return new Promise((resolve, reject) => {
     const hash = createHash(algorithm);
+
     hash.on('error', reject).setEncoding(encoding);
 
     fs.createReadStream(file, {
@@ -42,6 +43,7 @@ function downloadUpdateFile({
     console.log('已有请求正在下载 忽略: ', fileUrl);
     return;
   }
+
   canceledBySelf = false;
   if (forceUpdate && isDownloading) {
     console.log('强制更新开始');
@@ -76,6 +78,7 @@ function downloadUpdateFile({
     },
     onProgress: (progress) => {
       const { percent } = progress;
+
       console.log('progress', percent);
       onprogress?.(Math.round(percent * 100));
     },
@@ -86,9 +89,11 @@ function downloadUpdateFile({
       try {
         console.log('md4 file', dl.getSavePath());
         const updateFileMd5 = await hashFile(dl.getSavePath());
+
         console.log('md5', updateFileMd5);
         if (updateFileMd5 !== md5) {
           const error = new Error('文件md5校验失败，请重新下载');
+
           done?.(error);
         } else {
           done?.();
@@ -105,6 +110,7 @@ function downloadUpdateFile({
         console.log('强制下载', canceledBySelf);
         return;
       }
+
       isDownloading = false;
       if (err instanceof electronDl.CancelError) {
         done?.(new Error('下载被中断'));
@@ -116,6 +122,7 @@ function downloadUpdateFile({
       cancelled = false;
     });
 }
+
 function cancelUpdate() {
   canceledBySelf = true;
   downloadItem?.cancel?.();

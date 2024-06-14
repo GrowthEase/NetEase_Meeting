@@ -1,6 +1,6 @@
 import Styles from './index.less';
 import { Button, ConfigProvider } from 'antd';
-import { useEffect, useState, FC } from 'react';
+import React, { useEffect, useState, FC } from 'react';
 
 const antdPrefixCls = 'nemeeting';
 
@@ -45,6 +45,7 @@ const Authorization: FC<AuthorizationProps> = ({
       const timer = setInterval(async () => {
         // @ts-ignore
         const { ipcRenderer } = window;
+
         if (ipcRenderer) {
           const {
             camera: hasCameraAuthorization,
@@ -83,6 +84,7 @@ const Authorization: FC<AuthorizationProps> = ({
       onCancel?.();
     }
   };
+
   return (
     <div
       style={{ borderRadius: showBtn ? '0px' : '4px' }}

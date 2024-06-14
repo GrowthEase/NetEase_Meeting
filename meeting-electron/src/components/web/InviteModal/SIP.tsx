@@ -1,5 +1,4 @@
-import type { TabsProps } from 'antd'
-import { Button, Tabs } from 'antd'
+import { Button, Tabs, TabsProps } from 'antd'
 import { AutoComplete } from 'antd/es'
 import EventEmitter from 'eventemitter3'
 import { NERoomMember } from 'neroom-web-sdk'
@@ -111,14 +110,14 @@ const SIPCall: React.FC<SIPCallProps> = (props) => {
   const { neMeeting: neMeetingContext, eventEmitter: eventEmitterContext } =
     useGlobalContext()
   const [callingLoading, setCallingLoading] = useState(false)
-  const [countryCode, setCountryCode] = useState('+86')
+  const [countryCode] = useState('+86')
   // 是否接听入会
   const [isJoin, setIsJoin] = useState(false)
   // 接听时长
   const [durationTime, setDurationTime] = useState('')
   const timerRef = useRef<number | NodeJS.Timeout>()
 
-  const eventEmitter = props.eventEmitter || eventEmitterContext
+  const eventEmitter = eventEmitterContext
   const neMeeting = props.neMeeting || neMeetingContext
 
   const [currentCallingInfo, setCurrentCallingInfo] = useState<{
@@ -146,6 +145,7 @@ const SIPCall: React.FC<SIPCallProps> = (props) => {
     // 把手机号格式化为 123 4567 8901 的格式
     let phoneNumber = phone?.replace(/\s/g, '')
     const length = phoneNumber.length
+
     // 如果大于3小于7位，格式化为 123 4567
     if (length > 3 && length <= 7) {
       phoneNumber = phoneNumber.slice(0, 3) + ' ' + phoneNumber.slice(3)
@@ -157,6 +157,7 @@ const SIPCall: React.FC<SIPCallProps> = (props) => {
         ' ' +
         phoneNumber.slice(7)
     }
+
     return phoneNumber
   }, [phone])
 
@@ -164,23 +165,29 @@ const SIPCall: React.FC<SIPCallProps> = (props) => {
   const getCorrectPhone = (phone: string) => {
     return phone?.replace(/\s/g, '')
   }
+
   const onPhoneChange = (phoneNum: string) => {
     if (phoneNum.length > 11) {
       return
     }
+
     // 只能输入数字
     phoneNum = phoneNum.replace(/\D/g, '')
     // 如果长度大于11，截取前11位
     if (phoneNum.length > 11) {
       phoneNum = phoneNum.slice(0, 11)
     }
+
     setMembersBySearch([])
     setPhone(phoneNum)
   }
+
   function handleInputChange(name: string) {
     let userName = name
+
     if (!isComposingRef.current) {
       let inputLength = 0
+
       for (let i = 0; i < userName.length; i++) {
         // 检测字符是否为中文字符
         if (userName.charCodeAt(i) > 127) {
@@ -188,6 +195,7 @@ const SIPCall: React.FC<SIPCallProps> = (props) => {
         } else {
           inputLength += 1
         }
+
         // 判断当前字符长度是否超过限制，如果超过则终止 for 循环
         if (inputLength > 20) {
           // 是否表情结尾
@@ -196,21 +204,26 @@ const SIPCall: React.FC<SIPCallProps> = (props) => {
           } else {
             userName = userName.slice(0, i)
           }
+
           break
         }
       }
     }
+
     setInviteName({
       value: userName,
       valid: true,
     })
   }
+
   // 手机号变化处理函数
   const onPhoneSearch = debounce((phoneNum: string) => {
     const correctPhone = getCorrectPhone(phoneNum)
+
     if (correctPhone.length < 11) {
       return
     }
+
     neMeeting
       ?.searchAccount({
         phoneNumber: correctPhone,
@@ -229,6 +242,7 @@ const SIPCall: React.FC<SIPCallProps> = (props) => {
     setCallingLoading(true)
     setIsJoin(false)
     const correctPhone = getCorrectPhone(phone)
+
     neMeeting
       ?.callByNumber({
         number: correctPhone,
@@ -236,12 +250,16 @@ const SIPCall: React.FC<SIPCallProps> = (props) => {
         name: inviteName.value || correctPhone,
       })
       ?.then((res) => {
+        if (!res) return
+
         const data = res.data
+
         // 呼叫人已被呼叫中
         if (data.isRepeatedCall) {
           Toast.info(t('sipCallIsInInviting'))
           return
         }
+
         setCallingState(NEMeetingInviteStatus.calling)
         setCalling(true)
         setCurrentCallingInfo((info) => {
@@ -272,6 +290,7 @@ const SIPCall: React.FC<SIPCallProps> = (props) => {
     setIsJoin(false)
     setMembersBySearch([])
   }
+
   // 当切换到输入手机界面需要重置手机号
   useEffect(() => {
     if (!calling) {
@@ -282,6 +301,7 @@ const SIPCall: React.FC<SIPCallProps> = (props) => {
   // 取消呼叫
   const onCallingCancelHandler = () => {
     const userUuid = currentCallingInfo.userUuid
+
     if (userUuid) {
       if (isCalling) {
         neMeeting?.hangUpCall(userUuid)?.catch((e) => {
@@ -296,38 +316,52 @@ const SIPCall: React.FC<SIPCallProps> = (props) => {
       }
     }
   }
+
   // 点击其他成员处理函数
   const onCallOtherHandler = () => {
     setCalling(false)
   }
+
   useEffect(() => {
     function handleMemberSipInviteStateChanged(member: NERoomMember) {
       // 当前呼叫的成员状态变更
       if (member.uuid === currentCallingInfo.userUuid) {
-        setCallingState(member.inviteState as unknown as NEMeetingInviteStatus)
+        const inviteState =
+          member.inviteState as unknown as NEMeetingInviteStatus
+
+        setCallingState(inviteState)
         setIsJoin(false)
+
+        if (inviteState === NEMeetingInviteStatus.canceled) {
+          setCalling(false)
+        }
       }
     }
+
     function handleMemberJoinRoom(members: NERoomMember[]) {
       // 当前呼叫人员入会
       const member = members.find(
         (item) => item.uuid === currentCallingInfo.userUuid
       )
+
       // 当前呼叫的成员状态变更
       if (member) {
         setIsJoin(true)
       }
     }
+
     function handleMemberLeaveRoom(members: NERoomMember[]) {
       // 当前呼叫人员离开
       const member = members.find(
         (item) => item.uuid === currentCallingInfo.userUuid
       )
+
       // 当前呼叫的成员状态变更
       if (member) {
         setCalling(false)
       }
     }
+
     eventEmitter?.on(EventType.MemberJoinRoom, handleMemberJoinRoom)
     eventEmitter?.on(EventType.MemberLeaveRoom, handleMemberLeaveRoom)
     eventEmitter?.on(
@@ -342,7 +376,7 @@ const SIPCall: React.FC<SIPCallProps> = (props) => {
         handleMemberSipInviteStateChanged
       )
     }
-  }, [currentCallingInfo.userUuid])
+  }, [currentCallingInfo.userUuid, eventEmitter])
   const isCalling = useMemo(() => {
     return (
       callingState === NEMeetingInviteStatus.calling ||
@@ -354,6 +388,7 @@ const SIPCall: React.FC<SIPCallProps> = (props) => {
   useEffect(() => {
     if (isJoin) {
       const startTime = new Date().getTime()
+
       setDurationTime(meetingDuration(startTime))
       timerRef.current = setInterval(() => {
         setDurationTime(meetingDuration(startTime))
@@ -368,9 +403,11 @@ const SIPCall: React.FC<SIPCallProps> = (props) => {
   }, [isJoin])
   const checkIsPhone = useMemo(() => {
     const correctPhone = getCorrectPhone(phone)
+
     if (!correctPhone) {
       return true
     }
+
     return /^1[3,4,5,6,7,8,9]\d{9}/.test(correctPhone)
   }, [phone])
 
@@ -413,6 +450,7 @@ const SIPCall: React.FC<SIPCallProps> = (props) => {
       }
     })
   }, [membersBySearch])
+
   return (
     <div className={`nemeeting-invite-SIP ${className || ''}`}>
       {calling ? (

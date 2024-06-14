@@ -9,15 +9,17 @@ import { copyElementValue } from '../../../utils'
 
 const MeetingHeader: React.FC<DrawerProps> = ({ ...restProps }) => {
   const { t } = useTranslation()
-  const { meetingInfo, memberList } = useMeetingInfoContext()
+  const { meetingInfo } = useMeetingInfoContext()
 
   const { localMember } = meetingInfo
 
   const displayId = useMemo(() => {
     if (meetingInfo?.meetingNum) {
       const id = meetingInfo.meetingNum
+
       return id.slice(0, 3) + '-' + id.slice(3, 6) + '-' + id.slice(6)
     }
+
     return ''
   }, [meetingInfo?.meetingNum])
 
@@ -121,4 +123,5 @@ const MeetingHeader: React.FC<DrawerProps> = ({ ...restProps }) => {
     </Drawer>
   )
 }
+
 export default MeetingHeader

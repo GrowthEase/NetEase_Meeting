@@ -18,7 +18,7 @@ export type WatermarkParams = {
   bottom?: number
 }
 
-const drawWatermark = (params: WatermarkParams) => {
+const drawWatermark = (params: WatermarkParams): void => {
   const {
     type = 2,
     textAlign = 'center' as CanvasTextAlign,
@@ -35,12 +35,15 @@ const drawWatermark = (params: WatermarkParams) => {
   } = params
 
   let container = params.container
+
   if (container === undefined || container === null) {
     container = document.body
   }
+
   if (!(container instanceof HTMLElement)) {
     container = container.current
   }
+
   if (container === null) return
 
   const width = container.offsetWidth
@@ -52,21 +55,8 @@ const drawWatermark = (params: WatermarkParams) => {
   let __wm = container.querySelector('.__wm') as HTMLCanvasElement
 
   if (!__wm) {
-    // 统一获取参数
-    const args = {
-      container,
-      type,
-      width,
-      height,
-      textAlign,
-      textBaseline,
-      fontSize,
-      color,
-      content,
-      rotate,
-      zIndex,
-    }
     const canvas = document.createElement('canvas')
+
     canvas.setAttribute('width', width + 'px')
     canvas.setAttribute('height', height + 'px')
     __wm = canvas
@@ -81,6 +71,7 @@ const drawWatermark = (params: WatermarkParams) => {
     z-index:${zIndex};
     pointer-events:none;
   `
+
     __wm.setAttribute('style', styleStr)
     __wm.classList.add('__wm')
     container.style.position = 'relative'
@@ -88,6 +79,7 @@ const drawWatermark = (params: WatermarkParams) => {
   }
 
   const ctx = __wm.getContext('2d')
+
   if (!ctx) return
   ctx.textAlign = textAlign
   ctx.textBaseline = textBaseline
@@ -97,6 +89,7 @@ const drawWatermark = (params: WatermarkParams) => {
   const contentWidth = ctx.measureText(content).width
   const validDrawWidth = Math.min(contentMaxWidth, contentWidth)
   const radians = (Math.PI / 180) * rotate // 角度转弧度
+
   if (type === 1) {
     ctx.save() // 保存当前状态
     ctx.translate(width / 2, height / 2)
@@ -116,11 +109,14 @@ const drawWatermark = (params: WatermarkParams) => {
     // 1. 根据canvas的宽高计算出最多可以绘制多少个水印，几行，几列
     const row = Math.ceil(height / (offsetY + lineHeight))
     const col = Math.ceil(width / (offsetX + validDrawWidth)) + 1
+
     // 2. 根据行列数，计算出每个水印的坐标并绘制
     for (let r = 0; r <= row; r++) {
       const coordY = r * (offsetY + adjustHeight) + offsetY
+
       for (let c = 0; c <= col; c++) {
         const coordX = c * (offsetX + adjustWidth) + offsetX
+
         ctx.save() // 保存当前状态
         ctx.translate(coordX, coordY)
         ctx.rotate(radians)
@@ -145,9 +141,11 @@ function stopDrawWatermark(
   if (!(container instanceof HTMLElement)) {
     container = container.current
   }
+
   if (container === null) return
 
   const __wm = container.querySelector('canvas.__wm') as HTMLCanvasElement
+
   if (__wm) {
     __wm.parentNode?.removeChild(__wm)
     // __wm.getContext('2d')?.clearRect(0, 0, __wm.offsetWidth, __wm.offsetHeight)
@@ -165,6 +163,7 @@ const drawWrapText = function ({ text, context, x, y, maxWidth, lineHeight }) {
   if (typeof maxWidth == 'undefined') {
     maxWidth = (canvas && canvas.width) || 300
   }
+
   if (typeof lineHeight == 'undefined') {
     lineHeight =
       (canvas && parseInt(window.getComputedStyle(canvas).lineHeight)) ||
@@ -179,6 +178,7 @@ const drawWrapText = function ({ text, context, x, y, maxWidth, lineHeight }) {
     const testLine = line + arrText[n]
     const metrics = context.measureText(testLine)
     const testWidth = metrics.width
+
     if (testWidth > maxWidth && n > 0) {
       context.fillText(line, x, y)
       line = arrText[n]
@@ -187,6 +187,7 @@ const drawWrapText = function ({ text, context, x, y, maxWidth, lineHeight }) {
       line = testLine
     }
   }
+
   context.fillText(line, x, y)
 }
 

@@ -42,6 +42,7 @@ export const NetworkInfo: React.FC<NetworkInfoProps> = ({
       yellow: t('networkStateGeneral'),
       red: t('networkStatePoor'),
     }
+
     return map[signalColor]
   }, [signalColor, t])
 
@@ -104,6 +105,7 @@ export const NetworkInfo: React.FC<NetworkInfoProps> = ({
     </>
   )
 }
+
 const Network: React.FC<{
   className?: string
   onlyIcon?: boolean
@@ -131,11 +133,13 @@ const Network: React.FC<{
   const [downPacketLossRate, setDownPacketLossRate] = useState(0)
   const meetingInfoRef = useRef<NEMeetingInfo>(meetingInfo)
   const meetingListRef = useRef<NEMember[]>(memberList)
+
   meetingInfoRef.current = meetingInfo
   meetingListRef.current = memberList
 
   const isLocalVideoOrScreenShareOn = () => {
     const { localMember } = meetingInfoRef.current
+
     return localMember.isVideoOn || localMember.isSharingScreen
   }
 
@@ -144,6 +148,7 @@ const Network: React.FC<{
       return item.isVideoOn || item.isSharingScreen
     })
   }
+
   useEffect(() => {
     if (canShowNetworkToastRef.current) {
       if (
@@ -157,7 +162,7 @@ const Network: React.FC<{
         }, 6000)
       }
     }
-  }, [networkQualityInfo.downStatus, networkQualityInfo.upStatus])
+  }, [networkQualityInfo.downStatus, networkQualityInfo.upStatus, t])
   useEffect(() => {
     canShowNetworkToastRef.current = !!online
   }, [online])
@@ -169,15 +174,18 @@ const Network: React.FC<{
           const localNetwork = data.find((item) => {
             return item.userUuid === meetingInfo.myUuid
           })
+
           if (localNetwork) {
             // 设置下行网络质量
             setNetworkQualityInfo(localNetwork)
           }
         }
+
         if (networkQualityTimerRef.current) {
           clearTimeout(networkQualityTimerRef.current)
           networkQualityTimerRef.current = null
         }
+
         networkQualityTimerRef.current = window.setTimeout(() => {
           // 4表示网络差，5s未收到回调表示断网或者信号差
           setNetworkQualityInfo({
@@ -198,19 +206,22 @@ const Network: React.FC<{
         const _downPacketLoss = isRemoteVideoOrScreenShareOn()
           ? data.rxVideoPacketLossRate
           : data.rxAudioPacketLossRate
+
         setUpPacketLossRate(_upPacketLoss)
         setDownPacketLossRate(_downPacketLoss)
         let rtt = data.downRtt
+
         if (data.upRtt) {
           rtt += data.upRtt
         }
+
         setNetworkDelay(rtt)
       }
     )
     return () => {
       eventEmitter?.off(EventType.NetworkQuality)
     }
-  }, [])
+  }, [eventEmitter, meetingInfo.myUuid])
 
   const signalColor = useMemo(() => {
     if (
@@ -227,6 +238,7 @@ const Network: React.FC<{
       return 'red'
     }
   }, [networkQualityInfo.downStatus, networkQualityInfo.upStatus])
+
   return (
     <div className={`meeting-network ${className || ''}`}>
       {onlyIcon ? (

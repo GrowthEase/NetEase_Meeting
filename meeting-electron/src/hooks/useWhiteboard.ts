@@ -26,28 +26,31 @@ export function useWhiteboard(): WhiteboardRes {
   const transparentColor = 'rgba(255, 255, 255, 0)'
   const isSetCanvasRef = useRef(false)
   const meetingInfoRef = useRef<NEMeetingInfo | null>(null)
+
   meetingInfoRef.current = meetingInfo
   useEffect(() => {
     if (!isSetCanvasRef.current) {
       return
     }
+
     if (enableDraw) {
       neMeeting?.whiteboardController?.setEnableDraw(true)
     } else {
       neMeeting?.whiteboardController?.setEnableDraw(false)
     }
-  }, [enableDraw])
+  }, [enableDraw, neMeeting?.whiteboardController])
 
   useEffect(() => {
     if (!isSetCanvasRef.current) {
       return
     }
+
     if (enableDraw) {
       neMeeting?.whiteboardController?.setEnableDraw(true)
     } else {
       neMeeting?.whiteboardController?.setEnableDraw(false)
     }
-  }, [enableDraw])
+  }, [enableDraw, neMeeting?.whiteboardController])
 
   useEffect(() => {
     if (meetingInfo.isWhiteboardTransparent) {
@@ -72,6 +75,7 @@ export function useWhiteboard(): WhiteboardRes {
     if (!isSetCanvasRef.current) {
       return
     }
+
     if (
       meetingInfo.localMember.properties.wbDrawable?.value == '1' ||
       meetingInfo.whiteboardUuid === meetingInfo.localMember.uuid
@@ -91,9 +95,11 @@ export function useWhiteboard(): WhiteboardRes {
   const dealTransparentWhiteboard = () => {
     if (!window.isElectronNative) {
       const whiteboardController = neMeeting?.whiteboardController
+
       if (meetingInfoRef.current?.isWhiteboardTransparent) {
         whiteboardController?.setCanvasBackgroundColor(transparentColor)
         const mainVideoSize = meetingInfo.mainVideoSize
+
         whiteboardController?.lockCameraWithContent(
           mainVideoSize.width,
           mainVideoSize.height
@@ -106,6 +112,7 @@ export function useWhiteboard(): WhiteboardRes {
       if (meetingInfoRef.current?.isWhiteboardTransparent) {
         iframeDomSetCanvasBackgroundColor(transparentColor)
         const mainVideoSize = meetingInfo.mainVideoSize
+
         iframeDomLockCameraWithContent(
           mainVideoSize.width,
           mainVideoSize.height
@@ -122,6 +129,7 @@ export function useWhiteboard(): WhiteboardRes {
     const iframeDom = document.getElementById(
       'nemeeting-whiteboard-iframe'
     ) as HTMLIFrameElement
+
     if (iframeDom) {
       iframeDom.contentWindow?.postMessage(
         `{"action":"jsDirectCall","param":{"action":"lockCameraWithContent","params":[{"height": ${height}, "width": ${width}}],"target":"drawPlugin"}}`,
@@ -135,6 +143,7 @@ export function useWhiteboard(): WhiteboardRes {
     const iframeDom = document.getElementById(
       'nemeeting-whiteboard-iframe'
     ) as HTMLIFrameElement
+
     if (iframeDom) {
       iframeDom.contentWindow?.postMessage(
         `{"action":"jsDirectCall","param":{"action":"setAppConfig","params":[{"canvasBgColor": "${color}"}],"target":"drawPlugin"}}`,
@@ -142,10 +151,12 @@ export function useWhiteboard(): WhiteboardRes {
       )
     }
   }
+
   function iframeDomUnlockCameraWithContent() {
     const iframeDom = document.getElementById(
       'nemeeting-whiteboard-iframe'
     ) as HTMLIFrameElement
+
     if (iframeDom) {
       iframeDom.contentWindow?.postMessage(
         `{"action":"jsDirectCall","param":{"action":"unlockCameraWithContent","params":[],"target":"drawPlugin"}}`,

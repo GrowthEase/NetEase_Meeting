@@ -1,5 +1,60 @@
 @text-primary-color: #333333;
 
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+  border-radius: 4px;
+  overflow: overlay;
+}
+// ::-webkit-scrollbar:before {
+//   content: '';
+//   display: block;
+//   width: 5px; /* 左侧padding的宽度 */
+//   background: #000; /* 或者你想要的颜色 */
+// }
+
+// /* 模拟滚动条右侧 padding */
+// ::-webkit-scrollbar:after {
+//   content: '';
+//   display: block;
+//   width: 5px; /* 右侧padding的宽度 */
+//   background: #000; /* 或者你想要的颜色 */
+// }
+::-webkit-scrollbar-button {
+  width: 4px;
+  height: 0;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: 0 0;
+}
+::-webkit-scrollbar-thumb {
+  -webkit-transition: 0.3s;
+  transition: 0.3s;
+}
+::-webkit-scrollbar-thumb:hover {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track-piece {
+  background-color: transparent;
+  -webkit-border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:vertical {
+  height: 4px;
+  background-color: #cdcfd7;
+  -webkit-border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:horizontal {
+  width: 4px;
+  background-color: #cdcfd7;
+  -webkit-border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:vertical:hover,
+::-webkit-scrollbar-thumb:horizontal:hover {
+  background-color: #cdcfd7;
+}
+
 .meeting-electron-header-drag-bar {
   .drag-region {
     -webkit-app-region: drag;
@@ -25,15 +80,26 @@
     max-height: 100%;
   }
 }
+.drag {
+  -webkit-app-region: drag;
+}
 .before-meeting-home-container {
   position: relative;
-  height: 670px;
-  width: 375px;
+  height: 480px;
+  width: 720px;
   background: #ffffff;
   box-shadow: 0px 10px 30px rgba(47, 56, 111, 0.1);
   border-radius: 10px;
   box-sizing: border-box;
   color: @text-primary-color;
+  display: flex;
+  .before-meeting-home-container-header {
+    position: absolute;
+    width: 650px;
+    height: 50px;
+    left: 65px;
+    // -webkit-app-region: drag;
+  }
   .nemeeting-header-item {
     display: flex;
     align-items: center;
@@ -92,22 +158,20 @@
         color: #909194;
       }
     }
-    .setting-button {
-      cursor: pointer;
-      .iconfont {
-        font-size: 24px;
-        color: #909194;
-      }
-    }
   }
   .before-meeting-home-network-error {
     font-size: 12px;
-    padding: 4px 12px;
+    padding: 4px 12px 4px 12px;
     background: rgba(255, 60, 48, 0.2);
-    margin: 0 -10px;
     color: #ed2e24;
     text-align: left;
     display: flex;
+    position: fixed;
+    margin-left: 65px;
+    width: 655px;
+    box-sizing: border-box;
+    border-radius: 8px 8px 0 0;
+    overflow: hidden;
     .before-meeting-home-alter-content {
       flex: 1;
       padding: 2px 7px;
@@ -115,25 +179,56 @@
   }
   .before-meeting-home-alter {
     font-size: 12px;
-    padding: 4px 12px;
+    padding: 0px 12px;
     background: #fff2d1;
-    margin: 0 -10px;
     color: #f29900;
     text-align: left;
     display: flex;
+    align-items: center;
+    position: absolute;
+    width: 296px;
+    height: 59px;
+    box-sizing: border-box;
+    left: 80px;
+    top: 40px;
+    overflow: hidden;
+    border-radius: 4px;
+
     .before-meeting-home-alter-content {
-      flex: 1;
-      padding: 2px 7px;
+      font-size: 12px;
+      font-weight: normal;
+      line-height: 16.5px;
+      letter-spacing: 0px;
+      color: #f29900;
+      width: 234px;
+      height: 100%;
+      box-sizing: border-box;
+      padding: 8px 0;
+      margin: 0 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
     }
     .anticon-close {
+      display: inline-block;
+      width: 16px;
+      font-size: 16px;
       cursor: pointer;
+      -webkit-app-region: no-drag;
+      z-index: 99;
+    }
+    .anticon-exclamation-circle {
+      display: inline-block;
+      width: 16px;
+      font-size: 16px;
     }
   }
+
   .before-meeting-home-buttons {
-    margin-top: 10px;
     display: flex;
     justify-content: space-between;
-    border-bottom: 1px solid #f2f3f5;
     padding-bottom: 20px;
     .meeting-button {
       display: flex;
@@ -153,7 +248,7 @@
   }
   .nemeeting-dropdown .nemeeting-dropdown-menu .nemeeting-dropdown-menu-item {
     border-radius: 0;
-    padding: 0 20px;
+    padding: 0 16px;
     cursor: default;
     &:last-child {
       border-bottom: none;
@@ -169,24 +264,53 @@
     }
   }
 }
+
 .nemeeting-open-meeting-info {
   padding: 12px 16px 0 16px;
-  background-color: #f8f9fb;
   border-radius: 5px;
   box-sizing: border-box;
-  margin-bottom: 19px;
+  margin-bottom: 16px;
   width: 260px;
   overflow: hidden;
   .meeting-limit-info {
-    margin: 12px 0;
+    margin: 4px 0 16px 0;
+    /* 正文/Regular */
+    font-family: PingFang SC;
     font-size: 14px;
-    color: #333;
+    font-weight: normal;
+    line-height: 22px;
+    letter-spacing: 0em;
+    /* 文字颜色 Text/强调&正文标题 */
+    color: #1e1f27;
+    display: flex;
+    align-items: center;
+    .info {
+      width: 180px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .box {
+      width: 4px;
+      height: 4px;
+      box-sizing: border-box;
+      background-color: #8d90a0;
+      display: inline-block;
+      transform: rotate(45deg);
+      margin-right: 5px;
+    }
   }
   .you-can-open {
-    font-size: 12px;
-    color: #666;
+    font-size: 14px;
+    font-weight: normal;
+    margin-top: 5px;
+    letter-spacing: 0em;
+    /* 文字颜色 Text/次要信息 */
+    color: #8d90a0;
     display: flex;
     justify-content: space-between;
+    opacity: 0.8;
   }
   .expire-tip {
     height: 34px;
@@ -197,35 +321,99 @@
   }
 }
 .nemeeting-open-meeting-info-wrap {
-  border-bottom: 1px solid #f2f3f5;
+  border-radius: 8px;
+  opacity: 1;
+  background: #ffffff;
+  margin-top: 4px;
 }
 .user-menu-item-info {
   border: none !important;
 }
+
 .user-menu-item {
   padding: 14px 0;
   display: flex;
   align-items: center;
   width: 100%;
   font-weight: 400;
-  border-bottom: 1px solid #f2f3f5;
+  .user-menu-item {
+    font-size: 24px;
+  }
+  .short-meeting-num {
+    font-size: 14px;
+    font-weight: normal;
+    line-height: 22px;
+    text-align: right;
+    letter-spacing: 0em;
+    /* 文字颜色 Text/次强调&正文标题 */
+    color: #53576a;
+    margin-right: 5px;
+    white-space: nowrap;
+  }
+  .nemeeting-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+  }
+  .user-name-wrap {
+    margin-left: 16px;
+  }
+  .user-name {
+    line-height: 24px;
+    letter-spacing: 0em;
+    /* 文字颜色 Text/强调&正文标题 */
+    color: #1e1f27;
+    font-size: 16px;
+    color: #333;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 200px;
+    display: flex;
+    box-sizing: border-box;
+    .user-name-content {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 160px;
+      font-weight: 500;
+    }
+    .anticon-edit {
+      color: #53576a;
+      font-size: 16px;
+      margin-left: 10px;
+      box-sizing: border-box;
+      opacity: 0.8;
+    }
+  }
+
   &.normal-item {
     justify-content: space-between;
   }
   .title {
-    font-weight: 400;
-    font-size: 16px;
+    font-weight: 500 !important;
+    font-size: 14px;
     display: flex;
     align-items: center;
   }
   .sub-title {
-    font-size: 14px;
-    color: #999999;
-    margin-left: 5px;
+    font-size: 12px;
+    color: #8d90a0;
+    display: flex;
+    align-items: center;
+    opacity: 0.8;
+
     .iconfont,
     .anticon {
       margin-left: 5px;
       cursor: pointer;
+      font-size: 12px;
+      font-weight: normal;
+      line-height: 20px;
+      letter-spacing: 0em;
+      /* 文字颜色 Text/次要信息 */
+      color: #8d90a0;
     }
   }
   .custom-tag {
@@ -252,81 +440,222 @@
     line-height: 48px;
     color: #fff;
   }
-  .user-name {
-    margin: 0 12px;
-    font-size: 20px;
-    color: #333;
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 200px;
-  }
+
   .anticon {
     color: #cccccc;
   }
   .logout-button {
     text-align: center;
     color: #fe3b30;
-    font-size: 17px;
+    /* 正文/Regular */
+    font-family: PingFang SC;
+    font-size: 14px;
+    font-weight: normal;
+    line-height: 22px;
+    letter-spacing: 0em;
+    /* 错误色 Error/默认 */
+    color: #f51d45;
     flex: 1;
   }
 }
 
-.schedule-meeting-group-item {
-  margin-bottom: 20px;
-}
+.user-menu-head-item {
+  padding: 14px 0;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  font-weight: 400;
+  .short-meeting-num {
+    font-size: 14px;
+    font-weight: normal;
+    line-height: 22px;
+    text-align: right;
+    letter-spacing: 0em;
+    /* 文字颜色 Text/次强调&正文标题 */
+    color: #53576a;
+    margin-right: 5px;
+    white-space: nowrap;
+  }
+  .nemeeting-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+  }
+  .user-name-wrap {
+    margin-left: 16px;
+  }
+  .user-name {
+    line-height: 24px;
+    letter-spacing: 0em;
+    /* 文字颜色 Text/强调&正文标题 */
+    color: #1e1f27;
+    font-size: 16px;
+    color: #333;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 200px;
+    display: flex;
+    box-sizing: border-box;
+    .user-name-content {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 160px;
+      font-weight: 500;
+    }
+    .anticon-edit {
+      color: #53576a;
+      font-size: 16px;
+      margin-left: 10px;
+      box-sizing: border-box;
+      opacity: 0.8;
+    }
+  }
 
-.schedule-meeting-group-date {
-  .date {
-    font-weight: 500;
-    font-size: 32px;
+  &.normal-item {
+    justify-content: space-between;
   }
-  .month {
-    font-weight: 400;
+  .title {
+    font-weight: 500 !important;
     font-size: 14px;
-    margin: 0px 8px;
+    display: flex;
+    align-items: center;
   }
-  .weekday {
-    font-weight: 400;
+  .sub-title {
+    font-size: 12px;
+    color: #8d90a0;
+    display: flex;
+    align-items: center;
+    opacity: 0.8;
+
+    .iconfont,
+    .anticon {
+      margin-left: 5px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: normal;
+      line-height: 20px;
+      letter-spacing: 0em;
+      /* 文字颜色 Text/次要信息 */
+      color: #8d90a0;
+    }
+  }
+  .custom-tag {
+    color: #337eff;
+    border: 1px solid #bacef0;
+  }
+  .versionExplain {
+    z-index: 9999;
+    .nemeeting-popover-title {
+      font-weight: 400;
+    }
+  }
+  .iconfsfds {
+    cursor: pointer;
+    color: #cccccc;
+  }
+  .user-icon {
+    background: linear-gradient(180deg, #5996ff 1.1%, #2575ff 100%);
+    width: 48px;
+    height: 48px;
+    border-radius: 100%;
+    font-size: 22px;
+    text-align: center;
+    line-height: 48px;
+    color: #fff;
+  }
+
+  .anticon {
+    color: #cccccc;
+  }
+  .logout-button {
+    text-align: center;
+    color: #fe3b30;
+    /* 正文/Regular */
+    font-family: PingFang SC;
     font-size: 14px;
+    font-weight: normal;
+    line-height: 22px;
+    letter-spacing: 0em;
+    /* 错误色 Error/默认 */
+    color: #f51d45;
+    flex: 1;
   }
 }
 
 .before-meeting-home-history-button {
   position: absolute;
-  right: 0;
-  top: 16px;
-  min-width: 61px;
-  padding: 0 10px;
-  height: 28px;
-  line-height: 28px;
   cursor: pointer;
-  box-shadow: 0px 4px 8px rgba(224, 228, 232, 0.4);
-  border: 1px solid #f2f3f5;
-  border-top-left-radius: 14px;
-  border-bottom-left-radius: 14px;
+  top: 129px;
+  right: 64px;
+  /* 颜色/蓝色 */
+  color: #337eff;
+  border-radius: 3px;
+  height: 20px;
+  box-sizing: border-box;
+  padding-left: 5px;
+  // width: 70px;
   text-align: center;
   z-index: 1000;
   background: #fff;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  .history-meeting-title {
+    display: inline-block;
+    // width: 48px;
+    font-size: 12px;
+    height: 20px;
+    line-height: 20px;
+    // overflow: hidden;
+    // text-overflow: ellipsis;
+    // white-space: nowrap;
+  }
+  .icon-jiantou {
+    width: 16px;
+    height: 20px;
+    line-height: 20px;
+    box-sizing: border-box;
+    display: inline-block;
+    .iconfont {
+      margin-top: 2px;
+    }
+    svg {
+      font-size: 16px;
+    }
+  }
 }
 
+.before-meeting-home-empty-schedule-meeting {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  top: 40px;
+  align-items: center;
+  color: #999999;
+  display: flex;
+  align-items: center;
+  height: 90%;
+  box-sizing: border-box;
+  .text {
+    display: inline-block;
+    text-align: center;
+    width: 100%;
+    margin-top: 12px;
+  }
+  img {
+    display: block;
+    width: 120px;
+    height: 120px;
+  }
+}
 .before-meeting-home-schedule-meeting-container {
   position: relative;
   margin: 0 -10px;
   overflow-y: hidden;
 
-  .before-meeting-home-empty-schedule-meeting {
-    margin-top: 88px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: #999999;
-    img {
-      width: 120px;
-    }
-  }
   .schedule-meeting-list-container {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -341,77 +670,6 @@
   }
 }
 
-.schedule-meeting-item {
-  display: flex;
-  align-items: center;
-  height: 72px;
-  .iconcalendar1x {
-    color: #337eff;
-    font-size: 20px;
-    margin-right: 30px;
-  }
-  .schedule-meeting-item-content {
-    flex: 1;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-    border-bottom: 1px solid #f2f3f5;
-    .periodic-tag {
-      color: #337eff;
-      border: 1px solid #bacef0;
-    }
-    .top {
-      font-size: 12px;
-      color: rgba(153, 153, 153, 1);
-      .time {
-        font-size: 12px;
-        color: rgba(51, 51, 51, 1);
-      }
-      .in-progress-state {
-        color: #337eff;
-      }
-    }
-    .bottom {
-      margin-top: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      .schedule-meeting-item-subject {
-        font-size: 16px;
-        color: rgba(51, 51, 51, 1);
-        overflow: hidden; //超出的文本隐藏
-        text-overflow: ellipsis; //溢出用省略号显示
-        white-space: nowrap; //溢出不换行
-        width: 170px;
-      }
-      .schedule-meeting-item-buttons {
-        display: flex;
-        align-items: center;
-      }
-      .schedule-meeting-item-button,
-      .iconyx-tv-more1x {
-        height: 22px;
-        line-height: 20px;
-        text-align: center;
-        padding: 0 10px;
-        color: rgba(51, 126, 255, 1);
-        border: 1px solid rgba(51, 126, 255, 1);
-        border-radius: 18px;
-        display: inline-block;
-        margin-right: 10px;
-        font-size: 12px;
-        box-sizing: border-box;
-        cursor: pointer;
-      }
-      .iconyx-tv-more1x {
-        padding: 4px;
-        width: 22px;
-        border-radius: 11px;
-      }
-    }
-  }
-}
 .nemeeting-feedback-loading-text {
   z-index: 9999;
   background-color: #fff;
@@ -424,9 +682,559 @@
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
-  min-width: 55%;
-  max-width: 90%;
+  // min-width: 55%;
+  // max-width: 90%;
   z-index: 10;
   border-radius: 4px;
   box-shadow: 0px 0px 16px rgba(0, 0, 0, 0.12);
+  width: fit-content;
+}
+
+.before-meeting-home-content-wrap {
+  display: flex;
+  width: 100%;
+}
+.before-meeting-home-left-side {
+  width: 75px;
+  height: 100%;
+  margin-right: -10px;
+  opacity: 1;
+  background: #f0f1f5;
+  border-radius: 10px 0 0 10px;
+  box-sizing: border-box;
+  padding: 40px 16px 15px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  // -webkit-app-region: drag;
+  .before-meeting-home-user-avatar {
+    cursor: pointer;
+    -webkit-app-region: no-drag;
+  }
+  .nemeeting-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+  }
+  .before-meeting-home-bottom-buttons {
+    position: relative;
+    right: 4px;
+    -webkit-app-region: no-drag;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    margin-bottom: 5px;
+    height: 72px;
+    box-sizing: border-box;
+    .nemeeting-badge {
+      width: 24px;
+      height: 24px;
+      line-height: 24px;
+      display: flex;
+      justify-content: center;
+      align-self: center;
+      .iconfont {
+        margin: auto;
+        color: #53576a;
+      }
+    }
+
+    .iconfont {
+      font-size: 16px;
+    }
+    .notification-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .notification-icon:hover {
+      background-color: #e6e7eb;
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+    }
+    .iconxiaoxi {
+      color: #53576a;
+      font-size: 18px;
+    }
+    .setting-button {
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .iconfont {
+        font-size: 18px;
+        color: #53576a;
+        margin: auto;
+      }
+    }
+    .setting-button:hover {
+      background-color: #e6e7eb;
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+    }
+  }
+}
+
+.before-meeting-home-middle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  border-radius: 8px 0 0 8px;
+  .before-meeting-home-middle-content {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px 0 0 8px;
+    background: #fff;
+    .before-meeting-home-buttons {
+      width: 192px;
+      height: 256px;
+      box-sizing: border-box;
+      padding-bottom: none;
+      margin-top: 11.5px;
+
+      .meeting-button-img {
+        margin-bottom: 48px;
+        .iconfaqihuiyi {
+          width: 48px;
+          height: 48px;
+          color: #fff;
+        }
+        .icon-wrap {
+          cursor: pointer;
+        }
+        .iconfont-wrap {
+          cursor: pointer;
+          position: relative;
+          bottom: 0px;
+          width: 72px;
+          height: 72px;
+          background: #2663fe;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          border-radius: 16px;
+          transition: all 0.05s linear;
+        }
+        .text {
+          display: block;
+          width: 72px;
+          text-align: center;
+          margin-top: 16px;
+          font-size: 14px;
+          font-weight: normal;
+          line-height: 16px;
+          letter-spacing: 0px;
+          color: #53576a;
+          opacity: 0.9;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        img {
+          width: 72px;
+          height: 72px;
+        }
+      }
+      .icon-wrap:hover {
+        .iconfont-wrap {
+          bottom: 5px;
+          box-shadow: 0px 4px 12px 0px rgba(30, 31, 39, 0.3);
+        }
+      }
+    }
+  }
+}
+
+.before-meeting-home-right {
+  flex: 1;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+
+  .before-meeting-home-right-content {
+    width: 288px;
+    height: 400px;
+    border-radius: 8px;
+    border: 1px solid #e6e7eb;
+  }
+  .before-meeting-home-right-header {
+    width: 288px;
+    height: 72px;
+    // background-image: url('../../../assets/before-meeting-home-header.png');
+    background-repeat: no-repeat;
+    background-size: 100% auto;
+    border-radius: 8px 8px 0 0;
+    padding: 8px 16px;
+    box-sizing: border-box;
+    .time {
+      font-size: 24px;
+      font-weight: 400;
+      line-height: 32px;
+      letter-spacing: 0em;
+      color: #ffffff;
+    }
+    .date {
+      font-size: 14px;
+      font-weight: normal;
+      line-height: 22px;
+      letter-spacing: 0em;
+      color: #ffffff;
+      font-weight: 300;
+      .today {
+        margin-right: 5px;
+      }
+    }
+  }
+
+  .schedule-meeting-list-container-wrap {
+    width: 286px;
+    height: 326px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0px 16px 16px 16px;
+    margin-right: 2px;
+    position: relative;
+
+    .schedule-meeting-item {
+      display: flex;
+      align-items: center;
+      width: 256px;
+      padding: 8px;
+      height: 60px;
+      border-radius: 8px;
+      box-sizing: border-box;
+
+      .iconcalendar1x {
+        color: #337eff;
+        font-size: 20px;
+      }
+      .schedule-meeting-item-content {
+        height: 100%;
+        display: flex;
+        width: 240px;
+        justify-content: center;
+        flex-direction: column;
+        border-radius: 8px;
+        box-sizing: border-box;
+
+        .periodic-tag {
+          color: #337eff;
+          border: 1px solid #bacef0;
+          font-size: 12px;
+          width: 36px;
+          height: 20px;
+          line-height: 20px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          text-align: center;
+          padding: 0;
+        }
+        .top {
+          display: flex;
+          font-size: 12px;
+          color: rgba(153, 153, 153, 1);
+          height: 22px;
+          box-sizing: border-box;
+          .time {
+            font-size: 12px;
+            color: #3d3d3d;
+          }
+
+          .schedule-meeting-item-buttons {
+            display: none;
+            align-items: center;
+            box-sizing: border-box;
+            .schedule-meeting-item-button-join {
+              font-size: 12px;
+              height: 24px;
+              padding: 0;
+              width: 48px;
+              height: 24px;
+              line-height: 24px;
+              box-sizing: border-box;
+              border-radius: 4px;
+              text-align: center;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              span {
+                text-align: center;
+              }
+            }
+            .more {
+              border-radius: 4px;
+              background: #ffffff;
+              width: 24px;
+              height: 24px;
+              line-height: 24px;
+              font-size: 18px;
+              margin-left: 6px;
+              text-align: center;
+              cursor: pointer;
+            }
+          }
+
+          .schedule-meeting-item-subject {
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 22px;
+            letter-spacing: 0em;
+            /* 文字颜色 Text/强调&正文标题 */
+            color: #1e1f27;
+            overflow: hidden; //超出的文本隐藏
+            text-overflow: ellipsis; //溢出用省略号显示
+            white-space: nowrap; //溢出不换行
+            width: 170px;
+            display: flex;
+            align-items: center;
+          }
+          .schedule-meeting-item-subject-text {
+            overflow: hidden; //超出的文本隐藏
+            text-overflow: ellipsis; //溢出用省略号显示
+            white-space: nowrap; //溢出不换行
+            max-width: 110px;
+            height: 22px;
+            display: inline-block;
+            margin-right: 8px;
+          }
+        }
+        .bottom {
+          display: flex;
+          align-items: center;
+          height: 20px;
+          .line {
+            width: 1px;
+            height: 12px;
+            z-index: 1;
+            border-radius: 1px;
+            opacity: 1;
+            /* 边框颜色 Border/深&悬浮 */
+            background: #cdcfd7;
+            margin: 0 6px;
+          }
+          .schedule-meeting-item-button,
+          .iconyx-tv-more1x {
+            height: 22px;
+            line-height: 20px;
+            text-align: center;
+            padding: 0 10px;
+            color: rgba(51, 126, 255, 1);
+            border: 1px solid rgba(51, 126, 255, 1);
+            border-radius: 18px;
+            display: inline-block;
+            margin-right: 10px;
+            font-size: 12px;
+            box-sizing: border-box;
+            cursor: pointer;
+          }
+          .iconyx-tv-more1x {
+            padding: 4px;
+            width: 22px;
+            border-radius: 11px;
+          }
+          .dur-time {
+            color: #53576a;
+            opacity: 0.8;
+            white-space: nowrap;
+            font-size: 12px;
+          }
+          .meeting-id {
+            color: #53576a;
+            opacity: 0.8;
+            white-space: nowrap;
+            font-size: 12px;
+            cursor: pointer;
+          }
+        }
+      }
+    }
+    .schedule-meeting-item:hover {
+      background: #f0f1f5;
+      .schedule-meeting-item-content {
+        .schedule-meeting-item-buttons {
+          display: flex;
+        }
+      }
+    }
+    .schedule-meeting-group-date {
+      font-size: 12px;
+      font-weight: normal;
+      line-height: 20px;
+      letter-spacing: 0em;
+      padding: 0 8px;
+      /* 文字颜色 Text/次要信息 */
+      color: #8d90a0;
+      height: 40px;
+      box-sizing: border-box;
+      padding: 16px 0 4px 7px;
+      .schedule-meeting-group-date {
+        height: 20px;
+        box-sizing: border-box;
+      }
+      .weekday {
+        margin-right: 5px;
+      }
+    }
+  }
+}
+.in-progress-state {
+  color: #337eff;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.in-ready-state {
+  /* 橙色 */
+  color: #ff7903;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.in-end-state {
+  color: #8d90a0;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.before-meeting-home-user-menu {
+  .nemeeting-dropdown-menu {
+    position: absolute;
+    background-color: #f0f1f5;
+    top: -17px;
+    left: 15px;
+    width: 308px;
+    height: 396px;
+    overflow-y: auto;
+    box-shadow: 0px 6px 32px 0px rgba(30, 31, 39, 0.24);
+
+    .anticon-right {
+      font-size: 16px;
+      color: #8d90a0;
+    }
+    .nemeeting-dropdown-menu-item-active {
+      background-color: #f0f1f5 !important;
+    }
+    .user-menu-item:hover {
+      background-color: #e6e7eb;
+    }
+    .user-menu-item-meeting-num {
+      background-color: #fff;
+      border-radius: 8px 8px 0 0;
+      padding: 13px 16px;
+      box-sizing: border-box;
+      height: 48px;
+      cursor: pointer;
+      .iconfuzhi1 {
+        font-size: 24px;
+      }
+    }
+    .feedback {
+      background-color: #fff;
+      padding: 13px 16px;
+      height: 48px;
+      box-sizing: border-box;
+    }
+    .about {
+      height: 48px;
+      background-color: #fff;
+      padding: 13px 16px;
+      box-sizing: border-box;
+      border-radius: 0 0 8px 8px;
+    }
+    .logout {
+      background-color: #fff;
+      padding: 13px 16px;
+      height: 48px;
+      box-sizing: border-box;
+      border-radius: 8px;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+    .title {
+      font-weight: 400;
+      max-width: 70px;
+
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      .personal-meeting-num {
+        max-width: 70px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+  }
+  .nemeeting-dropdown-menu::-webkit-scrollbar {
+    background-color: #f0f1f5;
+  }
+}
+
+.nemeeting-dropdown-menu-item {
+  .user-menu-item:hover {
+    opacity: 1;
+    /* 填充颜色 Fill/常规&白底悬浮 */
+    background: #f0f1f5;
+  }
+}
+
+.before-meeting-home-top-buttons {
+  position: absolute;
+  height: 30px;
+  width: 74px;
+  right: 0;
+  top: 0;
+}
+
+.join-meeting-modal-wrap {
+  .nemeeting-modal {
+    width: 375px;
+    height: 402px;
+    .nemeeting-modal-header {
+      width: 375px;
+      height: 50px;
+    }
+    .nemeeting-modal-body {
+      padding: 16px 16px 0 16px;
+      background: #f0f1f5;
+
+      .before-meeting-modal-content {
+        padding: 0;
+      }
+    }
+  }
+}
+.before-meeting-home-alter-popover {
+  width: 296px;
+  height: 122px;
+  box-sizing: border-box;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.75);
+  .nemeeting-popover-arrow::before {
+    background: rgba(0, 0, 0, 0.75);
+  }
+  .nemeeting-popover-inner {
+    background: rgba(0, 0, 0, 0.3) !important;
+    padding: 4px 12px;
+    border-radius: 4px !important;
+
+    .nemeeting-popover-inner-content {
+      color: #fff;
+      word-break: break-all;
+    }
+  }
 }

@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import './index.less'
+
 interface LivePreviewProps {
   className?: string
   memberCount: number
@@ -20,6 +21,7 @@ const GalleryScreenViewItems: React.FC<ItemProps> = ({
   formatNumber,
 }) => {
   const views: JSX.Element[] = []
+
   for (let i = 1; i <= numberCountByLimit; i++) {
     views.push(
       <div className="per1-12 view-bg" key={i}>
@@ -27,6 +29,7 @@ const GalleryScreenViewItems: React.FC<ItemProps> = ({
       </div>
     )
   }
+
   return (
     <div className="preview-item preview-screen-share">
       <div className="per8-12 view-bg" />
@@ -41,6 +44,7 @@ const GalleryVietItems: React.FC<ItemProps> = ({
   model,
 }) => {
   const views: JSX.Element[] = []
+
   if (model === 'gallery') {
     for (let i = 1; i <= numberCountByLimit; i++) {
       views.push(
@@ -49,6 +53,7 @@ const GalleryVietItems: React.FC<ItemProps> = ({
         </div>
       )
     }
+
     return <div className="preview-item preview-per">{views}</div>
   } else if (model === 'focus') {
     for (let i = 1; i <= numberCountByLimit - 1; i++) {
@@ -58,6 +63,7 @@ const GalleryVietItems: React.FC<ItemProps> = ({
         </div>
       )
     }
+
     return (
       <div className="preview-item preview-focus">
         <div className="per8-12-focus view-bg">
@@ -67,10 +73,12 @@ const GalleryVietItems: React.FC<ItemProps> = ({
       </div>
     )
   }
+
   return <></>
 }
+
 const LivePreview: React.FC<LivePreviewProps> = (props) => {
-  const { memberCount, className, model, isSharing } = props
+  const { memberCount, model, isSharing } = props
   const { t } = useTranslation()
   const numberCountByLimit = useMemo(() => {
     if (model === 'gallery') {

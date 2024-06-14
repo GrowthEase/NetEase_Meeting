@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
-import Toast from '../components/common/toast'
 import { groupMembersService } from '../components/h5/MeetingCanvas/service'
 import { useGlobalContext, useMeetingInfoContext } from '../store'
 import { ActionType, LayoutTypeEnum, NEMember } from '../types'
@@ -15,16 +13,27 @@ interface MeetingCanvasProps {
   groupType: 'h5' | 'web'
 }
 
-export default function useMeetingCanvas(data: MeetingCanvasProps) {
-  const {
-    isSpeaker,
-    isSpeakerLayoutPlacementRight,
-    isAudioMode,
-    groupNum,
-    resizableWidth,
-    groupType,
-  } = data
-  const { t } = useTranslation()
+interface MeetingCanvasReturn {
+  hideNoVideoMembers: boolean
+  memberList: NEMember[]
+  canPreSubscribe?: boolean
+  groupMembers: NEMember[][]
+  handleViewDoubleClick: (member: NEMember) => void
+  preSpeakerLayoutInfo: React.MutableRefObject<'top' | 'right'>
+  handleUnsubscribeMembers: (
+    memberList: NEMember[][],
+    activeSpeakerList: string[],
+    activeIndex: number,
+    mainUuid?: string
+  ) => void
+  unsubscribeMembersTimerMap: React.MutableRefObject<Record<string, any>>
+  clearUnsubscribeMembersTimer: (uuid: string) => void
+}
+
+export default function useMeetingCanvas(
+  data: MeetingCanvasProps
+): MeetingCanvasReturn {
+  const { isSpeaker, isAudioMode, groupNum, groupType } = data
   const {
     meetingInfo,
     memberList: meetingMemberList,
@@ -55,8 +64,10 @@ export default function useMeetingCanvas(data: MeetingCanvasProps) {
       const list = originMemberList.filter(
         (item) => item.isVideoOn || item.isSharingScreen
       )
+
       return list.length > 0 ? list : [meetingInfo.localMember]
     }
+
     return originMemberList
   }, [hideNoVideoMembers, originMemberList, meetingInfo.localMember])
 
@@ -66,10 +77,20 @@ export default function useMeetingCanvas(data: MeetingCanvasProps) {
       globalConfig?.appConfig.MEETING_CLIENT_CONFIG?.activeSpeakerConfig
         .enableVideoPreSubscribe &&
       isSpeaker &&
-      !meetingInfo.focusUuid
+      !meetingInfo.focusUuid &&
+      meetingInfo.setting?.normalSetting?.enableVoicePriorityDisplay !== false
     )
-  }, [globalConfig?.appConfig, isSpeaker, meetingInfo.focusUuid])
-
+  }, [
+    globalConfig?.appConfig,
+    isSpeaker,
+    meetingInfo.focusUuid,
+    meetingInfo.setting?.normalSetting?.enableVoicePriorityDisplay,
+  ])
+  const enableVoicePriorityDisplay = useMemo(() => {
+    return (
+      meetingInfo.setting?.normalSetting?.enableVoicePriorityDisplay !== false
+    )
+  }, [meetingInfo.setting?.normalSetting?.enableVoicePriorityDisplay])
   // 对成员列表进行排序
   const groupMembers = useMemo(() => {
     if (isAudioMode) {
@@ -77,6 +98,7 @@ export default function useMeetingCanvas(data: MeetingCanvasProps) {
       const list = inInvitingMemberList
         ? meetingMemberList.concat(inInvitingMemberList)
         : meetingMemberList
+
       return [list]
     } else {
       return groupMembersService({
@@ -88,36 +110,36 @@ export default function useMeetingCanvas(data: MeetingCanvasProps) {
         myUuid: meetingInfo.localMember.uuid,
         activeSpeakerUuid: meetingInfo.lastActiveSpeakerUuid || '',
         groupType,
+        enableVoicePriorityDisplay,
         enableSortByVoice: !!meetingInfo.enableSortByVoice,
         layout: isSpeaker ? LayoutTypeEnum.Speaker : LayoutTypeEnum.Gallery,
         whiteboardUuid: meetingInfo.whiteboardUuid,
         isWhiteboardTransparent: meetingInfo.isWhiteboardTransparent,
         pinVideoUuid: meetingInfo.pinVideoUuid,
         viewOrder: meetingInfo.remoteViewOrder || meetingInfo.localViewOrder,
+        hostUuid: meetingInfo.hostUuid,
       })
     }
   }, [
     meetingMemberList,
     inInvitingMemberList,
-    meetingInfo.hostUuid,
     meetingInfo.focusUuid,
-    meetingInfo.activeSpeakerUuid,
     meetingInfo.screenUuid,
     meetingInfo.whiteboardUuid,
-    meetingInfo.layout,
     meetingInfo.pinVideoUuid,
     isSpeaker,
     meetingInfo.lastActiveSpeakerUuid,
     meetingInfo.isWhiteboardTransparent,
-    resizableWidth,
-    isSpeakerLayoutPlacementRight,
     groupNum,
     isAudioMode,
     meetingInfo.remoteViewOrder,
     meetingInfo.localViewOrder,
     meetingInfo.galleryModeMaxCount,
     meetingInfo.enableSortByVoice,
+    meetingInfo.hostUuid,
     groupType,
+    meetingInfo.localMember.uuid,
+    enableVoicePriorityDisplay,
   ])
 
   function handleViewDoubleClick(member: NEMember) {
@@ -158,7 +180,7 @@ export default function useMeetingCanvas(data: MeetingCanvasProps) {
         },
       })
     }
-  }, [isAudioMode, meetingInfo.pinVideoUuid])
+  }, [isAudioMode, meetingInfo.pinVideoUuid, dispatch])
 
   function handleUnsubscribeMembers(
     memberList: NEMember[][],
@@ -167,6 +189,7 @@ export default function useMeetingCanvas(data: MeetingCanvasProps) {
     mainUuid?: string
   ) {
     const currentMemberList = memberList[activeIndex]
+
     if (currentMemberList) {
       // 获取当前页开启视频的成员uuid
       const currentVideoOnMemberUuids = currentMemberList
@@ -174,6 +197,7 @@ export default function useMeetingCanvas(data: MeetingCanvasProps) {
           (item) => item.isVideoOn && neMeeting?.localMember?.uuid !== item.uuid
         )
         .map((item) => item.uuid)
+
       mainUuid && currentVideoOnMemberUuids.push(mainUuid)
       // 所有开启视频的成员
       let allVideoOnMemberUuids = memberList
@@ -182,6 +206,7 @@ export default function useMeetingCanvas(data: MeetingCanvasProps) {
           (item) => item.isVideoOn && item.uuid != neMeeting?.localMember?.uuid
         )
         .map((item) => item.uuid)
+
       // 需要把在当前说话者列表的也加入到订阅中。并且去重
       allVideoOnMemberUuids = [...allVideoOnMemberUuids, ...activeSpeakerList]
       allVideoOnMemberUuids = [...new Set(allVideoOnMemberUuids)]
@@ -204,9 +229,11 @@ export default function useMeetingCanvas(data: MeetingCanvasProps) {
               ? 0
               : 1
             : 1
+
         if (neMeeting?.subscribeMembersMap[uuid] === streamType) {
           return
         }
+
         neMeeting?.subscribeRemoteVideoStream(uuid, streamType)
       })
     }

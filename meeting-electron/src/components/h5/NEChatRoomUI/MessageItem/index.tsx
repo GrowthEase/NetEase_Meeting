@@ -3,7 +3,7 @@ import { useLongPress, useUpdateEffect } from 'ahooks'
 import { Dropdown, MenuProps, Spin } from 'antd'
 import { Image, ImageViewer } from 'antd-mobile/es'
 
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NERoomChatMessage } from '../../../../types'
 import {
@@ -42,6 +42,7 @@ function getFileIcon(ext: string) {
   }
   const key =
     Object.keys(regMap).find((key) => regMap[key].test(ext)) || 'unknown'
+
   return fileIconMap[key]
 }
 
@@ -109,8 +110,10 @@ const MessageItem: React.FC<MessageItemProps> = ({
     if (!url || !search) {
       return url || ''
     }
+
     if (url.startsWith('blob:')) return url
     const urlObj = new URL(url)
+
     urlObj.search += (urlObj.search.startsWith('?') ? '&' : '?') + search
     return urlObj.href
   }
@@ -140,11 +143,15 @@ const MessageItem: React.FC<MessageItemProps> = ({
     const { isMe, fromNick, toNickname } = msg
     const isWaitingRoom = msg.chatroomType === 1
     let isPrivate = false
+
     if (msg.custom) {
       try {
         const custom = JSON.parse(msg.custom)
+
         isPrivate = custom.toAccounts?.length > 0
-      } catch {}
+      } catch (error) {
+        console.error('parse custom error', error)
+      }
     }
 
     if (isWaitingRoom) {
@@ -201,6 +208,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
   function renderImageMessage() {
     const file = msg.file
+
     if (file) {
       return (
         <div className={imageWrapperCls}>
@@ -234,6 +242,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
         </div>
       )
     }
+
     return null
   }
 
@@ -242,6 +251,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
 
     if (file) {
       const fileExt = '.' + file.ext
+
       return (
         <div className={fileWrapperCls}>
           {msg.status === 'failed' && (
@@ -257,7 +267,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
             className="file-box"
             onClick={() => {
               const url = addUrlSearch(file.url, 'download=' + file.name)
-              downloadFile(url, file.name)
+
+              downloadFile(url)
             }}
           >
             <Spin
@@ -283,15 +294,18 @@ const MessageItem: React.FC<MessageItemProps> = ({
         </div>
       )
     }
+
     return null
   }
 
   function renderNotificationMessage() {
     let content = ''
+
     if (msg.attach?.type === 'deleteChatroomMsg') {
       content =
         (msg.isMe ? t('chatYou') : msg.fromNick) + t('chatRecallAMessage')
     }
+
     return <div className={notificationCls}>{content}</div>
   }
 
@@ -346,7 +360,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
           <Dropdown
             menu={{ items: contentDropdownItems }}
             open={contentDropdown && contentDropdownItems.length > 0}
-            onOpenChange={(open) => {
+            onOpenChange={() => {
               onLongPress?.()
             }}
             trigger={dropdownTrigger}

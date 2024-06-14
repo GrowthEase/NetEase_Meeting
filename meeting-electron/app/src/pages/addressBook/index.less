@@ -1,16 +1,39 @@
 .invite-page-header {
   -webkit-app-region: drag;
-  height: 40px;
+  height: 50px;
+}
+.electron-drag-bar {
+  -webkit-app-region: drag;
+  height: 50px;
+  line-height: 50px;
+}
+.meeting-attendees {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+  text-align: center;
+  letter-spacing: 0em;
+  /* 文字颜色 Text/强调&正文标题 */
+  color: #1e1f27;
 }
 .addressBook-page {
+  height: 100%;
   overflow-y: hidden;
+  .address-book-wrap {
+    height: 335px;
+    padding-top: 20px;
+    box-sizing: border-box;
+  }
   .nemeeting-address-confirm-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px 0;
+    height: 64px;
+    box-sizing: border-box;
+    border-top: 1px solid #e6e7eb;
   }
   .nemeeting-address-confirm-cancel {
-    margin-right: 20px;
+    margin-right: 8px;
+    border-radius: 4px;
   }
 }

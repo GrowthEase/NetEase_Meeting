@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { NPS } from '../../../../src/components/web/NPS';
+import React, { useEffect, useState } from 'react';
+import NPS from '../../../../src/components/web/NPS/NPS';
 import './index.less';
 import PCTopButtons from '../../../../src/components/common/PCTopButtons';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +11,7 @@ export default function NPSPage() {
     appKey: '',
     nickname: '',
   });
+
   useEffect(() => {
     // 设置页面标题
     setTimeout(() => {
@@ -19,10 +20,12 @@ export default function NPSPage() {
 
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data;
+
       if (event === 'setNpsInfo') {
         setNpsProps(payload);
       }
     }
+
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);
@@ -34,8 +37,15 @@ export default function NPSPage() {
     <div className="nps-meeting-page">
       <div className="electron-drag-bar">
         <div className="drag-region" />
-        {t('npsTitle')}
-        <PCTopButtons minimizable={false} maximizable={false} />
+        <div
+          className="title"
+          style={{
+            fontWeight: window.systemPlatform === 'win32' ? 'bold' : '500',
+          }}
+        >
+          {t('npsTitle')}
+        </div>
+        <PCTopButtons size="normal" minimizable={false} maximizable={false} />
       </div>
       <div className="nps-meeting-content">
         <NPS {...npsProps} />

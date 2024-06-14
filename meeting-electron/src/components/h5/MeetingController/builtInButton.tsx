@@ -1,6 +1,7 @@
 import { NEMember, Role } from '../../../types'
 import './index.less'
 import { useTranslation } from 'react-i18next'
+import React from 'react'
 
 // 音频管理组件
 type AudioButtonProps = {
@@ -15,6 +16,7 @@ const AudioButton: React.FC<AudioButtonProps> = ({
   onClick,
 }) => {
   const { t } = useTranslation()
+
   return (
     <div
       key={item.id}
@@ -76,6 +78,7 @@ const VideoButton: React.FC<VideoButtonProps> = ({
   onClick,
 }) => {
   const { t } = useTranslation()
+
   return (
     <div
       key={item.id}
@@ -140,6 +143,7 @@ const MemberButton: React.FC<MemberButtonProps> = ({
   onClickHandsUpBtn,
 }) => {
   const { t } = useTranslation()
+
   return (
     <div className="relative controller-item">
       {/*举手图标显示`*/}
@@ -193,6 +197,7 @@ const ChatButton: React.FC<ChatButtonProps> = ({
   item,
 }) => {
   const { t } = useTranslation()
+
   return (
     <div
       className="relative controller-item"

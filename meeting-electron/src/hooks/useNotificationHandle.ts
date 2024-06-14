@@ -34,6 +34,7 @@ export default function useNotificationHandle(
     if (!message) return
     const data = message.data?.data
     const type = data?.type
+
     if (type === 'MEETING.INVITE' || type === 'MEETING.SCHEDULE.START') {
       // 拒绝加入
       if (action === 'reject') {
@@ -53,6 +54,7 @@ export default function useNotificationHandle(
           if (data.meetingNum === meetingNum) {
             return
           }
+
           if (isLocalSharingScreen) {
             try {
               await neMeeting?.muteLocalScreenShare()
@@ -60,6 +62,7 @@ export default function useNotificationHandle(
               console.warn('muteLocalScreenShare', error)
             }
           }
+
           // 加入新的会议
           setTimeout(async () => {
             try {
@@ -80,14 +83,23 @@ export default function useNotificationHandle(
                   data: null,
                 })
               const setting = getLocalStorageSetting()
+
               eventEmitter?.emit(UserEventType.JoinOtherMeeting, {
                 meetingNum: data.meetingNum,
                 video: setting?.normalSetting.openVideo ? 1 : 2,
                 audio: setting?.normalSetting.openAudio ? 1 : 2,
               })
               notificationApi?.destroy()
-            } catch (e: any) {
-              Toast.fail(e.message || e.msg || e.code)
+            } catch (e: unknown) {
+              const knownError = e as {
+                message: string
+                msg: string
+                code: string
+              }
+
+              Toast.fail(
+                knownError.message || knownError.msg || knownError.code
+              )
             }
           })
         } else {

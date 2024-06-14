@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import {
   GlobalContext,
   MeetingInfoContext,
@@ -16,12 +16,12 @@ import {
 } from '../../../types'
 import { DeviceType, NEDeviceBaseInfo } from 'neroom-web-sdk'
 import classNames from 'classnames'
-import Toast from '../../common/toast'
 import Network from '../../common/Network'
+
 // 移动端摄像头类型
 enum MobileCameraType {
-  FRONT = 'front', // 前置摄像头
-  BACK = 'back', // 后置摄像头
+  FRONT = 'user', // 前置摄像头
+  BACK = 'environment', // 后置摄像头
 }
 
 // 移动端麦克风类型
@@ -33,6 +33,7 @@ enum MobileMicrophoneType {
 import './index.less'
 import { useTranslation } from 'react-i18next'
 import Dialog from '../ui/dialog'
+
 interface MeetingHeaderProps {
   className?: string
   visible?: boolean
@@ -49,7 +50,7 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
   const [showMeetingInfo, setShowMeetingInfo] = useState(false)
   const [showExitAction, setShowExitAction] = useState(false)
   const {
-    meetingInfo: { localMember, hostUuid, myUuid, subject },
+    meetingInfo: { localMember, subject },
     dispatch,
   } = useContext<MeetingInfoContextInterface>(MeetingInfoContext)
   const {
@@ -81,7 +82,7 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
     [MobileCameraType.BACK]: ['back', '后置'],
   }
 
-  const { t, i18n: i18next } = useTranslation()
+  const { t } = useTranslation()
   const i18n = {
     leave: t('leave'),
     meetingQuit: t('meetingQuit'),
@@ -119,9 +120,11 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
         },
       },
     ]
+
     if (!isHost) {
       actions.splice(1, 1) // 非主持人不能结束会议
     }
+
     setActions(actions)
     setShowExitAction(true)
   }
@@ -176,6 +179,7 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
   const initDeviceInfo = async () => {
     const promiseArr = [neMeeting?.getCameras()]
     const result = await Promise.all(promiseArr)
+
     if (result[0]) {
       const cameras = result[0]
       const cameraId = neMeeting?.getSelectedCameraDevice()
@@ -187,81 +191,67 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
         cameraItem,
       }
       let cameraType = MobileCameraType.FRONT
+
       if (cameraItem) {
         const back_flag = possibleCameraField[MobileCameraType.BACK].includes(
           cameraItem.deviceName.toLowerCase()
         )
+
         cameraType = back_flag ? MobileCameraType.BACK : MobileCameraType.FRONT
       }
-      setMobileDeviceType((x) => {
+
+      setMobileDeviceType(() => {
         return {
           cameraType,
         }
       })
-      setDeviceInfo((x) => {
+      setDeviceInfo(() => {
         return deviceInfo
       })
       return deviceInfo
     }
   }
 
-  const switchDevice = async (
-    type: DeviceType,
-    switchTag: MobileMicrophoneType | MobileCameraType
-  ) => {
+  const switchDevice = async (type: DeviceType) => {
     if (isSwitchingRef.current) return
     isSwitchingRef.current = true
     let cameras = deviceInfo?.cameras
+
     if (!cameras || cameras?.length === 0) {
       const result = await initDeviceInfo()
+
       if (result) {
         cameras = result?.cameras
       }
     }
 
     const { cameraType } = mobileDeviceType
-    console.log('switchDevice  ', type, mobileDeviceType)
+
     if (cameras) {
       if (type === 'camera') {
         const cameraId =
           cameraType === MobileCameraType.BACK
             ? MobileCameraType.FRONT
             : MobileCameraType.BACK
-        cameras.sort((a, b) => {
-          if (a.deviceName < b.deviceName) return -1
-          if (a.deviceName > b.deviceName) return 1
-          return 0
-        })
-        console.log('switchTag  ', cameraId)
-        const cameraItem = cameras.find((item) => {
-          const flag = possibleCameraField[cameraId].some(
-            (field) => item.deviceName.toLowerCase().indexOf(field) > -1
-          )
-          if (flag) return item
-        })
-        if (cameraItem?.deviceId) {
-          // 部分机型存在直接切换不了的问题，故先关后开
-          await neMeeting?.muteLocalVideo(false)
-          await neMeeting?.changeLocalVideo(cameraItem.deviceId)
-          neMeeting
-            ?.unmuteLocalVideo('', false)
-            .then((res: any) => {
-              setMobileDeviceType({
-                cameraType: cameraId as MobileCameraType,
-                // microType: mobileDeviceType.microType
-              })
+
+        await neMeeting?.muteLocalVideo(false)
+        neMeeting
+          ?.unmuteLocalVideo(cameraId)
+          .then(() => {
+            setMobileDeviceType({
+              cameraType: cameraId as MobileCameraType,
+              // microType: mobileDeviceType.microType
             })
-            .catch((error: any) => {
-              console.log(error)
-            })
-            .finally(() => {
-              isSwitchingRef.current = false
-            })
-        } else {
-          Toast.info(i18n.unsupportedSwitchCamera)
-        }
+          })
+          .catch((error: any) => {
+            console.log(error)
+          })
+          .finally(() => {
+            isSwitchingRef.current = false
+          })
       }
     }
+
     isSwitchingRef.current = false
   }
 
@@ -333,7 +323,7 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
                 <i
                   className="iconfont icon-white iconyx-tv-filpx"
                   onClick={() => {
-                    switchDevice('camera', mobileDeviceType.cameraType)
+                    switchDevice('camera')
                   }}
                 ></i>
               </>
@@ -405,4 +395,5 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
     </>
   )
 }
+
 export default MeetingHeader

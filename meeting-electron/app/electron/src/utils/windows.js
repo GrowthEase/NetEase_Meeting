@@ -6,6 +6,7 @@ function activateApplicationWindowByHandle(winHandle) {
     ShowWindow: ['bool', ['long', 'int']],
   });
   const targetWindowHandle = 0x00000000; // Replace with the actual window handle
+
   // Show and bring the window to the foreground
   user32.ShowWindow(winHandle, 5); // SW_SHOW
   user32.SetForegroundWindow(winHandle);

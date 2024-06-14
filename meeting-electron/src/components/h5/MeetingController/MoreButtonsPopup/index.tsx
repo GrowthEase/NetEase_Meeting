@@ -1,6 +1,7 @@
 import { css } from '@emotion/css'
 import { Popup, PopupProps } from 'antd-mobile/es'
 import { MoreButtonItem } from './useMoreButtons'
+import React from 'react'
 
 const popupBodyClassName = css`
   background-image: linear-gradient(180deg, #33333f, #292933);

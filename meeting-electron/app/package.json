@@ -1,6 +1,6 @@
 {
   "name": "netease-meeting",
-  "version": "3.14.1",
+  "version": "4.6.0",
   "private": true,
   "description": "Secure, simple and open video conferencing solution that enhances office collaboration efficiency and caters to meetings of all sizes. Features include remote audio/video conferences and online collaboration tools.",
   "author": "netease",
@@ -14,8 +14,8 @@
     "build:web-prod": "cross-env RUN_ENV=production umi build",
     "postinstall": "umi generate tmp",
     "prettier": "prettier --write '**/*.{js,jsx,tsx,ts,less,md,json}'",
-    "start": "umi dev",
-    "start:h5": "cross-env PLATFORM=h5 umi dev",
+    "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider umi dev",
+    "start:prod": "cross-env RUN_ENV=production  umi dev",
     "test": "umi-test",
     "test:coverage": "umi-test --coverage"
   },
@@ -30,7 +30,7 @@
   "dependencies": {
     "@ant-design/pro-layout": "^6.5.0",
     "ansi-regex": "^6.0.1",
-    "antd": "^5.4.7",
+    "antd": "^5.17.0",
     "antd-mobile": "^5.18.0",
     "cross-env": "^7.0.3",
     "dotenv": "^16.1.1",

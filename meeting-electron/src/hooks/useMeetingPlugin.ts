@@ -1,7 +1,7 @@
 import { NECustomSessionMessage } from 'neroom-web-sdk/dist/types/types/messageChannelService'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useGlobalContext, useMeetingInfoContext } from '../store'
-import { ActionType } from '../types'
+import { ActionType, NEMeetingInfo } from '../types'
 import { objectToQueryString } from '../utils'
 import { openWindow } from '../utils/windowsProxy'
 
@@ -25,7 +25,12 @@ function useMeetingPlugin(): {
   const { meetingInfo, dispatch } = useMeetingInfoContext()
   const [pluginList, setPluginList] = useState<PluginInfo[]>([])
 
+  const meetingInfoRef = useRef<NEMeetingInfo>(meetingInfo)
+
+  meetingInfoRef.current = meetingInfo
+
   const pluginListRef = useRef<PluginInfo[]>(pluginList)
+
   pluginListRef.current = pluginList
 
   const notificationMessagesRef = useRef<
@@ -59,19 +64,26 @@ function useMeetingPlugin(): {
   const onClickPlugin = useCallback(
     (value: PluginInfo | string, isH5?: boolean): PluginInfo | undefined => {
       let plugin
+      let pluginUrlSearch = ''
+
       if (typeof value === 'string') {
         // 创建URL对象
         const urlObj = new URL(value)
         // 获取查询字符串参数
         const searchParams = new URLSearchParams(urlObj.search)
+
+        pluginUrlSearch = urlObj.search
+        pluginUrlSearch = pluginUrlSearch.replace('?', '')
         // 获取pluginId的值
         const pluginId = searchParams.get('pluginId')
+
         plugin = pluginListRef.current.find(
           (item) => item.pluginId === pluginId
         )
       } else {
         plugin = value
       }
+
       if (!plugin) {
         return
       }
@@ -94,6 +106,7 @@ function useMeetingPlugin(): {
           type: ActionType.UPDATE_MEETING_INFO,
           data: {
             rightDrawerTabActiveKey: plugin.pluginId,
+            pluginUrlSearch,
           },
         })
         return
@@ -110,14 +123,15 @@ function useMeetingPlugin(): {
         const pluginWinOpenData = {
           event: 'updateData',
           payload: {
-            meetingInfo: JSON.parse(JSON.stringify(meetingInfo)),
+            meetingInfo: JSON.parse(JSON.stringify(meetingInfoRef.current)),
             pluginId: plugin.pluginId,
             url: plugin.homeUrl,
-            roomArchiveId: meetingInfo.roomArchiveId,
+            roomArchiveId: meetingInfoRef.current.roomArchiveId,
             isInMeeting: true,
             title: plugin.name,
           },
         }
+
         if (pluginWin?.firstOpen === false) {
           pluginWin.postMessage(pluginWinOpenData, pluginWin.origin)
         } else {
@@ -125,10 +139,13 @@ function useMeetingPlugin(): {
             pluginWin?.postMessage(pluginWinOpenData, pluginWin.origin)
           })
         }
-        function messageListener(e) {
+
+        const messageListener = (e) => {
           const { event, payload } = e.data
+
           if (event === 'neMeeting' && neMeeting) {
             const { replyKey, fnKey, args } = payload
+
             neMeeting[fnKey]?.(...args)
               .then((res) => {
                 pluginWin?.postMessage(
@@ -155,15 +172,17 @@ function useMeetingPlugin(): {
               })
           }
         }
+
         pluginWin?.removeEventListener('message', messageListener)
         pluginWin?.addEventListener('message', messageListener)
 
         return plugin
       }
 
-      const rightDrawerTabs = meetingInfo.rightDrawerTabs
+      const rightDrawerTabs = meetingInfoRef.current.rightDrawerTabs
 
       const item = rightDrawerTabs.find((item) => item.key === plugin.pluginId)
+
       // 没有添加
       if (!item) {
         rightDrawerTabs.push({
@@ -171,6 +190,7 @@ function useMeetingPlugin(): {
           key: plugin.pluginId,
         })
       }
+
       if (item && rightDrawerTabs.length === 1) {
         // 只有一个，不处理这里
       } else {
@@ -179,13 +199,14 @@ function useMeetingPlugin(): {
           data: {
             rightDrawerTabs: [...rightDrawerTabs],
             rightDrawerTabActiveKey: plugin.pluginId,
+            pluginUrlSearch,
           },
         })
       }
 
       return
     },
-    [dispatch, neMeeting, isElectronSharingScreen, pluginList, meetingInfo]
+    [dispatch, neMeeting, isElectronSharingScreen]
   )
 
   return { pluginList, onClickPlugin }

@@ -21,6 +21,7 @@ const AudioCard: React.FC<AudioCardProps> = (props) => {
   const isInPhone = useMemo(() => {
     return member.properties?.phoneState?.value == '1'
   }, [member.properties?.phoneState?.value])
+
   return (
     <div
       ref={ref}

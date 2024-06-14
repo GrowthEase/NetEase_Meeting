@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next'
 import './index.less'
 
 interface ChatroomModalProps extends ModalProps {
-  roomArchiveId?: string
+  roomArchiveId?: number
   roomService?: NERoomService
   accountId?: string
   subject?: string

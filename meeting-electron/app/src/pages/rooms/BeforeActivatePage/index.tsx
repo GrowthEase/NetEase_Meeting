@@ -1,6 +1,6 @@
 import Styles from './index.less';
 import { ConfigProvider } from 'antd';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import QRCode from 'react-qr-code';
 
 const antdPrefixCls = 'nemeeting';
@@ -25,6 +25,7 @@ const BeforeActivatePage: React.FC<BeforeActivatePageProps> = ({
       // 如果按下的键不是英文字符或数字，阻止默认行为
       // 获取按下的键码
       const keyCode = event.keyCode;
+
       // 检查键码是否是英文字符或数字的范围
       if (
         (keyCode >= 65 && keyCode <= 90) || // 大写英文字母
@@ -35,18 +36,22 @@ const BeforeActivatePage: React.FC<BeforeActivatePageProps> = ({
         // 数字
         // 键码是英文字符或数字，执行你的逻辑
         const keyCode = event.keyCode;
+
         if (keyCode !== 8 && values.length < 8) {
           // 输入字符
           const char = event.key.toUpperCase();
           const newValues = [...values, char];
+
           setValues(newValues);
         } else if (keyCode === 8) {
           // 删除字符
           const newValues = values.slice(0, values.length - 1);
+
           setValues(newValues);
         }
       }
     };
+
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
@@ -56,6 +61,7 @@ const BeforeActivatePage: React.FC<BeforeActivatePageProps> = ({
   useEffect(() => {
     if (values.length === CODE_LENGTH) {
       const code = values.join('');
+
       onActivate(code);
     }
   });

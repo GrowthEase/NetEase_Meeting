@@ -1,7 +1,4 @@
-type PostMessageFunction = {
-  (message: any, targetOrigin: string, transfer?: Transferable[]): void
-  (message: any, options?: WindowPostMessageOptions): void
-}
+import { IPCEvent } from '../../app/src/types'
 
 type SelfWindowProxy = WindowProxy & { firstOpen: boolean }
 
@@ -21,6 +18,11 @@ type windows =
   | 'addressBook'
   | 'notificationCardWindow'
   | 'scheduleMeetingWindow'
+  | 'joinMeetingWindow'
+  | 'immediateMeetingWindow'
+  | 'interpreterSettingWindow'
+  | 'interpreterWindow'
+  | 'feedbackWindow'
   | string
 
 const windowsUrl: {
@@ -41,6 +43,12 @@ const windowsUrl: {
   monitoringWindow: '#/monitoring',
   addressBook: '#/addressBook',
   scheduleMeetingWindow: '#/scheduleMeeting',
+  annotationWindow: '#/annotation',
+  interpreterSettingWindow: '#/interpreterSetting',
+  interpreterWindow: '#/interpreterWindow',
+  joinMeetingWindow: '#/joinMeeting',
+  immediateMeetingWindow: '#/immediateMeeting',
+  feedbackWindow: '#/feedback',
 }
 
 const windowsClosed: {
@@ -57,17 +65,21 @@ function openWindow(
 ): (WindowProxy & { firstOpen: boolean }) | null {
   const openUrl = url ?? windowsUrl[name]
   let windowProxy = windowsProxy[name]
+
   if (!windowProxy) {
     const childWindow = window.open(openUrl)
+
     if (childWindow) {
       windowProxy = Object.assign(childWindow, { firstOpen: true })
       windowsProxy[name] = windowProxy
     }
+
     windowsUrl[name] = openUrl
   } else {
     windowProxy.firstOpen = false
-    window.ipcRenderer?.send('focusWindow', openUrl)
+    window.ipcRenderer?.send(IPCEvent.focusWindow, openUrl)
   }
+
   window.ipcRenderer?.removeAllListeners(`windowClosed:${openUrl}`)
   window.ipcRenderer?.once(`windowClosed:${openUrl}`, () => {
     // 通知子窗口关闭
@@ -78,6 +90,7 @@ function openWindow(
     } else if (name === 'scheduleMeetingWindow') {
       closeWindow('addressBook')
     }
+
     window.webFrame?.clearCache()
   })
   windowsClosed[name] = false
@@ -88,6 +101,7 @@ function getWindow(name: windows): WindowProxy | null {
   if (!windowsClosed[name]) {
     return windowsProxy[name]
   }
+
   return null
 }
 
@@ -95,8 +109,12 @@ function closeWindow(name: windows): void {
   windowsProxy[name]?.close()
 }
 
-function closeAllWindows(): void {
+function closeAllWindows(excludes?: string[]): void {
   Object.keys(windowsProxy).forEach((key) => {
+    if (excludes && excludes.includes(key)) {
+      return
+    }
+
     closeWindow(key)
   })
 }
@@ -106,12 +124,15 @@ function getActiveWindows(): SelfWindowProxy[] {
     (key) => !windowsClosed[key]
   )
   const activeWindows: SelfWindowProxy[] = []
+
   for (const key of activeWindowKeys) {
     const selfWindowProxy = windowsProxy[key]
+
     if (selfWindowProxy) {
       activeWindows.push(selfWindowProxy)
     }
   }
+
   return activeWindows
 }
 

@@ -1,14 +1,20 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { NERoomChatMessage } from '../../../types/innerType'
-import { formatDate } from '../../../utils'
+
+interface CommonError {
+  code: number | string
+  message: string
+}
 
 export function handleRecMsgService(msgs: NERoomChatMessage[]): any {
   let unReadMsgsCount = 0 // 获取未读消息
+
   msgs = msgs
     .filter((msg: NERoomChatMessage) => {
       if (['text', 'image', 'audio', 'video', 'file'].includes(msg.type)) {
         unReadMsgsCount += 1
       }
+
       return (
         ['text', 'image', 'audio', 'video', 'file'].includes(msg.type) ||
         (msg.type === 'notification' &&
@@ -34,8 +40,10 @@ const handleMap = {
       .then((res: any) => {
         return res.data
       })
-      .catch((err: any) => {
-        return err
+      .catch((err: unknown) => {
+        const error = err as CommonError
+
+        return error
       })
   },
   orientation: (request: any, params: any) => {
@@ -45,8 +53,10 @@ const handleMap = {
       .then((res: any) => {
         return res.data
       })
-      .catch((err: any) => {
-        return err
+      .catch((err: unknown) => {
+        const error = err as CommonError
+
+        return error
       })
   },
   resend: (request: any, params: any) => {
@@ -57,9 +67,11 @@ const handleMap = {
         console.log(res, 'resend success')
         return res.data
       })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
+        const error = err as CommonError
+
         console.log(err, 'resend err')
-        return err
+        return error
       })
   },
 }
@@ -76,7 +88,6 @@ export function handleSendMsgService(
 }
 
 export function formatMsg(msg: NERoomChatMessage, myUuid?: string): any {
-  msg.time = formatDate(msg.time, 'yyyy-MM-dd hh:mm:ss')
   myUuid && (msg.isMe = msg.from === myUuid)
   return msg
 }

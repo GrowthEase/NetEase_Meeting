@@ -29,6 +29,7 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogin }) => {
       )
       return
     }
+
     onLogin(type)
   }
 
@@ -67,6 +68,7 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogin }) => {
               href="https://meeting.163.com/privacy/agreement_mobile_ysbh_wap.shtml"
               target="_blank"
               title="用户服务协议"
+              rel="noreferrer"
             >
               {i18n.privacyPolicy}
             </a>
@@ -75,6 +77,7 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogin }) => {
               href="https://netease.im/meeting/clauses?serviceType=0"
               target="_blank"
               title="隐私政策"
+              rel="noreferrer"
             >
               {i18n.userAgreement}
             </a>

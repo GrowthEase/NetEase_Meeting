@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MeetingNotificationList from '../../../../src/components/common/Notification/List';
@@ -18,12 +18,15 @@ const MeetingNotification: React.FC = () => {
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data;
+
       if (event === 'windowOpen') {
         const { sessionId, isInMeeting } = payload;
+
         setSessionId(sessionId);
         setIsInMeeting(isInMeeting);
       }
     }
+
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);
@@ -32,6 +35,7 @@ const MeetingNotification: React.FC = () => {
 
   function handleClick(action?: string) {
     const parentWindow = window.parent;
+
     parentWindow?.postMessage(
       {
         event: 'notificationClick',
@@ -54,7 +58,13 @@ const MeetingNotification: React.FC = () => {
       {isInMeeting ? null : (
         <div className="electron-drag-bar">
           <div className="drag-region" />
-          {t('notifyCenter')}
+          <span
+            style={{
+              fontWeight: window.systemPlatform === 'win32' ? 'bold' : '500',
+            }}
+          >
+            {t('notifyCenter')}
+          </span>
           <PCTopButtons minimizable={false} maximizable={false} />
         </div>
       )}

@@ -6,7 +6,7 @@ export default function useWatch<T>(
   data: T,
   callback: Callback<T>,
   config = { immediate: false }
-) {
+): void {
   const { immediate } = config
   const prev = useRef<T>() // 上一次的值
   const stop = useRef(false) // 是否停止watch
@@ -24,6 +24,7 @@ export default function useWatch<T>(
       } else {
         execFn()
       }
+
       prev.current = data
     }
 
@@ -31,5 +32,5 @@ export default function useWatch<T>(
     //   console.log('销毁')
     //   stop.current = true
     // }
-  }, [data])
+  }, [data, immediate])
 }

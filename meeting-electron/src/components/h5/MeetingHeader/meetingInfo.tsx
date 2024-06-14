@@ -18,7 +18,7 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({
   const [selfShow, setSelfShow] = useState(false)
   const { meetingInfo } =
     useContext<MeetingInfoContextInterface>(MeetingInfoContext)
-  const { t, i18n: i18next } = useTranslation()
+  const { t } = useTranslation()
   const i18n = {
     copySuccess: t('copySuccess'),
     shortId: t('shortId'),
@@ -33,8 +33,10 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({
   const displayId = useMemo(() => {
     if (meetingInfo?.meetingNum) {
       const id = meetingInfo.meetingNum
+
       return id.slice(0, 3) + '-' + id.slice(3, 6) + '-' + id.slice(6)
     }
+
     return ''
   }, [meetingInfo?.meetingNum])
 
@@ -125,13 +127,14 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({
                       {copyItem(meetingInfo?.password)}
                     </div>
                   )}
-                  <div className="info-item">
-                    <div className="info-item-title">{i18n.meetingHost}</div>
-                    <div className="info-item-content">
-                      {meetingInfo?.hostName}
+                  {meetingInfo?.hostName ? (
+                    <div className="info-item">
+                      <div className="info-item-title">{i18n.meetingHost}</div>
+                      <div className="info-item-content">
+                        {meetingInfo?.hostName}
+                      </div>
                     </div>
-                  </div>
-
+                  ) : null}
                   {meetingInfo?.meetingInviteUrl && (
                     <div className="info-item">
                       <div className="info-item-title">
@@ -143,6 +146,16 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({
                       </div>
                     </div>
                   )}
+                  {meetingInfo?.maxMembers ? (
+                    <div className="info-item">
+                      <div className="info-item-title">
+                        {t('meetingMaxMembers')}
+                      </div>
+                      <div className="info-item-content">
+                        {meetingInfo?.maxMembers}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -152,4 +165,5 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({
     </>
   )
 }
+
 export default MeetingInfo
