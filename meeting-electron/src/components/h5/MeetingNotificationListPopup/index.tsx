@@ -1,6 +1,6 @@
 import { css } from '@emotion/css'
 import { Popup, PopupProps } from 'antd-mobile/es'
-import { useRef } from 'react'
+import React, { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMeetingInfoContext } from '../../../store'
 import MeetingNotificationList, {

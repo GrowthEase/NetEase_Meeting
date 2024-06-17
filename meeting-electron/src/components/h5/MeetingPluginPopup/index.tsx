@@ -1,6 +1,6 @@
 import { css } from '@emotion/css'
 import { Popup, PopupProps } from 'antd-mobile/es'
-import { useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { useMeetingInfoContext } from '../../../store'
 import { ActionType } from '../../../types'
 import MeetingPlugin from '../../common/PlugIn/MeetingPlugin'
@@ -33,10 +33,10 @@ const pluginContainerCls = css`
   height: calc(100% - 40px);
 `
 
-const MeetingPluginPopup: React.FC<PopupProps> = ({ ...restProps }) => {
+const MeetingPluginPopup: React.FC<PopupProps> = () => {
   const { meetingInfo, dispatch } = useMeetingInfoContext()
   const { pluginList } = useMeetingPlugin()
-  const { t, i18n: i18next } = useTranslation()
+  const { t } = useTranslation()
   const i18n = {
     globalClose: t('globalClose'),
   }
@@ -52,8 +52,23 @@ const MeetingPluginPopup: React.FC<PopupProps> = ({ ...restProps }) => {
     if (rightDrawerTabActiveKey && plugin) {
       return true
     }
+
     return false
   }, [rightDrawerTabActiveKey, plugin])
+
+  const pluginUrl = useMemo(() => {
+    let url = plugin?.homeUrl ?? ''
+
+    if (meetingInfo.pluginUrlSearch) {
+      if (url.includes('?')) {
+        url += `&${meetingInfo.pluginUrlSearch}`
+      } else {
+        url += `?${meetingInfo.pluginUrlSearch}`
+      }
+    }
+
+    return url
+  }, [plugin, meetingInfo.pluginUrlSearch])
 
   const onClose = () => {
     // 关闭插件
@@ -83,7 +98,7 @@ const MeetingPluginPopup: React.FC<PopupProps> = ({ ...restProps }) => {
           </div>
           <div className={pluginContainerCls}>
             <MeetingPlugin
-              url={plugin.homeUrl}
+              url={pluginUrl}
               pluginId={plugin.pluginId}
               isInMeeting={true}
             />

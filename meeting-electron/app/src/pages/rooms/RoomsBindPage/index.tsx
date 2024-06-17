@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { RoomsInfo } from '../request';
 import Styles from './index.less';
 import { ConfigProvider, message } from 'antd';

@@ -1,10 +1,6 @@
-import { NEResult, NERoomMember } from 'neroom-web-sdk'
+import { NEResult } from 'neroom-web-sdk'
 import NEMeetingService from './NEMeeting'
-import {
-  EventType,
-  GetMeetingConfigResponse,
-  NEMeetingJoinOptions,
-} from '../types'
+import { EventType, GetMeetingConfigResponse } from '../types'
 import {
   JoinOptions,
   NEMeetingInviteInfo,
@@ -17,18 +13,7 @@ interface InitOptions {
   neMeeting: NEMeetingService
   eventEmitter: EventEmitter
 }
-interface InviteData {
-  inviteInfo: {
-    inviteIcon: string
-    inviterName: string
-    subject: string
-    outOfMeeting: boolean
-  }
-  meetingId: string
-  meetingNum: string
-  roomUuid: string
-  notifyCard: any
-}
+
 export default class NEMeetingInviteService {
   private _neMeeting: NEMeetingService
   private _event: EventEmitter
@@ -49,6 +34,7 @@ export default class NEMeetingInviteService {
   async rejectInvite(meetingId: string): Promise<NEResult<null> | undefined> {
     const message = this._meetingIdToMeetingNumMap.get(meetingId)
     const roomUuid = message?.data?.data.roomUuid
+
     if (roomUuid) {
       return this._neMeeting?.rejectInvite(roomUuid)
     } else {
@@ -81,14 +67,14 @@ export default class NEMeetingInviteService {
   on<K extends keyof NEMeetingInviteListener>(
     eventName: K,
     callback: NEMeetingInviteListener[K]
-  ) {
+  ): void {
     callback && this._event.on(eventName, callback)
   }
 
   off<K extends keyof NEMeetingInviteListener>(
     eventName: K,
     callback?: NEMeetingInviteListener[K]
-  ) {
+  ): void {
     if (callback) {
       this._event.off(eventName, callback)
     } else {
@@ -96,7 +82,7 @@ export default class NEMeetingInviteService {
     }
   }
 
-  destroy() {
+  destroy(): void {
     this._meetingIdToMeetingNumMap.clear()
     this._roomUuidToMeetingNumMap.clear()
     this._event.removeAllListeners()
@@ -108,24 +94,31 @@ export default class NEMeetingInviteService {
         localStorage.getItem('nemeeting-global-config') || '{}'
       )
     }
+
     console.warn('_handleReceiveSessionMessage>>', message)
     const sessionId = this._globalConfig?.appConfig.notifySenderAccid
+
     if (sessionId && message?.sessionId === sessionId) {
       if (message.data) {
         const data =
           Object.prototype.toString.call(message.data) === '[object Object]'
             ? message.data
             : JSON.parse(message.data)
+
         message.data = data
       }
+
       const type = message.data?.data?.type
+
       // 非会中显示的通知
       if (type === 'MEETING.INVITE') {
         const data = message.data?.data
+
         message.data?.data?.timestamp
         if (data.inviteInfo) {
           data.inviteInfo.timestamp = message.data?.data?.timestamp
         }
+
         // 第一次需要抛出事件
         this._event.emit(
           EventType.OnMeetingInviteStatusChange,
@@ -136,7 +129,6 @@ export default class NEMeetingInviteService {
         )
         this._meetingIdToMeetingNumMap.set(data.meetingId, message)
         this._roomUuidToMeetingNumMap.set(data.roomUuid, message)
-        // this._event.emit(EventType.OnMeetingInviteStatusChanged, ​)
       }
     }
   }
@@ -146,10 +138,12 @@ export default class NEMeetingInviteService {
       const { member, roomUuid } = res.data
       const message = this._roomUuidToMeetingNumMap.get(roomUuid)
       const inviteData = message?.data?.data
+
       if (!inviteData || member.subState === NEMeetingInviteStatus.calling) {
         console.log('roomUuid not found', inviteData, member.subState)
         return
       }
+
       this._event.emit(
         EventType.OnMeetingInviteStatusChange,
         member.subState,
@@ -160,6 +154,7 @@ export default class NEMeetingInviteService {
     } else if ([33, 51, 30].includes(res.commandId)) {
       const inviteInfo = this._roomUuidToMeetingNumMap.get(res.roomUuid)?.data
         ?.data
+
       if (inviteInfo) {
         this._event.emit(
           EventType.OnMeetingInviteStatusChange,
@@ -175,7 +170,7 @@ export default class NEMeetingInviteService {
 
   private _initListener() {
     this._neMeeting.eventEmitter.on(
-      EventType.OnReceiveSessionMessage,
+      EventType.onSessionMessageReceived,
       this._handleReceiveSessionMessage.bind(this)
     )
     this._neMeeting.eventEmitter.on(

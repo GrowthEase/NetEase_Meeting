@@ -1,4 +1,4 @@
-const { BrowserWindow, ipcMain, screen, shell } = require('electron');
+const { BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
 
 const isLocal = process.env.MODE === 'local';
@@ -12,13 +12,13 @@ const COLLAPSE_WINDOW_WIDTH = 350;
 
 let mY = 0;
 
-let excludeWindowList = [];
-
 let memberNotifyTimer = null;
+let mainWindowAlwaysOnTopTimer;
 
 const sharingScreen = {
   isSharing: false,
   memberNotifyWindow: null,
+  shareScreen: null,
 };
 
 const closeScreenSharingWindow = function () {
@@ -33,8 +33,10 @@ function createNotifyWindow(mainWindow) {
   ) {
     return;
   }
+
   const nowDisplay = screen.getPrimaryDisplay();
   const { x, y, width, height } = nowDisplay.workArea;
+
   sharingScreen.memberNotifyWindow = new BrowserWindow({
     width: NOTIFY_WINDOW_WIDTH,
     height: NOTIFY_WINDOW_HEIGHT,
@@ -57,13 +59,15 @@ function createNotifyWindow(mainWindow) {
     },
   });
   const notifyWindow = sharingScreen.memberNotifyWindow;
+
   if (isLocal) {
-    notifyWindow.loadURL('https://localhost:8000/#/memberNotify');
+    notifyWindow.loadURL('http://localhost:8000/#/memberNotify');
   } else {
     notifyWindow.loadFile(path.join(__dirname, '../build/index.html'), {
       hash: 'memberNotify',
     });
   }
+
   notifyWindow.setAlwaysOnTop(true, 'screen-saver');
   notifyWindow.show();
   setTimeout(() => {
@@ -76,6 +80,7 @@ function createNotifyWindow(mainWindow) {
       }
     });
   }
+
   ipcMain.on('notify-show', (event, arg) => {
     sharingScreen.memberNotifyWindow?.webContents.send('notify-show', arg);
     sharingScreen.memberNotifyWindow?.setPosition(
@@ -110,6 +115,7 @@ function createNotifyWindow(mainWindow) {
     sharingScreen.memberNotifyWindow = null;
   });
 }
+
 function setNotifyWindowPosition(width, height) {
   if (
     sharingScreen.memberNotifyWindow &&
@@ -120,12 +126,15 @@ function setNotifyWindowPosition(width, height) {
       Math.round(height + NOTIFY_WINDOW_HEIGHT),
     );
   }
+
   clearNotifyWIndowTimeout();
 }
+
 function clearNotifyWIndowTimeout() {
   memberNotifyTimer && clearTimeout(memberNotifyTimer);
   memberNotifyTimer = null;
 }
+
 function removeMemberNotifyListener() {
   ipcMain.removeAllListeners('notify-show');
   ipcMain.removeAllListeners('notify-hide');
@@ -150,24 +159,43 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
   // 用来改变工具栏视图的高度
   let mainHeight = [60];
 
+  function mainWindowCenter(mainWindow) {
+    const nowDisplay = shareScreen || screen.getPrimaryDisplay();
+    const { x, width } = nowDisplay.workArea;
+    const mainWindowWidth = mainWindow.getBounds().width;
+
+    mainWindow.setBounds({
+      x: Math.floor(x + width / 2 - mainWindowWidth / 2),
+      y: mY,
+    });
+  }
+
   function removeMainHeight(height) {
     const index = mainHeight.findIndex((item) => item === height);
+
     if (index !== -1) {
       mainHeight.splice(index, 1);
     }
   }
 
   function setMainWindowHeight() {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      return;
+    }
+
     let height = Math.max.apply(null, mainHeight);
+
     // 如果高度没有超过 100 ， 说明是工具栏的高度，不需要改变主窗口的高度。 只有 40 ， 60  两种
     if (height < 100) {
       height = mainHeight[mainHeight.length - 1];
     }
+
     if (sharingScreen.isSharing) {
       mainWindow.setBounds({
         height,
       });
     }
+
     if (height === 60) {
       mainWindow.setBounds({
         width: WINDOW_WIDTH,
@@ -181,25 +209,27 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
         width: WINDOW_WIDTH,
       });
     }
-    mainWindow.center();
-    mainWindow.setBounds({
-      y: mY,
-    });
+
+    // mainWindow.center();
+    mainWindowCenter(mainWindow);
   }
 
   ipcMain.on('nemeeting-sharing-screen', (event, value) => {
     const { method, data } = value;
-    const nowDisplay = shareScreen || screen.getPrimaryDisplay();
-    const { x, y, width } = nowDisplay.workArea;
+
     switch (method) {
-      case 'start':
-        createNotifyWindow(mainWindow);
+      case 'start': {
+        const nowDisplay = shareScreen || screen.getPrimaryDisplay();
+        const { x, y, width } = nowDisplay.workArea;
+
+        mainWindow.setBackgroundColor('rgba(255, 255, 255, 0)');
         mainWindow.setOpacity(0);
-        mainWindow.setBackgroundColor('rgba(255, 255, 255,0)');
         setTimeout(() => {
           mainWindow.setOpacity(1);
           mainWindow.setBackgroundColor('rgba(255, 255, 255,0)');
-        }, 600);
+        }, 300);
+
+        createNotifyWindow(mainWindow);
         sharingScreen.isSharing = true;
 
         mainWindow.setMinimizable(false);
@@ -210,6 +240,7 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
 
         const mainWidth = 760;
         const mainX = x + width / 2 - mainWidth / 2;
+
         // 记录主窗口的y坐标
         mY = y;
 
@@ -223,28 +254,46 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
         mainHeight = [60];
         setMainWindowHeight();
 
-        mainWindow.setAlwaysOnTop(true, 'screen-saver');
+        mainWindow.setAlwaysOnTop(true, 'normal', 100);
+        if (isWin32) {
+          mainWindowAlwaysOnTopTimer = setInterval(() => {
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.setAlwaysOnTop(true, 'normal', 100);
+            } else {
+              clearInterval(mainWindowAlwaysOnTopTimer);
+              mainWindowAlwaysOnTopTimer = null;
+            }
+          }, 1000);
+        }
 
         break;
-      case 'share-screen':
+      }
+
+      case 'share-screen': {
         shareScreen = screen.getAllDisplays()[data];
+        sharingScreen.shareScreen = shareScreen;
         screen.on('display-removed', (_, data) => {
           const isSameDisplay = data.label === shareScreen?.label;
+
           if (isSameDisplay) {
             // TODO: 退出共享
           }
         });
+
         break;
+      }
+
       case 'stop':
         closeMemberNotifyWindow();
         if (sharingScreen.isSharing) {
+          mainWindow.setBackgroundColor('rgba(255, 255, 255, 1)');
           if (!data?.immediately) {
             mainWindow.setOpacity(0);
             setTimeout(() => {
               if (mainWindow.isDestroyed()) return;
               mainWindow.setOpacity(1);
               !isWin32 && mainWindow.setBackgroundColor('#ffffff');
-            }, 600);
+            }, 300);
           }
 
           shareScreen = null;
@@ -259,8 +308,12 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
           initMainWindowSize();
           mainWindow.show();
 
-          sharingScreen.screenSharingChatRoomWindow?.hide();
+          if (mainWindowAlwaysOnTopTimer) {
+            clearInterval(mainWindowAlwaysOnTopTimer);
+            mainWindowAlwaysOnTopTimer = null;
+          }
         }
+
         break;
       case 'controlBarVisibleChangeByMouse':
         if (sharingScreen.isSharing) {
@@ -279,11 +332,10 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
             mainHeight.push(40);
             setMainWindowHeight(true);
           }
-          mainWindow.center();
-          mainWindow.setBounds({
-            y: mY,
-          });
+
+          mainWindowCenter(mainWindow);
         }
+
         break;
       case 'openDeviceList':
         mainHeight.push(800);
@@ -306,18 +358,21 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
           mainHeight.push(300);
           setMainWindowHeight();
         }
+
         break;
       case 'closeModal':
         if (sharingScreen.isSharing) {
           removeMainHeight(300);
           setMainWindowHeight(true);
         }
+
         break;
       case 'openToast':
         if (sharingScreen.isSharing) {
           mainHeight.push(120);
           setMainWindowHeight();
         }
+
         event.sender.send('nemeeting-sharing-screen', {
           method,
           data: sharingScreen.isSharing,
@@ -328,16 +383,21 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
           removeMainHeight(120);
           setMainWindowHeight(true);
         }
+
         break;
-      case 'videoWindowHeightChange':
+      case 'videoWindowHeightChange': {
         const { height } = data;
         const videoWindow = BrowserWindow.fromWebContents(event.sender);
+
         if (videoWindow) {
           videoWindow?.setBounds({
             height: Math.round(height + MEETING_HEADER_HEIGHT),
           });
         }
+
         break;
+      }
+
       default:
         break;
     }

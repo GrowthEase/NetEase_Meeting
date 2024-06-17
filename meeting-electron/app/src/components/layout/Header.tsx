@@ -35,6 +35,7 @@ const Header: FC<HeaderProps> = (props) => {
       localStorage.removeItem('loginWay');
       localStorage.removeItem('loginAppNameSpace');
     }
+
     toWebsite();
   };
 
@@ -48,8 +49,10 @@ const Header: FC<HeaderProps> = (props) => {
 
   useEffect(() => {
     const userString = localStorage.getItem(LOCALSTORAGE_USER_INFO);
+
     if (userString) {
       const user = JSON.parse(userString);
+
       setUserInfo(user);
     }
   }, []);
@@ -65,12 +68,12 @@ const Header: FC<HeaderProps> = (props) => {
             </div>
           </Space> */}
           <Dropdown
-            dropdownRender={(menu) => (
+            dropdownRender={() => (
               <>
                 <ul className={styles.dropdownMenu}>
                   <li
                     className={styles.toProfile}
-                    onClick={(e) => {
+                    onClick={() => {
                       toProfile();
                     }}
                   >
@@ -78,7 +81,7 @@ const Header: FC<HeaderProps> = (props) => {
                   </li>
                   <li
                     className={styles.toProfile}
-                    onClick={(e) => {
+                    onClick={() => {
                       logout();
                     }}
                   >

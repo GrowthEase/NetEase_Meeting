@@ -7,7 +7,13 @@ import antd_zh_CH from 'antd/locale/zh_CN';
 import BeforeActivatePage from './BeforeActivatePage';
 import RoomsBindPage from './RoomsBindPage';
 import RoomsHomePage from './RoomsHomePage';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import req, { QRCodeRes, RoomsInfo, Settings, domain } from './request';
 import { EventType } from '../../../../src/types';
 import { useDevices } from './hooks';
@@ -79,6 +85,7 @@ const RoomsPage: React.FC = () => {
   const videoPreviewRef = useRef(false);
   const speakerTestTimerRef = useRef<NodeJS.Timeout>();
   const microphoneTestRef = useRef('');
+
   1;
   const [hasMicAuthorization, setHasMicAuthorization] = useState(true);
   const [hasCameraAuthorization, setHasCameraAuthorization] = useState(true);
@@ -90,6 +97,7 @@ const RoomsPage: React.FC = () => {
   });
   const deviceInfoRef = useRef<SelectedDeviceInfo>(deviceInfo);
   const settingRef = useRef<Settings>();
+
   deviceInfoRef.current = deviceInfo;
   settingRef.current = settings;
 
@@ -101,12 +109,14 @@ const RoomsPage: React.FC = () => {
         return true;
       }
     }
+
     return false;
   }, [activeStep, roomsInfo]);
 
   function initRooms() {
     if (activeStep === 0) {
       const res = req.getAccountInfo();
+
       if (res) {
         handleUserLogin({
           appKey: res.appKey,
@@ -114,9 +124,10 @@ const RoomsPage: React.FC = () => {
           token: res.userToken,
         });
         const activeStep = localStorage.getItem('NetEase-Rooms-ActiveStep');
+
         setActiveStep(Number(activeStep) || 2);
       } else {
-        function getRoomQRCode() {
+        const getRoomQRCode = () => {
           req.getRoomsQRCode().then((res) => {
             setQrCodeRes(res);
             handleUserLogin({
@@ -129,7 +140,8 @@ const RoomsPage: React.FC = () => {
               getRoomQRCode();
             }, res.expireSeconds * 1000);
           });
-        }
+        };
+
         getRoomQRCode();
       }
     }
@@ -160,6 +172,7 @@ const RoomsPage: React.FC = () => {
       localStorage.removeItem('NetEase-Rooms-Current-Meeting');
       window.ipcRenderer?.send('beforeEnterRoom');
     }
+
     //@ts-ignore
     NEMeetingKit.actions.on('onMeetingStatusChanged', (status: number) => {
       // 会议状态变更如密码输入框点击取消返回到会前状态
@@ -179,6 +192,7 @@ const RoomsPage: React.FC = () => {
     const previewRoomContext =
       // @ts-ignore
       NEMeetingKit.actions.neMeeting?.roomService?.getPreviewRoomContext();
+
     if (previewRoomContext) {
       previewRoomContext.addPreviewRoomListener({
         onPlayoutDeviceChanged: () => {
@@ -206,9 +220,11 @@ const RoomsPage: React.FC = () => {
 
   function handleResumeMeeting() {
     const meetingInfo = localStorage.getItem('NetEase-Rooms-Current-Meeting');
+
     if (meetingInfo) {
       try {
         const joinOptions = JSON.parse(meetingInfo);
+
         NEMeetingKit.actions.join(joinOptions, function (e: any) {
           setJoiningMeeting(false);
           if (!e) {
@@ -219,7 +235,9 @@ const RoomsPage: React.FC = () => {
             setInMeeting(false);
           }
         });
-      } catch {}
+      } catch (error) {
+        console.error('handleResumeMeeting', error);
+      }
     }
   }
 
@@ -248,6 +266,7 @@ const RoomsPage: React.FC = () => {
     );
     const updateDateTime = updateDate.getTime();
     let updateDelay = 0;
+
     if (updateDateTime > nowTime) {
       updateDelay = updateDateTime - nowTime;
     } else {
@@ -262,6 +281,7 @@ const RoomsPage: React.FC = () => {
       ) {
         return;
       }
+
       const macVersion =
         settingRef.current?.updateVersion?.mac?.versionName || '';
       const winVersion =
@@ -283,13 +303,17 @@ const RoomsPage: React.FC = () => {
             localUpdateInfo.platform == 'darwin' ? macVersion : winVersion,
         },
       });
+
       if (res.data.code != 200 && res.data.code != 0) {
         return;
       }
+
       const tmpData = res.data.ret;
+
       if (!tmpData) {
         return;
       }
+
       updateInfoRef.current = tmpData;
       if (localUpdateInfo.platform == 'darwin') {
         checkUpdate({
@@ -301,6 +325,7 @@ const RoomsPage: React.FC = () => {
         });
       }
     }
+
     // 测试时候设置延迟10s
     // updateDelay = 10000;
     updateTimer.current && clearTimeout(updateTimer.current);
@@ -328,6 +353,7 @@ const RoomsPage: React.FC = () => {
     if (NEMeetingKit.actions.isInitialized) {
       NEMeetingKit.actions.destroy();
     }
+
     NEMeetingKit.actions.init(
       0,
       0,
@@ -410,6 +436,7 @@ const RoomsPage: React.FC = () => {
               camera: camera !== 'denied',
               microphone: microphone !== 'denied',
             });
+
             req.sendCustomMessage({
               // 反馈控制器应用权限情况
               cmdId: 339,
@@ -424,6 +451,7 @@ const RoomsPage: React.FC = () => {
   function handleJoin() {
     const previewController = NEMeetingKit.actions.neMeeting?.previewController;
     const roomContext = NEMeetingKit.actions.neMeeting?.roomContext;
+
     window.ipcRenderer?.send('stopPreview');
     window.ipcRenderer?.send('enterRoom');
     // 关闭麦克风测试
@@ -445,9 +473,11 @@ const RoomsPage: React.FC = () => {
     );
 
     const localMember = roomContext?.localMember;
+
     if (localMember) {
       roomContext?.updateMemberProperty(localMember.uuid, 'rooms_node', '1');
     }
+
     //  入会后，状态改成 3
     setActiveStep(3);
   }
@@ -457,8 +487,8 @@ const RoomsPage: React.FC = () => {
     const { speakList, recordList, cameraList } = res;
     const tmpDeviceInfo: SelectedDeviceInfo = { ...deviceInfo };
     // 当下发的设备本端没有的情况下需要重新上报下设备并切换默认设备
-    let needToReport = false;
     const videoDeviceList = device?.video?.in;
+
     if (
       videoDeviceList &&
       Array.isArray(videoDeviceList) &&
@@ -467,20 +497,20 @@ const RoomsPage: React.FC = () => {
       const selectedDevice = videoDeviceList.find((item) => {
         return item.selected;
       });
-      if (!selectedDevice) {
-        needToReport = true;
-      } else {
+
+      if (selectedDevice) {
         const exitsIndex = cameraList.findIndex(
           (item) => item.id === selectedDevice?.id,
         );
+
         if (exitsIndex > -1) {
           tmpDeviceInfo.selectedVideoDeviceId = selectedDevice?.id;
-        } else {
-          needToReport = true;
         }
       }
     }
+
     const micDeviceList = device?.audio?.in;
+
     if (
       micDeviceList &&
       Array.isArray(micDeviceList) &&
@@ -489,20 +519,20 @@ const RoomsPage: React.FC = () => {
       const selectedDevice = micDeviceList.find((item) => {
         return item.selected;
       });
-      if (!selectedDevice) {
-        needToReport = true;
-      } else {
+
+      if (selectedDevice) {
         const exitsIndex = recordList.findIndex(
           (item) => item.id === selectedDevice?.id,
         );
+
         if (exitsIndex > -1) {
           tmpDeviceInfo.selectedMicDeviceId = selectedDevice?.id;
-        } else {
-          needToReport = true;
         }
       }
     }
+
     const speakerDeviceList = device?.audio?.out;
+
     if (
       speakerDeviceList &&
       Array.isArray(speakerDeviceList) &&
@@ -511,12 +541,14 @@ const RoomsPage: React.FC = () => {
       const selectedDevice = speakerDeviceList.find((item) => {
         return item.selected;
       });
+
       if (!selectedDevice) {
         needToReport = true;
       } else {
         const exitsIndex = speakList.findIndex(
           (item) => item.id === selectedDevice?.id,
         );
+
         if (exitsIndex > -1) {
           tmpDeviceInfo.selectedSpeakerDeviceId = selectedDevice?.id;
         } else {
@@ -524,6 +556,7 @@ const RoomsPage: React.FC = () => {
         }
       }
     }
+
     reportDevices(tmpDeviceInfo, setDeviceInfo);
     return tmpDeviceInfo;
   }
@@ -531,15 +564,19 @@ const RoomsPage: React.FC = () => {
   useEffect(() => {
     let isJoining = false;
     const previewController = NEMeetingKit.actions.neMeeting?.previewController;
+
     function handelRoomsCustomEvent(res: any) {
       const { commandId, senderUuid, data } = res;
       const dataObj = JSON.parse(data);
+
       if (isCheckingUpdateRef.current) {
         return;
       }
+
       switch (commandId) {
-        case 200:
+        case 200: {
           const _settings: Settings = dataObj.settings;
+
           // 设置更新
           if (_settings) {
             setSettings({
@@ -547,7 +584,10 @@ const RoomsPage: React.FC = () => {
               ..._settings,
             });
           }
+
           break;
+        }
+
         case 201:
           // 状态更新
           req.getRoomsInfo().then((res) => {
@@ -579,18 +619,19 @@ const RoomsPage: React.FC = () => {
           req.removeAccountInfo();
           setActiveStep(0);
           break;
-        case 206:
+        case 206: {
           //  投屏入会
           if (inMeeting || isJoining || isCheckingUpdateRef.current) {
             return;
           }
+
           dataObj.video =
             !settings?.videoEnabled || !hasCameraAuthorization ? 2 : 1;
           dataObj.audio =
             !settings?.audioEnabled || !hasMicAuthorization ? 2 : 1;
           isJoining = true;
           setJoiningMeeting(true);
-          let joinOptions = {
+          const joinOptions = {
             ...dataObj,
             isRooms: true,
             enableFixedToolbar: false,
@@ -600,6 +641,7 @@ const RoomsPage: React.FC = () => {
               frameRate: 30,
             },
           };
+
           NEMeetingKit.actions.join(joinOptions, function (e: any) {
             isJoining = false;
             setJoiningMeeting(false);
@@ -616,6 +658,8 @@ const RoomsPage: React.FC = () => {
             }
           });
           break;
+        }
+
         case 207:
           //控制器绑定
           setActiveStep(3);
@@ -625,12 +669,14 @@ const RoomsPage: React.FC = () => {
             setSettings(res.settings);
           });
           break;
-        case 208:
+        case 208: {
           if (inMeeting || isJoining) {
             return;
           }
+
           //Rooms检查版本更新指令
           const versionInfo = dataObj.versionInfo;
+
           updateInfoRef.current = versionInfo;
           setUpdateError({
             showUpdateError: false,
@@ -638,6 +684,8 @@ const RoomsPage: React.FC = () => {
           });
           checkUpdate(versionInfo, true);
           break;
+        }
+
         case 209:
           // 控制台下发设备切换
           getSelectedDeviceInfoFromDevice(dataObj);
@@ -660,11 +708,13 @@ const RoomsPage: React.FC = () => {
             window.ipcRenderer?.send('restartApp');
           }, 0);
           break;
-        case 303:
+
+        case 303: {
           // 会议开始
           if (inMeeting || isJoining || isCheckingUpdateRef.current) {
             return;
           }
+
           dataObj.video =
             dataObj.noVideo ||
             !settings?.videoEnabled ||
@@ -677,7 +727,7 @@ const RoomsPage: React.FC = () => {
               : 1;
           isJoining = true;
           setJoiningMeeting(true);
-          joinOptions = {
+          const joinOptions = {
             ...dataObj,
             isRooms: true,
             enableFixedToolbar: false,
@@ -687,6 +737,7 @@ const RoomsPage: React.FC = () => {
               frameRate: 30,
             },
           };
+
           NEMeetingKit.actions.join(joinOptions, function (e: any) {
             isJoining = false;
             setJoiningMeeting(false);
@@ -703,6 +754,8 @@ const RoomsPage: React.FC = () => {
             }
           });
           break;
+        }
+
         case 304:
           // 会议离开
           NEMeetingKit.actions.neMeeting?.leave();
@@ -817,6 +870,7 @@ const RoomsPage: React.FC = () => {
           out: [],
         },
       };
+
       if (data.type === 'video') {
         res.video.in.push({
           id: data.deviceId,
@@ -839,11 +893,13 @@ const RoomsPage: React.FC = () => {
           isDefault: false,
         });
       }
+
       getSelectedDeviceInfoFromDevice(res);
     }
 
     function handelRoomsSendEvent(data: { cmdId: number; message?: string }) {
       const { cmdId, message = '{}' } = data;
+
       roomsInfo?.controls?.forEach((item) => {
         req.sendCustomMessage({
           cmdId,
@@ -876,10 +932,12 @@ const RoomsPage: React.FC = () => {
 
   async function sendControllerUpdateInfo(toUserUuid: string, seq: number) {
     let _localUpdateInfo = localUpdateInfo;
+
     if (!_localUpdateInfo.versionName) {
       _localUpdateInfo = await getLocalUpdateInfo();
       setLocalUpdateInfo(_localUpdateInfo);
     }
+
     req.sendCustomMessage({
       // 更新controller版本
       cmdId: 336,
@@ -894,9 +952,11 @@ const RoomsPage: React.FC = () => {
   const checkUpdate = useCallback(
     async (data: ResUpdateInfo, forceUpdate = false) => {
       let updateInfo = localUpdateInfo;
+
       if (forceUpdate) {
         isCheckingUpdateRef.current = true;
       }
+
       if (!updateInfo.versionName) {
         try {
           updateInfo = await getLocalUpdateInfo();
@@ -906,22 +966,26 @@ const RoomsPage: React.FC = () => {
           console.log('getLocalUpdateInfo Error', e);
         }
       }
+
       const ipcRenderer = window.ipcRenderer;
 
       // 判断是否需要更新
       const needUpdate =
         (data?.latestVersionCode || 0) > updateInfo.versionCode;
+
       console.log('needUpdate', needUpdate);
       if (!needUpdate) {
         isCheckingUpdateRef.current = false;
         return;
       }
+
       async function handleUpdate(data: ResUpdateInfo) {
         if (needUpdate) {
           setNeedUpdateType(
             forceUpdate ? UpdateType.forceUpdate : UpdateType.normalUpdate,
           );
           let description = data.description;
+
           try {
             description = await ipcRenderer?.invoke(
               IPCEvent.decodeBase64,
@@ -930,6 +994,7 @@ const RoomsPage: React.FC = () => {
           } catch (e) {
             console.log('decodeBase64 Error', e);
           }
+
           setUpdateInfo({
             title: data.title || '--',
             description: description || '--',
@@ -942,11 +1007,12 @@ const RoomsPage: React.FC = () => {
               md5: data?.checkCode || '',
               forceUpdate: forceUpdate,
             })
-            .catch((e: any) => {
+            .catch(() => {
               isCheckingUpdateRef.current = false;
             });
         }
       }
+
       // 判断是否需要强制更新
       if (!inMeeting) {
         handleUpdate(data);
@@ -970,6 +1036,7 @@ const RoomsPage: React.FC = () => {
   useEffect(() => {
     if (roomsInfo && settings) {
       const key = 'NetEase-Rooms-Settings';
+
       settings.pairingCode = roomsInfo.pairingCode;
       localStorage.setItem(key, JSON.stringify(settings));
     }
@@ -980,10 +1047,12 @@ const RoomsPage: React.FC = () => {
     if (navigator.onLine) {
       initRooms();
     }
+
     function handleOnline() {
       initRooms();
       message.destroy('offline');
     }
+
     function handleOffline() {
       if (!inMeeting) {
         message.error({
@@ -993,6 +1062,7 @@ const RoomsPage: React.FC = () => {
         });
       }
     }
+
     if (!navigator.onLine) {
       handleOffline();
     }
@@ -1028,6 +1098,7 @@ const RoomsPage: React.FC = () => {
         isCheckingUpdateRef.current = false;
       }
     };
+
     const handleUpdateError = (_: any, error: any) => {
       // setNeedUpdateType(UpdateType.noUpdate);
       setUpdateProgress(0);
@@ -1039,11 +1110,13 @@ const RoomsPage: React.FC = () => {
     };
 
     const ipcRenderer = window.ipcRenderer;
+
     ipcRenderer?.on(IPCEvent.updateProgress, handleUpdateProgress);
     ipcRenderer?.on(IPCEvent.updateError, handleUpdateError);
 
     return () => {
       const ipcRenderer = window.ipcRenderer;
+
       ipcRenderer?.off(IPCEvent.updateProgress, handleUpdateProgress);
       ipcRenderer?.off(IPCEvent.updateError, handleUpdateError);
     };

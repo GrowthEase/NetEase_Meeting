@@ -1,9 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { NEMember, Role, SearchAccountInfo } from '../../../types'
-import { Checkbox, Dropdown, Input } from 'antd'
-import type { MenuProps } from 'antd'
-import { SearchOutlined } from '@ant-design/icons'
+import { Role, SearchAccountInfo } from '../../../types'
+import { Checkbox, Dropdown, Input, MenuProps } from 'antd'
 import EmptyImg from '../../../assets/empty-SIPCall.png'
 import UserAvatar from '../../common/Avatar'
 import { debounce } from '../../../utils'
@@ -83,17 +81,19 @@ const ConnectMemberItem: React.FC<ConnectMemberItemProps> = ({
     if (!onRoleChange) return
     onRoleChange(member.userUuid, key as Role)
   }
+
   const memberRole = useMemo(() => {
     const roleMap = {
       host: t('host'),
       cohost: t('coHost'),
     }
+
     return member.role ? roleMap[member.role] : ''
-  }, [member.role])
+  }, [member.role, t])
 
   const isMySelf = useMemo(() => {
     return member.userUuid === myUuid
-  }, [member.userUuid])
+  }, [member.userUuid, myUuid])
 
   return (
     <div className="nemeeting-connect-member-item">
@@ -156,6 +156,7 @@ const ConnectMemberItem: React.FC<ConnectMemberItemProps> = ({
     </div>
   )
 }
+
 interface ConnectMemberListSelectedProps {
   className?: string
   options: SearchAccountInfo[]
@@ -195,17 +196,16 @@ const ConnectMemberListSelected: React.FC<ConnectMemberListSelectedProps> = ({
 
 // 通讯录成员列表
 const ConnectMemberList: React.FC<ConnectMemberListProps> = ({
-  className,
   onChange,
   myUuid,
   options,
   value,
-  showMore,
 }) => {
   const { t } = useTranslation()
   const onCheckChange = (member: SearchAccountInfo, isChecked: boolean) => {
     onChange?.(member, isChecked)
   }
+
   return options.length > 0 ? (
     <>
       {options.map((item) => {
@@ -262,6 +262,7 @@ const AddressBook: React.FC<SIPBatchCallProps> = ({
   const onConnectMembersChange = (member: SearchAccountInfo, isChecked) => {
     onChange?.(member, isChecked)
   }
+
   const onRoleChangeHandler = (uuid: string, role: Role) => {
     // 如果是联席主持人，不能超过4个
     if (
@@ -272,18 +273,22 @@ const AddressBook: React.FC<SIPBatchCallProps> = ({
       Toast.fail(t('participantOverRoleLimitCount'))
       return
     }
+
     onRoleChange?.(uuid, role)
   }
+
   const onNameChange = (name: string) => {
     searchNameRef.current = name
     currentPageRef.current = 1
     searchName(name, 1)
   }
+
   const searchName = debounce((name: string, page: number) => {
     if (!name) {
       setConnectMembers([])
       return
     }
+
     neMeeting
       ?.searchAccount({
         name,
@@ -297,11 +302,12 @@ const AddressBook: React.FC<SIPBatchCallProps> = ({
 
   useEffect(() => {
     const scrollElement = scrollRef.current
+
     if (!scrollElement) {
       return
     }
+
     function handleScroll() {
-      //@ts-ignore
       if (
         scrollElement &&
         scrollElement.scrollTop + scrollElement.clientHeight >=
@@ -315,6 +321,7 @@ const AddressBook: React.FC<SIPBatchCallProps> = ({
         if (searchNameRef.current === '') {
           return
         }
+
         neMeeting
           ?.searchAccount({
             name: searchNameRef.current,
@@ -330,11 +337,12 @@ const AddressBook: React.FC<SIPBatchCallProps> = ({
           })
       }
     }
-    scrollRef.current?.addEventListener('scroll', handleScroll)
+
+    scrollElement.addEventListener('scroll', handleScroll)
     return () => {
-      scrollRef.current?.removeEventListener('scroll', handleScroll)
+      scrollElement.removeEventListener('scroll', handleScroll)
     }
-  }, [connectMembers])
+  }, [connectMembers, neMeeting])
   // @ts-ignore
   return (
     <div className={`nemeeting-address-book ${className || ''}`}>
@@ -344,8 +352,12 @@ const AddressBook: React.FC<SIPBatchCallProps> = ({
           <Input
             allowClear
             onChange={(e) => onNameChange(e.target.value)}
-            prefix={<SearchOutlined style={{ color: '#B3B7BC' }} />}
             placeholder={t('sipSearch')}
+            prefix={
+              <svg className="icon iconfont iconsousuo" aria-hidden="true">
+                <use xlinkHref="#iconsousuo"></use>
+              </svg>
+            }
           />
         </div>
         <div className={'nemeeting-batch-left-list'} ref={scrollRef}>
@@ -366,7 +378,7 @@ const AddressBook: React.FC<SIPBatchCallProps> = ({
             selectedCount: `${selectedMembers.length}/${maxCount || ''}`,
           })}
         </div>
-        <div className={'nemeeting-batch-left-list'}>
+        <div className={'nemeeting-batch-right-list'}>
           <ConnectMemberListSelected
             ownerUserUuid={ownerUserUuid}
             myUuid={myUuid}
@@ -378,6 +390,7 @@ const AddressBook: React.FC<SIPBatchCallProps> = ({
               const member = selectedMembers.find(
                 (item) => item.userUuid === uuid
               )
+
               member && onChange?.(member, false)
             }}
           />

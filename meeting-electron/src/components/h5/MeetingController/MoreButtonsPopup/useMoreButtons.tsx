@@ -1,8 +1,9 @@
 import { Badge } from 'antd-mobile/es'
 import { useTranslation } from 'react-i18next'
 import { useGlobalContext, useMeetingInfoContext } from '../../../../store'
-import { ActionType } from '../../../../types'
+import { ActionType, Role } from '../../../../types'
 import useMeetingPlugin from '../../../../hooks/useMeetingPlugin'
+import React, { useMemo } from 'react'
 
 export type MoreButtonItem = {
   id: number | string
@@ -18,7 +19,7 @@ type onButtonClickFn = (key: string) => void
 function useMoreButtons(onButtonClick?: onButtonClickFn): MoreButtonItem[] {
   const { t } = useTranslation()
   const { meetingInfo, dispatch } = useMeetingInfoContext()
-  const { moreBarList } = useGlobalContext()
+  const { moreBarList, globalConfig } = useGlobalContext()
   const { pluginList, onClickPlugin } = useMeetingPlugin()
 
   const notificationUnReadCount = meetingInfo.notificationMessages.filter(
@@ -26,6 +27,12 @@ function useMoreButtons(onButtonClick?: onButtonClickFn): MoreButtonItem[] {
   ).length
 
   const moreButtons: MoreButtonItem[] = []
+
+  const isHostOrCoHost = useMemo(() => {
+    const role = meetingInfo.localMember.role
+
+    return role === Role.host || role === Role.coHost
+  }, [meetingInfo.localMember.role])
 
   // 通知按钮
   const notificationBtn = {
@@ -61,10 +68,31 @@ function useMoreButtons(onButtonClick?: onButtonClickFn): MoreButtonItem[] {
     hidden: meetingInfo.noNotifyCenter === true,
   }
 
+  // 同声传译
+  const interpretationBtn = {
+    id: 31,
+    key: 'interpretation',
+    icon: (
+      <svg className="icon iconfont icon-image" aria-hidden="true">
+        <use xlinkHref="#icontongshengchuanyi"></use>
+      </svg>
+    ),
+    label: t('interpretation'),
+    onClick: async () => {
+      onButtonClick?.('interpretation')
+    },
+    hidden: !(
+      globalConfig?.appConfig.APP_ROOM_RESOURCE.interpretation?.enable &&
+      (isHostOrCoHost || meetingInfo.interpretation?.started)
+    ),
+  }
+
   moreBarList?.forEach((item) => {
     let btn = {
       29: notificationBtn,
+      31: interpretationBtn,
     }[item.id]
+
     if (!btn) {
       // 用来更新按钮状态
       const proxyItem = new Proxy(item, {
@@ -83,6 +111,7 @@ function useMoreButtons(onButtonClick?: onButtonClickFn): MoreButtonItem[] {
       })
 
       let btnConfig
+
       if (Array.isArray(item.btnConfig)) {
         btnConfig = item.btnConfig.find((btn) => {
           return btn.status === item.btnStatus
@@ -90,6 +119,7 @@ function useMoreButtons(onButtonClick?: onButtonClickFn): MoreButtonItem[] {
       } else {
         btnConfig = item.btnConfig
       }
+
       if (btnConfig) {
         btn = {
           id: item.id,
@@ -103,9 +133,9 @@ function useMoreButtons(onButtonClick?: onButtonClickFn): MoreButtonItem[] {
         }
       }
     }
+
     btn && moreButtons.push(btn)
   })
-
   pluginList.forEach((plugin) => {
     const pluginNotificationDot =
       meetingInfo.notificationMessages.filter(
@@ -128,6 +158,7 @@ function useMoreButtons(onButtonClick?: onButtonClickFn): MoreButtonItem[] {
         onClickPlugin(plugin, true)
       },
     }
+
     moreButtons.push(btn)
   })
 

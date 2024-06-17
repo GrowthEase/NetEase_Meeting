@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { css } from '@emotion/css'
 import pkg from '../../../../../package.json'
@@ -39,6 +39,7 @@ const MeetingPlugin: React.FC<MeetingPluginProps> = (props) => {
   useEffect(() => {
     const iframeWindow = iframeRef.current?.contentWindow
     const localMember = meetingInfo.localMember
+
     if (iframeWindow) {
       iframeWindow.postMessage(
         {
@@ -60,6 +61,7 @@ const MeetingPlugin: React.FC<MeetingPluginProps> = (props) => {
 
   useEffect(() => {
     const origin = new URL(url).origin
+
     function receiveMessage(event: any) {
       function onResult(res: any) {
         event.source.postMessage(
@@ -73,8 +75,10 @@ const MeetingPlugin: React.FC<MeetingPluginProps> = (props) => {
 
       if (event.origin !== origin) return
       const { data } = event
+
       try {
         const { method, methodId } = JSON.parse(data)
+
         if (method === 'requestAuthCode') {
           neMeeting
             ?.getMeetingPluginAuthCode({ pluginId })
@@ -93,6 +97,7 @@ const MeetingPlugin: React.FC<MeetingPluginProps> = (props) => {
               })
             })
         }
+
         if (method === 'getCurrentMeetingInfo') {
           onResult({
             code: 0,
@@ -105,6 +110,7 @@ const MeetingPlugin: React.FC<MeetingPluginProps> = (props) => {
             message: 'success',
           })
         }
+
         if (method === 'getAppInfo') {
           onResult({
             code: 0,
@@ -117,6 +123,7 @@ const MeetingPlugin: React.FC<MeetingPluginProps> = (props) => {
             message: 'success',
           })
         }
+
         if (method === 'config') {
           onResult({
             code: 0,
@@ -125,8 +132,11 @@ const MeetingPlugin: React.FC<MeetingPluginProps> = (props) => {
             message: 'success',
           })
         }
-      } catch {}
+      } catch (e) {
+        console.error('MeetingPlugin receiveMessage error:', e)
+      }
     }
+
     window.addEventListener('message', receiveMessage)
     return () => {
       window.removeEventListener('message', receiveMessage)

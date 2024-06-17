@@ -19,7 +19,6 @@ const AudioModeCanvas: React.FC<AudioModeCanvasH5Props> = ({
   const [isPortrait, setIsPortrait] = useState(true)
   const {
     groupMemberList,
-    activeIndex,
     setColumnCount,
     setLineCount,
     setActiveIndex,
@@ -28,10 +27,11 @@ const AudioModeCanvas: React.FC<AudioModeCanvasH5Props> = ({
     meetingInfo,
     memberList,
   })
-  const onSizeChange = useCallback((event: Event) => {
+  const onSizeChange = useCallback(() => {
     console.log('setIsPortrait>>>', screen.orientation.angle === 0)
     setIsPortrait(screen.orientation.angle === 0)
   }, [])
+
   useEffect(() => {
     window.addEventListener('resize', onSizeChange)
     return () => {
@@ -43,6 +43,7 @@ const AudioModeCanvas: React.FC<AudioModeCanvasH5Props> = ({
   const calculateColumnCountAndLineCount = (isPortrait: boolean) => {
     let columnCount = 4
     let lineCount = 3
+
     // 竖屏模式4行3列
     if (isPortrait) {
       columnCount = 3
@@ -52,10 +53,12 @@ const AudioModeCanvas: React.FC<AudioModeCanvasH5Props> = ({
       columnCount = 7
       lineCount = 2
     }
+
     console.log('columnCount>>', columnCount, 'lineCount>>', lineCount)
     setColumnCount(columnCount)
     setLineCount(lineCount)
   }
+
   useEffect(() => {
     calculateColumnCountAndLineCount(isPortrait)
   }, [isPortrait])
@@ -82,7 +85,7 @@ const AudioModeCanvas: React.FC<AudioModeCanvasH5Props> = ({
                 {lineMembers.map((members, i: number) => {
                   return (
                     <div className="nemeeting-audio-line" key={i}>
-                      {members.map((member, j) => {
+                      {members.map((member) => {
                         return (
                           <VideoCard
                             isAudioMode={true}

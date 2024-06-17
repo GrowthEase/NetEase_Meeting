@@ -8,9 +8,7 @@
   box-sizing: border-box;
   height: 100%;
   font-family: system-ui;
-  .nps-meeting-content {
-    padding: 0 20px;
-  }
+
   .electron-drag-bar {
     .drag-region {
       -webkit-app-region: drag;
@@ -20,12 +18,18 @@
       left: 0;
       right: 40px;
     }
-    height: 40px;
+    height: 50px;
     font-weight: normal;
     line-height: 40px;
     text-align: center;
     font-size: 18px;
     border-bottom: 1px solid #ebedf0;
     position: relative;
+    .title {
+      width: 400px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 }

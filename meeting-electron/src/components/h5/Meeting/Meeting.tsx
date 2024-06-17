@@ -31,6 +31,7 @@ import MeetingPluginPopup from '../MeetingPluginPopup'
 import './AppH5.less'
 import Record from '../../common/Record'
 import useWatermark from '../../../hooks/useWatermark'
+import { MAJOR_AUDIO } from '../../../config'
 
 interface AppProps {
   width: number | string
@@ -44,21 +45,24 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
   })
   useMeetingNotificationInMeeting()
 
-  const { meetingInfo, dispatch } =
+  const { meetingInfo } =
     useContext<MeetingInfoContextInterface>(MeetingInfoContext)
   const { localMember } = meetingInfo
   const {
-    eventEmitter,
     neMeeting,
+    eventEmitter,
     waitingRejoinMeeting,
+    interpretationSetting,
     dispatch: globalDispatch,
     online,
   } = useContext<GlobalContextInterface>(GlobalContext)
   const toolTimer = useRef<null | ReturnType<typeof setTimeout>>(null)
 
+  const meetingInfoRef = useRef(meetingInfo)
+  const interpretationSettingRef = useRef(interpretationSetting)
+
   const [showMeetingTool, setShowMeetingTool] = useState<boolean>(true)
-  const [showReplayVideoDialog, setShowReplayVideoDialog] =
-    useState<boolean>(false)
+  const showReplayVideoDialog = false
   const {
     joinLoading,
     showReplayDialog,
@@ -78,7 +82,7 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
     timeTipContent,
   } = useEventHandler()
 
-  const { t, i18n: i18next } = useTranslation()
+  const { t } = useTranslation()
 
   const i18n = {
     hostOpenCameraTips: t('participantHostOpenCameraTips'),
@@ -100,6 +104,7 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
   const onSizeChange = useCallback((event: Event) => {
     if (event.target instanceof Window) {
       const { innerHeight, innerWidth } = event.target
+
       // 临时兼容竖屏键盘唤起导致的宽大于高事件
       if (innerWidth - innerHeight > 80) {
         console.log({ innerHeight, innerWidth })
@@ -109,9 +114,6 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
     }
   }, [])
 
-  // 开始录制弹窗提醒
-  const [startMeetingRecordingModal, setStartMeetingRecordingModal] =
-    useState(false)
   // 结束录制弹窗提醒
   const [endMeetingRecordingModal, setEndMeetingRecordingModal] =
     useState(false)
@@ -123,6 +125,7 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
 
   const showRecord = useMemo(() => {
     const cloudRecord = meetingInfo.cloudRecordState
+
     return (
       (cloudRecord === RecordState.Recording ||
         cloudRecord === RecordState.Starting) &&
@@ -146,13 +149,7 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
     return () => {
       window.removeEventListener('resize', onSizeChange)
     }
-  }, [])
-
-  useEffect(() => {
-    if (meetingInfo?.isCloudRecording && showCloudRecordingUI) {
-      setStartMeetingRecordingModal(true)
-    }
-  }, [showCloudRecordingUI])
+  }, [onSizeChange])
 
   useEffect(() => {
     if (endMeetingRecordingModal) {
@@ -172,29 +169,47 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
             setCountdownNumber(countdownNumber - 1)
           }
         }, 1000)
+
         return () => {
           clearTimeout(timer)
         }
       }
     }
-  }, [countdownNumber])
+  }, [countdownNumber, endMeetingRecordingModal])
 
   useEffect(() => {
     if (showCloudRecordingUI) {
       // 收到录制弹框提醒确认
-      eventEmitter?.on(
-        EventType.roomCloudRecordStateChanged,
-        (recordState, operatorMember) => {
-          const isCloudRecording = recordState === 0
-          if (isCloudRecording) {
-            setStartMeetingRecordingModal(true)
-          } else {
-            setEndMeetingRecordingModal(true)
-          }
+      eventEmitter?.on(EventType.roomCloudRecordStateChanged, (recordState) => {
+        const isCloudRecording = recordState === 0
+
+        if (!isCloudRecording) {
+          setEndMeetingRecordingModal(true)
         }
-      )
+      })
     }
-  }, [showCloudRecordingUI])
+  }, [showCloudRecordingUI, eventEmitter])
+
+  useEffect(() => {
+    const listenLanguageCurrent = interpretationSettingRef.current
+    const meetingInfoCurrent = meetingInfoRef.current
+
+    return () => {
+      const listenLanguage = listenLanguageCurrent?.listenLanguage
+
+      if (
+        meetingInfoCurrent.interpretation?.started &&
+        !meetingInfoCurrent.isInterpreter
+      ) {
+        if (listenLanguage && listenLanguage !== MAJOR_AUDIO) {
+          const channel =
+            meetingInfoCurrent.interpretation?.channelNames[listenLanguage]
+
+          channel && neMeeting?.leaveRtcChannel(channel)
+        }
+      }
+    }
+  }, [neMeeting])
 
   // 5秒后隐藏操作栏
   function _setToolsHide() {
@@ -202,6 +217,7 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
       clearTimeout(toolTimer.current)
       toolTimer.current = null
     }
+
     toolTimer.current = setTimeout(() => {
       setShowMeetingTool(false)
     }, 5000)

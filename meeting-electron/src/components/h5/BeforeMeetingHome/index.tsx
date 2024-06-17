@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { Badge, Button, Dropdown, Input, MenuProps, Spin, Tag } from 'antd'
+import React, { useEffect, useRef, useState } from 'react'
+import { Button, Input } from 'antd'
 import dayjs from 'dayjs'
 import { useTranslation } from 'react-i18next'
 import classNames from 'classnames'
@@ -13,15 +13,12 @@ import {
   NOT_FIRST_LOGIN,
 } from '../../../../app/src/config'
 
-import { NEPreviewController, NERoomService } from 'neroom-web-sdk'
+import { NEPreviewController } from 'neroom-web-sdk'
 import qs from 'qs'
 import { IPCEvent } from '../../../../app/src/types'
 import {
   CreateMeetingResponse,
-  CreateOptions,
   EventType,
-  GlobalContext as GlobalContextInterface,
-  GetMeetingConfigResponse,
   JoinOptions,
   MeetingSetting,
 } from '../../../types'
@@ -29,7 +26,7 @@ import { NEMeetingStatus } from '../../../types/type'
 import UserAvatar from '../../common/Avatar'
 import Modal from '../../common/Modal'
 import Toast from '../../common/toast'
-import { ActionSheet, Popup } from 'antd-mobile/es'
+import { ActionSheet } from 'antd-mobile/es'
 import { Action } from 'antd-mobile/es/components/action-sheet'
 import Dialog from '../ui/dialog'
 import { errorCodeMap } from '../../../config'
@@ -45,26 +42,14 @@ interface BeforeMeetingHomeProps {
   onLogout: () => void
 }
 
+let appKey = ''
+
 const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
   const [accountInfo, setAccountInfo] = useState<any>()
   const [inMeeting, setInMeeting] = useState(false)
-  const [isSSOLogin, setIsSSOLogin] = useState<boolean>(false)
   const isLogin = useRef<boolean>(false)
-  const [loginLoading, setLoginLoading] = useState(true)
   const [previewController, setPreviewController] =
     useState<NEPreviewController>()
-  const [roomService, setRoomService] = useState<NERoomService>()
-  const [appName, setAppName] = useState<string>('')
-  const [tipInfo, setTipInfo] = useState<{
-    content: string
-    title: string
-    url: string
-  }>()
-  const [meetingListGroupByDate, setMeetingListGroupByDate] =
-    useState<MeetingListGroupByDate>([])
-  const [appLiveAvailable, setAppLiveAvailable] = useState<boolean>(false)
-  const [globalConfig, setGlobalConfig] =
-    useState<GetMeetingConfigResponse | null>(null)
   const videoPreviewRef = useRef<HTMLDivElement>(null)
   const [setting, setSetting] = useState<MeetingSetting | null>(null)
   const [openVideo, setOpenVideo] = useState<boolean>(false)
@@ -78,7 +63,6 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
   const passwordRef = React.useRef<string>('')
   const [logoutSheetVisible, setLogoutSheetVisible] = useState(false)
   const [logoutDialogVisible, setLogoutDialogVisible] = useState(false)
-  let appKey = ''
 
   const { t, i18n: i18next } = useTranslation()
 
@@ -165,11 +149,13 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       meetingServerDomain: domain, //会议服务器地址，支持私有化部署
       locale: i18next.language, //语言
     }
+
     console.log('init config ', config)
     if (NEMeetingKit.actions.isInitialized) {
       cb()
       return
     }
+
     NEMeetingKit.actions.init(0, 0, config, cb) // （width，height）单位px 建议比例4:3
     NEMeetingKit.actions.on('onMeetingStatusChanged', (status: number) => {
       if (status === NEMeetingStatus.MEETING_STATUS_IN_WAITING_ROOM) {
@@ -179,7 +165,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
         setInMeeting(false)
       }
     })
-    NEMeetingKit.actions.on('roomEnded', (reason: any) => {
+    NEMeetingKit.actions.on('roomEnded', () => {
       setInMeeting(false)
       setTimeout(() => {
         window.location.reload()
@@ -197,22 +183,24 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
         const groupedData = data.reduce(
           (acc: Record<string, CreateMeetingResponse[]>, obj) => {
             const key = dayjs(obj.startTime).startOf('day').valueOf()
+
             if (!acc[key]) {
               acc[key] = []
             }
+
             acc[key].push(obj)
             return acc
           },
           {}
         )
         const meetingListGroupByDate: MeetingListGroupByDate = []
+
         Object.keys(groupedData).forEach((key) => {
           meetingListGroupByDate.push({
             date: key,
             list: groupedData[key],
           })
         })
-        setMeetingListGroupByDate(meetingListGroupByDate)
       })
       .catch((e: any) => {
         // 用户被注销或者删除
@@ -224,17 +212,15 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
         }
       })
   }
+
   // 登录
   function login(account, token) {
-    setLoginLoading(true)
     init((e) => {
       if (!e) {
         const previewController = NEMeetingKit.actions.neMeeting
           ?.previewController as NEPreviewController
+
         setPreviewController(previewController)
-        const roomService = NEMeetingKit.actions.neMeeting
-          ?.roomService as NERoomService
-        setRoomService(roomService)
         NEMeetingKit.actions.login(
           {
             // 登陆
@@ -244,7 +230,6 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
           function (e: any) {
             if (!e) {
               isLogin.current = true
-              setLoginLoading(false)
               setAccountInfo({
                 //@ts-ignore
                 ...NEMeetingKit.actions.accountInfo,
@@ -283,26 +268,26 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
 
               NEMeetingKit.actions.neMeeting?.getAppInfo().then((res) => {
                 console.log('getAppInfo', res)
-                setAppName(res.appName)
               })
-              NEMeetingKit.actions.neMeeting?.getAppTips().then((res) => {
-                setTipInfo(res.tips[0])
-              })
+              NEMeetingKit.actions.neMeeting?.getAppTips()
               NEMeetingKit.actions.neMeeting?.getAppConfig().then((res) => {
                 console.log('getAppConfig', res)
-                setAppLiveAvailable(!!res.appConfig?.APP_ROOM_RESOURCE?.live)
               })
               const notFirstLogin = sessionStorage.getItem(NOT_FIRST_LOGIN)
+
               if (!notFirstLogin) {
-                window.ipcRenderer?.send('isStartByUrl')
+                window.ipcRenderer?.send(IPCEvent.isStartByUrl)
                 sessionStorage.setItem(NOT_FIRST_LOGIN, 'true')
               }
+
               const currentMeetingStr = localStorage.getItem(
                 'ne-meeting-current-info'
               )
+
               // 异常退出恢复会议
               if (currentMeetingStr) {
                 const currentMeeting = JSON.parse(currentMeetingStr)
+
                 // 15分钟内恢复会议
                 if (currentMeeting.time > Date.now() - 1000 * 60 * 15) {
                   Modal.confirm({
@@ -315,12 +300,16 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                     onOk: () => {
                       try {
                         const currentMeeting = JSON.parse(currentMeetingStr)
+
                         currentMeeting.joinType = 'join'
                         window.ipcRenderer?.send(
                           IPCEvent.enterRoom,
                           currentMeeting
                         )
-                      } catch {}
+                      } catch (error) {
+                        console.error('restore meeting error', error)
+                      }
+
                       localStorage.removeItem('ne-meeting-current-info')
                     },
                   })
@@ -328,11 +317,9 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                   localStorage.removeItem('ne-meeting-current-info')
                 }
               }
-              NEMeetingKit.actions.neMeeting?.getGlobalConfig().then((res) => {
-                setGlobalConfig(res)
-              })
+
+              NEMeetingKit.actions.neMeeting?.getGlobalConfig()
             } else {
-              setLoginLoading(false)
               console.error('login fail appKey ', e, {
                 // 登陆
                 accountId: account,
@@ -349,11 +336,12 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       }
     })
   }
+
   //退出登录
   function logout() {
     onLogout()
-    NEMeetingKit?.actions?.destroy()
     isLogin.current = false
+    NEMeetingKit?.actions?.destroy()
   }
 
   function getDeviceList() {
@@ -362,6 +350,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       previewController.enumCameraDevices().then(({ data }) => {
         if (data.length > 0) {
           let deviceId = ''
+
           if (
             data.find(
               (item) => item.deviceId === setting?.videoSetting.deviceId
@@ -371,8 +360,8 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
           } else {
             deviceId = data[0].deviceId
           }
+
           setCameraId(deviceId)
-          const device = data.find((item) => item.deviceId === deviceId)
           previewController?.switchDevice({
             type: 'camera',
             deviceId: getDefaultDeviceId(deviceId),
@@ -383,6 +372,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       previewController.enumRecordDevices().then(({ data }) => {
         if (data.length > 0) {
           let deviceId = ''
+
           if (
             data.find(
               (item) => item.deviceId === setting?.audioSetting.recordDeviceId
@@ -392,8 +382,8 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
           } else {
             deviceId = data[0].deviceId
           }
+
           setMicId(deviceId)
-          const device = data.find((item) => item.deviceId === deviceId)
           previewController?.switchDevice({
             type: 'microphone',
             deviceId: getDefaultDeviceId(deviceId),
@@ -404,6 +394,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       previewController.enumPlayoutDevices().then(({ data }) => {
         if (data.length > 0) {
           let deviceId = ''
+
           if (
             data.find(
               (item) => item.deviceId === setting?.audioSetting.playoutDeviceId
@@ -413,8 +404,8 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
           } else {
             deviceId = data[0].deviceId
           }
+
           setSpeakerId(deviceId)
-          const device = data.find((item) => item.deviceId === deviceId)
           previewController?.switchDevice({
             type: 'speaker',
             deviceId: getDefaultDeviceId(deviceId),
@@ -479,14 +470,17 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     const storeNicknameStr = localStorage.getItem(
       'ne-meeting-nickname-' + accountInfo?.account
     )
+
     if (storeNicknameStr) {
       const storeNickname = JSON.parse(storeNicknameStr)
+
       if (storeNickname[options.meetingNum]) {
         options.nickName = storeNickname[options.meetingNum]
       } else {
         localStorage.removeItem('ne-meeting-nickname-' + accountInfo?.account)
       }
     }
+
     function fetchJoin(options: JoinOptions): Promise<void> {
       return new Promise((resolve, reject) => {
         NEMeetingKit.actions.join(
@@ -498,12 +492,13 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
             watermarkConfig: {
               name: accountInfo.nickname,
             },
-            moreBarList: [{ id: 29 }],
+            moreBarList: [{ id: 29 }, { id: 31 }],
           },
           function (e: any) {
             if (e) {
               reject(e)
             }
+
             resolve()
           }
         )
@@ -540,6 +535,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
             />
           )
         }
+
         if (e.code === 1020) {
           passwordRef.current = ''
           modal = Modal.confirm({
@@ -577,6 +573,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                 } else if (e.code === 3102) {
                   modal.destroy()
                 }
+
                 throw e
               }
             },
@@ -589,6 +586,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
         setSubmitLoading(false)
       })
   }
+
   // 加入会议
   function onJoinMeeting() {
     joinMeeting({
@@ -609,6 +607,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
   function handleInvitationUrl(url: string) {
     let meetingNum = ''
     const query = qs.parse(url.split('?')[1]?.split('#/')[0])
+
     meetingNum = query.meetingId as string
     if (meetingNum) {
       setMeetingNum(meetingNum)
@@ -623,11 +622,12 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
 
   useEffect(() => {
     const userString = localStorage.getItem(LOCALSTORAGE_USER_INFO)
+
     if (userString) {
       const user = JSON.parse(userString)
+
       if (user.userUuid && user.userToken && (user.appKey || user.appId)) {
         appKey = user.appKey || user.appId
-        setIsSSOLogin(user.loginType === 'SSO')
         setTimeout(() => {
           login(user.userUuid, user.userToken)
         }, 100)
@@ -637,11 +637,15 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     } else {
       logout()
     }
+
     const setting = localStorage.getItem('ne-meeting-setting')
+
     if (setting) {
       try {
         setSetting(JSON.parse(setting) as MeetingSetting)
-      } catch (error) {}
+      } catch (error) {
+        console.log('setting parse error', error)
+      }
     }
   }, [inMeeting])
 
@@ -680,13 +684,14 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     if (!openVideo) {
       setOpenVideoSuccess(false)
     }
-  }, [openVideo, previewController])
+  }, [openVideo, previewController, t])
 
   useEffect(() => {
     if (setting) {
       setOpenAudio(setting.normalSetting.openAudio)
       setOpenVideo(setting.normalSetting.openVideo)
     }
+
     getDeviceList()
     navigator.mediaDevices.addEventListener('devicechange', getDeviceList)
     return () => {
@@ -696,6 +701,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     previewController,
     setting?.normalSetting.openVideo,
     setting?.normalSetting.openAudio,
+    setting,
   ])
 
   useEffect(() => {
@@ -871,4 +877,5 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     </>
   )
 }
+
 export default BeforeMeetingHome

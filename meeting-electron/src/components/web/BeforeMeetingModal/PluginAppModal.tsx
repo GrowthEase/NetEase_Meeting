@@ -4,10 +4,18 @@ import Modal from '../../common/Modal'
 
 import './index.less'
 import MeetingPlugin from '../../common/PlugIn/MeetingPlugin'
+import NEMeetingService from '../../../services/NEMeeting'
+
+type PluginInfo = {
+  name: string
+  homeUrl: string
+  roomArchiveId: string
+  pluginId: string
+}
 
 interface PluginAppModalProps extends ModalProps {
-  pluginInfo: any
-  neMeeting: any
+  pluginInfo: PluginInfo
+  neMeeting: NEMeetingService
 }
 
 const PluginAppModal: React.FC<PluginAppModalProps> = ({

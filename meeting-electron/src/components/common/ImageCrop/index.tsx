@@ -1,7 +1,6 @@
 import 'cropperjs/dist/cropper.css'
-import { createRef, MouseEventHandler, useState } from 'react'
+import React, { createRef, MouseEventHandler, useState } from 'react'
 import Cropper, { ReactCropperElement } from 'react-cropper'
-// import 'react-cropper/dist/cropper.css'
 
 import { Button } from 'antd'
 import { useTranslation } from 'react-i18next'
@@ -31,6 +30,7 @@ const ImageCrop: React.FC<ImageCropProps> = (props) => {
         const base64 = cropperRef.current?.cropper
           .getCroppedCanvas()
           .toDataURL()
+
         window.ipcRenderer
           ?.invoke('saveAvatarToPath', base64)
           .then(({ filePath }) => {

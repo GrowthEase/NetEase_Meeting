@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import NEMeetingService from '../../../../src/services/NEMeeting';
 import useUserInfo from '../../../../src/hooks/useUserInfo';
@@ -9,6 +9,7 @@ import AddressBook from '../../../../src/components/common/AddressBook';
 import { Role, SearchAccountInfo } from '../../../../src/types';
 import PCTopButtons from '../../../../src/components/common/PCTopButtons';
 import { useGlobalContext } from '../../../../src/store';
+import Modal from '../../../../src/components/common/Modal';
 
 export default function InvitePage() {
   const { t } = useTranslation();
@@ -34,6 +35,7 @@ export default function InvitePage() {
             return new Promise((resolve, reject) => {
               const parentWindow = window.parent;
               const replyKey = `addressBookMeetingReply_${replyCount.current++}`;
+
               parentWindow?.postMessage(
                 {
                   event: 'neMeeting',
@@ -47,16 +49,20 @@ export default function InvitePage() {
               );
               const handleMessage = (e: MessageEvent) => {
                 const { event, payload } = e.data;
+
                 if (event === replyKey) {
                   const { result, error } = payload;
+
                   if (error) {
                     reject(error);
                   } else {
                     resolve(result);
                   }
+
                   window.removeEventListener('message', handleMessage);
                 }
               };
+
               window.addEventListener('message', handleMessage);
             });
           };
@@ -68,11 +74,35 @@ export default function InvitePage() {
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data;
+
       if (event === 'updateData') {
         const { selectedMembers } = payload;
+
         setSelectedMembers(selectedMembers);
+      } else if (event === 'showConfirmDeleteInterpreter') {
+        console.log('confirmDeleteInterpreter', payload);
+        Modal.confirm({
+          title: t('commonTitle'),
+          content: t('interpRemoveMemberInInterpreters'),
+          cancelText: t('globalCancel'),
+          okText: t('globalDelete'),
+          onOk: () => {
+            const parentWindow = window.parent;
+
+            parentWindow.postMessage(
+              {
+                event: 'onDeleteInterpreterAndAddressBookMember',
+                payload: {
+                  userUuid: payload.userUuid,
+                },
+              },
+              parentWindow.origin,
+            );
+          },
+        });
       }
     }
+
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);
@@ -81,6 +111,7 @@ export default function InvitePage() {
 
   const onCancelHandler = () => {
     const parentWindow = window.parent;
+
     parentWindow.postMessage(
       {
         event: 'onAddressBookCancelHandler',
@@ -92,6 +123,7 @@ export default function InvitePage() {
 
   const onConfirmHandler = () => {
     const parentWindow = window.parent;
+
     parentWindow.postMessage(
       {
         event: 'onAddressBookConfirmHandler',
@@ -106,6 +138,7 @@ export default function InvitePage() {
     isChecked: boolean,
   ) => {
     const parentWindow = window.parent;
+
     parentWindow.postMessage(
       {
         event: 'onMembersChangeHandler',
@@ -120,6 +153,7 @@ export default function InvitePage() {
 
   const onRoleChange = (uuid: string, role?: Role) => {
     const parentWindow = window.parent;
+
     parentWindow.postMessage(
       {
         event: 'onRoleChange',
@@ -136,26 +170,43 @@ export default function InvitePage() {
     <div className="addressBook-page">
       <div className="electron-drag-bar">
         <div className="drag-region" />
-        {t('meetingAttendees')}
-        <PCTopButtons minimizable={false} maximizable={false} />
+        <span
+          className="meeting-attendees"
+          style={{
+            fontWeight: window.systemPlatform === 'win32' ? 'bold' : '500',
+          }}
+        >
+          {t('meetingAttendees')}
+        </span>
+        <PCTopButtons size="normal" minimizable={false} maximizable={false} />
       </div>
       {neMeeting && (
-        <div style={{ marginTop: '20px' }}>
-          <AddressBook
-            sortByRole
-            selectedMembers={selectedMembers}
-            maxCount={scheduleMemberConfig?.max}
-            maxCoHostCount={scheduleMemberConfig?.coHostLimit}
-            myUuid={userInfo?.userUuid || ''}
-            onChange={onMembersChangeHandler}
-            onRoleChange={onRoleChange}
-            neMeeting={neMeeting}
-            showMore={true}
-          />
+        <div>
+          <div className="address-book-wrap">
+            <AddressBook
+              sortByRole
+              selectedMembers={selectedMembers}
+              maxCount={scheduleMemberConfig?.max}
+              maxCoHostCount={scheduleMemberConfig?.coHostLimit}
+              myUuid={userInfo?.userUuid || ''}
+              onChange={onMembersChangeHandler}
+              onRoleChange={onRoleChange}
+              neMeeting={neMeeting}
+              showMore={true}
+            />
+          </div>
+
           <div className="nemeeting-address-confirm-wrapper">
             <Button
               className="nemeeting-address-confirm-cancel"
-              style={{ width: '120px' }}
+              style={{
+                width: '128px',
+                fontSize: '16px',
+                color: '#4096ff',
+                borderColor: '#4096ff',
+                background: '#ffffff',
+                borderRadius: '4px',
+              }}
               shape="round"
               size="large"
               onClick={onCancelHandler}
@@ -163,7 +214,7 @@ export default function InvitePage() {
               {t('globalCancel')}
             </Button>
             <Button
-              style={{ width: '120px' }}
+              style={{ width: '128px', fontSize: '16px', borderRadius: '4px' }}
               type="primary"
               shape="round"
               size="large"

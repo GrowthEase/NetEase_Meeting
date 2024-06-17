@@ -24,6 +24,7 @@ export enum IPCEvent {
   changeMirror = 'changeMirror',
   whiteboardTransparentMirror = 'whiteboardTransparentMirror',
   getLogPath = 'getLogPath',
+  getPrivateConfig = 'getPrivateConfig',
   previewController = 'previewController',
   getMemberListWindowIsOpen = 'getMemberListWindowIsOpen',
 
@@ -53,6 +54,39 @@ export enum IPCEvent {
   memberNotifyClose = 'member-notify-close',
   memberNotifyNotNotify = 'member-notify-not-notify',
   memberNotifyMourseMove = 'member-notify-mousemove',
+
+  sharingScreen = 'nemeeting-sharing-screen',
+  minimizeWindow = 'minimize-window',
+  maximizeWindow = 'maximize-window',
+  isStartByUrl = 'isStartByUrl',
+  openBrowserWindow = 'open-browser-window',
+  choseFile = 'nemeeting-choose-file',
+  choseFileDone = 'nemeeting-choose-file-done',
+  beauty = 'nemeeting-beauty',
+  downloadPath = 'nemeeting-download-path',
+  downloadPathReply = 'nemeeting-download-path-reply',
+  relaunch = 'relaunch',
+  focusWindow = 'focusWindow',
+  annotationWindow = 'annotationWindow',
+  electronJoinMeeting = 'electron-join-meeting',
+  getThemeColor = 'get-theme-color',
+  setThemeColor = 'set-theme-color',
+  getDeviceAccessStatus = 'getDeviceAccessStatus',
+  openMeetingAbout = 'open-meeting-about',
+  setExcludeWindowList = 'setExcludeWindowList',
+  mainCloseBefore = 'main-close-before',
+  openMeetingFeedback = 'open-meeting-feedback',
+  getSystemManufacturer = 'get-system-manufacturer',
+  openMeeting = 'nemeeting-open-meeting',
+  childWindowClosed = 'childWindow:closed',
+  getMonitoringInfo = 'getMonitoringInfo',
+  getVirtualBackground = 'getVirtualBackground',
+  getImageBase64 = 'nemeeting-get-image-base64',
+  addVirtualBackgroundReply = 'addVirtualBackground-reply',
+
+  interpreterWindowChange = 'interpreterWindowChange',
+  openDevTools = 'openDevTools',
+  displayChanged = 'display-changed',
 }
 
 export enum UpdateType {
@@ -111,6 +145,7 @@ export interface EnterPriseInfo {
   appKey: string;
   appName: string;
   idpList: Array<IdpInfo>;
+  ssoLevel: number;
 }
 export interface IdpInfo {
   id: number;

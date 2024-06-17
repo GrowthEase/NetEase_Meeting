@@ -2,22 +2,23 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import './index.less'
-import Modal from '../../common/Modal'
 import { Button, Checkbox, Input } from 'antd'
 import { feedbackApi } from '../../../utils/feedbackApi'
 import Toast from '../../common/toast'
-import { NEMeetingKit } from '../../../types'
 import { IPCEvent } from '../../../../app/src/types'
+import NEMeetingService from '../../../services/NEMeeting'
+
 const { TextArea } = Input
 
-interface FeedbackProps {
+export interface FeedbackProps {
   visible: boolean
-  onClose: () => void
+  onClose?: () => void
   meetingId: string
   appKey: string
   nickname: string
-  neMeeting: { actions: NEMeetingKit }
-  loadingChange: (loading: boolean) => void
+  neMeeting?: NEMeetingService
+  loadingChange?: (loading: boolean) => void
+  onFeedbackSuccess?: () => void
   inMeeting?: boolean
   systemAndManufacturer?: {
     manufacturer: string
@@ -26,7 +27,7 @@ interface FeedbackProps {
   }
 }
 
-const Feedback: React.FC<FeedbackProps> = ({
+const FeedbackContent: React.FC<FeedbackProps> = ({
   visible,
   onClose,
   meetingId,
@@ -34,6 +35,7 @@ const Feedback: React.FC<FeedbackProps> = ({
   appKey,
   neMeeting,
   loadingChange,
+  onFeedbackSuccess,
   systemAndManufacturer,
   inMeeting,
 }) => {
@@ -43,6 +45,7 @@ const Feedback: React.FC<FeedbackProps> = ({
   const [description, setDescription] = useState<string>('')
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const inMeetingRef = React.useRef<boolean>(false)
+
   inMeetingRef.current = !!inMeeting
   const submitBtnEnabled = useMemo(() => {
     if (description.trim()) {
@@ -54,11 +57,12 @@ const Feedback: React.FC<FeedbackProps> = ({
         return false
       }
     }
-  }, [problemCategories, description])
+  }, [problemCategories, description, t])
 
   const problems = [
     {
       title: t('audioProblem'),
+      key: 'audioProblem',
       categories: [
         t('aLargeDelay'),
         t('mechanicalSound'),
@@ -72,6 +76,7 @@ const Feedback: React.FC<FeedbackProps> = ({
     },
     {
       title: t('videoProblem'),
+      key: 'videoProblem',
       categories: [
         t('longTimeStuck'),
         t('videoIsIntermittent'),
@@ -84,34 +89,32 @@ const Feedback: React.FC<FeedbackProps> = ({
     },
     {
       title: t('other'),
+      key: 'other',
       categories: [t('unexpectedExit'), t('otherProblems')],
     },
   ]
 
   async function submit() {
-    onClose()
+    onClose?.()
     setIsSubmitting(true)
-    loadingChange(true)
+    loadingChange?.(true)
     setTimeout(async () => {
       try {
         const category = problemCategories.join(',')
+
         // 如果提交的problemCategories包含音频问题则需要生成dump文件
         if (
           window.isElectronNative &&
           inMeetingRef.current &&
           problems[0].categories.some((item) => category.includes(item))
         ) {
-          //@ts-ignore
-          neMeeting?.actions.neMeeting?.roomContext?.rtcController.startAudioDump(
-            0
-          )
+          neMeeting?.startAudioDump?.(0)
           setTimeout(async () => {
-            //@ts-ignore
-            neMeeting?.actions.neMeeting?.roomContext?.rtcController.stopAudioDump()
+            neMeeting?.stopAudioDump()
             handleFeedback(category)
               .catch(() => {
                 Toast.fail(t('uploadFailed'))
-                loadingChange(false)
+                loadingChange?.(false)
                 setIsSubmitting(false)
               })
               .finally(() => {
@@ -124,7 +127,7 @@ const Feedback: React.FC<FeedbackProps> = ({
       } catch (e) {
         console.log('e>>>>', e)
         Toast.fail(t('uploadFailed'))
-        loadingChange(false)
+        loadingChange?.(false)
         setIsSubmitting(false)
       }
     }, 1000)
@@ -132,9 +135,11 @@ const Feedback: React.FC<FeedbackProps> = ({
 
   async function handleFeedback(category: string) {
     let res
+
     if (window.isElectronNative) {
-      res = await neMeeting?.actions.uploadLog()
+      res = await neMeeting?.uploadLog()
     }
+
     feedbackApi({
       appKey: appKey,
       category,
@@ -147,9 +152,10 @@ const Feedback: React.FC<FeedbackProps> = ({
     })
       .then(() => {
         Toast.success(t('thankYourFeedback'))
+        onFeedbackSuccess?.()
       })
       .finally(() => {
-        loadingChange(false)
+        loadingChange?.(false)
         setIsSubmitting(false)
       })
   }
@@ -162,62 +168,66 @@ const Feedback: React.FC<FeedbackProps> = ({
   }, [visible])
 
   return (
-    <Modal
-      title={t('feedback')}
-      open={visible}
-      maskClosable={isSubmitting ? true : false}
-      footer={null}
-      width={375}
-      onCancel={() => onClose()}
-      destroyOnClose
-    >
+    <div>
       {isSubmitting ? (
         <>
           <div className="feedback-problem">{t('uploadLoadingText')}</div>
         </>
       ) : (
-        <>
-          {problems.map((problem) => {
-            return (
-              <div className="feedback-problem" key={problem.title}>
-                <div className="feedback-problem-title">{problem.title}</div>
-                <div className="feedback-problem-categories">
-                  {problem.categories.map((category) => {
-                    return (
-                      <Checkbox
-                        className="feedback-problem-category"
-                        key={category}
-                        value={category}
-                        checked={problemCategories.includes(category)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setProblemCategories([
-                              ...problemCategories,
-                              category,
-                            ])
-                          } else {
-                            setProblemCategories(
-                              problemCategories.filter(
-                                (item) => item !== category
-                              )
-                            )
-                          }
-                        }}
-                      >
-                        {category}
-                      </Checkbox>
-                    )
-                  })}
+        <div className="feedback-problem-wrap">
+          <div className="feedback-problem-content">
+            {problems.map((problem) => {
+              return (
+                <div
+                  className="feedback-problem feedback-problem-content-item"
+                  key={problem.title}
+                >
+                  <div className="feedback-problem-title">{problem.title}</div>
+                  <div className="feedback-problem-categories">
+                    {problem.categories.map((category) => {
+                      return (
+                        <div className="checkbox-wrap" key={category}>
+                          <Checkbox
+                            className="feedback-problem-category"
+                            key={category}
+                            value={category}
+                            checked={problemCategories.includes(category)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setProblemCategories([
+                                  ...problemCategories,
+                                  category,
+                                ])
+                              } else {
+                                setProblemCategories(
+                                  problemCategories.filter(
+                                    (item) => item !== category
+                                  )
+                                )
+                              }
+                            }}
+                          >
+                            <div className="category">{category}</div>
+                          </Checkbox>
+                        </div>
+                      )
+                    })}
+                    {problem.key === 'other' && (
+                      <div className="text-area-wrap">
+                        <TextArea
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          placeholder={t('otherProblemsTips')}
+                          maxLength={300}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
-          <TextArea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder={t('otherProblemsTips')}
-            maxLength={300}
-          />
+              )
+            })}
+          </div>
+
           <div className="feedback-footer">
             <Button
               className="feedback-submit-btn"
@@ -229,9 +239,10 @@ const Feedback: React.FC<FeedbackProps> = ({
               {t('submit')}
             </Button>
           </div>
-        </>
+        </div>
       )}
-    </Modal>
+    </div>
   )
 }
-export default Feedback
+
+export default FeedbackContent

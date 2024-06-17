@@ -9,6 +9,7 @@ interface RemainTimeTipInterface {
 
 const RemainTimeTip: React.FC<RemainTimeTipInterface> = (props) => {
   const { className, text, onCloseHandler } = props
+
   return (
     <div className={`nemeeting-remaining-time-tip ${className}`}>
       <span>{text}</span>

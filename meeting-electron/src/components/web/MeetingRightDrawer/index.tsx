@@ -53,6 +53,7 @@ const MeetingRightDrawer: React.FC<DrawerProps> = ({ ...restProps }) => {
       })
     } else {
       const plugin = pluginList.find((item) => item.pluginId === key)
+
       plugin && onClickPlugin(plugin)
     }
   }
@@ -60,9 +61,11 @@ const MeetingRightDrawer: React.FC<DrawerProps> = ({ ...restProps }) => {
   function handleCloseTab(key: string) {
     const newTabs = rightDrawerTabs.filter((item) => item.key !== key)
     let newActiveKey = rightDrawerTabActiveKey
+
     if (key === rightDrawerTabActiveKey && newTabs.length > 0) {
       newActiveKey = newTabs[newTabs.length - 1].key
     }
+
     if (newTabs.length === 0) {
       dispatch?.({
         type: ActionType.UPDATE_MEETING_INFO,
@@ -86,6 +89,7 @@ const MeetingRightDrawer: React.FC<DrawerProps> = ({ ...restProps }) => {
     if (rightDrawerTabActiveKey) {
       setTimeout(() => {
         const dom = document.getElementById(rightDrawerTabActiveKey)
+
         dom &&
           dom.scrollIntoView({
             behavior: 'smooth',
@@ -132,12 +136,15 @@ const MeetingRightDrawer: React.FC<DrawerProps> = ({ ...restProps }) => {
               if (item.key === 'chatroom') {
                 item.label = t('chat')
               }
+
               if (item.key === 'memberList') {
                 item.label = t('participants')
               }
+
               if (item.key === 'notification') {
                 item.label = t('notifyCenter')
               }
+
               return (
                 <div
                   id={item.key}
@@ -208,6 +215,7 @@ const MeetingRightDrawer: React.FC<DrawerProps> = ({ ...restProps }) => {
           const isOpen = rightDrawerTabs.find(
             (item) => item.key === plugin.pluginId
           )
+
           return isOpen ? (
             <div
               key={plugin.pluginId}

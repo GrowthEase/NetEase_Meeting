@@ -6,6 +6,7 @@ interface Window {
   systemPlatform?: 'win32' | 'darwin'
   isElectronNative?: boolean
   NERoom?: any
+  electronLog?: (...params: any[]) => void
   isWins32: boolean
   webFrame?: {
     clearCache: () => void

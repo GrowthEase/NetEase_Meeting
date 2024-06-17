@@ -31,7 +31,7 @@ class BaseCustomBtnConfig {
    * @param {*}
    * @return {*}
    */
-  public getList() {
+  public getList(): any {
     return deepClone(this.barList)
   }
 
@@ -41,13 +41,15 @@ class BaseCustomBtnConfig {
    * @param {object} btnItem 替换的菜单项
    * @return {*}
    */
-  public addItem(location, btnItem, afterItemId) {
+  public addItem(location, btnItem, afterItemId): void {
     if (this.barList.length >= (this.forMain ? 7 : 10)) {
       throw new Error('已超出自定义最大限制')
     }
+
     if (!afterItemId) {
       this.barList.push(btnItem)
     }
+
     this.barList.splice(location, 0, btnItem)
   }
   /**
@@ -55,7 +57,7 @@ class BaseCustomBtnConfig {
    * @param {string|number} id 菜单ID
    * @return {*}
    */
-  public delItem(location) {
+  public delItem(location: number): void {
     this.barList.splice(location, 1)
   }
   /**
@@ -76,6 +78,7 @@ class BaseCustomBtnConfig {
     if (list) {
       await this.compareList(deepClone(list))
     }
+
     await this.checkListSameid()
     for (const item of this.barList) {
       switch (true) {
@@ -87,6 +90,7 @@ class BaseCustomBtnConfig {
           break
       }
     }
+
     return true
   }
 
@@ -100,11 +104,13 @@ class BaseCustomBtnConfig {
     if (!hasOwnType(btnItem, 'id')) {
       throw new Error(`this menuitem missing id: ${JSON.stringify(btnItem)}`)
     }
+
     if (!checkType(btnItem.id, 'number')) {
       throw new Error(
         `this menuitem's id isn't number: ${JSON.stringify(btnItem)}`
       )
     }
+
     if (isCustom) {
       if (!this.menuIds.includes(btnItem.id) && Number(btnItem.id) <= 100) {
         throw new Error(
@@ -113,32 +119,38 @@ class BaseCustomBtnConfig {
           )}`
         )
       }
+
       if (!btnItem.type) {
         throw new Error(
           `this menuitem missing type : ${JSON.stringify(btnItem)}`
         )
       }
+
       if (!this.barTypes.includes(btnItem.type)) {
         throw new Error(
           `this menuitem's type is illegal: ${JSON.stringify(btnItem)}`
         )
       }
+
       const checkArr =
         btnItem.type === 'single'
           ? [...this.checkPresetKeys]
           : [...this.checkKeys]
+
       for (const item of checkArr) {
         if (!hasOwnType(btnItem, item)) {
           throw new Error(
             `this menuitem missing ${item} : ${JSON.stringify(btnItem)}`
           )
         }
+
         // 校验对象还是数组
         const checkBtnConfigArr =
             btnItem.type === 'single'
               ? [...this.btnConfigBasic.slice(0, -1)]
               : [...this.btnConfigBasic],
           isSingle = btnItem.type === 'single'
+
         if (isSingle) {
           for (const btnConfigItem of checkBtnConfigArr) {
             if (!hasOwnType(btnItem.btnConfig, btnConfigItem)) {
@@ -148,6 +160,7 @@ class BaseCustomBtnConfig {
                 )}`
               )
             }
+
             if (!isLegalParam(btnItem.btnConfig[btnConfigItem])) {
               throw new Error(
                 `this menuitem's btnConfig ${btnConfigItem} is empty : ${JSON.stringify(
@@ -166,6 +179,7 @@ class BaseCustomBtnConfig {
                   )}`
                 )
               }
+
               if (!isLegalParam(btnItem.btnConfig[confKey][btnConfigItem])) {
                 throw new Error(
                   `this menuitem's btnConfig ${btnConfigItem} is empty : ${JSON.stringify(
@@ -179,12 +193,14 @@ class BaseCustomBtnConfig {
       }
     } else {
       const checkArr = ['id']
+
       for (const item of checkArr) {
         if (!hasOwnType(btnItem, item)) {
           throw new Error(
             `this menuitem missing ${item} : ${JSON.stringify(btnItem)}`
           )
         }
+
         // if (hasOwnType(btnItem, 'btnConfig') && (checkType(btnItem.btnConfig, 'object') || checkType(btnItem.btnConfig, 'array'))) {
         //   const checkBtnConfigArr =  [...this.btnConfigBasic.slice(0, -1)],
         //   isSingle = Object.values(SingleMeunIds).includes(btnItem.id);
@@ -239,6 +255,7 @@ class BaseCustomBtnConfig {
     const arr = [...this.barList].filter((a) =>
       [...list].some((b) => a.id === b.id)
     )
+
     if (arr.length > 0) {
       throw new Error(
         `there are some same id in main list and more list: ${JSON.stringify(
@@ -246,11 +263,13 @@ class BaseCustomBtnConfig {
         )}`
       )
     }
+
     return true
   }
 
   private async checkListSameid() {
     const arr = []
+
     for (const item of this.barList) {
       if (arr.includes[item.id]) {
         throw new Error(
@@ -260,6 +279,7 @@ class BaseCustomBtnConfig {
         )
       }
     }
+
     return true
   }
 }

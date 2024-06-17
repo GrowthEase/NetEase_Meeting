@@ -41,6 +41,8 @@ import './index.less'
 import MoreButtonsPopup from './MoreButtonsPopup'
 import useMoreButtons from './MoreButtonsPopup/useMoreButtons'
 import { useTranslation } from 'react-i18next'
+import Interpretation from '../Interpretation'
+import { MAJOR_AUDIO, MAJOR_DEFAULT_VOLUME } from '../../../config'
 
 interface MeetingControllerProps {
   className?: string
@@ -58,10 +60,16 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
   const { meetingInfo, memberList, dispatch } =
     useContext<MeetingInfoContextInterface>(MeetingInfoContext)
   const { localMember, screenUuid, notificationMessages } = meetingInfo
-  const { neMeeting, eventEmitter, toolBarList, moreBarList } =
-    useContext<GlobalContextInterface>(GlobalContext)
+  const {
+    neMeeting,
+    eventEmitter,
+    toolBarList,
+    interpretationSetting,
+    dispatch: globalDispatch,
+  } = useContext<GlobalContextInterface>(GlobalContext)
   const [showMember, setShowMember] = useState(false)
   const [showChatRoom, setShowChatRoom] = useState(false) // 打开聊天室
+  const [showInterpretation, setShowInterpretation] = useState(false) // 打开同传
   const [unReadCount, setUnReadCount] = useState(0) // 聊天室未读消息
   const [receiveMsg, setReceiveMsg] = useState<NERoomChatMessage[]>() // 聊天室未读消息
   const [moreBtnVisible, setMoreBtnVisible] = useState<boolean>(false)
@@ -70,7 +78,11 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
   // const toolBarList = globalConfig?.toolBarList
   // const moreBarList = globalConfig?.moreBarList
   const meetingControllerRef = useRef<HTMLDivElement | null>(null)
-  const { t, i18n: i18next } = useTranslation()
+  const interpretationSettingRef = useRef(interpretationSetting)
+
+  interpretationSettingRef.current = interpretationSetting
+  const listeningChannelRef = useRef('')
+  const { t } = useTranslation()
   const i18n = {
     moreBtn: t('moreBtn'),
     commonTitle: t('commonTitle'),
@@ -80,13 +92,21 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
   ).length
 
   const meetingInfoRef = useRef(meetingInfo)
+
   meetingInfoRef.current = meetingInfo
 
   const moreButtons = useMoreButtons(onMoreButtonClick)
 
   function onMoreButtonClick(key: string) {
-    if (key === 'notification') {
-      setNotificationPopupVisible(true)
+    switch (key) {
+      case 'notification':
+        setNotificationPopupVisible(true)
+        break
+      case 'interpretation':
+        setShowInterpretation(true)
+        break
+      default:
+        break
     }
   }
 
@@ -96,6 +116,31 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
       checkNeedHandsUp: checkNeedHandsUp,
     }
   })
+  const defaultListeningVolume = useMemo(() => {
+    const playouOutputtVolume =
+      meetingInfo.setting.audioSetting.playouOutputtVolume
+
+    if (playouOutputtVolume !== undefined) {
+      return playouOutputtVolume
+    } else {
+      return 70
+    }
+  }, [meetingInfo.setting.audioSetting.playouOutputtVolume])
+
+  function handleSwitchToMajorAudio() {
+    listeningChannelRef.current &&
+      neMeeting?.leaveRtcChannel(listeningChannelRef.current)
+    setIsShowInterpretationTip(false)
+    globalDispatch?.({
+      type: ActionType.UPDATE_GLOBAL_CONFIG,
+      data: {
+        interpretationSetting: {
+          listenLanguage: MAJOR_AUDIO,
+          isListenMajor: false,
+        },
+      },
+    })
+  }
 
   useEffect(() => {
     eventEmitter?.on(EventType.ReceiveChatroomMessages, (msgs) => {
@@ -119,22 +164,28 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
         checkNeedHandsUp(data.type, data.isOpen)
       }
     )
+    eventEmitter?.on(EventType.OnInterpreterLeaveAll, (listeningChannel) => {
+      listeningChannelRef.current = listeningChannel
+      setIsShowInterpretationTip(true)
+    })
     return () => {
       eventEmitter?.off(EventType.ReceiveChatroomMessages)
       eventEmitter?.off(EventType.NeedAudioHandsUp)
       eventEmitter?.off(EventType.NeedVideoHandsUp)
       eventEmitter?.off(EventType.CheckNeedHandsUp)
+      eventEmitter?.off(EventType.OnInterpreterLeaveAll)
     }
-  }, [])
+  }, [eventEmitter])
   const [isShowVideoHandsUpDialog, setIsShowVideoHandsUpDialog] =
     useState(false)
+  const [isShowInterpretationTip, setIsShowInterpretationTip] = useState(false)
   const [isShowAudioHandsUpDialog, setIsShowAudioHandsUpDialog] =
     useState(false)
   const [isShowHandsDownDialog, setIsShowHandsDownDialog] = useState(false)
 
   const isScreen = useMemo(() => {
     return !!screenUuid && screenUuid === localMember.uuid
-  }, [screenUuid])
+  }, [screenUuid, localMember.uuid])
 
   const isHost = useMemo(() => {
     return localMember.role === Role.host || localMember.role === Role.coHost
@@ -143,6 +194,7 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
   // 根据角色配置菜单的展示与否
   const btnVisible = (visibility = 0) => {
     let result = false
+
     switch (true) {
       case NEMenuVisibility.VISIBLE_ALWAYS === visibility:
         result = true
@@ -156,6 +208,7 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
       default:
         break
     }
+
     return result
   }
 
@@ -168,10 +221,13 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
       } else {
         operateLocalVideo(0)
       }
+
       return
     }
+
     const isHost =
       localMember.role === Role.host || localMember.role === Role.coHost
+
     if (type === 'video') {
       // 当前房间不允许自己打开，非主持人，当前非共享用户
       if (
@@ -248,6 +304,7 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
         } else {
           Toast.info(t('cancelHandUpSuccess'))
         }
+
         dispatch &&
           dispatch({
             type: ActionType.UPDATE_MEMBER,
@@ -360,17 +417,48 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
         return <></>
       }
     },
-    [
-      toolBarList,
-      moreBarList,
-      localMember,
-      memberList,
-      btnVisible,
-      checkNeedHandsUp,
-      showMember,
-      unReadCount,
-    ]
+
+    [localMember, memberList, checkNeedHandsUp, showMember, unReadCount]
   )
+
+  useEffect(() => {
+    if (!meetingInfo.interpretation?.started) {
+      setShowInterpretation(false)
+      const listenLanguage = interpretationSettingRef.current?.listenLanguage
+
+      if (listenLanguage && listenLanguage !== MAJOR_AUDIO) {
+        const channel =
+          meetingInfoRef.current.interpretation?.channelNames[listenLanguage]
+
+        channel && neMeeting?.leaveRtcChannel(channel)
+      }
+
+      globalDispatch?.({
+        type: ActionType.UPDATE_GLOBAL_CONFIG,
+        data: {
+          interpretationSetting: {
+            listenLanguage: MAJOR_AUDIO,
+            isListenMajor: false,
+          },
+        },
+      })
+      neMeeting?.rtcController?.adjustChannelPlaybackSignalVolume('', 70)
+    } else {
+      Toast.info(t('interpStartNotification'))
+    }
+  }, [meetingInfo.interpretation?.started, t, neMeeting?.rtcController])
+
+  function handleHideRemoveLanguageTip() {
+    dispatch?.({
+      type: ActionType.UPDATE_MEETING_INFO,
+      data: {
+        showLanguageRemovedInfo: {
+          show: false,
+          language: '',
+        },
+      },
+    })
+  }
 
   return (
     <>
@@ -382,7 +470,7 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
           onClick={(e) => onCardClick(e)}
           ref={meetingControllerRef}
         >
-          {toolBarList?.map((item, index) => {
+          {toolBarList?.map((item) => {
             if (defaultMenusInH5?.some((menu) => menu.id === item.id)) {
               return getBuiltInButtonContent(item)
             } else if (item.id >= CustomButtonIdBoundaryValue) {
@@ -453,6 +541,41 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
         </div>
       </Dialog>
       <Dialog
+        visible={!!meetingInfo.showLanguageRemovedInfo?.show}
+        title={i18n.commonTitle}
+        cancelText={t('gotIt')}
+        confirmText={t('globalView')}
+        onCancel={() => {
+          handleHideRemoveLanguageTip()
+        }}
+        onConfirm={() => {
+          handleHideRemoveLanguageTip()
+          setShowInterpretation(true)
+        }}
+      >
+        <div style={{ color: '#000', fontSize: '13px' }}>
+          {t('interpLanguageRemoved', {
+            language: meetingInfo.showLanguageRemovedInfo?.language,
+          })}
+        </div>
+      </Dialog>
+      <Dialog
+        visible={isShowInterpretationTip}
+        title={i18n.commonTitle}
+        cancelText={t('globalCancel')}
+        confirmText={t('interpSwitchToMajorAudio')}
+        onCancel={() => {
+          setIsShowInterpretationTip(false)
+        }}
+        onConfirm={() => {
+          handleSwitchToMajorAudio()
+        }}
+      >
+        <div style={{ color: '#000', fontSize: '13px' }}>
+          {t('interpInterpreterOffline')}
+        </div>
+      </Dialog>
+      <Dialog
         visible={isShowHandsDownDialog}
         title={i18n.commonTitle}
         onCancel={() => {
@@ -482,6 +605,19 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
           setShowMember(false)
         }}
       />
+      {/* 同声传译 */}
+      {
+        <Interpretation
+          defaultMajorVolume={MAJOR_DEFAULT_VOLUME}
+          defaultListeningVolume={defaultListeningVolume}
+          neMeeting={neMeeting}
+          interpretation={meetingInfo.interpretation}
+          interpretationSetting={interpretationSetting}
+          visible={showInterpretation}
+          onClose={() => setShowInterpretation(false)}
+          localMember={localMember}
+        />
+      }
       {/* more buttons */}
       <MoreButtonsPopup
         moreButtons={moreButtons}

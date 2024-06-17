@@ -43,10 +43,6 @@ interface MeetingCanvasProps {
   wrapperWidth?: number
 }
 
-interface LayoutInfo {
-  layout: LayoutTypeEnum
-  speakerLayoutPlacement: 'top' | 'right'
-}
 interface SmallRenderProps {
   mainHeight: number
 }
@@ -71,6 +67,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
   const [speakerRightCollapse, setSpeakerRightCollapse] = useState(false)
   const [swiperWidth, setSwiperWidth] = useState<'100%' | number>('100%')
   const [maxResizableWidth, setMaxResizableWidth] = useState(0)
+  const [speakerRightResizing, setSpeakerRightResizing] = useState(false)
   // const [activeSpeakerList, setActiveSpeakerList] = useState<string[]>([])
   const isSpeakerRef = useRef<boolean>(isSpeaker)
   const toastIdRef = useRef<string>('')
@@ -88,18 +85,22 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
 
   const groupNum = useMemo(() => {
     let groupNum = 4
+
     if (isSpeakerLayoutPlacementRight) {
       groupNum = 6
       if (resizableWidth > 340) {
         groupNum = 4
       }
+
       if (resizableWidth > 500) {
         groupNum = 9
       }
+
       if (resizableWidth > 660) {
         groupNum = 16
       }
     }
+
     return groupNum
   }, [resizableWidth, isSpeakerLayoutPlacementRight])
 
@@ -121,6 +122,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     groupType: 'web',
   })
   const swiperInstanceRef = useRef<SwiperClass | null>(null)
+
   isSpeakerRef.current = isSpeaker
 
   const showCollapseBtn = useMemo(() => {
@@ -131,6 +133,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     ) {
       return false
     }
+
     return isSpeaker
   }, [
     memberList.length,
@@ -142,6 +145,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
   const onResize = useCallback((entries: ResizeObserverEntry[]) => {
     for (const entry of entries) {
       const { width, height } = entry.contentRect
+
       setWindowInnerWidth(width)
       setWindowInnerHeight(height)
     }
@@ -159,6 +163,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     const viewHeight = windowInnerHeight / lineNum
     let height = Math.floor(viewHeight)
     let width = Math.floor(viewWidth)
+
     if (viewWidth / viewHeight > VIEW_RATIO) {
       width = Math.floor(viewHeight * VIEW_RATIO)
     } else {
@@ -174,6 +179,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
   useEffect(() => {
     const wrapDom = document.querySelector('.nemeeting-canvas-web')
     let observer: ResizeObserver
+
     if (wrapDom) {
       setWindowInnerWidth(wrapDom.clientWidth)
       setWindowInnerHeight(wrapDom.clientHeight)
@@ -194,7 +200,9 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     if (!isHost) {
       return
     }
+
     const uuid = member.uuid
+
     if (member.inviteType === 2) {
       neMeeting?.inviteByUserUuid(uuid)?.catch((e) => {
         Toast.fail(e.message)
@@ -205,6 +213,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
       })
     }
   }
+
   const isSpeakerFull = useMemo(() => {
     if (
       meetingInfo.layout === LayoutTypeEnum.Gallery ||
@@ -212,6 +221,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     ) {
       return false
     }
+
     return isSpeakerLayoutPlacementRight
       ? speakerRightCollapse
       : speakerTopCollapse
@@ -222,10 +232,6 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     meetingInfo.layout,
     meetingInfo.whiteboardUuid,
   ])
-
-  const viewType = useMemo(() => {
-    return !!meetingInfo.screenUuid ? 'screen' : 'video'
-  }, [meetingInfo.screenUuid])
 
   const isHost = useMemo(() => {
     return (
@@ -238,6 +244,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
   function getLineNumAndColumnNum(memberCount: number) {
     // 一行存放几个视图
     let splitNum = 1
+
     if (memberCount >= 2 && memberCount <= 4) {
       splitNum = 2
     } else if (memberCount >= 5 && memberCount <= 9) {
@@ -245,13 +252,16 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     } else if (memberCount >= 10) {
       splitNum = 4
     }
+
     // 计算目前视图数量需要几行排放
     const count = Math.ceil(Math.min(memberCount, 16) / splitNum)
+
     return {
       lineNum: count,
       columnNum: splitNum,
     }
   }
+
   useEffect(() => {
     setActiveIndex(0)
     // 切换到画廊模式需要设置下每个画布宽高比为16:9
@@ -259,11 +269,14 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
       if (swiperInstanceRef.current?.destroyed) {
         return
       }
+
       swiperInstanceRef.current?.slideTo(0)
       // 当画布切换的时候，元素还没有重新设置成新的宽度，造成第一次切换比列不对，需要手动算一次
       const swiperDom = document.querySelector('.nemeeting-canvas-web')
+
       if (swiperDom) {
         const memberCount = memberList.length
+
         // 获取画布对应几行和几列
         calculateViewSize({ memberCount, windowInnerHeight, windowInnerWidth })
       }
@@ -296,7 +309,9 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
       setSwiperWidth(windowInnerWidth * 0.6)
       return
     }
+
     const memberList = groupMembers[activeIndex]
+
     // 获取画布对应几行和几列
     calculateViewSize({
       memberCount: memberList?.length,
@@ -325,6 +340,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
       windowInnerWidth,
       windowInnerHeight,
     })
+
     setVideoViewHeight(height)
     // 加20宽度，否则会出现父容器宽度跟不上里面画面宽度，造成竖向排列
     // setSwiperWidth(width * columnNum + 20)
@@ -338,13 +354,16 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
       setSpeakerTopCollapse(!speakerTopCollapse)
     }
   }
+
   useEffect(() => {
     if (!isMounted.current) {
       return
     }
+
     if (toastIdRef.current) {
       Toast.destroy(toastIdRef.current)
     }
+
     if (meetingInfo.pinVideoUuid) {
       toastIdRef.current = Toast.info(
         t('meetingPinViewTip', {
@@ -354,13 +373,10 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     } else {
       toastIdRef.current = Toast.info(t('meetingUnpinViewTip'))
     }
-  }, [meetingInfo.pinVideoUuid])
+  }, [meetingInfo.pinVideoUuid, t])
   useEffect(() => {
     isMounted.current = true
   }, [])
-  const videoCardViewHeight = useMemo(() => {
-    return isAudioMode ? 128 : videoViewHeight
-  }, [isAudioMode, videoViewHeight])
 
   const videoViewWidth = useMemo(() => {
     return isAudioMode ? 102 : Math.floor(videoViewHeight * VIEW_RATIO)
@@ -378,9 +394,11 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
       (!meetingInfo.whiteboardUuid || meetingInfo.isWhiteboardTransparent)
         ? groupMembers.slice(1)
         : groupMembers
+
     if (groupMembers.length === 1 && !!meetingInfo.screenUuid) {
       sliderGroupMembers = groupMembers
     }
+
     return sliderGroupMembers
   }, [
     groupMembers,
@@ -397,7 +415,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
   // 主画面成员
   const mainMember = useMemo(() => {
     return groupMembers[0]?.[0] || meetingInfo.localMember
-  }, [groupMembers])
+  }, [groupMembers, meetingInfo.localMember])
 
   useEffect(() => {
     function handleActiveSpeakerActiveChanged(info: {
@@ -412,9 +430,10 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
       } else {
         // 如果不在说话列表且不再当前页则取消订阅，否则订阅大流;
         const memberList = sliderGroupMembers[activeIndex]
-        const member = memberList.find((item) => {
+        const member = memberList?.find((item) => {
           item.uuid === info.user
         })
+
         console.warn('取消订阅大流>>>>>', member, info.user)
         if (member) {
           neMeeting?.subscribeRemoteVideoStream(info.user, 1)
@@ -426,6 +445,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
         }
       }
     }
+
     if (canPreSubscribe && !isElectronSharingScreen) {
       eventEmitter?.on(
         EventType.ActiveSpeakerActiveChanged,
@@ -444,6 +464,8 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     canPreSubscribe,
     mainMember.uuid,
     isElectronSharingScreen,
+    eventEmitter,
+    neMeeting,
   ])
 
   // 是否显示顶部成员列表
@@ -480,6 +502,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     if (isElectronSharingScreen) {
       return
     }
+
     handleUnsubscribeMembers(
       sliderGroupMembers,
       activeSpeakerList,
@@ -497,21 +520,26 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
   useEffect(() => {
     if (isSpeakerLayoutPlacementRight && !isElectronSharingScreen) {
       const wrapper = document.querySelector('#nemeeting-canvas-web')
-      function resize() {
+
+      const resize = () => {
         const groupMembers = sliderGroupMembers[activeIndex]
+
         if (wrapper && groupMembers) {
           const length = groupMembers.length
           const wrapperHeight = wrapper.clientHeight
           let width = resizableWidth - 20
+
           if (groupNum === 6 || length < 2) {
             const maxHeight = wrapperHeight / length
             const maxWidth = maxHeight * VIEW_RATIO
+
             if (width > maxWidth) {
               width = maxWidth
             }
           } else if (groupNum === 4 || length < 4) {
             const maxHeight = wrapperHeight / 2
             const maxWidth = maxHeight * VIEW_RATIO
+
             width = width / 2
             if (width > maxWidth) {
               width = maxWidth
@@ -519,6 +547,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
           } else if (groupNum === 9 || length < 9) {
             const maxHeight = wrapperHeight / 3
             const maxWidth = maxHeight * VIEW_RATIO
+
             width = width / 3
             if (width > maxWidth) {
               width = maxWidth
@@ -526,18 +555,22 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
           } else if (groupNum === 16 || length < 16) {
             const maxHeight = wrapperHeight / 4
             const maxWidth = maxHeight * VIEW_RATIO
+
             width = width / 4
             if (width > maxWidth) {
               width = maxWidth
             }
           }
+
           if (width >= 160) {
             setSpeakerRightViewWidth(width)
             setSpeakerRightViewHeight(width / VIEW_RATIO)
           }
         }
+
         return resizableWidth
       }
+
       resize()
       const ro = new ResizeObserver((entries) => {
         if (entries.length > 0) {
@@ -545,11 +578,13 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
             if (resizableWidth > wrapper.clientWidth - 160) {
               setResizableWidth(wrapper.clientWidth - 160)
             }
+
             setMaxResizableWidth(wrapper.clientWidth - 160)
             resize()
           }
         }
       })
+
       ro.observe(wrapper as HTMLElement)
       return () => {
         ro.unobserve(wrapper as HTMLElement)
@@ -573,6 +608,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
 
   const speakerRightViewColumnNum = useMemo(() => {
     const length = sliderGroupMembers[activeIndex]?.length
+
     if (groupNum === 6 || length < 2) {
       return 1
     } else if (groupNum === 4 || length < 4) {
@@ -582,6 +618,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     } else if (groupNum === 16 || length < 16) {
       return 4
     }
+
     return 1
   }, [groupNum, sliderGroupMembers, activeIndex])
 
@@ -655,7 +692,13 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
               zIndex: 999,
             },
           }}
-          onResize={(e, direction, ref, d) => {
+          onResizeStart={() => {
+            setSpeakerRightResizing(true)
+          }}
+          onResizeStop={() => {
+            setSpeakerRightResizing(false)
+          }}
+          onResize={(e, direction, ref) => {
             setResizableWidth(ref.clientWidth)
           }}
           style={
@@ -749,10 +792,11 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
                         : undefined
                     }
                   >
-                    {filterMembers.map((member, i) => {
+                    {filterMembers.map((member) => {
                       const needPreSubscribe =
                         canPreSubscribe &&
-                        activeSpeakerList.includes(member.uuid)
+                        activeSpeakerList.includes(member?.uuid)
+
                       return (
                         <VideoCard
                           onCallClick={onCallClick}
@@ -785,8 +829,8 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
                               ? 1
                               : 0
                           }
-                          isMySelf={member.uuid === meetingInfo.myUuid}
-                          key={member.uuid}
+                          isMySelf={member?.uuid === meetingInfo.myUuid}
+                          key={member?.uuid}
                           type={'video'}
                           className={`h-full text-white nemeeting-video-card video-card card-for-${members.length}`}
                           member={member}
@@ -892,10 +936,10 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
                 className={`w-full h-full text-white bg-black`}
                 member={mainMember}
                 avatarSize={64}
+                speakerRightResizing={speakerRightResizing}
               />
             </div>
           )}
-
           {!!meetingInfo.whiteboardUuid && !meetingInfo.screenUuid && (
             <WhiteboardView
               isEnable={!!meetingInfo.whiteboardUuid && !meetingInfo.screenUuid}
@@ -913,11 +957,12 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
 }
 
 // 小画面显示（适用于面试间）
-const SmallRender: React.FC<SmallRenderProps> = ({ mainHeight }) => {
-  const [isShowMyVideo, setIsShowMyVideo] = useState(true)
+const SmallRender: React.FC<SmallRenderProps> = () => {
+  const [isShowMyVideo] = useState(true)
   const { meetingInfo, memberList } = useContext(MeetingInfoContext)
   const { t } = useTranslation()
   let otherMember: NEMember | undefined
+
   if (memberList.length > 1) {
     otherMember = memberList[0]
     // 如果第一个用户是本端则去第二项
@@ -961,6 +1006,7 @@ const SmallRender: React.FC<SmallRenderProps> = ({ mainHeight }) => {
     </div>
   )
 }
+
 const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
   const {
     className,

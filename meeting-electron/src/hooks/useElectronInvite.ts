@@ -6,7 +6,9 @@ import { ActionType, EventType, UserEventType } from '../types'
 import { getLocalStorageSetting } from '../utils'
 import { useTranslation } from 'react-i18next'
 
-export default function useElectronInvite(data: { needOpenWindow: boolean }) {
+export default function useElectronInvite(data: {
+  needOpenWindow: boolean
+}): void {
   const { needOpenWindow } = data
   const { t } = useTranslation()
   const { inviteService, neMeeting, eventEmitter, dispatch } =
@@ -16,6 +18,7 @@ export default function useElectronInvite(data: { needOpenWindow: boolean }) {
     if (!message || !window.isElectronNative) return
     const data = message.data?.data
     const type = data?.type
+
     if (type === 'MEETING.INVITE') {
       if (action === 'reject') {
         neMeeting?.rejectInvite(data.roomUuid)
@@ -33,24 +36,30 @@ export default function useElectronInvite(data: { needOpenWindow: boolean }) {
           video: setting?.normalSetting.openAudio ? 1 : 2,
           audio: setting?.normalSetting.openVideo ? 1 : 2,
         }
+
         eventEmitter?.emit(UserEventType.JoinOtherMeeting, options, (e) => {
           console.log('加入房间', e)
         })
       }
     }
   }
+
   function windowLoadListener(childWindow) {
     function messageListener(e) {
       const { event, payload } = e.data
+
       if (event === 'notificationClick') {
         const { action, message } = payload
+
         if (action.startsWith('join') || action.startsWith('reject')) {
           onNotificationClickHandler(action, message)
         }
       }
     }
+
     childWindow?.addEventListener('message', messageListener)
   }
+
   function openNotificationCardWindow(message) {
     const notificationCardWindow = openWindow('notificationCardWindow')
     const postMessage = () => {
@@ -64,6 +73,7 @@ export default function useElectronInvite(data: { needOpenWindow: boolean }) {
         notificationCardWindow.origin
       )
     }
+
     // 不是第一次打开
     if (notificationCardWindow?.firstOpen === false) {
       postMessage()
@@ -77,17 +87,18 @@ export default function useElectronInvite(data: { needOpenWindow: boolean }) {
 
   useEffect(() => {
     if (window.isElectronNative) {
-      function handleMeetingInviteStatusChanged(
+      const handleMeetingInviteStatusChanged = (
         status: NEMeetingInviteStatus,
         meetingId: string,
         inviteInfo: NEMeetingInviteInfo,
         message: any
-      ) {
+      ) => {
         console.warn('handleMeetingInviteStatusChanged>>>', status, inviteInfo)
         if (status === NEMeetingInviteStatus.calling) {
           const dataObj = message.data as any
           const notifyCard = dataObj?.data?.notifyCard
           const type = dataObj.data.type
+
           if (notifyCard && type === 'MEETING.INVITE') {
             notifyCard.popUpCardBottomButton = [
               {
@@ -102,6 +113,7 @@ export default function useElectronInvite(data: { needOpenWindow: boolean }) {
             ]
             dataObj.data.notifyCard = notifyCard
           }
+
           message.data = dataObj
           needOpenWindow && openNotificationCardWindow(message)
         } else if (
@@ -110,6 +122,7 @@ export default function useElectronInvite(data: { needOpenWindow: boolean }) {
           status === NEMeetingInviteStatus.removed
         ) {
           const notificationCardWindow = getWindow('notificationCardWindow')
+
           console.warn('notificationCardWindow>>', notificationCardWindow)
           notificationCardWindow?.postMessage(
             {
@@ -123,6 +136,7 @@ export default function useElectronInvite(data: { needOpenWindow: boolean }) {
           )
         }
       }
+
       inviteService?.on(
         EventType.OnMeetingInviteStatusChange,
         //@ts-ignore

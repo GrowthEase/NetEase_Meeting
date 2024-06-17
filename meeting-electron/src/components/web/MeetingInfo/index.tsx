@@ -21,8 +21,10 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({ className }) => {
   const displayId = useMemo(() => {
     if (meetingInfo?.meetingNum) {
       const id = meetingInfo.meetingNum
+
       return id.slice(0, 3) + '-' + id.slice(3, 6) + '-' + id.slice(6)
     }
+
     return ''
   }, [meetingInfo?.meetingNum])
 
@@ -34,9 +36,11 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({ className }) => {
 
   function getMeetingInviteUrl() {
     const meetingInviteUrl = meetingInfo.meetingInviteUrl
+
     if (!meetingInviteUrl) {
       return
     }
+
     return meetingInviteUrl
     /*
     if (location.origin === 'https://meeting.163.com') {
@@ -143,34 +147,41 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({ className }) => {
               </div>
             </div>
           )}
-          <div className="meeting-info-item">
-            <div className="meeting-info-item-title">{t('host')}</div>
-            <div className="meeting-info-item-content">
-              {meetingInfo.hostName}
+          {meetingInfo.hostName ? (
+            <div className="meeting-info-item">
+              <div className="meeting-info-item-title">{t('host')}</div>
+              <div className="meeting-info-item-content">
+                {meetingInfo.hostName}
+              </div>
             </div>
-          </div>
-          <div className="meeting-info-item">
-            <div className="meeting-info-item-title">
-              {t('meetingInviteUrl')}
+          ) : null}
+          {meetingInfo.meetingInviteUrl ? (
+            <div className="meeting-info-item">
+              <div className="meeting-info-item-title">
+                {t('meetingInviteUrl')}
+              </div>
+              <div className="meeting-info-item-content">
+                {meetingInfo.meetingInviteUrl}
+                <svg
+                  className="icon iconfont iconcopy1x"
+                  aria-hidden="true"
+                  onClick={() => handleCopy(getMeetingInviteUrl())}
+                >
+                  <use xlinkHref="#iconcopy1x"></use>
+                </svg>
+              </div>
             </div>
-            <div className="meeting-info-item-content">
-              {meetingInfo.meetingInviteUrl}
-              <svg
-                className="icon iconfont iconcopy1x"
-                aria-hidden="true"
-                onClick={() => handleCopy(getMeetingInviteUrl())}
-              >
-                <use xlinkHref="#iconcopy1x"></use>
-              </svg>
+          ) : null}
+          {meetingInfo.maxMembers ? (
+            <div className="meeting-info-item">
+              <div className="meeting-info-item-title">
+                {t('meetingMaxMembers')}
+              </div>
+              <div className="meeting-info-item-content">
+                {meetingInfo.maxMembers}
+              </div>
             </div>
-            {/* <svg
-              className="icon iconfont iconcopy1x"
-              aria-hidden="true"
-              onClick={() => handleCopy(meetingInfo.meetingInviteUrl)}
-            >
-              <use xlinkHref="#iconcopy1x"></use>
-            </svg> */}
-          </div>
+          ) : null}
         </div>
       }
       placement="bottom"
@@ -183,4 +194,5 @@ const MeetingInfo: React.FC<MeetingInfoProps> = ({ className }) => {
     </Popover>
   )
 }
+
 export default MeetingInfo

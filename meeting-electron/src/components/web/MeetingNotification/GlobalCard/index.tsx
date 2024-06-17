@@ -18,6 +18,7 @@ const MeetingNotificationGlobalCard: React.FC<
 
   const message = useMemo(() => {
     const len = messageList.length
+
     if (len > 0) {
       return messageList[len - 1]
     } else {
@@ -36,13 +37,16 @@ const MeetingNotificationGlobalCard: React.FC<
         : 0
       const popupDuration =
         message.data?.data?.popupDuration * 1000 || 60000 - tmpDurationTime
+
       if (popupDuration <= 0) {
         onClose?.()
         return
       }
+
       if (timerRef.current) {
         clearTimeout(timerRef.current)
       }
+
       timerRef.current = setTimeout(() => {
         timerRef.current = null
         onClose?.()
@@ -106,4 +110,5 @@ const MeetingNotificationGlobalCard: React.FC<
     </div>
   ) : null
 }
+
 export default MeetingNotificationGlobalCard

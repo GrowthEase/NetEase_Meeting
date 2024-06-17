@@ -23,6 +23,7 @@ function useMeetingNotificationInMeeting(): void {
         ) {
           return
         }
+
         const isNotificationCenterOpen =
           !!getWindow('notificationList') ||
           meetingInfo.rightDrawerTabActiveKey === 'notification'
@@ -30,17 +31,20 @@ function useMeetingNotificationInMeeting(): void {
         const plugin = pluginList?.find(
           (item) => item.notifySenderAccid === message?.sessionId
         )
+
         if (plugin?.pluginId) {
           isPluginOpen =
             !!getWindow(plugin.pluginId) ||
             meetingInfo.rightDrawerTabActiveKey === plugin.pluginId
         }
+
         if (message.data) {
           const dataObj =
             Object.prototype.toString.call(message.data) === '[object Object]'
               ? message.data
               : JSON.parse(message.data)
           const type = dataObj.data.type
+
           // 会中过滤非当前会议的通知消息
           if (
             (meetingInfo.meetingId &&
@@ -55,11 +59,14 @@ function useMeetingNotificationInMeeting(): void {
           ) {
             return
           }
+
           const inviteNotification =
             type === 'MEETING.INVITE' || type === 'MEETING.SCHEDULE.START'
+
           // 如果是邀请按钮需要修改按钮
           if (inviteNotification) {
             const notifyCard = dataObj?.data?.notifyCard
+
             if (notifyCard) {
               notifyCard.popUpCardBottomButton = [
                 {
@@ -76,6 +83,7 @@ function useMeetingNotificationInMeeting(): void {
               dataObj.data.notifyCard = notifyCard
             }
           }
+
           message.data = dataObj
           dispatch?.({
             type: ActionType.UPDATE_MEETING_INFO,
@@ -98,11 +106,14 @@ function useMeetingNotificationInMeeting(): void {
             },
           })
         }
-      } catch {}
+      } catch (error) {
+        console.error('error', error)
+      }
     }
-    eventEmitter?.on(EventType.OnReceiveSessionMessage, onReceiveMessage)
+
+    eventEmitter?.on(EventType.onSessionMessageReceived, onReceiveMessage)
     return () => {
-      eventEmitter?.off(EventType.OnReceiveSessionMessage, onReceiveMessage)
+      eventEmitter?.off(EventType.onSessionMessageReceived, onReceiveMessage)
     }
   }, [
     globalConfig,

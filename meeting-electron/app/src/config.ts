@@ -1,4 +1,5 @@
 const isApp = typeof process != 'undefined';
+
 export const DOMAIN_SERVER = isApp ? process.env.MEETING_DOMAIN : '';
 
 export const APP_KEY = isApp ? process.env.APP_KEY : '';
@@ -21,12 +22,14 @@ export const SSO_APP_KEY = isApp ? process.env.SSO_APP_KEY : ''; // test
 export const PROTOCOL = 'nemeeting';
 
 export const MEETING_ENV = isApp ? process.env.MEETING_ENV : '';
+
+export const PRIVATE_CONFIG = isApp ? process.env.PRIVATE_CONFIG : '';
 /**
  * 上线需修改配置
  */
 
 // prod发布
-export const WEBSITE_URL = 'https://meeting.163.com/';
+export const WEBSITE_URL = isApp ? process.env.WEBSITE_URL : '';
 
 // test发布
 // export const WEBSITE_URL =

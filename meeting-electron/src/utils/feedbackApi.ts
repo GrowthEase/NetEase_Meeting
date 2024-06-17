@@ -1,6 +1,7 @@
 import RoomKit from 'neroom-web-sdk'
 import axios from 'axios'
 import pkg from '../../package.json'
+
 const feedbackUrl = 'https://statistic.live.126.net/statics/report/common/form'
 
 export function feedbackApi(data: {

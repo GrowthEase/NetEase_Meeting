@@ -1,5 +1,5 @@
 import { Chart } from '@antv/g2';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Radio } from 'antd';
 import { useUpdateEffect } from 'ahooks';
 import { useTranslation } from 'react-i18next';
@@ -29,10 +29,12 @@ const MonitoringPage: React.FC = () => {
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data;
+
       if (event === 'monitoringType') {
         setType(payload);
       }
     }
+
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);
@@ -47,6 +49,7 @@ const MonitoringPage: React.FC = () => {
   useEffect(() => {
     const sourceData: Record<string, number> = {};
     const data: MonitoringDataItem[] = [];
+
     if (monitoringData && radioValue !== 'bitrate') {
       if (type === 'network') {
         if (radioValue === 'rtt') {
@@ -69,16 +72,20 @@ const MonitoringPage: React.FC = () => {
           });
         }
       }
+
       const nowTime = Math.floor(Date.now() / 1000);
+
       for (let i = 0; i < 90; i++) {
         const time = nowTime - i * 2;
         const item =
           sourceData[time] || sourceData[time - 1] || sourceData[time + 1];
+
         data.unshift({
           value: item || 0,
           time,
         });
       }
+
       chartRef.current?.changeData(data);
     }
   }, [type, radioValue, monitoringData]);
@@ -112,7 +119,9 @@ const MonitoringPage: React.FC = () => {
           rxSourceData[item.time] = item.value;
         });
       }
+
       const nowTime = Math.floor(Date.now() / 1000);
+
       for (let i = 0; i < 90; i++) {
         const time = nowTime - i * 2;
         const rxItem =
@@ -120,6 +129,7 @@ const MonitoringPage: React.FC = () => {
           rxSourceData[time - 1] ||
           rxSourceData[time + 1] ||
           0;
+
         data.unshift({
           type: 'rx',
           value: rxItem,
@@ -130,6 +140,7 @@ const MonitoringPage: React.FC = () => {
           txSourceData[time - 1] ||
           txSourceData[time + 1] ||
           0;
+
         data.unshift({
           type: 'tx',
           value: txItem,
@@ -139,6 +150,7 @@ const MonitoringPage: React.FC = () => {
           setBitrate([txItem, rxItem]);
         }
       }
+
       chartRef.current?.changeData(data);
     }
   }, [type, radioValue, monitoringData]);
@@ -165,11 +177,13 @@ const MonitoringPage: React.FC = () => {
         if (radioValue === 'rtt') {
           return 'ms';
         }
+
         return '%';
       case 'audio':
         if (radioValue === 'bitrate') {
           return 'kbps';
         }
+
         return 'dB';
       default:
         return 'kbps';
@@ -206,7 +220,9 @@ const MonitoringPage: React.FC = () => {
           autoFit: true,
         });
       }
+
       const chart = chartRef.current;
+
       chart.legend(false);
       chart.animate(false);
       chart.data([]);
@@ -234,10 +250,12 @@ const MonitoringPage: React.FC = () => {
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data;
+
       if (event === 'monitoring') {
         setMonitoringData(payload);
       }
     }
+
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);
@@ -255,8 +273,15 @@ const MonitoringPage: React.FC = () => {
     <>
       <div className="electron-drag-bar">
         <div className="drag-region" />
-        {title}
-        <PCTopButtons minimizable={false} maximizable={false} />
+        <span
+          style={{
+            fontWeight: window.systemPlatform === 'win32' ? 'bold' : '500',
+          }}
+          className="title"
+        >
+          {title}
+        </span>
+        <PCTopButtons size="normal" minimizable={false} maximizable={false} />
       </div>
       <div className="monitoring-wrapper">
         {radioItems.length > 0 && (

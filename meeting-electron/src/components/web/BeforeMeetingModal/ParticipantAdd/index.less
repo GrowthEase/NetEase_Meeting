@@ -1,7 +1,7 @@
-
 .nemeeting-schedule-participant-add {
   display: flex;
   align-items: center;
+  overflow: hidden;
 }
 .nemeeting-address-confirm-cancel {
   margin-right: 20px;
@@ -12,20 +12,38 @@
     width: 100%;
   }
 }
-.nemeeting-schedule-participant-add, .nemeeting-schedule-participant-preview {
+.nemeeting-schedule-participant-meeting-attendees {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 22px;
+  letter-spacing: 0em;
+  /* 文字颜色 Text/强调&正文标题 */
+  color: #1e1f27;
+}
+.nemeeting-schedule-participant-add,
+.nemeeting-schedule-participant-preview {
+  background: #ffffff;
   .nemeeting-schedule-member-add {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #F2F2F5;
+    background-color: #f2f2f5;
     border-radius: 50%;
+    min-width: 32px;
+    height: 32px;
     cursor: pointer;
+    .iconcross {
+      transform: rotate(45deg);
+      width: 14px;
+      height: 14px;
+      color: #53576a;
+    }
   }
   .nemeeting-schedule-member-item {
     width: 32px;
     height: 32px;
     position: relative;
-    margin-right: 10px;
+    margin-right: 14px;
   }
   .nemeeting-schedule-member-item:last-child {
     margin-right: 0;
@@ -36,7 +54,6 @@
     justify-content: center;
     padding: 24px 0;
   }
-  
 
   .nemeeting-modal-body {
     padding: 0;
@@ -51,14 +68,57 @@
     border-radius: 50%;
   }
 }
-
+.ne-preview-interp-list {
+  // padding-bottom: 13px !important;
+  .ne-preview-interp-list-header {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+  }
+  .ne-preview-interp-item {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    height: 40px;
+    background-color: #f2f3f5;
+    padding: 0 12px;
+    border-radius: 4px;
+    flex: 1;
+  }
+  .ne-preview-interp-item-name {
+    font-size: 14px;
+    margin-left: 8px;
+    color: #333;
+  }
+  .ne-preview-interp-list-header-count {
+    margin-right: 12px;
+  }
+  .ne-preview-interp-content {
+    max-height: 276px;
+    overflow-y: auto;
+    padding: 0 16px;
+  }
+  .ne-preview-interp-content-item {
+    padding: 16px 0;
+  }
+  .ne-preview-interp-lang {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 12px;
+  }
+}
 .nemeeting-schedule-participant-preview {
-  margin: 10px 0;  
   flex-direction: column;
   .nemeeting-schedule-participant-preview-header {
-    height: 24px;
+    padding: 0 16px;
+    height: 48px;
+    box-sizing: border-box;
     display: flex;
-    font-size: 16px;
+    font-size: 14px;
     align-items: center;
     justify-content: space-between;
   }
@@ -84,17 +144,52 @@
   }
   .nemeeting-schedule-participant-preview-content {
     display: flex;
-    margin: 16px 0;
+    align-items: center;
+    height: 48px;
+    box-sizing: border-box;
+    padding: 0 15px 0 16px;
+    .nemeeting-schedule-member-item {
+      position: relative;
+      bottom: 2px;
+    }
   }
   .nemeeting-schedule-participant-preview-content-h {
     display: flex;
     flex-direction: column;
     max-height: 276px;
+    min-height: 48px;
     overflow-y: auto;
-    margin: 16px 0;
+    padding: 0 15px 0 16px;
   }
   .nemeeting-schedule-participant-preview-count {
     margin-left: 28px;
-    color: #999;
+    font-size: 14px;
+    color: #53576a;
+    margin-right: 12px;
+  }
+}
+
+.nemeeting-address-book-modal-wrap {
+  .address-book-wrap {
+    height: 335px;
+    padding-top: 20px;
+    box-sizing: border-box;
+  }
+
+  .nemeeting-address-confirm-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 64px;
+    box-sizing: border-box;
+    border-top: 1px solid #e6e7eb;
+  }
+  .nemeeting-address-confirm-cancel {
+    margin-right: 8px;
+    border-radius: 4px !important;
+  }
+  .anticon-close-circle {
+    color: #cdcfd7 !important;
+    font-size: 14px;
   }
 }

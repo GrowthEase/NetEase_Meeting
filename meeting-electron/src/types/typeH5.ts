@@ -416,6 +416,11 @@ export enum NEMeetingIdDisplayOption {
   DISPLAY_SHORT_ID_ONLY = 2,
 }
 
+interface CommonError {
+  code: number | string
+  message: string
+}
+
 export type userUuid = string
 
 /**
@@ -649,7 +654,7 @@ export interface NEMeetingKit {
    * @param callback 接口回调
    */
   checkSystemRequirements: (
-    callback: (err: any, result?: boolean | string) => void
+    callback: (err: CommonError, result?: boolean | string) => void
   ) => void
   /**
    * im 复用场景需要调用该方法，入参为IM，该方法会重新处理getInstance并返回一个包装过的IM，然后直接调用IM.getInstance方法

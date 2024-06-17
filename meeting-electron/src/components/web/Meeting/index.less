@@ -6,7 +6,33 @@
 .nemeeting {
   text-align: center;
   height: 100%;
-
+  .nemeeting-interpreter-window-wrapper {
+    position: absolute;
+    left: 40px;
+    top: 40px;
+    z-index: 999;
+  }
+  .nemeeting-floating-window {
+    position: absolute;
+    right: 0;
+    bottom: 84px;
+    left: unset !important;
+    top: unset !important;
+    z-index: 99;
+  }
+  .nemeeting-interpreter-modal {
+    height: 543px;
+    .nemeeting-modal-header {
+      height: 50px;
+      border-bottom: 1px solid #ebedf0;
+    }
+    .nemeeting-modal-title {
+      line-height: 50px;
+    }
+    .nemeeting-modal-content {
+      padding: 0;
+    }
+  }
   .nemeeting-top-right-wrap {
     position: absolute;
     top: 5px;
@@ -102,6 +128,7 @@
   }
   .speaker-list-hide {
     right: -195px;
+    left: unset !important;
   }
   .nemeeting-network {
     position: absolute;
@@ -271,5 +298,50 @@
   }
   .permission-tips-step {
     margin-top: 10px;
+  }
+}
+
+.nemeeting-interp-tip-modal {
+  .nemeeting-modal-confirm-title {
+    font-size: 18px;
+  }
+  .nemeeting-interp-modal-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .ne-preview-interp-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 32px;
+      background-color: #f2f3f5;
+      padding: 0 12px;
+      border-radius: 4px;
+      width: 120px;
+      box-sizing: border-box;
+    }
+  }
+  .nemeeting-interp-modal-lang {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  .nemeeting-interp-modal-tip {
+    font-size: 14px;
+    color: #666;
+    margin: 24px 0;
+  }
+  .nemeeting-interp-remove-modal-tip {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 20px;
+  }
+  .nemeeting-interp-modal-footer {
+    border-top: 1px solid #ebedf0;
+    color: #337eff;
+    height: 50px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 }

@@ -6,11 +6,6 @@ import { Button } from 'antd';
 import Toast from '../../../../src/components/common/toast';
 import { useTranslation } from 'react-i18next';
 
-interface VerifyCodeInputProps extends InputProps {
-  appKey?: string;
-  scene: number; // 1-登录 2-注册 3-修改密码(新版本1：登录并注册)
-}
-
 const VerifyCodeInput: FC<InputProps> = (props) => {
   const { t } = useTranslation();
   const { phone, scene, appKey, ...otherProps } = props;
@@ -40,6 +35,7 @@ const VerifyCodeInput: FC<InputProps> = (props) => {
       Toast.fail(e.msg || e.message || e.code);
     });
   };
+
   const sendCodeStyle = {
     fontSize: '14px',
     // width: '70px',
@@ -59,6 +55,7 @@ const VerifyCodeInput: FC<InputProps> = (props) => {
         style={sendCodeStyle}
         disabled={!phone}
         type="link"
+        className="send-code-button"
       >
         {t('authGetCheckCode')}
       </Button>

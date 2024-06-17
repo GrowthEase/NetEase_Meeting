@@ -1,10 +1,10 @@
 import { Button, Checkbox } from 'antd';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import AppAboutLogoImage from '../../assets/app-about-logo.png';
 import MobLogo from '../../assets/mob-logo@2x.png';
 import Toast from '../../../../src/components/common/toast';
 import './index.less';
-import LoginBySSO from './bySSO';
+import LoginBySSO, { matchURL } from './bySSO';
 import NormalLogin from './normalLogin';
 import PCTopButtons from '../../../../src/components/common/PCTopButtons';
 import BaseInput from '../../../src/components/input';
@@ -12,8 +12,20 @@ import EnterpriseLogin from './enterpriseLogin';
 import { getEnterPriseInfoApi } from '../../api';
 import { EnterPriseInfo } from '../../types';
 import { useTranslation } from 'react-i18next';
+import LoginTypeIcon from './loginTypeIcon';
+import {
+  DOMAIN_SERVER,
+  LOCALSTORAGE_LOGIN_BACK,
+  PROTOCOL,
+  LOCALSTORAGE_SSO_APP_KEY,
+} from '../../config';
+import { getDeviceKey } from '../../../../src/utils';
+import { NEClientInnerType } from '../../../../src/types';
+import classNames from 'classnames';
 
-export const CREATE_ACCOUNT_URL = process.env.CREATE_ACCOUNT_URL;
+// export const CREATE_ACCOUNT_URL = process.env.CREATE_ACCOUNT_URL;
+export const CREATE_ACCOUNT_URL =
+  'https://doc.yunxin.163.com/meeting/concept/DI1MDY1ODg?platform=console';
 
 type ShowType =
   | 'home'
@@ -31,7 +43,7 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogged }) => {
   const [isAgree, setIsAgree] = useState<boolean>(false);
   const [type, setType] = useState<ShowType>('home');
   const [enterpriseCode, setEnterpriseCode] = useState({
-    value: '',
+    value: localStorage.getItem('nemeeting-website-sso'),
     valid: false,
   });
   const [enterpriseLoading, setEnterpriseLoading] = useState(false);
@@ -45,22 +57,80 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogged }) => {
     setType(type);
   };
 
-  const goEnterprise = () => {
-    if (checkIsAgree()) {
-      setEnterpriseLoading(true);
-      getEnterPriseInfoApi({ code: enterpriseCode.value })
-        .then((data) => {
-          setType('enterpriseLogin');
-          setEnterpriseInfo(data);
-          // setEnterpriseCode({ value: '', valid: false });
-        })
-        .catch((err) => {
-          Toast.fail(err.msg || err.message);
-        })
-        .finally(() => {
-          setEnterpriseLoading(false);
-        });
+  const toSSOUrl = (_enterpriseCode: string, ipdId: number, appKey: string) => {
+    // @ts-ignore
+    const { query } = location;
+    const [loginAppNameSpace] = [query?.loginAppNameSpace];
+    const { href } = window.location;
+    const backUrl = window.localStorage.getItem(LOCALSTORAGE_LOGIN_BACK);
+    const returnURL = query?.returnURL
+      ? matchURL(
+          `${href.split('?')[0]}`,
+          `returnURL=${query?.returnURL}&loginAppNameSpace=${
+            loginAppNameSpace || _enterpriseCode
+          }&backUrl=${window.encodeURIComponent(
+            (query?.backUrl as string) || '',
+          )}&from=${query?.from || 'web'}`,
+        )
+      : `${href.split('?')[0]}?loginAppNameSpace=${
+          loginAppNameSpace || _enterpriseCode
+        }&backUrl=${window.encodeURIComponent(backUrl || '')}&from=${
+          query?.from || 'web'
+        }`;
+
+    const ssoUrl = `${DOMAIN_SERVER}/scene/meeting/v2/sso-authorize`;
+    const key = getDeviceKey();
+    const clientCallbackUrl = window.isElectronNative
+      ? `${PROTOCOL}://loginSuccess?` // 自定义协议唤起应用
+      : `${window.encodeURIComponent(returnURL)}`;
+    const clientType = window.isElectronNative
+      ? window.isWins32
+        ? NEClientInnerType.PC
+        : NEClientInnerType.MAC
+      : NEClientInnerType.WEB;
+
+    localStorage.setItem(LOCALSTORAGE_SSO_APP_KEY, appKey);
+    const url = `${ssoUrl}?callback=${clientCallbackUrl}&idp=${ipdId}&key=${key}&clientType=${clientType}&appKey=${appKey}`;
+
+    if (window.isElectronNative) {
+      window.ipcRenderer?.send('open-browser-window', url);
+    } else {
+      window.location.href = url;
     }
+  };
+
+  const goEnterprise = () => {
+    if (!enterpriseCode.value || !checkIsAgree()) {
+      return;
+    }
+
+    const code = enterpriseCode.value;
+
+    setEnterpriseLoading(true);
+    getEnterPriseInfoApi({ code: code })
+      .then((data) => {
+        localStorage.setItem('nemeeting-website-sso', code);
+        if (data.ssoLevel === 2 && data.idpList.length > 0) {
+          const ipdInfo = data.idpList.find((item) => {
+            return item.type === 1;
+          });
+
+          if (ipdInfo) {
+            toSSOUrl(code, ipdInfo.id, data.appKey);
+            return;
+          }
+        }
+
+        setType('enterpriseLogin');
+        setEnterpriseInfo(data);
+        // setEnterpriseCode({ value: '', valid: false });
+      })
+      .catch((err) => {
+        Toast.fail(err.msg || err.message);
+      })
+      .finally(() => {
+        setEnterpriseLoading(false);
+      });
   };
 
   function onCreateAccount() {
@@ -76,17 +146,19 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogged }) => {
       Toast.info(t('authPrivacyCheckedTips'));
       return false;
     }
+
     return true;
   }, [isAgree]);
 
   const onClickLogin = (type: ShowType) => {
-    if (checkIsAgree()) {
-      login(type);
-    }
+    login(type);
   };
+
   function goBack() {
     setType('home');
   }
+
+  // function
 
   return (
     <div className={'before-login-wrap'}>
@@ -97,7 +169,15 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogged }) => {
           <PCTopButtons maximizable={false} />
         </div>
       )}
-      <div className="before-login">
+      <div
+        className={classNames('before-login', {
+          'login-home': type === 'home',
+          'login-enterprise': type === 'enterpriseLogin',
+          'login-register': type === 'register',
+          'login-sso': type === 'sso',
+          'login-login': type === 'login',
+        })}
+      >
         <div className="before-login-content">
           {type === 'home' && (
             <>
@@ -108,6 +188,14 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogged }) => {
                 src={AppAboutLogoImage}
               />
               <BaseInput
+                prefix={
+                  <svg
+                    className="icon iconfont input-prefix-icon"
+                    aria-hidden="true"
+                  >
+                    <use xlinkHref="#iconqiyedaima"></use>
+                  </svg>
+                }
                 style={{ width: '100%', paddingLeft: 0 }}
                 size="middle"
                 value={enterpriseCode.value}
@@ -116,13 +204,15 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogged }) => {
               />
               <div className="no-enterprise-tip">
                 <div>
-                  {t('authNoCorpCode')}
+                  {/* {t('authNoCorpCode')} */}
                   <Button
                     className="create-count"
                     type="link"
                     onClick={onCreateAccount}
                   >
-                    {t('authCreateNow')}
+                    <span className="get-corp-code">
+                      {t('authHowToGetCorpCode')}
+                    </span>
                   </Button>
                 </div>
                 <Button
@@ -146,23 +236,39 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogged }) => {
               >
                 {t('authNextStep')}
               </Button>
-              <Button
+              {/* <Button
                 type="link"
                 onClick={() => {
                   onClickLogin('sso');
                 }}
               >
                 {t('authLoginBySSO')}
-              </Button>
+              </Button> */}
             </>
           )}
           {type === 'enterpriseLogin' && (
             <EnterpriseLogin
               enterpriseInfo={enterpriseInfo}
-              checkIsAgree={checkIsAgree}
               onLogged={onLogged}
               goBack={goBack}
-              onSSOLogin={() => login('sso')}
+              onSSOLogin={() => {
+                if (enterpriseInfo && enterpriseInfo.idpList.length > 0) {
+                  const ipdInfo = enterpriseInfo.idpList.find((item) => {
+                    return item.type === 1;
+                  });
+
+                  if (ipdInfo && enterpriseCode.value) {
+                    toSSOUrl(
+                      enterpriseCode.value,
+                      ipdInfo.id,
+                      enterpriseInfo.appKey,
+                    );
+                    return;
+                  }
+                }
+
+                Toast.fail(t('authSSONotSupport'));
+              }}
             />
           )}
           {type === 'register' && (
@@ -193,7 +299,7 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogged }) => {
                     {t('authLoginToCorpEdition')}
                   </Button>
                 </div>
-                <Button
+                {/* <Button
                   className="create-count"
                   type="link"
                   onClick={() => {
@@ -201,7 +307,7 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogged }) => {
                   }}
                 >
                   {t('authLoginBySSO')}
-                </Button>
+                </Button> */}
               </div>
             </>
           )}
@@ -221,53 +327,69 @@ const BeforeLogin: React.FC<BeforeLoginProps> = ({ onLogged }) => {
             />
           )}
         </div>
-        <div className={'footer'}>
-          <div className="footer-agreement">
-            <Checkbox
-              onChange={(e) => {
-                setIsAgree(e.target.checked);
-              }}
-              checked={isAgree}
-            />
-            <span className="text">
-              {t('authHasReadAndAgreeMeeting')}
-              <a
-                href="https://meeting.163.com/privacy/agreement_mobile_ysbh_wap.shtml"
-                target="_blank"
-                title={t('authPrivacy')}
-                onClick={(e) => {
-                  if (window.ipcRenderer) {
-                    window.ipcRenderer.send(
-                      'open-browser-window',
-                      'https://meeting.163.com/privacy/agreement_mobile_ysbh_wap.shtml',
-                    );
-                    e.preventDefault();
-                  }
+        {type !== 'enterpriseLogin' && (
+          <div className={'footer'}>
+            {type === 'home' ? (
+              <div className="footer-login-type">
+                <LoginTypeIcon
+                  title={t('authLoginBySSO')}
+                  icon="iconSSO1"
+                  onClick={() => {
+                    login('sso');
+                  }}
+                />
+              </div>
+            ) : null}
+
+            <div className="footer-agreement">
+              <Checkbox
+                onChange={(e) => {
+                  setIsAgree(e.target.checked);
                 }}
-              >
-                {t('authPrivacy')}
-              </a>
-              {t('authAnd')}
-              <a
-                href="https://netease.im/meeting/clauses?serviceType=0"
-                target="_blank"
-                title={t('authUserProtocol')}
-                onClick={(e) => {
-                  if (window.ipcRenderer) {
-                    window.ipcRenderer.send(
-                      'open-browser-window',
-                      'https://netease.im/meeting/clauses?serviceType=0',
-                    );
-                    e.preventDefault();
-                  }
-                }}
-              >
-                {t('authUserProtocol')}
-              </a>
-            </span>
+                checked={isAgree}
+              />
+              <span className="text">
+                {t('authHasReadAndAgreeMeeting')}
+                <a
+                  href="https://meeting.163.com/privacy/agreement_mobile_ysbh_wap.shtml"
+                  target="_blank"
+                  title={t('authPrivacy')}
+                  onClick={(e) => {
+                    if (window.ipcRenderer) {
+                      window.ipcRenderer.send(
+                        'open-browser-window',
+                        'https://meeting.163.com/privacy/agreement_mobile_ysbh_wap.shtml',
+                      );
+                      e.preventDefault();
+                    }
+                  }}
+                  rel="noreferrer"
+                >
+                  {t('authPrivacy')}
+                </a>
+                {t('authAnd')}
+                <a
+                  href="https://netease.im/meeting/clauses?serviceType=0"
+                  target="_blank"
+                  title={t('authUserProtocol')}
+                  onClick={(e) => {
+                    if (window.ipcRenderer) {
+                      window.ipcRenderer.send(
+                        'open-browser-window',
+                        'https://netease.im/meeting/clauses?serviceType=0',
+                      );
+                      e.preventDefault();
+                    }
+                  }}
+                  rel="noreferrer"
+                >
+                  {t('authUserProtocol')}
+                </a>
+              </span>
+            </div>
+            <img className="footer-logo" src={MobLogo} />
           </div>
-          <img className="footer-logo" src={MobLogo} />
-        </div>
+        )}
       </div>
     </div>
   );

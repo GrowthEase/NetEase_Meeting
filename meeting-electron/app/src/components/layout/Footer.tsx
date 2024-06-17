@@ -47,6 +47,7 @@ const Content: React.FC<FooterProps> = ({ className = '', logo = true }) => {
             href="https://netease.im/meeting/clauses?serviceType=0"
             target="_blank"
             title="用户服务协议"
+            rel="noreferrer"
           >
             用户服务协议
           </a>
@@ -55,6 +56,7 @@ const Content: React.FC<FooterProps> = ({ className = '', logo = true }) => {
             href="https://meeting.163.com/privacy/agreement_mobile_ysbh_wap.shtml"
             target="_blank"
             title="隐私政策"
+            rel="noreferrer"
           >
             隐私政策
           </a>

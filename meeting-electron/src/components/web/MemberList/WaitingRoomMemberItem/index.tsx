@@ -2,18 +2,16 @@ import { Button, Checkbox, Dropdown, MenuProps } from 'antd'
 import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { NEMeetingInfo } from '../../../../types'
-
 import { NEWaitingRoomMember } from 'neroom-web-sdk/dist/types/types/interface'
 import NEMeetingService from '../../../../services/NEMeeting'
 import UserAvatar from '../../../common/Avatar'
-import Modal from '../../../common/Modal'
+import Modal, { ConfirmModal } from '../../../common/Modal'
 import Toast from '../../../common/toast'
 import './index.less'
+import { useMeetingInfoContext } from '../../../../store'
 
 interface MemberItemProps {
   data: NEWaitingRoomMember
-  meetingInfo: NEMeetingInfo
   neMeeting?: NEMeetingService
   handleUpdateUserNickname: (
     uuid: string,
@@ -24,31 +22,34 @@ interface MemberItemProps {
 
 const WaitingRoomMemberItem: React.FC<MemberItemProps> = ({
   data,
-  meetingInfo,
   neMeeting,
   handleUpdateUserNickname,
 }) => {
   const { t } = useTranslation()
+  const { meetingInfo, memberList, inInvitingMemberList } =
+    useMeetingInfoContext()
   const [waitingTime, setWaitingTime] = useState('')
-  const [updateUserNicknameModalOpen, setUpdateUserNicknameModalOpen] =
-    useState(false)
-  const waitingTimerRef = useRef<any>(null)
+  const waitingTimerRef = useRef<NodeJS.Timeout | null>(null)
   const notAllowJoinRef = useRef(false)
-  const expelMemberModalRef = useRef<any>(null)
+  const expelMemberModalRef = useRef<ConfirmModal | null>(null)
 
   function formatJoinTime(joinTime: number) {
     if (!joinTime) {
       return `${t('waiting')}--${t('hours')}--${'minutes'}`
     }
+
     // 根据joinTime格式化成等待x小时xx分这样的格式
     const nowTime = new Date().getTime()
     const time = nowTime - joinTime
+
     if (time > 0) {
       const hours = Math.floor(time / (3600 * 1000))
       const minutes = Math.floor((time - hours * 3600 * 1000) / (60 * 1000))
+
       if (hours === 0 && minutes === 0) {
         return ''
       }
+
       return `${t('waiting')}${hours > 0 ? hours + t('hours') : ''}${
         minutes > 0 ? minutes + t('minutes') : ''
       }`
@@ -58,16 +59,29 @@ const WaitingRoomMemberItem: React.FC<MemberItemProps> = ({
   }
 
   function admitMember(uuid: string, autoAdmit?: boolean) {
-    neMeeting?.admitMember(uuid, autoAdmit)?.catch((error: any) => {
-      Toast.fail(error?.msg || error?.message)
-      throw error
-    })
+    const maxMembers = meetingInfo.maxMembers || 0
+    const inInvitingMemberListLength = inInvitingMemberList?.length || 0
+    const memberListLength = memberList.length
+
+    if (memberListLength + inInvitingMemberListLength >= maxMembers) {
+      Modal.warning({
+        title: t('commonTitle'),
+        content: t('participantUpperLimitTipAdmitOtherTip'),
+      })
+    } else {
+      neMeeting?.admitMember(uuid, autoAdmit)?.catch((err: unknown) => {
+        const knownError = err as { message: string; msg: string }
+
+        Toast.fail(knownError?.msg || knownError?.message)
+      })
+    }
   }
 
   function expelMember(uuid: string) {
     if (expelMemberModalRef.current) {
       return
     }
+
     expelMemberModalRef.current = Modal.confirm({
       title: t('participantExpelWaitingMemberDialogTitle'),
       width: 270,
@@ -97,7 +111,7 @@ const WaitingRoomMemberItem: React.FC<MemberItemProps> = ({
 
   useEffect(() => {
     setWaitingTime(formatJoinTime(data.joinTime))
-    clearInterval(waitingTimerRef.current)
+    waitingTimerRef.current && clearInterval(waitingTimerRef.current)
     // 1分钟更新一次
     waitingTimerRef.current = setInterval(() => {
       setWaitingTime(formatJoinTime(data.joinTime))
@@ -106,7 +120,7 @@ const WaitingRoomMemberItem: React.FC<MemberItemProps> = ({
 
   useEffect(() => {
     return () => {
-      clearInterval(waitingTimerRef.current)
+      waitingTimerRef.current && clearInterval(waitingTimerRef.current)
     }
   }, [])
 
@@ -146,7 +160,7 @@ const WaitingRoomMemberItem: React.FC<MemberItemProps> = ({
             <Dropdown
               menu={{
                 items,
-                onClick: (e) => {
+                onClick: () => {
                   admitMember(data.uuid, true)
                 },
               }}
@@ -177,4 +191,5 @@ const WaitingRoomMemberItem: React.FC<MemberItemProps> = ({
     </div>
   )
 }
+
 export default WaitingRoomMemberItem

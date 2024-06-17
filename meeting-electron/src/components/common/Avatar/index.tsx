@@ -1,5 +1,11 @@
 import EditOutlined from '@ant-design/icons/EditOutlined'
-import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react'
+import React, {
+  CSSProperties,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { AvatarSize } from '../../../types/innerType'
 import { NEMeetingInviteStatus } from '../../../types/type'
 import { getUserName } from '../../../utils'
@@ -36,20 +42,25 @@ const UserAvatar: React.FC<AvatarProps> = ({
 }) => {
   const [canShowImg, setCanShowImg] = useState(true)
   const imgRef = useRef<HTMLImageElement>(null)
+
   useEffect(() => {
     function handleLoad() {
       setCanShowImg(true)
     }
+
     function handleError() {
       setCanShowImg(false)
     }
+
     if (avatar && imgRef.current) {
-      imgRef.current.addEventListener('load', handleLoad)
-      imgRef.current.addEventListener('error', handleError)
+      const imgRefDom = imgRef.current
+
+      imgRefDom.addEventListener('load', handleLoad)
+      imgRefDom.addEventListener('error', handleError)
 
       return () => {
-        imgRef.current?.removeEventListener('load', handleLoad)
-        imgRef.current?.removeEventListener('error', handleError)
+        imgRefDom.removeEventListener('load', handleLoad)
+        imgRefDom.removeEventListener('error', handleError)
       }
     }
   }, [avatar])
@@ -77,7 +88,8 @@ const UserAvatar: React.FC<AvatarProps> = ({
       default:
         return null
     }
-  }, [inviteState])
+  }, [inviteState, onCallClick])
+
   return (
     <div
       onClick={onClick}

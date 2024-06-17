@@ -4,21 +4,20 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
-  useMemo,
   useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
 import { IPCEvent } from '../../../../app/src/types'
-import eleIpc from '../../../services/electron/index'
 import { useGlobalContext, useMeetingInfoContext } from '../../../store'
 import { ActionType } from '../../../types'
 import Modal from '../../common/Modal'
 import Toast from '../../common/toast'
 import './index.less'
+import { closeWindow, openWindow } from '../../../utils/windowsProxy'
 
 interface ShareListItem {
-  id: string
-  displayId: string
+  id: number
+  displayId: number
   thumbnail: string
   appIcon: string
   name: string
@@ -61,7 +60,6 @@ const ScreenShareListModal = forwardRef<
   }>()
   const [currentInfo, setCurrentInfo] = useState<ShareListItem>()
   const [isLoading, setIsLoading] = useState(true)
-  const eleIpcIns = useMemo(() => eleIpc.getInstance(), [])
 
   const handleSelectShare = (item) => {
     setCurrentInfo(item)
@@ -108,24 +106,26 @@ const ScreenShareListModal = forwardRef<
   */
 
   useEffect(() => {
-    if (restProps.open) {
-      setShareInfos({
-        windowList: [],
-        screenList: [],
+    if (!restProps.open) {
+      shareInfos?.screenList.forEach((item, index) => {
+        closeWindow(`screenMarker${index}`)
       })
     }
-  }, [restProps.open])
+  }, [shareInfos?.screenList, restProps.open])
 
   const getShareList = useCallback(async () => {
     setIsLoading(true)
     function toDataURL(data, size) {
       function toRGBA(data: number[]) {
         const result: number[][] = []
+
         for (let i = 0; i < data.length; i += 4) {
           result.push(data.slice(i, i + 4))
         }
+
         result.forEach((item) => {
           const green = item[0]
+
           item[0] = item[2]
           item[2] = green
         })
@@ -136,6 +136,7 @@ const ScreenShareListModal = forwardRef<
         const canvas = document.createElement('canvas')
         const context = canvas.getContext('2d')
         const imageData = context?.createImageData(size.width, size.height)
+
         imageData?.data.set(toRGBA(Array.from(data)))
         imageData && context?.putImageData(imageData, 0, 0)
         return canvas.toDataURL()
@@ -143,29 +144,51 @@ const ScreenShareListModal = forwardRef<
         return ''
       }
     }
+
     try {
-      // @ts-ignore
       const res = await neMeeting?.getScreenCaptureSourceList()
-      if (res.data && res.data?.length > 0) {
+
+      console.log('获取到的原始桌面及窗口信息', res)
+
+      if (res?.data && res.data?.length > 0) {
         const _screenList: ShareListItem[] = []
         const _windowList: ShareListItem[] = []
+
+        const excludeNames = [
+          '网易会议',
+          'ne-meeting-electron',
+          'Electron',
+          'StatusIndicator',
+          'Netease',
+        ]
+
         res.data?.forEach(async (item) => {
           if (
-            [
-              '网易会议',
-              'ne-meeting-electron',
-              'Electron',
-              'StatusIndicator',
-              'Netease',
-            ].includes(item.title) ||
+            excludeNames.includes(item.title) ||
+            excludeNames.includes(item.name) ||
             !(item.thumbImage?.length > 0)
           ) {
             return
           }
+
           if (item.type === 1) {
+            // 过滤掉全白的桌面
+            let length = 0
+
+            item.thumbImage.data.forEach((item) => {
+              if (item === 255) {
+                length++
+              }
+            })
+            if (length === item.thumbImage.data.length) {
+              return
+            }
+
+            const index = _screenList.length
+
             _screenList.push({
               id: item.id,
-              name: `桌面 ${_screenList.length + 1}`,
+              name: `桌面 ${index + 1}`,
               thumbnail:
                 item.thumbImage && item.thumbImage.length > 0
                   ? toDataURL(item.thumbImage.data, item.thumbImage.size)
@@ -173,8 +196,12 @@ const ScreenShareListModal = forwardRef<
               appIcon: '',
               displayId: item.id,
               isApp: false,
-              index: _screenList.length,
+              index: index,
             })
+            openWindow(
+              `screenMarker${index}`,
+              `#/screenSharing/screenMarker/${index}`
+            )
           } else {
             _windowList.push({
               id: item.id,
@@ -197,6 +224,7 @@ const ScreenShareListModal = forwardRef<
         if (_screenList.length > 0) {
           handleSelectShare(_screenList[0])
         }
+
         setIsLoading(false)
         return true
       } else {
@@ -211,7 +239,7 @@ const ScreenShareListModal = forwardRef<
       }, 500)
       return false
     }
-  }, [neMeeting])
+  }, [neMeeting, i18n.getScreenCaptureSourceListError, restProps])
 
   useImperativeHandle(
     ref,
@@ -233,6 +261,31 @@ const ScreenShareListModal = forwardRef<
       )
     })
   }
+
+  useEffect(() => {
+    if (restProps.open) {
+      setShareInfos({
+        windowList: [],
+        screenList: [],
+      })
+    }
+  }, [restProps.open])
+
+  useEffect(() => {
+    if (restProps.open) {
+      window.ipcRenderer?.on(IPCEvent.displayChanged, () => {
+        // 这里需要调用下暂停否则列表获取又问题
+        shareInfos?.screenList.forEach((item, index) => {
+          closeWindow(`screenMarker${index}`)
+        })
+        getShareList()
+      })
+      return () => {
+        window.ipcRenderer?.removeAllListeners(IPCEvent.displayChanged)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shareInfos?.screenList, restProps.open])
 
   const getPartContent = useCallback(
     (list: ShareListItem[]) => {
@@ -277,6 +330,7 @@ const ScreenShareListModal = forwardRef<
       footer={
         <div className="screen-share-list-modal-footer">
           <Checkbox
+            checked={shareSound}
             defaultChecked={shareSound}
             id={`share-sound-checkbox-${shareSound}`}
             onChange={() => onShareSoundChanged?.(!shareSound)}
@@ -289,9 +343,11 @@ const ScreenShareListModal = forwardRef<
             onClick={async () => {
               if (!currentInfo) return
               const isFullScreen = await getIsFullScreen()
+
               if (isFullScreen) {
-                window.ipcRenderer?.send('quiteFullscreen')
+                window.ipcRenderer?.send(IPCEvent.quiteFullscreen)
               }
+
               setTimeout(
                 () => {
                   if (shareSound) {
@@ -299,6 +355,7 @@ const ScreenShareListModal = forwardRef<
                       // @ts-ignore
                       neMeeting?.previewController?.installAudioCaptureDriver?.()
                     }
+
                     // @ts-ignore
                     neMeeting?.rtcController?.startSystemAudioLoopbackCapture?.()
                     dispatch &&
@@ -319,13 +376,15 @@ const ScreenShareListModal = forwardRef<
                         },
                       })
                   }
+
                   // 分享的是桌面，需要记录下来
                   if (!currentInfo.isApp) {
-                    window.ipcRenderer?.send('nemeeting-sharing-screen', {
+                    window.ipcRenderer?.send(IPCEvent.sharingScreen, {
                       method: 'share-screen',
                       data: currentInfo.index,
                     })
                   }
+
                   onStartShare?.(currentInfo)
                 },
                 isFullScreen ? 1000 : 0
@@ -366,5 +425,7 @@ const ScreenShareListModal = forwardRef<
     </Modal>
   )
 })
+
+ScreenShareListModal.displayName = 'ScreenShareListModal'
 
 export default ScreenShareListModal

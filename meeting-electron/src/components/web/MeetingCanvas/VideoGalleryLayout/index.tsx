@@ -1,4 +1,4 @@
-import React, { MutableRefObject, useMemo, useRef } from 'react'
+import React, { useMemo, useRef } from 'react'
 import { SortableContainer, SortableElement } from 'react-sortable-hoc'
 
 import { css } from '@emotion/css'
@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next'
 import Modal from '../../../common/Modal'
 import { Button } from 'antd'
 
-interface VideoGalleryLayout {
+interface VideoGalleryLayoutIF {
   videoViewWidth: number
   videoViewHeight: number
   handleViewDoubleClick: (member: NEMember) => void
@@ -21,7 +21,7 @@ interface VideoGalleryLayout {
   onCallClick?: (member: NEMember) => void
 }
 
-interface SortableItemProps extends VideoGalleryLayout {
+interface SortableItemProps extends VideoGalleryLayoutIF {
   member: NEMember
 }
 
@@ -109,8 +109,8 @@ const SortableItem = SortableElement<SortableItemProps>((props) => {
   )
 })
 
-const SortableList = SortableContainer<VideoGalleryLayout>(
-  ({ members, width, ...resetProps }: VideoGalleryLayout) => {
+const SortableList = SortableContainer<VideoGalleryLayoutIF>(
+  ({ members, width, ...resetProps }: VideoGalleryLayoutIF) => {
     const { meetingInfo } = useMeetingInfoContext()
 
     const { localMember } = meetingInfo
@@ -148,7 +148,7 @@ const SortableList = SortableContainer<VideoGalleryLayout>(
   }
 )
 
-const VideoGalleryLayout: React.FC<VideoGalleryLayout> = (props) => {
+const VideoGalleryLayout: React.FC<VideoGalleryLayoutIF> = (props) => {
   const { t } = useTranslation()
   const { neMeeting } = useGlobalContext()
   const { meetingInfo, dispatch } = useMeetingInfoContext()
@@ -163,10 +163,12 @@ const VideoGalleryLayout: React.FC<VideoGalleryLayout> = (props) => {
   function arrayMove(arr, oldIndex, newIndex) {
     if (newIndex >= arr.length) {
       let k = newIndex - arr.length + 1
+
       while (k--) {
         arr.push(undefined)
       }
     }
+
     arr.splice(newIndex, 0, arr.splice(oldIndex, 1)[0])
     return arr
   }
@@ -207,6 +209,7 @@ const VideoGalleryLayout: React.FC<VideoGalleryLayout> = (props) => {
       const videoDom = videoContainerDom.getElementsByClassName(
         'nertc-video-container'
       )[0]
+
       videoDom?.parentElement?.removeChild(videoDom)
       if (member?.uuid === meetingInfo.myUuid) {
         neMeeting?.rtcController?.setupLocalVideoCanvas(videoContainerDom)
@@ -222,12 +225,14 @@ const VideoGalleryLayout: React.FC<VideoGalleryLayout> = (props) => {
 
   const onSortEnd = ({ oldIndex, newIndex }) => {
     const member = members[oldIndex]
+
     getVideoContainerDom(
       `#nemeeting-video-container-${member.uuid}-video`,
       member
     )
     const newMembers = arrayMove(members, oldIndex, newIndex)
     const viewOrder = newMembers.map((member) => member.uuid).join(',')
+
     dispatch?.({
       type: ActionType.UPDATE_MEETING_INFO,
       data: {
@@ -239,6 +244,7 @@ const VideoGalleryLayout: React.FC<VideoGalleryLayout> = (props) => {
 
   const onSortStart = ({ index }) => {
     const member = members[index]
+
     getVideoContainerDom(
       `.dragging-handle #nemeeting-video-container-${member.uuid}-video`,
       member
@@ -264,6 +270,7 @@ const VideoGalleryLayout: React.FC<VideoGalleryLayout> = (props) => {
       const index = members.findIndex(
         (member) => member.uuid === currentMoveMember.current?.uuid
       )
+
       // 如果当前移动的成员不在列表中，则重新渲染
       if (index === -1) {
         reRender()

@@ -5,22 +5,21 @@ import { Pagination } from 'swiper'
 import 'swiper/css'
 import 'swiper/css/pagination'
 import VideoCard from '../../common/VideoCard'
+import { NEMember, EventType } from '../../../types'
 import {
-  NEMember,
-  EventType,
-  GlobalContext as GlobalContextInterface,
-} from '../../../types'
-import { MeetingInfoContext, useGlobalContext } from '../../../store'
+  MeetingInfoContext,
+  useGlobalContext,
+  GlobalContext,
+} from '../../../store'
 import WhiteboardView from './WhiteboardView'
 import { getClientType } from '../../../utils'
-import { ActionType } from '../../../types/innerType'
 import { useIsAudioMode } from '../../../hooks/useAudioMode'
 import AudioModeCanvas from './AudioModeCanvas'
 
-import { GlobalContext } from '../../../store'
 import { Swiper as SwiperClass } from 'swiper/types'
 import useActiveSpeakerManager from '../../../hooks/useActiveSpeakerManager'
 import useMeetingCanvas from '../../../hooks/useMeetingCanvas'
+
 interface MeetingCanvasProps {
   className?: string
   onActiveIndexChanged: (activeIndex: number) => void
@@ -28,7 +27,7 @@ interface MeetingCanvasProps {
 const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
   const { className, onActiveIndexChanged } = props
   // const [groupMembers, setGroupMembers] = useState<Array<NEMember[]>>([])
-  const [groupNum, setGroupNum] = useState<number>(4)
+  const [groupNum] = useState<number>(4)
   const [fullScreenIndex, setFullScreenIndex] = useState(0)
   const { meetingInfo, memberList } = useContext(MeetingInfoContext)
   // 当前显示页面index
@@ -42,7 +41,7 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
     memberList,
   })
   const viewType = useMemo(() => {
-    return !!meetingInfo.screenUuid ? 'screen' : 'video'
+    return meetingInfo.screenUuid ? 'screen' : 'video'
   }, [meetingInfo.screenUuid])
   const { activeSpeakerList } = useActiveSpeakerManager()
 
@@ -60,7 +59,7 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
     groupType: 'h5',
   })
 
-  const { neMeeting, dispatch: globalDispatch } = useContext(GlobalContext)
+  const { neMeeting } = useContext(GlobalContext)
 
   const swiperInstanceRef = useRef<SwiperClass | null>(null)
 
@@ -79,7 +78,7 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
   // 返回第一页，解决ios滑动到页面重新回来video标签遮挡。需要重新渲染
   useEffect(() => {
     onActiveIndexChanged && onActiveIndexChanged(activeIndex)
-    // 切换到非第一页，ios需要重新渲染防止vidoe遮挡昵称
+    // 切换到非第一页，ios需要重新渲染防止video遮挡昵称
     if (activeIndex !== 0 && getClientType() === 'IOS') {
       setShowPagination(false)
       setTimeout(() => {
@@ -100,9 +99,10 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
       } else {
         // 如果不在说话列表且不再当前页则取消订阅，否则订阅大流;
         const memberList = groupMembers[activeIndex]
-        const member = memberList.find((item) => {
+        const member = memberList?.find((item) => {
           item.uuid === info.user
         })
+
         if (member) {
           neMeeting?.subscribeRemoteVideoStream(info.user, 1)
           clearUnsubscribeMembersTimer(info.user)
@@ -112,6 +112,7 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
         }
       }
     }
+
     if (canPreSubscribe) {
       eventEmitter?.on(
         EventType.ActiveSpeakerActiveChanged,
@@ -133,7 +134,7 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
         setIosTime(Math.random())
       }, 800)
     }
-  }, [groupMembers])
+  }, [groupMembers, activeIndex])
 
   useEffect(() => {
     if (meetingInfo.whiteboardUuid) {
@@ -142,6 +143,7 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
       if (swiperInstanceRef.current?.destroyed) {
         return
       }
+
       swiperInstanceRef.current?.slideTo(0)
     }
   }, [meetingInfo.whiteboardUuid])
@@ -150,18 +152,9 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
     if (index !== fullScreenIndex) {
       event.stopPropagation()
     }
+
     if (meetingInfo.screenUuid === uuid) return
     setFullScreenIndex(index)
-  }
-
-  async function leaveMeeting() {
-    globalDispatch?.({
-      type: ActionType.UPDATE_GLOBAL_CONFIG,
-      data: {
-        waitingRejoinMeeting: false,
-      },
-    })
-    await neMeeting?.leave()
   }
 
   return isAudioMode ? (
@@ -194,6 +187,7 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
                       const needPreSubscribe =
                         canPreSubscribe &&
                         activeSpeakerList.includes(member.uuid)
+
                       return (
                         <VideoCard
                           style={{
@@ -232,10 +226,11 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
                         />
                       )
                     })
-                  : members.map((member: NEMember, i: number) => {
+                  : members.map((member: NEMember) => {
                       const needPreSubscribe =
                         canPreSubscribe &&
                         activeSpeakerList.includes(member.uuid)
+
                       return (
                         <VideoCard
                           showBorder={
@@ -270,4 +265,5 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
     </div>
   )
 }
+
 export default React.memo(MeetingCanvas)

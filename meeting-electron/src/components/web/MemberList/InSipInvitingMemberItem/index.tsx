@@ -25,6 +25,7 @@ const InSipInvitingMemberItem: React.FC<InvitingMemberItemProps> = ({
       Toast.fail(e.message)
     })
   }
+
   function cancelCall(uuid: string) {
     // 应用内
     if (data.inviteType === 2) {
@@ -37,6 +38,7 @@ const InSipInvitingMemberItem: React.FC<InvitingMemberItemProps> = ({
       })
     }
   }
+
   function callByUserUuid(uuid: string) {
     if (data.inviteType === 2) {
       neMeeting?.inviteByUserUuid(uuid)?.catch((e) => {
@@ -48,6 +50,7 @@ const InSipInvitingMemberItem: React.FC<InvitingMemberItemProps> = ({
       })
     }
   }
+
   const onClickHandler = () => {
     switch (data.inviteState) {
       case NEMeetingInviteStatus.waitingCall:
@@ -76,6 +79,7 @@ const InSipInvitingMemberItem: React.FC<InvitingMemberItemProps> = ({
         break
     }
   }
+
   const stateText = useMemo(() => {
     const textMap = {
       [NEMeetingInviteStatus.error]: t('sipCallStatusError'),
@@ -92,12 +96,13 @@ const InSipInvitingMemberItem: React.FC<InvitingMemberItemProps> = ({
       (NEMeetingInviteStatus.calling || NEMeetingInviteStatus.waitingCall)
         ? '#26BD71'
         : '#999'
+
     return (
       <div style={{ color }} className="nemeeting-SIP-member-state">
         {textMap[data.inviteState]}
       </div>
     )
-  }, [data.inviteState, data.inviteType])
+  }, [data.inviteState, data.inviteType, t])
   const btnText = useMemo(() => {
     const btnTextMap = {
       [NEMeetingInviteStatus.waitingCall]: t('globalCancel'),
@@ -108,8 +113,9 @@ const InSipInvitingMemberItem: React.FC<InvitingMemberItemProps> = ({
       [NEMeetingInviteStatus.canceled]: t('sipCall'),
       [NEMeetingInviteStatus.error]: t('sipCall'),
     }
+
     return btnTextMap[data.inviteState]
-  }, [data.inviteState])
+  }, [data.inviteState, t])
   const btnColor = useMemo(() => {
     const btnColorMap = {
       [NEMeetingInviteStatus.waitingCall]: '#F24957',
@@ -120,8 +126,10 @@ const InSipInvitingMemberItem: React.FC<InvitingMemberItemProps> = ({
       [NEMeetingInviteStatus.canceled]: '#26BD71',
       [NEMeetingInviteStatus.error]: '#26BD71',
     }
+
     return btnColorMap[data.inviteState]
   }, [data.inviteState])
+
   return (
     <div className="nemeeting-SIP-member-item">
       <UserAvatar

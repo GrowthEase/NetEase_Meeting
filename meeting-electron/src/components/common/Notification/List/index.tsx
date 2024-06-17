@@ -1,12 +1,17 @@
 import dayjs from 'dayjs'
 import { NECustomSessionMessage } from 'neroom-web-sdk/dist/types/types/messageChannelService'
-import React, { forwardRef, useCallback, useEffect, useMemo } from 'react'
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useImperativeHandle,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { useImperativeHandle } from 'react'
 import EmptyImg from '../../../../assets/empty-notification.png'
 import { useGlobalContext, useMeetingInfoContext } from '../../../../store'
-import { ActionType, EventType, NEMeetingInfo } from '../../../../types'
+import { ActionType, EventType } from '../../../../types'
 import Modal from '../../../common/Modal'
 import Toast from '../../../common/toast'
 import './index.less'
@@ -54,6 +59,7 @@ const MeetingNotificationList = forwardRef<
       const lengthIndex = notificationListMap[sessionId]?.length - 1
       const lastMessage = notificationListMap[sessionId]?.[lengthIndex]
       const toTime = init ? Date.now() : lastMessage?.time - 1
+
       neMeeting
         ?.getSessionMessagesHistory({
           sessionId,
@@ -82,8 +88,10 @@ const MeetingNotificationList = forwardRef<
 
   const handleScroll = () => {
     const dom = contentDomRef.current
+
     if (!dom) return
     const { scrollTop, scrollHeight, clientHeight } = dom
+
     if (scrollTop + clientHeight >= scrollHeight) {
       // 加载更多
       fetchNotificationList()
@@ -100,6 +108,7 @@ const MeetingNotificationList = forwardRef<
           const promises = sessionIds.map((sessionId) => {
             return neMeeting?.deleteAllSessionMessage(sessionId)
           })
+
           await Promise.all(promises)
           dispatch?.({
             type: ActionType.UPDATE_MEETING_INFO,
@@ -118,38 +127,43 @@ const MeetingNotificationList = forwardRef<
 
   useEffect(() => {
     if (neMeeting && sessionIds.length > 0) {
-      function handleReceiveSessionMessage() {
+      const handleReceiveSessionMessage = () => {
         setTimeout(() => {
           fetchNotificationList(true)
         }, 1000)
       }
+
       fetchNotificationList(true)
       eventEmitter?.on(
-        EventType.OnReceiveSessionMessage,
+        EventType.onSessionMessageReceived,
         handleReceiveSessionMessage
       )
       return () => {
         eventEmitter?.off(
-          EventType.OnReceiveSessionMessage,
+          EventType.onSessionMessageReceived,
           handleReceiveSessionMessage
         )
       }
     }
-  }, [sessionIds.length, eventEmitter])
+  }, [sessionIds.length, eventEmitter, neMeeting])
 
   useEffect(() => {
     if (sessionIds.length === 0) {
       const notificationMessages = meetingInfo.notificationMessages
+
       if (notificationMessages.length > 0) {
         setNotificationListMap(
           notificationMessages.reduce((acc, currentItem) => {
             if (currentItem.noShowInNotificationCenter) {
               return acc
             }
+
             const { sessionId } = currentItem
+
             if (!acc[sessionId]) {
               acc[sessionId] = []
             }
+
             acc[sessionId].push({
               ...currentItem,
               content: currentItem.data || undefined,

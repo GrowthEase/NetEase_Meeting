@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import PCTopButtons from '../../../../src/components/common/PCTopButtons';
 import ChatRoom from '../../../../src/components/web/Chatroom/Chatroom';
@@ -22,12 +22,15 @@ const ChatPage: React.FC = () => {
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data;
+
       if (event === 'updateData') {
         const { cacheMsgs, roomArchiveId, startTime, subject } = payload;
+
         setInitMsgs(cacheMsgs);
         roomArchiveId && setChatInfo({ roomArchiveId, startTime, subject });
       }
     }
+
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);
@@ -46,7 +49,14 @@ const ChatPage: React.FC = () => {
         <div className="history-chat-wrapper">
           <div className="electron-drag-bar">
             <div className="drag-region" />
-            {t('chatHistory')}
+            <span
+              style={{
+                fontWeight: window.systemPlatform === 'win32' ? 'bold' : '500',
+              }}
+              className="chat-history-title"
+            >
+              {t('chatHistory')}
+            </span>
             <PCTopButtons minimizable={false} maximizable={false} />
           </div>
           <ChatRoom

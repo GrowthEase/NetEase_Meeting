@@ -3,6 +3,7 @@ import React, { Fragment } from 'react'
 import ReactDOM from 'react-dom'
 import classNames from 'classnames'
 import './index.less'
+import { IPCEvent } from '../../../../app/src/types'
 
 interface ToastInfo {
   msg: string | 'info'
@@ -31,15 +32,18 @@ class Toast extends React.Component {
     if (!id) {
       return
     }
+
     const darkToast = document.getElementById(id)
+
     if (darkToast) {
-      window.ipcRenderer?.send('nemeeting-sharing-screen', {
+      window.ipcRenderer?.send(IPCEvent.sharingScreen, {
         method: 'closeToast',
       })
       darkToast.parentNode?.removeChild(darkToast)
       exitToastCount = Math.max(exitToastCount - 1, 0)
       if (cacheList.length > 0) {
         const info = cacheList.shift()
+
         if (info) {
           Toast[info.type](
             info.msg,
@@ -52,10 +56,12 @@ class Toast extends React.Component {
     } else {
       // 还未创建元素只是在缓存队列
       const index = cacheList.findIndex((item) => item.id === id)
+
       if (index !== -1) {
         cacheList.splice(index, 1)
       }
     }
+
     callback?.()
   }
   static info(
@@ -75,10 +81,12 @@ class Toast extends React.Component {
     })
 
     const el = document.getElementById(id)
+
     // 在缓存队列
     if (!el) {
       return id
     }
+
     setTime(timeout, id)
     ReactDOM.render(
       <Fragment>
@@ -129,10 +137,12 @@ class Toast extends React.Component {
       id: domId,
     })
     const el = document.getElementById(id)
+
     // 在缓存队列
     if (!el || !id) {
       return id
     }
+
     setTime(timeout, id)
     ReactDOM.render(
       <Fragment>
@@ -179,10 +189,12 @@ class Toast extends React.Component {
       id: domId,
     })
     const el = document.getElementById(id)
+
     // 在缓存队列
     if (!el || !id) {
       return id
     }
+
     setTime(timeout, id)
     ReactDOM.render(
       <Fragment>
@@ -233,10 +245,12 @@ class Toast extends React.Component {
       id: domId,
     })
     const el = document.getElementById(id)
+
     // 在缓存队列
     if (!el || !id) {
       return id
     }
+
     setTime(timeout, id)
     ReactDOM.render(
       <Fragment>
@@ -272,6 +286,7 @@ class Toast extends React.Component {
 function init(options: ToastInfo): string {
   // 如果存在id则是从缓存队列里取出
   const domId = options.id || DomId + '-' + Date.now()
+
   if (exitToastCount >= MAX_COUNT) {
     if (cacheList.length < MAX_CACHE_COUNT) {
       cacheList.push(options)
@@ -281,33 +296,38 @@ function init(options: ToastInfo): string {
       return ''
     }
   }
+
   if (!container) {
     container = document.createElement('div')
     container.className = 'neMeeting-toast-container'
     document.body.appendChild(container)
   }
+
   exitToastCount += 1
-  window.ipcRenderer?.send('nemeeting-sharing-screen', {
+  window.ipcRenderer?.send(IPCEvent.sharingScreen, {
     method: 'openToast',
   })
   // clearTimeout(timer)
   const darkToast = document.createElement('div')
+
   darkToast.setAttribute('id', domId)
   darkToast.setAttribute('class', 'nemeeint-toast')
   container.appendChild(darkToast)
   // document.body.appendChild(darkToast)
   // darkToast.style.display = 'block'
-  window.ipcRenderer?.once('nemeeting-sharing-screen', (_, value) => {
+  window.ipcRenderer?.once(IPCEvent.sharingScreen, (_, value) => {
     if (value.method === 'openToast' && value.data) {
       darkToast.style.top = '60px'
     }
   })
   return domId
 }
+
 function setTime(timeout: number, id: string) {
   if (timeout === 0) return
   setTimeout(() => {
     Toast.handleCloseToast(id)
   }, timeout)
 }
+
 export default Toast

@@ -1,6 +1,6 @@
 import Styles from './index.less';
 import { Button, ConfigProvider } from 'antd';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Authorization from '../Authorization';
 
 const antdPrefixCls = 'nemeeting';
@@ -9,6 +9,7 @@ ConfigProvider.config({ prefixCls: antdPrefixCls });
 
 const AuthorizationTip = () => {
   const [showModal, setShowModal] = useState(false);
+
   return (
     <div>
       <div className={Styles.dialog}>

@@ -27,7 +27,9 @@ export function getDevices(): Promise<Devices> {
         isDefault: item.defaultDevice,
       }));
   }
+
   const previewController = NEMeetingKit.actions.neMeeting?.previewController;
+
   return Promise.all([
     //@ts-ignore
     previewController?.enumCameraDevices(),
@@ -37,6 +39,7 @@ export function getDevices(): Promise<Devices> {
     previewController?.enumPlayoutDevices(),
   ]).then((res) => {
     const [cameraList, recordList, playoutList] = res;
+
     return {
       cameraList: formatDevices(cameraList?.data),
       recordList: formatDevices(recordList?.data),
@@ -78,9 +81,11 @@ export function reportDevices(
     const videoIndex = videoDeviceList.findIndex(
       (item) => item.id == tmpDeviceInfo.selectedVideoDeviceId,
     );
+
     // 当前选中的设备已不存在
     if (videoIndex < 0) {
       const defaultIndex = videoDeviceList.findIndex((item) => item.isDefault);
+
       tmpDeviceInfo.selectedVideoDeviceId =
         defaultIndex > -1
           ? videoDeviceList[defaultIndex].id
@@ -93,14 +98,17 @@ export function reportDevices(
     } else {
       videoDeviceList[videoIndex].selected = true;
     }
+
     const audioInDeviceList = data.audio.in;
     const audioInIndex = audioInDeviceList.findIndex(
       (item) => item.id == tmpDeviceInfo.selectedMicDeviceId,
     );
+
     if (audioInIndex < 0) {
       const defaultIndex = audioInDeviceList.findIndex(
         (item) => item.isDefault,
       );
+
       tmpDeviceInfo.selectedMicDeviceId =
         defaultIndex > -1
           ? audioInDeviceList[defaultIndex].id
@@ -113,14 +121,17 @@ export function reportDevices(
     } else {
       audioInDeviceList[audioInIndex].selected = true;
     }
+
     const audioOutDeviceList = data.audio.out;
     const audioOutIndex = audioOutDeviceList.findIndex(
       (item) => item.id == tmpDeviceInfo.selectedSpeakerDeviceId,
     );
+
     if (audioOutIndex < 0) {
       const defaultIndex = audioOutDeviceList.findIndex(
         (item) => item.isDefault,
       );
+
       tmpDeviceInfo.selectedSpeakerDeviceId =
         defaultIndex > -1
           ? audioOutDeviceList[defaultIndex].id
@@ -133,6 +144,7 @@ export function reportDevices(
     } else {
       audioOutDeviceList[audioOutIndex].selected = true;
     }
+
     req.reportDevices(data);
     setDeviceInfo(tmpDeviceInfo);
     return { data, deviceInfo: tmpDeviceInfo };
@@ -142,14 +154,18 @@ export function reportDevices(
 export function getVersionCode(version: string) {
   const verArr = version.split('.');
   let versionCode = 0;
+
   if (verArr[0]) {
     versionCode += parseInt(verArr[0]) * 10000;
   }
+
   if (verArr[1]) {
     versionCode += parseInt(verArr[1]) * 100;
   }
+
   if (verArr[2]) {
     versionCode += parseInt(verArr[2]);
   }
+
   return versionCode;
 }

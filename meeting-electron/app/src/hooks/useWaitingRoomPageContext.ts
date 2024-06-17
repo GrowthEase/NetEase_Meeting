@@ -1,5 +1,5 @@
 import { NEWaitingRoomMember } from 'neroom-web-sdk/dist/types/types/interface';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 type WaitingRoomPageContextValue = {
   waitingRoomInfo: {
@@ -20,20 +20,24 @@ function useWaitingRoomPageContext(): WaitingRoomPageContextValue {
   });
   const [memberList, setMemberList] = useState([]);
 
-  function dispatch(payload: any) {
-    const parentWindow = window.parent;
-    parentWindow?.postMessage(
-      {
-        event: 'waitingRoomInfoDispatch',
-        payload: payload,
-      },
-      parentWindow.origin,
-    );
-  }
+  const dispatch = useCallback(() => {
+    return (payload: any) => {
+      const parentWindow = window.parent;
+
+      parentWindow?.postMessage(
+        {
+          event: 'waitingRoomInfoDispatch',
+          payload: payload,
+        },
+        parentWindow.origin,
+      );
+    };
+  }, []);
 
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data;
+
       switch (event) {
         case 'windowOpen':
         case 'updateData':
@@ -46,6 +50,7 @@ function useWaitingRoomPageContext(): WaitingRoomPageContextValue {
           break;
       }
     }
+
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);

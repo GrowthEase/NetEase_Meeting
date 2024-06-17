@@ -28,7 +28,7 @@ const AudioIcon: React.FC<AudioIconProps> = (props) => {
   const localMember = meetingInfo.localMember
 
   function getAudioImage(level: number) {
-    if (level === 0) {
+    if (level === 0 && !meetingInfo.isInterpreter) {
       setOpenAudioImage(dark ? AudioImageDark0 : AudioImage0)
     } else if (level >= 1 && level < 30) {
       setOpenAudioImage(dark ? AudioImageDark1 : AudioImage1)
@@ -45,6 +45,7 @@ const AudioIcon: React.FC<AudioIconProps> = (props) => {
     if (!memberId) {
       return
     }
+
     if (memberId === meetingInfo.localMember.uuid) {
       eventEmitter?.on(EventType.RtcLocalAudioVolumeIndication, getAudioImage)
       return () => {
@@ -54,15 +55,16 @@ const AudioIcon: React.FC<AudioIconProps> = (props) => {
         )
       }
     } else {
-      function handleAudioVolumeIndication(
+      const handleAudioVolumeIndication = (
         arr: { userUuid: string; volume: number }[]
-      ) {
+      ) => {
         arr.forEach((item) => {
           if (item.userUuid === memberId) {
             getAudioImage(item.volume)
           }
         })
       }
+
       eventEmitter?.on(
         EventType.RtcAudioVolumeIndication,
         handleAudioVolumeIndication
@@ -74,12 +76,10 @@ const AudioIcon: React.FC<AudioIconProps> = (props) => {
         )
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventEmitter, localMember.uuid])
+  }, [eventEmitter, localMember.uuid, meetingInfo.isInterpreter])
 
   useEffect(() => {
     getAudioImage(audioLevel)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audioLevel, dark])
 
   return <img src={openAudioImage} className={className} />

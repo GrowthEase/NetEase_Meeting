@@ -9,7 +9,7 @@ import Toast from '../../common/toast'
 import './index.less'
 import { errorCodeMap } from '../../../config'
 
-const LongPressSpaceUnmute: React.FC = ({}) => {
+const LongPressSpaceUnmute: React.FC = () => {
   const { t } = useTranslation()
   const { meetingInfo } = useMeetingInfoContext()
   const { neMeeting } = useGlobalContext()
@@ -36,7 +36,9 @@ const LongPressSpaceUnmute: React.FC = ({}) => {
     if (isElectronSharingScreen || !localMember.isAudioConnected) {
       return
     }
+
     let keyDownTimer
+
     function handleKeyDown(e) {
       if (
         handleKeyDownRef.current ||
@@ -48,6 +50,7 @@ const LongPressSpaceUnmute: React.FC = ({}) => {
       ) {
         return
       }
+
       if (e.key === ' ') {
         handleKeyDownRef.current = true
       }
@@ -68,9 +71,16 @@ const LongPressSpaceUnmute: React.FC = ({}) => {
               await neMeeting?.muteLocalAudio()
               setLongPressSpaceAudio(false)
             }
-          } catch (error: any) {
+          } catch (err: unknown) {
+            const knownError = err as {
+              message: string
+              msg: string
+              code: number
+            }
+
             Toast.fail(
-              error?.msg || t(errorCodeMap[error?.code] || 'unMuteAudioFail')
+              knownError?.msg ||
+                t(errorCodeMap[knownError?.code] || 'unMuteAudioFail')
             )
           }
         }
@@ -81,15 +91,18 @@ const LongPressSpaceUnmute: React.FC = ({}) => {
       if (handleKeyDownRef.current && e.key !== ' ') {
         return
       }
+
       if (e.key === ' ') {
         handleKeyDownRef.current = false
       }
+
       clearTimeout(keyDownTimer)
       keyDownTimer = null
       setLongPressSpaceAudio(false)
       if (localMember.isAudioOn && longPressSpaceAudio && e.key === ' ') {
         let failCount = 0
-        async function muteLocalAudio() {
+
+        const muteLocalAudio = async () => {
           try {
             await neMeeting?.muteLocalAudio()
           } catch {
@@ -99,6 +112,7 @@ const LongPressSpaceUnmute: React.FC = ({}) => {
             }, 500)
           }
         }
+
         await muteLocalAudio()
       }
     }
@@ -119,13 +133,13 @@ const LongPressSpaceUnmute: React.FC = ({}) => {
       }
     }
 
-    async function handleBlur(event) {
+    async function handleBlur() {
       if (focusRef.current) {
         focusRef.current = false
       }
     }
 
-    async function handleVisibilityChange(e) {
+    async function handleVisibilityChange() {
       if (document.visibilityState !== 'visible') {
         clearTimeout(keyDownTimer)
         keyDownTimer = null
@@ -136,7 +150,7 @@ const LongPressSpaceUnmute: React.FC = ({}) => {
       }
     }
 
-    async function handleWindowBlur(e) {
+    async function handleWindowBlur() {
       clearTimeout(keyDownTimer)
       keyDownTimer = null
       setLongPressSpaceAudio(false)
@@ -218,4 +232,5 @@ const LongPressSpaceUnmute: React.FC = ({}) => {
     </div>
   )
 }
+
 export default LongPressSpaceUnmute

@@ -18,6 +18,7 @@ const Record: React.FC<RecordProps> = ({
   notShowRecordBtn,
 }) => {
   const { t } = useTranslation()
+
   return (
     <div className={`nemeeting-record ${className || ''}`}>
       {

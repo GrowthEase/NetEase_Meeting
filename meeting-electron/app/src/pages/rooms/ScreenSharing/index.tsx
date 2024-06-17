@@ -3,6 +3,7 @@ import { RoomsInfo } from '../request';
 import CloseOutlined from '@ant-design/icons/CloseOutlined';
 import ArrowImage from '../../../assets/rooms-arrow.png';
 import { Tag } from 'antd';
+import React from 'react';
 
 interface RoomPageProps {
   roomsInfo?: RoomsInfo;

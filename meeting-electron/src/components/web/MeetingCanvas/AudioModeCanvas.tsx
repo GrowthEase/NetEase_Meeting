@@ -1,8 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import VideoCard from '../../common/VideoCard'
 import { NEMeetingInfo, NEMember } from '../../../types'
 import { Swiper, SwiperSlide } from 'swiper/react'
-import { Swiper as SwiperClass } from 'swiper/types'
 import { Navigation } from 'swiper'
 import { debounce } from '../../../utils'
 import classNames from 'classnames'
@@ -48,6 +47,7 @@ const AudioModeCanvas: React.FC<AudioModeCanvasProps> = ({
 
       let columnCount = 7
       let lineCount = 3
+
       /**
        * 如果宽度在960~1360之间，每行放7个
        * 如果宽度在1360~1760之间，每行放10个
@@ -60,6 +60,7 @@ const AudioModeCanvas: React.FC<AudioModeCanvasProps> = ({
       } else if (width > 1760) {
         columnCount = 12
       }
+
       setColumnCount(columnCount)
       setPreAndNextBtnOffset(
         Math.max((width - columnCount * defaultColumnWidth) / 2 - 90, 0)
@@ -76,8 +77,10 @@ const AudioModeCanvas: React.FC<AudioModeCanvasProps> = ({
       } else if (height > 1040) {
         lineCount = 5
       }
+
       setLineCount(lineCount)
     },
+
     []
   )
 
@@ -85,6 +88,7 @@ const AudioModeCanvas: React.FC<AudioModeCanvasProps> = ({
     (entries: ResizeObserverEntry[]) => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect
+
         calculateColumnCountAndLineCount(width, height)
       }
     },
@@ -95,6 +99,7 @@ const AudioModeCanvas: React.FC<AudioModeCanvasProps> = ({
     const wrapDom = audioModeWrapRef.current
     let observer: ResizeObserver
     const debounceOnResize = debounce(onResize, 100)
+
     if (wrapDom) {
       observer = new ResizeObserver(debounceOnResize)
       observer.observe(wrapDom)
@@ -161,7 +166,7 @@ const AudioModeCanvas: React.FC<AudioModeCanvasProps> = ({
                 {lineMembers.map((members, i) => {
                   return (
                     <div className="nemeeting-audio-line" key={i}>
-                      {members.map((member, j) => {
+                      {members.map((member) => {
                         return (
                           <VideoCard
                             isAudioMode={true}

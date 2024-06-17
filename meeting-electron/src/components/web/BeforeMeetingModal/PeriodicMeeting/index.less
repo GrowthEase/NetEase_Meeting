@@ -1,7 +1,15 @@
 .nemeeting-recurring {
-  margin-bottom: 16px;
+  margin-top: -8px;
+  margin-bottom: 20px;
+  .nemeeting-select .nemeeting-select-arrow {
+    font-size: 14px;
+    color: #999999;
+  }
   .nemeeting-periodic-times {
     text-align: center;
+    .nemeeting-input {
+      padding: 4px 5px;
+    }
   }
   .nemeeting-input-group-addon {
     padding: 0;
@@ -21,13 +29,17 @@
 .nemeeting-periodic-item {
   display: flex;
   align-items: center;
-  margin: 12px 0;
+  margin: 8px 0;
 }
 .nemeeting-periodic-item-label {
   margin-right: 10px;
+  white-space: nowrap;
 }
 .nemeeting-periodic-item-content {
   flex: 1;
+  .nemeeting-checkbox-wrapper:nth-child(-n + 4) {
+    margin-bottom: 8px;
+  }
 }
 .nemeeting-periodic-item-frequency {
   align-items: start;

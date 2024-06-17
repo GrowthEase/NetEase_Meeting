@@ -27,6 +27,7 @@ export default {
   meetingJoinTips: `ミーティングに入っています...`,
   globalClose: `閉じる`,
   globalOpen: `開く`,
+  globalDelete: '消去',
   participants: `${attendee}`,
   meetingJoinFail: `ミーティングに参加できませんでした`,
   reJoinMeetingFail: `${meeting}ミーティング に再参加できませんでした`,
@@ -63,8 +64,10 @@ export default {
   participantMute: 'ミュート',
   participantUnmute: 'ミュート解除',
   participantStopVideo: 'ビデオをオフ',
+  copyMeetingIdTip: '会議IDをコピーします',
   participantStartVideo: 'ビデオを開く',
   screenShareStop: '共有の終了',
+  comingSoon: '近日公開',
   pauseScreenShare:
     '共有は停止されていますので、ウィンドウの一番上をお願いします。',
   shareComputerAudio: 'コンピュータのオーディオを共有します',
@@ -77,6 +80,7 @@ export default {
   participantTransferHostConfirm: `司会者の権限を{userName}に移譲しますか？`,
   participantRemove: '削除',
   participantRemoveConfirm: '削除の確認',
+  sponsorMeeting: 'ミーティングを主催します',
   yes: 'はい',
   no: '「いいえ」',
   participantCannotRemoveSelf: '自分自身を削除できません',
@@ -100,6 +104,8 @@ export default {
   notify: '通知',
   meetingSwitchOtherDevice: `${host} ホストに移出したか、別のデバイスに切り替えたため、${meeting} ミーティングを退出しました`,
   sure: '確定',
+  yesterday: '昨日',
+  meetingInviteUrlTips: '会議リンクをコピーします',
   // forbiddenByHostVideo: `${host} ホストがお前のビデオを停止しました`,
   participantOpenCamera: 'カメラをオンになっています',
   participantHostOpenCameraTips: `${host} ホストがお前のカメラを再度オンになっています。オンのことを確認してください? `,
@@ -110,8 +116,10 @@ export default {
   participantSetHost: '合同司会者にし',
   participantSetCoHost: '合同司会者を取り消す',
   participantCancelCoHost: '撤销联席主持人',
-
+  timezone: 'タイムゾーン',
   screenShare: '画面共有',
+  meetingRoomScreenCasting: 'スクリーンキャスト',
+  meetingLiveMode: 'ライブモード',
   screenShareTips:
     ' 画面に表示されているすべてのもののキャプチャを開始します。 ',
   screenShareOverLimit: '誰かが既に共有しているため、共有できません',
@@ -173,8 +181,8 @@ export default {
   handsUpDown: 'ハンズダウン',
   inHandsUp: '挙手',
   handsUpFail: '挙手できませんでした',
-  handsUpSuccessAlready: `手を上げました。${host} ホストの処理を​​待っています`,
-  handsUpSuccess: `ハンドアップ成功しました。${host} ホストの処理を​​待っています`,
+  handsUpSuccessAlready: `手を上げました。${host} ホストの処理を待っています`,
+  handsUpSuccess: `ハンドアップ成功しました。${host} ホストの処理を待っています`,
   cancelHandsUpFail: '手を上げる失敗のをキャンセルします',
   hostRejectAudioHandsUp: `${host} ホストが手を下ろしました`,
   hostAgreeAudioHandsUp: `${host} ホストがお前のミュートを解除しました。自由に話すことができます`,
@@ -488,6 +496,7 @@ export default {
   downloadPath: 'チャットルームファイルの保存パス',
   chosePath: '選択',
   language: '言語',
+  chooseLanguage: '言語を選択してください',
   file: 'コンピュータファイルです',
 
   notification: '通知',
@@ -851,6 +860,7 @@ export default {
   frameRate: 'フレームレート',
   moreMonitoring: '詳細データの表示',
   networkState: 'ネットワークの状態',
+  nickname: 'ニックネーム',
   // 访客入会
   meetingGuestJoin: '訪問者入会',
   meetingGuestJoinSecurityNotice:
@@ -912,6 +922,7 @@ export default {
   sipSearchContacts: '参加者を検索して追加',
   sipCallPhone: 'でんわよびだし',
   participantNotJoined: '未入会',
+  participantJoining: '加入中...',
   sipCallCancel: 'キャンセルコール',
   sipCallAgainEx: 'さいよびだし',
   sipCallStatusRejected: 'リジェクト',
@@ -922,7 +933,11 @@ export default {
   sipCallStatusTermed: '切断済み',
   sipCallStatusUnaccepted: '受信していません',
   sipPhoneNumber: '電話番号',
+  settingVoicePriorityDisplay: '音声優先表示',
   sipCallMemberSelected: '選択：{{selectedCount}}',
+  settingVoicePriorityDisplayTip:
+    '起動すると、話している参加者を優先して表示します。',
+  meetingRepeatQuit: '会議終了',
   sipContactsPrivacy:
     'アドレス帳へのアクセスを許可してください連絡先に電話で入会します',
   sipContactNoNumber: '会議人数上限に達しました',
@@ -942,4 +957,122 @@ export default {
   meetingOpen: '展開',
   meetingClose: '折り畳み',
   meetingAttendeeCount: '{{count}}人',
+
+  // 同声传译
+
+  globalUpdate: '更新',
+  globalLang: '言語',
+  globalView: '表示する',
+  interpretation: '同時通訳',
+  interpInterpreter: '通訳者',
+  interpSelectInterpreter: '通訳者を選ぶ',
+  interpInfoIncompleteTitle: '通訳者の情報が不完全です',
+  interpInterpreterAlreadyExists:
+    'ユーザーは通訳者に選ばれました。繰り返し選択できません',
+  interpInfoIncompleteMsg: '情報の不完全な翻訳者は削除されます',
+  interpStart: 'スタート',
+  interpStartNotification: '司会者はすでに同時通訳を始めた',
+  interpStop: '閉じる',
+  interpStopNotification: '司会者はすでに同時通訳をオフにした',
+  interpConfirmStopMsg:
+    '同時通訳をオフにすると、聞いているすべてのチャンネルがオフになります。オフにしますか？',
+  interpConfirmUpdateMsg: '更新しますか？',
+  interpConfirmCancelEditMsg:
+    '同時通訳の設定をキャンセルしてもよろしいですか？',
+  interpSelectListenLanguage: '聴く言語を選択してください',
+  interpSelectLanguage: '言語を選択する',
+  interpAddLanguage: '言語を追加する',
+  interpInputLanguage: '言語を入力する',
+  interpLanguageAlreadyExists: '言語はすでに存在する',
+  interpListenMajorAudioMeanwhile: '原音を同時に聞く',
+  interpManagement: '同時通訳管理',
+  interpSettings: '同時通訳設置',
+  interpMajorAudio: '原音',
+  interpMajorChannel: 'マスタチャネル',
+  interpMajorAudioVolume: 'サウンドトラック',
+  interpAddInterperter: '通訳者を追加',
+  interpJoinChannelErrorMsg:
+    '翻訳チャンネルへの加入に失敗しました。再加入しますか？',
+  interpReJoinChannel: '追加し直す',
+  interpAssignInterpreter: 'あなたは本場会議の通訳者になりました',
+  interpAssignLanguage: '現在の言語',
+  interpSpeakerTip: '{{language1}}を聴いていて、{{language2}}と言っています',
+  interpOutputLanguage: '言語を翻訳する',
+  interpRemoveInterpreterOnly: '通訳者のみを削除',
+  interpRemoveInterpreterInMembers: '参加者からも削除',
+  interpRemoveMemberInInterpreters:
+    '参加者は通訳者としても割り当てられ、参加者を削除すると通訳者の割り当ても解除されます',
+  interpSettingTip: '「同時通訳」でリスニング言語と通訳言語を設定できます',
+  interpUnassignInterpreter: 'あなたは司会者から通訳者から削除されました',
+  interpLanguageRemoved: '司会者はリスニング言語「{{language}}」を削除しました',
+  interpInterpreterOffline:
+    '現在聞いているチャンネルでは、通訳者は全員去っています。あなたのために原音に切り替えましたか？',
+  interpDontSwitch: '切り替えない',
+  interpSwitchToMajorAudio: '原音に戻す',
+  interpAudioShareIsForbiddenDesktop:
+    '通訳者として、画面を共有するときにコンピューターの音声を同時に共有することはできません',
+  interpInterpreterInMeetingStatusChanged: '通訳者の参加状況が変更されました',
+  interpListeningChannelDisconnect:
+    '聴取言語チャネルが切断され、再接続を試みている',
+  interpSpeakingChannelDisconnect:
+    '翻訳言語チャンネルが切断され、再接続を試みています',
+  langChinese: '中国語',
+  langEnglish: '英語',
+  langJapanese: '日本語',
+  langKorean: '韓国語',
+  langFrench: 'フランス語',
+  langGerman: 'ドイツ語',
+  langSpanish: 'スペイン語',
+  langRussian: 'ロシア語',
+  langPortuguese: 'ポルトガル語',
+  langItalian: 'イタリア語',
+  langTurkish: 'トルコ語',
+  langVietnamese: 'ベトナム語',
+  langThai: 'タイ語',
+  langIndonesian: 'インドネシア語',
+  langMalay: 'マレー語',
+  langArabic: 'アラビア語',
+  langHindi: 'ヒンディー語',
+
+  // 批注
+  annotation: '注釈',
+  annotationEnabled: '注釈が開きました',
+  annotationDisabled: '注釈は停止されています',
+  startAnnotation: '注釈',
+  stopAnnotation: '退出注釈',
+  inAnnotation: '注釈中',
+  saveAnnotation: '注釈を保存し',
+
+  // 登录优化
+  authHowToGetCorpCode: '企業コードを取得する方法？',
+  authGetCorpCodeFromAdmin: '企業管理者から入手できます。',
+  authIKnowCorpCode: '企業コード',
+  authIDontKnowCorpCode: '企業メール',
+  authTypeAccountPwd: 'アカウント',
+  authLoginByAccountPwd: 'パスワード',
+  authLoginByMobilePwd: '電話 パスワード',
+  authLoginByEmailPwd: 'メールアカウント',
+  authOtherLoginTypes: 'その他のオプション',
+  authSSONotSupport: 'シングルサインオンはサポートされていません。',
+
+  meetingMaxMembers: '最大参加人数',
+  speakerVolumeMuteTips:
+    '現在のスピーカ設備は音が出ません。システムのスピーカが音を消して適切な音量に調整したかどうかチェックしてください。',
+
+  // 人数上限
+  openWaitingRoom: '待合室を開ける',
+  participantUpperLimitWaitingRoomTip:
+    '参会者数が上限に達しました。待合室を有効にすることをお勧めします。',
+  participantUpperLimitReleaseSeatsTip:
+    '参加者の数が上限に達したため、新規参加者は参加できません。参加していないメンバーを削除したり、会議の席を外したりすることができます。',
+  participantUpperLimitTipAdmitOtherTip:
+    '参加人数が上限に達しました。未入会メンバーを外すか、会議の席を一人外してから控え室メンバーに入るようお願いします。',
+  meetingSearchNotFound: '検索結果なし',
+
+  // 周期会议详情
+  meetingRepeatDayInWeek: '{{week}}週ごとの{{day}}繰り返し',
+  meetingRepeatDay: '{{day}}日ごとに繰り返す',
+  meetingRepeatDayInMonth: '{{month}}ヶ月ごとの{{day}}繰り返し',
+  meetingRepeatDayInWeekInMonth:
+    '{{month}}ヶ月ごとの{week}個目の{{weekday}}繰り返し',
 }

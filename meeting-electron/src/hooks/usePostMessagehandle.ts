@@ -1,6 +1,14 @@
 import { isPromiseCheck } from '../utils'
 
-export default function usePostMessageHandle() {
+interface PostMessageHandle {
+  handlePostMessage: (
+    childWindow: Window,
+    result: any,
+    replyKey: string
+  ) => void
+}
+
+export default function usePostMessageHandle(): PostMessageHandle {
   function handlePostMessage(childWindow, result, replyKey) {
     if (isPromiseCheck(result)) {
       result
@@ -11,9 +19,15 @@ export default function usePostMessageHandle() {
           })
         })
         .catch((error) => {
-          postMessage(childWindow, replyKey, {
-            error,
-          })
+          if (error.message) {
+            postMessage(childWindow, replyKey, {
+              error: { message: error.message, code: error.code },
+            })
+          } else {
+            postMessage(childWindow, replyKey, {
+              error,
+            })
+          }
         })
     } else {
       postMessage(childWindow, replyKey, {
@@ -22,6 +36,7 @@ export default function usePostMessageHandle() {
       })
     }
   }
+
   function postMessage(childWindow, replyKey, payload) {
     childWindow?.postMessage(
       {

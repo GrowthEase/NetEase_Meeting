@@ -4,16 +4,16 @@ import React from 'react'
 import i18n from '../../../locales/i18n'
 
 import './index.less'
+import { IPCEvent } from '../../../../app/src/types'
+
+export type ConfirmModal = ReturnType<typeof AntModal.confirm>
+export type WarningModal = ReturnType<typeof AntModal.confirm>
 
 const modalMaps = new Map<string, any>()
 
 type ModalType = React.FC<ModalProps> & {
-  confirm: (
-    props: ModalFuncProps & { key?: string }
-  ) => ReturnType<typeof AntModal.confirm>
-  warning: (
-    props: ModalFuncProps & { key?: string }
-  ) => ReturnType<typeof AntModal.warning>
+  confirm: (props: ModalFuncProps & { key?: string }) => ConfirmModal
+  warning: (props: ModalFuncProps & { key?: string }) => WarningModal
   destroyAll: () => void
   destroy: (key: string) => void
 }
@@ -29,12 +29,13 @@ const Modal: ModalType = (props) => {
 }
 
 Modal.confirm = (props) => {
-  window.ipcRenderer?.send('nemeeting-sharing-screen', {
+  window.ipcRenderer?.send(IPCEvent.sharingScreen, {
     method: 'openModal',
   })
   if (props.key && modalMaps.has(props.key)) {
     return modalMaps.get(props.key)
   }
+
   const modal = AntModal.confirm({
     wrapClassName: 'nemeeting-custom-confirm-modal',
     icon: null,
@@ -48,7 +49,7 @@ Modal.confirm = (props) => {
     afterClose: () => {
       props.key && modalMaps.delete(props.key)
       props.afterClose?.()
-      window.ipcRenderer?.send('nemeeting-sharing-screen', {
+      window.ipcRenderer?.send(IPCEvent.sharingScreen, {
         method: 'closeModal',
       })
     },
@@ -56,6 +57,7 @@ Modal.confirm = (props) => {
       await props.onOk?.(...args)
     },
   })
+
   if (props.key) {
     modalMaps.set(props.key, modal)
   }
@@ -67,6 +69,7 @@ Modal.warning = (props) => {
   if (props.key && modalMaps.has(props.key)) {
     return modalMaps.get(props.key)
   }
+
   const modal = AntModal.warning({
     wrapClassName: 'nemeeting-custom-confirm-modal',
     icon: null,
@@ -77,11 +80,12 @@ Modal.warning = (props) => {
     afterClose: () => {
       props.key && modalMaps.delete(props.key)
       props.afterClose?.()
-      window.ipcRenderer?.send('nemeeting-sharing-screen', {
+      window.ipcRenderer?.send(IPCEvent.sharingScreen, {
         method: 'closeModal',
       })
     },
   })
+
   if (props.key) {
     modalMaps.set(props.key, modal)
   }
@@ -93,6 +97,7 @@ Modal.destroyAll = AntModal.destroyAll
 
 Modal.destroy = (key: string) => {
   const modal = modalMaps.get(key)
+
   modal?.destroy()
   modalMaps.delete(key)
 }

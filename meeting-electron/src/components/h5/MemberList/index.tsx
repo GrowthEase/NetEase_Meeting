@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import React, { useContext, useEffect, useMemo, useState } from 'react'
 import {
   NEMember,
   Role,
@@ -19,11 +13,7 @@ import Dialog from '../ui/dialog'
 import Toast from '../../common/toast'
 import { GlobalContext, MeetingInfoContext } from '../../../store'
 import './index.less'
-import {
-  NEChatPermission,
-  hostAction,
-  memberAction,
-} from '../../../types/innerType'
+import { NEChatPermission, memberAction } from '../../../types/innerType'
 import UserAvatar from '../../common/Avatar'
 import { useTranslation } from 'react-i18next'
 import { useUpdateEffect } from 'ahooks'
@@ -51,7 +41,7 @@ const MemberListUI: React.FC<MemberListProps> = ({
 
   const [selfShow, setSelfShow] = useState(false)
   const {
-    meetingInfo: { localMember, hostUuid, myUuid, meetingChatPermission },
+    meetingInfo: { localMember, myUuid, meetingChatPermission },
     memberList: memberListContext,
     dispatch,
   } = useContext<MeetingInfoContextInterface>(MeetingInfoContext)
@@ -59,7 +49,6 @@ const MemberListUI: React.FC<MemberListProps> = ({
   const [showOperation, setShowOperation] = useState(false)
   const [beOperatedUser, setBeOperatedUser] = useState<NEMember>()
   const [userActions, setUserActions] = useState<Action[]>([])
-  const meetingLockStatus = true
   const [showDialog, setShowDialog] = useState(false)
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [newName, setNewName] = useState('')
@@ -119,6 +108,7 @@ const MemberListUI: React.FC<MemberListProps> = ({
       ...audioOn,
       ...other,
     ]
+
     return res
   }, [restProps.memberList, memberListContext, localMember])
 
@@ -134,7 +124,7 @@ const MemberListUI: React.FC<MemberListProps> = ({
   /**
    * 成员操作内容
    */
-  const displayMoreBtns = (item: NEMember, isHost: boolean) => {
+  const displayMoreBtns = (item: NEMember) => {
     if (isPrivateChat) {
       console.log('item', item)
       dispatch?.({
@@ -146,6 +136,7 @@ const MemberListUI: React.FC<MemberListProps> = ({
       onClose?.()
       return
     }
+
     const displayBtns: Action[] = [] // 展示的action结构
 
     const getPrivateChatShow = () => {
@@ -153,21 +144,26 @@ const MemberListUI: React.FC<MemberListProps> = ({
       if (item.uuid === myUuid) {
         return false
       }
+
       if (item.clientType === NEClientType.SIP) {
         return false
       }
+
       // 自己是主持人或者联席主持人
       if (localMember.role === Role.host || localMember.role === Role.coHost) {
         return true
       }
+
       // 不可以聊天
       if (meetingChatPermission === NEChatPermission.NO_CHAT) {
         return false
       }
+
       // 点击的人是主持人或者联席主持人
       if (item.role === Role.host || item.role === Role.coHost) {
         return true
       }
+
       // 自由聊天
       if (meetingChatPermission === NEChatPermission.FREE_CHAT) {
         return true
@@ -193,6 +189,7 @@ const MemberListUI: React.FC<MemberListProps> = ({
         },
       },
     ]
+
     normalBtns.map((btn) => {
       if (btn.isShow) {
         if (btn.id === memberAction.modifyMeetingNickName) {
@@ -219,7 +216,6 @@ const MemberListUI: React.FC<MemberListProps> = ({
     })
 
     // 主持人和联席主持人展示的操作
-    const hostOrCohostBtns: any[] = []
     // if (isHost) {
     //   const hostBtns = [
     //     // isShow 预留展示逻辑
@@ -370,7 +366,7 @@ const MemberListUI: React.FC<MemberListProps> = ({
   }
 
   useUpdateEffect(() => {
-    clickMember && displayMoreBtns(clickMember, localMember?.uuid === hostUuid)
+    clickMember && displayMoreBtns(clickMember)
   }, [memberList, meetingChatPermission])
 
   useUpdateEffect(() => {
@@ -382,183 +378,12 @@ const MemberListUI: React.FC<MemberListProps> = ({
     const index = memberList.findIndex(
       (item) => item.uuid === clickMember?.uuid
     )
+
     if (index === -1) {
       setShowOperation(false)
       setClickMember(undefined)
     }
   }, [memberList])
-
-  const operateAllOrMeeting = async (type: hostAction) => {
-    await neMeeting?.sendHostControl(type, localMember?.uuid)
-  }
-
-  // host操作成员
-  const handleMore = async (
-    memberInfo: NEMember,
-    uid: string,
-    type: hostAction
-  ) => {
-    // const { commit, dispatch } = this.$store;
-    let callback: () => any = () => {
-      return true
-    }
-    switch (type) {
-      case hostAction.remove:
-        console.debug('执行成员移除 %o %t', memberInfo)
-        callback = () => {
-          // this.settingInfo.type = type;
-          // this.settingInfo.uid = uid;
-          // this.hideAll();
-          // this.visibleRemoveMember = true;
-        }
-        break
-      case hostAction.muteMemberVideo:
-        console.debug('执行成员关闭视频 %o %t', memberInfo)
-        // this.$toast(`关闭 ${memberInfo.nickName} 视频`);
-        callback = () => {
-          // memberInfo.video = 2;
-        }
-        break
-      case hostAction.muteMemberAudio:
-        console.debug('执行成员静音 %o %t', memberInfo)
-        // this.$toast(`${memberInfo.nickName} 静音`);
-        callback = () => {
-          // memberInfo.audio = 2;
-        }
-        break
-      case hostAction.unmuteMemberVideo:
-        console.debug('执行成员开启视频 %o %t', memberInfo)
-        // this.$toast(`开启 ${memberInfo.nickName} 视频`);
-        callback = () => {
-          // memberInfo.video = 4;
-        }
-        break
-      case hostAction.unmuteMemberAudio:
-        console.debug('执行成员取消静音 %o %t', memberInfo)
-        // this.$toast(`取消 ${memberInfo.nickName} 静音`);
-        callback = () => {
-          // memberInfo.audio = 4;
-        }
-        break
-      case hostAction.muteVideoAndAudio:
-        console.debug('执行成员关闭音视频 %o %t', memberInfo)
-        callback = () => {
-          //
-        }
-        break
-      case hostAction.unmuteVideoAndAudio:
-        console.debug('执行成员开启音视频 %o %t', memberInfo)
-        callback = () => {
-          //
-        }
-        break
-      // case hostAction.agreeHandsUp:
-      //   console.debug('执行成员取消静音', memberInfo);
-      //   // this.$toast(`取消 ${memberInfo.nickName} 静音`);
-      //   callback = () => {
-      //     // memberInfo.audio = 4;
-      //   }
-      //   break;
-      case hostAction.transferHost:
-        console.debug('执行成员主持人移交 %o %t', memberInfo)
-        callback = () => {
-          // const oldHost = state.memberMap[state.localInfo.avRoomUid]
-          // oldHost.isHost = false;
-          // commit('updateMember', oldHost);
-          // this.$store.commit('setLocalInfo', {
-          //   role: 'participant',
-          // });
-          // memberInfo.isHost = true;
-          // this.settingInfo.type = type;
-          // this.settingInfo.uid = uid;
-          // this.hideAll();
-          // if (memberInfo.clientType === NEMeetingClientType.sip) {
-          //   this.$toast('无法设置SIP设备为主持人');
-          // } else {
-          //   this.visibleRemoveHost = true;
-          // }
-        }
-        break
-      case hostAction.closeWhiteShare:
-        console.debug('主持人关闭白板 %o %t', memberInfo)
-        callback = () => {
-          // this.settingInfo.type = type;
-          // this.settingInfo.uid = uid;
-          // this.hideAll();
-          // this.visibleCloseWhiteboard = true;
-        }
-        break
-      case hostAction.setFocus:
-        console.debug('执行设置焦点视频 %o %t', memberInfo)
-        // this.$toast(`设置 ${memberInfo.nickName} 为焦点`);
-        callback = () => {
-          // memberInfo.isFocus = true;
-          // commit('setMeetingInfo', { focusAvRoomUid: memberInfo.avRoomUid })
-          // dispatch('sortMemberList');
-        }
-        break
-      case hostAction.unsetFocus:
-        console.debug('执行移除焦点视频 %o %t', memberInfo)
-        // this.$toast(`移除 ${memberInfo.nickName} 为焦点`);
-        callback = () => {
-          // memberInfo.isFocus = false;
-          // commit('setMeetingInfo', { focusAvRoomUid: 0 })
-          // dispatch('sortMemberList');
-        }
-        break
-      case hostAction.closeScreenShare:
-        console.debug('主持人关闭屏幕共享 %o %t', memberInfo)
-        callback = () => {
-          // this.settingInfo.type = type;
-          // this.settingInfo.uid = uid;
-          // this.hideAll();
-          // this.visibleCloseScreenShare = true;
-        }
-        break
-      case hostAction.setCoHost:
-        console.debug('主持人设置联席主持人 %o %t', memberInfo)
-        // 添加trycatch 捕获设置联席主持人上限错误提示
-        try {
-          await neMeeting?.sendHostControl(
-            hostAction.setCoHost,
-            memberInfo.uuid
-          )
-        } catch (e: any) {
-          // 国际化
-          // this.$toast(this.errorCodes[e.code] || e.msg || e.message);
-        }
-        break
-      case hostAction.unSetCoHost:
-        console.debug('主持人取消设置联席主持人 %o %t', memberInfo)
-        await neMeeting?.sendHostControl(
-          hostAction.unSetCoHost,
-          memberInfo.uuid
-        )
-        break
-      default:
-        break
-    }
-    if (
-      // type !== hostAction.remove &&
-      type !== hostAction.transferHost &&
-      type !== hostAction.closeWhiteShare &&
-      type !== hostAction.setCoHost &&
-      type !== hostAction.unSetCoHost &&
-      type !== hostAction.closeScreenShare
-    ) {
-      console.log('memberInfo', memberInfo, type)
-      await neMeeting?.sendHostControl(type, memberInfo.uuid)
-      // if( type === hostAction.unmuteMemberAudio|| type === hostAction.unmuteMemberVideo || type === hostAction.unmuteAllVideo || type === hostAction.unmuteVideoAndAudio) {
-      //   neMeeting?.sendHostControl(hostAction.rejectHandsUp, [memberInfo.accountId]);
-      // }
-    }
-    callback()
-    setShowOperation(false)
-    setShowRenameDialog(false)
-    // commit('updateMember', memberInfo);
-    // dispatch('sortMemberList');
-    // document.body.click();
-  }
 
   // 成员自己的操作
   const handleMemberMore = async (
@@ -571,6 +396,7 @@ const MemberListUI: React.FC<MemberListProps> = ({
 
   const memberIdentityStr = (uuid: string, role: string) => {
     const identities: string[] = []
+
     role === Role.host && identities.push(t('host'))
     role === Role.coHost && identities.push(t('coHost'))
     role === Role.guest && identities.push(t('meetingRoleGuest'))
@@ -584,21 +410,26 @@ const MemberListUI: React.FC<MemberListProps> = ({
         if (isPrivateChat) {
           return member.uuid !== myUuid
         }
+
         return true
       })
       .filter((member) => member.name.indexOf(searchName) > -1)
+
     return list
   }, [memberList, searchName, isPrivateChat, myUuid])
 
   const isNickNameValid = useMemo(() => {
     if (!showRenameDialog) return
     const _byteResult = newName.replace(/[\u4e00-\u9fa5]/g, 'aa')
+
     if (newName.trim().length <= 0) {
       return false
     }
+
     if (_byteResult.length > 20) {
       return false
     }
+
     return true
   }, [newName, showRenameDialog])
 
@@ -616,8 +447,10 @@ const MemberListUI: React.FC<MemberListProps> = ({
         )
       })
   }
+
   const handleInputChange = (value: string) => {
     let userInput = value
+
     if (!isComposingRef.current) {
       let inputLength = 0
 
@@ -628,6 +461,7 @@ const MemberListUI: React.FC<MemberListProps> = ({
         } else {
           inputLength += 1
         }
+
         // 判断当前字符长度是否超过限制，如果超过则终止 for 循环
         if (inputLength > 20) {
           userInput = userInput.slice(0, i)
@@ -635,6 +469,7 @@ const MemberListUI: React.FC<MemberListProps> = ({
         }
       }
     }
+
     setNewName(userInput)
   }
 
@@ -642,6 +477,7 @@ const MemberListUI: React.FC<MemberListProps> = ({
     if (!isPrivateChat || !privateChatAll) {
       return null
     }
+
     const isHostOrCoHost =
       localMember.role === Role.host || localMember.role === Role.coHost
 
@@ -688,13 +524,15 @@ const MemberListUI: React.FC<MemberListProps> = ({
   return (
     <>
       <div
-        className={`member-list ${selfShow ? 'show' : ''}`}
+        className={`member-list ${selfShow ? 'nemeeting-member-lit-show' : ''}`}
         onClick={(e) => {
           onCloseClick(e)
         }}
       >
         <div
-          className={`member-list-content ${selfShow ? 'show' : ''}`}
+          className={`member-list-content ${
+            selfShow ? 'nemeeting-member-lit-show' : ''
+          }`}
           onClick={(e) => {
             e.stopPropagation()
           }}
@@ -734,7 +572,7 @@ const MemberListUI: React.FC<MemberListProps> = ({
                   className={`nemeeting-member-item relative`}
                   key={member?.uuid + index}
                   onClick={() => {
-                    displayMoreBtns(member, localMember?.uuid === hostUuid)
+                    displayMoreBtns(member)
                     setClickMember(member)
                   }}
                 >
@@ -926,4 +764,5 @@ const MemberListUI: React.FC<MemberListProps> = ({
     </>
   )
 }
+
 export default MemberListUI

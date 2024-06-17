@@ -1,7 +1,6 @@
 import React, {
   CSSProperties,
   LegacyRef,
-  MutableRefObject,
   useCallback,
   useContext,
   useEffect,
@@ -27,8 +26,8 @@ import './index.less'
 import { debounce, substringByByte3 } from '../../../utils'
 import { worker } from '../../web/Meeting/Meeting'
 import UserAvatar from '../Avatar'
-import Toast from '../toast'
 import AudioCard from './audioCard'
+import AnnotationView from '../AnnotationView'
 
 interface VideoCardProps {
   isMySelf: boolean
@@ -36,6 +35,7 @@ interface VideoCardProps {
   isMain: boolean
   streamType?: 0 | 1
   type?: 'video' | 'screen'
+  speakerRightResizing?: boolean
   isSubscribeVideo?: boolean // 是否订阅视频流
   className?: string
   showBorder?: boolean // 是否显示绿框
@@ -67,6 +67,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     iosTime,
     canShowCancelFocusBtn,
     focusBtnClassName,
+    speakerRightResizing,
     style,
     mirroring,
     avatarSize,
@@ -82,16 +83,16 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     useContext<GlobalContextInterface>(GlobalContext)
   const viewRef = useRef<HTMLDivElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const annotationRef = useRef<HTMLDivElement | null>(null)
   const timer = useRef<any>(null)
-  const videoSizeTimer = useRef<any>(null)
   const refreshRateCountRef = useRef<number>(0)
   const resolutionWidthRef = useRef<number>(0)
   const resolutionHeightRef = useRef<number>(0)
+  const screenShareVideoResolutionRef = useRef<{
+    width: number
+    height: number
+  }>({ width: 0, height: 0 })
   const [refreshRate, setRefreshRate] = useState<number>(0)
-
-  const isMainVideo = useMemo<boolean>(() => {
-    return isMain && type === 'video'
-  }, [isMain, type])
 
   // 是否需要订阅当前流，非当前页面则不订阅
   const isSubscribeVideo = useMemo(() => {
@@ -109,6 +110,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     if (isMySelf) {
       return
     }
+
     if (!isSubscribeVideo) {
       console.warn('非当前页不播放视频')
     } else {
@@ -151,11 +153,13 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
       type !== 'screen'
     )
   }, [
-    showCancelFocusBtn,
     meetingInfo.pinVideoUuid,
     member.uuid,
     type,
     meetingInfo.focusUuid,
+    meetingInfo.showFocusBtn,
+    canShowCancelFocusBtn,
+    isMain,
   ])
   const canShowMainPinBtn = useMemo(() => {
     return (
@@ -170,6 +174,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     if (isMySelf || type !== 'screen') {
       return
     }
+
     viewRef.current &&
       neMeeting?.rtcController?.setupRemoteVideoSubStreamCanvas(
         viewRef.current,
@@ -182,6 +187,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
       window.isElectronNative ? 100 : 1000
     )
   }
+
   const nickName = useMemo(() => {
     return substringByByte3(member.name, 20)
   }, [member.name])
@@ -192,7 +198,8 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
         playRemoteVideo()
       }
     }
-  }, [streamType])
+  }, [streamType, isMySelf, member.isVideoOn, type])
+
   useEffect(() => {
     if (isMySelf) {
       // 设置本端画布
@@ -205,6 +212,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
         //  第一次进入会议，且不是 Electron
         // if (!window.isElectronNative) {
         const isHost = member.role === Role.host || member.role === Role.coHost
+
         console.warn(
           'mounted>>>>>>',
           meetingInfo.isUnMutedVideo,
@@ -225,6 +233,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
         ) {
           neMeeting?.unmuteLocalAudio()
         }
+
         // 后续设置为false
         dispatch &&
           dispatch({
@@ -256,6 +265,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
         }
       }
     }
+
     return () => {
       timer.current && clearTimeout(timer.current)
     }
@@ -265,6 +275,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     if (preIsSubscribe === isSubscribeVideo || type === 'screen') {
       return
     }
+
     if (member.isVideoOn) {
       if (!isSubscribeVideo) {
         // timer.current = setTimeout(() => {
@@ -276,6 +287,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
           clearTimeout(timer.current)
           timer.current = null
         }
+
         playRemoteVideo()
       }
     }
@@ -284,6 +296,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     if (member.isVideoOn === preIsVideoOn) {
       return
     }
+
     if (type === 'screen') {
       return
     } else {
@@ -306,7 +319,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
       }
     }
   })
-  useWatch<boolean>(member.isSharingScreen, (preIsSharingScreen) => {
+  useWatch<boolean>(member.isSharingScreen, () => {
     if (type === 'screen') {
       if (isMySelf) {
         if (member.isSharingScreen) {
@@ -321,80 +334,90 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
   })
 
   function onCardClick(e: any) {
+    // neMeeting?.rtcController?.takeRemoteSnapshot(member.uuid, 0, )
     onClick?.(e)
   }
+
   // 透明白板需要，根据不同分辨率保存当前主画面的大小
-  const setMainVideoSize = async () => {
-    if (isMainVideo && member.isVideoOn) {
-      videoSizeTimer.current && clearTimeout(videoSizeTimer.current)
-      videoSizeTimer.current = null
-      const videoSize = {
-        width: 0,
-        height: 0,
-      }
-      const mainDom = viewRef.current as HTMLElement
-      let videoInfo
-      if (isMySelf) {
-        const localVideoStats = await neMeeting?.getLocalVideoStats()
-        if (localVideoStats && localVideoStats.length > 0) {
-          const videoStat = localVideoStats[0]
-          videoInfo = {
-            renderResolutionWidth: videoStat.captureResolutionWidth,
-            renderResolutionHeight: videoStat.captureResolutionHeight,
-          }
-        } else {
-          videoSizeTimer.current = setTimeout(() => {
-            setMainVideoSize()
-          }, 1500)
-          return
-        }
-      } else {
-        const videoStats = await neMeeting?.getRemoteVideoStats()
-        if (videoStats && videoStats.length > 0) {
-          const videoStat = videoStats.find(
-            (_member) => _member.userUuid == String(member.rtcUid)
-          )
-          if (videoStat) {
-            const layer = videoStat.layers[0]
-            videoInfo = {
-              renderResolutionWidth: layer.RenderResolutionWidth,
-              renderResolutionHeight: layer.RenderResolutionHeight,
-            }
-          }
-        } else {
-          videoSizeTimer.current = setTimeout(() => {
-            setMainVideoSize()
-          }, 1500)
-          return
-        }
-      }
-      if (videoInfo) {
-        // const videoStat = videoInfo.layers[0]
-        if (
-          videoInfo.renderResolutionHeight >= videoInfo.renderResolutionWidth
-        ) {
-          videoSize.height = mainDom.clientHeight
-          videoSize.width =
-            mainDom.clientHeight *
-            (videoInfo.renderResolutionWidth / videoInfo.renderResolutionHeight)
-        } else {
-          videoSize.width = mainDom.clientWidth
-          videoSize.height =
-            mainDom.clientWidth *
-            (videoInfo.renderResolutionHeight / videoInfo.renderResolutionWidth)
-        }
-      }
-      dispatch?.({
-        type: ActionType.UPDATE_MEETING_INFO,
-        data: {
-          mainVideoSize: {
-            width: videoSize.width,
-            height: videoSize.height,
-          },
-        },
-      })
-    }
-  }
+  // const setMainVideoSize = async () => {
+  //   if (isMainVideo && member.isVideoOn) {
+  //     videoSizeTimer.current && clearTimeout(videoSizeTimer.current)
+  //     videoSizeTimer.current = null
+  //     const videoSize = {
+  //       width: 0,
+  //       height: 0,
+  //     }
+  //     const mainDom = viewRef.current as HTMLElement
+  //     let videoInfo
+
+  //     if (isMySelf) {
+  //       const localVideoStats = await neMeeting?.getLocalVideoStats()
+
+  //       if (localVideoStats && localVideoStats.length > 0) {
+  //         const videoStat = localVideoStats[0]
+
+  //         videoInfo = {
+  //           renderResolutionWidth: videoStat.captureResolutionWidth,
+  //           renderResolutionHeight: videoStat.captureResolutionHeight,
+  //         }
+  //       } else {
+  //         videoSizeTimer.current = setTimeout(() => {
+  //           setMainVideoSize()
+  //         }, 1500)
+  //         return
+  //       }
+  //     } else {
+  //       const videoStats = await neMeeting?.getRemoteVideoStats()
+
+  //       if (videoStats && videoStats.length > 0) {
+  //         const videoStat = videoStats.find(
+  //           (_member) => _member.userUuid == String(member.rtcUid)
+  //         )
+
+  //         if (videoStat) {
+  //           const layer = videoStat.layers[0]
+
+  //           videoInfo = {
+  //             renderResolutionWidth: layer.RenderResolutionWidth,
+  //             renderResolutionHeight: layer.RenderResolutionHeight,
+  //           }
+  //         }
+  //       } else {
+  //         videoSizeTimer.current = setTimeout(() => {
+  //           setMainVideoSize()
+  //         }, 1500)
+  //         return
+  //       }
+  //     }
+
+  //     if (videoInfo) {
+  //       // const videoStat = videoInfo.layers[0]
+  //       if (
+  //         videoInfo.renderResolutionHeight >= videoInfo.renderResolutionWidth
+  //       ) {
+  //         videoSize.height = mainDom.clientHeight
+  //         videoSize.width =
+  //           mainDom.clientHeight *
+  //           (videoInfo.renderResolutionWidth / videoInfo.renderResolutionHeight)
+  //       } else {
+  //         videoSize.width = mainDom.clientWidth
+  //         videoSize.height =
+  //           mainDom.clientWidth *
+  //           (videoInfo.renderResolutionHeight / videoInfo.renderResolutionWidth)
+  //       }
+  //     }
+
+  //     dispatch?.({
+  //       type: ActionType.UPDATE_MEETING_INFO,
+  //       data: {
+  //         mainVideoSize: {
+  //           width: videoSize.width,
+  //           height: videoSize.height,
+  //         },
+  //       },
+  //     })
+  //   }
+  // }
 
   const cancelFocus = (type: 'focus' | 'pin') => {
     if (type === 'focus') {
@@ -427,9 +450,11 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
           if (viewRef.current) {
             // 性能优化
             const canvas = canvasRef.current
+
             if (canvas) {
               const viewWidth = viewRef.current.clientWidth
               const viewHeight = viewRef.current.clientHeight
+
               if (viewWidth / (width / height) > viewHeight) {
                 canvas.style.height = `${viewHeight}px`
                 canvas.style.width = `${viewHeight * (width / height)}px`
@@ -438,7 +463,24 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
                 canvas.style.height = `${viewWidth / (width / height)}px`
               }
             }
+
+            // 性能优化
+            const annotation = annotationRef.current
+
+            if (annotation && type === 'screen') {
+              const viewWidth = viewRef.current.clientWidth
+              const viewHeight = viewRef.current.clientHeight
+
+              if (viewWidth / (width / height) > viewHeight) {
+                annotation.style.height = `${viewHeight}px`
+                annotation.style.width = `${viewHeight * (width / height)}px`
+              } else {
+                annotation.style.width = `${viewWidth}px`
+                annotation.style.height = `${viewWidth / (width / height)}px`
+              }
+            }
           }
+
           resolutionWidthRef.current = width
           resolutionHeightRef.current = height
           refreshRateCountRef.current++
@@ -453,6 +495,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
         setRefreshRate(refreshRateCountRef.current)
         refreshRateCountRef.current = 0
       }, 1000)
+
       return () => {
         clearInterval(timer)
       }
@@ -462,9 +505,11 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
   useEffect(() => {
     if (member.isSharingScreen && type === 'screen') {
       const canvas = canvasRef.current
+
       if (canvas && viewRef.current) {
         // @ts-ignore
         const offscreen = canvas.transferControlToOffscreen()
+
         worker.postMessage(
           {
             canvas: offscreen,
@@ -474,6 +519,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
           [offscreen]
         )
         const handle = handleVideoFrame()
+
         eventEmitter?.on(EventType.onVideoFrameData, handle)
         return () => {
           eventEmitter?.off(EventType.onVideoFrameData, handle)
@@ -496,9 +542,11 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
   useEffect(() => {
     if (member.isVideoOn && isSubscribeVideo && type === 'video') {
       const canvas = canvasRef.current
+
       if (canvas && viewRef.current) {
         // @ts-ignore
         const offscreen = canvas.transferControlToOffscreen()
+
         worker.postMessage(
           {
             canvas: offscreen,
@@ -508,6 +556,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
           [offscreen]
         )
         const handle = handleVideoFrame()
+
         eventEmitter?.on(EventType.onVideoFrameData, handle)
         return () => {
           eventEmitter?.off(EventType.onVideoFrameData, handle)
@@ -527,6 +576,43 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     handleVideoFrame,
     member.uuid,
   ])
+
+  useEffect(() => {
+    function resize(data: { width: number; height: number }) {
+      screenShareVideoResolutionRef.current = data
+      const { width, height } = data
+      const annotation = annotationRef.current
+
+      if (annotation && viewRef.current) {
+        const viewWidth = viewRef.current.clientWidth
+        const viewHeight = viewRef.current.clientHeight
+
+        if (viewWidth / (width / height) > viewHeight) {
+          annotation.style.height = `${viewHeight}px`
+          annotation.style.width = `${viewHeight * (width / height)}px`
+        } else {
+          annotation.style.width = `${viewWidth}px`
+          annotation.style.height = `${viewWidth / (width / height)}px`
+        }
+      }
+    }
+
+    const viewDom = viewRef.current
+
+    if (type === 'screen' && !window.isElectronNative && viewDom) {
+      const observer = new ResizeObserver(() => {
+        resize(screenShareVideoResolutionRef.current)
+      })
+
+      observer.observe(viewDom)
+      eventEmitter?.on(EventType.RtcScreenShareVideoResize, resize)
+      return () => {
+        eventEmitter?.off(EventType.RtcScreenShareVideoResize, resize)
+        observer.unobserve(viewDom)
+        observer.disconnect()
+      }
+    }
+  }, [type, neMeeting, eventEmitter])
 
   function handleCallClick() {
     onCallClick?.(member)
@@ -553,7 +639,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
       style={{
         ...style,
       }}
-      onDoubleClick={(e) => {
+      onDoubleClick={() => {
         handleDoubleClick()
       }}
       onClick={(e) => onCardClick(e)}
@@ -644,6 +730,18 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
         {isCanvasVisible && window.isElectronNative && (
           <canvas ref={canvasRef} className="nemeeting-video-view-canvas" />
         )}
+        {type === 'screen' ? (
+          <div
+            className="video-view-screen-share-annotation"
+            style={{
+              display: meetingInfo.annotationEnabled ? 'block' : 'none',
+              pointerEvents: speakerRightResizing ? 'none' : 'visible',
+            }}
+            ref={annotationRef}
+          >
+            <AnnotationView isEnable={true} />
+          </div>
+        ) : null}
         <span className="nemeeting-ios-time">{iosTime || ''}</span>
       </div>
       {((type === 'video' && !member.isVideoOn) ||

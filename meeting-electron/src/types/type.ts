@@ -1,5 +1,4 @@
 import WebRoomkit, {
-  NEResult,
   NERoomLiveState,
   NERoomMemberInviteState,
   NERoomMemberInviteType,
@@ -13,6 +12,8 @@ import {
   NEChatPermission,
   NEWaitingRoomChatPermission,
   RecordState,
+  SearchAccountInfo,
+  ServerError,
   WatermarkInfo,
 } from './innerType'
 import NEMeetingInviteService from '../services/NEMeetingInviteService'
@@ -90,6 +91,8 @@ export interface NEMember {
   volume?: number
   avatar?: string
 }
+
+type NEError = ServerError | Error
 
 export enum NEClientInnerType {
   WEB = 'web',
@@ -244,6 +247,8 @@ export interface NEMeetingInfo extends NEMeetingSDKInfo {
     label?: string
   }[]
   rightDrawerTabActiveKey?: string
+  // plugin Query string
+  pluginUrlSearch?: string
   /**
    * 通知消息列表
    */
@@ -302,12 +307,7 @@ export interface NEMeetingInfo extends NEMeetingSDKInfo {
   /**
    * 水印内容
    */
-  watermarkConfig?: {
-    name?: string
-    phone?: string
-    email?: string
-    jobNumber?: string
-  }
+  watermarkConfig?: NEWatermarkConfig
   /**
    * 固定视频
    */
@@ -320,6 +320,171 @@ export interface NEMeetingInfo extends NEMeetingSDKInfo {
   noNotifyCenter?: boolean
   /** 配置会议中是否展示 web 小应用，如签到应用。 默认会拉取小应用列表并展示。 */
   noWebApps?: boolean
+
+  /**
+   * 是否本端开启同声传译，用于toast提示
+   */
+  openInterpretationBySelf?: boolean
+
+  /**
+   * 同传收听语言被移除弹窗通知信息
+   */
+  showLanguageRemovedInfo?: {
+    show: boolean
+    language: string
+  }
+}
+export interface NEMeetingJoinOptions {
+  /** 配置会议中成员列表是否不显示"全体关闭/打开视频"，默认为true，即不显示 */
+  noMuteAllVideo?: boolean
+
+  /** 配置会议中成员列表是否不显示"全体禁音/解除全体静音"，默认为false，即显示 */
+  noMuteAllAudio?: boolean
+
+  /** 配置入会时是否关闭本端视频，默认为true，即关闭视频，但在会议中可重新打开 */
+  noVideo?: boolean
+
+  /** 配置入会时是否关闭本端音频，默认为true，即关闭音频，但在会议中可重新打开 */
+  noAudio?: boolean
+
+  /** 配置是否在会议界面中显示会议时长，默认为false，入会前设置，会议中无法设置 */
+  showMeetingTime?: boolean
+
+  /** 配置是否开启语音激励，默认为true */
+  enableSpeakerSpotlight?: boolean
+
+  /** 配置会议中是否显示"邀请"按钮，默认为false，即显示*/
+  noInvite?: boolean
+
+  /** 配置会议中是否显示"sip"功能菜单，默认为false，即显示*/
+  noSip?: boolean
+
+  /** 配置会议中是否显示"聊天"按钮，默认为false，即显示*/
+  noChat?: false
+
+  /** 配置会议中是否显示"切换摄像头"按钮，默认为false，即显示 */
+  noSwitchCamera?: boolean
+
+  /** 配置会议中是否开启前置摄像头视频镜像，默认开启 */
+  enableFrontCameraMirror?: boolean
+
+  /** 配置会议中是否显示"切换音频模式"按钮，默认为false，即显示 */
+  noSwitchAudioMode?: boolean
+
+  /** 配置会议中是否包含画廊模式, 默认为false*/
+  noGallery?: boolean
+
+  /** 配置会议中是否显示"共享白板"按钮, 默认false，即显示*/
+  noWhiteBoard?: boolean
+
+  /** 配置会议中是否显示"改名"菜单, 默认false，即显示 */
+  noRename?: boolean
+
+  /** 配置是否在会议界面中显示"直播"入口, 默认false，即显示  */
+  noLive?: boolean
+
+  /** 配置会议中是否开启剩余时间提醒, 默认false */
+  showMeetingRemainingTip?: boolean
+
+  /** 配置会议中主页是否显示屏幕共享者的摄像头画面，默认为true，当前正在共享的内容画面不受影响。 如果设置为关闭，屏幕共享者的摄像头画面会被隐藏，不会遮挡共享内容画面。 */
+  showScreenShareUserVideo?: boolean
+
+  /**
+   * 开启/关闭音频共享功能。 默认为true, 开启后，在发起屏幕共享时，会同时自动开启设备的音频共享； 关闭后，在发起屏幕共享时，不会自动打开音频共享，但可以通过UI手动开启音频共享。 该设置默认为关闭。
+   */
+  enableAudioShare?: boolean
+
+  /** 配置会议中主页是否显示白板共享者的摄像头画面。 默认为false，如果设置为开启，白板共享者的摄像头画面会以小窗口的方法覆盖在白板画面上显示。 */
+  showWhiteboardShareUserVideo?: boolean
+
+  /** 配置会议中白板共享时是否开启标注模式。 默认为false*/
+  enableTransparentWhiteboard?: boolean
+
+  /** 配置会议内是否显示 {@link NEMeetingParams#tag}。 */
+  showMemberTag: boolean
+
+  /** 是否开启麦克风静音检测，默认开启。 开启该功能后，SDK 在检测到麦克风有音频输入，但此时处于静音打开的状态时，会提示用户关闭静音。 */
+  detectMutedMic?: boolean
+
+  /** 会中"会议号"显示规则，默认为 {@link NEMeetingIdDisplayOption#DISPLAY_ALL} */
+  meetingIdDisplayOption?: NEMeetingIdDisplayOption
+
+  /**
+   * 配置会议内"Toolbar"菜单列表中的菜单项。通过提供一个完整的菜单列表，其中可包含SDK内置菜单和自定义注入菜单，SDK会根据该列表排序依次显示对应菜单项，并在自定义菜单点击时触发对应回调。该配置仅会议前设置生效，会议过程中修改列表不会触发更新。如果不配置该列表，默认为{@link
+   * NEMenuItems#getBuiltinToolbarMenuItemList()}
+   *
+   * <p>注意：部分SDK内置菜单<b>只支持</b>在Toolbar菜单列表中显示，不能放入"更多"菜单列表中，且Toolbar菜单列表最多允许同时显示<b>4</b>个菜单项，即max(VISIBLE_ALWAYS
+   * + VISIBLE_EXCLUDE_HOST, VISIBLE_ALWAYS + VISIBLE_TO_HOST_ONLY) &le; 4
+   *
+   * @see NESingleStateMenuItem
+   * @see NECheckableMenuItem
+   * @ see
+   *     NEMeetingService#setOnInjectedMenuItemClickListener(NEMeetingOnInjectedMenuItemClickListener)
+   */
+  fullToolbarMenuItems: ToolBarList
+
+  /**
+   * 配置会议内"更多"菜单列表中的菜单项。通过提供一个完整的菜单列表，其中可包含SDK内置菜单和自定义注入菜单，SDK会根据该列表排序依次显示对应菜单项，并在自定义菜单点击时触发对应回调。该配置仅会议前设置生效，会议过程中修改列表不会触发更新。如果不配置该列表，默认为{@link
+   * NEMenuItems#getBuiltinMoreMenuItemList()}
+   *
+   * <p>注意：部分SDK内置菜单<b>只支持</b>在"更多"菜单列表中显示，且"更多"菜单列表最多允许配置同时显示<b>10</b>个菜单项，即max(VISIBLE_ALWAYS +
+   * VISIBLE_EXCLUDE_HOST, VISIBLE_ALWAYS + VISIBLE_TO_HOST_ONLY) &le; 10
+   *
+   * @see NESingleStateMenuItem
+   * @see NECheckableMenuItem
+   * @ see
+   *     NEMeetingService#setOnInjectedMenuItemClickListener(NEMeetingOnInjectedMenuItemClickListener)
+   */
+  fullMoreMenuItems: MoreBarList
+
+  /** 语音相关参数 {@link NEAudioProfile} */
+  // audioProfile: NEAudioProfile
+
+  /** 会议聊天室配置。 */
+  // NEMeetingChatroomConfig chatroomConfig;
+
+  /** 菜单按钮是否显示"云录制" */
+  showCloudRecordMenuItem?: boolean
+
+  /** 会议中是否展示云录制中UI */
+  showCloudRecordingUI?: boolean
+
+  /** 是否允许音频设备切换 */
+  // public boolean enableAudioDeviceSwitch = true;
+
+  /** 配置会议中是否展示通知中心菜单，默认展示。 */
+  noNotifyCenter?: boolean
+
+  /** 配置会议中是否展示 web 小应用，如签到应用。 默认会拉取小应用列表并展示。 */
+  noWebApps?: boolean
+}
+export interface NEJoinMeetingParams {
+  /**
+   * 会议号
+   */
+  meetingNum: string
+
+  /** 会议中的用户昵称，不能为空 */
+  displayName: string
+  /** 会议中的用户头像，可空 */
+  avatar?: string
+  /** 会议中的成员标签，自定义，最大长度1024 */
+  tag?: string
+
+  /** 会议密码 */
+  password?: string
+
+  /** 媒体流加密配置 */
+  encryptionConfig: NEEncryptionConfig
+
+  /** 水印配置 */
+  watermarkConfig: NEWatermarkConfig
+}
+export interface NEWatermarkConfig {
+  name?: string
+  phone?: string
+  email?: string
+  jobNumber?: string
 }
 
 export interface NEMeetingSDKInfo {
@@ -329,6 +494,7 @@ export interface NEMeetingSDKInfo {
   hostName: string
   screenUuid: string
   whiteboardUuid: string
+  annotationEnabled: boolean
   focusUuid: string
   activeSpeakerUuid: string
   properties: Record<string, any>
@@ -341,7 +507,8 @@ export interface NEMeetingSDKInfo {
   shortMeetingNum: string
   ownerUserUuid: string
   rtcStartTime: number
-  roomArchiveId: string
+  roomArchiveId: number
+  timezoneId?: string
   sipCid?: string
   meetingNum: string
   meetingInviteUrl: string
@@ -387,6 +554,22 @@ export interface NEMeetingSDKInfo {
    * 访客入会
    */
   enableGuestJoin?: boolean
+  interpretation?: InterpretationRes
+  isInterpreter?: boolean
+  /**
+   * 批注权限
+   */
+  annotationPermission?: number
+}
+
+export interface InterpretationRes {
+  interpreters: {
+    [uuid: string]: string[]
+  }
+  channelNames: {
+    [lang: string]: string
+  }
+  started: boolean
 }
 export interface NEMeetingSDK {
   memberList: NEMember[]
@@ -449,7 +632,90 @@ export type NEMeetingInitConfig = {
    * 扩展字段
    */
   extras?: Record<string, any>
+  /**
+   * 是否读取私有化配置文件
+   */
+  useAssetServerConfig?: boolean
 }
+export interface NEMeetingAssetWhiteboardServerConfig
+  extends NEWhiteboardServerConfig {
+  webServer: string
+  fontDownloadServer: string
+}
+export interface NEMeetingAssetRtcServerConfig extends NERtcServerConfig {
+  compatServer: string
+  nosLbsServer: string
+  nosUploadSever: string
+  nosTokenServer: string
+}
+export interface NEMeetingAssetIMServerConfig {
+  appkey: string
+  lbsUrl: string
+  weblbsUrl: string
+  nosReplacement: string
+  nosAccess: string
+  pubkeyVersion: string
+  chatroomDemoListUrl: string
+  websdkSsl: boolean
+  nosSsl: boolean
+  webchatroomAddr: string[]
+  module: string
+  version: number
+  lbs: string
+  link: string
+  link_web: string
+  nos_lbs: string
+  nos_uploader: string
+  nos_uploader_host: string
+  https_enabled: boolean
+  nos_downloader: string
+  nos_accelerate: string
+  nos_accelerate_host: string
+  nt_server: string
+  kibana_server: string
+  statistic_server: string
+  report_global_server: string
+  multi_video: number
+  hand_shake_type: number
+  nego_key_neca: number
+  nego_key_enca_key_version: number
+  nego_key_enca_key_parta: string
+  nego_key_enca_key_partb: string
+  comm_enca: number
+}
+export interface NEMeetingPrivateConfig {
+  corpCode?: string
+  module?: {
+    nps: {
+      enabled: boolean
+    }
+    feedback?: {
+      enable: boolean
+    }
+    appUpgrade?: {
+      enable: boolean
+      iosCheckUrl: string
+    }
+    about?: {
+      privacyUrl: string
+      userProtocolUrl: string
+    }
+    account?: {
+      deleteAccountUrl: string
+      registryUrl: string
+    }
+  }
+  meeting: {
+    serverUrl: string
+  }
+  roomkit: {
+    roomServer: string
+  }
+  im?: NEMeetingAssetIMServerConfig
+  rtc?: NEMeetingAssetRtcServerConfig
+  whiteboard?: NEMeetingAssetWhiteboardServerConfig
+}
+
 export type NEIMServerConfig = {
   /**
    * lbs连接地址
@@ -578,11 +844,11 @@ export interface JoinOptions {
   /**
    * 是否开启视频入会 1为开启 2为关闭
    */
-  video?: 1 | 2
+  video?: number
   /**
    * 是否开启音频入会 1为开启 2为关闭
    */
-  audio?: 1 | 2
+  audio?: number
   /**
    * 会时模式，1 常规（默认）， 2开启白板入会
    * @ignore
@@ -819,6 +1085,7 @@ export enum Role {
   /** 访客 */
   guest = 'guest',
 }
+export type NEMeetingRoleType = Role
 /**
  * 视频分辨率
  */
@@ -830,6 +1097,107 @@ export type VideoFrameRate = 5 | 10 | 15 | 20 | 25
 
 export interface CreateOptions extends JoinOptions {
   enableWaitingRoom?: boolean
+}
+
+export interface NERoomControl {
+  type: string
+  attendeeOff: AttendeeOffType
+  state: number
+  allowSelfOn: boolean
+}
+export interface NEStartMeetingParams {
+  subject?: string
+  /**
+   * 指定要创建会议号
+   * 可指定为个人会议ID或个人会议短号；
+   * 当不指定时，由服务端随机分配一个会议ID；
+   */
+  meetingNum?: string
+
+  /** 房间中的用户昵称，不能为空 */
+  displayName?: string
+
+  /// 房间密码;
+  /// 创建房间时，如果密码不为空，会创建带指定密码的房间
+  /// 加入带密码的房间时，需要指定密码
+  password?: string
+
+  /// 会议中的用户成员标签，自定义，最大长度50
+  tag?: string
+
+  avatar: string
+
+  /// 透传字段
+  extraData?: string
+
+  /// 音视频控制
+  controls: NERoomControl[]
+
+  /// 设置会议成员角色
+  roleBinds: Record<string, NEMeetingRoleType>
+
+  /// 媒体流加密类型
+  encryptionConfig: NEEncryptionConfig
+}
+export interface NEMeetingAppNoticeTips {
+  appKey: string
+  tips: NEMeetingAppNoticeTip[]
+  curTime: number
+}
+export enum NEMeetingAppNoticeTipType {}
+
+export interface NEMeetingAppNoticeTip {
+  /**
+   * 应用消息提示
+   */
+  content: string
+  /**
+   * 应用消息内容
+   */
+  title: string
+  /**
+   * 确认按钮文案
+   */
+  okBtnLabel: string
+  /**
+   * 跳转链接
+   */
+  url: string
+  /**
+   * 应用消息提示类型
+   */
+  type: NEMeetingAppNoticeTipType
+  /**
+   * 截止时间
+   */
+  time: number
+  /**
+   * 是否可用
+   */
+  enable: boolean
+}
+
+export interface NELocalHistoryMeeting {
+  /// 会议号
+  meetingNum: string
+
+  /// 会议唯一标识
+  meetingId: number
+
+  /// 会议短号
+  shortMeetingNum?: string
+
+  /// 会议主题
+  subject: string
+
+  /// 会议密码
+  password?: string
+
+  /// 会议昵称
+  nickname: string
+
+  /// sipId
+  sipId?: string
 }
 
 export type CustomOptions = {
@@ -900,6 +1268,7 @@ export type EventName =
   | 'peerJoin'
   | 'peerLeave'
   | 'roomEnded'
+  | 'authEvent'
   | 'onMeetingStatusChanged'
   | 'onScreenSharingStatusChange'
 /**
@@ -999,7 +1368,7 @@ export interface NEMeetingKit {
    * @param options 相应配置项
    * @param callback 接口回调
    */
-  login: (options: LoginOptions, callback: (e?: any) => void) => void
+  login: (options: LoginOptions, callback: (e?: NEError) => void) => void
   /**
    * @ignore
    * 账号密码登录接口
@@ -1008,7 +1377,7 @@ export interface NEMeetingKit {
    */
   loginWithPassword: (
     options: { username: string; password: string },
-    callback: (e?: any) => void
+    callback: (e?: NEError) => void
   ) => void
 
   /**
@@ -1017,7 +1386,7 @@ export interface NEMeetingKit {
    */
   anonymousJoinMeeting: (
     options: JoinOptions,
-    callback: (e?: any) => void
+    callback: (e?: ServerError | Error) => void
   ) => void
   /**
    * 登出接口
@@ -1029,19 +1398,19 @@ export interface NEMeetingKit {
    * @param options 相应配置参数
    * @param callback 接口回调
    */
-  create: (options: CreateOptions, callback: (e?: any) => void) => void
+  create: (options: CreateOptions, callback: (e?: NEError) => void) => void
   /**
    * 加入会议接口
    * @param options 相应配置参数
    * @param callback 接口回调
    */
-  join: (options: JoinOptions, callback: (e?: any) => void) => void
+  join: (options: JoinOptions, callback: (e?: NEError) => void) => void
   /**
    * 通过邀请会议接口
    * @param options 相应配置参数
    * @param callback 接口回调
    */
-  acceptInvite: (options: JoinOptions, callback: (e?: any) => void) => void
+  acceptInvite: (options: JoinOptions, callback: (e?: NEError) => void) => void
   /**
    * 动态更新自定义按钮
    * @param options
@@ -1114,7 +1483,7 @@ export interface NEMeetingKit {
    * @param roomArchiveId 房间roomArchiveId
    */
   getRoomCloudRecordList: (
-    roomArchiveId: string
+    roomArchiveId: number
   ) => Promise<NEResult<NERoomRecord[]>>
   /**
    * 切换语言
@@ -1161,24 +1530,85 @@ export interface SipMember {
   inviterUid: string
 }
 
-export interface MeetingList {
+export interface MeetingListItem {
   /** 参会记录id */
   attendeeId: number
-  roomArchiveId: string
+  roomArchiveId: number
   meetingNum: number
   subject: string
   type: number
   roomStartTime: number
   roomEntryTime: number
+  ownerUserUuid: string
   ownerNickname: string
   isFavorite: boolean
+  favoriteId: number
+  roomEndTime: number
+  ownerAvatar?: string
+  timezoneId: string
+}
+
+/// 聊天室导出状态
+export const enum NEChatroomExportAccess {
+  /** 未知 */
+  kUnknown = 0,
+  /** 可导出 */
+  kAvailable,
+  /** 无权限导出 */
+  kNoPermission,
+  /** 已过期 */
+  kOutOfDate,
+}
+
+export type NEChatroomInfo = {
+  /** 聊天室id */
+  chatroomId: number
+  /** 导出权限 */
+  exportAccess: NEChatroomExportAccess
+}
+
+export type NEMeetingWebAppIconItem = {
+  /** 应用图标url */
+  defaultIcon: string
+  /** 推送图标url */
+  notifyIcon?: string
+}
+
+export const enum NEMeetingWebAppItemType {
+  /** 官方应用 */
+  kOfficial = 0,
+  /** 企业自建应用 */
+  kCorporate = 1,
+}
+
+export type NEMeetingWebAppItem = {
+  /** 应用Id */
+  pluginId: string
+  /** 应用名称 */
+  name: string
+  /** 应用图标 */
+  icon: NEMeetingWebAppIconItem
+  /** 应用描述 */
+  description?: string
+  /** 应用类型 */
+  type: NEMeetingWebAppItemType
+  /** 应用链接 */
+  homeUrl: string
+  /** 会话Id */
+  notifySenderAccid?: string
+}
+
+export type NEHistoryMeetingDetail = {
+  /** 聊天室信息 */
+  chatroom?: NEChatroomInfo
+  pluginInfoList?: NEMeetingWebAppItem[]
 }
 
 /**
  * 组件当前支持的语言类型。通过{@link NEMeetingKit#switchLanguage(NEMeetingLanguage)} 可切换语言。
  * CHINESE 中文；ENGLISH 英文；JAPANESE 日文；
  */
-export enum NEMeetingLanguage {
+export const enum NEMeetingLanguage {
   CHINESE = 'CHINESE',
   ENGLISH = 'ENGLISH',
   JAPANESE = 'JAPANESE',
@@ -1344,4 +1774,153 @@ export interface NEMeetingInviteInfo {
   inviterName?: string
   inviterIcon?: string
   subject?: string
+}
+
+/**
+ * 同声传译译员
+ */
+export interface NEMeetingInterpreter {
+  /**
+   * 传译员用户 Id
+   */
+  userId?: string
+
+  /**
+   * 第一语言，默认为收听语言
+   */
+  firstLang: string
+
+  /**
+   * 第一语言，默认为收听语言
+   */
+  secondLang: string
+}
+
+export type NEMeetingInterpreterInfo = NEMeetingInterpreter & {
+  userInfo?: SearchAccountInfo
+}
+
+export interface NEInterpretationEventListener {
+  /**
+   * 房间内可用语言列表更新通知
+   * @param languageList
+   */
+  onAvailableLanguageListUpdated(languageList: string[]): void
+
+  /**
+   * 同声传译开启状态变更通知
+   * @param started
+   */
+  onInterpretationStartStateChanged(started: boolean): void
+
+  /**
+   * 同声传译译员列表变更通知
+   * @param interpreters
+   */
+  onInterpreterListChanged(interpreters: NEMeetingInterpreter[]): void
+
+  /**
+   * 本端同声传译译员角色变更通知
+   * @param myInterpreter
+   */
+  onMyInterpreterChanged(myInterpreter?: NEMeetingInterpreter): void
+
+  /**
+   * 本端传译语言变更通知
+   * @param language
+   */
+  onMySpeakLanguageChanged(language: string): void
+
+  /**
+   * 本端收听语言变更通知
+   * @param language
+   */
+  onMyListenLanguageChanged(language: string): void
+
+  /**
+   * 本端收听的语言频道不可用通知
+   * @param language
+   */
+  onMyListenLanguageUnavailable(language: string): void
+}
+
+export interface NEMeetingInterpretationSettings {
+  listenLanguage?: string
+  isListenMajor?: boolean
+  majorVolume?: number
+  muted?: boolean
+  speakerLanguage?: string
+}
+
+export type ServiceBundle = {
+  /** 会议服务 */
+  name: string
+  /** 会议服务过期时间: -1 永不过期 */
+  expireTimeStamp: number
+  /** 会议服务过期提示 */
+  expireTip: string
+  /** 会议服务最大人数 */
+  maxMembers: number
+  /** 套餐支持的最大时长，以分钟为单位，小于0或为空表示不限时长 */
+  maxMinutes: number
+  /** 会议服务最大人数 */
+  meetingMaxMembers: number
+  /** 会议服务最大时长 */
+  meetingMaxMinutes: number
+}
+
+export type NEAccountInfo = {
+  /** 企业名称 */
+  corpName?: string
+  /** 用户 */
+  userUuid: string
+  /** 用户token */
+  userToken: string
+  /** 用户昵称 */
+  nickname: string
+  /** 个人会议号 */
+  privateMeetingNum: string
+  /** 会议短号 */
+  shortMeetingNum: string
+  /** 是否为初始密码 */
+  isInitialPassword: boolean
+  /** 用户账号 */
+  account?: string
+  /** 用户头像 */
+  avatar?: string
+  /** 用户手机号 */
+  phoneNumber?: string
+  /** 用户邮箱 */
+  email?: string
+  /** 个人会议短号 */
+  privateShortMeetingNum?: string
+  /** 会议服务 */
+  serviceBundle?: ServiceBundle
+  /** 是否是匿名账号 */
+  isAnonymous?: boolean
+}
+
+export interface EnterPriseInfo {
+  appKey: string
+  appName: string
+  idpList: Array<IdpInfo>
+  ssoLevel: number
+}
+export interface IdpInfo {
+  id: number
+  name: string
+  type: number
+}
+
+export type NEScheduledMember = {
+  userUuid: string
+  role: string
+}
+
+export interface NEResult<T = null> {
+  code: number | string
+  message?: string
+  data: T
+  requestId?: string
+  cost?: number
 }

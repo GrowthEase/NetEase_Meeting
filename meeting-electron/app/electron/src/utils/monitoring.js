@@ -4,7 +4,7 @@ const network = require('network');
 const si = require('systeminformation');
 const isWin32 = process.platform === 'win32';
 
-let timer = null;
+const timer = null;
 
 function initMonitoring() {
   ipcMain.handle('getMonitoringInfo', async () => {
@@ -22,15 +22,18 @@ function initMonitoring() {
       used: os.totalmem() - os.freemem(),
     };
     const appMetrics = app.getAppMetrics();
+
     return new Promise((resolve) => {
       network.get_active_interface(function (err, obj) {
         let network = obj || { type: 'No network', desc: 'No network' };
+
         if (isWin32 && obj) {
           network = {
             type: obj.type,
             desc: obj.type === 'Wireless' ? 'Wi-Fi' : 'Ethernet',
           };
         }
+
         return resolve({
           cpu,
           cpuUse,

@@ -14,6 +14,7 @@ function activateApplicationWindowByName(targetName) {
               end repeat
             end tell
           `;
+
   applescript.execString(script, function (err, rtn) {
     if (err) {
       console.error(err);

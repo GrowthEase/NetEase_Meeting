@@ -28,6 +28,7 @@ export function useIsAudioMode(data: UseIsAudioModeProps): {
       )
     )
   }, [memberList, meetingInfo.whiteboardUuid, meetingInfo.screenUuid])
+
   return {
     isAudioMode,
   }
@@ -62,13 +63,17 @@ export default function useAudioMode(
     columnCount: number
   ): Array<Array<NEMember[]>> {
     const result: Array<Array<NEMember[]>> = []
+
     if (columnCount <= 0 || lineCount <= 0) {
       return result
     }
+
     let pageIndex = 0
+
     // 遍历所有项
     while (pageIndex * lineCount * columnCount < arr.length) {
       const page: Array<NEMember[]> = []
+
       for (
         let i = 0;
         i < lineCount && (pageIndex * lineCount + i) * columnCount < arr.length;
@@ -79,22 +84,28 @@ export default function useAudioMode(
           (pageIndex * lineCount + i) * columnCount,
           (pageIndex * lineCount + i + 1) * columnCount
         )
+
         page.push(row)
       }
+
       // 整个棋盘数据
       result.push(page)
       pageIndex++
     }
+
     return result
   }
 
   const viewOrder = meetingInfo.remoteViewOrder || meetingInfo.localViewOrder
+
   if (viewOrder) {
     const idOrder = viewOrder.split(',')
+
     memberList.sort((a, b) => {
       // 获取 a 和 b 对象的 id 在 idOrder 数组中的索引位置
       const indexA = idOrder.indexOf(a.uuid)
       const indexB = idOrder.indexOf(b.uuid)
+
       // 根据 id 在 idOrder 中的索引位置进行排序
       if (indexA === -1 && indexB === -1) {
         return 0 // 如果两个都不在给定的 UUID 数组中，则保持原顺序
@@ -111,17 +122,22 @@ export default function useAudioMode(
   // 最终渲染成员三维数组，第一个表示多少页，第二个表示多少行，第三个表示多少列
   const groupMemberList = useMemo(() => {
     const res = convertTo2DArray(memberList, lineCount, columnCount)
+
     if (swiperInstanceRef.current && !swiperInstanceRef.current.destroyed) {
       swiperInstanceRef.current?.slideTo(0)
     }
+
     return res
   }, [columnCount, lineCount, memberList])
+
   useEffect(() => {
     if (activeIndex > groupMemberList.length - 1) {
       const _activeIndex = Math.max(groupMemberList.length - 1, 0)
+
       if (swiperInstanceRef.current && !swiperInstanceRef.current.destroyed) {
         swiperInstanceRef.current?.slideTo(_activeIndex)
       }
+
       setActiveIndex(_activeIndex)
     }
   }, [groupMemberList.length, activeIndex])

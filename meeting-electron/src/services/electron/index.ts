@@ -3,6 +3,7 @@ import { EnhancedEventEmitter } from './event'
 const { ipcRenderer } = window
 
 let eleInstance: EleUIUseEvent | null
+
 class EleUIUseEvent extends EnhancedEventEmitter {
   constructor() {
     super()
@@ -18,6 +19,7 @@ class EleUIUseEvent extends EnhancedEventEmitter {
         'sendMessage',
         async (event: any, channel: string, args: any) => {
           const result = await this.sendMessage(channel, args) // 调用实例的 sendMessage 方法
+
           event.returnValue = result // 将返回值发送回主进程
         }
       )
@@ -48,6 +50,7 @@ export default {
     if (!eleInstance && ipcRenderer) {
       eleInstance = new EleUIUseEvent()
     }
+
     return eleInstance
   },
   destroy(): void {

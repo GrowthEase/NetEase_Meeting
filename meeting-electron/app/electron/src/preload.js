@@ -1,6 +1,7 @@
 const { ipcRenderer, webFrame } = require('electron');
 const NERoom = require('neroom-node-sdk');
 const log = require('electron-log/renderer');
+
 log.transports.console.format = '[{y}-{m}-{d} {h}:{i}:{s}.{ms}] {text}';
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -17,6 +18,7 @@ try {
 } catch (e) {
   console.warn('neroom-node-sdk not found');
 }
+
 window.electronLog = log.info;
 // console.error = log.info;
 // console.info = log.info;

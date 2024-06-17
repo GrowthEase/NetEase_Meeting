@@ -15,6 +15,7 @@ import { GlobalContext, MeetingInfoContext } from '../../../store'
 import {
   ActionType,
   BrowserType,
+  EventType,
   GlobalContext as GlobalContextInterface,
   NEChatPermission,
   NEClientType,
@@ -44,9 +45,11 @@ const uuid = () => {
     function (c) {
       const r = (Math.random() * 16) | 0
       const v = c === 'x' ? r : (r & 0x3) | 0x8
+
       return v.toString(16)
     }
   )
+
   return data
 }
 
@@ -67,12 +70,12 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
 }) => {
   const { t } = useTranslation()
 
-  const { neMeeting } = useContext<GlobalContextInterface>(GlobalContext)
+  const { neMeeting, eventEmitter } =
+    useContext<GlobalContextInterface>(GlobalContext)
   const { meetingInfo, memberList, dispatch } = useContext(MeetingInfoContext)
   const [selfShow, setSelfShow] = useState(false)
   const [unReadMsgs, setUnReadMsgsCount] = useState(0)
   const [msgStr, setMsgStr] = useState('')
-  const [errorMsg, setErrorMsg] = useState<NERoomChatMessage>()
   const [msgList, setMsgList] = useState<NERoomChatMessage[]>([]) // 聊天室消息
   const [privateChatMemberId, setPrivateChatMemberId] = useState<string>() // 私聊对象
   const contentRef = useRef<HTMLDivElement>(null)
@@ -106,22 +109,25 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
     if (isHostOrCoHost || isWaitingRoom) {
       return ''
     }
+
     if (meetingChatPermission === NEChatPermission.PUBLIC_CHAT_ONLY) {
       return t('chatPublicOnly')
     }
+
     if (meetingChatPermission === NEChatPermission.PRIVATE_CHAT_HOST_ONLY) {
       return t('chatPrivateHostOnly')
     }
   }, [isHostOrCoHost, meetingChatPermission, t, isWaitingRoom])
 
   const getHostAndCohostList = useCallback(() => {
-    neMeeting?.getHostAndCohostList(meetingInfo.meetingNum).then((res) => {
+    neMeeting?.getHostAndCohostList().then((res) => {
       setHostOrCohostList(res)
     })
-  }, [meetingInfo.meetingNum, neMeeting])
+  }, [neMeeting])
 
   const privateChatMembers = useMemo(() => {
     let _memberList: NEMember[] = []
+
     if (isWaitingRoom) {
       _memberList = hostOrCohostList
     } else if (isHostOrCoHost) {
@@ -189,6 +195,7 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
       ...audioOn,
       ...other,
     ].filter((item) => item.clientType !== NEClientType.SIP)
+
     return res
   }, [
     memberList,
@@ -224,6 +231,7 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
               },
             })
           }
+
           setActionSheetOpen(false)
         },
       },
@@ -260,6 +268,7 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
         }
       }
     }
+
     return 0
   }, [
     isHostOrCoHost,
@@ -288,6 +297,7 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
       privateChatMembers.findIndex(
         (item) => item.uuid === avatarClickMsg?.from
       ) === -1
+
     if (localMember.role === Role.member && disabled) {
       setActionSheetOpen(false)
     }
@@ -296,6 +306,7 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
   useEffect(() => {
     if (contentRef.current) {
       const lastMsg = msgList[msgList.length - 1]
+
       if (isScrolledToBottomRef.current || lastMsg?.isMe) {
         setTimeout(
           () => {
@@ -346,6 +357,7 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
         window.scrollBy(0, 1)
       }
     }
+
     return 'ne-chatroom-footer-bottom0'
   }, [isFocus])
 
@@ -359,10 +371,12 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
       msg.attach?.type === 'deleteChatroomMsg'
     ) {
       const _msg = msgList.find((item) => item.idClient === msg.attach?.msgId)
+
       if (_msg) {
         const index = msgList.findIndex(
           (item) => item.idClient === msg.attach?.msgId
         )
+
         if (index > -1) {
           msgList[index] = {
             ...msg,
@@ -374,13 +388,16 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
           setMsgList([...msgList])
         }
       }
+
       return true
     }
+
     return false
   }
 
   // 接受消息
   function onReceiveMsgs(data: NERoomChatMessage[]) {
+    console.log('onReceiveMsgs', data)
     const messages = data
     const type = messages[0].attach && messages[0].attach.type
     const updateListType = [
@@ -389,6 +406,7 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
       'kickMember',
       'updateChatroom',
     ]
+
     handleRecMsg(messages.filter((msg) => !onDeleteMsg(msg)))
     if (type && updateListType.includes(type)) {
       getMembers()
@@ -398,8 +416,10 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
   function updateMsg(id: string, msg: Partial<NERoomChatMessage>) {
     const msgList = msgListRef.current
     const index = msgList.findIndex((item) => item.idClient === id)
+
     if (index !== -1) {
       const _msg = msgList[index]
+
       msgList[index] = {
         ..._msg,
         ...msg,
@@ -411,6 +431,7 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
   async function inputFile(type: 'image' | 'file'): Promise<File> {
     return new Promise((resolve, reject) => {
       const fileInput = document.createElement('input')
+
       fileInput.type = 'file'
       const accept =
         type === 'image'
@@ -420,24 +441,31 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
       fileInput.accept = accept
       fileInput.onchange = (e) => {
         const file = (e.target as HTMLInputElement).files?.[0]
+
         if (file) {
           const ext = file.name && file.name.split('.').pop()?.toLowerCase()
+
           if (ext && !accept.includes(ext)) {
             Toast.fail(t('fileTypeNotSupport'))
             reject()
           }
+
           if (type === 'file' && file.size > fileSizeLimit) {
             Toast.fail(t('chatFileSizeExceedTheLimit'))
             reject()
           }
+
           if (type === 'image' && file.size > imgSizeLimit) {
             Toast.fail(t('chatImageSizeExceedTheLimit'))
             reject()
           }
+
           resolve(Object.assign(file, { url: URL.createObjectURL(file) }))
         }
+
         fileInput.parentElement?.removeChild(fileInput)
       }
+
       document.body.appendChild(fileInput)
       fileInput.click()
     })
@@ -470,6 +498,7 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
       from: localMember.uuid,
       toNickname: privateChatMember?.name,
     } as NERoomChatMessage
+
     setMsgList((prev) => [...prev, tempMsg])
     return tempMsg
   }
@@ -484,6 +513,7 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
     const file = resendMsg?.tempFile
       ? resendMsg.tempFile
       : await inputFile(type)
+
     // 选完文件后，如果私聊对象变了，不发送
     if (
       beforePrivateChatMemberId !== privateChatMemberIdRef.current ||
@@ -491,6 +521,7 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
     ) {
       return
     }
+
     const privateChatMember = getPrivateChat()
 
     resendMsg
@@ -500,6 +531,7 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
       : addTempMsg(file, idClient, type, privateChatMember)
 
     const toAccounts = privateChatMember ? [privateChatMember.uuid] : []
+
     try {
       const res =
         type === 'file'
@@ -516,6 +548,7 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
               isWaitingRoom ? 1 : 0
             )
       const msg: NERoomChatMessage | undefined = res?.data
+
       if (res?.code === 0 && msg) {
         // type === 'image' && Object.assign(msg, { file })
         updateMsg(msg.messageUuid || idClient, msg)
@@ -537,6 +570,7 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
     if (privateChatMemberIdRef.current === 'meetingAll') {
       return
     }
+
     return privateChatMembers.find(
       (item) => item.uuid === privateChatMemberIdRef.current
     )
@@ -547,12 +581,14 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
       Toast.fail(t('chatCannotSendBlankLetter'))
       return
     }
+
     if (msgStr.length > 5000) {
       // 发送完消息，失去焦点
       inputRef.current?.blur()
       Toast.fail(t('messageLengthLimit'))
       return
     }
+
     const idClient = getUUID()
     const privateChatMember = getPrivateChat()
     const toAccounts = privateChatMember ? [privateChatMember.uuid] : []
@@ -563,12 +599,14 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
       isWaitingRoom ? 1 : 0
     )
     const msg: NERoomChatMessage | undefined = res?.data
+
     if (res?.code === 0 && msg) {
       msg.isMe = true
       msg.isPrivate = !!privateChatMember
       msg.toNickname = privateChatMember?.name
       setMsgList((prev) => [...prev, msg])
     }
+
     setMsgStr('')
     // 发送完消息，失去焦点
     inputRef.current?.blur()
@@ -589,8 +627,10 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
   function handleRecMsg(newMsgs: any) {
     const oldMsgs = [...msgList]
     const { msgs, unReadMsgsCount } = handleRecMsgService(newMsgs)
+
     setUnReadMsgsCount(unReadMsgsCount + unReadMsgs)
     const msgArr = [...oldMsgs, ...msgs]
+
     setMsgList(msgArr)
   }
 
@@ -608,8 +648,10 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
       console.error('not init chatroom')
       return
     }
+
     const MyAccid = localMember.uuid
     let members = memberList
+
     members = members.filter(
       (item) => item.isInChatroom && item.uuid !== MyAccid
     )
@@ -618,8 +660,11 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
 
   const onRevokeMsg = async (msg: NERoomChatMessage) => {
     if (msg.idClient && msg.status === 'success') {
-      console.log('revoke msg:', msg)
-      await chatController?.recallChatroomMessage(msg.idClient, msg.time)
+      await chatController?.recallChatroomMessage(
+        msg.idClient,
+        msg.time,
+        msg.chatroomType
+      )
     }
   }
 
@@ -627,9 +672,11 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
     if (msg.isMe) {
       return
     }
+
     const uuid = msg.from
     const member = privateChatMembers.find((item) => item.uuid === uuid)
     let actionSheetOpen = false
+
     if (isWaitingRoom && waitingRoomChatPermission !== 0) {
       if (member) {
         actionSheetOpen = true
@@ -641,9 +688,11 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
         actionSheetOpen = true
       }
     }
+
     if (actionSheetOpen) {
       setAvatarClickMsg(msg)
     }
+
     setActionSheetOpen(actionSheetOpen)
   }
 
@@ -651,6 +700,7 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
     setLongPressMsg(undefined)
     if (contentRef.current) {
       const { clientHeight, scrollHeight, scrollTop } = contentRef.current
+
       isScrolledToBottomRef.current =
         scrollHeight - clientHeight <= scrollTop + 10
       if (isScrolledToBottomRef.current) {
@@ -670,6 +720,30 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
   useUpdateEffect(() => {
     visible && scrollToBottom()
   }, [visible])
+
+  useEffect(() => {
+    function handleManagersUpdated(data: NEMember[]) {
+      setHostOrCohostList(data)
+    }
+
+    eventEmitter?.on(
+      EventType.WaitingRoomOnManagersUpdated,
+      handleManagersUpdated
+    )
+    return () => {
+      eventEmitter?.off(
+        EventType.WaitingRoomOnManagersUpdated,
+        handleManagersUpdated
+      )
+    }
+  }, [eventEmitter])
+
+  useEffect(() => {
+    window.addEventListener('online', getHostAndCohostList)
+    return () => {
+      window.removeEventListener('online', getHostAndCohostList)
+    }
+  }, [getHostAndCohostList])
 
   const renderPrivateChat = () => {
     let privateChatLabel = isWaitingRoom ? t('chatPrivate') : t('chatSendTo')
@@ -700,6 +774,7 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
       const privateMember = privateChatMembers?.find(
         (item) => item.uuid === privateChatMemberId
       )
+
       if (!privateMember) {
         // 如果在等候室，或者不是主持人，且权限是私聊主持人。 选择第一个人
         if (
@@ -712,6 +787,7 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
         } else {
           setPrivateChatMemberId('meetingAll')
         }
+
         return null
       } else {
         privateUser = (
@@ -733,6 +809,7 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
         )
       }
     }
+
     return (
       <div className="private-chat-content">
         <div
@@ -874,4 +951,5 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
     </div>
   )
 }
+
 export default NEChatRoom

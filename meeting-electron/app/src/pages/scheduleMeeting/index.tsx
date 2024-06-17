@@ -1,20 +1,22 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import EventEmitter from 'eventemitter3';
 
 import PCTopButtons from '../../../../src/components/common/PCTopButtons';
-import {
-  ScheduleMeeting,
+import ScheduleMeeting, {
   ScheduleMeetingRef,
-} from '../../../../src/components/web/BeforeMeetingModal/ScheduleMeetingModal';
+} from '../../../../src/components/web/BeforeMeetingModal/ScheduleMeeting';
 import { useGlobalContext } from '../../../../src/store';
+import ScheduleMeetingBgImg from '../../assets/schedule_bg.png';
 
 import './index.less';
 import {
   CreateMeetingResponse,
+  EventType,
   GetMeetingConfigResponse,
 } from '../../../../src/types';
 import Toast from '../../../../src/components/common/toast';
+import classNames from 'classnames';
 
 const eventEmitter = new EventEmitter();
 
@@ -29,11 +31,14 @@ const ScheduleMeetingPage: React.FC = () => {
   const [appLiveAvailable, setAppLiveAvailable] = useState<boolean>(false);
   const [globalConfig, setGlobalConfig] = useState<GetMeetingConfigResponse>();
   const [editMeeting, setEditMeeting] = useState<CreateMeetingResponse>();
+  const [pageMode, setPageMode] = useState<'detail' | 'edit' | 'create'>(
+    'create',
+  );
 
   useEffect(() => {
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data;
-      console.log('event', event, payload);
+
       if (event === 'windowOpen') {
         payload.nickname && setNickname(payload.nickname);
         payload.appLiveAvailable &&
@@ -47,6 +52,7 @@ const ScheduleMeetingPage: React.FC = () => {
         setSubmitLoading(false);
       }
     }
+
     window.addEventListener('message', handleMessage);
     return () => {
       window.removeEventListener('message', handleMessage);
@@ -61,6 +67,7 @@ const ScheduleMeetingPage: React.FC = () => {
         scheduleMeetingRef.current?.handleCancelEditMeeting();
       }
     }
+
     window.ipcRenderer?.on('scheduleMeetingWindow:close', ipcRenderer);
     return () => {
       window.ipcRenderer?.removeListener(
@@ -76,13 +83,38 @@ const ScheduleMeetingPage: React.FC = () => {
     });
   }, [t]);
 
+  useEffect(() => {
+    eventEmitter.on(EventType.OnScheduledMeetingPageModeChanged, (mode) => {
+      setPageMode(mode);
+    });
+    return () => {
+      eventEmitter.off(EventType.OnScheduledMeetingPageModeChanged);
+    };
+  }, []);
+
   return (
     <>
-      <div className="schedule-meeting-page">
+      <div
+        className={classNames('schedule-meeting-page', {
+          'schedule-meeting-page-bg': pageMode === 'detail',
+        })}
+        style={{
+          backgroundImage:
+            pageMode === 'detail' ? `url(${ScheduleMeetingBgImg})` : 'none',
+        }}
+      >
         <div className="electron-drag-bar">
           <div className="drag-region" />
-          {t('scheduleMeeting')}
-          <PCTopButtons minimizable={false} maximizable={false} />
+          {pageMode !== 'detail' && (
+            <span
+              style={{
+                fontWeight: window.systemPlatform === 'win32' ? 'bold' : '500',
+              }}
+            >
+              {t('scheduleMeeting')}
+            </span>
+          )}
+          <PCTopButtons size="normal" minimizable={false} maximizable={false} />
         </div>
         <div className="schedule-meeting-page-content">
           <ScheduleMeeting
@@ -100,6 +132,7 @@ const ScheduleMeetingPage: React.FC = () => {
             }}
             onJoinMeeting={(meetingId) => {
               const parentWindow = window.parent;
+
               parentWindow?.postMessage(
                 {
                   event: 'joinScheduleMeeting',
@@ -114,6 +147,7 @@ const ScheduleMeetingPage: React.FC = () => {
               setSubmitLoading(true);
               isCreateOrEditScheduleMeetingRef.current = true;
               const parentWindow = window.parent;
+
               parentWindow?.postMessage(
                 {
                   event: 'createOrEditScheduleMeeting',
@@ -126,6 +160,7 @@ const ScheduleMeetingPage: React.FC = () => {
             }}
             onCancelMeeting={(cancelRecurringMeeting) => {
               const parentWindow = window.parent;
+
               parentWindow?.postMessage(
                 {
                   event: 'cancelScheduleMeeting',

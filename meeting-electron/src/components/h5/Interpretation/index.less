@@ -1,0 +1,76 @@
+.ne-meeting-app-h5 {
+  .ne-meeting-interpretation-h5 {
+    height: 0;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 21;
+    overflow: hidden;
+  }
+  .ne-meeting-interpretation-h5.ne-meeting-interp-show {
+    height: 100%;
+  }
+  .ne-meeting-interp-content-h5 {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 0;
+    z-index: 22;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    background-color: #f2f3f5;
+    overflow: hidden;
+  }
+  .ne-meeting-interp-content-h5.ne-meeting-interp-show {
+    height: 91%;
+    transition: height 0.3s;
+    -webkit-transition: height 0.3s; /* Safari */
+  }
+  .ne-meeting-interp-content-wrapper {
+    padding-top: 4px;
+    height: 100%;
+    overflow-y: auto;
+  }
+  .ne-meeting-interp-header {
+    height: 48px;
+    text-align: center;
+    line-height: 48px;
+    font-size: 16px;
+    font-weight: 500;
+    background-color: #fff;
+  }
+  .ne-meeting-interp-tip {
+    font-size: 14px;
+    color: #999;
+    text-align: left;
+    padding: 0 20px;
+    margin: 16px 0 8px 0;
+  }
+  .ne-meeting-interp-content-item {
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 56px;
+    font-size: 16px;
+  }
+  .ne-meeting-interp-itme-icon {
+    font-size: 14px;
+    color: #cccccc;
+  }
+
+  .ne-meeting-interp-content-slider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+  .ne-interp-slider-icon {
+    color: #bfbfbf;
+  }
+  .ne-meeting-interp-content-listen {
+  }
+}

@@ -6,28 +6,76 @@
   display: flex;
   align-items: center;
   justify-content: end;
-  padding: 0 10px;
-  .iconfont {
-    width: 18px;
-    height: 18px;
-    line-height: 18px;
+  height: 50px;
+  margin-right: 12px;
+  -webkit-app-region: no-drag;
+  .close {
+   color: #F51D45;
+   width: 12px;
+   height: 12px;
   }
   .anticon,
   .iconfont {
-    padding: 2px;
     cursor: pointer;
-    margin-right: 5px;
-    color: #909194;
+    color: #53576A;
   }
-  .anticon,
-  .iconfont {
-    &:hover {
+  
+  .icon-top-button{
+    width: 32px;
+    height: 32px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .icon-zuixiaohua:hover{
+    background-color: #E6E7EB;
+  }
+   
+  .icon-zuidahua:hover{
+    background-color: #E6E7EB;
+  }
+ 
+
+  .icon-close:hover{
+    border-radius: 4px;
+    background-color: #F51D45;
+    .close{
       color: #fff;
-      background-color: #e5e5e5;
     }
-    &.close:hover {
+  }
+
+  .iconzuixiaohua_huaban1{
+    position: relative;
+    bottom: 2px;
+    width: 12px;
+    color: #53576A;
+  }
+  
+}
+.pc-top-buttons-small{
+  height: 24px;
+  margin-right: 0;
+  .icon-top-button{
+    width: 32px;
+    height: 24px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .icon-zuixiaohua{
+    padding-top: 3px;
+  }
+  .icon-close:hover{
+    border-radius: 0px;
+    background-color: #F51D45;
+    .close{
       color: #fff;
-      background-color: red;
     }
   }
 }

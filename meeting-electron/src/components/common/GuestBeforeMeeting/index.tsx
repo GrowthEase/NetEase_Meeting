@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { css, cx } from '@emotion/css'
 import { Button, Checkbox, Input } from 'antd'
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { isLastCharacterEmoji } from '../../../utils'
 import Toast from '../toast'
 import NEMeetingKit from '../../../index'
@@ -15,6 +15,12 @@ import {
 import { JoinOptions } from '../../../types'
 import Modal from '../Modal'
 import { useUpdateEffect } from 'ahooks'
+import { IPCEvent } from '../../../../app/src/types'
+
+interface CommonError {
+  code: number
+  msg: string
+}
 
 const guestBeforeMeetingContainerCls = css`
   width: 375px;
@@ -235,14 +241,17 @@ const GuestBeforeMeeting: React.FC<GuestBeforeMeetingProps> = (props) => {
       Toast.info(t('authPrivacyCheckedTips'))
       return false
     }
+
     return true
   }
 
   function handleInputChange(value: string) {
     setInputExtraShow(false)
     let userInput = value
+
     if (!isComposingRef.current) {
       let inputLength = 0
+
       for (let i = 0; i < userInput.length; i++) {
         // 检测字符是否为中文字符
         if (userInput.charCodeAt(i) > 127) {
@@ -250,6 +259,7 @@ const GuestBeforeMeeting: React.FC<GuestBeforeMeetingProps> = (props) => {
         } else {
           inputLength += 1
         }
+
         // 判断当前字符长度是否超过限制，如果超过则终止 for 循环
         if (inputLength > 20) {
           if (isLastCharacterEmoji(userInput)) {
@@ -257,11 +267,13 @@ const GuestBeforeMeeting: React.FC<GuestBeforeMeetingProps> = (props) => {
           } else {
             userInput = userInput.slice(0, i)
           }
+
           setInputExtraShow(true)
           break
         }
       }
     }
+
     setName(userInput)
   }
 
@@ -291,6 +303,7 @@ const GuestBeforeMeeting: React.FC<GuestBeforeMeetingProps> = (props) => {
           if (e) {
             reject(e)
           }
+
           resolve()
         }
       )
@@ -307,6 +320,7 @@ const GuestBeforeMeeting: React.FC<GuestBeforeMeetingProps> = (props) => {
       })
       .then((res) => {
         const { meetingUserUuid, meetingUserToken, meetingAuthType } = res
+
         NEMeetingKit.actions.login(
           {
             accountId: meetingUserUuid,
@@ -323,6 +337,7 @@ const GuestBeforeMeeting: React.FC<GuestBeforeMeetingProps> = (props) => {
                 video: videoOpen ? 1 : 2,
                 audio: audioOpen ? 1 : 2,
               }
+
               fetchJoin({
                 ...joinOptions,
               })
@@ -355,6 +370,7 @@ const GuestBeforeMeeting: React.FC<GuestBeforeMeetingProps> = (props) => {
                       />
                     )
                   }
+
                   if (e.code === 1020) {
                     passwordRef.current = ''
                     modal = Modal.confirm({
@@ -372,9 +388,12 @@ const GuestBeforeMeeting: React.FC<GuestBeforeMeetingProps> = (props) => {
                             password: passwordRef.current,
                           })
                           setInMeeting(true)
-                        } catch (e: any) {
-                          if (e.code === 1020) {
+                        } catch (e: unknown) {
+                          const error = e as CommonError
+
+                          if (error.code === 1020) {
                             modal.update({
+                              width: 375,
                               content: (
                                 <>
                                   {InputComponent(passwordRef.current)}
@@ -390,9 +409,10 @@ const GuestBeforeMeeting: React.FC<GuestBeforeMeetingProps> = (props) => {
                                 </>
                               ),
                             })
-                          } else if (e.code === 3102) {
+                          } else if (error.code === 3102) {
                             modal.destroy()
                           }
+
                           throw e
                         }
                       },
@@ -435,6 +455,7 @@ const GuestBeforeMeeting: React.FC<GuestBeforeMeetingProps> = (props) => {
         meetingServerDomain: domain, //会议服务器地址，支持私有化部署
         locale: i18next.language, //语言
       }
+
       NEMeetingKit.actions.init(0, 0, config, () => {
         console.log
       })
@@ -445,7 +466,6 @@ const GuestBeforeMeeting: React.FC<GuestBeforeMeetingProps> = (props) => {
         })
       })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useUpdateEffect(() => {
@@ -588,12 +608,13 @@ const GuestBeforeMeeting: React.FC<GuestBeforeMeetingProps> = (props) => {
                         onClick={(e) => {
                           if (window.ipcRenderer) {
                             window.ipcRenderer.send(
-                              'open-browser-window',
+                              IPCEvent.openBrowserWindow,
                               'https://meeting.163.com/privacy/agreement_mobile_ysbh_wap.shtml'
                             )
                             e.preventDefault()
                           }
                         }}
+                        rel="noreferrer"
                       >
                         {t('authPrivacy')}
                       </a>
@@ -605,12 +626,13 @@ const GuestBeforeMeeting: React.FC<GuestBeforeMeetingProps> = (props) => {
                         onClick={(e) => {
                           if (window.ipcRenderer) {
                             window.ipcRenderer.send(
-                              'open-browser-window',
+                              IPCEvent.openBrowserWindow,
                               'https://netease.im/meeting/clauses?serviceType=0'
                             )
                             e.preventDefault()
                           }
                         }}
+                        rel="noreferrer"
                       >
                         {t('authUserProtocol')}
                       </a>

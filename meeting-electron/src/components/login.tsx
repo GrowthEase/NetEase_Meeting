@@ -23,38 +23,42 @@ const Login: React.FC<LoginProps> = (props) => {
     null
   )
   const { neMeeting } = useContext<GlobalContextInterface>(GlobalContext)
-  const { eventEmitter, outEventEmitter } =
-    useContext<GlobalContextInterface>(GlobalContext)
+  const { outEventEmitter } = useContext<GlobalContextInterface>(GlobalContext)
   const { dispatch } =
     useContext<MeetingInfoContextInterface>(MeetingInfoContext)
-  const handleUsernameChange = (e: any) => {
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUsername(e.target.value)
   }
-  const handleTokenChange = (e: any) => {
+
+  const handleTokenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setToken(e.target.value)
   }
 
-  const handleMeetingIdChange = (e: any) => {
+  const handleMeetingIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMeetingId(e.target.value)
   }
-  const handleAudioChange = (e: any) => {
+
+  const handleAudioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     console.log('handleAudioChange', e)
     e.persist()
     setIsOpenAudio(e.target.checked)
   }
 
-  const handleVideoChange = (e: any) => {
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.persist()
     console.log('handleVideoChange', e)
     setIsOpenVideo(e.target.checked)
   }
-  const handleNicknameChange = (e: any) => {
+
+  const handleNicknameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNickname(e.target.value)
   }
-  const handlePasswordChange = (e: any) => {
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value)
   }
-  const handleAccountIdChange = (e: any) => {
+
+  const handleAccountIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAccountId(e.target.value)
   }
 
@@ -66,6 +70,7 @@ const Login: React.FC<LoginProps> = (props) => {
     const callback = () => {
       console.log('登录')
     }
+
     outEventEmitter?.emit(UserEventType.Login, { options, callback })
   }
 
@@ -73,6 +78,7 @@ const Login: React.FC<LoginProps> = (props) => {
     const callback = () => {
       console.log('登出')
     }
+
     outEventEmitter?.emit(UserEventType.Logout, { callback })
   }
 
@@ -84,35 +90,11 @@ const Login: React.FC<LoginProps> = (props) => {
     const callback = () => {
       console.log('密码登录')
     }
+
     outEventEmitter?.emit(UserEventType.LoginWithPassword, {
       options,
       callback,
     })
-  }
-
-  const createMeeting = () => {
-    neMeeting
-      ?.create({
-        meetingNum: '', // 1.随机会议，2.个人会议，3.预约会议
-        nickName: '',
-        video: 1,
-        audio: 1,
-        noChat: false,
-        attendeeAudioOff: false,
-        attendeeVideoOff: false,
-        password: '',
-        noSip: false,
-      })
-      .then(() => {
-        const meeting = neMeeting?.getMeetingInfo()
-        if (meeting) {
-          dispatch &&
-            dispatch({
-              type: ActionType.SET_MEETING,
-              data: meeting,
-            })
-        }
-      })
   }
 
   const joinMeeting = () => {
@@ -127,8 +109,10 @@ const Login: React.FC<LoginProps> = (props) => {
         console.log(e, 'joinMeeting')
         return
       }
+
       console.log('加入会议成功')
       const meeting = neMeeting?.getMeetingInfo()
+
       if (meeting) {
         dispatch &&
           dispatch({
@@ -137,6 +121,7 @@ const Login: React.FC<LoginProps> = (props) => {
           })
       }
     }
+
     outEventEmitter?.emit(UserEventType.JoinMeeting, { options, callback })
   }
 
@@ -152,8 +137,10 @@ const Login: React.FC<LoginProps> = (props) => {
         console.log(e, 'anonymousJoin')
         return
       }
+
       console.log('加入会议成功')
       const meeting = neMeeting?.getMeetingInfo()
+
       if (meeting) {
         dispatch &&
           dispatch({
@@ -162,6 +149,7 @@ const Login: React.FC<LoginProps> = (props) => {
           })
       }
     }
+
     outEventEmitter?.emit(UserEventType.AnonymousJoinMeeting, {
       options,
       callback,
@@ -170,6 +158,7 @@ const Login: React.FC<LoginProps> = (props) => {
 
   const checkStystem = async () => {
     const result = await neMeeting?.checkSystemRequirements()
+
     setSystemSupportFlag(result || false)
   }
 

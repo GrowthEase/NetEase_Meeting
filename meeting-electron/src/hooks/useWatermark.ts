@@ -7,11 +7,22 @@ import {
   WatermarkParams,
 } from '../utils/watermark'
 
-function useWatermark(params?: WatermarkParams): void {
+function useWatermark(params?: WatermarkParams & { disabled?: boolean }): void {
   const { meetingInfo } = useMeetingInfoContext()
 
   useEffect(() => {
-    if (meetingInfo) {
+    function replaceFormat(format: string, info: Record<string, string>) {
+      const regex = /{([^}]+)}/g
+      const result = format?.replace(regex, (match, key) => {
+        const value = info[key]
+
+        return value ? value : match // 如果值存在，则返回对应的值，否则返回原字符串
+      })
+
+      return result
+    }
+
+    if (meetingInfo && !params?.disabled) {
       const localMember = meetingInfo?.localMember
       const needDrawWatermark =
         meetingInfo.meetingNum &&
@@ -27,15 +38,8 @@ function useWatermark(params?: WatermarkParams): void {
           email: meetingInfo.watermarkConfig?.email || '',
           jobNumber: meetingInfo.watermarkConfig?.jobNumber || '',
         }
-        function replaceFormat(format: string, info: Record<string, string>) {
-          const regex = /{([^}]+)}/g
-          const result = format.replace(regex, (match, key) => {
-            const value = info[key]
-            return value ? value : match // 如果值存在，则返回对应的值，否则返回原字符串
-          })
-          return result
-        }
-        function draw() {
+
+        const draw = () => {
           stopDrawWatermark(params?.container)
           drawWatermark({
             content: replaceFormat(videoFormat, supportInfo),
@@ -43,6 +47,7 @@ function useWatermark(params?: WatermarkParams): void {
             ...params,
           })
         }
+
         draw()
         window.addEventListener('resize', draw)
         return () => {

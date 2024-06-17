@@ -8,13 +8,13 @@ import {
   useWaitingRoomContext,
 } from '../../../store'
 import { useTranslation } from 'react-i18next'
-import { Button, Switch, ActionSheet } from 'antd-mobile/es'
+import { Button, Switch, ActionSheet, Badge } from 'antd-mobile/es'
 import type { Action } from 'antd-mobile/es/components/action-sheet'
 import { ActionType, EventType } from '../../../types'
 import { NEMeetingLeaveType } from '../../../types/type'
 import { NERoomChatMessage } from '../../../types/innerType'
 import Dialog from '../ui/dialog'
-import { Badge } from 'antd-mobile/es'
+import classNames from 'classnames'
 import NEChatRoom from '../NEChatRoom'
 
 interface WaitRoomProps {
@@ -45,6 +45,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
     setCloseInfo(data)
     setShowCloseDialog(true)
   }
+
   const {
     isOffLine,
     meetingState,
@@ -63,6 +64,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
   const onLeaveRoom = () => {
     setShowExitAction(true)
   }
+
   const onClickOpenAudio = (isOpen: boolean) => {
     handleOpenAudio(!isOpen)
   }
@@ -70,15 +72,18 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
   useEffect(() => {
     const canvasView = document.getElementById('nemeetingWaitingRoomCanvas')
     const container = document.getElementById('neMeetingWaitingRoomH5')
+
     if (!canvasView || !container) {
       return
     }
+
     let disX = 0
     let disY = 0
 
     //拖动事件监听
     const move = (e: TouchEvent) => {
       const { clientX, clientY } = e.targetTouches[0]
+
       // 不能超过屏幕左右边界
       if (clientX - disX <= 2) {
         canvasView.style.left = '2px'
@@ -87,6 +92,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
       } else {
         canvasView.style.left = clientX - disX + 'px'
       }
+
       // 不能超过屏幕上下边界
       if (clientY - disY <= 2) {
         canvasView.style.top = '2px'
@@ -108,11 +114,13 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
       // 获取元素的宽高
       const { clientX, clientY } = e.targetTouches[0]
       const { left, top } = canvasView.getBoundingClientRect()
+
       disX = clientX - left
       disY = clientY - top
       canvasView.addEventListener('touchmove', move)
       canvasView.addEventListener('touchend', up)
     }
+
     // h5监听视频预览窗口touchstart touchmove touchend拖动事件进行拖动
     canvasView?.addEventListener('touchstart', start)
     return () => {
@@ -132,9 +140,11 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
     })
     outEventEmitter?.emit(EventType.RoomEnded, reason)
   }
+
   const onClickOpenVideo = (isOpen: boolean) => {
     handleOpenVideo(!isOpen)
   }
+
   const leaveMeetingRoom = async () => {
     try {
       await neMeeting?.leave()
@@ -149,6 +159,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
       )
     }
   }
+
   const actions: Action[] = [
     {
       text: t('meetingLeaveFull'),
@@ -167,11 +178,14 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
     return () => {
       eventEmitter?.off(EventType.ReceiveChatroomMessages)
     }
-  }, [])
+  }, [eventEmitter])
 
   return (
     <div
-      className={'nemeeting-waiting-room-h5 ne-meeting-app-h5'}
+      className={classNames(
+        'nemeeting-waiting-room-h5 ne-meeting-app-h5',
+        className
+      )}
       id="neMeetingWaitingRoomH5"
     >
       <div

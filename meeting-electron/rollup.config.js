@@ -95,10 +95,13 @@ function buildConfig(platform) {
         }),
         ...plugins,
       ],
+      /*
       treeshake: {
         moduleSideEffects: false,
       },
+      */
     },
+    /*
     {
       input: path.resolve(__dirname, 'src/index.tsx'),
       output: [
@@ -115,10 +118,8 @@ function buildConfig(platform) {
       ],
       external: Object.keys(pkg.dependencies || {}),
       plugins,
-      treeshake: {
-        moduleSideEffects: false,
-      },
     },
+    */
   ]
 }
 

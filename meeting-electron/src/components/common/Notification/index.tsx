@@ -55,14 +55,15 @@ const MeetingNotification: React.FC<MeetingNotificationProps> = ({
   const notificationApi = useMemo(() => {
     return notificationInstance || notification
   }, [notificationInstance, notification])
-  const { onNotificationClickHandler } = useNotificationHandle({
+
+  useNotificationHandle({
     neMeeting,
     notificationApi,
     beforeMeeting,
     isLocalSharingScreen: localMember.isSharingScreen,
     beforeMeetingJoin,
   })
-  function onReceiveSessionMessage(message: NECustomSessionMessage) {
+  function onSessionMessageReceived(message: NECustomSessionMessage) {
     if (
       (meetingInfo.meetingNum || beforeMeeting) &&
       !noMoreRemindSessionIdsRef.current.includes(message.sessionId)
@@ -79,6 +80,7 @@ const MeetingNotification: React.FC<MeetingNotificationProps> = ({
             // h5 删除所有通知
             isH5 && notificationApi?.destroy()
             let notificationContent: any = {}
+
             if (
               !isH5 &&
               beforeMeeting &&
@@ -136,6 +138,7 @@ const MeetingNotification: React.FC<MeetingNotificationProps> = ({
                                     message.sessionId
                                   )
                                 }
+
                                 if (
                                   item.action.startsWith(
                                     'meeting://open_plugin'
@@ -143,6 +146,7 @@ const MeetingNotification: React.FC<MeetingNotificationProps> = ({
                                 ) {
                                   onClickPlugin(item.action, isH5)
                                 }
+
                                 notificationApi?.destroy(message.messageId)
                               }}
                             >
@@ -177,13 +181,15 @@ const MeetingNotification: React.FC<MeetingNotificationProps> = ({
                                     message.sessionId
                                   )
                                 }
+
                                 if (
                                   item.action.startsWith(
                                     'meeting://open_plugin'
                                   )
                                 ) {
-                                  onClickPlugin(item.action)
+                                  onClickPlugin(item.action, isH5)
                                 }
+
                                 notificationApi?.destroy(message.messageId)
                               }}
                             >
@@ -213,14 +219,18 @@ const MeetingNotification: React.FC<MeetingNotificationProps> = ({
                 placement: isH5 ? 'bottom' : 'topRight',
               }
             }
+
             // 会中不需要弹窗
             if (type === 'MEETING.INVITE' && !beforeMeeting) {
               return
             }
+
             notificationApi?.open(notificationContent)
           }
         }
-      } catch {}
+      } catch (error) {
+        console.log('onSessionMessageReceived error', error)
+      }
     }
   }
 
@@ -240,7 +250,7 @@ const MeetingNotification: React.FC<MeetingNotificationProps> = ({
               notificationMessages: [...meetingInfo.notificationMessages],
             },
           })
-          onReceiveSessionMessage(message)
+          onSessionMessageReceived(message)
         }
       })
     } else {
@@ -250,6 +260,7 @@ const MeetingNotification: React.FC<MeetingNotificationProps> = ({
 
   useEffect(() => {
     const message = meetingInfo.notificationMessages[0]
+
     if (
       message &&
       message.beNotified === false &&
@@ -262,9 +273,8 @@ const MeetingNotification: React.FC<MeetingNotificationProps> = ({
           notificationMessages: [...meetingInfo.notificationMessages],
         },
       })
-      onReceiveSessionMessage(message)
+      onSessionMessageReceived(message)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     notificationApi,
     t,
@@ -282,6 +292,7 @@ const MeetingNotification: React.FC<MeetingNotificationProps> = ({
         const dataObj = customMessage.data as any
         const notifyCard = dataObj?.data?.notifyCard
         const type = dataObj.data.type
+
         if (
           notifyCard &&
           (type === 'MEETING.INVITE' || type === 'MEETING.SCHEDULE.START')
@@ -299,12 +310,15 @@ const MeetingNotification: React.FC<MeetingNotificationProps> = ({
           ]
           dataObj.data.notifyCard = notifyCard
         }
+
         customMessage.data = dataObj
       }
-      onReceiveSessionMessage(customMessage)
+
+      onSessionMessageReceived(customMessage)
     }
-  }, [customMessage])
+  }, [customMessage, t])
 
   return <></>
 }
+
 export default MeetingNotification

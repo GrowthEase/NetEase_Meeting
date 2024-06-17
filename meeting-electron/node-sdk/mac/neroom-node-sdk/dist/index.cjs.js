@@ -692,13 +692,13 @@ var NEAuthService = /** @class */ (function () {
             });
         });
     };
-    NEAuthService.prototype.loginByIM = function (account, dynamicToken, imToken) {
-        return new Promise(function (resolve, reject) {
+    NEAuthService.prototype.loginByIM = function () {
+        return new Promise(function () {
             // todo
         });
     };
-    NEAuthService.prototype.loginByDynamicToken = function (account, token) {
-        return new Promise(function (resolve, reject) {
+    NEAuthService.prototype.loginByDynamicToken = function () {
+        return new Promise(function () {
             // todo
         });
     };
@@ -718,25 +718,23 @@ var NEAuthService = /** @class */ (function () {
     NEAuthService.prototype.destroy = function () {
         this._authService.destroy();
     };
-    NEAuthService.prototype.renewToken = function (token) {
-        return new Promise(function (resolve, reject) {
+    NEAuthService.prototype.renewToken = function () {
+        return new Promise(function () {
             // todo
         });
     };
-    NEAuthService.TAG_NAME = 'NEAuthService';
     return NEAuthService;
 }());
 
 var NEMessageChannelService = /** @class */ (function () {
     function NEMessageChannelService(initOptions) {
         this._listenerMap = new Map();
-        this._messageSessionListenerMap = new Map();
         this._messageChannelService = initOptions.messageChannelService;
     }
     NEMessageChannelService.prototype.addMessageChannelListener = function (listener) {
-        var _onReceiveCustomMessage = listener.onReceiveCustomMessage;
-        if (_onReceiveCustomMessage) {
-            listener.onReceiveCustomMessage = function (message) {
+        var _onCustomMessageReceived = listener.onCustomMessageReceived;
+        if (_onCustomMessageReceived) {
+            listener.onCustomMessageReceived = function (message) {
                 var roomUuid = message.roomUuid, senderUuid = message.senderUuid, commandId = message.commandId, data = message.data;
                 var resData = data;
                 if (commandId === 99) {
@@ -744,7 +742,7 @@ var NEMessageChannelService = /** @class */ (function () {
                         body: data,
                     };
                 }
-                _onReceiveCustomMessage({
+                _onCustomMessageReceived({
                     roomUuid: roomUuid,
                     senderUuid: senderUuid,
                     commandId: commandId,
@@ -783,27 +781,8 @@ var NEMessageChannelService = /** @class */ (function () {
             });
         });
     };
-    NEMessageChannelService.prototype.sendCustomMessageToRoom = function (roomUuid, commandId, data) {
+    NEMessageChannelService.prototype.sendCustomMessageToRoom = function () {
         throw new Error('Method not implemented.');
-    };
-    NEMessageChannelService.prototype.addReceiveSessionMessageListener = function (listener) {
-        function _receiveSessionMessageListener(key) {
-            var args = [];
-            for (var _i = 1; _i < arguments.length; _i++) {
-                args[_i - 1] = arguments[_i];
-            }
-            if (listener[key]) {
-                listener[key].apply(listener, __spreadArray([], __read(args), false));
-            }
-        }
-        var index = this._messageChannelService.addReceiveSessionMessageListener(_receiveSessionMessageListener);
-        this._messageSessionListenerMap.set(listener, index);
-    };
-    NEMessageChannelService.prototype.removeReceiveSessionMessageListener = function (listener) {
-        var index = this._messageSessionListenerMap.get(listener);
-        if (index !== undefined) {
-            this._messageChannelService.removeReceiveSessionMessageListener(index);
-        }
     };
     NEMessageChannelService.prototype.queryUnreadMessageList = function (sessionId, sessionType) {
         var _this = this;
@@ -871,7 +850,7 @@ var NEMessageChannelService = /** @class */ (function () {
         });
     };
     NEMessageChannelService.prototype.destroy = function () {
-        return new Promise(function (resolve, reject) {
+        return new Promise(function () {
             // todo
         });
     };
@@ -970,10 +949,10 @@ var NERoomLiveController = /** @class */ (function () {
         return info;
     };
     //  不需要实现
-    NERoomLiveController.prototype.setLiveInfoFromRoomPropertiesLive = function (liveInfo) {
+    NERoomLiveController.prototype.setLiveInfoFromRoomPropertiesLive = function () {
         throw new Error('Method not implemented.');
     };
-    NERoomLiveController.prototype.setLiveInfo = function (liveInfo) {
+    NERoomLiveController.prototype.setLiveInfo = function () {
         throw new Error('Method not implemented.');
     };
     NERoomLiveController.prototype.addLiveStreamTask = function (taskInfo) {
@@ -1043,7 +1022,7 @@ var NERoomLiveController = /** @class */ (function () {
         });
     };
     // 不需要实现
-    NERoomLiveController.prototype._getUuidListByRtcUidList = function (rtcUidList) {
+    NERoomLiveController.prototype._getUuidListByRtcUidList = function () {
         throw new Error('Method not implemented.');
     };
     return NERoomLiveController;
@@ -1131,30 +1110,63 @@ var NERoomRtcController = /** @class */ (function () {
             });
         });
     };
-    NERoomRtcController.prototype.joinRtcChannel = function () {
+    NERoomRtcController.prototype.joinRtcChannel = function (channelName) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            _this._rtcController.joinRtcChannel(function (code, message) {
+            var callback = function (code, message) {
                 if (code === 0) {
                     return resolve(SuccessBody(null));
                 }
                 else {
                     return reject(FailureBodySync(null, message, code));
                 }
-            });
+            };
+            if (channelName) {
+                return _this._rtcController.joinRtcChannel(channelName, callback);
+            }
+            else {
+                return _this._rtcController.joinRtcChannel(callback);
+            }
         });
     };
-    NERoomRtcController.prototype.leaveRtcChannel = function () {
+    NERoomRtcController.prototype.leaveRtcChannel = function (channelName) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            _this._rtcController.leaveRtcChannel(function (code, message) {
+            var cb = function (code, message) {
                 if (code === 0) {
                     return resolve(SuccessBody(null));
                 }
                 else {
                     return reject(FailureBodySync(null, message, code));
                 }
-            });
+            };
+            if (channelName) {
+                return _this._rtcController.leaveRtcChannel(channelName, cb);
+            }
+            else {
+                return _this._rtcController.leaveRtcChannel(cb);
+            }
+        });
+    };
+    NERoomRtcController.prototype.enableMediaPub = function (channelName, mediaType, enable) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var code = _this._rtcController.enableMediaPub(channelName, mediaType, enable);
+            return code === 0
+                ? resolve(SuccessBody(null))
+                : reject(FailureBodySync(null));
+        });
+    };
+    NERoomRtcController.prototype.adjustChannelPlaybackSignalVolume = function (channelName, volume) {
+        this._rtcController.adjustChannelPlaybackSignalVolume(channelName, volume);
+    };
+    NERoomRtcController.prototype.enableLocalAudio = function (channelName, enable) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var code = _this._rtcController.enableLocalAudio(channelName, enable);
+            return code === 0
+                ? resolve(SuccessBody(null))
+                : reject(FailureBodySync(null));
         });
     };
     NERoomRtcController.prototype.muteMyAudio = function () {
@@ -1186,10 +1198,10 @@ var NERoomRtcController = /** @class */ (function () {
     NERoomRtcController.prototype.setupLocalVideoCanvas = function (videoView, mirroring) {
         return this._rtcController.setupLocalVideoCanvas(Buffer.from([]), !!mirroring);
     };
-    NERoomRtcController.prototype.setRemoteMemberMap = function (remoteMemberMap) {
+    NERoomRtcController.prototype.setRemoteMemberMap = function () {
         return SuccessBody(null);
     };
-    NERoomRtcController.prototype.setLocalMember = function (localMember) {
+    NERoomRtcController.prototype.setLocalMember = function () {
         return SuccessBody(null);
     };
     NERoomRtcController.prototype.setupRemoteVideoSubStreamCanvas = function (videoView, userUuid) {
@@ -1198,7 +1210,7 @@ var NERoomRtcController = /** @class */ (function () {
     NERoomRtcController.prototype.setupRemoteVideoCanvas = function (videoView, userUuid) {
         return this._rtcController.setupRemoteVideoCanvas(userUuid, Buffer.from([]));
     };
-    NERoomRtcController.prototype.setupRemoteStreamContext = function (userUuid, mediaType, context) {
+    NERoomRtcController.prototype.setupRemoteStreamContext = function () {
         return 0;
     };
     NERoomRtcController.prototype.getScreenSharingUserUuid = function () {
@@ -1207,10 +1219,10 @@ var NERoomRtcController = /** @class */ (function () {
     NERoomRtcController.prototype.setScreenSharingUserUuid = function (userUuid) {
         console.log('setScreenSharingUserUuid', userUuid);
     };
-    NERoomRtcController.prototype._getRtcUidByUuid = function (userUuid) {
+    NERoomRtcController.prototype._getRtcUidByUuid = function () {
         return 0;
     };
-    NERoomRtcController.prototype._getUuidByRtcUid = function (rtcUid) {
+    NERoomRtcController.prototype._getUuidByRtcUid = function () {
         return '';
     };
     NERoomRtcController.prototype.startScreenShare = function (screenConfig) {
@@ -1381,7 +1393,7 @@ var NERoomRtcController = /** @class */ (function () {
         var _a;
         (_a = this._rtcController) === null || _a === void 0 ? void 0 : _a.setAudioProfile(profile, scenario);
     };
-    NERoomRtcController.prototype.setLocalScreenProfile = function (profile) {
+    NERoomRtcController.prototype.setLocalScreenProfile = function () {
         // todo
     };
     // web 内部接口无须实现
@@ -1394,7 +1406,7 @@ var NERoomRtcController = /** @class */ (function () {
         });
     };
     // web 内部接口无须实现
-    NERoomRtcController.prototype.playLocalStream = function (type) {
+    NERoomRtcController.prototype.playLocalStream = function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 return [2 /*return*/, SuccessBody(null)];
@@ -1434,10 +1446,11 @@ var NERoomRtcController = /** @class */ (function () {
             });
         });
     };
-    NERoomRtcController.prototype.unmuteMyAudio = function () {
+    NERoomRtcController.prototype.unmuteMyAudio = function (enableMediaPub) {
         var _this = this;
+        if (enableMediaPub === void 0) { enableMediaPub = true; }
         return new Promise(function (resolve, reject) {
-            _this._rtcController.unmuteMyAudio(function (code, message) {
+            _this._rtcController.unmuteMyAudio(enableMediaPub, function (code, message) {
                 if (code === 0) {
                     return resolve(SuccessBody(null));
                 }
@@ -1470,23 +1483,28 @@ var NERoomRtcController = /** @class */ (function () {
         return this.switchDevice({ type: 'speaker', deviceId: deviceId });
     };
     // web内部使用无需实现
-    NERoomRtcController.prototype.addLiveStreamTask = function (taskInfo) {
+    NERoomRtcController.prototype.addLiveStreamTask = function () {
         return Promise.resolve(SuccessBody(null));
     };
     // web内部使用无需实现
-    NERoomRtcController.prototype.updateLiveStreamTask = function (taskInfo) {
+    NERoomRtcController.prototype.updateLiveStreamTask = function () {
         return Promise.resolve(SuccessBody(null));
     };
-    NERoomRtcController.prototype.removeLiveStreamTask = function (taskId) {
+    NERoomRtcController.prototype.removeLiveStreamTask = function () {
         return Promise.resolve(SuccessBody(null));
     };
-    NERoomRtcController.prototype.enableAudioVolumeIndication = function (enable, interval) {
-        return this._rtcController.enableAudioVolumeIndication(enable, interval);
+    NERoomRtcController.prototype.enableAudioVolumeIndication = function (enable, interval, enableVad, channelName) {
+        if (channelName) {
+            return this._rtcController.enableAudioVolumeIndication(channelName, enable, interval, !!enableVad);
+        }
+        else {
+            return this._rtcController.enableAudioVolumeIndication(!!enable, interval);
+        }
     };
-    NERoomRtcController.prototype.pushExternalVideoFrame = function (videoSource) {
+    NERoomRtcController.prototype.pushExternalVideoFrame = function () {
         throw new Error('Method not implemented.');
     };
-    NERoomRtcController.prototype.seExternalVideoSource = function (enable) {
+    NERoomRtcController.prototype.seExternalVideoSource = function () {
         throw new Error('Method not implemented.');
     };
     NERoomRtcController.prototype.enableEarBack = function () {
@@ -1499,50 +1517,50 @@ var NERoomRtcController = /** @class */ (function () {
     NERoomRtcController.prototype.disableEarBack = function () {
         throw new Error('Method not implemented.');
     };
-    NERoomRtcController.prototype.startAudioMixing = function (option) {
+    NERoomRtcController.prototype.startAudioMixing = function () {
         throw new Error('Method not implemented.');
     };
-    NERoomRtcController.prototype.playEffect = function (effectId, option) {
+    NERoomRtcController.prototype.playEffect = function () {
         throw new Error('Method not implemented.');
     };
     NERoomRtcController.prototype.stopAudioMixing = function () {
         throw new Error('Method not implemented.');
     };
-    NERoomRtcController.prototype.stopEffect = function (effectId) {
+    NERoomRtcController.prototype.stopEffect = function () {
         throw new Error('Method not implemented.');
     };
-    NERoomRtcController.prototype.setAudioMixingPlaybackVolume = function (volume) {
+    NERoomRtcController.prototype.setAudioMixingPlaybackVolume = function () {
         throw new Error('Method not implemented.');
     };
-    NERoomRtcController.prototype.setEffectSendVolume = function (volume) {
+    NERoomRtcController.prototype.setEffectSendVolume = function () {
         throw new Error('Method not implemented.');
     };
     NERoomRtcController.prototype.stopAllEffects = function () {
         throw new Error('Method not implemented.');
     };
     // 不需要实现
-    NERoomRtcController.prototype.replayRemoteStream = function (options) {
+    NERoomRtcController.prototype.replayRemoteStream = function () {
         throw new Error('Method not implemented.');
     };
     NERoomRtcController.prototype.adjustRecordingSignalVolume = function (volume) {
         return this._rtcController.adjustRecordingSignalVolume(Number(volume * 4));
     };
-    NERoomRtcController.prototype.pauseEffect = function (effectId) {
+    NERoomRtcController.prototype.pauseEffect = function () {
         throw new Error('Method not implemented.');
     };
     NERoomRtcController.prototype.pauseAllEffects = function () {
         throw new Error('Method not implemented.');
     };
-    NERoomRtcController.prototype.resumeEffect = function (effectId) {
+    NERoomRtcController.prototype.resumeEffect = function () {
         throw new Error('Method not implemented.');
     };
     NERoomRtcController.prototype.resumeAllEffects = function () {
         throw new Error('Method not implemented.');
     };
-    NERoomRtcController.prototype.getEffectDuration = function (options) {
+    NERoomRtcController.prototype.getEffectDuration = function () {
         throw new Error('Method not implemented.');
     };
-    NERoomRtcController.prototype.setChannelProfile = function (options) {
+    NERoomRtcController.prototype.setChannelProfile = function () {
         throw new Error('Method not implemented.');
     };
     NERoomRtcController.prototype.enableLocalSubStreamAudio = function () {
@@ -1652,6 +1670,35 @@ var NERoomRtcController = /** @class */ (function () {
     NERoomRtcController.prototype.stopAudioDump = function () {
         return this._rtcController.stopAudioDump();
     };
+    NERoomRtcController.prototype.getPlayoutDeviceMute = function () {
+        return this._rtcController.getPlayoutDeviceMute();
+    };
+    NERoomRtcController.prototype.takeRemoteSnapshot = function (userUuid, streamType) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._rtcController.takeRemoteSnapshot(userUuid, streamType, function (code, message, data) {
+                if (code === 0) {
+                    return resolve(SuccessBody(data));
+                }
+                else {
+                    return reject(FailureBodySync(null, message, code));
+                }
+            });
+        });
+    };
+    NERoomRtcController.prototype.takeLocalSnapshot = function (streamType) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._rtcController.takeLocalSnapshot(streamType, function (code, message, data) {
+                if (code === 0) {
+                    return resolve(SuccessBody(data));
+                }
+                else {
+                    return reject(FailureBodySync(null, message, code));
+                }
+            });
+        });
+    };
     return NERoomRtcController;
 }());
 
@@ -1714,10 +1761,10 @@ var NERoomChatController = /** @class */ (function () {
             });
         });
     };
-    NERoomChatController.prototype.updateMyChatroomMemberInfo = function (options) {
+    NERoomChatController.prototype.updateMyChatroomMemberInfo = function () {
         throw new Error('Method not implemented.');
     };
-    NERoomChatController.prototype.fetchChatRoomMembers = function (type, limit) {
+    NERoomChatController.prototype.fetchChatRoomMembers = function () {
         throw new Error('Method not implemented.');
     };
     NERoomChatController.prototype.sendBroadcastTextMessage = function (message, chatroomType) {
@@ -1921,7 +1968,7 @@ var NERoomWhiteboardController = /** @class */ (function () {
         this.isJoinedWhiteboard = true;
         this._roomWhiteboardController = initOptions.roomWhiteboardController;
     }
-    NERoomWhiteboardController.prototype.setWhiteboardNeedInfo = function (params) {
+    NERoomWhiteboardController.prototype.setWhiteboardNeedInfo = function () {
         throw new Error('Method not implemented.');
     };
     NERoomWhiteboardController.prototype.initWhiteboard = function () {
@@ -1949,7 +1996,7 @@ var NERoomWhiteboardController = /** @class */ (function () {
         this._roomWhiteboardController.setupWhiteboardCanvas(_viewCallBack);
         return Promise.resolve(SuccessBody(null));
     };
-    NERoomWhiteboardController.prototype.resetWhiteboardCanvas = function (view) {
+    NERoomWhiteboardController.prototype.resetWhiteboardCanvas = function () {
         throw new Error('Method not implemented.');
     };
     NERoomWhiteboardController.prototype.startWhiteboardShare = function () {
@@ -2007,10 +2054,10 @@ var NERoomWhiteboardController = /** @class */ (function () {
             }
         });
     };
-    NERoomWhiteboardController.prototype.setCanvasBackgroundColor = function (color) {
+    NERoomWhiteboardController.prototype.setCanvasBackgroundColor = function () {
         throw new Error('Method not implemented.');
     };
-    NERoomWhiteboardController.prototype.lockCameraWithContent = function (width, height) {
+    NERoomWhiteboardController.prototype.lockCameraWithContent = function () {
         throw new Error('Method not implemented.');
     };
     NERoomWhiteboardController.prototype.destroy = function () {
@@ -2186,16 +2233,30 @@ var NEWaitingRoomController = /** @class */ (function () {
             });
         });
     };
+    NEWaitingRoomController.prototype.getWaitingRoomManagerList = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var _a;
+            (_a = _this._waitingRoomController) === null || _a === void 0 ? void 0 : _a.getWaitingRoomManagerList(function (code, message, data) {
+                if (code === 0) {
+                    return resolve(SuccessBody(data));
+                }
+                else {
+                    return reject(FailureBodySync(null, message, code));
+                }
+            });
+        });
+    };
     /**
      * @ignore 不对外暴露
      */
-    NEWaitingRoomController.prototype.on = function (eventName, callback) {
+    NEWaitingRoomController.prototype.on = function () {
         throw new Error('Method not implemented.');
     };
     /**
      * @ignore 不对外暴露
      */
-    NEWaitingRoomController.prototype.off = function (eventName, callback) {
+    NEWaitingRoomController.prototype.off = function () {
         throw new Error('Method not implemented.');
     };
     return NEWaitingRoomController;
@@ -2426,6 +2487,136 @@ var NERoomAppInviteController = /** @class */ (function () {
     return NERoomAppInviteController;
 }());
 
+var NERoomAnnotationController = /** @class */ (function () {
+    function NERoomAnnotationController(initOptions) {
+        this.isSupported = true;
+        this._roomAnnotationController = initOptions.roomAnnotationController;
+    }
+    NERoomAnnotationController.prototype.getWhiteboardUrl = function () {
+        return 'https://roomkit.netease.im/static/wbsdk/3.9.13/g2/webview.html';
+    };
+    NERoomAnnotationController.prototype.isAnnotationEnabled = function () {
+        return this._roomAnnotationController.getIsAnnotationEnabled();
+    };
+    NERoomAnnotationController.prototype.login = function () {
+        return this._roomAnnotationController.login();
+    };
+    NERoomAnnotationController.prototype.logout = function () {
+        return this._roomAnnotationController.logout();
+    };
+    NERoomAnnotationController.prototype.auth = function () {
+        return this._roomAnnotationController.auth();
+    };
+    NERoomAnnotationController.prototype.setupCanvas = function (view) {
+        function _viewCallBack(key) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
+            if (key === 'onLogin' || key === 'onLogout' || key === 'onAuth') {
+                view[key].apply(view, __spreadArray([], __read(args), false));
+            }
+        }
+        this._annotationView = view;
+        this._roomAnnotationController.setupAnnotationCanvas(_viewCallBack);
+    };
+    NERoomAnnotationController.prototype.resetCanvas = function (view) {
+        function _viewCallBack(key) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
+            if (key === 'onLogin' || key === 'onLogout' || key === 'onAuth') {
+                view === null || view === void 0 ? void 0 : view[key].apply(view, __spreadArray([], __read(args), false));
+            }
+        }
+        this._annotationView = view;
+        this._roomAnnotationController.resetAnnotationCanvas(_viewCallBack);
+    };
+    NERoomAnnotationController.prototype.startAnnotation = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._roomAnnotationController.startAnnotationShare(function (code, message) {
+                if (code === 0) {
+                    resolve(SuccessBody(null));
+                }
+                else {
+                    reject(FailureBodySync({ code: code, message: message }));
+                }
+            });
+        });
+    };
+    NERoomAnnotationController.prototype.stopAnnotation = function () {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            _this._roomAnnotationController.stopAnnotationShare(function (code, message) {
+                if (code === 0) {
+                    resolve(SuccessBody(null));
+                }
+                else {
+                    reject(FailureBodySync({ code: code, message: message }));
+                }
+            });
+        });
+    };
+    NERoomAnnotationController.prototype.setEnableDraw = function (enable) {
+        var _a, _b, _c, _d;
+        var opt = {
+            action: 'jsDirectCall',
+            param: {
+                action: 'enableDraw',
+                params: [enable],
+                target: 'drawPlugin',
+            },
+        };
+        (_a = this._annotationView) === null || _a === void 0 ? void 0 : _a.onDrawEnableChanged("WebJSBridge(".concat(JSON.stringify(opt), ");"));
+        if (enable) {
+            (_b = this._annotationView) === null || _b === void 0 ? void 0 : _b.onToolConfigChanged("WebJSBridge({\"action\":\"jsDirectCall\",\"param\":{\"action\":\"show\",\"params\":[],\"target\":\"toolCollection\"}});");
+            var tool = {
+                action: 'jsDirectCall',
+                param: {
+                    action: 'setVisibility',
+                    target: 'toolCollection',
+                    params: [
+                        {
+                            bottomRight: {
+                                visible: false,
+                            },
+                            bottomLeft: {
+                                visible: false,
+                            },
+                            topRight: {
+                                visible: false,
+                            },
+                            left: {
+                                visible: true,
+                                exclude: [
+                                    'pan',
+                                    'image',
+                                    'exportImage',
+                                    'uploadLog',
+                                    'uploadCenter',
+                                ],
+                            },
+                        },
+                    ],
+                },
+            };
+            (_c = this._annotationView) === null || _c === void 0 ? void 0 : _c.onToolConfigChanged("WebJSBridge(".concat(JSON.stringify(tool), ");"));
+        }
+        else {
+            (_d = this._annotationView) === null || _d === void 0 ? void 0 : _d.onToolConfigChanged("WebJSBridge({\"action\":\"jsDirectCall\",\"param\":{\"action\":\"hide\",\"params\":[],\"target\":\"toolCollection\"}});");
+        }
+    };
+    NERoomAnnotationController.prototype.destroy = function () {
+        return Promise.resolve(SuccessBody(null));
+    };
+    NERoomAnnotationController.prototype.setAnnotationState = function (state) {
+        throw new Error("Method not implemented. setAnnotationState : ".concat(state));
+    };
+    return NERoomAnnotationController;
+}());
+
 var NERoomContext = /** @class */ (function () {
     // private _eventEmitter: EventEmitter
     function NERoomContext(initOptions) {
@@ -2433,7 +2624,7 @@ var NERoomContext = /** @class */ (function () {
         this._rtcStatsListenerMap = new Map();
         this._roomContext = initOptions.roomService.getRoomContext(initOptions.roomUuid);
     }
-    NERoomContext.prototype.initialize = function (options) {
+    NERoomContext.prototype.initialize = function () {
         return Promise.resolve();
     };
     Object.defineProperty(NERoomContext.prototype, "isInitialize", {
@@ -2636,6 +2827,18 @@ var NERoomContext = /** @class */ (function () {
                 });
             }
             return this._roomWhiteboardController;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(NERoomContext.prototype, "annotationController", {
+        get: function () {
+            if (!this._roomAnnotationController) {
+                this._roomAnnotationController = new NERoomAnnotationController({
+                    roomAnnotationController: this._roomContext.getAnnotationController(),
+                });
+            }
+            return this._roomAnnotationController;
         },
         enumerable: false,
         configurable: true
@@ -2992,13 +3195,13 @@ var NERoomContext = /** @class */ (function () {
     /**
      * @ignore 不对外暴露
      */
-    NERoomContext.prototype.on = function (eventName, callback) {
+    NERoomContext.prototype.on = function () {
         throw new Error('Method not implemented.');
     };
     /**
      * @ignore 不对外暴露
      */
-    NERoomContext.prototype.off = function (eventName, callback) {
+    NERoomContext.prototype.off = function () {
         throw new Error('Method not implemented.');
     };
     NERoomContext.prototype.destroy = function () {
@@ -3044,7 +3247,7 @@ var NEPreviewController = /** @class */ (function () {
     /**
      * 开始测试麦克风
      */
-    NEPreviewController.prototype.startRecordDeviceTest = function (callback) {
+    NEPreviewController.prototype.startRecordDeviceTest = function () {
         var _this = this;
         // todo 需要处理回调
         return new Promise(function (resolve, reject) {
@@ -3119,7 +3322,6 @@ var NEPreviewController = /** @class */ (function () {
             var code;
             return __generator(this, function (_a) {
                 code = -1;
-                console.log('switchDevice');
                 switch (params.type) {
                     case 'camera':
                         code = this._preRtcController.selectCameraDevice(params.deviceId);
@@ -3338,7 +3540,7 @@ var NERoomService = /** @class */ (function () {
     };
     NERoomService.prototype.previewRoom = function (params, options) {
         var _this = this;
-        return new Promise(function (resolve, reject) {
+        return new Promise(function (resolve) {
             _this._roomService.previewRoom(params, options, function (code, message, previewRoomContext) {
                 if (code === 0) {
                     resolve({ code: code, message: null, data: previewRoomContext });
@@ -3425,9 +3627,11 @@ var NERoomService = /** @class */ (function () {
                 }
             });
         }
-        if (typeof params.password === 'undefined') {
-            params.password = '';
-        }
+        Object.keys(params).forEach(function (key) {
+            if (typeof params[key] === 'undefined') {
+                delete params[key];
+            }
+        });
         var func = type === 'joinRoom'
             ? this._roomService.joinRoom.bind(this._roomService)
             : this._roomService.joinRoomByInvite.bind(this._roomService);
@@ -3527,6 +3731,24 @@ var Roomkit = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
+    Roomkit.prototype.getService = function (type) {
+        if (type === 'roomService') {
+            return this.roomService;
+        }
+        else if (type === 'authService') {
+            return this.authService;
+        }
+        else if (type === 'messageService') {
+            return this.messageChannelService;
+        }
+    };
+    Object.defineProperty(Roomkit.prototype, "deviceId", {
+        get: function () {
+            return this._roomkit.getDeviceId();
+        },
+        enumerable: false,
+        configurable: true
+    });
     Roomkit.prototype.switchLanguage = function (language) {
         var roomLanguageMap = {
             default: 0,
@@ -3574,10 +3796,10 @@ var Roomkit = /** @class */ (function () {
     Roomkit.prototype.removeGlobalEventListener = function (listener) {
         this._roomkit.removeGlobalEventListener(listener);
     };
-    Roomkit.prototype.reuseIM = function (NIM) {
+    Roomkit.prototype.reuseIM = function () {
         // todo
     };
-    Roomkit.prototype.emit = function (eventName, data) {
+    Roomkit.prototype.emit = function () {
         // todo
     };
     Roomkit.prototype.uploadLog = function () {

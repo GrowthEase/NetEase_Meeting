@@ -22,11 +22,15 @@ export default {
   networkUnavailableCloseFail: `Ending meeting failed due to the network error`,
   globalCancel: 'Cancel',
   globalSure: 'OK',
+  copyMeetingIdTip: `Copy meeting ID`,
+  comingSoon: 'Coming soon',
+
   meetingBeauty: `Beauty`,
   meetingBeautyLevel: `Level`,
   meetingJoinTips: `Joining ${meeting}...`,
   globalClose: `Close`,
   globalOpen: `Open`,
+  globalDelete: 'delete',
   participants: `${attendee}`, // 会议成员列表标题
   meetingJoinFail: `Failed to join the meeting`,
   reJoinMeetingFail: `Failed to rejoin ${meeting}`,
@@ -99,6 +103,10 @@ export default {
   notify: 'Notification',
   meetingSwitchOtherDevice: `You are removed by ${host} or switched to another device, you have left ${meeting}`,
   sure: 'OK',
+  yesterday: 'Yesterday',
+  timeZone: 'Time Zone',
+  sponsorMeeting: 'Sponsor Meeting',
+  timezone: 'Time Zone',
   // forbiddenByHostVideo: `${host} stopped your video`,
   participantOpenCamera: 'Turn on camera',
   participantHostOpenCameraTips: `${host} requests to turn on your camera. Turn on the camera?`,
@@ -109,6 +117,9 @@ export default {
   participantSetHost: 'Set as host',
   participantSetCoHost: 'Set as co-host',
   participantCancelCoHost: 'Cancel the co-host',
+  meetingInviteUrlTips: 'Copy the invitation link',
+  meetingRoomScreenCasting: 'Screen sharing',
+  meetingLiveMode: 'Live',
 
   screenShare: 'ShareScreen',
   screenShareTips: 'All content on your screen is being captured.',
@@ -488,6 +499,7 @@ export default {
   downloadPath: 'Chat room file saving path',
   chosePath: 'Select',
   language: 'Language',
+  chooseLanguage: 'Select Language',
   file: 'File',
 
   notification: 'Notification',
@@ -552,7 +564,9 @@ export default {
   allMeeting: 'All Meetings',
   app: 'Apps',
   collectMeeting: 'Favorites',
+  meetingRepeatQuit: 'End',
   operations: 'Operation',
+  nickname: 'Nickname',
   collect: 'Favorite',
   cancelCollect: 'Cancel',
   collectSuccess: 'Success',
@@ -592,10 +606,13 @@ export default {
   beautyEffect: 'Beauty effect',
   virtualBackground: 'Virtual background',
   addLocalImage: 'Add local image',
+  settingVoicePriorityDisplay: 'Voice priority display',
   emptyVirtualBackground: 'Empty',
   virtualBackgroundError1: 'Custom background image does not exist',
   virtualBackgroundError2: 'Invalid image format for custom background image',
   virtualBackgroundError3: 'Invalid color format for custom background image',
+  settingVoicePriorityDisplayTip:
+    'Once activated, it will prioritize displaying speaking participants.',
   virtualBackgroundError4:
     'The device does not support the use of virtual backgrounds',
   virtualBackgroundError5: 'Failed to turn on virtual background',
@@ -695,7 +712,7 @@ export default {
   authResetInitialPasswordTitle: 'Set a new password',
   authModifyPasswordSuccess: 'Success',
   authUnavailable: 'None',
-  authMobileNum: 'Mobile phone number',
+  authMobileNum: 'Mobile phone',
   authEnterCheckCode: 'Please enter the verification code',
   authGetCheckCode: 'Get code',
   authResendCode: '',
@@ -732,7 +749,7 @@ export default {
   settingConfirmExitApp: 'Confirm to exit the app',
 
   meetingPinView: 'Lock video',
-  meetingPinViewTip: 'The video is locked, tap unlock at {corner} to unlock',
+  meetingPinViewTip: 'The video is locked, tap unlock at {{corner}} to unlock',
   meetingTopLeftCorner: 'top left corner',
   meetingBottomRightCorner: 'bottom right corner',
   meetingUnpinView: 'Unlock video',
@@ -914,6 +931,7 @@ export default {
   sipSearchContacts: 'Search and add participants',
   sipCallPhone: 'Phone call',
   participantNotJoined: 'Not joined',
+  participantJoining: 'Be joining',
   sipCallCancel: 'Cancel call',
   sipCallAgainEx: 'Call again',
   sipCallStatusRejected: 'Rejected',
@@ -945,4 +963,129 @@ export default {
   meetingOpen: 'Show',
   meetingClose: 'Fold',
   meetingAttendeeCount: '{{count}} people',
+  // 同声传译
+
+  globalUpdate: 'Update',
+  globalLang: 'Language',
+  globalView: 'View',
+  interpretation: 'Interpretation',
+  interpInterpreter: 'Interpreter',
+  interpSelectInterpreter: 'Select interpreter',
+  interpInfoIncompleteTitle:
+    'The user has been selected as a interpreter and cannot be selected again',
+  interpInterpreterAlreadyExists: 'Interpreter information is incomplete',
+  interpInfoIncompleteMsg:
+    'Quitting will remove interpreters with incomplete information',
+  interpStart: 'Start',
+  interpStartNotification: 'The host has started simultaneous interpretation',
+  interpStop: 'Stop interpretation',
+  interpStopNotification: 'The host has turned off simultaneous interpretation',
+  interpConfirmStopMsg:
+    'Turning off simultaneous interpretation will turn off all listening channels. Do you want to turn it off?',
+  interpConfirmUpdateMsg: 'Update?',
+  interpConfirmCancelEditMsg: 'Are you sure to cancel the settings ?',
+  interpSelectListenLanguage: 'Please select a listening language',
+  interpSelectLanguage: 'Select language',
+  interpAddLanguage: 'Add',
+  interpInputLanguage: 'Input',
+  interpLanguageAlreadyExists: 'Language already exists',
+  interpListenMajorAudioMeanwhile: 'Listen to the original sound',
+  interpManagement: 'Manage interpretation',
+  interpSettings: 'Set up',
+  interpMajorAudio: 'Original sound',
+  interpMajorChannel: 'Main',
+  interpMajorAudioVolume: 'Original volume',
+  interpAddInterperter: 'Add interpreter',
+  interpJoinChannelErrorMsg:
+    'Failed to join the interpretation channel. Do you want to rejoin?',
+  interpReJoinChannel: 'Rejoin',
+  interpAssignInterpreter: 'You have become the interpreter of this meeting',
+  interpAssignLanguage: 'Language',
+  interpSpeakerTip:
+    'You are listening to {{language1}} and saying {{language2}}',
+  interpOutputLanguage: 'Translation language',
+  interpRemoveInterpreterOnly: 'Only delete interpreter',
+  interpRemoveInterpreterInMembers: 'Delete from participants',
+  interpRemoveMemberInInterpreters:
+    'The participant is also assigned as an interpreter. Deleting the participant will cancel the interpreter assignment at the same time.',
+  interpSettingTip:
+    'You can set the listening language and translation language in "Interpretation"',
+  interpUnassignInterpreter:
+    'You have been removed from interpreters by the host',
+  interpLanguageRemoved:
+    'The host has deleted the listening language "{{language}}"',
+  interpInterpreterOffline:
+    'All the interpreters have left the channel you are listening to . Would you like to switch back to the original sound ?',
+  interpDontSwitch: 'Not Now',
+  interpSwitchToMajorAudio: 'Switch back',
+  interpAudioShareIsForbiddenDesktop:
+    'As an interpreter, you will not be able to share your computer voice when sharing the screen',
+  interpInterpreterInMeetingStatusChanged:
+    'Interpreter participation status has changed',
+  interpListeningChannelDisconnect:
+    'The listening language channel has been disconnected, trying to reconnect',
+  interpSpeakingChannelDisconnect:
+    'The interpreter language channel has been disconnected, trying to reconnect',
+  langChinese: 'Chinese',
+  langEnglish: 'English',
+  langJapanese: 'Japanese',
+  langKorean: 'Korean',
+  langFrench: 'French',
+  langGerman: 'German',
+  langSpanish: 'Spanish',
+  langRussian: 'Russian',
+  langPortuguese: 'Portuguese',
+  langItalian: 'Italian',
+  langTurkish: 'Turkish',
+  langVietnamese: 'Vietnamese',
+  langThai: 'Thai',
+  langIndonesian: 'Indonesian',
+  langMalay: 'Malay',
+  langArabic: 'Arabic',
+  langHindi: 'Hindi',
+
+  // 批注
+  annotation: 'Annotate',
+  annotationEnabled: 'Annotation enabled',
+  annotationDisabled: 'Annotation disabled',
+  startAnnotation: 'Annotate',
+  stopAnnotation: 'Exit annotation',
+  inAnnotation: 'Annotating',
+  saveAnnotation: 'Save annotations',
+
+  // 登录优化
+  authHowToGetCorpCode: 'How to get the enterprise code?',
+  authGetCorpCodeFromAdmin:
+    'You can obtain it from your enterprise administrator.',
+  authIKnowCorpCode: 'Enterprise code',
+  authIDontKnowCorpCode: 'Enterprise email',
+  authTypeAccountPwd: 'Account',
+  authLoginByAccountPwd: 'Password',
+  authLoginByMobilePwd: 'Phone Account',
+  authLoginByEmailPwd: 'Email Account',
+  authOtherLoginTypes: 'More options',
+  authSSONotSupport: 'SSO login is not supported.',
+
+  meetingMaxMembers: 'Maximum participants',
+  speakerVolumeMuteTips:
+    'The speaker device is silent. Please check whether the system speakers have been unmuted and adjusted to the appropriate volume.',
+
+  // 人数上限
+  openWaitingRoom: 'Open waiting room',
+  participantUpperLimitWaitingRoomTip:
+    'The number of participants has reached  the limit , it is recommended to use the waiting room.',
+  participantUpperLimitReleaseSeatsTip:
+    'The number of participants has reached  the limit , and new participants will not be able to join the meeting.You can try removing not-joined members or releasing a seat in the meeting.',
+  participantUpperLimitTipAdmitOtherTip:
+    'The number of participants has reached  the limit . Please remove an unjoined member or release a seat in the meeting before admitting a member to the waiting room.',
+  meetingSearchNotFound: 'No search results',
+
+  // 周期会议详情
+  meetingRepeatDayInWeek:
+    'The meeting will repeat on {{day}} every {{week}} week(s)',
+  meetingRepeatDay: 'The meeting will repeat every {{day}} day(s)',
+  meetingRepeatDayInMonth:
+    'The meeting will repeat on  {{day}} every {{month}} month(s)',
+  meetingRepeatDayInWeekInMonth:
+    'The meeting will repeat on  No.{{week}}  {{weekday}} every {{month}} month(s)',
 }

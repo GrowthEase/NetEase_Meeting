@@ -27,6 +27,7 @@ export default {
   meetingJoinTips: `正在进入${meeting}...`, // 加入会议Loading提示信息
   globalClose: `关闭`, // 通用
   globalOpen: `打开`, // 通用
+  globalDelete: '删除',
   participants: `${attendee}`, // 会议成员列表标题
   meetingJoinFail: `加入会 议失败`, //  加入会议失败提示
   reJoinMeetingFail: `重新加入${meeting}失败`, // 重试加入会议失败提示
@@ -47,6 +48,7 @@ export default {
   participantUnMuteAllAudioFail: '解除全体静音失败', //解除全体静音失败提示消息
   leaveByHost: `您已被${host}移出会议`,
   leaveBySelf: `您已在其他设备登录`,
+  meetingLiveMode: '直播模式',
 
   participantTurnOffVideos: '全体关闭视频',
   participantMuteVideoAllDialogTips: '所有以及新加入成员将被关闭视频',
@@ -137,6 +139,7 @@ export default {
   meetingUnLockMeetingByHost: `${meeting}已解锁，新${attendee}将可以加入${meeting}`, //解锁会议成功主持人端提示
   meetingUnLockMeetingByHostFail: `${meeting}解锁失败`, //解锁会议失败提示
   coHostLimit: `${coHost}已达到上限`,
+  nickname: '昵称', //昵称
   // 聊天室相关
   // send: '发送', //通用
   // inputMessageHint: '输入消息...', //聊天室输入框hint
@@ -179,6 +182,7 @@ export default {
   undoWhiteBoardInteractFail: '取消白板互动失败', //主持人操作成员撤回白板失败提示
   sip: 'SIP电话/终端入会',
   sipTip: 'sip',
+  meetingInviteUrlTip: '邀请链接',
   // 直播相关
   live: '直播', //直播功能
   liveUrl: '直播观看地址', //直播功能
@@ -203,6 +207,8 @@ export default {
   memberNotInMeeting: `成员不在${meeting}中`,
   cannotSubscribeSelfAudio: '不能订阅自己的音频',
   partMemberNotInMeeting: `部分成员不在${meeting}中`,
+  copyMeetingIdTip: '点击复制会议号',
+  comingSoon: '即将上线，敬请期待',
   //补充
   commonTitle: '提示', // 通用二次提示title
   inviteBtn: '会议邀请', // 邀请按钮
@@ -284,6 +290,7 @@ export default {
   disconnected: '网络已断开，正在尝试重新连接…',
   unmute: '暂时取消静音',
   searchName: '输入姓名进行搜索',
+  meetingRepeatQuit: '结束于',
   lowerHand: '手放下',
   speaker: '扬声器',
   testSpeaker: '检测扬声器',
@@ -336,6 +343,8 @@ export default {
   disconnectAudioFailed: '断开电脑音频失败',
   connectAudioFailed: '连接电脑音频失败',
   connectAudioShort: '连接音频',
+  speakerVolumeMuteTips:
+    '当前选中的扬声器设备暂无声音效果，请检查系统扬声器是否已解除静音并调至合适音量。',
   audioSetting: '音频选项',
   videoSetting: '视频选项',
   beautySetting: '美颜和虚拟背景选项',
@@ -356,8 +365,7 @@ export default {
   stopCloudRecord: '停止录制',
   recording: '录制中',
   isStartCloudRecord: '是否开始云录制？',
-  startRecordTip:
-    '开启后，将录制会议过程中的音视频与共享屏幕内容到云端，同时告知所有参会成员',
+  startRecordTip: '开启后，将录制会议过程中的音视频与共享屏幕内容到云端',
   startRecordTipNoNotify:
     '开启后，将录制会议过程中的音视频与共享屏幕内容到云端',
   beingMeetingRecorded: '该会议正在录制中',
@@ -373,7 +381,7 @@ export default {
   viewingLinkAfterMeetingEnd: '你可以在会议结束后联系会议创建者获取查看链接',
   meetingDetails: '会议详情',
   startTime: '开始时间',
-  creator: '创建者',
+  creator: '创建人',
   cloudRecordingLink: '云录制链接',
   generatingCloudRecordingFile: '云录制文件生成中',
   stopRecordFailed: '停止录制失败',
@@ -463,9 +471,10 @@ export default {
   pressSpaceBarToMute: '静音时长按空格键暂时开启麦克风',
   InputLevel: '输入级别',
   audio: '音频',
-  downloadPath: '聊天文件保存路径',
+  downloadPath: '聊天文件保存至',
   chosePath: '选择路径',
-  language: '选择语言',
+  language: '语言',
+  chooseLanguage: '选择语言',
   file: '文件',
 
   notification: '通知',
@@ -484,7 +493,8 @@ export default {
 
   // 会前
   appTitle: '网易会议',
-  immediateMeeting: '即刻会议',
+  immediateMeeting: '发起会议',
+  sponsorMeeting: '发起会议',
   scheduleMeeting: '预约会议',
   scheduleMeetingSuccess: '预约会议成功',
   scheduleMeetingFail: '预约会议失败',
@@ -495,7 +505,7 @@ export default {
   cancelScheduleMeetingFail: '取消预约会议失败',
   updateUserNicknameSuccess: '修改昵称成功',
   updateUserNicknameFail: '修改昵称失败',
-  emptyScheduleMeeting: '当前暂无即将召开的会议',
+  emptyScheduleMeeting: '暂无会议',
   globalMonday: '周一',
   globalTuesday: '周二',
   globalWednesday: '周三',
@@ -504,6 +514,7 @@ export default {
   globalSaturday: '周六',
   globalSunday: '周日',
   globalMonth: '月',
+  yesterday: '昨天',
   historyMeeting: '历史会议',
   currentVersion: '当前版本',
   personalMeetingNum: '个人会议号',
@@ -526,6 +537,7 @@ export default {
   copyRight: 'Copyright ©1997-{{year}} NetEase Inc.\nAll Rights Reserved.',
   chatHistory: '聊天记录',
   allMeeting: '全部会议',
+  meetingRoomScreenCasting: '会议室投屏',
   app: '应用',
   collectMeeting: '收藏会议',
   operations: '操作',
@@ -650,7 +662,7 @@ export default {
   authEnterPassword: '请输入密码',
   authLoginByCorpCode: '企业代码登录',
   authLoginByCorpMail: '企业邮箱登录',
-  authEnterCorpMail: '请输入企业邮箱',
+  authEnterCorpMail: '请输入邮箱',
   authResetInitialPasswordDialogTitle: '设置新密码',
   authResetInitialPasswordDialogMessage:
     '当前密码为初始密码，为了安全考虑，建议您前往设置新密码',
@@ -718,7 +730,9 @@ export default {
   meetingRepeatWeekday: '星期',
 
   meetingRepeatMeetings: '周期性会议',
+  timezone: '时区',
   meetingRepeatLabel: '重复',
+  meetingRepeatFrequency: '频率',
   meetingRepeatEnd: '结束',
   meetingRepeatEveryday: '每天',
   meetingRepeatEveryWeekday: '每个工作日',
@@ -728,7 +742,6 @@ export default {
   meetingRepeatOneDay: '某天',
   meetingRepeatTimes: '限定会议次数',
   meetingRepeatCustom: '自定义',
-  meetingRepeatFrequency: '频率',
   meetingRepeatUnitDay: '天',
   meetingRepeatUnitWeek: '周',
   meetingRepeatUnitMonth: '月',
@@ -854,6 +867,7 @@ export default {
   sipSearchContacts: '搜索并添加参会人',
   sipCallPhone: '电话呼叫',
   participantNotJoined: '未入会',
+  participantJoining: '正在加入中...',
   sipCallCancel: '取消呼叫',
   sipCallAgainEx: '再次呼叫',
   sipCallStatusRejected: '已拒接',
@@ -864,7 +878,7 @@ export default {
   sipCallStatusTermed: '已挂断',
   sipCallStatusUnaccepted: '未接听',
   sipPhoneNumber: '电话号码',
-  sipCallMemberSelected: '选择：{{selectedCount}}',
+  sipCallMemberSelected: '已选：{{selectedCount}}',
   sipContactsPrivacy: '请授权访问您的通讯录，用于呼叫联系人以电话方式入会',
   sipContactNoNumber: '该成员无电话信息，暂不支持选择',
   sipCallIsInMeeting: '该成员已在会议中',
@@ -902,4 +916,111 @@ export default {
   meetingOpen: '展开',
   meetingClose: '收起',
   meetingAttendeeCount: '{{count}}人',
+
+  // 同声传译
+
+  globalUpdate: '更新',
+  globalLang: '语言',
+  globalView: '查看',
+  interpretation: '同声传译',
+  interpInterpreter: '译员',
+  interpSelectInterpreter: '选择译员',
+  interpInfoIncompleteTitle: '译员信息不完整',
+  interpInterpreterAlreadyExists: '用户已被选为译员，无法重复选择',
+  interpInfoIncompleteMsg: '退出将删除信息不完整的译员',
+  interpStart: '开始同声传译',
+  interpStartNotification: '主持人已开启同声传译',
+  interpStop: '关闭同声传译',
+  interpStopNotification: '主持人已关闭同声传译',
+  interpConfirmStopMsg: '关闭同声传译将关闭所有收听的频道，是否关闭？',
+  interpConfirmUpdateMsg: '是否更新？',
+  interpConfirmCancelEditMsg: '确定取消同声传译设置吗？',
+  interpSelectListenLanguage: '请选择收听语言',
+  interpSelectLanguage: '选择语言',
+  interpAddLanguage: '添加语言',
+  interpInputLanguage: '输入语言',
+  interpLanguageAlreadyExists: '语言已存在',
+  interpListenMajorAudioMeanwhile: '同时收听原声',
+  interpManagement: '管理同声传译',
+  interpSettings: '设置同声传译',
+  interpMajorAudio: '原声',
+  interpMajorChannel: '主频道',
+  interpMajorAudioVolume: '原声音量',
+  interpAddInterperter: '添加译员',
+  interpJoinChannelErrorMsg: '加入传译频道失败，是否重新加入？',
+  interpReJoinChannel: '重新加入',
+  interpAssignInterpreter: '您已成为本场会议的同传译员',
+  interpAssignLanguage: '当前语言',
+  interpSpeakerTip: '您正在收听{{language1}}，说{{language2}}',
+  interpOutputLanguage: '传译语言',
+  interpRemoveInterpreterOnly: '仅删除译员',
+  interpRemoveInterpreterInMembers: '同时从参会人中删除',
+  interpRemoveMemberInInterpreters:
+    '该参会人同时被指派为译员，删除参会者将会同时取消译员指派',
+  interpSettingTip: '您可以在“同声传译”中设置收听语言与传译语言',
+  interpUnassignInterpreter: '您已被主持人从同传译员中移除',
+  interpLanguageRemoved: '主持人已删除收听语言“{{language}}”',
+  interpInterpreterOffline:
+    '当前收听的频道中，译员已全部离开，是否为您切换回原声？',
+  interpDontSwitch: '暂不切换',
+  interpSwitchToMajorAudio: '切回原声',
+  interpAudioShareIsForbiddenDesktop:
+    '作为译员，您共享屏幕时将无法同时共享电脑声音',
+  interpInterpreterInMeetingStatusChanged: '译员参会状态已变更',
+  interpListeningChannelDisconnect: '收听语言频道已断开，正在尝试重连',
+  interpSpeakingChannelDisconnect: '传译语言频道已断开，正在尝试重连',
+  langChinese: '中文',
+  langEnglish: '英语',
+  langJapanese: '日语',
+  langKorean: '韩语',
+  langFrench: '法语',
+  langGerman: '德语',
+  langSpanish: '西班牙语',
+  langRussian: '俄语',
+  langPortuguese: '葡萄牙语',
+  langItalian: '意大利语',
+  langTurkish: '土耳其语',
+  langVietnamese: '越南语',
+  langThai: '泰语',
+  langIndonesian: '印尼语',
+  langMalay: '马来语',
+  langArabic: '阿拉伯语',
+  langHindi: '印地语',
+  // 批注
+  annotation: '互动批注',
+  annotationEnabled: '互动批注已开启',
+  annotationDisabled: '互动批注已关闭',
+  startAnnotation: '批注',
+  stopAnnotation: '退出批注',
+  inAnnotation: '正在批注中',
+  saveAnnotation: '保存当前批注',
+  // 登录优化
+  authHowToGetCorpCode: '如何获取企业代码？',
+  authGetCorpCodeFromAdmin: '可与企业管理员咨询您的企业代码',
+  authIKnowCorpCode: '我知道企业代码',
+  authIDontKnowCorpCode: '我不知道企业代码',
+  authTypeAccountPwd: '账号密码',
+  authLoginByAccountPwd: '账号密码登录',
+  authLoginByMobilePwd: '手机号密码登录',
+  authLoginByEmailPwd: '邮箱密码登录',
+  authOtherLoginTypes: '其他登录方式',
+  authSSONotSupport: '当前不支持SSO登录',
+
+  settingVoicePriorityDisplay: '语音激励',
+  settingVoicePriorityDisplayTip: '开启后，将优先显示正在说话的参会成员',
+  meetingMaxMembers: '最多参会人数',
+  // 人数上限
+  openWaitingRoom: '开启等候室',
+  participantUpperLimitWaitingRoomTip: '当前会议已达人数上限，建议开启等候室。',
+  participantUpperLimitReleaseSeatsTip:
+    '当前会议已达到人数上限，新参会者将无法加入会议，您可以尝试移除未入会成员或释放会议中的一个席位。',
+  participantUpperLimitTipAdmitOtherTip:
+    '当前会议已达到人数上限，请先移除未入会成员或释放会议中的一个席位，然后再准入等候室成员。',
+  meetingSearchNotFound: '暂无搜索结果',
+
+  // 周期会议详情
+  meetingRepeatDayInWeek: '每{{week}}周的{{day}}重复',
+  meetingRepeatDay: '每{{day}}天重复',
+  meetingRepeatDayInMonth: '每{{month}}个月的{{day}}重复',
+  meetingRepeatDayInWeekInMonth: '每{{month}}个月的第{{week}}个{{weekday}}重复',
 }

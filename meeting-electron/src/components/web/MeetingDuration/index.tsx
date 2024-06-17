@@ -15,6 +15,7 @@ const MeetingDuration: React.FC<MeetingDurationProps> = React.memo(
 
     useEffect(() => {
       const _startTime = Math.min(startTime, new Date().getTime())
+
       setDurationTime(meetingDuration(_startTime))
       timerRef.current = setInterval(() => {
         setDurationTime(meetingDuration(_startTime))

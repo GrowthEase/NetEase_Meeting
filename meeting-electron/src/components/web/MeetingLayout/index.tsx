@@ -1,15 +1,16 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import classNames from 'classnames'
 import { useTranslation } from 'react-i18next'
 
 import { Button, Divider, Popover, Switch, Dropdown, MenuProps } from 'antd'
 import { useGlobalContext, useMeetingInfoContext } from '../../../store'
-import { ActionType, EventType, LayoutTypeEnum, Role } from '../../../types'
+import { ActionType, LayoutTypeEnum, Role } from '../../../types'
 import Modal from '../../common/Modal'
 import './index.less'
 import Toast from '../../common/toast'
 import useMeetingCanvas from '../../../hooks/useMeetingCanvas'
 import { useUpdateEffect } from 'ahooks'
+
 interface MeetingLayoutProps {
   className?: string
   onSettingClick?: () => void
@@ -28,6 +29,7 @@ const MeetingLayout: React.FC<MeetingLayoutProps> = React.memo(
       if (meetingInfo.layout === LayoutTypeEnum.Gallery) {
         return '#iconyx-layout-2'
       }
+
       if (meetingInfo.speakerLayoutPlacement === 'top') {
         return '#iconyx-layout-1'
       }
@@ -51,9 +53,11 @@ const MeetingLayout: React.FC<MeetingLayoutProps> = React.memo(
 
     const handleRemoteViewOrder = (open: boolean) => {
       let viewOrder = ''
+
       if (localMember.role === Role.host && meetingInfo.localViewOrder) {
         viewOrder = meetingInfo.localViewOrder
       }
+
       neMeeting?.syncViewOrder(open, viewOrder)
     }
 
@@ -82,6 +86,7 @@ const MeetingLayout: React.FC<MeetingLayoutProps> = React.memo(
         })
         return
       }
+
       dispatch?.({
         type: ActionType.UPDATE_MEETING_INFO,
         data: {
@@ -103,7 +108,7 @@ const MeetingLayout: React.FC<MeetingLayoutProps> = React.memo(
             active: layout === LayoutTypeEnum.Gallery,
             disable: !!meetingInfo.screenUuid,
             onClick: () => {
-              if (!!meetingInfo.screenUuid) return
+              if (meetingInfo.screenUuid) return
               dispatch?.({
                 type: ActionType.UPDATE_MEETING_INFO,
                 data: {
@@ -166,6 +171,7 @@ const MeetingLayout: React.FC<MeetingLayoutProps> = React.memo(
 
       return neMeeting?.getMeetingInfoByFetch(meetingNum).then((res) => {
         const viewOrder = res.settings.roomInfo.viewOrder
+
         return viewOrder
       })
     }
@@ -194,6 +200,7 @@ const MeetingLayout: React.FC<MeetingLayoutProps> = React.memo(
                     meetingInfo.remoteViewOrder
                   )
                 }
+
                 Toast.success(t('saveSuccess'))
               } catch {
                 Toast.fail(t('saveFail'))
@@ -207,6 +214,7 @@ const MeetingLayout: React.FC<MeetingLayoutProps> = React.memo(
         label: t('load'),
         onClick: async () => {
           const scheduledMeetingViewOrder = await getScheduledMeetingViewOrder()
+
           if (!scheduledMeetingViewOrder) {
             Toast.info(t('noLoadGalleryLayout'))
           } else {
@@ -225,6 +233,7 @@ const MeetingLayout: React.FC<MeetingLayoutProps> = React.memo(
                       scheduledMeetingViewOrder
                     )
                   }
+
                   Toast.success(t('loadSuccess'))
                 } catch {
                   Toast.fail(t('loadFail'))
@@ -382,8 +391,8 @@ const MeetingLayout: React.FC<MeetingLayoutProps> = React.memo(
 )
 
 export function useMeetingViewOrder(): void {
-  const { neMeeting, eventEmitter } = useGlobalContext()
-  const { meetingInfo, dispatch } = useMeetingInfoContext()
+  const { neMeeting } = useGlobalContext()
+  const { meetingInfo } = useMeetingInfoContext()
   const { groupMembers } = useMeetingCanvas({
     isSpeaker: false,
     isSpeakerLayoutPlacementRight: false,
@@ -400,6 +409,7 @@ export function useMeetingViewOrder(): void {
     if (localMember.role === Role.host && meetingInfo.remoteViewOrder === '') {
       const members = groupMembers[0]
       const viewOrder = members.map((member) => member.uuid).join(',')
+
       neMeeting?.syncViewOrder(true, viewOrder)
     }
   }, [meetingInfo.remoteViewOrder, localMember.role])

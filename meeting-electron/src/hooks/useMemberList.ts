@@ -62,6 +62,7 @@ export default function useMemberList(data: UseMemberListProps): {
       ...audioOn,
       ...other,
     ]
+
     setShowMemberList(res)
   }, [memberList, localMember])
 

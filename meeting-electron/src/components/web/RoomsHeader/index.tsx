@@ -33,7 +33,9 @@ const RoomsHeader: React.FC<RoomsHeaderProps> = ({ style }) => {
     settings = JSON.parse(
       localStorage.getItem('NetEase-Rooms-Settings') || '{}'
     )
-  } catch {}
+  } catch (error) {
+    console.error(error)
+  }
 
   useEffect(() => {
     if (meetingInfo.showSpeaker !== settings?.highlightActiveUserEnabled) {
@@ -95,4 +97,5 @@ const RoomsHeader: React.FC<RoomsHeaderProps> = ({ style }) => {
     </div>
   )
 }
+
 export default RoomsHeader

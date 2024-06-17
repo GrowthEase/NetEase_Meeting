@@ -1,5 +1,6 @@
 function initLog(fileName, path) {
   const log = require('electron-log/main');
+
   log.initialize({ preload: true });
   log.transports.console.format = '[{y}-{m}-{d} {h}:{i}:{s}.{ms}] {text}';
   log.transports.file.maxSize = 1024 * 1024 * 10;
@@ -10,6 +11,7 @@ function initLog(fileName, path) {
   log.transports.file.resolvePathFn = (variables) =>
     path.join(path, 'app', variables.fileName);
 }
+
 function getLogDate() {
   const date = new Date();
   const year = date.getFullYear();
@@ -17,6 +19,7 @@ function getLogDate() {
   const day = date.getDate().toString().padStart(2, '0');
 
   const formattedDate = `${year}${month}${day}`;
+
   console.log('formattedDate', formattedDate);
   return formattedDate;
 }
