@@ -198,11 +198,9 @@ class _MeetingMemberPageViewState
     return PopScopeBuilder(
       child: SafeArea(
         top: false,
-        child: Listener(
-          onPointerDown: (_) {
-            if (_focusNode.hasFocus) {
-              _focusNode.unfocus();
-            }
+        child: GestureDetector(
+          onTap: () {
+            FocusScope.of(context).requestFocus(FocusNode());
           },
           child: ListenableBuilder(
             listenable: pageDataManager,
