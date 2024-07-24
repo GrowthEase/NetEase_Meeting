@@ -54,9 +54,6 @@ PODS:
   - integration_test (0.0.1):
     - Flutter
   - Marvel (1.0.7)
-  - marvelflutter (0.0.1):
-    - Flutter
-    - Marvel
   - MTBBarcodeScanner (5.0.11)
   - NECoreIMKit (9.6.9):
     - NECoreIMKit/NOS (= 9.6.9)
@@ -182,7 +179,6 @@ DEPENDENCIES:
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - integration_test (from `.symlinks/plugins/integration_test/ios`)
   - Marvel (= 1.0.7)
-  - marvelflutter (from `.symlinks/plugins/marvelflutter/ios`)
   - NEDyldYuv
   - NERoomKit/ScreenShare
   - netease_meeting_kit (from `.symlinks/plugins/netease_meeting_kit/ios`)
@@ -241,8 +237,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/image_picker_ios/ios"
   integration_test:
     :path: ".symlinks/plugins/integration_test/ios"
-  marvelflutter:
-    :path: ".symlinks/plugins/marvelflutter/ios"
   netease_meeting_kit:
     :path: ".symlinks/plugins/netease_meeting_kit/ios"
   netease_roomkit:
@@ -289,7 +283,6 @@ SPEC CHECKSUMS:
   image_picker_ios: c560581cceedb403a6ff17f2f816d7fea1421fc1
   integration_test: ce0a3ffa1de96d1a89ca0ac26fca7ea18a749ef4
   Marvel: ef6e63a3ad0a44ef6eb19ba6bdb5739d66b903b8
-  marvelflutter: 6c4c672375360c2086de023217c3db61999ea511
   MTBBarcodeScanner: f453b33c4b7dfe545d8c6484ed744d55671788cb
   NECoreIMKit: 6d595f6d180cf8e0bbf55fa7d862ea177dfef884
   NECoreKit: 893ad0a01dc362fc2e237baae0013260f4050884
@@ -312,11 +305,11 @@ SPEC CHECKSUMS:
   url_launcher_ios: 5334b05cef931de560670eeae103fd3e431ac3fe
   vibration: 7d883d141656a1c1a6d8d238616b2042a51a1241
   wakelock_plus: 78ec7c5b202cab7761af8e2b2b3d0671be6c4ae1
-  webview_flutter_wkwebview: be0f0d33777f1bfd0c9fdcb594786704dbf65f36
+  webview_flutter_wkwebview: 2a23822e9039b7b1bc52e5add778e5d89ad488d1
   yunxin_alog: c5532d2a6ab378baef9927fcae5ab19fe36c1103
   YXAlog: ac9bab3aff1326caa72cc25aedc358bc8d4f1b31
   YXArtemis: 36515be167b57ed0632bd4ac616578aacf549a39
 
 PODFILE CHECKSUM: 7481d349a74b23271f877c14d931cf105f7bd0f2
 
-COCOAPODS: 1.14.3
+COCOAPODS: 1.15.2
