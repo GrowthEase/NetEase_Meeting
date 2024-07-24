@@ -13,14 +13,14 @@ import 'package:nemeeting/utils/meeting_util.dart';
 import 'package:nemeeting/uikit/const/consts.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/client/http_code.dart';
-import 'package:nemeeting/service/profile/app_profile.dart';
 import 'package:nemeeting/widget/meeting_text_field.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
+import '../global_state.dart';
 import '../language/localizations.dart';
 import '../uikit/utils/nav_utils.dart';
 import '../uikit/values/colors.dart';
 import 'package:nemeeting/base/util/text_util.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 
 class MeetJoinRoute extends StatefulWidget {
   @override
@@ -29,7 +29,8 @@ class MeetJoinRoute extends StatefulWidget {
   }
 }
 
-class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute> {
+class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute>
+    with FirstBuildScope {
   ValueNotifier<bool> openCamera = ValueNotifier(true);
 
   ValueNotifier<bool> openMicrophone = ValueNotifier(true);
@@ -37,6 +38,7 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute> {
   final maxIdLength = 12;
 
   late TextEditingController _meetingNumController;
+  late final _meetingNumFocusNode = FocusNode();
 
   ValueNotifier<bool> joinEnable = ValueNotifier(false);
 
@@ -45,13 +47,13 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute> {
 
   int _selectedRecordIndex = 0;
 
-  final localHistoryMeetingManager = LocalHistoryMeetingManager();
+  final preMeetingService = NEMeetingKit.instance.getPreMeetingService();
 
   @override
   void initState() {
     super.initState();
-    var meetingNum = AppProfile.deepLinkMeetingNum;
-    AppProfile.deepLinkMeetingNum = null;
+    var meetingNum = GlobalState.deepLinkMeetingNum;
+    GlobalState.deepLinkMeetingNum = null;
     _meetingNumController = TextEditingController(text: meetingNum);
     _onMeetingIdChanged();
     Future.wait([
@@ -60,6 +62,16 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute> {
     ]).then((values) {
       openCamera.value = values[0];
       openMicrophone.value = values[1];
+    });
+  }
+
+  @override
+  void onFirstBuild() {
+    super.onFirstBuild();
+    ModalRoute.of(context)!.animation?.addStatusListener((status) {
+      if (status == AnimationStatus.completed && mounted) {
+        _meetingNumFocusNode.requestFocus();
+      }
     });
   }
 
@@ -82,8 +94,8 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                MeetingSettingGroup(children: [buildMeetingId()]),
-                MeetingSettingGroup(children: [
+                MeetingCard(children: [buildMeetingId()]),
+                MeetingCard(children: [
                   buildMicrophoneItem(),
                   buildCameraItem(),
                 ]),
@@ -104,7 +116,7 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute> {
         getAppLocalizations().meetingNum,
         style: TextStyle(
             color: AppColors.color_1E1E27,
-            fontSize: 14,
+            fontSize: 16,
             fontWeight: FontWeight.w500),
       ),
       SizedBox(width: 40.w),
@@ -116,8 +128,8 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute> {
   Widget buildMeetingIdInput() {
     return TextField(
       key: MeetingValueKey.inputMeetingId,
-      autofocus: _meetingNumController.text.isEmpty,
-      style: TextStyle(color: AppColors.color_53576A, fontSize: 14),
+      focusNode: _meetingNumFocusNode,
+      style: TextStyle(color: AppColors.color_53576A, fontSize: 16),
       inputFormatters: [
         LengthLimitingTextInputFormatter(maxIdLength),
         FilteringTextInputFormatter.allow(RegExp(r'\d[-\d]*')),
@@ -134,7 +146,7 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute> {
       textAlignVertical: TextAlignVertical.center,
       decoration: InputDecoration(
           hintText: getAppLocalizations().meetingEnterId,
-          hintStyle: TextStyle(fontSize: 14, color: AppColors.color_CDCFD7),
+          hintStyle: TextStyle(fontSize: 16, color: AppColors.color_CDCFD7),
           border: InputBorder.none,
           suffixIcon: Row(
               mainAxisSize: MainAxisSize.min,
@@ -144,7 +156,7 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute> {
                   visible: _meetingNumController.text.isNotEmpty,
                   child: ClearIconButton(
                     padding: EdgeInsets.all(6),
-                    size: 14,
+                    size: 16,
                     onPressed: () {
                       _meetingNumController.clear();
                       _onMeetingIdChanged();
@@ -156,8 +168,9 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute> {
                 Visibility(
                   visible: hasMeetingRecords,
                   child: DropdownIconButton(
+                    key: MeetingValueKey.openCameraCreateMeeting,
                     padding: EdgeInsets.all(6),
-                    size: 14,
+                    size: 16,
                     onPressed: () {
                       _showHistoryMeetingDialog();
                       setState(() {});
@@ -170,7 +183,7 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute> {
 
   Widget buildCameraItem() {
     return MeetingSwitchItem(
-      key: MeetingValueKey.openCameraCreateMeeting,
+      switchKey: MeetingValueKey.openCameraJoinMeeting,
       title: getAppLocalizations().meetingJoinCameraOn,
       valueNotifier: openCamera,
       onChanged: (bool value) {
@@ -182,7 +195,7 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute> {
 
   Widget buildMicrophoneItem() {
     return MeetingSwitchItem(
-      key: MeetingValueKey.openMicrophoneCreateMeeting,
+      switchKey: MeetingValueKey.openMicrophoneJoinMeeting,
       title: getAppLocalizations().meetingJoinMicrophoneOn,
       valueNotifier: openMicrophone,
       onChanged: (bool value) {
@@ -212,16 +225,9 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute> {
 
   Future<void> joinMeeting() async {
     FocusScope.of(context).requestFocus(FocusNode());
-    var historyItem = localHistoryMeetingManager.localHistoryMeetingList
-        .where((historyItem) => (historyItem.meetingNum == targetMeetingNum ||
-            historyItem.shortMeetingNum == targetMeetingNum))
-        .firstOrNull;
-    String? lastUsedNickname;
-
-    if (historyItem != null) {
-      lastUsedNickname = historyItem.nickname;
-    }
-    _onJoinMeeting(nickname: lastUsedNickname);
+    final nickname =
+        LocalHistoryMeetingManager().getLatestNickname(targetMeetingNum);
+    _onJoinMeeting(nickname: nickname);
   }
 
   String get targetMeetingNum =>
@@ -230,9 +236,9 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute> {
   void _onJoinMeeting({String? nickname}) async {
     LoadingUtil.showLoading();
     //shareScreenTips 屏幕弹窗提示共享文案
-    final result = await NEMeetingUIKit.instance.joinMeeting(
+    final result = await NEMeetingKit.instance.getMeetingService().joinMeeting(
       context,
-      NEJoinMeetingUIParams(
+      NEJoinMeetingParams(
         meetingNum: targetMeetingNum,
         displayName: nickname ?? MeetingUtil.getNickName(),
         watermarkConfig: NEWatermarkConfig(
@@ -256,7 +262,6 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute> {
     );
     if (!mounted) return;
     final errorCode = result.code;
-    final data = result.data;
     final errorMessage = result.msg;
     LoadingUtil.cancelLoading();
     if (errorCode == NEMeetingErrorCode.success) {
@@ -327,7 +332,7 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute> {
                 },
                 child: Text(getAppLocalizations().meetingClearRecord,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 16,
                       color: AppColors.color_1f2329,
                       fontWeight: FontWeight.normal,
                     ))),
@@ -342,7 +347,7 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute> {
                   },
                   child: Text(getAppLocalizations().globalSure,
                       style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 16,
                           color: AppColors.blue_337eff,
                           fontWeight: FontWeight.w500)))),
         ],
@@ -363,8 +368,8 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute> {
               onSelectedItemChanged: (int index) {
                 _selectedRecordIndex = index;
               },
-              children: localHistoryMeetingManager.localHistoryMeetingList
-                  .map((record) {
+              children:
+                  preMeetingService.getLocalHistoryMeetingList().map((record) {
                 return Center(
                     child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -398,24 +403,25 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute> {
       LocalHistoryMeetingManager().hasLocalMeetingHistory;
 
   void _selectMeetingRecord() {
-    if (localHistoryMeetingManager.localHistoryMeetingList.isEmpty) {
+    if (preMeetingService.getLocalHistoryMeetingList().isEmpty) {
       return;
     }
-    var record = localHistoryMeetingManager
-        .localHistoryMeetingList[_selectedRecordIndex];
+    var record =
+        preMeetingService.getLocalHistoryMeetingList()[_selectedRecordIndex];
     _meetingNumController.text = record.meetingNum;
     _onMeetingIdChanged();
     setState(() {});
   }
 
   void _clearMeetingRecords() async {
-    localHistoryMeetingManager.clearAll();
+    preMeetingService.clearLocalHistoryMeetingList();
     setState(() {});
   }
 
   @override
   void dispose() {
     _meetingNumController.dispose();
+    _meetingNumFocusNode.dispose();
     LoadingUtil.cancelLoading();
     super.dispose();
   }

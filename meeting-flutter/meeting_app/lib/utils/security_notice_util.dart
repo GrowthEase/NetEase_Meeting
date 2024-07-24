@@ -5,10 +5,9 @@
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
-import 'package:nemeeting/service/auth/auth_manager.dart';
 
 import 'package:nemeeting/service/repo/user_repo.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 
 class AppNotificationManager {
   static const _tag = 'AppNotificationManager';

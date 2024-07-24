@@ -4,8 +4,9 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:nemeeting/base/util/global_preferences.dart';
 import 'package:nemeeting/service/util/user_preferences.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import '../language/localizations.dart';
 
 /// 默认开启白板
@@ -34,9 +35,7 @@ const kEnablePasswordLogin = !kReleaseMode;
 /// 开启摇一摇打开二维码扫描
 const kEnableShakeAndOpenQrScan = false;
 
-const inMeetingMoreMenuItemId = 101;
-
-Future<NEMeetingUIOptions> buildMeetingUIOptions({
+Future<NEMeetingOptions> buildMeetingUIOptions({
   bool? noVideo,
   bool? noAudio,
   bool? showMeetingTime,
@@ -48,8 +47,6 @@ Future<NEMeetingUIOptions> buildMeetingUIOptions({
   noVideo ??= !(await settingsService.isTurnOnMyVideoWhenJoinMeetingEnabled());
   noAudio ??= !(await settingsService.isTurnOnMyAudioWhenJoinMeetingEnabled());
   showMeetingTime ??= await settingsService.isShowMyMeetingElapseTimeEnabled();
-  final enableAudioDeviceSwitch =
-      await UserPreferences().isAudioDeviceSwitchEnabled();
   noCloudRecord ??= kNoCloudRecord;
   final showShareUserVideo = await UserPreferences().getShowShareUserVideo();
   final enableTransparentWhiteboard =
@@ -58,13 +55,14 @@ Future<NEMeetingUIOptions> buildMeetingUIOptions({
       await settingsService.isFrontCameraMirrorEnabled();
   final enableSpeakerSpotlight =
       await settingsService.isSpeakerSpotlightEnabled();
-  return NEMeetingUIOptions(
+  final cloudRecordConfig = await settingsService.getCloudRecordConfig();
+  return NEMeetingOptions(
     noVideo: noVideo,
     noAudio: noAudio,
     noMuteAllVideo: kNoMuteAllVideo,
     noWhiteBoard: !openWhiteBoard,
     noSip: kNoSip,
-    noCloudRecord: noCloudRecord,
+    cloudRecordConfig: cloudRecordConfig,
     showScreenShareUserVideo: showShareUserVideo,
     showWhiteboardShareUserVideo: showShareUserVideo,
     showMeetingTime: showMeetingTime,
@@ -77,7 +75,8 @@ Future<NEMeetingUIOptions> buildMeetingUIOptions({
     extras: {'shareScreenTips': getAppLocalizations().meetingShareScreenTips},
     showCloudRecordMenuItem: true,
     showCloudRecordingUI: true,
-    enableAudioDeviceSwitch: enableAudioDeviceSwitch,
     enableSpeakerSpotlight: enableSpeakerSpotlight,
+    autoEnableCaptionsOnJoin:
+        await GlobalPreferences().isEnableCaptionsOnJoin(),
   );
 }

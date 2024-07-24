@@ -1,30 +1,39 @@
-# meetingservice
+<!-- 
+This README describes the package. If you publish this package to pub.dev,
+this README's contents appear on the landing page for your package.
 
-A new Flutter package.
+For information about how to write a good package README, see the guide for
+[writing package pages](https://dart.dev/guides/libraries/writing-package-pages). 
 
-## Getting Started
+For general information about developing packages, see the Dart guide for
+[creating packages](https://dart.dev/guides/libraries/create-library-packages)
+and the Flutter guide for
+[developing packages and plugins](https://flutter.dev/developing-packages). 
+-->
 
-This project is a starting point for a Dart
-[package](https://flutter.dev/developing-packages/),
-a library module containing code that can be shared easily across
-multiple Flutter or Dart projects.
+TODO: Put a short description of the package here that helps potential users
+know whether this package might be useful for them.
 
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.dev/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+## Features
 
-### meeting-sdk-android模块
-> 对外接口为Java API，用过Channel通道invokeMethod meeting_sdk模块
-![img](code_img/meeting-sdk-android流程图.png)
+TODO: List what your package can do. Maybe include images, gifs, or videos.
 
-### meeting_sdk模块
-> 以package的方式，为Flutter 应用提供Dart API.会议SDK全局接口，提供初始化、管理其他会议相关子服务的能力
-![img](code_img/meeting_sdk流程图.png)
+## Getting started
 
-### meeting_core模块
-> 以package的方式，为Flutter 应用提供Dart API。主要提供RTC能力和dart UI。view使用platform View
-![img](code_img/meeting_core流程图.png)
+TODO: List prerequisites and provide or point to information on how to
+start using the package.
 
-### meeting_core模块
-> 以package的方式，为Flutter 应用提供Dart API。主要提供repo数据仓库
-![img](code_img/meeting_service流程图.png)
+## Usage
+
+TODO: Include short and useful examples for package users. Add longer examples
+to `/example` folder. 
+
+```dart
+const like = 'sample';
+```
+
+## Additional information
+
+TODO: Tell users more about the package: where to find more information, how to 
+contribute to the package, how to file issues, what response they can expect 
+from the package authors, and more.

@@ -14,7 +14,7 @@ import 'package:nemeeting/uikit/values/colors.dart';
 import 'package:nemeeting/utils/state_utils.dart';
 import 'package:nemeeting/widget/meeting_text_field.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 
 class ModifyPasswordRoute extends StatefulWidget {
   @override
@@ -63,10 +63,10 @@ class ModifyPasswordState extends AppBaseState {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          MeetingSettingGroup(children: [
+          MeetingCard(children: [
             buildOldPassword(),
           ]),
-          MeetingSettingGroup(children: [
+          MeetingCard(children: [
             buildNewPassword(),
             buildNewPasswordAgain(),
           ]),

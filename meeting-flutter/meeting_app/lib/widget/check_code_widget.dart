@@ -9,7 +9,7 @@ import 'package:nemeeting/language/localizations.dart';
 import '../service/repo/auth_repo.dart';
 import '../uikit/values/colors.dart';
 import 'package:yunxin_alog/yunxin_alog.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import 'package:nemeeting/constants.dart';
 
 var countDownTime = 60;

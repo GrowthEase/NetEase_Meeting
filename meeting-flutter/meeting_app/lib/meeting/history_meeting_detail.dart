@@ -5,13 +5,13 @@
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:flutter/material.dart';
+import 'package:nemeeting/pre_meeting/transcription_history.dart';
+import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/uikit/utils/nav_utils.dart';
+import 'package:nemeeting/uikit/utils/router_name.dart';
 import 'package:nemeeting/uikit/values/fonts.dart';
-import 'package:nemeeting/utils/meeting_util.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
-import 'package:netease_common/netease_common.dart';
-import 'package:netease_meeting_assets/netease_meeting_assets.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import '../language/localizations.dart';
 import '../service/repo/history_repo.dart';
 import '../uikit/state/meeting_base_state.dart';
@@ -33,7 +33,6 @@ class HistoryMeetingDetailRoute extends StatefulWidget {
 class _HistoryMeetingDetailRouteState
     extends AppBaseState<HistoryMeetingDetailRoute> {
   NERemoteHistoryMeeting item;
-  final myUuid = MeetingUtil.getUuid();
 
   bool hasCloudRecordTask = false;
   bool hasChatHistory = false;
@@ -50,10 +49,10 @@ class _HistoryMeetingDetailRouteState
   @override
   void initState() {
     super.initState();
-    if (myUuid == item.ownerUserUuid) {
+    if (AuthManager().accountId == item.ownerUserUuid) {
       NEMeetingKit.instance
-          .getMeetingService()
-          .getRoomCloudRecordList(item.meetingId.toString())
+          .getPreMeetingService()
+          .getMeetingCloudRecordList(item.meetingId)
           .then((value) {
         if (!mounted) return;
         hasCloudRecordTask = value.isSuccess();
@@ -70,7 +69,8 @@ class _HistoryMeetingDetailRouteState
         if (value.data!.chatroomInfo != null) {
           chatroomInfo = value.data!.chatroomInfo!;
           if (chatroomInfo.exportAccess.index == 1 &&
-              chatroomInfo.chatroomId != null) {
+              chatroomInfo.chatroomId != null &&
+              chatroomInfo.chatroomId != 0) {
             hasChatHistory = true;
             setState(() {});
           }
@@ -134,20 +134,19 @@ class _HistoryMeetingDetailRouteState
     return Container(
       child: Column(
         children: [
-          MeetingSettingGroup(children: [
+          MeetingCard(children: [
             MeetingListCopyable.withTopCorner(
                 title: getAppLocalizations().meetingNum,
                 content: TextUtil.applyMask(item.meetingNum, '000-000-0000')),
             buildOwner(),
           ]),
-          MeetingSettingGroup(children: [
+          MeetingCard(children: [
             buildTime(getAppLocalizations().meetingStartTime,
                 DateTime.fromMillisecondsSinceEpoch(item.roomStartTime)),
             buildTime(getAppLocalizations().meetingEndTime,
                 DateTime.fromMillisecondsSinceEpoch(item.roomEndTime)),
           ]),
-          if (hasChatHistory || hasCloudRecordTask || pluginInfoList.isNotEmpty)
-            Flexible(child: buildApplicationModule()),
+          Flexible(child: buildApplicationModule()),
           SizedBox(height: 16),
         ],
       ),
@@ -171,11 +170,12 @@ class _HistoryMeetingDetailRouteState
   }
 
   Widget buildApplicationModule() {
-    return MeetingSettingGroup(
+    return MeetingCard(
       children: [
         if (hasCloudRecordTask) Flexible(child: buildCloudRecord()),
         if (hasChatHistory) buildMessageHistory(),
         if (pluginInfoList.isNotEmpty) buildPluginListWidget(),
+        buildTranscriptionMessageHistory(),
       ],
     );
   }
@@ -200,6 +200,56 @@ class _HistoryMeetingDetailRouteState
         });
   }
 
+  Future<NEResult<List<NEMeetingTranscriptionInfo>>>? transcriptionInfoResult;
+  Widget buildTranscriptionMessageHistory() {
+    if (AuthManager().accountId != item.ownerUserUuid) return SizedBox.shrink();
+    transcriptionInfoResult ??= NEMeetingKit.instance
+        .getPreMeetingService()
+        .getHistoryMeetingTranscriptionInfo(item.meetingId);
+    return FutureBuilder(
+        future: transcriptionInfoResult,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return SizedBox.shrink();
+          }
+          final result = snapshot.requireData;
+          final transcriptionList = result.data;
+          if (transcriptionList == null || transcriptionList.isEmpty) {
+            return SizedBox.shrink();
+          }
+
+          /// 只要有一个已经生成完成，就展示转写入口
+          final hasGenerated = transcriptionList.any((e) => e.isGenerated);
+          return MeetingArrowItem(
+            title: getAppLocalizations().transcription,
+            content: !hasGenerated
+                ? getAppLocalizations().transcriptionGenerating
+                : null,
+            contentTextStyle: !hasGenerated
+                ? TextStyle(
+                    fontSize: 14,
+                    color: AppColors.color_337eff,
+                    fontWeight: FontWeight.w400,
+                    decoration: TextDecoration.none,
+                  )
+                : null,
+            showArrow: hasGenerated,
+            onTap: hasGenerated
+                ? () {
+                    if (transcriptionList.length == 1) {
+                      TranscriptionMessageHistoryPage.show(
+                          context, item.meetingId, transcriptionList.first);
+                    } else {
+                      NavUtils.pushNamed(
+                          context, RouterName.transcriptionTiming,
+                          arguments: [item.meetingId, transcriptionList]);
+                    }
+                  }
+                : null,
+          );
+        });
+  }
+
   Widget buildPluginListWidget() {
     return Container(
         height: (48 * pluginInfoList.length).toDouble(),
@@ -215,15 +265,11 @@ class _HistoryMeetingDetailRouteState
                         showMeetingPopupPageRoute(
                             barrierColor: Colors.black.withOpacity(0.8),
                             context: context,
-                            routeSettings: RouteSettings(
-                                name: MeetingWebAppPage.routeName),
+                            routeSettings: RouteSettings(name: plugin.name),
                             builder: (context) {
-                              return MeetingWebAppPage(
-                                roomArchiveId: item.meetingId.toString(),
-                                homeUrl: plugin.homeUrl,
-                                title: plugin.name,
-                                sessionId: plugin.sessionId,
-                              );
+                              return NEMeetingKit.instance
+                                  .getPreMeetingService()
+                                  .loadWebAppView(item.meetingId, plugin);
                             });
                       }))
                   .toList(),
@@ -329,76 +375,79 @@ class _HistoryMeetingDetailRouteState
   }
 
   Widget buildCloudRecord() {
+    final hasRecordItem = recordUrlList.isNotEmpty;
     return Container(
         child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: EdgeInsets.only(left: 16, top: 13, bottom: 13),
-          child: Text(getAppLocalizations().historyMeetingCloudRecord,
-              style: _textStyle),
+          padding: EdgeInsets.only(left: 16, right: 16, top: 13, bottom: 13),
+          child: Row(
+            children: [
+              Text(
+                getAppLocalizations().historyMeetingCloudRecord,
+                style: TextStyle(
+                  color: AppColors.color_1E1E27,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              if (!hasRecordItem)
+                Expanded(
+                  child: Text(
+                      textAlign: TextAlign.right,
+                      getAppLocalizations()
+                          .historyMeetingCloudRecordingFileBeingGenerated,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.color_337eff,
+                        fontWeight: FontWeight.w400,
+                      )),
+                ),
+            ],
+          ),
         ),
-        recordUrlList.isNotEmpty
-            ? Flexible(
-                child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: recordUrlList
-                      .map((url) => Container(
-                            padding: EdgeInsets.only(left: 32, right: 16),
-                            height: 48,
-                            child: Row(
-                              children: [
-                                Expanded(
-                                    child: GestureDetector(
-                                  child: Text(
-                                    url,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        color: AppColors.color_337eff),
-                                  ),
-                                  onTap: () => NavUtils.launchByURL(url),
-                                )),
-                                SizedBox(width: 16),
-                                NEGestureDetector(
-                                    onTap: () {
-                                      Clipboard.setData(
-                                          ClipboardData(text: url));
-                                      ToastUtils.showToast(
-                                          context,
-                                          getAppLocalizations()
-                                              .globalCopySuccess);
-                                    },
-                                    child: Icon(
-                                      NEMeetingIconFont.icon_copy,
-                                      color: AppColors.color_337EFF,
-                                      size: 24,
-                                    ))
-                              ],
-                            ),
-                          ))
-                      .toList(),
-                ),
-              ))
-            : Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2)),
-                    SizedBox(width: 8),
-                    Text(
-                        getAppLocalizations()
-                            .historyMeetingCloudRecordingFileBeingGenerated,
-                        style: TextStyle(
-                            fontSize: 14, color: AppColors.color_337eff)),
-                  ],
-                ),
-              )
+        if (hasRecordItem)
+          Flexible(
+              child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: recordUrlList
+                  .map((url) => Container(
+                        padding: EdgeInsets.only(left: 32, right: 16),
+                        height: 48,
+                        child: Row(
+                          children: [
+                            Expanded(
+                                child: GestureDetector(
+                              child: Text(
+                                url,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.color_337eff),
+                              ),
+                              onTap: () => NavUtils.launchByURL(url),
+                            )),
+                            SizedBox(width: 16),
+                            NEGestureDetector(
+                                onTap: () {
+                                  Clipboard.setData(ClipboardData(text: url));
+                                  ToastUtils.showToast(context,
+                                      getAppLocalizations().globalCopySuccess);
+                                },
+                                child: Icon(
+                                  NEMeetingIconFont.icon_copy,
+                                  color: AppColors.color_337EFF,
+                                  size: 24,
+                                ))
+                          ],
+                        ),
+                      ))
+                  .toList(),
+            ),
+          )),
       ],
     ));
   }

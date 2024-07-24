@@ -7,18 +7,14 @@ import 'dart:math';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:nemeeting/language/localizations.dart';
-import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/service/config/app_config.dart';
-import 'package:nemeeting/service/model/account_app_info.dart';
-import 'package:nemeeting/service/repo/accountinfo_repo.dart';
 import 'package:nemeeting/setting/personal_setting.dart';
 import 'package:nemeeting/uikit/state/meeting_base_state.dart';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import 'package:nemeeting/utils/integration_test.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
-import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/uikit/utils/nav_utils.dart';
 import 'package:nemeeting/uikit/utils/router_name.dart';
 import 'package:nemeeting/uikit/values/colors.dart';
@@ -34,19 +30,6 @@ class _AppSettingRouteState extends AppBaseState<AppSettingRoute> {
   bool bCanPress = true;
   bool vCanPress = true; //虚拟背景防暴击
   late final meetingAccountService = NEMeetingKit.instance.getAccountService();
-  AccountAppInfo? _accountAppInfo;
-
-  @override
-  void initState() {
-    super.initState();
-    AccountInfoRepo().getAccountAppInfo().then((result) {
-      if (mounted && result.code == HttpCode.success) {
-        setState(() {
-          _accountAppInfo = result.data;
-        });
-      }
-    });
-  }
 
   @override
   Widget buildBody() {
@@ -91,7 +74,7 @@ class _AppSettingRouteState extends AppBaseState<AppSettingRoute> {
             ),
             Builder(builder: (context) {
               return Visibility(
-                visible: context.isBeautyFaceEnabled ||
+                visible: context.isBeautyFaceSupported ||
                     context.isVirtualBackgroundEnabled,
                 child: SizedBox(
                   height: 20.h,
@@ -101,11 +84,12 @@ class _AppSettingRouteState extends AppBaseState<AppSettingRoute> {
             NESettingItemGroup(children: [
               Builder(
                 builder: (context) {
-                  return context.isBeautyFaceEnabled
+                  return context.isBeautyFaceSupported
                       ? Container(
                           child: NESettingItem(
                               getAppLocalizations().settingBeauty, onTap: () {
-                            if (NEMeetingUIKit.instance
+                            if (NEMeetingKit.instance
+                                    .getMeetingService()
                                     .getCurrentMeetingInfo() !=
                                 null) {
                               ToastUtils.showToast(
@@ -132,7 +116,8 @@ class _AppSettingRouteState extends AppBaseState<AppSettingRoute> {
                           child: NESettingItem(
                               getAppLocalizations().settingVirtualBackground,
                               onTap: () {
-                            if (NEMeetingUIKit.instance
+                            if (NEMeetingKit.instance
+                                    .getMeetingService()
                                     .getCurrentMeetingInfo() !=
                                 null) {
                               ToastUtils.showToast(
@@ -236,10 +221,9 @@ class _AppSettingRouteState extends AppBaseState<AppSettingRoute> {
           ),
           onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(
-                  builder: (context) => PersonalSetting(
-                      _accountAppInfo?.appName ??
-                          getAppLocalizations().settingDefaultCompanyName))));
+              NEMeetingPageRoute(
+                  builder: (context) => PersonalSetting(accountInfo.corpName ??
+                      getAppLocalizations().settingDefaultCompanyName))));
     });
   }
 

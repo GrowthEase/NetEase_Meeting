@@ -15,7 +15,7 @@ import 'package:nemeeting/utils/security_notice_util.dart';
 import 'package:nemeeting/utils/state_utils.dart';
 import 'package:nemeeting/widget/meeting_text_field.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../language/localizations.dart';
 import '../uikit/utils/nav_utils.dart';

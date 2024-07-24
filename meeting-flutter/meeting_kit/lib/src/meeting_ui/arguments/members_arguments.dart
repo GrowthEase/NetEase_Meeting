@@ -1,0 +1,25 @@
+// Copyright (c) 2022 NetEase, Inc. All rights reserved.
+// Use of this source code is governed by a MIT license that can be
+// found in the LICENSE file.
+
+part of meeting_ui;
+
+class MembersArguments {
+  final Stream roomInfoUpdatedEventStream;
+  final NEMeetingOptions options;
+  final Map<String, StreamController<int>> audioVolumeStreams;
+  final NERoomContext roomContext;
+  final String meetingTitle;
+  final WaitingRoomManager waitingRoomManager;
+  final ValueListenable<bool> isMySelfManagerListenable;
+
+  MembersArguments({
+    required this.options,
+    required this.roomInfoUpdatedEventStream,
+    required this.audioVolumeStreams,
+    required this.roomContext,
+    required this.meetingTitle,
+    required this.waitingRoomManager,
+    required this.isMySelfManagerListenable,
+  });
+}

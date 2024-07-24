@@ -36,13 +36,13 @@ abstract class NESettingsService extends ValueNotifier<Map> {
   Future<bool> isTurnOnMyAudioWhenJoinMeetingEnabled();
 
   /// 查询应用是否支持会议直播
-  Future<bool> isMeetingLiveSupported();
+  bool isMeetingLiveSupported();
 
   /// 查询应用是否支持白板共享
-  Future<bool> isMeetingWhiteboardSupported();
+  bool isMeetingWhiteboardSupported();
 
   /// 查询应用是否支持云端录制服务
-  Future<bool> isMeetingCloudRecordSupported();
+  bool isMeetingCloudRecordSupported();
 
   /// 设置是否打开音频智能降噪
   ///
@@ -109,7 +109,7 @@ abstract class NESettingsService extends ValueNotifier<Map> {
   Future<bool> isTransparentWhiteboardEnabled();
 
   /// 查询应用是否支持美颜
-  Future<bool> isBeautyFaceSupported();
+  bool isBeautyFaceSupported();
 
   /// 获取当前美颜参数，关闭返回0
   Future<int> getBeautyFaceValue();
@@ -120,8 +120,38 @@ abstract class NESettingsService extends ValueNotifier<Map> {
   Future<void> setBeautyFaceValue(int value);
 
   /// 查询应用是否支持等候室
-  Future<bool> isWaitingRoomSupported();
+  bool isWaitingRoomSupported();
 
   /// 查询应用是否支持虚拟背景
-  Future<bool> isVirtualBackgroundSupported();
+  bool isVirtualBackgroundSupported();
+
+  /// 查询应用同声传译配置
+  NEInterpretationConfig getInterpretationConfig();
+
+  /// 查询应用预约会议指定成员配置
+  NEScheduledMemberConfig getScheduledMemberConfig();
+
+  /// 查询应用是否支持编辑昵称
+  bool isNicknameUpdateSupported();
+
+  /// 查询应用是否支持编辑头像
+  bool isAvatarUpdateSupported();
+
+  /// 查询应用是否支持字幕功能
+  bool isCaptionsSupported();
+
+  /// 查询应用是否支持转写功能
+  bool isTranscriptionSupported();
+
+  /// 查询应用是否支持访客入会
+  bool isGuestJoinSupported();
+
+  /// 查询应用session会话Id
+  String getAppNotifySessionId();
+
+  /// 查询云录制配置
+  Future<NECloudRecordConfig> getCloudRecordConfig();
+
+  /// 设置云录制配置
+  void setCloudRecordConfig(NECloudRecordConfig config);
 }

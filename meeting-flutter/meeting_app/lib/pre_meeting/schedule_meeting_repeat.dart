@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:nemeeting/pre_meeting/schedule_meeting_repeat_custom.dart';
 import 'package:nemeeting/utils/meeting_string_util.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import '../language/localizations.dart';
 import '../uikit/state/meeting_base_state.dart';
 import '../uikit/values/colors.dart';
@@ -35,10 +35,10 @@ class _ScheduleMeetingRepeatRouteState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          MeetingSettingGroup(
+          MeetingCard(
             children: buildTypeItems(),
           ),
-          MeetingSettingGroup(children: [
+          MeetingCard(children: [
             buildCustomItem(getAppLocalizations().meetingRepeatCustom),
             if (widget.recurringRule.type == NEMeetingRecurringRuleType.custom)
               buildCustomDetail()
@@ -110,7 +110,7 @@ class _ScheduleMeetingRepeatRouteState
         : MeetingArrowItem(
             title: title,
             onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+              Navigator.of(context).push(NEMeetingPageRoute(builder: (context) {
                 return ScheduleMeetingRepeatCustomRoute(
                     widget.recurringRule, widget.startTime, widget.isEdit);
               })).then((value) => setState(() {}));
@@ -125,7 +125,7 @@ class _ScheduleMeetingRepeatRouteState
           widget.recurringRule, widget.startTime),
       titleTextStyle: TextStyle(fontSize: 14, color: AppColors.color_53576A),
       onTap: () {
-        Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+        Navigator.of(context).push(NEMeetingPageRoute(builder: (context) {
           return ScheduleMeetingRepeatCustomRoute(
               widget.recurringRule, widget.startTime, widget.isEdit);
         })).then((value) => setState(() {}));

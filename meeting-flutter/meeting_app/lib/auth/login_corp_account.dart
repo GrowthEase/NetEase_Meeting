@@ -17,7 +17,7 @@ import 'package:nemeeting/utils/privacy_util.dart';
 import 'package:nemeeting/utils/state_utils.dart';
 import 'package:nemeeting/widget/meeting_text_field.dart';
 import 'package:netease_common/netease_common.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 
 import '../../language/localizations.dart';
 import '../../service/client/http_code.dart';
@@ -210,18 +210,6 @@ class LoginCorpAccountState extends AuthBaseState
     );
   }
 
-  /// 从页面中间开始向左滑动，并且在动画结束后保持在动画完成状态
-  static Widget _defaultTransitionBuilder(
-      Widget child, Animation<double> animation) {
-    return SlideTransition(
-      position: Tween<Offset>(
-        begin: const Offset(0.5, 0),
-        end: Offset.zero,
-      ).animate(_KeepCompleteAnimation(animation)),
-      child: child,
-    );
-  }
-
   void handleLoginTypeTap(LoginItemType type) {
     if (type != LoginItemType.sso) {
       setState(() {
@@ -307,57 +295,4 @@ class LoginCorpAccountState extends AuthBaseState
       _ => getAppLocalizations().authLoginByAccountPwd,
     };
   }
-}
-
-/// 动画结束后，始终保持在动画完成状态
-class _KeepCompleteAnimation extends Animation<double>
-    with
-        AnimationLazyListenerMixin,
-        AnimationLocalListenersMixin,
-        AnimationLocalStatusListenersMixin {
-  _KeepCompleteAnimation(this._parent);
-
-  final Animation<double> _parent;
-  AnimationStatus? _status;
-  double? _value;
-
-  @override
-  void didStartListening() {
-    if (_parent.status == AnimationStatus.completed ||
-        _parent.status == AnimationStatus.reverse) {
-      _status = AnimationStatus.completed;
-      _value = 1.0;
-      return;
-    }
-    _parent.addListener(_notifyListeners);
-    _parent.addStatusListener(_notifyStatusListeners);
-  }
-
-  @override
-  void didStopListening() {
-    _parent.removeListener(_notifyListeners);
-    _parent.removeStatusListener(_notifyStatusListeners);
-  }
-
-  void _notifyListeners() {
-    if (_status != null) return;
-    notifyListeners();
-  }
-
-  void _notifyStatusListeners(AnimationStatus status) {
-    if (_status != null) return;
-    if (status == AnimationStatus.completed ||
-        status == AnimationStatus.reverse) {
-      _status = AnimationStatus.completed;
-      _value = 1.0;
-    } else {
-      notifyStatusListeners(status);
-    }
-  }
-
-  @override
-  AnimationStatus get status => _status ?? _parent.status;
-
-  @override
-  double get value => _value ?? _parent.value;
 }

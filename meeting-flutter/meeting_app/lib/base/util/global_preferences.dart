@@ -20,6 +20,7 @@ class GlobalPreferences extends Preferences {
   static const String keyShakeAndOpenQrScan = 'shakeAndOpenQrScan';
   static const String languageCode = 'languageCode';
   static const String _keyVirtualBackgroundResMd5 = 'virtualBackgroundResMd5';
+  static const String _keyEnableCaptionsOnJoin = 'enableCaptionsOnJoin';
 
   GlobalPreferences._internal();
 
@@ -149,5 +150,13 @@ class GlobalPreferences extends Preferences {
   /// 获取虚拟背景资源md5值，用于比对是否需要重新解压
   Future<String?> getVirtualBackgroundResMd5() {
     return getSp(_keyVirtualBackgroundResMd5);
+  }
+
+  Future<bool> isEnableCaptionsOnJoin() async {
+    return await getBoolSp(_keyEnableCaptionsOnJoin) ?? false;
+  }
+
+  Future<bool> seEnableCaptionsOnJoin(bool value) async {
+    return setBoolSp(_keyEnableCaptionsOnJoin, value);
   }
 }

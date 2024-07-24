@@ -6,8 +6,10 @@
 #import <CoreFoundation/CFNotificationCenter.h>
 #import <Flutter/Flutter.h>
 #import <ReplayKit/ReplayKit.h>
+#import <UserNotifications/UNUserNotificationCenter.h>
 #include "GeneratedPluginRegistrant.h"
 #import "NTESLinkStreamHandler.h"
+@import NERoomKit;
 
 const char *breaken_pathes[] = {"/Applications/Cydia.app",
                                 "/Library/MobileSubstrate/MobileSubstrate.dylib", "/bin/bash",
@@ -62,6 +64,17 @@ static NSString *const broadcastExtensionAppGroup = @"group.com.netease.yunxin.m
   [GeneratedPluginRegistrant registerWithRegistry:self];
 
   BOOL success = [super application:application didFinishLaunchingWithOptions:launchOptions];
+
+  /// 申请推送权限
+  [UNUserNotificationCenter.currentNotificationCenter
+      requestAuthorizationWithOptions:UNAuthorizationOptionAlert
+                    completionHandler:^(BOOL granted, NSError *_Nullable error) {
+                      if (granted) {
+                        [UNUserNotificationCenter currentNotificationCenter].delegate =
+                            (id<UNUserNotificationCenterDelegate>)self;
+                      }
+                    }];
+
   return success;
 }
 
@@ -73,6 +86,24 @@ static NSString *const broadcastExtensionAppGroup = @"group.com.netease.yunxin.m
     return [self.streamHandler handleLink:url.absoluteString];
   }
   return NO;
+}
+
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+       willPresentNotification:(UNNotification *)notification
+         withCompletionHandler:(void (^)(UNNotificationPresentationOptions))completionHandler {
+  if (UIApplication.sharedApplication.applicationState != UIApplicationStateActive) {
+    completionHandler(UNNotificationPresentationOptionAlert |
+                      UNNotificationPresentationOptionBadge);
+  }
+}
+
+- (void)application:(UIApplication *)app
+    didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
+  [[NERoomKit shared] updateApnsTokenWithData:deviceToken key:nil];
+}
+
+- (void)applicationWillResignActive:(UIApplication *)application {
+  [UIApplication sharedApplication].applicationIconBadgeNumber = 0;
 }
 
 - (NTESLinkStreamHandler *)streamHandler {

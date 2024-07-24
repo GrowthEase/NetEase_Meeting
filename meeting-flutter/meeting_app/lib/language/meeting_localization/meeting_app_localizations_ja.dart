@@ -186,6 +186,13 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get globalMonthDec => '12月';
 
   @override
+  String get globalPhotosPermissionRationale =>
+      '画像をアップロードしたり、プロフィール画像を変更したりするためのアルバム権限の申請が必要です';
+
+  @override
+  String get globalPhotosPermission => 'アルバムが使えません';
+
+  @override
   String get authImmediatelyRegister => '登録します';
 
   @override
@@ -869,6 +876,27 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get meetingTime => '時間';
 
   @override
+  String get autoRecord => '自動録画';
+
+  @override
+  String get meetingCloudRecord => '自動クラウド録画';
+
+  @override
+  String get meetingEnableCloudRecordWhenHostJoin => '司会者が入会して開く';
+
+  @override
+  String get meetingEnableCloudRecordWhenMemberJoin => 'メンバーが入会して開く';
+
+  @override
+  String get copyMeetingInvite => '招待状をコピー';
+
+  @override
+  String get copyMeetingNum => '会議番号/リンク';
+
+  @override
+  String get copyMeetingAll => 'すべてコピー';
+
+  @override
   String get historyMeeting => '歴史会議';
 
   @override
@@ -1114,94 +1142,6 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get settingLanguageTip => '日本語';
 
   @override
-  String get feedbackInRoom => 'フィードバック';
-
-  @override
-  String get feedbackProblemType => '問題の類型';
-
-  @override
-  String get feedbackSuccess => 'フィードバックの提出に成功しました';
-
-  @override
-  String get feedbackAudioLatency => '長時間の遅れ';
-
-  @override
-  String get feedbackAudioFreeze => '相手の話し声がひっかかる';
-
-  @override
-  String get feedbackCannotHearOthers => '相手の声が聞こえない';
-
-  @override
-  String get feedbackCannotHearMe => '他の人には聞こえない';
-
-  @override
-  String get feedbackTitleExtras => '補足情報';
-
-  @override
-  String get feedbackTitleDate => '問題の発生時期';
-
-  @override
-  String get feedbackContentEmpty => '無';
-
-  @override
-  String get feedbackTitleSelectPicture => '画像';
-
-  @override
-  String get feedbackAudioMechanicalNoise => '機械音';
-
-  @override
-  String get feedbackAudioNoise => '雑音';
-
-  @override
-  String get feedbackAudioEcho => '反響がある';
-
-  @override
-  String get feedbackAudioVolumeSmall => '音量が小さいです';
-
-  @override
-  String get feedbackVideoFreeze => 'ビデオ長時間カートンです';
-
-  @override
-  String get feedbackVideoIntermittent => 'ビデオは途切れ途切れです';
-
-  @override
-  String get feedbackVideoTearing => '画面が裂ける';
-
-  @override
-  String get feedbackVideoTooBrightOrDark => '画面が明るすぎる/暗すぎる';
-
-  @override
-  String get feedbackVideoBlurry => '画面がぼやける';
-
-  @override
-  String get feedbackVideoNoise => '画面のノイズが目立つ';
-
-  @override
-  String get feedbackAudioVideoNotSync => '音画が同期していない';
-
-  @override
-  String get feedbackUnexpectedExit => '予期せず脱退する';
-
-  @override
-  String get feedbackOthers => '他にも問題があります';
-
-  @override
-  String get feedbackTitleAudio => 'オーディオの問題';
-
-  @override
-  String get feedbackTitleVideo => 'ビデオの問題';
-
-  @override
-  String get feedbackTitleOthers => 'その他';
-
-  @override
-  String get feedbackTitleDescription => '問題の説明';
-
-  @override
-  String get feedbackOtherTip =>
-      '質問を説明してください。「他に質問があります」を選択した場合、提出する前に具体的な説明を記入する必要があります';
-
-  @override
   String get evaluationTitle => '評価';
 
   @override
@@ -1230,4 +1170,46 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
 
   @override
   String get evaluationGoHome => 'トップページに戻ります';
+
+  @override
+  String get transcriptionCaptionAndTranslate => '字幕と翻訳';
+
+  @override
+  String get transcriptionCaptionSettings => '字幕設定';
+
+  @override
+  String get transcriptionEnableCaptionOnJoin => '会議参加時に字幕をつけます';
+
+  @override
+  String get transcriptionTranslateSettings => '翻訳設定';
+
+  @override
+  String get transcriptionCaptionTypeSize => 'サイズ';
+
+  @override
+  String get transcriptionCaptionExampleSize => '字幕の文字サイズの例';
+
+  @override
+  String get transcription => 'リアルタイム転記';
+
+  @override
+  String get transcriptionGenerating => '転記ファイル生成中 ..';
+
+  @override
+  String get transcriptionTiming => '転記開始時刻';
+
+  @override
+  String get transcriptionExportFile => '輸出このファイル';
+
+  @override
+  String get globalFileSaveAs => '輸出';
+
+  @override
+  String get globalFileTypePDF => 'PDF';
+
+  @override
+  String get globalFileTypeWord => 'Word';
+
+  @override
+  String get globalFileTypeTxt => 'Text';
 }

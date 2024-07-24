@@ -4,9 +4,10 @@
 
 import 'dart:io';
 
+import 'package:netease_common/netease_common.dart';
+
 import '../model/client_upgrade_info.dart';
 import '../repo/i_repo.dart';
-import '../response/result.dart';
 
 /// 不知道放哪儿的， 都放这儿
 class MiscRepo extends IRepo {
@@ -16,13 +17,13 @@ class MiscRepo extends IRepo {
 
   factory MiscRepo() => _singleton;
 
-  Future<Result<UpgradeInfo>> getClientUpdateInfo(String? accountId,
+  Future<NEResult<UpgradeInfo>> getClientUpdateInfo(String? accountId,
       String versionName, int versionCode, int clientAppCode) async {
     return appService.getClientUpdateInfo(
         accountId, versionName, versionCode, clientAppCode);
   }
 
-  Future<Result<void>> downloadFile(
+  Future<NEResult<void>> downloadFile(
       String url, File file, void Function(int count, int total) progress) {
     return appService.downloadFile(url, file, progress);
   }

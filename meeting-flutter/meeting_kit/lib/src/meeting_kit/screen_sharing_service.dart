@@ -53,11 +53,6 @@ class NEScreenSharingParams {
   /// 分享昵称
   final String displayName;
 
-  /// iOS平台的AppGroup
-  String? iosAppGroup;
-
-  IntervalEvent? trackingEvent;
-
   NEScreenSharingParams({
     required this.sharingCode,
     required this.displayName,

@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nemeeting/uikit/values/dimem.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import 'package:nemeeting/service/config/app_config.dart';
 import 'package:nemeeting/service/config/servers.dart';
 
@@ -121,7 +121,8 @@ class _AboutState extends AppBaseState<About> {
         ),
       ),
       onTap: () async {
-        if (NEMeetingUIKit.instance.getCurrentMeetingInfo() != null) {
+        if (NEMeetingKit.instance.getMeetingService().getCurrentMeetingInfo() !=
+            null) {
           ToastUtils.showToast(context,
               getAppLocalizations().meetingOperationNotSupportedInMeeting);
           return;
@@ -155,7 +156,7 @@ class _AboutState extends AppBaseState<About> {
       if (Servers().userProtocol?.isNotEmpty ?? false) {
         Navigator.push(
             context,
-            MaterialPageRoute(
+            NEMeetingPageRoute(
                 builder: (context) => WebViewPage(WebViewArguments(
                     Servers().userProtocol,
                     getAppLocalizations().authServiceAgreement))));
@@ -170,7 +171,7 @@ class _AboutState extends AppBaseState<About> {
       if (Servers().privacy?.isNotEmpty ?? false) {
         Navigator.push(
             context,
-            MaterialPageRoute(
+            NEMeetingPageRoute(
                 builder: (context) => WebViewPage(WebViewArguments(
                     Servers().privacy, getAppLocalizations().authPrivacy))));
       } else {

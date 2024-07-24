@@ -22,8 +22,8 @@ abstract class NEMeetingMessageChannelService {
 
   ///
   /// 获取指定会话的未读消息列表
-  /// sessionId 会话id
-  /// return  消息列表
+  /// [sessionId] 会话id
+  /// return 消息列表
   ///
   Future<NEResult<List<NEMeetingSessionMessage>>> queryUnreadMessageList(
       String sessionId);
@@ -31,9 +31,16 @@ abstract class NEMeetingMessageChannelService {
   ///
   /// 清除指定会话的未读消息数
   /// 该接口会触发 NEMeetingMessageChannelListener.onSessionMessageRecentChanged 回调通知。
-  /// sessionId 会话id
+  /// [sessionId] 会话id
   ///
   Future<VoidResult> clearUnreadCount(String sessionId);
+
+  ///
+  ///  删除指定会话的所有消息
+  ///  该接口会触发 NEMeetingMessageChannelListener.onSessionMessageAllDeleted 回调通知。
+  ///  [sessionId] 会话id
+  ///
+  Future<VoidResult> deleteAllSessionMessage(String sessionId);
 
   ///
   /// 获取指定会话的历史消息
@@ -42,35 +49,4 @@ abstract class NEMeetingMessageChannelService {
   ///
   Future<NEResult<List<NEMeetingSessionMessage>>> getSessionMessagesHistory(
       NEMeetingGetMessageHistoryParams param);
-
-  ///
-  ///  删除指定会话的所有消息
-  ///  该接口会触发 NEMeetingMessageChannelListener.onSessionMessageAllDeleted 回调通知。
-  ///  [sessionId] 会话id
-  ///
-  Future<VoidResult> deleteAllSessionMessage(String sessionId);
-}
-
-/// 回调接口，用于监听消息变更事件
-abstract mixin class NEMeetingMessageChannelListener {
-  /// 接收到自定义消息
-  // void onCustomMessageReceive(NEMeetingCustomMessage message) {}
-
-  /// 接收到自定义消息时会回调该方法
-  /// [message] 自定义会话消息
-  void onSessionMessageReceived(NEMeetingSessionMessage message) {}
-
-  /// 会话消息未读数变更时会回调该方法
-  /// [messages] 会话消息未读数列表
-  void onSessionMessageRecentChanged(List<NEMeetingRecentSession> messages) {}
-
-  /// 会话消息被删除时会回调该方法
-  ///  [message] 自定义会话消息
-  void onSessionMessageDeleted(NEMeetingSessionMessage message) {}
-
-  /// 会话消息全部被删除时会回调该方法
-  /// [sessionId] 会话id
-  /// [sessionType] 会话类型
-  void onSessionMessageAllDeleted(
-      String sessionId, NEMeetingSessionTypeEnum sessionType) {}
 }

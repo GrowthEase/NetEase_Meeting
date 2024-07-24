@@ -2,12 +2,29 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        // 配置HMS Core SDK的Maven仓地址。
+        maven {url 'https://developer.huawei.com/repo/'}
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.1.3'
+        // 增加AGC插件配置，请您参见AGC插件依赖关系选择合适的AGC插件版本。
+        classpath 'com.huawei.agconnect:agcp:1.6.0.300'
+    }
+}
+
 allprojects {
     repositories {
         mavenCentral()
         google()
         maven {
             url  "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+        maven {
+            url  'https://developer.huawei.com/repo/'
         }
     }
 }

@@ -5,7 +5,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import '../uikit/state/meeting_base_state.dart';
 import '../language/localizations.dart';
 import '../uikit/values/colors.dart';
@@ -47,7 +47,7 @@ class _ScheduleMeetingRepeatEndRouteState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              MeetingSettingGroup(children: [
+              MeetingCard(children: [
                 buildCheckableItem(NEMeetingRecurringEndRuleType.date),
                 if (widget.recurringRule.endRule?.type ==
                     NEMeetingRecurringEndRuleType.date)
@@ -103,7 +103,7 @@ class _ScheduleMeetingRepeatEndRouteState
     );
   }
 
-  var _time;
+  DateTime? _selectedEndTime;
 
   void _showCupertinoDatePicker() {
     final date = widget.recurringRule.endRule!.date;
@@ -132,15 +132,15 @@ class _ScheduleMeetingRepeatEndRouteState
                   mode: CupertinoDatePickerMode.date,
                   backgroundColor: AppColors.white,
                   onDateTimeChanged: (DateTime time) {
-                    _time = time;
+                    _selectedEndTime = time;
                   },
                 )),
           ]);
         }).then((value) {
-      if (mounted && value == 'done') {
+      if (mounted && value == 'done' && _selectedEndTime != null) {
         setState(() {
           widget.recurringRule.endRule!.date =
-              DateFormat('yyyy/MM/dd').format(_time);
+              DateFormat('yyyy/MM/dd').format(_selectedEndTime!);
           _inputController.text =
               widget.recurringRule.endRule!.times.toString();
         });

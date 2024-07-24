@@ -13,8 +13,6 @@ class AssetName {
   static const String emptyMeetingList = 'assets/images/empty_meeting_list.png';
 
   static const String iconWarning = 'assets/images/icon_warning.png';
-  static const String iconInRoomFeedback =
-      'assets/images/icon_inroom_feedback.png';
 
   static const String emptyHistoryMeetingList =
       'assets/images/empty_historyMeeting_list.png';

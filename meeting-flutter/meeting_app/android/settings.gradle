@@ -28,3 +28,12 @@ plugins {
 
 include ":app"
 rootProject.name = 'meeting-flutter-app'
+
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        // 配置HMS Core SDK的Maven仓地址。
+        maven {url 'https://developer.huawei.com/repo/'}
+    }
+}

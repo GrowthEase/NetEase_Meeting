@@ -7,8 +7,7 @@ import 'package:nemeeting/uikit/state/meeting_base_state.dart';
 import 'package:nemeeting/uikit/values/asset_name.dart';
 import 'package:nemeeting/uikit/values/colors.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
-import 'package:netease_common/netease_common.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import '../language/localizations.dart';
 import '../service/repo/history_repo.dart';
 import '../uikit/values/fonts.dart';
@@ -259,6 +258,7 @@ class _HistoryMeetingRouteState extends AppBaseState<HistoryMeetingRoute> {
       return buildEmptyView(getAppLocalizations().historyMeetingListEmpty);
     }
     return ListView.builder(
+        key: MeetingValueKey.historyMeetingList,
         itemCount: allMeetingList.length,
         itemBuilder: (context, index) {
           var item = allMeetingList[index];
@@ -409,7 +409,7 @@ class _HistoryMeetingRouteState extends AppBaseState<HistoryMeetingRoute> {
       onTap: () {
         final isFavorite = item.isFavorite;
         Navigator.of(context)
-            .push(MaterialPageRoute(
+            .push(NEMeetingPageRoute(
                 builder: (context) => HistoryMeetingDetailRoute(item)))
             .then((value) {
           /// 收藏状态变更，则刷新收藏列表

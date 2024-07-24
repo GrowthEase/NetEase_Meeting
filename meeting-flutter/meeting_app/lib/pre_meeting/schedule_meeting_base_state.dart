@@ -11,8 +11,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nemeeting/pre_meeting/schedule_meeting_repeat.dart';
 import 'package:nemeeting/pre_meeting/schedule_meeting_repeat_end.dart';
 import 'package:nemeeting/routes/timezone_page.dart';
+import 'package:nemeeting/widget/cloud_record_config.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_core.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 
 import '../base/util/text_util.dart';
 import '../language/localizations.dart';
@@ -59,12 +61,14 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
 
   bool isLiveEnabled = false;
 
-  bool attendeeRecordOn = !kNoCloudRecord;
+  NECloudRecordConfig cloudRecordConfig =
+      NECloudRecordConfig(enable: !kNoCloudRecord);
 
   final enableGuestJoin = ValueNotifier(false);
 
   final enableInterpretation = ValueNotifier(false);
   InterpreterListController? interpreterListController;
+  final settingsService = NEMeetingKit.instance.getSettingsService();
 
   BoxDecoration _boxDecoration = BoxDecoration(
     color: Colors.white,
@@ -73,32 +77,28 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
     ),
   );
 
+  Map<String, NEContact> contactMap;
   List<NEContact> get contactList => scheduledMemberList
-      .where((element) => element.contact != null)
-      .map((e) => e.contact!)
+      .map((e) => contactMap[e.userUuid])
+      .whereType<NEContact>()
       .toList();
 
-  /// userUuid to role
   List<NEScheduledMember> scheduledMemberList = [];
 
   /// 滑动控制器
   ScrollController _scrollController = ScrollController();
   int _pageSize = 20;
 
-  ScheduleMeetingBaseState({NEMeetingItem? item}) {
-    if (item == null) {
-      meetingItem = NEMeetingItem();
-      meetingItem.ownerUserUuid = AuthManager().accountId;
-      meetingItem.scheduledMemberList = [];
-    } else {
-      meetingItem = item;
-    }
+  ScheduleMeetingBaseState(this.meetingItem, this.contactMap) {
     meetingItem.scheduledMemberList!.sort((lhs, rhs) =>
         NEScheduledMemberExt.compareMember(
             lhs, rhs, AuthManager().accountId, meetingItem.ownerUserUuid));
     scheduledMemberList.clear();
     scheduledMemberList
         .addAll(meetingItem.scheduledMemberList!.map((e) => e.copy()));
+    if (meetingItem.scheduledMemberList?.isNotEmpty != true) {
+      addMyselfToDefaultAttendee();
+    }
   }
 
   late final int _maxMembers;
@@ -113,16 +113,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
       setState(() {});
     });
     meetingPasswordController = TextEditingController();
-    var settingsService = NEMeetingKit.instance.getSettingsService();
-    Future.wait([
-      settingsService.isMeetingLiveSupported(),
-      settingsService.isMeetingCloudRecordSupported(),
-    ]).then((values) {
-      setState(() {
-        isLiveEnabled = values[0];
-        // showMeetingRecord = values[1];
-      });
-    });
+    isLiveEnabled = settingsService.isMeetingLiveSupported();
 
     _scrollController = ScrollController()
       ..addListener(() {
@@ -131,14 +122,12 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
           loadMoreContacts().then((value) => setState(() {}));
         }
       });
-    _maxMembers = SDKConfig.current.scheduleMemberMax;
+    _maxMembers = settingsService.getScheduledMemberConfig().scheduleMemberMax;
   }
 
   @override
   Widget buildBody() {
     return NEMeetingKitFeatureConfig(
-        // 使用最近的 sdk config，如果在会议中，可以查询到会议中使用的实例
-        config: context.sdkConfig,
         builder: (context, child) => NEGestureDetector(
             onTap: () {
               FocusScope.of(context).unfocus();
@@ -157,7 +146,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
                 if (recurringRule.type != NEMeetingRecurringRuleType.no &&
                     isEditAll() == false)
                   buildEditRepeatMeetingTips(),
-                if (SDKConfig.current.isScheduledMembersEnabled) ...[
+                if (settingsService.getScheduledMemberConfig().isSupported) ...[
                   buildScheduleAttendees(),
                 ],
                 buildSecurityPart(context),
@@ -168,7 +157,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
   }
 
   Widget buildMeetingInfoPart(BuildContext context) {
-    return MeetingSettingGroup(
+    return MeetingCard(
       title: getAppLocalizations().meetingTime,
       iconColor: AppColors.color_337eff,
       iconData: IconFont.icon_time,
@@ -209,7 +198,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
 
   /// 构建安全模块
   Widget buildSecurityPart(BuildContext context) {
-    return MeetingSettingGroup(
+    return MeetingCard(
       title: getAppLocalizations().meetingSecurity,
       iconData: IconFont.icon_security,
       iconColor: AppColors.color_1BB650,
@@ -219,9 +208,9 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
             valueListenable: meetingPwdSwitch,
             builder: (context, value, child) =>
                 Visibility(child: buildPwdInput(), visible: value)),
-        if (context.isWaitingRoomEnabled)
+        if (context.isWaitingRoomSupported)
           MeetingSwitchItem(
-              key: MeetingValueKey.scheduleWaitingRoom,
+              switchKey: MeetingValueKey.scheduleWaitingRoom,
               title: NEMeetingUIKit.instance
                   .getUIKitLocalizations()
                   .waitingRoomEnable,
@@ -230,9 +219,9 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
               onChanged: (value) {
                 enableWaitingRoom.value = value;
               }),
-        if (context.isGuestJoinEnabled)
+        if (context.isGuestJoinSupported)
           MeetingSwitchItem(
-              key: MeetingValueKey.scheduleEnableGuestJoin,
+              switchKey: MeetingValueKey.scheduleEnableGuestJoin,
               title: getAppLocalizations().meetingGuestJoin,
               valueNotifier: enableGuestJoin,
               contentBuilder: (enable) => Text(
@@ -253,13 +242,13 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
 
   /// 构建设置模块
   Widget buildSettingPart(BuildContext context) {
-    return MeetingSettingGroup(
+    return MeetingCard(
       title: NEMeetingUIKit.instance.getUIKitLocalizations().settings,
       iconColor: AppColors.color_8D90A0,
       iconData: IconFont.icon_setting,
       children: [
         MeetingSwitchItem(
-          key: MeetingValueKey.scheduleAttendeeAudio,
+          switchKey: MeetingValueKey.scheduleAttendeeAudio,
           title: getAppLocalizations().meetingAttendeeAudioOff,
           valueNotifier: attendeeAudioAutoOff,
           onChanged: (value) => attendeeAudioAutoOff.value = value,
@@ -271,7 +260,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    buildRadio(
+                    MeetingRadioItem(
                         value: false,
                         padding: EdgeInsets.only(left: 32, right: 16),
                         title: getAppLocalizations()
@@ -281,7 +270,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
                           attendeeAudioAutoOffNotAllowSelfOn = false;
                           setState(() {});
                         }),
-                    buildRadio(
+                    MeetingRadioItem(
                         value: true,
                         padding: EdgeInsets.only(
                             left: 32, right: 16, top: 9, bottom: 9),
@@ -298,14 +287,15 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
               return SizedBox.shrink();
             }),
         MeetingSwitchItem(
-          key: MeetingValueKey.scheduleEnableJoinBeforeHost,
+          switchKey: MeetingValueKey.scheduleEnableJoinBeforeHost,
           title: getAppLocalizations().meetingJoinBeforeHost,
           valueNotifier: enableJoinBeforeHost,
           onChanged: (value) => enableJoinBeforeHost.value = value,
         ),
+        if (context.isCloudRecordSupported) buildCloudRecord(),
         if (isLiveEnabled)
           MeetingSwitchItem(
-            key: MeetingValueKey.scheduleLiveSwitch,
+            switchKey: MeetingValueKey.scheduleLiveSwitch,
             title: getAppLocalizations().meetingLiveOn,
             valueNotifier: liveSwitch,
             onChanged: (value) => liveSwitch.value = value,
@@ -318,9 +308,9 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
               }
               return SizedBox.shrink();
             }),
-        if (context.interpretationConfig.enable)
+        if (context.interpretationConfig.isSupported)
           MeetingSwitchItem(
-            key: MeetingValueKey.scheduleEnableInterpretation,
+            switchKey: MeetingValueKey.scheduleEnableInterpretation,
             title:
                 NEMeetingUIKit.instance.getUIKitLocalizations().interpretation,
             valueNotifier: enableInterpretation,
@@ -338,60 +328,17 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
     );
   }
 
+  Widget buildCloudRecord() {
+    return CloudRecordConfig(cloudRecordConfig: cloudRecordConfig);
+  }
+
   /// 是不是自己
   bool isMySelf(String? uuid) => uuid == AuthManager().accountId;
-
-  Widget buildRadio({
-    required String title,
-    required bool value,
-    required bool groupValue,
-    required Function(bool?)? onChanged,
-    double height = 40,
-    EdgeInsetsGeometry? padding,
-  }) {
-    return NEGestureDetector(
-      child: Container(
-        padding: padding,
-        height: height,
-        color: Colors.white,
-        child: Row(
-          children: [
-            Container(
-              width: 16,
-              height: 16,
-              child: Radio<bool>(
-                value: value,
-                groupValue: groupValue,
-                onChanged: onChanged,
-                fillColor: MaterialStateProperty.resolveWith((states) {
-                  if (states.contains(MaterialState.selected)) {
-                    return AppColors.color_337EFF.withOpacity(
-                      states.contains(MaterialState.disabled) ? 0.5 : 1.0,
-                    );
-                  }
-                  return AppColors.colorE6E7EB;
-                }),
-              ),
-            ),
-            SizedBox(width: 12),
-            Expanded(
-                child: Text(title,
-                    style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.color_53576A,
-                        fontWeight: FontWeight.w400,
-                        decoration: TextDecoration.none))),
-          ],
-        ),
-      ),
-      onTap: () => onChanged?.call(value),
-    );
-  }
 
   /// 会议标题
   Widget buildSubject(
       {required FocusNode focusNode, TextEditingController? controller}) {
-    return MeetingSettingGroup(children: [
+    return MeetingCard(children: [
       Row(
         children: [
           SizedBox(width: 16),
@@ -399,7 +346,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
             getAppLocalizations().meetingName,
             style: TextStyle(
                 color: AppColors.color_1E1E27,
-                fontSize: 14,
+                fontSize: 16,
                 fontWeight: FontWeight.w500),
           ),
           SizedBox(width: 26.w),
@@ -448,15 +395,17 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
       onTap: () => DialogUtils.showContactsPopup(
         context: context,
         titleBuilder: (int size) =>
-            '${getAppLocalizations().meetingAttendees}（$size）',
+            '${getAppLocalizations().meetingAttendees}($size)',
         scheduledMemberList: scheduledMemberList,
+        contactMap: contactMap,
         myUserUuid: myUserUuid,
         ownerUuid: meetingItem.ownerUserUuid,
         addActionClick: () => DialogUtils.showContactsAddPopup(
           context: context,
           titleBuilder: (int size) =>
-              '${getAppLocalizations().meetingAddAttendee}${size > 0 ? '（$size）' : ''}',
+              '${getAppLocalizations().meetingAddAttendee}${size > 0 ? '($size)' : ''}',
           scheduledMemberList: scheduledMemberList,
+          contactMap: contactMap,
           myUserUuid: myUserUuid,
           itemClickCallback: handleClickCallback,
         ),
@@ -525,8 +474,9 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
             onTap: () => DialogUtils.showContactsAddPopup(
               context: context,
               titleBuilder: (int size) =>
-                  '${getAppLocalizations().meetingAddAttendee}${size > 0 ? '（$size）' : ''}',
+                  '${getAppLocalizations().meetingAddAttendee}${size > 0 ? '($size)' : ''}',
               scheduledMemberList: scheduledMemberList,
+              contactMap: contactMap,
               myUserUuid: NEMeetingKit.instance
                       .getAccountService()
                       .getAccountInfo()
@@ -650,7 +600,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
             title: getAppLocalizations().meetingTimezone,
             content: '${timezone?.time ?? ''} ${timezone?.zone ?? ''}',
             onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+              Navigator.of(context).push(NEMeetingPageRoute(builder: (context) {
                 return TimezonePage(timezoneNotifier: timezoneNotifier);
               }));
             },
@@ -663,7 +613,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
       title: getAppLocalizations().meetingRepeat,
       content: getRepeatText(),
       onTap: () {
-        Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+        Navigator.of(context).push(NEMeetingPageRoute(builder: (context) {
           return ScheduleMeetingRepeatRoute(recurringRule,
               startTime.millisecondsSinceEpoch, isEditAll() != null);
         })).then((value) => setState(() {}));
@@ -729,7 +679,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
       title: getAppLocalizations().meetingRepeatEndAt,
       content: getRepeatEndText(),
       onTap: () {
-        Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+        Navigator.of(context).push(NEMeetingPageRoute(builder: (context) {
           return ScheduleMeetingRepeatEndRoute(recurringRule);
         })).then((value) => setState(() {}));
       },
@@ -847,7 +797,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
 
   Widget buildPwd() {
     return MeetingSwitchItem(
-        key: MeetingValueKey.schedulePwdSwitch,
+        switchKey: MeetingValueKey.schedulePwdSwitch,
         title: getAppLocalizations().meetingPassword,
         valueNotifier: meetingPwdSwitch,
         onChanged: (bool value) {
@@ -922,7 +872,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
 
   Widget buildLiveLevel() {
     return MeetingSwitchItem(
-        key: MeetingValueKey.scheduleLiveLevel,
+        switchKey: MeetingValueKey.scheduleLiveLevel,
         title: getAppLocalizations().meetingLiveLevelTip,
         valueNotifier: liveLevelSwitch,
         padding: EdgeInsets.only(
@@ -945,6 +895,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
         listenable: interpreterListController!,
         builder: (context, _) {
           return MeetingArrowItem(
+            key: MeetingValueKey.scheduleInterpreters,
             minHeight: 40,
             padding: EdgeInsets.only(left: 32, right: 16),
             title: NEMeetingUIKit.instance
@@ -1059,12 +1010,13 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
         NEMeetingKit.instance.getAccountService().getAccountInfo();
     final userUuid = accountInfo?.userUuid ?? '';
     scheduledMemberList.add(NEScheduledMember(
-        role: MeetingRoles.kHost,
-        userUuid: userUuid,
-        contact: NEContact(
-            name: accountInfo?.nickname ?? '',
-            avatar: accountInfo?.avatar,
-            userUuid: userUuid)));
+      role: MeetingRoles.kHost,
+      userUuid: userUuid,
+    ));
+    contactMap[userUuid] = NEContact(
+        name: accountInfo?.nickname ?? '',
+        avatar: accountInfo?.avatar,
+        userUuid: userUuid);
   }
 
   /// 本地分页加载通讯录成员
@@ -1087,10 +1039,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
 
     /// 更新通讯录信息
     result.data?.foundList.forEach((contact) {
-      final scheduleMember = scheduledMemberList
-          .where((element) => element.userUuid == contact.userUuid)
-          .firstOrNull;
-      scheduleMember?.contact = contact;
+      contactMap[contact.userUuid] = contact;
     });
   }
 

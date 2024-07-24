@@ -4,17 +4,14 @@
 
 import 'dart:async';
 
-import 'package:nemeeting/service/config/app_config.dart';
-import 'package:netease_common/netease_common.dart';
-import 'package:netease_meeting_core/meeting_kit.dart';
+import 'package:netease_meeting_kit/meeting_kit.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/auth/auth_state.dart';
 import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/service/config/login_type.dart';
 import 'package:nemeeting/service/model/login_info.dart';
 import 'package:nemeeting/service/repo/i_repo.dart';
-import 'package:nemeeting/service/response/result.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 
 /// 登录注册,
 class AuthRepo extends IRepo {
@@ -33,7 +30,7 @@ class AuthRepo extends IRepo {
         .requestSmsCodeForLogin(mobile);
   }
 
-  Future<Result<LoginInfo>> loginByPwd(
+  Future<NEResult<LoginInfo>> loginByPwd(
       String appKey, Future<NEResult<NEAccountInfo>> action()) async {
     return AuthManager()
         .loginProcedure(
@@ -53,7 +50,7 @@ class AuthRepo extends IRepo {
   }
 
   /// 验证码登录
-  Future<Result<LoginInfo>> loginByMobileCheckCode(
+  Future<NEResult<LoginInfo>> loginByMobileCheckCode(
       String appKey, String mobile, String checkCode) {
     return AuthManager().loginProcedure(LoginType.verify, appKey: appKey,
         () async {
@@ -71,7 +68,7 @@ class AuthRepo extends IRepo {
     });
   }
 
-  Future<Result<LoginInfo>> loginBySSOUri(
+  Future<NEResult<LoginInfo>> loginBySSOUri(
     String uri, {
     String? appKey,
     String? corpCode,

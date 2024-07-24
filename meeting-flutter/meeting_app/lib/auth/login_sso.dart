@@ -15,7 +15,7 @@ import 'package:nemeeting/uikit/values/colors.dart';
 import 'package:nemeeting/uikit/values/fonts.dart';
 import 'package:nemeeting/utils/state_utils.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import '../../language/localizations.dart';
@@ -103,6 +103,9 @@ class LoginSSOState extends AuthBaseState with NESSOLoginControllerMixin {
                       color: AppColors.greyB0B6BE,
                     ),
                   ),
+                ),
+                SizedBox(
+                  width: 8,
                 ),
                 NEGestureDetector(
                   child: Container(

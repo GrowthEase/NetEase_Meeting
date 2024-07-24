@@ -7,3 +7,12 @@
 /// loginType为1, 3，传登录密码
 /// loginType为2，传手机检验码)
 enum LoginType { token, password, verify, third, sso }
+
+class LoginTypeFromInt {
+  static LoginType fromInt(int? type) {
+    return LoginType.values.firstWhere(
+      (element) => element.index == type,
+      orElse: () => LoginType.token,
+    );
+  }
+}

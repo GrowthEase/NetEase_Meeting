@@ -7,11 +7,10 @@ import 'dart:io';
 import 'package:flutter/widgets.dart';
 import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/service/repo/misc_repo.dart';
-import 'package:nemeeting/service/response/result.dart';
 
 typedef ProgressCallback = void Function(int count, int total);
 
-typedef DownloadResult = void Function(Result result);
+typedef DownloadResult = void Function(int code);
 
 /// down load progress notify
 class DownloadProgressNotifier extends ChangeNotifier {
@@ -46,7 +45,7 @@ class DownloadProgressNotifier extends ChangeNotifier {
       }
     }).then((result) {
       if (!_cancel) {
-        downloadResult(result);
+        downloadResult(result.code);
       }
     });
   }
@@ -55,7 +54,7 @@ class DownloadProgressNotifier extends ChangeNotifier {
   void cancel({bool cancelNotify = true}) {
     _cancel = true;
     if (cancelNotify) {
-      downloadResult(Result<void>(code: HttpCode.cancel, data: null));
+      downloadResult(HttpCode.cancel);
     }
   }
 

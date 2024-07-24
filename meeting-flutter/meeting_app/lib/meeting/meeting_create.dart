@@ -18,10 +18,9 @@ import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/service/config/app_config.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
 import '../uikit/utils/nav_utils.dart';
-import '../uikit/values/fonts.dart';
 import '../uikit/values/colors.dart';
 import 'package:nemeeting/base/util/text_util.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import 'package:nemeeting/utils/integration_test.dart';
 import '../uikit/const/consts.dart';
 import '../widget/meeting_text_field.dart';
@@ -62,11 +61,9 @@ class _MeetCreateRouteState extends AppBaseState<MeetCreateRoute> {
     Future.wait([
       settingsService.isTurnOnMyVideoWhenJoinMeetingEnabled(),
       settingsService.isTurnOnMyAudioWhenJoinMeetingEnabled(),
-      settingsService.isMeetingCloudRecordSupported(),
     ]).then((values) {
       openCamera.value = values[0];
       openMicrophone.value = values[1];
-      // showMeetingRecord = values[3];
     });
     passwordFocusNode.addListener(() {
       setState(() {});
@@ -97,13 +94,13 @@ class _MeetCreateRouteState extends AppBaseState<MeetCreateRoute> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  MeetingSettingGroup(children: [
+                  MeetingCard(children: [
                     buildUseSelfMeetingItem(),
                     if (!TextUtil.isEmpty(MeetingUtil.getShortMeetingNum()))
                       buildShortMeetingIdItem(),
                     buildMeetingIdItem(),
                   ]),
-                  MeetingSettingGroup(children: [
+                  MeetingCard(children: [
                     buildPwd(),
                     ValueListenableBuilder(
                         valueListenable: meetingPwdSwitch,
@@ -114,7 +111,7 @@ class _MeetCreateRouteState extends AppBaseState<MeetCreateRoute> {
                           );
                         }),
                   ]),
-                  MeetingSettingGroup(children: [
+                  MeetingCard(children: [
                     buildMicrophoneItem(),
                     buildCameraItem(),
                     if (showMeetingRecord) buildRecordItem(),
@@ -132,6 +129,7 @@ class _MeetCreateRouteState extends AppBaseState<MeetCreateRoute> {
 
   Widget buildUseSelfMeetingItem() {
     return MeetingSwitchItem(
+        switchKey: MeetingValueKey.userSelfMeetingNumCreateMeeting,
         title: getAppLocalizations().meetingUsePersonalMeetId,
         valueNotifier: userSelfMeetingNum,
         onChanged: (bool value) {
@@ -170,7 +168,7 @@ class _MeetCreateRouteState extends AppBaseState<MeetCreateRoute> {
 
   Widget buildPwd() {
     return MeetingSwitchItem(
-        key: MeetingValueKey.schedulePwdSwitch,
+        switchKey: MeetingValueKey.schedulePwdSwitch,
         title: getAppLocalizations().meetingPassword,
         valueNotifier: meetingPwdSwitch,
         onChanged: (bool value) {
@@ -219,11 +217,11 @@ class _MeetCreateRouteState extends AppBaseState<MeetCreateRoute> {
             },
             decoration: InputDecoration(
               hintText: '${getAppLocalizations().meetingEnterPassword}',
-              hintStyle: TextStyle(fontSize: 14, color: AppColors.color_999999),
+              hintStyle: TextStyle(fontSize: 16, color: AppColors.color_999999),
               isCollapsed: true,
               border: InputBorder.none,
             ),
-            style: TextStyle(color: AppColors.color_1E1E27, fontSize: 14),
+            style: TextStyle(color: AppColors.color_1E1E27, fontSize: 16),
           )),
           TextUtil.isEmpty(_meetingPasswordController.text) ||
                   !passwordFocusNode.hasFocus
@@ -248,7 +246,7 @@ class _MeetCreateRouteState extends AppBaseState<MeetCreateRoute> {
 
   Widget buildCameraItem() {
     return MeetingSwitchItem(
-      key: MeetingValueKey.openCameraCreateMeeting,
+      switchKey: MeetingValueKey.openCameraCreateMeeting,
       title: getAppLocalizations().meetingJoinCameraOn,
       valueNotifier: openCamera,
       onChanged: (bool value) {
@@ -260,7 +258,7 @@ class _MeetCreateRouteState extends AppBaseState<MeetCreateRoute> {
 
   Widget buildRecordItem() {
     return MeetingSwitchItem(
-      key: MeetingValueKey.openRecordEnterMeeting,
+      switchKey: MeetingValueKey.openRecordEnterMeeting,
       title: getAppLocalizations().meetingJoinCloudRecordOn,
       valueNotifier: openRecord,
       onChanged: (bool value) {
@@ -271,7 +269,7 @@ class _MeetCreateRouteState extends AppBaseState<MeetCreateRoute> {
 
   Widget buildMicrophoneItem() {
     return MeetingSwitchItem(
-      key: MeetingValueKey.openMicrophoneCreateMeeting,
+      switchKey: MeetingValueKey.openMicrophoneCreateMeeting,
       title: getAppLocalizations().meetingJoinMicrophoneOn,
       valueNotifier: openMicrophone,
       onChanged: (bool value) {
@@ -292,27 +290,15 @@ class _MeetCreateRouteState extends AppBaseState<MeetCreateRoute> {
             child: MeetingActionButton(
               key: MeetingValueKey.createMeetingBtn,
               onTap: value ? createMeeting : null,
-              text: getAppLocalizations().meetingCreate,
+              text: getAppLocalizations().meetingHold,
             ),
           ));
         });
   }
 
   Future<void> createMeeting() async {
-    var historyItem = await NEMeetingKit.instance
-        .getMeetingService()
-        .getLocalHistoryMeetingList()
-        .where((historyItem) => (historyItem.meetingNum ==
-                (userSelfMeetingNum.value ? MeetingUtil.getMeetingNum() : '') ||
-            historyItem.shortMeetingNum ==
-                (userSelfMeetingNum.value
-                    ? MeetingUtil.getShortMeetingNum()
-                    : '')))
-        .firstOrNull;
-    String? lastUsedNickname;
-    if (historyItem != null) {
-      lastUsedNickname = historyItem.nickname;
-    }
+    final lastUsedNickname = LocalHistoryMeetingManager().getLatestNickname(
+        userSelfMeetingNum.value ? MeetingUtil.getMeetingNum() : '');
     onCreateMeeting(nickname: lastUsedNickname);
   }
 
@@ -321,9 +307,9 @@ class _MeetCreateRouteState extends AppBaseState<MeetCreateRoute> {
 
     var meetingNum = useSelfNum ? MeetingUtil.getMeetingNum() : null;
     LoadingUtil.showLoading();
-    final result = await NEMeetingUIKit.instance.startMeeting(
+    final result = await NEMeetingKit.instance.getMeetingService().startMeeting(
       context,
-      NEStartMeetingUIParams(
+      NEStartMeetingParams(
         meetingNum: meetingNum,
         password:
             meetingPwdSwitch.value ? _meetingPasswordController.text : null,
@@ -354,7 +340,7 @@ class _MeetCreateRouteState extends AppBaseState<MeetCreateRoute> {
       //shareScreenTips 屏幕共享弹窗提示文案
       switchToJoin(
         context,
-        NEJoinMeetingUIParams(
+        NEJoinMeetingParams(
           meetingNum: meetingNum!,
           displayName: nickname ?? MeetingUtil.getNickName(),
           watermarkConfig: NEWatermarkConfig(
@@ -386,8 +372,8 @@ class _MeetCreateRouteState extends AppBaseState<MeetCreateRoute> {
     }
   }
 
-  void switchToJoin(BuildContext context, NEJoinMeetingUIParams param,
-      NEMeetingUIOptions opts) {
+  void switchToJoin(
+      BuildContext context, NEJoinMeetingParams param, NEMeetingOptions opts) {
     showDialog<bool>(
         context: context,
         builder: (BuildContext dialogContext) {
@@ -410,7 +396,8 @@ class _MeetCreateRouteState extends AppBaseState<MeetCreateRoute> {
           );
         }).then((ok) {
       if (!context.mounted || ok != true) return;
-      NEMeetingUIKit.instance
+      NEMeetingKit.instance
+          .getMeetingService()
           .joinMeeting(context, param, opts, backgroundWidget: HomePageRoute(),
               onMeetingPageRouteWillPush: () async {
         NavUtils.pop(context);

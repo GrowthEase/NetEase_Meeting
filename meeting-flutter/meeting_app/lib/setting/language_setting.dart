@@ -14,7 +14,7 @@ import '../language/localizations.dart';
 import '../uikit/state/meeting_base_state.dart';
 import '../uikit/values/colors.dart';
 import '../uikit/values/dimem.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 
 class LanguageSetting extends StatefulWidget {
   @override
@@ -92,7 +92,7 @@ class _LanguageSettingState extends AppBaseState<LanguageSetting> {
     var isSystemDefault = (languageCode) =>
         WidgetsBinding.instance.platformDispatcher.locale.languageCode ==
         languageCode;
-    NEMeetingUIKit.instance.switchLanguage(
+    NEMeetingKit.instance.switchLanguage(
         isSystemDefault(languageCode) ? NEMeetingLanguage.automatic : language);
     GlobalPreferences().setLanguageCode(isSystemDefault(languageCode)
         ? NEMeetingLanguage.automatic.locale.languageCode

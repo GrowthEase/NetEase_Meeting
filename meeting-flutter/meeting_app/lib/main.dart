@@ -10,10 +10,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nemeeting/error_handler/error_handler.dart';
+import 'package:nemeeting/routes/home_page.dart';
 import 'package:nemeeting/uikit/values/colors.dart';
+import 'package:nemeeting/utils/const_config.dart';
+import 'package:nemeeting/utils/meeting_util.dart';
 import 'package:nemeeting/utils/virtual_background_util.dart';
 import 'package:netease_common/netease_common.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import 'package:yunxin_alog/yunxin_alog.dart';
 
 import '../service/auth/auth_manager.dart';
@@ -30,7 +33,7 @@ void main() {
   runZonedGuarded<Future<void>>(() async {
     debugPrint('AppStartUp: main');
     WidgetsFlutterBinding.ensureInitialized();
-    AppStyle.setSystemUIOverlayStyleDark();
+    NEMeetingKitUIStyle.setSystemUIOverlayStyleDark();
     ErrorHandler.instance().install();
     await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     await Application.ensureInitialized();
@@ -50,9 +53,8 @@ class MeetingApp extends StatefulWidget {
   State<MeetingApp> createState() => _MeetingAppState();
 }
 
-class _MeetingAppState extends State<MeetingApp> {
-  late NEMeetingStatusListener _meetingStatusListener;
-
+class _MeetingAppState extends State<MeetingApp>
+    implements NEMeetingStatusListener {
   final isInMinimizedMode = ValueNotifier<bool>(false);
 
   @override
@@ -76,20 +78,7 @@ class _MeetingAppState extends State<MeetingApp> {
         VirtualBackgroundManager().ensureInit();
       }
     });
-
-    _meetingStatusListener = (status) {
-      switch (status.event) {
-        case NEMeetingEvent.inMeetingMinimized:
-          isInMinimizedMode.value = true;
-          break;
-        case NEMeetingEvent.inMeeting:
-          isInMinimizedMode.value = false;
-          break;
-        default:
-          break;
-      }
-    };
-    NEMeetingUIKit.instance.addMeetingStatusListener(_meetingStatusListener);
+    NEMeetingKit.instance.getMeetingService().addMeetingStatusListener(this);
   }
 
   @override
@@ -107,8 +96,19 @@ class _MeetingAppState extends State<MeetingApp> {
                         return value
                             ? child!
                             : InComingInvite(
+                                currentContext: () =>
+                                    NavUtils.navigatorKey.currentContext,
                                 child: child!,
                                 isInMinimizedMode: false,
+                                getDefaultNickName: () =>
+                                    MeetingUtil.getNickName(),
+                                backgroundWidget: HomePageRoute(),
+                                buildMeetingUIOptions: (videoAccept) =>
+                                    buildMeetingUIOptions(
+                                  noVideo: !videoAccept,
+                                  noAudio: false,
+                                  context: context,
+                                ),
                               );
                       }));
             },
@@ -120,21 +120,22 @@ class _MeetingAppState extends State<MeetingApp> {
                 useMaterial3: false,
                 brightness: Brightness.light,
                 appBarTheme: AppBarTheme(
-                  systemOverlayStyle: AppStyle.systemUiOverlayStyleDark,
+                  systemOverlayStyle:
+                      NEMeetingKitUIStyle.systemUiOverlayStyleDark,
                 )),
             themeMode: ThemeMode.light,
             navigatorKey: NavUtils.navigatorKey,
             home: WelcomePage(),
             navigatorObservers: [BotToastNavigatorObserver()],
             // 注册路由表
-            routes: RoutesRegister.routes,
+            // routes: RoutesRegister.routes,
+            onGenerateRoute: RoutesRegister.onGenerateRoute,
             localizationsDelegates: [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
               ...MeetingAppLocalizations.localizationsDelegates,
               ...NEMeetingUIKitLocalizations.localizationsDelegates,
-              NEMeetingKitLocalizations.delegate,
             ],
             supportedLocales: [
               const Locale('en', 'US'), // 美国英语
@@ -156,18 +157,32 @@ class _MeetingAppState extends State<MeetingApp> {
     if (language == null ||
         language == NEMeetingLanguage.automatic.locale.languageCode) return;
     if (language == NEMeetingLanguage.chinese.locale.languageCode) {
-      await NEMeetingUIKit.instance.switchLanguage(NEMeetingLanguage.chinese);
+      await NEMeetingKit.instance.switchLanguage(NEMeetingLanguage.chinese);
     } else if (language == NEMeetingLanguage.english.locale.languageCode) {
-      await NEMeetingUIKit.instance.switchLanguage(NEMeetingLanguage.english);
+      await NEMeetingKit.instance.switchLanguage(NEMeetingLanguage.english);
     } else if (language == NEMeetingLanguage.japanese.locale.languageCode) {
-      await NEMeetingUIKit.instance.switchLanguage(NEMeetingLanguage.japanese);
+      await NEMeetingKit.instance.switchLanguage(NEMeetingLanguage.japanese);
     }
   }
 
   @override
   void dispose() {
-    NEMeetingUIKit.instance.removeMeetingStatusListener(_meetingStatusListener);
+    NEMeetingKit.instance.getMeetingService().removeMeetingStatusListener(this);
     super.dispose();
+  }
+
+  @override
+  void onMeetingStatusChanged(NEMeetingEvent event) {
+    switch (event.status) {
+      case NEMeetingStatus.inMeetingMinimized:
+        isInMinimizedMode.value = true;
+        break;
+      case NEMeetingStatus.inMeeting:
+        isInMinimizedMode.value = false;
+        break;
+      default:
+        break;
+    }
   }
 }
 

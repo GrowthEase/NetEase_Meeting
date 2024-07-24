@@ -14,19 +14,19 @@ class _NEContactsServiceImpl extends NEContactsService {
   @override
   Future<NEResult<NEContactsInfoResult>> getContactsInfo(
       List<String> userUuids) {
-    return MeetingRepository.getContactsInfo(userUuids);
+    return ContactsRepository.getContactsInfo(userUuids);
   }
 
   @override
   Future<NEResult<List<NEContact>>> searchContactListByName(
       String? name, int? pageSize, int? pageNum) {
-    return MeetingRepository.searchContacts(name, null, pageSize, pageNum);
+    return ContactsRepository.searchContacts(name, null, pageSize, pageNum);
   }
 
   @override
   Future<NEResult<List<NEContact>>> searchContactListByPhoneNumber(
       String? phoneNumber, int? pageSize, int? pageNum) {
-    return MeetingRepository.searchContacts(
+    return ContactsRepository.searchContacts(
         null, phoneNumber, pageSize, pageNum);
   }
 }

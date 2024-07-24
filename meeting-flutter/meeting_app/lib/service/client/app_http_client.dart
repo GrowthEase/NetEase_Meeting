@@ -8,9 +8,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:nemeeting/base/client_type.dart';
 import 'package:dio/dio.dart';
+import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/config/servers.dart';
 import 'package:yunxin_alog/yunxin_alog.dart';
-import 'package:nemeeting/service/profile/app_profile.dart';
 import 'package:nemeeting/base/manager/device_manager.dart';
 
 import '../module_name.dart';
@@ -51,9 +51,9 @@ class AppHttpClient {
 
   /// common header
   Map<String, dynamic> get baseHeaders => {
-        'token': AppProfile.accountToken,
-        'user': AppProfile.accountId,
-        'appKey': AppProfile.appKey,
+        'token': AuthManager().accountToken,
+        'user': AuthManager().accountId,
+        'appKey': AuthManager().appKey,
         'clientType':
             DeviceManager().clientType == ClientType.aos ? 'android' : 'ios',
         // 'sdkVersion': AppConfig().nertcVersionName,

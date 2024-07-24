@@ -6,7 +6,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
-import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/service/repo/user_repo.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
@@ -15,7 +14,7 @@ import '../uikit/state/meeting_base_state.dart';
 import '../uikit/values/colors.dart';
 import '../uikit/values/dimem.dart';
 import '../uikit/const/consts.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 
 import '../utils/integration_test.dart';
 
@@ -153,7 +152,6 @@ class _NickSettingState extends AppBaseState<NickSetting> {
     lifecycleExecuteUI(UserRepo().updateNickname(nick)).then((result) {
       if (result == null) return;
       if (result.code == HttpCode.success) {
-        AuthManager().saveNick(nick);
         ToastUtils.showToast(
             context, getAppLocalizations().settingModifySuccess);
         updateHistoryMeetingItem(originalNickname, nick);

@@ -10,7 +10,7 @@ import 'package:nemeeting/service/config/servers.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
 import 'package:nemeeting/webview/webview_page.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import '../uikit/state/meeting_base_state.dart';
 import '../uikit/utils/nav_utils.dart';
 import '../uikit/utils/router_name.dart';
@@ -76,7 +76,8 @@ class _AccountAndSafetySettingState
   Widget _buildDeleteAccount() {
     return NESettingItem(getAppLocalizations().settingDeleteAccount,
         arrowTip: '', showArrow: true, onTap: () {
-      if (NEMeetingUIKit.instance.getCurrentMeetingInfo() != null) {
+      if (NEMeetingKit.instance.getMeetingService().getCurrentMeetingInfo() !=
+          null) {
         ToastUtils.showToast(context,
             getAppLocalizations().meetingOperationNotSupportedInMeeting);
         return;
@@ -119,11 +120,11 @@ class _AccountAndSafetySettingState
   }
 
   bool canModifyPwd() {
-    return AuthManager().loginType == LoginType.password.index;
+    return AuthManager().loginType == LoginType.password;
   }
 
   bool canDeleteAccount() {
-    return AuthManager().loginType == LoginType.verify.index;
+    return AuthManager().loginType == LoginType.verify;
   }
 
   String getMobile() {

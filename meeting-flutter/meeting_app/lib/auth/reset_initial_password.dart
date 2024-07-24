@@ -15,8 +15,7 @@ import 'package:nemeeting/uikit/values/colors.dart';
 import 'package:nemeeting/uikit/values/fonts.dart';
 import 'package:nemeeting/utils/state_utils.dart';
 import 'package:nemeeting/widget/meeting_text_field.dart';
-import 'package:netease_common/netease_common.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 
 import '../../language/localizations.dart';
 
