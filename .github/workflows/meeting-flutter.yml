@@ -17,11 +17,11 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: meeting-flutter/meeting-app
+        working-directory: ./meeting-flutter/meeting-app
 
     steps:
       - name: Clone repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -38,11 +38,11 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: meeting-flutter/meeting-app
+        working-directory: ./meeting-flutter/meeting-app
 
     steps:
       - name: Clone repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
