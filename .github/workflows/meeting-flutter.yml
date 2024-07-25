@@ -17,7 +17,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ./meeting-flutter/meeting-app
+        working-directory: meeting-flutter/meeting-app
 
     steps:
       - name: Clone repository
@@ -38,7 +38,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ./meeting-flutter/meeting-app
+        working-directory: meeting-flutter/meeting-app
 
     steps:
       - name: Clone repository
