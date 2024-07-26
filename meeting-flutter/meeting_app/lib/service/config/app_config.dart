@@ -6,8 +6,8 @@ import 'dart:convert';
 
 import 'package:nemeeting/base/manager/device_manager.dart';
 import 'package:nemeeting/base/util/global_preferences.dart';
-import 'package:netease_meeting_ui/meeting_plugin.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_core.dart';
+import 'package:netease_meeting_kit/meeting_plugin.dart';
 import 'package:netease_common/netease_common.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -46,6 +46,13 @@ class AppConfig {
   String get deleteAccountWebServiceUrl => '';
   String get registryUrl => '';
 
+  NEMeetingMixPushConfig? _mixPushConfig;
+  NEMeetingMixPushConfig get mixPushConfig =>
+      _mixPushConfig ?? NEMeetingMixPushConfig();
+
+  String _apnsCerName = 'meetingPush';
+  String get apnsCerName => _apnsCerName;
+
   static bool get isInDebugMode {
     return _debugMode;
   }
@@ -56,9 +63,8 @@ class AppConfig {
     await loadPackageInfo();
 
     NEAppConfig config = await loadConfig();
-    print("config = ${config.toJson()}");
     _appKey = config.appKey;
-    _serverUrl = config.meetingServerConfig?.meetingServer;
+    _serverUrl = config.serverUrl;
     _userProtocolUrl = config.meetingModuleConfig?.about?.userProtocolUrl;
     _privacyUrl = config.meetingModuleConfig?.about?.privacyUrl;
     return Future.value();
@@ -99,9 +105,10 @@ class NEAppConfig {
   String? appKey;
   String? corpCode;
   String? buildTime;
-  late String serverUrl;
   NEAppModuleConfig? meetingModuleConfig;
-  NEMeetingServerConfig? meetingServerConfig;
+  String? serverUrl;
+  NEMeetingMixPushConfig? mixPushConfig;
+  String? apnsCerName;
 
   NEAppConfig();
 
@@ -109,20 +116,32 @@ class NEAppConfig {
     appKey = json[_appKey] as String?;
     buildTime = json[_buildTime] as String?;
     if (json.containsKey(_meetingServerConfigKey)) {
-      meetingServerConfig =
-          NEMeetingServerConfig.fromJson(json[_meetingServerConfigKey]);
+      serverUrl =
+          (json[_meetingServerConfigKey] as Map)['serverUrl'] as String?;
     }
 
     if (json.containsKey(_meetingModuleConfigKey)) {
       meetingModuleConfig =
           NEAppModuleConfig.fromJson(json[_meetingModuleConfigKey]);
     }
+
+    /// Android 通知推送
+    if (json['mixPushConfig']?['android'] != null) {
+      mixPushConfig =
+          NEMeetingMixPushConfig.fromJson(json['mixPushConfig']['android']);
+    }
+
+    /// iOS 通知推送
+    if (json['mixPushConfig']?['ios'] != null) {
+      apnsCerName = json['mixPushConfig']['ios']['apnsCerName'] as String;
+    }
   }
 
-  Map toJson() => {
-        if (meetingServerConfig != null)
-          _meetingServerConfigKey: meetingServerConfig!.toJson(),
-      };
+  /// toString
+  @override
+  String toString() {
+    return 'NEAppConfig{appKey: $appKey, corpCode: $corpCode, serverUrl: $serverUrl}';
+  }
 }
 
 class NEAppModuleConfig {

@@ -8,7 +8,7 @@ import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:crypto/crypto.dart';
 import 'package:netease_common/netease_common.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../base/util/global_preferences.dart';
@@ -59,17 +59,23 @@ class VirtualBackgroundManager {
 
       /// mac系统会生成.DS_Store和__MACOSX文件夹,需要过滤掉
       if (!filename.contains('.DS_Store') && !filename.contains('__MACOSX')) {
-        if (file.isFile) {
-          final data = file.content as List<int>;
-          final virtualBackgroundFile = File('${cache?.path}/$filename')
-            ..createSync(recursive: true)
-            ..writeAsBytesSync(data);
-          if (const {'jpg', 'png', 'jpeg'}
-              .contains(virtualBackgroundFile.path.split('.').last)) {
-            sourceList.add(virtualBackgroundFile.path);
+        try {
+          if (file.isFile) {
+            final data = file.content as List<int>;
+            final virtualBackgroundFile = File('${cache?.path}/$filename')
+              ..createSync(recursive: true)
+              ..writeAsBytesSync(data);
+            if (const {'jpg', 'png', 'jpeg'}
+                .contains(virtualBackgroundFile.path.split('.').last)) {
+              sourceList.add(virtualBackgroundFile.path);
+            }
+          } else {
+            await Directory('${cache?.path}/' + filename)
+                .create(recursive: true);
           }
-        } else {
-          await Directory('${cache?.path}/' + filename).create(recursive: true);
+        } catch (e) {
+          Alog.e(
+              tag: _tag, content: 'initBuiltInVirtualBackgroundRes error=$e');
         }
       }
     }

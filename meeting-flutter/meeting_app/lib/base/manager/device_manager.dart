@@ -5,7 +5,7 @@
 import 'dart:io';
 
 import 'package:nemeeting/constants.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 
 import '../util/global_preferences.dart';
 import '../client_type.dart';

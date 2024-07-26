@@ -9,7 +9,7 @@ import 'package:dio/dio.dart';
 import 'package:nemeeting/service/client/app_http_client.dart';
 import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/service/proto/base_proto.dart';
-import 'package:nemeeting/service/response/result.dart';
+import 'package:netease_common/netease_common.dart';
 
 class DownloadFileProto extends BaseProto<void> {
   final String url;
@@ -21,13 +21,13 @@ class DownloadFileProto extends BaseProto<void> {
   DownloadFileProto(this.url, this.file, this.progressCallback);
 
   @override
-  Future<Result<void>> execute() async {
+  Future<NEResult<void>> execute() async {
     var response =
         await AppHttpClient().downloadFile(url, file.path, progressCallback);
     if (response?.statusCode != HttpStatus.ok) {
-      return Result(code: HttpCode.netWorkError);
+      return NEResult(code: HttpCode.netWorkError);
     } else {
-      return Result(code: HttpCode.success);
+      return NEResult(code: HttpCode.success);
     }
   }
 

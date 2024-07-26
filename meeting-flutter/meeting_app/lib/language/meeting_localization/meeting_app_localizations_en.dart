@@ -191,6 +191,13 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String get globalMonthDec => 'Dec.';
 
   @override
+  String get globalPhotosPermissionRationale =>
+      'Apply for permission to upload pictures or modify your profile picture';
+
+  @override
+  String get globalPhotosPermission => 'Albums unavailable';
+
+  @override
   String get authImmediatelyRegister => 'Register Now';
 
   @override
@@ -899,6 +906,29 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String get meetingTime => 'Time';
 
   @override
+  String get autoRecord => 'Auto Recording';
+
+  @override
+  String get meetingCloudRecord => 'Auto cloud recording';
+
+  @override
+  String get meetingEnableCloudRecordWhenHostJoin =>
+      'Record after the host joins';
+
+  @override
+  String get meetingEnableCloudRecordWhenMemberJoin =>
+      'Record after an attendee joins';
+
+  @override
+  String get copyMeetingInvite => 'Invite';
+
+  @override
+  String get copyMeetingNum => 'Meeting ID/Link';
+
+  @override
+  String get copyMeetingAll => 'Copy all';
+
+  @override
   String get historyMeeting => 'Meeting history';
 
   @override
@@ -1157,95 +1187,6 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String get settingLanguageTip => 'English';
 
   @override
-  String get feedbackInRoom => 'Feedback';
-
-  @override
-  String get feedbackProblemType => 'Problem Type';
-
-  @override
-  String get feedbackSuccess => 'Feedback submitted successfully';
-
-  @override
-  String get feedbackAudioLatency => 'A large delay';
-
-  @override
-  String get feedbackAudioFreeze => 'Stuck';
-
-  @override
-  String get feedbackCannotHearOthers => 'Can\'t hear the other\'s voice';
-
-  @override
-  String get feedbackCannotHearMe => 'The others can\'t hear me';
-
-  @override
-  String get feedbackTitleExtras => 'Additional Information';
-
-  @override
-  String get feedbackTitleDate => 'Occurrence Time';
-
-  @override
-  String get feedbackContentEmpty => 'Empty';
-
-  @override
-  String get feedbackTitleSelectPicture => 'Picture';
-
-  @override
-  String get feedbackAudioMechanicalNoise => 'Mechanical sound';
-
-  @override
-  String get feedbackAudioNoise => 'Noise';
-
-  @override
-  String get feedbackAudioEcho => 'Echo';
-
-  @override
-  String get feedbackAudioVolumeSmall => 'Low volume';
-
-  @override
-  String get feedbackVideoFreeze => 'Long time stuck';
-
-  @override
-  String get feedbackVideoIntermittent => 'Video is intermittent';
-
-  @override
-  String get feedbackVideoTearing => 'Tearing';
-
-  @override
-  String get feedbackVideoTooBrightOrDark => 'Picture too bright/too dark';
-
-  @override
-  String get feedbackVideoBlurry => 'Blurred image';
-
-  @override
-  String get feedbackVideoNoise => 'Obvious noise';
-
-  @override
-  String get feedbackAudioVideoNotSync =>
-      'Sound and picture are not synchronized';
-
-  @override
-  String get feedbackUnexpectedExit => 'Unexpected exit';
-
-  @override
-  String get feedbackOthers => 'There are other problems';
-
-  @override
-  String get feedbackTitleAudio => 'Audio problem';
-
-  @override
-  String get feedbackTitleVideo => 'Video problem';
-
-  @override
-  String get feedbackTitleOthers => 'Other';
-
-  @override
-  String get feedbackTitleDescription => 'Description';
-
-  @override
-  String get feedbackOtherTip =>
-      'Please describe your problem (when you select \"There are other problems\"), you need to fill in a specific description before submitting';
-
-  @override
   String get evaluationTitle => 'Evaluation';
 
   @override
@@ -1278,4 +1219,48 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
 
   @override
   String get evaluationGoHome => 'Back Homepage';
+
+  @override
+  String get transcriptionCaptionAndTranslate => 'Subtitles and translation';
+
+  @override
+  String get transcriptionCaptionSettings => 'Subtitle Settings';
+
+  @override
+  String get transcriptionEnableCaptionOnJoin =>
+      'Enable subtitles when joining a meeting';
+
+  @override
+  String get transcriptionTranslateSettings => 'Translation Settings';
+
+  @override
+  String get transcriptionCaptionTypeSize => 'Text Size';
+
+  @override
+  String get transcriptionCaptionExampleSize => 'Example of subtitle text size';
+
+  @override
+  String get transcription => 'Real-time transcription';
+
+  @override
+  String get transcriptionGenerating =>
+      'Transcription file is being generated...';
+
+  @override
+  String get transcriptionTiming => 'Initiation time';
+
+  @override
+  String get transcriptionExportFile => 'Export this  file';
+
+  @override
+  String get globalFileSaveAs => 'Export';
+
+  @override
+  String get globalFileTypePDF => 'PDF';
+
+  @override
+  String get globalFileTypeWord => 'Word';
+
+  @override
+  String get globalFileTypeTxt => 'Text';
 }

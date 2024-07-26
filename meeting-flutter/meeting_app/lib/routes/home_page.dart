@@ -6,10 +6,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:nemeeting/application.dart';
 import 'package:nemeeting/auth/reset_initial_password.dart';
 import 'package:nemeeting/base/util/global_preferences.dart';
 import 'package:nemeeting/channel/deep_link_manager.dart';
+import 'package:nemeeting/global_state.dart';
 import 'package:nemeeting/service/util/user_preferences.dart';
 import 'package:nemeeting/utils/const_config.dart';
 import 'package:nemeeting/utils/dialog_utils.dart';
@@ -21,8 +21,7 @@ import 'package:nemeeting/widget/meeting_network_notice.dart';
 import 'package:nemeeting/widget/meeting_security_notice.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
 import 'package:netease_common/netease_common.dart';
-import 'package:netease_meeting_core/meeting_service.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import 'package:nemeeting/pre_meeting/schedule_meeting_detail.dart';
 import 'package:nemeeting/utils/integration_test.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
@@ -65,20 +64,18 @@ class HomePageRoute extends StatefulWidget {
 
 class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
     with
+        NEMeetingStatusListener,
         NEMeetingMessageChannelListener,
         NEAccountServiceListener,
-        NEPreMeetingListener,
-        NEMeetingInviteStatusListener {
-  NEMeetingStatusListener? _meetingStatusListener;
-
+        NEPreMeetingListener {
   List<NEMeetingItem> meetingList = <NEMeetingItem>[];
 
-  List<NEMeetingGroup> meetingGroupList = <NEMeetingGroup>[];
+  List<MeetingItemGroup> meetingGroupList = <MeetingItemGroup>[];
 
   DateTime meetingStartDate = DateTime.now();
 
   ///默认是idle状态，会中内存会记录缓存中。当会议最小化是需要根据版本，不能放入SP，因为会被杀进程。会议需要重新进入。
-  int meetingStatus = NEMeetingEvent.idle;
+  int meetingStatus = NEMeetingStatus.idle;
 
   /// 是否已经展示结束会议的dialog
   static bool isShowEndDialog = false;
@@ -86,6 +83,7 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
   final streamSubscriptions = <StreamSubscription>[];
 
   late final meetingAccountService = NEMeetingKit.instance.getAccountService();
+  final settingsService = NEMeetingKit.instance.getSettingsService();
 
   @override
   void initState() {
@@ -93,9 +91,6 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
     NEMeetingKit.instance
         .getMeetingMessageChannelService()
         .addMeetingMessageChannelListener(this);
-    lifecycleListen(AuthManager().authInfoStream(), (event) {
-      setState(() {});
-    });
 
     handleMeetingSdk();
     getMeetingList();
@@ -106,11 +101,14 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
 
     UserPreferences().meetingInfo.then((meetingInfo) {
       if (TextUtil.isEmpty(meetingInfo) ||
-          (NEMeetingUIKit.instance.getCurrentMeetingInfo() != null &&
-              (NEMeetingUIKit.instance.getMeetingStatus().event ==
-                      NEMeetingEvent.inMeetingMinimized ||
-                  NEMeetingUIKit.instance.getMeetingStatus().event ==
-                      NEMeetingEvent.inMeeting))) return;
+          (NEMeetingKit.instance.getMeetingService().getCurrentMeetingInfo() !=
+                  null &&
+              (NEMeetingKit.instance.getMeetingService().getMeetingStatus() ==
+                      NEMeetingStatus.inMeetingMinimized ||
+                  NEMeetingKit.instance
+                          .getMeetingService()
+                          .getMeetingStatus() ==
+                      NEMeetingStatus.inMeeting))) return;
       var info = jsonDecode(meetingInfo!) as Map?;
       if (info == null) return;
       var meetingNum = info['meetingNum'] as String?;
@@ -137,24 +135,12 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
     // prepareLottie();
     NEMeetingKit.instance
         .getMeetingMessageChannelService()
-        .queryUnreadMessageList(SDKConfig.current.appNotifySessionId)
+        .queryUnreadMessageList(settingsService.getAppNotifySessionId())
         .then((value) {
       if (value.data != null && value.data!.length > 0) {
         MeetingUtil.setUnreadNotifyMessageListenable(value.data!.length);
       }
     });
-    EventBus().subscribe(NEMeetingUIEvents.flutterInvitedChanged, (arg) {
-      var meetingInfo = NEMeetingUIKit.instance.getCurrentMeetingInfo();
-      final CardData? cardData = arg.cardData;
-      if (meetingInfo == null && arg.type != InviteJoinActionType.reject) {
-        handleEvent(cardData, arg.type == InviteJoinActionType.audioAccept);
-      }
-    });
-
-    /// 会议监听呼叫事件
-    NEMeetingKit.instance
-        .getMeetingInviteService()
-        .addMeetingInviteStatusListener(this);
   }
 
   @override
@@ -174,61 +160,64 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
 
   void handleMeetingSdk() {
     if (widget.isPipMode) return;
-    _meetingStatusListener ??= (status) {
-      meetingStatus = status.event;
-      NEPlatformChannel().notifyMeetingStatusChanged(meetingStatus);
-      setState(() {});
-      switch (meetingStatus) {
-        case NEMeetingEvent.disconnecting:
-          switch (status.arg) {
-            case NEMeetingCode.closeByHost:
-
-              /// 主持人关闭会议
-              showEndDialog(getAppLocalizations().meetingCloseByHost);
-              break;
-
-            case NEMeetingCode.authInfoExpired:
-
-              /// 认证过期
-              showAuthInfoExpiredDialog();
-              break;
-
-            case NEMeetingCode.endOfLife:
-
-              /// 会议时长超限
-              showEndDialog(getAppLocalizations().meetingEndOfLife);
-              break;
-
-            case NEMeetingCode.loginOnOtherDevice:
-
-              /// 账号再其他设备入会
-              showEndDialog(getAppLocalizations().meetingSwitchOtherDevice);
-              break;
-
-            case NEMeetingCode.syncDataError:
-
-              /// 同步数据失败
-              showEndDialog(getAppLocalizations().meetingSyncDataError);
-              break;
-
-            // case NEMeetingCode.removedByHost: /// 被主持人移除会议
-            //   ToastUtils.showToast(context, getAppLocalizations().removedByHost);
-            //   break;
-          }
-          UserPreferences().setMeetingInfo('');
-          break;
-        case NEMeetingEvent.inWaitingRoom:
-        case NEMeetingEvent.inMeeting:
-          var meetingInfo = NEMeetingUIKit.instance.getCurrentMeetingInfo();
-          saveMeetingInfo(meetingInfo);
-          break;
-        case NEMeetingEvent.connecting:
-          break;
-        default:
-      }
-    };
-    NEMeetingUIKit.instance.addMeetingStatusListener(_meetingStatusListener!);
+    NEMeetingKit.instance.getMeetingService().addMeetingStatusListener(this);
     NEMeetingKit.instance.getAccountService().addListener(this);
+  }
+
+  @override
+  void onMeetingStatusChanged(NEMeetingEvent event) {
+    meetingStatus = event.status;
+    NEPlatformChannel().notifyMeetingStatusChanged(meetingStatus);
+    setState(() {});
+    switch (meetingStatus) {
+      case NEMeetingStatus.disconnecting:
+        switch (event.arg) {
+          case NEMeetingCode.closeByHost:
+
+            /// 主持人关闭会议
+            showEndDialog(getAppLocalizations().meetingCloseByHost);
+            break;
+
+          case NEMeetingCode.authInfoExpired:
+
+            /// 认证过期
+            showAuthInfoExpiredDialog();
+            break;
+
+          case NEMeetingCode.endOfLife:
+
+            /// 会议时长超限
+            showEndDialog(getAppLocalizations().meetingEndOfLife);
+            break;
+
+          case NEMeetingCode.loginOnOtherDevice:
+
+            /// 账号再其他设备入会
+            showEndDialog(getAppLocalizations().meetingSwitchOtherDevice);
+            break;
+
+          case NEMeetingCode.syncDataError:
+
+            /// 同步数据失败
+            showEndDialog(getAppLocalizations().meetingSyncDataError);
+            break;
+
+          // case NEMeetingCode.removedByHost: /// 被主持人移除会议
+          //   ToastUtils.showToast(context, getAppLocalizations().removedByHost);
+          //   break;
+        }
+        UserPreferences().setMeetingInfo('');
+        break;
+      case NEMeetingStatus.inWaitingRoom:
+      case NEMeetingStatus.inMeeting:
+        var meetingInfo =
+            NEMeetingKit.instance.getMeetingService().getCurrentMeetingInfo();
+        saveMeetingInfo(meetingInfo);
+        break;
+      case NEMeetingStatus.connecting:
+        break;
+      default:
+    }
   }
 
   @override
@@ -296,18 +285,12 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
     }, () async {
       NavUtils.closeCurrentState('ok');
       LoadingUtil.showLoading();
-      var historyItem = LocalHistoryMeetingManager()
-          .localHistoryMeetingList
-          .where((historyItem) => (historyItem.meetingNum == meetingNum ||
-              historyItem.shortMeetingNum == meetingNum))
-          .firstOrNull;
-      String? lastUsedNickname;
-      if (historyItem != null) {
-        lastUsedNickname = historyItem.nickname;
-      }
-      final result = await NEMeetingUIKit.instance.joinMeeting(
+      String? lastUsedNickname =
+          LocalHistoryMeetingManager().getLatestNickname(meetingNum);
+      final result =
+          await NEMeetingKit.instance.getMeetingService().joinMeeting(
         context,
-        NEJoinMeetingUIParams(
+        NEJoinMeetingParams(
           meetingNum: meetingNum,
           displayName: lastUsedNickname ?? MeetingUtil.getNickName(),
           watermarkConfig: NEWatermarkConfig(
@@ -363,7 +346,7 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
         } else {
           last = itemDay;
 
-          meetingGroupList.add(NEMeetingGroup(itemDay, [element]));
+          meetingGroupList.add(MeetingItemGroup(itemDay, [element]));
 
           meetingList.add(NEMeetingItem()..startTime = last);
           meetingList.add(element);
@@ -499,9 +482,9 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
       key: MeetingValueKey.personalSetting,
       height: 64.h,
       alignment: Alignment.center,
-      padding: EdgeInsets.only(left: 24.w, right: 24.w),
       child: Row(
         children: <Widget>[
+          SizedBox(width: 24),
           NEGestureDetector(
             child: NEAccountInfoBuilder(builder: (context, accountInfo, _) {
               return _buildUserProfile(accountInfo);
@@ -510,9 +493,9 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
               _onSetting();
             },
           ),
-          SizedBox(width: 12.w),
           Spacer(),
           _buildNotificationBtn(),
+          SizedBox(width: 16),
         ],
       ),
     );
@@ -524,6 +507,7 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
         mainAxisSize: MainAxisSize.min,
         children: [
           NEMeetingAvatar.xlarge(
+            key: MeetingValueKey.avatar,
             name: accountInfo.nickname,
             url: accountInfo.avatar,
           ),
@@ -542,6 +526,7 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
                         style: TextStyle(
                           fontSize: 16.spMin,
                           color: AppColors.black_222222,
+                          fontWeight: FontWeight.w500,
                         ),
                         textAlign: TextAlign.center,
                         textDirection: TextDirection.ltr,
@@ -574,63 +559,67 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
   }
 
   Widget _buildNotificationBtn() {
-    return Container(
-        height: Dimen.homeTitleHeight,
-        child: Stack(alignment: Alignment.centerRight, children: <Widget>[
-          Container(
-            alignment: Alignment.centerRight,
-            margin: EdgeInsets.only(right: 4),
-            child: NEGestureDetector(
-              onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => NEMeetingUIKitLocalizationsScope(
-                        child: MeetingAppNotifyCenter(
-                            sessionId: SDKConfig.current.appNotifySessionId,
-                            onClearAllMessage: () {
-                              MeetingUtil.setUnreadNotifyMessageListenable(0);
-                            }),
-                      ),
-                    ));
-              },
-              child: Icon(
-                IconFont.icon_alarm,
-                size: 24,
-                color: AppColors.color_53576A,
-              ),
-            ),
+    return Stack(children: <Widget>[
+      Container(
+        key: MeetingValueKey.notifyCenter,
+        padding: EdgeInsets.all(8),
+        child: NEGestureDetector(
+          onTap: () {
+            Navigator.push(
+                context,
+                NEMeetingPageRoute(
+                  builder: (context) => NEMeetingUIKitLocalizationsScope(
+                    child: MeetingAppNotifyCenter(
+                        sessionId: settingsService.getAppNotifySessionId(),
+                        onClearAllMessage: () {
+                          MeetingUtil.setUnreadNotifyMessageListenable(0);
+                        }),
+                  ),
+                ));
+          },
+          child: Icon(
+            IconFont.icon_alarm,
+            size: 24,
+            color: AppColors.color_53576A,
           ),
-          SafeValueListenableBuilder(
-              valueListenable: MeetingUtil.getUnreadNotifyMessageListenable(),
-              builder: (_, int value, __) => value > 0
-                  ? Align(
-                      alignment: Alignment.centerRight,
-                      child: Container(
-                        margin: EdgeInsets.only(bottom: 24),
-                        child: ClipOval(
-                            child: Container(
-                                height: 16.h,
-                                width: 16.w,
-                                decoration: ShapeDecoration(
-                                    color: Colors.red, shape: CircleBorder()),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  value > 99 ? '99+' : '$value',
-                                  style: TextStyle(
-                                      fontSize: value > 99
-                                          ? 8.sp
-                                          : value > 9
-                                              ? 10.sp
-                                              : 11.sp,
-                                      color: Colors.white,
-                                      decoration: TextDecoration.none,
-                                      fontWeight: FontWeight.w400),
-                                ))),
-                      ),
-                    )
-                  : Container()),
-        ]));
+        ),
+      ),
+      Positioned(
+          right: 0,
+          top: 0,
+          child: SafeValueListenableBuilder(
+            valueListenable: MeetingUtil.getUnreadNotifyMessageListenable(),
+            builder: (_, int value, __) => value > 0
+                ? ClipOval(
+                    child: Container(
+                        height: 16,
+                        constraints: BoxConstraints(
+                          minWidth: 16,
+                        ),
+                        padding: EdgeInsets.only(left: 2, right: 2),
+                        decoration: ShapeDecoration(
+                            color: AppColors.color_F51D45, shape: Border()),
+                        alignment: Alignment.center,
+                        child: Text(
+                          value > 99 ? '99+' : '$value',
+                          strutStyle: StrutStyle(
+                            forceStrutHeight: true,
+                            height: 1,
+                          ),
+                          style: TextStyle(
+                            fontSize: value > 99
+                                ? 8
+                                : value > 9
+                                    ? 10
+                                    : 11,
+                            color: Colors.white,
+                            decoration: TextDecoration.none,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        )))
+                : Container(),
+          )),
+    ]);
   }
 
   void _onCreateMeeting() {
@@ -876,7 +865,7 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
                         size: 14, color: AppColors.color_8D90A0))),
           ])),
       onTap: () {
-        Navigator.of(context).push(MaterialPageRoute(
+        Navigator.of(context).push(NEMeetingPageRoute(
             settings: RouteSettings(name: ScheduleMeetingDetailRoute.routeName),
             builder: (context) {
               return ScheduleMeetingDetailRoute(item);
@@ -933,8 +922,8 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
   @override
   void onAuthInfoExpired() {
     /// 当前处于会议中，会议会自动断开，原因是登录态过期，这里不需要弹框
-    if (NEMeetingUIKit.instance.getMeetingStatus().event != NEMeetingEvent.idle)
-      return;
+    if (NEMeetingKit.instance.getMeetingService().getMeetingStatus() !=
+        NEMeetingStatus.idle) return;
     showAuthInfoExpiredDialog();
   }
 
@@ -971,9 +960,7 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
   @override
   void dispose() {
     PrivacyUtil.dispose();
-    if (_meetingStatusListener != null)
-      NEMeetingUIKit.instance
-          .removeMeetingStatusListener(_meetingStatusListener!);
+    NEMeetingKit.instance.getMeetingService().removeMeetingStatusListener(this);
     NEMeetingKit.instance.getPreMeetingService().removeListener(this);
     NEMeetingKit.instance.getAccountService().removeListener(this);
     DeepLinkManager().detach(context);
@@ -1099,52 +1086,13 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
   @override
   void onSessionMessageRecentChanged(List<NEMeetingRecentSession> messages) {
     int? _unreadCount = messages
-        .takeWhile(
-            (value) => value.sessionId == SDKConfig.current.appNotifySessionId)
+        .takeWhile((value) =>
+            value.sessionId == settingsService.getAppNotifySessionId())
         .lastOrNull
         ?.unreadCount;
     if (_unreadCount != null) {
       MeetingUtil.setUnreadNotifyMessageListenable(_unreadCount);
     }
-  }
-
-  /// 电话或视频入会
-  /// [inviteData] 邀请数据
-  /// [videoMute] 是否视频关闭
-  ///
-  Future<void> handleEvent(CardData? inviteData, bool videoMute) async {
-    if (inviteData?.meetingNum == null || !mounted) return;
-    LoadingUtil.showLoading();
-    NEMeetingUIKit.instance.getMeetingInviteService().acceptInvite(
-      context,
-      NEJoinMeetingUIParams(
-        meetingNum: inviteData!.meetingNum!,
-        displayName: MeetingUtil.getNickName(),
-        watermarkConfig: NEWatermarkConfig(
-          name: MeetingUtil.getNickName(),
-        ),
-      ),
-      await buildMeetingUIOptions(
-        noVideo: videoMute,
-        noAudio: false,
-        context: context,
-      ),
-      onPasswordPageRouteWillPush: () async {
-        LoadingUtil.cancelLoading();
-      },
-      onMeetingPageRouteWillPush: () async {
-        LoadingUtil.cancelLoading();
-      },
-      backgroundWidget: HomePageRoute(),
-    ).then((result) {
-      LoadingUtil.cancelLoading();
-      if (result.isSuccess()) {
-      } else {
-        if (mounted) {
-          ToastUtils.showToast(context, result.msg);
-        }
-      }
-    });
   }
 
   void initAccelerometer() {
@@ -1156,10 +1104,10 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
             tag: tag,
             content: 'accelerometer trigger x = ${event.x}, '
                 'y = ${event.y}, z = ${event.z}, value = $value, '
-                'isQrScanPagePopped = ${Application.isQrScanPagePopped}');
-        if (!Application.isQrScanPagePopped) {
+                'isQrScanPagePushed = ${GlobalState.isQrScanPagePushed}');
+        if (!GlobalState.isQrScanPagePushed) {
           NavUtils.pushNamed(context, RouterName.qrScan).then((value) {
-            Application.isQrScanPagePopped = true;
+            GlobalState.isQrScanPagePushed = true;
           });
         }
       }
@@ -1187,8 +1135,11 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
       });
     }
   }
+}
 
-  @override
-  void onMeetingInviteStatusChanged(NEMeetingInviteStatus status,
-      String? meetingId, NEMeetingInviteInfo inviteInfo) {}
+class MeetingItemGroup {
+  final int time;
+  final List<NEMeetingItem> meetings;
+
+  MeetingItemGroup(this.time, this.meetings);
 }

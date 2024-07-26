@@ -3,8 +3,7 @@
 // found in the LICENSE file.
 
 import 'package:nemeeting/base/util/sp_util.dart';
-import 'package:nemeeting/service/profile/app_profile.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:nemeeting/service/auth/auth_manager.dart';
 
 class UserPreferences extends Preferences {
   static const String localSetting = 'localSetting';
@@ -26,15 +25,6 @@ class UserPreferences extends Preferences {
 
   Future<void> setShowShareUserVideo(bool value) async {
     setBoolSp(_wrapperKey(showShareUserVideo), value);
-  }
-
-  void enableAudioDeviceSwitch(bool enable) {
-    setBoolSp(_wrapperKey(audioDeviceSwitch), enable);
-  }
-
-  Future<bool> isAudioDeviceSwitchEnabled() async {
-    return getBoolSp(_wrapperKey(audioDeviceSwitch))
-        .then((value) => value ?? SDKConfig.current.isAudioDeviceSwitchEnabled);
   }
 
   Future<void> setMeetingInfo(String value) async {
@@ -73,6 +63,6 @@ class UserPreferences extends Preferences {
   }
 
   String _wrapperKey(String key) {
-    return '${AppProfile.accountId}_$key';
+    return '${AuthManager().accountId}_$key';
   }
 }

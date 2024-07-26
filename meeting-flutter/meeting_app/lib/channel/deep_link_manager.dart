@@ -6,21 +6,19 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/base/util/global_preferences.dart';
 import 'package:nemeeting/channel/ne_platform_channel.dart';
+import 'package:nemeeting/global_state.dart';
 import 'package:nemeeting/language/localizations.dart';
 import 'package:nemeeting/routes/home_page.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/client/http_code.dart';
-import 'package:nemeeting/service/profile/app_profile.dart';
 import 'package:nemeeting/uikit/utils/nav_utils.dart';
 import 'package:nemeeting/uikit/utils/router_name.dart';
 import 'package:nemeeting/uikit/values/colors.dart';
 import 'package:nemeeting/utils/const_config.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
-import 'package:netease_meeting_core/meeting_service.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import 'package:intl/intl.dart';
 import 'package:yunxin_alog/yunxin_alog.dart';
-import 'package:netease_meeting_assets/netease_meeting_assets.dart';
 
 class DeepLinkManager {
   static final _instance = DeepLinkManager._internal();
@@ -47,10 +45,10 @@ class DeepLinkManager {
 
   static const _TAG = "DeepLinkManager";
   // https://meeting.163.com/invite/#/?meeting=xekJAxcNYG39Dn4XIT6sAA==
-  static final inviteUrlPattern = RegExp(r'https://meeting\.163\.com/invite.*');
+  static final inviteUrlPattern = RegExp(r'https://.*/invite/.*');
   static final meetingIdPattern = RegExp(r'[0-9\-]+');
   static const meetingIdMinLen = 4;
-  static const _kTypeMeetingId = 0;
+  static const _kTypeMeetingNum = 0;
   static const _kTypeMeetingCode = 1;
   static const _kKeyMeetingId = 'meetingId';
   static const _kKeyMeetingCode = 'meeting';
@@ -88,8 +86,8 @@ class DeepLinkManager {
   void _handlePendingRequest() {
     if (!isEnabled ||
         WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed ||
-        NEMeetingUIKit.instance.getMeetingStatus().event !=
-            NEMeetingEvent.idle) {
+        NEMeetingKit.instance.getMeetingService().getMeetingStatus() !=
+            NEMeetingStatus.idle) {
       return;
     }
 
@@ -147,7 +145,7 @@ class DeepLinkManager {
         .map((e) => e.group(0)?.replaceAll(RegExp(r'-'), ''))
         .whereType<String>()
         .where((element) => element.length >= meetingIdMinLen)) {
-      if (await _checkMeeting(id, needConfirm: true, type: _kTypeMeetingId)) {
+      if (await _checkMeeting(id, needConfirm: true, type: _kTypeMeetingNum)) {
         return;
       }
     }
@@ -165,7 +163,7 @@ class DeepLinkManager {
         content: 'handleDeepLinkUri: uri=$uri, checking=$_checkingMeetingKey');
     _deepLinkUri = uri;
     _checkMeeting(tryParseMeetingKey(uri, _kKeyMeetingId),
-        needConfirm: false, type: _kTypeMeetingId);
+        needConfirm: false, type: _kTypeMeetingNum);
   }
 
   bool isLoggedIn() =>
@@ -173,6 +171,7 @@ class DeepLinkManager {
 
   Future<bool> _checkMeeting(String? meetingKey,
       {required bool needConfirm, required int type}) async {
+    final stopwatch = Stopwatch()..start();
     Alog.i(
         tag: _TAG,
         content:
@@ -212,7 +211,8 @@ class DeepLinkManager {
         return true;
       }());
       if (!needConfirm) {
-        final currentMeeting = NEMeetingUIKit.instance.getCurrentMeetingInfo();
+        final currentMeeting =
+            NEMeetingKit.instance.getMeetingService().getCurrentMeetingInfo();
         if (currentMeeting?.meetingNum == meetingKey ||
             currentMeeting?.inviteCode == meetingKey) {
           ToastUtils.showToast(_context!,
@@ -243,24 +243,28 @@ class DeepLinkManager {
     _pendingCheckRequest = null;
     _checkingMeetingKey = request;
 
-    MeetingInfo? meetingInfo;
-    if (needConfirm) {
-      meetingInfo = (await MeetingRepository.getMeetingInfoEx(
-        meetingId: type == _kTypeMeetingId ? meetingKey : null,
-        meetingCode: type == _kTypeMeetingCode ? meetingKey : null,
-      ))
-          .data;
-      assert(() {
-        print(
-            '$_TAG: meeting info: ${meetingInfo?.meetingNum} ${meetingInfo?.type.name} ${meetingInfo?.state.name}');
-        return true;
-      }());
-      if (meetingInfo == null ||
-          meetingInfo.state == NEMeetingItemStatus.cancel ||
-          meetingInfo.state == NEMeetingItemStatus.recycled) {
-        _checkingMeetingKey = null;
-        return true;
-      }
+    NEMeetingItem? meetingItem;
+    final meetingItemResult = type == _kTypeMeetingNum
+        ? await NEMeetingKit.instance
+            .getPreMeetingService()
+            .getMeetingItemByNum(meetingKey)
+        : await NEMeetingKit.instance
+            .getPreMeetingService()
+            .getMeetingItemByInviteCode(meetingKey);
+    if (meetingItemResult.isSuccess()) {
+      meetingItem = meetingItemResult.data;
+    }
+    assert(() {
+      print(
+          '$_TAG: meeting info: ${meetingItem?.meetingNum} ${meetingItem?.meetingType} ${meetingItem?.status}');
+      return true;
+    }());
+    if (meetingItem == null ||
+        meetingItem.meetingNum == null ||
+        meetingItem.status == NEMeetingItemStatus.cancel ||
+        meetingItem.status == NEMeetingItemStatus.recycled) {
+      _checkingMeetingKey = null;
+      return true;
     }
     if (_checkingMeetingKey != request) {
       return true;
@@ -268,16 +272,16 @@ class DeepLinkManager {
 
     _lastCheckedMeetingKey = meetingKey;
 
-    if (_isMeetingIdle && _context != null) {
+    final meetingNum = meetingItem.meetingNum;
+    if (_isMeetingIdle && _context != null && meetingNum != null) {
       // needConfirm：如果为true就是剪切板入会，如果为false就是链接入会
       if (!needConfirm) {
         // 新需求：如果是链接入会，需要跳到加入会议页面，手动加入会议
-        final meetingNum = meetingInfo?.meetingNum ?? meetingKey;
-        if (AppProfile.deepLinkMeetingNum == meetingNum) {
+        if (GlobalState.deepLinkMeetingNum == meetingNum) {
           /// 主动查询和被动上报会连续触发这个回调，所以需要判断是否已经处理过
           return true;
         }
-        AppProfile.deepLinkMeetingNum = meetingNum;
+        GlobalState.deepLinkMeetingNum = meetingNum;
         NavUtils.pushNamedAndRemoveUntil(_context!, RouterName.meetJoin,
             utilRouteName: RouterName.homePage);
         _checkingMeetingKey = null;
@@ -291,11 +295,13 @@ class DeepLinkManager {
           .isTurnOnMyVideoWhenJoinMeetingEnabled();
       MeetingSetting meetingSetting =
           MeetingSetting(isAudioOn: isAudioOn, isVideoOn: isVideoOn);
+      stopwatch.stop();
+      print('++++check meeting elapsed: ${stopwatch.elapsedMilliseconds}');
       DialogResult? dialogResult = await _showJoinMeetingConfirmDialog(
-          _context!, meetingSetting, meetingInfo!);
+          _context!, meetingSetting, meetingItem);
       if (dialogResult?.isJoinMeeting == true) {
         await _joinMeetingWithDefaultSettings(
-            _context!, meetingInfo.meetingNum, dialogResult);
+            _context!, meetingNum, dialogResult);
       }
     }
 
@@ -304,16 +310,17 @@ class DeepLinkManager {
   }
 
   bool get _isMeetingIdle =>
-      NEMeetingUIKit.instance.getMeetingStatus().event == NEMeetingEvent.idle;
+      NEMeetingKit.instance.getMeetingService().getMeetingStatus() ==
+      NEMeetingStatus.idle;
 
   Future<DialogResult?> _showJoinMeetingConfirmDialog(BuildContext context,
-      MeetingSetting meetingSetting, MeetingInfo meetingInfo) async {
+      MeetingSetting meetingSetting, NEMeetingItem meetingItem) async {
     return showDialog<DialogResult>(
         context: context,
         builder: (ctx) {
           return _MeetingInfoDialog(
             meetingSetting: meetingSetting,
-            meetingInfo: meetingInfo,
+            meetingItem: meetingItem,
           );
         });
   }
@@ -321,9 +328,9 @@ class DeepLinkManager {
   Future _joinMeetingWithDefaultSettings(BuildContext context,
       String meetingNum, DialogResult? dialogResult) async {
     LoadingUtil.showLoading();
-    final result = await NEMeetingUIKit.instance.joinMeeting(
+    final result = await NEMeetingKit.instance.getMeetingService().joinMeeting(
       context,
-      NEJoinMeetingUIParams(
+      NEJoinMeetingParams(
         meetingNum: meetingNum,
         displayName: MeetingUtil.getNickName(),
         watermarkConfig: NEWatermarkConfig(
@@ -390,9 +397,9 @@ class _CheckRequest {
 
 class _MeetingInfoDialog extends StatefulWidget {
   final MeetingSetting meetingSetting;
-  final MeetingInfo meetingInfo;
+  final NEMeetingItem meetingItem;
   _MeetingInfoDialog(
-      {Key? key, required this.meetingSetting, required this.meetingInfo})
+      {Key? key, required this.meetingSetting, required this.meetingItem})
       : super(key: key);
 
   @override
@@ -415,12 +422,9 @@ class _MeetingInfoDialogState extends State<_MeetingInfoDialog> {
   @override
   Widget build(BuildContext context) {
     final startTime =
-        DateTime.fromMillisecondsSinceEpoch(widget.meetingInfo.startTime);
-    final endTime = DateTime.fromMillisecondsSinceEpoch(
-        widget.meetingInfo.type == NEMeetingType.kReservation
-            ? widget.meetingInfo.endTime
-            : widget.meetingInfo.startTime +
-                const Duration(hours: 1).inMilliseconds);
+        DateTime.fromMillisecondsSinceEpoch(widget.meetingItem.startTime);
+    final endTime =
+        DateTime.fromMillisecondsSinceEpoch(widget.meetingItem.endTime);
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -453,7 +457,7 @@ class _MeetingInfoDialogState extends State<_MeetingInfoDialog> {
                         ),
                         Container(),
                         Text(
-                          widget.meetingInfo.subject,
+                          widget.meetingItem.subject!,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -485,7 +489,7 @@ class _MeetingInfoDialogState extends State<_MeetingInfoDialog> {
                         Row(
                           children: [
                             Text(
-                              widget.meetingInfo.meetingNum
+                              widget.meetingItem.meetingNum!
                                   .toMeetingNumFormat(),
                               style: TextStyle(
                                 fontSize: 14,
@@ -503,7 +507,7 @@ class _MeetingInfoDialogState extends State<_MeetingInfoDialog> {
                               ),
                               onTap: () {
                                 Clipboard.setData(ClipboardData(
-                                    text: widget.meetingInfo.meetingNum));
+                                    text: widget.meetingItem.meetingNum!));
                                 ToastUtils.showToast(context,
                                     getAppLocalizations().globalCopySuccess);
                               },
@@ -657,8 +661,8 @@ class _MeetingInfoDialogState extends State<_MeetingInfoDialog> {
                   },
                   style: ButtonStyle(
                     backgroundColor:
-                        MaterialStateProperty.all(AppColors.color_337eff),
-                    shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                        WidgetStateProperty.all(AppColors.color_337eff),
+                    shape: WidgetStateProperty.all(RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(4),
                     )),
                   ),

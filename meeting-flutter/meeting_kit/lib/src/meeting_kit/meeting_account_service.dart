@@ -111,32 +111,10 @@ abstract class NEAccountService {
   /// 登出当前已登录的账号
   ///
   Future<VoidResult> logout();
-
-  ///
-  /// 匿名登录。该方法可支持在不登录正式账号的情况下，临时加入会议。
-  /// * 匿名账号池是共享的，不能保证每次登录都是同一个匿名账号。
-  /// * 匿名登录后，如果不再使用匿名账号，需要业务方手动调用[logout]接口登出。
-  ///
-  Future<NEResult<NEAccountInfo>> anonymousLogin();
 }
 
 @Deprecated('已废弃，请使用[NEAccountServiceListener]代替')
 typedef NEAuthListener = NEAccountServiceListener;
-
-/// 账号服务监听器，可监听登录状态变更、账号信息变更相关事件。
-mixin class NEAccountServiceListener {
-  /// 登录状态变更为未登录，原因为当前登录账号已在其他设备上重新登录
-  void onKickOut() {}
-
-  /// 账号信息过期通知，原因为用户修改了密码，应用层随后应该重新登录
-  void onAuthInfoExpired() {}
-
-  /// 断线重连成功
-  void onReconnected() {}
-
-  /// 账号信息更新通知
-  void onAccountInfoUpdated(NEAccountInfo? accountInfo) {}
-}
 
 extension NEAccountServiceExtension on NEAccountService {
   bool get isAnonymous => getAccountInfo()?.isAnonymous == true;

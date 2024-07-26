@@ -14,10 +14,8 @@ import 'package:nemeeting/service/auth/auth_state.dart';
 import 'package:nemeeting/service/config/login_type.dart';
 import 'package:nemeeting/service/model/login_info.dart';
 import 'dart:convert';
-import 'package:nemeeting/service/profile/app_profile.dart';
 import 'package:nemeeting/base/util/global_preferences.dart';
-import 'package:nemeeting/service/response/result.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_kit.dart';
 
 import '../../language/localizations.dart';
 import '../../utils/meeting_util.dart';
@@ -25,13 +23,10 @@ import '../config/servers.dart';
 import '../util/user_preferences.dart';
 
 class AuthManager with AppLogger {
+  static AuthManager? _instance;
   factory AuthManager() => _instance ??= AuthManager._internal();
 
-  static AuthManager? _instance;
   LoginInfo? _loginInfo;
-
-  final StreamController<LoginInfo?> _authInfoChanged =
-      StreamController.broadcast();
 
   AuthManager._internal();
 
@@ -41,10 +36,7 @@ class AuthManager with AppLogger {
     final loginInfo = await GlobalPreferences().loginInfo;
     if (TextUtil.isEmpty(loginInfo)) return null;
     try {
-      final cachedLoginInfo =
-          LoginInfo.fromJson(jsonDecode(loginInfo as String) as Map);
-      cachedLoginInfo.nickname = null;
-      return cachedLoginInfo;
+      return LoginInfo.fromJson(jsonDecode(loginInfo as String) as Map);
     } catch (e) {
       logger.d('LoginInfo.fromJson(jsonDecode(loginInfo) exception = ' +
           e.toString());
@@ -52,19 +44,19 @@ class AuthManager with AppLogger {
     return null;
   }
 
-  String? get accountId => _loginInfo?.accountId;
+  String? get accountId => accountInfo?.userUuid;
 
-  String? get nickName => _loginInfo?.nickname ?? accountInfo?.nickname;
+  String? get nickName => accountInfo?.nickname;
 
-  String? get mobilePhone => accountInfo?.phoneNumber;
+  String? get phoneNumber => accountInfo?.phoneNumber;
 
   String? get email => accountInfo?.email;
 
-  String? get accountToken => _loginInfo?.accountToken;
+  String? get accountToken => accountInfo?.userToken;
 
   String? get appKey => _loginInfo?.appKey;
 
-  int? get loginType => _loginInfo?.loginType;
+  LoginType? get loginType => _loginInfo?.loginType;
 
   NEAccountInfo? get accountInfo =>
       _neMeetingKit.getAccountService().getAccountInfo();
@@ -78,16 +70,16 @@ class AuthManager with AppLogger {
     return Future.value(result.code == NEMeetingErrorCode.success);
   }
 
-  Future<Result<void>> _autoLoginMeetingKit() async {
+  Future<NEResult<void>> _autoLoginMeetingKit() async {
     final loginInfo = await _loadLoginInfoCache();
     if (loginInfo == null) {
-      return Result(code: NEMeetingErrorCode.failed);
+      return NEResult(code: NEMeetingErrorCode.failed);
     }
     logger.i('_autoLoginMeetingKit loginType = ${loginInfo.loginType}');
     final id = loginInfo.accountId;
     final token = loginInfo.accountToken;
     return loginProcedure(
-      LoginType.token,
+      loginInfo.loginType,
       () => _neMeetingKit.getAccountService().loginByToken(id, token),
       appKey: loginInfo.appKey,
     );
@@ -108,8 +100,8 @@ class AuthManager with AppLogger {
       channelName: getAppLocalizations().globalAppName,
       channelDesc: getAppLocalizations().globalAppName,
     );
-    return NEMeetingUIKit.instance.initialize(
-      NEMeetingUIKitConfig(
+    return NEMeetingKit.instance.initialize(
+      NEMeetingKitConfig(
         appKey: appKey,
         corpCode: corpCode,
         corpEmail: corpEmail,
@@ -126,11 +118,13 @@ class AuthManager with AppLogger {
               }
             : null,
         foregroundServiceConfig: foregroundServiceConfig,
+        apnsCerName: AppConfig().apnsCerName,
+        mixPushConfig: AppConfig().mixPushConfig,
       ),
     );
   }
 
-  Future<Result<LoginInfo>> loginProcedure(
+  Future<NEResult<LoginInfo>> loginProcedure(
     LoginType loginType,
     Future<NEResult<NEAccountInfo>> Function() loginAction, {
     String? appKey,
@@ -141,16 +135,16 @@ class AuthManager with AppLogger {
         appKey: appKey, corpCode: corpCode, corpEmail: corpEmail);
     logger.i('MeetingSDK initialize result=$initializeResult');
     if (!initializeResult.isSuccess()) {
-      return Result(code: initializeResult.code, msg: initializeResult.msg);
+      return initializeResult.cast();
     }
     appKey ??= initializeResult.data?.appKey;
-    final loginResult = await loginAction().map((accountInfo) {
+    final loginResult = await loginAction().map<LoginInfo>((accountInfo) {
       return LoginInfo(
         appKey: appKey!,
         accountId: accountInfo.userUuid,
         accountToken: accountInfo.userToken,
         isInitialPassword: accountInfo.isInitialPassword,
-        loginType: loginType.index,
+        loginType: loginType,
       );
     });
     logger.i('MeetingSDK login result=$loginResult');
@@ -162,46 +156,27 @@ class AuthManager with AppLogger {
         return true;
       }());
     }
-    return Result(
-        code: loginResult.code, msg: loginResult.msg, data: loginResult.data);
-  }
-
-  void saveNick(String nick) {
-    final loginInfo = _loginInfo;
-    if (loginInfo != null) {
-      loginInfo.nickname = nick;
-      _syncAuthInfo(loginInfo);
-    }
+    return loginResult;
   }
 
   void loginResultSuccess(LoginInfo loginInfo) {
-    _loginInfo = loginInfo;
-    _syncAuthInfo(loginInfo);
+    _setLoginInfo(loginInfo);
 
     /// 登录成功后重新加载用户本地会议记录
     LocalHistoryMeetingManager().ensureInit();
   }
 
-  void loginResultFailed() {}
-
-  void _syncAuthInfo(LoginInfo loginInfo) {
-    AppProfile.updateProfile(loginInfo);
-    GlobalPreferences().setLoginInfo(jsonEncode(loginInfo));
-    _authInfoChanged.add(loginInfo);
+  void _setLoginInfo(LoginInfo? loginInfo) {
+    _loginInfo = loginInfo;
+    GlobalPreferences()
+        .setLoginInfo(loginInfo == null ? '{}' : jsonEncode(loginInfo));
   }
 
   void logout() {
     _neMeetingKit.getAccountService().logout();
-    AppProfile.clear();
-    _loginInfo = null;
-    GlobalPreferences().setLoginInfo('{}');
+    _setLoginInfo(null);
     UserPreferences().setMeetingInfo('');
     MeetingUtil.setUnreadNotifyMessageListenable(0);
-    _authInfoChanged.add(null);
-  }
-
-  Stream<LoginInfo?> authInfoStream() {
-    return _authInfoChanged.stream;
   }
 
   void tokenIllegal(String errorTip) {

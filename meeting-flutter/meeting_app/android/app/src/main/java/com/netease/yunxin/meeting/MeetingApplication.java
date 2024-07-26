@@ -5,6 +5,7 @@
 package com.netease.yunxin.meeting;
 
 import android.app.Application;
+import com.netease.yunxin.meeting.util.ProcessUtils;
 import io.flutter.embedding.engine.FlutterEngine;
 
 public class MeetingApplication extends Application {
@@ -15,6 +16,11 @@ public class MeetingApplication extends Application {
   public void onCreate() {
     super.onCreate();
     application = this;
+
+    // 华为通知推送初始化
+    if (ProcessUtils.isMainProcess(this)) {
+      com.huawei.hms.support.common.ActivityMgr.INST.init(this);
+    }
   }
 
   public static MeetingApplication getApplication() {

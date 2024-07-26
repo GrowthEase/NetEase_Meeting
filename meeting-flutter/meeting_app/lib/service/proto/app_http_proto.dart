@@ -4,16 +4,14 @@
 
 import 'dart:io';
 
-import 'package:yunxin_alog/yunxin_alog.dart';
+import 'package:nemeeting/constants.dart';
+import 'package:netease_common/netease_common.dart';
 import 'package:dio/dio.dart';
 import 'package:nemeeting/service/client/app_http_client.dart';
 import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/service/proto/base_proto.dart';
-import 'package:nemeeting/service/response/result.dart';
 
-import '../module_name.dart';
-
-const String _tag = 'HTTP';
+Alogger _httpLogger = Alogger.normal('AppHttp', Constants.moduleName);
 
 abstract class AppHttpProto<T> extends BaseProto {
   AppHttpClient client = AppHttpClient();
@@ -26,24 +24,18 @@ abstract class AppHttpProto<T> extends BaseProto {
   }
 
   @override
-  Future<Result<T>> execute() async {
+  Future<NEResult<T>> execute() async {
     Response? response;
     var url = path();
     response = await client.execute(method, url, header(), data());
     if (response == null) {
-      Alog.e(
-          moduleName: moduleName,
-          tag: _tag,
-          content: 'resp path=$url result is null');
-      return Result(code: HttpCode.netWorkError);
+      _httpLogger.e('resp path=$url result is null');
+      return NEResult(code: HttpCode.netWorkError);
     } else {
       if (response.statusCode == HttpStatus.ok) {
-        Alog.d(
-            moduleName: moduleName,
-            tag: _tag,
-            content: 'resp path=$url code = 200 , result ${response.data}');
+        _httpLogger.d('resp path=$url code = 200 , result ${response.data}');
         if (response.data == null || response.data is! Map) {
-          return Result(code: HttpCode.success);
+          return NEResult(code: HttpCode.success);
         } else {
           final map = response.data as Map;
           final code = (map['code'] ?? HttpCode.serverError) as int;
@@ -51,32 +43,26 @@ abstract class AppHttpProto<T> extends BaseProto {
           try {
             if (code == HttpCode.success) {
               final data = map['data']; // protect may be ret is null
-              return Result(
+              return NEResult(
                   code: HttpCode.success,
                   msg: msg,
                   data: (data is! Map ? null : result(data)) as T?);
             }
           } catch (e, s) {
-            Alog.e(
-                moduleName: moduleName,
-                tag: _tag,
-                content:
-                    'parse response error: path=$url, exception=$e, stacktrace=\n$s');
+            _httpLogger.e(
+                'parse response error: path=$url, exception=$e, stacktrace=\n$s');
           }
-          return Result(code: code, msg: msg);
+          return NEResult(code: code, msg: msg);
         }
       } else {
-        Alog.e(
-            moduleName: moduleName,
-            tag: _tag,
-            content: 'resp path=$path code${response.statusCode}');
-        return Result(code: response.statusCode as int);
+        _httpLogger.e('resp path=$path code${response.statusCode}');
+        return NEResult(code: response.statusCode as int);
       }
     }
   }
 }
 
-abstract class AppHttpProtoCompat<T> extends BaseProto {
+abstract class AppHttpProtoCompat<T> extends BaseProto<T> {
   AppHttpClient client = AppHttpClient();
 
   /// custom options
@@ -87,24 +73,18 @@ abstract class AppHttpProtoCompat<T> extends BaseProto {
   }
 
   @override
-  Future<Result<T>> execute() async {
+  Future<NEResult<T>> execute() async {
     Response? response;
     var url = path();
     response = await client.execute(method, url, header(), data());
     if (response == null) {
-      Alog.e(
-          moduleName: moduleName,
-          tag: _tag,
-          content: 'resp path=$url result is null');
-      return Result(code: HttpCode.netWorkError);
+      _httpLogger.e('resp path=$url result is null');
+      return NEResult(code: HttpCode.netWorkError);
     } else {
       if (response.statusCode == HttpStatus.ok) {
-        Alog.d(
-            moduleName: moduleName,
-            tag: _tag,
-            content: 'resp path=$url code = 200 , result ${response.data}');
+        _httpLogger.d('resp path=$url code = 200 , result ${response.data}');
         if (response.data == null || response.data is! Map) {
-          return Result(code: HttpCode.success);
+          return NEResult(code: HttpCode.success);
         } else {
           final map = response.data as Map;
           final code = (map['code'] ?? HttpCode.serverError) as int;
@@ -112,26 +92,20 @@ abstract class AppHttpProtoCompat<T> extends BaseProto {
           try {
             if (code == HttpStatus.ok) {
               final data = map['ret']; // protect may be ret is null
-              return Result(
+              return NEResult(
                   code: HttpCode.success,
                   msg: msg,
-                  data: (data is! Map ? null : result(data)) as T?);
+                  data: data is! Map ? null : result(data));
             }
           } catch (e, s) {
-            Alog.e(
-                moduleName: moduleName,
-                tag: _tag,
-                content:
-                    'parse response error: path=$url, exception=$e, stacktrace=\n$s');
+            _httpLogger.e(
+                'parse response error: path=$url, exception=$e, stacktrace=\n$s');
           }
-          return Result(code: code, msg: msg);
+          return NEResult(code: code, msg: msg);
         }
       } else {
-        Alog.e(
-            moduleName: moduleName,
-            tag: _tag,
-            content: 'resp path=$path code${response.statusCode}');
-        return Result(code: response.statusCode as int);
+        _httpLogger.e('resp path=$path code${response.statusCode}');
+        return NEResult(code: response.statusCode as int);
       }
     }
   }

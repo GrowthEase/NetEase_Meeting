@@ -5,8 +5,7 @@
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/pre_meeting/schedule_meeting_base_state.dart';
-import 'package:netease_meeting_core/meeting_service.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import 'package:nemeeting/utils/const_config.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
 import 'package:nemeeting/utils/integration_test.dart';
@@ -14,17 +13,22 @@ import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/uikit/values/colors.dart';
 
 import '../language/localizations.dart';
+import '../service/auth/auth_manager.dart';
 
 class ScheduleMeetingRoute extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
-    return _ScheduleMeetingRouteState();
+    final meetingItem = NEMeetingItem();
+    meetingItem.ownerUserUuid = AuthManager().accountId;
+    meetingItem.scheduledMemberList = [];
+    return _ScheduleMeetingRouteState(meetingItem);
   }
 }
 
 class _ScheduleMeetingRouteState
     extends ScheduleMeetingBaseState<ScheduleMeetingRoute> {
-  _ScheduleMeetingRouteState() : super();
+  _ScheduleMeetingRouteState(NEMeetingItem meetingItem)
+      : super(meetingItem, {});
 
   @override
   void initState() {
@@ -33,7 +37,6 @@ class _ScheduleMeetingRouteState
     callTime();
     recurringRule = NEMeetingRecurringRule(
         type: NEMeetingRecurringRuleType.no, startTime: startTime);
-    addMyselfToDefaultAttendee();
     TimezonesUtil.getTimezoneById(null)
         .then((timezone) => timezoneNotifier.value = timezone);
   }
@@ -126,7 +129,7 @@ class _ScheduleMeetingRouteState
     } else {
       setting.controls = null;
     }
-    setting.cloudRecordOn = attendeeRecordOn;
+    meetingItem.cloudRecordConfig = cloudRecordConfig;
     meetingItem.settings = setting;
     var live = NEMeetingItemLive();
     live.enable = liveSwitch.value;
@@ -155,6 +158,7 @@ class _ScheduleMeetingRouteState
         .then((result) {
       LoadingUtil.cancelLoading();
       scheduling = false;
+      if (!mounted) return;
       if (result.code == HttpCode.success && result.data != null) {
         ToastUtils.showToast(
             context,

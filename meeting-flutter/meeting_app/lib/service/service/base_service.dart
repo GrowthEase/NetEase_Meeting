@@ -5,20 +5,19 @@
 import 'package:nemeeting/service/auth/auth_manager.dart';
 import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/service/proto/base_proto.dart';
-import 'package:nemeeting/service/response/result.dart';
+import 'package:netease_common/netease_common.dart';
 
 /// base service
 class BaseService {
   /// execute method
-  Future<Result<T>> execute<T>(BaseProto proto) {
+  Future<NEResult<T>> execute<T>(BaseProto<T> proto) {
     return proto.execute().then((result) {
       if (proto.checkLoginState() &&
           (result.code == HttpCode.verifyError ||
               result.code == HttpCode.tokenError)) {
         AuthManager().tokenIllegal(HttpCode.getMsg(result.msg, 'Token失效'));
       }
-      // return Result(code: result.code, msg: result.msg, data: result.data as T);
-      return result as Result<T>;
+      return result;
     });
   }
 }

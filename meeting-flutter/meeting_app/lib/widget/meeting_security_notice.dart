@@ -14,11 +14,11 @@ import 'package:nemeeting/uikit/values/fonts.dart';
 import 'package:nemeeting/utils/security_notice_util.dart';
 import 'package:nemeeting/webview/webview_page.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 
 import '../uikit/values/asset_name.dart';
-import '../uikit/values/borders.dart';
 import '../uikit/values/colors.dart';
+import '../utils/integration_test.dart';
 
 class MeetingAppNotificationBar extends StatefulWidget {
   final VoidCallback? onClose;
@@ -145,7 +145,7 @@ class MeetingAppNotificationBarState
     return Align(
         alignment: Alignment.topCenter,
         child: Container(
-          // padding: EdgeInsets.only(top: 3, left: 2),
+          key: MeetingValueKey.tipClose,
           height: 12.w,
           width: 12.w,
           child: NEGestureDetector(

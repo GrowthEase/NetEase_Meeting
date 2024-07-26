@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 import 'package:nemeeting/base/util/text_util.dart';
-import 'package:netease_meeting_core/meeting_kit.dart';
+import 'package:netease_meeting_kit/meeting_kit.dart';
 
 class HttpCode {
   static const int cancel = -4;

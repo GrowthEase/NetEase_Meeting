@@ -81,66 +81,73 @@ class _NEPreMeetingServiceImpl extends NEPreMeetingService with _AloggerMixin {
   @override
   Future<NEResult<List<NERemoteHistoryMeeting>>> getFavoriteMeetingList(
       int? anchorId, int limit) {
-    apiLogger.i('getFavoriteMeetings $anchorId $limit');
+    apiLogger.i('getFavoriteMeetings: $anchorId $limit');
     return PreRoomRepository.getFavoriteMeetings(anchorId, limit);
   }
 
   @override
   Future<NEResult<int>> addFavoriteMeeting(int meetingId) {
-    apiLogger.i('addFavoriteMeeting $meetingId');
+    apiLogger.i('addFavoriteMeeting: $meetingId');
     return PreRoomRepository.addFavoriteMeeting(meetingId);
   }
 
   @override
   Future<VoidResult> removeFavoriteMeeting(int meetingId) {
-    apiLogger.i('removeFavoriteMeeting $meetingId');
+    apiLogger.i('removeFavoriteMeeting: $meetingId');
     return PreRoomRepository.removeFavoriteMeetingByRoomArchiveId(meetingId);
   }
 
   @override
   Future<NEResult<List<NERemoteHistoryMeeting>>> getHistoryMeetingList(
       int anchorId, int limit) {
-    apiLogger.i('getHistoryMeetingList $anchorId $limit');
+    apiLogger.i('getHistoryMeetingList: $anchorId $limit');
     return PreRoomRepository.getHistoryMeetings(anchorId, limit);
   }
 
   @override
   Future<NEResult<NERemoteHistoryMeetingDetail>> getHistoryMeetingDetail(
       int meetingId) {
-    apiLogger.i('getHistoryMeetingDetail $meetingId');
+    apiLogger.i('getHistoryMeetingDetail: $meetingId');
     return PreRoomRepository.getHistoryMeetingDetail(meetingId);
   }
 
   @override
   Future<NEResult<NERemoteHistoryMeeting>> getHistoryMeeting(int meetingId) {
-    apiLogger.i('getHistoryMeeting $meetingId');
+    apiLogger.i('getHistoryMeeting: $meetingId');
     return PreRoomRepository.getHistoryMeeting(meetingId);
   }
 
   @override
   Future<NEResult<NEMeetingItem>> scheduleMeeting(NEMeetingItem item) {
-    apiLogger.i('scheduleMeeting ,item${item.toString()}');
+    apiLogger.i('scheduleMeeting: item=${item.toString()}');
     return PreRoomRepository.scheduleRoom(item);
   }
 
   @override
   Future<NEResult<NEMeetingItem>> editMeeting(
       NEMeetingItem item, bool editRecurringMeeting) {
-    apiLogger.i('editMeeting ,item${item.toString()} $editRecurringMeeting');
+    apiLogger.i('editMeeting: item=${item.toString()} $editRecurringMeeting');
     return PreRoomRepository.editRoom(item, editRecurringMeeting);
   }
 
   @override
   Future<NEResult<void>> cancelMeeting(
       int meetingId, bool cancelRecurringMeeting) {
-    apiLogger.i('cancelMeeting $meetingId $cancelRecurringMeeting');
+    apiLogger.i('cancelMeeting: $meetingId $cancelRecurringMeeting');
     return PreRoomRepository.cancelRoom(meetingId, cancelRecurringMeeting);
   }
 
   @override
   Future<NEResult<NEMeetingItem>> getMeetingItemByNum(String meetingNum) {
-    apiLogger.i('getMeetingItemByNum $meetingNum');
+    apiLogger.i('getMeetingItemByNum: $meetingNum');
     return PreRoomRepository.getRoomItemByNum(meetingNum);
+  }
+
+  @override
+  Future<NEResult<NEMeetingItem>> getMeetingItemByInviteCode(
+      String inviteCode) {
+    apiLogger.i('getMeetingItemByInviteCode: $inviteCode');
+    return PreRoomRepository.getRoomItemByInviteCode(inviteCode);
   }
 
   @override
@@ -164,6 +171,33 @@ class _NEPreMeetingServiceImpl extends NEPreMeetingService with _AloggerMixin {
   }
 
   @override
+  Future<String> getInviteInfo(NEMeetingItem item) {
+    apiLogger.i('getInviteInfo ${item.meetingNum}');
+    return NEMeetingUIKit.instance.getInviteInfo(item);
+  }
+
+  Future<NEResult<List<NEMeetingTranscriptionInfo>>>
+      getHistoryMeetingTranscriptionInfo(int meetingId) {
+    apiLogger.i('getHistoryMeetingTranscriptionInfo $meetingId');
+    return PreRoomRepository.getHistoryMeetingTranscriptionInfo(meetingId);
+  }
+
+  Future<NEResult<String>> getHistoryMeetingTranscriptionFileUrl(
+      int meetingId, String fileKey) {
+    apiLogger.i('getHistoryMeetingTranscriptionFileUrl $meetingId $fileKey');
+    return PreRoomRepository.getHistoryMeetingTranscriptionFileUrl(
+        meetingId, fileKey);
+  }
+
+  Future<NEResult<List<NEMeetingTranscriptionMessage>>>
+      getHistoryMeetingTranscriptionMessageList(int meetingId, String fileKey) {
+    apiLogger
+        .i('getHistoryMeetingTranscriptionMessageList $meetingId $fileKey');
+    return PreRoomRepository.getHistoryMeetingTranscriptionMessageList(
+        meetingId, fileKey);
+  }
+
+  @override
   void addListener(NEPreMeetingListener listener) {
     apiLogger.i('addListener');
     _listeners.add(listener);
@@ -173,5 +207,42 @@ class _NEPreMeetingServiceImpl extends NEPreMeetingService with _AloggerMixin {
   void removeListener(NEPreMeetingListener listener) {
     apiLogger.i('removeListener');
     _listeners.remove(listener);
+  }
+
+  @override
+  List<NELocalHistoryMeeting> getLocalHistoryMeetingList() {
+    return MeetingRepository().getLocalHistoryMeetingList();
+  }
+
+  @override
+  void clearLocalHistoryMeetingList() {
+    MeetingRepository().clearLocalHistoryMeetingList();
+  }
+
+  @override
+  Future<NEResult<List<NEMeetingRecord>>> getMeetingCloudRecordList(
+      int meetingId) {
+    return MeetingRepository().getMeetingCloudRecordList(meetingId);
+  }
+
+  @override
+  Future<NEResult<List<NERoomChatMessage>>> fetchChatroomHistoryMessageList(
+      int meetingId, NEChatroomHistoryMessageSearchOption option) {
+    return MeetingRepository()
+        .fetchChatroomHistoryMessages(meetingId.toString(), option);
+  }
+
+  @override
+  Widget loadWebAppView(
+    int meetingId,
+    NEMeetingWebAppItem item,
+  ) {
+    return MeetingWebAppPage(
+      key: ValueKey(item),
+      roomArchiveId: meetingId.toString(),
+      homeUrl: item.homeUrl,
+      title: item.name,
+      sessionId: item.sessionId,
+    );
   }
 }

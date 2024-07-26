@@ -183,6 +183,12 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get globalMonthDec => '12月';
 
   @override
+  String get globalPhotosPermissionRationale => '音视频会议需要申请相册权限，用于上传图片或修改头像';
+
+  @override
+  String get globalPhotosPermission => '无法使用相册';
+
+  @override
   String get authImmediatelyRegister => '立即注册';
 
   @override
@@ -862,6 +868,27 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get meetingTime => '时间';
 
   @override
+  String get autoRecord => '自动录制';
+
+  @override
+  String get meetingCloudRecord => '自动云录制';
+
+  @override
+  String get meetingEnableCloudRecordWhenHostJoin => '主持人入会后开启';
+
+  @override
+  String get meetingEnableCloudRecordWhenMemberJoin => '成员入会后开启';
+
+  @override
+  String get copyMeetingInvite => '复制邀请信息';
+
+  @override
+  String get copyMeetingNum => '复制会议号/链接';
+
+  @override
+  String get copyMeetingAll => '复制全部';
+
+  @override
   String get historyMeeting => '历史会议';
 
   @override
@@ -1106,93 +1133,6 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get settingLanguageTip => '简体中文';
 
   @override
-  String get feedbackInRoom => '问题反馈';
-
-  @override
-  String get feedbackProblemType => '问题类型';
-
-  @override
-  String get feedbackSuccess => '反馈提交成功';
-
-  @override
-  String get feedbackAudioLatency => '对方说话声音延迟很大';
-
-  @override
-  String get feedbackAudioFreeze => '对方说话声音很卡';
-
-  @override
-  String get feedbackCannotHearOthers => '听不到对方声音';
-
-  @override
-  String get feedbackCannotHearMe => '对方听不到我的声音';
-
-  @override
-  String get feedbackTitleExtras => '补充信息';
-
-  @override
-  String get feedbackTitleDate => '问题发生时间';
-
-  @override
-  String get feedbackContentEmpty => '无';
-
-  @override
-  String get feedbackTitleSelectPicture => '本地图片';
-
-  @override
-  String get feedbackAudioMechanicalNoise => '播放机械音';
-
-  @override
-  String get feedbackAudioNoise => '杂音';
-
-  @override
-  String get feedbackAudioEcho => '有回声';
-
-  @override
-  String get feedbackAudioVolumeSmall => '音量小';
-
-  @override
-  String get feedbackVideoFreeze => '视频长时间卡顿';
-
-  @override
-  String get feedbackVideoIntermittent => '视频断断续续';
-
-  @override
-  String get feedbackVideoTearing => '画面撕裂';
-
-  @override
-  String get feedbackVideoTooBrightOrDark => '画面过亮/过暗';
-
-  @override
-  String get feedbackVideoBlurry => '画面模糊';
-
-  @override
-  String get feedbackVideoNoise => '画面明显噪点';
-
-  @override
-  String get feedbackAudioVideoNotSync => '音画不同步';
-
-  @override
-  String get feedbackUnexpectedExit => '意外退出';
-
-  @override
-  String get feedbackOthers => '存在其他问题';
-
-  @override
-  String get feedbackTitleAudio => '音频问题';
-
-  @override
-  String get feedbackTitleVideo => '视频问题';
-
-  @override
-  String get feedbackTitleOthers => '其他';
-
-  @override
-  String get feedbackTitleDescription => '问题描述';
-
-  @override
-  String get feedbackOtherTip => '请描述您的问题，（当您选中\"存在其他问题\"时），需填写具体描述才可进行提交';
-
-  @override
   String get evaluationTitle => '评分';
 
   @override
@@ -1221,4 +1161,46 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
 
   @override
   String get evaluationGoHome => '返回首页';
+
+  @override
+  String get transcriptionCaptionAndTranslate => '字幕和翻译';
+
+  @override
+  String get transcriptionCaptionSettings => '字幕设置';
+
+  @override
+  String get transcriptionEnableCaptionOnJoin => '加入会议时开启字幕';
+
+  @override
+  String get transcriptionTranslateSettings => '翻译设置';
+
+  @override
+  String get transcriptionCaptionTypeSize => '字号大小';
+
+  @override
+  String get transcriptionCaptionExampleSize => '字幕文字大小示例';
+
+  @override
+  String get transcription => '实时转写';
+
+  @override
+  String get transcriptionGenerating => '转写文件生成中...';
+
+  @override
+  String get transcriptionTiming => '发起转写时间';
+
+  @override
+  String get transcriptionExportFile => '导出此转写文件';
+
+  @override
+  String get globalFileSaveAs => '导出为';
+
+  @override
+  String get globalFileTypePDF => 'PDF';
+
+  @override
+  String get globalFileTypeWord => 'Word';
+
+  @override
+  String get globalFileTypeTxt => '纯文本';
 }

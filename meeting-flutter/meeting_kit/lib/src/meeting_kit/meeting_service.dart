@@ -4,163 +4,6 @@
 
 part of meeting_kit;
 
-/// 提供创建会议必要的基本参数，如会议ID、房间昵称等
-class NEStartMeetingParams {
-  ///
-  /// 会议主题
-  ///
-  final String? subject;
-
-  /// 指定要创建会议号
-  /// * 可指定为个人会议ID或个人会议短号；
-  /// * 当不指定时，由服务端随机分配一个会议ID；
-  final String? meetingNum;
-
-  /// 房间中的用户昵称，不能为空
-  final String displayName;
-
-  /// 房间密码;
-  /// 创建房间时，如果密码不为空，会创建带指定密码的房间
-  /// 加入带密码的房间时，需要指定密码
-  final String? password;
-
-  /// 会议中的用户成员标签，自定义，最大长度50
-  final String? tag;
-
-  final String? avatar;
-
-  /// 透传字段
-  final String? extraData;
-
-  /// 音视频控制
-  final List<NEMeetingControl>? controls;
-
-  /// 设置会议成员角色
-  final Map<String, NEMeetingRoleType>? roleBinds;
-
-  /// 媒体流加密类型
-  final NEEncryptionConfig? encryptionConfig;
-
-  IntervalEvent? trackingEvent;
-
-  NEStartMeetingParams({
-    this.subject,
-    this.meetingNum,
-    required this.displayName,
-    this.password,
-    this.tag,
-    this.avatar,
-    this.extraData,
-    this.controls,
-    this.roleBinds,
-    this.encryptionConfig,
-  });
-
-  @override
-  String toString() {
-    return 'NEStartMeetingParams{meetingNum: $meetingNum, displayName: $displayName, tag: $tag}';
-  }
-}
-
-class NEStartMeetingOptions {
-  ///
-  /// 是否开启聊天室
-  ///
-  final bool noChat;
-
-  ///
-  /// 是否开启 云端录制
-  ///
-  final bool noCloudRecord;
-
-  ///
-  /// 是否开启 SIP 功能
-  ///
-  final bool noSip;
-
-  ///
-  /// 配置会议是否默认开启等候室。如果初始设置为不开启，管理员也可以后续在会中手动开启/关闭等候室。
-  /// 开启等候室后，参会者需要管理员同意后才能加入会议。
-  ///
-  final bool enableWaitingRoom;
-
-  ///
-  /// 配置在加入Rtc频道成功后是否打开本地音频设备，默认打开。
-  /// 该选项若配置为打开，则SDK会提前初始化音频设备，但不会对外发送本地音频流。
-  ///
-  final bool enableMyAudioDeviceOnJoinRtc;
-
-  ///
-  /// 是否开启访客入会
-  ///
-  final bool enableGuestJoin;
-
-  NEStartMeetingOptions({
-    this.noChat = false,
-    this.noCloudRecord = true,
-    this.noSip = false,
-    this.enableWaitingRoom = false,
-    this.enableMyAudioDeviceOnJoinRtc = true,
-    this.enableGuestJoin = false,
-  });
-}
-
-/// 提供加入会议时必要的额外参数，如会议ID、用户会议昵称,tag等
-class NEJoinMeetingParams {
-  /// 会议号
-  final String meetingNum;
-
-  /// 会议昵称
-  final String displayName;
-
-  /// 房间密码;
-  /// 创建房间时，如果密码不为空，会创建带指定密码的房间
-  /// 加入带密码的房间时，需要指定密码
-  final String? password;
-
-  /// 会议中的用户成员标签，自定义，最大长度50
-  final String? tag;
-
-  final String? avatar;
-
-  /// 媒体流加密类型
-  final NEEncryptionConfig? encryptionConfig;
-
-  IntervalEvent? trackingEvent;
-
-  NEJoinMeetingParams({
-    required this.meetingNum,
-    required this.displayName,
-    this.password,
-    this.tag,
-    this.avatar,
-    this.encryptionConfig,
-  });
-
-  NEJoinMeetingParams copy({String? password}) {
-    return NEJoinMeetingParams(
-      meetingNum: meetingNum,
-      displayName: displayName,
-      password: password ?? this.password,
-      tag: tag,
-      avatar: avatar,
-      encryptionConfig: encryptionConfig,
-    );
-  }
-}
-
-class NEJoinMeetingOptions {
-  ///
-  /// 配置在加入Rtc频道成功后是否打开本地音频设备，默认打开。
-  /// 该选项若配置为打开，则SDK会提前初始化音频设备，但不会对外发送本地音频流。
-  ///
-  final bool enableMyAudioDeviceOnJoinRtc;
-
-  NEJoinMeetingOptions({
-    this.enableMyAudioDeviceOnJoinRtc = true,
-  });
-}
-
 /// 提供会议相关的服务接口，诸如创建会议、加入会议、添加会议状态监听等。可通过 [NEMeetingKit.getMeetingService] 获取对应的服务实例
 abstract class NEMeetingService {
   /// 开始一个新的会议，只有完成SDK的登录鉴权操作才允许创建会议。
@@ -169,11 +12,14 @@ abstract class NEMeetingService {
   /// [param] 会议参数对象，不能为空
   /// [opts]  会议选项对象，可空；当未指定时，会使用默认的选项
   ///
-  /// 该回调会返回一个[NERoomContext]房间上下文实例，该实例支持会议相关扩展 [NEMeetingContext]
-  Future<NEResult<NERoomContext>> startMeeting(
+  Future<NEResult<void>> startMeeting(
+    BuildContext context,
     NEStartMeetingParams param,
-    NEStartMeetingOptions opts,
-  );
+    NEMeetingOptions opts, {
+    MeetingPageRouteWillPushCallback? onMeetingPageRouteWillPush,
+    MeetingPageRouteDidPushCallback? onMeetingPageRouteDidPush,
+    Widget? backgroundWidget,
+  });
 
   /// 加入一个当前正在进行中的会议，只有完成SDK的登录鉴权操作才允许加入会议。
   /// 加入会议成功后，SDK会拉起会议页面，调用方不用做其他操作
@@ -181,40 +27,83 @@ abstract class NEMeetingService {
   /// [param] 会议参数对象，不能为空
   /// [opts]  会议选项对象，可空；当未指定时，会使用默认的选项
   ///
-  /// 该回调会返回一个[NERoomContext]房间上下文实例，该实例支持会议相关扩展 [NEMeetingContext]
-  Future<NEResult<NERoomContext>> joinMeeting(
+  Future<NEResult<void>> joinMeeting(
+    BuildContext context,
     NEJoinMeetingParams param,
-    NEJoinMeetingOptions opts,
-  );
+    NEMeetingOptions opts, {
+    PasswordPageRouteWillPushCallback? onPasswordPageRouteWillPush,
+    MeetingPageRouteWillPushCallback? onMeetingPageRouteWillPush,
+    MeetingPageRouteDidPushCallback? onMeetingPageRouteDidPush,
+    Widget? backgroundWidget,
+  });
 
-  ///  加入一个当前正在进行中的会议，已登录或未登录均可加入会议。
-  ///<p>加入会议成功后，SDK会拉起会议页面，调用方不用做其他操作。
+  ///  匿名入一个当前正在进行中的会议，未登录状态可通过该接口加入会议。
+  ///  <p>加入会议成功后，SDK会拉起会议页面，调用方不用做其他操作。
   ///
   /// [param] 会议参数对象，不能为空
   /// [opts]  会议选项对象，可空；当未指定时，会使用默认的选项
-  Future<NEResult<NERoomContext>> anonymousJoinMeeting(
+  Future<NEResult<void>> anonymousJoinMeeting(
+    BuildContext context,
     NEJoinMeetingParams param,
-    NEJoinMeetingOptions opts,
-  );
+    NEMeetingOptions opts, {
+    PasswordPageRouteWillPushCallback? onPasswordPageRouteWillPush,
+    MeetingPageRouteWillPushCallback? onMeetingPageRouteWillPush,
+    MeetingPageRouteDidPushCallback? onMeetingPageRouteDidPush,
+  });
 
-  ///  获取云录制文件信息，房间结束后，服务端转码生成
   ///
-  ///   * [roomArchiveId] 房间归档id
-  Future<NEResult<List<NERoomRecord>>> getRoomCloudRecordList(
-      String roomArchiveId);
-
-  Future<NEResult<List<NERoomChatMessage>>> fetchChatroomHistoryMessages(
-      String roomArchiveId, NEChatroomHistoryMessageSearchOption option);
-
-  ///  获取消息附件
+  /// 将当前正在进行中的会议页面关闭。不会退出或结束会议，会议继续在后台运行。 如果当前无进行中的会议，则调用无效。
   ///
-  ///   * [messageUuid] 消息id
-  Future<NEResult<void>> downloadAttachment(String messageUuid);
+  Future<NEResult<void>> minimizeCurrentMeeting();
 
-  /// 获取本地历史会议记录列表，不支持漫游保存，默认保存最近10条记录
   ///
-  /// 结果，数据类型为[NELocalHistoryMeeting]列表
-  List<NELocalHistoryMeeting> getLocalHistoryMeetingList();
+  /// 从画中画模式恢复会议。如果当前无进行中的会议，则调用无效。
+  ///
+  Future<NEResult<void>> fullscreenCurrentMeeting();
+
+  ///
+  ///  离开当前进行中的会议，并通过参数控制是否同时结束当前会议；
+  /// 只有主持人才能结束会议，其他用户设置结束会议无效；
+  /// 如果退出当前会议后，会议中再无其他成员，则该会议也会结束；
+  /// [closeIfHost] true：结束会议；false：不结束会议；
+  ///
+  Future<NEResult<void>> leaveCurrentMeeting(bool closeIfHost);
+
+  ///
+  /// 设置菜单项点击事件回调
+  ///
+  void setOnInjectedMenuItemClickListener(
+      NEMeetingOnInjectedMenuItemClickListener listener);
+
+  ///
+  /// 更新当前存在的自定义菜单项的状态 注意：该接口更新菜单项的文本(最长为10，超过不生效)
+  /// [item] 当前已存在的菜单项
+  ///
+  Future<NEResult<void>> updateInjectedMenuItem(NEMeetingMenuItem? item);
+
+  ///
+  /// 获取当前会议状态，参考[NEMeetingStatus]
+  ///
+  int getMeetingStatus();
+
+  ///
+  /// 获取当前会议详情。如果当前无正在进行中的会议，则回调数据对象为空
+  ///
+  NEMeetingInfo? getCurrentMeetingInfo();
+
+  ///
+  /// 添加会议状态监听实例，用于接收会议状态变更通知
+  ///
+  /// [listener] 要添加的监听实例
+  ///
+  void addMeetingStatusListener(NEMeetingStatusListener listener);
+
+  ///
+  /// 移除对应的会议状态的监听实例
+  ///
+  /// [listener] 要移除的监听实例
+  ///
+  void removeMeetingStatusListener(NEMeetingStatusListener listener);
 }
 
 /// 会议信息
@@ -264,6 +153,7 @@ class NEMeetingInfo {
   /// 当前主持人id
   final String hostUserId;
 
+  /// 额外数据
   final String? extraData;
 
   ///

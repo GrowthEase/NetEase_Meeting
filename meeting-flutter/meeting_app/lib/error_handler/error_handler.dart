@@ -22,6 +22,11 @@ abstract class ErrorHandler {
       await recordFlutterError(details);
       originalOnError?.call(details);
     };
+    var originalOnError2 = PlatformDispatcher.instance.onError;
+    PlatformDispatcher.instance.onError = (error, stack) {
+      recordError(error, stack);
+      return originalOnError2?.call(error, stack) ?? true;
+    };
   }
 
   Future<void> recordError(dynamic exception, StackTrace? stack,

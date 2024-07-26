@@ -2,27 +2,34 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../utils/integration_test.dart';
 import '../values/colors.dart';
 import '../values/fonts.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 
 abstract class AppBaseState<T extends StatefulWidget>
     extends PlatformAwareLifecycleBaseState<T> {
   @protected
   Color get backgroundColor => AppColors.globalBg;
 
+  @protected
+  bool get showContentDivider => false;
+
   @override
   Widget buildWithPlatform(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: resizeToAvoidBottomInset,
       appBar: buildCustomAppBar() != null ? null : buildAppBar(),
       body: Column(
         children: [
           if (buildCustomAppBar() != null) buildCustomAppBar()!,
+          if (showContentDivider)
+            Container(
+              height: 1,
+              color: AppColors.colorE6E7EB,
+            ),
           Expanded(
             child: NEMeetingKitFeatureConfig(
               child: buildBody(),
@@ -32,6 +39,8 @@ abstract class AppBaseState<T extends StatefulWidget>
       ),
     );
   }
+
+  bool? get resizeToAvoidBottomInset => null;
 
   String getTitle();
 

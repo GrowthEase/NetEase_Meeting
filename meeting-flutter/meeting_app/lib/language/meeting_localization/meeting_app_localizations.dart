@@ -445,6 +445,18 @@ abstract class MeetingAppLocalizations {
   /// **'12月'**
   String get globalMonthDec;
 
+  /// No description provided for @globalPhotosPermissionRationale.
+  ///
+  /// In zh, this message translates to:
+  /// **'音视频会议需要申请相册权限，用于上传图片或修改头像'**
+  String get globalPhotosPermissionRationale;
+
+  /// No description provided for @globalPhotosPermission.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法使用相册'**
+  String get globalPhotosPermission;
+
   /// No description provided for @authImmediatelyRegister.
   ///
   /// In zh, this message translates to:
@@ -1738,6 +1750,48 @@ abstract class MeetingAppLocalizations {
   /// **'时间'**
   String get meetingTime;
 
+  /// No description provided for @autoRecord.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动录制'**
+  String get autoRecord;
+
+  /// No description provided for @meetingCloudRecord.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动云录制'**
+  String get meetingCloudRecord;
+
+  /// No description provided for @meetingEnableCloudRecordWhenHostJoin.
+  ///
+  /// In zh, this message translates to:
+  /// **'主持人入会后开启'**
+  String get meetingEnableCloudRecordWhenHostJoin;
+
+  /// No description provided for @meetingEnableCloudRecordWhenMemberJoin.
+  ///
+  /// In zh, this message translates to:
+  /// **'成员入会后开启'**
+  String get meetingEnableCloudRecordWhenMemberJoin;
+
+  /// No description provided for @copyMeetingInvite.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制邀请信息'**
+  String get copyMeetingInvite;
+
+  /// No description provided for @copyMeetingNum.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制会议号/链接'**
+  String get copyMeetingNum;
+
+  /// No description provided for @copyMeetingAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'复制全部'**
+  String get copyMeetingAll;
+
   /// No description provided for @historyMeeting.
   ///
   /// In zh, this message translates to:
@@ -2213,180 +2267,6 @@ abstract class MeetingAppLocalizations {
   /// **'简体中文'**
   String get settingLanguageTip;
 
-  /// No description provided for @feedbackInRoom.
-  ///
-  /// In zh, this message translates to:
-  /// **'问题反馈'**
-  String get feedbackInRoom;
-
-  /// No description provided for @feedbackProblemType.
-  ///
-  /// In zh, this message translates to:
-  /// **'问题类型'**
-  String get feedbackProblemType;
-
-  /// No description provided for @feedbackSuccess.
-  ///
-  /// In zh, this message translates to:
-  /// **'反馈提交成功'**
-  String get feedbackSuccess;
-
-  /// No description provided for @feedbackAudioLatency.
-  ///
-  /// In zh, this message translates to:
-  /// **'对方说话声音延迟很大'**
-  String get feedbackAudioLatency;
-
-  /// No description provided for @feedbackAudioFreeze.
-  ///
-  /// In zh, this message translates to:
-  /// **'对方说话声音很卡'**
-  String get feedbackAudioFreeze;
-
-  /// No description provided for @feedbackCannotHearOthers.
-  ///
-  /// In zh, this message translates to:
-  /// **'听不到对方声音'**
-  String get feedbackCannotHearOthers;
-
-  /// No description provided for @feedbackCannotHearMe.
-  ///
-  /// In zh, this message translates to:
-  /// **'对方听不到我的声音'**
-  String get feedbackCannotHearMe;
-
-  /// No description provided for @feedbackTitleExtras.
-  ///
-  /// In zh, this message translates to:
-  /// **'补充信息'**
-  String get feedbackTitleExtras;
-
-  /// No description provided for @feedbackTitleDate.
-  ///
-  /// In zh, this message translates to:
-  /// **'问题发生时间'**
-  String get feedbackTitleDate;
-
-  /// No description provided for @feedbackContentEmpty.
-  ///
-  /// In zh, this message translates to:
-  /// **'无'**
-  String get feedbackContentEmpty;
-
-  /// No description provided for @feedbackTitleSelectPicture.
-  ///
-  /// In zh, this message translates to:
-  /// **'本地图片'**
-  String get feedbackTitleSelectPicture;
-
-  /// No description provided for @feedbackAudioMechanicalNoise.
-  ///
-  /// In zh, this message translates to:
-  /// **'播放机械音'**
-  String get feedbackAudioMechanicalNoise;
-
-  /// No description provided for @feedbackAudioNoise.
-  ///
-  /// In zh, this message translates to:
-  /// **'杂音'**
-  String get feedbackAudioNoise;
-
-  /// No description provided for @feedbackAudioEcho.
-  ///
-  /// In zh, this message translates to:
-  /// **'有回声'**
-  String get feedbackAudioEcho;
-
-  /// No description provided for @feedbackAudioVolumeSmall.
-  ///
-  /// In zh, this message translates to:
-  /// **'音量小'**
-  String get feedbackAudioVolumeSmall;
-
-  /// No description provided for @feedbackVideoFreeze.
-  ///
-  /// In zh, this message translates to:
-  /// **'视频长时间卡顿'**
-  String get feedbackVideoFreeze;
-
-  /// No description provided for @feedbackVideoIntermittent.
-  ///
-  /// In zh, this message translates to:
-  /// **'视频断断续续'**
-  String get feedbackVideoIntermittent;
-
-  /// No description provided for @feedbackVideoTearing.
-  ///
-  /// In zh, this message translates to:
-  /// **'画面撕裂'**
-  String get feedbackVideoTearing;
-
-  /// No description provided for @feedbackVideoTooBrightOrDark.
-  ///
-  /// In zh, this message translates to:
-  /// **'画面过亮/过暗'**
-  String get feedbackVideoTooBrightOrDark;
-
-  /// No description provided for @feedbackVideoBlurry.
-  ///
-  /// In zh, this message translates to:
-  /// **'画面模糊'**
-  String get feedbackVideoBlurry;
-
-  /// No description provided for @feedbackVideoNoise.
-  ///
-  /// In zh, this message translates to:
-  /// **'画面明显噪点'**
-  String get feedbackVideoNoise;
-
-  /// No description provided for @feedbackAudioVideoNotSync.
-  ///
-  /// In zh, this message translates to:
-  /// **'音画不同步'**
-  String get feedbackAudioVideoNotSync;
-
-  /// No description provided for @feedbackUnexpectedExit.
-  ///
-  /// In zh, this message translates to:
-  /// **'意外退出'**
-  String get feedbackUnexpectedExit;
-
-  /// No description provided for @feedbackOthers.
-  ///
-  /// In zh, this message translates to:
-  /// **'存在其他问题'**
-  String get feedbackOthers;
-
-  /// No description provided for @feedbackTitleAudio.
-  ///
-  /// In zh, this message translates to:
-  /// **'音频问题'**
-  String get feedbackTitleAudio;
-
-  /// No description provided for @feedbackTitleVideo.
-  ///
-  /// In zh, this message translates to:
-  /// **'视频问题'**
-  String get feedbackTitleVideo;
-
-  /// No description provided for @feedbackTitleOthers.
-  ///
-  /// In zh, this message translates to:
-  /// **'其他'**
-  String get feedbackTitleOthers;
-
-  /// No description provided for @feedbackTitleDescription.
-  ///
-  /// In zh, this message translates to:
-  /// **'问题描述'**
-  String get feedbackTitleDescription;
-
-  /// No description provided for @feedbackOtherTip.
-  ///
-  /// In zh, this message translates to:
-  /// **'请描述您的问题，（当您选中\"存在其他问题\"时），需填写具体描述才可进行提交'**
-  String get feedbackOtherTip;
-
   /// No description provided for @evaluationTitle.
   ///
   /// In zh, this message translates to:
@@ -2446,6 +2326,90 @@ abstract class MeetingAppLocalizations {
   /// In zh, this message translates to:
   /// **'返回首页'**
   String get evaluationGoHome;
+
+  /// No description provided for @transcriptionCaptionAndTranslate.
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕和翻译'**
+  String get transcriptionCaptionAndTranslate;
+
+  /// No description provided for @transcriptionCaptionSettings.
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕设置'**
+  String get transcriptionCaptionSettings;
+
+  /// No description provided for @transcriptionEnableCaptionOnJoin.
+  ///
+  /// In zh, this message translates to:
+  /// **'加入会议时开启字幕'**
+  String get transcriptionEnableCaptionOnJoin;
+
+  /// No description provided for @transcriptionTranslateSettings.
+  ///
+  /// In zh, this message translates to:
+  /// **'翻译设置'**
+  String get transcriptionTranslateSettings;
+
+  /// No description provided for @transcriptionCaptionTypeSize.
+  ///
+  /// In zh, this message translates to:
+  /// **'字号大小'**
+  String get transcriptionCaptionTypeSize;
+
+  /// No description provided for @transcriptionCaptionExampleSize.
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕文字大小示例'**
+  String get transcriptionCaptionExampleSize;
+
+  /// No description provided for @transcription.
+  ///
+  /// In zh, this message translates to:
+  /// **'实时转写'**
+  String get transcription;
+
+  /// No description provided for @transcriptionGenerating.
+  ///
+  /// In zh, this message translates to:
+  /// **'转写文件生成中...'**
+  String get transcriptionGenerating;
+
+  /// No description provided for @transcriptionTiming.
+  ///
+  /// In zh, this message translates to:
+  /// **'发起转写时间'**
+  String get transcriptionTiming;
+
+  /// No description provided for @transcriptionExportFile.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出此转写文件'**
+  String get transcriptionExportFile;
+
+  /// No description provided for @globalFileSaveAs.
+  ///
+  /// In zh, this message translates to:
+  /// **'导出为'**
+  String get globalFileSaveAs;
+
+  /// No description provided for @globalFileTypePDF.
+  ///
+  /// In zh, this message translates to:
+  /// **'PDF'**
+  String get globalFileTypePDF;
+
+  /// No description provided for @globalFileTypeWord.
+  ///
+  /// In zh, this message translates to:
+  /// **'Word'**
+  String get globalFileTypeWord;
+
+  /// No description provided for @globalFileTypeTxt.
+  ///
+  /// In zh, this message translates to:
+  /// **'纯文本'**
+  String get globalFileTypeTxt;
 }
 
 class _MeetingAppLocalizationsDelegate

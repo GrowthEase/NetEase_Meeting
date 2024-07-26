@@ -6,7 +6,7 @@ platform :ios, "12.0"
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 
 source "https://github.com/CocoaPods/Specs.git"
-source "ssh://git@g.hz.netease.com:22222/yunxin-app/specs.git"
+# source "ssh://git@g.hz.netease.com:22222/yunxin-app/specs.git"
 #source 'https://cdn.cocoapods.org/'
 
 ENV["COCOAPODS_DISABLE_STATS"] = "true"

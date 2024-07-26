@@ -15,6 +15,8 @@ class MeetingValueKey {
   static const editNickName = ValueKey('editNickName');
   static const clearEdit = ValueKey('clearEdit');
 
+  static const avatar = ValueKey('avatar');
+
   ///匿名会页面 [AnonyMeetJoinRoute.dart]
   static const anonymousMeetJoin = ValueKey('anonymousMeetJoin');
 
@@ -25,6 +27,8 @@ class MeetingValueKey {
   static const openMicroEnterMeeting = ValueKey('openMicroEnterMeeting');
 
   /// inputMeetingId = '请输入会议ID'
+  static const userSelfMeetingNumCreateMeeting =
+      ValueKey('userSelfMeetingNumCreateMeeting');
   static const inputMeetingId = ValueKey('inputMeetingId');
   static const clearAnonyMeetIdInput = ValueKey('clearAnonyMeetIdInput');
 
@@ -67,17 +71,22 @@ class MeetingValueKey {
   static const showShareUserVideo = ValueKey('showShareUserVideo');
 
   ///会议创建模板[MeetCreateRoute]
-  static const userSelfMeetingNumCreateMeeting =
-      ValueKey('userSelfMeetingNumCreateMeeting');
   static const openMicrophoneCreateMeeting =
       ValueKey('openMicrophoneCreateMeeting');
   static const openRecordEnterMeeting = ValueKey('openRecordEnterMeeting');
   static const openCameraCreateMeeting = ValueKey('openCameraCreateMeeting');
   static const createMeetingBtn = ValueKey('createMeetingBtn');
   static const personalMeetingId = ValueKey('personalMeetingId');
+  static const dropdownIconButton = ValueKey('dropdownIconButton');
 
   ///返回按钮
   static const back = ValueKey('back');
+
+  /// 黄条关闭
+  static const tipClose = ValueKey('tipClose');
+
+  /// 通知中心
+  static const notifyCenter = ValueKey('notifyCenter');
 
   ///会议设置模板[MeetJoinRoute]
   static const openCameraJoinMeeting = ValueKey('openCameraJoinMeeting');
@@ -106,12 +115,14 @@ class MeetingValueKey {
   static const scheduleEnableInterpretation =
       ValueKey('scheduleEnableInterpretation');
   static const scheduleAttendeeAudio = ValueKey('scheduleAttendeeAudio');
+  static const scheduleCloudRecord = ValueKey('scheduleCloudRecord');
   static const scheduleAttendeeAudioAllow =
       ValueKey('scheduleAttendeeAudioAllow');
   static const scheduleAttendeeAudioNotAllow =
       ValueKey('scheduleAttendeeAudioNotAllow');
   static const scheduleBtn = ValueKey('scheduleBtn');
   static const scheduleCancel = ValueKey('scheduleCancel');
+  static const scheduleCopy = ValueKey('scheduleCopy');
   static const scheduleJoin = ValueKey('scheduleJoin');
   static const scheduleCopyID = ValueKey('scheduleCopyID');
   static const scheduleCopyPwd = ValueKey('scheduleCopyPwd');
@@ -122,6 +133,7 @@ class MeetingValueKey {
   static const scheduleFavorite = ValueKey('scheduleFavorite');
   static const scheduleMeetingIdCopy = ValueKey('scheduleMeetingIdCopy');
   static const scheduleMeetingItemTitle = ValueKey('scheduleMeetingItemTitle');
+  static const scheduleInterpreters = ValueKey('scheduleInterpreters');
 
   static const logoutByDialog = ValueKey('logoutByDialog');
 
@@ -130,11 +142,14 @@ class MeetingValueKey {
   static const copy = ValueKey('copy');
 
   /// 历史会议
+  static const historyMeetingList = ValueKey('historyMeetingList');
   static const historyMeetingItemTitle = ValueKey('historyMeetingItemTitle');
 
   /// 评价关闭按钮
   static const evaluationCloseBtn = ValueKey("evaluationCloseBtn");
   static const evaluationTextFieldInput = ValueKey("evaluationTextFieldInput");
+
+  static const enableCaptionOnJoin = ValueKey("enableCaptionOnJoin");
 
   /// 非product的版本，则显示。switchButton 默认 valueKey的后缀是value = false  -1; value = true 0，
   static Widget addTextWidgetTest(

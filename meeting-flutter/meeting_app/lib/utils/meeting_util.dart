@@ -3,30 +3,12 @@
 // found in the LICENSE file.
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
-import 'package:netease_meeting_core/meeting_kit.dart';
+import 'package:netease_meeting_kit/meeting_kit.dart';
 import 'package:nemeeting/service/auth/auth_manager.dart';
 
 class MeetingUtil {
-  static String getUuid() {
-    return AuthManager().accountId ??
-        NEMeetingKit.instance.getAccountService().getAccountInfo()?.userUuid ??
-        '';
-  }
-
   static String getNickName() {
-    return AuthManager().nickName ??
-        NEMeetingKit.instance.getAccountService().getAccountInfo()?.nickname ??
-        '';
-  }
-
-  static String getCurrentNickLeading() {
-    final nickName = getNickName();
-    return nickName.isNotEmpty ? nickName.characters.first : '';
-  }
-
-  static String getAppKey() {
-    return AuthManager().appKey ?? '';
+    return AuthManager().nickName ?? '';
   }
 
   static String getMeetingNum() {
@@ -50,7 +32,7 @@ class MeetingUtil {
   }
 
   static String getMobilePhone() {
-    return AuthManager().mobilePhone ?? '';
+    return AuthManager().phoneNumber ?? '';
   }
 
   /// 未读消息数

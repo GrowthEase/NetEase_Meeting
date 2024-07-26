@@ -34,6 +34,13 @@
     <!--震动-->
     <uses-permission android:name="android.permission.VIBRATE"/>
 
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
+    <!--小米推送-->
+    <permission android:name="com.netease.yunxin.meeting.permission.MIPUSH_RECEIVE"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="com.netease.yunxin.meeting.permission.MIPUSH_RECEIVE" />
+
     <application
         android:name=".MeetingApplication"
         android:icon="@mipmap/ic_launcher"
@@ -114,5 +121,77 @@
             android:exported="false"
             android:process=":core" />
 
+        <!-- 小米推送 -->
+        <service
+            android:name="com.xiaomi.push.service.XMPushService"
+            android:enabled="true"
+            android:process=":pushservice"/>
+        <service
+            android:name="com.xiaomi.push.service.XMJobService"
+            android:enabled="true"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:process=":pushservice" />
+        <!--注：此service必须在3.0.1版本以后（包括3.0.1版本）加入-->
+        <service
+            android:enabled="true"
+            android:exported="true"
+            android:name="com.xiaomi.mipush.sdk.PushMessageHandler" />
+
+        <service android:enabled="true"
+            android:name="com.xiaomi.mipush.sdk.MessageHandleService" />
+        <!--注：此service必须在2.2.5版本以后（包括2.2.5版本）加入-->
+        <receiver
+            android:exported="false"
+            android:process=":pushservice"
+            android:name="com.xiaomi.push.service.receivers.PingReceiver" >
+            <intent-filter>
+                <action android:name="com.xiaomi.push.PING_TIMER" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="com.netease.nimlib.mixpush.mi.MiPushReceiver"
+            android:exported="true">
+            <intent-filter android:priority="0x7fffffff">
+                <action android:name="com.xiaomi.mipush.RECEIVE_MESSAGE"/>
+                <action android:name="com.xiaomi.mipush.MESSAGE_ARRIVED"/>
+                <action android:name="com.xiaomi.mipush.ERROR"/>
+            </intent-filter>
+        </receiver>
+
+
+        <!-- 华为推送 -->
+        <service
+            android:name="com.netease.nimlib.mixpush.hw.HWPushService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.huawei.push.action.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- vivo推送 -->
+        <service
+            android:name="com.vivo.push.sdk.service.CommandClientService"
+            android:permission="com.push.permission.UPSTAGESERVICE"
+            android:exported="true"/>
+        <activity
+            android:name="com.vivo.push.sdk.LinkProxyClientActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
+
+        <receiver android:name="com.netease.nimlib.mixpush.vivo.VivoPushReceiver"
+            android:exported="true">
+            <intent-filter>
+                <!-- 接收 push 消息 -->
+                <action android:name="com.vivo.pushclient.action.RECEIVE"/>
+            </intent-filter>
+        </receiver>
+        <meta-data
+            android:name="api_key"
+            android:value="${vivoApiKey}"/>
+        <meta-data
+            android:name="app_id"
+            android:value="${vivoAppId}"/>
     </application>
 </manifest>

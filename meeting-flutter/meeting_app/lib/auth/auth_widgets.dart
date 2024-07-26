@@ -82,40 +82,43 @@ class LoginItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget child = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Material(
-          color: AppColors.color_F5F6FA,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.r),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Ink(
-            child: IconButton(
-              constraints: BoxConstraints.tightFor(
-                width: 48.r,
-                height: 48.r,
+    Widget child = GestureDetector(
+      onTap: onTap != null ? () => onTap!(type) : null,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Material(
+            color: AppColors.color_F5F6FA,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Ink(
+              child: IconButton(
+                constraints: BoxConstraints.tightFor(
+                  width: 48.r,
+                  height: 48.r,
+                ),
+                icon: Icon(getIcon(type)),
+                iconSize: 24.r,
+                color: AppColors.color_337eff,
+                onPressed: onTap != null ? () => onTap!(type) : null,
               ),
-              icon: Icon(getIcon(type)),
-              iconSize: 24.r,
-              color: AppColors.color_337eff,
-              onPressed: onTap != null ? () => onTap!(type) : null,
             ),
           ),
-        ),
-        SizedBox(height: 8.h),
-        FittedBox(
-          child: Text(
-            getLabel(type),
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: AppColors.color_999999,
+          SizedBox(height: 8.h),
+          FittedBox(
+            child: Text(
+              getLabel(type),
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.color_999999,
+              ),
+              maxLines: 1,
             ),
-            maxLines: 1,
           ),
-        ),
-      ],
+        ],
+      ),
     );
     return SizedBox(
       width: 56.w,

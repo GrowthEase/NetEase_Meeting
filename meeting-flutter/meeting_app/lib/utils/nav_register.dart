@@ -10,6 +10,7 @@ import 'package:nemeeting/auth/login_sso.dart';
 import 'package:nemeeting/auth/modify_password.dart';
 import 'package:nemeeting/auth/reset_initial_password.dart';
 import 'package:nemeeting/auth/verify_mobile_check_code.dart';
+import 'package:nemeeting/pre_meeting/transcription_history.dart';
 import 'package:nemeeting/setting/app_setting.dart';
 import 'package:nemeeting/meeting/history_meeting.dart';
 import 'package:nemeeting/meeting/meeting_create.dart';
@@ -21,6 +22,8 @@ import 'package:nemeeting/routes/network_not_available_page.dart';
 import 'package:nemeeting/setting/account_and_safety_setting.dart';
 import 'package:nemeeting/setting/avatar_setting.dart';
 import 'package:nemeeting/routes/qr_scan_page.dart';
+import 'package:nemeeting/setting/captions_setting.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import '../setting/language_setting.dart';
 import '../uikit/utils/router_name.dart';
 import 'package:nemeeting/setting/meeting_setting.dart';
@@ -52,10 +55,20 @@ class RoutesRegister {
     RouterName.webview: (context) => WebViewPage(),
     RouterName.qrScan: (context) => QrScanPage(),
     RouterName.languageSetting: (context) => LanguageSetting(),
+    RouterName.captionsSetting: (context) => CaptionsSetting(),
+    RouterName.transcriptionTiming: (context) => TranscriptionTimingPage(),
   };
 
   static Map<String, Widget Function(dynamic)> get routes {
     return _routes;
+  }
+
+  static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
+    final name = settings.name;
+    final builder = _routes[name];
+    return builder != null
+        ? NEMeetingPageRoute(settings: settings, builder: builder)
+        : null;
   }
 
   static MaterialPageRoute getPageRoute(String routeName, BuildContext context,
@@ -64,7 +77,7 @@ class RoutesRegister {
     if (builder == null) {
       throw Exception('Invalid route name: $routeName');
     }
-    return MaterialPageRoute(
+    return NEMeetingPageRoute(
         builder: (context) => builder(context),
         settings: RouteSettings(arguments: arguments));
   }

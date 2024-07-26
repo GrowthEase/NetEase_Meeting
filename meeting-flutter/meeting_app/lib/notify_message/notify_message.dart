@@ -2,6 +2,8 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
+import 'dart:convert';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -9,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:nemeeting/service/repo/history_repo.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
 import 'package:netease_common/netease_common.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import '../meeting/history_meeting_detail.dart';
 import '../pre_meeting/schedule_meeting_detail.dart';
 import '../uikit/state/meeting_base_state.dart';
@@ -141,7 +143,8 @@ class MeetingAppNotifyCenterState extends AppBaseState<MeetingAppNotifyCenter>
   /// 显示清空对话框
   Future<void> showClearDialog() async {
     /// 会议中不支持操作
-    if (NEMeetingUIKit.instance.getCurrentMeetingInfo() != null) {
+    if (NEMeetingKit.instance.getMeetingService().getCurrentMeetingInfo() !=
+        null) {
       ToastUtils.showToast(context,
           NEMeetingUIKitLocalizations.of(context)!.globalOperationFail);
       return;
@@ -194,12 +197,16 @@ class MeetingAppNotifyCenterState extends AppBaseState<MeetingAppNotifyCenter>
   /// [notifyData] notifyData 对应通知的数据
   Widget buildNotifyMessageItem(BuildContext context, int index) {
     var notifyData = _messageListListenable.value[index].data;
-    int? timeStamp = notifyData?.data?.timestamp;
-    var header = notifyData?.data?.notifyCard?.header;
+    CardData? data = null;
+    if (notifyData != null) {
+      data = NotifyCardData.fromMap(jsonDecode(notifyData)).data;
+    }
+    int? timeStamp = data?.timestamp;
+    var header = data?.notifyCard?.header;
     String? icon = header?.icon;
     var notifyCenterCardClickAction =
-        notifyData?.data?.notifyCard?.notifyCenterCardClickAction;
-    var body = notifyData?.data?.notifyCard?.body;
+        data?.notifyCard?.notifyCenterCardClickAction;
+    var body = data?.notifyCard?.body;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -336,8 +343,10 @@ class MeetingAppNotifyCenterState extends AppBaseState<MeetingAppNotifyCenter>
 
   /// 跳转到对应的页面
   void pushPage(int index) {
-    var data = _messageListListenable.value[index].data?.data;
-    var type = data?.type;
+    var message = _messageListListenable.value[index].data;
+    if (TextUtils.isEmpty(message)) return;
+    final data = NotifyCardData.fromMap(jsonDecode(message!)).data;
+    final type = data?.type;
     if (type == null) return;
     switch (type) {
       case NotifyCenterCardType.meetingNewRecordFile:
@@ -359,7 +368,7 @@ class MeetingAppNotifyCenterState extends AppBaseState<MeetingAppNotifyCenter>
         .getHistoryMeetingDetailsByMeetingId(data!.meetingId!)
         .then((value) {
       if (value.isSuccess() && value.data != null) {
-        Navigator.of(context).push(MaterialPageRoute(
+        Navigator.of(context).push(NEMeetingPageRoute(
             builder: (context) => HistoryMeetingDetailRoute(
                 value.data as NERemoteHistoryMeeting)));
       } else {
@@ -379,7 +388,7 @@ class MeetingAppNotifyCenterState extends AppBaseState<MeetingAppNotifyCenter>
         .getMeetingItemById(data!.meetingId!)
         .then((value) {
       if (value.isSuccess() && value.data != null) {
-        Navigator.of(context).push(MaterialPageRoute(
+        Navigator.of(context).push(NEMeetingPageRoute(
             settings: RouteSettings(name: ScheduleMeetingDetailRoute.routeName),
             builder: (context) => ScheduleMeetingDetailRoute(value.data!)));
       } else {

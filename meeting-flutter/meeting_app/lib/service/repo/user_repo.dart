@@ -2,11 +2,9 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
-import 'package:netease_common/netease_common.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_kit.dart';
 
 import '../repo/i_repo.dart';
-import '../response/result.dart';
 
 /// 用户信息
 class UserRepo extends IRepo {

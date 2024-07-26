@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import '../uikit/values/colors.dart';
 import '../uikit/values/fonts.dart';
 

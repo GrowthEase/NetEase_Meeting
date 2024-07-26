@@ -1,6 +1,6 @@
-name: netease_meeting_core
-description: A package provide related APIs to start、schedule、join meeting.
-version: 0.1.0-rc.0
+name: netease_meeting_kit
+description: A package implements standard UI for netease_meeting.
+version: 0.0.1
 homepage: https://yunxin.163.com/
 publish_to: none
 
@@ -12,18 +12,64 @@ dependencies:
   flutter:
     sdk: flutter
 
-  connectivity_plus: ^6.0.2
-  async: ^2.11.0
-  shared_preferences: ^2.2.3
-  dio: ^5.4.2+1
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.19.0
+  device_info_plus: ^10.1.0
+  azlistview_plus: ^3.0.0
+  flutter_contacts: ^1.1.7
+  lpinyin: ^2.0.3
+  bot_toast: ^4.1.3
+  permission_handler: ^11.3.1
   path_provider: ^2.1.3
   uuid: ^4.4.0
-  device_info_plus: ^10.1.0
+  wakelock_plus: ^1.2.4
+  shared_preferences: ^2.2.3
+  characters: ^1.3.0
+  convert: ^3.1.1
   webview_flutter: ^4.7.0
-  intl: ^0.18.1
+  provider: ^6.1.2
+  image_size_getter: ^2.1.3
+  cached_network_image: ^3.3.1
+  open_filex: ^4.4.0
+  scrollable_positioned_list: ^0.3.8
+  file_picker: ^8.0.0+1
+  mask_text_input_formatter: ^2.9.0
+  audioplayers: ^6.0.0
+  vibration: ^1.9.0
+  flutter_slidable: ^3.1.0
+  flutter_timezone: ^1.0.8
+  connectivity_plus: ^6.0.2
+  async: ^2.11.0
+  dio: ^5.4.2+1
   yunxin_alog: ^2.0.0
-  netease_roomkit: ^1.29.0
+  flutter_screenutil: ^5.9.0
+  archive: ^3.4.10
+  netease_common: ^1.0.7
+  netease_roomkit: ^1.30.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  generate: true
+  plugin:
+    platforms:
+      android:
+        package: com.netease.meeting.plugin
+        pluginClass: MeetingPlugin
+      ios:
+        pluginClass: MeetingPlugin
+  assets:
+    - assets/images/
+    - assets/images/2.0x/
+    - assets/images/3.0x/
+    - assets/sounds/
+    - assets/timezones/
+
+  fonts:
+    - family: iconfont
+      fonts:
+        - asset: assets/fonts/iconfont.ttf

@@ -4,10 +4,10 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:nemeeting/application.dart';
+import 'package:nemeeting/global_state.dart';
 import 'package:nemeeting/uikit/state/meeting_base_state.dart';
 import 'package:nemeeting/utils/app_util.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 class QrScanPage extends StatefulWidget {
@@ -25,7 +25,7 @@ class QrScanState extends AppBaseState<QrScanPage> {
   @override
   void initState() {
     super.initState();
-    Application.isQrScanPagePopped = true;
+    GlobalState.isQrScanPagePushed = true;
   }
 
   // In order to get hot reload to work we need to pause the camera if the platform
@@ -84,7 +84,7 @@ class QrScanState extends AppBaseState<QrScanPage> {
   @override
   void dispose() {
     controller?.dispose();
-    Application.isQrScanPagePopped = false;
+    GlobalState.isQrScanPagePushed = false;
     super.dispose();
   }
 

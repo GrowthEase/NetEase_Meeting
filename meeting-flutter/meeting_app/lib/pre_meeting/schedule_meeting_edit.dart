@@ -5,9 +5,8 @@
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/pre_meeting/schedule_meeting_base_state.dart';
-import 'package:netease_meeting_core/meeting_service.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
-import 'package:nemeeting/utils/const_config.dart';
+import 'package:netease_meeting_kit/meeting_core.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import 'package:nemeeting/utils/integration_test.dart';
 import 'package:nemeeting/service/client/http_code.dart';
 import '../language/localizations.dart';
@@ -15,23 +14,25 @@ import '../uikit/values/colors.dart';
 
 class ScheduleMeetingEditRoute extends StatefulWidget {
   final NEMeetingItem item;
+  final Map<String, NEContact> contactMap;
 
   /// 是否修改所有会议（周期性会议）
   final bool isEditAll;
 
-  ScheduleMeetingEditRoute(this.item, {this.isEditAll = false});
+  ScheduleMeetingEditRoute(this.item, this.contactMap,
+      {this.isEditAll = false});
 
   @override
   State<StatefulWidget> createState() {
-    return _ScheduleMeetingEditRouteState(item);
+    return _ScheduleMeetingEditRouteState(item, contactMap);
   }
 }
 
 class _ScheduleMeetingEditRouteState
     extends ScheduleMeetingBaseState<ScheduleMeetingEditRoute> {
-  _ScheduleMeetingEditRouteState(NEMeetingItem item) : super(item: item);
-
-  bool cloudRecordOn = !kNoCloudRecord;
+  _ScheduleMeetingEditRouteState(
+      NEMeetingItem item, Map<String, NEContact> contactMap)
+      : super(item, contactMap);
 
   @override
   bool? isEditAll() {
@@ -43,7 +44,9 @@ class _ScheduleMeetingEditRouteState
     super.initState();
     meetingPasswordController.text = meetingItem.password ?? '';
     meetingPwdSwitch.value = !TextUtil.isEmpty(meetingItem.password);
-    cloudRecordOn = meetingItem.settings.cloudRecordOn;
+    if (meetingItem.cloudRecordConfig != null) {
+      cloudRecordConfig = meetingItem.cloudRecordConfig!;
+    }
     enableWaitingRoom.value = meetingItem.waitingRoomEnabled;
     enableJoinBeforeHost.value = meetingItem.enableJoinBeforeHost;
     enableGuestJoin.value = meetingItem.enableGuestJoin;
@@ -53,7 +56,7 @@ class _ScheduleMeetingEditRouteState
         meetingItem.settings.isAudioOffNotAllowSelfOn;
     liveSwitch.value = meetingItem.live?.enable ?? false;
     liveLevelSwitch.value = meetingItem.live?.liveWebAccessControlLevel ==
-        NEMeetingLiveAuthLevel.appToken.index;
+        NEMeetingLiveAuthLevel.appToken;
 
     meetingSubjectController =
         TextEditingController(text: '${meetingItem.subject}');
@@ -169,7 +172,7 @@ class _ScheduleMeetingEditRouteState
     } else {
       setting.controls = null;
     }
-    setting.cloudRecordOn = cloudRecordOn;
+    requestMeetingItem.cloudRecordConfig = cloudRecordConfig;
     requestMeetingItem.settings = setting;
     var live = NEMeetingItemLive();
     live.enable = liveSwitch.value;

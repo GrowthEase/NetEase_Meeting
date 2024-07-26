@@ -7,7 +7,7 @@ import 'package:nemeeting/auth/verify_mobile_check_code.dart';
 import 'package:nemeeting/language/localizations.dart';
 import 'package:nemeeting/state/auth_base_state.dart';
 import 'package:nemeeting/uikit/values/colors.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import 'package:nemeeting/base/util/error.dart';
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:nemeeting/service/client/http_code.dart';
@@ -161,15 +161,15 @@ class LoginMobileState extends AuthBaseState {
                   key: MeetingValueKey.getCheckCode,
                   style: ButtonStyle(
                       backgroundColor:
-                          MaterialStateProperty.resolveWith<Color>((states) {
-                        if (states.contains(MaterialState.disabled)) {
+                          WidgetStateProperty.resolveWith<Color>((states) {
+                        if (states.contains(WidgetState.disabled)) {
                           return AppColors.blue_50_337eff;
                         }
                         return AppColors.blue_337eff;
                       }),
-                      padding: MaterialStateProperty.all(
+                      padding: WidgetStateProperty.all(
                           EdgeInsets.symmetric(vertical: 13)),
-                      shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                      shape: WidgetStateProperty.all(RoundedRectangleBorder(
                           side: BorderSide(
                               color: _btnEnable
                                   ? AppColors.blue_337eff

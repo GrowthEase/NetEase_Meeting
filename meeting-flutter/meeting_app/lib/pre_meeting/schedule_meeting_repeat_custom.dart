@@ -6,7 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/uikit/values/fonts.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import '../language/localizations.dart';
 import '../uikit/state/meeting_base_state.dart';
 import '../uikit/values/colors.dart';
@@ -153,10 +153,9 @@ class _ScheduleMeetingRepeatCustomRouteState
                 fontWeight: FontWeight.w500),
           ),
         ),
-        MeetingSettingGroup(children: [buildDatePicker()]),
-        if (_shouldShowWeek)
-          MeetingSettingGroup(children: [buildWeekCalendar()]),
-        if (_shouldShowMonth) MeetingSettingGroup(children: [buildCalendar()]),
+        MeetingCard(children: [buildDatePicker()]),
+        if (_shouldShowWeek) MeetingCard(children: [buildWeekCalendar()]),
+        if (_shouldShowMonth) MeetingCard(children: [buildCalendar()]),
         SizedBox(height: 16),
       ]),
     );

@@ -3,8 +3,7 @@
 // found in the LICENSE file.
 
 import 'package:nemeeting/service/repo/i_repo.dart';
-import 'package:netease_common/netease_common.dart';
-import 'package:netease_meeting_core/meeting_kit.dart';
+import 'package:netease_meeting_kit/meeting_kit.dart';
 
 class HistoryRepo extends IRepo {
   HistoryRepo._internal();

@@ -44,6 +44,9 @@ enum JSAPIEventType {
 
   /// 会中自身信息发生变化
   inmeetingUserInfo,
+
+  /// 小应用自定义事件
+  customEvent,
 }
 
 /// JSAPI参数对象
@@ -130,16 +133,15 @@ class NEMeetingJSBridge {
     ..setJavaScriptMode(JavaScriptMode.unrestricted);
   final String roomArchiveId;
   final String homeUrl;
-  NERoomContext? roomContext;
+  final NERoomContext? roomContext;
   late NERoomEventCallback _eventCallback;
+  late NEMessageChannelCallback _messageCallback;
+  String? _currentPluginId = null;
 
   /// 是否已经通过鉴权
   bool _hasPermitted = false;
 
-  NEMeetingJSBridge(
-      this.roomArchiveId, this.homeUrl, NERoomContext? roomContext) {
-    this.roomContext = roomContext;
-
+  NEMeetingJSBridge(this.roomArchiveId, this.homeUrl, this.roomContext) {
     /// 添加接口调用监听
     _controller.addJavaScriptChannel(_spaceName, onMessageReceived: (message) {
       Alog.i(
@@ -207,14 +209,53 @@ class NEMeetingJSBridge {
           _postUserInfoEvent();
         }
       }),
+      chatroomMessagesReceived: ((messages) {
+        messages.forEach((element) {
+          Alog.i(
+              tag: _tag,
+              content: 'chatroomMessagesReceived: ${element.messageType}');
+          if (element is NERoomChatCustomMessage) {
+            Alog.i(
+                tag: _tag, content: 'custom message: ${(element).attachStr}');
+          }
+        });
+      }),
     );
 
     /// 监听NERoom事件
     roomContext?.addEventCallback(_eventCallback);
+
+    _messageCallback = NEMessageChannelCallback(
+      onCustomMessageReceiveCallback: handlePassThroughMessage,
+    );
+
+    NERoomKit.instance.messageChannelService
+        .addMessageChannelCallback(_messageCallback);
+  }
+
+  void handlePassThroughMessage(NECustomMessage message) {
+    if (roomContext == null || message.roomUuid != roomContext?.roomUuid) {
+      return;
+    }
+    Alog.i(tag: _tag, content: 'handlePassThroughMessage: ${message.data}');
+
+    final pluginMessage = json.decode(message.data);
+    if (pluginMessage is! Map) return;
+    var pluginId = pluginMessage['pluginId'];
+
+    if (_currentPluginId == pluginId) {
+      Map<String, dynamic> data = {
+        'content': pluginMessage['message'],
+      };
+      postEvent(JSAPIEvent(data: data, eventType: JSAPIEventType.customEvent));
+    }
   }
 
   dispose() {
+    _currentPluginId = null;
     roomContext?.removeEventCallback(_eventCallback);
+    NERoomKit.instance.messageChannelService
+        .removeMessageChannelCallback(_messageCallback);
   }
 
   WebViewController get controller => _controller;
@@ -235,6 +276,7 @@ class NEMeetingJSBridge {
   /// 通知事件
   postEvent(JSAPIEvent event) {
     if (_isListeningEvent && _hasPermitted) {
+      Alog.i(tag: _tag, content: 'postEvent: ${event.toString()}');
       _controller.runJavaScript('$_spaceName.onEvent(${event.toString()})');
     }
   }
@@ -258,8 +300,7 @@ class NEMeetingJSBridge {
   _getAppInfo(JSAPIParams params) {
     final info = {
       'appVersion': SDKConfig.sdkVersionCode,
-      'clientLanguage':
-          NEMeetingKit.instance.currentLanguage.roomLang.languageCode,
+      'clientLanguage': CoreRepository().currentLanguage.roomLang.languageCode,
     };
     final result = JSAPIResult(
       method: params.method,
@@ -300,7 +341,8 @@ class NEMeetingJSBridge {
     final param = params.params;
     final pluginId = param?['pluginId']?.toString();
     if (pluginId != null) {
-      WebAppRepository.getAuthCode(pluginId).then((value) {
+      WebAppRepository.getAuthCode(roomContext?.crossAppAuthorization, pluginId)
+          .then((value) {
         final result = JSAPIResult(
           method: params.method,
           code: value.code,
@@ -331,11 +373,13 @@ class NEMeetingJSBridge {
     final curTime = param?['curTime'] as String?;
     final checkSum = param?['checkSum'] as String?;
     final pluginId = param?['pluginId'] as String?;
+    _currentPluginId = pluginId;
     if (nonce != null &&
         curTime != null &&
         checkSum != null &&
         pluginId != null) {
       JSApiPermissionRequest request = JSApiPermissionRequest(
+          authorization: roomContext?.crossAppAuthorization,
           pluginId: pluginId,
           openId: openId,
           nonce: nonce,

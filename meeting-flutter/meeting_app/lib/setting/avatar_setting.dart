@@ -4,15 +4,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:nemeeting/language/localizations.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import '../image_crop/crop_controller.dart';
 import '../image_crop/crop_error.dart';
 import '../image_crop/crop_target_size.dart';
 import '../image_crop/crop_widget.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-
-import '../service/repo/user_repo.dart';
 
 class AvatarSetting extends StatefulWidget {
   const AvatarSetting({super.key});

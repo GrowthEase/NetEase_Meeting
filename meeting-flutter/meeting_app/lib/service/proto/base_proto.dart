@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
 
-import 'package:nemeeting/service/response/result.dart';
+import 'package:netease_common/netease_common.dart';
 
 abstract class BaseProto<T> {
   String get method => 'POST';
@@ -17,7 +17,7 @@ abstract class BaseProto<T> {
     return null;
   }
 
-  Future<Result<T>> execute();
+  Future<NEResult<T>> execute();
 
   bool checkLoginState() {
     return true;

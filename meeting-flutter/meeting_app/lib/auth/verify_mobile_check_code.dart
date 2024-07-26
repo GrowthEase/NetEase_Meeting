@@ -82,15 +82,15 @@ class VerifyMobileCheckCodeState extends AuthBaseState {
       margin: EdgeInsets.only(left: 30, top: 50, right: 30),
       child: ElevatedButton(
         style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
-              if (states.contains(MaterialState.disabled)) {
+            backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+              if (states.contains(WidgetState.disabled)) {
                 return AppColors.blue_50_337eff;
               }
               return AppColors.blue_337eff;
             }),
             padding:
-                MaterialStateProperty.all(EdgeInsets.symmetric(vertical: 13)),
-            shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                WidgetStateProperty.all(EdgeInsets.symmetric(vertical: 13)),
+            shape: WidgetStateProperty.all(RoundedRectangleBorder(
                 side: BorderSide(
                     color: _btnEnable
                         ? AppColors.blue_337eff

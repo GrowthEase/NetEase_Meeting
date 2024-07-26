@@ -7,7 +7,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/base/util/text_util.dart';
 import 'package:nemeeting/utils/nav_register.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../utils/router_name.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -57,10 +57,10 @@ class NavUtils {
     bool? pageRoute,
   }) {
     return (pageRoute ??
-            NEMeetingUIKit.instance.getMeetingStatus().event ==
-                    NEMeetingEvent.inMeetingMinimized ||
-                NEMeetingUIKit.instance.getMeetingStatus().event ==
-                    NEMeetingEvent.inMeeting)
+            NEMeetingKit.instance.getMeetingService().getMeetingStatus() ==
+                    NEMeetingStatus.inMeetingMinimized ||
+                NEMeetingKit.instance.getMeetingService().getMeetingStatus() ==
+                    NEMeetingStatus.inMeeting)
         ? Navigator.push(
             context,
             RoutesRegister.getPageRoute(routeName, context,

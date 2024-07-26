@@ -5,11 +5,15 @@
 import 'package:flutter/material.dart';
 import 'package:nemeeting/service/util/user_preferences.dart';
 import 'package:nemeeting/uikit/state/meeting_base_state.dart';
+import 'package:nemeeting/uikit/utils/nav_utils.dart';
+import 'package:nemeeting/uikit/utils/router_name.dart';
 import 'package:nemeeting/uikit/values/colors.dart';
 import 'package:nemeeting/uikit/values/fonts.dart';
 import 'package:nemeeting/utils/integration_test.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_core.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import '../language/localizations.dart';
+import '../widget/cloud_record_config.dart';
 
 class MeetingSetting extends StatefulWidget {
   @override
@@ -21,6 +25,18 @@ class MeetingSetting extends StatefulWidget {
 class _MeetingSettingState extends AppBaseState {
   final settings = NEMeetingKit.instance.getSettingsService();
 
+  final cloudRecordConfig = ValueNotifier(NECloudRecordConfig());
+
+  @override
+  void initState() {
+    super.initState();
+    settings.getCloudRecordConfig().then((value) {
+      if (mounted) {
+        cloudRecordConfig.value = value;
+      }
+    });
+  }
+
   @override
   Widget buildBody() {
     final settingAudioItems = getSettingAudioItems();
@@ -31,7 +47,7 @@ class _MeetingSettingState extends AppBaseState {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             if (settingAudioItems.isNotEmpty)
-              MeetingSettingGroup(
+              MeetingCard(
                 title: NEMeetingUIKit.instance
                     .getUIKitLocalizations()
                     .settingAudio,
@@ -40,7 +56,7 @@ class _MeetingSettingState extends AppBaseState {
                 children: settingAudioItems,
               ),
             if (settingVideoItems.isNotEmpty)
-              MeetingSettingGroup(
+              MeetingCard(
                 title: NEMeetingUIKit.instance
                     .getUIKitLocalizations()
                     .settingVideo,
@@ -49,7 +65,7 @@ class _MeetingSettingState extends AppBaseState {
                 children: getSettingVideoItems(),
               ),
             if (settingCommonItems.isNotEmpty)
-              MeetingSettingGroup(
+              MeetingCard(
                 title: NEMeetingUIKit.instance
                     .getUIKitLocalizations()
                     .settingCommon,
@@ -118,7 +134,7 @@ class _MeetingSettingState extends AppBaseState {
       valueNotifier.value = value;
     });
     return MeetingSwitchItem(
-      key: key,
+      switchKey: key,
       title: label,
       valueNotifier: valueNotifier,
       content: content,
@@ -141,7 +157,7 @@ class _MeetingSettingState extends AppBaseState {
     );
   }
 
-  /// 显示会议持续事件
+  /// 显示会议持续时间
   MeetingSwitchItem buildMeetTimeItem() {
     return buildSwitchItem(
       key: MeetingUIValueKeys.openShowMeetTime,
@@ -153,11 +169,25 @@ class _MeetingSettingState extends AppBaseState {
     );
   }
 
+  /// 云录制配置
+  Widget buildCloudRecord() {
+    return ValueListenableBuilder(
+      valueListenable: cloudRecordConfig,
+      builder: (context, value, child) {
+        return CloudRecordConfig(
+          cloudRecordConfig: value,
+          onConfigChanged: (config) {
+            settings.setCloudRecordConfig(config);
+          },
+        );
+      },
+    );
+  }
+
   /// 音频模块
   List<MeetingSwitchItem> getSettingAudioItems() {
     return [
       buildMicrophoneItem(),
-      buildAudioDeviceSwitch(),
       buildAudioAINS(),
       buildSpeakerSpotlight(),
     ];
@@ -173,22 +203,13 @@ class _MeetingSettingState extends AppBaseState {
   }
 
   /// 通用模块
-  List<MeetingSwitchItem> getSettingCommonItems() {
+  List<Widget> getSettingCommonItems() {
     return [
       buildMeetTimeItem(),
       buildWhiteboardTransparent(),
+      if (settings.isMeetingCloudRecordSupported()) buildCloudRecord(),
+      buildCaptionsSettings(),
     ];
-  }
-
-  /// 构建音频设备切换选项
-  MeetingSwitchItem buildAudioDeviceSwitch() {
-    return buildSwitchItem(
-        key: MeetingValueKey.enableAudioDeviceSwitch,
-        label: getAppLocalizations().settingEnableAudioDeviceSwitch,
-        asyncData: UserPreferences().isAudioDeviceSwitchEnabled(),
-        onDataChanged: (value) {
-          UserPreferences().enableAudioDeviceSwitch(value);
-        });
   }
 
   /// 共享时开启摄像头
@@ -221,5 +242,16 @@ class _MeetingSettingState extends AppBaseState {
       onDataChanged: (value) =>
           settings.enableTurnOnMyAudioWhenJoinMeeting(value),
     );
+  }
+
+  /// 字幕设置
+  Widget buildCaptionsSettings() {
+    return NEMeetingKitFeatureConfig(builder: (context, _) {
+      if (!context.isCaptionsSupported) return SizedBox.shrink();
+      return MeetingArrowItem(
+        title: getAppLocalizations().transcriptionCaptionAndTranslate,
+        onTap: () => NavUtils.pushNamed(context, RouterName.captionsSetting),
+      );
+    });
   }
 }

@@ -1,11 +1,14 @@
 // Copyright (c) 2022 NetEase, Inc. All rights reserved.
 // Use of this source code is governed by a MIT license that can be
 // found in the LICENSE file.
+import groovy.json.JsonSlurper
 
 plugins {
     id "com.android.application"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
+    // 华为推送
+    id "com.huawei.agconnect"
 }
 
 def flutterVersionCode = gradle.settings.ext.localProperties.getProperty('flutter.versionCode')
@@ -42,9 +45,13 @@ android {
         targetSdkVersion 34
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        def configFile = file('./src/main/assets/xkit_server.config')
+        def parsedConfig = new JsonSlurper().parseText(configFile.text)
         manifestPlaceholders = [
                 'deepLinkHost' : 'meeting.netease.im',
-                'deepLinkScheme' : 'nemeeting'
+                'deepLinkScheme' : 'nemeeting',
+                'vivoApiKey' : parsedConfig.mixPushConfig.android.vivoApiKey,
+                'vivoAppId' : parsedConfig.mixPushConfig.android.vivoAppId
         ]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -85,10 +92,25 @@ flutter {
     source '../..'
 }
 
+repositories {
+    flatDir {
+        dirs 'aars'
+    }
+}
+
 dependencies {
     implementation fileTree(include: ['*.jar','*.aar'], dir: 'libs')
 
     implementation  'androidx.core:core-splashscreen:1.0.1'
+
+    // 小米推送
+    implementation (name: 'MiPush_SDK_Client_6_0_1-C_3rd', ext: 'aar')
+
+    // 华为推送
+    implementation 'com.huawei.hms:push:6.12.0.300'
+
+    // vivo推送
+    implementation (name: 'vivo_pushSDK_v3.0.0.4_484', ext: 'aar')
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.1.1'

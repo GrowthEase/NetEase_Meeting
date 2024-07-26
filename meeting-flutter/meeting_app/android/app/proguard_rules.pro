@@ -20,3 +20,22 @@
 -dontwarn org.xmlpull.v1.XmlPullParser
 -dontwarn org.xmlpull.v1.XmlSerializer
 -keep class org.xmlpull.v1.* {*;}
+
+### 华为推送
+-ignorewarnings
+-keepattributes *Annotation*
+-keepattributes Exceptions
+-keepattributes InnerClasses
+-keepattributes Signature
+-keepattributes SourceFile,LineNumberTable
+-keep class com.huawei.hianalytics.**{*;}
+-keep class com.huawei.updatesdk.**{*;}
+-keep class com.huawei.hms.**{*;}
+
+### 小米推送
+-keep class com.xiaomi.** {*;}
+
+### vivo推送
+-dontwarn com.vivo.push.**
+-keep class com.vivo.push.**{*; }
+-keep class com.vivo.vms.**{*; }

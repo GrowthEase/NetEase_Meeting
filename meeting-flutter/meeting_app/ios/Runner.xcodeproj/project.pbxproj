@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
-		36E782B8D4E80E925E9333C5 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
+		36E782B8D4E80E925E9333C5 /* BuildFile in Frameworks */ = {isa = PBXBuildFile; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		530E41932A3760A100ADE1B9 /* ReplayKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DB8EC4E2654EEAA00BB171E /* ReplayKit.framework */; };
 		530E419B2A3760A100ADE1B9 /* MeetingBroadcaster.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 530E41922A3760A100ADE1B9 /* MeetingBroadcaster.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -17,7 +17,7 @@
 		530F661C29C4597500DA53FB /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 530F661B29C4597500DA53FB /* CoreTelephony.framework */; };
 		530F661E29C4597D00DA53FB /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 530F661D29C4597D00DA53FB /* SystemConfiguration.framework */; };
 		530F662029C4598A00DA53FB /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 530F661F29C4598A00DA53FB /* libc++.tbd */; };
-		53100BFA29CAFD1700F13844 /* RiskPerception.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 53100BF929CAFD1700F13844 /* RiskPerception.framework */; };
+		53100BFA29CAFD1700F13844 /* BuildFile in Frameworks */ = {isa = PBXBuildFile; };
 		5E9FB8762BBD577D00AF6D2C /* xkit_server.config in Resources */ = {isa = PBXBuildFile; fileRef = 5E9FB8752BBD577D00AF6D2C /* xkit_server.config */; };
 		8AA055F02B96FC7B00AA1315 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8AA055F22B96FC7B00AA1315 /* InfoPlist.strings */; };
 		978B8F6F1D3862AE00F588F7 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 7AFFD8EE1D35381100E5BB4D /* AppDelegate.m */; };
@@ -129,7 +129,7 @@
 				530F661A29C4596B00DA53FB /* AVFoundation.framework in Frameworks */,
 				CA2A313725C2511800017C94 /* CoreML.framework in Frameworks */,
 				36E782B8D4E80E925E9333C5 /* BuildFile in Frameworks */,
-				53100BFA29CAFD1700F13844 /* RiskPerception.framework in Frameworks */,
+				53100BFA29CAFD1700F13844 /* BuildFile in Frameworks */,
 				C5F8F8E19572F96594432AF4 /* Pods_Runner.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -185,7 +185,6 @@
 		97C146F01CF9000F007C117D /* Runner */ = {
 			isa = PBXGroup;
 			children = (
-				53100BF829CAF4EB00F13844 /* third_party */,
 				CA3E726023E7EEB400B775BB /* RunnerRelease.entitlements */,
 				CA3E725F23E7EE7E00B775BB /* RunnerDebug.entitlements */,
 				CA3E725D23E7E2F600B775BB /* NTESLinkStreamHandler.m */,
@@ -341,7 +340,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				5E9FB8762BBD577D00AF6D2C /* xkit_server.config in Resources */,
-				26EBE31926C12FFE001B4A68 /* key_public.dat in Resources */,
 				8AA055F02B96FC7B00AA1315 /* InfoPlist.strings in Resources */,
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
@@ -487,10 +485,10 @@
 				"${BUILT_PRODUCTS_DIR}/file_picker/file_picker.framework",
 				"${BUILT_PRODUCTS_DIR}/flutter_contacts/flutter_contacts.framework",
 				"${BUILT_PRODUCTS_DIR}/flutter_timezone/flutter_timezone.framework",
+				"${BUILT_PRODUCTS_DIR}/hawk/hawk.framework",
 				"${BUILT_PRODUCTS_DIR}/image_picker_ios/image_picker_ios.framework",
 				"${BUILT_PRODUCTS_DIR}/integration_test/integration_test.framework",
-				"${BUILT_PRODUCTS_DIR}/marvelflutter/marvelflutter.framework",
-				"${BUILT_PRODUCTS_DIR}/netease_meeting_ui/netease_meeting_ui.framework",
+				"${BUILT_PRODUCTS_DIR}/netease_meeting_kit/netease_meeting_kit.framework",
 				"${BUILT_PRODUCTS_DIR}/netease_roomkit/netease_roomkit.framework",
 				"${BUILT_PRODUCTS_DIR}/open_filex/open_filex.framework",
 				"${BUILT_PRODUCTS_DIR}/package_info_plus/package_info_plus.framework",
@@ -540,10 +538,10 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/file_picker.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/flutter_contacts.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/flutter_timezone.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hawk.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/image_picker_ios.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/integration_test.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/marvelflutter.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/netease_meeting_ui.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/netease_meeting_kit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/netease_roomkit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/open_filex.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/package_info_plus.framework",
@@ -691,11 +689,13 @@
 				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CODE_SIGN_ENTITLEMENTS = Runner/RunnerDebug.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 40600;
+				CURRENT_PROJECT_VERSION = 40700;
 				DEPLOYMENT_POSTPROCESSING = YES;
-				DEVELOPMENT_TEAM = 7C9A6NRV5L;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 7C9A6NRV5L;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -723,7 +723,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 4.5.0;
+				MARKETING_VERSION = 4.7.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -794,6 +794,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.debug;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = Meeting_Dev;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
@@ -869,7 +870,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 40600;
+				CURRENT_PROJECT_VERSION = 40700;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DEVELOPMENT_TEAM = 7C9A6NRV5L;
 				ENABLE_BITCODE = NO;
@@ -899,7 +900,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 4.6.0;
+				MARKETING_VERSION = 4.7.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -987,7 +988,7 @@
 				CODE_SIGN_ENTITLEMENTS = MeetingBroadcaster/MeetingBroadcaster.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 40600;
+				CURRENT_PROJECT_VERSION = 40700;
 				DEVELOPMENT_TEAM = 7C9A6NRV5L;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -1003,7 +1004,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 4.6.0;
+				MARKETING_VERSION = 4.7.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.debug.MeetingBroadcaster;
@@ -1027,9 +1028,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_ENTITLEMENTS = MeetingBroadcaster/MeetingBroadcaster.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 40600;
-				DEVELOPMENT_TEAM = 7C9A6NRV5L;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 40700;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 7C9A6NRV5L;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -1044,12 +1047,13 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 4.6.0;
+				MARKETING_VERSION = 4.7.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.debug.MeetingBroadcaster;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = MeetingBroadcaster_Dev;
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1070,7 +1074,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 40600;
+				CURRENT_PROJECT_VERSION = 40700;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 569GNZ5392;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -1083,7 +1087,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 4.6.0;
+				MARKETING_VERSION = 4.7.0;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.MeetingBroadcaster;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1107,9 +1111,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_ENTITLEMENTS = MeetingBroadcaster/MeetingBroadcaster.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 40600;
-				DEVELOPMENT_TEAM = 7C9A6NRV5L;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 40700;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 7C9A6NRV5L;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MeetingBroadcaster/Info.plist;
@@ -1120,11 +1126,12 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 4.6.0;
+				MARKETING_VERSION = 4.7.0;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.debug.MeetingBroadcaster;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = MeetingBroadcaster_Dev;
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1254,11 +1261,13 @@
 				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
 				CODE_SIGN_ENTITLEMENTS = Runner/RunnerDebug.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 40600;
+				CURRENT_PROJECT_VERSION = 40700;
 				DEPLOYMENT_POSTPROCESSING = YES;
-				DEVELOPMENT_TEAM = 7C9A6NRV5L;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 7C9A6NRV5L;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1286,7 +1295,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 4.6.0;
+				MARKETING_VERSION = 4.7.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -1357,6 +1366,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.debug;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = Meeting_Dev;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
@@ -1373,7 +1383,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 40600;
+				CURRENT_PROJECT_VERSION = 40700;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 569GNZ5392;
@@ -1404,7 +1414,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 4.6.0;
+				MARKETING_VERSION = 4.7.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

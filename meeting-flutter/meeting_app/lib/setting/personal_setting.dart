@@ -9,7 +9,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nemeeting/utils/meeting_util.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
-import 'package:netease_meeting_ui/meeting_ui.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
 import '../language/localizations.dart';
 import '../uikit/state/meeting_base_state.dart';
 import '../uikit/utils/nav_utils.dart';
@@ -33,13 +33,7 @@ class PersonalSetting extends StatefulWidget {
 }
 
 class _PersonalSettingState extends AppBaseState<PersonalSetting> {
-  @override
-  void initState() {
-    super.initState();
-    lifecycleListen(AuthManager().authInfoStream(), (event) {
-      setState(() {});
-    });
-  }
+  final settingsService = NEMeetingKit.instance.getSettingsService();
 
   @override
   Widget buildBody() {
@@ -53,13 +47,19 @@ class _PersonalSettingState extends AppBaseState<PersonalSetting> {
                       NESettingItemGap(),
                       NESettingItemGroup(children: [
                         buildHead(),
-                        NESettingItem(getAppLocalizations().settingNick,
-                            arrowTip: MeetingUtil.getNickName(),
-                            showArrow: canModifyNick(), onTap: () {
-                          if (canModifyNick()) {
-                            NavUtils.pushNamed(context, RouterName.nickSetting);
-                          }
-                        }),
+                        NEAccountInfoBuilder(
+                          builder: (context, accountInfo, _) {
+                            return NESettingItem(
+                                getAppLocalizations().settingNick,
+                                arrowTip: accountInfo.nickname,
+                                showArrow: canModifyNick(), onTap: () {
+                              if (canModifyNick()) {
+                                NavUtils.pushNamed(
+                                    context, RouterName.nickSetting);
+                              }
+                            });
+                          },
+                        ),
                       ]),
                       NESettingItemGap(),
                       NESettingItemGroup(children: [
@@ -193,10 +193,11 @@ class _PersonalSettingState extends AppBaseState<PersonalSetting> {
     if (!canModifyAvatar()) {
       return;
     }
-    final isInMeeting = NEMeetingUIKit.instance.getMeetingStatus().event ==
-            NEMeetingEvent.inMeetingMinimized ||
-        NEMeetingUIKit.instance.getMeetingStatus().event ==
-            NEMeetingEvent.inMeeting;
+    final isInMeeting =
+        NEMeetingKit.instance.getMeetingService().getMeetingStatus() ==
+                NEMeetingStatus.inMeetingMinimized ||
+            NEMeetingKit.instance.getMeetingService().getMeetingStatus() ==
+                NEMeetingStatus.inMeeting;
     if (isInMeeting) {
       ToastUtils.showToast(
           context, getAppLocalizations().meetingOperationNotSupportedInMeeting);
@@ -240,7 +241,8 @@ class _PersonalSettingState extends AppBaseState<PersonalSetting> {
   }
 
   void showLogoutActionSheet() {
-    if (NEMeetingUIKit.instance.getCurrentMeetingInfo() != null) {
+    if (NEMeetingKit.instance.getMeetingService().getCurrentMeetingInfo() !=
+        null) {
       ToastUtils.showToast(
           context, getAppLocalizations().meetingOperationNotSupportedInMeeting);
       return;
@@ -309,10 +311,10 @@ class _PersonalSettingState extends AppBaseState<PersonalSetting> {
   }
 
   bool canModifyNick() {
-    return !SDKConfig.current.nicknameUpdateDisabled;
+    return settingsService.isNicknameUpdateSupported();
   }
 
   bool canModifyAvatar() {
-    return !SDKConfig.current.avatarUpdateDisabled;
+    return settingsService.isAvatarUpdateSupported();
   }
 }

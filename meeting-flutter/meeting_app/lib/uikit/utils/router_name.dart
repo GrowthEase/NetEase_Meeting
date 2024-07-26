@@ -30,4 +30,7 @@ class RouterName {
   static const String controlSetting = 'controlsetting';
   static const String qrScan = 'qrScan';
   static const String languageSetting = 'languageSetting';
+  static const String captionsSetting = 'captionsSetting';
+  static const String transcriptionTiming = 'transcriptionTiming';
+  static const String transcriptionHistory = 'transcriptionHistory';
 }

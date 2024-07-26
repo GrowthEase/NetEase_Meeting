@@ -24,6 +24,12 @@
 @import device_info_plus;
 #endif
 
+#if __has_include(<device_information/DeviceInformationPlugin.h>)
+#import <device_information/DeviceInformationPlugin.h>
+#else
+@import device_information;
+#endif
+
 #if __has_include(<file_picker/FilePickerPlugin.h>)
 #import <file_picker/FilePickerPlugin.h>
 #else
@@ -42,22 +48,28 @@
 @import flutter_timezone;
 #endif
 
+#if __has_include(<hawk/HawkPlugin.h>)
+#import <hawk/HawkPlugin.h>
+#else
+@import hawk;
+#endif
+
 #if __has_include(<image_picker_ios/FLTImagePickerPlugin.h>)
 #import <image_picker_ios/FLTImagePickerPlugin.h>
 #else
 @import image_picker_ios;
 #endif
 
-#if __has_include(<marvelflutter/MarvelflutterPlugin.h>)
-#import <marvelflutter/MarvelflutterPlugin.h>
+#if __has_include(<integration_test/IntegrationTestPlugin.h>)
+#import <integration_test/IntegrationTestPlugin.h>
 #else
-@import marvelflutter;
+@import integration_test;
 #endif
 
-#if __has_include(<netease_meeting_ui/MeetingPlugin.h>)
-#import <netease_meeting_ui/MeetingPlugin.h>
+#if __has_include(<netease_meeting_kit/MeetingPlugin.h>)
+#import <netease_meeting_kit/MeetingPlugin.h>
 #else
-@import netease_meeting_ui;
+@import netease_meeting_kit;
 #endif
 
 #if __has_include(<netease_roomkit/RoomKitPlugin.h>)
@@ -150,11 +162,13 @@
   [AudioplayersDarwinPlugin registerWithRegistrar:[registry registrarForPlugin:@"AudioplayersDarwinPlugin"]];
   [ConnectivityPlusPlugin registerWithRegistrar:[registry registrarForPlugin:@"ConnectivityPlusPlugin"]];
   [FPPDeviceInfoPlusPlugin registerWithRegistrar:[registry registrarForPlugin:@"FPPDeviceInfoPlusPlugin"]];
+  [DeviceInformationPlugin registerWithRegistrar:[registry registrarForPlugin:@"DeviceInformationPlugin"]];
   [FilePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FilePickerPlugin"]];
   [FlutterContactsPlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterContactsPlugin"]];
   [FlutterTimezonePlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterTimezonePlugin"]];
+  [HawkPlugin registerWithRegistrar:[registry registrarForPlugin:@"HawkPlugin"]];
   [FLTImagePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTImagePickerPlugin"]];
-  [MarvelflutterPlugin registerWithRegistrar:[registry registrarForPlugin:@"MarvelflutterPlugin"]];
+  [IntegrationTestPlugin registerWithRegistrar:[registry registrarForPlugin:@"IntegrationTestPlugin"]];
   [MeetingPlugin registerWithRegistrar:[registry registrarForPlugin:@"MeetingPlugin"]];
   [RoomKitPlugin registerWithRegistrar:[registry registrarForPlugin:@"RoomKitPlugin"]];
   [OpenFilePlugin registerWithRegistrar:[registry registrarForPlugin:@"OpenFilePlugin"]];
