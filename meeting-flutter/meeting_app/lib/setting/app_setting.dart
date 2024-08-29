@@ -254,7 +254,7 @@ class _AppSettingRouteState extends AppBaseState<AppSettingRoute> {
                   Text(
                     getAppLocalizations().settingServiceBundleTitle,
                     style: TextStyle(
-                      fontSize: 14.sp,
+                      fontSize: 16,
                       color: AppColors.color_8D90A0,
                     ),
                   ),
@@ -263,7 +263,7 @@ class _AppSettingRouteState extends AppBaseState<AppSettingRoute> {
                     Text(
                       serviceBundleExpireTime,
                       style: TextStyle(
-                        fontSize: 14.w,
+                        fontSize: 16,
                         color: AppColors.color_999999,
                       ),
                     ),
@@ -294,7 +294,7 @@ class _AppSettingRouteState extends AppBaseState<AppSettingRoute> {
                       child: Text(
                     serviceBundleDetail,
                     style: TextStyle(
-                      fontSize: 14.sp,
+                      fontSize: 16,
                       height: 1,
                       color: AppColors.color_1E1F27,
                     ),
@@ -311,7 +311,7 @@ class _AppSettingRouteState extends AppBaseState<AppSettingRoute> {
                 Text(
                   serviceBundle.expireTip,
                   style: TextStyle(
-                    fontSize: 14.w,
+                    fontSize: 16,
                     color: AppColors.color_666666,
                   ),
                 ),

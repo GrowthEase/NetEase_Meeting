@@ -58,7 +58,10 @@ class MeetingLiveSettingState
   bool isUserValidForLive(NERoomMember? user) =>
       user != null &&
       user.isVisible &&
-      (user.isVideoOn || user.isSharingScreen);
+      (user.isAudioOn ||
+          user.isVideoOn ||
+          user.isSharingScreen ||
+          user.isSharingSystemAudio);
 
   void filterAvailableUsers() {
     availableLiveUids = roomContext

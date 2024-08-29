@@ -52,6 +52,8 @@ class NEMeetingIconFont {
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_yx_tv_sharescreen = IconData(0xe7b9,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_share_system_audio = IconData(0xe744,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_yx_tv_more1x = IconData(0xe7fd,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_earpiece = IconData(0xe728,
@@ -160,6 +162,8 @@ class NEMeetingIconFont {
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_settings = IconData(0xe726,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_settings_stroke = IconData(0xe712,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_audio = IconData(0xe725,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_members = IconData(0xe72a,
@@ -187,5 +191,23 @@ class NEMeetingIconFont {
   static const IconData icon_copy2 = IconData(0xe614,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_feedback = IconData(0xe737,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_info = IconData(0xe743,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_emoji_delete = IconData(0xe738,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_image_open = IconData(0xe73f,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_folder_open = IconData(0xe73e,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_emoji_open = IconData(0xe740,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_keyboard_open = IconData(0xe741,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_emoji_open_2 = IconData(0xe742,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_contacts = IconData(0xe734,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_call_batch = IconData(0xe733,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
 }

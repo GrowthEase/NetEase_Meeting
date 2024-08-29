@@ -256,8 +256,11 @@ class LoginCorpAccountState extends AuthBaseState
       final account = getAccountController().text.trim();
       final password = _corpPasswordController.text.trim();
       LoadingUtil.showLoading();
-      final result = await AuthRepo()
-          .loginByPwd(corpInfo.appKey, () => loginAction(account, password));
+      final result = await AuthRepo().loginByPwd(
+        corpInfo.appKey,
+        () => loginAction(account, password),
+        corpCode: corpInfo.corpCode,
+      );
       LoadingUtil.cancelLoading();
       if (result.code == HttpCode.success) {
         NavUtils.pushNamedAndRemoveUntil(context, RouterName.homePage,

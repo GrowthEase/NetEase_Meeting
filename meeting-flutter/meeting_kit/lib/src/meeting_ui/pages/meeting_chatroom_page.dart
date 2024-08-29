@@ -8,8 +8,10 @@ class MeetingChatRoomPage extends StatefulWidget {
   static const String routeName = "/meetingChatRoom";
   final ChatRoomArguments arguments;
   final String? roomArchiveId;
+  final TextEditingController? editController;
 
-  MeetingChatRoomPage({required this.arguments, this.roomArchiveId});
+  MeetingChatRoomPage(
+      {required this.arguments, this.roomArchiveId, this.editController});
 
   @override
   State<StatefulWidget> createState() {
@@ -18,11 +20,26 @@ class MeetingChatRoomPage extends StatefulWidget {
 }
 
 class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
-    with MeetingStateScope, MeetingKitLocalizationsMixin, EventTrackMixin {
+    with
+        MeetingStateScope,
+        MeetingKitLocalizationsMixin,
+        EventTrackMixin,
+        FirstBuildScope {
   final ChatRoomArguments _arguments;
   bool _isInHistoryPage = false;
 
-  late TextEditingController _contentController;
+  final _emailSpanBuilder = MeetingTextSpanBuilder();
+
+  double _keyboardHeight = 0;
+  double _preKeyboardHeight = 0;
+  double _currentViewInsetsBottom = 0;
+  final activeEmojiGird = ValueNotifier(false);
+  double emojisPanelPaddingBottom = 0;
+
+  final GlobalKey<ExtendedTextFieldState> _textFieldKey =
+      GlobalKey<ExtendedTextFieldState>();
+  final StreamController<void> _emojiPanelBuilderController =
+      StreamController<void>.broadcast();
 
   MeetingChatRoomState(this._arguments, String? roomArchiveId) {
     _isInHistoryPage = roomArchiveId != null;
@@ -119,7 +136,6 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
         memberLeaveRoom: memberLeaveRoom,
       ));
     }
-    _contentController = TextEditingController();
     lifecycleListen(_arguments.messageSource.messageStream,
         (dynamic dataSource) {
       setState(() {
@@ -252,6 +268,18 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
 
   @override
   Widget build(BuildContext context) {
+    _currentViewInsetsBottom = MediaQuery.of(context).viewInsets.bottom;
+    final bool showingKeyboard = _currentViewInsetsBottom > _preKeyboardHeight;
+    _preKeyboardHeight = _currentViewInsetsBottom;
+    if ((_currentViewInsetsBottom > 0 &&
+            _currentViewInsetsBottom >= _keyboardHeight) ||
+        showingKeyboard) {
+      activeEmojiGird.value = false;
+      _emojiPanelBuilderController.add(null);
+    }
+
+    _keyboardHeight = max(_keyboardHeight, _currentViewInsetsBottom);
+
     final double appBarHeight = AppBar().preferredSize.height;
     final double statusBarHeight = MediaQuery.of(context).padding.top;
     return PopScopeBuilder<FocusNode>(
@@ -264,7 +292,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
       child: Scaffold(
         backgroundColor: _UIColors.colorF6F6F6,
         appBar: buildAppBar(context),
-        resizeToAvoidBottomInset: true,
+        resizeToAvoidBottomInset: false,
         //body: SafeArea(top: false, left: false, right: false, child: buildBody()),
         body: _isInHistoryPage && !isShowLoading && _arguments.msgSize <= 0
             ? Center(child: LayoutBuilder(builder: (context, constraints) {
@@ -344,6 +372,10 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
   }
 
   Widget newMessageTips() {
+    var bottom = 90.0;
+    if (activeEmojiGird.value) {
+      bottom += emojisPanelHeight;
+    }
     return SafeArea(
         left: false,
         top: false,
@@ -353,7 +385,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
               _scrollToIndex(_arguments.msgSize - 1);
             },
             child: Container(
-                margin: EdgeInsets.only(bottom: 90),
+                margin: EdgeInsets.only(bottom: bottom),
                 padding: EdgeInsets.symmetric(horizontal: 5),
                 height: 28,
                 decoration: BoxDecoration(
@@ -381,13 +413,15 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
   Widget buildBody() {
     return Container(
       color: Colors.white,
-      child: SafeArea(
-          child: Column(
+      child: Column(
         children: <Widget>[
           buildListView(),
-          if (!_isInHistoryPage) buildInputPanel()
+          if (!_isInHistoryPage)
+            buildInputPanel()
+          else
+            SizedBox(height: MediaQuery.of(context).padding.bottom),
         ],
-      )),
+      ),
     );
   }
 
@@ -640,9 +674,15 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
               chatRoomType == NEChatroomType.waitingRoom) {
             header = meetingUiLocalizations.chatPrivateInWaitingRoom;
           }
-          icon = NEMeetingAvatar.xSmall(
-            name: targetMember.name,
-            url: targetMember.avatar,
+          icon = ValueListenableBuilder(
+            valueListenable: _arguments.hideAvatar ?? ValueNotifier(false),
+            builder: (context, hideAvatar, child) {
+              return NEMeetingAvatar.xSmall(
+                name: targetMember.name,
+                url: targetMember.avatar,
+                hideImageAvatar: hideAvatar,
+              );
+            },
           );
           break;
       }
@@ -778,6 +818,42 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
         });
   }
 
+  double get emojisPanelHeight {
+    final isPortrait =
+        MediaQuery.of(context).size.width < MediaQuery.of(context).size.height;
+    return isPortrait ? 205.0 : 115.0;
+  }
+
+  void initEmojisPanelPaddingBottom() {
+    var paddingBottom = MediaQuery.of(context).padding.bottom;
+    final isPortrait =
+        MediaQuery.of(context).size.width < MediaQuery.of(context).size.height;
+    final defaultPaddingBottom = isPortrait ? 32.0 : 18.0;
+    emojisPanelPaddingBottom = paddingBottom > defaultPaddingBottom
+        ? paddingBottom
+        : defaultPaddingBottom;
+  }
+
+  @override
+  void onFirstBuild() {
+    super.onFirstBuild();
+    initEmojisPanelPaddingBottom();
+  }
+
+  void onEmojiActiveChanged() {
+    activeEmojiGird.value = !activeEmojiGird.value;
+    if (activeEmojiGird.value) {
+      // make sure grid height = keyboardHeight
+      _keyboardHeight = _currentViewInsetsBottom;
+      SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+    } else {
+      _keyboardHeight = 0;
+      SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+      _focusNode.requestFocus();
+    }
+    _emojiPanelBuilderController.add(null);
+  }
+
   Widget buildChatRoomBottom(dynamic sendTarget) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -797,15 +873,59 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                buildInputBox(),
-                if (_arguments.isImageMessageEnabled) SizedBox(width: 10),
                 if (_arguments.isImageMessageEnabled)
-                  buildIcon(Icons.image_outlined, _onSelectImage),
-                if (_arguments.isFileMessageEnabled) SizedBox(width: 10),
+                  buildIcon(NEMeetingIconFont.icon_image_open, _onSelectImage),
+                if (_arguments.isImageMessageEnabled) SizedBox(width: 12),
                 if (_arguments.isFileMessageEnabled)
-                  buildIcon(Icons.folder_open_outlined, _onSelectFile),
+                  buildIcon(NEMeetingIconFont.icon_folder_open, _onSelectFile),
+                if (_arguments.isFileMessageEnabled) SizedBox(width: 12),
+                buildInputBox(),
+                SizedBox(width: 12),
+                ValueListenableBuilder(
+                    valueListenable: activeEmojiGird,
+                    builder: (context, value, child) {
+                      return buildIcon(
+                          value
+                              ? NEMeetingIconFont.icon_keyboard_open
+                              : NEMeetingIconFont.icon_emoji_open,
+                          onEmojiActiveChanged);
+                    }),
               ],
             ),
+          ),
+
+        if (sendTarget != null)
+          StreamBuilder<void>(
+            stream: _emojiPanelBuilderController.stream,
+            builder: (BuildContext b, AsyncSnapshot<void> d) {
+              double? height =
+                  _keyboardHeight - MediaQuery.of(context).padding.bottom;
+              if (height <= 0) height = null;
+              return SizedBox(
+                  height: activeEmojiGird.value
+                      ? null
+                      : MediaQuery.of(context).padding.bottom,
+                  child: activeEmojiGird.value
+                      ? EmojisPanel(
+                          textFieldKey: _textFieldKey,
+                          controller: widget.editController!,
+                          sendAction: onSendMessage,
+                          height: emojisPanelHeight,
+                          paddingBottom: emojisPanelPaddingBottom,
+                        )
+                      : SizedBox(
+                          height: MediaQuery.of(context).padding.bottom));
+            },
+          ),
+
+        if (sendTarget != null)
+          StreamBuilder<void>(
+            stream: _emojiPanelBuilderController.stream,
+            builder: (BuildContext b, AsyncSnapshot<void> d) {
+              return Container(
+                height: activeEmojiGird.value ? 0 : _currentViewInsetsBottom,
+              );
+            },
           ),
       ],
     );
@@ -829,10 +949,11 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
                 NEChatPermission.privateChatHostOnly)) {
       tips = meetingUiLocalizations.chatHostLeft;
     }
+    final paddingBottom = MediaQuery.of(context).padding.bottom;
     return Container(
-      height: 60,
+      height: 60 + paddingBottom,
       alignment: Alignment.center,
-      padding: EdgeInsets.symmetric(horizontal: 12),
+      padding: EdgeInsets.only(left: 12, right: 12, bottom: paddingBottom),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -859,6 +980,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
 
   /// 是否已经显示选择发送目标的弹窗
   bool _isShowSelectTargetDialog = false;
+
   Future<void> _showSelectTargetDialog() async {
     if (roomContext == null || _isShowSelectTargetDialog) return;
     _isShowSelectTargetDialog = true;
@@ -872,6 +994,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
         _arguments.waitingRoomManager,
         _arguments.chatRoomManager!,
         _arguments.roomInfoUpdatedEventStream,
+        _arguments.hideAvatar ?? ValueNotifier(false),
       ),
       routeSettings: RouteSettings(name: 'MeetingSelectChatMemberPage'),
     );
@@ -894,21 +1017,26 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
         child: Container(
       decoration: BoxDecoration(
           color: _UIColors.colorF7F8FA,
-          borderRadius: BorderRadius.all(Radius.circular(20)),
+          borderRadius: BorderRadius.all(Radius.circular(8)),
           border: Border.all(width: 1, color: _UIColors.colorF2F3F5)),
-      height: 40,
+      constraints: BoxConstraints(minHeight: 40),
       alignment: Alignment.center,
-      child: TextField(
-          key: MeetingUIValueKeys.inputMessageKey,
+      child: ExtendedTextField(
+          key: _textFieldKey,
+          minLines: 1,
+          maxLines: 3,
           focusNode: _focusNode,
-          controller: _contentController,
+          controller: widget.editController,
+          specialTextSpanBuilder: _emailSpanBuilder,
           cursorColor: _UIColors.blue_337eff,
           keyboardAppearance: Brightness.light,
           textAlignVertical: TextAlignVertical.center,
+          keyboardType: TextInputType.text,
           textInputAction: TextInputAction.send,
           onEditingComplete: () {
-            _contentController.clearComposing();
-          }, //this forbid the keyboard to dismiss
+            widget.editController?.clearComposing();
+          },
+          //this forbid the keyboard to dismiss
           onSubmitted: (_) => onSendMessage(),
           decoration: InputDecoration(
             filled: true,
@@ -963,12 +1091,12 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
       return;
     }
     sending = true;
-    final content = _contentController.text;
+    final content = widget.editController!.text;
     if (content.isBlank) {
       showToast(meetingUiLocalizations.chatCannotSendBlankLetter);
     } else if (await _realSendMessage(OutTextMessage(_myNickname, _myAvatar,
         content, toUserUuidList, toUserNicknameList, chatRoomType))) {
-      _contentController.clear();
+      widget.editController!.clear();
     }
     sending = false;
   }
@@ -1116,6 +1244,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
   Widget? buildMessageItem(Object? message) {
     if (message is MessageState) {
       return _MessageItem(
+        hideAvatar: _arguments.hideAvatar ?? ValueNotifier(false),
         key: Key(message.uuid),
         incoming: !message.isSend,
         message: message,
@@ -1609,9 +1738,10 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
         color: isRight ? _UIColors.colorCCE1FF : _UIColors.colorF2F3F5,
         borderRadius: BorderRadius.all(Radius.circular(8)),
       ),
-      child: Text(
+      child: ExtendedText(
         content,
         softWrap: true,
+        specialTextSpanBuilder: _emailSpanBuilder,
         style: TextStyle(color: _UIColors.color_333333, fontSize: 14),
       ),
     );
@@ -1750,7 +1880,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
           return;
         }
 
-        Object? message;
+        MessageState? message;
         if (_selectingType == SelectType.image) {
           message = OutImageMessage(_myNickname, _myAvatar, path, size,
               toUserUuidList, toUserNicknameList, chatRoomType);
@@ -1765,7 +1895,7 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
     }
   }
 
-  Future<bool> _realSendMessage(Object message) async {
+  Future<bool> _realSendMessage(MessageState message) async {
     if (await _hasNetworkOrToast() == true) {
       if (message is OutMessageState) {
         if (message.isFailed) {
@@ -1836,7 +1966,6 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
     }());
     roomContext?.removeEventCallback(roomEventCallback);
     _arguments.messageSource.resetUnread();
-    _contentController.dispose();
     _focusNode.dispose();
     itemPositionsListener.itemPositions
         .removeListener(_handleItemPositionsChanged);
@@ -1854,6 +1983,7 @@ class _MessageItem extends StatelessWidget {
   final Widget? messageType;
   final WidgetBuilder contentBuilder;
   final VoidCallback? avatarOnTap;
+  final ValueListenable<bool> hideAvatar;
 
   bool get outgoing => !incoming;
 
@@ -1867,6 +1997,7 @@ class _MessageItem extends StatelessWidget {
     this.messageFrom,
     this.messageType,
     this.avatarOnTap,
+    required this.hideAvatar,
   }) : super(key: key);
 
   static const _failureIconSize = 21.0;
@@ -1889,9 +2020,15 @@ class _MessageItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final head = GestureDetector(
       onTap: avatarOnTap,
-      child: NEMeetingAvatar.medium(
-        name: message.nickname,
-        url: message.avatar,
+      child: ValueListenableBuilder(
+        valueListenable: hideAvatar,
+        builder: (context, hideAvatar, child) {
+          return NEMeetingAvatar.medium(
+            name: message.nickname,
+            url: message.avatar,
+            hideImageAvatar: hideAvatar,
+          );
+        },
       ),
     );
     final child = ValueListenableBuilder(
@@ -1907,7 +2044,7 @@ class _MessageItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               if (incoming) head,
-              SizedBox(width: 4),
+              SizedBox(width: 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: outgoing
@@ -1931,7 +2068,7 @@ class _MessageItem extends StatelessWidget {
                         ],
                       ],
                     ),
-                    SizedBox(height: 4),
+                    SizedBox(height: 6),
                     Stack(
                       children: [
                         if (leftFailIcon)
@@ -1939,11 +2076,13 @@ class _MessageItem extends StatelessWidget {
                             child: failureIcon,
                           ),
                         Row(
-                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: outgoing
+                              ? MainAxisAlignment.end
+                              : MainAxisAlignment.start,
                           children: [
                             if (leftFailIcon)
                               SizedBox(width: _failureIconSize + 4),
-                            contentBuilder(context),
+                            Flexible(child: contentBuilder(context)),
                             if (rightFailIcon)
                               SizedBox(width: _failureIconSize + 4),
                           ],
@@ -1957,7 +2096,7 @@ class _MessageItem extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(width: 4),
+              SizedBox(width: 8),
               if (outgoing) head,
             ],
           ),

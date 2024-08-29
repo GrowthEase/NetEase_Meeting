@@ -28,8 +28,6 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
     with EventTrackMixin, MeetingKitLocalizationsMixin, MeetingStateScope {
   MeetingInfoPageState(this.roomContext);
 
-  static const _radius = const Radius.circular(20);
-
   final NERoomContext roomContext;
 
   final titleWidth = 100.0;
@@ -37,20 +35,17 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: 20.0,
+      padding: EdgeInsets.only(
+        top: 24,
+        left: 20.0,
+        right: 20.0,
+        bottom: 8.0 + MediaQuery.of(context).padding.bottom,
       ),
       decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(topLeft: _radius, topRight: _radius)),
-      child: SafeArea(
-        top: false,
-        minimum: EdgeInsets.symmetric(
-          vertical: 20.0,
-        ),
-        child: IntrinsicHeight(
-          child: buildContent(),
-        ),
+        color: Colors.white,
+      ),
+      child: IntrinsicHeight(
+        child: buildContent(),
       ),
     );
   }
@@ -65,34 +60,45 @@ class MeetingInfoPageState extends BaseState<MeetingInfoPage>
           _title(),
           _desc(),
           _buildSplit(),
-          SizedBox(
-            height: 20,
+          Flexible(
+            child: SingleChildScrollView(
+              physics: BouncingScrollPhysics(),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  SizedBox(
+                    height: 20,
+                  ),
+                  ..._buildMeetingNum(),
+                  if (!TextUtils.isEmpty(roomContext.password)) ...[
+                    const SizedBox(height: 8),
+                    _buildPwd()
+                  ],
+                  if (!TextUtils.isEmpty(getHostName())) ...[
+                    const SizedBox(height: 8),
+                    _buildHost()
+                  ],
+                  if (!TextUtils.isEmpty(widget.meetingInfo.inviteUrl)) ...[
+                    const SizedBox(height: 8),
+                    buildCopyItem(
+                        NEMeetingUIKitLocalizations.of(context)!
+                            .meetingInviteUrl,
+                        widget.meetingInfo.inviteUrl!),
+                  ],
+                  if (!TextUtils.isEmpty(roomContext.sipCid)) ...[
+                    ..._buildMobileDialIn(),
+                    const SizedBox(height: 8),
+                    _buildSip(),
+                  ],
+                  ...[const SizedBox(height: 8), _buildMaxMembers()],
+                  ...buildDebugView().expand((element) => [
+                        const SizedBox(height: 8),
+                        element,
+                      ]),
+                ],
+              ),
+            ),
           ),
-          ..._buildMeetingNum(),
-          if (!TextUtils.isEmpty(roomContext.password)) ...[
-            const SizedBox(height: 8),
-            _buildPwd()
-          ],
-          if (!TextUtils.isEmpty(getHostName())) ...[
-            const SizedBox(height: 8),
-            _buildHost()
-          ],
-          if (!TextUtils.isEmpty(widget.meetingInfo.inviteUrl)) ...[
-            const SizedBox(height: 8),
-            buildCopyItem(
-                NEMeetingUIKitLocalizations.of(context)!.meetingInviteUrl,
-                widget.meetingInfo.inviteUrl!),
-          ],
-          if (!TextUtils.isEmpty(roomContext.sipCid)) ...[
-            ..._buildMobileDialIn(),
-            const SizedBox(height: 8),
-            _buildSip(),
-          ],
-          ...[const SizedBox(height: 8), _buildMaxMembers()],
-          ...buildDebugView().expand((element) => [
-                const SizedBox(height: 8),
-                element,
-              ]),
         ],
       ),
     );

@@ -61,8 +61,7 @@ public class MainActivity extends FlutterActivity {
   private String startString;
   private int meetingStatus = 0;
 
-  // 最小化状态
-  private final int inMeetingMinimized = 4;
+  long lastPermissionRequestTimestamp = 0;
 
   @Nullable
   @Override
@@ -78,18 +77,25 @@ public class MainActivity extends FlutterActivity {
     new MethodChannel(dartExecutor.getBinaryMessenger(), CHANNEL)
         .setMethodCallHandler(
             (call, result) -> {
-              if (call.method.equals("initialLink")) {
-                if (startString != null) {
-                  result.success(startString);
-                  startString = null;
-                } else {
-                  result.success("");
-                }
-              } else if (call.method.equals("apkDownloadOk")) {
-                String filePath = call.argument("filePath");
-                installApk(filePath, result);
-              } else if (call.method.equals("notifyMeetingStatusChanged")) {
-                meetingStatus = call.argument("meetingStatus");
+              switch (call.method) {
+                case "initialLink":
+                  if (startString != null) {
+                    result.success(startString);
+                    startString = null;
+                  } else {
+                    result.success("");
+                  }
+                  break;
+                case "apkDownloadOk":
+                  String filePath = call.argument("filePath");
+                  installApk(filePath, result);
+                  break;
+                case "notifyMeetingStatusChanged":
+                  meetingStatus = call.argument("meetingStatus");
+                  break;
+                case "notifyInMeetingPermissionRequest":
+                  lastPermissionRequestTimestamp = System.currentTimeMillis();
+                  break;
               }
             });
     if (data != null) {
@@ -328,19 +334,42 @@ public class MainActivity extends FlutterActivity {
     pip();
   }
 
-  @Override
-  public void onBackPressed() {
-    super.onBackPressed();
-    //    pip();
-  }
-
   private void pip() {
-    if (meetingStatus != inMeetingMinimized) return;
+    // 兼容部分设备权限申请时，误触退后台自动小窗事件
+    if (lastPermissionRequestTimestamp >= System.currentTimeMillis() - 1000) {
+      Log.i(TAG, "ignore pip due to permission");
+      return;
+    }
+    // 在鸿蒙系统上部分机型存在兼容问题
+    if (isHarmonyOs()) {
+      Log.i(TAG, "isHarmonyOs does not support PIP");
+      return;
+    }
+    // 最小化状态/加入中/会议中
+    int connecting = 2, inMeeting = 3, inMeetingMinimized = 4;
+    if (meetingStatus != inMeetingMinimized
+        && meetingStatus != connecting
+        && meetingStatus != inMeeting) return;
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       PictureInPictureParams.Builder builder =
           new PictureInPictureParams.Builder().setAspectRatio(new Rational(9, 16));
 
+      if (isInPictureInPictureMode()) {
+        return;
+      }
       enterPictureInPictureMode(builder.build());
+    }
+  }
+
+  // 判断是否为鸿蒙系统
+  public static boolean isHarmonyOs() {
+    try {
+      Class<?> buildExClass = Class.forName("com.huawei.system.BuildEx");
+      Object osBrand = buildExClass.getMethod("getOsBrand").invoke(buildExClass);
+      if (osBrand == null) return false;
+      return "Harmony".equalsIgnoreCase(osBrand.toString());
+    } catch (Throwable x) {
+      return false;
     }
   }
 }

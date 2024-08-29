@@ -30,11 +30,14 @@ class DialogUtils {
               canPop: canBack,
               child: CupertinoAlertDialog(
                 title: TextUtils.isEmpty(title) ? null : Text(title),
-                content: content != null
-                    ? Text(content,
-                        textAlign:
-                            isContentCenter ? TextAlign.center : TextAlign.left)
-                    : null,
+                content: Container(
+                    width: 500, // 设置宽度
+                    child: content != null
+                        ? Text(content,
+                            textAlign: isContentCenter
+                                ? TextAlign.center
+                                : TextAlign.left)
+                        : null),
                 actions: <Widget>[
                   CupertinoDialogAction(
                     child: Text(cancelText ?? localizations.globalCancel),
@@ -293,6 +296,7 @@ class DialogUtils {
           loadMoreContacts: loadMoreContacts,
           getMemberSubTitles: getMemberSubTitles,
           onWillRemoveAttendee: onWillRemoveAttendee,
+          hideAvatar: ValueNotifier(false),
         ),
       ),
       routeSettings: RouteSettings(name: 'ContactsPopup'),

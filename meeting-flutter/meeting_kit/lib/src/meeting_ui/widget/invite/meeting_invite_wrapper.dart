@@ -21,6 +21,9 @@ class MeetingInviteWrapper extends StatefulWidget {
   /// 显示邀请中的覆盖，
   final bool isCalling;
 
+  /// 是否显示呼叫角标
+  final bool showActionIcon;
+
   final InviteType inviteType;
 
   final VoidCallback? onCall;
@@ -29,6 +32,7 @@ class MeetingInviteWrapper extends StatefulWidget {
     required this.child,
     required this.isCalling,
     required this.inviteType,
+    required this.showActionIcon,
     this.onCall,
   });
 
@@ -45,7 +49,7 @@ class _InviteGIFState extends State<MeetingInviteWrapper> {
       children: <Widget>[
         widget.child ?? Container(),
         if (widget.inviteType != InviteType.none) _buildOverlay(),
-        if (!widget.isCalling) _buildCall(),
+        if (!widget.isCalling && widget.showActionIcon) _buildCall(),
       ],
     );
   }

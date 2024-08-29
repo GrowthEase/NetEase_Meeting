@@ -10,18 +10,20 @@ class MeetingChatRoomMemberPage extends StatefulWidget {
   final WaitingRoomManager? waitingRoomManager;
   final ChatRoomManager chatRoomManager;
   final Stream? roomInfoUpdatedEventStream;
+  final ValueNotifier<bool> hideAvatar;
 
   MeetingChatRoomMemberPage(
     this.roomContext,
     this.waitingRoomManager,
     this.chatRoomManager,
     this.roomInfoUpdatedEventStream,
+    this.hideAvatar,
   );
 
   @override
   State<StatefulWidget> createState() {
     return MeetingChatRoomMembersPageState(roomContext, waitingRoomManager,
-        chatRoomManager, roomInfoUpdatedEventStream);
+        chatRoomManager, roomInfoUpdatedEventStream, hideAvatar);
   }
 }
 
@@ -37,12 +39,14 @@ class MeetingChatRoomMembersPageState
     this.waitingRoomManager,
     this.chatRoomManager,
     this.roomInfoUpdatedEventStream,
+    this.hideAvatar,
   );
   final NERoomContext roomContext;
   final WaitingRoomManager? waitingRoomManager;
   final ChatRoomManager chatRoomManager;
   final Stream? roomInfoUpdatedEventStream;
   late final NERoomEventCallback roomEventCallback;
+  final ValueNotifier<bool> hideAvatar;
 
   final _subscriptions = <StreamSubscription>[];
 
@@ -226,9 +230,15 @@ class MeetingChatRoomMembersPageState
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            NEMeetingAvatar.medium(
-              name: user.name,
-              url: user.avatar,
+            ValueListenableBuilder(
+              valueListenable: hideAvatar,
+              builder: (context, hideAvatar, child) {
+                return NEMeetingAvatar.medium(
+                  name: user.name,
+                  url: user.avatar,
+                  hideImageAvatar: hideAvatar,
+                );
+              },
             ),
             SizedBox(width: 6),
             Expanded(

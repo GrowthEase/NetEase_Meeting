@@ -115,7 +115,7 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute>
       Text(
         getAppLocalizations().meetingNum,
         style: TextStyle(
-            color: AppColors.color_1E1E27,
+            color: AppColors.color_1E1F27,
             fontSize: 16,
             fontWeight: FontWeight.w500),
       ),
@@ -241,9 +241,7 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute>
       NEJoinMeetingParams(
         meetingNum: targetMeetingNum,
         displayName: nickname ?? MeetingUtil.getNickName(),
-        watermarkConfig: NEWatermarkConfig(
-          name: MeetingUtil.getNickName(),
-        ),
+        watermarkConfig: buildNEWatermarkConfig(),
       ),
       await buildMeetingUIOptions(
         noVideo: !openCamera.value,

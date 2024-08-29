@@ -12,6 +12,7 @@ class MembersArguments {
   final String meetingTitle;
   final WaitingRoomManager waitingRoomManager;
   final ValueListenable<bool> isMySelfManagerListenable;
+  final ValueListenable<bool> hideAvatar;
 
   MembersArguments({
     required this.options,
@@ -21,5 +22,6 @@ class MembersArguments {
     required this.meetingTitle,
     required this.waitingRoomManager,
     required this.isMySelfManagerListenable,
+    required this.hideAvatar,
   });
 }

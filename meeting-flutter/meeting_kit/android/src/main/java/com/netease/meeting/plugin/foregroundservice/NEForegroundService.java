@@ -4,6 +4,7 @@
 
 package com.netease.meeting.plugin.foregroundservice;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.Service;
 import android.content.Context;
@@ -11,14 +12,20 @@ import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
+import android.text.TextUtils;
 import android.util.Log;
 import com.netease.yunxin.flutter.plugins.roomkit.RoomKitEventDispatcher;
 import com.netease.yunxin.flutter.plugins.roomkit.RoomKitEventListener;
+import java.util.HashSet;
 import java.util.Map;
 
 public class NEForegroundService extends Service {
 
   private static final String TAG = "NEForegroundService";
+
+  private static final String KEY_SERVICE_TYPE = "serviceType";
+  private static final String SERVICE_TYPE_MEDIA_PROJECTION = "mediaProjection";
+  private static final String SERVICE_TYPE_MICROPHONE = "microphone";
 
   public static final int ONGOING_NOTIFICATION_ID = 0x9527;
 
@@ -31,7 +38,7 @@ public class NEForegroundService extends Service {
     return foregroundServiceConfig;
   }
 
-  public static void start(Context context, Map config) {
+  public static void start(Context context, Map config, String serviceType) {
     ForegroundServiceConfig fsc = ForegroundServiceConfig.fromMap(config);
     if (fsc == null) {
       return;
@@ -41,26 +48,33 @@ public class NEForegroundService extends Service {
       Log.i(TAG, "ensure notification fail, ignore start service.");
       return;
     }
+    Intent intent = getServiceLaunchIntent(context, serviceType);
     try {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        // Android 14 or later：在用户授权后才能开启前台 Service
-        if (Build.VERSION.SDK_INT >= 34) {
+        // Android 14 or later：屏幕共享的前台服务需要在用户授权后才能开启
+        if (Build.VERSION.SDK_INT >= 34 && SERVICE_TYPE_MEDIA_PROJECTION.equals(serviceType)) {
           startForegroundServiceListener.register(
               () -> {
                 Log.e(TAG, "startForegroundService after permission granted");
-                context.startForegroundService(new Intent(context, NEForegroundService.class));
+                context.startForegroundService(intent);
               });
           return;
         }
         Log.e(TAG, "startForegroundService");
-        context.startForegroundService(new Intent(context, NEForegroundService.class));
+        context.startForegroundService(intent);
       } else {
         Log.e(TAG, "startService");
-        context.startService(new Intent(context, NEForegroundService.class));
+        context.startService(intent);
       }
     } catch (Throwable throwable) {
       Log.e(TAG, "startService error", throwable);
     }
+  }
+
+  private static Intent getServiceLaunchIntent(Context context, String type) {
+    Intent intent = new Intent(context, NEForegroundService.class);
+    intent.putExtra(KEY_SERVICE_TYPE, type);
+    return intent;
   }
 
   public static void cancel(Context context) {
@@ -78,10 +92,14 @@ public class NEForegroundService extends Service {
     startForegroundServiceListener.unregister();
   }
 
+  private Notification notification;
+  private final HashSet<String> serviceTypes = new HashSet<>();
+
   @Override
   public void onCreate() {
     Log.i(TAG, "onCreate");
     super.onCreate();
+    notification = NENotificationManager.getInstance().getNotification();
   }
 
   @Override
@@ -93,27 +111,49 @@ public class NEForegroundService extends Service {
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
     Log.i(TAG, "onStartCommand");
-    onStartForeground();
+    onStartForeground(intent);
     super.onStartCommand(intent, flags, startId);
     return START_NOT_STICKY;
   }
 
-  private void onStartForeground() {
-    Notification notification = NENotificationManager.getInstance().getNotification();
+  @SuppressLint("NewApi")
+  private void onStartForeground(Intent intent) {
     if (notification == null) {
       Log.i(TAG, "onStartForeground without notification");
       return;
     }
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-      startForeground(
-          ONGOING_NOTIFICATION_ID,
-          notification,
-          ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION);
+    String serviceType = intent.getStringExtra(KEY_SERVICE_TYPE);
+    if (!TextUtils.isEmpty(serviceType)) {
+      serviceTypes.add(serviceType);
+    }
+
+    int foregroundServiceType = determineForegroundServiceType();
+    if (foregroundServiceType != 0) {
+      startForeground(ONGOING_NOTIFICATION_ID, notification, foregroundServiceType);
     } else {
       startForeground(ONGOING_NOTIFICATION_ID, notification);
     }
 
-    Log.i(TAG, "onStartForeground");
+    Log.i(
+        TAG,
+        "onStartForeground: serviceType="
+            + serviceType
+            + ", foregroundServiceType="
+            + Long.toHexString(foregroundServiceType));
+  }
+
+  private int determineForegroundServiceType() {
+    int type = 0;
+    for (String serviceType : serviceTypes) {
+      if (SERVICE_TYPE_MEDIA_PROJECTION.equals(serviceType)
+          && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        type |= ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION;
+      } else if (SERVICE_TYPE_MICROPHONE.equals(serviceType)
+          && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        type |= ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE;
+      }
+    }
+    return type;
   }
 
   @Override

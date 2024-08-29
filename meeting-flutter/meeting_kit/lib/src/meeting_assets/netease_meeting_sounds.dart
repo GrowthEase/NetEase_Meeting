@@ -9,4 +9,10 @@ class NEMeetingSounds {
 
   static const String appInviteRing =
       "packages/$meetingAssetsPackageName/assets/sounds/avchat_ring.mp3";
+
+  static const String memberJoinRing =
+      "packages/$meetingAssetsPackageName/assets/sounds/member_join.mp3";
+
+  static const String memberLeaveRing =
+      "packages/$meetingAssetsPackageName/assets/sounds/member_leave.mp3";
 }

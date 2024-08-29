@@ -300,7 +300,7 @@ class _HistoryMeetingDetailRouteState
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
                 fontSize: 20,
-                color: AppColors.color_1E1E27,
+                color: AppColors.color_1E1F27,
                 fontWeight: FontWeight.w500),
           )),
           NEGestureDetector(
@@ -388,7 +388,7 @@ class _HistoryMeetingDetailRouteState
               Text(
                 getAppLocalizations().historyMeetingCloudRecord,
                 style: TextStyle(
-                  color: AppColors.color_1E1E27,
+                  color: AppColors.color_1E1F27,
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                 ),

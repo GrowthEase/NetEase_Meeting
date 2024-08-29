@@ -12,6 +12,7 @@
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
 
     <!-- Android 13需要此运行时权限，但对于前台 Service 可以不用申请 -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -29,7 +30,7 @@
         <service
             android:name=".foregroundservice.NEForegroundService"
             android:enabled="true"
-            android:foregroundServiceType="mediaProjection"
+            android:foregroundServiceType="mediaProjection|microphone"
             android:exported="false">
             <intent-filter><action android:name="com.netease.Yunxin.ScreenShare" /></intent-filter>
         </service>

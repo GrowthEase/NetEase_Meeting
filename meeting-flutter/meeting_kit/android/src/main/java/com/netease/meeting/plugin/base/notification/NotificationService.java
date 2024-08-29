@@ -56,6 +56,6 @@ public class NotificationService extends Handler {
   }
 
   private void onStartForegroundService(MethodCall call) {
-    NEForegroundService.start(context, call.<Map>argument("config"));
+    NEForegroundService.start(context, call.<Map>argument("config"), call.argument("serviceType"));
   }
 }

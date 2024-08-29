@@ -74,6 +74,7 @@ final class AccountRepository with _AloggerMixin {
         _notifyReconnected();
       }
     });
+    ConnectivityManager().onReconnected.listen((_) => syncAccountInfo());
   }
 
   NEAccountInfo? getAccountInfo() => _accountInfo;
@@ -123,6 +124,8 @@ final class AccountRepository with _AloggerMixin {
     final event = IntervalEvent(kEventLogin, startTime: startTime)
       ..addParam(kEventParamType, loginType)
       ..addParam(kEventParamUserId, userId)
+      ..addParam(kEventParamCorpCode, CoreRepository().initedConfig?.corpCode)
+      ..addParam(kEventParamCorpEmail, CoreRepository().initedConfig?.corpEmail)
       ..beginStep(kLoginStepAccountInfo);
     Future<NEResult<NEAccountInfo>> realLogin() async {
       final accountInfoResult = await accountInfoAction();
@@ -165,10 +168,13 @@ final class AccountRepository with _AloggerMixin {
   }
 
   void _setAccountInfo(NEAccountInfo? accountInfo) {
-    this._accountInfo = accountInfo;
-    _authListenerSet
-        .toList()
-        .forEach((listener) => listener.onAccountInfoUpdated(accountInfo));
+    if (_accountInfo != accountInfo) {
+      commonLogger.i('setAccountInfo');
+      this._accountInfo = accountInfo;
+      _authListenerSet
+          .toList()
+          .forEach((listener) => listener.onAccountInfoUpdated(accountInfo));
+    }
   }
 
   void _notifyAuthInfoExpired() {
@@ -181,5 +187,19 @@ final class AccountRepository with _AloggerMixin {
   /// 通知重连成功
   void _notifyReconnected() {
     _authListenerSet.toList().forEach((listener) => listener.onReconnected());
+  }
+
+  void syncAccountInfo() async {
+    final accountInfo = _accountInfo;
+    if (accountInfo != null && !accountInfo.isAnonymous) {
+      commonLogger.i('syncAccountInfo');
+      final result = await AuthRepository.fetchAccountInfoByToken(
+        accountInfo.userUuid,
+        accountInfo.userToken,
+      );
+      if (result.isSuccess() && accountInfo == _accountInfo) {
+        _setAccountInfo(result.data);
+      }
+    }
   }
 }

@@ -203,29 +203,29 @@ class _MeetingItemImpl extends NEMeetingItem {
 
   Map handleRoomProperties() {
     var roomProperties = {}; // 参考 创建会议 ，从setting里获取controls就可以了
-    if (settings.controls?.isEmpty ?? true) {
-      // 如果controls为空，说明没有启用 自动静音 和 自动关闭视频
-      roomProperties[AudioControlProperty.key] = AudioControlProperty.disable;
-      roomProperties[VideoControlProperty.key] = VideoControlProperty.disable;
-    }
+    int securityCtrl = 0;
     settings.controls?.forEach((control) {
       if (control is NEMeetingAudioControl) {
-        roomProperties[AudioControlProperty.key] = control.attendeeOff ==
-                NEMeetingAttendeeOffType.none
-            ? AudioControlProperty.disable
-            : (control.attendeeOff == NEMeetingAttendeeOffType.offAllowSelfOn
-                ? AudioControlProperty.offAllowSelfOn
-                : AudioControlProperty.offNotAllowSelfOn);
+        securityCtrl |= MeetingSecurityCtrlValue.AUDIO_OFF;
+        if (control.attendeeOff == NEMeetingAttendeeOffType.offAllowSelfOn) {
+          securityCtrl &= ~MeetingSecurityCtrlValue.AUDIO_NOT_ALLOW_SELF_ON;
+        } else if (control.attendeeOff ==
+            NEMeetingAttendeeOffType.offNotAllowSelfOn) {
+          securityCtrl |= MeetingSecurityCtrlValue.AUDIO_NOT_ALLOW_SELF_ON;
+        }
       }
       if (control is NEMeetingVideoControl) {
-        roomProperties[VideoControlProperty.key] = control.attendeeOff ==
-                NEMeetingAttendeeOffType.none
-            ? VideoControlProperty.disable
-            : (control.attendeeOff == NEMeetingAttendeeOffType.offAllowSelfOn
-                ? VideoControlProperty.offAllowSelfOn
-                : VideoControlProperty.offNotAllowSelfOn);
+        securityCtrl |= MeetingSecurityCtrlValue.VIDEO_OFF;
+        if (control.attendeeOff == NEMeetingAttendeeOffType.offAllowSelfOn) {
+          securityCtrl &= ~MeetingSecurityCtrlValue.VIDEO_NOT_ALLOW_SELF_ON;
+        } else if (control.attendeeOff ==
+            NEMeetingAttendeeOffType.offNotAllowSelfOn) {
+          securityCtrl |= MeetingSecurityCtrlValue.VIDEO_NOT_ALLOW_SELF_ON;
+        }
       }
     });
+    roomProperties[MeetingSecurityCtrlKey.securityCtrlKey] =
+        securityCtrl.toString();
     roomProperties[GuestJoinProperty.key] =
         _enableGuestJoin ? GuestJoinProperty.enable : GuestJoinProperty.disable;
     roomProperties[MeetingPropertyKeys.kExtraData] = extraData;
@@ -454,16 +454,26 @@ class _MeetingItemImpl extends NEMeetingItem {
         GuestJoinProperty.enable);
     Map? extraDataMap = roomProperties?['extraData'] as Map?;
     impl.extraData = extraDataMap?['value'] as String?;
-    final audioOffMap = roomProperties?[AudioControlProperty.key] as Map?;
-    final videoOffMap = roomProperties?[VideoControlProperty.key] as Map?;
     final sip = roomProperties?['sip'] as Map?;
     impl.sipCid = sip?['sipCid'] as String?;
-    final controls = [
-      if (audioOffMap != null) NEInMeetingAudioControl.fromJson(audioOffMap),
-      if (videoOffMap != null) NEInMeetingVideoControl.fromJson(videoOffMap),
-    ];
-    impl.settings = NEMeetingItemSetting()
-      ..controls = controls.isNotEmpty ? controls : null;
+    final securityCtrlMap =
+        roomProperties?[MeetingSecurityCtrlKey.securityCtrlKey] as Map?;
+    if (securityCtrlMap != null) {
+      final securityCtrl = securityCtrlMap['value'] as String?;
+      if (securityCtrl != null) {
+        final number = int.tryParse(securityCtrl);
+        if (number != null) {
+          final audioControl = NEInMeetingAudioControl.fromSecurityCtrl(number);
+          final videoControl = NEInMeetingVideoControl.fromSecurityCtrl(number);
+          final controls = [
+            if (audioControl.enabled) audioControl,
+            if (videoControl.enabled) videoControl,
+          ];
+          impl.settings = NEMeetingItemSetting()
+            ..controls = controls.isNotEmpty ? controls : null;
+        }
+      }
+    }
 
     impl.cloudRecordConfig =
         NECloudRecordConfig.fromJson(settings?['recordConfig'] as Map?);

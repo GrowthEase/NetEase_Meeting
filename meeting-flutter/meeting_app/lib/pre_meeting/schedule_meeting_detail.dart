@@ -612,13 +612,13 @@ class _ScheduleMeetingDetailRouteState
                   Text(time,
                       style: TextStyle(
                           fontSize: 36,
-                          color: AppColors.color_1E1E27,
+                          color: AppColors.color_1E1F27,
                           fontWeight: FontWeight.w600)),
                   Spacer(),
                   Text(date,
                       style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.color_1E1E27,
+                          color: AppColors.color_1E1F27,
                           fontWeight: FontWeight.w400)),
                 ],
               ));
@@ -915,9 +915,7 @@ class _ScheduleMeetingDetailRouteState
       NEJoinMeetingParams(
         meetingNum: item.meetingNum!,
         displayName: nickname ?? MeetingUtil.getNickName(),
-        watermarkConfig: NEWatermarkConfig(
-          name: MeetingUtil.getNickName(),
-        ),
+        watermarkConfig: buildNEWatermarkConfig(),
       ),
       await buildMeetingUIOptions(context: context),
       onMeetingPageRouteWillPush: () async {

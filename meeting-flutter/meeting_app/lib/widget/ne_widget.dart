@@ -98,7 +98,7 @@ class NESettingItemArrow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Icon(
       IconFont.iconyx_allowx_2,
-      size: 14.spMin,
+      size: 16,
       color: AppColors.color_8D90A0,
     );
   }
@@ -114,8 +114,8 @@ class NESettingItemTitle extends StatelessWidget {
     return NEText(
       title,
       style: TextStyle(
-          fontSize: 14.spMin,
-          color: AppColors.color_1E1E27,
+          fontSize: 16,
+          color: AppColors.color_1E1F27,
           fontWeight: FontWeight.w500),
     );
   }
@@ -133,7 +133,7 @@ class NESettingItemContent extends StatelessWidget {
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
       style: TextStyle(
-          fontSize: 14.spMin,
+          fontSize: 16,
           color: AppColors.color_53576A,
           fontWeight: FontWeight.w400),
     );

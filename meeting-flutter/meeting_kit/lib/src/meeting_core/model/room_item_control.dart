@@ -145,22 +145,17 @@ class NEInMeetingAudioControl extends NEMeetingAudioControl {
           allowSelfOn: true,
         );
 
-  factory NEInMeetingAudioControl.fromJson(Map<dynamic, dynamic>? json) {
-    bool allowSelfOn = true;
-    bool enabled = false;
+  factory NEInMeetingAudioControl.fromSecurityCtrl(int securityCtrl) {
+    bool allowSelfOn =
+        (securityCtrl & MeetingSecurityCtrlValue.AUDIO_NOT_ALLOW_SELF_ON) !=
+            MeetingSecurityCtrlValue.AUDIO_NOT_ALLOW_SELF_ON;
+    bool enabled = (securityCtrl & MeetingSecurityCtrlValue.AUDIO_OFF) ==
+        MeetingSecurityCtrlValue.AUDIO_OFF;
     NEMeetingAttendeeOffType attendeeOff = NEMeetingAttendeeOffType.none;
-    if (json != null && json['value'] != null) {
-      final value = json['value'] as String;
-      if (value.startsWith(RegExp('${AudioControlProperty.offAllowSelfOn}'))) {
-        allowSelfOn = true;
-        enabled = true;
-        attendeeOff = NEMeetingAttendeeOffType.offAllowSelfOn;
-      } else if (value
-          .startsWith(RegExp('${AudioControlProperty.offNotAllowSelfOn}'))) {
-        allowSelfOn = false;
-        enabled = true;
-        attendeeOff = NEMeetingAttendeeOffType.offNotAllowSelfOn;
-      }
+    if (enabled) {
+      attendeeOff = allowSelfOn
+          ? NEMeetingAttendeeOffType.offAllowSelfOn
+          : NEMeetingAttendeeOffType.offNotAllowSelfOn;
     }
     return NEInMeetingAudioControl(
         attendeeOff: attendeeOff, enabled: enabled, allowSelfOn: allowSelfOn);
@@ -211,22 +206,17 @@ class NEInMeetingVideoControl extends NEMeetingVideoControl {
           allowSelfOn: true,
         );
 
-  factory NEInMeetingVideoControl.fromJson(Map<dynamic, dynamic>? json) {
-    bool allowSelfOn = true;
-    bool enabled = false;
+  factory NEInMeetingVideoControl.fromSecurityCtrl(int securityCtrl) {
+    bool allowSelfOn =
+        (securityCtrl & MeetingSecurityCtrlValue.VIDEO_NOT_ALLOW_SELF_ON) !=
+            MeetingSecurityCtrlValue.VIDEO_NOT_ALLOW_SELF_ON;
+    bool enabled = (securityCtrl & MeetingSecurityCtrlValue.VIDEO_OFF) ==
+        MeetingSecurityCtrlValue.VIDEO_OFF;
     NEMeetingAttendeeOffType attendeeOff = NEMeetingAttendeeOffType.none;
-    if (json != null && json['value'] != null) {
-      final value = json['value'] as String;
-      if (value.startsWith(RegExp('${VideoControlProperty.offAllowSelfOn}'))) {
-        allowSelfOn = true;
-        enabled = true;
-        attendeeOff = NEMeetingAttendeeOffType.offAllowSelfOn;
-      } else if (value
-          .startsWith(RegExp('${VideoControlProperty.offNotAllowSelfOn}'))) {
-        allowSelfOn = false;
-        enabled = true;
-        attendeeOff = NEMeetingAttendeeOffType.offNotAllowSelfOn;
-      }
+    if (enabled) {
+      attendeeOff = allowSelfOn
+          ? NEMeetingAttendeeOffType.offAllowSelfOn
+          : NEMeetingAttendeeOffType.offNotAllowSelfOn;
     }
     return NEInMeetingVideoControl(
         attendeeOff: attendeeOff, enabled: enabled, allowSelfOn: allowSelfOn);

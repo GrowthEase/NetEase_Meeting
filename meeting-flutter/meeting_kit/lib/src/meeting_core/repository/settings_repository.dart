@@ -4,7 +4,12 @@
 
 part of meeting_core;
 
-class SettingsRepository extends ValueNotifier<Map> {
+///
+/// 设置项变更监听器
+///
+typedef void NESettingsChangedListener();
+
+class SettingsRepository extends ValueNotifier<Map> with _AloggerMixin {
   static final _instance = SettingsRepository._();
 
   factory SettingsRepository() => _instance;
@@ -23,12 +28,15 @@ class SettingsRepository extends ValueNotifier<Map> {
   final Map _settingsCache = {};
   final Map _transientStates = {};
   int? _beautyFaceValue;
+  AccountSettings? _accountSettings;
+  final _settingsChangedListeners = ObserverList<NESettingsChangedListener>();
 
   final sdkConfig = SDKConfig.global;
 
   Future<Map> ensureSettings() async {
     _sharedPreferences = await SharedPreferences.getInstance();
-    if (_userId != getCurrentUserId()) {
+    var changed = _userId != getCurrentUserId();
+    if (changed) {
       _beautyFaceValue = null;
       _userId = getCurrentUserId();
       _key = '${_userId}_localSetting';
@@ -37,6 +45,15 @@ class SettingsRepository extends ValueNotifier<Map> {
       _settingsCache.addAll((settings == null || settings.isEmpty
           ? {}
           : json.decode(settings)) as Map);
+    }
+
+    /// 对比 account settings
+    final oldAccountSettings = _accountSettings;
+    _accountSettings = AccountRepository().getAccountInfo()?._settings;
+    if (!changed && oldAccountSettings != _accountSettings) {
+      changed = true;
+    }
+    if (changed) {
       _markChanged();
     }
     return _settingsCache;
@@ -68,10 +85,20 @@ class SettingsRepository extends ValueNotifier<Map> {
   /// 通过[ValueNotifier]通知listeners
   void _markChanged() async {
     await updateTransientStates();
-    value = Map.fromEntries([
-      ..._settingsCache.entries,
-      ..._transientStates.entries,
-    ]);
+    value = {
+      ..._settingsCache,
+      ..._transientStates,
+      ..._getAccountSettings(),
+    };
+    _notifySettingsChanged();
+  }
+
+  Map _getAccountSettings() {
+    return {
+      Keys.asrTranslationLanguage: getASRTranslationLanguage().index,
+      Keys.captionBilingual: isCaptionBilingualEnabled(),
+      Keys.transcriptionBilingual: isTranscriptionBilingualEnabled(),
+    };
   }
 
   /// update global config
@@ -101,16 +128,12 @@ class SettingsRepository extends ValueNotifier<Map> {
     _transientStates[Keys.isTranscriptionSupported] =
         isTranscriptionSupported();
     _transientStates[Keys.isGuestJoinSupported] = isGuestJoinSupported();
+    _transientStates[Keys.isMeetingChatSupported] = isMeetingChatSupported();
   }
 
   ///保存用户信息配置
-  Future<NEResult<void>> saveSettingsApi(BeautySettings status) async {
-    return await HttpApiHelper._saveSettingsApi(status);
-  }
-
-  ///获取用户信息配置
-  Future<NEResult<AccountSettings>> getSettingsApi() async {
-    return HttpApiHelper._getSettingsApi();
+  Future<NEResult<void>> saveAccountSettings(AccountSettings status) {
+    return HttpApiHelper._saveSettingsApi(status);
   }
 
   /// 设置是否显示会议时长
@@ -156,6 +179,9 @@ class SettingsRepository extends ValueNotifier<Map> {
 
   /// 查询应用是否支持云端录制服务
   bool isMeetingCloudRecordSupported() => sdkConfig.isCloudRecordSupported;
+
+  /// 查询应用是否支持聊天室服务
+  bool isMeetingChatSupported() => sdkConfig.isMeetingChatSupported;
 
   /// 设置是否打开音频智能降噪
   ///
@@ -298,10 +324,22 @@ class SettingsRepository extends ValueNotifier<Map> {
       /// 两秒后，如果未继续发生变更保存美颜设置
       Future.delayed(Duration(seconds: 2)).then((value) {
         if (_beautyFaceValue == value) {
-          saveSettingsApi(BeautySettings(beauty: Beauty(level: value)));
+          saveAccountSettings(AccountSettings(
+              beauty: BeautySettings(beauty: Beauty(level: value))));
         }
       });
     }
+  }
+
+  /// 查询是否在视频中显示昵称
+  Future<bool> isShowNameInVideoEnabled() async {
+    await ensureSettings();
+    return _settingsCache[Keys.isShowNameInVideoEnabled] ?? true;
+  }
+
+  /// 设置是否在视频中显示昵称
+  Future<void> enableShowNameInVideo(bool enable) async {
+    _writeSettings(Keys.isShowNameInVideoEnabled, enable);
   }
 
   /// 查询应用是否支持等候室
@@ -348,6 +386,88 @@ class SettingsRepository extends ValueNotifier<Map> {
     _writeSettings(Keys.cloudRecordConfig, config.toJson());
     return Future.value();
   }
+
+  Future<int> setASRTranslationLanguage(
+      NEMeetingASRTranslationLanguage language) async {
+    commonLogger.i('setASRTranslationLanguage: $language');
+    final result = await saveAccountSettings(
+        AccountSettings(asrTranslationLanguage: language.name));
+    return result.code;
+  }
+
+  NEMeetingASRTranslationLanguage getASRTranslationLanguage() {
+    return NEMeetingASRTranslationLanguage.values.firstWhereOrNull((e) =>
+            e.name ==
+            _accountSettings?.asrTranslationLanguage?.toLowerCase()) ??
+        NEMeetingASRTranslationLanguage.none;
+  }
+
+  Future<int> enableCaptionBilingual(bool enable) async {
+    commonLogger.i('enableCaptionBilingual: $enable');
+    final result =
+        await saveAccountSettings(AccountSettings(captionBilingual: enable));
+    return result.code;
+  }
+
+  bool isCaptionBilingualEnabled() {
+    return _accountSettings?.captionBilingual ?? false;
+  }
+
+  Future<int> enableTranscriptionBilingual(bool enable) async {
+    commonLogger.i('enableTranscriptionBilingual: $enable');
+    final result = await saveAccountSettings(
+        AccountSettings(transcriptionBilingual: enable));
+    return result.code;
+  }
+
+  bool isTranscriptionBilingualEnabled() {
+    return _accountSettings?.transcriptionBilingual ?? false;
+  }
+
+  void addSettingsChangedListener(NESettingsChangedListener listener) {
+    _settingsChangedListeners.add(listener);
+  }
+
+  void removeSettingsChangedListener(NESettingsChangedListener listener) {
+    _settingsChangedListeners.remove(listener);
+  }
+
+  void _notifySettingsChanged() {
+    commonLogger.i('notify settings changed');
+    try {
+      for (final listener
+          in _settingsChangedListeners.toList(growable: false)) {
+        if (_settingsChangedListeners.contains(listener)) {
+          listener();
+        }
+      }
+    } catch (e) {}
+  }
+
+  /// 设置聊天新消息提醒类型
+  ///
+  /// [type] 新消息提醒类型
+  void setChatMessageNotificationType(NEChatMessageNotificationType type) {
+    _writeSettings(Keys.chatMessageNotificationType, type.value);
+  }
+
+  /// 查询聊天新消息提醒类型
+  Future<NEChatMessageNotificationType> getChatMessageNotificationType() async {
+    await ensureSettings();
+    return Future.value(NEChatMessageNotificationTypeExtension.mapValueToEnum(
+        _settingsCache[Keys.chatMessageNotificationType]));
+  }
+
+  /// 设置是否显示未入会成员
+  ///
+  /// [enable] true-开启，false-关闭
+  void enableShowNotYetJoinedMembers(bool enable) =>
+      _writeSettings(Keys.isShowNotYetJoinedMembersEnabled, enable);
+
+  /// 查询是否显示未入会成员
+  Future<bool> isShowNotYetJoinedMembersEnabled() =>
+      ensureSettings().then((settings) =>
+          (settings[Keys.isShowNotYetJoinedMembersEnabled] ?? true) as bool);
 }
 
 class Keys {
@@ -384,7 +504,16 @@ class Keys {
   static const String isNicknameUpdateSupported = "isNicknameUpdateSupported";
   static const String appNotifySessionId = "appNotifySessionId";
   static const String cloudRecordConfig = "cloudRecordConfig";
+  static const String isShowNotYetJoinedMembersEnabled =
+      "isShowNotYetJoinedMembersEnabled";
   static const String isCaptionsSupported = "isCaptionsSupported";
   static const String isTranscriptionSupported = "isTranscriptionSupported";
   static const String isGuestJoinSupported = "isGuestJoinSupported";
+  static const String isMeetingChatSupported = "isMeetingChatSupported";
+  static const String asrTranslationLanguage = 'asrTranslationLanguage';
+  static const String captionBilingual = 'captionBilingual';
+  static const String transcriptionBilingual = 'transcriptionBilingual';
+  static const String chatMessageNotificationType =
+      "chatMessageNotificationType";
+  static const String isShowNameInVideoEnabled = "isShowNameInVideoEnabled";
 }

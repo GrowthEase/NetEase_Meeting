@@ -18,6 +18,7 @@ class ContactsPopup extends StatefulWidget {
   final GetMemberSubTitles? getMemberSubTitles;
   final OnWillRemoveAttendee? onWillRemoveAttendee;
   final bool editable;
+  final ValueListenable<bool> hideAvatar;
 
   const ContactsPopup({
     super.key,
@@ -31,14 +32,19 @@ class ContactsPopup extends StatefulWidget {
     this.loadMoreContacts,
     this.getMemberSubTitles,
     this.onWillRemoveAttendee,
+    required this.hideAvatar,
   });
 
   @override
-  State<ContactsPopup> createState() => _ContactsPopupState();
+  State<ContactsPopup> createState() => _ContactsPopupState(hideAvatar);
 }
 
 class _ContactsPopupState extends PopupBaseState<ContactsPopup>
     with MeetingKitLocalizationsMixin {
+  final ValueListenable<bool> hideAvatar;
+
+  _ContactsPopupState(this.hideAvatar);
+
   @override
   String get title =>
       widget.titleBuilder.call(widget.scheduledMemberList.length);
@@ -113,10 +119,17 @@ class _ContactsPopupState extends PopupBaseState<ContactsPopup>
           padding: EdgeInsets.symmetric(horizontal: 20, vertical: 7),
           child: Row(
             children: [
-              NEMeetingAvatar.medium(
-                  name: contact.name,
-                  url: contact.avatar,
-                  showRoleIcon: isMeetingOwner(contact.userUuid)),
+              ValueListenableBuilder(
+                valueListenable: hideAvatar,
+                builder: (context, hideAvatar, child) {
+                  return NEMeetingAvatar.medium(
+                    name: contact.name,
+                    url: contact.avatar,
+                    showRoleIcon: isMeetingOwner(contact.userUuid),
+                    hideImageAvatar: hideAvatar,
+                  );
+                },
+              ),
               SizedBox(width: 12),
               Expanded(
                   child: Column(

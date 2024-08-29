@@ -103,8 +103,8 @@ class _NickSettingState extends AppBaseState<NickSetting> {
                                   setState(() {});
                                 },
                               )),
-                    style: TextStyle(
-                        color: AppColors.color_333333, fontSize: 14.spMin),
+                    style:
+                        TextStyle(color: AppColors.color_333333, fontSize: 16),
                   ),
                 ),
               ]),
@@ -132,7 +132,7 @@ class _NickSettingState extends AppBaseState<NickSetting> {
           getAppLocalizations().globalComplete,
           style: TextStyle(
             color: enable ? AppColors.color_337eff : AppColors.blue_50_337eff,
-            fontSize: 16.spMin,
+            fontSize: 16,
           ),
         ),
         onPressed: enable ? _commit : null,

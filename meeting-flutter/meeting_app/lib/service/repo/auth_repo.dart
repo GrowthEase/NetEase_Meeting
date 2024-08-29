@@ -31,12 +31,18 @@ class AuthRepo extends IRepo {
   }
 
   Future<NEResult<LoginInfo>> loginByPwd(
-      String appKey, Future<NEResult<NEAccountInfo>> action()) async {
+    String appKey,
+    Future<NEResult<NEAccountInfo>> action(), {
+    String? corpCode,
+    String? corpEmail,
+  }) async {
     return AuthManager()
         .loginProcedure(
       LoginType.password,
       action,
       appKey: appKey,
+      corpCode: corpCode,
+      corpEmail: corpEmail,
     )
         .then((sdkLoginResult) {
       if (sdkLoginResult.code == HttpCode.success) {

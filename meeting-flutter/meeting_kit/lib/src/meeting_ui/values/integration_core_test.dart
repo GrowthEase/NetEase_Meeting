@@ -99,17 +99,28 @@ class MeetingUIValueKeys {
   static const meetingAnnotationPermissionEnabled =
       ValueKey('meetingAnnotationPermissionEnabled');
   static const meetingLockSwitch = ValueKey('meetingLockSwitch');
+  static const meetingHideAvatar = ValueKey('meetingHideAvatar');
   static const meetingBlacklist = ValueKey('meetingBlacklist');
   static const meetingChat = ValueKey('meetingChat');
+  static const meetingShareScreen = ValueKey('meetingShareScreen');
+  static const unmuteAudioBySelf = ValueKey('unmuteAudioBySelf');
+  static const unmuteVideoBySelf = ValueKey('unmuteVideoBySelf');
+  static const updateNicknameBySelf = ValueKey('updateNicknameBySelf');
+  static const meetingShareWhiteboard = ValueKey('meetingShareWhiteboard');
 
   /// 会中设置页面
   static const openShowMeetTime = ValueKey('openShowMeetTime');
+  static const showNotYetJoinedMembers = ValueKey('showNotYetJoinedMembers');
   static const audioAINS = ValueKey('audioAINS');
   static const enableTransparentWhiteboard =
       ValueKey('enableTransparentWhiteboard');
   static const enableFrontCameraMirror = ValueKey('enableFrontCameraMirror');
+  static const memberJoinWithMute = ValueKey('memberJoinWithMute');
+  static const ringWhenMemberJoinOrLeave =
+      ValueKey('ringWhenMemberJoinOrLeave');
+  static const chatMessageNotification = ValueKey('chatMessageNotification');
   static const enableSpeakerSpotlight = ValueKey('enableSpeakerSpotlight');
-
+  static const enableShowNameInVideo = ValueKey('enableShowNameInVideo');
   static const interpretationLang = ValueKey('interpretationLang');
   static const enableCloudRecord = ValueKey('enableCloudRecord');
 

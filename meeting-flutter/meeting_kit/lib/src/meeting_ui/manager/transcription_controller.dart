@@ -31,6 +31,25 @@ abstract class NEMeetingLiveTranscriptionController {
   /// 仅当本端为管理员或管理员允许成员使用字幕时，可以开启字幕
   bool canMySelfEnableCaption();
 
+  /// 设置目标翻译语言
+  Future<VoidResult> setTranslationLanguage(
+      NEMeetingASRTranslationLanguage language);
+
+  /// 返回当前设置的翻译语言
+  NEMeetingASRTranslationLanguage getTranslationLanguage();
+
+  /// 开启/关闭转写双语显示
+  void enableTranscriptionBilingual(bool enable);
+
+  /// 获取转写双语显示状态
+  bool isTranscriptionBilingualEnabled();
+
+  /// 开启/关闭字幕双语显示
+  void enableCaptionBilingual(bool enable);
+
+  /// 获取字幕双语显示状态
+  bool isCaptionBilingualEnabled();
+
   /// 添加监听器
   void addListener(NEMeetingLiveTranscriptionControllerListener listener);
 
@@ -55,6 +74,9 @@ abstract class NEMeetingLiveTranscriptionController {
   /// 获取转写消息历史
   List<NERoomCaptionMessage> getTranscriptionMessageList();
 
+  /// 获取是否隐藏头像
+  bool get isAvatarHidden;
+
   /// 销毁控制器
   void dispose();
 }
@@ -68,6 +90,12 @@ mixin class NEMeetingLiveTranscriptionControllerListener {
   ///
   void onReceiveCaptionMessages(
       String? channel, List<NERoomCaptionMessage> captionMessages) {}
+
+  ///
+  /// 头像显示隐藏变化
+  /// - [hide] 是否隐藏
+  ///
+  void onAvatarHiddenChanged(bool hide) {}
 
   ///
   /// 允许成员使用字幕开关变更通知
@@ -94,6 +122,11 @@ mixin class NEMeetingLiveTranscriptionControllerListener {
   /// 转写变更
   ///
   void onTranscriptionMessageUpdated() {}
+
+  ///
+  /// 翻译设置变更
+  ///
+  void onTranslationSettingsChanged() {}
 }
 
 class _MeetingLiveTranscriptionController
@@ -128,12 +161,15 @@ class _MeetingLiveTranscriptionController
 
   _MeetingLiveTranscriptionController._(this.roomContext) : super._() {
     roomContext.addEventCallback(eventCallback);
+    SettingsRepository().addSettingsChangedListener(updateTranslationSettings);
     handleTranscriptionEnableChanged();
   }
 
   @override
   void dispose() {
     roomContext.removeEventCallback(eventCallback);
+    SettingsRepository()
+        .removeSettingsChangedListener(updateTranslationSettings);
     listeners.clear();
   }
 
@@ -170,6 +206,11 @@ class _MeetingLiveTranscriptionController
         listener.onAllowParticipantsEnableCaptionChanged(allow);
       });
     }
+    if (properties.containsKey(MeetingSecurityCtrlKey.securityCtrlKey)) {
+      notifyListeners((listener) {
+        listener.onAvatarHiddenChanged(roomContext.isAvatarHidden);
+      });
+    }
 
     /// 转写开关状态变更
     if (properties[transcriptionKey] != null) {
@@ -195,6 +236,7 @@ class _MeetingLiveTranscriptionController
     commonLogger.i('onCaptionStateChanged: $state, $code, $msg');
     if (state == NERoomCaptionState.STATE_ENABLE_CAPTION_SUCCESS) {
       captionsEngineRunning = true;
+      syncTranslationLanguage();
     } else if (state == NERoomCaptionState.STATE_DISABLE_CAPTION_SUCCESS) {
       captionsEngineRunning = false;
     }
@@ -218,7 +260,7 @@ class _MeetingLiveTranscriptionController
   void handleCaptionMessages(
       String? channel, List<NERoomCaptionMessage> captionMessages) {
     debugPrint(
-        'handleCaptionMessages: ${captionMessages.map((e) => '${e.fromUserUuid}-${e.content}-${e.timestamp}').join('\n')}');
+        'handleCaptionMessages: ${captionMessages.map((e) => '${e.fromUserUuid}-${e.content}-${e.translationContent}-${e.timestamp}').join('\n')}');
     final filterMessages = <NERoomCaptionMessage>[];
     final transcriptionEnabled = isTranscriptionEnabled();
     var transcriptionMessageUpdated = false;
@@ -353,6 +395,9 @@ class _MeetingLiveTranscriptionController
     return history.flattened.toList(growable: false);
   }
 
+  @override
+  bool get isAvatarHidden => roomContext.isAvatarHidden;
+
   void handleTranscriptionEnableChanged() {
     final enabled = isTranscriptionEnabled();
     commonLogger.i('onTranscriptionEnableChanged: $enabled');
@@ -408,6 +453,78 @@ class _MeetingLiveTranscriptionController
     commonLogger.i('stopCaptionsEngine: cur=$captionsEngineRunning');
     if (!captionsEngineRunning) return const NEResult.success();
     return roomContext.rtcController.enableCaption(false);
+  }
+
+  var translationLanguage = SettingsRepository().getASRTranslationLanguage();
+
+  /// 重置翻译语言
+  void syncTranslationLanguage() {
+    roomContext.rtcController
+        .setCaptionTranslationLanguage(translationLanguage.mapToRoomLanguage());
+  }
+
+  @override
+  Future<VoidResult> setTranslationLanguage(
+      NEMeetingASRTranslationLanguage language) async {
+    if (language != translationLanguage) {
+      SettingsRepository().setASRTranslationLanguage(language);
+    }
+    return const NEResult.success();
+  }
+
+  @override
+  NEMeetingASRTranslationLanguage getTranslationLanguage() {
+    return translationLanguage;
+  }
+
+  bool transcriptionBilingualEnabled =
+      SettingsRepository().isTranscriptionBilingualEnabled();
+  @override
+  void enableTranscriptionBilingual(bool enable) {
+    SettingsRepository().enableTranscriptionBilingual(enable);
+  }
+
+  @override
+  bool isTranscriptionBilingualEnabled() {
+    return transcriptionBilingualEnabled;
+  }
+
+  bool captionBilingualEnabled =
+      SettingsRepository().isCaptionBilingualEnabled();
+  @override
+  void enableCaptionBilingual(bool enable) {
+    SettingsRepository().enableCaptionBilingual(enable);
+  }
+
+  @override
+  bool isCaptionBilingualEnabled() {
+    return captionBilingualEnabled;
+  }
+
+  void updateTranslationSettings() {
+    final transcriptionBilingual =
+        SettingsRepository().isTranscriptionBilingualEnabled();
+    final captionBilingual = SettingsRepository().isCaptionBilingualEnabled();
+    final translationLanguage =
+        SettingsRepository().getASRTranslationLanguage();
+    var changed = false;
+    if (this.translationLanguage != translationLanguage) {
+      changed = true;
+      this.translationLanguage = translationLanguage;
+      syncTranslationLanguage();
+    }
+    if (this.transcriptionBilingualEnabled != transcriptionBilingual) {
+      this.transcriptionBilingualEnabled = transcriptionBilingual;
+      changed = true;
+    }
+    if (this.captionBilingualEnabled != captionBilingual) {
+      this.captionBilingualEnabled = captionBilingual;
+      changed = true;
+    }
+
+    commonLogger.i('onTranslationSettingsChanged');
+    if (changed)
+      notifyListeners((listener) => listener.onTranslationSettingsChanged());
   }
 
   @override

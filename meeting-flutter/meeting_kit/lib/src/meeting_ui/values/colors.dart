@@ -103,5 +103,9 @@ class _UIColors {
   static const Color color_ADCBFF = Color(0xffADCBFF);
   static const Color color404040 = Color(0xff404040);
   static const Color color3F3F3F = Color(0xff3f3f3f);
-  static const Color color6604040F = Color(0x6604040F);
+  static const Color colorA6ADB6 = Color(0xffA6ADB6);
+  static const Color colorF7C266 = Color(0xFFF7C266);
+  static const Color colorF5F6F7 = Color(0xffF5F6F7);
+  static const Color colorB1B6C2 = Color(0xffB1B6C2);
+  static const Color colorF29900 = Color(0xffF29900);
 }

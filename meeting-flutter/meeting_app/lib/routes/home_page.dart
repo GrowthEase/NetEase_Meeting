@@ -21,6 +21,7 @@ import 'package:nemeeting/widget/meeting_network_notice.dart';
 import 'package:nemeeting/widget/meeting_security_notice.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
 import 'package:netease_common/netease_common.dart';
+import 'package:netease_meeting_kit/meeting_core.dart';
 import 'package:netease_meeting_kit/meeting_ui.dart';
 import 'package:nemeeting/pre_meeting/schedule_meeting_detail.dart';
 import 'package:nemeeting/utils/integration_test.dart';
@@ -85,6 +86,8 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
   late final meetingAccountService = NEMeetingKit.instance.getAccountService();
   final settingsService = NEMeetingKit.instance.getSettingsService();
 
+  late final InMeetingPermissionRequestListener permissionRequestListener;
+
   @override
   void initState() {
     super.initState();
@@ -95,6 +98,12 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
     handleMeetingSdk();
     getMeetingList();
     NEMeetingKit.instance.getPreMeetingService().addListener(this);
+
+    permissionRequestListener = (String permissionName) {
+      NEPlatformChannel().notifyInMeetingPermissionRequest(permissionName);
+    };
+    InMeetingPermissionUtils.addPermissionRequestListener(
+        permissionRequestListener);
 
     /// 会议如果还未结束，只是等候室和房间切换状态，则正常进入会议不显示会议恢复弹框
     if (widget.isPipMode) return;
@@ -293,9 +302,7 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
         NEJoinMeetingParams(
           meetingNum: meetingNum,
           displayName: lastUsedNickname ?? MeetingUtil.getNickName(),
-          watermarkConfig: NEWatermarkConfig(
-            name: MeetingUtil.getNickName(),
-          ),
+          watermarkConfig: buildNEWatermarkConfig(),
         ),
         await buildMeetingUIOptions(context: context),
         onPasswordPageRouteWillPush: () async {
@@ -777,7 +784,7 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
                                   child: NEText(item.subject ?? '',
                                       style: TextStyle(
                                         fontSize: 18.spMin,
-                                        color: AppColors.color_1E1E27,
+                                        color: AppColors.color_1E1F27,
                                         overflow: TextOverflow.ellipsis,
                                         fontWeight: FontWeight.w500,
                                       )),
@@ -967,6 +974,8 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
     streamSubscriptions.forEach((element) {
       element.cancel();
     });
+    InMeetingPermissionUtils.removePermissionRequestListener(
+        permissionRequestListener);
     super.dispose();
   }
 

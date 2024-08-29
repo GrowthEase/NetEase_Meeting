@@ -82,6 +82,7 @@ class AuthManager with AppLogger {
       loginInfo.loginType,
       () => _neMeetingKit.getAccountService().loginByToken(id, token),
       appKey: loginInfo.appKey,
+      corpCode: loginInfo.corpCode,
     );
   }
 
@@ -141,6 +142,7 @@ class AuthManager with AppLogger {
     final loginResult = await loginAction().map<LoginInfo>((accountInfo) {
       return LoginInfo(
         appKey: appKey!,
+        corpCode: corpCode,
         accountId: accountInfo.userUuid,
         accountToken: accountInfo.userToken,
         isInitialPassword: accountInfo.isInitialPassword,

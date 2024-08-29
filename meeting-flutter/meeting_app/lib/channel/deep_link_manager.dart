@@ -333,9 +333,7 @@ class DeepLinkManager {
       NEJoinMeetingParams(
         meetingNum: meetingNum,
         displayName: MeetingUtil.getNickName(),
-        watermarkConfig: NEWatermarkConfig(
-          name: MeetingUtil.getNickName(),
-        ),
+        watermarkConfig: buildNEWatermarkConfig(),
       ),
       await buildMeetingUIOptions(
         noVideo: dialogResult?.noVideo ?? true,

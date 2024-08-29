@@ -39,6 +39,8 @@ const kEventParamReason = "reason";
 const kEventParamMeetingDuration = "meetingDuration";
 const kEventParamInputPasswordElapsed = "inputPasswordCost";
 const kEventParamRequestPermissionElapsed = "requestPermissionCost";
+const kEventParamCorpCode = 'corpCode';
+const kEventParamCorpEmail = 'corpEmail';
 
 extension ReportEventExtension<T> on Future<NEResult<T>> {
   Future<NEResult<T>> thenReport(IntervalEvent? event,

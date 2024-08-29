@@ -889,6 +889,13 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get copyMeetingAll => '复制全部';
 
   @override
+  String get meetingCrossAppNoPermission =>
+      '很抱歉，您尝试加入的会议暂未对外部人员开放。如有需要，请联系会议组织者开启访客入会权限。';
+
+  @override
+  String get meetingCrossAppJoinTip => '该会议由其他团队/组织创建，您将以访客身份加入，是否加入会议？';
+
+  @override
   String get historyMeeting => '历史会议';
 
   @override
@@ -914,6 +921,9 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
 
   @override
   String get historyMeetingCloudRecordingFileBeingGenerated => '云录制文件生成中…';
+
+  @override
+  String get nan => '很抱歉，您尝试加入的会议暂未对外部人员开放。如有需要，请联系会议组织者开启访客入会权限。';
 
   @override
   String get settings => '设置';
@@ -1191,6 +1201,15 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
 
   @override
   String get transcriptionExportFile => '导出此转写文件';
+
+  @override
+  String get transcriptionCaptionShowBilingual => '字幕同时显示双语';
+
+  @override
+  String get transcriptionSettingShowBilingual => '转写同时显示双语';
+
+  @override
+  String get transcriptionTranslationSettingsTip => '对会中字幕和转写生效，翻译内容仅自己可见';
 
   @override
   String get globalFileSaveAs => '导出为';

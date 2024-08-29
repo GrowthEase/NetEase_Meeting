@@ -41,16 +41,19 @@ class ContactInfo extends ISuspensionBean {
 class MeetingLocalContactsPage extends StatefulWidget {
   final void Function(ContactInfo contact) onContactItemClick;
   final ValueListenable<bool> isMySelfManagerListenable;
+  final ValueListenable<bool> hideAvatar;
 
   MeetingLocalContactsPage(
       {required this.onContactItemClick,
-      required this.isMySelfManagerListenable});
+      required this.isMySelfManagerListenable,
+      required this.hideAvatar});
 
   @override
   State<MeetingLocalContactsPage> createState() =>
       _MeetingLocalContactsPageState(
           onContactItemClick: onContactItemClick,
-          isMySelfManagerListenable: isMySelfManagerListenable);
+          isMySelfManagerListenable: isMySelfManagerListenable,
+          hideAvatar: hideAvatar);
 }
 
 class _MeetingLocalContactsPageState
@@ -61,16 +64,18 @@ class _MeetingLocalContactsPageState
 
   /// 所有的通讯录成员
   List<ContactInfo> _fullContacts = [];
-  double susItemHeight = 25;
+  double susItemHeight = 40;
   final FocusNode _focusNode = FocusNode();
   late TextEditingController _searchTextEditingController;
   final ValueListenable<bool> isMySelfManagerListenable;
+  final ValueListenable<bool> hideAvatar;
 
   final void Function(ContactInfo contact) onContactItemClick;
 
   _MeetingLocalContactsPageState(
       {required this.onContactItemClick,
-      required this.isMySelfManagerListenable});
+      required this.isMySelfManagerListenable,
+      required this.hideAvatar});
 
   @override
   void initState() {
@@ -102,43 +107,34 @@ class _MeetingLocalContactsPageState
       onWillAutoPop: (_) {
         return !isMySelfManagerListenable.value;
       },
-      child: Scaffold(
-          appBar: TitleBar(
-            title: TitleBarTitle(meetingUiLocalizations.sipLocalContacts),
-            showBottomDivider: true,
-          ),
-          body: PopScope(
-            child: SafeArea(
-                top: false,
-                child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () {
-                      _focusNode.unfocus();
-                    },
-                    child: DefaultTextStyle(
-                      style: TextStyle(decoration: TextDecoration.none),
-                      child: Column(
-                        children: <Widget>[
-                          _buildSearch(),
-                          Divider(height: .0),
-                          Expanded(
-                            child: _contacts.isEmpty
-                                ? _buildEmptyContacts()
-                                : _buildListView(),
-                          ),
-                        ],
-                      ),
-                    ))),
-            onPopInvoked: (didPop) async {
-              if (didPop) {
-                return;
-              }
-              final navigator = Navigator.of(context);
-              if (onWillPop()) {
-                navigator.pop();
-              }
-            },
-          )),
+      child: PopScope(
+        child: Container(
+          height: MediaQuery.of(context).size.height * (1.0 - 66.0 / 812) - 100,
+          child: MeetingCard(
+              margin: EdgeInsets.zero,
+              iconData: NEMeetingIconFont.icon_contacts,
+              iconColor: _UIColors.color_337eff,
+              title: meetingUiLocalizations.sipLocalContacts,
+              children: [
+                _buildSearch(),
+                Container(height: 2, color: _UIColors.colorF0F1F5),
+                Expanded(
+                  child: _contacts.isEmpty
+                      ? _buildEmptyContacts()
+                      : _buildListView(),
+                ),
+              ]),
+        ),
+        onPopInvoked: (didPop) async {
+          if (didPop) {
+            return;
+          }
+          final navigator = Navigator.of(context);
+          if (onWillPop()) {
+            navigator.pop();
+          }
+        },
+      ),
     );
   }
 
@@ -234,12 +230,12 @@ class _MeetingLocalContactsPageState
 
   Widget _buildSusWidget(String susTag) {
     return Container(
-      margin: EdgeInsets.only(top: 20.0, right: 40),
+      alignment: Alignment.bottomLeft,
       height: susItemHeight,
       width: double.infinity,
-      alignment: Alignment.centerLeft,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           Text(
             '$susTag',
@@ -250,7 +246,7 @@ class _MeetingLocalContactsPageState
             ),
           ),
           SizedBox(height: 8.0),
-          Divider(height: .0),
+          Container(height: 1, color: _UIColors.colorF0F1F5),
         ],
       ),
     );
@@ -271,72 +267,92 @@ class _MeetingLocalContactsPageState
       },
       child: Container(
           color: Colors.white,
-          margin: EdgeInsets.only(left: 20),
+          margin: EdgeInsets.only(left: 16),
           child: Column(
             children: <Widget>[
               Offstage(
                 offstage: model.isShowSuspension != true,
                 child: _buildSusWidget(susTag),
               ),
-              Row(
-                children: <Widget>[
-                  Container(
-                    margin: EdgeInsets.only(top: 5, bottom: 5, right: 10),
-                    child: NEMeetingAvatar.xxlarge(
-                        name: model.displayName, url: null),
-                  ),
-                  Expanded(
-                      child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        model.displayName,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            color: _UIColors.black_333333,
-                            fontSize: 16.0,
-                            fontWeight: FontWeight.w400),
-                      ),
-                      if (model.phones != null && model.phones!.isNotEmpty)
-                        Text(
-                          model.phones!.first.number,
-                          style: TextStyle(
-                              color: _UIColors.color_999999, fontSize: 12.0),
-                        ),
-                    ],
-                  )),
-                  SizedBox(width: 20),
-                ],
-              ),
+              buildContactItem(model)
             ],
           )),
     );
   }
 
+  Widget buildContactItem(ContactInfo model) {
+    return Container(
+      height: 56,
+      child: Row(
+        children: <Widget>[
+          ValueListenableBuilder(
+            valueListenable: hideAvatar,
+            builder: (context, hideAvatar, child) {
+              return NEMeetingAvatar.large(
+                name: model.displayName,
+                url: null,
+                hideImageAvatar: hideAvatar,
+              );
+            },
+          ),
+          SizedBox(width: 12),
+          Expanded(
+              child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                model.displayName,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                    color: _UIColors.black_333333,
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.w400),
+              ),
+              SizedBox(height: 6),
+              if (model.phones != null && model.phones!.isNotEmpty)
+                Text(
+                  model.phones!.first.number,
+                  style:
+                      TextStyle(color: _UIColors.color_999999, fontSize: 12.0),
+                ),
+            ],
+          )),
+          SizedBox(width: 16),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSearch() {
     return Container(
-        margin: EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
-        padding: EdgeInsets.only(right: 16),
-        decoration: BoxDecoration(
-            color: _UIColors.colorF7F8FA,
-            borderRadius: BorderRadius.all(Radius.circular(20)),
-            border: Border.all(width: 1, color: _UIColors.colorF2F3F5)),
         height: 36,
-        alignment: Alignment.center,
+        margin: EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.all(Radius.circular(4)),
+            border: Border.all(
+                width: 1,
+                color: _focusNode.hasFocus
+                    ? _UIColors.color_337eff
+                    : _UIColors.colorE6E7EB)),
         child: TextField(
           focusNode: _focusNode,
           controller: _searchTextEditingController,
           cursorColor: _UIColors.blue_337eff,
           keyboardAppearance: Brightness.light,
           textAlignVertical: TextAlignVertical.center,
+          style: TextStyle(
+            fontSize: 16,
+            color: _UIColors.color1E1F27,
+          ),
           decoration: InputDecoration(
               isDense: true,
               filled: true,
               fillColor: Colors.transparent,
               hintText: meetingUiLocalizations.participantSearchMember,
               hintStyle: TextStyle(
-                  fontSize: 15,
+                  fontSize: 16,
                   color: _UIColors.colorD8D8D8,
                   decoration: TextDecoration.none),
               border: InputBorder.none,

@@ -4,29 +4,41 @@
 
 part of meeting_ui;
 
-class MeetingCard extends StatelessWidget {
+class MeetingCard extends StatefulWidget {
   final String? title;
+  final String? summary;
   final Color? titleColor;
   final double? titleFontSize;
   final IconData? iconData;
   final Color? iconColor;
   final List<Widget> children;
   final EdgeInsetsGeometry? margin;
+  final CrossAxisAlignment crossAxisAlignment;
 
-  const MeetingCard(
-      {super.key,
-      this.title,
-      this.iconData,
-      this.iconColor,
-      this.titleColor,
-      this.titleFontSize,
-      this.margin,
-      required this.children});
+  const MeetingCard({
+    super.key,
+    this.title,
+    this.summary,
+    this.iconData,
+    this.iconColor,
+    this.titleColor,
+    this.titleFontSize,
+    this.margin,
+    this.crossAxisAlignment = CrossAxisAlignment.start,
+    required this.children,
+  });
+
+  @override
+  State<MeetingCard> createState() => _MeetingCardState();
+}
+
+class _MeetingCardState extends State<MeetingCard> {
+  final _summaryVisible = ValueNotifier(false);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: margin ?? EdgeInsets.only(top: 16, left: 16, right: 16),
+      margin: widget.margin ?? EdgeInsets.only(top: 16, left: 16, right: 16),
       decoration: BoxDecoration(
         color: _UIColors.white,
         borderRadius: BorderRadius.all(
@@ -35,10 +47,11 @@ class MeetingCard extends StatelessWidget {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: widget.crossAxisAlignment,
         children: [
           _buildTitle(),
-          ...children,
+          _buildSummary(),
+          ...widget.children,
         ],
       ),
     );
@@ -46,7 +59,8 @@ class MeetingCard extends StatelessWidget {
 
   /// 构建标题
   Widget _buildTitle() {
-    if (title == null && iconData == null) return SizedBox.shrink();
+    if (widget.title == null && widget.iconData == null)
+      return SizedBox.shrink();
     return Container(
       height: 32,
       alignment: Alignment.bottomLeft,
@@ -57,26 +71,67 @@ class MeetingCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          if (iconData != null) ...[
+          if (widget.iconData != null) ...[
             Icon(
-              iconData,
+              widget.iconData,
               size: 13,
-              color: iconColor,
+              color: widget.iconColor,
             ),
             SizedBox(width: 4),
           ],
-          if (title != null)
+          if (widget.title != null)
             Text(
-              title!,
+              widget.title!,
               strutStyle: StrutStyle(forceStrutHeight: true, height: 1),
               style: TextStyle(
-                fontSize: titleFontSize ?? 12,
-                color: titleColor ?? _UIColors.color8D90A0,
+                fontSize: widget.titleFontSize ?? 12,
+                color: widget.titleColor ?? _UIColors.color8D90A0,
                 fontWeight: FontWeight.w500,
+              ),
+            ),
+          if (widget.summary != null)
+            GestureDetector(
+              onTap: () {
+                _summaryVisible.value = !_summaryVisible.value;
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: Icon(
+                  NEMeetingIconFont.icon_info,
+                  size: 14,
+                  color: _UIColors.colorCDCFD7,
+                ),
               ),
             ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSummary() {
+    if (widget.summary == null) return SizedBox.shrink();
+    return ValueListenableBuilder<bool>(
+      valueListenable: _summaryVisible,
+      builder: (context, visible, child) {
+        if (!visible) return SizedBox.shrink();
+        return Container(
+          margin: EdgeInsets.only(left: 16, right: 16, top: 4),
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          decoration: ShapeDecoration(
+            color: _UIColors.colorF0F1F5,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          child: Text(
+            widget.summary!,
+            style: TextStyle(
+              fontSize: 12,
+              color: _UIColors.color8D90A0,
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -93,22 +148,22 @@ class MeetingSwitchItem extends StatelessWidget {
   final TextStyle? titleTextStyle;
   final double? minHeight;
 
-  const MeetingSwitchItem(
-      {this.switchKey,
-      required this.title,
-      this.content,
-      this.contentBuilder,
-      this.padding,
-      this.titleTextStyle,
-      this.minHeight,
-      required this.valueNotifier,
-      required this.onChanged});
+  const MeetingSwitchItem({
+    this.switchKey,
+    required this.title,
+    this.content,
+    this.contentBuilder,
+    this.padding,
+    this.titleTextStyle,
+    this.minHeight,
+    required this.valueNotifier,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
-      constraints:
-          BoxConstraints(minHeight: minHeight ?? (Platform.isIOS ? 56 : 48)),
+      constraints: BoxConstraints(minHeight: minHeight ?? 48),
       child: Container(
         padding: padding ??
             EdgeInsets.only(
@@ -169,7 +224,7 @@ class MeetingSwitchItem extends StatelessWidget {
                 width: 40,
                 height: 24,
                 child: Transform.scale(
-                  scale: Platform.isIOS ? 0.9 : 0.8,
+                  scale: 0.8,
                   child: ValueListenableBuilder<bool>(
                       valueListenable: valueNotifier,
                       builder: (context, value, child) {
@@ -441,13 +496,19 @@ class MeetingArrowItem extends StatelessWidget {
 
   /// item左侧标题
   Widget getTitle({required String text}) {
-    return Text(text,
-        softWrap: true,
-        style: titleTextStyle ??
-            TextStyle(
-                color: _UIColors.color1E1E27,
-                fontSize: 16,
-                fontWeight: FontWeight.w500));
+    return Text(
+      text,
+      softWrap: true,
+      style: titleTextStyle ??
+          TextStyle(
+              color: _UIColors.color1E1E27,
+              fontSize: 16,
+              fontWeight: FontWeight.w500),
+      strutStyle: StrutStyle(
+        forceStrutHeight: true,
+        height: 1,
+      ),
+    );
   }
 
   /// item右侧内容
@@ -457,6 +518,7 @@ class MeetingArrowItem extends StatelessWidget {
       // 解决中文高度显示不居中问题
       strutStyle: StrutStyle(
         forceStrutHeight: true,
+        height: 1,
       ),
       style: contentTextStyle ??
           TextStyle(

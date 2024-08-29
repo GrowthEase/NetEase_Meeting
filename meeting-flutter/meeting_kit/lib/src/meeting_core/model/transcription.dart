@@ -159,3 +159,44 @@ class NEMeetingTranscriptionInfo {
     };
   }
 }
+
+///
+/// 字幕/转写目标翻译语言枚举
+///
+enum NEMeetingASRTranslationLanguage {
+  ///
+  /// 不翻译
+  ///
+  none,
+
+  ///
+  /// 中文
+  ///
+  chinese,
+
+  ///
+  /// 英文
+  ///
+  english,
+
+  ///
+  /// 日文
+  ///
+  japanese;
+}
+
+extension NEMeetingASRTranslationLanguageEx on NEMeetingASRTranslationLanguage {
+  NERoomCaptionTranslationLanguage mapToRoomLanguage() {
+    const map = {
+      NEMeetingASRTranslationLanguage.none:
+          NERoomCaptionTranslationLanguage.none,
+      NEMeetingASRTranslationLanguage.chinese:
+          NERoomCaptionTranslationLanguage.chinese,
+      NEMeetingASRTranslationLanguage.english:
+          NERoomCaptionTranslationLanguage.english,
+      NEMeetingASRTranslationLanguage.japanese:
+          NERoomCaptionTranslationLanguage.japanese,
+    };
+    return map[this]!;
+  }
+}

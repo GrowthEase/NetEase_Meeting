@@ -56,7 +56,9 @@ final class _LocalSettings {
 
   static final _LocalSettings _instance = _LocalSettings._();
 
-  _LocalSettings._();
+  _LocalSettings._() {
+    isBarrageShow();
+  }
 
   final _LocalStorage _localStorage = _LocalStorage();
 
@@ -65,6 +67,11 @@ final class _LocalSettings {
       'phone_state_permission_time';
   static const _requestBluetoothConnectPermissionTimeKey =
       'bluetooth_connect_permission_time';
+  static const _showBulletScreenKey = 'show_bullet_screen';
+
+  bool _isBulletScreenShow = true;
+  StreamController<bool> _isBulletScreenShowStream =
+      StreamController.broadcast();
 
   /// 更新请求获取手机状态权限时间
   void updatePhoneStatePermissionTime() {
@@ -98,5 +105,24 @@ final class _LocalSettings {
     }
     final now = DateTime.now().millisecondsSinceEpoch;
     return now - lastTime >= _requestPermissionInterval.inMilliseconds;
+  }
+
+  /// 是否显示弹幕
+  Future<bool> isBarrageShow() async {
+    final value = await _localStorage.getBool(_showBulletScreenKey);
+    _isBulletScreenShow = value ?? true;
+    return _isBulletScreenShow;
+  }
+
+  /// 是否显示弹幕stream
+  Stream<bool> getIsBarrageShowStream() {
+    return _isBulletScreenShowStream.stream.addInitial(_isBulletScreenShow);
+  }
+
+  /// 设置是否显示弹幕
+  Future<bool> setBarrageShow(bool show) {
+    _isBulletScreenShow = show;
+    _isBulletScreenShowStream.add(show);
+    return _localStorage.setBool(_showBulletScreenKey, show);
   }
 }

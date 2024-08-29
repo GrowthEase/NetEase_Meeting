@@ -51,7 +51,7 @@ final class NEMeetingCorpInfo {
 
   /// 是否强制 sso 登录
   bool get isForceSSOLogin =>
-      ssoLevel == NEMeetingCorpSSOLevel.kForce.index && idpList.isNotEmpty;
+      ssoLevel == NEMeetingCorpSSOLevel.kForce && idpList.isNotEmpty;
 }
 
 final class NEMeetingIdpInfo {

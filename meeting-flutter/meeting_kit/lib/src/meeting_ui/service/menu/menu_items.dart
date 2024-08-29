@@ -35,13 +35,19 @@ class NEMenuIDs {
     managerParticipants,
     notifyCenter,
     invitation,
+    security,
     chatroom,
     whiteBoard,
     cloudRecord,
-    security,
     disconnectAudio,
-    sipCall,
     settings,
+    sipCall,
+    captions,
+    transcription,
+    interpretation,
+    beauty,
+    virtualBackground,
+    live,
     feedback,
   };
 
@@ -86,14 +92,44 @@ class NEMenuIDs {
   /// 内置"通知"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
   static const int notifyCenter = 26;
 
-  /// 内置"呼叫"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
-  static const int sipCall = 27;
-
   /// 内置"设置"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
-  static const int settings = 28;
+  static const int settings = 27;
 
   /// 内置"反馈"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
-  static const int feedback = 29;
+  static const int feedback = 28;
+
+  /// 更多菜单
+  static const int more = 50;
+
+  static const int cancel = 51;
+
+  static const int leaveMeeting = 52;
+
+  static const int closeMeeting = 53;
+
+  /// 内置"美颜"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
+  static const int beauty = 54;
+
+  /// 内置"直播"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
+  static const int live = 55;
+
+  /// 内置"SIP"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
+  static const int sip = 57;
+
+  /// 内置"虚拟背景"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
+  static const int virtualBackground = 58;
+
+  /// 内置"同声传译"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
+  static const int interpretation = 59;
+
+  /// 内置"字幕"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
+  static const int captions = 60;
+
+  /// 内置"实时转写"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
+  static const int transcription = 61;
+
+  /// 内置"呼叫"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
+  static const int sipCall = 62;
 }
 
 class NEMenuItems {
@@ -106,16 +142,18 @@ class NEMenuItems {
         managerParticipants,
       ];
 
-  static List<NEMeetingMenuItem> get defaultMoreMenuItems => [
+  static List<NEMeetingMenuItem> get defaultMoreStandardMenuItems => [
         notifyCenter,
         invitation,
+        security,
         chatroom,
         whiteBoard,
         cloudRecord,
-        security,
         disconnectAudio,
-        sipCall,
         settings,
+      ];
+
+  static List<NEMeetingMenuItem> get defaultMoreSaasFeedbackMenuItems => [
         feedback,
       ];
 
@@ -207,13 +245,6 @@ class NEMenuItems {
     checkedStateItem: NEMenuItemInfo.undefine,
   );
 
-  /// 呼叫
-  static final sipCall = NESingleStateMenuItem(
-    itemId: NEMenuIDs.sipCall,
-    visibility: NEMenuVisibility.visibleToHostOnly,
-    singleStateItem: NEMenuItemInfo.undefine,
-  );
-
   /// 设置
   static final settings = NESingleStateMenuItem(
     itemId: NEMenuIDs.settings,
@@ -224,6 +255,82 @@ class NEMenuItems {
   /// 反馈
   static final feedback = NESingleStateMenuItem(
     itemId: NEMenuIDs.feedback,
+    visibility: NEMenuVisibility.visibleAlways,
+    singleStateItem: NEMenuItemInfo.undefine,
+  );
+
+  /// 动态菜单按钮
+  /// 需要在"更多"菜单中优先展示
+  static final List<NEMeetingMenuItem> dynamicFeatureMenuItemList = [
+    sipCall,
+    captions,
+    transcription,
+    interpretation,
+    beauty,
+    virtualBackground,
+    live,
+  ];
+
+  /// 更多菜单
+  static final more = NESingleStateMenuItem(
+    itemId: NEMenuIDs.more,
+    visibility: NEMenuVisibility.visibleAlways,
+    singleStateItem: NEMenuItemInfo.undefine,
+  );
+
+  /// 呼叫
+  static final sipCall = NESingleStateMenuItem(
+    itemId: NEMenuIDs.sipCall,
+    visibility: NEMenuVisibility.visibleToHostOnly,
+    singleStateItem: NEMenuItemInfo.undefine,
+  );
+
+  /// 美颜菜单
+  static final beauty = NESingleStateMenuItem(
+    itemId: NEMenuIDs.beauty,
+    visibility: NEMenuVisibility.visibleAlways,
+    singleStateItem: NEMenuItemInfo.undefine,
+  );
+
+  /// 直播菜单
+  static final live = NESingleStateMenuItem(
+    itemId: NEMenuIDs.live,
+    visibility: NEMenuVisibility.visibleToHostOnly,
+    singleStateItem: NEMenuItemInfo.undefine,
+  );
+
+  /// SIP
+  static final sip = NESingleStateMenuItem(
+    itemId: NEMenuIDs.sip,
+    visibility: NEMenuVisibility.visibleAlways,
+    singleStateItem: NEMenuItemInfo(text: 'SIP'),
+  );
+
+  /// 虚拟背景
+  static final virtualBackground = NESingleStateMenuItem(
+    itemId: NEMenuIDs.virtualBackground,
+    visibility: NEMenuVisibility.visibleAlways,
+    singleStateItem: NEMenuItemInfo.undefine,
+  );
+
+  /// 字幕
+  static final captions = NECheckableMenuItem(
+    itemId: NEMenuIDs.captions,
+    visibility: NEMenuVisibility.visibleAlways,
+    uncheckStateItem: NEMenuItemInfo.undefine,
+    checkedStateItem: NEMenuItemInfo.undefine,
+  );
+
+  /// 实时转写
+  static final transcription = NESingleStateMenuItem(
+    itemId: NEMenuIDs.transcription,
+    visibility: NEMenuVisibility.visibleAlways,
+    singleStateItem: NEMenuItemInfo.undefine,
+  );
+
+  /// 同声传译
+  static final interpretation = NESingleStateMenuItem(
+    itemId: NEMenuIDs.interpretation,
     visibility: NEMenuVisibility.visibleAlways,
     singleStateItem: NEMenuItemInfo.undefine,
   );

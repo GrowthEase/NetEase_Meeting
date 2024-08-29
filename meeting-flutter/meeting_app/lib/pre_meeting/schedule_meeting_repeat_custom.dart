@@ -169,7 +169,7 @@ class _ScheduleMeetingRepeatCustomRouteState
   Widget buildDatePicker() {
     final textStyle = TextStyle(
         fontSize: 16,
-        color: AppColors.color_1E1E27,
+        color: AppColors.color_1E1F27,
         fontWeight: FontWeight.w500);
     return Column(children: <Widget>[
       Container(
@@ -318,7 +318,7 @@ class _ScheduleMeetingRepeatCustomRouteState
               Text(title,
                   style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.color_1E1E27,
+                      color: AppColors.color_1E1F27,
                       fontWeight: FontWeight.w500)),
             ],
           )),

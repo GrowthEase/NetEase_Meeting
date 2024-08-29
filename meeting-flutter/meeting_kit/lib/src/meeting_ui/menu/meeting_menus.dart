@@ -12,107 +12,6 @@ typedef MenuItemTipBuilder = Widget Function(
 typedef MenuItemIconBuilder = Widget Function(
     BuildContext context, NEMenuItemState state);
 
-/// 内部使用，50-99
-class InternalMenuIDs {
-  /// 更多菜单
-  static const int more = 50;
-
-  static const int cancel = 51;
-
-  static const int leaveMeeting = 52;
-
-  static const int closeMeeting = 53;
-
-  /// 美颜菜单
-  static const int beauty = 54;
-
-  /// 直播菜单
-  static const int live = 55;
-
-  /// 切换视图菜单
-  static const int switchShowType = 56;
-
-  /// sip
-  static const int sip = 57;
-
-  /// 虚拟背景
-  static const int virtualBackground = 58;
-
-  /// 同声传译
-  static const int interpretation = 59;
-
-  /// 字幕菜单
-  static const int captions = 60;
-
-  /// 转写菜单
-  static const int transcription = 61;
-}
-
-class InternalMenuItems {
-  /// 动态菜单按钮
-  /// 需要在"更多"菜单中优先展示
-  static final List<NEMeetingMenuItem> dynamicFeatureMenuItemList = [
-    beauty,
-    live,
-    virtualBackground,
-    transcription,
-    captions,
-    interpretation,
-  ];
-
-  /// 更多菜单
-  static final more = NESingleStateMenuItem(
-    itemId: InternalMenuIDs.more,
-    visibility: NEMenuVisibility.visibleAlways,
-    singleStateItem: NEMenuItemInfo.undefine,
-  );
-
-  /// 美颜菜单
-  static final beauty = NESingleStateMenuItem(
-    itemId: InternalMenuIDs.beauty,
-    visibility: NEMenuVisibility.visibleAlways,
-    singleStateItem: NEMenuItemInfo.undefine,
-  );
-
-  /// 直播菜单
-  static final live = NESingleStateMenuItem(
-    itemId: InternalMenuIDs.live,
-    visibility: NEMenuVisibility.visibleToHostOnly,
-    singleStateItem: NEMenuItemInfo.undefine,
-  );
-
-  static final sip = NESingleStateMenuItem(
-    itemId: InternalMenuIDs.sip,
-    visibility: NEMenuVisibility.visibleAlways,
-    singleStateItem: NEMenuItemInfo(text: 'SIP'),
-  );
-
-  static final virtualBackground = NESingleStateMenuItem(
-    itemId: InternalMenuIDs.virtualBackground,
-    visibility: NEMenuVisibility.visibleAlways,
-    singleStateItem: NEMenuItemInfo.undefine,
-  );
-
-  static final captions = NECheckableMenuItem(
-    itemId: InternalMenuIDs.captions,
-    visibility: NEMenuVisibility.visibleAlways,
-    uncheckStateItem: NEMenuItemInfo.undefine,
-    checkedStateItem: NEMenuItemInfo.undefine,
-  );
-
-  static final transcription = NESingleStateMenuItem(
-    itemId: InternalMenuIDs.transcription,
-    visibility: NEMenuVisibility.visibleAlways,
-    singleStateItem: NEMenuItemInfo.undefine,
-  );
-
-  static final interpretation = NESingleStateMenuItem(
-    itemId: InternalMenuIDs.interpretation,
-    visibility: NEMenuVisibility.visibleAlways,
-    singleStateItem: NEMenuItemInfo.undefine,
-  );
-}
-
 abstract class MenuStateController<T> extends ValueNotifier<T> {
   final ValueListenable? listenTo;
 
@@ -230,37 +129,37 @@ final _builtinMenuItemIcons = <int, Map<int, (IconData, Color)>>{
   NEMenuIDs.invitation: {
     _noneState: (NEMeetingIconFont.icon_yx_tv_invitex, _UIColors.colorECEDEF),
   },
-  InternalMenuIDs.more: {
+  NEMenuIDs.more: {
     _noneState: (Icons.more_horiz, _UIColors.colorECEDEF),
   },
-  InternalMenuIDs.beauty: {
+  NEMenuIDs.beauty: {
     _noneState: (NEMeetingIconFont.icon_beauty1x, _UIColors.colorECEDEF),
   },
-  InternalMenuIDs.live: {
+  NEMenuIDs.live: {
     _noneState: (NEMeetingIconFont.icon_live, _UIColors.colorECEDEF),
   },
   NEMenuIDs.whiteBoard: {
     _uncheckState: (NEMeetingIconFont.icon_whiteboard, _UIColors.colorECEDEF),
     _checkState: (NEMeetingIconFont.icon_whiteboard, _UIColors.blue_337eff),
   },
-  InternalMenuIDs.sip: {
-    _noneState: (NEMeetingIconFont.icon_sip, _UIColors.colorECEDEF),
-  },
-  InternalMenuIDs.virtualBackground: {
+  NEMenuIDs.virtualBackground: {
     _noneState: (
       NEMeetingIconFont.icon_virtual_background,
       _UIColors.colorECEDEF
     ),
   },
-  InternalMenuIDs.captions: {
+  NEMenuIDs.captions: {
     _uncheckState: (NEMeetingIconFont.icon_captions, _UIColors.colorECEDEF),
     _checkState: (NEMeetingIconFont.icon_captions, _UIColors.colorECEDEF),
   },
-  InternalMenuIDs.transcription: {
+  NEMenuIDs.transcription: {
     _noneState: (NEMeetingIconFont.icon_transcription, _UIColors.colorECEDEF),
   },
-  InternalMenuIDs.interpretation: {
+  NEMenuIDs.interpretation: {
     _noneState: (NEMeetingIconFont.icon_interpretation, _UIColors.colorECEDEF),
+  },
+  NEMenuIDs.sipCall: {
+    _noneState: (NEMeetingIconFont.icon_call_out, _UIColors.colorECEDEF),
   },
   NEMenuIDs.cloudRecord: {
     _uncheckState: (
@@ -274,9 +173,6 @@ final _builtinMenuItemIcons = <int, Map<int, (IconData, Color)>>{
   },
   NEMenuIDs.security: {
     _noneState: (NEMeetingIconFont.icon_security, _UIColors.colorECEDEF),
-  },
-  NEMenuIDs.sipCall: {
-    _noneState: (NEMeetingIconFont.icon_call_out, _UIColors.colorECEDEF),
   },
   NEMenuIDs.settings: {
     _noneState: (NEMeetingIconFont.icon_setting, _UIColors.colorECEDEF),
@@ -523,34 +419,34 @@ String? _getDefaultMenuTitle(
           : localizations!.cloudRecordingStart;
     case NEMenuIDs.security:
       return localizations!.meetingSecurity;
-    case NEMenuIDs.sipCall:
-      return localizations!.sipCall;
     case NEMenuIDs.settings:
       return localizations!.settings;
     case NEMenuIDs.notifyCenter:
       return localizations!.globalNotify;
-    case InternalMenuIDs.more:
-      return localizations!.meetingMore;
-    case InternalMenuIDs.beauty:
-      return localizations!.meetingBeauty;
-    case InternalMenuIDs.live:
-      return localizations!.live;
-    case InternalMenuIDs.virtualBackground:
-      return localizations!.virtualBackground;
-    case InternalMenuIDs.interpretation:
-      return localizations!.interpretation;
-    case InternalMenuIDs.captions:
-      return checked
-          ? localizations!.transcriptionDisableCaption
-          : localizations!.transcriptionEnableCaption;
-    case InternalMenuIDs.transcription:
-      return localizations!.transcription;
     case NEMenuIDs.disconnectAudio:
       return checked
           ? localizations!.meetingReconnectAudio
           : localizations!.meetingDisconnectAudio;
     case NEMenuIDs.feedback:
       return localizations!.feedbackInRoom;
+    case NEMenuIDs.more:
+      return localizations!.meetingMore;
+    case NEMenuIDs.beauty:
+      return localizations!.meetingBeauty;
+    case NEMenuIDs.live:
+      return localizations!.live;
+    case NEMenuIDs.virtualBackground:
+      return localizations!.virtualBackground;
+    case NEMenuIDs.interpretation:
+      return localizations!.interpretation;
+    case NEMenuIDs.captions:
+      return checked
+          ? localizations!.transcriptionDisableCaption
+          : localizations!.transcriptionEnableCaption;
+    case NEMenuIDs.transcription:
+      return localizations!.transcription;
+    case NEMenuIDs.sipCall:
+      return localizations!.sipCall;
   }
   return null;
 }

@@ -10,6 +10,7 @@ class ContactsAddPopup extends StatefulWidget {
   final Map<String, NEContact> contactMap;
   final String myUserUuid;
   final ContactItemClickCallback itemClickCallback;
+  final NEMeetingLiveTranscriptionController? transcriptionController;
 
   const ContactsAddPopup({
     super.key,
@@ -18,6 +19,7 @@ class ContactsAddPopup extends StatefulWidget {
     required this.contactMap,
     required this.myUserUuid,
     required this.itemClickCallback,
+    this.transcriptionController,
   });
 
   @override
@@ -25,12 +27,22 @@ class ContactsAddPopup extends StatefulWidget {
 }
 
 class _ContactsAddPopupState extends PopupBaseState<ContactsAddPopup>
-    with MeetingKitLocalizationsMixin {
+    with
+        MeetingKitLocalizationsMixin,
+        NEMeetingLiveTranscriptionControllerListener {
   List<NEContact> newContactList = [];
+  final hideAvatar = ValueNotifier(false);
 
   @override
   void initState() {
     super.initState();
+    widget.transcriptionController?.addListener(this);
+    hideAvatar.value = widget.transcriptionController?.isAvatarHidden ?? false;
+  }
+
+  @override
+  void onAvatarHiddenChanged(bool hide) {
+    hideAvatar.value = hide;
   }
 
   @override
@@ -85,6 +97,7 @@ class _ContactsAddPopupState extends PopupBaseState<ContactsAddPopup>
         });
       },
       itemClickCallback: widget.itemClickCallback,
+      hideAvatar: hideAvatar,
     );
   }
 }

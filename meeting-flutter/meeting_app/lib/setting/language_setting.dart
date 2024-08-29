@@ -114,7 +114,7 @@ class _LanguageSettingState extends AppBaseState<LanguageSetting> {
               child: Text(
                 title,
                 style: TextStyle(
-                  fontSize: 14.spMin,
+                  fontSize: 16,
                   color: AppColors.color_222222,
                   fontWeight: FontWeight.w500,
                 ),
@@ -123,7 +123,7 @@ class _LanguageSettingState extends AppBaseState<LanguageSetting> {
             isSelected
                 ? Icon(
                     IconFont.icon_yx_gouxuan,
-                    size: 16.spMin,
+                    size: 16,
                     color: AppColors.color_337eff,
                   )
                 : SizedBox(),

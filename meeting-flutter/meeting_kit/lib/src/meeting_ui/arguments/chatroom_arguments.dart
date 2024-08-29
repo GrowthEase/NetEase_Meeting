@@ -18,10 +18,12 @@ class ChatRoomArguments {
   final WaitingRoomManager? waitingRoomManager;
   final ChatRoomManager? chatRoomManager;
   final Stream? roomInfoUpdatedEventStream;
+  final ValueNotifier<bool>? hideAvatar;
 
   ChatRoomArguments(
       {this.roomContext,
       required this.messageSource,
+      this.hideAvatar,
       this.waitingRoomManager,
       this.chatRoomManager,
       this.roomInfoUpdatedEventStream});
@@ -58,6 +60,9 @@ class ChatRoomMessageSource {
   StreamController<dynamic> messageNotify = StreamController.broadcast();
 
   StreamController<int> unreadNotify = StreamController.broadcast();
+
+  /// 新消息提醒文本流,用于气泡和聊天弹幕
+  final newMessageNotifyTextStream = StreamController<MessageState>.broadcast();
 
   final SDKConfig? sdkConfig;
   final NEMeetingChatroomConfig? chatroomConfig;
@@ -237,7 +242,7 @@ class ChatRoomMessageSource {
     return messages.remove(message);
   }
 
-  void append(Object message, int time, {bool incUnread = true}) {
+  void append(MessageState message, int time, {bool incUnread = true}) {
     if (time - lastTime > showTimeInterval) {
       messages.add(TimeMessage(time));
       lastTime = time;
@@ -258,6 +263,7 @@ class ChatRoomMessageSource {
     isInsertMessage = false;
     unreadNotify.add(unread);
     messageNotify.add(this);
+    newMessageNotifyTextStream.add(message);
   }
 
   void insert(List<MessageState> inMessages, int lastTime,
@@ -335,6 +341,7 @@ class ChatRoomMessageSource {
   void dispose() {
     messageNotify.close();
     unreadNotify.close();
+    newMessageNotifyTextStream.close();
   }
 }
 

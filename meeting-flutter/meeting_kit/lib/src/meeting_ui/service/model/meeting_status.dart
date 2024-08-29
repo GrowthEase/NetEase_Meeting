@@ -105,6 +105,9 @@ class NEMeetingStatus {
   /// * [NEMeetingCode.closeByHost]
   static const int disconnecting = 6;
 
+  /// 当前处于屏幕共享中
+  static const int inScreenSharing = 7;
+
   /// 未知
   static const int unknown = 100;
 }

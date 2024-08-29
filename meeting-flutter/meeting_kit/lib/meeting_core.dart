@@ -142,9 +142,13 @@ part 'src/meeting_core/model/invite_info.dart';
 part 'src/meeting_core/model/transcription.dart';
 part 'src/meeting_core/model/listener/message_channel_listener.dart';
 part 'src/meeting_core/utils/local_history_meeting_manager.dart';
+part 'src/meeting_core/utils/in_meeting_permission_utils.dart';
+part 'src/meeting_core/utils/connectivity_manager.dart';
 part 'src/meeting_core/repository/meeting_context.dart';
 part 'src/meeting_core/remote/http/transcription_api.dart';
 part 'src/meeting_core/remote/http/check_invite_state_api.dart';
+part 'src/meeting_core/remote/http/stop_member_activities_api.dart';
+part 'src/meeting_core/remote/http/meeting_security_ctrl_api.dart';
 
 /// https://office.netease.com/doc/?identity=3963dc2ced7a48259860289c5d8970af
 class MeetingErrorCode {

@@ -84,6 +84,9 @@ class NEMeetingAvatar extends StatelessWidget {
   /// 展示头像右下角身份icon
   final bool? showRoleIcon;
 
+  /// 是否强制使用文本头像
+  final bool? hideImageAvatar;
+
   const NEMeetingAvatar({
     super.key,
     required this.size,
@@ -91,6 +94,7 @@ class NEMeetingAvatar extends StatelessWidget {
     this.url,
     required this.textStyle,
     this.showRoleIcon,
+    this.hideImageAvatar,
   }) : assert(name != null || url != null);
 
   NEMeetingAvatar.xSmall({
@@ -98,6 +102,7 @@ class NEMeetingAvatar extends StatelessWidget {
     this.name,
     this.url,
     this.showRoleIcon,
+    this.hideImageAvatar,
   })  : size = 16,
         textStyle = _xSmallTextStyle;
 
@@ -106,6 +111,7 @@ class NEMeetingAvatar extends StatelessWidget {
     this.name,
     this.url,
     this.showRoleIcon,
+    this.hideImageAvatar,
   })  : size = 24,
         textStyle = _smallTextStyle;
 
@@ -114,6 +120,7 @@ class NEMeetingAvatar extends StatelessWidget {
     this.name,
     this.url,
     this.showRoleIcon,
+    this.hideImageAvatar,
   })  : size = 32,
         textStyle = _mediumTextStyle;
 
@@ -122,6 +129,7 @@ class NEMeetingAvatar extends StatelessWidget {
     this.name,
     this.url,
     this.showRoleIcon,
+    this.hideImageAvatar,
   })  : size = 36,
         textStyle = _largeTextStyle;
 
@@ -130,6 +138,7 @@ class NEMeetingAvatar extends StatelessWidget {
     this.name,
     this.url,
     this.showRoleIcon,
+    this.hideImageAvatar,
   })  : size = 40,
         textStyle = _xlargeTextStyle;
 
@@ -138,6 +147,7 @@ class NEMeetingAvatar extends StatelessWidget {
     this.name,
     this.url,
     this.showRoleIcon,
+    this.hideImageAvatar,
   })  : size = 48,
         textStyle = _xxlargeTextStyle;
 
@@ -146,6 +156,7 @@ class NEMeetingAvatar extends StatelessWidget {
     this.name,
     this.url,
     this.showRoleIcon,
+    this.hideImageAvatar,
   })  : size = 64,
         textStyle = _xxxlargeTextStyle;
 
@@ -218,7 +229,8 @@ class NEMeetingAvatar extends StatelessWidget {
     };
 
     Widget result = nameWidget;
-    if (url != null &&
+    if (hideImageAvatar != true &&
+        url != null &&
         url.isNotEmpty &&
         (url.startsWith('http://') || url.startsWith('https://'))) {
       result = Image.network(

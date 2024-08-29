@@ -2,7 +2,7 @@ name: nemeeting
 description: A new Flutter application.
 publish_to: none
 
-version: 4.7.0+40700
+version: 4.8.0+40800
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -46,9 +46,6 @@ dependencies:
   sticky_headers: ^0.3.0
 #  yunxin_integration_test: 0^0.0.1-rc.7
 
-
-dev_dependencies:
-  hawk: ^0.0.2-rc.12
 dependency_overrides:
    device_info_plus: ^10.1.0
    permission_handler: ^11.3.1

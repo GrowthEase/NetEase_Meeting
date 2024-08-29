@@ -212,7 +212,7 @@ class _HistoryMeetingRouteState extends AppBaseState<HistoryMeetingRoute> {
                   title,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                      color: AppColors.color_1E1E27,
+                      color: AppColors.color_1E1F27,
                       fontSize: 15,
                       fontWeight: FontWeight.w500),
                 )),
@@ -362,7 +362,7 @@ class _HistoryMeetingRouteState extends AppBaseState<HistoryMeetingRoute> {
                           item.subject,
                           style: TextStyle(
                               fontSize: 16,
-                              color: AppColors.color_1E1E27,
+                              color: AppColors.color_1E1F27,
                               fontWeight: FontWeight.w500),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

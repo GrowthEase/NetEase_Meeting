@@ -137,7 +137,8 @@ class NEFloatingService extends _Service {
 
   Future<void> setup(
       String roomUuid, String waitingTips, String interruptedTips,
-      {bool autoEnterPIP = false,
+      {bool hideAvatar = false,
+      bool autoEnterPIP = false,
       String? inviterRoomId,
       String? inviterName,
       String? inviterIcon}) async {
@@ -147,6 +148,7 @@ class NEFloatingService extends _Service {
     map['auto_enter_pip'] = autoEnterPIP;
     map['waitingTips'] = waitingTips;
     map['interruptedTips'] = interruptedTips;
+    map['hideAvatar'] = hideAvatar;
     if (TextUtils.isNotEmpty(inviterIcon)) {
       map['inviterIcon'] = inviterIcon;
     }
@@ -173,6 +175,14 @@ class NEFloatingService extends _Service {
           false;
     }
     return false;
+  }
+
+  Future<void> hideAvatar(bool hide) async {
+    if (!_isPIPSetupDone) return;
+    Map map = buildArguments();
+    map['hideAvatar'] = hide;
+    await _methodChannel.invokeMethod('hideAvatar', map);
+    return;
   }
 
   Future<void> updateVideo(

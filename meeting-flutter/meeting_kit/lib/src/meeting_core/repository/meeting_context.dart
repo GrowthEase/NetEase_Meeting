@@ -114,10 +114,87 @@ extension NEMeetingContext on NERoomContext {
 
   /// 允许或关闭成员批注权限
   Future<NEResult<void>> enableAnnotationPermission(bool enable) {
-    return updateRoomProperty(
-      AnnotationProperty.key,
-      enable ? AnnotationProperty.enable : AnnotationProperty.disable,
-    );
+    annotationController.stopAnnotationShare();
+    return meetingSecurityCtrl(
+        {MeetingSecurityCtrlKey.ANNOTATION_DISABLE: !enable});
+  }
+
+  /// 允许或关闭成员屏幕共享权限
+  Future<NEResult<void>> updateScreenSharePermission(bool enable) {
+    stopMemberScreenShare();
+    return meetingSecurityCtrl(
+        {MeetingSecurityCtrlKey.SCREEN_SHARE_DISABLE: !enable});
+  }
+
+  /// 停止普通成员的屏幕共享
+  void stopMemberScreenShare() {
+    // 有人在共享，但是不是主持人与联席主持人
+    final userUuid = rtcController.getScreenSharingUserUuid();
+    final member = getMember(userUuid);
+    if (member != null && !member.isHost && !member.isCohost) {
+      rtcController.stopMemberScreenShare(userUuid!);
+    }
+  }
+
+  /// 允许或关闭成员白板共享权限
+  Future<NEResult<void>> updateWhiteboardPermission(bool enable) {
+    stopMemberWhiteboard();
+    return meetingSecurityCtrl(
+        {MeetingSecurityCtrlKey.WHILE_BOARD_SHARE_DISABLE: !enable});
+  }
+
+  /// 停止普通成员的白板
+  void stopMemberWhiteboard() {
+    // 有人在共享，但是不是主持人与联席主持人
+    final userUuid = whiteboardController.getWhiteboardSharingUserUuid();
+    final member = getMember(userUuid);
+    if (member != null && !member.isHost && !member.isCohost) {
+      whiteboardController.stopMemberWhiteboardShare(userUuid!);
+    }
+  }
+
+  /// 允许或关闭成员自己改名权限
+  Future<NEResult<void>> updateNicknamePermission(bool enable) {
+    return meetingSecurityCtrl(
+        {MeetingSecurityCtrlKey.EDIT_NAME_DISABLE: !enable});
+  }
+
+  /// 允许或关闭成员自己解除静音权限
+  Future<NEResult<void>> updateUnmuteAudioBySelfPermission(bool enable) {
+    return meetingSecurityCtrl(
+        {MeetingSecurityCtrlKey.AUDIO_NOT_ALLOW_SELF_ON: !enable});
+  }
+
+  /// 允许或关闭成员自己打开视频权限
+  Future<NEResult<void>> updateUnmuteVideoBySelfPermission(bool enable) {
+    return meetingSecurityCtrl(
+        {MeetingSecurityCtrlKey.VIDEO_NOT_ALLOW_SELF_ON: !enable});
+  }
+
+  /// 允许或关闭成员表情回应权限
+  Future<NEResult<void>> updateEmojiRespPermission(bool enable) {
+    return meetingSecurityCtrl(
+        {MeetingSecurityCtrlKey.EMOJI_RESP_DISABLE: !enable});
+  }
+
+  /// 允许或关闭成员本地录制权限
+  Future<NEResult<void>> updateLocalRecordPermission(bool enable) {
+    return meetingSecurityCtrl(
+        {MeetingSecurityCtrlKey.LOCAL_RECORD_DISABLE: !enable});
+  }
+
+  /// 允许或关闭成员在成员离开入会播放提示声音权限
+  Future<NEResult<void>> updatePlaySound(bool play) {
+    return meetingSecurityCtrl({MeetingSecurityCtrlKey.PLAY_SOUND: play});
+  }
+
+  /// 允许或关闭头像显示
+  Future<NEResult<void>> updateHideAvatar(bool hide) {
+    return meetingSecurityCtrl({MeetingSecurityCtrlKey.AVATAR_HIDE: hide});
+  }
+
+  Future<NEResult<void>> meetingSecurityCtrl(Map<String, bool> body) {
+    return HttpApiHelper._meetingSecurityCtrl(body, roomUuid);
   }
 
   void setupMeetingEnv(MeetingInfo meetingInfo) {
@@ -156,9 +233,51 @@ extension NEMeetingContext on NERoomContext {
   bool get isGuestJoinEnabled =>
       roomProperties[GuestJoinProperty.key] == GuestJoinProperty.enable;
 
+  bool checkSecurity(int securityCtrlValue) {
+    final securityCtrl = roomProperties[MeetingSecurityCtrlKey.securityCtrlKey];
+    if (securityCtrl != null) {
+      final number = int.tryParse(securityCtrl);
+      if (number != null) {
+        return (number & securityCtrlValue) != 0;
+      }
+    }
+    return false;
+  }
+
+  /// 是否在成员加入离开的时候播放铃声
+  bool get canPlayRing => checkSecurity(MeetingSecurityCtrlValue.PLAY_SOUND);
+
+  /// 是否隐藏头像
+  bool get isAvatarHidden =>
+      checkSecurity(MeetingSecurityCtrlValue.AVATAR_HIDE);
+
   /// 是否允许成员批注
   bool get isAnnotationPermissionEnabled =>
-      roomProperties[AnnotationProperty.key] != AnnotationProperty.disable;
+      !checkSecurity(MeetingSecurityCtrlValue.ANNOTATION_DISABLE);
+
+  /// 是否允许成员屏幕共享
+  bool get isScreenSharePermissionEnabled =>
+      !checkSecurity(MeetingSecurityCtrlValue.SCREEN_SHARE_DISABLE);
+
+  /// 是否允许成员自行解除静音
+  bool get isUnmuteAudioBySelfEnabled =>
+      !checkSecurity(MeetingSecurityCtrlValue.AUDIO_NOT_ALLOW_SELF_ON);
+
+  /// 是否允许成员自行打开视频
+  bool get isUnmuteVideoBySelfEnabled =>
+      !checkSecurity(MeetingSecurityCtrlValue.VIDEO_NOT_ALLOW_SELF_ON);
+
+  /// 是否允许成员更新昵称
+  bool get isUpdateNicknamePermissionEnabled =>
+      !checkSecurity(MeetingSecurityCtrlValue.EDIT_NAME_DISABLE);
+
+  /// 是否允许成员本地录制
+  bool get isLocalRecordPermissionEnabled =>
+      !checkSecurity(MeetingSecurityCtrlValue.LOCAL_RECORD_DISABLE);
+
+  /// 是否允许成员共享白板
+  bool get isWhiteboardPermissionEnabled =>
+      !checkSecurity(MeetingSecurityCtrlValue.WHILE_BOARD_SHARE_DISABLE);
 
   /// 设置是否允许访客入会
   Future<NEResult<void>> enableGuestJoin(bool enable) {
@@ -168,50 +287,56 @@ extension NEMeetingContext on NERoomContext {
     );
   }
 
-  bool get isAllAudioMuted {
-    final value = roomProperties[AudioControlProperty.key];
-    return value != null &&
-        value.startsWith(RegExp(AudioControlProperty.disable)) != true;
-  }
+  /// 当前是否全体静音
+  bool get isAllAudioMuted => checkSecurity(MeetingSecurityCtrlValue.AUDIO_OFF);
 
-  bool get isAllVideoMuted {
-    final value = roomProperties[VideoControlProperty.key];
-    return value != null &&
-        value.startsWith(RegExp(VideoControlProperty.disable)) != true;
-  }
+  /// 当前是否全体关闭视频
+  bool get isAllVideoMuted => checkSecurity(MeetingSecurityCtrlValue.VIDEO_OFF);
 
   bool get canReclaimHost {
     return meetingInfo.ownerUserUuid == localMember.uuid && !isMySelfHost();
   }
 
-  bool canUnmuteMyAudio() =>
-      isMySelfHost() ||
-      isMySelfCoHost() ||
-      roomProperties[AudioControlProperty.key]
-              ?.startsWith(RegExp(AudioControlProperty.offNotAllowSelfOn)) !=
-          true ||
-      localMember.isSharingScreen;
+  /// 是否可以自行解除静音
+  bool canUnmuteMyAudio() {
+    final propertyCan =
+        !checkSecurity(MeetingSecurityCtrlValue.AUDIO_NOT_ALLOW_SELF_ON);
 
-  bool canUnmuteMyVideo() =>
-      isMySelfHost() ||
-      isMySelfCoHost() ||
-      roomProperties[VideoControlProperty.key]
-              ?.startsWith(RegExp(VideoControlProperty.offNotAllowSelfOn)) !=
-          true ||
-      localMember.isSharingScreen;
+    // 自己是主持人或联席主持人
+    return isMySelfHost() ||
+        isMySelfCoHost() ||
+        propertyCan ||
+        // 自己在屏幕共享中
+        localMember.isSharingScreen;
+  }
+
+  /// 是否可以自行打开视频
+  bool canUnmuteMyVideo() {
+    final propertyCan =
+        !checkSecurity(MeetingSecurityCtrlValue.VIDEO_NOT_ALLOW_SELF_ON);
+
+    // 自己是主持人或联席主持人
+    return isMySelfHost() ||
+        isMySelfCoHost() ||
+        propertyCan ||
+        // 自己在屏幕共享中
+        localMember.isSharingScreen;
+  }
 
   /// 获取所有用户
   Iterable<NERoomMember> getAllUsers(
       {bool sort = true,
       bool enableSpeakerSpotlight = true,
       bool isViewOrder = false,
-      bool isIncludeInviteMember = false,
-      bool isIncludeInviteWaitingJoinMember = true}) {
+      // 是否包含邀请成员
+      bool includeInviteMember = false,
+      // 是否包含等待加入成员
+      bool includeInviteWaitingJoinMember = true}) {
     /// 所有需要展示的成员列表
     List<NERoomMember> members = [];
-    if (isIncludeInviteMember) {
+    if (includeInviteMember) {
       inviteMembers.forEach((element) {
-        if (isIncludeInviteWaitingJoinMember ||
+        if (includeInviteWaitingJoinMember ||
             element.inviteState != NERoomMemberInviteState.waitingJoin) {
           members.add(element);
         }
@@ -247,7 +372,16 @@ extension NEMeetingContext on NERoomContext {
     return members.where((member) => isHostOrCoHost(member.uuid));
   }
 
+  /// 获取联席主持人
+  List<NERoomMember> getCoHosts() {
+    return remoteMembers.where((member) => isCoHost(member.uuid)).toList();
+  }
+
   bool isMySelfHostOrCoHost() => isHostOrCoHost(localMember.uuid);
+
+  /// 判断用户是不是会议创建者
+  bool isOwner(String? uuid) =>
+      uuid != null && meetingInfo.ownerUserUuid == uuid;
 
   /// 自己是不是主持人
   bool isMySelfHost() => isHost(localMember.uuid);
@@ -370,6 +504,11 @@ extension NEMeetingContext on NERoomContext {
         .then((value) => value.data);
   }
 
+  /// 暂停参会者活动
+  Future<VoidResult> stopMemberActivities() {
+    return HttpApiHelper._stopMemberActivities(meetingInfo.meetingId);
+  }
+
   ///成员列表展示顺序：
   /// 主持人->联席主持人->自己->举手->屏幕共享（白板）->音视频->视频->音频-> 邀请 -> 昵称排序
   /// 优先处理如果是邀请状态就不向前排序
@@ -448,6 +587,43 @@ extension NEMeetingContext on NERoomContext {
 extension NEMeetingRtcController on NERoomRtcController {
   NERoomContext get _ctx => _ctxHolder[this]!;
 
+  ///主持人将所有与会者静音, [allowUnmuteSelf] true：允许取消自己静音；反之，不允许
+  Future<NEResult<void>> muteAllParticipantsAudio(bool allowUnmuteSelf) {
+    return meetingSecurityCtrl({
+      MeetingSecurityCtrlKey.AUDIO_OFF: true,
+      MeetingSecurityCtrlKey.AUDIO_NOT_ALLOW_SELF_ON: !allowUnmuteSelf
+    });
+  }
+
+  /// 主持人取消全体静音
+  Future<NEResult<void>> unmuteAllParticipantsAudio() {
+    return meetingSecurityCtrl({
+      MeetingSecurityCtrlKey.AUDIO_OFF: false,
+      MeetingSecurityCtrlKey.AUDIO_NOT_ALLOW_SELF_ON: false
+    });
+  }
+
+  ///主持人将所有与会者视频关闭。
+  /// [allowUnmuteSelf] true：允许取消自己静音；反之，不允许
+  Future<NEResult<void>> muteAllParticipantsVideo(bool allowUnmuteSelf) {
+    return meetingSecurityCtrl({
+      MeetingSecurityCtrlKey.VIDEO_OFF: true,
+      MeetingSecurityCtrlKey.VIDEO_NOT_ALLOW_SELF_ON: !allowUnmuteSelf
+    });
+  }
+
+  /// 主持人取消全体视频关闭
+  Future<NEResult<void>> unmuteAllParticipantsVideo() {
+    return meetingSecurityCtrl({
+      MeetingSecurityCtrlKey.VIDEO_OFF: false,
+      MeetingSecurityCtrlKey.VIDEO_NOT_ALLOW_SELF_ON: false
+    });
+  }
+
+  Future<NEResult<void>> meetingSecurityCtrl(Map<String, bool> body) {
+    return HttpApiHelper._meetingSecurityCtrl(body, _ctx.roomUuid);
+  }
+
   ///
   /// 邀请成员打开音视频，走自定义透传
   ///
@@ -490,25 +666,6 @@ extension NEMeetingRtcController on NERoomRtcController {
     );
   }
 
-  ///主持人将所有与会者静音, [allowUnmuteSelf] true：允许取消自己静音；反之，不允许
-  Future<NEResult<void>> muteAllParticipantsAudio(bool allowUnmuteSelf) {
-    final sed = DateTime.now().millisecondsSinceEpoch;
-    return _ctx.updateRoomProperty(
-        AudioControlProperty.key,
-        allowUnmuteSelf
-            ? '${AudioControlProperty.offAllowSelfOn}_$sed'
-            : '${AudioControlProperty.offNotAllowSelfOn}_$sed');
-  }
-
-  /// 主持人取消全体静音
-  Future<NEResult<void>> unmuteAllParticipantsAudio() {
-    final sed = DateTime.now().millisecondsSinceEpoch;
-    return _ctx.updateRoomProperty(
-      AudioControlProperty.key,
-      '${AudioControlProperty.disable}_$sed',
-    );
-  }
-
   /// 主持人取消设置/设置对应用户为焦点视频
   Future<NEResult<void>> pinVideo(String userUuid, bool on) {
     _alog.i('pin user video: $userUuid, $on');
@@ -531,26 +688,6 @@ extension NEMeetingRtcController on NERoomRtcController {
     } else {
       return _ctx.deleteRoomProperty(ViewOrderConfigProperty.key);
     }
-  }
-
-  ///主持人将所有与会者视频关闭。
-  /// [allowUnmuteSelf] true：允许取消自己静音；反之，不允许
-  Future<NEResult<void>> muteAllParticipantsVideo(bool allowUnmuteSelf) {
-    final sed = DateTime.now().millisecondsSinceEpoch;
-    return _ctx.updateRoomProperty(
-        VideoControlProperty.key,
-        allowUnmuteSelf
-            ? '${VideoControlProperty.offAllowSelfOn}_$sed'
-            : '${VideoControlProperty.offNotAllowSelfOn}_$sed');
-  }
-
-  /// 主持人取消全体视频关闭
-  Future<NEResult<void>> unmuteAllParticipantsVideo() {
-    final sed = DateTime.now().millisecondsSinceEpoch;
-    return _ctx.updateRoomProperty(
-      VideoControlProperty.key,
-      '${VideoControlProperty.disable}_$sed',
-    );
   }
 }
 
@@ -733,6 +870,21 @@ class HandsUpProperty {
   static const String key = 'handsUp';
   static const String up = '1';
   static const String reject = '2';
+}
+
+class MeetingCustomMessage {
+  static const _type = 'type';
+  static const int stopMemberActivitiesType = 203;
+
+  static int? parseMessage(String customMessage) {
+    try {
+      final message = json.decode(customMessage);
+      if (message is Map) {
+        return message[_type] as int;
+      }
+    } catch (e) {}
+    return null;
+  }
 }
 
 /// 自定义信令透传消息

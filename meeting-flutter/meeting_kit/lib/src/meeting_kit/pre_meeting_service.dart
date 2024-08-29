@@ -151,4 +151,10 @@ abstract class NEPreMeetingService {
   ///
   Future<NEResult<List<NERoomChatMessage>>> fetchChatroomHistoryMessageList(
       int meetingId, NEChatroomHistoryMessageSearchOption option);
+
+  ///
+  /// 加载会议聊天室历史消息页面
+  /// * [meetingId] 会议唯一 Id
+  ///
+  Widget loadChatroomHistoryMessageView(int meetingId);
 }

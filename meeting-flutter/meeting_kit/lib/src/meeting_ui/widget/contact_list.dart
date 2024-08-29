@@ -31,6 +31,8 @@ class ContactList extends StatefulWidget {
   /// 是否展示搜索提示，默认展示
   final bool showSearchHint;
 
+  final ValueListenable<bool>? hideAvatar;
+
   ContactList({
     super.key,
     this.itemClickCallback,
@@ -39,10 +41,11 @@ class ContactList extends StatefulWidget {
     this.onSelectedContactListChanged,
     this.singleMode = false,
     this.showSearchHint = true,
+    this.hideAvatar,
   });
 
   @override
-  State<ContactList> createState() => _ContactListState();
+  State<ContactList> createState() => _ContactListState(hideAvatar);
 }
 
 class _ContactListState extends State<ContactList>
@@ -62,6 +65,10 @@ class _ContactListState extends State<ContactList>
   final _searchTextEditingController = TextEditingController();
 
   final _focusNode = FocusNode();
+
+  final ValueListenable<bool>? hideAvatar;
+
+  _ContactListState(this.hideAvatar);
 
   @override
   void initState() {
@@ -139,16 +146,15 @@ class _ContactListState extends State<ContactList>
   /// 通讯录页面
   Widget _buildContacts() {
     return Container(
-      color: Colors.white,
+      decoration: BoxDecoration(
+          color: _UIColors.white,
+          borderRadius: BorderRadius.all(Radius.circular(8))),
       child: Column(
         children: [
-          SizedBox(height: 12),
           _buildSearch(),
           if (_selectedContacts.isNotEmpty && !widget.singleMode)
-            SizedBox(height: 12),
-          if (_selectedContacts.isNotEmpty && !widget.singleMode)
             _buildSelected(),
-          SizedBox(height: 12),
+          Container(height: 1, color: _UIColors.globalBg),
           Expanded(
             child: Container(
               margin: EdgeInsets.only(left: 20, right: 20),
@@ -167,9 +173,9 @@ class _ContactListState extends State<ContactList>
       return Container();
     }
     return Container(
-      alignment: Alignment.topCenter,
-      margin: EdgeInsets.only(top: 100),
+      alignment: Alignment.center,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Image.asset(NEMeetingImages.iconNoContacts,
@@ -190,11 +196,10 @@ class _ContactListState extends State<ContactList>
     return Material(
       color: Colors.white,
       child: Container(
-          margin: EdgeInsets.only(left: 20, right: 20),
+          margin: EdgeInsets.only(left: 16, right: 16, top: 6, bottom: 6),
           decoration: BoxDecoration(
-              color: _UIColors.colorF7F8FA,
-              borderRadius: BorderRadius.all(Radius.circular(20)),
-              border: Border.all(width: 1, color: _UIColors.colorF2F3F5)),
+              borderRadius: BorderRadius.all(Radius.circular(4)),
+              border: Border.all(width: 1, color: _UIColors.colorE6E7EB)),
           height: 36,
           alignment: Alignment.center,
           child: TextField(
@@ -204,20 +209,24 @@ class _ContactListState extends State<ContactList>
             cursorColor: _UIColors.blue_337eff,
             keyboardAppearance: Brightness.light,
             textAlignVertical: TextAlignVertical.center,
+            style: TextStyle(
+              fontSize: 16,
+              color: _UIColors.color1E1F27,
+            ),
             decoration: InputDecoration(
                 isDense: true,
                 filled: true,
                 fillColor: Colors.transparent,
                 hintText: meetingUiLocalizations.participantSearchMember,
                 hintStyle: TextStyle(
-                    fontSize: 15,
-                    color: _UIColors.colorD8D8D8,
+                    fontSize: 16,
+                    color: _UIColors.colorCDCFD7,
                     decoration: TextDecoration.none),
                 border: InputBorder.none,
                 prefixIcon: Icon(
                   NEMeetingIconFont.icon_search2_line1x,
                   size: 16,
-                  color: _UIColors.colorD8D8D8,
+                  color: _UIColors.colorA6ADB6,
                 ),
                 prefixIconConstraints: BoxConstraints(
                     minWidth: 32, minHeight: 32, maxHeight: 32, maxWidth: 32),
@@ -236,27 +245,38 @@ class _ContactListState extends State<ContactList>
   /// 已选成员列表
   Widget _buildSelected() {
     return Container(
-      height: 52,
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      color: _UIColors.colorF2F4F5,
+      height: 48,
+      padding: EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemBuilder: (context, index) {
-                final contact = _selectedContacts[index];
-                return Container(
-                  margin: EdgeInsets.only(right: 14),
-                  child: GestureDetector(
-                    onTap: () => _reverseSelectContact(contact),
-                    child: NEMeetingAvatar.large(
-                        name: contact.name, url: contact.avatar),
-                  ),
-                );
-              },
-              itemCount: _selectedContacts.length,
+            child: MediaQuery.removePadding(
+              context: context,
+              removeLeft: true,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemBuilder: (context, index) {
+                  final contact = _selectedContacts[index];
+                  return Container(
+                    margin: EdgeInsets.only(right: 14),
+                    child: GestureDetector(
+                      onTap: () => _reverseSelectContact(contact),
+                      child: ValueListenableBuilder(
+                        valueListenable: hideAvatar ?? ValueNotifier(false),
+                        builder: (context, hideAvatar, child) {
+                          return NEMeetingAvatar.medium(
+                            name: contact.name,
+                            url: contact.avatar,
+                            hideImageAvatar: hideAvatar,
+                          );
+                        },
+                      ),
+                    ),
+                  );
+                },
+                itemCount: _selectedContacts.length,
+              ),
             ),
           ),
           SizedBox(width: 8),
@@ -269,7 +289,7 @@ class _ContactListState extends State<ContactList>
               },
               child: Text(meetingUiLocalizations.sipContactsClear,
                   style:
-                      TextStyle(fontSize: 16, color: _UIColors.colorA6ABD6))),
+                      TextStyle(fontSize: 14, color: _UIColors.color8D90A0))),
         ],
       ),
     );
@@ -300,14 +320,9 @@ class _ContactListState extends State<ContactList>
       return MediaQuery.removePadding(
           removeTop: true,
           context: context,
-          child: ListView.separated(
+          child: ListView.builder(
             controller: _scrollController,
-            separatorBuilder: (context, index) {
-              return Container(
-                height: 1,
-                color: _UIColors.colorF2F3F5,
-              );
-            },
+            physics: BouncingScrollPhysics(),
             itemBuilder: (context, index) {
               final contact = _searchedContacts[index];
               return GestureDetector(
@@ -353,8 +368,16 @@ class _ContactListState extends State<ContactList>
                             NEMeetingImages.assetImage(
                                 NEMeetingImages.iconCircleUnchecked),
                           SizedBox(width: 8),
-                          NEMeetingAvatar.large(
-                              name: contact.name, url: contact.avatar),
+                          ValueListenableBuilder(
+                            valueListenable: hideAvatar ?? ValueNotifier(false),
+                            builder: (context, hideAvatar, child) {
+                              return NEMeetingAvatar.large(
+                                name: contact.name,
+                                url: contact.avatar,
+                                hideImageAvatar: hideAvatar,
+                              );
+                            },
+                          ),
                           SizedBox(width: 12),
                           Expanded(
                               child: Column(

@@ -202,15 +202,19 @@ class MeetingNotificationManagerState extends State<MeetingNotificationManager>
         if (_notificationBarController!.isCompleted &&
             _notificationBarTimer == null) {
           final notificationBar = _notificationBars.first._widget;
-          _notificationBarTimer = Timer(notificationBar.duration, () {
-            assert(
-              _notificationBarController!.status == AnimationStatus.forward ||
-                  _notificationBarController!.status ==
-                      AnimationStatus.completed,
-            );
-            hideCurrentNotificationBar(
-                reason: NotificationBarClosedReason.timeout);
-          });
+
+          /// duration为空表示不自动消失
+          if (notificationBar.duration != null) {
+            _notificationBarTimer = Timer(notificationBar.duration!, () {
+              assert(
+                _notificationBarController!.status == AnimationStatus.forward ||
+                    _notificationBarController!.status ==
+                        AnimationStatus.completed,
+              );
+              hideCurrentNotificationBar(
+                  reason: NotificationBarClosedReason.timeout);
+            });
+          }
         }
       }
     }
@@ -276,7 +280,7 @@ class _MeetingNotificationManagerScope extends InheritedWidget {
 class NotificationBar extends StatelessWidget {
   final Object? notificationChannel;
   final Color backgroundColor;
-  final Duration duration;
+  final Duration? duration;
   final bool showCloseIcon;
   final bool showNoMoreReminder;
   final Widget? icon;

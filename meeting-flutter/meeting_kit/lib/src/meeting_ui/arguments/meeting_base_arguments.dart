@@ -23,6 +23,9 @@ class MeetingBaseArguments {
   /// show Meeting time
   bool? get showMeetingTime => options.showMeetingTime;
 
+  /// 是否显示未加入成员
+  bool? get showNotYetJoinedMembers => options.showNotYetJoinedMembers;
+
   /// 邀请
   bool get noInvite => options.noInvite;
 
@@ -40,19 +43,22 @@ class MeetingBaseArguments {
   bool get noSwitchAudioMode => options.noSwitchAudioMode;
 
   /// 更多菜单
-  List<NEMeetingMenuItem> get injectedMoreMenuItems =>
+  List<NEMeetingMenuItem>? get injectedMoreMenuItems =>
       options.fullMoreMenuItems;
 
   /// Toolbar菜单
   List<NEMeetingMenuItem> get injectedToolbarMenuItems {
-    final items = <NEMeetingMenuItem>[...options.fullToolbarMenuItems];
+    if (options.fullToolbarMenuItems?.isNotEmpty != true) {
+      return NEMenuItems.defaultToolbarMenuItems;
+    }
+    final items = <NEMeetingMenuItem>[...options.fullToolbarMenuItems!];
     final index = items.indexOf(NEMenuItems.microphone);
     if (index != -1 &&
-        options.fullMoreMenuItems.contains(NEMenuItems.disconnectAudio) &&
-        !options.fullToolbarMenuItems.contains(NEMenuItems.disconnectAudio)) {
+        injectedMoreMenuItems?.contains(NEMenuItems.disconnectAudio) == true &&
+        !options.fullToolbarMenuItems!.contains(NEMenuItems.disconnectAudio)) {
       items.insert(
           index,
-          options.fullMoreMenuItems
+          injectedMoreMenuItems!
               .firstWhere((e) => e == NEMenuItems.disconnectAudio));
     }
     return items;

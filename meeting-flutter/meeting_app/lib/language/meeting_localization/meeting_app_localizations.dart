@@ -1792,6 +1792,18 @@ abstract class MeetingAppLocalizations {
   /// **'复制全部'**
   String get copyMeetingAll;
 
+  /// No description provided for @meetingCrossAppNoPermission.
+  ///
+  /// In zh, this message translates to:
+  /// **'很抱歉，您尝试加入的会议暂未对外部人员开放。如有需要，请联系会议组织者开启访客入会权限。'**
+  String get meetingCrossAppNoPermission;
+
+  /// No description provided for @meetingCrossAppJoinTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'该会议由其他团队/组织创建，您将以访客身份加入，是否加入会议？'**
+  String get meetingCrossAppJoinTip;
+
   /// No description provided for @historyMeeting.
   ///
   /// In zh, this message translates to:
@@ -1845,6 +1857,12 @@ abstract class MeetingAppLocalizations {
   /// In zh, this message translates to:
   /// **'云录制文件生成中…'**
   String get historyMeetingCloudRecordingFileBeingGenerated;
+
+  /// No description provided for @nan.
+  ///
+  /// In zh, this message translates to:
+  /// **'很抱歉，您尝试加入的会议暂未对外部人员开放。如有需要，请联系会议组织者开启访客入会权限。'**
+  String get nan;
 
   /// No description provided for @settings.
   ///
@@ -2386,6 +2404,24 @@ abstract class MeetingAppLocalizations {
   /// In zh, this message translates to:
   /// **'导出此转写文件'**
   String get transcriptionExportFile;
+
+  /// No description provided for @transcriptionCaptionShowBilingual.
+  ///
+  /// In zh, this message translates to:
+  /// **'字幕同时显示双语'**
+  String get transcriptionCaptionShowBilingual;
+
+  /// No description provided for @transcriptionSettingShowBilingual.
+  ///
+  /// In zh, this message translates to:
+  /// **'转写同时显示双语'**
+  String get transcriptionSettingShowBilingual;
+
+  /// No description provided for @transcriptionTranslationSettingsTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'对会中字幕和转写生效，翻译内容仅自己可见'**
+  String get transcriptionTranslationSettingsTip;
 
   /// No description provided for @globalFileSaveAs.
   ///

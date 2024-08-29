@@ -21,12 +21,20 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
   final SecurityArguments _arguments;
   late final NERoomContext _roomContext;
   late final NERoomEventCallback roomEventCallback;
-  final isLocked = ValueNotifier<bool>(false);
-  final meetingChatEnabled = ValueNotifier<bool>(false);
   final watermarkEnabled = ValueNotifier<bool>(false);
-  final guestJoinEnabled = ValueNotifier<bool>(false);
+  final isLocked = ValueNotifier<bool>(false);
   final isBlackListEnabled = ValueNotifier<bool>(true);
-  final isAnnotationPermissionEnabled = ValueNotifier<bool>(false);
+  final guestJoinEnabled = ValueNotifier<bool>(false);
+  final hideAvatar = ValueNotifier<bool>(false);
+
+  final meetingChatEnabled = ValueNotifier<bool>(true);
+  final isAnnotationPermissionEnabled = ValueNotifier<bool>(true);
+  final isShareScreenEnabled = ValueNotifier<bool>(true);
+  final isUnmuteAudioBySelfEnabled = ValueNotifier<bool>(true);
+  final isUnmuteVideoBySelfEnabled = ValueNotifier<bool>(true);
+  final isUpdateNicknameBySelfEnabled = ValueNotifier<bool>(true);
+  final isShareWhiteboardEnabled = ValueNotifier<bool>(true);
+  final isLocalRecordEnabled = ValueNotifier<bool>(false);
 
   MeetingSecurityState(this._arguments);
 
@@ -37,9 +45,17 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
     isLocked.value = _roomContext.isRoomLocked;
     watermarkEnabled.value = _roomContext.watermark.isEnable();
     guestJoinEnabled.value = _roomContext.isGuestJoinEnabled;
+    hideAvatar.value = _roomContext.isAvatarHidden;
     isBlackListEnabled.value = _roomContext.isRoomBlackListEnabled;
     isAnnotationPermissionEnabled.value =
         _roomContext.isAnnotationPermissionEnabled;
+    isShareScreenEnabled.value = _roomContext.isScreenSharePermissionEnabled;
+    isUnmuteAudioBySelfEnabled.value = _roomContext.isUnmuteAudioBySelfEnabled;
+    isUnmuteVideoBySelfEnabled.value = _roomContext.isUnmuteVideoBySelfEnabled;
+    isUpdateNicknameBySelfEnabled.value =
+        _roomContext.isUpdateNicknamePermissionEnabled;
+    isShareWhiteboardEnabled.value = _roomContext.isWhiteboardPermissionEnabled;
+    isLocalRecordEnabled.value = _roomContext.isLocalRecordPermissionEnabled;
     meetingChatEnabled.value =
         _roomContext.chatPermission != NEChatPermission.noChat;
     _roomContext.addEventCallback(roomEventCallback = NERoomEventCallback(
@@ -88,9 +104,20 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
           ? NEMeetingUIKitLocalizations.of(context)!.meetingGuestJoinEnabled
           : NEMeetingUIKitLocalizations.of(context)!.meetingGuestJoinDisabled);
     }
-    if (properties.containsKey(AnnotationProperty.key)) {
+    if (properties.containsKey(MeetingSecurityCtrlKey.securityCtrlKey)) {
+      hideAvatar.value = _roomContext.isAvatarHidden;
       isAnnotationPermissionEnabled.value =
           _roomContext.isAnnotationPermissionEnabled;
+      isShareScreenEnabled.value = _roomContext.isScreenSharePermissionEnabled;
+      isUnmuteVideoBySelfEnabled.value =
+          _roomContext.isUnmuteVideoBySelfEnabled;
+      isUnmuteAudioBySelfEnabled.value =
+          _roomContext.isUnmuteAudioBySelfEnabled;
+      isUpdateNicknameBySelfEnabled.value =
+          _roomContext.isUpdateNicknamePermissionEnabled;
+      isShareWhiteboardEnabled.value =
+          _roomContext.isWhiteboardPermissionEnabled;
+      isLocalRecordEnabled.value = _roomContext.isLocalRecordPermissionEnabled;
     }
   }
 
@@ -113,43 +140,103 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
   }
 
   Widget _buildBody() {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          /// 管理成员模块
-          MeetingCard(
-              title: meetingUiLocalizations.meetingManagement,
-              iconData: NEMeetingIconFont.icon_settings,
-              iconColor: _UIColors.color8D90A0,
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (_arguments.waitingRoomManager.isFeatureSupported) ...[
-                  _buildWaitingRoom(),
-                ],
-                if (!_roomContext.watermark.isForce()) ...[
-                  _buildWatermark(),
-                ],
-                _buildLockMeeting(),
-                _buildBlackList(),
-                if (_arguments.isGuestJoinSupported) ...[
-                  _buildGuestJoin(),
-                ]
-              ]),
+                /// 管理成员模块
+                MeetingCard(
+                    title: meetingUiLocalizations.meetingManagement,
+                    iconData: NEMeetingIconFont.icon_settings,
+                    iconColor: _UIColors.color8D90A0,
+                    children: [
+                      if (_arguments.waitingRoomManager.isFeatureSupported) ...[
+                        _buildWaitingRoom(),
+                      ],
+                      if (!_roomContext.watermark.isForce()) ...[
+                        _buildWatermark(),
+                      ],
+                      _buildLockMeeting(),
+                      _buildBlackList(),
+                      if (_arguments.isGuestJoinSupported) ...[
+                        _buildGuestJoin(),
+                      ],
+                      _buildHideAvatar(),
+                    ]),
 
-          /// 允许成员
-          MeetingCard(
-            title: meetingUiLocalizations.meetingAllowMembersTo,
-            iconData: NEMeetingIconFont.icon_members,
-            iconColor: _UIColors.color_337eff,
-            children: [
-              if (meetingUIState.sdkConfig.isMeetingChatSupported)
-                _buildMeetingChat(),
-              _buildAnnotationPermission(),
-            ],
+                /// 允许成员
+                MeetingCard(
+                  title: meetingUiLocalizations.meetingAllowMembersTo,
+                  iconData: NEMeetingIconFont.icon_members,
+                  iconColor: _UIColors.color_337eff,
+                  children: [
+                    if (meetingUIState.sdkConfig.isMeetingChatSupported)
+                      _buildMeetingChat(),
+                    _buildShareScreen(),
+                    _buildUnmuteAudioBySelf(),
+                    _buildUnmuteVideoBySelf(),
+                    _buildUpdateNicknameBySelf(),
+                    _buildShareWhiteboard(),
+                    _buildAnnotationPermission(),
+                    // 本地录制，暂时还没有
+                    // _buildLocalRecord(),
+                  ],
+                ),
+                SizedBox(height: 16),
+              ],
+            ),
           ),
-          SizedBox(height: 16),
-        ],
-      ),
+        ),
+        Container(
+          color: _UIColors.white,
+          child: Padding(
+            padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 10,
+                bottom: 10 + MediaQuery.of(context).padding.bottom),
+            child: SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  side: BorderSide(width: 1, color: _UIColors.colorF51D45),
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  meetingUiLocalizations.suspendParticipantActivities,
+                  style: TextStyle(
+                    color: _UIColors.colorF51D45,
+                    fontSize: 16,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+                onPressed: () {
+                  DialogUtils.showCommonDialog(
+                    context,
+                    meetingUiLocalizations.suspendAllParticipantActivities,
+                    meetingUiLocalizations.suspendParticipantActivitiesTips,
+                    acceptText: meetingUiLocalizations.globalPause,
+                    () {
+                      Navigator.of(context).pop();
+                    },
+                    () {
+                      _stopMemberActivities();
+                      Navigator.of(context).pop();
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -258,6 +345,14 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
         onChanged: (newValue) => _updateLockState(newValue));
   }
 
+  MeetingSwitchItem _buildHideAvatar() {
+    return MeetingSwitchItem(
+        switchKey: MeetingUIValueKeys.meetingHideAvatar,
+        title: meetingUiLocalizations.hideAvatar,
+        valueNotifier: hideAvatar,
+        onChanged: (newValue) => _updateHideAvatar(newValue));
+  }
+
   MeetingSwitchItem _buildBlackList() {
     return MeetingSwitchItem(
         switchKey: MeetingUIValueKeys.meetingBlacklist,
@@ -273,6 +368,53 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
         title: meetingUiLocalizations.meetingChat,
         valueNotifier: meetingChatEnabled,
         onChanged: (newValue) => _updateMeetingChatState(newValue));
+  }
+
+  MeetingSwitchItem _buildShareScreen() {
+    return MeetingSwitchItem(
+        switchKey: MeetingUIValueKeys.meetingShareScreen,
+        title: meetingUiLocalizations.screenShare,
+        valueNotifier: isShareScreenEnabled,
+        onChanged: (newValue) => _updateScreenSharePermission(newValue));
+  }
+
+  MeetingSwitchItem _buildUnmuteAudioBySelf() {
+    return MeetingSwitchItem(
+        switchKey: MeetingUIValueKeys.unmuteAudioBySelf,
+        title: meetingUiLocalizations.unmuteAudioBySelf,
+        valueNotifier: isUnmuteAudioBySelfEnabled,
+        onChanged: (newValue) => _updateUnmuteAudioBySelfPermission(newValue));
+  }
+
+  MeetingSwitchItem _buildUnmuteVideoBySelf() {
+    return MeetingSwitchItem(
+        switchKey: MeetingUIValueKeys.unmuteVideoBySelf,
+        title: meetingUiLocalizations.participantStartVideo,
+        valueNotifier: isUnmuteVideoBySelfEnabled,
+        onChanged: (newValue) => _updateUnmuteVideoBySelfPermission(newValue));
+  }
+
+  MeetingSwitchItem _buildUpdateNicknameBySelf() {
+    return MeetingSwitchItem(
+        switchKey: MeetingUIValueKeys.updateNicknameBySelf,
+        title: meetingUiLocalizations.updateNicknameBySelf,
+        valueNotifier: isUpdateNicknameBySelfEnabled,
+        onChanged: (newValue) => _updateNicknamePermission(newValue));
+  }
+
+  MeetingSwitchItem _buildShareWhiteboard() {
+    return MeetingSwitchItem(
+        switchKey: MeetingUIValueKeys.meetingShareWhiteboard,
+        title: meetingUiLocalizations.whiteboardShare,
+        valueNotifier: isShareWhiteboardEnabled,
+        onChanged: (newValue) => _updateWhiteboardPermission(newValue));
+  }
+
+  MeetingArrowItem _buildLocalRecord() {
+    return MeetingArrowItem(
+      title: meetingUiLocalizations.localRecordPermission,
+      content: meetingUiLocalizations.localRecordOnlyHost,
+    );
   }
 
   /// 锁定会议
@@ -292,6 +434,13 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
               : meetingUiLocalizations.meetingUnLockMeetingByHostFail);
         }
       });
+    });
+  }
+
+  /// 设置头像显示隐藏
+  void _updateHideAvatar(bool hide) {
+    doIfNetworkAvailable(() {
+      lifecycleExecute(_roomContext.updateHideAvatar(hide));
     });
   }
 
@@ -367,6 +516,52 @@ class MeetingSecurityState extends LifecycleBaseState<MeetingSecurityPage>
           .then((result) {
         if (!mounted) return;
       });
+    });
+  }
+
+  /// 暂停参会者活动
+  void _stopMemberActivities() {
+    doIfNetworkAvailable(() {
+      lifecycleExecute(_roomContext.stopMemberActivities()).then((result) {
+        commonLogger.i('stopMemberActivities result: $result');
+        if (!mounted) return;
+      });
+    });
+  }
+
+  void _updateScreenSharePermission(bool enable) {
+    doIfNetworkAvailable(() {
+      lifecycleExecute(_roomContext.updateScreenSharePermission(enable));
+    });
+  }
+
+  void _updateWhiteboardPermission(bool enable) {
+    doIfNetworkAvailable(() {
+      lifecycleExecute(_roomContext.updateWhiteboardPermission(enable));
+    });
+  }
+
+  void _updateNicknamePermission(bool enable) {
+    doIfNetworkAvailable(() {
+      lifecycleExecute(_roomContext.updateNicknamePermission(enable));
+    });
+  }
+
+  void _updateLocalRecordPermission(bool enable) {
+    doIfNetworkAvailable(() {
+      lifecycleExecute(_roomContext.updateLocalRecordPermission(enable));
+    });
+  }
+
+  void _updateUnmuteAudioBySelfPermission(bool enable) {
+    doIfNetworkAvailable(() {
+      lifecycleExecute(_roomContext.updateUnmuteAudioBySelfPermission(enable));
+    });
+  }
+
+  void _updateUnmuteVideoBySelfPermission(bool enable) {
+    doIfNetworkAvailable(() {
+      lifecycleExecute(_roomContext.updateUnmuteVideoBySelfPermission(enable));
     });
   }
 }
