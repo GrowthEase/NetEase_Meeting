@@ -128,7 +128,7 @@ class MeetingUIValueKeys {
   static const waitingChatPermissionSwitch =
       ValueKey('waitingChatPermissionSwitch');
 
-  ///会中成员管理
+  /// 会中成员管理
   static const memberItem = ValueKey('memberItem');
   static const renameDialogInputKey = ValueKey('renameDialogInputKey');
   static const handsUpIcon = ValueKey('handsUpIcon');
