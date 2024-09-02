@@ -124,9 +124,6 @@ class MeetingUIValueKeys {
   static const interpretationLang = ValueKey('interpretationLang');
   static const enableCloudRecord = ValueKey('enableCloudRecord');
 
-  static const interpretationLang = ValueKey('interpretationLang');
-  static const enableCloudRecord = ValueKey('enableCloudRecord');
-
   /// 聊天权限界面
   static const waitingChatPermissionSwitch =
       ValueKey('waitingChatPermissionSwitch');
