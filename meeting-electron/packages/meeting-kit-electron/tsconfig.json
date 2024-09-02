@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "lib": ["DOM", "ES2018"],
+    "skipLibCheck": true,
+    "sourceMap": false,
+    "moduleResolution": "node",
+    "strict": true,
+    "declaration": true,
+    "downlevelIteration": true,
+    "allowSyntheticDefaultImports": true,
+    "typeRoots": ["./node_modules/@types"],
+    "resolveJsonModule": true,
+    "noImplicitAny": false,
+    "composite": false,
+    "rootDir": "./",
+    "isolatedModules": true
+  },
+  "include": ["src"],
+  "exclude": ["dist", "node_modules"]
+}

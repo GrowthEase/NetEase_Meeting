@@ -1,0 +1,208 @@
+.member-list-container {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding-right: 4px;
+  .pd20 {
+    padding: 0 20px;
+  }
+  .nemeeting-drawer-footer {
+    padding: 0;
+  }
+
+  .waiting-room-unread-notify {
+    position: absolute;
+    top: 0;
+    right: -6px;
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    background-color: #ff4d4f;
+  }
+  .member-list-search {
+    width: 100%;
+    display: flex;
+    height: 30px;
+    margin-top: 20px;
+    border-radius: 8px;
+    opacity: 1;
+    /* 边框颜色 Border/深&悬浮 */
+    border: 1px solid #cdcfd7;
+    padding: 4px 16px;
+  }
+  .member-list-content {
+    margin-top: 16px;
+    // height: calc(100% - 200px);
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 8px;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+  .member-List-footer-item-sharing {
+    justify-content: space-around !important;
+  }
+  .member-List-footer-item {
+    display: flex;
+    flex-wrap: wrap;
+    min-height: 59px;
+    flex-wrap: nowrap;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    border-top: 1px solid #e6e7eb;
+    padding: 0 20px;
+    &:last-child {
+      border-bottom: none;
+    }
+    .member-List-footer-btn {
+      border-radius: 16px;
+      padding: 4px 20px;
+      border-radius: 8px;
+      opacity: 1;
+      height: 36px;
+      box-sizing: border-box;
+      span {
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        width: 100%;
+        overflow: hidden;
+        color: #1e1f27;
+      }
+    }
+    .member-list-footer-more-btn {
+      width: 68px;
+      height: 36px;
+      font-size: 14px;
+      font-weight: normal;
+      letter-spacing: 0px;
+      /* 文字颜色 Text/强调&正文标题 */
+      color: #1e1f27;
+      // border-radius: 3px;
+      // background-color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      padding: 10px 10px;
+    }
+    .iconxiajiantou-shixin {
+      display: inline-block;
+      width: 13px;
+      height: 19px;
+      line-height: 16px;
+      color: #8d90a0;
+      position: relative;
+      left: 2px;
+    }
+    .member-list-footer-more-btn-text {
+      display: inline-block;
+      height: 16px;
+      display: inline-block;
+      width: 40px;
+      box-sizing: border-box;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      margin-right: 3px;
+    }
+  }
+  .member-list-waiting-footer-item {
+    justify-content: space-around !important;
+    .waiting-roomAdmit-all-btn {
+      span {
+        color: #fff;
+      }
+    }
+  }
+  .nemeeting-member-list-tabs {
+    height: 32px;
+    background: #f0f1f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 16px;
+    border-radius: 8px;
+    position: relative;
+  }
+  .nemeeting-member-list-tab {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    height: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    span {
+      white-space: nowrap;
+      overflow: hidden;
+    }
+  }
+  .nemeeting-member-list-tab-selected {
+    background-color: #337eff;
+    border-radius: 8px;
+    color: #fff;
+  }
+}
+
+.nemeeting-waiting-room-all-tip {
+  color: #333;
+  font-size: 13px;
+}
+
+.member-list-footer-more-btn-drop-down {
+  position: absolute;
+  bottom: 65px !important;
+  border-radius: 12px;
+  min-width: 120px;
+
+  box-shadow: 0px 4px 20px 0px rgba(0, 0, 0, 0.2);
+  .nemeeting-dropdown-menu {
+    border-radius: 12px;
+  }
+
+  .nemeeting-dropdown-menu-item:hover {
+    border-radius: 8px;
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.08);
+  }
+}
+
+.member-List-footer-btn-unmute-Audio {
+  margin: 0 12px;
+}
+
+.member-list-search-iconsousuo {
+  color: #8d90a0;
+}
+
+.nemeeting-mute-media-modal {
+  .nemeeting-modal-header {
+    border: none;
+    height: 24px;
+    margin-bottom: 5px;
+  }
+  .nemeeting-modal-title {
+    height: 24px !important;
+    line-height: 24px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    display: block;
+    text-align: left !important;
+  }
+  .nemeeting-modal-content {
+    padding: 20px 24px;
+  }
+}
+
+.meeting-reclaim-host-btn {
+  max-width: 120px !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

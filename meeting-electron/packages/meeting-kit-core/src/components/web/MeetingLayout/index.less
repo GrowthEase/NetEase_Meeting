@@ -1,0 +1,174 @@
+@import '../../../styles/variables.less';
+
+.nemeeting-layout-button {
+  cursor: pointer;
+  height: 21px;
+  line-height: 21px;
+  color: #fff;
+  font-weight: 500;
+  font-size: 12px;
+  padding: 0px 6px;
+  background: #3d3d3d;
+  border-radius: 2px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  .iconfont {
+    font-size: 14px;
+  }
+  .nemeeting-layout-button-text {
+    margin: 0 4px;
+  }
+  .nemeeting-layout-button-allow {
+    transform: rotate(90deg);
+    font-size: 12px;
+  }
+}
+
+.nemeeting-top-right-wrap {
+  .nemeeting-layout-list-popover {
+    .nemeeting-popover-inner,
+    .nemeeting-popover-arrow::before {
+      background-color: rgba(11, 11, 11, 0.9);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+    }
+    .nemeeting-layout-list-content {
+      color: @black-theme-color;
+    }
+    .nemeeting-layout-group-item-icon {
+      color: #d2e5fb;
+    }
+
+    .nemeeting-layout-group-item-active {
+      .nemeeting-layout-group-item-icon {
+        color: #337eff;
+      }
+    }
+  }
+}
+
+.light-theme {
+  .nemeeting-layout-list-popover {
+    .nemeeting-popover-inner,
+    .nemeeting-popover-arrow::before {
+      background: rgba(255, 255, 255, 0.9);
+      color: @light-theme-color;
+    }
+    .nemeeting-layout-header {
+      color: #3d3d3d;
+    }
+    .nemeeting-layout-footer {
+      color: @light-theme-color;
+    }
+    .nemeeting-layout-list-content {
+      color: #dceafd;
+      .nemeeting-layout-group-item-text {
+        color: @light-theme-color;
+      }
+    }
+  }
+}
+
+.nemeeting-layout-list-popover {
+  .nemeeting-popover-inner {
+    text-align: center;
+    padding: 0;
+    background-color: transparent;
+    border-radius: 2px;
+  }
+  .nemeeting-layout-header {
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    font-size: 16px;
+    color: #fff;
+    font-weight: 500;
+    border-bottom: 1px solid rgba(164, 164, 164, 0.2);
+    .link-button {
+      cursor: pointer;
+      color: #337eff;
+      font-size: 14px;
+      .iconfont {
+        margin-right: 4px;
+      }
+    }
+  }
+  .nemeeting-layout-footer {
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #666;
+    padding: 0 24px;
+    color: #fff;
+    .link-button {
+      cursor: pointer;
+      color: #337eff;
+      font-size: 14px;
+    }
+    .nemeeting-layout-footer-left {
+      display: flex;
+      align-items: center;
+      .iconfont {
+        margin-right: 4px;
+        cursor: pointer;
+      }
+      .nemeeting-switch {
+        background-color: #aca9a9;
+      }
+      .nemeeting-switch-checked {
+        background-color: #1677ff;
+      }
+    }
+    .nemeeting-layout-footer-text {
+      margin: 0 4px 0 8px;
+    }
+  }
+  .nemeeting-layout-list-content {
+    padding: 20px;
+    display: flex;
+    .nemeeting-layout-group-title {
+      white-space: nowrap;
+      color: #666;
+    }
+    .nemeeting-layout-group-content {
+      display: flex;
+    }
+    .nemeeting-layout-group-line {
+      background: rgba(164, 164, 164, 0.2);
+      height: 80px;
+      margin-top: 18px;
+    }
+    .nemeeting-layout-group-item {
+      cursor: pointer;
+      margin: 0 15px;
+    }
+    .nemeeting-layout-group-item-icon {
+      font-size: 80px;
+    }
+    .nemeeting-layout-group-item-text {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    }
+    .nemeeting-layout-group-item-radio {
+      font-size: 20px;
+    }
+    .nemeeting-layout-group-item.nemeeting-layout-group-item-active {
+      color: #337eff;
+      .nemeeting-layout-group-item-text {
+        color: #337eff;
+      }
+    }
+    .nemeeting-layout-group-item.nemeeting-layout-group-item-disable {
+      .nemeeting-layout-group-item-icon {
+        color: #8c8c91;
+      }
+      cursor: not-allowed;
+    }
+  }
+}

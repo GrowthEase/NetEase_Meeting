@@ -1,0 +1,3 @@
+#!/bin/bash
+osascript ./script.scpt
+exit 0

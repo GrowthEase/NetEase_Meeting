@@ -1,0 +1,35 @@
+.nemeeting-bullet-screen-message-list {
+  display: flex;
+  flex-direction: column-reverse;
+  height: calc(100% - 50px);
+  .nemeeting-bullet-screen-message-item-wrapper {
+    display: flex;
+  }
+  .nemeeting-bullet-screen-message-item {
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 8px;
+    margin-top: 10px;
+    text-align: left;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+  .nemeeting-bullet-screen-message-item-box {
+    font-size: 12px;
+    line-height: 18px;
+    text-align: left;
+    color: #ffffff;
+
+    display: -webkit-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-wrap: break-word;
+    word-break: break-all;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+
+    .nemeeting-bullet-screen-message-item-nickname {
+      color: #f7c266;
+    }
+  }
+}

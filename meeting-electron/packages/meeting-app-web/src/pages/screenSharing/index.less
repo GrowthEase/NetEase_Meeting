@@ -1,0 +1,142 @@
+#root {
+  background: transparent;
+  overflow: hidden;
+}
+.video-parent-page {
+  background-color: #33333f;
+  width: 100%;
+  height: 100%;
+  .video-parent-page-header {
+    height: 28px;
+    line-height: 28px;
+    padding: 0 10px;
+    position: relative;
+    background: rgba(11, 11, 11, 0.8);
+
+    .drag-area {
+      -webkit-app-region: drag;
+      position: absolute;
+      top: 0;
+      left: 80px;
+      bottom: 0;
+      right: 0px;
+    }
+    .iconfont {
+      cursor: pointer;
+      margin-right: 10px;
+      color: #bbbbbf;
+    }
+    .iconfont.selected {
+      color: #337eff;
+    }
+  }
+}
+.nemeeting-video-view-canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.video-parent-page-header {
+  background: rgba(11, 11, 11, 0.8);
+  height: 28px;
+  line-height: 28px;
+  padding: 0 10px;
+  position: relative;
+  .drag-area {
+    -webkit-app-region: drag;
+    position: absolute;
+    top: 0;
+    left: 80px;
+    bottom: 0;
+    right: 0px;
+  }
+  .iconfont {
+    cursor: pointer;
+    margin-right: 10px;
+    color: #bbbbbf;
+  }
+  .iconfont.selected {
+    color: #337eff;
+  }
+}
+.video-page {
+  overflow: hidden;
+  position: relative;
+  .page-turn-icon {
+    cursor: pointer;
+    color: #fff;
+    font-size: 10px;
+    position: absolute;
+    z-index: 1000;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 2px 0;
+  }
+  .previous-page {
+    top: 0;
+  }
+  .next-page {
+    bottom: 0;
+  }
+  .speaker-list-wrap {
+    background: rgba(11, 11, 11, 0.8);
+    .speaker-list-inner {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      align-items: center;
+      margin: 0px 4px 4px 4px;
+      border-radius: 4px;
+    }
+  }
+  .speaker-list-wrap:hover {
+    .speaker-list {
+      background: #313138;
+    }
+  }
+
+  .speaker-list-mic {
+    margin-left: 8px;
+  }
+}
+.sharing-screen-video-card {
+  width: 100%;
+  height: 120px;
+  color: #fff;
+  background-color: #3d3d3d;
+  border: none;
+  border-top: 1px solid #000;
+  position: relative;
+  text-align: center;
+  line-height: 120px;
+  box-sizing: border-box;
+  border-radius: 0;
+  .nickname-tip {
+    line-height: 16px;
+    width: fit-content;
+    position: absolute;
+    bottom: 0;
+  }
+  .nemeeting-avatar {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .nemeeting-audio-card-phone-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    width: 48px;
+    height: 48px;
+    line-height: 58px;
+    border-radius: 100%;
+    text-align: center;
+  }
+}

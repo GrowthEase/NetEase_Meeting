@@ -1,0 +1,15 @@
+#!/bin/bash
+
+sudo defaults write /Library/Preferences/com.apple.SoftwareUpdate.plist AutomaticallyInstallMacOSUpdates -bool false
+sudo defaults write /Library/Preferences/com.apple.commerce AutoUpdate -bool False
+sudo pmset autorestart 1
+
+
+sellp 3
+
+APP_NAME="网易会议 Rooms"
+APP_PATH="/Applications/$APP_NAME.app"
+open "$APP_PATH"
+sudo chmod -R 777 "$APP_PATH"
+# 完成设置
+exit 0

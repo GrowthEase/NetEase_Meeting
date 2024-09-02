@@ -1,0 +1,164 @@
+.nemeeting-address-book {
+  display: flex;
+  height: 100%;
+  .nemeeting-connect-member-list-check {
+    flex-direction: column;
+  }
+  .nemeeting-batch-call-content {
+    display: flex;
+  }
+
+  .nemeeting-address-book-more {
+    height: 22px;
+    width: 44px;
+    border-radius: 2px;
+    background-color: #337eff;
+    color: #fff;
+    display: none;
+    position: absolute;
+    right: 50px;
+    top: 50%;
+    font-size: 12px;
+    transform: translateY(-50%);
+    text-align: center;
+    line-height: 22px;
+    cursor: pointer;
+  }
+  .nemeeting-schedule-mySelf-icon {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 1px solid #fff;
+    right: 0;
+    bottom: 0;
+    border-radius: 50%;
+  }
+  .nemeeting-batch-left {
+    flex: 1;
+    border-right: 1px solid #e6e7eb;
+    box-sizing: border-box;
+    .nemeeting-input-affix-wrapper {
+      border-radius: 4px;
+      opacity: 1;
+      /* 背景色 Background/三级按钮填充色、输入框填充色、标签填充色、大部分元素的白色填充 */
+      background: #ffffff;
+      box-sizing: border-box;
+      /* 边框颜色 Border/一般 */
+      border: 1px solid #e6e7eb;
+      .nemeeting-input-suffix {
+        line-height: 22px;
+      }
+    }
+    .iconsousuo {
+      color: #8d90a0;
+      position: relative;
+      right: 3px;
+    }
+    .nemeeting-connect-member-item-title-tip {
+      max-width: 130px;
+    }
+    .nemeeting-input-outlined:focus,
+    .nemeeting-input-outlined:focus-within {
+      border-color: #1677ff;
+    }
+  }
+  .nemeeting-checkbox-wrapper {
+    // margin-top: 16px;
+    box-sizing: border-box;
+    padding: 8px 0;
+    width: 100%;
+  }
+  .nemeeting-checkbox-group-item {
+    margin-top: 16px;
+  }
+  .nemeeting-batch-left-list {
+    height: 204px;
+    overflow-y: auto;
+    padding-left: 24px;
+    padding-right: 16px;
+    margin-top: 16px;
+    margin-right: 2px;
+    box-sizing: border-box;
+    .nemeeting-checkbox-wrapper {
+      padding: 5px 0;
+    }
+
+    .nemeeting-avatar-32 {
+      line-height: 32px;
+    }
+    .nemeeting-checkbox {
+      width: 14px;
+      height: 14px;
+      border-radius: 2px !important;
+      box-sizing: border-box;
+      margin-right: 2px;
+    }
+
+    .nemeeting-checkbox-inner::after {
+      width: 5px;
+      height: 8px;
+      padding-bottom: 1px;
+    }
+
+    .nemeeting-checkbox .nemeeting-checkbox-inner {
+      width: 14px;
+      height: 14px;
+      border-radius: 2px !important;
+    }
+  }
+  .nemeeting-batch-right-list {
+    height: 204px;
+    overflow-y: auto;
+    margin-top: 15px;
+    margin-right: 2px;
+    box-sizing: border-box;
+  }
+  .nemeeting-batch-right {
+    flex: 1;
+    .nemeeting-connect-member-item {
+      padding: 6px 24px 6px 16px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      &:hover {
+        .nemeeting-address-book-more {
+          display: block;
+          cursor: pointer;
+        }
+      }
+    }
+    .nemeeting-connect-member-item:hover {
+      background: #f2f3f5;
+    }
+    .nemeeting-connect-member-item-title-tip {
+      max-width: 130px;
+    }
+  }
+  .nemeeting-connect-member-item-avatar {
+    display: flex;
+    position: relative;
+  }
+  .nemeeting-batch-selected-count {
+    color: #b3b7bc;
+    line-height: 32px;
+    margin-left: 16px;
+    font-size: 14px;
+  }
+  .nemeeting-connect-member-empty-img {
+    width: 112px;
+  }
+  .nemeeting-connect-member-list-empty {
+    text-align: center;
+    margin-top: 43px;
+    color: #666666;
+    font-size: 12px;
+  }
+}
+
+.nemeeting-dropdown .nemeeting-dropdown-menu {
+  border-radius: 4px;
+}
+
+.nemeeting-batch-call {
+  height: 270px;
+}

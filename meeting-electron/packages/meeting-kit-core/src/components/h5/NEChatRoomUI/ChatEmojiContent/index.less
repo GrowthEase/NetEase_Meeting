@@ -1,0 +1,50 @@
+.chat-input-emoji-content {
+  text-align: left;
+  overflow: scroll;
+  height: 240px;
+  background: #f5f6f7;
+  padding: 16px 10px 50px 10px;
+  position: relative;
+  .chat-input-emoji-item-wrapper {
+    width: calc(100% / 7);
+    margin-bottom: 16px;
+    display: inline-block;
+    text-align: center;
+  }
+  .chat-input-emoji-content-buttons {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    position: fixed;
+    bottom: 34px;
+    right: 12px;
+    .chat-input-emoji-content-button-delete {
+      width: 54px;
+      height: 40px;
+      background-color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 8px;
+      margin-right: 12px;
+      .iconfont {
+        margin: 0;
+        font-size: 24px;
+        color: #b1b6c2;
+      }
+    }
+    .chat-input-emoji-content-button-send {
+      width: 54px;
+      height: 40px;
+      text-align: center;
+      line-height: 40px;
+      color: #fff;
+      font-size: 14px;
+      border-radius: 8px;
+      background-color: #337eff;
+    }
+    .chat-input-emoji-content-button-send-disabled {
+      background-color: #b1b6c2;
+    }
+  }
+}

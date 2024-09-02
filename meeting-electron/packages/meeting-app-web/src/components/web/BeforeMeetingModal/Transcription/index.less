@@ -1,0 +1,154 @@
+.nemeeting-app-transcription {
+  height: 620px;
+  position: relative;
+  background-color: #f0f1f5;
+  overflow-y: auto;
+  .nemeeting-app-trans-list {
+    padding: 16px;
+  }
+  .nemeeting-app-transcription-detail {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: #fff;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+  }
+  .nemeeting-app-trans-detail-btn {
+    font-size: 14px;
+  }
+  .nemeeting-app-trans-detail-virtual-content {
+    padding: 16px 20px;
+  }
+  .nemeeting-app-trans-detail-content {
+    flex: 1;
+  }
+  .nemeeting-app-trans-detail-footer {
+    height: 64px;
+    border-top: 1px solid #e6e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .nemeeting-transcription-item {
+    display: flex;
+    justify-content: start;
+    align-items: start;
+    margin-bottom: 12px;
+
+    .nemeeting-transcription-item-nickname {
+      margin-right: 8px;
+    }
+    .nemeeting-transcription-item-name-wrapper {
+      display: flex;
+      line-height: 18px;
+    }
+    .nemeeting-transcription-item-name {
+      color: #1e1f27;
+      font-size: 14px;
+      margin-right: 8px;
+      margin-left: 4px;
+    }
+    .nemeeting-transcription-item-content {
+      line-height: 22px;
+      user-select: text;
+      word-wrap: break-word;
+      word-break: break-all;
+    }
+    .nemeeting-transcription-item-time {
+      color: #8d90a0;
+      font-size: 12px;
+    }
+  }
+  .nemeeting-app-trans-list-item {
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 48px;
+    cursor: pointer;
+  }
+  .nemeeting-app-trans-list-item-date {
+    color: #53576a;
+    font-size: 14px;
+  }
+  .nemeeting-app-tran-title {
+    font-size: 14px;
+    color: #1e1f27;
+    font-weight: 500;
+    height: 48px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+  }
+  .nemeeting-app-trans-list-content {
+    background-color: #fff;
+    border-radius: 8px;
+  }
+  .nemeeting-app-trans-detail-header {
+    height: 40px;
+    padding-left: 16px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #e6e7eb;
+    box-sizing: border-box;
+  }
+  .nemeeting-app-trans-detail-header-back {
+    cursor: pointer;
+  }
+  .nemeeting-app-trans-detail-header-title {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    font-size: 14px;
+    color: #53576a;
+    transform: translate(-50%, -50%);
+  }
+}
+.nemeeting-app-trans-detail-pop {
+  .nemeeting-popover-inner {
+    padding: 0;
+  }
+}
+.nemeeting-app-trans-popover-content {
+  width: 160px;
+  height: 128px;
+  padding: 4px;
+  box-sizing: border-box;
+  .nemeeting-app-trans-save-title {
+    color: #8d90a0;
+    font-size: 12px;
+    line-height: 16px;
+    padding: 0 8px;
+    margin: 4px 0;
+  }
+  .nemeeting-app-trans-save-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    height: 32px;
+    border-radius: 8px;
+    padding: 0 8px;
+    &:hover {
+      background-color: #e6e7eb;
+    }
+  }
+  .nemeeting-app-trans-save-item-label {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    font-size: 14px;
+    color: #1e1f27;
+  }
+  .ne-trans-save-item-label-icon {
+    margin-right: 8px;
+    font-size: 18px;
+  }
+  .ne-trans-save-item-icon {
+    color: #1677ff;
+  }
+}

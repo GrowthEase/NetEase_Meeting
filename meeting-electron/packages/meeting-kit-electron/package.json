@@ -1,0 +1,35 @@
+{
+  "name": "nemeeting-electron-sdk",
+  "version": "4.8.0",
+  "description": "NetEase Meeting Electron SDK",
+  "keywords": ["Meeting", "Electron"],
+  "license": "MIT",
+  "main": "lib/kit/impl/meeting_kit.js",
+  "files": ["lib", "build", "package.json"],
+  "scripts": {
+    "build": "gulp"
+  },
+  "dependencies": {
+    "applescript": "^1.0.0",
+    "electron-updater": "^6.1.1",
+    "electron-log": "^5.0.0",
+    "image-size": "1.0.2",
+    "network": "^0.7.0",
+    "semver": "^7.5.4",
+    "systeminformation": "^5.21.11",
+    "neroom-types": "1.31.2",
+    "neroom-node-sdk": "1.31.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.9",
+    "@electron-forge/cli": "^7.4.0",
+    "cross-env": "^7.0.3",
+    "electron": "24.8.3",
+    "electron-builder": "24.6.3",
+    "typescript": "^5.3.0",
+    "gulp": "^4.0.2",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "del": "^6.0.0",
+    "nemeeting-core-sdk": "workspace:^"
+  }
+}

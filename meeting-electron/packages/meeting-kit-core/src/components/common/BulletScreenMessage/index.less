@@ -1,0 +1,111 @@
+.nemeeting-bullet-screen-message-container {
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 350px;
+  height: 400px;
+  pointer-events: none;
+
+  &.nemeeting-bullet-screen-message-container-expand {
+    padding-left: 12px;
+  }
+
+  .nemeeting-bullet-screen-message-container-expand-btn {
+    width: 36px;
+    height: 36px;
+    pointer-events: auto;
+    background: rgba(0, 0, 0, 0.36);
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    cursor: pointer;
+    color: #fff;
+    line-height: 36px;
+    position: absolute;
+    bottom: 0;
+    &:hover {
+      background: rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  .nemeeting-bullet-screen-message-input-container {
+    pointer-events: auto;
+    display: flex;
+    position: absolute;
+    bottom: 0;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 8px;
+    font-size: 12px;
+    align-items: center;
+    height: 30px;
+    box-sizing: border-box;
+    .private-chat-member {
+      color: #fff;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      .private-chat-member-name {
+        .private-chat-member-name-text {
+          max-width: 75px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          font-size: 12px;
+        }
+      }
+    }
+
+    .jinyan-icon {
+      color: #ffffff;
+      opacity: 0.8;
+      font-size: 18px;
+    }
+    .nemeeting-bullet-screen-message-input-divider {
+      height: 20px;
+      width: 1px;
+      background-color: #d8d8d8;
+      opacity: 0.5;
+      margin: 0 5px;
+    }
+    .nemeeting-bullet-screen-message-fold-btn {
+      color: #fff;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      .iconfont {
+        font-size: 14px;
+      }
+    }
+    input {
+      width: 100px;
+      background-color: transparent;
+      border: none;
+      color: #fff;
+      caret-color: #fff;
+      &:focus-visible {
+        outline: none;
+      }
+    }
+    &.nemeeting-bullet-screen-message-input-container-focus {
+      input {
+        width: 170px;
+      }
+    }
+    &.nemeeting-bullet-screen-message-input-container-hide {
+      display: none;
+    }
+  }
+}
+
+.screen-share-setting-group-content {
+  .nemeeting-space-item {
+    height: 16px;
+    line-height: 16px;
+    margin-bottom: 20px;
+  }
+  .nemeeting-space-gap-row-small {
+    row-gap: 0px;
+  }
+  .nemeeting-space-item:last-child {
+    margin-bottom: 0px;
+  }
+}

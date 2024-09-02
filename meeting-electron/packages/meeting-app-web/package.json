@@ -1,0 +1,77 @@
+{
+  "name": "nemeeting-app-web",
+  "version": "4.8.0",
+  "private": true,
+  "description": "Secure, simple and open video conferencing solution that enhances office collaboration efficiency and caters to meetings of all sizes. Features include remote audio/video conferences and online collaboration tools.",
+  "author": "netease",
+  "main": "./app/main.js",
+  "scripts": {
+    "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider PLATFORM=electron RUN_ENV=development umi build",
+    "build:h5": "cross-env PLATFORM=h5 RUN_ENV=development umi build",
+    "build:web": "cross-env NODE_OPTIONS=--openssl-legacy-provider RUN_ENV=development umi build",
+    "build:prod": "cross-env NODE_OPTIONS=--openssl-legacy-provider PLATFORM=electron RUN_ENV=production umi build",
+    "build:online": "cross-env NODE_OPTIONS=--openssl-legacy-provider PLATFORM=electron RUN_ENV=production umi build",
+    "build:test": "cross-env NODE_OPTIONS=--openssl-legacy-provider PLATFORM=electron RUN_ENV=development umi build",
+    "build:h5-prod": "cross-env PLATFORM=h5 RUN_ENV=production umi build",
+    "build:web-prod": "cross-env NODE_OPTIONS=--openssl-legacy-provider RUN_ENV=production umi build",
+    "postinstall": "umi generate tmp",
+    "prettier": "prettier --write '**/*.{js,jsx,tsx,ts,less,md,json}'",
+    "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider umi dev",
+    "start:prod": "cross-env RUN_ENV=production NODE_OPTIONS=--openssl-legacy-provider   umi dev",
+    "test": "umi-test",
+    "test:coverage": "umi-test --coverage"
+  },
+  "lint-staged": {
+    "*.{js,jsx,less,md,json}": [
+      "prettier --write"
+    ],
+    "*.ts?(x)": [
+      "prettier --parser=typescript --write"
+    ]
+  },
+  "dependencies": {
+    "@ant-design/icons": "^5.3.7",
+    "@ant-design/pro-layout": "^6.5.0",
+    "@antv/g2": "^5.1.16",
+    "@emotion/css": "^11.11.2",
+    "ahooks": "^3.7.8",
+    "ansi-regex": "^6.0.1",
+    "antd": "^5.17.0",
+    "antd-mobile": "^5.18.0",
+    "axios": "^0.27.2",
+    "classnames": "^2.5.1",
+    "cross-env": "^7.0.3",
+    "dayjs": "^1.11.11",
+    "dotenv": "^16.1.1",
+    "eventemitter3": "^4.0.7",
+    "hawk-web": "^1.3.14",
+    "lottie-web": "^5.11.0",
+    "nemeeting-web-sdk": "workspace:^",
+    "neroom-types": "1.31.2",
+    "qs": "^6.12.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-i18next": "^12.2.2",
+    "react-qr-code": "^2.0.12",
+    "react-virtualized": "^9.22.5",
+    "swiper": "8",
+    "ts-md5": "^1.2.11",
+    "umi": "^3.5.40",
+    "wait-on": "^7.0.1"
+  },
+  "devDependencies": {
+    "@types/qs": "^6.9.15",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@umijs/preset-react": "1.x",
+    "@umijs/test": "^3.5.40",
+    "lint-staged": "^10.0.7",
+    "node-loader": "^2.0.0",
+    "prettier": "^2.2.0",
+    "typescript": "^4.1.2",
+    "yorkie": "^2.0.0"
+  },
+  "gitHooks": {
+    "pre-commit": "lint-staged"
+  }
+}
