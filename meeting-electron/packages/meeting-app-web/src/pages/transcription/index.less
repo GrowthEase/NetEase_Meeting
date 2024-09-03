@@ -1,0 +1,42 @@
+.nemeeting-transcription-page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  background-color: #fff;
+  box-sizing: border-box;
+  height: 100%;
+  font-family: system-ui;
+  .electron-drag-bar {
+    .drag-region {
+      -webkit-app-region: drag;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 40px;
+    }
+    height: 50px;
+    font-weight: normal;
+    line-height: 50px;
+    text-align: center;
+    border-bottom: 1px solid #ebedf0;
+    position: relative;
+  }
+  .title {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+    text-align: center;
+    letter-spacing: 0em;
+    /* 文字颜色 Text/强调&正文标题 */
+    color: #1e1f27;
+  }
+}
+
+.meeting-history-bg {
+  .electron-drag-bar {
+    border-bottom: none;
+  }
+}

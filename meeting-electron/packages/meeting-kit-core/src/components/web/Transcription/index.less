@@ -1,0 +1,120 @@
+.nemeeting-transcription {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+  padding-right: 4px;
+  .nemeeting-transcription-content {
+    flex: 1;
+    overflow: hidden;
+  }
+  .nemeeting-app-trans-detail-virtual-content {
+    padding-bottom: 5px;
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  .nemeeting-transcription-footer-tip {
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .nemeeting-transcription-footer {
+    opacity: 1;
+  }
+  .nemeeting-transcription-start-tip {
+    font-size: 12px;
+    line-height: 18px;
+    margin-top: 16px;
+    margin-bottom: 12px;
+    color: #8d90a0;
+    text-align: center;
+  }
+  .nemeeting-transcription-footer-content {
+    height: 60px;
+    border-top: 1px solid #e6e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    .nemeeting-tran-setting-icon {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      color: #8D90A0;
+      cursor: pointer;
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.08);
+      }
+    }
+  }
+  .nemeeting-transcription-btn {
+    border-radius: 4px;
+    width: 96px;
+    span {
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      width: 100%;
+    }
+  }
+  .nemeeting-transcription-footer-tag {
+    background-color: #f0f1f5;
+    border-radius: 4px;
+    height: 22px;
+    padding: 0 6px;
+    box-sizing: border-box;
+    color: #8d90a0;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+.nemeeting-transcription-item {
+  display: flex;
+  justify-content: start;
+  align-items: start;
+  margin-bottom: 12px;
+
+  .nemeeting-transcription-item-nickname {
+    margin-right: 8px;
+  }
+  .nemeeting-transcription-item-name-wrapper {
+    display: flex;
+    line-height: 18px;
+    margin-left: 4px;
+  }
+  .nemeeting-transcription-item-name {
+    color: #1e1f27;
+    font-size: 12px;
+    margin-right: 8px;
+    margin-left: 4px;
+    flex: 1;
+  }
+  .nemeeting-transcription-item-content {
+    line-height: 22px;
+    user-select: text;
+    word-wrap: break-word;
+    word-break: break-all;
+    border-radius: 4px;
+    padding: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+    &:hover {
+      background-color: #adcbff;
+    }
+  }
+  .nemeeting-transcription-item-time {
+    color: #8d90a0;
+    font-size: 12px;
+  }
+}

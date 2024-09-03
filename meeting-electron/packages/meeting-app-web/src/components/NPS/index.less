@@ -1,0 +1,134 @@
+.nps-score-wrap {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px 0 20px 0;
+  .nps-score-item {
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    cursor: pointer;
+    position: relative;
+    .nps-score-text {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      text-align: center;
+      background-color: #f0f1f5;
+      overflow: hidden;
+      border-radius: 50%;
+    }
+    .nps-score-animation {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      svg {
+        transform: translate3d(0px, 0px, 0px) scale(1.36) !important;
+      }
+    }
+    &:hover {
+      .nps-score-text {
+        background-color: #fff;
+      }
+    }
+  }
+}
+.nps-score-tip-wrap {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 16px;
+  letter-spacing: 0px;
+  color: #3d3d3d;
+  margin: 0px 0px 20px 0px;
+}
+.nps-feedback-success {
+  height: 244px;
+  padding-top: 40px;
+  text-align: center;
+  #nps-feedback-success-svg {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+  }
+  .nps-feedback-text {
+    margin-top: 10px;
+    font-weight: 500;
+    font-size: 18px;
+  }
+}
+
+.nps-modal-wrap {
+  .nemeeting-modal-close {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .nemeeting-modal-header {
+    padding: 13px 0;
+    text-align: center;
+    box-sizing: border-box;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0;
+    border-bottom: 1px solid #e6e7eb;
+    .nemeeting-modal-title {
+      width: 500px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+  .nemeeting-modal-content {
+    padding: 0;
+    height: 395px;
+    box-sizing: border-box;
+  }
+  .feedback-submit-btn {
+    color: #ffffff;
+  }
+  .nemeeting-modal-content {
+    .nps-feedback-footer {
+      .nemeeting-btn-primary:disabled {
+        color: #d9d9d9;
+      }
+    }
+  }
+}
+
+.nps-score-and-tip-wrap {
+  padding: 0 24px;
+  .nemeeting-input-outlined {
+    border-color: #e6e7eb;
+    padding: 16px;
+  }
+  .nemeeting-input-outlined:focus,
+  .nemeeting-input-outlined:focus-within {
+    border-color: #1677ff;
+    box-shadow: 0 0 0 2px rgba(5, 145, 255, 0.1);
+    outline: 0;
+    background-color: #ffffff;
+  }
+}
+
+.nps-feedback-footer {
+  height: 64px;
+  border-top: 1px solid #e6e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  .nemeeting-btn {
+    width: 112px;
+    height: 40px;
+    border-radius: 4px;
+  }
+  .feedback-submit-btn {
+    color: #ffffff;
+  }
+}

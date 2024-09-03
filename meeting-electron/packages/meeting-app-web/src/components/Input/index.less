@@ -1,0 +1,172 @@
+.baseInput {
+  position: relative;
+  width: 100%;
+  height: 44px;
+  box-sizing: border-box;
+  padding-top: 8px;
+  .nemeeting-input-prefix {
+    font-size: 17px;
+    margin-inline-end: 8px;
+  }
+  .baseInputContent {
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    outline: none;
+    box-shadow: none;
+    border-radius: 0;
+    border-bottom: 1px solid #dcdfe5;
+    .nemeeting-input {
+      border-top: none;
+      border-right: none;
+      border-left: none;
+      font-size: 17px;
+      color: #333333;
+      // font-family: SFProText-Regular;
+      padding-left: 2px;
+      &:focus {
+        box-shadow: none;
+        color: #337eff;
+      }
+    }
+    .nemeeting-input-suffix {
+      height: 30px;
+    }
+  }
+  .tip {
+    position: absolute;
+    font-size: 12px;
+    color: #337eff;
+    line-height: 22px;
+    top: 40x;
+    left: 2px;
+  }
+  .closeIcon {
+    position: absolute;
+    cursor: pointer;
+    height: 20px;
+    width: 20px;
+    background-color: #ccc;
+    color: #fff;
+    line-height: 20px;
+    border-radius: 50%;
+    right: 10px;
+    top: 5px;
+    font-size: 20px;
+  }
+}
+.baseInput {
+  .nemeeting-input {
+    border-top: none;
+    border-right: none;
+    border-left: none;
+    font-size: 17px;
+    color: #333333;
+    // font-family: SFProText-Regular;
+    padding-left: 2px;
+    &:focus {
+      box-shadow: none;
+      color: #337eff;
+    }
+  }
+  .nemeeting-input-suffix {
+    height: 30px;
+  }
+}
+
+.phoneInput {
+  .phone-input-number-wrap {
+    display: flex;
+    align-items: center;
+  }
+  .phoneInputNumber {
+    display: inline-block;
+    color: #333;
+    width: 32px;
+    padding-right: 16px;
+  }
+  .line {
+    display: inline-block;
+    height: 20px;
+    width: 1px;
+    opacity: 1;
+    background: #dcdfe5;
+    margin-right: 16px;
+  }
+  input {
+    padding-left: 16px;
+  }
+}
+.pwdInput {
+  :global {
+    .eyeIcon {
+      display: none;
+      cursor: pointer;
+    }
+    .nemeeting-input:focus + .nemeeting-input-suffix > .eyeIcon,
+    .eyeIcon:hover {
+      display: inline-block;
+    }
+  }
+}
+.countdown {
+  display: inline-block;
+  color: #337eff;
+  margin-right: 4px;
+}
+
+.login-enterprise {
+  .nemeeting-input-outlined {
+    background: none;
+  }
+  .loginTop {
+    padding: 0;
+  }
+  .loginTopLeft {
+    .back-icon-wrap {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      font-size: 16px;
+      cursor: pointer;
+      color: #1e1f27;
+      top: 15px;
+      .back-icon {
+        top: 0;
+      }
+    }
+    .loginTitle {
+      margin-top: 6px;
+    }
+  }
+  .login-panel .loginTop {
+    margin-bottom: 0px;
+  }
+  .baseInput {
+    padding-top: 0px;
+    margin-top: 30px;
+  }
+  .input-container > .baseInput:last-child {
+    margin-top: 24px;
+  }
+  .input-container {
+    margin-bottom: 80px !important;
+  }
+  .footer {
+    height: 52px;
+    text-align: center;
+    margin-bottom: 40px;
+    margin-top: 25px;
+  }
+  .nemeeting-btn-primary:disabled {
+    background: #85b2ff;
+  }
+  .nemeeting-input-prefix {
+    margin-right: 8px;
+  }
+}
+.send-code-button {
+  span {
+    color: #337eff;
+  }
+}

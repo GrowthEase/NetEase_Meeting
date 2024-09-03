@@ -1,0 +1,958 @@
+.nemeeting-setting {
+  .normal-setting {
+    .normal-setting-item {
+      display: flex;
+      align-items: center;
+      height: 16px;
+      box-sizing: border-box;
+      .nemeeting-checkbox-wrapper {
+        margin-top: 0px;
+      }
+      .nemeeting-blacklist-tip {
+        margin-left: 0;
+      }
+    }
+    .nemeeting-tran-setting-tip {
+      color: #999;
+      font-size: 14px;
+      font-weight: normal;
+    }
+    .nemeeting-trans-setting-title {
+      margin-top: 40px;
+    }
+  }
+  .nemeeting-progress {
+    margin-top: 3px;
+  }
+  .nemeeting-progress .nemeeting-progress-steps-item {
+    margin-inline-end: 10px;
+  }
+  .nemeeting-setting-caption-show {
+    width: 540px;
+    height: 88px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.66);
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  .nemeeting-setting-caption-12 {
+    font-size: 12px;
+    line-height: 18px;
+  }
+  .nemeeting-setting-caption-15 {
+    font-size: 15px;
+    line-height: 22px;
+  }
+  .nemeeting-setting-caption-18 {
+    font-size: 18px;
+    line-height: 28px;
+  }
+  .nemeeting-setting-caption-21 {
+    font-size: 21px;
+    line-height: 30px;
+  }
+  .nemeeting-setting-caption-24 {
+    font-size: 24px;
+  }
+  .nemeeting-setting-caption-demo {
+    text-align: center;
+  }
+  .nemeeting-setting-caption-size-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    margin-bottom: 20px;
+  }
+  .nemeeting-setting-caption-size-slider {
+    flex: 1;
+    margin-left: 44px;
+    margin-bottom: 0;
+    margin-top: 0;
+  }
+  .nemeeting-setting-caption-demo-text {
+    font-weight: 500;
+    letter-spacing: 0em;
+    color: #ffffff;
+  }
+  .nemeeting-setting-caption-demo-en {
+    font-weight: 500;
+    letter-spacing: 0em;
+    color: #f7c266;
+  }
+  .nemeeting-progress .nemeeting-progress-steps-item:last-child {
+    margin-inline-end: 4px;
+  }
+  // .nemeeting-progress .nemeeting-progress-steps-outer {
+  //   justify-content: flex-end;
+  // }
+  .nemeeting-modal-content {
+    overflow: hidden;
+  }
+  .nemeeting-modal-header {
+    margin-bottom: 0;
+  }
+  .nemeeting-modal-body {
+    padding: 0;
+  }
+  .video-mirror {
+    transform: rotatey(180deg);
+  }
+  .video-mirror-check,
+  .video-resolution-check {
+    margin-top: 20px;
+    .icona-45 {
+      color: #cccccc;
+    }
+  }
+  .video-open {
+    margin-top: 20px;
+  }
+  .nemeeting-btn-primary:disabled {
+    opacity: 0.65;
+    border: none;
+    background-color: #1677ff;
+    color: #fff;
+  }
+  .nemeeting-menu-title-content {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 100px;
+  }
+  .nemeeting-menu-light .nemeeting-menu-item-selected {
+    border-radius: 8px;
+    // height: 40px;
+    color: #fff;
+    background: #337eff;
+    .nemeeting-menu-title-content {
+      font-weight: bold;
+    }
+  }
+  .setting-wrap {
+    // padding-right: 36px;
+    // box-sizing: border-box;
+    //padding-top: 30px;
+    //overflow-y: auto;
+  }
+  .video-setting {
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+    // align-items: center;
+  }
+  .normal-setting-language {
+    display: flex;
+    align-items: center;
+    .nemeeting-select-selector {
+      border: 1px solid #e1e3e5;
+    }
+  }
+  .normal-setting-title {
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  .normal-setting-sub-title {
+    margin-right: 45px;
+    font-size: 14px;
+    font-weight: normal;
+    line-height: 16px;
+    letter-spacing: 0px;
+    color: #333;
+  }
+  .normal-setting-download {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    margin-bottom: 40px;
+  }
+  .normal-setting-label {
+    width: 100px;
+    margin-right: 10px;
+    font-size: 14px;
+    color: #333333;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .normal-setting-download-path {
+    height: 100%;
+    width: 320px;
+    padding: 8px 30px 8px 12px;
+    line-height: 16px;
+    border-radius: 4px;
+    opacity: 1;
+    box-sizing: border-box;
+    border: 1px solid #e1e3e5;
+    font-size: 14px;
+    font-weight: normal;
+    letter-spacing: 0px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #999999;
+  }
+
+  .normal-setting-item {
+    margin-bottom: 20px;
+    font-size: 14px;
+    .nemeeting-checkbox-wrapper {
+      span {
+        color: #333333;
+      }
+    }
+    &:last-child {
+      margin-bottom: 36px;
+    }
+  }
+  .normal-setting-item:last-child {
+    margin-bottom: 40px;
+  }
+  .video-setting-item {
+    // display: flex;
+    padding-bottom: 40px;
+    .output-level-title {
+      height: 16px;
+    }
+    .nemeeting-checkbox-wrapper {
+      height: 16px;
+      .span {
+        height: 16px;
+      }
+    }
+  }
+
+  .more-setting-item {
+    .voice-quality-content {
+      // width: fit-content;
+      .sub-setting-quality {
+        height: 44px;
+        box-sizing: border-box;
+        margin-left: 24px;
+        .check-space {
+          margin-top: 12px;
+        }
+      }
+    }
+    .voice-quality-tooltip .nemeeting-tooltip-inner {
+      background-color: #fff;
+      color: #333;
+      width: 312px;
+    }
+  }
+  .icon-menu {
+    color: #c5c8cd;
+  }
+  .video-setting-title {
+    //width: 83px;
+    margin-bottom: 20px;
+    white-space: nowrap;
+  }
+  .video-canvas {
+    width: 540px;
+    height: 304px;
+    background-color: #000;
+    margin-bottom: 20px;
+    margin-top: -15px;
+    overflow: hidden;
+    position: relative;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+  .nemeeting-menu-item {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    width: 100%;
+    border-radius: 0;
+    height: 50px;
+    .iconfont {
+      font-size: 16px;
+    }
+  }
+  .nemeeting-progress-line {
+    margin-bottom: 0;
+    margin-right: 0;
+  }
+  .audio-select-wrap {
+    display: flex;
+    justify-content: space-between;
+    .nemeeting-select {
+    }
+  }
+  .icona-45 {
+    font-size: 14px;
+  }
+  .setting-title {
+    font-size: 14px;
+    font-weight: bold;
+    text-align: left;
+    margin-right: 25px;
+    margin-bottom: 20px;
+    height: 16px;
+  }
+  .video-setting-content {
+    flex: 1;
+    color: #333;
+    font-size: 14px;
+    .radio-title {
+      margin-bottom: 20px;
+    }
+    .radio-item {
+      margin-right: 48px;
+    }
+  }
+  .video-device-select {
+    width: 320px;
+  }
+  .audio-device-select {
+    // max-width: 300px;
+    flex: 1;
+  }
+  .icon-color {
+    color: #ccc;
+  }
+  .setting-menu {
+    height: 100%;
+  }
+  .icon-menu {
+    color: #c5c8cd;
+  }
+  .output-level {
+    display: flex;
+    margin: 20px 0;
+    align-items: center;
+    height: 16px;
+  }
+  .output-level-content {
+    display: flex;
+    align-items: center;
+    flex: 1;
+  }
+  .output-leve-progress {
+    flex: 1;
+  }
+  .output-slider {
+    flex: 1;
+    margin: 0 15px;
+  }
+  .camera-label {
+    width: 80px;
+  }
+  .nemeeting-slider-track {
+    background-color: #337eff !important;
+  }
+  .nemeeting-slider-handle::after {
+    box-shape: 0 0 0 2px #337eff;
+  }
+  .output-volume {
+    margin-bottom: 0;
+  }
+  .checkbox-space {
+    margin-top: 16px;
+  }
+  .checkbox-space-text {
+    height: 16px;
+  }
+
+  .nemeeting-checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    color: #333333;
+    margin-top: 20px;
+    width: fit-content;
+    span {
+      display: inline-block;
+      height: 16px;
+      line-height: 16px;
+      font-size: 14px;
+    }
+  }
+  .sub-setting-quality {
+    .nemeeting-checkbox-wrapper-disabled {
+      margin-top: 12px !important;
+    }
+  }
+
+  .nemeeting-select-selection-item {
+    color: #333333;
+  }
+  .output-level-title {
+    width: 60px;
+    padding-right: 40px;
+    white-space: nowrap;
+    color: #333333;
+  }
+  .toolbar-tip {
+    color: #333333;
+  }
+}
+.nemeeting-select-dropdown
+  .nemeeting-select-item-option-selected:not(
+    .nemeeting-select-item-option-disabled
+  ) {
+  background-color: inherit;
+  color: #337eff;
+  font-weight: 400;
+}
+.nemeeting-select-dropdown .nemeeting-select-item {
+  color: #000;
+}
+.nemeeting-select-dropdown
+  .nemeeting-select-item-option-active:not(
+    .nemeeting-select-item-option-disabled
+  ) {
+  background: #f7f8fa;
+}
+
+.beauty-setting {
+  margin-top: 20px;
+  .beauty-setting-slider {
+    height: 16px;
+    .beauty-effect-title {
+      font-size: 14px;
+    }
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    // width: 450px;
+    // margin-left: 50%;
+    // transform: translateX(-50%);
+    .nemeeting-slider {
+      // margin-left: 20px;
+      flex: 1;
+    }
+  }
+  .iconjinzhi {
+    font-size: 17px;
+    color: #666666;
+  }
+  .iconmeiyanxiaoguo {
+    font-size: 17px;
+    color: #666666;
+  }
+  .beauty-setting-slider-line-wrapper {
+    width: 450px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .beauty-setting-none {
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    cursor: pointer;
+    margin-right: 10px;
+  }
+  .beauty-setting-full {
+    width: 16px;
+    height: 16px;
+    margin-left: 12px;
+    margin-bottom: 2px;
+    cursor: pointer;
+  }
+  .beauty-setting-slider-line {
+    flex: 1;
+    display: flex;
+  }
+  .beauty-video-canvas {
+    width: 540px;
+    height: 304px;
+    background-color: #333;
+    overflow: hidden;
+    margin: -15px 0 20px 0;
+    border-radius: 6px;
+    position: relative;
+  }
+  .beauty-video-radio-group {
+    display: flex;
+    align-items: center;
+    width: 200px;
+    margin-left: 50%;
+    transform: translateX(-50%);
+  }
+  .beauty-setting-background-list {
+    width: 470px;
+    margin: 15px auto 0px;
+    height: 270px;
+    overflow-y: auto;
+    .virtual-selected-item {
+      border: 2px solid #337eff;
+    }
+    .beauty-setting-background-item {
+      box-sizing: border-box;
+      display: inline-block;
+      width: 98px;
+      height: 62px;
+      border-radius: 4px;
+      box-sizing: border-box;
+      cursor: pointer;
+      vertical-align: middle;
+      margin-left: 20px;
+      margin-bottom: 12px;
+      position: relative;
+      &:nth-child(4n + 1) {
+        margin-left: 0;
+      }
+      &:hover {
+        .anticon-close-circle {
+          display: block;
+        }
+      }
+      img {
+        width: 100%;
+        height: 100%;
+        border-radius: 4px;
+      }
+
+      .anticon-close-circle {
+        display: none;
+        position: absolute;
+        top: 0;
+        right: 0;
+        color: red;
+        font-size: 16px;
+      }
+    }
+    .empty-background {
+      background-color: #727272;
+      text-align: center;
+      line-height: 60px;
+      color: #fff;
+      font-size: 14px;
+    }
+    .add-background {
+      border: 1px dashed #999999;
+      color: #999999;
+      text-align: center;
+      font-size: 12px;
+      .anticon-plus-circle {
+        font-size: 14px;
+        display: block;
+        margin: 15px 0 6px 0;
+      }
+    }
+  }
+}
+.nemeeting-setting-content {
+  display: flex;
+  height: 550px;
+  box-sizing: border-box;
+  color: #333;
+  .menu-wrap {
+    width: 180px;
+    .nemeeting-menu-item {
+      color: #333;
+      height: 40px;
+      margin-top: 16px;
+      border-radius: 8px;
+      transition: none;
+      padding-inline-start: 8px;
+      padding-inline-end: 0px;
+    }
+    .nemeeting-menu-item:nth-child(1) {
+      margin-top: 8px;
+    }
+    .nemeeting-menu-item.nemeeting-menu-item-selected {
+      border-radius: 8px;
+      color: #fff;
+      background: #337eff;
+      &.nemeeting-menu-item-active:hover {
+        background: #337eff;
+      }
+      .nemeeting-menu-title-content {
+        font-weight: bold;
+      }
+    }
+    .nemeeting-menu-item.nemeeting-menu-item-active:hover {
+      background: rgba(51, 126, 255, 0.1);
+    }
+  }
+  .setting-content {
+    padding-top: 20px;
+    padding-left: 40px;
+    padding-right: 36px;
+    margin-bottom: 5px;
+    overflow-x: hidden;
+    margin-right: 2px;
+    height: 550px;
+    flex: 1;
+    overflow-y: auto;
+    .nemeeting-btn-primary {
+      border: 1px solid #337eff;
+      color: #337eff;
+    }
+    .nemeeting-select-selector {
+      border: 1px solid #e1e3e5;
+      border-radius: 4px;
+    }
+  }
+  .nemeeting-menu {
+    padding: 0 12px;
+    color: #666;
+    .icon-menu {
+      font-size: 22px;
+      color: #c5c8cd;
+    }
+  }
+  .nemeeting-menu-item-selected {
+    .icon-menu {
+      color: #fff;
+    }
+  }
+  .nemeeting-security-and-account {
+    color: #333;
+  }
+  .security-account-title {
+    font-size: 14px;
+    font-weight: bold;
+  }
+  .security-account-title-tip {
+    font-size: 14px;
+    color: #697385;
+  }
+  .security-account-label {
+    min-width: 100px;
+  }
+  .security-account-item {
+    font-size: 14px;
+  }
+  .security-account-item-wrap {
+    display: flex;
+    line-height: 16px;
+    margin-top: 24px;
+  }
+  .nemeeting-security-section {
+    margin-top: 48px;
+  }
+  .security-account-modify {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 14px;
+  }
+  .security-account-input-tip {
+    font-size: 12px;
+    margin-top: 4px;
+    color: #333;
+  }
+  .security-account-input-wrap {
+    padding: 0 36px;
+    margin-bottom: 18px;
+    margin-top: 20px;
+  }
+  .security-account-input {
+    margin-top: 16px;
+    border-radius: 0;
+  }
+  .security-account-error-tip {
+    margin-top: 4px;
+    color: #f24957;
+    font-size: 12px;
+    height: 18px;
+  }
+  .security-account-tip {
+    color: #999999;
+    font-size: 14px;
+  }
+
+  .security-account-modify {
+    .nemeeting-btn-round {
+      border-radius: 4px;
+      opacity: 1;
+      box-sizing: border-box;
+      border: 1px solid #e1e3e5;
+      margin-right: 150px;
+    }
+  }
+  .security-account-input-tip-light {
+    color: #337eff;
+  }
+}
+
+.beauty-setting {
+  .nemeeting-radio-button-wrapper {
+    width: 100px;
+    height: 28px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .nemeeting-radio-button-wrapper:first-child {
+    border-start-start-radius: 4px;
+    border-end-start-radius: 4px;
+    line-height: 28px;
+  }
+  .nemeeting-radio-button-wrapper:last-child {
+    border-start-end-radius: 4px;
+    border-end-end-radius: 4px;
+    line-height: 28px;
+  }
+}
+
+.nemeeting-setting-monitoring {
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .nemeeting-radio-button-wrapper {
+    width: 100px;
+    height: 28px;
+    text-align: center;
+  }
+  .nemeeting-radio-button-wrapper:first-child {
+    border-start-start-radius: 4px;
+    border-end-start-radius: 4px;
+    line-height: 28px;
+  }
+  .nemeeting-radio-button-wrapper:last-child {
+    border-start-end-radius: 4px;
+    border-end-end-radius: 4px;
+    line-height: 28px;
+  }
+  .nemeeting-radio-button-wrapper {
+    min-width: 100px;
+    text-align: center;
+  }
+
+  .monitoring-content {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    width: 540px;
+    .icon-status {
+      margin-left: 5px;
+      color: #337eff;
+      cursor: pointer;
+    }
+    .content-item-line {
+      margin-bottom: 8px;
+      white-space: nowrap;
+    }
+    .arrow {
+      font-size: 11px;
+      vertical-align: baseline;
+    }
+  }
+  .monitoring-content-box-network {
+    width: 540px;
+    height: 117px;
+    box-sizing: border-box;
+  }
+  .monitoring-content-box-cpu,
+  .monitoring-content-box-memory {
+    width: 260px;
+    height: 126px;
+    box-sizing: border-box;
+  }
+  .monitoring-content-box-network,
+  .monitoring-content-box-cpu,
+  .monitoring-content-box-memory {
+    border-radius: 4px;
+    border: 1px solid #ebebeb;
+    overflow: hidden;
+    margin-bottom: 16px;
+
+    .label {
+      color: #333;
+      font-weight: bold;
+    }
+    .title {
+      color: #697385;
+      display: flex;
+      align-items: center;
+      .iconfont {
+        font-size: 18px;
+        margin-right: 10px;
+      }
+    }
+    .header {
+      background-color: #f6f8fb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 16px;
+      height: 36px;
+    }
+    .content {
+      padding: 14px 16px;
+      .nemeeting-progress .nemeeting-progress-inner {
+        height: 6px;
+        border-radius: 8px !important;
+        overflow: hidden;
+      }
+      .content-item {
+        display: flex;
+        align-items: center;
+        color: #333;
+        justify-content: space-between;
+        height: 16px;
+        &:first-child {
+          margin-bottom: 14px;
+        }
+        .title {
+          line-height: 16px;
+          color: #333;
+          padding-left: 5px;
+        }
+        .label {
+          color: #697385;
+        }
+
+        .blue {
+          border-left: 2px solid #337eff;
+        }
+        .gray {
+          border-left: 2px solid #cccccc;
+        }
+      }
+    }
+    .network-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      .content-item {
+        width: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 40px;
+        padding: 0 16px;
+        box-sizing: border-box;
+        &:nth-child(1) {
+          border-bottom: 1px solid #ebebeb;
+        }
+        &:nth-child(2) {
+          border-bottom: 1px solid #ebebeb;
+        }
+        &:nth-child(2n) {
+          border-left: 1px solid #ebebeb;
+        }
+        .title {
+          color: #697385;
+        }
+        .arrow {
+          font-size: 11px;
+          vertical-align: baseline;
+          margin: 0 5px 0 5px;
+        }
+      }
+    }
+  }
+  .warning {
+    margin-left: 10px;
+  }
+
+  .monitoring-content-box-audio,
+  .monitoring-content-box-video,
+  .monitoring-content-box-screen {
+    width: 540px;
+    height: 100px;
+    box-sizing: border-box;
+    border-radius: 4px;
+    border: 1px solid #ebebeb;
+    overflow: hidden;
+    margin-bottom: 16px;
+    .header {
+      background-color: #f6f8fb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 16px;
+      height: 36px;
+      .title {
+        color: #697385;
+        display: flex;
+        align-items: center;
+        .iconfont {
+          font-size: 18px;
+          margin-right: 10px;
+        }
+      }
+      .label {
+        color: #333;
+        font-weight: bold;
+      }
+    }
+    .content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      .content-item {
+        width: 33%;
+        display: flex;
+        justify-content: space-between;
+        height: 64px;
+        padding: 0 16px;
+        box-sizing: border-box;
+        border-left: 1px solid #ebebeb;
+        padding: 10px 16px;
+        .title {
+          color: #333;
+        }
+        &:nth-child(1) {
+          border: none;
+        }
+        .iconfont {
+          margin-right: 5px;
+        }
+      }
+    }
+  }
+  .security-meeting-modal-wrap {
+    .nemeeting-modal-header {
+      .nemeeting-modal-title {
+        font-size: 16px;
+      }
+    }
+  }
+}
+.security-meeting-modal-wrap {
+  .before-meeting-modal-footer {
+    .nemeeting-btn {
+      color: #fff;
+    }
+  }
+}
+
+.record-setting {
+  display: flex;
+  flex-direction: column;
+  .record-setting-content-sub-item {
+    padding: 10px 0 0 20px;
+  }
+}
+
+.screen-share-setting-item {
+  margin-bottom: 40px;
+  .nemeeting-space-item {
+    margin-bottom: 12px;
+  }
+  .screen-share-setting-item-content {
+    display: flex;
+    align-items: center;
+    .nemeeting-checkbox-wrapper {
+      margin-top: 0;
+    }
+  }
+  .screen-share-setting-select-label {
+    display: flex;
+    justify-content: space-between;
+    span {
+      color: #999;
+    }
+  }
+}
+
+.screen-share-setting-title{
+  height: 16px;
+  line-height: 16px;
+}

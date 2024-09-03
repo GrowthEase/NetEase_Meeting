@@ -1,0 +1,36 @@
+.nemeeting-chatroom-editor {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 85px;
+  overflow-y: auto;
+  padding-top: 5px;
+  .nemeeting-chatroom-editable {
+    text-align: left;
+    overflow-y: auto;
+    font-size: 14px;
+    border: none;
+    box-shadow: none;
+    background-color: transparent;
+    color: #000;
+    line-height: 1.5;
+    width: 100%;
+    padding: 4px 11px;
+    outline: none;
+  }
+  [contenteditable='true']:empty:before {
+    content: attr(data-placeholder);
+    color: #808080ab;
+  }
+}
+
+.nemeeting-chatroom-editor-disabled {
+  color: #cccccc;
+  position: relative;
+  width: 100%;
+  height: 67px;
+  padding-bottom: 33px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

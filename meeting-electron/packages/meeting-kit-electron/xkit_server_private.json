@@ -1,0 +1,85 @@
+{
+  "corpCode": "yunxin",
+  "appkey": "xxx",
+  "module": {
+    "nps": {
+      "enable": false
+    },
+    "feedback": {
+      "enable": false
+    },
+    "appUpgrade": {
+      "enable": false,
+      "iosCheckUrl": ""
+    },
+    "about": {
+      "privacyUrl": "",
+      "userProtocolUrl": ""
+    },
+    "account": {
+      "deleteAccountUrl": "",
+      "registryUrl": ""
+    }
+  },
+  "meeting": {
+    "serverUrl": ""
+  },
+  "roomkit": {
+    "roomServer": ""
+  },
+  "im": {
+    "appkey": "",
+    "lbsUrl": "",
+    "weblbsUrl": "",
+    "nosReplacement": "",
+    "nosAccess": "",
+    "pubkeyVersion": "0",
+    "chatroomDemoListUrl": "",
+    "websdkSsl": true,
+    "nosSsl": true,
+    "webchatroomAddr": [""],
+    "module": "",
+    "version": 0,
+    "lbs": "",
+    "link": "",
+    "link_web": "",
+    "nos_lbs": "",
+    "nos_uploader": "",
+    "nos_uploader_host": "",
+    "https_enabled": true,
+    "nos_downloader": "",
+    "nos_accelerate": "",
+    "nos_accelerate_host": "",
+    "nt_server": "",
+    "kibana_server": "",
+    "statistic_server": "",
+    "report_global_server": "",
+    "multi_video": 1,
+    "hand_shake_type": 0,
+    "nego_key_neca": 1,
+    "nego_key_enca_key_version": 0,
+    "nego_key_enca_key_parta": "",
+    "nego_key_enca_key_partb": "",
+    "comm_enca": 1
+  },
+  "rtc": {
+    "channelServer": "",
+    "statisticsServer": "",
+    "roomServer": "",
+    "compatServer": "",
+    "nosLbsServer": "",
+    "nosUploadSever": "",
+    "nosTokenServer": "",
+    "useIPv6": false
+  },
+  "whiteboard": {
+    "webServer": "",
+    "roomServer": "",
+    "sdkLogNosServer": "",
+    "dataReportServer": "",
+    "directNosServer": "",
+    "mediaUploadServer": "",
+    "docTransServer": "",
+    "fontDownloadServer": ""
+  }
+}

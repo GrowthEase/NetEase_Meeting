@@ -1,0 +1,40 @@
+.nemeeting-whiteboard-wrap {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 12;
+  .nemeeting-whiteboard-mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0);
+    z-index: 99;
+  }
+  .whiteboard-view {
+    height: 100%;
+    width: 100%;
+    position: relative;
+    border: none;
+  }
+  .whiteboard-view-small {
+    #yunxin-whiteboard-toolCollection {
+      display: none;
+    }
+  }
+  .whiteboard-index {
+    z-index: 2;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  .docUpload-popup {
+    max-height: 74vh;
+  }
+  .tc-resize-container .tc-resize-input input[type='range'] {
+    left: 0;
+  }
+}

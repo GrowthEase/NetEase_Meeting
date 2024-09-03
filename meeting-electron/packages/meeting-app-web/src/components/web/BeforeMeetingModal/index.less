@@ -1,0 +1,2026 @@
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+  border-radius: 4px;
+  overflow: overlay;
+}
+
+::-webkit-scrollbar-button {
+  width: 4px;
+  height: 0;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: 0 0;
+}
+::-webkit-scrollbar-thumb {
+  -webkit-transition: 0.3s;
+  transition: 0.3s;
+}
+::-webkit-scrollbar-thumb:hover {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track-piece {
+  background-color: transparent;
+  -webkit-border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:vertical {
+  height: 4px;
+  background-color: #cdcfd7;
+  -webkit-border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:horizontal {
+  width: 4px;
+  background-color: #cdcfd7;
+  -webkit-border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:vertical:hover,
+::-webkit-scrollbar-thumb:horizontal:hover {
+  background-color: #cdcfd7;
+}
+
+.user-select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+// .before-meeting-schedule-modal-footer.before-meeting-modal-footer {
+//   padding: 20px 10px;
+//   margin: 0 -20px;
+// }
+.nemeeting-repeat-edit-tip {
+  color: #f29900;
+  font-size: 14px;
+  margin: 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  .nemeeting-repeat-edit-tip-line {
+    width: 33px;
+    height: 1px;
+    border: none;
+    background-color: #f29900;
+  }
+}
+.schedule-recurring-edit-modal-content {
+  text-align: center;
+  margin: 35px 0;
+  font-size: 16px;
+}
+.schedule-recurring-edit-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  .nemeeting-btn.nemeeting-btn-round.nemeeting-btn {
+    border-radius: 4px;
+  }
+  .schedule-edit-modal-footer-button {
+    min-width: 88px;
+  }
+}
+.iconrili {
+  color: #8d90a0;
+}
+.nemeeting-schedule-cancel {
+  text-align: center;
+  margin-top: 26px;
+}
+.schedule-recurring-edit-modal-footer {
+  .schedule-edit-modal-footer-button {
+    span {
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      width: 100%;
+    }
+  }
+}
+.immediateMeeting-meeting-modal-warp {
+  .nemeeting-modal-body {
+    padding: 10px 20px 0 20px;
+  }
+  .before-meeting-modal-footer {
+    padding: 20px 30px;
+  }
+  .nemeeting-modal-header {
+    -webkit-app-region: no-drag;
+  }
+}
+
+.before-meeting-modal-footer {
+  border-top: 1px solid #ebedf0;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+
+  .nemeeting-popover-inner {
+    padding: 5px 10px;
+  }
+  .before-meeting-modal-footer-button-submit {
+    flex-grow: 1;
+    border-radius: 4px;
+    width: 335px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    span {
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    &.nemeeting-btn-primary:disabled {
+      cursor: not-allowed;
+      border: none;
+      color: #fff;
+      background-color: rgba(22, 119, 255, 0.5);
+      box-shadow: none;
+    }
+    .nemeeting-btn-loading-icon {
+      transition: none;
+    }
+  }
+  .before-meeting-modal-footer-button {
+    max-width: 106px;
+    flex-grow: 1;
+    border-radius: 4px;
+    min-width: 100px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+
+    span {
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    &.nemeeting-btn-primary:disabled {
+      cursor: not-allowed;
+      border: none;
+      color: #fff;
+      background-color: rgba(22, 119, 255, 0.5);
+      box-shadow: none;
+    }
+    .nemeeting-btn-loading-icon {
+      transition: none;
+    }
+  }
+  .arrow-wrapper {
+    flex-grow: 1;
+    text-align: center;
+    margin-right: 10px;
+    cursor: pointer;
+  }
+
+  .iconjiantou-shang {
+    color: #666666;
+    margin-right: 20px;
+    cursor: pointer;
+  }
+
+  .device-list-container {
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    margin: 0 -12px;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    max-height: 420px;
+    overflow-y: auto;
+  }
+  .more-title,
+  .device-title {
+    font-weight: 600;
+    padding: 0px 24px;
+    color: #333333;
+    height: 40px;
+    line-height: 40px;
+  }
+  .more-title {
+    cursor: pointer;
+    &:hover {
+      background: #f2f3f5;
+    }
+  }
+  .divider-line {
+    margin: 0;
+  }
+  .device-item {
+    height: 35px;
+    padding: 0px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 220px;
+    cursor: pointer;
+    .device-label {
+      // font-weight: bold;
+      max-width: 200px;
+      overflow: hidden; //超出的文本隐藏
+      text-overflow: ellipsis; //溢出用省略号显示
+      white-space: nowrap; //溢出不换行
+    }
+    &:hover {
+      background: #f2f3f5;
+      .device-label {
+        color: #337eff;
+      }
+    }
+  }
+}
+.before-meeting-modal-content {
+  padding: 10px 0 0 0;
+  .nemeeting-input,
+  .nemeeting-input-affix-wrapper,
+  .nemeeting-picker {
+    border-radius: 2px;
+    color: #333;
+  }
+  .nemeeting-picker {
+    display: block;
+  }
+  .nemeeting-video-mirror {
+    transform: rotatey(180deg);
+  }
+  .nemeeting-form {
+    margin: 0 0 16px 0;
+  }
+  .nemeeting-form-item {
+    margin-bottom: 15px;
+    .icona-45 {
+      margin-left: 5px;
+      color: #cccccc;
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+    }
+    &:last-child {
+      margin-bottom: 0px;
+    }
+  }
+
+  .nemeeting-form-item-label {
+    padding: 0 0 5px 0;
+    label {
+      font-size: 14px;
+      font-weight: bold;
+      line-height: 22px;
+      letter-spacing: 0em;
+      /* 文字颜色 Text/强调&正文标题 */
+      color: #1e1f27;
+    }
+  }
+  .schedule-detail-item {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+  .nickname-input {
+    padding-left: 0;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+    box-shadow: none;
+    border-color: #d9d9d9;
+    border-inline-end-width: 0;
+
+    input {
+      font-size: 16px;
+      color: #333333;
+    }
+    input:focus {
+      color: #4096ff;
+    }
+  }
+  .nickname-input-form-item {
+    .nemeeting-form-item-extra {
+      color: #4096ff;
+    }
+  }
+
+  .app-about-version {
+    color: #999999;
+    text-align: center;
+    margin: 15px 0px;
+  }
+  .app-about-item {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid #ebedf0;
+    cursor: pointer;
+    &:last-child {
+      border-bottom: 1px solid #ebedf0;
+    }
+  }
+  .copy-right-content {
+    font-size: 12px;
+    text-align: center;
+    height: 100px;
+    line-height: 100px;
+    word-wrap: pre-wrap;
+  }
+  .video-preview {
+    // height: 188px;
+    background: rgba(244, 246, 252, 1);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    position: relative;
+    .user-avatar {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(180deg, #5996ff 1.1%, #2575ff 100%);
+      // width: 48px;
+      // height: 48px;
+      border-radius: 100%;
+      text-align: center;
+      line-height: 48px;
+      color: #fff;
+    }
+    &.nemeeting-video-mirror {
+      transform: rotateY(180deg);
+      .user-avatar {
+        transform: translate(-50%, -50%) rotateY(180deg);
+      }
+    }
+  }
+}
+
+.password-form-item-wrapper {
+  .nemeeting-form-item-control-input {
+    display: flex;
+    align-items: start;
+    min-height: 22px;
+  }
+  .nemeeting-form-item-control-input-content {
+    // line-height: 32px;
+  }
+  .icona-45 {
+    color: #cccccc;
+  }
+  .password-disable-wrapper {
+    display: flex;
+    align-items: center;
+    .nemeeting-input-affix-wrapper {
+      margin-top: 8px;
+    }
+  }
+}
+.attendee-radio-first {
+  // margin-top: 6px;
+}
+.attendee-radio {
+  margin-top: 8px;
+}
+.password-form-item {
+  // display: flex;
+  // align-items: center;
+  .nemeeting-input-affix-wrapper {
+    margin-top: 5px;
+    // flex: 1;
+    // width: 40%;
+  }
+  .immediate-meeting-password-input {
+    width: 40%;
+  }
+}
+.meeting-setting-item {
+  margin: 10px 0;
+}
+.nemeeting-modal-root .nemeeting-modal-wrap.history-meeting-modal {
+  z-index: 1001;
+}
+
+div.history-meeting-modal {
+  .nemeeting-modal {
+    height: 670px;
+    .modal-title {
+      font-weight: bold;
+      font-size: 18px;
+      line-height: 25px;
+      text-align: center;
+      color: #333333;
+    }
+  }
+}
+
+.in-progress-state {
+  color: #337eff;
+  height: 20px;
+  line-height: 20px;
+}
+.in-ready-state {
+  /* 橙色 */
+  color: #ff7903;
+  height: 20px;
+  line-height: 20px;
+}
+
+.in-end-state {
+  color: #8d90a0;
+  height: 20px;
+  line-height: 20px;
+}
+
+.meeting-history {
+  position: relative;
+  height: 100%;
+  height: 630px;
+  .nemeeting-details {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    bottom: 0;
+    background: #f2f3f5;
+    z-index: 10000;
+    color: #333333;
+    .mb16 {
+      margin-bottom: 16px;
+    }
+    .nemeeting-details-header {
+      // background: #fff;
+
+      position: relative;
+      font-size: 17px;
+      height: 100px;
+      .nemeeting-details-back {
+        height: 44px;
+        line-height: 44px;
+        margin-left: 20px;
+      }
+      .back-icon {
+        display: inline-block;
+        font-size: 15px;
+        cursor: pointer;
+        color: #1e1f27;
+      }
+    }
+    .nemeeting-detail-footer {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      border-top: 1px solid #ebedf0;
+    }
+    .nemeeting-detail-btn {
+      margin-top: 12px;
+      margin-bottom: 20px;
+      border-radius: 18px;
+      width: 120px;
+      height: 36px;
+    }
+    .meeting-record-list {
+      background-color: #f6f6f6;
+      border-radius: 3px;
+      max-height: 280px;
+      margin-top: 16px;
+      overflow-y: auto;
+    }
+    .nemeeting-detail-content {
+      background: #f0f1f5;
+      padding: 19px 20px 20px 20px;
+      .meeting-detail-item-label {
+        font-size: 14px;
+        font-weight: bold;
+        letter-spacing: 0em;
+        /* 文字颜色 Text/强调&正文标题 */
+        color: #1e1f27;
+        height: 24px;
+        line-height: 24px;
+      }
+
+      .meeting-id-and-creator {
+        height: 96px;
+        border-radius: 8px;
+        opacity: 1;
+        background: #ffffff;
+
+        .meeting-id {
+          display: flex;
+          align-items: center;
+          height: 48px;
+          padding: 0 16px;
+          justify-content: space-between;
+          .meeting-id-right {
+            // height: 24px;
+            line-height: 24px;
+            .id {
+              font-size: 14px;
+              font-weight: normal;
+              text-align: right;
+              letter-spacing: 0em;
+              /* 文字颜色 Text/次强调&正文标题 */
+              color: #53576a;
+              margin-right: 12px;
+              position: relative;
+              bottom: 2px;
+            }
+          }
+
+          .icon-copy {
+            cursor: pointer;
+            color: #337eff;
+            margin-left: 12px;
+            font-size: 24px;
+          }
+        }
+        .meeting-creator {
+          display: flex;
+          align-items: center;
+          height: 48px;
+          padding: 0 16px;
+          justify-content: space-between;
+          .nick-avatar-wrap {
+            display: flex;
+            align-items: center;
+          }
+          .meeting-creator-ownerNickname {
+            font-size: 14px;
+            font-weight: normal;
+            text-align: right;
+            letter-spacing: 0em;
+            /* 文字颜色 Text/次强调&正文标题 */
+            color: #53576a;
+            line-height: 24px;
+          }
+          .owner-avatar {
+            margin-left: 12px;
+          }
+        }
+      }
+      .meeting-detail-time {
+        height: 96px;
+        background-color: #fff;
+        border-radius: 8px;
+        margin-top: 16px;
+      }
+      .meeting-start-time {
+        display: flex;
+        align-items: center;
+        height: 48px;
+        padding: 0 16px;
+        justify-content: space-between;
+
+        .meeting-start-time-right {
+          height: 24px;
+          line-height: 24px;
+          font-size: 14px;
+          font-weight: normal;
+          text-align: right;
+          letter-spacing: 0em;
+          /* 文字颜色 Text/次强调&正文标题 */
+          color: #53576a;
+        }
+      }
+    }
+
+    .nemeeting-detail-app {
+      background: #fff;
+      margin-top: 16px;
+      border-radius: 8px;
+      // min-height: 48px;
+      max-height: 456px;
+      margin-bottom: 44px;
+    }
+    .nemeeting-detail-app-item-title {
+      height: 48px;
+      box-sizing: border-box;
+      padding: 13px 0;
+      font-size: 14px;
+      font-weight: bold;
+      line-height: 22px;
+      letter-spacing: 0em;
+      /* 文字颜色 Text/强调&正文标题 */
+      color: #1e1f27;
+    }
+    .nemeeting-record-wrap {
+      max-height: 360px;
+      box-sizing: border-box;
+      .nemeeting-record-list {
+        max-height: 312px;
+        min-height: 30px;
+        overflow-y: auto;
+        box-sizing: border-box;
+        padding: 0 16px;
+      }
+      .nemeeting-detail-app-item-title {
+        height: 48px;
+        width: 348px;
+        box-sizing: border-box;
+        padding: 13px 16px;
+        font-size: 14px;
+        font-weight: bold;
+        line-height: 22px;
+        letter-spacing: 0em;
+        /* 文字颜色 Text/强调&正文标题 */
+        color: #1e1f27;
+      }
+      .meeting-record-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 48px;
+        box-sizing: border-box;
+        padding-left: 16px;
+        .meeting-record-url {
+          width: 245px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          cursor: pointer;
+          color: #337eff;
+          font-size: 14px;
+        }
+      }
+    }
+
+    .nemeeting-detail-app-item {
+      padding: 16px 0;
+      // border-radius: 4px;
+      // border: 1px solid #eaebec;
+      // margin-top: 10px;
+      color: #333333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-flow: wrap;
+      cursor: pointer;
+      .iconchat-history {
+        margin-left: 10px;
+        font-size: 24px;
+      }
+
+      .nemeeting-detail-app-item-title {
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+        .iconfont {
+          margin-right: 6px;
+        }
+        .app-icon-img {
+          width: 20px;
+          height: 20px;
+          margin-right: 6px;
+          filter: invert(60%);
+        }
+      }
+      .iconfont {
+        color: #666;
+        font-size: 20px;
+      }
+    }
+    .meeting-subject {
+      font-size: 20px;
+      display: flex;
+      height: 55px;
+      justify-content: space-between;
+      align-items: center;
+      color: #333;
+      font-weight: bold;
+      padding: 0 20px;
+      .meeting-subject-content {
+        width: 250px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .collect-icon-wrap:hover {
+        width: 24px;
+        height: 24px;
+        background-color: #f0f1f5;
+        border-radius: 3px;
+      }
+    }
+    .meeting-title {
+      font-size: 16px;
+      display: flex;
+      height: 55px;
+      justify-content: space-between;
+      align-items: center;
+      color: #333;
+      font-weight: bold;
+      padding: 0 20px;
+    }
+    .meeting-id-content {
+      margin-right: 4px;
+    }
+    .record-file-generating {
+      text-align: center;
+      color: #337eff;
+      font-size: 14px;
+    }
+    .record-file-loading {
+      margin-right: 5px;
+    }
+
+    .meeting-record-list > div:last-child {
+      margin-bottom: 0;
+    }
+
+    .collect-icon {
+      width: 24px;
+      height: 24px;
+      font-size: 24px;
+      cursor: pointer;
+    }
+  }
+  .bl-ellipsis {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    word-break: break-all;
+  }
+  .iconcollecting {
+    color: #ff7903;
+  }
+  .iconcollection {
+    color: #e6e7eb;
+    font-size: 26px;
+    z-index: 1;
+  }
+  .scroll-end {
+    text-align: center;
+    font-size: 12px;
+    color: #999999;
+    padding: 8px 0;
+    margin-bottom: 20px;
+  }
+  .scroll-loading {
+    position: absolute;
+    top: 50%;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .meeting-type {
+    display: flex;
+    position: relative;
+    align-items: center;
+    height: 48px;
+    .meeting-type-item {
+      cursor: pointer;
+      width: 50%;
+      text-align: center;
+      font-weight: 400;
+      font-size: 15px;
+      // padding: 9px 0 10px 0;
+      box-sizing: border-box;
+      height: 48px;
+      line-height: 48px;
+    }
+    .meeting-type-item-active {
+      font-weight: bold;
+      border-bottom: 2px solid #337eff;
+    }
+  }
+  .nemeeting-detail-app-item-chat {
+    height: 48px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    margin: 0 16px;
+    padding: 0 !important;
+    .iconchat-history {
+      font-size: 24px !important;
+      color: #8d90a0;
+    }
+  }
+  .meeting-list {
+    font-weight: 400;
+    border-top: 1px solid #e5e5e5;
+    // border-radius: 4px;
+    height: 585px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    margin-right: 2px;
+
+    .meeting-list-date {
+      background: #f0f1f5;
+      padding: 5px 20px 5px 20px;
+      height: 32px;
+      box-sizing: border-box;
+      color: #999999;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .meeting-list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      z-index: 0;
+      height: 83px;
+      box-sizing: border-box;
+      cursor: pointer;
+      .meeting-list-item-dur,
+      .meeting-list-item-num {
+        font-size: 14px;
+        font-weight: normal;
+        line-height: 20px;
+        letter-spacing: 0em;
+        /* 文字颜色 Text/次强调&正文标题 */
+        color: #53576a;
+      }
+      .meeting-list-item-owner {
+        font-size: 12px;
+        font-weight: normal;
+        line-height: 20px;
+        letter-spacing: 0em;
+        /* 文字颜色 Text/次强调&正文标题 */
+        color: #53576a;
+      }
+
+      .meeting-list-item-num {
+        max-width: 100px;
+      }
+
+      .meeting-list-item-detail {
+        display: flex;
+        height: 22px;
+        align-items: center;
+      }
+      .meeting-list-item-line {
+        width: 1px;
+        height: 12px;
+        /* 边框颜色 Border/深&悬浮 */
+        background: #cdcfd7;
+        margin: 0 6px;
+      }
+      .meeting-item-left {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        .iconcalendar1x {
+          font-size: 24px;
+          color: #337eff;
+          margin-right: 15px;
+        }
+        .meeting-info {
+          .moment {
+            color: #333333;
+            font-weight: bold;
+            font-size: 12px;
+          }
+          .sub-text {
+            color: #999999;
+            font-size: 12px;
+          }
+          .subject {
+            font-size: 16px;
+            line-height: 22px;
+            color: #222222;
+            margin: 4px 0;
+            max-width: 204px;
+          }
+          .icon-copy {
+            display: inline-block;
+            margin-left: 8px;
+            font-size: 14px;
+            color: #909ab6;
+            cursor: pointer;
+          }
+        }
+      }
+
+      .meeting-list-item-right:hover {
+        background-color: #fff;
+        border-radius: 3px;
+      }
+      .collect-icon {
+        font-size: 24px;
+        cursor: pointer;
+      }
+      .meeting-list-item-subject {
+        font-size: 16px;
+        font-weight: bold;
+        line-height: 24px;
+        letter-spacing: 0em;
+        /* 文字颜色 Text/强调&正文标题 */
+        color: #1e1f27;
+        margin: 0 0 8px 0;
+        width: 260px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+    .meeting-list-item-left {
+      .meeting-list-item-dur {
+        max-width: 85px;
+        white-space: nowrap;
+      }
+      .meeting-list-item-num {
+        max-width: 100px;
+        white-space: nowrap;
+      }
+      .meeting-list-item-owner {
+        width: 70px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+    .meeting-list-item:hover {
+      background: #f0f1f5;
+    }
+
+    .empty-list {
+      padding-top: 104px;
+      color: #999999;
+      width: 120px;
+      margin: 0 auto;
+      text-align: center;
+    }
+  }
+  .collecting {
+    color: #ffc309;
+  }
+}
+
+.nemeeting-detail-app-check-in {
+  height: 48px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  padding: 0 16px !important;
+  border-radius: 0 0 8px 8px;
+  cursor: pointer;
+  .iconchat-history {
+    font-size: 24px !important;
+    color: #8d90a0;
+  }
+}
+
+.bottom-line {
+  width: 355px;
+  height: 1px;
+  background-color: #f0f1f5;
+  margin-left: 20px;
+}
+
+.meeting-history-bg {
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+  .meeting-history {
+    height: 630px;
+    .nemeeting-details {
+      display: flex;
+      flex-direction: column;
+      background: none;
+      .nemeeting-detail-content {
+        flex: 1;
+      }
+    }
+  }
+  .block {
+    height: 44px;
+    width: 100%;
+    background: #f0f1f5;
+  }
+}
+.history-meeting-modal-detail-wrap {
+  .nemeeting-detail-content {
+    height: 513px;
+    box-sizing: border-box;
+  }
+}
+
+// 历史会议时间
+.history-meeting-group-date {
+  .weekday {
+    margin-right: 5px;
+  }
+}
+.recent-meeting-dropdown {
+  min-width: 345px !important;
+  .nemeeting-dropdown-menu {
+    max-height: 204px;
+    overflow-y: auto;
+  }
+}
+.recent-meeting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #333333;
+  .recent-meeting-item-title {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+.recent-meeting-clear {
+  color: #337eff;
+  text-align: center;
+}
+
+.device-list-title {
+  margin-top: 5px;
+}
+
+.schedule-meeting-windows {
+  .nemeeting-form-item {
+    .nemeeting-form-item-label label {
+      font-weight: bold;
+    }
+  }
+}
+
+.schedule-meeting-container {
+  // padding-right: 2px;
+  .nemeeting-form-item {
+    margin-bottom: 20px;
+  }
+  .nemeeting-form-item-label label {
+    font-weight: bold;
+  }
+  .nemeeting-form {
+    margin: 0 0 8px 0;
+  }
+  .iconjiantou-xia-copy {
+    font-size: 14px;
+    color: #999999;
+  }
+  .nemeeting-input-suffix {
+    position: relative;
+    top: 2px;
+    .anticon-close-circle {
+      font-size: 16px !important;
+      color: #8d90a0;
+    }
+  }
+  .nemeeting-input-outlined:focus,
+  .nemeeting-input-outlined:focus-within {
+    border-color: #337eff;
+    box-shadow: none;
+  }
+  .nemeeting-input-outlined {
+    border-radius: 4px;
+    /* 边框颜色 Border/深&悬浮 */
+    border: 1px solid #cdcfd7;
+  }
+  .nemeeting-picker-outlined {
+    border-radius: 4px;
+    /* 边框颜色 Border/深&悬浮 */
+    border: 1px solid #cdcfd7;
+  }
+  .nemeeting-select-single div.nemeeting-select-selector {
+    border-radius: 4px;
+    /* 边框颜色 Border/深&悬浮 */
+    border: 1px solid #cdcfd7;
+  }
+  .nemeeting-form .nemeeting-form-item:nth-child(1) {
+    margin-top: 10px;
+  }
+  .nemeeting-col {
+    margin: 2px 0;
+  }
+  &::-webkit-scrollbar {
+    display: none; /* 对于 Chrome 和 Safari */
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  // overflow-y: auto;
+  .nemeeting-schedule-setting {
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 22px;
+    letter-spacing: 0em;
+    /* 文字颜色 Text/强调&正文标题 */
+    color: #1e1f27;
+    padding: 0 0 5px 0;
+    line-height: 1.5;
+    font-weight: bold;
+    margin-top: 15px;
+  }
+  .nemeeting-form-item
+    .nemeeting-form-item-label
+    > label.nemeeting-form-item-required:not(
+      .nemeeting-form-item-required-mark-optional
+    )::before {
+    display: none;
+  }
+  .live-only-employees-form-item {
+    margin: -28px 0 20px 0px;
+  }
+  .nemeeting-input-affix-wrapper-disabled {
+    background: #f2f2f5;
+  }
+
+  .schedule-meeting-detail-container {
+    width: 100%;
+    height: 100%;
+    min-height: 550px;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+
+    .schedule-meeting-detail-header {
+      padding: 0 20px;
+      width: 375px;
+      box-sizing: border-box;
+    }
+
+    .schedule-meeting-item-list-wrap {
+      flex: 1;
+      background-color: #f0f1f5;
+      padding: 16px 16px 0 16px;
+      width: 343px;
+    }
+
+    .schedule-meeting-detail-title {
+      font-size: 20px;
+      font-weight: bold;
+      line-height: 24px;
+      letter-spacing: 0px;
+      /* 文字颜色 Text/强调&正文标题 */
+      color: #1e1f27;
+      width: 280px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .schedule-meeting-detail {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 24px;
+      .schedule-meeting-start,
+      .schedule-meeting-end {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 110px;
+        height: 68px;
+        box-sizing: border-box;
+        text-align: center;
+        margin-bottom: 20px;
+        .schedule-meeting-start-title,
+        .schedule-meeting-end-title {
+          width: 95px;
+          height: 38px;
+          margin: 0 auto;
+          font-size: 36px;
+          font-weight: 500;
+          line-height: 32px;
+          text-align: center;
+          white-space: nowrap;
+        }
+        .schedule-meeting-start-date,
+        .schedule-meeting-end-date {
+          width: 100px;
+          height: 20px;
+          font-size: 12px;
+          line-height: 20px;
+          text-align: center;
+          letter-spacing: 0em;
+          /* 文字颜色 Text/强调&正文标题 */
+          color: #1e1f27;
+        }
+      }
+      .schedule-meeting-end {
+        .schedule-meeting-end-date {
+          width: 100%;
+          text-align: center;
+        }
+      }
+      .schedule-meeting-start {
+        .schedule-meeting-start-date {
+          width: 100%;
+          text-align: center;
+        }
+      }
+      .schedule-meeting-status-wrap {
+        width: 100px;
+        height: 68px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        .schedule-meeting-status {
+          font-size: 12px;
+          text-align: center;
+        }
+        .schedule-meeting-dur-wrap {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 120px;
+        }
+        .schedule-meeting-dur-content {
+          display: flex;
+          align-items: center;
+        }
+        .schedule-meeting-dur-line {
+          width: 20px;
+          height: 1px;
+          background-color: #e6e7eb;
+        }
+        .schedule-meeting-dur {
+          font-size: 12px;
+          font-weight: normal;
+          letter-spacing: 0em;
+          /* 文字颜色 Text/强调&正文标题 */
+          color: #1e1f27;
+          width: 48px;
+          height: 20px;
+          line-height: 20px;
+          border-radius: 2px;
+          background: #f0f1f5;
+          text-align: center;
+          white-space: nowrap;
+          width: fit-content;
+          padding: 0 3px;
+          margin: 0 5px;
+        }
+
+        .schedule-meeting-GMT {
+          font-size: 12px;
+          font-weight: normal;
+          line-height: 18px;
+          letter-spacing: 0em;
+          /* 文字颜色 Text/次强调&正文标题 */
+          color: #53576a;
+          position: relative;
+          bottom: 1px;
+        }
+      }
+    }
+    .preview-memberList-wrap {
+      margin-bottom: 16px;
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: #fff;
+    }
+    .nemeeting-schedule-participant-preview {
+      // padding: 0px 16px 0 16px;
+      padding-right: 1px;
+      overflow: hidden;
+    }
+    .schedule-meeting-item-wrap {
+      border-radius: 8px;
+      opacity: 1;
+      background: #ffffff;
+      padding: 0px 16px;
+    }
+    .schedule-meeting-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 48px;
+      .meeting-id {
+        width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .invite-url {
+        width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .password-label {
+        width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .schedule-meeting-item-password {
+        font-size: 14px;
+        font-weight: normal;
+        line-height: 22px;
+        text-align: right;
+        letter-spacing: 0em;
+        /* 文字颜色 Text/次强调&正文标题 */
+        color: #53576a;
+      }
+      .schedule-meeting-label {
+        font-size: 14px;
+        font-weight: bold;
+        line-height: 22px;
+        letter-spacing: 0em;
+        /* 文字颜色 Text/强调&正文标题 */
+        color: #1e1f27;
+      }
+      .schedule-meeting-id {
+        font-size: 14px;
+        font-weight: normal;
+        line-height: 22px;
+        text-align: right;
+        letter-spacing: 0em;
+        /* 文字颜色 Text/次强调&正文标题 */
+        color: #53576a;
+      }
+      .schedule-meeting-line-left {
+        display: flex;
+        align-items: center;
+      }
+      .schedule-meeting-id-copy,
+      .schedule-meeting-invite-url-copy {
+        color: #337eff;
+        font-size: 24px;
+        margin-left: 12px;
+        cursor: pointer;
+        .copy {
+          font-size: 24px;
+        }
+      }
+    }
+    .schedule-meeting-invite-url-label {
+      font-size: 14px;
+      font-weight: bold;
+      line-height: 22px;
+      letter-spacing: 0em;
+      /* 文字颜色 Text/强调&正文标题 */
+      color: #1e1f27;
+      width: 120px;
+    }
+    .schedule-meeting-item-url {
+      font-size: 14px;
+      font-weight: normal;
+      line-height: 22px;
+      text-align: right;
+      letter-spacing: 0em;
+      margin-right: -4px;
+      /* 文字颜色 Text/次强调&正文标题 */
+      color: #53576a;
+      width: 180px;
+      margin-left: 10px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .schedule-meeting-item-switch-wrap {
+      height: 48px;
+      background-color: #fff;
+      border-radius: 8px;
+      margin-top: 16px;
+      padding: 0px 16px;
+      box-sizing: border-box;
+
+      .nemeeting-switch {
+        background-color: #e9e9ea;
+      }
+      .schedule-meeting-switch-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .schedule-meeting-switch-label {
+        display: flex;
+        flex-direction: column;
+      }
+      .nemeeting-switch-checked {
+        background: #85baff;
+        opacity: 1;
+        .nemeeting-switch-handle::before {
+          width: 20px;
+          height: 20px;
+          left: -2px;
+        }
+      }
+      .nemeeting-switch {
+        display: inline-block;
+        width: 40px;
+        height: 24px;
+        min-width: 40px;
+        .nemeeting-switch-handle::before {
+          width: 20px;
+          height: 20px;
+        }
+
+        .nemeeting-switch-inner {
+          display: inline-block;
+          width: 40px;
+          height: 24px;
+        }
+      }
+      .switch-label {
+        font-size: 14px;
+        font-weight: bold;
+        line-height: 24px;
+        height: 24px;
+        letter-spacing: 0em;
+        /* 文字颜色 Text/强调&正文标题 */
+        color: #1e1f27;
+        margin-top: 2px;
+      }
+      .waiting-room-label {
+        width: 150px;
+      }
+      .switch-tip {
+        font-size: 12px;
+        font-weight: normal;
+        line-height: 20px;
+        letter-spacing: 0em;
+        /* 文字颜色 Text/次要信息 */
+        color: #8d90a0;
+      }
+      .waiting-room-tip {
+        width: 230px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .autoMute-label {
+        width: 230px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .autoMute-tip {
+        width: 230px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+    .schedule-meeting-item-live-wrap {
+      background-color: #fff;
+      border-radius: 8px;
+      margin: 16px 0;
+      padding: 0px 16px;
+      box-sizing: border-box;
+      .schedule-meeting-right {
+        font-size: 14px;
+        font-weight: normal;
+        line-height: 22px;
+        text-align: right;
+        letter-spacing: 0em;
+        /* 文字颜色 Text/次强调&正文标题 */
+        color: #53576a;
+      }
+      .meeting-live-label {
+        width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .meeting-live-url {
+        width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+  }
+  .nemeeting-form-interp {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    bottom: 25px;
+  }
+  .nemeeting-form-interp-input {
+    height: 32px;
+    border: 1px solid #e1e3e5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+    padding: 0 12px;
+    margin-left: 10px;
+    cursor: pointer;
+  }
+}
+
+.nemeeting-select-single div.nemeeting-select-selector {
+  border-radius: 2px;
+}
+
+.date-picker-form-item {
+  display: flex;
+  justify-content: space-between;
+  .date-picker {
+    width: 60%;
+  }
+  .time-picker {
+    width: 35%;
+  }
+  .iconjiantou-xia-copy {
+    color: #999999;
+    width: 14px;
+  }
+}
+
+.history-meeting-modal {
+  .nemeeting-modal-content {
+    padding: 0;
+    height: 664px;
+    box-sizing: border-box;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+}
+
+.chatroom-modal-root {
+  &.nemeeting-custom-modal .nemeeting-modal-body {
+    padding: 0;
+  }
+  .nemeeting-modal-header {
+    margin: 0;
+  }
+  .nemeeting-modal-content {
+    padding: 0;
+    overflow: hidden;
+  }
+  .nemeeting-modal-title {
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    border-bottom: 1px solid #ebedf0;
+    height: 50px;
+    line-height: 50px;
+  }
+  .chatroom-content {
+    height: 620px;
+    position: relative;
+  }
+}
+.update-nick-name-modal {
+  .before-meeting-modal-content {
+    height: 108px;
+    box-sizing: border-box;
+    padding: 16px;
+    opacity: 1;
+    background: #f0f1f5;
+    .nemeeting-form {
+      height: 76px;
+      background-color: #fff;
+      border-radius: 8px;
+      .nemeeting-form-item {
+        height: 100%;
+        .nemeeting-form-item-control-input {
+          height: 48px;
+          padding: 0 16px;
+          .nickname-input {
+            border: none;
+          }
+        }
+      }
+      .nemeeting-input-prefix {
+        margin-right: 20px;
+      }
+      .nemeeting-form-item-extra {
+        height: 28px;
+        padding: 4px 16px;
+        font-size: 12px;
+        font-weight: normal;
+        line-height: 20px;
+        letter-spacing: 0em;
+        /* 文字颜色 Text/次要信息 */
+        color: #8d90a0;
+        width: 320px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .nick-name-label {
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 22px;
+        letter-spacing: 0em;
+        /* 文字颜色 Text/强调&正文标题 */
+        color: #1e1f27;
+      }
+    }
+  }
+  .nemeeting-modal-footer {
+    margin-top: 0;
+    height: 64px;
+    box-sizing: border-box;
+    .before-meeting-modal-footer {
+      margin-top: 0;
+      .before-meeting-modal-footer-button {
+        display: inline-block;
+        width: 335px !important;
+        max-width: 335px !important;
+        height: 40px;
+        display: flex;
+        align-items: center;
+      }
+    }
+  }
+  .anticon-close-circle {
+    font-size: 14px;
+  }
+}
+.schedule-meeting-container-wrap {
+  height: 614px;
+  .schedule-meeting-container {
+    .meeting-guest-join {
+      position: relative;
+      bottom: 5px;
+      margin-bottom: 5px;
+    }
+  }
+  .before-meeting-modal-content {
+    overflow-x: hidden;
+    height: 550px;
+    overflow-y: auto;
+    box-sizing: border-box;
+    .schedule-meeting-container {
+      height: 100%;
+    }
+  }
+  .schedule-meeting-detail-container::-webkit-scrollbar {
+    background-color: #f0f1f5;
+  }
+  .schedule-meeting-content-edit {
+    padding: 5px 18px 0 20px;
+    margin-right: 2px;
+    .before-meeting-modal-footer {
+      padding: 10px 20px 0 20px;
+      height: 65px;
+      display: flex;
+      align-items: center;
+      margin: 0;
+      background-color: #fff;
+      .nemeeting-btn-background-ghost {
+        // margin: 0 8px;
+      }
+      .nemeeting-btn {
+        height: 40px;
+        box-sizing: border-box;
+      }
+    }
+  }
+  .before-meeting-modal-footer {
+    padding: 0px 20px;
+    box-sizing: border-box;
+    height: 65px;
+    display: flex;
+    align-items: center;
+    margin: 0;
+    background-color: #fff;
+    .nemeeting-btn-background-ghost {
+      // margin: 0 2px;
+    }
+    .nemeeting-btn {
+      height: 40px;
+      box-sizing: border-box;
+    }
+  }
+  .nemeeting-checkbox-wrapper {
+    .icona-45 {
+      font-size: 14px;
+      color: #cdcfd7;
+    }
+  }
+}
+.schedule-meeting-modal-wrap-class {
+  // .schedule-meeting-detail-header {
+  //   margin-top: 20px;
+  // }
+  .nemeeting-modal-header {
+    background: none;
+  }
+  .nemeeting-modal-content {
+    .nemeeting-modal-header {
+      border-bottom: 1px solid #e6e7eb;
+    }
+    .before-meeting-modal-content {
+      padding-top: 0;
+    }
+  }
+}
+.schedule-meeting-modal-wrap-detail {
+  .nemeeting-modal-close {
+    top: 9px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .nemeeting-modal-header {
+    border-bottom: none !important;
+    display: flex;
+    align-items: center;
+    justify-content: end;
+    padding-right: 44px;
+  }
+  .nemeeting-modal-content {
+    background-image: url('../../../assets/schedule_bg.png');
+    background-repeat: no-repeat;
+    background-size: 100% auto;
+  }
+
+  .before-meeting-modal-footer {
+    .before-meeting-modal-footer-button-edit {
+      margin: 0 8px !important;
+    }
+    .before-meeting-modal-footer-button {
+      width: 106px !important;
+      max-width: 106px !important;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+  }
+}
+
+.history-meeting-modal-detail-wrap {
+  .nemeeting-modal-header {
+    border-bottom: none !important;
+    background: none !important;
+  }
+  .nemeeting-modal-content {
+    background-image: url('../../../assets/history-meeting-bg.png');
+    background-repeat: no-repeat;
+    background-size: 100% auto;
+    background-color: none;
+    .nemeeting-details {
+      background: none;
+
+      .nemeeting-detail-content {
+        background-color: #f0f1f5;
+        // height: 100%;
+      }
+    }
+  }
+}
+.meeting-history {
+  .nemeeting-detail-content {
+    background-color: #f0f1f5;
+    // height: 100%;
+    overflow-y: auto;
+  }
+}
+
+.schedule-recurring-edit-modal-wrap {
+  .nemeeting-modal-content {
+    background-image: none;
+  }
+}
+
+.iconfuzhi1 {
+  font-size: 24px;
+  color: #337eff;
+  cursor: pointer;
+}
+
+.meeting-live {
+  margin-bottom: -5px;
+}
+.open-live-form-item-wrap {
+  margin-top: -2px;
+  .nemeeting-form-item-control-input {
+    position: relative;
+    bottom: 5px;
+  }
+  .nemeeting-col {
+    flex: 0 0 25px;
+    box-sizing: border-box;
+  }
+}
+
+.schedule-interp-wrap {
+  position: relative;
+  bottom: 4px;
+  .nemeeting-form-item-control {
+    position: relative;
+    bottom: 5px;
+  }
+  .nemeeting-col {
+    flex: 0 0 25px;
+    box-sizing: border-box;
+  }
+}
+
+.nemeeting-repeat-wrp {
+  height: 96px;
+  padding: 0px 16px;
+  background-color: #fff;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  box-sizing: border-box;
+  .nemeeting-repeat-item {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .nemeeting-repeat-label {
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 22px;
+      letter-spacing: 0em;
+      color: #1e1f27;
+    }
+    .nemeeting-repeat-value {
+      font-size: 14px;
+      font-weight: normal;
+      line-height: 22px;
+      text-align: right;
+      letter-spacing: 0em;
+      /* 文字颜色 Text/次强调&正文标题 */
+      color: #53576a;
+      display: flex;
+      align-items: center;
+      .nemeeting-custom-repeat-value {
+        display: inline-block;
+        max-width: 160px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+  }
+}
+
+.schedule-meeting-item-switch-auto-mute {
+  margin-bottom: 15px;
+}
+
+.schedule-meeting-item-switch-waiting-room {
+  margin-bottom: 15px;
+}
+.invite-schedule-meeting-modal-wrap {
+  .nemeeting-modal-header {
+    border-bottom: none;
+  }
+  .nemeeting-btn-default {
+    border: none;
+  }
+  .nemeeting-modal-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .nemeeting-modal-close-icon {
+      color: #53576a;
+      font-weight: bold;
+    }
+  }
+  .nemeeting-modal-content {
+    .nemeeting-modal-close:hover {
+      background-color: #e6e7eb;
+    }
+  }
+
+  .nemeeting-modal-header {
+    background: #f0f1f5;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    .nemeeting-modal-title {
+      text-align: left;
+      .title-content {
+        display: flex;
+        align-items: center;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: normal;
+        letter-spacing: 0em;
+        /* 文字颜色Text/强调&正文标题 */
+        color: #1e1f27;
+        span {
+          display: inline-block;
+          width: 400px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+    }
+  }
+  .nemeeting-modal-content {
+    background: #f0f1f5;
+  }
+  .nemeeting-modal-body {
+    padding: 0 20px 16px 20px;
+  }
+  .schedule-meeting-invite-content {
+    border-radius: 8px;
+    opacity: 1;
+    background: #ffffff;
+    padding: 8px 24px;
+
+    .schedule-meeting-invite-item {
+      box-sizing: border-box;
+      display: flex;
+      // align-items: center;
+      margin: 8px 0;
+      display: flex;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 22px;
+      letter-spacing: 0em;
+      /* 文字颜色 Text/强调&正文标题 */
+      color: #1e1f27;
+    }
+    .schedule-meeting-invite-item-title {
+      width: 84px;
+      height: 22px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 22px;
+      letter-spacing: 0em;
+      margin-right: 16px;
+      /* 文字颜色 Text/次要信息 */
+      color: #8d90a0;
+    }
+    .schedule-meeting-invite-item-content {
+      width: 286px;
+    }
+    .default-meeting-info-title {
+      margin-top: 4px;
+      height: 22px;
+    }
+  }
+  .icon-dui-gou {
+    margin-right: 8px;
+    height: 22px;
+    box-sizing: border-box;
+    padding-top: 2px;
+  }
+  .iconduigou {
+    color: #26bd71;
+    display: inline-block;
+    height: 20px;
+    width: 20px;
+  }
+}
+
+.schedule-meeting-detail-footer-button {
+  width: 163.5px;
+  height: 40px;
+}
+.schedule-meeting-detail-buttons {
+  display: flex;
+  height: 32px;
+  align-items: center;
+
+  .icon-buttons {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+}
+
+.schedule-meeting-invite-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 72px;
+  background: #f0f1f5;
+  padding: 16px 58px 0 58px;
+  box-sizing: border-box;
+  .schedule-meeting-invite-footer-button {
+    width: 163.5px;
+    height: 40px;
+    font-size: 16px;
+    box-sizing: border-box;
+    display: inline-block;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    span {
+      width: 150px;
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: center;
+    }
+  }
+  .nemeeting-btn {
+    height: 40px;
+    box-sizing: border-box;
+  }
+  .schedule-meeting-invite-footer-button-primary {
+    opacity: 1;
+    /* 颜色/蓝色 */
+    background: #337eff;
+  }
+}
+
+.schedule-meeting-detail-web-dropdown {
+  .nemeeting-dropdown-menu-item {
+    padding: 0px !important;
+  }
+  .nemeeting-dropdown-menu {
+    right: 50px;
+  }
+}
