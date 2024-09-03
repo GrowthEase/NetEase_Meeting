@@ -85,14 +85,14 @@ class MeetingUIValueKeys {
   static const liveLayoutFocus = ValueKey('liveLayoutFocus');
   static const liveLayoutScreenShare = ValueKey('liveLayoutScreenShare');
 
-  ///美颜页面
+  /// 美颜页面
   static const beautyLevelSlider = ValueKey('beautyLevelSlider');
   static const beautyPageClose = ValueKey('beautyPageClose');
 
-  ///虚拟背景页面
+  /// 虚拟背景页面
   static const virtualBackgroundItem = ValueKey('virtualBackgroundItem');
 
-  ///会议安全页面
+  /// 会议安全页面
   static const waitingRoomSwitch = ValueKey('waitingRoomSwitch');
   static const watermarkSwitch = ValueKey('watermarkSwitch');
   static const meetingEnableGuestJoin = ValueKey('meetingEnableGuestJoin');
