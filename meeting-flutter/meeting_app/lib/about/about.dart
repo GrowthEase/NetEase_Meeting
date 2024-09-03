@@ -99,7 +99,7 @@ class _AboutState extends AppBaseState<About> {
             Text(
               getAppLocalizations().settingCheckUpdate,
               style: TextStyle(
-                  fontSize: 14.spMin,
+                  fontSize: 16,
                   color: AppColors.black_222222,
                   fontWeight: FontWeight.w500),
             ),

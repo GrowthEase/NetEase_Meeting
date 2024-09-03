@@ -139,6 +139,12 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get globalPhotosPermission => '无法使用相册';
 
   @override
+  String get globalSend => '发送';
+
+  @override
+  String get globalPause => '暂停';
+
+  @override
   String get meetingBeauty => '美颜';
 
   @override
@@ -620,6 +626,12 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get meetingNotExist => '会议不存在';
 
   @override
+  String get meetingSaySomeThing => '说点什么…';
+
+  @override
+  String get meetingKeepSilence => '当前禁言中';
+
+  @override
   String get reuseIMNotSupportAnonymousLogin => 'IM复用不支持匿名登录';
 
   @override
@@ -627,6 +639,45 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get updateNicknameBySelf => '自己改名';
+
+  @override
+  String get updateNicknameNoPermission => '主持人不允许成员改名';
+
+  @override
+  String get shareNoPermission => '共享失败，仅主持人可共享';
+
+  @override
+  String get localRecordPermission => '本地录制权限';
+
+  @override
+  String get localRecordOnlyHost => '仅主持人可录制';
+
+  @override
+  String get localRecordAll => '所有人可录制';
+
+  @override
+  String get sharingStopByHost => '主持人已终止了你的共享';
+
+  @override
+  String get suspendParticipantActivities => '暂停参会者活动';
+
+  @override
+  String get suspendParticipantActivitiesTips => '所有人都将被静音，视频、屏幕共享将停止，会议将被锁定。';
+
+  @override
+  String get alreadySuspendParticipantActivitiesByHost => '主持人已暂停参会者活动';
+
+  @override
+  String get alreadySuspendParticipantActivities => '已暂停参会者活动';
+
+  @override
+  String get suspendAllParticipantActivities => '暂停所有参会者活动?';
+
+  @override
+  String get hideAvatarByHost => '主持人已隐藏所有头像';
+
+  @override
+  String get hideAvatar => '隐藏头像';
 
   @override
   String get screenShare => '共享屏幕';
@@ -660,6 +711,9 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   }
 
   @override
+  String get screenShareMyself => '你正在共享屏幕';
+
+  @override
   String get screenShareInteractionTip => '双指分开放大画面';
 
   @override
@@ -687,7 +741,7 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get whiteBoardPackUp => '收起';
 
   @override
-  String get meetingHasScreenShareShare => '屏幕共享时暂不支持白板共享';
+  String get meetingHasScreenShareShare => '屏幕或电脑音频共享时暂不支持白板共享';
 
   @override
   String get meetingHasWhiteBoardShare => '共享白板时暂不支持屏幕共享';
@@ -701,6 +755,19 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   @override
   String get screenShareWarning =>
       '近期有不法分子冒充客服、校园贷和公检法诈骗，请您提高警惕。检测到您的会议有安全风险，已禁用了共享功能。';
+
+  @override
+  String get backSharingView => '返回共享内容';
+
+  @override
+  String screenSharingViewUserLabel(Object userName) {
+    return '$userName的屏幕共享';
+  }
+
+  @override
+  String whiteBoardSharingViewUserLabel(Object userName) {
+    return '$userName的白板共享';
+  }
 
   @override
   String get virtualBackground => '虚拟背景';
@@ -1442,7 +1509,7 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
       '网络已断开，请检查您的网络情况，或尝试重新入会';
 
   @override
-  String get networkNotStable => '当前网络状况不佳';
+  String get networkNotStable => '当前网络状态不佳';
 
   @override
   String get networkUnavailableCloseFail => '网络异常，结束会议失败';
@@ -1452,6 +1519,9 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get networkUnavailableCheck => '网络连接失败，请检查你的网络连接！';
+
+  @override
+  String get networkUnstableTip => '网络不稳定，正在连接...';
 
   @override
   String get notifyCenter => '通知中心';
@@ -2007,6 +2077,36 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get settingSpeakerSpotlightTip => '开启后，将优先显示正在说话的参会成员';
 
   @override
+  String get settingShowName => '始终在视频中显示参会者名字';
+
+  @override
+  String get settingHideNotYetJoinedMembers => '隐藏未入会成员';
+
+  @override
+  String get settingChatMessageNotification => '新聊天消息提醒';
+
+  @override
+  String get settingChatMessageNotificationBarrage => '弹幕';
+
+  @override
+  String get settingChatMessageNotificationBubble => '气泡';
+
+  @override
+  String get settingChatMessageNotificationNoReminder => '不提醒';
+
+  @override
+  String get usingComputerAudioInMeeting => '入会时使用电脑麦克风';
+
+  @override
+  String get joinMeetingSettings => '入会设置';
+
+  @override
+  String get memberJoinWithMute => '成员入会时自动静音';
+
+  @override
+  String get ringWhenMemberJoinOrLeave => '成员入会或离开时播放提示音';
+
+  @override
   String get transcriptionEnableCaption => '开启字幕';
 
   @override
@@ -2038,6 +2138,10 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get transcriptionCaptionForbidden => '主持人不允许成员使用字幕，已关闭字幕';
+
+  @override
+  String get transcriptionCaptionNotAvailableInSubChannel =>
+      '当前未收听原声，字幕暂不可用，如需使用请收听原声';
 
   @override
   String get transcriptionCaptionFontSize => '字号';
@@ -2089,6 +2193,30 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get transcriptionStartFailed => '开启字幕失败';
+
+  @override
+  String get transcriptionTranslationSettings => '翻译设置';
+
+  @override
+  String get transcriptionSettings => '转写设置';
+
+  @override
+  String get transcriptionTargetLang => '目标翻译语言';
+
+  @override
+  String get transcriptionShowBilingual => '同时显示双语';
+
+  @override
+  String get transcriptionNotTranslated => '不翻译';
+
+  @override
+  String get transcriptionMemberPermission => '查看成员权限';
+
+  @override
+  String get transcriptionViewFullContent => '查看完整内容';
+
+  @override
+  String get transcriptionViewConferenceContent => '查看参会期间内容';
 
   @override
   String get feedbackInRoom => '问题反馈';

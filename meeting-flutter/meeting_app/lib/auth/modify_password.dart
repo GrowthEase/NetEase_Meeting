@@ -280,7 +280,7 @@ class ModifyPasswordState extends AppBaseState {
                 child: Text(
                   title,
                   style: TextStyle(
-                      color: AppColors.color_1E1E27,
+                      color: AppColors.color_1E1F27,
                       fontSize: 14.spMin,
                       height: 1.0,
                       decoration: TextDecoration.none,

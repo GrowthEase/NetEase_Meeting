@@ -27,6 +27,9 @@ class _MeetingSettingState extends AppBaseState {
 
   final cloudRecordConfig = ValueNotifier(NECloudRecordConfig());
 
+  final _notificationType = ValueNotifier<NEChatMessageNotificationType>(
+      NEChatMessageNotificationType.barrage);
+
   @override
   void initState() {
     super.initState();
@@ -35,12 +38,16 @@ class _MeetingSettingState extends AppBaseState {
         cloudRecordConfig.value = value;
       }
     });
+    settings.getChatMessageNotificationType().then((value) {
+      _notificationType.value = value;
+    });
   }
 
   @override
   Widget buildBody() {
     final settingAudioItems = getSettingAudioItems();
     final settingVideoItems = getSettingVideoItems();
+    final settingChatItems = getSettingChatItems();
     final settingCommonItems = getSettingCommonItems();
     return SingleChildScrollView(
       child: Column(
@@ -64,6 +71,13 @@ class _MeetingSettingState extends AppBaseState {
                 iconColor: AppColors.color_1BB650,
                 children: getSettingVideoItems(),
               ),
+            if (settingChatItems.isNotEmpty)
+              MeetingCard(
+                title: NEMeetingUIKit.instance.getUIKitLocalizations().chat,
+                iconData: NEMeetingIconFont.icon_chat,
+                iconColor: AppColors.color_337eff,
+                children: getSettingChatItems(),
+              ),
             if (settingCommonItems.isNotEmpty)
               MeetingCard(
                 title: NEMeetingUIKit.instance
@@ -73,7 +87,7 @@ class _MeetingSettingState extends AppBaseState {
                 iconColor: AppColors.color_8D90A0,
                 children: getSettingCommonItems(),
               ),
-            SizedBox(height: 16),
+            SizedBox(height: 16 + MediaQuery.of(context).padding.bottom),
           ]),
     );
   }
@@ -145,6 +159,76 @@ class _MeetingSettingState extends AppBaseState {
     );
   }
 
+  /// 聊天模块
+  List<Widget> getSettingChatItems() {
+    return [
+      if (settings.isMeetingChatSupported()) buildChatMessageNotification(),
+    ];
+  }
+
+  /// 新消息提醒
+  Widget buildChatMessageNotification() {
+    return ValueListenableBuilder(
+        valueListenable: _notificationType,
+        builder: (context, value, _) {
+          return MeetingArrowItem(
+              key: MeetingUIValueKeys.chatMessageNotification,
+              title: localizations.settingChatMessageNotification,
+              content: getNotificationTypeText(value),
+              onTap: showNotificationTypeDialog);
+        });
+  }
+
+  NEMeetingUIKitLocalizations get localizations =>
+      NEMeetingUIKit.instance.getUIKitLocalizations();
+
+  String getNotificationTypeText(NEChatMessageNotificationType type) {
+    switch (type) {
+      case NEChatMessageNotificationType.barrage:
+        return localizations.settingChatMessageNotificationBarrage;
+      case NEChatMessageNotificationType.bubble:
+        return localizations.settingChatMessageNotificationBubble;
+      case NEChatMessageNotificationType.noRemind:
+        return localizations.settingChatMessageNotificationNoReminder;
+    }
+  }
+
+  void showNotificationTypeDialog() {
+    BottomSheetUtils.showMeetingBottomDialogWithTitle(
+        buildContext: context,
+        title: localizations.settingChatMessageNotification,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            buildNotificationCheckItem(
+              title: localizations.settingChatMessageNotificationBarrage,
+              type: NEChatMessageNotificationType.barrage,
+            ),
+            buildNotificationCheckItem(
+              title: localizations.settingChatMessageNotificationBubble,
+              type: NEChatMessageNotificationType.bubble,
+            ),
+            buildNotificationCheckItem(
+              title: localizations.settingChatMessageNotificationNoReminder,
+              type: NEChatMessageNotificationType.noRemind,
+            ),
+          ],
+        ));
+  }
+
+  Widget buildNotificationCheckItem(
+      {required String title, required NEChatMessageNotificationType type}) {
+    return MeetingCheckItem(
+      title: title,
+      isSelected: _notificationType.value == type,
+      onTap: () {
+        _notificationType.value = type;
+        SettingsRepository().setChatMessageNotificationType(type);
+        Navigator.of(context).pop();
+      },
+    );
+  }
+
   /// 白板透明
   MeetingSwitchItem buildWhiteboardTransparent() {
     return buildSwitchItem(
@@ -199,6 +283,7 @@ class _MeetingSettingState extends AppBaseState {
       buildCameraItem(),
       buildFrontCameraMirror(),
       buildShowShareUserVideo(),
+      buildShowNameInVideo(),
     ];
   }
 
@@ -208,6 +293,7 @@ class _MeetingSettingState extends AppBaseState {
       buildMeetTimeItem(),
       buildWhiteboardTransparent(),
       if (settings.isMeetingCloudRecordSupported()) buildCloudRecord(),
+      buildNotYetJoinSettings(),
       buildCaptionsSettings(),
     ];
   }
@@ -220,6 +306,15 @@ class _MeetingSettingState extends AppBaseState {
       asyncData: UserPreferences().getShowShareUserVideo(),
       onDataChanged: (value) => UserPreferences().setShowShareUserVideo(value),
     );
+  }
+
+  /// 视频中始终显示用户名
+  MeetingSwitchItem buildShowNameInVideo() {
+    return buildSwitchItem(
+        key: MeetingValueKey.showName,
+        label: NEMeetingUIKit.instance.getUIKitLocalizations().settingShowName,
+        asyncData: settings.isShowNameInVideoEnabled(),
+        onDataChanged: (value) => settings.enableShowNameInVideo(value));
   }
 
   /// 构建摄像头选项
@@ -247,11 +342,25 @@ class _MeetingSettingState extends AppBaseState {
   /// 字幕设置
   Widget buildCaptionsSettings() {
     return NEMeetingKitFeatureConfig(builder: (context, _) {
-      if (!context.isCaptionsSupported) return SizedBox.shrink();
+      if (!context.isCaptionsSupported && !context.isTranscriptionSupported)
+        return SizedBox.shrink();
       return MeetingArrowItem(
         title: getAppLocalizations().transcriptionCaptionAndTranslate,
         onTap: () => NavUtils.pushNamed(context, RouterName.captionsSetting),
       );
     });
+  }
+
+  /// 隐藏未入会成员设置
+  Widget buildNotYetJoinSettings() {
+    return buildSwitchItem(
+      key: MeetingUIValueKeys.showNotYetJoinedMembers,
+      label: NEMeetingUIKit.instance
+          .getUIKitLocalizations()
+          .settingHideNotYetJoinedMembers,
+      asyncData:
+          settings.isShowNotYetJoinedMembersEnabled().then((value) => !value),
+      onDataChanged: (value) => settings.enableShowNotYetJoinedMembers(!value),
+    );
   }
 }

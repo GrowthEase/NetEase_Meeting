@@ -897,6 +897,13 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get copyMeetingAll => 'すべてコピー';
 
   @override
+  String get meetingCrossAppNoPermission =>
+      '申し訳ありませんが、参加させていただいた会議は外部の方に公開しておりません。ご希望の場合は、会議主催者に連絡してゲスト入会を開始します。';
+
+  @override
+  String get meetingCrossAppJoinTip => '他のチーム/組織が作成した会議にゲストとして参加します。会議に参加しますか?';
+
+  @override
   String get historyMeeting => '歴史会議';
 
   @override
@@ -922,6 +929,10 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
 
   @override
   String get historyMeetingCloudRecordingFileBeingGenerated => 'クラウド記録ファイルの生成';
+
+  @override
+  String get nan =>
+      '申し訳ありませんが、参加させていただいた会議は外部の方に公開しておりません。ご希望の場合は、会議主催者に連絡してゲスト入会を開始します。';
 
   @override
   String get settings => 'セット';
@@ -1200,6 +1211,16 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
 
   @override
   String get transcriptionExportFile => '輸出このファイル';
+
+  @override
+  String get transcriptionCaptionShowBilingual => '字幕はバイリンガルを同時に表示します';
+
+  @override
+  String get transcriptionSettingShowBilingual => '転記と同時にバイリンガルを表示';
+
+  @override
+  String get transcriptionTranslationSettingsTip =>
+      '会議中の字幕と転記が有効になり、翻訳内容は自分にしか見えない';
 
   @override
   String get globalFileSaveAs => '輸出';

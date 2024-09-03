@@ -929,6 +929,14 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String get copyMeetingAll => 'Copy all';
 
   @override
+  String get meetingCrossAppNoPermission =>
+      'Sorry, the meeting you are trying to join is not open to outsiders. If necessary, contact the meeting organizer to enable the guest joining right.';
+
+  @override
+  String get meetingCrossAppJoinTip =>
+      'The meeting was created by another team/organization and you will join as a guest. Do you want to join?';
+
+  @override
   String get historyMeeting => 'Meeting history';
 
   @override
@@ -955,6 +963,10 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   @override
   String get historyMeetingCloudRecordingFileBeingGenerated =>
       'Generating cloud recording file';
+
+  @override
+  String get nan =>
+      'Sorry, the meeting you are trying to join is not open to outsiders. If necessary, contact the meeting organizer to enable the guest joining right.';
 
   @override
   String get settings => 'Settings';
@@ -1251,6 +1263,16 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
 
   @override
   String get transcriptionExportFile => 'Export this  file';
+
+  @override
+  String get transcriptionCaptionShowBilingual => 'Bilingual  subtitles';
+
+  @override
+  String get transcriptionSettingShowBilingual => 'Bilingual  transcripts';
+
+  @override
+  String get transcriptionTranslationSettingsTip =>
+      'This setting applies to live subtitles and transcripts, The translation is only visible to you.';
 
   @override
   String get globalFileSaveAs => 'Export';

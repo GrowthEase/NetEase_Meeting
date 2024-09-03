@@ -11,5 +11,6 @@ part 'src/meeting_assets/netease_meeting_images.dart';
 part 'src/meeting_assets/netease_meeting_icon_font.dart';
 part 'src/meeting_assets/netease_meeting_sounds.dart';
 part 'src/meeting_assets/netease_meeting_timezones.dart';
+part 'src/meeting_assets/netease_meeting_emojis.dart';
 
 const String meetingAssetsPackageName = 'netease_meeting_kit';

@@ -41,6 +41,9 @@ class NEAccountInfo {
   /// 是否是匿名账号
   late final bool isAnonymous;
 
+  /// 账号设置
+  late final AccountSettings _settings;
+
   NEAccountInfo({
     required this.userUuid,
     required this.userToken,
@@ -54,7 +57,7 @@ class NEAccountInfo {
     this.isInitialPassword = false,
     this.serviceBundle,
     this.isAnonymous = false,
-  });
+  }) : _settings = AccountSettings();
 
   NEAccountInfo.fromMap(Map map,
       {String? userUuid, String? userToken, bool? isAnonymous}) {
@@ -68,6 +71,7 @@ class NEAccountInfo {
     privateMeetingNum = map['privateMeetingNum'] as String;
     privateShortMeetingNum = map['shortMeetingNum'] as String?;
     isInitialPassword = map['initialPassword'] as bool? ?? false;
+    _settings = AccountSettings.fromMap(map['settings'] as Map? ?? {});
 
     serviceBundle = switch (map['serviceBundle']) {
       {
@@ -88,6 +92,42 @@ class NEAccountInfo {
     };
 
     this.isAnonymous = isAnonymous ?? false;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        corpName,
+        userUuid,
+        userToken,
+        nickname,
+        avatar,
+        phoneNumber,
+        email,
+        privateMeetingNum,
+        privateShortMeetingNum,
+        isInitialPassword,
+        serviceBundle,
+        isAnonymous,
+        _settings,
+      );
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is NEAccountInfo &&
+        corpName == other.corpName &&
+        userUuid == other.userUuid &&
+        userToken == other.userToken &&
+        nickname == other.nickname &&
+        avatar == other.avatar &&
+        phoneNumber == other.phoneNumber &&
+        email == other.email &&
+        privateMeetingNum == other.privateMeetingNum &&
+        privateShortMeetingNum == other.privateShortMeetingNum &&
+        isInitialPassword == other.isInitialPassword &&
+        serviceBundle == other.serviceBundle &&
+        isAnonymous == other.isAnonymous &&
+        _settings == other._settings;
   }
 }
 
@@ -259,4 +299,24 @@ class NEServiceBundle {
   bool get isExpired =>
       !isNeverExpired &&
       expireTimestamp < DateTime.now().millisecondsSinceEpoch;
+
+  @override
+  int get hashCode => Object.hash(
+        name,
+        maxMinutes,
+        maxMembers,
+        expireTimestamp,
+        expireTip,
+      );
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is NEServiceBundle &&
+        name == other.name &&
+        maxMinutes == other.maxMinutes &&
+        maxMembers == other.maxMembers &&
+        expireTimestamp == other.expireTimestamp &&
+        expireTip == other.expireTip;
+  }
 }

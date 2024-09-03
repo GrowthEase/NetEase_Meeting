@@ -12,12 +12,7 @@ import SDWebImage
       let style = dealName()
       label.text = style.0
       label.font = UIFont.boldSystemFont(ofSize: CGFloat(style.1))
-      imageView.isHidden = (url == nil || url!.isEmpty)
-      if !imageView.isHidden {
-        label.isHidden = true
-      } else {
-        label.isHidden = (name == nil || name!.isEmpty)
-      }
+      updateHidden()
     }
   }
 
@@ -28,6 +23,21 @@ import SDWebImage
          let url = URL(string: urlStr) {
         imageView.sd_setImage(with: url)
       }
+      updateHidden()
+    }
+  }
+
+  public var hideAvatar: Bool = false {
+    didSet {
+      updateHidden()
+    }
+  }
+
+  func updateHidden() {
+    if hideAvatar {
+      label.isHidden = (name == nil || name!.isEmpty)
+      imageView.isHidden = true
+    } else {
       imageView.isHidden = (url == nil || url!.isEmpty)
       if !imageView.isHidden {
         label.isHidden = true

@@ -7,8 +7,9 @@ part of meeting_ui;
 class SipCallArguments {
   final NERoomContext roomContext;
   final ValueListenable<bool> isMySelfManagerListenable;
+  final ValueListenable<bool> hideAvatar;
   final String? outboundPhoneNumber;
 
   SipCallArguments(this.roomContext, this.isMySelfManagerListenable,
-      this.outboundPhoneNumber);
+      this.outboundPhoneNumber, this.hideAvatar);
 }

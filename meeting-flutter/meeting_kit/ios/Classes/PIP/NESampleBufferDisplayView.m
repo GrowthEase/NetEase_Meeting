@@ -119,6 +119,9 @@
 - (void)showInfo:(BOOL)flag {
   self.infoBgView.hidden = !flag;
 }
+- (void)updateAvatarHidden:(BOOL)hide {
+  self.avatar.hideAvatar = hide;
+}
 - (void)layoutSubviews {
   [super layoutSubviews];
   CGFloat width = MIN(self.frame.size.width, self.frame.size.height);

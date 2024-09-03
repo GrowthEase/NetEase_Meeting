@@ -193,18 +193,10 @@ class MeetingUIServiceHelper {
   }
 
   NEResult<NERoomContext>? _checkParameters(NEMeetingOptions opts) {
-    // if (_exceedMaxVisibleCount(opts.injectedToolbarMenuItems, 4)) {
-    //   return const NEResult<void>(
-    //       code: NEMeetingErrorCode.paramError,
-    //       msg: '\'Toolbar\'菜单列表最多允许同时显示4个菜单项');
-    // }
-    // if (_exceedMaxVisibleCount(opts.injectedMoreMenuItems, 10)) {
-    //   return const NEResult<void>(
-    //       code: NEMeetingErrorCode.paramError, msg: '\'更多\'菜单列表最多允许同时显示10个菜单项');
-    // }
-
-    final allMenuItems =
-        opts.fullToolbarMenuItems.followedBy(opts.fullMoreMenuItems);
+    final allMenuItems = [
+      ...?opts.fullToolbarMenuItems,
+      ...?opts.fullMoreMenuItems
+    ];
     final ids = <int>{};
     for (var element in allMenuItems) {
       if (element.itemId < firstInjectableMenuId &&
@@ -220,23 +212,27 @@ class MeetingUIServiceHelper {
       }
     }
 
-    for (var element in opts.fullToolbarMenuItems) {
-      if (element.itemId < firstInjectableMenuId &&
-          NEMenuIDs.toolbarExcludes.contains(element.itemId)) {
-        return NEResult<NERoomContext>(
-            code: NEMeetingErrorCode.paramError,
-            msg: '该菜单项不允许添加至Toolbar菜单中: id=${element.itemId}');
+    if (opts.fullToolbarMenuItems != null) {
+      for (var element in opts.fullToolbarMenuItems!) {
+        if (element.itemId < firstInjectableMenuId &&
+            NEMenuIDs.toolbarExcludes.contains(element.itemId)) {
+          return NEResult<NERoomContext>(
+              code: NEMeetingErrorCode.paramError,
+              msg: '该菜单项不允许添加至Toolbar菜单中: id=${element.itemId}');
+        }
+      }
+    }
+    if (opts.fullMoreMenuItems != null) {
+      for (var element in opts.fullMoreMenuItems!) {
+        if (element.itemId < firstInjectableMenuId &&
+            NEMenuIDs.moreExcludes.contains(element.itemId)) {
+          return NEResult<NERoomContext>(
+              code: NEMeetingErrorCode.paramError,
+              msg: '该菜单项不允许添加到\'更多\'菜单中: id=${element.itemId}');
+        }
       }
     }
 
-    for (var element in opts.fullMoreMenuItems) {
-      if (element.itemId < firstInjectableMenuId &&
-          NEMenuIDs.moreExcludes.contains(element.itemId)) {
-        return NEResult<NERoomContext>(
-            code: NEMeetingErrorCode.paramError,
-            msg: '该菜单项不允许添加到\'更多\'菜单中: id=${element.itemId}');
-      }
-    }
     return null;
   }
 

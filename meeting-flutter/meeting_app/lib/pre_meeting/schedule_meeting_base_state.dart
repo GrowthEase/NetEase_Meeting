@@ -345,7 +345,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
           Text(
             getAppLocalizations().meetingName,
             style: TextStyle(
-                color: AppColors.color_1E1E27,
+                color: AppColors.color_1E1F27,
                 fontSize: 16,
                 fontWeight: FontWeight.w500),
           ),

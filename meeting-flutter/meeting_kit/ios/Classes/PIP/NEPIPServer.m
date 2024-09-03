@@ -74,6 +74,8 @@ API_AVAILABLE(ios(15.0))
 @property(nonatomic, assign) BOOL roomEnded;
 // 当前正在邀请自己的房间id
 @property(nonatomic, copy) NSString *inviterRoomId;
+// 是否隐藏头像
+@property(nonatomic, assign) BOOL isHideAvatar;
 @end
 
 @implementation NEPIPServer
@@ -101,9 +103,21 @@ API_AVAILABLE(ios(15.0))
     result(@YES);
   } else if ([method isEqualToString:@"inviteDispose"]) {
     [self inviteDispose:call result:result];
+  } else if ([method isEqualToString:@"hideAvatar"]) {
+    [self hideAvatar:call result:result];
   } else {
     result(FlutterMethodNotImplemented);
   }
+}
+
+- (void)setIsHideAvatar:(BOOL)isHideAvatar {
+  _isHideAvatar = isHideAvatar;
+  [self.displayView updateAvatarHidden:isHideAvatar];
+}
+
+- (void)hideAvatar:(FlutterMethodCall *)call result:(FlutterResult)result {
+  NSDictionary *arguments = call.arguments;
+  self.isHideAvatar = [arguments[@"hideAvatar"] boolValue];
 }
 
 - (void)inviteDispose:(FlutterMethodCall *)call result:(FlutterResult)result {
@@ -177,6 +191,7 @@ API_AVAILABLE(ios(15.0))
   NSString *inviterName = arguments[@"inviterName"];
   NSString *inviterIcon = arguments[@"inviterIcon"];
   NSString *inviterRoomId = arguments[@"inviterRoomId"];
+  self.isHideAvatar = [arguments[@"hideAvatar"] boolValue];
   if (inviterRoomId.length) {
     self.inviterRoomId = inviterRoomId;
     if (inviterName.length || inviterIcon.length) {

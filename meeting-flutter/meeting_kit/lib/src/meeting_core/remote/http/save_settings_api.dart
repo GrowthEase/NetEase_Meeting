@@ -6,9 +6,9 @@ part of meeting_core;
 
 /// 保存用户信息配置
 class _SaveSettingsApi extends HttpApi<String> {
-  BeautySettings request;
+  AccountSettings settings;
 
-  _SaveSettingsApi(this.request);
+  _SaveSettingsApi(this.settings);
 
   @override
   String path() =>
@@ -16,10 +16,9 @@ class _SaveSettingsApi extends HttpApi<String> {
 
   @override
   String? result(Map map) {
-    // return NEMeetingItem.fromJson(map);
     return null;
   }
 
   @override
-  Map data() => {'settings': request.toMap()};
+  Map data() => {'settings': settings.toMap()};
 }

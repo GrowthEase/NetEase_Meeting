@@ -301,24 +301,27 @@ class MeetingRepository with _AloggerMixin {
     }
 
     final roomProperties = {};
+    int securityCtrl = 0;
     param.controls?.forEach((control) {
       if (control is NEMeetingAudioControl) {
-        roomProperties[AudioControlProperty.key] = control.attendeeOff ==
-                NEMeetingAttendeeOffType.none
-            ? AudioControlProperty.disable
-            : (control.attendeeOff == NEMeetingAttendeeOffType.offAllowSelfOn
-                ? AudioControlProperty.offAllowSelfOn
-                : AudioControlProperty.offNotAllowSelfOn);
+        if (control.attendeeOff == NEMeetingAttendeeOffType.offAllowSelfOn) {
+          securityCtrl &= ~MeetingSecurityCtrlValue.AUDIO_NOT_ALLOW_SELF_ON;
+        } else if (control.attendeeOff ==
+            NEMeetingAttendeeOffType.offNotAllowSelfOn) {
+          securityCtrl |= MeetingSecurityCtrlValue.AUDIO_NOT_ALLOW_SELF_ON;
+        }
       }
       if (control is NEMeetingVideoControl) {
-        roomProperties[VideoControlProperty.key] = control.attendeeOff ==
-                NEMeetingAttendeeOffType.none
-            ? VideoControlProperty.disable
-            : (control.attendeeOff == NEMeetingAttendeeOffType.offAllowSelfOn
-                ? VideoControlProperty.offAllowSelfOn
-                : VideoControlProperty.offNotAllowSelfOn);
+        if (control.attendeeOff == NEMeetingAttendeeOffType.offAllowSelfOn) {
+          securityCtrl &= ~MeetingSecurityCtrlValue.VIDEO_NOT_ALLOW_SELF_ON;
+        } else if (control.attendeeOff ==
+            NEMeetingAttendeeOffType.offNotAllowSelfOn) {
+          securityCtrl |= MeetingSecurityCtrlValue.VIDEO_NOT_ALLOW_SELF_ON;
+        }
       }
     });
+    roomProperties[MeetingSecurityCtrlKey.securityCtrlKey] =
+        securityCtrl.toString();
     roomProperties[GuestJoinProperty.key] = opts.enableGuestJoin
         ? GuestJoinProperty.enable
         : GuestJoinProperty.disable;

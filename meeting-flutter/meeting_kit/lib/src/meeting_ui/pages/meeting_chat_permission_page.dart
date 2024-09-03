@@ -26,15 +26,15 @@ class MeetingChatPermissionState
   MeetingChatPermissionState(this._roomContext, this.waitingRoomManager);
 
   ValueNotifier<NEChatPermission?> chatPermission = ValueNotifier(null);
-  ValueNotifier<NEWaitingRoomChatPermission?> waitingRoomChatPermission =
-      ValueNotifier(null);
+  ValueNotifier<bool> waitingRoomChatPermission = ValueNotifier(false);
   late final NERoomEventCallback roomEventCallback;
 
   @override
   void initState() {
     super.initState();
     chatPermission.value = _roomContext.chatPermission;
-    waitingRoomChatPermission.value = _roomContext.waitingRoomChatPermission;
+    waitingRoomChatPermission.value = _roomContext.waitingRoomChatPermission ==
+        NEWaitingRoomChatPermission.privateChatHostOnly;
     _roomContext.addEventCallback(roomEventCallback = NERoomEventCallback(
       roomPropertiesChanged: _onRoomPropertiesChanged,
       memberRoleChanged: _onMemberRoleChanged,
@@ -46,7 +46,9 @@ class MeetingChatPermissionState
       chatPermission.value = _roomContext.chatPermission;
     }
     if (properties.containsKey(NEWaitingRoomChatPermissionProperty.key)) {
-      waitingRoomChatPermission.value = _roomContext.waitingRoomChatPermission;
+      waitingRoomChatPermission.value =
+          _roomContext.waitingRoomChatPermission ==
+              NEWaitingRoomChatPermission.privateChatHostOnly;
     }
   }
 
@@ -96,7 +98,6 @@ class MeetingChatPermissionState
           if (waitingRoomManager.isFeatureSupported) ...[
             _buildSubTitle(meetingUiLocalizations.chatPermissionInWaitingRoom),
             _buildWaitingRoomChatPermission(),
-            _buildSplit(),
           ],
         ],
       ),
@@ -139,26 +140,28 @@ class MeetingChatPermissionState
   }
 
   Widget _buildWaitingRoomChatPermission() {
-    return _buildItemSwitch<NEWaitingRoomChatPermission?>(
-      key: MeetingUIValueKeys.waitingChatPermissionSwitch,
-      title: meetingUiLocalizations.chatWaitingRoomPrivateHostOnly,
-      valueNotifier: waitingRoomChatPermission,
-      itemValue: NEWaitingRoomChatPermission.privateChatHostOnly,
-      onChanged: (on) {
-        doIfNetworkAvailable(() async {
-          _roomContext
-              .updateWaitingRoomChatPermission(on
-                  ? NEWaitingRoomChatPermission.privateChatHostOnly
-                  : NEWaitingRoomChatPermission.noChat)
-              .then((result) {
-            if (mounted && !result.isSuccess()) {
-              showToast(
-                result.msg ?? meetingUiLocalizations.globalOperationFail,
-              );
-            }
+    return Container(
+      color: _UIColors.white,
+      child: MeetingSwitchItem(
+        switchKey: MeetingUIValueKeys.waitingChatPermissionSwitch,
+        title: meetingUiLocalizations.chatWaitingRoomPrivateHostOnly,
+        valueNotifier: waitingRoomChatPermission,
+        onChanged: (on) {
+          doIfNetworkAvailable(() async {
+            _roomContext
+                .updateWaitingRoomChatPermission(on
+                    ? NEWaitingRoomChatPermission.privateChatHostOnly
+                    : NEWaitingRoomChatPermission.noChat)
+                .then((result) {
+              if (mounted && !result.isSuccess()) {
+                showToast(
+                  result.msg ?? meetingUiLocalizations.globalOperationFail,
+                );
+              }
+            });
           });
-        });
-      },
+        },
+      ),
     );
   }
 
@@ -197,42 +200,6 @@ class MeetingChatPermissionState
                 }),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildItemSwitch<T>({
-    required String title,
-    required T itemValue,
-    required ValueNotifier<T> valueNotifier,
-    required Function(bool newValue) onChanged,
-    Key? key,
-  }) {
-    return Container(
-      height: 56,
-      color: _UIColors.white,
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(color: _UIColors.black_222222, fontSize: 16),
-            ),
-          ),
-          ValueListenableBuilder<T>(
-              valueListenable: valueNotifier,
-              builder: (context, value, child) {
-                return CupertinoSwitch(
-                    key: key,
-                    value: value == itemValue,
-                    onChanged: (newValue) => onChanged.call(newValue),
-                    activeColor: _UIColors.blue_337eff);
-              }),
-        ],
       ),
     );
   }

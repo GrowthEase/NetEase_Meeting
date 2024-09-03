@@ -200,9 +200,8 @@ class _NEMeetingUIKitScreenSharingServiceImpl
       /// Android 显示前台服务通知
       final foregroundConfig = await MeetingCore().getForegroundConfig();
       if (foregroundConfig != null) {
-        await NEMeetingPlugin()
-            .getNotificationService()
-            .startForegroundService(foregroundConfig);
+        await NEMeetingPlugin().getNotificationService().startForegroundService(
+            foregroundConfig, NENotificationService.serviceTypeMediaProjection);
       }
     }
 

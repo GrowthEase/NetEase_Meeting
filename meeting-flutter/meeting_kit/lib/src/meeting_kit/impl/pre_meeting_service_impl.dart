@@ -245,4 +245,14 @@ class _NEPreMeetingServiceImpl extends NEPreMeetingService with _AloggerMixin {
       sessionId: item.sessionId,
     );
   }
+
+  @override
+  Widget loadChatroomHistoryMessageView(int meetingId) {
+    return NEMeetingUIKitLocalizationsScope(
+      child: MeetingChatRoomPage(
+        arguments: ChatRoomArguments(messageSource: ChatRoomMessageSource()),
+        roomArchiveId: meetingId.toString(),
+      ),
+    );
+  }
 }

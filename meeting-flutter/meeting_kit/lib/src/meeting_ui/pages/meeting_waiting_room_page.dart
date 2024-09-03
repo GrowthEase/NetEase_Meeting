@@ -44,10 +44,15 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
   final floating = NEMeetingPlugin().getFloatingService();
   ValueNotifier<bool> _isInPIPView = ValueNotifier(false);
 
+  /// 聊天室输入框controller
+  late TextEditingController _chatInputController;
+
   int? disconnectingCode;
 
   StreamSubscription? _roomEndStreamSubscription;
   StreamSubscription? _waitingRoomStatusSubscription;
+
+  final ValueNotifier<bool> hideAvatar = ValueNotifier(false);
 
   @override
   void initState() {
@@ -59,8 +64,11 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
     meetingState = meetingInfo.state;
     audioMute = widget.arguments.initialAudioMute;
     videoMute = widget.arguments.initialVideoMute;
+    _chatInputController = TextEditingController();
     roomContext.addEventCallback(roomCallback = NERoomEventCallback(
       chatroomMessagesReceived: chatroomMessagesReceived,
+      roomPropertiesChanged: handleRoomPropertiesEvent,
+      roomPropertiesDeleted: handleRoomPropertiesEvent,
     ));
     roomContext.waitingRoomController.addListener(this);
     NEMeetingKit.instance.getPreMeetingService().addListener(this);
@@ -69,6 +77,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
     createHistoryMeetingItem();
     handleAppLifecycleChangeEvent();
     _isInPIPView = ValueNotifier(widget.arguments.initialIsInPIPView);
+    hideAvatar.value = roomContext.isAvatarHidden;
   }
 
   void handleAppLifecycleChangeEvent() {
@@ -158,6 +167,12 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
     });
   }
 
+  void handleRoomPropertiesEvent(Map<String, String> properties) {
+    if (properties.containsKey(MeetingSecurityCtrlKey.securityCtrlKey)) {
+      hideAvatar.value = roomContext.isAvatarHidden;
+    }
+  }
+
   bool hasCleanup = false;
   void cleanup() {
     if (hasCleanup) return;
@@ -182,6 +197,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
     _roomEndStreamSubscription?.cancel();
     _waitingRoomStatusSubscription?.cancel();
     _chatRoomManager?.dispose();
+    _chatInputController.dispose();
     cleanup();
     super.dispose();
   }
@@ -319,31 +335,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
       child: ValueListenableBuilder(
         valueListenable: _isInPIPView,
         builder: (_, bool isInPIPView, __) {
-          return isInPIPView
-              ? Container(
-                  color: _UIColors.grey_292933,
-                  child: Stack(fit: StackFit.expand, children: [
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          disconnectingCode != null
-                              ? meetingUiLocalizations.meetingWasInterrupted
-                              : meetingUiLocalizations.movedToWaitingRoom,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w400,
-                            decoration: TextDecoration.none,
-                          ),
-                        ),
-                      ),
-                    ),
-                    buildNameView(roomContext.myUuid),
-                  ]),
-                )
-              : _buildBody();
+          return isInPIPView ? _buildPIPBody() : _buildBody();
         },
       ),
       canPop: false,
@@ -355,6 +347,32 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: NEMeetingKitUIStyle.systemUiOverlayStyleLight,
       child: child,
+    );
+  }
+
+  Widget _buildPIPBody() {
+    return Container(
+      color: _UIColors.grey_292933,
+      child: Stack(fit: StackFit.expand, children: [
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              disconnectingCode != null
+                  ? meetingUiLocalizations.meetingWasInterrupted
+                  : meetingUiLocalizations.movedToWaitingRoom,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                decoration: TextDecoration.none,
+              ),
+            ),
+          ),
+        ),
+        buildNameView(roomContext.myUuid),
+      ]),
     );
   }
 
@@ -559,7 +577,9 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
               messageSource: _messageSource,
               chatRoomManager: chatRoomManager,
               waitingRoomManager: waitingRoomManager,
+              hideAvatar: hideAvatar,
             ),
+            editController: _chatInputController,
           );
         });
   }
@@ -694,12 +714,12 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
                   ),
                 ),
                 _buildActionSheetItem(context, false,
-                    localizations.meetingLeave, InternalMenuIDs.leaveMeeting),
+                    localizations.meetingLeave, NEMenuIDs.leaveMeeting),
               ],
-              cancelButton: _buildActionSheetItem(context, true,
-                  localizations.globalCancel, InternalMenuIDs.cancel),
+              cancelButton: _buildActionSheetItem(
+                  context, true, localizations.globalCancel, NEMenuIDs.cancel),
             )).then<void>((int? itemId) async {
-      if (mounted && itemId == InternalMenuIDs.leaveMeeting) {
+      if (mounted && itemId == NEMenuIDs.leaveMeeting) {
         roomContext.leaveRoom();
         handleRoomEnd(NERoomEndReason.kLeaveBySelf);
       }
@@ -932,7 +952,7 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
           ),
         );
       },
-      onPinStart: (alignment) {
+      onPositionChanged: (alignment) {
         videoPreviewAlignment = alignment;
       },
     );

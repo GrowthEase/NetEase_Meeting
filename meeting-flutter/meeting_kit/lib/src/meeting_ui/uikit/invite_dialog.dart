@@ -29,76 +29,96 @@ class _InviteDialog extends StatelessWidget {
           ),
         ),
         Center(
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 33),
-            decoration: const ShapeDecoration(
-              color: Colors.white,
-              shape: RoundedRectangleBorder(
-                side: BorderSide(color: Colors.white),
-                borderRadius: BorderRadius.all(Radius.circular(14)),
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                SizedBox(
-                  height: 18,
-                ),
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w500,
-                    decoration: TextDecoration.none,
+          child: OrientationBuilder(
+            builder: (_, orientation) {
+              final isPortrait = orientation == Orientation.portrait;
+              return Container(
+                margin: isPortrait
+                    ? const EdgeInsets.symmetric(horizontal: 33)
+                    : EdgeInsets.only(
+                        bottom: MediaQuery.of(context).padding.bottom),
+                constraints:
+                    isPortrait ? null : BoxConstraints.tightFor(width: 309),
+                decoration: const ShapeDecoration(
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    side: BorderSide(color: Colors.white),
+                    borderRadius: BorderRadius.all(Radius.circular(14)),
                   ),
                 ),
-                const SizedBox(height: 11),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                  ),
-                  child: Text(
-                    content,
-                    textAlign: TextAlign.left,
-                    style: const TextStyle(
-                      color: _UIColors.color_333333,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      decoration: TextDecoration.none,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    Flexible(
+                        child: SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                SizedBox(
+                                  height: 18,
+                                ),
+                                Text(
+                                  title,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 17,
+                                    fontWeight: Platform.isIOS
+                                        ? FontWeight.w600
+                                        : FontWeight.w500,
+                                    decoration: TextDecoration.none,
+                                  ),
+                                ),
+                                const SizedBox(height: 11),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
+                                  child: Text(
+                                    content,
+                                    textAlign: TextAlign.left,
+                                    style: const TextStyle(
+                                      color: _UIColors.color_333333,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                      decoration: TextDecoration.none,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 15),
+                              ],
+                            ))),
+                    const Divider(
+                      height: 1,
+                      color: _UIColors.color3F3F3F,
                     ),
-                  ),
-                ),
-                const SizedBox(height: 15),
-                const Divider(
-                  height: 1,
-                  color: _UIColors.color3F3F3F,
-                ),
-                GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTap: () => onOK(),
-                  child: Container(
-                    height: 60,
-                    child: Center(
-                      child: Text(
-                        NEMeetingUIKitLocalizations.of(context)!
-                            .meetingCopyInvite,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: _UIColors.color_007AFF,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                          decoration: TextDecoration.none,
+                    GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onTap: () => onOK(),
+                      child: Container(
+                        height: 60,
+                        child: Center(
+                          child: Text(
+                            NEMeetingUIKitLocalizations.of(context)!
+                                .meetingCopyInvite,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: _UIColors.color_007AFF,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w400,
+                              decoration: TextDecoration.none,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ],

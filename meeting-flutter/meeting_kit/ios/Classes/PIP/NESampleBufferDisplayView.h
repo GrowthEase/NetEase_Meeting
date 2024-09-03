@@ -11,6 +11,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)updateStateWithMember:(NERoomMember *)member isSelf:(BOOL)isSelf;
 - (void)showPhone:(BOOL)flag;
 - (void)showInfo:(BOOL)flag;
+- (void)updateAvatarHidden:(BOOL)hide;
 @end
 
 NS_ASSUME_NONNULL_END

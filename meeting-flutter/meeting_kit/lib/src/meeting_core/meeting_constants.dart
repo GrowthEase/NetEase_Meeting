@@ -4,6 +4,84 @@
 
 part of meeting_core;
 
+class MeetingSecurityCtrlValue {
+  /// 是否允许批注
+  static var ANNOTATION_DISABLE = 0x1;
+
+  /// 是否允许屏幕共享
+  static final SCREEN_SHARE_DISABLE = 0x2;
+
+  /// 是否允许开启白板
+  static final WHILE_BOARD_SHARE_DISABLE = 0x4;
+
+  /// 是否允许自己改名
+  static final EDIT_NAME_DISABLE = 0x8;
+
+  /// 是否是全体静音
+  static final AUDIO_OFF = 0x10;
+
+  /// 是否允许自行解除静音
+  static final AUDIO_NOT_ALLOW_SELF_ON = 0x20;
+
+  /// 是否是全体关闭视频
+  static final VIDEO_OFF = 0x40;
+
+  /// 是否允许自行打开视频
+  static final VIDEO_NOT_ALLOW_SELF_ON = 0x80;
+
+  /// 表情回复开关
+  static final EMOJI_RESP_DISABLE = 0x100;
+
+  /// 本地录制开关
+  static final LOCAL_RECORD_DISABLE = 0x200;
+
+  /// 成员加入离开播放提示音
+  static final PLAY_SOUND = 0x400;
+
+  /// 头像显示隐藏
+  static final AVATAR_HIDE = 0x800;
+}
+
+class MeetingSecurityCtrlKey {
+  static final securityCtrlKey = 'securityCtrl';
+
+  /// 是否允许批注
+  static final ANNOTATION_DISABLE = 'ANNOTATION_DISABLE';
+
+  /// 是否允许屏幕共享
+  static final SCREEN_SHARE_DISABLE = 'SCREEN_SHARE_DISABLE';
+
+  /// 是否允许开启白板
+  static final WHILE_BOARD_SHARE_DISABLE = 'WHILE_BOARD_SHARE_DISABLE';
+
+  /// 是否允许自己改名
+  static final EDIT_NAME_DISABLE = 'EDIT_NAME_DISABLE';
+
+  /// 是否是全体静音
+  static final AUDIO_OFF = 'AUDIO_OFF';
+
+  /// 是否允许自行解除静音
+  static final AUDIO_NOT_ALLOW_SELF_ON = 'AUDIO_NOT_ALLOW_SELF_ON';
+
+  /// 是否是全体关闭视频
+  static final VIDEO_OFF = 'VIDEO_OFF';
+
+  /// 是否允许自行打开视频
+  static final VIDEO_NOT_ALLOW_SELF_ON = 'VIDEO_NOT_ALLOW_SELF_ON';
+
+  /// 表情回复开关
+  static final EMOJI_RESP_DISABLE = 'EMOJI_RESP_DISABLE';
+
+  /// 本地录制开关
+  static final LOCAL_RECORD_DISABLE = 'LOCAL_RECORD_DISABLE';
+
+  /// 成员加入离开播放提示音
+  static final PLAY_SOUND = 'PLAY_SOUND';
+
+  /// 头像显示隐藏
+  static final AVATAR_HIDE = 'AVATAR_HIDE';
+}
+
 const kMeetingTemplateId = 40;
 
 class MeetingPropertyKeys {
@@ -33,21 +111,6 @@ class PhoneStateProperty {
 ///
 class AudioControlProperty {
   static const key = 'audioOff';
-
-  ///
-  /// 未启用
-  ///
-  static const disable = "disable";
-
-  ///
-  /// 自动关闭，允许自行解除
-  ///
-  static const offAllowSelfOn = "offAllowSelfOn";
-
-  ///
-  /// 自动关闭，不允许自行解除
-  ///
-  static const offNotAllowSelfOn = "offNotAllowSelfOn";
 }
 
 ///
@@ -55,21 +118,6 @@ class AudioControlProperty {
 ///
 class VideoControlProperty {
   static const key = 'videoOff';
-
-  ///
-  /// 未启用
-  ///
-  static const disable = "disable";
-
-  ///
-  /// 自动关闭，允许自行解除
-  ///
-  static const offAllowSelfOn = "offAllowSelfOn";
-
-  ///
-  /// 自动关闭，不允许自行解除
-  ///
-  static const offNotAllowSelfOn = "offNotAllowSelfOn";
 }
 
 ///
@@ -77,19 +125,6 @@ class VideoControlProperty {
 ///
 class WatermarkProperty {
   static const key = 'watermark';
-}
-
-///
-/// 批注属性Key
-///
-class AnnotationProperty {
-  static const key = 'annotationPermission';
-
-  /// 未启用
-  static const disable = '0';
-
-  /// 启用
-  static const enable = '1';
 }
 
 ///

@@ -146,6 +146,9 @@ abstract class NESettingsService extends ValueNotifier<Map> {
   /// 查询应用是否支持访客入会
   bool isGuestJoinSupported();
 
+  /// 查询应用是否支持聊天室服务
+  bool isMeetingChatSupported();
+
   /// 查询应用session会话Id
   String getAppNotifySessionId();
 
@@ -154,4 +157,72 @@ abstract class NESettingsService extends ValueNotifier<Map> {
 
   /// 设置云录制配置
   void setCloudRecordConfig(NECloudRecordConfig config);
+
+  ///
+  /// 设置会中字幕/转写翻译语言
+  /// - [language] 目标翻译语言
+  ///
+  Future<int> setASRTranslationLanguage(
+      NEMeetingASRTranslationLanguage language);
+
+  ///
+  /// 获取会中字幕/转写翻译语言
+  ///
+  NEMeetingASRTranslationLanguage getASRTranslationLanguage();
+
+  ///
+  /// 开启会中字幕同时显示双语
+  /// - [enable] true-开启，false-关闭
+  ///
+  Future<int> enableCaptionBilingual(bool enable);
+
+  ///
+  /// 查询会中字幕同时显示双语是否开启
+  ///
+  bool isCaptionBilingualEnabled();
+
+  ///
+  /// 开启会中转写同时显示双语
+  /// - [enable] true-开启，false-关闭
+  ///
+  Future<int> enableTranscriptionBilingual(bool enable);
+
+  ///
+  /// 查询会中转写同时显示双语是否开启
+  ///
+  bool isTranscriptionBilingualEnabled();
+
+  ///
+  /// 添加设置变更监听器
+  ///
+  void addSettingsChangedListener(NESettingsChangedListener listener);
+
+  ///
+  /// 移除设置变更监听器
+  ///
+  void removeSettingsChangedListener(NESettingsChangedListener listener);
+
+  ///
+  /// 设置聊天新消息提醒类型
+  ///
+  void setChatMessageNotificationType(NEChatMessageNotificationType type);
+
+  ///
+  /// 查询聊天新消息提醒类型
+  ///
+  Future<NEChatMessageNotificationType> getChatMessageNotificationType();
+
+  /// 查询是否在视频中显示用户名
+  Future<bool> isShowNameInVideoEnabled();
+
+  /// 设置是否在视频中显示用户名
+  Future<void> enableShowNameInVideo(bool enable);
+
+  /// 设置是否显示未入会成员
+  ///
+  /// [enable] true-开启，false-关闭
+  void enableShowNotYetJoinedMembers(bool enable);
+
+  /// 查询是否显示未入会成员
+  Future<bool> isShowNotYetJoinedMembersEnabled();
 }

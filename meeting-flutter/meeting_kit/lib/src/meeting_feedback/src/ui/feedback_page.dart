@@ -238,7 +238,7 @@ class _FeedbackContentState extends State<FeedbackContent> {
                 onTap: selectDate,
                 titleTextStyle: TextStyle(
                   color: _UIColors.color53576A,
-                  fontSize: 14,
+                  fontSize: 16,
                   fontWeight: FontWeight.w400,
                 ),
               ),
@@ -458,7 +458,7 @@ class _FeedbackContentState extends State<FeedbackContent> {
                     strutStyle: StrutStyle(forceStrutHeight: true),
                     style: TextStyle(
                         color: _UIColors.color53576A,
-                        fontSize: 14,
+                        fontSize: 16,
                         fontWeight: FontWeight.w400,
                         decoration: TextDecoration.none),
                   ),
@@ -487,7 +487,7 @@ class _FeedbackContentState extends State<FeedbackContent> {
         showArrow: false,
         titleTextStyle: TextStyle(
           color: _UIColors.color1E1F27,
-          fontSize: 14,
+          fontSize: 16,
           fontWeight: FontWeight.w500,
         ));
   }
@@ -564,7 +564,7 @@ class _FeedbackContentState extends State<FeedbackContent> {
           keyboardAppearance: Brightness.light,
           decoration: InputDecoration(
               hintText: localizations.feedbackOtherTip,
-              hintStyle: TextStyle(fontSize: 14, color: _UIColors.colorCDCFD7),
+              hintStyle: TextStyle(fontSize: 16, color: _UIColors.colorCDCFD7),
               border: InputBorder.none,
               suffixIcon: _focusNode.hasFocus && _textController.text.isNotEmpty
                   ? ClearIconButton(onPressed: () {
@@ -574,7 +574,7 @@ class _FeedbackContentState extends State<FeedbackContent> {
                   : null),
           style: TextStyle(
             color: _UIColors.color1E1E27,
-            fontSize: 14,
+            fontSize: 16,
           ),
         ),
       ),

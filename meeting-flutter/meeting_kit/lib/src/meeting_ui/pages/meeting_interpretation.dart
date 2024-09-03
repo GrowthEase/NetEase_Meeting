@@ -5,27 +5,31 @@ part of meeting_ui;
 
 class MeetingInterpretationPage extends StatefulWidget {
   static bool get isShowing => _MeetingInterpretationPageState._instance > 0;
+  final ValueNotifier<bool> hideAvatar;
 
-  static Future show(BuildContext context) {
+  static Future show(BuildContext context, ValueNotifier<bool> hideAvatar) {
     return showMeetingPopupPageRoute(
       context: context,
       builder: (context) {
-        return MeetingInterpretationPage();
+        return MeetingInterpretationPage(hideAvatar);
       },
       routeSettings: RouteSettings(name: 'MeetingInterpretationPage'),
     );
   }
 
-  const MeetingInterpretationPage({super.key});
+  const MeetingInterpretationPage(this.hideAvatar, {super.key});
 
   @override
   State<MeetingInterpretationPage> createState() =>
-      _MeetingInterpretationPageState();
+      _MeetingInterpretationPageState(hideAvatar);
 }
 
 class _MeetingInterpretationPageState
     extends _InterpretationPageBaseState<MeetingInterpretationPage> {
   static int _instance = 0;
+  final ValueNotifier<bool> hideAvatar;
+
+  _MeetingInterpretationPageState(this.hideAvatar);
 
   @override
   void initState() {
@@ -109,7 +113,8 @@ class _MeetingInterpretationPageState
           SizedBox(height: 10),
           GotoTile(
             title: meetingUiLocalizations.interpManagement,
-            onTap: () => InMeetingInterpretationManagementPage.show(context),
+            onTap: () =>
+                InMeetingInterpretationManagementPage.show(context, hideAvatar),
           ),
         ],
       ],
@@ -145,35 +150,41 @@ class _MeetingInterpretationPageState
 
 /// 会中译员管理、开始同声传译、停止同声传译
 class InMeetingInterpretationManagementPage extends StatefulWidget {
-  static Future show(BuildContext context) {
+  final ValueNotifier<bool> hideAvatar;
+  static Future show(BuildContext context, ValueNotifier<bool> hideAvatar) {
     return showMeetingPopupPageRoute(
       context: context,
       builder: (context) {
-        return InMeetingInterpretationManagementPage();
+        return InMeetingInterpretationManagementPage(hideAvatar: hideAvatar);
       },
       routeSettings: RouteSettings(name: 'InterpretationManagementPage'),
     );
   }
 
-  const InMeetingInterpretationManagementPage({super.key});
+  const InMeetingInterpretationManagementPage(
+      {super.key, required this.hideAvatar});
 
   @override
   State<InMeetingInterpretationManagementPage> createState() =>
-      _InMeetingInterpretationManagementPageState();
+      _InMeetingInterpretationManagementPageState(hideAvatar);
 }
 
 class _InMeetingInterpretationManagementPageState
     extends _InterpretationPageBaseState<
         InMeetingInterpretationManagementPage> {
   final interpreters = <InterpreterInfo>[];
+  final ValueNotifier<bool> hideAvatar;
 
   late final InterpreterListController interpreterListController;
+
+  _InMeetingInterpretationManagementPageState(this.hideAvatar);
 
   @override
   void onFirstBuild() {
     super.onFirstBuild();
     interpreterListController = InMeetingInterpreterListController(
         getRoomContext(),
+        hideAvatar,
         interpController.getInterpreterList().map((e) {
           return InterpreterInfo(
             userId: e.userId,
@@ -223,8 +234,8 @@ class _InMeetingInterpretationManagementPageState
           children: [
             Expanded(
               child: InterpreterListPage(
-                controller: interpreterListController,
-              ),
+                  controller: interpreterListController,
+                  hideAvatar: hideAvatar),
             ),
             bottomActionButtons(),
           ],
@@ -816,10 +827,12 @@ class MeetingInterpreterCard extends StatelessWidget {
   final OnSelectUser? onSelectUser;
   final InterpreterInfo interpreter;
   final OnGetComment? onGetComment;
+  final ValueNotifier<bool>? hideAvatar;
 
   const MeetingInterpreterCard({
     super.key,
     required this.interpreter,
+    this.hideAvatar,
     this.onSelectUser,
     this.onSelectFirstLang,
     this.onSelectSecondLang,
@@ -861,9 +874,15 @@ class MeetingInterpreterCard extends StatelessWidget {
                     child: Row(
                       children: [
                         if (name != null)
-                          NEMeetingAvatar.small(
-                            name: name,
-                            url: avatar,
+                          ValueListenableBuilder(
+                            valueListenable: hideAvatar ?? ValueNotifier(false),
+                            builder: (context, hideAvatar, child) {
+                              return NEMeetingAvatar.small(
+                                name: name,
+                                url: avatar,
+                                hideImageAvatar: hideAvatar,
+                              );
+                            },
                           ),
                         if (name != null) SizedBox(width: 8),
                         Text(
@@ -1422,8 +1441,9 @@ class InterpreterListController extends ChangeNotifier {
 /// 会中译员列表管理
 class InMeetingInterpreterListController extends InterpreterListController {
   final NERoomContext roomContext;
+  final ValueNotifier<bool> hideAvatar;
 
-  InMeetingInterpreterListController(this.roomContext,
+  InMeetingInterpreterListController(this.roomContext, this.hideAvatar,
       [super.interpreterInfos]);
 
   @override
@@ -1441,7 +1461,7 @@ class InMeetingInterpreterListController extends InterpreterListController {
   Future<InterpreterInfo?> selectUser(
       BuildContext context, InterpreterInfo interpreter) {
     return _SelectInterpreterFromInMeetingPage.select(
-            context, interpreter.userId, getSelectedUsers())
+            context, interpreter.userId, getSelectedUsers(), hideAvatar)
         .then((member) {
       if (member != null) {
         interpreter.setUser(member.uuid, member);
@@ -1459,20 +1479,26 @@ class InterpreterListPage extends StatefulWidget {
   final InterpreterListController controller;
   final bool editable;
   final OnWillRemoveInterpreter? onWillRemoveInterpreter;
+  final ValueNotifier<bool>? hideAvatar;
 
   const InterpreterListPage({
     super.key,
     required this.controller,
     this.editable = true,
     this.onWillRemoveInterpreter,
+    this.hideAvatar,
   });
 
   @override
-  State<InterpreterListPage> createState() => _InterpreterListPageState();
+  State<InterpreterListPage> createState() =>
+      _InterpreterListPageState(hideAvatar);
 }
 
 class _InterpreterListPageState extends State<InterpreterListPage> {
   late InterpreterListController controller;
+  final ValueNotifier<bool>? hideAvatar;
+
+  _InterpreterListPageState(this.hideAvatar);
 
   @override
   void initState() {
@@ -1569,6 +1595,7 @@ class _InterpreterListPageState extends State<InterpreterListPage> {
           editable ? () => selectLang(interpreter, false) : null,
       onSelectUser: editable ? controller.selectUser : null,
       onGetComment: controller.getUserComment,
+      hideAvatar: hideAvatar,
     );
   }
 
@@ -1767,34 +1794,44 @@ class _SelectInterpreterFromContactList extends StatelessWidget {
 /// 会中选择译员页面，包含与会成员、未入会成员（不包含 sip 端）
 class _SelectInterpreterFromInMeetingPage extends StatefulWidget {
   static Future<NEBaseRoomMember?> select(
-      BuildContext context, String? selected, Set<String> selectedUsers) {
+      BuildContext context,
+      String? selected,
+      Set<String> selectedUsers,
+      ValueNotifier<bool> hideAvatar) {
     return showMeetingPopupPageRoute<NEBaseRoomMember>(
       context: context,
       routeSettings: RouteSettings(name: 'SelectInterpreterFromInMeetingPage'),
       builder: (context) {
         return _SelectInterpreterFromInMeetingPage(
-            current: selected, selectedUsers: selectedUsers);
+            current: selected,
+            selectedUsers: selectedUsers,
+            hideAvatar: hideAvatar);
       },
     );
   }
 
   final Set<String> selectedUsers;
   final String? current;
+  final ValueNotifier<bool> hideAvatar;
 
   const _SelectInterpreterFromInMeetingPage({
     super.key,
     this.current,
     required this.selectedUsers,
+    required this.hideAvatar,
   });
 
   @override
   State<_SelectInterpreterFromInMeetingPage> createState() =>
-      _SelectInterpreterFromInMeetingPageState();
+      _SelectInterpreterFromInMeetingPageState(hideAvatar);
 }
 
 class _SelectInterpreterFromInMeetingPageState
     extends State<_SelectInterpreterFromInMeetingPage>
     with MeetingKitLocalizationsMixin, MeetingStateScope {
+  final ValueNotifier<bool> hideAvatar;
+
+  _SelectInterpreterFromInMeetingPageState(this.hideAvatar);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1882,9 +1919,15 @@ class _SelectInterpreterFromInMeetingPageState
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            NEMeetingAvatar.medium(
-              name: user.name,
-              url: user.avatar,
+            ValueListenableBuilder(
+              valueListenable: hideAvatar,
+              builder: (context, hideAvatar, child) {
+                return NEMeetingAvatar.medium(
+                  name: user.name,
+                  url: user.avatar,
+                  hideImageAvatar: hideAvatar,
+                );
+              },
             ),
             SizedBox(width: 6),
             Expanded(
@@ -2099,6 +2142,8 @@ mixin InMeetingInterpretationManager<T extends StatefulWidget>
     return _interpretationController!;
   }
 
+  late ValueNotifier<bool> hideAvatar;
+
   /// 最小化时不展示相关弹窗
   bool get _shouldNotShowDialog {
     return !mounted ||
@@ -2164,7 +2209,7 @@ mixin InMeetingInterpretationManager<T extends StatefulWidget>
     ))?.closed;
     _interpreterInMeetingStatusChangedDialogShowing = false;
     if (mounted && result?.isAction == true) {
-      InMeetingInterpretationManagementPage.show(context);
+      InMeetingInterpretationManagementPage.show(context, hideAvatar);
     }
   }
 
@@ -2217,7 +2262,7 @@ mixin InMeetingInterpretationManager<T extends StatefulWidget>
     if (mounted &&
         willGotoInterpretationPage &&
         !MeetingInterpretationPage.isShowing) {
-      MeetingInterpretationPage.show(context);
+      MeetingInterpretationPage.show(context, hideAvatar);
     }
   }
 

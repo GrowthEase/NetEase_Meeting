@@ -110,6 +110,8 @@ class PermissionHelper {
   }
 
   static Future<bool> _requestSingle(Permission request) async {
+    /// 权限请求通知
+    InMeetingPermissionUtils.notifyPermissionRequest(request.toString());
     if (_ongoing == null || _ongoing?.isCompleted == true) {
       _ongoing = Completer();
     } else {

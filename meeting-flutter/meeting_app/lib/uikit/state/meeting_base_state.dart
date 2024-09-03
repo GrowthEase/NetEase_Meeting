@@ -71,7 +71,7 @@ abstract class AppBaseState<T extends StatefulWidget>
       title: Text(
         getTitle(),
         style: TextStyle(
-            color: AppColors.color_1E1E27,
+            color: AppColors.color_1E1F27,
             fontSize: 16,
             fontWeight: FontWeight.w500),
       ),
@@ -84,7 +84,7 @@ abstract class AppBaseState<T extends StatefulWidget>
               icon: const Icon(
                 IconFont.iconyx_returnx,
                 size: 14,
-                color: AppColors.color_1E1E27,
+                color: AppColors.color_1E1F27,
               ),
               padding: EdgeInsets.all(5),
               onPressed: () {

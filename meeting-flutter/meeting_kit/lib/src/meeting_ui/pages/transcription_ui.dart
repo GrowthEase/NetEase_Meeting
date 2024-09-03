@@ -156,25 +156,31 @@ class _MeetingCaptionsBarState extends State<MeetingCaptionsBar>
   static const captionsMessageTimeoutInSeconds = 5;
   static const maxLinesOfAll = 4;
   static const maxLinesOfEach = 2;
-  static const nicknameWidth = 90.0;
+  static const nicknameWidth = 28.0;
+  static const lineHeight = 22.0;
+  static const captionTextFontSize = 14.0;
   // static const contentWidth = 265.0;
 
   late final controller = widget.controller;
   var enabled = false;
   var loading = false;
+  String? notificationMessage;
+  bool showNotification = false;
   AnimationController? animationController;
   static final loadingHintOffsetTween =
       Tween<Offset>(begin: Offset.zero, end: Offset(0.0, -1.0));
   static final settingsHintOffsetTween =
       Tween<Offset>(begin: Offset(0.0, 1.0), end: Offset.zero);
 
-  bool get hasContent => enabled && (loading || activeSpeakers.isNotEmpty);
+  bool get hasContent =>
+      enabled && (loading || activeSpeakers.isNotEmpty || showNotification);
 
   @override
   void initState() {
     super.initState();
     controller.addListener(this);
     enabled = controller.isCaptionsEnabled();
+    updateCaptionSettings();
   }
 
   @override
@@ -190,12 +196,46 @@ class _MeetingCaptionsBarState extends State<MeetingCaptionsBar>
   void onMySelfCaptionEnableChanged(bool enable) {
     setState(() {
       enabled = enable;
-      resetCaptionsMessage();
+      notificationMessage = null;
       hideCaptionsTimer?.cancel();
+      resetCaptionsMessage();
       if (enable) {
         startLoading();
       }
     });
+  }
+
+  @override
+  void onTranslationSettingsChanged() {
+    updateCaptionSettings();
+  }
+
+  /// 显示源语言
+  bool showOriginalText = true;
+
+  /// 显示翻译语言
+  bool showTranslatedText = false;
+
+  /// 是否仅展示一种语言，原始语言或翻译语言
+  bool showSingleLanguage = true;
+  void updateCaptionSettings() {
+    final transLang = controller.getTranslationLanguage();
+    final bilingual = controller.isCaptionBilingualEnabled();
+
+    /// 不翻译/显示双语，则展示原语言
+    final shouldShowOriginalText =
+        transLang == NEMeetingASRTranslationLanguage.none || bilingual;
+    final shouldShowTranslatedText =
+        transLang != NEMeetingASRTranslationLanguage.none;
+    if (shouldShowOriginalText != showOriginalText ||
+        shouldShowTranslatedText != showTranslatedText) {
+      setState(() {
+        showOriginalText = shouldShowOriginalText;
+        showTranslatedText = shouldShowTranslatedText;
+        showSingleLanguage = (showOriginalText != showTranslatedText) &&
+            (showOriginalText || showTranslatedText);
+      });
+    }
   }
 
   final userMessageInfos = <String, _UserCaptionsMessageInfo>{};
@@ -204,12 +244,31 @@ class _MeetingCaptionsBarState extends State<MeetingCaptionsBar>
   void resetCaptionsMessage() {
     activeSpeakers.clear();
     userMessageInfos.clear();
+    showNotification = false;
   }
+
+  late NEInterpretationController interpretationController =
+      meetingUIState.interpretationController;
 
   @override
   void onReceiveCaptionMessages(
       String? channel, List<NERoomCaptionMessage> captionMessages) {
     if (!enabled) return;
+
+    /// 同传没有收听原声，不展示字幕
+    if (meetingUIState.interpretationController.listenLanguage != null &&
+        !meetingUIState.interpretationController
+            .isMajorAudioInBackgroundEnabled()) {
+      if (notificationMessage == null) {
+        notificationMessage =
+            meetingUiLocalizations.transcriptionCaptionNotAvailableInSubChannel;
+        showNotification = true;
+        setState(() {});
+      }
+      return;
+    }
+    notificationMessage = null;
+    showNotification = false;
     for (final msg in captionMessages) {
       final user = msg.fromUserUuid;
       userMessageInfos
@@ -232,12 +291,19 @@ class _MeetingCaptionsBarState extends State<MeetingCaptionsBar>
     activeSpeakers
         .where((user) => !newActiveSpeakers.contains(user))
         .forEach((user) {
+      /// 重置不再是演讲者的成员消息
       userMessageInfos[user]?.resetShowingMessageText();
     });
     activeSpeakers.clear();
     activeSpeakers.addAll(newActiveSpeakers);
     setState(() {});
     scheduleHideCaptionsTimer();
+  }
+
+  ValueNotifier<bool> hideAvatar = ValueNotifier(false);
+  @override
+  void onAvatarHiddenChanged(bool hide) {
+    hideAvatar.value = hide;
   }
 
   Timer? hideCaptionsTimer;
@@ -265,7 +331,7 @@ class _MeetingCaptionsBarState extends State<MeetingCaptionsBar>
         IntrinsicWidth(
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 8.w),
-            height: 22.h,
+            height: 22,
             decoration: ShapeDecoration(
               shape: StadiumBorder(),
               color: _UIColors.black80,
@@ -293,7 +359,11 @@ class _MeetingCaptionsBarState extends State<MeetingCaptionsBar>
               ),
             ),
             clipBehavior: Clip.hardEdge,
-            child: loading ? buildLoading() : buildCaptions(),
+            child: loading
+                ? buildLoading()
+                : (notificationMessage != null && showNotification
+                    ? buildNotification()
+                    : buildCaptions()),
           ),
         )
       ],
@@ -306,11 +376,7 @@ class _MeetingCaptionsBarState extends State<MeetingCaptionsBar>
     }
     return GestureDetector(
       child: body,
-      onTap: () {
-        if (meetingUIState.roomContext.isMySelfHostOrCoHost()) {
-          MeetingCaptionsSettingsPage.show(context);
-        }
-      },
+      onTap: () => MeetingCaptionsSettingsPage.show(context),
     );
   }
 
@@ -321,8 +387,7 @@ class _MeetingCaptionsBarState extends State<MeetingCaptionsBar>
       controller.addStatusListener((status) async {
         if (status == AnimationStatus.completed) {
           if (!mounted) return;
-          if (meetingUIState.roomContext.isMySelfHostOrCoHost())
-            await Future.delayed(const Duration(seconds: 2));
+          await Future.delayed(const Duration(seconds: 2));
           if (!mounted) return;
           setState(() {
             loading = false;
@@ -335,13 +400,7 @@ class _MeetingCaptionsBarState extends State<MeetingCaptionsBar>
     animationController!.value = 0;
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted || !loading) return;
-    if (meetingUIState.roomContext.isMySelfHostOrCoHost()) {
-      animationController!.forward();
-    } else {
-      setState(() {
-        loading = false;
-      });
-    }
+    animationController!.forward();
   }
 
   Widget buildLoading() {
@@ -386,28 +445,41 @@ class _MeetingCaptionsBarState extends State<MeetingCaptionsBar>
           ),
           SlideTransition(
             position: settingsHintOffsetTween.animate(animationController!),
-            child: MemberRoleChangedBuilder.ifManager(
-                roomContext: meetingUIState.roomContext,
-                builder: (context, _) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text(
-                        meetingUiLocalizations.transcriptionCaptionSettingsHint,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: _UIColors.white,
-                          decoration: TextDecoration.none,
-                          fontWeight: FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                  );
-                }),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text(
+                  meetingUiLocalizations.transcriptionCaptionSettingsHint,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: _UIColors.white,
+                    decoration: TextDecoration.none,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget buildNotification() {
+    scheduleHideCaptionsTimer();
+    return Container(
+      padding: const EdgeInsets.all(8.0),
+      child: Text(
+        notificationMessage!,
+        style: TextStyle(
+          fontSize: 14,
+          color: _UIColors.white,
+          decoration: TextDecoration.none,
+          fontWeight: FontWeight.normal,
+        ),
+        textAlign: TextAlign.center,
       ),
     );
   }
@@ -418,95 +490,169 @@ class _MeetingCaptionsBarState extends State<MeetingCaptionsBar>
       child: LayoutBuilder(
         builder: (context, constraints) {
           if (userMessageInfos.isEmpty) return SizedBox.shrink();
-
-          /// 如果只有一个人的字幕，最多展示 4 行；多人情况下，最多每人展示 2 行字幕
-          final activeSpeakerLen = activeSpeakers.length;
-          var remainLines = maxLinesOfAll;
-          final widgets = <Widget>[];
-          var index = 0;
-          for (var user in activeSpeakers) {
-            assert(userMessageInfos.containsKey(user));
-            final messageInfo = userMessageInfos[user]!;
-
-            /// 强制把第二个人的行数留给第三个人至少一行
-            int reservation = 0;
-            if (activeSpeakerLen == 3 && index == 1 && remainLines <= 2) {
-              reservation = 1;
-            }
-            final measureInfo = measureText(messageInfo.getNextMessageText(),
-                min(maxLinesOfEach - reservation, remainLines), constraints);
-            if (messageInfo.latestMessage.isFinal) {
-              messageInfo.setShowingMessageText(measureInfo.text);
-            }
-            widgets.add(buildCaptionMessageRow(
-              controller.getUserInfo(user)!,
-              measureInfo.lines,
-              measureInfo.text,
-            ));
-            remainLines -= measureInfo.lines;
-            if (remainLines <= 0) {
-              break;
-            }
-            ++index;
+          List<Widget> widgets;
+          if (showSingleLanguage) {
+            widgets = buildSingleLanguageCaption(constraints);
+          } else {
+            widgets = buildTwoLanguageCaption(constraints);
           }
           return Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: widgets.reversed.toList(),
+            children: widgets,
           );
         },
       ),
     );
   }
 
+  /// 单语字幕: 原语言或翻译语言
+  List<Widget> buildSingleLanguageCaption(BoxConstraints constraints) {
+    assert(showSingleLanguage);
+
+    /// 如果只有一个人的字幕，最多展示 4 行；多人情况下，最多每人展示 2 行字幕
+    final activeSpeakerLen = activeSpeakers.length;
+    var remainLines = maxLinesOfAll;
+    final widgets = <Widget>[];
+    var index = 0;
+    final isTranslated = showTranslatedText;
+    for (var user in activeSpeakers) {
+      assert(userMessageInfos.containsKey(user));
+      final messageInfo = userMessageInfos[user]!;
+
+      /// 强制把第二个人的行数留给第三个人至少一行
+      int reservation = 0;
+      if (activeSpeakerLen == 3 && index == 1 && remainLines <= 2) {
+        reservation = 1;
+      }
+      final measureInfo = measureText(
+          messageInfo.getNextMessageText(isTranslated),
+          min(maxLinesOfEach - reservation, remainLines),
+          constraints);
+      if (messageInfo.latestMessage.isFinal) {
+        messageInfo.setShowingMessageText(measureInfo.text, isTranslated);
+      }
+      widgets.add(buildCaptionMessageRow(
+        controller.getUserInfo(user)!,
+        measureInfo.lines,
+        measureInfo.text,
+        contentTextStyle:
+            isTranslated ? translationTextStyle : captionTextStyle,
+      ));
+      remainLines -= measureInfo.lines;
+      if (remainLines <= 0) {
+        break;
+      }
+      ++index;
+    }
+    return widgets.reversed.toList();
+  }
+
+  /// 双语字幕
+  List<Widget> buildTwoLanguageCaption(BoxConstraints constraints) {
+    assert(showOriginalText && showOriginalText);
+
+    /// 每种语言的最大行数
+    var maxLineOfLang = activeSpeakers.length >= 2 ? 1 : 2;
+
+    var remainLines = maxLinesOfAll;
+    final widgets = <Widget>[];
+    outer:
+    for (var user in activeSpeakers) {
+      assert(userMessageInfos.containsKey(user));
+      final messageInfo = userMessageInfos[user]!;
+
+      for (var isTranslated in const [true, false]) {
+        final text = messageInfo.getNextMessageText(isTranslated);
+        if (text.isEmpty) continue;
+        final measureInfo = measureText(
+            messageInfo.getNextMessageText(isTranslated),
+            min(maxLineOfLang, remainLines),
+            constraints);
+        if (messageInfo.latestMessage.isFinal) {
+          messageInfo.setShowingMessageText(measureInfo.text, isTranslated);
+        }
+        widgets.add(buildCaptionMessageRow(
+          controller.getUserInfo(user)!,
+          measureInfo.lines,
+          measureInfo.text,
+          contentTextStyle:
+              isTranslated ? translationTextStyle : captionTextStyle,
+        ));
+        remainLines -= measureInfo.lines;
+        if (remainLines <= 0) {
+          break outer;
+        }
+      }
+    }
+    return widgets.reversed.toList();
+  }
+
   Widget buildCaptionMessageRow(
-      CaptionMessageUserInfo userInfo, int maxLines, String text) {
+    CaptionMessageUserInfo userInfo,
+    int maxLines,
+    String text, {
+    TextStyle contentTextStyle = captionTextStyle,
+  }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
+          alignment: Alignment.centerLeft,
           width: nicknameWidth,
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  userInfo.nickname,
-                  style: nickTextStyle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
+          height: lineHeight,
+          padding: EdgeInsets.all(2.0),
+          child: ValueListenableBuilder(
+            valueListenable: hideAvatar,
+            builder: (context, hideAvatar, child) {
+              return NEMeetingAvatar(
+                size: 18,
+                textStyle: AvatarTextStyle(
+                  fontSizeOneChinese: 10,
+                  fontSizeTwoChinese: 8,
+                  fontSizeLetter: 10,
                 ),
-              ),
-              Text(
-                ': ',
-                style: nickTextStyle,
-              ),
-            ],
+                name: userInfo.nickname,
+                url: userInfo.avatar,
+                hideImageAvatar: hideAvatar,
+              );
+            },
           ),
         ),
         Expanded(
-          child: Text(
-            text,
-            style: captionTextStyle,
-            maxLines: maxLines,
-            // overflow: TextOverflow.ellipsis,
+          child: Padding(
+            padding: EdgeInsets.only(top: 2),
+            child: Text(
+              text,
+              style: contentTextStyle.copyWith(inherit: false),
+              maxLines: maxLines,
+              strutStyle: StrutStyle(
+                forceStrutHeight: true,
+                height: 18 / 14,
+              ),
+              // textAlign: TextAlign.center,
+              // overflow: TextOverflow.ellipsis,
+            ),
           ),
         ),
       ],
     );
   }
 
-  static const nickTextStyle = TextStyle(
-    fontSize: 14,
-    color: _UIColors.color_85B2FF,
+  /// 原始内容样式
+  static const captionTextStyle = TextStyle(
+    fontSize: captionTextFontSize,
+    color: _UIColors.white,
     decoration: TextDecoration.none,
     fontWeight: FontWeight.w500,
   );
-  static const captionTextStyle = TextStyle(
-    fontSize: 14,
-    color: _UIColors.white,
+
+  /// 翻译内容样式
+  static const translationTextStyle = TextStyle(
+    fontSize: captionTextFontSize,
+    color: _UIColors.colorF7C266,
     decoration: TextDecoration.none,
-    fontWeight: FontWeight.normal,
+    fontWeight: FontWeight.w500,
   );
 
   TextPainter? textPainter;
@@ -536,7 +682,7 @@ class _MeetingCaptionsBarState extends State<MeetingCaptionsBar>
     if (actualLines <= requestMaxLines) {
       assert(() {
         print(
-            'measureText consume1: ${requestMaxLines} ${actualLines} ${stopwatch!.elapsedMilliseconds}');
+            'measureText consume1: ${text} ${requestMaxLines} ${actualLines} ${stopwatch!.elapsedMilliseconds}');
         return true;
       }());
       return _MeasureInfo(lineMetrics.length, text);
@@ -564,6 +710,9 @@ class _UserCaptionsMessageInfo {
   /// 包含所有的 final 消息
   String _text = '';
 
+  /// 翻译的文本
+  String _translationText = '';
+
   /// 最近一条收到的消息，用于排序
   /// 如果该消息为非 final 消息，则展示字幕时 需要拼接 text + latestMessage.content
   NERoomCaptionMessage? _latestMessage;
@@ -574,28 +723,48 @@ class _UserCaptionsMessageInfo {
   void addMessage(NERoomCaptionMessage message) {
     final last = _latestMessage;
     if (last != null && !last.isFinal) {
+      /// 非 final 消息保持时间戳不变
       message = message.copyWith(
         timestamp: last.timestamp,
       );
     }
+
     _latestMessage = message;
     if (message.isFinal) {
       _text += message.content;
+      _translationText += (message.translationContent ?? '');
     }
   }
 
-  String getNextMessageText() {
-    return latestMessage.isFinal == true
-        ? _text
-        : _text + latestMessage.content;
+  String getNextMessageText([bool isTranslated = false]) {
+    final isFinal = latestMessage.isFinal == true;
+    if (isTranslated) {
+      return isFinal
+          ? _translationText
+          : _translationText + latestMessage.nonNullTranslationContent;
+    } else {
+      return isFinal ? _text : _text + latestMessage.content;
+    }
   }
 
-  void setShowingMessageText(String text) {
-    _text = text;
+  void setShowingMessageText(String text, [bool isTranslated = false]) {
+    if (isTranslated) {
+      _translationText = text;
+    } else {
+      _text = text;
+    }
   }
 
   void resetShowingMessageText() {
-    _text = latestMessage.isFinal == true ? latestMessage.content : '';
+    var isFinal = latestMessage.isFinal == true;
+    _text = isFinal ? latestMessage.content : '';
+    _translationText = isFinal ? latestMessage.nonNullTranslationContent : '';
+  }
+}
+
+extension _NonNullTranslationContent on NERoomCaptionMessage {
+  String get nonNullTranslationContent {
+    return this.translationContent ?? '';
   }
 }
 
@@ -643,6 +812,11 @@ class _MeetingCaptionsSettingsPageState
   }
 
   @override
+  void onTranslationSettingsChanged() {
+    setState(() {});
+  }
+
+  @override
   void onFirstBuild() {
     controller = meetingUIState.transcriptionController;
     controller.addListener(this);
@@ -658,7 +832,7 @@ class _MeetingCaptionsSettingsPageState
 
   @override
   Widget build(BuildContext context) {
-    final child = Scaffold(
+    return Scaffold(
       backgroundColor: _UIColors.globalBg,
       appBar: TitleBar(
         title: TitleBarTitle(
@@ -667,28 +841,56 @@ class _MeetingCaptionsSettingsPageState
       ),
       body: buildBody(),
     );
-    return AutoPopIfNotManager(
-      roomContext: meetingUIState.roomContext,
-      child: child,
-    );
   }
 
   Widget buildBody() {
     return ListView(
       children: [
         MeetingCard(
-          title: meetingUiLocalizations.meetingAllowMembersTo,
-          iconData: NEMeetingIconFont.icon_members,
-          iconColor: _UIColors.color_337eff,
+          title: meetingUiLocalizations.transcriptionTranslationSettings,
+          iconData: NEMeetingIconFont.icon_settings,
+          iconColor: _UIColors.color8D90A0,
           children: [
+            MeetingArrowItem(
+              title: meetingUiLocalizations.transcriptionTargetLang,
+              content: switch (controller.getTranslationLanguage()) {
+                NEMeetingASRTranslationLanguage.chinese =>
+                  meetingUiLocalizations.langChinese,
+                NEMeetingASRTranslationLanguage.english =>
+                  meetingUiLocalizations.langEnglish,
+                NEMeetingASRTranslationLanguage.japanese =>
+                  meetingUiLocalizations.langJapanese,
+                _ => meetingUiLocalizations.transcriptionNotTranslated,
+              },
+              onTap: showTranslationLanguagePopup,
+            ),
             MeetingSwitchItem(
-              switchKey: MeetingUIValueKeys.allowParticipantsEnableCaptions,
-              title: meetingUiLocalizations.transcriptionAllowEnableCaption,
-              valueNotifier: allowEnableCaptionsNotifier,
-              onChanged: allowParticipantsEnableCaption,
+              title: meetingUiLocalizations.transcriptionShowBilingual,
+              valueNotifier:
+                  ValueNotifier(controller.isCaptionBilingualEnabled()),
+              onChanged: enableCaptionBilingualDisplay,
             ),
           ],
         ),
+        MemberRoleChangedBuilder.ifManager(
+            roomContext: meetingUIState.roomContext,
+            builder: (context, _) {
+              return MeetingCard(
+                title: meetingUiLocalizations.meetingAllowMembersTo,
+                iconData: NEMeetingIconFont.icon_members,
+                iconColor: _UIColors.color_337eff,
+                children: [
+                  MeetingSwitchItem(
+                    switchKey:
+                        MeetingUIValueKeys.allowParticipantsEnableCaptions,
+                    title:
+                        meetingUiLocalizations.transcriptionAllowEnableCaption,
+                    valueNotifier: allowEnableCaptionsNotifier,
+                    onChanged: allowParticipantsEnableCaption,
+                  ),
+                ],
+              );
+            }),
       ],
     );
   }
@@ -702,8 +904,200 @@ class _MeetingCaptionsSettingsPageState
       });
     });
   }
+
+  void showTranslationLanguagePopup() async {
+    final language = await SelectCaptionTranslationLanguagePopup.show(
+        context, controller.getTranslationLanguage());
+    if (!mounted || language == null) return;
+    controller.setTranslationLanguage(language);
+  }
+
+  void enableCaptionBilingualDisplay(bool enable) {
+    controller.enableCaptionBilingual(enable);
+  }
 }
 
+/// 转写设置
+class MeetingTranscriptionSettingsPage extends StatefulWidget {
+  static Future show(BuildContext context) {
+    return showMeetingPopupPageRoute(
+      context: context,
+      builder: (context) => MeetingTranscriptionSettingsPage(),
+    );
+  }
+
+  const MeetingTranscriptionSettingsPage({super.key});
+
+  @override
+  State<MeetingTranscriptionSettingsPage> createState() =>
+      _MeetingTranscriptionSettingsPageState();
+}
+
+class _MeetingTranscriptionSettingsPageState
+    extends State<MeetingTranscriptionSettingsPage>
+    with
+        MeetingKitLocalizationsMixin,
+        MeetingStateScope,
+        NEMeetingLiveTranscriptionControllerListener,
+        FirstBuildScope {
+  late NEMeetingLiveTranscriptionController controller;
+
+  @override
+  void onFirstBuild() {
+    controller = meetingUIState.transcriptionController;
+    controller.addListener(this);
+  }
+
+  @override
+  void dispose() {
+    controller.removeListener(this);
+    super.dispose();
+  }
+
+  @override
+  void onTranslationSettingsChanged() {
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _UIColors.globalBg,
+      appBar: TitleBar(
+        title: TitleBarTitle(
+          meetingUiLocalizations.transcriptionSettings,
+        ),
+      ),
+      body: buildBody(),
+    );
+  }
+
+  Widget buildBody() {
+    return ListView(
+      children: [
+        MeetingCard(
+          title: meetingUiLocalizations.transcriptionTranslationSettings,
+          iconData: NEMeetingIconFont.icon_settings,
+          iconColor: _UIColors.color8D90A0,
+          children: [
+            MeetingArrowItem(
+              title: meetingUiLocalizations.transcriptionTargetLang,
+              content: switch (controller.getTranslationLanguage()) {
+                NEMeetingASRTranslationLanguage.chinese =>
+                  meetingUiLocalizations.langChinese,
+                NEMeetingASRTranslationLanguage.english =>
+                  meetingUiLocalizations.langEnglish,
+                NEMeetingASRTranslationLanguage.japanese =>
+                  meetingUiLocalizations.langJapanese,
+                _ => meetingUiLocalizations.transcriptionNotTranslated,
+              },
+              onTap: showTranslationLanguagePopup,
+            ),
+            MeetingSwitchItem(
+              title: meetingUiLocalizations.transcriptionShowBilingual,
+              valueNotifier:
+                  ValueNotifier(controller.isTranscriptionBilingualEnabled()),
+              onChanged: enableTranscriptionBilingualDisplay,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  void showTranslationLanguagePopup() async {
+    final language = await SelectCaptionTranslationLanguagePopup.show(
+        context, controller.getTranslationLanguage());
+    if (!mounted || language == null) return;
+    controller.setTranslationLanguage(language);
+  }
+
+  void enableTranscriptionBilingualDisplay(bool enable) {
+    controller.enableTranscriptionBilingual(enable);
+  }
+}
+
+class SelectCaptionTranslationLanguagePopup extends StatelessWidget {
+  static Future<NEMeetingASRTranslationLanguage?> show(
+    BuildContext context,
+    NEMeetingASRTranslationLanguage? selected,
+  ) async {
+    final width = MediaQuery.sizeOf(context).shortestSide;
+    return BottomSheetUtils.showMeetingBottomDialog<
+        NEMeetingASRTranslationLanguage>(
+      buildContext: context,
+      constraints: BoxConstraints(minWidth: width, maxWidth: width),
+      routeSettings: RouteSettings(name: 'SelectCaptionTranslationLanguage'),
+      actionText: NEMeetingUIKitLocalizations.of(context)!.globalCancel,
+      child: SelectCaptionTranslationLanguagePopup(selected: selected),
+    ).result;
+  }
+
+  final NEMeetingASRTranslationLanguage? selected;
+
+  const SelectCaptionTranslationLanguagePopup({super.key, this.selected});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: NEMeetingASRTranslationLanguage.values.map((e) {
+          return _buildItem(e);
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildItem(NEMeetingASRTranslationLanguage language) {
+    final isSelected = language == selected;
+    final color = isSelected ? _UIColors.color_337eff : _UIColors.color_333333;
+    return Builder(builder: (context) {
+      final localizations = context.meetingUiLocalizations;
+      return GestureDetector(
+        onTap: () async {
+          Navigator.pop(context, isSelected ? null : language);
+        },
+        child: Container(
+          height: 48,
+          padding: EdgeInsets.only(left: 16, right: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  switch (language) {
+                    NEMeetingASRTranslationLanguage.chinese =>
+                      localizations.langChinese,
+                    NEMeetingASRTranslationLanguage.english =>
+                      localizations.langEnglish,
+                    NEMeetingASRTranslationLanguage.japanese =>
+                      localizations.langJapanese,
+                    _ => localizations.transcriptionNotTranslated,
+                  },
+                  style: TextStyle(
+                    fontSize: 16,
+                    decoration: TextDecoration.none,
+                    fontWeight: FontWeight.w500,
+                    color: _UIColors.color1E1F27,
+                  ),
+                ),
+              ),
+              if (isSelected)
+                Icon(
+                  NEMeetingIconFont.icon_check_line,
+                  size: 16,
+                  color: color,
+                ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+}
+
+/// 会议转写页面
 class MeetingTranscriptionPage extends StatefulWidget {
   static Future show(
       BuildContext context, ValueChanged<bool> enableTranscriptionCallback) {
@@ -739,7 +1133,7 @@ class _MeetingTranscriptionPageState extends State<MeetingTranscriptionPage>
   final itemScrollController = ItemScrollController();
   var autoScrollToBottom = true;
   var autoScrollToBottomScheduled = false;
-  ({bool isOldList, int index})? selectedIndexInfo;
+  ({bool isOldList, int index, bool isTranslated})? selectedIndexInfo;
   var selectedVer = 0;
   final scrollController = ScrollController();
   final centerKey = UniqueKey();
@@ -749,10 +1143,18 @@ class _MeetingTranscriptionPageState extends State<MeetingTranscriptionPage>
   final fakeMessageListScrollController = ScrollController();
   final ensureLayoutParamsCompleter = Completer<bool>();
 
+  /// 显示源语言
+  bool showOriginalText = true;
+
+  /// 显示翻译语言
+  bool showTranslatedText = false;
+
   @override
   void onFirstBuild() {
     controller.addListener(this);
+    updateTranscriptionSettings();
     transcriptionEnabledNotifier.value = controller.isTranscriptionEnabled();
+    hideAvatar.value = controller.isAvatarHidden;
     oldMessageList.addAll(controller.getTranscriptionMessageList().reversed);
     ensureLayoutParams();
   }
@@ -763,6 +1165,32 @@ class _MeetingTranscriptionPageState extends State<MeetingTranscriptionPage>
     scrollController.dispose();
     fakeMessageListScrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void onTranslationSettingsChanged() {
+    updateTranscriptionSettings();
+  }
+
+  void updateTranscriptionSettings() {
+    final transLang = controller.getTranslationLanguage();
+    final bilingual = controller.isTranscriptionBilingualEnabled();
+
+    /// 不翻译/显示双语，则展示原语言
+    final shouldShowOriginalText =
+        transLang == NEMeetingASRTranslationLanguage.none || bilingual;
+
+    /// 翻译打开/显示双语，则展示翻译语言
+    final shouldShowTranslatedText =
+        transLang != NEMeetingASRTranslationLanguage.none || bilingual;
+    if (shouldShowOriginalText != showOriginalText ||
+        shouldShowTranslatedText != showTranslatedText) {
+      setState(() {
+        selectedIndexInfo = null;
+        showOriginalText = shouldShowOriginalText;
+        showTranslatedText = shouldShowTranslatedText;
+      });
+    }
   }
 
   @override
@@ -799,6 +1227,19 @@ class _MeetingTranscriptionPageState extends State<MeetingTranscriptionPage>
     return Scaffold(
       backgroundColor: _UIColors.white,
       appBar: TitleBar(
+        leading: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => MeetingTranscriptionSettingsPage.show(context),
+          child: Container(
+            width: 48,
+            height: 48,
+            child: Icon(
+              NEMeetingIconFont.icon_settings_stroke,
+              size: 24,
+              color: _UIColors.color656A72,
+            ),
+          ),
+        ),
         title: TitleBarTitle(
           meetingUiLocalizations.transcription,
         ),
@@ -818,7 +1259,8 @@ class _MeetingTranscriptionPageState extends State<MeetingTranscriptionPage>
               Center(
                 child: Container(
                   margin: EdgeInsets.only(top: 4.h, bottom: 8.h),
-                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                  height: 22,
+                  padding: EdgeInsets.symmetric(horizontal: 6.w),
                   decoration: ShapeDecoration(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(4.r),
@@ -1008,20 +1450,30 @@ class _MeetingTranscriptionPageState extends State<MeetingTranscriptionPage>
     return buildMessageItem(isOldList, index, message);
   }
 
+  ValueNotifier<bool> hideAvatar = ValueNotifier(false);
+  @override
+  void onAvatarHiddenChanged(bool hide) {
+    hideAvatar.value = hide;
+  }
+
   Widget buildMessageItem(
       bool isOldList, int index, NERoomCaptionMessage message) {
     final userInfo = controller.getUserInfo(message.fromUserUuid)!;
-    final selected = selectedIndexInfo?.isOldList == isOldList &&
-        selectedIndexInfo?.index == index;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            NEMeetingAvatar.small(
-              name: userInfo.nickname,
-              url: userInfo.avatar,
+            ValueListenableBuilder(
+              valueListenable: hideAvatar,
+              builder: (context, hideAvatar, child) {
+                return NEMeetingAvatar.small(
+                  name: userInfo.nickname,
+                  url: userInfo.avatar,
+                  hideImageAvatar: hideAvatar,
+                );
+              },
             ),
             SizedBox(width: 8.w),
             Text(
@@ -1060,41 +1512,70 @@ class _MeetingTranscriptionPageState extends State<MeetingTranscriptionPage>
             SizedBox(width: 24),
             SizedBox(width: 8.w),
             Expanded(
-              child: Container(
-                padding: EdgeInsets.only(top: 4.0, right: 4.0, bottom: 4.0),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(4.r),
-                  color: selected ? _UIColors.color_ADCBFF : Colors.transparent,
-                ),
-                child: ChatMenuWidget(
-                  key: ValueKey('${message.timestamp}-$selectedVer'),
-                  showOnTap: true,
-                  showOnLongPress: false,
-                  onValueChanged: (value) {
-                    Clipboard.setData(ClipboardData(text: message.content));
-                  },
-                  actions: [
-                    meetingUiLocalizations.globalCopy,
-                  ],
-                  willShow: () {
-                    setState(() {
-                      selectedIndexInfo = (isOldList: isOldList, index: index);
-                    });
-                  },
-                  child: Text(
-                    message.content,
-                    style: TextStyle(
-                      fontSize: 16.spMin,
-                      color: _UIColors.color1E1F27,
-                      fontWeight: FontWeight.normal,
-                    ),
-                  ),
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (showOriginalText || message.translationContent.isEmpty)
+                    buildMessageContent(isOldList, message, index, false),
+                  if (showTranslatedText)
+                    buildMessageContent(isOldList, message, index, true),
+                ],
               ),
             ),
           ],
         ),
       ],
+    );
+  }
+
+  Widget buildMessageContent(
+    bool isOldList,
+    NERoomCaptionMessage message,
+    int index,
+    bool isTranslated,
+  ) {
+    final content = isTranslated ? message.translationContent : message.content;
+
+    /// 内容不存在
+    if (content == null || content.isEmpty) return SizedBox.shrink();
+    final selected = selectedIndexInfo?.isOldList == isOldList &&
+        selectedIndexInfo?.index == index &&
+        selectedIndexInfo?.isTranslated == isTranslated;
+    return Container(
+      padding: EdgeInsets.only(top: 4.0, right: 4.0, bottom: 4.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4.r),
+        color: selected ? _UIColors.color_ADCBFF : Colors.transparent,
+      ),
+      child: ChatMenuWidget(
+        key: ValueKey((message.timestamp, index, isTranslated, selectedVer)),
+        showOnTap: true,
+        showOnLongPress: false,
+        onValueChanged: (value) {
+          Clipboard.setData(ClipboardData(text: content));
+        },
+        actions: [
+          meetingUiLocalizations.globalCopy,
+        ],
+        willShow: () {
+          setState(() {
+            selectedIndexInfo = (
+              isOldList: isOldList,
+              index: index,
+              isTranslated: isTranslated
+            );
+          });
+        },
+        child: Text(
+          content,
+          style: TextStyle(
+            fontSize: 16.spMin,
+            color: _UIColors.color1E1F27,
+            fontWeight: FontWeight.normal,
+          ),
+        ),
+      ),
     );
   }
 

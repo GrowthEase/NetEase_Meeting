@@ -10,8 +10,8 @@ part of meeting_core;
 class SDKConfig with _AloggerMixin {
   ///android version修改对应packages/meeting_sdk_android/gradle.properties的内容
   ///iOS version修改packages/meeting_sdk_ios/NEMeetingScript/spec/NEMeetingSDK.podspec的内容
-  static const String sdkVersionName = '4.7.0';
-  static const int sdkVersionCode = 40700;
+  static const String sdkVersionName = '4.8.0';
+  static const int sdkVersionCode = 40800;
   static const String sdkType = 'official'; //pub
 
   static const int getSdkConfigRetryTime = 3; // 请求sdkConfig失败重试最大次数

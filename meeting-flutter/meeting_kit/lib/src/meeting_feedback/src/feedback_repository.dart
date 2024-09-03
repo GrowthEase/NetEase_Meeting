@@ -110,10 +110,10 @@ class FeedbackRepository with _AloggerMixin {
   }
 
   Future<NEResult<void>> commitFeedbackTask() async {
-    print('$_tag commitFeedbackTask');
     final pending = feedbackPending;
     var result = NEResult.success();
     if (pending != null) {
+      apiLogger.i('commitFeedbackTask');
       if (pending.needAudioDump == true) {
         final roomContext = MeetingRepository().currentRoomContext;
         await roomContext?.rtcController.stopAudioDump();

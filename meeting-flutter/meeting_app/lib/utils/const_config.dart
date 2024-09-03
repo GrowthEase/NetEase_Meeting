@@ -8,6 +8,7 @@ import 'package:nemeeting/base/util/global_preferences.dart';
 import 'package:nemeeting/service/util/user_preferences.dart';
 import 'package:netease_meeting_kit/meeting_ui.dart';
 import '../language/localizations.dart';
+import 'meeting_util.dart';
 
 /// 默认开启白板
 const bool openWhiteBoard = true;
@@ -43,10 +44,14 @@ Future<NEMeetingOptions> buildMeetingUIOptions({
   bool? audioAINSEnabled,
   required BuildContext context,
 }) async {
+  final title = getAppLocalizations().globalAppName;
   final settingsService = NEMeetingKit.instance.getSettingsService();
   noVideo ??= !(await settingsService.isTurnOnMyVideoWhenJoinMeetingEnabled());
   noAudio ??= !(await settingsService.isTurnOnMyAudioWhenJoinMeetingEnabled());
   showMeetingTime ??= await settingsService.isShowMyMeetingElapseTimeEnabled();
+  final showNameInVideo = await settingsService.isShowNameInVideoEnabled();
+  final showNotYetJoinedMembers =
+      await settingsService.isShowNotYetJoinedMembersEnabled();
   noCloudRecord ??= kNoCloudRecord;
   final showShareUserVideo = await UserPreferences().getShowShareUserVideo();
   final enableTransparentWhiteboard =
@@ -56,7 +61,10 @@ Future<NEMeetingOptions> buildMeetingUIOptions({
   final enableSpeakerSpotlight =
       await settingsService.isSpeakerSpotlightEnabled();
   final cloudRecordConfig = await settingsService.getCloudRecordConfig();
+  final chatMessageNotificationType =
+      await settingsService.getChatMessageNotificationType();
   return NEMeetingOptions(
+    title: title,
     noVideo: noVideo,
     noAudio: noAudio,
     noMuteAllVideo: kNoMuteAllVideo,
@@ -66,17 +74,35 @@ Future<NEMeetingOptions> buildMeetingUIOptions({
     showScreenShareUserVideo: showShareUserVideo,
     showWhiteboardShareUserVideo: showShareUserVideo,
     showMeetingTime: showMeetingTime,
+    showNotYetJoinedMembers: showNotYetJoinedMembers,
+    showNameInVideo: showNameInVideo,
     noMinimize: kNoMinimize,
     enablePictureInPicture: kEnablePictureInPicture,
     enableTransparentWhiteboard: enableTransparentWhiteboard,
     enableFrontCameraMirror: enableFrontCameraMirror,
     showMeetingRemainingTip: kShowMeetingRemainingTip,
     restorePreferredOrientations: [DeviceOrientation.portraitUp],
-    extras: {'shareScreenTips': getAppLocalizations().meetingShareScreenTips},
     showCloudRecordMenuItem: true,
     showCloudRecordingUI: true,
     enableSpeakerSpotlight: enableSpeakerSpotlight,
     autoEnableCaptionsOnJoin:
         await GlobalPreferences().isEnableCaptionsOnJoin(),
+    chatMessageNotificationType: chatMessageNotificationType,
+  );
+}
+
+NEWatermarkConfig buildNEWatermarkConfig({
+  String? name,
+  String? phone,
+  String? email,
+  String? jobNumber,
+}) {
+  final NEAccountService accountService =
+      NEMeetingKit.instance.getAccountService();
+  return NEWatermarkConfig(
+    name: name ?? MeetingUtil.getNickName(),
+    phone: phone ?? accountService.getAccountInfo()?.phoneNumber,
+    email: email ?? accountService.getAccountInfo()?.email,
+    jobNumber: jobNumber,
   );
 }

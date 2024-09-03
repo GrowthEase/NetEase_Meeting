@@ -141,6 +141,12 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get globalPhotosPermission => 'アルバムが使えません';
 
   @override
+  String get globalSend => '送信';
+
+  @override
+  String get globalPause => '一時停止';
+
+  @override
   String get meetingBeauty => '美顔';
 
   @override
@@ -629,6 +635,12 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get meetingNotExist => 'ミーティングは存在しません';
 
   @override
+  String get meetingSaySomeThing => '何か言って…';
+
+  @override
+  String get meetingKeepSilence => '現在のチャット禁止';
+
+  @override
   String get reuseIMNotSupportAnonymousLogin => 'IM の再利用は匿名ログインをサポートしていません';
 
   @override
@@ -636,6 +648,46 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
 
   @override
   String get updateNicknameBySelf => '改名';
+
+  @override
+  String get updateNicknameNoPermission => '司会者はメンバーの改名を許さない';
+
+  @override
+  String get shareNoPermission => '共有に失敗しました。司会者のみ共有できます';
+
+  @override
+  String get localRecordPermission => 'ローカル録画権限';
+
+  @override
+  String get localRecordOnlyHost => '司会者のみ録画可能';
+
+  @override
+  String get localRecordAll => '全員録画可能';
+
+  @override
+  String get sharingStopByHost => '司会者はあなたの共有を終了しました';
+
+  @override
+  String get suspendParticipantActivities => '参加者の活動を休止します';
+
+  @override
+  String get suspendParticipantActivitiesTips =>
+      '全員がミュートされ、ビデオ、スクリーン共有が停止し、会議がロックされます。';
+
+  @override
+  String get alreadySuspendParticipantActivitiesByHost => '司会者は出席者の活動を休止しました';
+
+  @override
+  String get alreadySuspendParticipantActivities => '参加者の活動は休止しました';
+
+  @override
+  String get suspendAllParticipantActivities => 'すべての参加者の活動を停止しますか?';
+
+  @override
+  String get hideAvatarByHost => '司会者はすべての画像を非表示にしました';
+
+  @override
+  String get hideAvatar => 'プロフィール画像を隠します';
 
   @override
   String get screenShare => '画面共有';
@@ -669,6 +721,9 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   }
 
   @override
+  String get screenShareMyself => '画面を共有しています';
+
+  @override
   String get screenShareInteractionTip => '2 本の指を離すと画面が拡大されます';
 
   @override
@@ -697,7 +752,7 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get whiteBoardPackUp => 'やめる';
 
   @override
-  String get meetingHasScreenShareShare => '画面共有中のホワイトボード共有はサポートされていません';
+  String get meetingHasScreenShareShare => '画面やパソコンの音声共有の場合、ホワイトボード共有はできません';
 
   @override
   String get meetingHasWhiteBoardShare => 'ホワイトボード共有場合は画面共有をサポートしていません';
@@ -711,6 +766,19 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   @override
   String get screenShareWarning =>
       '最近ではコールセンターを装った詐欺や、スクールローンや、公正法を悪用した詐欺もありますので、ご注意ください。あなたの会議のセキュリティリスクを検知し、共有機能を無効にしました。';
+
+  @override
+  String get backSharingView => '共有コンテンツに戻ります';
+
+  @override
+  String screenSharingViewUserLabel(Object userName) {
+    return '$userNameの画面共有です';
+  }
+
+  @override
+  String whiteBoardSharingViewUserLabel(Object userName) {
+    return '$userNameのホワイトボードを共有します';
+  }
 
   @override
   String get virtualBackground => '背景';
@@ -1477,6 +1545,9 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
       'ネットワーク接続に失敗しました、あなたのネットワーク接続をチェックしてください!';
 
   @override
+  String get networkUnstableTip => 'ネットワークが不安定で接続しています…';
+
+  @override
   String get notifyCenter => '通知センター';
 
   @override
@@ -2041,6 +2112,36 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
   String get settingSpeakerSpotlightTip => 'オンにすると、会話中の参加メンバーが優先的に表示されます';
 
   @override
+  String get settingShowName => '参加者名を常にビデオに表示';
+
+  @override
+  String get settingHideNotYetJoinedMembers => '非入会メンバーを隠す';
+
+  @override
+  String get settingChatMessageNotification => '新しいチャットメッセージのリマインダ';
+
+  @override
+  String get settingChatMessageNotificationBarrage => '弾幕';
+
+  @override
+  String get settingChatMessageNotificationBubble => 'きほう';
+
+  @override
+  String get settingChatMessageNotificationNoReminder => 'リマインダしない';
+
+  @override
+  String get usingComputerAudioInMeeting => '入会にはパソコンのマイクを使います';
+
+  @override
+  String get joinMeetingSettings => '入会設定';
+
+  @override
+  String get memberJoinWithMute => '入会者は自動的に消音になります';
+
+  @override
+  String get ringWhenMemberJoinOrLeave => '参加者の入会時や退出時に音声を流します';
+
+  @override
   String get transcriptionEnableCaption => '字幕をオンにする';
 
   @override
@@ -2073,6 +2174,10 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
 
   @override
   String get transcriptionCaptionForbidden => '司会者はメンバーに字幕の使用を許可しません';
+
+  @override
+  String get transcriptionCaptionNotAvailableInSubChannel =>
+      'オリジナルサウンドを聴いていない、字幕は使用できません';
 
   @override
   String get transcriptionCaptionFontSize => 'サイズ';
@@ -2126,6 +2231,30 @@ class NEMeetingUIKitLocalizationsJa extends NEMeetingUIKitLocalizations {
 
   @override
   String get transcriptionStartFailed => '字幕の有効化失敗です';
+
+  @override
+  String get transcriptionTranslationSettings => '翻訳の設定';
+
+  @override
+  String get transcriptionSettings => '転記設定';
+
+  @override
+  String get transcriptionTargetLang => 'ターゲット翻訳言語';
+
+  @override
+  String get transcriptionShowBilingual => 'バイリンガルを同時に表示';
+
+  @override
+  String get transcriptionNotTranslated => '翻訳しない';
+
+  @override
+  String get transcriptionMemberPermission => 'メンバー権限の表示';
+
+  @override
+  String get transcriptionViewFullContent => '内容全体を見る';
+
+  @override
+  String get transcriptionViewConferenceContent => '参会期間の内容を見る';
 
   @override
   String get feedbackInRoom => 'フィードバック';

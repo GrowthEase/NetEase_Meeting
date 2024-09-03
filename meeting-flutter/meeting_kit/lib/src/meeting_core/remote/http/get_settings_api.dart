@@ -11,7 +11,7 @@ class _GetSettingsApi extends HttpApi<AccountSettings> {
 
   @override
   AccountSettings result(Map map) {
-    return AccountSettings.fromMap(map as Map<String, dynamic>);
+    return AccountSettings.fromMap(map['settings'] as Map? ?? {});
   }
 
   @override

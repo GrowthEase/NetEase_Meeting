@@ -108,3 +108,41 @@ extension NERecordStrategyTypeExtension on NERecordStrategyType {
     }
   }
 }
+
+/// 聊天消息提醒类型
+enum NEChatMessageNotificationType {
+  /// 弹幕
+  barrage,
+
+  /// 气泡
+  bubble,
+
+  /// 不提醒
+  noRemind,
+}
+
+extension NEChatMessageNotificationTypeExtension
+    on NEChatMessageNotificationType {
+  int get value {
+    switch (this) {
+      case NEChatMessageNotificationType.barrage:
+        return 0;
+      case NEChatMessageNotificationType.bubble:
+        return 1;
+      case NEChatMessageNotificationType.noRemind:
+        return 2;
+    }
+  }
+
+  static NEChatMessageNotificationType mapValueToEnum(int? value) {
+    switch (value) {
+      case 0:
+        return NEChatMessageNotificationType.barrage;
+      case 1:
+        return NEChatMessageNotificationType.bubble;
+      case 2:
+        return NEChatMessageNotificationType.noRemind;
+    }
+    return NEChatMessageNotificationType.barrage;
+  }
+}

@@ -377,7 +377,6 @@ class ChatRoomManager with NEPreMeetingListener, _AloggerMixin {
     subscriptions.forEach((element) => element?.cancel());
     NEMeetingKit.instance.getPreMeetingService().removeListener(this);
     roomContext.removeEventCallback(_roomEventCallback);
-    _sendToTarget.dispose();
     _chatPermissionChanged.close();
     _waitingRoomChatPermissionChanged.close();
   }

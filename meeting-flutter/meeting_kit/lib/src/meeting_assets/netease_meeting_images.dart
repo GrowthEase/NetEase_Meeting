@@ -71,9 +71,20 @@ class NEMeetingImages {
       'assets/images/icon_circle_checked_immutable.png';
   static const String iconNoContacts = 'assets/images/no_contacts.png';
   static const String callLoadingGif = 'assets/images/call_loading.gif';
+  static const String iconBulletScreenEnabled =
+      'assets/images/icon_bullet_screen_enabled.png';
+  static const String iconBulletScreenDisabled =
+      'assets/images/icon_bullet_screen_disabled.png';
 
-  static Image assetImage(String image) =>
-      Image.asset(image, package: meetingAssetsPackageName);
+  static Image assetImage(String image,
+          {double? width, double? height, BoxFit? fit}) =>
+      Image.asset(
+        image,
+        package: meetingAssetsPackageName,
+        width: width,
+        height: height,
+        fit: fit,
+      );
 
   static AssetImage assetImageProvider(String image) =>
       AssetImage(image, package: meetingAssetsPackageName);

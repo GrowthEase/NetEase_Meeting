@@ -175,6 +175,9 @@ class _NESettingsServiceImpl extends NESettingsService
 
   bool isGuestJoinSupported() => SettingsRepository().isGuestJoinSupported();
 
+  bool isMeetingChatSupported() =>
+      SettingsRepository().isMeetingChatSupported();
+
   @override
   String getAppNotifySessionId() =>
       SettingsRepository().getAppNotifySessionId();
@@ -186,4 +189,59 @@ class _NESettingsServiceImpl extends NESettingsService
   @override
   void setCloudRecordConfig(NECloudRecordConfig config) =>
       SettingsRepository().setCloudRecordConfig(config);
+
+  @override
+  Future<int> setASRTranslationLanguage(
+          NEMeetingASRTranslationLanguage language) =>
+      SettingsRepository().setASRTranslationLanguage(language);
+
+  @override
+  NEMeetingASRTranslationLanguage getASRTranslationLanguage() =>
+      SettingsRepository().getASRTranslationLanguage();
+
+  @override
+  Future<int> enableCaptionBilingual(bool enable) =>
+      SettingsRepository().enableCaptionBilingual(enable);
+
+  @override
+  bool isCaptionBilingualEnabled() =>
+      SettingsRepository().isCaptionBilingualEnabled();
+
+  @override
+  Future<int> enableTranscriptionBilingual(bool enable) =>
+      SettingsRepository().enableTranscriptionBilingual(enable);
+
+  @override
+  bool isTranscriptionBilingualEnabled() =>
+      SettingsRepository().isTranscriptionBilingualEnabled();
+
+  @override
+  void addSettingsChangedListener(NESettingsChangedListener listener) =>
+      SettingsRepository().addSettingsChangedListener(listener);
+
+  @override
+  void removeSettingsChangedListener(NESettingsChangedListener listener) =>
+      SettingsRepository().removeSettingsChangedListener(listener);
+
+  Future<NEChatMessageNotificationType> getChatMessageNotificationType() =>
+      SettingsRepository().getChatMessageNotificationType();
+
+  @override
+  void setChatMessageNotificationType(NEChatMessageNotificationType type) =>
+      SettingsRepository().setChatMessageNotificationType(type);
+
+  Future<bool> isShowNameInVideoEnabled() =>
+      SettingsRepository().isShowNameInVideoEnabled();
+
+  @override
+  Future<void> enableShowNameInVideo(bool enable) =>
+      SettingsRepository().enableShowNameInVideo(enable);
+
+  @override
+  Future<bool> isShowNotYetJoinedMembersEnabled() =>
+      SettingsRepository().isShowNotYetJoinedMembersEnabled();
+
+  @override
+  void enableShowNotYetJoinedMembers(bool enable) =>
+      SettingsRepository().enableShowNotYetJoinedMembers(enable);
 }

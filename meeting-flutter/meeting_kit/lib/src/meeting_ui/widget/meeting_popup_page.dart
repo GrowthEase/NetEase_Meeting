@@ -55,7 +55,7 @@ class TitleBar extends StatelessWidget implements PreferredSizeWidget {
     super.key,
     this.title,
     this.leading,
-    this.height = 48.0,
+    this.height = 44.0,
     this.trailing = const TitleBarCloseIcon(),
     this.showBottomDivider = false,
     this.backgroundColor,
@@ -185,6 +185,7 @@ class _HideStatusBarActor {
   }
 
   void show() {
+    if (clients <= 0) return;
     if (--clients == 0) {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: [
         SystemUiOverlay.top,
@@ -201,6 +202,8 @@ Future<T?> showMeetingPopupPageRoute<T>({
   bool enableDrag = true,
   RouteSettings? routeSettings,
   Color? barrierColor,
+  Color backgroundColor = Colors.transparent,
+  bool heightMax = true,
 }) {
   var Size(:longestSide, :shortestSide) = MediaQuery.sizeOf(context);
   var maxHeight = longestSide * (1.0 - 100.0 / 812);
@@ -218,7 +221,10 @@ Future<T?> showMeetingPopupPageRoute<T>({
     clipBehavior: Clip.antiAlias,
     isDismissible: isDismissible,
     enableDrag: enableDrag,
-    constraints: BoxConstraints.tightFor(height: max(shortestSide, maxHeight)),
+    backgroundColor: backgroundColor,
+    constraints: heightMax
+        ? BoxConstraints.tightFor(height: max(shortestSide, maxHeight))
+        : null,
     builder: (context) {
       return OrientationBuilder(
         builder: (context, orientation) {
@@ -226,13 +232,35 @@ Future<T?> showMeetingPopupPageRoute<T>({
           Widget child = AnimatedContainer(
             duration: const Duration(milliseconds: 100),
             curve: Curves.easeIn,
-            child: builder(context),
+            child: Container(
+                constraints:
+                    BoxConstraints.tightFor(width: isPortrait ? null : 375),
+                child: builder(context)),
           );
+
+          /// 横屏模式，居右显示
+          if (!isPortrait) {
+            child = GestureDetector(
+              onTap: () {
+                Navigator.of(context).pop();
+              },
+              child: Container(
+                color: Colors.transparent,
+                alignment: Alignment.bottomRight,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8)),
+                  child: GestureDetector(onTap: () {}, child: child),
+                ),
+              ),
+            );
+          }
 
           /// 如果是切换为横屏模式，则隐藏状态栏
           /// 补充SafeArea，避免导航栏遮挡关闭按钮
           return AutoHideStatusBar(
-            child: SafeArea(child: child, bottom: false),
+            child: SafeArea(child: child, bottom: false, left: false),
             hide: !isPortrait,
           );
         },

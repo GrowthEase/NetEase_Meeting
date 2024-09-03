@@ -64,7 +64,7 @@ class _MeetingAppState extends State<MeetingApp>
     /// 切换至用户选中的语言
     switchLanguage().then((value) => setState(() {}));
 
-    /// 延迟首帧，待自动登录成功/失败后才展示
+    // 延迟首帧，待自动登录成功/失败后才展示
     WidgetsBinding.instance.deferFirstFrame();
     AuthState().authState().listen((event) {
       Alog.d(tag: 'AuthState', content: 'authState:$event');
@@ -177,10 +177,8 @@ class _MeetingAppState extends State<MeetingApp>
       case NEMeetingStatus.inMeetingMinimized:
         isInMinimizedMode.value = true;
         break;
-      case NEMeetingStatus.inMeeting:
-        isInMinimizedMode.value = false;
-        break;
       default:
+        isInMinimizedMode.value = false;
         break;
     }
   }

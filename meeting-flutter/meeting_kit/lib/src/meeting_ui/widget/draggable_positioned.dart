@@ -16,7 +16,7 @@ class DraggablePositioned extends StatefulWidget {
     required this.size,
     required this.builder,
     this.initialAlignment = Alignment.topRight,
-    this.onPinStart,
+    this.onPositionChanged,
   }) : super(key: key);
 
   final Size size;
@@ -26,7 +26,7 @@ class DraggablePositioned extends StatefulWidget {
   final Curve pinAnimationCurve;
   final WidgetBuilder builder;
   final Alignment initialAlignment;
-  final DraggablePositionedOnPinStart? onPinStart;
+  final DraggablePositionedOnPinStart? onPositionChanged;
 
   @override
   State<DraggablePositioned> createState() => _DraggablePositionedState();
@@ -179,7 +179,7 @@ class _DraggablePositionedState extends State<DraggablePositioned>
       initialOffset = Offset(left, top);
       offsetByGesture = Offset.zero;
 
-      widget.onPinStart?.call(alignment);
+      if (useAlignment == null) widget.onPositionChanged?.call(alignment);
     }
 
     return rect;

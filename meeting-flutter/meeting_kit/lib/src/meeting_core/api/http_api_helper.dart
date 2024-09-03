@@ -88,8 +88,8 @@ class HttpApiHelper {
   }
 
   ///保存用户信息配置
-  static Future<NEResult<void>> _saveSettingsApi(BeautySettings obj) {
-    return execute(_SaveSettingsApi(obj));
+  static Future<NEResult<void>> _saveSettingsApi(AccountSettings settings) {
+    return execute(_SaveSettingsApi(settings));
   }
 
   ///获取用户信息配置
@@ -121,6 +121,11 @@ class HttpApiHelper {
     return execute(_GetWaitingRoomPropertiesApi(roomUuid));
   }
 
+  /// 暂停参会者活动
+  static Future<NEResult<void>> _stopMemberActivities(int meetingId) {
+    return execute(_StopMemberActivitiesApi(meetingId));
+  }
+
   /// 通讯录搜索
   static Future<NEResult<List<NEContact>>> _searchContacts(
       String? name, String? phoneNumber, int? pageSize, int? pageNum) {
@@ -137,6 +142,11 @@ class HttpApiHelper {
   static Future<NEResult<List<NEScheduledMember>>> _getScheduledMembers(
       String meetingNum) {
     return execute(_GetScheduledMembersApi(meetingNum));
+  }
+
+  static Future<NEResult<void>> _meetingSecurityCtrl(
+      Map<String, bool> map, String roomUuid) {
+    return execute(_MeetingSecurityCtrlApi(map, roomUuid));
   }
 
   static Future<NEResult<List<NERemoteHistoryMeeting>>> _getFavoriteMeetings(

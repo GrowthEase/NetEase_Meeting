@@ -98,6 +98,7 @@ class _InComingInviteState extends State<InComingInvite>
         LocalHistoryMeetingManager().getLatestNickname(meetingNum);
     final nickName = lastUsedNickname ?? widget.getDefaultNickName();
     final uiOption = await widget.buildMeetingUIOptions?.call(videoAccept);
+    final accountInfo = AccountRepository().getAccountInfo();
     NEMeetingUIKit.instance.getMeetingInviteService().acceptInvite(
       widget.currentContext?.call() ?? context,
       NEJoinMeetingParams(
@@ -105,6 +106,8 @@ class _InComingInviteState extends State<InComingInvite>
         displayName: nickName,
         watermarkConfig: NEWatermarkConfig(
           name: nickName,
+          phone: accountInfo?.phoneNumber,
+          email: accountInfo?.email,
         ),
       ),
       uiOption ?? NEMeetingOptions(noAudio: false, noVideo: !videoAccept),

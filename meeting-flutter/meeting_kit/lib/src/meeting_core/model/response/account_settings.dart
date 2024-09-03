@@ -4,34 +4,85 @@
 
 part of meeting_core;
 
+/// 账号信息设置
+/// {
+///  "beauty": {
+///   "level": 1
+///  },
+///  "asrTranslationLanguage": 0,
+///  "captionBilingual": true,
+///  "transcriptionBilingual": true,
+/// }
 class AccountSettings {
-  BeautySettings? beauty;
+  static const _keyAsrTranslationLanguage = 'asrTranslationLanguage';
+  static const _keyCaptionBilingual = 'captionBilingual';
+  static const _keyTranscriptionBilingual = 'transcriptionBilingual';
 
-  AccountSettings({required this.beauty});
+  /// 美颜级别
+  final BeautySettings? beauty;
 
-  factory AccountSettings.fromMap(Map<String, dynamic> map) {
+  /// ASR目标翻译语言，默认不翻译
+  final String? asrTranslationLanguage;
+
+  /// 字幕显示双语，默认不显示
+  final bool? captionBilingual;
+
+  /// 转写显示双语，默认不显示
+  final bool? transcriptionBilingual;
+
+  AccountSettings({
+    this.beauty,
+    this.asrTranslationLanguage,
+    this.captionBilingual,
+    this.transcriptionBilingual,
+  });
+
+  factory AccountSettings.fromMap(Map map) {
     return AccountSettings(
-        beauty:
-            BeautySettings.fromMap(map['settings'] as Map<String, dynamic>));
+      beauty: BeautySettings.fromMap(map),
+      asrTranslationLanguage: map[_keyAsrTranslationLanguage] as String?,
+      captionBilingual: map[_keyCaptionBilingual] as bool?,
+      transcriptionBilingual: map[_keyTranscriptionBilingual] as bool?,
+    );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'settings': {
-        if (beauty != null) beauty!.toMap(),
-      }
+      if (beauty != null) ...beauty!.toMap(),
+      if (asrTranslationLanguage != null)
+        _keyAsrTranslationLanguage: asrTranslationLanguage,
+      if (captionBilingual != null) _keyCaptionBilingual: captionBilingual,
+      if (transcriptionBilingual != null)
+        _keyTranscriptionBilingual: transcriptionBilingual,
     };
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        beauty,
+        asrTranslationLanguage,
+        captionBilingual,
+        transcriptionBilingual,
+      );
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is AccountSettings &&
+        beauty == other.beauty &&
+        asrTranslationLanguage == other.asrTranslationLanguage &&
+        captionBilingual == other.captionBilingual &&
+        transcriptionBilingual == other.transcriptionBilingual;
   }
 }
 
 /// beauty : {'enable':true,'level':1}
-
 class BeautySettings {
   final Beauty beauty;
 
   BeautySettings({required this.beauty});
 
-  factory BeautySettings.fromMap(Map<String, dynamic> map) {
+  factory BeautySettings.fromMap(Map map) {
     return BeautySettings(
         beauty: Beauty.fromMap(
             (map['beauty'] ?? <String, dynamic>{}) as Map<String, dynamic>));
@@ -40,11 +91,19 @@ class BeautySettings {
   Map<String, dynamic> toMap() => {
         'beauty': beauty.toMap(),
       };
+
+  @override
+  int get hashCode => beauty.hashCode;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is BeautySettings && beauty == other.beauty;
+  }
 }
 
 /// enable : true
 /// level : 1
-
 class Beauty {
   final int level;
 
@@ -57,4 +116,13 @@ class Beauty {
   Map<String, dynamic> toMap() => {
         'level': level,
       };
+
+  @override
+  int get hashCode => level.hashCode;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Beauty && level == other.level;
+  }
 }

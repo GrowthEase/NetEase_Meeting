@@ -221,7 +221,7 @@ class _MeetCreateRouteState extends AppBaseState<MeetCreateRoute> {
               isCollapsed: true,
               border: InputBorder.none,
             ),
-            style: TextStyle(color: AppColors.color_1E1E27, fontSize: 16),
+            style: TextStyle(color: AppColors.color_1E1F27, fontSize: 16),
           )),
           TextUtil.isEmpty(_meetingPasswordController.text) ||
                   !passwordFocusNode.hasFocus
@@ -314,7 +314,7 @@ class _MeetCreateRouteState extends AppBaseState<MeetCreateRoute> {
         password:
             meetingPwdSwitch.value ? _meetingPasswordController.text : null,
         displayName: nickname ?? MeetingUtil.getNickName(),
-        watermarkConfig: NEWatermarkConfig(name: MeetingUtil.getNickName()),
+        watermarkConfig: buildNEWatermarkConfig(),
       ),
       await buildMeetingUIOptions(
         noVideo: !openCamera.value,
@@ -343,9 +343,7 @@ class _MeetCreateRouteState extends AppBaseState<MeetCreateRoute> {
         NEJoinMeetingParams(
           meetingNum: meetingNum!,
           displayName: nickname ?? MeetingUtil.getNickName(),
-          watermarkConfig: NEWatermarkConfig(
-            name: MeetingUtil.getNickName(),
-          ),
+          watermarkConfig: buildNEWatermarkConfig(),
         ),
         await buildMeetingUIOptions(
           noVideo: !openCamera.value,

@@ -22,7 +22,7 @@ class AnimatedMicphoneVolume extends StatelessWidget {
     Key? key,
     required this.volume,
     this.opacity,
-  })  : backgroundColor = const Color(0xFF49494D),
+  })  : backgroundColor = _UIColors.color53576A,
         super(key: key);
 
   @override

@@ -4,6 +4,10 @@
 part of meeting_plugin;
 
 class NENotificationService extends _Service {
+  static const _keyServiceType = "serviceType";
+  static const serviceTypeMicrophone = "microphone";
+  static const serviceTypeMediaProjection = "mediaProjection";
+
   @override
   String _getModule() {
     return "NENotificationService";
@@ -14,9 +18,13 @@ class NENotificationService extends _Service {
       : super(_methodChannel, handlerMap);
 
   ///start foreground service
-  Future<void> startForegroundService(NEForegroundServiceConfig? config) async {
+  Future<void> startForegroundService(
+      NEForegroundServiceConfig? config, String serviceType) async {
+    assert(serviceType == serviceTypeMicrophone ||
+        serviceType == serviceTypeMediaProjection);
     Map map = buildArguments();
     map['config'] = config?._toMap();
+    map[_keyServiceType] = serviceType;
     return await _methodChannel.invokeMethod('startForegroundService', map);
   }
 

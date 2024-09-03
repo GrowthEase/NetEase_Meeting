@@ -69,6 +69,7 @@ class MeetingValueKey {
   static const openMicrophone = ValueKey('openMicrophone');
   static const enableAudioDeviceSwitch = ValueKey('enableAudioDeviceSwitch');
   static const showShareUserVideo = ValueKey('showShareUserVideo');
+  static const showName = ValueKey('showName');
 
   ///会议创建模板[MeetCreateRoute]
   static const openMicrophoneCreateMeeting =

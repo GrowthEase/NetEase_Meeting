@@ -294,6 +294,11 @@ class NEMeetingErrorCode {
   /// 对应接口调用成功
   static const int success = MeetingErrorCode.success;
 
+  ///
+  /// 网络异常
+  ///
+  static const networkUnavailable = NEErrorCode.networkUnavailable;
+
   /// 开启了IM复用，请先登录IM
   static const int reuseIMNotLogin = NEErrorCode.reuseIMNotLogin;
 

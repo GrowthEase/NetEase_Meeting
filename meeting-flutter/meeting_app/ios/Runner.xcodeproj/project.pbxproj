@@ -460,24 +460,21 @@
 				"${PODS_ROOT}/NECoreKit/NECoreKit.framework",
 				"${BUILT_PRODUCTS_DIR}/NEDyldYuv/NEDyldYuv.framework",
 				"${PODS_ROOT}/NERoomKit/NERoomKit.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcAiDenoise.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcAiHowling.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcBeauty.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcFaceDetect.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcFaceEnhance.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcnn.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcSDK.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcReplayKit.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcPersonSegment.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcAudio3D.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcSuperResolution.framework",
-				"${PODS_ROOT}/NERtcSDK/NERTC/NERtcSDK/NERtcVideoDenoise.framework",
-				"${PODS_ROOT}/NIMSDK_LITE/NIMSDK/NIMSDK.framework",
-				"${PODS_ROOT}/NIMSDK_LITE/NIMSDK/NIMNOS.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcAiDenoise.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcAiHowling.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcBeauty.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcFaceDetect.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcFaceEnhance.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcnn.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcSDK.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcReplayKit.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcPersonSegment.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcAudio3D.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcSuperResolution.framework",
+				"${PODS_ROOT}/NERtcSDK_Special/NERTC/NERtcSDK/NERtcVideoDenoise.framework",
 				"${BUILT_PRODUCTS_DIR}/SDWebImage/SDWebImage.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftyGif/SwiftyGif.framework",
 				"${PODS_ROOT}/YXAlog/YXAlog_iOS.framework",
-				"${PODS_ROOT}/YXArtemis/YXArtemis.framework",
 				"${BUILT_PRODUCTS_DIR}/audioplayers_darwin/audioplayers_darwin.framework",
 				"${BUILT_PRODUCTS_DIR}/connectivity_plus/connectivity_plus.framework",
 				"${BUILT_PRODUCTS_DIR}/device_info_plus/device_info_plus.framework",
@@ -485,7 +482,6 @@
 				"${BUILT_PRODUCTS_DIR}/file_picker/file_picker.framework",
 				"${BUILT_PRODUCTS_DIR}/flutter_contacts/flutter_contacts.framework",
 				"${BUILT_PRODUCTS_DIR}/flutter_timezone/flutter_timezone.framework",
-				"${BUILT_PRODUCTS_DIR}/hawk/hawk.framework",
 				"${BUILT_PRODUCTS_DIR}/image_picker_ios/image_picker_ios.framework",
 				"${BUILT_PRODUCTS_DIR}/integration_test/integration_test.framework",
 				"${BUILT_PRODUCTS_DIR}/netease_meeting_kit/netease_meeting_kit.framework",
@@ -502,6 +498,9 @@
 				"${BUILT_PRODUCTS_DIR}/wakelock_plus/wakelock_plus.framework",
 				"${BUILT_PRODUCTS_DIR}/webview_flutter_wkwebview/webview_flutter_wkwebview.framework",
 				"${BUILT_PRODUCTS_DIR}/yunxin_alog/yunxin_alog.framework",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/NIMSDK_LITE/NOS/NIMSDK.framework/NIMSDK",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/NIMSDK_LITE/NOS/NIMNOS.framework/NIMNOS",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/YXArtemis_XCFramework/YXArtemis.framework/YXArtemis",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
@@ -525,12 +524,9 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcAudio3D.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcSuperResolution.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NERtcVideoDenoise.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIMSDK.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIMNOS.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SDWebImage.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftyGif.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/YXAlog_iOS.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/YXArtemis.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/audioplayers_darwin.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/connectivity_plus.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/device_info_plus.framework",
@@ -538,7 +534,6 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/file_picker.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/flutter_contacts.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/flutter_timezone.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hawk.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/image_picker_ios.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/integration_test.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/netease_meeting_kit.framework",
@@ -555,6 +550,9 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/wakelock_plus.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/webview_flutter_wkwebview.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/yunxin_alog.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIMSDK.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NIMNOS.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/YXArtemis.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -692,7 +690,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 40700;
+				CURRENT_PROJECT_VERSION = 40800;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 7C9A6NRV5L;
@@ -723,7 +721,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 4.7.0;
+				MARKETING_VERSION = 4.8.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -870,7 +868,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 40700;
+				CURRENT_PROJECT_VERSION = 40800;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DEVELOPMENT_TEAM = 7C9A6NRV5L;
 				ENABLE_BITCODE = NO;
@@ -900,7 +898,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 4.7.0;
+				MARKETING_VERSION = 4.8.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -988,7 +986,7 @@
 				CODE_SIGN_ENTITLEMENTS = MeetingBroadcaster/MeetingBroadcaster.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 40700;
+				CURRENT_PROJECT_VERSION = 40800;
 				DEVELOPMENT_TEAM = 7C9A6NRV5L;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -1004,7 +1002,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 4.7.0;
+				MARKETING_VERSION = 4.8.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.debug.MeetingBroadcaster;
@@ -1030,7 +1028,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 40700;
+				CURRENT_PROJECT_VERSION = 40800;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 7C9A6NRV5L;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -1047,7 +1045,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 4.7.0;
+				MARKETING_VERSION = 4.8.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.debug.MeetingBroadcaster;
@@ -1074,7 +1072,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 40700;
+				CURRENT_PROJECT_VERSION = 40800;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 569GNZ5392;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -1087,7 +1085,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 4.7.0;
+				MARKETING_VERSION = 4.8.0;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.MeetingBroadcaster;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1113,7 +1111,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 40700;
+				CURRENT_PROJECT_VERSION = 40800;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 7C9A6NRV5L;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -1126,7 +1124,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 4.7.0;
+				MARKETING_VERSION = 4.8.0;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.netease.yunxin.meeting.debug.MeetingBroadcaster;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1264,7 +1262,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 40700;
+				CURRENT_PROJECT_VERSION = 40800;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 7C9A6NRV5L;
@@ -1295,7 +1293,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 4.7.0;
+				MARKETING_VERSION = 4.8.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -1383,7 +1381,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = YES;
-				CURRENT_PROJECT_VERSION = 40700;
+				CURRENT_PROJECT_VERSION = 40800;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 569GNZ5392;
@@ -1414,7 +1412,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 4.7.0;
+				MARKETING_VERSION = 4.8.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

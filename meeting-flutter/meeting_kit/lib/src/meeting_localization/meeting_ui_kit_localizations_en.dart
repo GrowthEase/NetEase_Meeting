@@ -15,7 +15,7 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get globalDelete => 'delete';
 
   @override
-  String get globalNothing => '无';
+  String get globalNothing => 'None';
 
   @override
   String get globalCancel => 'Cancel';
@@ -140,6 +140,12 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
 
   @override
   String get globalPhotosPermission => 'Albums unavailable';
+
+  @override
+  String get globalSend => 'Send';
+
+  @override
+  String get globalPause => 'Pause';
 
   @override
   String get meetingBeauty => 'Beauty';
@@ -535,7 +541,7 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
       'Not allowed to join the meeting again.';
 
   @override
-  String get meetingAllowMembersTo => 'Allow attendees to';
+  String get meetingAllowMembersTo => 'Allow participants to';
 
   @override
   String get meetingChat => 'Group and Private Chats';
@@ -651,6 +657,12 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get meetingNotExist => 'Meeting does not exist';
 
   @override
+  String get meetingSaySomeThing => 'Type to chat';
+
+  @override
+  String get meetingKeepSilence => 'Block all chats';
+
+  @override
   String get reuseIMNotSupportAnonymousLogin =>
       'IM reuse does not support anonymous login';
 
@@ -659,6 +671,49 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
 
   @override
   String get updateNicknameBySelf => 'Rename';
+
+  @override
+  String get updateNicknameNoPermission => 'Renaming is not allowed';
+
+  @override
+  String get shareNoPermission => 'Sharing failed, only the host can share';
+
+  @override
+  String get localRecordPermission => 'Local Recording Permissions';
+
+  @override
+  String get localRecordOnlyHost => 'Only the host can record';
+
+  @override
+  String get localRecordAll => 'Allow all members to record';
+
+  @override
+  String get sharingStopByHost => 'The host has terminated your sharing';
+
+  @override
+  String get suspendParticipantActivities => 'Suspend participant activities';
+
+  @override
+  String get suspendParticipantActivitiesTips =>
+      'Everyone in the meeting will be muted and their videos and shared screen will stop. The meeting will be locked.';
+
+  @override
+  String get alreadySuspendParticipantActivitiesByHost =>
+      'The host has suspended participant activities';
+
+  @override
+  String get alreadySuspendParticipantActivities =>
+      'Participant activities have been suspended';
+
+  @override
+  String get suspendAllParticipantActivities =>
+      'Suspend all participant activities?';
+
+  @override
+  String get hideAvatarByHost => 'The host has hidden all profile pictures';
+
+  @override
+  String get hideAvatar => 'Hide profile pictures';
 
   @override
   String get screenShare => 'Share';
@@ -693,6 +748,9 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   }
 
   @override
+  String get screenShareMyself => 'You are sharing your screen';
+
+  @override
   String get screenShareInteractionTip => 'Pinch with 2 fingers to adjust zoom';
 
   @override
@@ -724,7 +782,7 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
 
   @override
   String get meetingHasScreenShareShare =>
-      'Whiteboard cannot be shared while screen is being shared';
+      'Whiteboard cannot be shared while screen or computer audio is being shared';
 
   @override
   String get meetingHasWhiteBoardShare =>
@@ -740,6 +798,19 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   @override
   String get screenShareWarning =>
       'Recently, there are criminals posing as customer service, campus loans and public security fraud, please be vigilant. A security risk has been detected for your meeting and sharing has been disabled.';
+
+  @override
+  String get backSharingView => 'Switch to shared content';
+
+  @override
+  String screenSharingViewUserLabel(Object userName) {
+    return 'Screen shared by $userName';
+  }
+
+  @override
+  String whiteBoardSharingViewUserLabel(Object userName) {
+    return 'Whiteboard shared by $userName';
+  }
 
   @override
   String get virtualBackground => 'Background';
@@ -1142,7 +1213,7 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get participantJoining => 'Be joining';
 
   @override
-  String get participantAttendees => 'Attendees';
+  String get participantAttendees => 'Participants';
 
   @override
   String get participantAdmit => 'Admit';
@@ -1356,7 +1427,7 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get chatPrivateHostOnly => 'Chat with host only';
 
   @override
-  String get chatMuted => 'Mute all attendees';
+  String get chatMuted => 'Mute all participants';
 
   @override
   String get chatPermissionInMeeting => 'Chat permissions in the meeting';
@@ -1537,7 +1608,7 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
       'Network disconnected, please check your network status or try to rejoin.';
 
   @override
-  String get networkNotStable => 'Unstable network';
+  String get networkNotStable => 'The network status is not good';
 
   @override
   String get networkUnavailableCloseFail =>
@@ -1550,6 +1621,9 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   @override
   String get networkUnavailableCheck =>
       'Network connection failed, please check your network connection!';
+
+  @override
+  String get networkUnstableTip => 'The network is unstable, connecting...';
 
   @override
   String get notifyCenter => 'Notification';
@@ -2139,6 +2213,39 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
       'When turned on, the participants who are speaking will be displayed first.';
 
   @override
+  String get settingShowName =>
+      'Always display participant names on their video';
+
+  @override
+  String get settingHideNotYetJoinedMembers => 'Hide unjoined members';
+
+  @override
+  String get settingChatMessageNotification => 'Chat message notifications';
+
+  @override
+  String get settingChatMessageNotificationBarrage => 'Chat area';
+
+  @override
+  String get settingChatMessageNotificationBubble => 'Speech bubble';
+
+  @override
+  String get settingChatMessageNotificationNoReminder => 'Off';
+
+  @override
+  String get usingComputerAudioInMeeting =>
+      'Use PC audio when joining a meeting';
+
+  @override
+  String get joinMeetingSettings => 'Join Settings';
+
+  @override
+  String get memberJoinWithMute => 'Mute participants upon entry';
+
+  @override
+  String get ringWhenMemberJoinOrLeave =>
+      'Play sound when someone joins or leaves';
+
+  @override
   String get transcriptionEnableCaption => 'Enable subtitles';
 
   @override
@@ -2175,6 +2282,10 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   @override
   String get transcriptionCaptionForbidden =>
       'Participants are not allowed to use subtitles, and subtitles have been turned off.';
+
+  @override
+  String get transcriptionCaptionNotAvailableInSubChannel =>
+      'Not listening to the original sound, subtitles are not available, if you need to use please listen to the original sound.';
 
   @override
   String get transcriptionCaptionFontSize => 'Text Size';
@@ -2232,6 +2343,31 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
 
   @override
   String get transcriptionStartFailed => 'Failed to enable subtitles';
+
+  @override
+  String get transcriptionTranslationSettings => 'Translation Settings';
+
+  @override
+  String get transcriptionSettings => 'Transcription Settings';
+
+  @override
+  String get transcriptionTargetLang => 'Translation Display';
+
+  @override
+  String get transcriptionShowBilingual => 'Bilingual Mode';
+
+  @override
+  String get transcriptionNotTranslated => 'Do Not Translate';
+
+  @override
+  String get transcriptionMemberPermission => 'Member viewing permissions';
+
+  @override
+  String get transcriptionViewFullContent => 'View full content';
+
+  @override
+  String get transcriptionViewConferenceContent =>
+      'View the contents during the meeting';
 
   @override
   String get feedbackInRoom => 'Feedback';

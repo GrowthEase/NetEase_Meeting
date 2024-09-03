@@ -105,4 +105,20 @@ class NEPlatformChannel extends BaseChannel {
       return '';
     }
   }
+
+  Future<String> notifyInMeetingPermissionRequest(String permissionName) async {
+    Alog.i(
+        tag: _tag,
+        content: 'notifyInMeetingPermissionRequest: $permissionName');
+    try {
+      return await platform.invokeMethod('notifyInMeetingPermissionRequest', {
+        'permissionName': permissionName,
+      }) as String;
+    } on PlatformException catch (e) {
+      Alog.e(
+          tag: _tag,
+          content: 'notifyInMeetingPermissionRequest exception: ${e.message}');
+      return '';
+    }
+  }
 }

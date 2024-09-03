@@ -8,7 +8,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:netease_meeting_kit/meeting_ui.dart';
 import 'package:netease_common/netease_common.dart';
@@ -97,7 +96,12 @@ export 'package:netease_meeting_kit/meeting_core.dart'
         NEMeetingTranscriptionMessage,
         NEMeetingTranscriptionInterval,
         NEMeetingTranscriptionInfo,
+        NEMeetingASRTranslationLanguage,
+        NESettingsChangedListener,
         LocalHistoryMeetingManager,
+        ConnectivityManager,
+        ConnectivityWatcher,
+        ConnectivityChangedBuilder,
         NEFeedback;
 export 'package:netease_roomkit/netease_roomkit.dart'
     show
@@ -127,7 +131,6 @@ part 'src/meeting_kit/settings_service.dart';
 part 'src/meeting_kit/module_name.dart';
 part 'src/meeting_kit/utils/rtc_utils.dart';
 part 'src/meeting_kit/utils/network_task_executor.dart';
-part 'src/meeting_kit/utils/connectivity_manager.dart';
 part 'src/meeting_kit/screen_sharing_service.dart';
 part 'src/meeting_kit/meeting_web_app_bridge.dart';
 part 'src/meeting_kit/contacts_service.dart';
