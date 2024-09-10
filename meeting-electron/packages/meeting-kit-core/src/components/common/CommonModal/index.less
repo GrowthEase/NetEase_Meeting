@@ -1,0 +1,44 @@
+@text-primary-color: #333333;
+.nemeeting-modal-wrap {
+  overflow-y: hidden !important;
+}
+.nemeeting-modal-mask {
+  background: rgba(0, 0, 0, 0) !important;
+}
+.nemeeting-custom-modal {
+  .nemeeting-modal {
+    max-width: 100%;
+    .nemeeting-modal-close:hover {
+      background-color: transparent;
+    }
+  }
+  .nemeeting-modal-header {
+    height: 50px;
+    border-bottom: 1px solid #ebedf0;
+    margin-bottom: 0;
+    .nemeeting-modal-title {
+      color: @text-primary-color;
+      font-size: 18px;
+      font-weight: normal;
+      text-align: center;
+      line-height: 50px;
+    }
+  }
+
+  .nemeeting-modal-content {
+    padding: 0;
+    // overflow: hidden;
+  }
+}
+
+.nemeeting-common-confirm-modal,
+.nemeeting-common-warning-modal {
+  .nemeeting-modal-confirm-btns {
+    margin-top: 20px;
+    display: flex;
+    justify-content: right;
+    .nemeeting-btn:focus-visible {
+      outline: none !important;
+    }
+  }
+}

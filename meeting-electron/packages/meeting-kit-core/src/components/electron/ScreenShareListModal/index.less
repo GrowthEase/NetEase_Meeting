@@ -1,0 +1,98 @@
+.screen-share-list-modal-footer {
+  width: 100%;
+  position: relative;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 0 24px;
+  border-top: 1px solid #e6e7eb;
+  margin: 0;
+  .nemeeting-checkbox-wrapper {
+    margin-right: 20px;
+  }
+  .nemeeting-btn {
+    right: 24px;
+    position: absolute;
+    border-radius: 8px;
+    line-height: 12px;
+    padding: 12px 20px;
+    height: 36px;
+    box-sizing: border-box;
+    &:disabled {
+      cursor: not-allowed;
+      background-color: rgba(22, 119, 255, 0.5);
+      color: #fff;
+      border: none;
+    }
+  }
+}
+.screen-share-list-modal-content {
+  height: 400px;
+  padding-top: 10px;
+  .screen-share-list-modal-part {
+    margin-bottom: 16px;
+    .part-title {
+      margin-bottom: 5px;
+      margin-left: 12px;
+      font-weight: bold;
+    }
+  }
+  .share-item {
+    border: 1px solid #e1e3e6;
+    border-radius: 8px;
+    text-align: center;
+    width: 180px;
+    height: 125px;
+    display: inline-block;
+    margin: 5px 8px;
+    padding-top: 10px;
+    cursor: pointer;
+    vertical-align: top;
+    .share-item-img-wrapper {
+      width: 160px;
+      height: 100px;
+      margin: 0 auto;
+      background-color: #fff;
+      position: relative;
+      border-radius: 4px;
+      .computer-sound-only-icon {
+        font-size: 32px;
+        color: #337eff;
+        display: block;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+    }
+    .share-item-img {
+      background: #f2f3f5;
+      border-radius: 2px;
+      width: 160px;
+      height: 100px;
+    }
+    .share-item-name {
+      width: calc(100% - 4px);
+      margin: 0 auto;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 15px;
+      margin-top: 5px;
+    }
+  }
+  .share-item:hover {
+    border: 1px solid #337eff;
+  }
+  .share-item-select {
+    background: #337eff;
+    border: 1px solid #337eff;
+    color: #fff;
+    .share-item-name {
+      font-weight: 500;
+    }
+  }
+}

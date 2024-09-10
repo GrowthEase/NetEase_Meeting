@@ -1,0 +1,531 @@
+@nechatroom-prefix: chatroom;
+
+.@{nechatroom-prefix}-chatroom-wrapper {
+  width: 100%;
+  height: 100%;
+  border-radius: 2px;
+  background-color: #fff;
+  color: #333;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  // border: 1px solid #ebedf0;
+  position: relative;
+}
+
+.@{nechatroom-prefix}-chatroom-title {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 500;
+  border-bottom: 1px solid #ebedf0;
+  padding: 9px 0;
+}
+
+.@{nechatroom-prefix}-bottom-btn {
+  position: absolute;
+  bottom: 105px;
+  right: 5px;
+  font-size: 12px;
+  background-color: #337eff;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 14px;
+  line-height: 14px;
+  cursor: pointer;
+  z-index: 11;
+}
+
+.@{nechatroom-prefix}-chatroom-list-wrapper {
+  padding: 0 0px 0px;
+  flex: 1;
+  position: relative;
+  overflow-y: hidden;
+}
+
+.@{nechatroom-prefix}-chatroom-list-content {
+  padding: 0 10px 0px;
+  .virtual-item:last-child {
+    padding-bottom: 20px;
+  }
+}
+
+.@{nechatroom-prefix}-chatroom-list-content {
+  padding: 0 20px 0px;
+  .virtual-item:last-child {
+    padding-bottom: 20px;
+  }
+}
+.@{nechatroom-prefix}-chatroom-view-empty-content {
+  position: absolute;
+  text-align: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #999;
+  img {
+    display: block;
+    width: 120px;
+    height: 120px;
+  }
+}
+
+.@{nechatroom-prefix}-chatroom-type {
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+  .@{nechatroom-prefix}-chatroom-type-label {
+    color: #666666;
+    white-space: nowrap;
+  }
+  .select-icon-close {
+    transform: rotate(180deg);
+  }
+}
+
+.@{nechatroom-prefix}-chatroom-content-fetch-history {
+  text-align: center;
+  height: 14px;
+  margin: 10px;
+  cursor: pointer;
+  color: #999999;
+  &:hover {
+    color: #666666;
+  }
+  &.absolute {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99;
+  }
+}
+
+.@{nechatroom-prefix}-chatroom-content-time {
+  text-align: center;
+  height: 12px;
+  color: #999999;
+  margin-top: 5px;
+}
+.private-chat-member-popover {
+  .nemeeting-popover-inner {
+    padding: 0;
+    border-radius: 4px;
+    width: 220px;
+  }
+  .private-chat-member-content {
+    font-size: 14px;
+    .private-chat-member-header {
+      .private-chat-member-search-input {
+        margin: 12px 16px 0 16px;
+        width: 188px;
+        border: none;
+        background: rgba(242, 243, 245, 1);
+        border-radius: 16px;
+      }
+      .nemeeting-tabs-nav {
+        margin-bottom: 0;
+      }
+    }
+    .private-chat-member-list {
+      max-height: 300px;
+      overflow-y: auto;
+      .private-chat-member-tips {
+        padding: 8px 16px 0 16px;
+        color: #999999;
+      }
+      .private-chat-member-item {
+        display: flex;
+        align-items: center;
+        height: 32px;
+        padding-left: 16px;
+        cursor: pointer;
+        margin: 5px 0;
+        &:hover {
+          background-color: rgba(0, 0, 0, 0.08);
+        }
+        .@{nechatroom-prefix}-chat-card-avatar {
+          width: 24px;
+          height: 24px;
+          margin: 0;
+          line-height: 24px;
+        }
+        .private-chat-member-name {
+          font-size: 14px;
+          width: 140px;
+          margin: 0 8px;
+          display: flex;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          .private-chat-member-name-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+          .private-chat-member-role {
+            color: #999999;
+            max-width: 80px;
+          }
+        }
+      }
+    }
+  }
+}
+
+.@{nechatroom-prefix}-chatroom-tools {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid #ebedf0;
+  height: 32px;
+  width: 100%;
+  overflow: hidden;
+  .@{nechatroom-prefix}-chatroom-tools-private-chat {
+    width: 230px;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    width: 0;
+    .private-chat-label {
+      font-size: 12px;
+      color: #666666;
+      white-space: nowrap;
+      margin: 0 0 0 8px;
+    }
+    .private-chat-member {
+      height: 24px;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      box-sizing: border-box;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      &:hover {
+        background-color: rgba(242, 243, 245, 1);
+        border-radius: 4px;
+      }
+      .@{nechatroom-prefix}-chat-card-avatar {
+        width: 22px;
+        height: 22px;
+        line-height: 22px;
+        flex-shrink: 0;
+      }
+      .private-chat-member-name {
+        font-size: 12px;
+        margin: 0 0 0 4px;
+        display: flex;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        .private-chat-member-name-text {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .private-chat-member-role {
+          color: #999999;
+          max-width: 80px;
+        }
+      }
+    }
+  }
+  .@{nechatroom-prefix}-chatroom-tools-buttons {
+    display: flex;
+    align-items: center;
+    .@{nechatroom-prefix}-chatroom-tools-button {
+      display: flex;
+      align-items: center;
+      margin-right: 12px;
+      cursor: pointer;
+      .nemeeting-upload-wrapper {
+        line-height: 0;
+      }
+      .permission-popover {
+        .nemeeting-popover-inner {
+          padding: 0;
+          border-radius: 4px;
+        }
+      }
+      .permission-content {
+        .permission-content-session {
+          padding: 12px;
+          border-bottom: 1px solid rgba(51, 51, 51, 0.1);
+          font-size: 14px;
+          &:last-child {
+            border-bottom: none;
+          }
+          .permission-content-session-link {
+            color: rgba(51, 126, 255, 1);
+            cursor: pointer;
+          }
+          .permission-content-session-title {
+            color: #999999;
+          }
+          .permission-content-session-item {
+            display: flex;
+            color: #333333;
+            align-items: center;
+            height: 20px;
+            margin-top: 12px;
+            cursor: pointer;
+            width: 210px;
+            .permission-content-session-item-text {
+              flex: 1;
+              width: 0;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              margin-right: 10px;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.@{nechatroom-prefix}-chatroom-view-footer {
+  height: 66px;
+  box-shadow: 0px -1px 5px 0px #7374791a;
+  box-sizing: border-box;
+  display: flex;
+  padding: 10px 0;
+  justify-content: center;
+  .@{nechatroom-prefix}-chatroom-view-export-btn {
+    height: 36px;
+    border-radius: 8px;
+    &:disabled {
+      cursor: not-allowed;
+      background-color: rgba(22, 119, 255, 0.5);
+      color: #fff;
+      border: none;
+    }
+  }
+}
+
+.@{nechatroom-prefix}-chatroom-editor {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 68px;
+  overflow-y: auto;
+  padding-top: 5px;
+}
+
+.@{nechatroom-prefix}-chatroom-editor-disabled {
+  color: #cccccc;
+  position: relative;
+  width: 100%;
+  height: 50px;
+  display: flex;
+  padding-top: 10px;
+  justify-content: center;
+}
+
+.@{nechatroom-prefix}-chat-card-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.@{nechatroom-prefix}-chat-card-info {
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  .@{nechatroom-prefix}-chat-card-avatar {
+    margin: 0 5px;
+  }
+}
+
+.@{nechatroom-prefix}-chat-card-avatar {
+  width: 24px;
+  line-height: 24px;
+  border-radius: 100%;
+  background: linear-gradient(180deg, #5996ff 1.1%, #2575ff 100%);
+  text-align: center;
+  color: #fff;
+  font-size: 10px;
+}
+
+.@{nechatroom-prefix}-chat-card-image-content {
+  position: relative;
+  max-width: 75%;
+  align-items: end !important;
+  .@{nechatroom-prefix}-loading-mask {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .@{nechatroom-prefix}-icon-loading {
+    font-size: 42px;
+    color: #fff;
+  }
+}
+
+.@{nechatroom-prefix}-chat-card-nickname {
+  color: #333;
+  max-width: 230px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  padding: 0 8px;
+  .@{nechatroom-prefix}-chat-card-nickname-private {
+    color: rgba(51, 126, 255, 1);
+    max-width: 135px;
+  }
+  .@{nechatroom-prefix}-chat-card-nickname-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.@{nechatroom-prefix}-chat-card-send-time {
+  color: #999;
+  white-space: nowrap;
+}
+
+.@{nechatroom-prefix}-chat-card-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 0 30px;
+}
+
+.@{nechatroom-prefix}-chat-card-fill-content {
+  position: relative;
+  height: 100px;
+  width: 82%;
+  border-radius: 8px;
+  border: 1px solid #dee0e2;
+  text-align: left;
+  margin: 0 30px;
+}
+
+.@{nechatroom-prefix}-btn-resend {
+  position: absolute;
+  top: 50%;
+  margin-top: -10px;
+  left: -18px;
+  svg {
+    font-size: 16px;
+  }
+}
+
+.@{nechatroom-prefix}-chat-card-file-footer {
+  line-height: 40px;
+  border-top: 1px solid #dee0e2;
+}
+
+.@{nechatroom-prefix}-chat-card-image-content {
+  .@{nechatroom-prefix}-chat-card-file-footer {
+    border-top: none;
+  }
+}
+
+.@{nechatroom-prefix}-chat-card-text {
+  border-radius: 8px;
+  padding: 10px 12px;
+  flex: 1;
+  height: auto;
+  color: #333;
+  font-size: 14px;
+  word-break: break-all;
+}
+
+.@{nechatroom-prefix}-chat-card-noti-wrapper {
+  text-align: center;
+  margin-top: 24px;
+}
+
+.@{nechatroom-prefix}-chatCardNotiContent {
+  font-size: 14px;
+  color: #666;
+}
+
+.@{nechatroom-prefix}-chat-card-text-item {
+  word-break: break-all;
+  white-space: pre-wrap;
+  text-align: left;
+  overflow-wrap: break-word;
+  max-width: 190px;
+}
+.nemeeting-image {
+  .@{nechatroom-prefix}-chat-card-img {
+    // width: 160px;
+    height: 120px;
+    border-radius: 8px;
+    // border: 1px solid #dfe0e3;
+    object-fit: contain;
+  }
+}
+
+.@{nechatroom-prefix}-chat-card-file {
+  width: 100%;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  color: #333;
+  cursor: default !important;
+  &:hover {
+    color: #333;
+  }
+}
+
+.@{nechatroom-prefix}-chat-card-file-content {
+  flex: 1;
+  margin-left: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.@{nechatroom-prefix}-chat-card-file-name {
+  font-size: 14px;
+  color: #333;
+  max-width: 150px;
+  display: flex;
+  align-items: center;
+  .file-name-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .file-name-ext {
+    flex-shrink: 0;
+  }
+}
+
+.@{nechatroom-prefix}-chat-card-file-size {
+  font-size: 12px;
+  color: #999;
+}
+
+.@{nechatroom-prefix}-chatroom-retry {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  color: #666;
+}
+
+.@{nechatroom-prefix}-chatroom-retry-btn {
+  padding: 0;
+}
+
+.@{nechatroom-prefix}-chat-card-private-text {
+  color: #337eff;
+  white-space: nowrap;
+}
+
+.@{nechatroom-prefix}-chat-card-public-text {
+  color: #999;
+  white-space: nowrap;
+}

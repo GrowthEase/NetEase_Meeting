@@ -1,0 +1,61 @@
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  overflow: hidden;
+  font-family: PingFangSC-Regular, sans-serif;
+  user-select: none;
+}
+img {
+  user-select: none;
+  -webkit-user-drag: none;
+}
+div:focus {
+  outline: none;
+}
+#root {
+  width: 100%;
+  height: 100%;
+}
+.app {
+  width: 100%;
+  height: 100%;
+  background-color: #e1e1eb;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.main-app {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+.main-app-web {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  // overflow-y: auto;
+  min-height: 380px;
+}
+.main-app-guest {
+  background-image: url('../assets/guest-bg.png');
+  background-size: cover;
+  .base-footer {
+    background: none !important;
+    .foot-text {
+      color: #f2f3f5 !important;
+      a {
+        color: #f2f3f5 !important;
+      }
+    }
+    p {
+      color: #f2f3f5 !important;
+    }
+  }
+}

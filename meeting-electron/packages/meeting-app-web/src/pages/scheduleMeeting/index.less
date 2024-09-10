@@ -1,0 +1,93 @@
+.schedule-meeting-page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  background-color: #fff;
+  box-sizing: border-box;
+  height: 100%;
+  font-family: system-ui;
+  .schedule-electron-drag-bar {
+    box-sizing: border-box;
+    height: 50px;
+    font-weight: normal;
+    line-height: 40px;
+    text-align: center;
+    font-size: 16px;
+    border-bottom: 1px solid #ebedf0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    /* 文字颜色 Text/强调&正文标题 */
+    color: #1e1f27;
+
+    .drag-region {
+      -webkit-app-region: drag;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 100px;
+    }
+  }
+  // .schedule-meeting-page-content {
+  //   .before-meeting-modal-footer {
+  //     padding-top: 3px;
+  //   }
+  // }
+}
+
+.schedule-meeting-page-bg {
+  background-repeat: no-repeat;
+  background-size: 100% auto;
+  // background-image: url('../../assets/schedule_bg.png');
+  .schedule-meeting-container {
+    height: 100%;
+  }
+  .schedule-electron-drag-bar {
+    border-bottom: none;
+  }
+  .schedule-meeting-page-content {
+    padding: 0;
+    height: 100%;
+    .before-meeting-modal-content {
+      padding: 0;
+      .schedule-meeting-container {
+        max-height: 570px;
+        // overflow-y: auto;
+      }
+      .schedule-meeting-detail-title {
+        margin-top: 20px;
+      }
+    }
+  }
+  .before-meeting-modal-footer {
+    .before-meeting-modal-footer-button-edit {
+      margin: 0 8px !important;
+    }
+    .before-meeting-modal-footer-button {
+      width: 106px !important;
+      max-width: 106px !important;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+  }
+}
+
+.schedule-meeting-pc-buttons {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  right: 0;
+  .icon-buttons {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+}

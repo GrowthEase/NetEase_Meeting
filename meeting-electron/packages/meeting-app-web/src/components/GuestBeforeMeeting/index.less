@@ -1,0 +1,476 @@
+.guest-before-meeting-title-cls {
+  font-size: 24px;
+  color: #333333;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 64px;
+  height: 33px;
+}
+
+.guest-before-meeting-name-input {
+  margin-top: 32px;
+  position: relative;
+  input {
+    text-align: center;
+    display: block;
+    height: 50px;
+    border-radius: 16px;
+    background: #f2f3f5;
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    &:focus {
+      border: none;
+    }
+    &:hover {
+      border: none;
+    }
+    &::placeholder {
+      color: #a8acb2;
+    }
+  }
+  .input-extra {
+    color: #4096ff;
+    margin-top: 8px;
+    text-align: center;
+  }
+  .iconfont {
+    position: absolute;
+    right: 16px;
+    top: 18px;
+    font-size: 16px;
+    color: #a8acb2;
+    cursor: pointer;
+  }
+}
+
+.guest-before-meeting-container-cls {
+  width: 375px;
+  min-height: 480px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(47, 56, 111, 0.1);
+  border-radius: 10px;
+  box-sizing: border-box;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  @media screen and (max-width: 590px) {
+    width: 100%;
+    height: 100%;
+    box-shadow: none;
+    border-radius: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #ffffff;
+  }
+  .join-btn {
+    border-radius: 8px;
+    opacity: 1;
+    /* 颜色/蓝色 */
+    background: #337eff;
+  }
+  .phone-join-btn {
+    border-radius: 8px;
+    opacity: 1;
+    margin-top: 62px;
+    margin-bottom: 15px;
+  }
+  .phone-cancel-btn {
+    border-radius: 8px;
+    color: #337eff;
+    border: 1px solid #337eff;
+    background-color: #fff;
+    margin-top: 0px;
+  }
+}
+
+.guest-before-meeting-btn-group-cls {
+  margin-top: 24px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.guest-before-meeting-join-btn-cls {
+  border-radius: 36px;
+  width: 100%;
+  height: 36px;
+  height: 50px;
+  background: #337eff;
+  margin: 16px 0 10px;
+  &.nemeeting-btn-primary:disabled {
+    cursor: not-allowed;
+    border: none;
+    color: #fff;
+    background-color: rgba(22, 119, 255, 0.5);
+    box-shadow: none;
+  }
+}
+
+.guest-before-meeting-btn-cls {
+  width: 140px;
+  height: 48px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #dcdce0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+  cursor: pointer;
+  .iconfont {
+    font-size: 24px;
+    margin-right: 8px;
+  }
+  .closed {
+    color: #fe3b30;
+  }
+  .open {
+    color: #1bb650;
+  }
+}
+
+.guest-before-meeting-h5-title-cls {
+  position: relative;
+  font-size: 18px;
+  font-weight: 500;
+  text-align: center;
+  color: #333333;
+  height: 50px;
+  line-height: 50px;
+  border-bottom: 1px solid #dcdce0;
+  margin: -24px -24px 0 -24px;
+  .login-btn {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+
+.guest-before-meeting-join-agreement-cls {
+  font-size: 14px;
+  color: #999999;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  .agree-checkbox {
+    margin-right: 4px;
+    flex-shrink: 0;
+  }
+  .agree-text {
+    text-align: center;
+    flex: 1;
+    a {
+      margin: 0 4px;
+      color: #337eff;
+    }
+  }
+}
+
+.before-meeting-home-lines {
+  background-color: #fff;
+  width: 100%;
+  border-radius: 8px;
+  .audio-line,
+  .video-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .audio-line-title,
+  .video-line-title {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    letter-spacing: 0em;
+    /* 文字颜色 Text/强调&正文标题 */
+    color: #1e1f27;
+  }
+  .nemeeting-popover-inner {
+    padding: 5px 10px;
+  }
+  .arrow-wrapper {
+    flex-grow: 1;
+    text-align: center;
+    margin-right: 10px;
+    cursor: pointer;
+  }
+  .audio-line,
+  .video-line {
+    height: 48px;
+    padding: 12px 16px;
+    box-sizing: border-box;
+  }
+  .iconjiantou-shang {
+    color: #666666;
+    margin-right: 20px;
+    cursor: pointer;
+  }
+
+  .device-list-container {
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    margin: 0 -12px;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    max-height: 420px;
+    overflow-y: auto;
+  }
+  .more-title,
+  .device-title {
+    font-weight: 600;
+    padding: 0px 24px;
+    color: #333333;
+    height: 40px;
+    line-height: 40px;
+  }
+  .more-title {
+    cursor: pointer;
+    &:hover {
+      background: #f2f3f5;
+    }
+  }
+  .divider-line {
+    margin: 0;
+  }
+  .device-item {
+    height: 35px;
+    padding: 0px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 220px;
+    cursor: pointer;
+    .device-label {
+      max-width: 200px;
+      overflow: hidden; //超出的文本隐藏
+      text-overflow: ellipsis; //溢出用省略号显示
+      white-space: nowrap; //溢出不换行
+    }
+    &:hover {
+      background: #f2f3f5;
+      .device-label {
+        color: #337eff;
+      }
+    }
+  }
+}
+
+.audio-line-switch {
+  .nemeeting-switch {
+    background-color: #e9e9ea !important;
+  }
+  .schedule-meeting-switch-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .schedule-meeting-switch-label {
+    display: flex;
+    flex-direction: column;
+  }
+  .nemeeting-switch-checked {
+    background: #337eff !important;
+    opacity: 1;
+    .nemeeting-switch-handle::before {
+      width: 20px;
+      height: 20px;
+      left: -2px;
+    }
+  }
+  .nemeeting-switch {
+    display: inline-block;
+    width: 40px;
+    height: 24px;
+    min-width: 40px;
+    .nemeeting-switch-handle::before {
+      width: 20px;
+      height: 20px;
+      left: 0px;
+    }
+
+    .nemeeting-switch-inner {
+      display: inline-block;
+      width: 40px;
+      height: 24px;
+    }
+  }
+  .switch-label {
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 24px;
+    height: 24px;
+    letter-spacing: 0em;
+    /* 文字颜色 Text/强调&正文标题 */
+    color: #1e1f27;
+    margin-top: 2px;
+  }
+  .waiting-room-label {
+    width: 150px;
+  }
+  .switch-tip {
+    font-size: 12px;
+    font-weight: normal;
+    line-height: 20px;
+    letter-spacing: 0em;
+    /* 文字颜色 Text/次要信息 */
+    color: #8d90a0;
+  }
+  .waiting-room-tip {
+    width: 230px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .autoMute-label {
+    width: 230px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .autoMute-tip {
+    width: 230px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.video-line-switch {
+  .nemeeting-switch {
+    background-color: #e9e9ea !important;
+  }
+  .schedule-meeting-switch-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .schedule-meeting-switch-label {
+    display: flex;
+    flex-direction: column;
+  }
+  .nemeeting-switch-checked {
+    background: #337eff !important;
+    opacity: 1;
+    .nemeeting-switch-handle::before {
+      width: 20px;
+      height: 20px;
+      left: -2px;
+    }
+  }
+  .nemeeting-switch {
+    display: inline-block;
+    width: 40px;
+    height: 24px;
+    min-width: 40px;
+    .nemeeting-switch-handle::before {
+      width: 20px;
+      height: 20px;
+      left: 0px;
+    }
+
+    .nemeeting-switch-inner {
+      display: inline-block;
+      width: 40px;
+      height: 24px;
+    }
+  }
+  .switch-label {
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 24px;
+    height: 24px;
+    letter-spacing: 0em;
+    /* 文字颜色 Text/强调&正文标题 */
+    color: #1e1f27;
+    margin-top: 2px;
+  }
+  .waiting-room-label {
+    width: 150px;
+  }
+  .switch-tip {
+    font-size: 12px;
+    font-weight: normal;
+    line-height: 20px;
+    letter-spacing: 0em;
+    /* 文字颜色 Text/次要信息 */
+    color: #8d90a0;
+  }
+  .waiting-room-tip {
+    width: 230px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .autoMute-label {
+    width: 230px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .autoMute-tip {
+    width: 230px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.guest-before-meeting-container-h5 {
+  background-color: #f0f1f5;
+}
+
+.guest-before-meeting-name-input-h5 {
+  height: 48px;
+  background-color: #fff;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  display: flex;
+  border-radius: 8px;
+  box-sizing: border-box;
+  margin-bottom: 16px;
+
+  .guest-before-meeting-name-input-title {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+    letter-spacing: 0em;
+    /* 文字颜色 Text/强调&正文标题 */
+    color: #1e1f27;
+    min-width: 64px;
+    white-space: nowrap;
+  }
+  .guest-before-meeting-name-input-input {
+    height: 24px;
+    background-color: #fff;
+    box-shadow: none !important;
+    text-align: left;
+    flex: 1;
+  }
+}
+
+.h5-un-support-browser-content {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+.h5-un-support-browser-tip {
+  width: 280px;
+  font-family: PingFang SC;
+  font-size: 16px;
+  font-weight: normal;
+  line-height: 24px;
+  text-align: center;
+  letter-spacing: 0em;
+  /* 文字颜色Text/次强调&正文标题 */
+  color: #53576a;
+  margin-bottom: 10px;
+}

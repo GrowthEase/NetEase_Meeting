@@ -1,0 +1,69 @@
+.nemeeting-private-chat-member-popover {
+  pointer-events: auto;
+  .nemeeting-popover-inner {
+    padding: 0;
+    border-radius: 8px;
+    width: 200px;
+    padding: 4px;
+  }
+  .private-chat-member-content {
+    font-size: 14px;
+    .private-chat-member-header {
+      .private-chat-member-search-input {
+        border: none;
+        background: rgba(242, 243, 245, 1);
+        box-shadow: none;
+        border-radius: 8px;
+        border: 1px solid #cdcfd7;
+        background-color: #fff;
+      }
+      .nemeeting-tabs-nav {
+        margin-bottom: 0;
+      }
+    }
+    .private-chat-member-list {
+      max-height: 300px;
+      overflow-y: auto;
+      .private-chat-member-tips {
+        padding: 8px 16px 8px 16px;
+        color: #999999;
+      }
+      .private-chat-member-item {
+        display: flex;
+        align-items: center;
+        height: 32px;
+        padding: 0 8px;
+        cursor: pointer;
+        margin: 5px 0;
+        border-radius: 8px;
+        &:hover {
+          background-color: rgba(0, 0, 0, 0.08);
+        }
+        .chatroom-chat-card-avatar {
+          width: 24px;
+          height: 24px;
+          margin: 0;
+          line-height: 24px;
+        }
+        .private-chat-member-name {
+          font-size: 14px;
+          width: 140px;
+          margin: 0 8px;
+          display: flex;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          .private-chat-member-name-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+          .private-chat-member-role {
+            color: #999999;
+            max-width: 80px;
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,358 @@
+@import '../../../../src/styles/variables.less';
+.video-view-wrap {
+  background: #3d3d3d;
+  // border: 1px solid #000;
+  box-sizing: border-box;
+  color: #fff;
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+  border-radius: 8px;
+  .nemeeting-screen-stop-btn {
+    background-color: #f51d45;
+    color: #fff;
+    &:hover {
+      color: #ffffff !important;
+      /* 颜色/红色 */
+      background: #f86471 !important;
+      border-color: #f86471 !important;
+    }
+  }
+  .video-view {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  &:hover {
+    .cancel-focus {
+      display: flex;
+    }
+  }
+
+  .video-view-phone-content-wrap {
+    border-radius: 50%;
+    position: relative;
+  }
+  .nemeeting-audio-phone-card {
+    border-radius: 50%;
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+  }
+  .video-view-nickname-avatar {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .video-view-screen-share-annotation {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 99;
+  }
+  .resolution {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 8px 10px;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    z-index: 99;
+  }
+  .nemeeting-video-mirror {
+    transform: rotatey(180deg);
+  }
+  .video-view-nickname {
+    top: 50%;
+    left: 0;
+    right: 0;
+    transform: translate(0, -50%);
+    margin-top: 0;
+    .icon-audio {
+      position: relative;
+      top: 1px;
+      left: -1px;
+    }
+  }
+  .nick-and-focus-wrap {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    display: flex;
+  }
+
+  .nickname-tip {
+    height: 24px;
+    padding: 3px 4px;
+    align-items: center;
+    display: flex;
+    max-width: 100%;
+    z-index: 10;
+    box-sizing: border-box;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.8);
+    max-width: 148px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    .nickname {
+      font-size: 12px;
+      color: #fff;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .iconfont {
+      font-size: 13px;
+      position: relative;
+      top: 1.5px;
+    }
+    .iconyx-tv-voice {
+      font-size: 14px;
+      margin-right: 2px;
+      position: relative;
+      top: 1px;
+    }
+  }
+  &.full-screen-card {
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    .icon-audio {
+      display: inline-block;
+    }
+  }
+  &.full-screen-card.local-member {
+    .icon-audio {
+      display: none !important;
+    }
+  }
+  .icon-audio {
+    display: none;
+  }
+
+  .small-video-card {
+    position: absolute !important;
+    width: 20%;
+    height: 20%;
+    top: 80px;
+    right: 15px;
+    z-index: 10;
+    overflow: hidden;
+    border: 1px solid #fff;
+  }
+  .video-view .nertc-video-container-local {
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .video-view .nertc-video-container-remote {
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .video-view .nertc-screen-container {
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .video-view-phone {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.3);
+    position: absolute;
+    z-index: 1;
+    .video-view-phone-content {
+      width: 100%;
+      // background-color: #292933;
+      z-index: 11;
+    }
+    .answer-ring-phone {
+      margin-top: 5px;
+    }
+  }
+  .cancel-focus {
+    // position: absolute;
+    // top: 0; // 29元素高度+28toolbar高度
+    // left: 0;
+    font-size: 14px;
+    color: #fff;
+    border: none;
+    padding: 4px 6px;
+    height: 24px;
+    line-height: 24px;
+    box-sizing: border-box;
+    background: rgba(49, 49, 56, 0.8);
+    border-radius: 6px;
+    z-index: 11;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    margin-left: 4px;
+    .cancel-focus-title {
+      font-size: 12px;
+    }
+    .icongudingshipin {
+      font-size: 14px;
+      margin-right: 5px;
+    }
+  }
+
+  @media only screen and (min-width: 768px) {
+    .answer-ring-phone,
+    .video-view-nickname {
+      font-size: 30px;
+    }
+  }
+}
+// 发言
+.nemeeting-active-border {
+  border: 2px solid #59f20c !important;
+}
+.nemeeting-ring-phone-img {
+  width: 70px;
+}
+.video-view-phone-nickname {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  background-color: #282932;
+  .answer-ring-nickname {
+    position: absolute;
+  }
+}
+
+.nemeeting-audio-card {
+  box-sizing: border-box;
+  .nemeeting-audio-card-name-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;
+    color: #fff;
+    margin-top: 8px;
+  }
+  .nemeeting-audio-card-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin-top: 14px;
+  }
+  .nemeeting-in-phone-tip {
+    color: #999;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 400;
+    width: 100%;
+    padding: 0 2px;
+  }
+  .nemeeting-audio-card-name {
+    max-width: 56px;
+  }
+  .nemeeting-ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nemeeting-audio-card-audio-icon {
+    width: 24px;
+    height: 24px;
+    margin-left: 6px;
+    border-radius: 50%;
+    background-color: #54575d;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .nemeeting-audio-card-avatar {
+    border-radius: 100%;
+    // overflow: hidden;
+    position: relative;
+  }
+  .nemeeting-audio-card-phone-icon {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .nemeeting-icon-phone {
+    font-size: 32px;
+    color: #fff;
+  }
+}
+
+.nemeeting-ios-time {
+  color: transparent;
+  position: absolute;
+  z-index: -1;
+}
+
+.nemeeting-canvas-web {
+  .w-full {
+    .video-view-wrap {
+      border-radius: 0px;
+    }
+  }
+}
+
+.invite-state-icon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 99;
+}
+
+.sharing-view-user-label {
+  display: flex;
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  border-radius: 4px;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.56);
+  color: #fff;
+  padding: 2px;
+
+  z-index: 999;
+  font-size: 12px;
+  max-width: calc(100% - 12px);
+  .sharing-view-user-label-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+  }
+  .icon {
+    font-size: 16px;
+    margin-right: 5px;
+  }
+}
+
+.nemeeting-in-phone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 10px;
+  justify-content: center;
+}
