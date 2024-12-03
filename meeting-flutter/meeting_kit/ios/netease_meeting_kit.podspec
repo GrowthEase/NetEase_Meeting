@@ -43,7 +43,7 @@ A new flutter plugin project.
     if Pod.const_defined?(:SPECIAL_VERSION) && SPECIAL_VERSION
         s.dependency "NERoomKit/Special_All", "1.32.0"
     else
-        s.dependency "NERoomKit", "1.32.0"
+        s.dependency "NERoomKit", "1.32.1"
     end
   end
 

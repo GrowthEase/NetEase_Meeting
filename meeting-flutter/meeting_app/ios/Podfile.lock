@@ -69,39 +69,39 @@ PODS:
   - NECoreKit (9.7.0):
     - YXAlog (= 1.0.7)
   - NEDyldYuv (0.0.1)
-  - NERoomKit (1.32.0):
+  - NERoomKit (1.32.1):
     - NECoreKit (>= 9.6.6)
-    - NERoomKit/Audio (= 1.32.0)
-    - NERoomKit/Base (= 1.32.0)
-    - NERoomKit/Beauty (= 1.32.0)
-    - NERoomKit/ScreenShare (= 1.32.0)
-    - NERoomKit/Segment (= 1.32.0)
-    - NERoomKit/Video (= 1.32.0)
-  - NERoomKit/Audio (1.32.0):
+    - NERoomKit/Audio (= 1.32.1)
+    - NERoomKit/Base (= 1.32.1)
+    - NERoomKit/Beauty (= 1.32.1)
+    - NERoomKit/ScreenShare (= 1.32.1)
+    - NERoomKit/Segment (= 1.32.1)
+    - NERoomKit/Video (= 1.32.1)
+  - NERoomKit/Audio (1.32.1):
     - NECoreKit (>= 9.6.6)
     - NERtcSDK/AiDenoise (= 5.6.33)
     - NERtcSDK/AiHowling (= 5.6.33)
     - NERtcSDK/Nenn (= 5.6.33)
     - NERtcSDK/SpatialSound (= 5.6.33)
-  - NERoomKit/Base (1.32.0):
+  - NERoomKit/Base (1.32.1):
     - NECoreIMKit (= 10.0.0)
     - NECoreKit (>= 9.6.6)
     - NERtcSDK/RtcBasic (= 5.6.33)
     - NIMSDK_LITE (= 10.5.0)
-  - NERoomKit/Beauty (1.32.0):
+  - NERoomKit/Beauty (1.32.1):
     - NECoreKit (>= 9.6.6)
     - NERtcSDK/Beauty (= 5.6.33)
     - NERtcSDK/FaceDetect (= 5.6.33)
     - NERtcSDK/FaceEnhance (= 5.6.33)
     - NERtcSDK/Nenn (= 5.6.33)
-  - NERoomKit/ScreenShare (1.32.0):
+  - NERoomKit/ScreenShare (1.32.1):
     - NECoreKit (>= 9.6.6)
     - NERtcSDK/ScreenShare (= 5.6.33)
-  - NERoomKit/Segment (1.32.0):
+  - NERoomKit/Segment (1.32.1):
     - NECoreKit (>= 9.6.6)
     - NERtcSDK/Nenn (= 5.6.33)
     - NERtcSDK/Segment (= 5.6.33)
-  - NERoomKit/Video (1.32.0):
+  - NERoomKit/Video (1.32.1):
     - NECoreKit (>= 9.6.6)
     - NERtcSDK/SuperResolution (= 5.6.33)
     - NERtcSDK/VideoDenoise (= 5.6.33)
@@ -120,13 +120,13 @@ PODS:
   - netease_meeting_kit (0.0.1):
     - Flutter
     - NEDyldYuv
-    - NERoomKit (= 1.32.0)
+    - NERoomKit (= 1.32.1)
     - SDWebImage
     - YXAlog
   - netease_roomkit (0.0.1):
     - Flutter
     - NEDyldYuv (= 0.0.1)
-    - NERoomKit (= 1.32.0)
+    - NERoomKit (= 1.32.1)
     - YXAlog
   - NIMSDK_LITE (10.5.0):
     - NIMSDK_LITE/NOS (= 10.5.0)
@@ -289,10 +289,10 @@ SPEC CHECKSUMS:
   NECoreIMKit: cc219ff68c34ae8c52503e8f9d4eede79e916e74
   NECoreKit: 4b32b50065e430f5615ed1ab63b26b29872d6772
   NEDyldYuv: 6b47adff16186768bf2f8b165697fdee8e94d7ac
-  NERoomKit: efa5356e7df279ab9de32c71bab29ab764a738c0
+  NERoomKit: 0732aca05728ff5f0ad477adb9950f46eaeaeca7
   NERtcSDK: 4bd20cd2a42c2ceabadf2d21aab629a38ad1d263
-  netease_meeting_kit: 914d017a1cbdfab66f52e7a73c10ba301c785392
-  netease_roomkit: ca9882e77bed7b1c80821983c9f2dc3a7e29c4d9
+  netease_meeting_kit: 40832ef728a049466efece02bd4c29b92575859a
+  netease_roomkit: 7794b24b2ca2e2663c07a2302966b67a0eb1ad0b
   NIMSDK_LITE: 06d0b5addf25c8d413b62769c197998f672e4a25
   open_filex: 6e26e659846ec990262224a12ef1c528bb4edbe4
   OrderedSet: aaeb196f7fef5a9edf55d89760da9176ad40b93c

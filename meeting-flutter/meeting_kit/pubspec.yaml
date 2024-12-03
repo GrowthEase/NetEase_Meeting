@@ -51,8 +51,8 @@ dependencies:
   extended_text: ^13.0.2
   sqflite: ^2.3.3
 
-  netease_common: ^1.0.7
-  netease_roomkit: ^1.32.0
+  netease_common: ^1.0.8
+  netease_roomkit: ^1.32.1
 
 dev_dependencies:
   flutter_test:

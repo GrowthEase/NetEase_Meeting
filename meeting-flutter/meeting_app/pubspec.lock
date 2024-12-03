@@ -728,10 +728,10 @@ packages:
     dependency: "direct main"
     description:
       name: netease_common
-      sha256: ec4fc60ab6b60106b715905b98b065ce70f2368d439958384d272a0847b00dd0
+      sha256: a54191502c2977ca215e77086c95ba5e096a505bfc74c1357e26eac4efed4092
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.7"
+    version: "1.0.8"
   netease_meeting_kit:
     dependency: "direct main"
     description:
@@ -743,18 +743,18 @@ packages:
     dependency: transitive
     description:
       name: netease_roomkit
-      sha256: f2e2767b765b79978997b7e59e31484fdee43928e4ec2b79eed94d102ffc1371
+      sha256: "1719c99b8f3bcef855ab8ac003a32a50995c94649a5b84431656aa6b2846ed7a"
       url: "https://pub.dev"
     source: hosted
-    version: "1.32.0"
+    version: "1.32.1"
   netease_roomkit_interface:
     dependency: transitive
     description:
       name: netease_roomkit_interface
-      sha256: f59fd07cf853ab33f2e4257b6edf15fd7c59e9eb9026a69d36fc26abd8a910e1
+      sha256: bb66b53f662aba5bea4d972111fbe02b5f8e5053ed0faf3f6bb962ad8b5d56d8
       url: "https://pub.dev"
     source: hosted
-    version: "1.32.0"
+    version: "1.32.1"
   nm:
     dependency: transitive
     description:
