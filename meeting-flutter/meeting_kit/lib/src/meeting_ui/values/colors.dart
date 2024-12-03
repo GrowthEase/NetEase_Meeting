@@ -29,6 +29,8 @@ class _UIColors {
   static const Color greyCCCCCC = Color(0xffcccccc);
   static const Color blue_5996FF = Color(0xff5996FF);
   static const Color blue_2575FF = Color(0xff2575FF);
+  static const Color color337eff = Color(0xff337eff);
+  static const Color color50337eff = Color(0x7f337eff);
   static const Color greyB0B6BE = Color(0xffB0B6BE);
   static const Color greyDCDFE5 = Color(0xffDCDFE5);
   static const Color color_60_3C3C43 = Color(0x993C3C43);
@@ -108,4 +110,6 @@ class _UIColors {
   static const Color colorF5F6F7 = Color(0xffF5F6F7);
   static const Color colorB1B6C2 = Color(0xffB1B6C2);
   static const Color colorF29900 = Color(0xffF29900);
+  static const Color colorFDFDFD = Color(0xFFFDFDFD);
+  static const Color colorF7F7F7 = Color(0xFFF7F7F7);
 }

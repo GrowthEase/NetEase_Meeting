@@ -14,10 +14,20 @@ abstract class NESettingsService extends ValueNotifier<Map> {
   /// 设置是否显示会议时长
   ///
   /// [enable] true-开启，false-关闭
+  @Deprecated('use setMeetingElapsedTimeDisplayType')
   void enableShowMyMeetingElapseTime(bool enable);
 
   /// 查询是否显示会议时长
+  @Deprecated('use getMeetingElapsedTimeDisplayType')
   Future<bool> isShowMyMeetingElapseTimeEnabled();
+
+  /// 设置会议时长展示类型
+  ///
+  /// [type] 会议时长展示类型
+  void setMeetingElapsedTimeDisplayType(NEMeetingElapsedTimeDisplayType type);
+
+  /// 查询会议时长展示类型
+  Future<NEMeetingElapsedTimeDisplayType> getMeetingElapsedTimeDisplayType();
 
   /// 设置入会时是否打开本地视频
   ///
@@ -225,4 +235,39 @@ abstract class NESettingsService extends ValueNotifier<Map> {
 
   /// 查询是否显示未入会成员
   Future<bool> isShowNotYetJoinedMembersEnabled();
+
+  /// 查询应用是否支持会议设备邀请
+  bool isCallOutRoomSystemDeviceSupported();
+
+  ///
+  /// 设置开启/关闭隐藏非视频参会者。默认为 false，即显示非视频参会者。
+  ///
+  /// [enable] true: 隐藏非视频参会者；false: 显示非视频参会者
+  ///
+  Future<void> enableHideVideoOffAttendees(bool enable);
+
+  ///
+  /// 查询是否开启隐藏非视频参会者。
+  ///
+  Future<bool> isHideVideoOffAttendeesEnabled();
+
+  ///
+  /// 设置开启/关闭隐藏本人视图。默认为 false，即显示本人视图。
+  ///
+  /// [enable] true: 隐藏本人视图；false: 显示本人视图
+  ///
+  Future<void> enableHideMyVideo(bool enable);
+
+  ///
+  /// 查询是否开启隐藏本人视图。
+  ///
+  Future<bool> isHideMyVideoEnabled();
+
+  /// 设置是否离开会议需要弹窗确认
+  ///
+  /// [enable] true-开启，false-关闭
+  void enableLeaveTheMeetingRequiresConfirmation(bool enable);
+
+  /// 查询是否离开会议需要弹窗确认
+  Future<bool> isLeaveTheMeetingRequiresConfirmationEnabled();
 }

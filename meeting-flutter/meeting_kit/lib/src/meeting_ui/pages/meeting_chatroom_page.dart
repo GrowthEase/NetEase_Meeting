@@ -21,6 +21,7 @@ class MeetingChatRoomPage extends StatefulWidget {
 
 class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
     with
+        _AloggerMixin,
         MeetingStateScope,
         MeetingKitLocalizationsMixin,
         EventTrackMixin,
@@ -346,16 +347,17 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
                 if (_focusNode.hasFocus) {
                   _focusNode.unfocus();
                 }
-                showMeetingPopupPageRoute(
-                    context: context,
-                    routeSettings: RouteSettings(
-                        name: MeetingChatPermissionPage.routeName),
-                    builder: (context) {
-                      return MeetingChatPermissionPage(
-                        roomContext!,
-                        _arguments.waitingRoomManager!,
-                      );
-                    });
+                BottomSheetUtils.showMeetingBottomDialog(
+                  buildContext: context,
+                  isSubpage: true,
+                  contentBackgroundColor: Colors.transparent,
+                  routeSettings:
+                      RouteSettings(name: MeetingChatPermissionPage.routeName),
+                  child: MeetingChatPermissionPage(
+                    roomContext!,
+                    _arguments.waitingRoomManager!,
+                  ),
+                );
               },
               child: Container(
                 width: 48,
@@ -1162,8 +1164,9 @@ class MeetingChatRoomState extends LifecycleBaseState<MeetingChatRoomPage>
       /// 聊天室历史记录历史功能未开启
       if (result.code == 403) {
         msg = meetingUiLocalizations.chatHistoryNotEnabled;
+        showToast(msg);
       }
-      if (msg != null) showToast(msg);
+      commonLogger.e('fetchChatroomHistoryMessages: $msg');
       return [];
     }
   }

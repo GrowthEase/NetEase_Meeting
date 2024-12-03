@@ -8,7 +8,9 @@ typedef WhiteBoardPageStatusCallback = void Function(bool isEditStatus);
 
 class WhiteBoardWebPage extends StatefulWidget {
   final WhiteBoardPageStatusCallback? whiteBoardPageStatusCallback;
-  final ValueNotifier<bool>? valueNotifier;
+
+  /// 绘制模式，绘制模式下显示右下角编辑按钮
+  final ValueNotifier<bool> drawableModeNotifier;
   final NERoomContext roomContext;
   final Color? backgroundColor;
   final bool? isMinimized;
@@ -18,11 +20,12 @@ class WhiteBoardWebPage extends StatefulWidget {
   final Function()? applyWhiteboardConfig;
   final NERoomWhiteboardBaseController whiteBoardController;
   final bool wrapSafeArea;
+  final bool ignorePointerNotInDrawMode;
 
   WhiteBoardWebPage({
     Key? key,
     this.whiteBoardPageStatusCallback,
-    this.valueNotifier,
+    required this.drawableModeNotifier,
     required this.roomContext,
     this.backgroundColor,
     this.isMinimized,
@@ -30,6 +33,7 @@ class WhiteBoardWebPage extends StatefulWidget {
     required this.whiteBoardController,
     this.applyWhiteboardConfig,
     this.wrapSafeArea = true,
+    this.ignorePointerNotInDrawMode = false,
   }) : super(key: key);
 
   @override
@@ -49,12 +53,15 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
   @override
   void initState() {
     super.initState();
-    widget.valueNotifier?.addListener(() {
-      ///没有权限则无法编辑
+    widget.drawableModeNotifier.addListener(() {
       if (mounted) {
-        setState(() {
-          isEditing = widget.valueNotifier!.value;
-        });
+        /// 进入绘制模式时
+        if (widget.drawableModeNotifier.value) {
+          isEditing = true;
+        } else {
+          isEditing = false;
+        }
+        updateEditWhiteBoardStatus(widget.isDrawWhiteboardEnabled(), true);
       }
     });
     callback = NERoomEventCallback(
@@ -89,14 +96,17 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
     Widget body = Stack(
       ///扩展到stack大小
       children: <Widget>[
-        widget.whiteBoardController.createWhiteboardView(
-          gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>[
-            new Factory<OneSequenceGestureRecognizer>(
-              () => _whiteboardViewGestureRecognizer,
-            ),
-          ].toSet(),
-          backgroundColor: widget.backgroundColor,
-        ),
+        IgnorePointer(
+            ignoring: widget.ignorePointerNotInDrawMode &&
+                !widget.drawableModeNotifier.value,
+            child: widget.whiteBoardController.createWhiteboardView(
+              gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>[
+                new Factory<OneSequenceGestureRecognizer>(
+                  () => _whiteboardViewGestureRecognizer,
+                ),
+              ].toSet(),
+              backgroundColor: widget.backgroundColor,
+            )),
         Positioned(
           right: 10,
           bottom: 150,
@@ -104,7 +114,8 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
           child: Padding(
               padding: const EdgeInsets.all(10),
               child: Visibility(
-                visible: widget.isDrawWhiteboardEnabled.call(),
+                visible: widget.isDrawWhiteboardEnabled() &&
+                    widget.drawableModeNotifier.value,
                 child: Center(
                   child: ElevatedButton(
                     style: ButtonStyle(
@@ -121,7 +132,11 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
                             side: BorderSide(color: _UIColors.color_337eff),
                             borderRadius:
                                 BorderRadius.all(Radius.circular(25))))),
-                    onPressed: () => updateEditWhiteBoardStatus(!isEditing),
+                    onPressed: () {
+                      var newEditStatus = !isEditing;
+                      updateEditWhiteBoardStatus(newEditStatus);
+                      widget.whiteBoardPageStatusCallback?.call(newEditStatus);
+                    },
                     child: Text(
                       isEditing
                           ? NEMeetingUIKitLocalizations.of(context)!
@@ -153,9 +168,6 @@ class _WhiteBoardWebPageState extends BaseState<WhiteBoardWebPage>
     commonLogger.i('switch drawable=$drawable');
     isEditing = drawable;
     widget.whiteBoardController.showWhiteboardTools(drawable);
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      widget.whiteBoardPageStatusCallback?.call(drawable);
-    });
     if (update) {
       setState(() {});
     }

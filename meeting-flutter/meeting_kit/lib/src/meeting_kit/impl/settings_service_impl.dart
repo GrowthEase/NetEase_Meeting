@@ -25,11 +25,22 @@ class _NESettingsServiceImpl extends NESettingsService
 
   @override
   void enableShowMyMeetingElapseTime(bool show) =>
-      SettingsRepository().enableShowMyMeetingElapseTime(show);
+      SettingsRepository().setMeetingElapsedTimeDisplayType(show
+          ? NEMeetingElapsedTimeDisplayType.meetingElapsedTime
+          : NEMeetingElapsedTimeDisplayType.none);
 
   @override
   Future<bool> isShowMyMeetingElapseTimeEnabled() =>
-      SettingsRepository().isShowMyMeetingElapseTimeEnabled();
+      SettingsRepository().getMeetingElapsedTimeDisplayType().then((value) =>
+          value == NEMeetingElapsedTimeDisplayType.meetingElapsedTime);
+
+  @override
+  void setMeetingElapsedTimeDisplayType(NEMeetingElapsedTimeDisplayType type) =>
+      SettingsRepository().setMeetingElapsedTimeDisplayType(type);
+
+  @override
+  Future<NEMeetingElapsedTimeDisplayType> getMeetingElapsedTimeDisplayType() =>
+      SettingsRepository().getMeetingElapsedTimeDisplayType();
 
   @override
   void enableTurnOnMyAudioWhenJoinMeeting(bool enable) =>
@@ -244,4 +255,32 @@ class _NESettingsServiceImpl extends NESettingsService
   @override
   void enableShowNotYetJoinedMembers(bool enable) =>
       SettingsRepository().enableShowNotYetJoinedMembers(enable);
+
+  @override
+  bool isCallOutRoomSystemDeviceSupported() =>
+      SettingsRepository().isCallOutRoomSystemDeviceSupported();
+
+  @override
+  Future<void> enableHideVideoOffAttendees(bool enable) =>
+      SettingsRepository().enableHideVideoOffAttendees(enable);
+
+  @override
+  Future<bool> isHideVideoOffAttendeesEnabled() =>
+      SettingsRepository().isHideVideoOffAttendeesEnabled();
+
+  @override
+  Future<void> enableHideMyVideo(bool enable) =>
+      SettingsRepository().enableHideMyVideo(enable);
+
+  @override
+  Future<bool> isHideMyVideoEnabled() =>
+      SettingsRepository().isHideMyVideoEnabled();
+
+  @override
+  void enableLeaveTheMeetingRequiresConfirmation(bool enable) =>
+      SettingsRepository().enableLeaveTheMeetingRequiresConfirmation(enable);
+
+  @override
+  Future<bool> isLeaveTheMeetingRequiresConfirmationEnabled() =>
+      SettingsRepository().isLeaveTheMeetingRequiresConfirmationEnabled();
 }

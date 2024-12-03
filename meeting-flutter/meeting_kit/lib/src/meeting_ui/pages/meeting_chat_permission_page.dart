@@ -44,6 +44,7 @@ class MeetingChatPermissionState
   void _onRoomPropertiesChanged(Map<String, String> properties) {
     if (properties.containsKey(NEChatPermissionProperty.key)) {
       chatPermission.value = _roomContext.chatPermission;
+      setState(() {});
     }
     if (properties.containsKey(NEWaitingRoomChatPermissionProperty.key)) {
       waitingRoomChatPermission.value =
@@ -68,66 +69,69 @@ class MeetingChatPermissionState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _UIColors.globalBg,
-      appBar: TitleBar(
-        title: TitleBarTitle(meetingUiLocalizations.chat),
-      ),
-      body: _buildBody(),
-    );
+    return _buildBody();
   }
 
   Widget _buildBody() {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildSubTitle(meetingUiLocalizations.chatPermissionInMeeting),
-          _buildMeetingChatPermission(
-              meetingUiLocalizations.chatFree, NEChatPermission.freeChat),
-          _buildSplit(),
-          _buildMeetingChatPermission(meetingUiLocalizations.chatPublicOnly,
-              NEChatPermission.publicChatOnly),
-          _buildSplit(),
-          _buildMeetingChatPermission(
-              meetingUiLocalizations.chatPrivateHostOnly,
-              NEChatPermission.privateChatHostOnly),
-          _buildSplit(),
-          _buildMeetingChatPermission(
-              meetingUiLocalizations.chatMuted, NEChatPermission.noChat),
-          if (waitingRoomManager.isFeatureSupported) ...[
-            _buildSubTitle(meetingUiLocalizations.chatPermissionInWaitingRoom),
-            _buildWaitingRoomChatPermission(),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSplit() {
-    return Container(
-      color: _UIColors.globalBg,
-      padding: EdgeInsets.only(left: 20),
-      child: Divider(height: 0.5),
-    );
-  }
-
-  Widget _buildSubTitle(String subTitle) {
-    return Container(
-      child: Text(subTitle,
-          style: TextStyle(fontSize: 14, color: _UIColors.color_999999)),
-      padding: EdgeInsets.only(left: 20, top: 16, bottom: 8),
+    return Column(
+      children: [
+        MeetingCard(
+            margin: EdgeInsets.zero,
+            title: meetingUiLocalizations.chatPermissionInMeeting,
+            children: [
+              _buildMeetingChatPermission(
+                  meetingUiLocalizations.chatFree, NEChatPermission.freeChat),
+              _buildMeetingChatPermission(meetingUiLocalizations.chatPublicOnly,
+                  NEChatPermission.publicChatOnly),
+              _buildMeetingChatPermission(
+                  meetingUiLocalizations.chatPrivateHostOnly,
+                  NEChatPermission.privateChatHostOnly),
+              _buildMeetingChatPermission(
+                  meetingUiLocalizations.chatMuted, NEChatPermission.noChat),
+            ]),
+        if (waitingRoomManager.isFeatureSupported)
+          MeetingCard(
+              margin: EdgeInsets.only(top: 16),
+              title: meetingUiLocalizations.chatPermissionInWaitingRoom,
+              children: [
+                _buildWaitingRoomChatPermission(),
+              ]),
+      ],
     );
   }
 
   Widget _buildMeetingChatPermission(String title, NEChatPermission itemValue) {
-    return _buildItemCheck<NEChatPermission?>(
+    return MeetingCheckItem(
       title: title,
-      valueNotifier: chatPermission,
-      itemValue: itemValue,
-      onClick: () {
+      isSelected: chatPermission.value == itemValue,
+      onTap: () {
         doIfNetworkAvailable(() async {
           _roomContext.updateChatPermission(itemValue).then((result) {
+            if (!mounted) return;
+            if (!result.isSuccess()) {
+              showToast(
+                result.msg ?? meetingUiLocalizations.globalOperationFail,
+              );
+            }
+            setState(() {});
+          });
+        });
+      },
+    );
+  }
+
+  Widget _buildWaitingRoomChatPermission() {
+    return MeetingSwitchItem(
+      switchKey: MeetingUIValueKeys.waitingChatPermissionSwitch,
+      title: meetingUiLocalizations.chatWaitingRoomPrivateHostOnly,
+      valueNotifier: waitingRoomChatPermission,
+      onChanged: (on) {
+        doIfNetworkAvailable(() async {
+          _roomContext
+              .updateWaitingRoomChatPermission(on
+                  ? NEWaitingRoomChatPermission.privateChatHostOnly
+                  : NEWaitingRoomChatPermission.noChat)
+              .then((result) {
             if (mounted && !result.isSuccess()) {
               showToast(
                 result.msg ?? meetingUiLocalizations.globalOperationFail,
@@ -136,71 +140,6 @@ class MeetingChatPermissionState
           });
         });
       },
-    );
-  }
-
-  Widget _buildWaitingRoomChatPermission() {
-    return Container(
-      color: _UIColors.white,
-      child: MeetingSwitchItem(
-        switchKey: MeetingUIValueKeys.waitingChatPermissionSwitch,
-        title: meetingUiLocalizations.chatWaitingRoomPrivateHostOnly,
-        valueNotifier: waitingRoomChatPermission,
-        onChanged: (on) {
-          doIfNetworkAvailable(() async {
-            _roomContext
-                .updateWaitingRoomChatPermission(on
-                    ? NEWaitingRoomChatPermission.privateChatHostOnly
-                    : NEWaitingRoomChatPermission.noChat)
-                .then((result) {
-              if (mounted && !result.isSuccess()) {
-                showToast(
-                  result.msg ?? meetingUiLocalizations.globalOperationFail,
-                );
-              }
-            });
-          });
-        },
-      ),
-    );
-  }
-
-  Widget _buildItemCheck<T>({
-    required String title,
-    required T itemValue,
-    required ValueNotifier<T> valueNotifier,
-    required Function() onClick,
-    Key? key,
-  }) {
-    return GestureDetector(
-      key: key,
-      onTap: onClick,
-      child: Container(
-        height: 56,
-        color: _UIColors.white,
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(color: _UIColors.black_222222, fontSize: 16),
-              ),
-            ),
-            ValueListenableBuilder<T>(
-                valueListenable: valueNotifier,
-                builder: (context, value, child) {
-                  return Visibility(
-                      child: Icon(NEMeetingIconFont.icon_check_line,
-                          size: 16, color: _UIColors.color_337eff),
-                      visible: value == itemValue);
-                }),
-          ],
-        ),
-      ),
     );
   }
 }

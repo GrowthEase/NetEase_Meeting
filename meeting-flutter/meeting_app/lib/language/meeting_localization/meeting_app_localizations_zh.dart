@@ -30,7 +30,7 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get globalCancel => '取消';
 
   @override
-  String get globalCopy => '复制';
+  String get globalCopy => 'settingChatMessageNotificationNoReminder';
 
   @override
   String get globalCopySuccess => '复制成功';
@@ -189,6 +189,9 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get globalPhotosPermission => '无法使用相册';
 
   @override
+  String get globalGoBack => '返回';
+
+  @override
   String get authImmediatelyRegister => '立即注册';
 
   @override
@@ -274,6 +277,11 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
 
   @override
   String get authGetCheckCode => '获取验证码';
+
+  @override
+  String authGetCheckCodeAgain(Object seconds) {
+    return '重新获取 ${seconds}S';
+  }
 
   @override
   String get authNewRegister => '新用户注册';
@@ -449,6 +457,11 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get meetingHold => '发起会议';
 
   @override
+  String meetingHoldSubject(Object userName) {
+    return '$userName的即刻会议';
+  }
+
+  @override
   String get meetingNetworkAbnormalityCheckAndRejoin => '网络异常，请检查网络连接后重新入会';
 
   @override
@@ -471,6 +484,9 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
 
   @override
   String get meetingNum => '会议号';
+
+  @override
+  String get meetingNickname => '入会昵称';
 
   @override
   String get meetingStatusInit => '待开始';
@@ -525,6 +541,9 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
 
   @override
   String get meetingEnterId => '请输入会议号';
+
+  @override
+  String get meetingEnterNickname => '请输入入会昵称';
 
   @override
   String meetingSubject(Object userName) {
@@ -889,11 +908,36 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
   String get copyMeetingAll => '复制全部';
 
   @override
-  String get meetingCrossAppNoPermission =>
+  String get meetingGuestJoinNotSupportedTitle => '会议暂未对外部人员开放';
+
+  @override
+  String get meetingGuestJoinNotSupported =>
       '很抱歉，您尝试加入的会议暂未对外部人员开放。如有需要，请联系会议组织者开启访客入会权限。';
 
   @override
+  String get meetingCrossAppJoinNotSupportedTitle => '会议不支持加入';
+
+  @override
+  String get meetingCrossAppJoinNotSupported =>
+      '很抱歉，您尝试加入的会议并非由您的团队/组织创建，暂不支持加入。您可退出登录，通过“加入会议”入口尝试加入。';
+
+  @override
   String get meetingCrossAppJoinTip => '该会议由其他团队/组织创建，您将以访客身份加入，是否加入会议？';
+
+  @override
+  String get meetingGuestJoinVerify => '访客身份验证';
+
+  @override
+  String get meetingGuestJoinVerifyTip => '为保障会议安全，请输入手机号进行身份验证';
+
+  @override
+  String get meetingLiveToOtherPlatform => '直播至第三方平台';
+
+  @override
+  String get meetingLiveReloadUpload => '点击重新上传';
+
+  @override
+  String get meetingCastScreen => '会议室投屏';
 
   @override
   String get historyMeeting => '历史会议';
@@ -921,9 +965,6 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
 
   @override
   String get historyMeetingCloudRecordingFileBeingGenerated => '云录制文件生成中…';
-
-  @override
-  String get nan => '很抱歉，您尝试加入的会议暂未对外部人员开放。如有需要，请联系会议组织者开启访客入会权限。';
 
   @override
   String get settings => '设置';
@@ -1141,6 +1182,12 @@ class MeetingAppLocalizationsZh extends MeetingAppLocalizations {
 
   @override
   String get settingLanguageTip => '简体中文';
+
+  @override
+  String get settingVolumeOutput => '输出音量';
+
+  @override
+  String get settingVolumeInput => '输入音量';
 
   @override
   String get evaluationTitle => '评分';

@@ -506,7 +506,7 @@ class MeetingArrowItem extends StatelessWidget {
               fontWeight: FontWeight.w500),
       strutStyle: StrutStyle(
         forceStrutHeight: true,
-        height: 1,
+        height: 1.3,
       ),
     );
   }
@@ -515,11 +515,6 @@ class MeetingArrowItem extends StatelessWidget {
   Widget getContent({required String text}) {
     return Text(
       text,
-      // 解决中文高度显示不居中问题
-      strutStyle: StrutStyle(
-        forceStrutHeight: true,
-        height: 1,
-      ),
       style: contentTextStyle ??
           TextStyle(
             fontSize: 16,
@@ -529,6 +524,10 @@ class MeetingArrowItem extends StatelessWidget {
           ),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
+      strutStyle: StrutStyle(
+        forceStrutHeight: true,
+        height: 1.3,
+      ),
     );
   }
 

@@ -145,6 +145,9 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get globalPause => '暂停';
 
   @override
+  String get globalNoContent => '暂无内容';
+
+  @override
   String get meetingBeauty => '美颜';
 
   @override
@@ -226,13 +229,25 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get meetingHandsUpApply => '举手申请';
 
   @override
+  String get meetingRaiseHand => '举手';
+
+  @override
   String get meetingCancelHandsUp => '取消举手';
 
   @override
-  String get meetingCancelHandsUpConfirm => '是否确定取消举手？';
+  String get meetingCancelHandsUpConfirm => '确定将手放下吗？';
 
   @override
   String get meetingHandsUpDown => '手放下';
+
+  @override
+  String get meetingHandsUpDownAll => '全部手放下';
+
+  @override
+  String get meetingHandsUpDownAllSuccess => '已将全部手放下';
+
+  @override
+  String get meetingHandsUpDownAllFail => '全部手放下失败';
 
   @override
   String get meetingInHandsUp => '举手中';
@@ -250,13 +265,18 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get meetingHostRejectAudioHandsUp => '主持人已将您的手放下';
 
   @override
+  String meetingHandsUpNumber(Object num) {
+    return '$num人正在举手';
+  }
+
+  @override
   String get meetingSip => 'SIP';
 
   @override
   String get meetingInviteUrl => '入会链接';
 
   @override
-  String get meetingInvitePageTitle => '添加与会者';
+  String get meetingInvitePageTitle => '添加参会者';
 
   @override
   String get meetingSipNumber => '内线话机/终端入会';
@@ -458,6 +478,12 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get meetingLeaveConfirm => '确定要离开会议吗?';
 
   @override
+  String get meetingAppointNewHost => '指定一名新主持人';
+
+  @override
+  String get meetingAppointAndLeave => '指定并离开';
+
+  @override
   String get meetingWatermarkEnabled => '水印已开启';
 
   @override
@@ -518,6 +544,15 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get meetingAllowMembersTo => '允许参会人员';
+
+  @override
+  String get meetingEmojiResponse => '回应';
+
+  @override
+  String get meetingAllowEmojiResponse => '允许成员表情回应';
+
+  @override
+  String get meetingRejectEmojiResponse => '禁止成员表情回应';
 
   @override
   String get meetingChat => '会中聊天';
@@ -621,6 +656,9 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get meetingLocked => '会议已锁定';
+
+  @override
+  String get meetingLockedTip => '很抱歉，您尝试加入的会议已锁定。如有需要，请联系会议组织者解锁会议。';
 
   @override
   String get meetingNotExist => '会议不存在';
@@ -795,6 +833,16 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get virtualCustom => '自定义';
+
+  @override
+  String get virtualBackgroundPerfInadequate => '设备性能不足';
+
+  @override
+  String get virtualBackgroundPerfInadequateTip =>
+      '您的设备性能不足，开启虚拟背景功能可能会导致视频质量下降或出现卡顿。您仍然希望尝试开启吗';
+
+  @override
+  String get virtualBackgroundForce => '强制开启';
 
   @override
   String get live => '直播';
@@ -1186,11 +1234,12 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get cloudRecordingEnabledTitle => '是否开启云录制';
 
   @override
-  String get cloudRecordingEnabledMessage => '开启后，所有参会成员将收到录制开始提醒';
+  String get cloudRecordingEnabledMessage =>
+      '开启后，会议过程中的音视频及共享屏幕内容将被录制到云端，同时告知所有参会成员';
 
   @override
   String get cloudRecordingEnabledMessageWithoutNotice =>
-      '开启后，将录制会议过程中的音视频与共享屏幕内容到云端';
+      '开启后，会议过程中的音视频及共享屏幕内容将被录制到云端';
 
   @override
   String get cloudRecordingTitle => '该会议正在被录制中';
@@ -1231,6 +1280,24 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get cloudRecordingStarting => '正在开启录制...';
+
+  @override
+  String get cloudRecordingUnableToStart => '无法启动云录制';
+
+  @override
+  String get cloudRecordingUnableToStartTips => '当前会议中无人开启麦克风或视频,为了启动录制,请解除静音';
+
+  @override
+  String get cloudRecordingEnableAISummary => '同时开启智能录制';
+
+  @override
+  String get cloudRecordingEnableAISummaryTip => '开启后本场会议将生成智能AI纪要（含总结、待办）';
+
+  @override
+  String get cloudRecordingAISummaryStarted => '本场会议已开启智能录制，将生成智能AI纪要（含总结、待办）';
+
+  @override
+  String get cloudRecordingEnableAISummaryFail => '智能录制开启失败，请稍后关闭录制后重试';
 
   @override
   String get chat => '聊天';
@@ -1487,7 +1554,7 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get networkConnectionPoor => '网络连接较差';
 
   @override
-  String get nan => '网络连接未知';
+  String get networkConnectionUnknown => '网络连接未知';
 
   @override
   String get networkLocalLatency => '延迟：';
@@ -1584,6 +1651,9 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get sipCallFailed => '呼叫失败';
 
   @override
+  String get sipCallBusy => '对方忙';
+
+  @override
   String get sipCallAgain => '重新拨打';
 
   @override
@@ -1661,6 +1731,9 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get sipCallIsInBlacklist => '该成员已被标记不允许再次加入，如需邀请，请关闭会议黑名单';
 
   @override
+  String get sipCallDeviceIsInBlacklist => '该设备已被标记不允许再次加入，如需邀请，请关闭会议黑名单';
+
+  @override
   String get sipCallByPhone => '电话呼叫';
 
   @override
@@ -1699,6 +1772,9 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get sipCallOutRoomInputTip => '请输入IP地址 或 SIP URI 或 已注册设备号码';
 
   @override
+  String get sipCallOutRoomH323InputTip => '请输入 IP 地址 或 E.164 号码';
+
+  @override
   String get sipDisplayName => '入会名称';
 
   @override
@@ -1706,6 +1782,27 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get sipDeviceIsInMeeting => '该设备已在会议中';
+
+  @override
+  String get sip => 'SIP';
+
+  @override
+  String get h323 => 'H.323';
+
+  @override
+  String get sipProtocol => '呼叫信令协议';
+
+  @override
+  String get roomSipCallIsInBlacklist => '该设备已被标记不允许再次加入，如需邀请，请关闭会议黑名单';
+
+  @override
+  String get roomSipCallIsInMeeting => '该设备已在会议中';
+
+  @override
+  String get roomSipCallrNetworkError => '网络异常无法呼叫，请检查网络';
+
+  @override
+  String get roomSipCallrNickNameLimit => '入会名称太长，请重新设置';
 
   @override
   String get monitoring => '质量监控';
@@ -2071,6 +2168,21 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get settingShowMeetDuration => '显示会议持续时间';
 
   @override
+  String get settingShowParticipationTime => '显示参会时长';
+
+  @override
+  String get settingShowElapsedTime => '显示时间';
+
+  @override
+  String get settingShowNone => '不显示';
+
+  @override
+  String get settingShowMeetingElapsedTime => '会议持续时间';
+
+  @override
+  String get settingShowParticipationElapsedTime => '参会时长';
+
+  @override
   String get settingSpeakerSpotlight => '语音激励';
 
   @override
@@ -2095,7 +2207,22 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
   String get settingChatMessageNotificationNoReminder => '不提醒';
 
   @override
+  String get settingHideVideoOffAttendees => '隐藏非视频参会者';
+
+  @override
+  String get settingHideMyVideo => '隐藏本人视图';
+
+  @override
+  String get settingLeaveTheMeetingRequiresConfirmation => '离开会议需要弹窗确认';
+
+  @override
   String get usingComputerAudioInMeeting => '入会时使用电脑麦克风';
+
+  @override
+  String get settingEnterFullscreen => '开始或加入会议时自动进入全屏模式';
+
+  @override
+  String get enterFullscreenTips => '按ESC或点击右上角按钮退出全屏模式';
 
   @override
   String get joinMeetingSettings => '入会设置';
@@ -2105,6 +2232,46 @@ class NEMeetingUIKitLocalizationsZh extends NEMeetingUIKitLocalizations {
 
   @override
   String get ringWhenMemberJoinOrLeave => '成员入会或离开时播放提示音';
+
+  @override
+  String get windowSizeWhenSharingTheScreen => '共享屏幕时的窗口大小';
+
+  @override
+  String get sideBySideMode => '并排模式';
+
+  @override
+  String get sideBySideModeTips => '查看其他用户共享屏幕时自动将参会者视频放置在共享屏幕右侧';
+
+  @override
+  String get whenIShareMyScreenInMeeting => '当我在会议中共享屏幕时';
+
+  @override
+  String get showAllSharingOptions => '显示所有共享选项';
+
+  @override
+  String get automaticDesktopSharing => '自动桌面共享';
+
+  @override
+  String get automaticDesktopSharingTips => '当你有多个显示器，系统将自动共享你的主桌面';
+
+  @override
+  String get onlyShowTheEntireScreen => '仅显示整个屏幕';
+
+  @override
+  String get sharedLimitFrameRate => '将你的屏幕共享限制为';
+
+  @override
+  String get sharedLimitFrameRateTips =>
+      '开启后，屏幕共享帧率将不超过设置值。共享视频时推荐使用高帧率可提升观看视频流畅性，其他场景推荐使用低帧率降低CPU消耗';
+
+  @override
+  String get sharedLimitFrameRateUnit => '帧/秒';
+
+  @override
+  String get preferMotionModel => '视频流畅度优先';
+
+  @override
+  String get preferMotionModelTips => '减少性能和带宽占用，优先保障共享流畅度';
 
   @override
   String get transcriptionEnableCaption => '开启字幕';

@@ -27,6 +27,8 @@ class MeetingTextField extends StatefulWidget {
   final ValueChanged<String>? onChanged;
   final VoidCallback? onEditingComplete;
   final Widget? prefixIcon;
+  final Widget? suffix;
+  final bool showClearIcon;
 
   const MeetingTextField({
     super.key,
@@ -47,6 +49,8 @@ class MeetingTextField extends StatefulWidget {
     this.onChanged,
     this.onEditingComplete,
     this.prefixIcon,
+    this.suffix,
+    this.showClearIcon = true,
   });
 
   @override
@@ -99,11 +103,13 @@ class _MeetingTextFieldState extends State<MeetingTextField> {
                 ),
             ],
             if (widget.focusNode?.hasFocus == true &&
+                widget.showClearIcon &&
                 widget.controller.text.isNotEmpty)
               ClearIconButton(
                 size: 20.r,
                 onPressed: widget.controller.clear,
               ),
+            if (widget.suffix != null) widget.suffix!,
           ],
         );
       },

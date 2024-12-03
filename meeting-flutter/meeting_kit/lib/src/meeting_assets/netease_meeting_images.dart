@@ -70,11 +70,14 @@ class NEMeetingImages {
   static const String iconCircleCheckedImmutable =
       'assets/images/icon_circle_checked_immutable.png';
   static const String iconNoContacts = 'assets/images/no_contacts.png';
+  static const String iconSearchContacts = 'assets/images/search_contacts.png';
   static const String callLoadingGif = 'assets/images/call_loading.gif';
   static const String iconBulletScreenEnabled =
       'assets/images/icon_bullet_screen_enabled.png';
   static const String iconBulletScreenDisabled =
       'assets/images/icon_bullet_screen_disabled.png';
+  static const String iconHandsUp = 'assets/images/icon_hands_up.png';
+  static const String iconNoContent = 'assets/images/icon_no_content.png';
 
   static Image assetImage(String image,
           {double? width, double? height, BoxFit? fit}) =>

@@ -1026,6 +1026,7 @@ class SelectCaptionTranslationLanguagePopup extends StatelessWidget {
     return BottomSheetUtils.showMeetingBottomDialog<
         NEMeetingASRTranslationLanguage>(
       buildContext: context,
+      isSubpage: true,
       constraints: BoxConstraints(minWidth: width, maxWidth: width),
       routeSettings: RouteSettings(name: 'SelectCaptionTranslationLanguage'),
       actionText: NEMeetingUIKitLocalizations.of(context)!.globalCancel,

@@ -24,14 +24,18 @@ class SliderWidget extends StatefulWidget {
 }
 
 class _SliderDemo extends State<SliderWidget> {
-  bool isOpenBeauty = false;
   late int _level;
 
   @override
   void initState() {
     super.initState();
     _level = widget.level;
-    isOpenBeauty = _level == 0 ? false : true;
+  }
+
+  @override
+  void didUpdateWidget(covariant SliderWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _level = widget.level;
   }
 
   @override
@@ -45,68 +49,6 @@ class _SliderDemo extends State<SliderWidget> {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            Container(
-              height: 44,
-              child: Center(
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                    SizedBox(
-                      width: 40,
-                      height: 44,
-                    ),
-                    // Container(
-                    //   margin: EdgeInsets.only(left: 15),
-                    //   height: 30,
-                    //   width: 40,
-                    //   child: CupertinoSwitch(
-                    //     key: MeetingCoreValueKey.meetingMembersLockSwitchBtn,
-                    //     value: isOpenBeauty,
-                    //     onChanged: (bool value) {
-                    //       setState(() {
-                    //         _openBeauty(value);
-                    //       });
-                    //     },
-                    //     activeColor: UIColors.blue_337eff,
-                    //   ),
-                    // ),
-                    Container(
-                      child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            NEMeetingUIKit.instance
-                                .getUIKitLocalizations()
-                                .meetingBeauty,
-                            style: TextStyle(
-                                color: _UIColors.white,
-                                fontSize: 16,
-                                decoration: TextDecoration.none,
-                                fontWeight: FontWeight.bold),
-                          )),
-                    ),
-                    widget.isShowClose ?? true
-                        ? Align(
-                            alignment: Alignment.centerRight,
-                            child: RawMaterialButton(
-                              constraints: const BoxConstraints(
-                                  minWidth: 40.0, minHeight: 44),
-                              child: Icon(
-                                NEMeetingIconFont.icon_yx_tv_duankaix,
-                                color: _UIColors.color_666666,
-                                size: 15,
-                                key: MeetingUIValueKeys.beautyPageClose,
-                              ),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          )
-                        : SizedBox(
-                            width: 40,
-                            height: 44,
-                          ),
-                  ])),
-            ),
             Container(
                 height: 108,
                 padding: EdgeInsets.only(left: 16, right: 16),
@@ -177,7 +119,6 @@ class _SliderDemo extends State<SliderWidget> {
                       onChanged: (double newValue) {
                         setState(() {
                           _level = newValue.round();
-                          isOpenBeauty = _level != 0;
                         });
                         widget.onChange(_level);
                       },

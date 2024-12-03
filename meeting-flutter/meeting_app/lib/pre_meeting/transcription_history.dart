@@ -204,7 +204,20 @@ class _TranscriptionMessageHistoryPageState
   @override
   Widget buildBody() {
     if (messageList.isEmpty) {
-      return SizedBox.shrink();
+      return Container(
+        padding: EdgeInsets.only(top: 100),
+        alignment: Alignment.topCenter,
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          NEMeetingImages.assetImage(
+            NEMeetingImages.iconNoContent,
+            width: 120,
+            height: 120,
+          ),
+          SizedBox(height: 8),
+          Text(NEMeetingUIKit.instance.getUIKitLocalizations().globalNoContent,
+              style: TextStyle(fontSize: 14, color: AppColors.color_8D90A0))
+        ]),
+      );
     }
     return ListView.separated(
       controller: scrollController,

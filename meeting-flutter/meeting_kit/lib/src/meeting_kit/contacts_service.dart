@@ -4,7 +4,9 @@
 
 part of meeting_kit;
 
-/// /// 通讯录服务提供了账号通讯录相关的能力。通过这个服务可以获取到通讯录成员及其详细信息。可通过 [getContactsService] 获取对应的服务实例。
+/// 通讯录服务提供了账号通讯录相关的能力。
+/// 通过这个服务可以获取到通讯录成员及其详细信息。
+/// 可通过 [getContactsService] 获取对应的服务实例。
 abstract class NEContactsService {
   /// 根据电话号码进行企业通讯录模糊搜索
   ///

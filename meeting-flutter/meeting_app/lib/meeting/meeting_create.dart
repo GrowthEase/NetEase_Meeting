@@ -310,6 +310,8 @@ class _MeetCreateRouteState extends AppBaseState<MeetCreateRoute> {
     final result = await NEMeetingKit.instance.getMeetingService().startMeeting(
       context,
       NEStartMeetingParams(
+        subject:
+            getAppLocalizations().meetingHoldSubject(MeetingUtil.getNickName()),
         meetingNum: meetingNum,
         password:
             meetingPwdSwitch.value ? _meetingPasswordController.text : null,

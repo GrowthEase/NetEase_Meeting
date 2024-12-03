@@ -22,10 +22,21 @@ class MeetingNotifyCenterActionUtil {
   /// 打开插件
   static void openPlugin(BuildContext context, NERoomContext roomContext,
       NESingleStateMenuItem<NEMeetingWebAppItem> item,
-      {ClearAllMessage? clearAllMessage}) {
+      {ClearAllMessage? clearAllMessage, String? actionParams}) {
     assert(item.singleStateItem.customObject != null);
     final customObject = item.singleStateItem.customObject;
     if (customObject == null) return;
+    var url = customObject.homeUrl;
+
+    /// 拼接actionParams
+    if (actionParams != null) {
+      actionParams = actionParams.replaceAll('${action_plugin_pre}', '');
+      if (Uri.parse(url).queryParameters.isEmpty) {
+        url = '${url}?${actionParams}';
+      } else {
+        url = '${url}&${actionParams}';
+      }
+    }
     showMeetingPopupPageRoute(
         context: context,
         routeSettings: RouteSettings(
@@ -34,7 +45,7 @@ class MeetingNotifyCenterActionUtil {
           return MeetingWatermark(
               child: MeetingWebAppPage(
             roomArchiveId: roomContext.meetingInfo.roomArchiveId!,
-            homeUrl: customObject.homeUrl,
+            homeUrl: url,
             title: customObject.name,
             sessionId: customObject.sessionId,
             roomContext: roomContext,

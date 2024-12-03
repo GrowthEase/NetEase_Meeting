@@ -5,8 +5,8 @@
 part of meeting_ui;
 
 class LoadingUtil {
-  static void showLoading() {
-    BotToast.showLoading();
+  static void showLoading({bool allowClick = false}) {
+    BotToast.showLoading(allowClick: allowClick);
   }
 
   static void cancelLoading() {

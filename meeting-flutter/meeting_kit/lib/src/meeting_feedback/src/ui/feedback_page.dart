@@ -27,7 +27,6 @@ class _FeedbackPageState extends State<FeedbackPage> with _AloggerMixin {
               child: FeedbackContent(onFeedback: _onFeedbackWrap),
             ),
           ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom),
         ],
       ),
     );
@@ -200,56 +199,63 @@ class _FeedbackContentState extends State<FeedbackContent> {
       NEMeetingUIKit.instance.getUIKitLocalizations();
 
   Widget buildContent() {
-    return Container(
-      color: _UIColors.globalBg,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            MeetingCard(children: [
-              buildTitle(localizations.feedbackTitleAudio),
-              ...audioQuestions.map((item) {
-                return buildItem(item);
-              }).toList()
-            ]),
-            MeetingCard(children: [
-              buildTitle(localizations.feedbackTitleVideo),
-              ...videoQuestions.map((item) {
-                return buildItem(item);
-              }).toList()
-            ]),
-            MeetingCard(children: [
-              buildTitle(localizations.feedbackTitleOthers),
-              ...otherQuestions.map((item) {
-                return buildItem(item);
-              }).toList()
-            ]),
-            MeetingCard(children: [
-              buildTitle(localizations.feedbackTitleDescription),
-              buildInputItem(),
-            ]),
-            MeetingCard(children: [
-              buildTitle(localizations.feedbackTitleExtras),
-              MeetingArrowItem(
-                title: localizations.feedbackTitleDate,
-                content: feedbackDate?.formatToTimeString('yyyy-MM-dd HH:mm') ??
-                    localizations.feedbackContentEmpty,
-                onTap: selectDate,
-                titleTextStyle: TextStyle(
-                  color: _UIColors.color53576A,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w400,
-                ),
+    return Column(
+      children: [
+        Expanded(
+          child: Container(
+            color: _UIColors.globalBg,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  MeetingCard(children: [
+                    buildTitle(localizations.feedbackTitleAudio),
+                    ...audioQuestions.map((item) {
+                      return buildItem(item);
+                    }).toList()
+                  ]),
+                  MeetingCard(children: [
+                    buildTitle(localizations.feedbackTitleVideo),
+                    ...videoQuestions.map((item) {
+                      return buildItem(item);
+                    }).toList()
+                  ]),
+                  MeetingCard(children: [
+                    buildTitle(localizations.feedbackTitleOthers),
+                    ...otherQuestions.map((item) {
+                      return buildItem(item);
+                    }).toList()
+                  ]),
+                  MeetingCard(children: [
+                    buildTitle(localizations.feedbackTitleDescription),
+                    buildInputItem(),
+                  ]),
+                  MeetingCard(children: [
+                    buildTitle(localizations.feedbackTitleExtras),
+                    MeetingArrowItem(
+                      title: localizations.feedbackTitleDate,
+                      content: feedbackDate
+                              ?.formatToTimeString('yyyy-MM-dd HH:mm') ??
+                          localizations.feedbackContentEmpty,
+                      onTap: selectDate,
+                      titleTextStyle: TextStyle(
+                        color: _UIColors.color53576A,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    buildImagePick(),
+                  ]),
+                  SizedBox(height: 16),
+                ],
               ),
-              buildImagePick(),
-            ]),
-            SizedBox(height: 40),
-            buildSubmit(),
-            SizedBox(height: 16),
-          ],
+            ),
+          ),
         ),
-      ),
+        Container(height: 0.5, color: _UIColors.colorE6E7EB),
+        buildSubmit(),
+      ],
     );
   }
 
@@ -583,7 +589,12 @@ class _FeedbackContentState extends State<FeedbackContent> {
 
   Widget buildSubmit() {
     return Container(
-        margin: EdgeInsets.symmetric(horizontal: 16),
+        padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 10,
+            bottom: 10 + MediaQuery.of(context).padding.bottom),
+        color: _UIColors.white,
         child: ElevatedButton(
           style: ButtonStyle(
               backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {

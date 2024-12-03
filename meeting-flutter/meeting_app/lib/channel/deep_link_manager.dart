@@ -171,7 +171,6 @@ class DeepLinkManager {
 
   Future<bool> _checkMeeting(String? meetingKey,
       {required bool needConfirm, required int type}) async {
-    final stopwatch = Stopwatch()..start();
     Alog.i(
         tag: _TAG,
         content:
@@ -233,8 +232,13 @@ class DeepLinkManager {
         return true;
       }());
       if (!needConfirm) {
-        ToastUtils.showToast(
-            _context!, getAppLocalizations().authPleaseLoginFirst);
+        if (GlobalState.deepLinkMeetingNum == meetingKey) {
+          return true;
+        }
+        GlobalState.deepLinkMeetingNum = meetingKey;
+        NavUtils.pushNamedAndRemoveUntil(_context!, RouterName.meetJoin,
+            utilRouteName: RouterName.entrance);
+        return true;
       }
       _pendingCheckRequest = request;
       return true;
@@ -295,8 +299,6 @@ class DeepLinkManager {
           .isTurnOnMyVideoWhenJoinMeetingEnabled();
       MeetingSetting meetingSetting =
           MeetingSetting(isAudioOn: isAudioOn, isVideoOn: isVideoOn);
-      stopwatch.stop();
-      print('++++check meeting elapsed: ${stopwatch.elapsedMilliseconds}');
       DialogResult? dialogResult = await _showJoinMeetingConfirmDialog(
           _context!, meetingSetting, meetingItem);
       if (dialogResult?.isJoinMeeting == true) {

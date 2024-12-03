@@ -76,6 +76,7 @@ part 'src/meeting_core/remote/http/get_web_app_list_api.dart';
 part 'src/meeting_core/remote/http/get_auth_code_api.dart';
 part 'src/meeting_core/remote/http/js_api_permission_api.dart';
 part 'src/meeting_core/remote/http/search_contacts_api.dart';
+part 'src/meeting_core/remote/http/ai_api.dart';
 part 'src/meeting_core/remote/http_api.dart';
 part 'src/meeting_core/repository/auth_repository.dart';
 part 'src/meeting_core/repository/in_meeting_repository.dart';
@@ -131,6 +132,8 @@ part 'src/meeting_core/remote/http/get_sso_account_info_api.dart';
 part 'src/meeting_core/remote/http/login_by_sms_api.dart';
 part 'src/meeting_core/remote/http/reset_password_api.dart';
 part 'src/meeting_core/remote/http/feedback_api.dart';
+part 'src/meeting_core/remote/http/guest_join.dart';
+part 'src/meeting_core/remote/http/hands_up_down_all_api.dart';
 part 'src/meeting_core/model/meeting_login_info.dart';
 part 'src/meeting_core/model/meeting_record.dart';
 part 'src/meeting_core/repository/contacts_repository.dart';
@@ -149,6 +152,7 @@ part 'src/meeting_core/remote/http/transcription_api.dart';
 part 'src/meeting_core/remote/http/check_invite_state_api.dart';
 part 'src/meeting_core/remote/http/stop_member_activities_api.dart';
 part 'src/meeting_core/remote/http/meeting_security_ctrl_api.dart';
+part 'src/meeting_core/repository/guest_repository.dart';
 
 /// https://office.netease.com/doc/?identity=3963dc2ced7a48259860289c5d8970af
 class MeetingErrorCode {

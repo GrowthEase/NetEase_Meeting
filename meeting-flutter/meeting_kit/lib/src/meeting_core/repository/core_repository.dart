@@ -33,6 +33,11 @@ class NEMeetingKitConfig {
   final String? iosBroadcastAppGroup;
 
   ///
+  /// 配置应用的scheme，屏幕共享倒计时结束后将会通过该自动自动返回应用
+  ///
+  final String? iosBroadcastScheme;
+
+  ///
   /// 是否检查并使用asset资源目录下的私有化服务器配置文件，默认为false。
   ///
   final bool useAssetServerConfig;
@@ -74,6 +79,7 @@ class NEMeetingKitConfig {
     this.corpEmail,
     this.serverUrl,
     this.iosBroadcastAppGroup,
+    this.iosBroadcastScheme,
     this.foregroundServiceConfig,
     this.useAssetServerConfig = false,
     this.extras,
@@ -94,6 +100,7 @@ class NEMeetingKitConfig {
         language == other.language &&
         appName == other.appName &&
         iosBroadcastAppGroup == other.iosBroadcastAppGroup &&
+        iosBroadcastScheme == other.iosBroadcastScheme &&
         useAssetServerConfig == other.useAssetServerConfig &&
         foregroundServiceConfig == other.foregroundServiceConfig &&
         mapEquals(extras, other.extras) &&
@@ -108,6 +115,7 @@ class NEMeetingKitConfig {
         corpEmail,
         appName,
         iosBroadcastAppGroup,
+        iosBroadcastScheme,
         useAssetServerConfig,
         foregroundServiceConfig,
         serverUrl,
@@ -122,6 +130,38 @@ class NEMeetingKitConfig {
   @override
   String toString() {
     return 'NEMeetingKitConfig{$_initializeKey, $serverUrl}';
+  }
+
+  // copyWith
+  NEMeetingKitConfig copyWith({
+    String? appName,
+    String? appKey,
+    String? corpCode,
+    String? corpEmail,
+    String? serverUrl,
+    String? iosBroadcastAppGroup,
+    NEForegroundServiceConfig? foregroundServiceConfig,
+    bool? useAssetServerConfig,
+    Map<String, dynamic>? extras,
+    NEMeetingLanguage? language,
+    String? apnsCerName,
+    NEMeetingMixPushConfig? mixPushConfig,
+  }) {
+    return NEMeetingKitConfig(
+      appName: appName ?? this.appName,
+      appKey: appKey ?? this.appKey,
+      corpCode: corpCode ?? this.corpCode,
+      corpEmail: corpEmail ?? this.corpEmail,
+      serverUrl: serverUrl ?? this.serverUrl,
+      iosBroadcastAppGroup: iosBroadcastAppGroup ?? this.iosBroadcastAppGroup,
+      foregroundServiceConfig:
+          foregroundServiceConfig ?? this.foregroundServiceConfig,
+      useAssetServerConfig: useAssetServerConfig ?? this.useAssetServerConfig,
+      extras: extras ?? this.extras,
+      language: language ?? this.language,
+      apnsCerName: apnsCerName ?? this.apnsCerName,
+      mixPushConfig: mixPushConfig ?? this.mixPushConfig,
+    );
   }
 }
 
@@ -311,6 +351,9 @@ class NEMeetingErrorCode {
   /// 账号需要重置密码才能允许登录
   static const int accountPasswordNeedReset = 3426;
 
+  /// 当前状态跨应用入会不支持
+  static const int crossAppJoinNotSupported = 112003;
+
   /// 企业不支持 SSO 登录
   static const int corpNotSupportSSO = 112002;
 
@@ -336,6 +379,12 @@ class NEMeetingErrorCode {
   /// 鉴权过期，如密码重置
   static const int authExpired = NEErrorCode.authExpired;
 
+  /// 不支持访客入会
+  static const int guestJoinNotSupported = 3432;
+
+  /// 访客入会需要认证
+  static const int guestJoinNeedVerify = 3433;
+
   /// 聊天室不存在
   static const int chatroomNotExists = 110001;
 }
@@ -356,6 +405,7 @@ final class CoreRepository with WidgetsBindingObserver, _AloggerMixin {
   String? _feedbackServer;
 
   CoreRepository._() {
+    _LogService().init();
     HttpHeaderRegistry().addContributor(() {
       final appKey = initedAppKey;
       final languageTag = localeListenable.value.toLanguageTag();
@@ -378,6 +428,7 @@ final class CoreRepository with WidgetsBindingObserver, _AloggerMixin {
 
   Future<NEResult<NEMeetingCorpInfo?>> initialize(
       NEMeetingKitConfig config) async {
+    await _LogService().init();
     apiLogger.i('initialize: $config');
     if (config == initedConfig) {
       return NEResult.successWith(initedCorpInfo);
@@ -427,7 +478,6 @@ final class CoreRepository with WidgetsBindingObserver, _AloggerMixin {
       switchLanguage(config.language);
     }
     final appKey = config.appKey ?? corpInfo!.appKey;
-    await _LogService().init();
     // 如果外部没有设置域名，则切换使用默认的域名
     final serverUrl = (config.serverUrl == null || config.serverUrl.isEmpty) &&
             serverConfig == null

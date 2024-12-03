@@ -147,11 +147,14 @@ class _MeetingAppInvitingState extends State<MeetingAppInviting>
                       ),
                     );
                   },
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: isFull,
-                    builder: (context, value, child) {
-                      return value ? buildFull() : buildNormal();
-                    },
+                  child: Material(
+                    color: Colors.transparent,
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: isFull,
+                      builder: (context, value, child) {
+                        return value ? buildFull() : buildNormal();
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -213,21 +216,28 @@ class _MeetingAppInvitingState extends State<MeetingAppInviting>
       onTap: switchMode,
       child: Container(
         margin: EdgeInsets.only(top: 50, left: 12, right: 12),
-        decoration: BoxDecoration(
+        child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          color: _UIColors.black.withOpacity(0.8),
-        ),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (widget.showInviter)
-              buildTitleWithUser(widget.userName!, widget.userAvatar)
-            else
-              buildTitle(widget.title!),
-            SizedBox(height: 18),
-            buildActions(),
-          ],
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: _UIColors.black.withOpacity(0.8),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.showInviter)
+                    buildTitleWithUser(widget.userName!, widget.userAvatar)
+                  else
+                    buildTitle(widget.title!),
+                  SizedBox(height: 18),
+                  buildActions(),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -529,7 +539,6 @@ class _MeetingAppInvitingState extends State<MeetingAppInviting>
         style: TextStyle(
           color: _UIColors.white,
           fontSize: 16,
-          decoration: TextDecoration.none,
         ),
       ),
     ]);

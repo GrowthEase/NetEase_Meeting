@@ -34,6 +34,8 @@ class ConnectivityManager with ChangeNotifier, _AloggerMixin {
     return _isConnected;
   }
 
+  bool isConnectedSync() => _isConnected;
+
   void _updateConnectivity(List<ConnectivityResult> result) {
     if (_onConnectedChanged.isClosed) return;
     bool connected =

@@ -21,40 +21,26 @@ class NESipCallRecord {
 }
 
 class NESipCallRecordsSQLManager {
-  late Database _database;
-
-  Future<void> initializeDatabase(String userUuid) async {
-    final databasesPath = await getDatabasesPath();
-    _database = await openDatabase(
-      '$databasesPath/$userUuid.db',
-      onCreate: (db, version) {
-        return db.execute(
-          "CREATE TABLE CallRecords(id INTEGER PRIMARY KEY, name TEXT, number TEXT)",
-        );
-      },
-      version: 1,
-    );
-  }
+  final _tableName = _DatabaseHelper().callRecordsTableName;
 
   Future<void> close() async {
-    await _database.close();
+    await _DatabaseHelper().close();
   }
 
   Future<void> addCallRecord(NESipCallRecord record) async {
-    await _database.insert('CallRecords', record.toMap());
+    await _DatabaseHelper().insert(_tableName, record.toMap());
 
     /// 只保留最新的100条
     final List<Map<String, dynamic>> maps =
-        await _database.query('CallRecords');
+        await _DatabaseHelper().query(_tableName);
     if (maps.length > 100) {
-      await _database.delete('CallRecords',
-          where: 'id = ?', whereArgs: [maps.first['id']]);
+      await _DatabaseHelper().delete(_tableName, maps.first['id']);
     }
   }
 
   Future<List<NESipCallRecord>> getAllCallRecords() async {
     final List<Map<String, dynamic>> maps =
-        await _database.query('CallRecords');
+        await _DatabaseHelper().query(_tableName);
     return List.generate(maps.length, (i) {
       return NESipCallRecord(
         id: maps[i]['id'],
@@ -65,10 +51,11 @@ class NESipCallRecordsSQLManager {
   }
 
   Future<void> clearCallRecords() async {
-    await _database.delete('CallRecords');
+    await _DatabaseHelper().deleteAll(_tableName);
   }
 
   Future<void> deleteCallRecord(int? id) async {
-    await _database.delete('CallRecords', where: 'id = ?', whereArgs: [id]);
+    if (id == null) return;
+    await _DatabaseHelper().delete(_tableName, id);
   }
 }

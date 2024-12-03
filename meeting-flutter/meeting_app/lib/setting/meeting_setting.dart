@@ -29,6 +29,9 @@ class _MeetingSettingState extends AppBaseState {
 
   final _notificationType = ValueNotifier<NEChatMessageNotificationType>(
       NEChatMessageNotificationType.barrage);
+  final _meetingElapsedTimeType =
+      ValueNotifier<NEMeetingElapsedTimeDisplayType>(
+          NEMeetingElapsedTimeDisplayType.none);
 
   @override
   void initState() {
@@ -40,6 +43,9 @@ class _MeetingSettingState extends AppBaseState {
     });
     settings.getChatMessageNotificationType().then((value) {
       _notificationType.value = value;
+    });
+    settings.getMeetingElapsedTimeDisplayType().then((value) {
+      _meetingElapsedTimeType.value = value;
     });
   }
 
@@ -193,6 +199,18 @@ class _MeetingSettingState extends AppBaseState {
     }
   }
 
+  String getMeetingElapsedTimeDisplayTypeText(
+      NEMeetingElapsedTimeDisplayType type) {
+    switch (type) {
+      case NEMeetingElapsedTimeDisplayType.none:
+        return localizations.settingShowNone;
+      case NEMeetingElapsedTimeDisplayType.meetingElapsedTime:
+        return localizations.settingShowMeetingElapsedTime;
+      case NEMeetingElapsedTimeDisplayType.participationElapsedTime:
+        return localizations.settingShowParticipationElapsedTime;
+    }
+  }
+
   void showNotificationTypeDialog() {
     BottomSheetUtils.showMeetingBottomDialogWithTitle(
         buildContext: context,
@@ -229,6 +247,42 @@ class _MeetingSettingState extends AppBaseState {
     );
   }
 
+  void showMeetingElapsedTimeDisplayTypeDialog() {
+    BottomSheetUtils.showMeetingBottomDialogWithTitle(
+        buildContext: context,
+        title: localizations.settingShowElapsedTime,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            buildElapsedTimeDisplayItem(
+              title: localizations.settingShowNone,
+              type: NEMeetingElapsedTimeDisplayType.none,
+            ),
+            buildElapsedTimeDisplayItem(
+              title: localizations.settingShowMeetingElapsedTime,
+              type: NEMeetingElapsedTimeDisplayType.meetingElapsedTime,
+            ),
+            buildElapsedTimeDisplayItem(
+              title: localizations.settingShowParticipationElapsedTime,
+              type: NEMeetingElapsedTimeDisplayType.participationElapsedTime,
+            ),
+          ],
+        ));
+  }
+
+  Widget buildElapsedTimeDisplayItem(
+      {required String title, required NEMeetingElapsedTimeDisplayType type}) {
+    return MeetingCheckItem(
+      title: title,
+      isSelected: _meetingElapsedTimeType.value == type,
+      onTap: () {
+        _meetingElapsedTimeType.value = type;
+        SettingsRepository().setMeetingElapsedTimeDisplayType(type);
+        Navigator.of(context).pop();
+      },
+    );
+  }
+
   /// 白板透明
   MeetingSwitchItem buildWhiteboardTransparent() {
     return buildSwitchItem(
@@ -241,16 +295,19 @@ class _MeetingSettingState extends AppBaseState {
     );
   }
 
-  /// 显示会议持续时间
-  MeetingSwitchItem buildMeetTimeItem() {
-    return buildSwitchItem(
-      key: MeetingUIValueKeys.openShowMeetTime,
-      label: NEMeetingUIKit.instance
-          .getUIKitLocalizations()
-          .settingShowMeetDuration,
-      asyncData: settings.isShowMyMeetingElapseTimeEnabled(),
-      onDataChanged: (value) => settings.enableShowMyMeetingElapseTime(value),
-    );
+  /// 显示会议持续事件
+  Widget buildMeetTimeItem() {
+    return ValueListenableBuilder(
+        valueListenable: _meetingElapsedTimeType,
+        builder: (context, value, _) {
+          return MeetingArrowItem(
+              key: MeetingUIValueKeys.meetingElapsedTimeDisplayType,
+              title: NEMeetingUIKit.instance
+                  .getUIKitLocalizations()
+                  .settingShowElapsedTime,
+              content: getMeetingElapsedTimeDisplayTypeText(value),
+              onTap: showMeetingElapsedTimeDisplayTypeDialog);
+        });
   }
 
   /// 云录制配置
@@ -284,6 +341,8 @@ class _MeetingSettingState extends AppBaseState {
       buildFrontCameraMirror(),
       buildShowShareUserVideo(),
       buildShowNameInVideo(),
+      buildHideVideoOffAttendees(),
+      buildHideMyVideo(),
     ];
   }
 
@@ -295,6 +354,7 @@ class _MeetingSettingState extends AppBaseState {
       if (settings.isMeetingCloudRecordSupported()) buildCloudRecord(),
       buildNotYetJoinSettings(),
       buildCaptionsSettings(),
+      buildLeaveTheMeetingRequiresConfirmation(),
     ];
   }
 
@@ -326,6 +386,27 @@ class _MeetingSettingState extends AppBaseState {
       onDataChanged: (value) =>
           settings.enableTurnOnMyVideoWhenJoinMeeting(value),
     );
+  }
+
+  /// 视频中始终显示用户名
+  MeetingSwitchItem buildHideVideoOffAttendees() {
+    return buildSwitchItem(
+        key: MeetingValueKey.hideVideoOffAttendees,
+        label: NEMeetingUIKit.instance
+            .getUIKitLocalizations()
+            .settingHideVideoOffAttendees,
+        asyncData: settings.isHideVideoOffAttendeesEnabled(),
+        onDataChanged: (value) => settings.enableHideVideoOffAttendees(value));
+  }
+
+  /// 视频中始终显示用户名
+  MeetingSwitchItem buildHideMyVideo() {
+    return buildSwitchItem(
+        key: MeetingValueKey.hideMyVideo,
+        label:
+            NEMeetingUIKit.instance.getUIKitLocalizations().settingHideMyVideo,
+        asyncData: settings.isHideMyVideoEnabled(),
+        onDataChanged: (value) => settings.enableHideMyVideo(value));
   }
 
   /// 构建麦克风选项
@@ -361,6 +442,18 @@ class _MeetingSettingState extends AppBaseState {
       asyncData:
           settings.isShowNotYetJoinedMembersEnabled().then((value) => !value),
       onDataChanged: (value) => settings.enableShowNotYetJoinedMembers(!value),
+    );
+  }
+
+  /// 离开会议需要弹窗确认
+  MeetingSwitchItem buildLeaveTheMeetingRequiresConfirmation() {
+    return buildSwitchItem(
+      key: MeetingUIValueKeys.enableLeaveTheMeetingRequiresConfirmation,
+      label: NEMeetingUIKit.instance
+          .getUIKitLocalizations()
+          .settingLeaveTheMeetingRequiresConfirmation,
+      asyncData: settings.isLeaveTheMeetingRequiresConfirmationEnabled(),
+      onDataChanged: settings.enableLeaveTheMeetingRequiresConfirmation,
     );
   }
 }

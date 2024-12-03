@@ -82,6 +82,11 @@ class SettingsRepository extends ValueNotifier<Map> with _AloggerMixin {
     }
   }
 
+  Future<dynamic> _getSettings(String key) async {
+    await ensureSettings();
+    return _settingsCache[key];
+  }
+
   /// 通过[ValueNotifier]通知listeners
   void _markChanged() async {
     await updateTransientStates();
@@ -115,6 +120,8 @@ class SettingsRepository extends ValueNotifier<Map> with _AloggerMixin {
         sdkConfig.isWaitingRoomSupported;
     _transientStates[Keys.isVirtualBackgroundSupported] =
         sdkConfig.isVirtualBackgroundSupported;
+    _transientStates[Keys.isCallOutRoomSystemDeviceSupported] =
+        sdkConfig.isCallOutRoomSystemDeviceSupported;
     _transientStates[Keys.interpretationConfig] =
         sdkConfig.interpretationConfig.toJson();
     _transientStates[Keys.scheduledMemberConfig] =
@@ -136,16 +143,18 @@ class SettingsRepository extends ValueNotifier<Map> with _AloggerMixin {
     return HttpApiHelper._saveSettingsApi(status);
   }
 
-  /// 设置是否显示会议时长
+  /// 设置会议时长展示类型
   ///
-  /// [enable] true-开启，false-关闭
-  void enableShowMyMeetingElapseTime(bool show) =>
-      _writeSettings(Keys.isShowMyMeetingElapseTimeEnabled, show);
+  /// [value] 会议时长展示类型
+  void setMeetingElapsedTimeDisplayType(NEMeetingElapsedTimeDisplayType type) =>
+      _writeSettings(Keys.meetingElapsedTimeDisplayType, type.value);
 
-  /// 查询是否显示会议时长
-  Future<bool> isShowMyMeetingElapseTimeEnabled() =>
+  /// 查询会议时长展示类型
+  Future<NEMeetingElapsedTimeDisplayType> getMeetingElapsedTimeDisplayType() =>
       ensureSettings().then((settings) =>
-          (settings[Keys.isShowMyMeetingElapseTimeEnabled] ?? false) as bool);
+          NEMeetingElapsedTimeDisplayTypeExtension.mapValueToEnum(
+              settings[Keys.meetingElapsedTimeDisplayType] as int?) ??
+          NEMeetingElapsedTimeDisplayType.none);
 
   /// 设置入会时是否打开本地视频
   ///
@@ -284,6 +293,24 @@ class SettingsRepository extends ValueNotifier<Map> with _AloggerMixin {
         (_settingsCache[Keys.isFrontCameraMirrorEnabled] as bool?) ?? true);
   }
 
+  /// 隐藏非视频参会者
+  Future<void> enableHideVideoOffAttendees(bool enable) async {
+    return _writeSettings(Keys.hideVideoOffAttendees, enable);
+  }
+
+  Future<bool> isHideVideoOffAttendeesEnabled() async {
+    return await _getSettings(Keys.hideVideoOffAttendees) as bool? ?? false;
+  }
+
+  /// 隐藏本人视图
+  Future<void> enableHideMyVideo(bool enable) async {
+    return _writeSettings(Keys.hideMyVideo, enable);
+  }
+
+  Future<bool> isHideMyVideoEnabled() async {
+    return await _getSettings(Keys.hideMyVideo) as bool? ?? false;
+  }
+
   /// 设置是否打开白板透明
   ///
   /// [enable] true-打开，false-关闭
@@ -382,9 +409,8 @@ class SettingsRepository extends ValueNotifier<Map> with _AloggerMixin {
   }
 
   /// 设置云录制配置
-  Future<void> setCloudRecordConfig(NECloudRecordConfig config) {
+  void setCloudRecordConfig(NECloudRecordConfig config) {
     _writeSettings(Keys.cloudRecordConfig, config.toJson());
-    return Future.value();
   }
 
   Future<int> setASRTranslationLanguage(
@@ -455,7 +481,8 @@ class SettingsRepository extends ValueNotifier<Map> with _AloggerMixin {
   Future<NEChatMessageNotificationType> getChatMessageNotificationType() async {
     await ensureSettings();
     return Future.value(NEChatMessageNotificationTypeExtension.mapValueToEnum(
-        _settingsCache[Keys.chatMessageNotificationType]));
+            _settingsCache[Keys.chatMessageNotificationType]) ??
+        NEChatMessageNotificationType.barrage);
   }
 
   /// 设置是否显示未入会成员
@@ -468,11 +495,27 @@ class SettingsRepository extends ValueNotifier<Map> with _AloggerMixin {
   Future<bool> isShowNotYetJoinedMembersEnabled() =>
       ensureSettings().then((settings) =>
           (settings[Keys.isShowNotYetJoinedMembersEnabled] ?? true) as bool);
+
+  /// 查询应用是否支持会议设备呼叫
+  bool isCallOutRoomSystemDeviceSupported() =>
+      sdkConfig.isCallOutRoomSystemDeviceSupported;
+
+  /// 设置是否离开会议需要弹窗确认
+  ///
+  /// [enable] true-开启，false-关闭
+  void enableLeaveTheMeetingRequiresConfirmation(bool enable) =>
+      _writeSettings(Keys.isLeaveTheMeetingRequiresConfirmationEnabled, enable);
+
+  /// 离开会议是否需要弹窗确认
+  Future<bool> isLeaveTheMeetingRequiresConfirmationEnabled() =>
+      ensureSettings().then((settings) =>
+          (settings[Keys.isLeaveTheMeetingRequiresConfirmationEnabled] ?? true)
+              as bool);
 }
 
 class Keys {
-  static const String isShowMyMeetingElapseTimeEnabled =
-      "isShowMyMeetingElapseTimeEnabled";
+  static const String meetingElapsedTimeDisplayType =
+      "meetingElapsedTimeDisplayType";
   static const String isTurnOnMyVideoWhenJoinMeetingEnabled =
       "isTurnOnMyVideoWhenJoinMeetingEnabled";
   static const String isTurnOnMyAudioWhenJoinMeetingEnabled =
@@ -491,6 +534,8 @@ class Keys {
   static const String currentVirtualBackground = "currentVirtualBackground";
   static const String isSpeakerSpotlightEnabled = "isSpeakerSpotlightEnabled";
   static const String isFrontCameraMirrorEnabled = "isFrontCameraMirrorEnabled";
+  static const String hideVideoOffAttendees = "hideVideoOffAttendees";
+  static const String hideMyVideo = "hideMyVideo";
   static const String isTransparentWhiteboardEnabled =
       "isTransparentWhiteboardEnabled";
   static const String isBeautyFaceSupported = "isBeautyFaceSupported";
@@ -498,6 +543,8 @@ class Keys {
   static const String isWaitingRoomSupported = "isWaitingRoomSupported";
   static const String isVirtualBackgroundSupported =
       "isVirtualBackgroundSupported";
+  static const String isCallOutRoomSystemDeviceSupported =
+      "isCallOutRoomSystemDeviceSupported";
   static const String interpretationConfig = "interpretationConfig";
   static const String scheduledMemberConfig = "scheduledMemberConfig";
   static const String isAvatarUpdateSupported = "isAvatarUpdateSupported";
@@ -516,4 +563,6 @@ class Keys {
   static const String chatMessageNotificationType =
       "chatMessageNotificationType";
   static const String isShowNameInVideoEnabled = "isShowNameInVideoEnabled";
+  static const String isLeaveTheMeetingRequiresConfirmationEnabled =
+      "isLeaveTheMeetingRequiresConfirmationEnabled";
 }

@@ -193,6 +193,9 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get globalPhotosPermission => 'アルバムが使えません';
 
   @override
+  String get globalGoBack => '戻る';
+
+  @override
   String get authImmediatelyRegister => '登録します';
 
   @override
@@ -278,6 +281,11 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
 
   @override
   String get authGetCheckCode => '取得する';
+
+  @override
+  String authGetCheckCodeAgain(Object seconds) {
+    return '再取得${seconds}S';
+  }
 
   @override
   String get authNewRegister => '新規ユーザー登録';
@@ -453,6 +461,11 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get meetingHold => '会議を開始';
 
   @override
+  String meetingHoldSubject(Object userName) {
+    return '$userNameの会議';
+  }
+
+  @override
   String get meetingNetworkAbnormalityCheckAndRejoin =>
       'ネットワークエラーです。ネットワーク接続を確認してから、再度ミーティングに参加してください';
 
@@ -476,6 +489,9 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
 
   @override
   String get meetingNum => '会議 ID';
+
+  @override
+  String get meetingNickname => '名前';
 
   @override
   String get meetingStatusInit => '開始待ち';
@@ -530,6 +546,9 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
 
   @override
   String get meetingEnterId => '会議IDを入力します';
+
+  @override
+  String get meetingEnterNickname => '入会後の名称を入力';
 
   @override
   String meetingSubject(Object userName) {
@@ -897,11 +916,36 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
   String get copyMeetingAll => 'すべてコピー';
 
   @override
-  String get meetingCrossAppNoPermission =>
+  String get meetingGuestJoinNotSupportedTitle => '会議は外部に開放していません';
+
+  @override
+  String get meetingGuestJoinNotSupported =>
       '申し訳ありませんが、参加させていただいた会議は外部の方に公開しておりません。ご希望の場合は、会議主催者に連絡してゲスト入会を開始します。';
 
   @override
+  String get meetingCrossAppJoinNotSupportedTitle => '会議への参加は認められません';
+
+  @override
+  String get meetingCrossAppJoinNotSupported =>
+      '申し訳ありませんが、参加しようとした会議はチームや組織が作成したものではなく、参加をサポートしていません。ログインを終了して、「ミーティングに参加」ポータルから参加しようとします。';
+
+  @override
   String get meetingCrossAppJoinTip => '他のチーム/組織が作成した会議にゲストとして参加します。会議に参加しますか?';
+
+  @override
+  String get meetingGuestJoinVerify => 'ゲスト認証';
+
+  @override
+  String get meetingGuestJoinVerifyTip => '会議の安全を保障するために、携帯電話番号を入力して認証してください';
+
+  @override
+  String get meetingLiveToOtherPlatform => 'サードパーティ製プラットフォームへのライブ配信';
+
+  @override
+  String get meetingLiveReloadUpload => '再アップロード';
+
+  @override
+  String get meetingCastScreen => '画面共有';
 
   @override
   String get historyMeeting => '歴史会議';
@@ -929,10 +973,6 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
 
   @override
   String get historyMeetingCloudRecordingFileBeingGenerated => 'クラウド記録ファイルの生成';
-
-  @override
-  String get nan =>
-      '申し訳ありませんが、参加させていただいた会議は外部の方に公開しておりません。ご希望の場合は、会議主催者に連絡してゲスト入会を開始します。';
 
   @override
   String get settings => 'セット';
@@ -1151,6 +1191,12 @@ class MeetingAppLocalizationsJa extends MeetingAppLocalizations {
 
   @override
   String get settingLanguageTip => '日本語';
+
+  @override
+  String get settingVolumeOutput => '出力音量';
+
+  @override
+  String get settingVolumeInput => '入力音量';
 
   @override
   String get evaluationTitle => '評価';

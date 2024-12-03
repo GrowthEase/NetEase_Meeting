@@ -38,6 +38,10 @@ class Servers {
   String? get appRegistryDetailUrl {
     return AppConfig().registryUrl;
   }
+
+  String get cloudRecordUrl {
+    return AppConfig().cloudRecordUrl;
+  }
 }
 
 final servers = Servers();

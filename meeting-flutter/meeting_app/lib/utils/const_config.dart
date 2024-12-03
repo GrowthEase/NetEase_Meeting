@@ -63,6 +63,8 @@ Future<NEMeetingOptions> buildMeetingUIOptions({
   final cloudRecordConfig = await settingsService.getCloudRecordConfig();
   final chatMessageNotificationType =
       await settingsService.getChatMessageNotificationType();
+  final enableLeaveTheMeetingRequiresConfirmation =
+      await settingsService.isLeaveTheMeetingRequiresConfirmationEnabled();
   return NEMeetingOptions(
     title: title,
     noVideo: noVideo,
@@ -88,6 +90,8 @@ Future<NEMeetingOptions> buildMeetingUIOptions({
     autoEnableCaptionsOnJoin:
         await GlobalPreferences().isEnableCaptionsOnJoin(),
     chatMessageNotificationType: chatMessageNotificationType,
+    enableLeaveTheMeetingRequiresConfirmation:
+        enableLeaveTheMeetingRequiresConfirmation,
   );
 }
 

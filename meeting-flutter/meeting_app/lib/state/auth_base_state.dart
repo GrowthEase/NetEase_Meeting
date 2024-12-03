@@ -36,6 +36,19 @@ abstract class AuthBaseState<T extends StatefulWidget> extends AppBaseState<T> {
                     ),
                   ),
                 ),
+                if (getSummary() != null)
+                  Container(
+                    margin: EdgeInsets.only(left: 30, top: 16),
+                    child: Text(
+                      getSummary()!,
+                      textAlign: TextAlign.left,
+                      style: TextStyle(
+                        color: AppColors.black_333333,
+                        fontWeight: FontWeight.normal,
+                        fontSize: 14.sp,
+                      ),
+                    ),
+                  ),
                 getSubject(),
                 Spacer(),
               ]),
@@ -55,4 +68,7 @@ abstract class AuthBaseState<T extends StatefulWidget> extends AppBaseState<T> {
   String getSubTitle();
 
   Widget getSubject();
+
+  @protected
+  String? getSummary() => null;
 }

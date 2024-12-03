@@ -11,13 +11,16 @@ import 'package:nemeeting/uikit/utils/nav_utils.dart';
 import 'package:nemeeting/uikit/utils/router_name.dart';
 import 'package:nemeeting/uikit/values/fonts.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
+import 'package:netease_meeting_kit/meeting_core.dart';
 import 'package:netease_meeting_kit/meeting_ui.dart';
 import '../language/localizations.dart';
+import '../service/config/servers.dart';
 import '../service/repo/history_repo.dart';
 import '../uikit/state/meeting_base_state.dart';
 import '../uikit/values/asset_name.dart';
 import '../uikit/values/colors.dart';
 import '../utils/integration_test.dart';
+import '../webview/webview_page.dart';
 
 class HistoryMeetingDetailRoute extends StatefulWidget {
   final NERemoteHistoryMeeting item;
@@ -172,12 +175,30 @@ class _HistoryMeetingDetailRouteState
   Widget buildApplicationModule() {
     return MeetingCard(
       children: [
-        if (hasCloudRecordTask) Flexible(child: buildCloudRecord()),
+        if (hasCloudRecordTask) buildCloudRecord(),
         if (hasChatHistory) buildMessageHistory(),
         if (pluginInfoList.isNotEmpty) buildPluginListWidget(),
         buildTranscriptionMessageHistory(),
       ],
     );
+  }
+
+  Widget buildCloudRecord() {
+    return MeetingArrowItem(
+        title: getAppLocalizations().historyMeetingCloudRecord,
+        content: recordUrlList.isNotEmpty
+            ? null
+            : getAppLocalizations()
+                .historyMeetingCloudRecordingFileBeingGenerated,
+        contentTextStyle: TextStyle(
+            fontSize: 14,
+            color: AppColors.color_337eff,
+            fontWeight: FontWeight.w400,
+            decoration: TextDecoration.none),
+        showArrow: recordUrlList.isNotEmpty,
+        onTap: () async {
+          if (recordUrlList.isNotEmpty) navigateToMeetingRecordPage();
+        });
   }
 
   Widget buildMessageHistory() {
@@ -374,82 +395,17 @@ class _HistoryMeetingDetailRouteState
         showArrow: false);
   }
 
-  Widget buildCloudRecord() {
-    final hasRecordItem = recordUrlList.isNotEmpty;
-    return Container(
-        child: Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: EdgeInsets.only(left: 16, right: 16, top: 13, bottom: 13),
-          child: Row(
-            children: [
-              Text(
-                getAppLocalizations().historyMeetingCloudRecord,
-                style: TextStyle(
-                  color: AppColors.color_1E1F27,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              if (!hasRecordItem)
-                Expanded(
-                  child: Text(
-                      textAlign: TextAlign.right,
-                      getAppLocalizations()
-                          .historyMeetingCloudRecordingFileBeingGenerated,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.color_337eff,
-                        fontWeight: FontWeight.w400,
-                      )),
-                ),
-            ],
-          ),
-        ),
-        if (hasRecordItem)
-          Flexible(
-              child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: recordUrlList
-                  .map((url) => Container(
-                        padding: EdgeInsets.only(left: 32, right: 16),
-                        height: 48,
-                        child: Row(
-                          children: [
-                            Expanded(
-                                child: GestureDetector(
-                              child: Text(
-                                url,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.color_337eff),
-                              ),
-                              onTap: () => NavUtils.launchByURL(url),
-                            )),
-                            SizedBox(width: 16),
-                            NEGestureDetector(
-                                onTap: () {
-                                  Clipboard.setData(ClipboardData(text: url));
-                                  ToastUtils.showToast(context,
-                                      getAppLocalizations().globalCopySuccess);
-                                },
-                                child: Icon(
-                                  NEMeetingIconFont.icon_copy,
-                                  color: AppColors.color_337EFF,
-                                  size: 24,
-                                ))
-                          ],
-                        ),
-                      ))
-                  .toList(),
-            ),
-          )),
-      ],
-    ));
+  Future navigateToMeetingRecordPage() {
+    var uri = Uri.parse(Servers().cloudRecordUrl);
+    uri = uri.replace(queryParameters: {
+      'id': '${item.meetingId}',
+      'token': '${AuthManager().accountToken}',
+      'user': '${AuthManager().accountId}',
+      'meetingAppKey': '${AuthManager().appKey}',
+    });
+    return NavUtils.pushNamed(context, RouterName.webview,
+        arguments: WebViewArguments(
+            uri.toString(), getAppLocalizations().historyMeetingCloudRecord));
   }
 
   Future<bool> isNetworkConnect() async {

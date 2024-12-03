@@ -74,11 +74,10 @@ class MeetingAppNotifyCenterState extends AppBaseState<MeetingAppNotifyCenter>
                 Widget? child) {
               return value.length > 0
                   ? Container(
-                      padding: EdgeInsets.all(16),
-                      child: ListView.separated(
+                      padding: EdgeInsets.only(left: 16, right: 16),
+                      child: ListView.builder(
                         controller: _scrollController,
-                        separatorBuilder: (context, index) =>
-                            SizedBox(height: 6),
+                        physics: BouncingScrollPhysics(),
                         itemBuilder: (context, index) {
                           return NEGestureDetector(
                             child: buildNotifyMessageItem(context, index),
@@ -95,7 +94,6 @@ class MeetingAppNotifyCenterState extends AppBaseState<MeetingAppNotifyCenter>
                           bottom: appBarHeight + statusBarHeight),
                       child: Center(
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Image(
@@ -207,56 +205,65 @@ class MeetingAppNotifyCenterState extends AppBaseState<MeetingAppNotifyCenter>
     var notifyCenterCardClickAction =
         data?.notifyCard?.notifyCenterCardClickAction;
     var body = data?.notifyCard?.body;
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
+    return Container(
+      margin: EdgeInsets.only(
+          top: 16,
+          bottom: index == _messageListListenable.value.length ? 16 : 0),
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          buildHeader(icon, header, timeStamp),
-          if (body?.title?.isNotEmpty == true)
-            Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.only(left: 16, top: 6, bottom: 2, right: 16),
-              child: Text(
-                '${body?.title}',
-                overflow: TextOverflow.ellipsis,
-                maxLines: 3,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.black_333333,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-          Container(
-            alignment: Alignment.centerLeft,
-            padding: EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
-            child: Text(
-              '${body?.content}',
-              overflow: TextOverflow.ellipsis,
-              maxLines: 10,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.color_666666,
-              ),
-            ),
+        child: Container(
+          color: AppColors.white,
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              buildHeader(icon, header, timeStamp),
+              if (body?.title?.isNotEmpty == true)
+                Container(
+                  alignment: Alignment.centerLeft,
+                  padding: EdgeInsets.only(left: 16, top: 12, right: 16),
+                  child: Text(
+                    '${body?.title}',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 3,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.black_333333,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                ),
+              if (body?.content?.isNotEmpty == true)
+                Container(
+                  alignment: Alignment.centerLeft,
+                  padding:
+                      EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 12),
+                  child: Text(
+                    '${body?.content}',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 10,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.color_53576A,
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+              if (notifyCenterCardClickAction != null)
+                Container(
+                  height: 0.5,
+                  margin: EdgeInsets.only(left: 16, right: 16),
+                  color: AppColors.colorE8E9EB,
+                ),
+              if (notifyCenterCardClickAction != null)
+                buildDetailItem(
+                    NEMeetingUIKitLocalizations.of(context)!
+                        .notifyCenterViewingDetails, () {
+                  pushPage(index);
+                })
+            ],
           ),
-          if (notifyCenterCardClickAction != null)
-            Container(
-              height: 0.5,
-              margin: EdgeInsets.only(left: 16, top: 8, bottom: 8),
-              color: AppColors.colorE8E9EB,
-            ),
-          if (notifyCenterCardClickAction != null)
-            buildDetailItem(
-                NEMeetingUIKitLocalizations.of(context)!
-                    .notifyCenterViewingDetails, () {
-              pushPage(index);
-            })
-        ],
+        ),
       ),
     );
   }
@@ -265,7 +272,9 @@ class MeetingAppNotifyCenterState extends AppBaseState<MeetingAppNotifyCenter>
       {String iconTip = ''}) {
     return NEGestureDetector(
       child: Container(
-        padding: EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
+        height: 43,
+        padding: EdgeInsets.only(left: 16, right: 16),
+        alignment: Alignment.center,
         child: Row(
           children: <Widget>[
             Text(title,
@@ -409,17 +418,29 @@ class MeetingAppNotifyCenterState extends AppBaseState<MeetingAppNotifyCenter>
     return GestureDetector(
       child: Container(
         height: 48,
-        padding: EdgeInsets.only(left: 16, top: 16),
+        padding: EdgeInsets.only(left: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              AppColors.color_FDFDFD,
+              AppColors.color_FDFDFD,
+              AppColors.color_F7F7F7,
+            ],
+            stops: [0.0, 0.90, 1.0],
+          ),
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             if (icon != null && icon.isNotEmpty)
               Container(
-                padding: EdgeInsets.only(right: 8),
+                padding: EdgeInsets.only(right: 10),
                 child: CachedNetworkImage(
-                  width: 28,
-                  height: 28,
+                  width: 24,
+                  height: 24,
                   imageUrl: icon,
                   fit: BoxFit.cover,
                 ),
@@ -431,8 +452,8 @@ class MeetingAppNotifyCenterState extends AppBaseState<MeetingAppNotifyCenter>
                 maxLines: 5,
                 style: TextStyle(
                     fontSize: 16,
-                    color: AppColors.color_999999,
-                    fontWeight: FontWeight.normal),
+                    color: AppColors.color_1E1F27,
+                    fontWeight: FontWeight.w500),
               ),
             ),
             Container(
@@ -443,7 +464,7 @@ class MeetingAppNotifyCenterState extends AppBaseState<MeetingAppNotifyCenter>
                     : NEMeetingUIKitLocalizations.of(context)!.globalNothing,
                 style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.color_999999,
+                    color: AppColors.color_8D90A0,
                     fontWeight: FontWeight.normal),
               ),
             )

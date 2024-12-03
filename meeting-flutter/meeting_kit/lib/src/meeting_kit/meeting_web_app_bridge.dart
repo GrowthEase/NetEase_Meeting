@@ -129,74 +129,28 @@ class JSAPIEvent {
 class NEMeetingJSBridge {
   final _tag = 'NEMeetingJSBridge';
   final _spaceName = "meeting";
-  final _controller = WebViewController()
-    ..setJavaScriptMode(JavaScriptMode.unrestricted);
+  final InAppWebViewController controller;
   final String roomArchiveId;
   final String homeUrl;
   final NERoomContext? roomContext;
   late NERoomEventCallback _eventCallback;
   late NEMessageChannelCallback _messageCallback;
   String? _currentPluginId = null;
+  final BuildContext buildContext;
 
   /// 是否已经通过鉴权
   bool _hasPermitted = false;
 
-  NEMeetingJSBridge(this.roomArchiveId, this.homeUrl, this.roomContext) {
-    /// 添加接口调用监听
-    _controller.addJavaScriptChannel(_spaceName, onMessageReceived: (message) {
-      Alog.i(
-          tag: _tag,
-          content:
-              '----------- Meeting onMessageReceived: ${message.message} -----------');
-      JSAPIParams params = JSAPIParams.fromJSONString(message.message);
-
-      /// 不需要授权的接口
-      if (params.method == JSAPIType.config.name) {
-        _config(params);
-      } else if (params.method == JSAPIType.checkJsApiConfig.name) {
-        _checkJsApiConfig(params);
-      } else if (params.method == JSAPIType.requestAuthCode.name) {
-        _requestAuthCode(params);
-      } else if (params.method == JSAPIType.closeWebView.name) {
-        _closeWebView(params);
-      } else if (params.method == JSAPIType.addEventListener.name) {
-        _addEventListener(params);
-      } else if (params.method == JSAPIType.removeEventListener.name) {
-        _removeEventListener(params);
-      } else {
-        if (!_hasPermitted) {
-          /// 没有授权，直接失败
-          final result = JSAPIResult(
-            method: params.method,
-            code: -1,
-            message: 'No Permission',
-            methodId: params.methodId,
-          ).toString();
-          _onResult(result);
-          return;
-        }
-
-        /// 需要授权的接口
-        if (params.method == JSAPIType.getAppInfo.name) {
-          _getAppInfo(params);
-        } else if (params.method == JSAPIType.neteaseMeeting.name) {
-          _neteaseMeeting(params);
-        } else if (params.method == JSAPIType.getUserInfo.name) {
-          _getUserInfo(params);
-        } else if (params.method == JSAPIType.getCurrentMeetingInfo.name) {
-          _getCurrentMeetingInfo(params);
-        } else {
-          /// 没有找到对应方法
-          final result = JSAPIResult(
-            method: params.method,
-            code: -1,
-            message: 'No Such Method',
-            methodId: params.methodId,
-          ).toString();
-          _onResult(result);
-        }
-      }
-    });
+  NEMeetingJSBridge(this.buildContext, this.roomArchiveId, this.homeUrl,
+      this.roomContext, this.controller) {
+    controller.addWebMessageListener(WebMessageListener(
+        jsObjectName: _spaceName,
+        onPostMessage: (WebMessage? message, WebUri? sourceOrigin,
+            bool isMainFrame, PlatformJavaScriptReplyProxy replyProxy) {
+          if (message?.data != null) onMessageReceived(message?.data);
+        }));
+    controller.loadUrl(
+        urlRequest: URLRequest(url: WebUri(homeUrl), headers: getHeaders()));
 
     _eventCallback = NERoomEventCallback(
       memberNameChanged: ((member, name, operateBy) {
@@ -233,6 +187,71 @@ class NEMeetingJSBridge {
         .addMessageChannelCallback(_messageCallback);
   }
 
+  Map<String, String> getHeaders() {
+    if (DebugOptions().isDebugMode) {
+      return {
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache',
+      };
+    }
+    return {};
+  }
+
+  void onMessageReceived(String message) {
+    Alog.i(
+        tag: _tag,
+        content:
+            '----------- Meeting onMessageReceived: ${message} -----------');
+    JSAPIParams params = JSAPIParams.fromJSONString(message);
+
+    /// 不需要授权的接口
+    if (params.method == JSAPIType.config.name) {
+      _config(params);
+    } else if (params.method == JSAPIType.checkJsApiConfig.name) {
+      _checkJsApiConfig(params);
+    } else if (params.method == JSAPIType.requestAuthCode.name) {
+      _requestAuthCode(params);
+    } else if (params.method == JSAPIType.closeWebView.name) {
+      _closeWebView(params);
+    } else if (params.method == JSAPIType.addEventListener.name) {
+      _addEventListener(params);
+    } else if (params.method == JSAPIType.removeEventListener.name) {
+      _removeEventListener(params);
+    } else {
+      if (!_hasPermitted) {
+        /// 没有授权，直接失败
+        final result = JSAPIResult(
+          method: params.method,
+          code: -1,
+          message: 'No Permission',
+          methodId: params.methodId,
+        ).toString();
+        _onResult(result);
+        return;
+      }
+
+      /// 需要授权的接口
+      if (params.method == JSAPIType.getAppInfo.name) {
+        _getAppInfo(params);
+      } else if (params.method == JSAPIType.neteaseMeeting.name) {
+        _neteaseMeeting(params);
+      } else if (params.method == JSAPIType.getUserInfo.name) {
+        _getUserInfo(params);
+      } else if (params.method == JSAPIType.getCurrentMeetingInfo.name) {
+        _getCurrentMeetingInfo(params);
+      } else {
+        /// 没有找到对应方法
+        final result = JSAPIResult(
+          method: params.method,
+          code: -1,
+          message: 'No Such Method',
+          methodId: params.methodId,
+        ).toString();
+        _onResult(result);
+      }
+    }
+  }
+
   void handlePassThroughMessage(NECustomMessage message) {
     if (roomContext == null || message.roomUuid != roomContext?.roomUuid) {
       return;
@@ -258,9 +277,6 @@ class NEMeetingJSBridge {
         .removeMessageChannelCallback(_messageCallback);
   }
 
-  WebViewController get controller => _controller;
-  BuildContext? buildContext;
-
   /// 个人信息变更通知
   _postUserInfoEvent() {
     final info = {
@@ -277,23 +293,8 @@ class NEMeetingJSBridge {
   postEvent(JSAPIEvent event) {
     if (_isListeningEvent && _hasPermitted) {
       Alog.i(tag: _tag, content: 'postEvent: ${event.toString()}');
-      _controller.runJavaScript('$_spaceName.onEvent(${event.toString()})');
-    }
-  }
-
-  /// 加载远端链接
-  load() {
-    final uri = Uri.parse(homeUrl);
-    if (DebugOptions().isDebugMode) {
-      if (_controller.platform is AndroidWebViewController) {
-        AndroidWebViewController.enableDebugging(true);
-      }
-      _controller.loadRequest(uri, headers: {
-        'Pragma': 'no-cache',
-        'Cache-Control': 'no-cache',
-      });
-    } else {
-      _controller.loadRequest(uri);
+      controller.evaluateJavascript(
+          source: '$_spaceName.onEvent(${event.toString()})');
     }
   }
 
@@ -418,23 +419,14 @@ class NEMeetingJSBridge {
   }
 
   _closeWebView(JSAPIParams params) {
-    if (buildContext != null) {
-      final result = JSAPIResult(
-        method: params.method,
-        code: -1,
-        message: 'No BuildContext',
-        methodId: params.methodId,
-      ).toString();
-      _onResult(result);
-      Navigator.pop(buildContext!);
-    } else {
-      final result = JSAPIResult(
-        method: params.method,
-        code: 0,
-        methodId: params.methodId,
-      ).toString();
-      _onResult(result);
-    }
+    final result = JSAPIResult(
+      method: params.method,
+      code: -1,
+      message: 'No BuildContext',
+      methodId: params.methodId,
+    ).toString();
+    _onResult(result);
+    Navigator.pop(buildContext);
   }
 
   _getCurrentMeetingInfo(JSAPIParams params) {
@@ -478,6 +470,6 @@ class NEMeetingJSBridge {
 
   _onResult(dynamic result) {
     Alog.i(tag: _tag, content: "api result = $result");
-    _controller.runJavaScript('$_spaceName.onResult($result)');
+    controller.evaluateJavascript(source: '$_spaceName.onResult($result)');
   }
 }

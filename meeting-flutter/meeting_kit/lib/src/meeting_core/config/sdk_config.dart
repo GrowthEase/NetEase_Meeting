@@ -10,8 +10,8 @@ part of meeting_core;
 class SDKConfig with _AloggerMixin {
   ///android version修改对应packages/meeting_sdk_android/gradle.properties的内容
   ///iOS version修改packages/meeting_sdk_ios/NEMeetingScript/spec/NEMeetingSDK.podspec的内容
-  static const String sdkVersionName = '4.8.0';
-  static const int sdkVersionCode = 40800;
+  static const String sdkVersionName = '4.9.0';
+  static const int sdkVersionCode = 40900;
   static const String sdkType = 'official'; //pub
 
   static const int getSdkConfigRetryTime = 3; // 请求sdkConfig失败重试最大次数
@@ -154,6 +154,7 @@ class SDKConfig with _AloggerMixin {
   bool get isSipInviteSupported => _appRoomResConfig.sipInvite;
   bool get isCaptionsSupported => _appRoomResConfig.caption;
   bool get isTranscriptionSupported => _appRoomResConfig.transcription;
+  bool get isAISummarySupported => _appRoomResConfig.summary;
 
   /// 是否支持访客入会，默认打开
   bool get isGuestJoinSupported => _appRoomResConfig.guest;
@@ -187,6 +188,10 @@ class SDKConfig with _AloggerMixin {
         {'notifySenderAccid': String notifySessionId} => notifySessionId,
         _ => '',
       };
+
+  /// 会议设备呼叫
+  bool get isCallOutRoomSystemDeviceSupported =>
+      _appRoomResConfig.callOutRoomSystemDevice;
 
   /// 聊天室
   MeetingChatroomServerConfig get meetingChatroomConfig =>
@@ -280,11 +285,17 @@ class AppRoomResConfig {
   /// 访客入会功能开关
   late final bool guest;
 
+  /// 会议设备呼叫功能开关
+  late final bool callOutRoomSystemDevice;
+
   /// 字幕功能开关
   late final bool caption;
 
   /// 转写功能开关
   late final bool transcription;
+
+  /// 智能总结功能开关
+  late final bool summary;
 
   /// 同声传译功能开关
   late final NEInterpretationConfig interpretation;
@@ -305,6 +316,9 @@ class AppRoomResConfig {
     guest = (json?['guest'] ?? true) as bool;
     caption = (json?['caption'] ?? false) as bool;
     transcription = (json?['transcript'] ?? false) as bool;
+    summary = (json?['summary'] ?? false) as bool;
+    callOutRoomSystemDevice =
+        (json?['callOutRoomSystemDevice'] ?? false) as bool;
     interpretation = switch (json?['interpretation']) {
       Map interpretation => NEInterpretationConfig.fromJson(interpretation),
       _ => const NEInterpretationConfig(),

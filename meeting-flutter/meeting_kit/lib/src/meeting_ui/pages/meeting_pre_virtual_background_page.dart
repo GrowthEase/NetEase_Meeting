@@ -24,35 +24,28 @@ class _PreVirtualBackgroundPageState
     super.initState();
     eventCallback = NEPreviewRoomEventCallback(
         rtcVirtualBackgroundSourceEnabled: onRtcVirtualBackgroundSourceEnabled);
-    NERoomKit.instance.roomService
-        .previewRoom(NEPreviewRoomParams(), NEPreviewRoomOptions())
-        .then((value) {
-      previewRoomContext = value.nonNullData;
-      previewRoomContext?.addEventCallback(eventCallback);
-      rtcController = previewRoomContext?.previewController;
-      checkPermission().then((granted) async {
-        if (granted && mounted) {
+    checkPermission().then((granted) {
+      if (granted && mounted) {
+        NERoomKit.instance.roomService
+            .previewRoom(NEPreviewRoomParams(), NEPreviewRoomOptions())
+            .then((value) async {
+          previewRoomContext = value.nonNullData;
+          previewRoomContext?.addEventCallback(eventCallback);
+          rtcController = previewRoomContext?.previewController;
+
           await _initRenderer();
           await _initVirtualBackgroundPictures();
-        }
-      });
+          var type = await rtcController?.getVirtualBackgroundSupportedType();
+          if (type != null) {
+            supportedType = type;
+          }
+        });
+      }
     });
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(body: buildBeautyPreViewWidget(context));
-  }
-
-  Widget buildBeautyPreViewWidget(BuildContext context) {
-    return Stack(children: <Widget>[
-      buildCallingVideoViewWidget(context),
-      buildBottomDialog(),
-      buildReturnIcon(),
-    ]);
-  }
-
-  Widget buildCallingVideoViewWidget(BuildContext context) {
+  Widget buildVideoView() {
     return renderer != null ? NERtcVideoView(renderer!) : Container();
   }
 

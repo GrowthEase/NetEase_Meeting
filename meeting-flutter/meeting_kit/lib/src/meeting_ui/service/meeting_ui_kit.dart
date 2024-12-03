@@ -95,6 +95,22 @@ abstract class NEMeetingUIKit {
     MeetingPageRouteDidPushCallback? onMeetingPageRouteDidPush,
   });
 
+  /// 以访客身份加入一个当前正在进行中的会议。
+  /// 加入会议成功后，SDK会拉起会议页面，调用方不用做其他操作。
+  ///
+  /// [param] 会议参数对象，不能为空
+  /// [opts]  会议选项对象，可空；当未指定时，会使用默认的选项
+  ///
+  Future<NEResult<void>> guestJoinMeeting(
+    BuildContext context,
+    NEGuestJoinMeetingParams param,
+    NEMeetingOptions opts, {
+    PasswordPageRouteWillPushCallback? onPasswordPageRouteWillPush,
+    MeetingPageRouteWillPushCallback? onMeetingPageRouteWillPush,
+    MeetingPageRouteDidPushCallback? onMeetingPageRouteDidPush,
+    Widget? backgroundWidget,
+  });
+
   ///
   ///  离开当前进行中的会议，并通过参数控制是否同时结束当前会议；
   /// 只有主持人才能结束会议，其他用户设置结束会议无效；
@@ -426,8 +442,8 @@ class _NEMeetingUIKitImpl extends NEMeetingUIKit with _AloggerMixin {
     MeetingPageRouteDidPushCallback? onMeetingPageRouteDidPush,
   }) async {
     bool isAnonymous = false;
+    apiLogger.i('anonymousJoinMeetingUI');
     if (!AccountRepository().isLoggedIn) {
-      apiLogger.i('anonymousJoinMeetingUI');
       final event = IntervalEvent(kEventJoinMeeting)
         ..addParam(kEventParamType, 'anonymous')
         ..addParam(kEventParamMeetingNum, param.meetingNum)
@@ -478,6 +494,94 @@ class _NEMeetingUIKitImpl extends NEMeetingUIKit with _AloggerMixin {
     ).onFailure((_, __) => logoutAnonymous('join error'));
   }
 
+  @override
+  Future<NEResult<void>> guestJoinMeeting(
+    BuildContext context,
+    NEGuestJoinMeetingParams param,
+    NEMeetingOptions opts, {
+    PasswordPageRouteWillPushCallback? onPasswordPageRouteWillPush,
+    MeetingPageRouteWillPushCallback? onMeetingPageRouteWillPush,
+    MeetingPageRouteDidPushCallback? onMeetingPageRouteDidPush,
+    Widget? backgroundWidget,
+  }) async {
+    bool isAnonymous = false;
+    apiLogger.i('guestJoinMeetingUI');
+    if (!AccountRepository().isLoggedIn) {
+      final event = IntervalEvent(kEventJoinMeeting)
+        ..addParam(kEventParamType, 'guest')
+        ..addParam(kEventParamMeetingNum, param.meetingNum)
+        ..beginStep(kMeetingStepMeetingInfo);
+      param.trackingEvent = event;
+
+      final meetingInfoResult =
+          await GuestRepository().getMeetingInfoForGuestJoin(
+        param.meetingNum!,
+        phoneNum: param.phoneNumber,
+        smsCode: param.smsCode,
+      );
+      event.endStepWithResult(meetingInfoResult);
+      final authorization = meetingInfoResult.data?.authorization;
+      if (!meetingInfoResult.isSuccess() || authorization == null) {
+        ReportRepository().reportEvent(event);
+        return meetingInfoResult.cast();
+      }
+
+      event.beginStep(kMeetingStepGuestLogin);
+      assert(CoreRepository().isInitialized);
+      final config =
+          CoreRepository().initedConfig!.copyWith(appKey: authorization.appKey);
+      var loginResult = await CoreRepository().initialize(config).map(() {
+        return AccountRepository().guestLogin(
+          authorization.user,
+          authorization.token,
+          authorization.authType,
+        );
+      });
+      if (loginResult.code ==
+          NEMeetingErrorCode.reuseIMNotSupportAnonymousLogin) {
+        loginResult = NEResult(
+          code: loginResult.code,
+          msg: NEMeetingUIKitLocalizations.of(context)!
+              .meetingReuseIMNotSupportAnonymousJoinMeeting,
+        );
+      } else if (!loginResult.isSuccess()) {
+        loginResult = NEResult(
+          code: loginResult.code,
+          msg: loginResult.msg ?? 'guest login error',
+        );
+      }
+      event.endStepWithResult(loginResult);
+      if (!loginResult.isSuccess()) {
+        ReportRepository().reportEvent(event);
+        return loginResult;
+      }
+      isAnonymous = true;
+    }
+    void logoutAnonymous(String reason) {
+      if (isAnonymous) {
+        commonLogger.i('logoutGuest: $reason');
+        if (NEMeetingKit.instance.getAccountService().isAnonymous) {
+          NEMeetingKit.instance.getAccountService().logout();
+        }
+      }
+    }
+
+    return joinMeeting(
+      context,
+      param,
+      opts,
+      onPasswordPageRouteWillPush: onPasswordPageRouteWillPush,
+      onMeetingPageRouteWillPush: onMeetingPageRouteWillPush,
+      onMeetingPageRouteDidPush: (popped) {
+        final f = popped.whenComplete(() {
+          logoutAnonymous('page popped');
+        });
+        onMeetingPageRouteDidPush?.call(f);
+      },
+      backgroundWidget: backgroundWidget,
+    ).onFailure((_, __) => logoutAnonymous('join error'));
+  }
+
   ///
   /// 离开当前会议
   ///
@@ -521,13 +625,8 @@ class _NEMeetingUIKitImpl extends NEMeetingUIKit with _AloggerMixin {
       return checkIdleResult;
     }
 
-    final level =
-        await NEMeetingKit.instance.getSettingsService().getBeautyFaceValue();
-
-    Navigator.push(
-        context,
-        NEMeetingPageRoute(
-            builder: (context) => BeautySettingPage(beautyLevel: level)));
+    Navigator.push(context,
+        NEMeetingPageRoute(builder: (context) => PreBeautySettingPage()));
     return Future.value(const NEResult(code: NEMeetingErrorCode.success));
   }
 

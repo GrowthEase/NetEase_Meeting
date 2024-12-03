@@ -253,7 +253,7 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
   }
 
   void getMeetingList() {
-    NEMeetingKit.instance.getPreMeetingService().getMeetingList([
+    NEMeetingKit.instance.getPreMeetingService().getScheduledMeetingList([
       NEMeetingItemStatus.init,
       NEMeetingItemStatus.started,
       NEMeetingItemStatus.ended,
@@ -429,14 +429,14 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
 
   Widget buildHistoryBtn() {
     return Positioned(
-      top: 0.h,
+      top: 2.h,
       right: 20.0.w,
       child: NEGestureDetector(
         child: Container(
-          height: 32.h,
+          height: 28.h,
           child: Center(
             child: Container(
-              height: 23.h,
+              height: 24.h,
               // alignment: Alignment.center,
               padding: EdgeInsets.only(left: 8.w, right: 8.w),
               decoration: BoxDecoration(
@@ -460,7 +460,7 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
                           fontWeight: FontWeight.w500),
                       strutStyle: StrutStyle(
                         forceStrutHeight: true,
-                        height: 1,
+                        height: 1.17,
                         fontSize: 14.spMin,
                       ),
                     ),
@@ -662,23 +662,25 @@ class _HomePageRouteState extends PlatformAwareLifecycleBaseState<HomePageRoute>
       return Align(
           alignment: Alignment.topCenter,
           child: Container(
-            margin: EdgeInsets.only(top: 64.h),
+            margin: EdgeInsets.only(top: 114.h),
             child: SingleChildScrollView(
               child: Column(
                 children: [
                   Image(
+                    height: 120.h,
+                    width: 120.w,
                     image: AssetImage(
                       AssetName.emptyMeetingList,
                       // package: AssetName.package
                     ),
                   ),
                   Container(
-                    margin: EdgeInsets.only(top: 24.h),
+                    margin: EdgeInsets.only(top: 8.h),
                     child: Text(
                       getAppLocalizations().meetingScheduleListEmpty,
                       style: TextStyle(
                           fontSize: 14.spMin,
-                          color: AppColors.color_53576A,
+                          color: AppColors.color_222222,
                           fontWeight: FontWeight.w400,
                           decoration: TextDecoration.none),
                     ),

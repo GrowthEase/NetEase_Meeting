@@ -151,7 +151,7 @@ abstract class ScheduleMeetingBaseState<T extends StatefulWidget>
                 ],
                 buildSecurityPart(context),
                 buildSettingPart(context),
-                SizedBox(height: 30),
+                SizedBox(height: 16 + MediaQuery.of(context).padding.bottom),
               ],
             ))));
   }

@@ -14,6 +14,9 @@ class NEAccountInfo {
   /// 用户 Token
   late final String userToken;
 
+  /// 鉴权类型
+  late final String? authType;
+
   /// 用户昵称
   late final String nickname;
 
@@ -47,6 +50,7 @@ class NEAccountInfo {
   NEAccountInfo({
     required this.userUuid,
     required this.userToken,
+    this.authType,
     this.corpName,
     this.nickname = '',
     this.privateMeetingNum = '',
@@ -63,6 +67,7 @@ class NEAccountInfo {
       {String? userUuid, String? userToken, bool? isAnonymous}) {
     this.userUuid = userUuid ?? map['userUuid'] as String;
     this.userToken = userToken ?? map['userToken'] as String;
+    authType = map['authType'] as String?;
     corpName = map['corpName'] as String?;
     nickname = map['nickname'] as String;
     avatar = map['avatar'] as String?;
@@ -99,6 +104,7 @@ class NEAccountInfo {
         corpName,
         userUuid,
         userToken,
+        authType,
         nickname,
         avatar,
         phoneNumber,
@@ -118,6 +124,7 @@ class NEAccountInfo {
         corpName == other.corpName &&
         userUuid == other.userUuid &&
         userToken == other.userToken &&
+        authType == other.authType &&
         nickname == other.nickname &&
         avatar == other.avatar &&
         phoneNumber == other.phoneNumber &&

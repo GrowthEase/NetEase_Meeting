@@ -38,6 +38,7 @@ class NEMenuIDs {
     security,
     chatroom,
     whiteBoard,
+    annotation,
     cloudRecord,
     disconnectAudio,
     settings,
@@ -114,7 +115,7 @@ class NEMenuIDs {
   static const int live = 55;
 
   /// 内置"SIP"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
-  static const int sip = 57;
+  // static const int sip = 57;
 
   /// 内置"虚拟背景"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
   static const int virtualBackground = 58;
@@ -130,6 +131,9 @@ class NEMenuIDs {
 
   /// 内置"呼叫"菜单ID，使用该ID的菜单可添加至"更多"菜单列表中的任意位置。
   static const int sipCall = 62;
+
+  /// "互动批注"菜单ID，收到批注状态事件的时候，在"更多"菜单列表中默认展示。
+  static const int annotation = 63;
 }
 
 class NEMenuItems {
@@ -148,6 +152,7 @@ class NEMenuItems {
         security,
         chatroom,
         whiteBoard,
+        annotation,
         cloudRecord,
         disconnectAudio,
         settings,
@@ -259,6 +264,14 @@ class NEMenuItems {
     singleStateItem: NEMenuItemInfo.undefine,
   );
 
+  /// 批注菜单
+  static final annotation = NECheckableMenuItem(
+    itemId: NEMenuIDs.annotation,
+    visibility: NEMenuVisibility.visibleAlways,
+    uncheckStateItem: NEMenuItemInfo.undefine,
+    checkedStateItem: NEMenuItemInfo.undefine,
+  );
+
   /// 动态菜单按钮
   /// 需要在"更多"菜单中优先展示
   static final List<NEMeetingMenuItem> dynamicFeatureMenuItemList = [
@@ -300,11 +313,11 @@ class NEMenuItems {
   );
 
   /// SIP
-  static final sip = NESingleStateMenuItem(
-    itemId: NEMenuIDs.sip,
-    visibility: NEMenuVisibility.visibleAlways,
-    singleStateItem: NEMenuItemInfo(text: 'SIP'),
-  );
+  // static final sip = NESingleStateMenuItem(
+  //   itemId: NEMenuIDs.sip,
+  //   visibility: NEMenuVisibility.visibleAlways,
+  //   singleStateItem: NEMenuItemInfo(text: 'SIP'),
+  // );
 
   /// 虚拟背景
   static final virtualBackground = NESingleStateMenuItem(

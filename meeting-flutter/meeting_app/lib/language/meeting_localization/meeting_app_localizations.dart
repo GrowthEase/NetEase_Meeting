@@ -148,7 +148,7 @@ abstract class MeetingAppLocalizations {
   /// No description provided for @globalCopy.
   ///
   /// In zh, this message translates to:
-  /// **'复制'**
+  /// **'settingChatMessageNotificationNoReminder'**
   String get globalCopy;
 
   /// No description provided for @globalCopySuccess.
@@ -457,6 +457,12 @@ abstract class MeetingAppLocalizations {
   /// **'无法使用相册'**
   String get globalPhotosPermission;
 
+  /// No description provided for @globalGoBack.
+  ///
+  /// In zh, this message translates to:
+  /// **'返回'**
+  String get globalGoBack;
+
   /// No description provided for @authImmediatelyRegister.
   ///
   /// In zh, this message translates to:
@@ -620,6 +626,12 @@ abstract class MeetingAppLocalizations {
   /// In zh, this message translates to:
   /// **'获取验证码'**
   String get authGetCheckCode;
+
+  /// No description provided for @authGetCheckCodeAgain.
+  ///
+  /// In zh, this message translates to:
+  /// **'重新获取 {seconds}S'**
+  String authGetCheckCodeAgain(Object seconds);
 
   /// No description provided for @authNewRegister.
   ///
@@ -957,6 +969,12 @@ abstract class MeetingAppLocalizations {
   /// **'发起会议'**
   String get meetingHold;
 
+  /// No description provided for @meetingHoldSubject.
+  ///
+  /// In zh, this message translates to:
+  /// **'{userName}的即刻会议'**
+  String meetingHoldSubject(Object userName);
+
   /// No description provided for @meetingNetworkAbnormalityCheckAndRejoin.
   ///
   /// In zh, this message translates to:
@@ -1004,6 +1022,12 @@ abstract class MeetingAppLocalizations {
   /// In zh, this message translates to:
   /// **'会议号'**
   String get meetingNum;
+
+  /// No description provided for @meetingNickname.
+  ///
+  /// In zh, this message translates to:
+  /// **'入会昵称'**
+  String get meetingNickname;
 
   /// No description provided for @meetingStatusInit.
   ///
@@ -1112,6 +1136,12 @@ abstract class MeetingAppLocalizations {
   /// In zh, this message translates to:
   /// **'请输入会议号'**
   String get meetingEnterId;
+
+  /// No description provided for @meetingEnterNickname.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入入会昵称'**
+  String get meetingEnterNickname;
 
   /// No description provided for @meetingSubject.
   ///
@@ -1792,17 +1822,65 @@ abstract class MeetingAppLocalizations {
   /// **'复制全部'**
   String get copyMeetingAll;
 
-  /// No description provided for @meetingCrossAppNoPermission.
+  /// No description provided for @meetingGuestJoinNotSupportedTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'会议暂未对外部人员开放'**
+  String get meetingGuestJoinNotSupportedTitle;
+
+  /// No description provided for @meetingGuestJoinNotSupported.
   ///
   /// In zh, this message translates to:
   /// **'很抱歉，您尝试加入的会议暂未对外部人员开放。如有需要，请联系会议组织者开启访客入会权限。'**
-  String get meetingCrossAppNoPermission;
+  String get meetingGuestJoinNotSupported;
+
+  /// No description provided for @meetingCrossAppJoinNotSupportedTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'会议不支持加入'**
+  String get meetingCrossAppJoinNotSupportedTitle;
+
+  /// No description provided for @meetingCrossAppJoinNotSupported.
+  ///
+  /// In zh, this message translates to:
+  /// **'很抱歉，您尝试加入的会议并非由您的团队/组织创建，暂不支持加入。您可退出登录，通过“加入会议”入口尝试加入。'**
+  String get meetingCrossAppJoinNotSupported;
 
   /// No description provided for @meetingCrossAppJoinTip.
   ///
   /// In zh, this message translates to:
   /// **'该会议由其他团队/组织创建，您将以访客身份加入，是否加入会议？'**
   String get meetingCrossAppJoinTip;
+
+  /// No description provided for @meetingGuestJoinVerify.
+  ///
+  /// In zh, this message translates to:
+  /// **'访客身份验证'**
+  String get meetingGuestJoinVerify;
+
+  /// No description provided for @meetingGuestJoinVerifyTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'为保障会议安全，请输入手机号进行身份验证'**
+  String get meetingGuestJoinVerifyTip;
+
+  /// No description provided for @meetingLiveToOtherPlatform.
+  ///
+  /// In zh, this message translates to:
+  /// **'直播至第三方平台'**
+  String get meetingLiveToOtherPlatform;
+
+  /// No description provided for @meetingLiveReloadUpload.
+  ///
+  /// In zh, this message translates to:
+  /// **'点击重新上传'**
+  String get meetingLiveReloadUpload;
+
+  /// No description provided for @meetingCastScreen.
+  ///
+  /// In zh, this message translates to:
+  /// **'会议室投屏'**
+  String get meetingCastScreen;
 
   /// No description provided for @historyMeeting.
   ///
@@ -1857,12 +1935,6 @@ abstract class MeetingAppLocalizations {
   /// In zh, this message translates to:
   /// **'云录制文件生成中…'**
   String get historyMeetingCloudRecordingFileBeingGenerated;
-
-  /// No description provided for @nan.
-  ///
-  /// In zh, this message translates to:
-  /// **'很抱歉，您尝试加入的会议暂未对外部人员开放。如有需要，请联系会议组织者开启访客入会权限。'**
-  String get nan;
 
   /// No description provided for @settings.
   ///
@@ -2284,6 +2356,18 @@ abstract class MeetingAppLocalizations {
   /// In zh, this message translates to:
   /// **'简体中文'**
   String get settingLanguageTip;
+
+  /// No description provided for @settingVolumeOutput.
+  ///
+  /// In zh, this message translates to:
+  /// **'输出音量'**
+  String get settingVolumeOutput;
+
+  /// No description provided for @settingVolumeInput.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入音量'**
+  String get settingVolumeInput;
 
   /// No description provided for @evaluationTitle.
   ///

@@ -66,8 +66,6 @@ class NEMeetingIconFont {
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_copy1x = IconData(0xe818,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
-  static const IconData icon_narrow_line = IconData(0xe819,
-      fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_search2_line1x = IconData(0xe81a,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_raisehands = IconData(0xe81b,
@@ -83,6 +81,8 @@ class NEMeetingIconFont {
   static const IconData icon_whiteboard = IconData(0xe607,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_sip = IconData(0xe68b,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_h323 = IconData(0xe74f,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_virtual_background = IconData(0xe6b9,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
@@ -138,7 +138,7 @@ class NEMeetingIconFont {
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_hand_up = IconData(0xe76c,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
-  static const IconData icon_narrow = IconData(0xe6ee,
+  static const IconData icon_narrow = IconData(0xe74a,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_system_phone = IconData(0xe6ea,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
@@ -209,5 +209,7 @@ class NEMeetingIconFont {
   static const IconData icon_contacts = IconData(0xe734,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
   static const IconData icon_call_batch = IconData(0xe733,
+      fontPackage: meetingAssetsPackageName, fontFamily: _family);
+  static const IconData icon_annotation = IconData(0xe85b,
       fontPackage: meetingAssetsPackageName, fontFamily: _family);
 }

@@ -148,6 +148,9 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get globalPause => 'Pause';
 
   @override
+  String get globalNoContent => 'No content';
+
+  @override
   String get meetingBeauty => 'Beauty';
 
   @override
@@ -234,14 +237,26 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get meetingHandsUpApply => 'Raise hand';
 
   @override
+  String get meetingRaiseHand => 'Raise hand';
+
+  @override
   String get meetingCancelHandsUp => 'Lower hand';
 
   @override
   String get meetingCancelHandsUpConfirm =>
-      'Are you sure you want to lower hand?';
+      'Are you sure to put your hands down?';
 
   @override
   String get meetingHandsUpDown => 'Lower hand';
+
+  @override
+  String get meetingHandsUpDownAll => 'Lower all hands';
+
+  @override
+  String get meetingHandsUpDownAllSuccess => 'All participants\' hands lowered';
+
+  @override
+  String get meetingHandsUpDownAllFail => 'Failed to lower all hands';
 
   @override
   String get meetingInHandsUp => 'Raising hand';
@@ -258,6 +273,11 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
 
   @override
   String get meetingHostRejectAudioHandsUp => 'The host rejected your request';
+
+  @override
+  String meetingHandsUpNumber(Object num) {
+    return '$num participants are raising hands';
+  }
 
   @override
   String get meetingSip => 'SIP';
@@ -476,6 +496,12 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
       'Are you sure you want to leave this meeting?';
 
   @override
+  String get meetingAppointNewHost => 'Assign a new host';
+
+  @override
+  String get meetingAppointAndLeave => 'Assign and leave';
+
+  @override
   String get meetingWatermarkEnabled => 'You have enabled watermark';
 
   @override
@@ -542,6 +568,15 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
 
   @override
   String get meetingAllowMembersTo => 'Allow participants to';
+
+  @override
+  String get meetingEmojiResponse => 'React';
+
+  @override
+  String get meetingAllowEmojiResponse => 'Allow emojis and reactions';
+
+  @override
+  String get meetingRejectEmojiResponse => 'Not allow emojis and reactions';
 
   @override
   String get meetingChat => 'Group and Private Chats';
@@ -652,6 +687,10 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
 
   @override
   String get meetingLocked => 'Meeting is locked';
+
+  @override
+  String get meetingLockedTip =>
+      'Sorry, the meeting is locked. Please contact the meeting organizer to unlock the meeting.';
 
   @override
   String get meetingNotExist => 'Meeting does not exist';
@@ -844,6 +883,17 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
 
   @override
   String get virtualCustom => 'Custom';
+
+  @override
+  String get virtualBackgroundPerfInadequate =>
+      'Insufficient device performance';
+
+  @override
+  String get virtualBackgroundPerfInadequateTip =>
+      'Your device\'s performance is insufficient, enabling the virtual background function may result in a decrease in video quality or stuttering. Do you still want to try enabling it';
+
+  @override
+  String get virtualBackgroundForce => 'Continue';
 
   @override
   String get live => 'Live';
@@ -1269,7 +1319,7 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
 
   @override
   String get cloudRecordingEnabledMessage =>
-      'After the recording starts, all participants will be informed and the meeting audio, video and shared screen view will be recorded to the cloud';
+      'After the recording starts,  the meeting audio, video and shared screen view will be recorded to the cloud and all participants will be informed.';
 
   @override
   String get cloudRecordingEnabledMessageWithoutNotice =>
@@ -1298,7 +1348,7 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
 
   @override
   String get cloudRecordingEndedAndGetUrl =>
-      'You can contact the meeting creator after the meeting to obtain a viewing link';
+      'You can contact the meeting creator after the meeting to obtain a viewing link.';
 
   @override
   String get cloudRecordingStart => 'Cloud recording';
@@ -1317,6 +1367,28 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
 
   @override
   String get cloudRecordingStarting => 'Starting recording…';
+
+  @override
+  String get cloudRecordingUnableToStart => 'Unable to start cloud recording';
+
+  @override
+  String get cloudRecordingUnableToStartTips =>
+      'No microphone or video is enabled in the meeting. To start recording, please unmute.';
+
+  @override
+  String get cloudRecordingEnableAISummary => 'Enable smart recording';
+
+  @override
+  String get cloudRecordingEnableAISummaryTip =>
+      'When enabled, this meeting will generate smart AI minutes (including summary and to-do list))';
+
+  @override
+  String get cloudRecordingAISummaryStarted =>
+      'This meeting has started smart recording and will generate smart AI minutes (including summary and to-do list)';
+
+  @override
+  String get cloudRecordingEnableAISummaryFail =>
+      'Smart recording fails to be enabled. Please stop recording later and try again';
 
   @override
   String get chat => 'Chat';
@@ -1585,7 +1657,7 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get networkConnectionPoor => 'Network connection is poor';
 
   @override
-  String get nan => 'Network connection is unknown';
+  String get networkConnectionUnknown => 'Network connection is unknown';
 
   @override
   String get networkLocalLatency => 'Latency';
@@ -1687,6 +1759,9 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get sipCallFailed => 'Call failed';
 
   @override
+  String get sipCallBusy => 'Line busy';
+
+  @override
   String get sipCallAgain => 'Redial';
 
   @override
@@ -1768,6 +1843,10 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
       'The member has been blocked. To invite, disable the meeting blacklist';
 
   @override
+  String get sipCallDeviceIsInBlacklist =>
+      'The device has been blocked. To invite, disable the meeting blacklist';
+
+  @override
   String get sipCallByPhone => 'Phone';
 
   @override
@@ -1808,6 +1887,9 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
       'IP address or SIP URI or registered device number';
 
   @override
+  String get sipCallOutRoomH323InputTip => 'IP address or E.164 number';
+
+  @override
   String get sipDisplayName => 'Name';
 
   @override
@@ -1815,6 +1897,30 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
 
   @override
   String get sipDeviceIsInMeeting => 'The device is already in the meeting';
+
+  @override
+  String get sip => 'SIP';
+
+  @override
+  String get h323 => 'H.323';
+
+  @override
+  String get sipProtocol => 'Protocol';
+
+  @override
+  String get roomSipCallIsInBlacklist =>
+      'The device has been blocked. To invite, disable the meeting blacklist';
+
+  @override
+  String get roomSipCallIsInMeeting => 'The device is already in the meeting';
+
+  @override
+  String get roomSipCallrNetworkError =>
+      'Network abnormality, please check your network';
+
+  @override
+  String get roomSipCallrNickNameLimit =>
+      'The  nickname is too long. Please reset it.';
 
   @override
   String get monitoring => 'Quality Monitoring';
@@ -2206,6 +2312,21 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get settingShowMeetDuration => 'Show Meeting Duration';
 
   @override
+  String get settingShowParticipationTime => 'Show Connected Time';
+
+  @override
+  String get settingShowElapsedTime => 'Display Time';
+
+  @override
+  String get settingShowNone => 'Do not show';
+
+  @override
+  String get settingShowMeetingElapsedTime => 'Meeting duration';
+
+  @override
+  String get settingShowParticipationElapsedTime => 'Connected time';
+
+  @override
   String get settingSpeakerSpotlight => 'Speaker Spotlight';
 
   @override
@@ -2232,8 +2353,26 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get settingChatMessageNotificationNoReminder => 'Off';
 
   @override
+  String get settingHideVideoOffAttendees => 'Hide non-video participants';
+
+  @override
+  String get settingHideMyVideo => 'Hide self view';
+
+  @override
+  String get settingLeaveTheMeetingRequiresConfirmation =>
+      'Ask me to confirm when l leave a meeting';
+
+  @override
   String get usingComputerAudioInMeeting =>
       'Use PC audio when joining a meeting';
+
+  @override
+  String get settingEnterFullscreen =>
+      'Enter full screen automatically when starting or joining a meeting';
+
+  @override
+  String get enterFullscreenTips =>
+      'Press ESC or click the button in the upper right corner to exit full screen mode';
 
   @override
   String get joinMeetingSettings => 'Join Settings';
@@ -2244,6 +2383,51 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   @override
   String get ringWhenMemberJoinOrLeave =>
       'Play sound when someone joins or leaves';
+
+  @override
+  String get windowSizeWhenSharingTheScreen =>
+      'Window size when screen sharing';
+
+  @override
+  String get sideBySideMode => 'Side-by-side mode';
+
+  @override
+  String get sideBySideModeTips =>
+      'While viewing others\' shared screens automatically place the participants\' videos to the right of the shared screen';
+
+  @override
+  String get whenIShareMyScreenInMeeting =>
+      'When I share my screen in a meeting';
+
+  @override
+  String get showAllSharingOptions => 'Show all sharing options';
+
+  @override
+  String get automaticDesktopSharing => 'Automatically share the desktop';
+
+  @override
+  String get automaticDesktopSharingTips =>
+      'When you have multiple monitors, your primary desktop will be shared automatically';
+
+  @override
+  String get onlyShowTheEntireScreen => 'Only display the entire screen';
+
+  @override
+  String get sharedLimitFrameRate => 'Limit your screen share to';
+
+  @override
+  String get sharedLimitFrameRateTips =>
+      'When turned on, the screen sharing frame rate will not exceed the set value.';
+
+  @override
+  String get sharedLimitFrameRateUnit => 'frames-per-second';
+
+  @override
+  String get preferMotionModel => 'Fluency preferred';
+
+  @override
+  String get preferMotionModelTips =>
+      'Reduce CPU and Bandwidth usage and prioritize the fluency if the shared video';
 
   @override
   String get transcriptionEnableCaption => 'Enable subtitles';
@@ -2400,7 +2584,7 @@ class NEMeetingUIKitLocalizationsEn extends NEMeetingUIKitLocalizations {
   String get feedbackTitleDate => 'Occurrence Time';
 
   @override
-  String get feedbackContentEmpty => 'Empty';
+  String get feedbackContentEmpty => 'None';
 
   @override
   String get feedbackTitleSelectPicture => 'Picture';

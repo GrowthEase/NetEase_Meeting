@@ -41,4 +41,11 @@ abstract class NEMeetingInviteService {
   ///
   void removeMeetingInviteStatusListener(
       NEMeetingInviteStatusListener listener);
+
+  ///
+  /// 呼叫指定会议室设备
+  /// [device] device 设备
+  ///
+  Future<NEResult<NERoomSIPCallInfo?>> callOutRoomSystem(
+      NERoomSystemDevice device);
 }

@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:nemeeting/about/about.dart';
+import 'package:nemeeting/auth/guest_login.dart';
 import 'package:nemeeting/auth/login_corp_account.dart';
 import 'package:nemeeting/auth/login_mobile.dart';
 import 'package:nemeeting/auth/login_sso.dart';
@@ -34,6 +35,7 @@ import '../webview/webview_page.dart';
 class RoutesRegister {
   static var _routes = {
     RouterName.mobileLogin: (context) => LoginMobileRoute(),
+    RouterName.guestLogin: (context) => GuestLoginRoute(),
     RouterName.corpAccountLogin: (context) => LoginCorpAccountRoute(),
     RouterName.resetInitialPassword: (context) => ResetInitialPasswordRoute(),
     RouterName.ssoLogin: (context) => LoginSSORoute(),

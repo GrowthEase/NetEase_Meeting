@@ -2,11 +2,11 @@ name: nemeeting
 description: A new Flutter application.
 publish_to: none
 
-version: 4.8.0+40800
+version: 4.9.1+40901
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
-  flutter: ">=3.10.0"
+  flutter: ">=3.22.2"
 
 dependencies:
   flutter:
@@ -34,7 +34,7 @@ dependencies:
     path: ../meeting_kit
   file_picker: ^8.0.0+1
 
-  webview_flutter: ^4.7.0
+  flutter_inappwebview: ^6.0.0
   sensors_plus: ^5.0.1
   qr_code_scanner: ^1.0.1
   flutter_screenutil: ^5.9.0

@@ -134,7 +134,7 @@ extension NEChatMessageNotificationTypeExtension
     }
   }
 
-  static NEChatMessageNotificationType mapValueToEnum(int? value) {
+  static NEChatMessageNotificationType? mapValueToEnum(int? value) {
     switch (value) {
       case 0:
         return NEChatMessageNotificationType.barrage;
@@ -143,6 +143,44 @@ extension NEChatMessageNotificationTypeExtension
       case 2:
         return NEChatMessageNotificationType.noRemind;
     }
-    return NEChatMessageNotificationType.barrage;
+    return null;
+  }
+}
+
+/// 会议时长展示类型
+enum NEMeetingElapsedTimeDisplayType {
+  /// 不显示
+  none,
+
+  /// 本场会议开始持续的时间
+  meetingElapsedTime,
+
+  /// 本次参会的时间
+  participationElapsedTime,
+}
+
+extension NEMeetingElapsedTimeDisplayTypeExtension
+    on NEMeetingElapsedTimeDisplayType {
+  int get value {
+    switch (this) {
+      case NEMeetingElapsedTimeDisplayType.none:
+        return 0;
+      case NEMeetingElapsedTimeDisplayType.meetingElapsedTime:
+        return 1;
+      case NEMeetingElapsedTimeDisplayType.participationElapsedTime:
+        return 2;
+    }
+  }
+
+  static NEMeetingElapsedTimeDisplayType? mapValueToEnum(int? value) {
+    switch (value) {
+      case 0:
+        return NEMeetingElapsedTimeDisplayType.none;
+      case 1:
+        return NEMeetingElapsedTimeDisplayType.meetingElapsedTime;
+      case 2:
+        return NEMeetingElapsedTimeDisplayType.participationElapsedTime;
+    }
+    return null;
   }
 }

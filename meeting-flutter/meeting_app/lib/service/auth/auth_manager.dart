@@ -61,6 +61,8 @@ class AuthManager with AppLogger {
   NEAccountInfo? get accountInfo =>
       _neMeetingKit.getAccountService().getAccountInfo();
 
+  bool get isLoggedIn => accountInfo != null;
+
   Future<bool> autoLogin() async {
     AuthState().updateState(state: AuthState.init);
     final result = await _autoLoginMeetingKit();
@@ -111,6 +113,7 @@ class AuthManager with AppLogger {
         /// 使用asset资源目录下的服务器配置文件
         useAssetServerConfig: true,
         iosBroadcastAppGroup: iosBroadcastExtensionAppGroup,
+        iosBroadcastScheme: iosBroadcastScheme,
         serverUrl: Servers().baseUrl,
         extras: AppConfig.isInDebugMode
             ? {

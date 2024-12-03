@@ -13,7 +13,17 @@ class _LogService {
 
   String? _rootPath;
 
+  Completer<bool>? _completer;
+
   Future<bool> init() async {
+    if (_completer == null) {
+      _completer = Completer();
+      _completer!.complete(_initImpl());
+    }
+    return _completer!.future;
+  }
+
+  Future<bool> _initImpl() async {
     if (_rootPath != null) {
       return true;
     }

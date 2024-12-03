@@ -19,9 +19,8 @@ class InMeetingFeedBack extends StatefulWidget {
     var meetingInfo =
         NEMeetingKit.instance.getMeetingService().getCurrentMeetingInfo();
     if (meetingInfo == null) return;
-    showCupertinoModalPopup(
+    showMeetingPopupPageRoute(
       context: buildContext,
-      useRootNavigator: false,
       builder: (BuildContext context) {
         return InMeetingFeedBack(
           meetingInfo: meetingInfo,
@@ -45,19 +44,20 @@ class _InMeetingFeedBackState extends State<InMeetingFeedBack> {
       topLeft: const Radius.circular(8),
       topRight: const Radius.circular(8),
     );
-    final data = MediaQuery.of(context);
-    var margin = data.size.height * 0.15;
-    return Container(
-      margin: EdgeInsets.only(top: margin),
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
-      decoration: BoxDecoration(
-        color: _UIColors.globalBg,
-        borderRadius: borderRadius,
+    return Scaffold(
+      appBar: TitleBar(
+        title: TitleBarTitle(
+          localizations.feedbackInRoom,
+        ),
       ),
-      child: ClipRRect(
-        borderRadius: borderRadius,
-        child: Scaffold(
-          body: FeedbackContent(
+      body: Container(
+        decoration: BoxDecoration(
+          color: _UIColors.globalBg,
+          borderRadius: borderRadius,
+        ),
+        child: ClipRRect(
+          borderRadius: borderRadius,
+          child: FeedbackContent(
             onFeedback: _onSubmit,
           ),
         ),

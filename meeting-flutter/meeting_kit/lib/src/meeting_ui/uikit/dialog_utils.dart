@@ -201,7 +201,7 @@ class DialogUtils {
     required BuildContext context,
     required WidgetBuilder builder,
     bool barrierDismissible = true,
-    Color? barrierColor = Colors.black54,
+    Color? barrierColor = Colors.black38,
     String? barrierLabel,
     bool useSafeArea = true,
     bool useRootNavigator = false,
@@ -340,6 +340,25 @@ class DialogUtils {
       cancelText: NEMeetingUIKitLocalizations.of(context)!.meetingLeaveFull,
       acceptText: NEMeetingUIKitLocalizations.of(context)!.meetingRejoining,
       cancelTextColor: _UIColors.colorFE3B30,
+      canBack: false,
+    );
+  }
+
+  static void showVirtualBackgroundAlertDialog(
+      {required BuildContext context,
+      required VoidCallback onCancelCallback,
+      required VoidCallback onForceOpenCallback}) {
+    showCommonDialog(
+      context,
+      NEMeetingUIKitLocalizations.of(context)!.virtualBackgroundPerfInadequate,
+      NEMeetingUIKitLocalizations.of(context)!
+          .virtualBackgroundPerfInadequateTip,
+      onCancelCallback,
+      onForceOpenCallback,
+      cancelText: NEMeetingUIKitLocalizations.of(context)!.globalCancel,
+      acceptText:
+          NEMeetingUIKitLocalizations.of(context)!.virtualBackgroundForce,
+      acceptTextColor: _UIColors.colorFE3B30,
       canBack: false,
     );
   }
@@ -483,7 +502,16 @@ class DialogUtils {
         return NEMeetingUIKitLocalizationsScope(
           builder: (context, localizations, _) {
             return CupertinoAlertDialog(
-              title: Text(title),
+              title: Padding(
+                  padding: EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      color: _UIColors.color1E1F27,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  )),
               content: contentWidget ??
                   Text(content,
                       textAlign:
@@ -801,6 +829,7 @@ extension MeetingUIDialogUtils on State {
                               padding: EdgeInsets.only(right: 10),
                               onPressed: () {
                                 controller.clear();
+                                setState(() {});
                               },
                             ),
                           ),

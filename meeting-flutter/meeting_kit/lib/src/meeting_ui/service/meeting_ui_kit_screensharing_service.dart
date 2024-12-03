@@ -141,7 +141,9 @@ class _NEMeetingUIKitScreenSharingServiceImpl
           _roomContext.rtcController
               .startScreenShare(
                   iosAppGroup:
-                      NEMeetingUIKit.instance.uiConfig?.iosBroadcastAppGroup)
+                      NEMeetingUIKit.instance.uiConfig?.iosBroadcastAppGroup,
+                  iosScheme:
+                      NEMeetingUIKit.instance.uiConfig?.iosBroadcastScheme)
               .then((value) {
             if (!value.isSuccess()) {
               apiLogger.i('startScreenShare fail  value: ${value.code}');

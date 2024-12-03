@@ -41,6 +41,7 @@ class _EntranceRouteState extends PlatformAwareLifecycleBaseState
   var _edition = _Edition.corp;
   final _corpCodeController = TextEditingController();
   var _hasInputChanged = false;
+  bool showCorpCodeInput = false;
 
   @override
   void initState() {
@@ -61,6 +62,13 @@ class _EntranceRouteState extends PlatformAwareLifecycleBaseState
     GlobalPreferences().savedCorpCode.then((value) {
       if (!mounted || value == null || _hasInputChanged) return;
       _corpCodeController.text = value;
+    });
+
+    /// 同意隐私政策弹窗后再显示输入框，解决vivo隐私检测问题
+    GlobalPreferences().ensurePrivacyAgree().then((_) {
+      setState(() {
+        showCorpCodeInput = true;
+      });
     });
   }
 
@@ -84,7 +92,7 @@ class _EntranceRouteState extends PlatformAwareLifecycleBaseState
                 SizedBox(
                   height: 54,
                 ),
-                buildCorpCodeInput(),
+                if (showCorpCodeInput) buildCorpCodeInput(),
                 SizedBox(
                   height: 10,
                 ),
@@ -103,8 +111,6 @@ class _EntranceRouteState extends PlatformAwareLifecycleBaseState
                     );
                   },
                 ),
-                Spacer(),
-                buildSSO(),
               ],
               if (_edition == _Edition.trial) ...[
                 SizedBox(
@@ -114,18 +120,16 @@ class _EntranceRouteState extends PlatformAwareLifecycleBaseState
                   text: getAppLocalizations().authRegisterAndLogin,
                   onTap: launchTrialLogin,
                 ),
-                SizedBox(
-                  height: 16,
-                ),
-                buildTrialLoginSubActions(),
-                Spacer(),
               ],
               SizedBox(
                 height: 24.h,
               ),
               PrivacyUtil.protocolTips(),
+              Spacer(),
+              if (_edition == _Edition.corp) buildCorpLoginBottomSubActions(),
+              if (_edition == _Edition.trial) buildTrialLoginSubActions(),
               SizedBox(
-                height: 16,
+                height: 16.h,
               ),
               Image.asset(
                 AssetName.provider,
@@ -199,27 +203,65 @@ class _EntranceRouteState extends PlatformAwareLifecycleBaseState
             ),
           ),
         ),
-        Spacer(),
-        NEGestureDetector(
-          child: Text(
-            getAppLocalizations().authLoginToTrialEdition,
-            style: TextStyle(
-              color: AppColors.blue_337eff,
-              fontSize: 14.spMin,
-            ),
+      ],
+    );
+  }
+
+  Widget buildCorpLoginBottomSubActions() {
+    return SizedBox(
+      height: 22,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          buildTextAction(getAppLocalizations().meetingJoin, () async {
+            NavUtils.pushNamed(context, RouterName.meetJoin);
+          }),
+          Container(
+            color: AppColors.colorE6E7EB,
+            width: 1,
+            height: 12,
+            margin: EdgeInsets.symmetric(horizontal: 10),
           ),
-          onTap: () {
+          buildTextAction(getAppLocalizations().authLoginBySSO, () async {
+            if (!await PrivacyUtil.ensurePrivacyAgree(context)) return;
+            NavUtils.pushNamed(context, RouterName.ssoLogin,
+                arguments: _corpCodeController.text.trim());
+          }),
+          Container(
+            color: AppColors.colorE6E7EB,
+            width: 1,
+            height: 12,
+            margin: EdgeInsets.symmetric(horizontal: 10),
+          ),
+          buildTextAction(getAppLocalizations().authLoginToTrialEdition, () {
             setState(() {
               _edition = _Edition.trial;
             });
-          },
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget buildTextAction(String action, VoidCallback callback) {
+    return NEGestureDetector(
+      onTap: callback,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Text(
+          action,
+          style: TextStyle(
+            fontSize: 14,
+            color: AppColors.color_8D90A0,
+          ),
         ),
-      ],
+      ),
     );
   }
 
   Widget buildTrialLoginSubActions() {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         Text(
           getAppLocalizations().authHasCorpCode,
@@ -246,16 +288,8 @@ class _EntranceRouteState extends PlatformAwareLifecycleBaseState
     );
   }
 
-  Widget buildSSO() {
-    return LoginItem(
-      type: LoginItemType.sso,
-      onTap: (_) async {
-        if (!await PrivacyUtil.ensurePrivacyAgree(context)) return;
-        NavUtils.pushNamed(context, RouterName.ssoLogin,
-            arguments: _corpCodeController.text.trim());
-      },
-    );
-  }
+  int _tapCount = 0;
+  int _tapTime = 0;
 
   Widget buildIcon() {
     return Container(
