@@ -14,9 +14,6 @@ class AssetName {
 
   static const String iconWarning = 'assets/images/icon_warning.png';
 
-  static const String emptyHistoryMeetingList =
-      'assets/images/empty_historyMeeting_list.png';
-
   static const String iconEvaluationAngry =
       'assets/lottie/icon_evaluation_angry.json';
   static const String iconEvaluationSad =

@@ -48,25 +48,24 @@ class MeetingProtocolsState extends State<MeetingProtocols> {
         .authHasReadAndAgreeToPolicy('##privacy##', '##userProtocol##');
     final tipList = tips.split('##');
     return Container(
-        alignment: Alignment.center,
-        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Material(
+        alignment: Alignment.centerLeft,
+        child: Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+          GestureDetector(
               key: ValueKey('protocolCheckBox'),
-              child: InkWell(
-                  onTap: () {
-                    setState(() {
-                      _value = !_value;
-                    });
-                    if (widget.onChanged != null) {
-                      widget.onChanged!(_value);
-                    }
-                  },
-                  child: Container(
-                    color: Colors.white,
-                    padding: EdgeInsets.only(right: 8),
-                    alignment: Alignment.centerRight,
-                    child: checkIcon(),
-                  ))),
+              onTap: () {
+                setState(() {
+                  _value = !_value;
+                });
+                if (widget.onChanged != null) {
+                  widget.onChanged!(_value);
+                }
+              },
+              child: Container(
+                margin: EdgeInsets.only(right: 12),
+                alignment: Alignment.centerRight,
+                // color: Colors.white,
+                child: checkIcon(),
+              )),
           Flexible(
             child: Text.rich(
               TextSpan(children: [
@@ -99,7 +98,7 @@ class MeetingProtocolsState extends State<MeetingProtocols> {
               // 解决中文垂直不居中问题
               strutStyle: StrutStyle(
                 forceStrutHeight: true,
-                height: 1,
+                height: 1.23,
               ),
             ),
           )
@@ -116,7 +115,7 @@ class MeetingProtocolsState extends State<MeetingProtocols> {
   TextStyle buildTextStyle(Color color) {
     return TextStyle(
         color: color,
-        fontSize: 12,
+        fontSize: 13,
         fontWeight: FontWeight.w400,
         decoration: TextDecoration.none);
   }

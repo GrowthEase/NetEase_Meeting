@@ -76,29 +76,41 @@ class PIPViewState extends State<PIPView> with TickerProviderStateMixin {
     });
   }
 
+  BuildContext? meetingContext;
   @override
   Widget build(BuildContext context) {
     final isFloating = _bottomWidget != null;
-    return RawPIPView(
-      avoidKeyboard: widget.avoidKeyboard,
-      bottomWidget: isFloating
-          ? Navigator(
-              onGenerateInitialRoutes: (navigator, initialRoute) => [
-                NEMeetingPageRoute(builder: (context) => _bottomWidget!),
-              ],
-            )
-          : null,
-      onTapTopWidget: isFloating ? stopFloating : null,
-      topWidget: IgnorePointer(
-        ignoring: isFloating,
-        child: Builder(
-          builder: (context) => widget.builder(context, isFloating),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (pop) {
+        if (meetingContext != null && Navigator.canPop(meetingContext!)) {
+          Navigator.of(meetingContext!).pop();
+        }
+      },
+      child: RawPIPView(
+        avoidKeyboard: widget.avoidKeyboard,
+        bottomWidget: isFloating
+            ? Navigator(
+                onGenerateInitialRoutes: (navigator, initialRoute) => [
+                  NEMeetingPageRoute(builder: (context) {
+                    meetingContext = context;
+                    return _bottomWidget!;
+                  }),
+                ],
+              )
+            : null,
+        onTapTopWidget: isFloating ? stopFloating : null,
+        topWidget: IgnorePointer(
+          ignoring: isFloating,
+          child: Builder(
+            builder: (context) => widget.builder(context, isFloating),
+          ),
         ),
+        floatingHeight: _floatingHeight,
+        floatingWidth: _floatingWidth,
+        initialCorner: widget.initialCorner,
+        ratio: _ratio,
       ),
-      floatingHeight: _floatingHeight,
-      floatingWidth: _floatingWidth,
-      initialCorner: widget.initialCorner,
-      ratio: _ratio,
     );
   }
 }

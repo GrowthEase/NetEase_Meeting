@@ -128,15 +128,24 @@ class _ScheduleMeetingDetailRouteState
             ToastUtils.showToast(context, getAppLocalizations().meetingEnd);
           }
 
-          /// 退回首页
-          if (Navigator.canPop(context)) {
-            Navigator.popUntil(context,
-                ModalRoute.withName(ScheduleMeetingDetailRoute.routeName));
-            Navigator.maybePop(context);
+          /// 退回首页；如果当前有正在进行的会议，不能 Pop 会议页面
+          final meetingStatus =
+              NEMeetingKit.instance.getMeetingService().getMeetingStatus();
+          if (meetingStatus == NEMeetingStatus.idle ||
+              meetingStatus == NEMeetingStatus.inMeetingMinimized) {
+            _maybePopPage();
           }
         }
       }
     });
+  }
+
+  void _maybePopPage() {
+    if (Navigator.canPop(context)) {
+      Navigator.popUntil(
+          context, ModalRoute.withName(ScheduleMeetingDetailRoute.routeName));
+      Navigator.maybePop(context);
+    }
   }
 
   @override
@@ -196,6 +205,7 @@ class _ScheduleMeetingDetailRouteState
 
   void showNavActionSheet() {
     showCupertinoModalPopup<String>(
+        useRootNavigator: false,
         context: context,
         builder: (BuildContext context) => CupertinoActionSheet(
               actions: <Widget>[
@@ -948,6 +958,9 @@ class _ScheduleMeetingDetailRouteState
       var errorTips =
           HttpCode.getMsg(errorMessage, getAppLocalizations().meetingJoinFail);
       ToastUtils.showBotToast(errorTips);
+      if (errorCode == NEMeetingErrorCode.meetingRecycled) {
+        _maybePopPage();
+      }
     }
     preMetingService.addListener(this);
   }

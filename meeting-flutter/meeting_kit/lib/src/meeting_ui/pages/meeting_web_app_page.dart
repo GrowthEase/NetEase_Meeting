@@ -27,7 +27,8 @@ class MeetingWebAppPage extends StatefulWidget {
   State<MeetingWebAppPage> createState() => _MeetingWebAppPageState();
 }
 
-class _MeetingWebAppPageState extends State<MeetingWebAppPage> {
+class _MeetingWebAppPageState extends State<MeetingWebAppPage>
+    with _AloggerMixin {
   late NEMeetingJSBridge bridge;
   bool _toClose = true;
 
@@ -39,30 +40,10 @@ class _MeetingWebAppPageState extends State<MeetingWebAppPage> {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
-    bridge = NEMeetingJSBridge(
-        widget.roomArchiveId, widget.homeUrl, widget.roomContext);
-    bridge.controller
-        .setNavigationDelegate(NavigationDelegate(onPageStarted: (url) {
-      bridge.controller.canGoBack().then((value) {
-        if (!mounted) return;
-        setState(() {
-          _toClose = !value;
-        });
-      });
-    }, onPageFinished: (url) {
-      bridge.controller.canGoBack().then((value) {
-        if (!mounted) return;
-        setState(() {
-          _toClose = !value;
-        });
-      });
-    }));
-    bridge.load();
   }
 
   @override
   Widget build(BuildContext context) {
-    bridge.buildContext = context;
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) async {
@@ -97,14 +78,33 @@ class _MeetingWebAppPageState extends State<MeetingWebAppPage> {
                 )
               : null,
         ),
-        body: WebViewWidget(
-          controller: bridge.controller,
+        body: InAppWebView(
           gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>[
             new Factory<OneSequenceGestureRecognizer>(
               () => EagerGestureRecognizer(),
             ),
           ].toSet(),
-        ), // This trailing comma makes auto-formatting nicer for build methods.
+          initialSettings: InAppWebViewSettings(
+            mixedContentMode: MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
+          ),
+          onWebViewCreated: (InAppWebViewController controller) {
+            bridge = NEMeetingJSBridge(context, widget.roomArchiveId,
+                widget.homeUrl, widget.roomContext, controller);
+          },
+          onLoadStop: (InAppWebViewController controller, Uri? url) {
+            commonLogger.i('MeetingWebAppPage onPageFinished $url');
+            bridge.controller.canGoBack().then((value) {
+              if (!mounted) return;
+              setState(() {
+                _toClose = !value;
+              });
+            });
+          },
+          onReceivedError: (InAppWebViewController controller,
+              WebResourceRequest request, WebResourceError error) {
+            commonLogger.e('onLoadError ${request.url} $error');
+          },
+        ),
       ),
     );
   }

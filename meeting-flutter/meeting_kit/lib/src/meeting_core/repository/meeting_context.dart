@@ -114,26 +114,29 @@ extension NEMeetingContext on NERoomContext {
 
   /// 允许或关闭成员批注权限
   Future<NEResult<void>> enableAnnotationPermission(bool enable) {
-    annotationController.stopAnnotationShare();
     return meetingSecurityCtrl(
         {MeetingSecurityCtrlKey.ANNOTATION_DISABLE: !enable});
   }
 
   /// 允许或关闭成员屏幕共享权限
   Future<NEResult<void>> updateScreenSharePermission(bool enable) {
-    stopMemberScreenShare();
+    // 有人在共享，但是不是主持人与联席主持人
+    final userUuid = rtcController.getScreenSharingUserUuid();
+    final member = getMember(userUuid);
+    if (member != null && !member.isHost && !member.isCohost) {
+      stopMemberScreenShare(member.uuid);
+    }
     return meetingSecurityCtrl(
         {MeetingSecurityCtrlKey.SCREEN_SHARE_DISABLE: !enable});
   }
 
   /// 停止普通成员的屏幕共享
-  void stopMemberScreenShare() {
-    // 有人在共享，但是不是主持人与联席主持人
-    final userUuid = rtcController.getScreenSharingUserUuid();
-    final member = getMember(userUuid);
-    if (member != null && !member.isHost && !member.isCohost) {
-      rtcController.stopMemberScreenShare(userUuid!);
+  Future<VoidResult> stopMemberScreenShare(String userUuid) async {
+    final result = await rtcController.stopMemberScreenShare(userUuid);
+    if (result.isSuccess()) {
+      annotationController.stopAnnotationShare();
     }
+    return result;
   }
 
   /// 允许或关闭成员白板共享权限
@@ -251,6 +254,10 @@ extension NEMeetingContext on NERoomContext {
   bool get isAvatarHidden =>
       checkSecurity(MeetingSecurityCtrlValue.AVATAR_HIDE);
 
+  /// 是否允许成员表情回应
+  bool get isEmojiResponseEnabled =>
+      !checkSecurity(MeetingSecurityCtrlValue.EMOJI_RESP_DISABLE);
+
   /// 是否允许成员批注
   bool get isAnnotationPermissionEnabled =>
       !checkSecurity(MeetingSecurityCtrlValue.ANNOTATION_DISABLE);
@@ -278,6 +285,9 @@ extension NEMeetingContext on NERoomContext {
   /// 是否允许成员共享白板
   bool get isWhiteboardPermissionEnabled =>
       !checkSecurity(MeetingSecurityCtrlValue.WHILE_BOARD_SHARE_DISABLE);
+
+  bool get isSmartSummaryEnabled =>
+      checkSecurity(MeetingSecurityCtrlValue.SMART_SUMMARY);
 
   /// 设置是否允许访客入会
   Future<NEResult<void>> enableGuestJoin(bool enable) {
@@ -330,6 +340,8 @@ extension NEMeetingContext on NERoomContext {
       bool isViewOrder = false,
       // 是否包含邀请成员
       bool includeInviteMember = false,
+      bool hideMyVideo = false,
+      bool hideVideoOffAttendees = false,
       // 是否包含等待加入成员
       bool includeInviteWaitingJoinMember = true}) {
     /// 所有需要展示的成员列表
@@ -360,7 +372,12 @@ extension NEMeetingContext on NERoomContext {
       members.removeWhere((member) => sortedRemoteMembers.contains(member));
       members = [...sortedRemoteMembers, ...members];
     }
-    return members.where((member) => member.isVisible).toSet().toList();
+    return members
+        .where((member) => member.isVisible)
+        .whereNot((member) => isMySelf(member.uuid) && hideMyVideo)
+        .where((member) => !hideVideoOffAttendees || member.canRenderVideo)
+        .toSet()
+        .toList();
   }
 
   /// 获取主持人和联席主持人
@@ -431,9 +448,9 @@ extension NEMeetingContext on NERoomContext {
     }
   }
 
-  Future<NEResult<void>> handOverHost(String userId) {
+  Future<NEResult<void>> handOverHost(String userId, bool resign) {
     assert(isMySelfHost());
-    return handOverMyRole(userId);
+    return handOverMyRole(userId, resign);
   }
 
   Future<NEResult<void>> reclaimHost(String userId) {
@@ -509,6 +526,11 @@ extension NEMeetingContext on NERoomContext {
     return HttpApiHelper._stopMemberActivities(meetingInfo.meetingId);
   }
 
+  /// 全部手放下
+  Future<VoidResult> handsUpDownAll() {
+    return HttpApiHelper._handsUpDownAllApi(meetingInfo.roomUuid);
+  }
+
   ///成员列表展示顺序：
   /// 主持人->联席主持人->自己->举手->屏幕共享（白板）->音视频->视频->音频-> 邀请 -> 昵称排序
   /// 优先处理如果是邀请状态就不向前排序
@@ -581,6 +603,21 @@ extension NEMeetingContext on NERoomContext {
       }
     }
     return lhs.name.compareTo(rhs.name);
+  }
+
+  /// 发送表情回应，优先使用聊天室，如未开通聊天室则使用透传消息
+  void sendEmojiMessage(String emojiTag, bool isChatroomEnabled) {
+    if (isChatroomEnabled) {
+      chatController.sendBroadcastCustomMessage(
+          MeetingEmojiMessenger.encodeMessage(
+              MeetingEmojiMessenger.commandId, emojiTag));
+    } else {
+      NERoomKit.instance.messageChannelService.sendCustomMessageToRoom(
+          roomUuid,
+          MeetingEmojiMessenger.commandId,
+          MeetingEmojiMessenger.encodeMessage(
+              MeetingEmojiMessenger.commandId, emojiTag));
+    }
   }
 }
 
@@ -778,6 +815,9 @@ extension NEMeetingMember on NERoomMember {
   bool get isInCall =>
       properties[PhoneStateProperty.key] == PhoneStateProperty.valueIsInCall;
 
+  bool get isRoomSystemDevice =>
+      clientType == NEClientType.sip || clientType == NEClientType.h323;
+
   ValueListenable<bool> get isInCallListenable {
     return _ensureIsInCallNotifier();
   }
@@ -915,4 +955,55 @@ class MeetingControlMessenger {
     } catch (e) {}
     return null;
   }
+}
+
+class MeetingEmojiMessenger {
+  static const int commandId = 11000;
+
+  static const _commandId = 'cmdId';
+  static const _emojiTag = 'emojiTag';
+
+  static String encodeMessage(int commandId, String emojiTag) {
+    return json.encode({
+      _commandId: commandId,
+      _emojiTag: emojiTag,
+    });
+  }
+
+  static int? parseCommandId(String customMessage) {
+    try {
+      final message = json.decode(customMessage);
+      if (message is Map) {
+        return message[_commandId] as int;
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  static String? parseEmojiTag(String customMessage) {
+    try {
+      final message = json.decode(customMessage);
+      if (message is Map) {
+        return message[_emojiTag] as String;
+      }
+    } catch (e) {}
+    return null;
+  }
+}
+
+/// 缓存用户的表情回应信息
+class NEMeetingUserEmoji {
+  // 用户的uuid
+  final String uuid;
+  // 当前用户的表情回应id，保存10秒
+  String? currentEmojiTag;
+  // 当前用户发起表情回应的时间，用来做10秒后的隐藏
+  int? currentEmojiTime;
+  // 举手或者表情回应变更通知
+  final currentEmojiTagStreamController = StreamController<String?>.broadcast();
+
+  Stream<String?> get currentEmojiTagStream =>
+      currentEmojiTagStreamController.stream;
+
+  NEMeetingUserEmoji(this.uuid);
 }

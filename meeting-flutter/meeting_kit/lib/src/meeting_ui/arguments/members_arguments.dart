@@ -13,6 +13,9 @@ class MembersArguments {
   final WaitingRoomManager waitingRoomManager;
   final ValueListenable<bool> isMySelfManagerListenable;
   final ValueListenable<bool> hideAvatar;
+  final HandsUpHelper handsUpHelper;
+  final EmojiResponseHelper emojiResponseHelper;
+  final List<NEMeetingMenuItem> memberActionMenuItems;
 
   MembersArguments({
     required this.options,
@@ -23,5 +26,8 @@ class MembersArguments {
     required this.waitingRoomManager,
     required this.isMySelfManagerListenable,
     required this.hideAvatar,
+    required this.handsUpHelper,
+    required this.emojiResponseHelper,
+    required this.memberActionMenuItems,
   });
 }

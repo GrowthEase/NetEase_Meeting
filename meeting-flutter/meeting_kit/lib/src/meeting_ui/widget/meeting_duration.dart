@@ -19,15 +19,12 @@ class _MeetingDurationState extends State<MeetingDuration> {
   Stopwatch stopwatch = Stopwatch();
   late Timer timer;
 
-  late int startMilliseconds;
-
   late int elapsed;
 
   @override
   void initState() {
     super.initState();
-    startMilliseconds = widget.startMilliseconds;
-    elapsed = startMilliseconds;
+    elapsed = widget.startMilliseconds;
     stopwatch.start();
     timer = Timer.periodic(Duration(seconds: 1), updateTime);
   }
@@ -45,7 +42,7 @@ class _MeetingDurationState extends State<MeetingDuration> {
   }
 
   void updateTime(Timer timer) {
-    elapsed = startMilliseconds + stopwatch.elapsedMilliseconds;
+    elapsed = widget.startMilliseconds + stopwatch.elapsedMilliseconds;
     setState(() {});
   }
 

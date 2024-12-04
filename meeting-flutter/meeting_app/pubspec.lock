@@ -387,6 +387,62 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_inappwebview:
+    dependency: "direct main"
+    description:
+      name: flutter_inappwebview
+      sha256: "3e9a443a18ecef966fb930c3a76ca5ab6a7aafc0c7b5e14a4a850cf107b09959"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.0.0"
+  flutter_inappwebview_android:
+    dependency: transitive
+    description:
+      name: flutter_inappwebview_android
+      sha256: d247f6ed417f1f8c364612fa05a2ecba7f775c8d0c044c1d3b9ee33a6515c421
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.13"
+  flutter_inappwebview_internal_annotations:
+    dependency: transitive
+    description:
+      name: flutter_inappwebview_internal_annotations
+      sha256: "787171d43f8af67864740b6f04166c13190aa74a1468a1f1f1e9ee5b90c359cd"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.0"
+  flutter_inappwebview_ios:
+    dependency: transitive
+    description:
+      name: flutter_inappwebview_ios
+      sha256: f363577208b97b10b319cd0c428555cd8493e88b468019a8c5635a0e4312bd0f
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.13"
+  flutter_inappwebview_macos:
+    dependency: transitive
+    description:
+      name: flutter_inappwebview_macos
+      sha256: b55b9e506c549ce88e26580351d2c71d54f4825901666bd6cfa4be9415bb2636
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.11"
+  flutter_inappwebview_platform_interface:
+    dependency: transitive
+    description:
+      name: flutter_inappwebview_platform_interface
+      sha256: "545fd4c25a07d2775f7d5af05a979b2cac4fbf79393b0a7f5d33ba39ba4f6187"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.10"
+  flutter_inappwebview_web:
+    dependency: transitive
+    description:
+      name: flutter_inappwebview_web
+      sha256: d8c680abfb6fec71609a700199635d38a744df0febd5544c5a020bd73de8ee07
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.8"
   flutter_localizations:
     dependency: "direct main"
     description: flutter
@@ -672,10 +728,10 @@ packages:
     dependency: "direct main"
     description:
       name: netease_common
-      sha256: ec4fc60ab6b60106b715905b98b065ce70f2368d439958384d272a0847b00dd0
+      sha256: a54191502c2977ca215e77086c95ba5e096a505bfc74c1357e26eac4efed4092
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.7"
+    version: "1.0.8"
   netease_meeting_kit:
     dependency: "direct main"
     description:
@@ -687,18 +743,18 @@ packages:
     dependency: transitive
     description:
       name: netease_roomkit
-      sha256: "37f0c920aa3efb0971a53f5d974689f9924932f83c029506983bab7bd064ca33"
+      sha256: "1719c99b8f3bcef855ab8ac003a32a50995c94649a5b84431656aa6b2846ed7a"
       url: "https://pub.dev"
     source: hosted
-    version: "1.31.0"
+    version: "1.32.1"
   netease_roomkit_interface:
     dependency: transitive
     description:
       name: netease_roomkit_interface
-      sha256: "16aa7e3e9b0ab524c9121cef663e470bca903a40839969d8b89545209f7add7a"
+      sha256: bb66b53f662aba5bea4d972111fbe02b5f8e5053ed0faf3f6bb962ad8b5d56d8
       url: "https://pub.dev"
     source: hosted
-    version: "1.31.0"
+    version: "1.32.1"
   nm:
     dependency: transitive
     description:
@@ -718,10 +774,11 @@ packages:
   open_filex:
     dependency: transitive
     description:
-      name: open_filex
-      sha256: ba425ea49affd0a98a234aa9344b9ea5d4c4f7625a1377961eae9fe194c3d523
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: HEAD
+      resolved-ref: "80d17a98f6a8e9e2520663a39fd3dcee4546407b"
+      url: "https://github.com/kirito0206/open_filex.git"
+    source: git
     version: "4.5.0"
   package_info_plus:
     dependency: "direct main"
@@ -1232,38 +1289,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.3"
-  webview_flutter:
-    dependency: "direct main"
-    description:
-      name: webview_flutter
-      sha256: "6869c8786d179f929144b4a1f86e09ac0eddfe475984951ea6c634774c16b522"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.8.0"
-  webview_flutter_android:
-    dependency: transitive
-    description:
-      name: webview_flutter_android
-      sha256: "6e64fcb1c19d92024da8f33503aaeeda35825d77142c01d0ea2aa32edc79fdc8"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.16.7"
-  webview_flutter_platform_interface:
-    dependency: transitive
-    description:
-      name: webview_flutter_platform_interface
-      sha256: d937581d6e558908d7ae3dc1989c4f87b786891ab47bb9df7de548a151779d8d
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.10.0"
-  webview_flutter_wkwebview:
-    dependency: transitive
-    description:
-      name: webview_flutter_wkwebview
-      sha256: "9c62cc46fa4f2d41e10ab81014c1de470a6c6f26051a2de32111b2ee55287feb"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.14.0"
   win32:
     dependency: transitive
     description:
@@ -1306,4 +1331,4 @@ packages:
     version: "2.0.0"
 sdks:
   dart: ">=3.4.0 <4.0.0"
-  flutter: ">=3.22.0"
+  flutter: ">=3.22.2"

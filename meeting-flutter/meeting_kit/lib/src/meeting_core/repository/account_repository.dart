@@ -34,6 +34,7 @@ final class AccountRepository with _AloggerMixin {
       return _accountInfo.guard((value) => {
                 'user': value.userUuid,
                 'token': value.userToken,
+                if (value.authType != null) 'authType': value.authType,
               }) ??
           const {};
     });
@@ -117,9 +118,33 @@ final class AccountRepository with _AloggerMixin {
         anonymous: true);
   }
 
-  Future<NEResult<NEAccountInfo>> loginWithAccountInfo(String loginType,
-      Future<NEResult<NEAccountInfo>> Function() accountInfoAction,
-      {bool anonymous = false, String? userId}) async {
+  Future<NEResult<NEAccountInfo>> guestLogin(
+    String userUuid,
+    String token,
+    String authType,
+  ) {
+    apiLogger.i('loginByDynamicToken');
+    return loginWithAccountInfo(
+      kLoginTypeAnonymous,
+      () => NEResult.successWith(NEAccountInfo(
+        userUuid: userUuid,
+        userToken: token,
+        authType: authType,
+        isAnonymous: true,
+      )),
+      loginAction: () => NERoomKit.instance.authService
+          .loginByDynamicToken(userUuid, token, authType),
+      anonymous: true,
+    );
+  }
+
+  Future<NEResult<NEAccountInfo>> loginWithAccountInfo(
+    String loginType,
+    FutureOr<NEResult<NEAccountInfo>> Function() accountInfoAction, {
+    bool anonymous = false,
+    String? userId,
+    Future<VoidResult> Function()? loginAction,
+  }) async {
     final startTime = DateTime.now().millisecondsSinceEpoch;
     final event = IntervalEvent(kEventLogin, startTime: startTime)
       ..addParam(kEventParamType, loginType)
@@ -134,8 +159,11 @@ final class AccountRepository with _AloggerMixin {
       if (info != null) {
         event.endStepWithResult(accountInfoResult);
         event.beginStep(kLoginStepRoomKitLogin);
-        final loginResult = await NERoomKit.instance.authService
-            .login(info.userUuid, info.userToken);
+        if (loginAction == null) {
+          loginAction = () => NERoomKit.instance.authService
+              .login(info.userUuid, info.userToken);
+        }
+        final loginResult = await loginAction!();
         event.endStepWithResult(loginResult);
         if (loginResult.isSuccess()) {
           _setAccountInfo(info);

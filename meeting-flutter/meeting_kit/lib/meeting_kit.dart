@@ -9,10 +9,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:netease_meeting_kit/meeting_ui.dart';
 import 'package:netease_common/netease_common.dart';
 import 'package:uuid/uuid.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 import 'package:netease_roomkit/netease_roomkit.dart'
     hide
@@ -20,7 +20,6 @@ import 'package:netease_roomkit/netease_roomkit.dart'
         NERtcVideoView,
         NERtcVideoRenderer,
         NEAuthService;
-import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 import 'package:netease_meeting_kit/meeting_core.dart';
 
@@ -112,7 +111,8 @@ export 'package:netease_roomkit/netease_roomkit.dart'
         NEWhiteboardServerConfig,
         NEChatroomType,
         NEChatroomMessageSearchOrder,
-        NEChatroomHistoryMessageSearchOption;
+        NEChatroomHistoryMessageSearchOption,
+        NERoomSystemDevice;
 
 part 'src/meeting_kit/meeting_account_service.dart';
 part 'src/meeting_kit/impl/screen_sharing_service_impl.dart';
@@ -128,6 +128,8 @@ part 'src/meeting_kit/meeting_service.dart';
 part 'src/meeting_kit/meeting_message_channel_service.dart';
 part 'src/meeting_kit/pre_meeting_service.dart';
 part 'src/meeting_kit/settings_service.dart';
+part 'src/meeting_kit/guest_service.dart';
+part 'src/meeting_kit/impl/guest_service_impl.dart';
 part 'src/meeting_kit/module_name.dart';
 part 'src/meeting_kit/utils/rtc_utils.dart';
 part 'src/meeting_kit/utils/network_task_executor.dart';
@@ -231,6 +233,11 @@ abstract class NEMeetingKit {
   /// 获取意见反馈服务。
   ///
   NEFeedbackService getFeedbackService();
+
+  ///
+  /// 获取访客服务。
+  ///
+  NEGuestService getGuestService();
 
   /// 添加登录状态监听器
   ///

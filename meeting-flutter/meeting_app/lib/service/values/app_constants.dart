@@ -7,3 +7,5 @@ import 'package:flutter/foundation.dart';
 const String iosBroadcastExtensionAppGroup = kDebugMode
     ? 'group.com.netease.yunxin.meeting.debug'
     : 'group.com.netease.yunxin.meeting';
+
+const String iosBroadcastScheme = 'nemeeting://';

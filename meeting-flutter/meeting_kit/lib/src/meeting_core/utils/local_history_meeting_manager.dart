@@ -4,12 +4,13 @@
 
 part of meeting_core;
 
-class LocalHistoryMeetingManager {
+class LocalHistoryMeetingManager with NEAccountServiceListener {
   String TAG = "LocalHistoryMeetingManager";
 
   /// 私有构造函数
   LocalHistoryMeetingManager._internal() {
     ensureInit();
+    AccountRepository().addListener(this);
   }
 
   /// 保存单例
@@ -109,6 +110,11 @@ class LocalHistoryMeetingManager {
   void saveLocalHistoryMeeting(List<NELocalHistoryMeeting> list) {
     List<String> records = list.map((e) => jsonEncode(e.toJson())).toList();
     _sharedPreferences.setStringList(_key, records);
+  }
+
+  @override
+  void onAccountInfoUpdated(NEAccountInfo? accountInfo) {
+    ensureInit();
   }
 }
 

@@ -136,18 +136,25 @@ class _InComingInviteState extends State<InComingInvite>
 /// [context] 上下文
 ///
 void handleInviteCodeError(BuildContext context, int? code,
-    NEMeetingUIKitLocalizations meetingUiLocalizations) {
+    NEMeetingUIKitLocalizations meetingUiLocalizations, bool isRoomDevice) {
   switch (code) {
     case 1022:
       ToastUtils.showToast(
           context, meetingUiLocalizations.memberCountOutOfRange);
       break;
     case 3006:
-      ToastUtils.showToast(context, meetingUiLocalizations.sipCallIsInMeeting);
+      ToastUtils.showToast(
+          context,
+          isRoomDevice
+              ? meetingUiLocalizations.sipDeviceIsInMeeting
+              : meetingUiLocalizations.sipCallIsInMeeting);
       break;
     case 601011:
       ToastUtils.showToast(
-          context, meetingUiLocalizations.sipCallIsInBlacklist);
+          context,
+          isRoomDevice
+              ? meetingUiLocalizations.sipCallDeviceIsInBlacklist
+              : meetingUiLocalizations.sipCallIsInBlacklist);
       break;
     default:
       break;

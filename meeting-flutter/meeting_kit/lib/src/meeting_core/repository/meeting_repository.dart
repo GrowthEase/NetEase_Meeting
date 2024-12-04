@@ -232,7 +232,7 @@ class MeetingRepository with _AloggerMixin {
 
     trackingEvent?.beginStep(kMeetingStepMeetingInfo);
     final meetingInfoResult =
-        await HttpApiHelper.execute(_GetMeetingInfoApi(param.meetingNum ?? ''));
+        await MeetingRepository().getMeetingInfo(param.meetingNum ?? '');
     trackingEvent?.endStepWithResult(meetingInfoResult);
     if (!meetingInfoResult.isSuccess()) {
       return NEResult(code: meetingInfoResult.code, msg: meetingInfoResult.msg);
@@ -241,6 +241,14 @@ class MeetingRepository with _AloggerMixin {
     trackingEvent?.beginStep(kMeetingStepJoinRoom);
     final meetingInfo = meetingInfoResult.nonNullData;
     final authorization = meetingInfo.authorization;
+
+    /// 暂不支持在登录状态下的跨 AppKey 的访客入会逻辑
+    if (authorization != null &&
+        authorization.appKey != CoreRepository().initedAppKey) {
+      return NEResult(
+        code: NEMeetingErrorCode.crossAppJoinNotSupported,
+      );
+    }
     final _params = NEJoinRoomParams(
       roomUuid: meetingInfo.roomUuid,
       userName: param.displayName,
@@ -384,6 +392,7 @@ class MeetingRepository with _AloggerMixin {
     }).then((result) {
       return NEResult(code: result.code, msg: result.msg);
     }).map(() {
+      _currentRoomUuid = _roomContext.roomUuid;
       return _roomContext..setupMeetingEnv(_meetingInfo);
     });
   }

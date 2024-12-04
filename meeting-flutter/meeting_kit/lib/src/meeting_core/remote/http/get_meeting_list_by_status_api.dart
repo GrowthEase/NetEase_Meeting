@@ -4,7 +4,7 @@
 
 part of meeting_core;
 
-/// 删除预约会议
+/// 获取预约会议
 class _GetMeetingListByStatusApi extends HttpApi<List<NEMeetingItem>> {
   List<NEMeetingItemStatus> status;
 

@@ -15,6 +15,7 @@ class _NEMeetingKitImpl extends NEMeetingKit with _AloggerMixin {
       _NEMeetingMessageChannelServiceImpl();
   _NEContactsServiceImpl contactsService = _NEContactsServiceImpl();
   _NEFeedbackServiceImpl feedbackService = _NEFeedbackServiceImpl();
+  _NEGuestServiceImpl guestService = _NEGuestServiceImpl();
 
   _NEMeetingKitImpl() {
     ConnectivityManager();
@@ -79,6 +80,9 @@ class _NEMeetingKitImpl extends NEMeetingKit with _AloggerMixin {
 
   @override
   NEFeedbackService getFeedbackService() => feedbackService;
+
+  @override
+  NEGuestService getGuestService() => guestService;
 
   @override
   Future<NEResult<void>> logout() async {

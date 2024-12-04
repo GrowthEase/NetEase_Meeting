@@ -58,4 +58,11 @@ class _NEMeetingInviteServiceImpl extends NEMeetingInviteService
     apiLogger.i('removeMeetingInviteStatusListener, listener: $listener');
     meetingInviteService.removeMeetingInviteStatusListener(listener);
   }
+
+  @override
+  Future<NEResult<NERoomSIPCallInfo?>> callOutRoomSystem(
+      NERoomSystemDevice device) {
+    apiLogger.i('callOutRoomSystem, meetingNum: device: $device');
+    return meetingInviteService.callOutRoomSystem(device);
+  }
 }

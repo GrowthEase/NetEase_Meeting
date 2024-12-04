@@ -52,6 +52,7 @@ class MeetingUINotifyMessagePageState
             }
           });
           return Scaffold(
+            backgroundColor: _UIColors.globalBg,
             appBar: TitleBar(
               leading: messageList.isNotEmpty
                   ? TextButton(
@@ -108,38 +109,51 @@ class MeetingUINotifyMessagePageState
             ));
   }
 
-  Widget buildNotifyMessageItem(
-      BuildContext context, NEMeetingSessionMessage item) {
+  Widget buildNotifyMessageItem(BuildContext context, int index) {
+    final item = widget.messageList.value[index];
     int? timeStamp = null;
-    CardData? cardData = null;
+    CardData? data = null;
     NotifyCard? notifyCard = null;
     if (TextUtils.isNotEmpty(item.data)) {
-      final data = NotifyCardData.fromMap(jsonDecode(item.data!));
-      timeStamp = data.data?.timestamp;
-      cardData = data.data;
-      notifyCard = cardData?.notifyCard;
+      final notifyData = NotifyCardData.fromMap(jsonDecode(item.data!));
+      timeStamp = notifyData.data?.timestamp;
+      data = notifyData.data;
+      notifyCard = data?.notifyCard;
     }
-    return GestureDetector(
-        child: Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0),
-          ),
+    return Container(
+      margin: EdgeInsets.only(
+          top: 16, bottom: index == widget.messageList.value.length ? 16 : 0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8.0),
+        child: Container(
+          color: _UIColors.white,
           child: Column(
             mainAxisSize: MainAxisSize.max,
             children: [
               Container(
                 height: 48,
-                padding: EdgeInsets.only(left: 16, top: 16),
+                padding: EdgeInsets.only(left: 16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      _UIColors.colorFDFDFD,
+                      _UIColors.colorFDFDFD,
+                      _UIColors.colorF7F7F7,
+                    ],
+                    stops: [0.0, 0.90, 1.0],
+                  ),
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Container(
-                      padding: EdgeInsets.only(right: 8),
+                      padding: EdgeInsets.only(right: 10),
                       child: MeetingCachedNetworkImage.CachedNetworkImage(
-                        width: 28,
-                        height: 28,
+                        width: 24,
+                        height: 24,
                         imageUrl: '${notifyCard?.header?.icon}',
                         fit: BoxFit.cover,
                       ),
@@ -151,8 +165,8 @@ class MeetingUINotifyMessagePageState
                         maxLines: 5,
                         style: TextStyle(
                             fontSize: 16,
-                            color: _UIColors.color_999999,
-                            fontWeight: FontWeight.normal),
+                            color: _UIColors.color1E1F27,
+                            fontWeight: FontWeight.w500),
                       ),
                     ),
                     Container(
@@ -164,7 +178,7 @@ class MeetingUINotifyMessagePageState
                                 .globalNothing,
                         style: TextStyle(
                             fontSize: 14,
-                            color: _UIColors.color_999999,
+                            color: _UIColors.color8D90A0,
                             fontWeight: FontWeight.normal),
                       ),
                     )
@@ -174,8 +188,7 @@ class MeetingUINotifyMessagePageState
               if (notifyCard?.body?.title?.isNotEmpty == true)
                 Container(
                   alignment: Alignment.centerLeft,
-                  padding:
-                      EdgeInsets.only(left: 16, top: 6, bottom: 2, right: 16),
+                  padding: EdgeInsets.only(left: 16, top: 12, right: 16),
                   child: Text(
                     '${notifyCard?.body?.title}',
                     overflow: TextOverflow.ellipsis,
@@ -184,47 +197,51 @@ class MeetingUINotifyMessagePageState
                     style: TextStyle(
                         fontSize: 14,
                         color: _UIColors.black_333333,
-                        fontWeight: FontWeight.bold),
+                        fontWeight: FontWeight.normal),
                   ),
                 ),
-              Container(
-                alignment: Alignment.centerLeft,
-                padding:
-                    EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
-                child: Text(
-                  '${notifyCard?.body?.content}',
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 10,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: _UIColors.color_666666,
+              if (notifyCard?.body?.content?.isNotEmpty == true)
+                Container(
+                  alignment: Alignment.centerLeft,
+                  padding:
+                      EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 12),
+                  child: Text(
+                    '${notifyCard?.body?.content}',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 10,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: _UIColors.color53576A,
+                      height: 1.5,
+                    ),
                   ),
                 ),
-              ),
-              Container(
-                height: 0.5,
-                margin: EdgeInsets.only(left: 16, top: 8, bottom: 8),
-                color: _UIColors.colorE8E9EB,
-              ),
+              if (notifyCard?.notifyCenterCardClickAction != null)
+                Container(
+                  height: 0.5,
+                  margin: EdgeInsets.only(left: 16, right: 16),
+                  color: _UIColors.colorE8E9EB,
+                ),
               if (notifyCard?.notifyCenterCardClickAction != null)
                 buildDetailItem(
                     NEMeetingUIKitLocalizations.of(context)!
                         .notifyCenterViewingDetails, () {
-                  pushPage(cardData);
+                  pushPage(data);
                 }),
             ],
           ),
         ),
-        onTap: () {
-          pushPage(cardData);
-        });
+      ),
+    );
   }
 
   Widget buildDetailItem(String title, VoidCallback voidCallback,
       {String iconTip = ''}) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
+        height: 43,
+        padding: EdgeInsets.only(left: 16, right: 16),
         child: Row(
           children: <Widget>[
             Text(title,
@@ -269,7 +286,6 @@ class MeetingUINotifyMessagePageState
             padding: EdgeInsets.only(bottom: 24),
             child: Center(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Image.asset(NEMeetingImages.noMessageHistory,
@@ -289,12 +305,12 @@ class MeetingUINotifyMessagePageState
               ),
             ))
         : Container(
-            padding: EdgeInsets.all(16),
-            child: ListView.separated(
+            padding: EdgeInsets.only(left: 16, right: 16),
+            child: ListView.builder(
               controller: _scrollController,
-              separatorBuilder: (context, index) => SizedBox(height: 6),
+              physics: BouncingScrollPhysics(),
               itemBuilder: (context, index) {
-                return buildNotifyMessageItem(context, messageList[index]);
+                return buildNotifyMessageItem(context, index);
               },
               itemCount: messageList.length,
               shrinkWrap: true,
@@ -318,17 +334,18 @@ class MeetingUINotifyMessagePageState
   }
 
   void pushPage(CardData? cardData) {
-    if (cardData != null &&
-        cardData.notifyCard?.notifyCenterCardClickAction != null) {
+    final actionParams = cardData?.notifyCard?.notifyCenterCardClickAction;
+    if (actionParams != null) {
       var item;
-      if (cardData.pluginId != null) {
+      if (cardData?.pluginId != null) {
         item = widget.webAppList?.firstWhere((value) =>
-            value.singleStateItem.customObject?.pluginId == cardData.pluginId);
+            value.singleStateItem.customObject?.pluginId == cardData!.pluginId);
       }
 
-      if (cardData.pluginId != null && item != null) {
+      if (cardData?.pluginId != null && item != null) {
         MeetingNotifyCenterActionUtil.openPlugin(
-            context, widget.roomContext, item);
+            context, widget.roomContext, item,
+            actionParams: actionParams);
       } else {
         ToastUtils.showToast(
             context,

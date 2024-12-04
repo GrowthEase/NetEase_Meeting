@@ -164,6 +164,13 @@ class _NEPreMeetingServiceImpl extends NEPreMeetingService with _AloggerMixin {
   }
 
   @override
+  Future<NEResult<List<NEMeetingItem>>> getScheduledMeetingList(
+      List<NEMeetingItemStatus> status) {
+    apiLogger.i('getScheduledMeetingList ,status${status.toString()}');
+    return PreRoomRepository.getRoomList(status);
+  }
+
+  @override
   Future<NEResult<List<NEScheduledMember>>> getScheduledMeetingMemberList(
       String meetingNum) {
     apiLogger.i('getScheduledMeetingMemberList $meetingNum');

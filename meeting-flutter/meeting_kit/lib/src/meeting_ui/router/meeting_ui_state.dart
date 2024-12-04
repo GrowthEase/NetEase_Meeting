@@ -286,6 +286,15 @@ class MeetingUIState extends ChangeNotifier
     return _interpretationController!;
   }
 
+  AISummaryController? _aiSummaryController;
+  AISummaryController get aiSummaryController {
+    _aiSummaryController ??= _AISummaryControllerImpl(
+      roomContext,
+      () => sdkConfig.isAISummarySupported,
+    );
+    return _aiSummaryController!;
+  }
+
   SDKConfig? _crossAppSDKConfig;
   SDKConfig get sdkConfig {
     if (roomContext.isCrossAppJoining) {
@@ -305,6 +314,7 @@ class MeetingUIState extends ChangeNotifier
     _interpretationController?.dispose();
     _crossAppSDKConfig?.dispose();
     _transcriptionController?.dispose();
+    _aiSummaryController?.dispose();
     clearAttachments();
     super.dispose();
   }

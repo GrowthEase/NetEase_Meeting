@@ -169,6 +169,14 @@ class MeetingInfo {
   ///
   late final String? timezoneId;
 
+  ///
+  /// 访客入会类型：
+  /// * 0 不允许访客入会
+  /// * 1 允许实名访客入会
+  /// * 2 允许匿名访客入会
+  ///
+  // late final int guestJoinType;
+
   MeetingInfo({
     required this.meetingId,
     required this.meetingNum,
@@ -208,8 +216,14 @@ class MeetingInfo {
     final appKey = map['meetingAppKey'] as String?;
     final user = map['meetingUserUuid'] as String?;
     final token = map['meetingUserToken'] as String?;
-    if (appKey != null && user != null && token != null) {
-      authorization = MeetingAuthorization(appKey, user, token);
+    final authType = map['meetingAuthType'] as String?;
+    if (appKey != null && user != null && token != null && authType != null) {
+      authorization = MeetingAuthorization(
+        appKey,
+        user,
+        token,
+        authType,
+      );
     } else {
       authorization = null;
     }
@@ -247,11 +261,13 @@ class MeetingAuthorization {
   final String appKey;
   final String user;
   final String token;
+  final String authType;
 
   MeetingAuthorization(
     this.appKey,
     this.user,
     this.token,
+    this.authType,
   );
 }
 

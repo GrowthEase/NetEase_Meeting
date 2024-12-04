@@ -6,80 +6,83 @@ part of meeting_core;
 
 class MeetingSecurityCtrlValue {
   /// 是否允许批注
-  static var ANNOTATION_DISABLE = 0x1;
+  static const ANNOTATION_DISABLE = 0x1 << 0;
 
   /// 是否允许屏幕共享
-  static final SCREEN_SHARE_DISABLE = 0x2;
+  static const SCREEN_SHARE_DISABLE = 0x1 << 1;
 
   /// 是否允许开启白板
-  static final WHILE_BOARD_SHARE_DISABLE = 0x4;
+  static const WHILE_BOARD_SHARE_DISABLE = 0x1 << 2;
 
   /// 是否允许自己改名
-  static final EDIT_NAME_DISABLE = 0x8;
+  static const EDIT_NAME_DISABLE = 0x1 << 3;
 
   /// 是否是全体静音
-  static final AUDIO_OFF = 0x10;
+  static const AUDIO_OFF = 0x1 << 4;
 
   /// 是否允许自行解除静音
-  static final AUDIO_NOT_ALLOW_SELF_ON = 0x20;
+  static const AUDIO_NOT_ALLOW_SELF_ON = 0x1 << 5;
 
   /// 是否是全体关闭视频
-  static final VIDEO_OFF = 0x40;
+  static const VIDEO_OFF = 0x1 << 6;
 
   /// 是否允许自行打开视频
-  static final VIDEO_NOT_ALLOW_SELF_ON = 0x80;
+  static const VIDEO_NOT_ALLOW_SELF_ON = 0x1 << 7;
 
   /// 表情回复开关
-  static final EMOJI_RESP_DISABLE = 0x100;
+  static const EMOJI_RESP_DISABLE = 0x1 << 8;
 
   /// 本地录制开关
-  static final LOCAL_RECORD_DISABLE = 0x200;
+  static const LOCAL_RECORD_DISABLE = 0x1 << 9;
 
   /// 成员加入离开播放提示音
-  static final PLAY_SOUND = 0x400;
+  static const PLAY_SOUND = 0x1 << 10;
 
   /// 头像显示隐藏
-  static final AVATAR_HIDE = 0x800;
+  static const AVATAR_HIDE = 0x1 << 11;
+
+  /// 智能会议纪要
+  static const SMART_SUMMARY = 0x1 << 12;
 }
 
 class MeetingSecurityCtrlKey {
-  static final securityCtrlKey = 'securityCtrl';
+  static const securityCtrlKey = 'securityCtrl';
 
   /// 是否允许批注
-  static final ANNOTATION_DISABLE = 'ANNOTATION_DISABLE';
+  static const ANNOTATION_DISABLE = 'ANNOTATION_DISABLE';
 
   /// 是否允许屏幕共享
-  static final SCREEN_SHARE_DISABLE = 'SCREEN_SHARE_DISABLE';
+  static const SCREEN_SHARE_DISABLE = 'SCREEN_SHARE_DISABLE';
 
   /// 是否允许开启白板
-  static final WHILE_BOARD_SHARE_DISABLE = 'WHILE_BOARD_SHARE_DISABLE';
+  static const WHILE_BOARD_SHARE_DISABLE = 'WHILE_BOARD_SHARE_DISABLE';
 
   /// 是否允许自己改名
-  static final EDIT_NAME_DISABLE = 'EDIT_NAME_DISABLE';
+  static const EDIT_NAME_DISABLE = 'EDIT_NAME_DISABLE';
 
   /// 是否是全体静音
-  static final AUDIO_OFF = 'AUDIO_OFF';
+  static const AUDIO_OFF = 'AUDIO_OFF';
 
   /// 是否允许自行解除静音
-  static final AUDIO_NOT_ALLOW_SELF_ON = 'AUDIO_NOT_ALLOW_SELF_ON';
+  static const AUDIO_NOT_ALLOW_SELF_ON = 'AUDIO_NOT_ALLOW_SELF_ON';
 
   /// 是否是全体关闭视频
-  static final VIDEO_OFF = 'VIDEO_OFF';
+  static const VIDEO_OFF = 'VIDEO_OFF';
 
   /// 是否允许自行打开视频
-  static final VIDEO_NOT_ALLOW_SELF_ON = 'VIDEO_NOT_ALLOW_SELF_ON';
+  static const VIDEO_NOT_ALLOW_SELF_ON = 'VIDEO_NOT_ALLOW_SELF_ON';
 
   /// 表情回复开关
-  static final EMOJI_RESP_DISABLE = 'EMOJI_RESP_DISABLE';
+  static const EMOJI_RESP_DISABLE = 'EMOJI_RESP_DISABLE';
 
   /// 本地录制开关
-  static final LOCAL_RECORD_DISABLE = 'LOCAL_RECORD_DISABLE';
+  static const LOCAL_RECORD_DISABLE = 'LOCAL_RECORD_DISABLE';
 
   /// 成员加入离开播放提示音
-  static final PLAY_SOUND = 'PLAY_SOUND';
+  static const PLAY_SOUND = 'PLAY_SOUND';
 
   /// 头像显示隐藏
-  static final AVATAR_HIDE = 'AVATAR_HIDE';
+  static const AVATAR_HIDE = 'AVATAR_HIDE';
 }
 
 const kMeetingTemplateId = 40;

@@ -34,7 +34,7 @@ class _GetMeetingInfoApi extends HttpApi<MeetingInfo> {
 
   @override
   String path() =>
-      'scene/meeting/${ServiceRepository().appKey}/v1/info/$meetingNum';
+      'scene/meeting/${ServiceRepository().appKey}/v2/info/$meetingNum';
 
   @override
   MeetingInfo result(Map map) => MeetingInfo.fromMap(map);

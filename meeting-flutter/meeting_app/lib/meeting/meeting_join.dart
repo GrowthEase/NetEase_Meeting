@@ -5,22 +5,25 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nemeeting/auth/guest_login.dart';
+import 'package:nemeeting/base/util/text_util.dart';
 import 'package:nemeeting/routes/home_page.dart';
+import 'package:nemeeting/service/auth/auth_manager.dart';
+import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/uikit/state/meeting_base_state.dart';
 import 'package:nemeeting/utils/const_config.dart';
 import 'package:nemeeting/utils/integration_test.dart';
-import 'package:nemeeting/utils/meeting_util.dart';
-import 'package:nemeeting/uikit/const/consts.dart';
-import 'package:nemeeting/service/auth/auth_manager.dart';
-import 'package:nemeeting/service/client/http_code.dart';
 import 'package:nemeeting/widget/meeting_text_field.dart';
 import 'package:nemeeting/widget/ne_widget.dart';
+import 'package:netease_meeting_kit/meeting_ui.dart';
+
 import '../global_state.dart';
 import '../language/localizations.dart';
+import '../uikit/const/consts.dart';
 import '../uikit/utils/nav_utils.dart';
 import '../uikit/values/colors.dart';
-import 'package:nemeeting/base/util/text_util.dart';
-import 'package:netease_meeting_kit/meeting_ui.dart';
+import '../utils/dialog_utils.dart';
+import '../utils/privacy_util.dart';
 
 class MeetJoinRoute extends StatefulWidget {
   @override
@@ -30,7 +33,7 @@ class MeetJoinRoute extends StatefulWidget {
 }
 
 class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute>
-    with FirstBuildScope {
+    with FirstBuildScope, GuestJoinController {
   ValueNotifier<bool> openCamera = ValueNotifier(true);
 
   ValueNotifier<bool> openMicrophone = ValueNotifier(true);
@@ -39,11 +42,14 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute>
 
   late TextEditingController _meetingNumController;
   late final _meetingNumFocusNode = FocusNode();
+  late final _meetingNicknameFocusNode = FocusNode();
+  late final _meetingNicknameController = TextEditingController();
 
   ValueNotifier<bool> joinEnable = ValueNotifier(false);
 
   final NESettingsService settingsService =
       NEMeetingKit.instance.getSettingsService();
+  final accountService = NEMeetingKit.instance.getAccountService();
 
   int _selectedRecordIndex = 0;
 
@@ -55,7 +61,7 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute>
     var meetingNum = GlobalState.deepLinkMeetingNum;
     GlobalState.deepLinkMeetingNum = null;
     _meetingNumController = TextEditingController(text: meetingNum);
-    _onMeetingIdChanged();
+    _meetingNumController.addListener(_onMeetingNumChanged);
     Future.wait([
       settingsService.isTurnOnMyVideoWhenJoinMeetingEnabled(),
       settingsService.isTurnOnMyAudioWhenJoinMeetingEnabled(),
@@ -63,6 +69,20 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute>
       openCamera.value = values[0];
       openMicrophone.value = values[1];
     });
+
+    String? nickname;
+    if (meetingNum != null) {
+      nickname = LocalHistoryMeetingManager().getLatestNickname(meetingNum);
+    }
+    nickname = AuthManager().nickName;
+    if (nickname != null && nickname.isNotEmpty) {
+      _meetingNicknameController.text = nickname;
+    }
+
+    Listenable.merge([
+      _meetingNumController,
+      _meetingNicknameController,
+    ]).addListener(_onMeetingParamsChanged);
   }
 
   @override
@@ -94,7 +114,37 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                MeetingCard(children: [buildMeetingId()]),
+                MeetingCard(
+                  children: [
+                    Table(
+                      defaultVerticalAlignment:
+                          TableCellVerticalAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      columnWidths: {
+                        1: FlexColumnWidth(),
+                      },
+                      defaultColumnWidth: IntrinsicColumnWidth(),
+                      children: [
+                        TableRow(
+                          children: [
+                            buildInputRowTitle(
+                                getAppLocalizations().meetingNum),
+                            buildMeetingIdInput(),
+                            SizedBox(width: 10.w),
+                          ],
+                        ),
+                        TableRow(
+                          children: [
+                            buildInputRowTitle(
+                                getAppLocalizations().meetingNickname),
+                            buildMeetingNicknameInput(),
+                            SizedBox(width: 10.w),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
                 MeetingCard(children: [
                   buildMicrophoneItem(),
                   buildCameraItem(),
@@ -102,27 +152,14 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute>
               ],
             ),
           )),
+          if (!AuthManager().isLoggedIn)
+            Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: PrivacyUtil.protocolTips()),
           buildJoin()
         ],
       ),
     );
-  }
-
-  Widget buildMeetingId(
-      {FocusNode? focusNode, TextEditingController? controller}) {
-    return Row(children: [
-      SizedBox(width: 16.w),
-      Text(
-        getAppLocalizations().meetingNum,
-        style: TextStyle(
-            color: AppColors.color_1E1F27,
-            fontSize: 16,
-            fontWeight: FontWeight.w500),
-      ),
-      SizedBox(width: 40.w),
-      Expanded(child: buildMeetingIdInput()),
-      SizedBox(width: 10.w),
-    ]);
   }
 
   Widget buildMeetingIdInput() {
@@ -134,14 +171,11 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute>
         LengthLimitingTextInputFormatter(maxIdLength),
         FilteringTextInputFormatter.allow(RegExp(r'\d[-\d]*')),
       ],
+      maxLines: 1,
       keyboardType: TextInputType.number,
       cursorColor: AppColors.blue_337eff,
       controller: _meetingNumController,
       textAlign: TextAlign.left,
-      onChanged: (value) {
-        _onMeetingIdChanged();
-        setState(() {});
-      },
       keyboardAppearance: Brightness.light,
       textAlignVertical: TextAlignVertical.center,
       decoration: InputDecoration(
@@ -152,18 +186,20 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute>
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Visibility(
-                  visible: _meetingNumController.text.isNotEmpty,
-                  child: ClearIconButton(
-                    padding: EdgeInsets.all(6),
-                    size: 16,
-                    onPressed: () {
-                      _meetingNumController.clear();
-                      _onMeetingIdChanged();
-                      setState(() {});
-                    },
-                  ),
-                ),
+                ListenableBuilder(
+                    listenable: _meetingNumController,
+                    builder: (context, _) {
+                      return Visibility(
+                        visible: _meetingNumController.text.isNotEmpty,
+                        child: ClearIconButton(
+                          padding: EdgeInsets.all(6),
+                          size: 16,
+                          onPressed: () {
+                            _meetingNumController.clear();
+                          },
+                        ),
+                      );
+                    }),
                 SizedBox(width: 12.w),
                 Visibility(
                   visible: hasMeetingRecords,
@@ -178,6 +214,43 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute>
                   ),
                 ),
               ])),
+    );
+  }
+
+  Widget buildInputRowTitle(String title) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: AppColors.color_1E1F27,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  Widget buildMeetingNicknameInput() {
+    return TextField(
+      key: MeetingValueKey.inputMeetingNickname,
+      focusNode: _meetingNicknameFocusNode,
+      style: TextStyle(color: AppColors.color_53576A, fontSize: 16),
+      keyboardType: TextInputType.text,
+      cursorColor: AppColors.blue_337eff,
+      controller: _meetingNicknameController,
+      textAlign: TextAlign.left,
+      maxLines: 1,
+      keyboardAppearance: Brightness.light,
+      textAlignVertical: TextAlignVertical.center,
+      decoration: InputDecoration(
+        hintText: getAppLocalizations().meetingEnterNickname,
+        hintStyle: TextStyle(fontSize: 16, color: AppColors.color_CDCFD7),
+        border: InputBorder.none,
+      ),
+      inputFormatters: [
+        MeetingLengthLimitingTextInputFormatter(nickLengthMax),
+      ],
     );
   }
 
@@ -224,23 +297,26 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute>
   }
 
   Future<void> joinMeeting() async {
+    final isLoggedIn = AuthManager().isLoggedIn;
     FocusScope.of(context).requestFocus(FocusNode());
-    final nickname =
-        LocalHistoryMeetingManager().getLatestNickname(targetMeetingNum);
-    _onJoinMeeting(nickname: nickname);
+    if (isLoggedIn) {
+      _onJoinMeeting();
+    } else {
+      if (!await PrivacyUtil.ensurePrivacyAgree(context)) return;
+      _guestJoinMeeting();
+    }
   }
 
   String get targetMeetingNum =>
       TextUtil.replace(_meetingNumController.text, RegExp(r'-'), '');
 
-  void _onJoinMeeting({String? nickname}) async {
+  void _onJoinMeeting() async {
     LoadingUtil.showLoading();
-    //shareScreenTips 屏幕弹窗提示共享文案
     final result = await NEMeetingKit.instance.getMeetingService().joinMeeting(
       context,
       NEJoinMeetingParams(
         meetingNum: targetMeetingNum,
-        displayName: nickname ?? MeetingUtil.getNickName(),
+        displayName: _meetingNicknameController.text,
         watermarkConfig: buildNEWatermarkConfig(),
       ),
       await buildMeetingUIOptions(
@@ -276,6 +352,27 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute>
           context, getAppLocalizations().meetingOperationNotSupportedInMeeting);
     } else if (errorCode == NEMeetingErrorCode.cancelled) {
       /// 暂不处理
+    } else if (errorCode == NEMeetingErrorCode.guestJoinNotSupported ||
+        errorCode == NEMeetingErrorCode.crossAppJoinNotSupported) {
+      var title = getAppLocalizations().meetingCrossAppJoinNotSupportedTitle;
+      var message = getAppLocalizations().meetingCrossAppJoinNotSupported;
+      if (errorCode == NEMeetingErrorCode.guestJoinNotSupported) {
+        title = getAppLocalizations().meetingGuestJoinNotSupportedTitle;
+        message = getAppLocalizations().meetingGuestJoinNotSupported;
+      }
+      AppDialogUtils.showOneButtonCommonDialog(
+        context,
+        title,
+        message,
+        () => Navigator.pop(context),
+      );
+    } else if (errorCode == NEMeetingErrorCode.meetingLocked) {
+      AppDialogUtils.showOneButtonCommonDialog(
+        context,
+        NEMeetingUIKit.instance.getUIKitLocalizations().meetingLocked,
+        NEMeetingUIKit.instance.getUIKitLocalizations().meetingLockedTip,
+        () => Navigator.pop(context),
+      );
     } else {
       var errorTips =
           HttpCode.getMsg(errorMessage, getAppLocalizations().meetingJoinFail);
@@ -283,9 +380,35 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute>
     }
   }
 
-  void _onMeetingIdChanged() {
-    var meetingId = _meetingNumController.text;
-    joinEnable.value = meetingId.length >= meetIdLengthMin;
+  void _guestJoinMeeting() async {
+    LoadingUtil.showLoading();
+    if (!NEMeetingKit.instance.isInitialized) {
+      final initResult = await AuthManager().initialize(appKey: '');
+      if (!initResult.isSuccess()) {
+        LoadingUtil.cancelLoading();
+        ToastUtils.showToast(context, getAppLocalizations().meetingJoinFail);
+        return;
+      }
+    }
+    guestJoinMeeting(
+      meetingNum: targetMeetingNum,
+      displayName: _meetingNicknameController.text,
+      noVideo: !openCamera.value,
+      noAudio: !openMicrophone.value,
+    );
+  }
+
+  void _onMeetingNumChanged() {
+    final nickname =
+        LocalHistoryMeetingManager().getLatestNickname(targetMeetingNum);
+    if (nickname != null) {
+      _meetingNicknameController.text = nickname;
+    }
+  }
+
+  void _onMeetingParamsChanged() {
+    joinEnable.value = _meetingNumController.text.isNotEmpty &&
+        _meetingNicknameController.text.isNotEmpty;
   }
 
   void _showHistoryMeetingDialog() {
@@ -407,8 +530,6 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute>
     var record =
         preMeetingService.getLocalHistoryMeetingList()[_selectedRecordIndex];
     _meetingNumController.text = record.meetingNum;
-    _onMeetingIdChanged();
-    setState(() {});
   }
 
   void _clearMeetingRecords() async {
@@ -420,6 +541,8 @@ class _MeetJoinRouteState extends AppBaseState<MeetJoinRoute>
   void dispose() {
     _meetingNumController.dispose();
     _meetingNumFocusNode.dispose();
+    _meetingNicknameController.dispose();
+    _meetingNicknameFocusNode.dispose();
     LoadingUtil.cancelLoading();
     super.dispose();
   }

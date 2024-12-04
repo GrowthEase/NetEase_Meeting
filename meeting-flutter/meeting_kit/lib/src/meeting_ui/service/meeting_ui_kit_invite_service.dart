@@ -50,6 +50,13 @@ abstract class NEMeetingUIKitInviteService {
   ///
   void removeMeetingInviteStatusListener(
       NEMeetingInviteStatusListener listener);
+
+  ///
+  /// 呼叫指定会议设备
+  /// [device] device 设备
+  ///
+  Future<NEResult<NERoomSIPCallInfo?>> callOutRoomSystem(
+      NERoomSystemDevice device);
 }
 
 class _NEMeetingUIKitInviteServiceImpl extends NEMeetingUIKitInviteService
@@ -109,4 +116,9 @@ class _NEMeetingUIKitInviteServiceImpl extends NEMeetingUIKitInviteService
       NEMeetingInviteStatusListener listener) {
     MeetingInviteRepository().removeMeetingInviteStatusListener(listener);
   }
+
+  @override
+  Future<NEResult<NERoomSIPCallInfo?>> callOutRoomSystem(
+          NERoomSystemDevice device) =>
+      MeetingInviteRepository().callOutRoomSystem(device);
 }

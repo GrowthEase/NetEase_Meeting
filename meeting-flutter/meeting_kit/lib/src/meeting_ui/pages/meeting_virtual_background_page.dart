@@ -8,12 +8,14 @@ class InMeetingVirtualBackgroundPage extends StatefulWidget {
   final NERoomContext roomContext;
   final NERoomUserVideoStreamSubscriber videoStreamSubscriber;
   final ValueListenable<bool> mirrorListenable;
+  final ValueListenable<bool> videoMuteListenable;
 
   InMeetingVirtualBackgroundPage({
     Key? key,
     required this.roomContext,
     required this.mirrorListenable,
     required this.videoStreamSubscriber,
+    required this.videoMuteListenable,
   });
 
   @override
@@ -25,44 +27,64 @@ class InMeetingVirtualBackgroundPage extends StatefulWidget {
 class _InMeetingVirtualBackgroundPageState
     extends _VirtualBackgroundPageState<InMeetingVirtualBackgroundPage> {
   final NERoomRtcController? rtcController;
+  VoidCallback? listener;
 
   _InMeetingVirtualBackgroundPageState({required this.rtcController});
 
   @override
   void initState() {
     super.initState();
+    rtcController?.getVirtualBackgroundSupportedType().then((value) {
+      supportedType = value;
+    });
     checkPermission().then((granted) {
       if (granted) {
         _initVirtualBackgroundPictures();
+
+        /// 会中关闭视频进入，仅开启视频，不推流
+        _enableLocalVideo();
       }
+    });
+
+    widget.videoMuteListenable.addListener(listener = () {
+      /// 在当前页面被关闭了视频
+      _enableLocalVideo();
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(body: buildBody(context));
+  void _enableLocalVideo() {
+    if (widget.videoMuteListenable.value) {
+      rtcController?.enableLocalVideo(true);
+    }
   }
 
-  Widget buildBody(BuildContext context) {
+  Widget buildVideoView() {
     return NERoomUserVideoStreamSubscriberProvider(
       subscriber: widget.videoStreamSubscriber,
-      child: Stack(
-        children: <Widget>[
-          ValueListenableBuilder<bool>(
-            valueListenable: widget.mirrorListenable,
-            builder: (context, mirror, child) {
-              return NERoomUserVideoView(
-                widget.roomContext.myUuid,
-                mirror: mirror,
-                debugName: widget.roomContext.localMember.name,
-              );
-            },
-          ),
-          buildBottomDialog(),
-          buildReturnIcon(),
-        ],
+      child: ValueListenableBuilder<bool>(
+        valueListenable: widget.mirrorListenable,
+        builder: (context, mirror, child) {
+          return NERoomUserVideoView(
+            widget.roomContext.myUuid,
+            mirror: mirror,
+            debugName: widget.roomContext.localMember.name,
+          );
+        },
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    if (listener != null) {
+      widget.videoMuteListenable.removeListener(listener!);
+    }
+
+    /// 会中关闭视频进入，关闭视频退出
+    if (widget.videoMuteListenable.value) {
+      rtcController?.enableLocalVideo(false);
+    }
   }
 }
 
@@ -73,10 +95,15 @@ abstract class _VirtualBackgroundPageState<T extends StatefulWidget>
   final _settingsService = NEMeetingKit.instance.getSettingsService();
   List<String> builtinVirtualBackgroundList = [];
   List<String> externalVirtualBackgroundList = <String>[];
+  bool virtualBackgroundIsEnable = false;
+  NERoomVirtualBackgroundSupportedType supportedType =
+      NERoomVirtualBackgroundSupportedType.kNEVirtualBackgroundSupportFull;
 
   NERoomBaseRtcController? get rtcController;
 
   double boxRatio = 80 / 46;
+
+  final _virtualBackgroundPictureStream = StreamController<Object?>();
 
   @override
   void initState() {
@@ -85,6 +112,21 @@ abstract class _VirtualBackgroundPageState<T extends StatefulWidget>
       NEMeetingKitUIStyle.setSystemUIOverlayStyle();
     });
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: <Widget>[
+          buildVideoView(),
+          buildBottomDialog(),
+          buildReturnIcon(),
+        ],
+      ),
+    );
+  }
+
+  Widget buildVideoView();
 
   Widget buildReturnIcon() {
     return Positioned(
@@ -172,6 +214,7 @@ abstract class _VirtualBackgroundPageState<T extends StatefulWidget>
                 _settingsService.setCurrentVirtualBackground(null);
                 currentSelectedPath = null;
                 enableVirtualBackground(false, '');
+                _virtualBackgroundPictureStream.add(null);
                 setState(() {});
               },
               child: Text(
@@ -191,17 +234,24 @@ abstract class _VirtualBackgroundPageState<T extends StatefulWidget>
 
   /// 构建用户自定义背景选择器
   Widget buildSelector() {
-    return Container(
-      padding: EdgeInsets.only(left: 12, bottom: 16, right: 16, top: 16),
-      child: divideToGroup(
-        [
-          buildNothing(),
-          buildPickImage(),
-          if (externalVirtualBackgroundList.isNotEmpty)
-            ...externalVirtualBackgroundList.map((e) => buildItem(e)).toList()
-        ],
-      ),
-    );
+    return StreamBuilder<Object?>(
+        stream: _virtualBackgroundPictureStream.stream,
+        builder: (context, snapshot) {
+          final child = Container(
+            padding: EdgeInsets.only(left: 12, bottom: 16, right: 16, top: 16),
+            child: divideToGroup(
+              [
+                buildNothing(),
+                buildPickImage(),
+                if (externalVirtualBackgroundList.isNotEmpty)
+                  ...externalVirtualBackgroundList
+                      .map((e) => buildItem(e))
+                      .toList()
+              ],
+            ),
+          );
+          return snapshot.data == true ? SizedBox(child: child) : child;
+        });
   }
 
   /// 构建默认背景选择器
@@ -314,11 +364,32 @@ abstract class _VirtualBackgroundPageState<T extends StatefulWidget>
         ));
   }
 
+  bool uploading = false;
   Widget buildPickImage() {
     return wrapOutsideBorder(
-      onTap: () => pickFiles(context).then((value) {
-        if (mounted) setState(() {});
-      }),
+      onTap: () async {
+        if (uploading) return;
+        uploading = true;
+        _virtualBackgroundPictureStream.add(null);
+        try {
+          await pickFiles(context);
+
+          /// 解决ios18上遇到的，新写入的图片，展示失败的问题
+          Future.delayed(Duration(seconds: 1)).then((value) {
+            if (failImages.isNotEmpty) {
+              failImages.clear();
+              _virtualBackgroundPictureStream.add(true);
+            }
+          });
+        } catch (e) {
+          Alog.e(
+              tag: _tag,
+              moduleName: _moduleName,
+              content: 'pickFiles error: $e');
+        }
+        uploading = false;
+        _virtualBackgroundPictureStream.add(null);
+      },
       showBorder: false,
       child: Container(
         alignment: Alignment.center,
@@ -330,24 +401,40 @@ abstract class _VirtualBackgroundPageState<T extends StatefulWidget>
           ),
           borderRadius: BorderRadius.all(Radius.circular(4)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Stack(
+          alignment: Alignment.center,
           children: [
-            Icon(
-              NEMeetingIconFont.icon_add_picture,
-              size: 16,
-              color: _UIColors.white,
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  NEMeetingIconFont.icon_add_picture,
+                  size: 16,
+                  color: _UIColors.white,
+                ),
+                SizedBox(height: 2),
+                Text(
+                  NEMeetingUIKit.instance.getUIKitLocalizations().virtualCustom,
+                  style: TextStyle(color: _UIColors.white, fontSize: 12),
+                ),
+              ],
             ),
-            SizedBox(height: 2),
-            Text(
-              NEMeetingUIKit.instance.getUIKitLocalizations().virtualCustom,
-              style: TextStyle(color: _UIColors.white, fontSize: 12),
-            ),
+            if (uploading)
+              Container(
+                  alignment: Alignment.center,
+                  color: _UIColors.black.withOpacity(0.6),
+                  child: SizedBox(
+                    height: 16,
+                    width: 16,
+                    child: CircularProgressIndicator(),
+                  )),
           ],
         ),
       ),
     );
   }
+
+  final failImages = <String>[];
 
   Widget buildItem(String path) {
     return wrapOutsideBorder(
@@ -355,10 +442,13 @@ abstract class _VirtualBackgroundPageState<T extends StatefulWidget>
           selectVirtualBackground(path);
         },
         showBorder: path == currentSelectedPath,
-        child: Image.file(
-          File(path),
-          fit: BoxFit.cover,
-        ));
+        child: Image.file(File(path), fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+          failImages.add(path);
+          return Container(
+            color: _UIColors.white.withOpacity(0.2),
+          );
+        }));
   }
 
   Future<bool> checkPermission() async {
@@ -388,6 +478,8 @@ abstract class _VirtualBackgroundPageState<T extends StatefulWidget>
     if (builtinVirtualBackgroundList.isNotEmpty) {
       builtinVirtualBackgroundList =
           replaceBundleId(cache!.path, builtinVirtualBackgroundList);
+      _settingsService
+          .setBuiltinVirtualBackgroundList(builtinVirtualBackgroundList);
     }
 
     externalVirtualBackgroundList =
@@ -395,10 +487,18 @@ abstract class _VirtualBackgroundPageState<T extends StatefulWidget>
     if (externalVirtualBackgroundList.length > 0) {
       externalVirtualBackgroundList =
           replaceBundleId(cache!.path, externalVirtualBackgroundList);
+      _settingsService
+          .setExternalVirtualBackgroundList(externalVirtualBackgroundList);
     }
     currentSelectedPath = await _settingsService.getCurrentVirtualBackground();
     if (currentSelectedPath != null) {
-      enableVirtualBackground(true, currentSelectedPath!);
+      currentSelectedPath =
+          replaceBundleIdByStr(currentSelectedPath!, cache!.path);
+      _settingsService.setCurrentVirtualBackground(currentSelectedPath);
+    }
+    if (currentSelectedPath != null) {
+      /// 已经开启的默认直接开启
+      enableVirtualBackground(true, currentSelectedPath!, force: true);
     }
     if (mounted) setState(() {});
   }
@@ -419,27 +519,70 @@ abstract class _VirtualBackgroundPageState<T extends StatefulWidget>
   }
 
   void selectVirtualBackground(String? path) {
-    if (currentSelectedPath == path) {
+    if (currentSelectedPath == path && virtualBackgroundIsEnable) {
       return;
     }
     currentSelectedPath = path;
     if (path == null) {
       enableVirtualBackground(false, '');
     } else {
-      enableVirtualBackground(true, path);
+      Alog.i(
+          tag: _tag,
+          moduleName: _moduleName,
+          content:
+              'getVirtualBackgroundSupportedType ret supportedType: $supportedType');
+
+      switch (supportedType) {
+        case NERoomVirtualBackgroundSupportedType
+              .kNEVirtualBackgroundSupportFull:
+          enableVirtualBackground(true, path);
+          break;
+        case NERoomVirtualBackgroundSupportedType
+              .kNEVirtualBackgroundSupportHardwareLimit:
+          ToastUtils.showToast(
+              context,
+              NEMeetingUIKit.instance
+                  .getUIKitLocalizations()
+                  .virtualBackgroundImageDeviceNotSupported);
+          break;
+        case NERoomVirtualBackgroundSupportedType
+              .kNEVirtualBackgroundSupportPerformanceLimit:
+          if (!virtualBackgroundIsEnable) {
+            DialogUtils.showVirtualBackgroundAlertDialog(
+                context: context,
+                onCancelCallback: () {
+                  Navigator.of(context).pop();
+                },
+                onForceOpenCallback: () {
+                  enableVirtualBackground(true, path, force: true);
+                  Navigator.of(context).pop();
+                });
+          } else {
+            Alog.i(
+                tag: _tag,
+                moduleName: _moduleName,
+                content:
+                    'already virtualBackgroundIsEnable: $virtualBackgroundIsEnable');
+            enableVirtualBackground(true, path, force: true);
+          }
+          break;
+      }
     }
     _settingsService.setCurrentVirtualBackground(path);
     if (mounted) setState(() {});
   }
 
-  void enableVirtualBackground(bool enable, String path) async {
+  void enableVirtualBackground(bool enable, String path,
+      {bool force = false}) async {
+    virtualBackgroundIsEnable = enable;
     await rtcController?.enableVirtualBackground(
         enable,
         NERoomVirtualBackgroundSource(
             backgroundSourceType: NERoomVirtualBackgroundType.kBackgroundImg,
             source: path,
             color: 0,
-            blurDegree: NERoomVirtualBackgroundType.kBlurDegreeHigh));
+            blurDegree: NERoomVirtualBackgroundType.kBlurDegreeHigh),
+        force: force);
   }
 
   Future<bool> pickFiles(BuildContext context) async {
@@ -518,6 +661,12 @@ abstract class _VirtualBackgroundPageState<T extends StatefulWidget>
       selected = false;
     }
     return selected;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _virtualBackgroundPictureStream.close();
   }
 }
 

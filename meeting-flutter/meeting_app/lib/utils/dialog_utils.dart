@@ -51,19 +51,32 @@ class AppDialogUtils {
         });
   }
 
-  static Future showOneButtonCommonDialog(
-      BuildContext context, String title, String content, VoidCallback callback,
+  static Future showOneButtonCommonDialog(BuildContext context, String? title,
+      String content, VoidCallback callback,
       {String? acceptText, bool canBack = true, bool isContentCenter = true}) {
     acceptText ??= getAppLocalizations().globalIKnow;
     return showDialog(
         context: context,
         useRootNavigator: false,
         barrierDismissible: canBack,
+        barrierColor: AppColors.black.withOpacity(0.4),
         builder: (BuildContext context) {
           return PopScope(
             canPop: canBack,
             child: CupertinoAlertDialog(
-              title: _isEmpty(title) ? null : Text(title),
+              title: title == null || _isEmpty(title)
+                  ? null
+                  : Padding(
+                      padding: EdgeInsets.only(bottom: 10),
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          color: AppColors.color_1E1F27,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
               content: Text(content,
                   textAlign:
                       isContentCenter ? TextAlign.center : TextAlign.left),

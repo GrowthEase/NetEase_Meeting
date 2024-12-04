@@ -16,19 +16,24 @@ enum CurrentCallState {
 
   /// 已接通
   connected,
+
+  /// 对方忙
+  busy,
 }
 
 /// 当前页面在进行的呼叫
 class CurrentCallInfo {
-  final String phoneNumber;
-  final String name;
+  final String? phoneNumber;
+  final String? name;
   final String? userUuid;
   final String? avatar;
+  final NERoomSystemDevice? device;
   CurrentCallState state = CurrentCallState.none;
   int time = 0;
   DateTime? connectedTime;
 
-  CurrentCallInfo(this.phoneNumber, this.name, this.userUuid, this.avatar);
+  CurrentCallInfo(
+      {this.phoneNumber, this.name, this.userUuid, this.avatar, this.device});
 }
 
 class MeetingSipCallPage extends StatefulWidget {
@@ -146,8 +151,6 @@ class _MeetingSipCallPageState
 
   /// 加载本地呼叫记录
   _loadCallRecords() async {
-    await _sipCallRecordsSQLManager
-        .initializeDatabase(arguments.roomContext.myUuid);
     final list = await _sipCallRecordsSQLManager.getAllCallRecords();
     _callRecords = list.reversed.toList();
     setState(() {
@@ -316,22 +319,31 @@ class _MeetingSipCallPageState
         ),
         Column(
           children: [
-            MeetingCard(
-                title: meetingUiLocalizations.sipKeypad,
-                iconData: NEMeetingIconFont.icon_call,
-                iconColor: _UIColors.color1BB650,
-                children: [
-                  buildInputPhone(),
-                  _phoneNumberError
-                      ? Container(
-                          padding: EdgeInsets.only(left: 16, right: 16),
-                          child: Text(meetingUiLocalizations.sipNumberError,
-                              style: TextStyle(
-                                  color: _UIColors.colorF24957, fontSize: 14)))
-                      : SizedBox.shrink(),
-                  buildInputName(),
-                ]),
-            Spacer(),
+            Expanded(
+                child: SingleChildScrollView(
+                    physics: BouncingScrollPhysics(),
+                    child: Column(
+                      children: [
+                        MeetingCard(
+                            title: meetingUiLocalizations.sipKeypad,
+                            iconData: NEMeetingIconFont.icon_call,
+                            iconColor: _UIColors.color1BB650,
+                            children: [
+                              buildInputPhone(),
+                              _phoneNumberError
+                                  ? Container(
+                                      padding:
+                                          EdgeInsets.only(left: 16, right: 16),
+                                      child: Text(
+                                          meetingUiLocalizations.sipNumberError,
+                                          style: TextStyle(
+                                              color: _UIColors.colorF24957,
+                                              fontSize: 14)))
+                                  : SizedBox.shrink(),
+                              buildInputName(),
+                            ]),
+                      ],
+                    ))),
             buildCallButton(_isCallBtnEnabled ? _onCall : null),
             Text(
                 '${meetingUiLocalizations.sipCallNumber} ${arguments.outboundPhoneNumber ?? ''}',
@@ -434,6 +446,7 @@ class _MeetingSipCallPageState
               });
             },
           ),
+        SizedBox(width: 12),
         Visibility(
             visible: _callRecords.isNotEmpty,
             child: IconButton(
@@ -480,39 +493,41 @@ class _MeetingSipCallPageState
     arguments.roomContext.sipController
         .callByNumber(number, "+86", name)
         .then((value) {
-      {
-        if (value.isSuccess()) {
-          setState(() {
-            if (value.data?.isRepeatedCall == true) {
-              ToastUtils.showToast(
-                  context, meetingUiLocalizations.sipCallIsCalling);
-            } else {
-              _currentCall = CurrentCallInfo(number, value.data?.name ?? number,
-                  value.data?.userUuid, _currentContact?.avatar)
-                ..state = CurrentCallState.calling;
-            }
-            _selectedContact = null;
-            _nameController.clear();
-            _mobileController.clear();
-          });
-        } else {
-          handleInviteCodeError(context, value.code, meetingUiLocalizations);
-          setState(() {
-            /// 这几种情况不需要跳转到呼叫失败页面
-            if (value.code != 1022 &&
-                value.code != 3006 &&
-                value.code != 601011) {
-              _currentCall = CurrentCallInfo(number, value.data?.name ?? number,
-                  value.data?.userUuid, _currentContact?.avatar)
-                ..state = CurrentCallState.callFailed;
-            } else {
-              _currentCall = null;
-            }
-            _selectedContact = null;
-            _nameController.clear();
-            _mobileController.clear();
-          });
-        }
+      if (value.isSuccess()) {
+        setState(() {
+          if (value.data?.isRepeatedCall == true) {
+            ToastUtils.showToast(
+                context, meetingUiLocalizations.sipCallIsCalling);
+          } else {
+            _currentCall = CurrentCallInfo(
+                phoneNumber: number,
+                name: value.data?.name ?? number,
+                userUuid: value.data?.userUuid,
+                avatar: _currentContact?.avatar)
+              ..state = CurrentCallState.calling;
+          }
+          _selectedContact = null;
+          _nameController.clear();
+          _mobileController.clear();
+        });
+      } else {
+        handleInviteCodeError(
+            context, value.code, meetingUiLocalizations, false);
+        setState(() {
+          /// 这几种情况不需要跳转到呼叫失败页面
+          if (value.code != 1022 &&
+              value.code != 3006 &&
+              value.code != 601011) {
+            _currentCall = CurrentCallInfo(
+                phoneNumber: number,
+                name: value.data?.name ?? number,
+                userUuid: value.data?.userUuid,
+                avatar: _currentContact?.avatar)
+              ..state = CurrentCallState.callFailed;
+          } else {
+            _currentCall = null;
+          }
+        });
       }
     });
   }
@@ -522,50 +537,47 @@ class _MeetingSipCallPageState
     return Column(
       children: [
         Expanded(
-          child: MeetingCard(
-            title: meetingUiLocalizations.sipBatchCall,
-            iconData: NEMeetingIconFont.icon_call_batch,
-            iconColor: _UIColors.color1BB650,
-            children: [
-              Expanded(
-                  child: ContactList(
-                selectedContactsCache: _selectedContacts,
-                hideAvatar: arguments.hideAvatar,
-                itemClickCallback: (contact, selectedSize, maxSelectedSizeTip) {
-                  if (TextUtils.isEmpty(contact.phoneNumber)) {
-                    /// 没有号码用户的不允许选中
-                    ToastUtils.showToast(
-                        context, meetingUiLocalizations.sipContactNoNumber);
-                  } else if (isMemberAlreadyInRoom(contact.userUuid)) {
-                    /// 已经在房间中的用户不允许再次呼叫
-                    ToastUtils.showToast(
-                        context, meetingUiLocalizations.sipCallIsInMeeting);
-                  } else if (isMemberAlreadyInCalling(contact.userUuid)) {
-                    /// 已经在呼叫中的用户不允许再次呼叫
-                    ToastUtils.showToast(
-                        context, meetingUiLocalizations.sipCallIsInInviting);
-                  } else if (_selectedContacts.length >= 10) {
-                    /// 选中用户超过10个
-                    ToastUtils.showToast(
-                        context, meetingUiLocalizations.sipCallMaxCount(10));
-                  } else if (_memberOverMaxCount()) {
-                    /// 人数超限
-                    ToastUtils.showToast(
-                        context, meetingUiLocalizations.memberCountOutOfRange);
-                  } else {
-                    return true;
-                  }
-                  return false;
-                },
-                onSelectedContactListChanged: (contactList) {
-                  setState(() {
-                    _selectedContacts = contactList;
-                  });
-                },
-              )),
-            ],
+            child: ContactList(
+          icon: Icon(
+            NEMeetingIconFont.icon_call_batch,
+            color: _UIColors.color1BB650,
+            size: 12,
           ),
-        ),
+          title: meetingUiLocalizations.sipBatchCall,
+          selectedContactsCache: _selectedContacts,
+          hideAvatar: arguments.hideAvatar,
+          itemClickCallback: (contact, selectedSize, maxSelectedSizeTip) {
+            if (TextUtils.isEmpty(contact.phoneNumber)) {
+              /// 没有号码用户的不允许选中
+              ToastUtils.showToast(
+                  context, meetingUiLocalizations.sipContactNoNumber);
+            } else if (isMemberAlreadyInRoom(contact.userUuid)) {
+              /// 已经在房间中的用户不允许再次呼叫
+              ToastUtils.showToast(
+                  context, meetingUiLocalizations.sipCallIsInMeeting);
+            } else if (isMemberAlreadyInCalling(contact.userUuid)) {
+              /// 已经在呼叫中的用户不允许再次呼叫
+              ToastUtils.showToast(
+                  context, meetingUiLocalizations.sipCallIsInInviting);
+            } else if (_selectedContacts.length >= 10) {
+              /// 选中用户超过10个
+              ToastUtils.showToast(
+                  context, meetingUiLocalizations.sipCallMaxCount(10));
+            } else if (_memberOverMaxCount()) {
+              /// 人数超限
+              ToastUtils.showToast(
+                  context, meetingUiLocalizations.memberCountOutOfRange);
+            } else {
+              return true;
+            }
+            return false;
+          },
+          onSelectedContactListChanged: (contactList) {
+            setState(() {
+              _selectedContacts = contactList;
+            });
+          },
+        )),
         buildCallButton(sipBatchCallBtnEnabled ? _onSipCall : null),
         Text(
             '${meetingUiLocalizations.sipCallNumber} ${arguments.outboundPhoneNumber ?? ''}',
@@ -596,7 +608,8 @@ class _MeetingSipCallPageState
         if (value.isSuccess()) {
           if (mounted) Navigator.of(context).pop();
         } else {
-          handleInviteCodeError(context, value.code, meetingUiLocalizations);
+          handleInviteCodeError(
+              context, value.code, meetingUiLocalizations, false);
         }
       });
     }
@@ -695,7 +708,7 @@ class _MeetingSipCallPageState
   @override
   void call() async {
     if (_currentCall?.phoneNumber != null && _currentCall?.name != null) {
-      _callByNumber(_currentCall!.phoneNumber, _currentCall!.name);
+      _callByNumber(_currentCall!.phoneNumber!, _currentCall!.name!);
     }
   }
 
@@ -739,6 +752,11 @@ abstract class _MeetingSipCallPageBaseState<T extends StatefulWidget>
               _currentCall?.state = CurrentCallState.callFailed;
               _currentCall?.connectedTime = null;
             });
+          } else if (member.inviteState == NERoomMemberInviteState.busy) {
+            setState(() {
+              _currentCall?.state = CurrentCallState.busy;
+              _currentCall?.connectedTime = null;
+            });
           } else if (member.inviteState == NERoomMemberInviteState.canceled) {
             setState(() {
               _currentCall = null;
@@ -748,18 +766,8 @@ abstract class _MeetingSipCallPageBaseState<T extends StatefulWidget>
       },
 
       /// 成员加入房间，说明通话接通了
-      memberJoinRoom: (List<NERoomMember> members) {
-        if (_currentCall != null) {
-          for (var element in members) {
-            if (element.uuid == _currentCall!.userUuid) {
-              setState(() {
-                _currentCall?.state = CurrentCallState.connected;
-                _currentCall?.connectedTime = DateTime.now();
-              });
-            }
-          }
-        }
-      },
+      memberJoinRoom: memberJoin,
+      memberJoinRtcChannel: memberJoin,
 
       /// 成员离开房间，说明通话结束了
       memberLeaveRoom: (List<NERoomMember> members) {
@@ -784,6 +792,19 @@ abstract class _MeetingSipCallPageBaseState<T extends StatefulWidget>
     _connectedTimer = Timer.periodic(Duration(seconds: 1), (Timer t) {
       _timerStreamController.add(DateTime.now());
     });
+  }
+
+  void memberJoin(List<NERoomMember> members) {
+    if (_currentCall != null) {
+      for (var element in members) {
+        if (element.uuid == _currentCall!.userUuid) {
+          setState(() {
+            _currentCall?.state = CurrentCallState.connected;
+            _currentCall?.connectedTime = DateTime.now();
+          });
+        }
+      }
+    }
   }
 
   @override
@@ -836,14 +857,21 @@ abstract class _MeetingSipCallPageBaseState<T extends StatefulWidget>
   _buildCallingHeader() {
     return Column(
       children: [
-        Text(_currentCall?.name ?? (_currentCall?.phoneNumber ?? ''),
-            style: TextStyle(fontSize: 28, color: _UIColors.color1E1F27)),
+        Container(
+          child: Text(_currentCall?.name ?? (_currentCall?.phoneNumber ?? ''),
+              style: TextStyle(fontSize: 28, color: _UIColors.color1E1F27)),
+          padding: EdgeInsets.only(left: 16, right: 16),
+          alignment: Alignment.center,
+        ),
         SizedBox(height: 16),
         if (_currentCall?.state == CurrentCallState.calling)
           Text(meetingUiLocalizations.sipCalling,
               style: TextStyle(fontSize: 16, color: _UIColors.color53576A)),
         if (_currentCall?.state == CurrentCallState.callFailed)
           Text(meetingUiLocalizations.sipCallFailed,
+              style: TextStyle(fontSize: 16, color: _UIColors.colorF24957)),
+        if (_currentCall?.state == CurrentCallState.busy)
+          Text(meetingUiLocalizations.sipCallBusy,
               style: TextStyle(fontSize: 16, color: _UIColors.colorF24957)),
       ],
     );
@@ -948,7 +976,8 @@ abstract class _MeetingSipCallPageBaseState<T extends StatefulWidget>
         children: [
           SizedBox(height: 32),
           if (_currentCall?.state == CurrentCallState.calling ||
-              _currentCall?.state == CurrentCallState.callFailed)
+              _currentCall?.state == CurrentCallState.callFailed ||
+              _currentCall?.state == CurrentCallState.busy)
             _buildCallingHeader(),
           if (_currentCall?.state == CurrentCallState.connected)
             _buildConnectedHeader(),
@@ -959,12 +988,14 @@ abstract class _MeetingSipCallPageBaseState<T extends StatefulWidget>
                   iconSize: 60,
                   onPressed: onCallBtnClicked,
                   icon: Image.asset(
-                      _currentCall?.state == CurrentCallState.callFailed
+                      _currentCall?.state == CurrentCallState.callFailed ||
+                              _currentCall?.state == CurrentCallState.busy
                           ? NEMeetingImages.call
                           : NEMeetingImages.hangup,
                       package: NEMeetingImages.package)),
               Text(
-                  _currentCall?.state == CurrentCallState.callFailed
+                  _currentCall?.state == CurrentCallState.callFailed ||
+                          _currentCall?.state == CurrentCallState.busy
                       ? meetingUiLocalizations.sipCallAgain
                       : (_currentCall?.state == CurrentCallState.calling
                           ? meetingUiLocalizations.sipCallCancel

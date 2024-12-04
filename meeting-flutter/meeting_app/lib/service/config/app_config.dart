@@ -28,6 +28,7 @@ class AppConfig {
   String? _corpCodeIntroductionUrl;
   String? _privacyUrl;
   String? _userProtocolUrl;
+  String? _cloudRecordUrl;
 
   late String versionName;
 
@@ -53,6 +54,9 @@ class AppConfig {
   String _apnsCerName = 'meetingPush';
   String get apnsCerName => _apnsCerName;
 
+  String get cloudRecordUrl =>
+      _cloudRecordUrl ?? 'https://meeting.163.com/recordInfo';
+
   static bool get isInDebugMode {
     return _debugMode;
   }
@@ -67,6 +71,7 @@ class AppConfig {
     _serverUrl = config.serverUrl;
     _userProtocolUrl = config.meetingModuleConfig?.about?.userProtocolUrl;
     _privacyUrl = config.meetingModuleConfig?.about?.privacyUrl;
+    _cloudRecordUrl = config.cloudRecordUrl;
     return Future.value();
   }
 
@@ -109,6 +114,7 @@ class NEAppConfig {
   String? serverUrl;
   NEMeetingMixPushConfig? mixPushConfig;
   String? apnsCerName;
+  String? cloudRecordUrl;
 
   NEAppConfig();
 
@@ -118,6 +124,8 @@ class NEAppConfig {
     if (json.containsKey(_meetingServerConfigKey)) {
       serverUrl =
           (json[_meetingServerConfigKey] as Map)['serverUrl'] as String?;
+      cloudRecordUrl =
+          (json[_meetingServerConfigKey] as Map)['cloudRecordUrl'] as String?;
     }
 
     if (json.containsKey(_meetingModuleConfigKey)) {

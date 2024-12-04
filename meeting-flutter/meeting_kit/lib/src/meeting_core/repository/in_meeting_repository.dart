@@ -18,4 +18,9 @@ class InMeetingRepository {
   static Future<NEResult<void>> hasEnableCaptionsPermission(String meetingNum) {
     return HttpApiHelper.execute(_CheckCaptionPermissionApi(meetingNum));
   }
+
+  /// 开启智能会议纪要
+  static Future<NEResult<void>> startAISummary(int meetingId) {
+    return HttpApiHelper.execute(_StartAISummaryApi(meetingId));
+  }
 }

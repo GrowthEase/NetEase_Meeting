@@ -119,7 +119,7 @@ class MeetingChatRoomMembersPageState
     /// 移除自己和SIP成员
     memberList.removeWhere((element) =>
         roomContext.isMySelf(element.uuid) ||
-        (element is NERoomMember && element.clientType == NEClientType.sip));
+        (element is NERoomMember && element.isRoomSystemDevice));
     return memberList;
   }
 
@@ -135,15 +135,23 @@ class MeetingChatRoomMembersPageState
           buildDivider(),
         ] else if (memberList.isEmpty)
           Padding(
-            padding: EdgeInsets.only(top: 40),
-            child: Text(
-              meetingUiLocalizations.participantNotFound,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.normal,
-                color: _UIColors.color3D3D3D,
-                decoration: TextDecoration.none,
-              ),
+            padding: EdgeInsets.only(top: 64),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NEMeetingImages.assetImage(NEMeetingImages.iconNoContent,
+                    width: 120, height: 120),
+                SizedBox(height: 8),
+                Text(
+                  meetingUiLocalizations.participantNotFound,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.normal,
+                    color: _UIColors.color3D3D3D,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+              ],
             ),
           ),
         Expanded(
@@ -290,7 +298,7 @@ class MeetingChatRoomMembersPageState
             overflow: TextOverflow.ellipsis,
           ),
           Text(
-            '(${subtitle.join(',')})',
+            '${subtitle.join(',')}',
             style: subTitleTextStyle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

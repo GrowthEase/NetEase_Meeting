@@ -33,6 +33,10 @@ class ContactList extends StatefulWidget {
 
   final ValueListenable<bool>? hideAvatar;
 
+  final Icon? icon;
+
+  final String? title;
+
   ContactList({
     super.key,
     this.itemClickCallback,
@@ -42,6 +46,8 @@ class ContactList extends StatefulWidget {
     this.singleMode = false,
     this.showSearchHint = true,
     this.hideAvatar,
+    this.icon,
+    this.title,
   });
 
   @override
@@ -146,22 +152,26 @@ class _ContactListState extends State<ContactList>
   /// 通讯录页面
   Widget _buildContacts() {
     return Container(
-      decoration: BoxDecoration(
-          color: _UIColors.white,
-          borderRadius: BorderRadius.all(Radius.circular(8))),
-      child: Column(
-        children: [
-          _buildSearch(),
-          if (_selectedContacts.isNotEmpty && !widget.singleMode)
-            _buildSelected(),
-          Container(height: 1, color: _UIColors.globalBg),
-          Expanded(
-            child: Container(
-              margin: EdgeInsets.only(left: 20, right: 20),
-              child: _buildContactsList(),
+      color: _UIColors.globalBg,
+      padding: EdgeInsets.all(16),
+      child: Container(
+        decoration: BoxDecoration(
+            color: _UIColors.white,
+            borderRadius: BorderRadius.all(Radius.circular(8))),
+        child: Column(
+          children: [
+            _buildSearch(),
+            if (_selectedContacts.isNotEmpty && !widget.singleMode)
+              _buildSelected(),
+            Container(height: 2, color: _UIColors.globalBg),
+            Expanded(
+              child: Container(
+                margin: EdgeInsets.only(left: 20, right: 20),
+                child: _buildContactsList(),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -173,19 +183,24 @@ class _ContactListState extends State<ContactList>
       return Container();
     }
     return Container(
-      alignment: Alignment.center,
+      padding: EdgeInsets.only(top: 72),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Image.asset(NEMeetingImages.iconNoContacts,
+          Image.asset(
+              width: 120,
+              height: 120,
+              searchTextEmpty
+                  ? NEMeetingImages.iconSearchContacts
+                  : NEMeetingImages.iconNoContacts,
               package: NEMeetingImages.package),
-          SizedBox(height: 10),
+          SizedBox(height: 8),
           Text(
               searchTextEmpty
                   ? meetingUiLocalizations.sipSearchContacts
                   : meetingUiLocalizations.meetingSearchNotFound,
-              style: TextStyle(fontSize: 14, color: _UIColors.color_666666)),
+              style: TextStyle(fontSize: 14, color: _UIColors.color8D90A0)),
         ],
       ),
     );
@@ -193,52 +208,78 @@ class _ContactListState extends State<ContactList>
 
   /// 搜索框
   Widget _buildSearch() {
-    return Material(
-      color: Colors.white,
-      child: Container(
-          margin: EdgeInsets.only(left: 16, right: 16, top: 6, bottom: 6),
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(4)),
-              border: Border.all(width: 1, color: _UIColors.colorE6E7EB)),
-          height: 36,
-          alignment: Alignment.center,
-          child: TextField(
-            key: MeetingUIValueKeys.searchTextFieldKey,
-            focusNode: _focusNode,
-            controller: _searchTextEditingController,
-            cursorColor: _UIColors.blue_337eff,
-            keyboardAppearance: Brightness.light,
-            textAlignVertical: TextAlignVertical.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: _UIColors.color1E1F27,
-            ),
-            decoration: InputDecoration(
-                isDense: true,
-                filled: true,
-                fillColor: Colors.transparent,
-                hintText: meetingUiLocalizations.participantSearchMember,
-                hintStyle: TextStyle(
-                    fontSize: 16,
-                    color: _UIColors.colorCDCFD7,
+    return Container(
+      margin: EdgeInsets.only(left: 16, right: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(height: 8),
+          Row(
+            children: [
+              widget.icon ??
+                  Icon(NEMeetingIconFont.icon_members,
+                      size: 12, color: _UIColors.blue_337eff),
+              SizedBox(width: 4),
+              Text(
+                widget.title ?? meetingUiLocalizations.participantSearchMember,
+                style: TextStyle(
+                    fontSize: 12,
+                    color: _UIColors.color8D90A0,
+                    fontWeight: FontWeight.w500,
                     decoration: TextDecoration.none),
-                border: InputBorder.none,
-                prefixIcon: Icon(
-                  NEMeetingIconFont.icon_search2_line1x,
-                  size: 16,
-                  color: _UIColors.colorA6ADB6,
+              ),
+            ],
+          ),
+          SizedBox(height: 10),
+          Container(
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8)),
+                  border: Border.all(width: 1, color: _UIColors.colorE6E7EB)),
+              height: 36,
+              alignment: Alignment.center,
+              child: TextField(
+                key: MeetingUIValueKeys.searchTextFieldKey,
+                focusNode: _focusNode,
+                controller: _searchTextEditingController,
+                cursorColor: _UIColors.blue_337eff,
+                keyboardAppearance: Brightness.light,
+                textAlignVertical: TextAlignVertical.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: _UIColors.color1E1F27,
                 ),
-                prefixIconConstraints: BoxConstraints(
-                    minWidth: 32, minHeight: 32, maxHeight: 32, maxWidth: 32),
-                suffixIcon: !_focusNode.hasFocus ||
-                        TextUtils.isEmpty(_searchTextEditingController.text)
-                    ? null
-                    : ClearIconButton(
-                        onPressed: () {
-                          _searchTextEditingController.clear();
-                        },
-                      )),
-          )),
+                decoration: InputDecoration(
+                    isDense: true,
+                    filled: true,
+                    fillColor: Colors.transparent,
+                    hintText: meetingUiLocalizations.participantSearchMember,
+                    hintStyle: TextStyle(
+                        fontSize: 16,
+                        color: _UIColors.colorCDCFD7,
+                        decoration: TextDecoration.none),
+                    border: InputBorder.none,
+                    prefixIcon: Icon(
+                      NEMeetingIconFont.icon_search2_line1x,
+                      size: 16,
+                      color: _UIColors.colorA6ADB6,
+                    ),
+                    prefixIconConstraints: BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                        maxHeight: 32,
+                        maxWidth: 32),
+                    suffixIcon: !_focusNode.hasFocus ||
+                            TextUtils.isEmpty(_searchTextEditingController.text)
+                        ? null
+                        : ClearIconButton(
+                            onPressed: () {
+                              _searchTextEditingController.clear();
+                            },
+                          )),
+              )),
+          SizedBox(height: 6),
+        ],
+      ),
     );
   }
 

@@ -367,6 +367,12 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'暂停'**
   String get globalPause;
 
+  /// No description provided for @globalNoContent.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无内容'**
+  String get globalNoContent;
+
   /// No description provided for @meetingBeauty.
   ///
   /// In zh, this message translates to:
@@ -529,6 +535,12 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'举手申请'**
   String get meetingHandsUpApply;
 
+  /// No description provided for @meetingRaiseHand.
+  ///
+  /// In zh, this message translates to:
+  /// **'举手'**
+  String get meetingRaiseHand;
+
   /// No description provided for @meetingCancelHandsUp.
   ///
   /// In zh, this message translates to:
@@ -538,7 +550,7 @@ abstract class NEMeetingUIKitLocalizations {
   /// No description provided for @meetingCancelHandsUpConfirm.
   ///
   /// In zh, this message translates to:
-  /// **'是否确定取消举手？'**
+  /// **'确定将手放下吗？'**
   String get meetingCancelHandsUpConfirm;
 
   /// No description provided for @meetingHandsUpDown.
@@ -546,6 +558,24 @@ abstract class NEMeetingUIKitLocalizations {
   /// In zh, this message translates to:
   /// **'手放下'**
   String get meetingHandsUpDown;
+
+  /// No description provided for @meetingHandsUpDownAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部手放下'**
+  String get meetingHandsUpDownAll;
+
+  /// No description provided for @meetingHandsUpDownAllSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'已将全部手放下'**
+  String get meetingHandsUpDownAllSuccess;
+
+  /// No description provided for @meetingHandsUpDownAllFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'全部手放下失败'**
+  String get meetingHandsUpDownAllFail;
 
   /// No description provided for @meetingInHandsUp.
   ///
@@ -577,6 +607,12 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'主持人已将您的手放下'**
   String get meetingHostRejectAudioHandsUp;
 
+  /// No description provided for @meetingHandsUpNumber.
+  ///
+  /// In zh, this message translates to:
+  /// **'{num}人正在举手'**
+  String meetingHandsUpNumber(Object num);
+
   /// No description provided for @meetingSip.
   ///
   /// In zh, this message translates to:
@@ -592,7 +628,7 @@ abstract class NEMeetingUIKitLocalizations {
   /// No description provided for @meetingInvitePageTitle.
   ///
   /// In zh, this message translates to:
-  /// **'添加与会者'**
+  /// **'添加参会者'**
   String get meetingInvitePageTitle;
 
   /// No description provided for @meetingSipNumber.
@@ -967,6 +1003,18 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'确定要离开会议吗?'**
   String get meetingLeaveConfirm;
 
+  /// No description provided for @meetingAppointNewHost.
+  ///
+  /// In zh, this message translates to:
+  /// **'指定一名新主持人'**
+  String get meetingAppointNewHost;
+
+  /// No description provided for @meetingAppointAndLeave.
+  ///
+  /// In zh, this message translates to:
+  /// **'指定并离开'**
+  String get meetingAppointAndLeave;
+
   /// No description provided for @meetingWatermarkEnabled.
   ///
   /// In zh, this message translates to:
@@ -1086,6 +1134,24 @@ abstract class NEMeetingUIKitLocalizations {
   /// In zh, this message translates to:
   /// **'允许参会人员'**
   String get meetingAllowMembersTo;
+
+  /// No description provided for @meetingEmojiResponse.
+  ///
+  /// In zh, this message translates to:
+  /// **'回应'**
+  String get meetingEmojiResponse;
+
+  /// No description provided for @meetingAllowEmojiResponse.
+  ///
+  /// In zh, this message translates to:
+  /// **'允许成员表情回应'**
+  String get meetingAllowEmojiResponse;
+
+  /// No description provided for @meetingRejectEmojiResponse.
+  ///
+  /// In zh, this message translates to:
+  /// **'禁止成员表情回应'**
+  String get meetingRejectEmojiResponse;
 
   /// No description provided for @meetingChat.
   ///
@@ -1278,6 +1344,12 @@ abstract class NEMeetingUIKitLocalizations {
   /// In zh, this message translates to:
   /// **'会议已锁定'**
   String get meetingLocked;
+
+  /// No description provided for @meetingLockedTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'很抱歉，您尝试加入的会议已锁定。如有需要，请联系会议组织者解锁会议。'**
+  String get meetingLockedTip;
 
   /// No description provided for @meetingNotExist.
   ///
@@ -1608,6 +1680,24 @@ abstract class NEMeetingUIKitLocalizations {
   /// In zh, this message translates to:
   /// **'自定义'**
   String get virtualCustom;
+
+  /// No description provided for @virtualBackgroundPerfInadequate.
+  ///
+  /// In zh, this message translates to:
+  /// **'设备性能不足'**
+  String get virtualBackgroundPerfInadequate;
+
+  /// No description provided for @virtualBackgroundPerfInadequateTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'您的设备性能不足，开启虚拟背景功能可能会导致视频质量下降或出现卡顿。您仍然希望尝试开启吗'**
+  String get virtualBackgroundPerfInadequateTip;
+
+  /// No description provided for @virtualBackgroundForce.
+  ///
+  /// In zh, this message translates to:
+  /// **'强制开启'**
+  String get virtualBackgroundForce;
 
   /// No description provided for @live.
   ///
@@ -2374,13 +2464,13 @@ abstract class NEMeetingUIKitLocalizations {
   /// No description provided for @cloudRecordingEnabledMessage.
   ///
   /// In zh, this message translates to:
-  /// **'开启后，所有参会成员将收到录制开始提醒'**
+  /// **'开启后，会议过程中的音视频及共享屏幕内容将被录制到云端，同时告知所有参会成员'**
   String get cloudRecordingEnabledMessage;
 
   /// No description provided for @cloudRecordingEnabledMessageWithoutNotice.
   ///
   /// In zh, this message translates to:
-  /// **'开启后，将录制会议过程中的音视频与共享屏幕内容到云端'**
+  /// **'开启后，会议过程中的音视频及共享屏幕内容将被录制到云端'**
   String get cloudRecordingEnabledMessageWithoutNotice;
 
   /// No description provided for @cloudRecordingTitle.
@@ -2460,6 +2550,42 @@ abstract class NEMeetingUIKitLocalizations {
   /// In zh, this message translates to:
   /// **'正在开启录制...'**
   String get cloudRecordingStarting;
+
+  /// No description provided for @cloudRecordingUnableToStart.
+  ///
+  /// In zh, this message translates to:
+  /// **'无法启动云录制'**
+  String get cloudRecordingUnableToStart;
+
+  /// No description provided for @cloudRecordingUnableToStartTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前会议中无人开启麦克风或视频,为了启动录制,请解除静音'**
+  String get cloudRecordingUnableToStartTips;
+
+  /// No description provided for @cloudRecordingEnableAISummary.
+  ///
+  /// In zh, this message translates to:
+  /// **'同时开启智能录制'**
+  String get cloudRecordingEnableAISummary;
+
+  /// No description provided for @cloudRecordingEnableAISummaryTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启后本场会议将生成智能AI纪要（含总结、待办）'**
+  String get cloudRecordingEnableAISummaryTip;
+
+  /// No description provided for @cloudRecordingAISummaryStarted.
+  ///
+  /// In zh, this message translates to:
+  /// **'本场会议已开启智能录制，将生成智能AI纪要（含总结、待办）'**
+  String get cloudRecordingAISummaryStarted;
+
+  /// No description provided for @cloudRecordingEnableAISummaryFail.
+  ///
+  /// In zh, this message translates to:
+  /// **'智能录制开启失败，请稍后关闭录制后重试'**
+  String get cloudRecordingEnableAISummaryFail;
 
   /// No description provided for @chat.
   ///
@@ -2953,11 +3079,11 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'网络连接较差'**
   String get networkConnectionPoor;
 
-  /// No description provided for @nan.
+  /// No description provided for @networkConnectionUnknown.
   ///
   /// In zh, this message translates to:
   /// **'网络连接未知'**
-  String get nan;
+  String get networkConnectionUnknown;
 
   /// No description provided for @networkLocalLatency.
   ///
@@ -3145,6 +3271,12 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'呼叫失败'**
   String get sipCallFailed;
 
+  /// No description provided for @sipCallBusy.
+  ///
+  /// In zh, this message translates to:
+  /// **'对方忙'**
+  String get sipCallBusy;
+
   /// No description provided for @sipCallAgain.
   ///
   /// In zh, this message translates to:
@@ -3295,6 +3427,12 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'该成员已被标记不允许再次加入，如需邀请，请关闭会议黑名单'**
   String get sipCallIsInBlacklist;
 
+  /// No description provided for @sipCallDeviceIsInBlacklist.
+  ///
+  /// In zh, this message translates to:
+  /// **'该设备已被标记不允许再次加入，如需邀请，请关闭会议黑名单'**
+  String get sipCallDeviceIsInBlacklist;
+
   /// No description provided for @sipCallByPhone.
   ///
   /// In zh, this message translates to:
@@ -3367,6 +3505,12 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'请输入IP地址 或 SIP URI 或 已注册设备号码'**
   String get sipCallOutRoomInputTip;
 
+  /// No description provided for @sipCallOutRoomH323InputTip.
+  ///
+  /// In zh, this message translates to:
+  /// **'请输入 IP 地址 或 E.164 号码'**
+  String get sipCallOutRoomH323InputTip;
+
   /// No description provided for @sipDisplayName.
   ///
   /// In zh, this message translates to:
@@ -3384,6 +3528,48 @@ abstract class NEMeetingUIKitLocalizations {
   /// In zh, this message translates to:
   /// **'该设备已在会议中'**
   String get sipDeviceIsInMeeting;
+
+  /// No description provided for @sip.
+  ///
+  /// In zh, this message translates to:
+  /// **'SIP'**
+  String get sip;
+
+  /// No description provided for @h323.
+  ///
+  /// In zh, this message translates to:
+  /// **'H.323'**
+  String get h323;
+
+  /// No description provided for @sipProtocol.
+  ///
+  /// In zh, this message translates to:
+  /// **'呼叫信令协议'**
+  String get sipProtocol;
+
+  /// No description provided for @roomSipCallIsInBlacklist.
+  ///
+  /// In zh, this message translates to:
+  /// **'该设备已被标记不允许再次加入，如需邀请，请关闭会议黑名单'**
+  String get roomSipCallIsInBlacklist;
+
+  /// No description provided for @roomSipCallIsInMeeting.
+  ///
+  /// In zh, this message translates to:
+  /// **'该设备已在会议中'**
+  String get roomSipCallIsInMeeting;
+
+  /// No description provided for @roomSipCallrNetworkError.
+  ///
+  /// In zh, this message translates to:
+  /// **'网络异常无法呼叫，请检查网络'**
+  String get roomSipCallrNetworkError;
+
+  /// No description provided for @roomSipCallrNickNameLimit.
+  ///
+  /// In zh, this message translates to:
+  /// **'入会名称太长，请重新设置'**
+  String get roomSipCallrNickNameLimit;
 
   /// No description provided for @monitoring.
   ///
@@ -4099,6 +4285,36 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'显示会议持续时间'**
   String get settingShowMeetDuration;
 
+  /// No description provided for @settingShowParticipationTime.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示参会时长'**
+  String get settingShowParticipationTime;
+
+  /// No description provided for @settingShowElapsedTime.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示时间'**
+  String get settingShowElapsedTime;
+
+  /// No description provided for @settingShowNone.
+  ///
+  /// In zh, this message translates to:
+  /// **'不显示'**
+  String get settingShowNone;
+
+  /// No description provided for @settingShowMeetingElapsedTime.
+  ///
+  /// In zh, this message translates to:
+  /// **'会议持续时间'**
+  String get settingShowMeetingElapsedTime;
+
+  /// No description provided for @settingShowParticipationElapsedTime.
+  ///
+  /// In zh, this message translates to:
+  /// **'参会时长'**
+  String get settingShowParticipationElapsedTime;
+
   /// No description provided for @settingSpeakerSpotlight.
   ///
   /// In zh, this message translates to:
@@ -4147,11 +4363,41 @@ abstract class NEMeetingUIKitLocalizations {
   /// **'不提醒'**
   String get settingChatMessageNotificationNoReminder;
 
+  /// No description provided for @settingHideVideoOffAttendees.
+  ///
+  /// In zh, this message translates to:
+  /// **'隐藏非视频参会者'**
+  String get settingHideVideoOffAttendees;
+
+  /// No description provided for @settingHideMyVideo.
+  ///
+  /// In zh, this message translates to:
+  /// **'隐藏本人视图'**
+  String get settingHideMyVideo;
+
+  /// No description provided for @settingLeaveTheMeetingRequiresConfirmation.
+  ///
+  /// In zh, this message translates to:
+  /// **'离开会议需要弹窗确认'**
+  String get settingLeaveTheMeetingRequiresConfirmation;
+
   /// No description provided for @usingComputerAudioInMeeting.
   ///
   /// In zh, this message translates to:
   /// **'入会时使用电脑麦克风'**
   String get usingComputerAudioInMeeting;
+
+  /// No description provided for @settingEnterFullscreen.
+  ///
+  /// In zh, this message translates to:
+  /// **'开始或加入会议时自动进入全屏模式'**
+  String get settingEnterFullscreen;
+
+  /// No description provided for @enterFullscreenTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'按ESC或点击右上角按钮退出全屏模式'**
+  String get enterFullscreenTips;
 
   /// No description provided for @joinMeetingSettings.
   ///
@@ -4170,6 +4416,84 @@ abstract class NEMeetingUIKitLocalizations {
   /// In zh, this message translates to:
   /// **'成员入会或离开时播放提示音'**
   String get ringWhenMemberJoinOrLeave;
+
+  /// No description provided for @windowSizeWhenSharingTheScreen.
+  ///
+  /// In zh, this message translates to:
+  /// **'共享屏幕时的窗口大小'**
+  String get windowSizeWhenSharingTheScreen;
+
+  /// No description provided for @sideBySideMode.
+  ///
+  /// In zh, this message translates to:
+  /// **'并排模式'**
+  String get sideBySideMode;
+
+  /// No description provided for @sideBySideModeTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看其他用户共享屏幕时自动将参会者视频放置在共享屏幕右侧'**
+  String get sideBySideModeTips;
+
+  /// No description provided for @whenIShareMyScreenInMeeting.
+  ///
+  /// In zh, this message translates to:
+  /// **'当我在会议中共享屏幕时'**
+  String get whenIShareMyScreenInMeeting;
+
+  /// No description provided for @showAllSharingOptions.
+  ///
+  /// In zh, this message translates to:
+  /// **'显示所有共享选项'**
+  String get showAllSharingOptions;
+
+  /// No description provided for @automaticDesktopSharing.
+  ///
+  /// In zh, this message translates to:
+  /// **'自动桌面共享'**
+  String get automaticDesktopSharing;
+
+  /// No description provided for @automaticDesktopSharingTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'当你有多个显示器，系统将自动共享你的主桌面'**
+  String get automaticDesktopSharingTips;
+
+  /// No description provided for @onlyShowTheEntireScreen.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅显示整个屏幕'**
+  String get onlyShowTheEntireScreen;
+
+  /// No description provided for @sharedLimitFrameRate.
+  ///
+  /// In zh, this message translates to:
+  /// **'将你的屏幕共享限制为'**
+  String get sharedLimitFrameRate;
+
+  /// No description provided for @sharedLimitFrameRateTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'开启后，屏幕共享帧率将不超过设置值。共享视频时推荐使用高帧率可提升观看视频流畅性，其他场景推荐使用低帧率降低CPU消耗'**
+  String get sharedLimitFrameRateTips;
+
+  /// No description provided for @sharedLimitFrameRateUnit.
+  ///
+  /// In zh, this message translates to:
+  /// **'帧/秒'**
+  String get sharedLimitFrameRateUnit;
+
+  /// No description provided for @preferMotionModel.
+  ///
+  /// In zh, this message translates to:
+  /// **'视频流畅度优先'**
+  String get preferMotionModel;
+
+  /// No description provided for @preferMotionModelTips.
+  ///
+  /// In zh, this message translates to:
+  /// **'减少性能和带宽占用，优先保障共享流畅度'**
+  String get preferMotionModelTips;
 
   /// No description provided for @transcriptionEnableCaption.
   ///

@@ -187,6 +187,10 @@ final _builtinMenuItemIcons = <int, Map<int, (IconData, Color)>>{
   NEMenuIDs.feedback: {
     _noneState: (NEMeetingIconFont.icon_feedback, _UIColors.colorECEDEF),
   },
+  NEMenuIDs.annotation: {
+    _uncheckState: (NEMeetingIconFont.icon_annotation, _UIColors.colorECEDEF),
+    _checkState: (NEMeetingIconFont.icon_annotation, _UIColors.blue_337eff),
+  },
 };
 
 Icon? _useBuiltinIconById(int id, int state, double size) {
@@ -447,6 +451,10 @@ String? _getDefaultMenuTitle(
       return localizations!.transcription;
     case NEMenuIDs.sipCall:
       return localizations!.sipCall;
+    case NEMenuIDs.annotation:
+      return checked
+          ? localizations!.stopAnnotation
+          : localizations!.annotation;
   }
   return null;
 }

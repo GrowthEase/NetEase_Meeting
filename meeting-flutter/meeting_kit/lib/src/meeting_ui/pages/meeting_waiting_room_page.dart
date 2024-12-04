@@ -695,6 +695,12 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
   }
 
   void _finishPage() {
+    /// 如果不是主播，关闭了“离开会议需要弹窗确认”，则直接离开
+    if (!(arguments.isLeaveTheMeetingRequiresConfirmationEnable ?? true)) {
+      handleLeaveRoom();
+      return;
+    }
+
     final localizations = NEMeetingUIKitLocalizations.of(context)!;
     DialogUtils.showChildNavigatorPopup<int>(
         context,
@@ -720,10 +726,14 @@ class _MeetingWaitingRoomPageState extends BaseState<MeetingWaitingRoomPage>
                   context, true, localizations.globalCancel, NEMenuIDs.cancel),
             )).then<void>((int? itemId) async {
       if (mounted && itemId == NEMenuIDs.leaveMeeting) {
-        roomContext.leaveRoom();
-        handleRoomEnd(NERoomEndReason.kLeaveBySelf);
+        handleLeaveRoom();
       }
     });
+  }
+
+  void handleLeaveRoom() {
+    roomContext.leaveRoom();
+    handleRoomEnd(NERoomEndReason.kLeaveBySelf);
   }
 
   Widget _buildActionSheetItem(

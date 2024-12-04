@@ -38,6 +38,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
   late final NERoomContext roomContext;
   late final NERoomWhiteboardController whiteboardController;
   late final NERoomRtcController rtcController;
+  late final NERoomAnnotationController annotationController;
   late final WaitingRoomManager waitingRoomManager;
   late final String roomId;
   late final int maxCount;
@@ -50,6 +51,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     roomContext = arguments.roomContext;
     whiteboardController = roomContext.whiteboardController;
     rtcController = roomContext.rtcController;
+    annotationController = roomContext.annotationController;
     waitingRoomManager = arguments.waitingRoomManager;
     roomId = roomContext.roomUuid;
     maxCount = parseMaxCountByContract(roomContext.extraData);
@@ -74,18 +76,26 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
         },
         pageBuilder: (page, _) {
           if (page.filteredUserList.isEmpty) {
-            return Column(children: [
-              SizedBox(height: 40),
-              Text(
-                meetingUiLocalizations.participantNotFound,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.normal,
-                  color: _UIColors.color3D3D3D,
-                  decoration: TextDecoration.none,
-                ),
+            return Padding(
+              padding: EdgeInsets.only(top: 64),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  NEMeetingImages.assetImage(NEMeetingImages.iconNoContent,
+                      width: 120, height: 120),
+                  SizedBox(height: 8),
+                  Text(
+                    meetingUiLocalizations.participantNotFound,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.normal,
+                      color: _UIColors.color3D3D3D,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ],
               ),
-            ]);
+            );
           }
           if (page.type == _MembersPageType.inMeeting) {
             return _buildInMeetingPage(
@@ -206,6 +216,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     return MeetingCard(
       margin: EdgeInsets.only(left: 16, right: 16, bottom: 16),
       children: [
+        if (isSelfHostOrCoHost()) buildHandsUpDownAll(),
         ListView.builder(
           padding: EdgeInsets.zero,
           shrinkWrap: true,
@@ -218,6 +229,59 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
         ),
       ],
     );
+  }
+
+  Widget buildHandsUpDownAll() {
+    return ValueListenableBuilder<int>(
+        valueListenable: arguments.handsUpHelper.handsUpCount,
+        builder: (_, count, child) {
+          return count > 0
+              ? Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  height: 38,
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Row(children: <Widget>[
+                        NEMeetingImages.assetImage(
+                          NEMeetingImages.iconHandsUp,
+                          width: 20,
+                          height: 20,
+                          fit: BoxFit.contain,
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text('$count',
+                              style: TextStyle(
+                                  color: _UIColors.color8D90A0,
+                                  fontSize: 12,
+                                  decoration: TextDecoration.none,
+                                  fontWeight: FontWeight.w400)),
+                        ),
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () =>
+                              arguments.handsUpHelper.handsUpDownAll(context),
+                          child: Text(
+                              NEMeetingUIKitLocalizations.of(context)!
+                                  .meetingHandsUpDownAll,
+                              style: TextStyle(
+                                  color: _UIColors.blue_337eff,
+                                  fontSize: 14,
+                                  decoration: TextDecoration.none,
+                                  fontWeight: FontWeight.w500)),
+                        ),
+                      ]),
+                      Container(
+                        height: 1,
+                        color: Colors.transparent,
+                      )
+                    ],
+                  ),
+                )
+              : SizedBox.shrink();
+        });
   }
 
   ///构建分割线
@@ -243,8 +307,41 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
             buildMuteAllVideoAction(
                 meetingUiLocalizations.participantTurnOnVideos,
                 unMuteAllVideo2Server),
+            _buildEmojiResponse(),
           ],
         ));
+  }
+
+  Widget _buildEmojiResponse() {
+    return ValueListenableBuilder(
+        valueListenable: arguments.emojiResponseHelper.isEmojiResponseEnabled,
+        builder: (_, enable, child) {
+          return GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              Navigator.pop(context);
+              _updateEmojiResponsePermission(!enable);
+            },
+            child: Container(
+                alignment: Alignment.center,
+                height: 48,
+                child: Text(
+                    enable
+                        ? meetingUiLocalizations.meetingRejectEmojiResponse
+                        : meetingUiLocalizations.meetingAllowEmojiResponse,
+                    style: TextStyle(
+                      color: _UIColors.color1E1F27,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ))),
+          );
+        });
+  }
+
+  void _updateEmojiResponsePermission(bool enable) {
+    doIfNetworkAvailable(() {
+      lifecycleExecute(roomContext.updateEmojiRespPermission(enable));
+    });
   }
 
   Widget buildMuteAllVideoAction(String text, VoidCallback? onPressed) {
@@ -473,15 +570,21 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
               },
             ),
             if (isSelfHostOrCoHost() && user.isRaisingHand) ...[
-              Icon(
-                  key: MeetingUIValueKeys.handsUpIcon,
-                  NEMeetingIconFont.icon_raisehands,
-                  color: _UIColors.color_337eff,
-                  size: 20),
+              NEMeetingImages.assetImage(
+                NEMeetingImages.iconHandsUp,
+                width: 20,
+                height: 20,
+                fit: BoxFit.contain,
+              ),
               const SizedBox(width: 16),
             ],
             if (user.clientType == NEClientType.sip) ...[
               Icon(NEMeetingIconFont.icon_sip,
+                  color: _UIColors.color_337eff, size: 20),
+              const SizedBox(width: 16),
+            ],
+            if (user.clientType == NEClientType.h323) ...[
+              Icon(NEMeetingIconFont.icon_h323,
                   color: _UIColors.color_337eff, size: 20),
               const SizedBox(width: 16),
             ],
@@ -549,11 +652,12 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
             fontWeight: FontWeight.w500));
   }
 
-  Widget buildActionSheet(
-      String text, NERoomMember user, MemberActionType memberActionType) {
+  Widget buildActionSheet(NERoomMember user, NEMeetingMenuItem menuActionItem) {
+    String text = getMenuItemTitle(menuActionItem, user);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => Navigator.pop(context, _ActionData(memberActionType, user)),
+      onTap: () =>
+          Navigator.pop(context, _ActionData(menuActionItem.itemId, user)),
       child: Container(
         height: 48,
         alignment: Alignment.center,
@@ -567,198 +671,10 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     if (roomContext.getMember(user.uuid) == null) {
       return [];
     }
-
-    final isSelfHost = roomContext.isMySelfHost();
-    final isSelf = roomContext.isMySelf(user.uuid);
-    final isUserCoHost = roomContext.isCoHost(user.uuid);
-    final isUserHost = roomContext.isHost(user.uuid);
-    final isPinned = roomContext.getFocusUuid() == user.uuid;
-    final isUserOwner = roomContext.isOwner(user.uuid);
-    final isCoHostFull = roomContext.getCoHosts().length >=
-        meetingUIState.sdkConfig.scheduledMemberConfig.coHostLimit;
-    final hasScreenSharing =
-        roomContext.rtcController.getScreenSharingUserUuid() != null;
-    final hasWhiteboardSharing =
-        whiteboardController.getWhiteboardSharingUserUuid() != null;
-    final hasInteract =
-        whiteboardController.isDrawWhiteboardEnabledWithUserId(user.uuid);
-    final isCurrentSharingWhiteboard =
-        whiteboardController.isWhiteboardSharing(user.uuid);
-    final isSelfSharingWhiteboard = whiteboardController.isSharingWhiteboard();
-    final lockedUser = buildContext.read<MeetingUIState>().lockedUser;
-
-    if (user.clientType == NEClientType.sip) {
-      return <Widget>[
-        if (isSelfHostOrCoHost() && !arguments.options.noRename)
-          buildActionSheet(meetingUiLocalizations.participantRename, user,
-              MemberActionType.updateNick),
-        if (isSelfHostOrCoHost() && user.isRaisingHand)
-          buildActionSheet(meetingUiLocalizations.meetingHandsUpDown, user,
-              MemberActionType.hostRejectHandsUp),
-        if (isSelfHostOrCoHost() && user.isAudioOn && user.isAudioConnected)
-          buildActionSheet(meetingUiLocalizations.participantMute, user,
-              MemberActionType.hostMuteAudio),
-        if (isSelfHostOrCoHost() && !user.isAudioOn && user.isAudioConnected)
-          buildActionSheet(meetingUiLocalizations.participantUnmute, user,
-              MemberActionType.hostUnMuteAudio),
-        if (isSelfHostOrCoHost() && user.isVideoOn)
-          buildActionSheet(meetingUiLocalizations.participantStopVideo, user,
-              MemberActionType.hostMuteVideo),
-        if (isSelfHostOrCoHost() && !user.isVideoOn)
-          buildActionSheet(meetingUiLocalizations.participantStartVideo, user,
-              MemberActionType.hostUnMuteVideo),
-        if (isSelfHostOrCoHost() &&
-            (!user.isVideoOn || !user.isAudioOn) &&
-            user.isAudioConnected)
-          buildActionSheet(
-              meetingUiLocalizations.participantTurnOnAudioAndVideo,
-              user,
-              MemberActionType.hostUnmuteAudioAndVideo),
-        if (isSelfHostOrCoHost() &&
-            user.isVideoOn &&
-            user.isAudioOn &&
-            user.isAudioConnected)
-          buildActionSheet(
-              meetingUiLocalizations.participantTurnOffAudioAndVideo,
-              user,
-              MemberActionType.hostMuteAudioAndVideo),
-        if (isSelfHostOrCoHost() && !hasScreenSharing && !isPinned)
-          buildActionSheet(
-              meetingUiLocalizations.participantAssignActiveSpeaker,
-              user,
-              MemberActionType.setFocusVideo),
-        if (isSelfHostOrCoHost() && !hasScreenSharing && isPinned)
-          buildActionSheet(
-              meetingUiLocalizations.participantUnassignActiveSpeaker,
-              user,
-              MemberActionType.cancelFocusVideo),
-        if (user.isVideoOn &&
-            lockedUser != user.uuid &&
-            !hasScreenSharing &&
-            !hasWhiteboardSharing &&
-            roomContext.getFocusUuid() == null)
-          buildActionSheet(meetingUiLocalizations.meetingPinView, user,
-              MemberActionType.lockVideo),
-        if (lockedUser == user.uuid)
-          buildActionSheet(meetingUiLocalizations.meetingUnpinView, user,
-              MemberActionType.unlockVideo),
-        if (isSelfHostOrCoHost() && user.isSharingScreen && !isSelf)
-          buildActionSheet(meetingUiLocalizations.screenShareStop, user,
-              MemberActionType.hostStopScreenShare),
-        if (isSelfHostOrCoHost())
-          buildActionSheet(meetingUiLocalizations.participantRemove, user,
-              MemberActionType.removeMember),
-      ];
-    } else {
-      return <Widget>[
-        if (!arguments.options.noRename && (isSelf || isSelfHostOrCoHost()))
-          buildActionSheet(meetingUiLocalizations.participantRename, user,
-              MemberActionType.updateNick),
-        if (isSelfHostOrCoHost() && user.isRaisingHand)
-          buildActionSheet(meetingUiLocalizations.meetingHandsUpDown, user,
-              MemberActionType.hostRejectHandsUp),
-        if (isSelfHostOrCoHost() && user.isAudioOn && user.isAudioConnected)
-          buildActionSheet(meetingUiLocalizations.participantMute, user,
-              MemberActionType.hostMuteAudio),
-        if (isSelfHostOrCoHost() && !user.isAudioOn && user.isAudioConnected)
-          buildActionSheet(meetingUiLocalizations.participantUnmute, user,
-              MemberActionType.hostUnMuteAudio),
-        if (isSelfHostOrCoHost() && user.isVideoOn)
-          buildActionSheet(meetingUiLocalizations.participantStopVideo, user,
-              MemberActionType.hostMuteVideo),
-        if (isSelfHostOrCoHost() && !user.isVideoOn)
-          buildActionSheet(meetingUiLocalizations.participantStartVideo, user,
-              MemberActionType.hostUnMuteVideo),
-        if (isSelfHostOrCoHost() &&
-            (!user.isVideoOn || !user.isAudioOn) &&
-            user.isAudioConnected)
-          buildActionSheet(
-              meetingUiLocalizations.participantTurnOnAudioAndVideo,
-              user,
-              MemberActionType.hostUnmuteAudioAndVideo),
-        if (isSelfHostOrCoHost() &&
-            user.isVideoOn &&
-            user.isAudioOn &&
-            user.isAudioConnected)
-          buildActionSheet(
-              meetingUiLocalizations.participantTurnOffAudioAndVideo,
-              user,
-              MemberActionType.hostMuteAudioAndVideo),
-        if (!isSelf &&
-            meetingUIState.sdkConfig.isMeetingChatSupported &&
-            // 已经加入聊天室才展示私聊按钮
-            context.read<MeetingUIState>().inMeetingChatroom.hasJoin &&
-            (isSelfHostOrCoHost() ||
-                roomContext.chatPermission == NEChatPermission.freeChat ||
-                (roomContext.chatPermission != NEChatPermission.noChat &&
-                    roomContext.isHostOrCoHost(user.uuid))))
-          buildActionSheet(meetingUiLocalizations.chatPrivate, user,
-              MemberActionType.chatPrivate),
-        if (isSelfHostOrCoHost() && !hasScreenSharing && !isPinned)
-          buildActionSheet(
-              meetingUiLocalizations.participantAssignActiveSpeaker,
-              user,
-              MemberActionType.setFocusVideo),
-        if (isSelfHostOrCoHost() && !hasScreenSharing && isPinned)
-          buildActionSheet(
-              meetingUiLocalizations.participantUnassignActiveSpeaker,
-              user,
-              MemberActionType.cancelFocusVideo),
-        if (user.isVideoOn &&
-            lockedUser != user.uuid &&
-            !hasScreenSharing &&
-            !hasWhiteboardSharing &&
-            roomContext.getFocusUuid() == null)
-          buildActionSheet(meetingUiLocalizations.meetingPinView, user,
-              MemberActionType.lockVideo),
-        if (lockedUser == user.uuid)
-          buildActionSheet(meetingUiLocalizations.meetingUnpinView, user,
-              MemberActionType.unlockVideo),
-        if (isSelfHost && !isSelf && !isUserCoHost && !isCoHostFull)
-          buildActionSheet(meetingUiLocalizations.participantAssignCoHost, user,
-              MemberActionType.makeCoHost),
-        if (isSelfHost && !isSelf && isUserCoHost)
-          buildActionSheet(meetingUiLocalizations.participantUnassignCoHost,
-              user, MemberActionType.cancelCoHost),
-        if (isSelfHost && !isSelf)
-          buildActionSheet(meetingUiLocalizations.participantTransferHost, user,
-              MemberActionType.changeHost),
-        if (isUserHost && roomContext.canReclaimHost)
-          buildActionSheet(meetingUiLocalizations.meetingReclaimHost, user,
-              MemberActionType.reclaimHost),
-        if (isSelfHostOrCoHost() &&
-            (user.isSharingScreen || user.isSharingSystemAudio) &&
-            !isSelf)
-          buildActionSheet(meetingUiLocalizations.screenShareStop, user,
-              MemberActionType.hostStopScreenShare),
-        if (isSelfHostOrCoHost() && isCurrentSharingWhiteboard)
-          buildActionSheet(meetingUiLocalizations.whiteBoardClose, user,
-              MemberActionType.hostStopWhiteBoardShare),
-        if (!isSelf && isSelfSharingWhiteboard && hasInteract)
-          buildActionSheet(
-              meetingUiLocalizations.participantUndoWhiteBoardInteract,
-              user,
-              MemberActionType.undoMemberWhiteboardInteraction),
-        if (!isSelf && isSelfSharingWhiteboard && !hasInteract)
-          buildActionSheet(meetingUiLocalizations.participantWhiteBoardInteract,
-              user, MemberActionType.awardedMemberWhiteboardInteraction),
-        if (isSelfHostOrCoHost() &&
-            !isUserOwner &&
-            !isSelf &&
-            !isUserHost &&
-            !isUserCoHost &&
-            waitingRoomManager.waitingRoomEnabledOnEntryListenable.value)
-          buildActionSheet(meetingUiLocalizations.participantPutInWaitingRoom,
-              user, MemberActionType.putInWaitingRoom),
-        if (isSelfHostOrCoHost() &&
-            !isSelf &&
-            !isUserCoHost &&
-            !isUserHost &&
-            !isUserOwner)
-          buildActionSheet(meetingUiLocalizations.participantRemove, user,
-              MemberActionType.removeMember),
-      ];
-    }
+    return arguments.memberActionMenuItems
+        .where((item) => shouldShowAction(item, user))
+        .map((item) => buildActionSheet(user, item))
+        .toList();
   }
 
   void handleInMeetingMemberItemClick(NERoomMember user) async {
@@ -779,54 +695,48 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
           },
         ));
     controller.result.then<void>((_ActionData? value) {
-      if (value != null && value.action.index != -1) {
-        handleAction(value.action, value.user);
+      if (value != null && value.actionId != -1) {
+        handleAction(value.actionId, value.user);
       }
     });
   }
 
-  void handleAction(MemberActionType action, NERoomMember user) {
-    final isSelfHost = roomContext.isMySelfHost();
+  void handleAction(int action, NERoomMember user) {
     final isSelf = roomContext.isMySelf(user.uuid);
     final isUserCoHost = roomContext.isCoHost(user.uuid);
     final isUserHost = roomContext.isHost(user.uuid);
-    final isPinned = roomContext.getFocusUuid() == user.uuid;
     final isUserOwner = roomContext.isOwner(user.uuid);
+    final isPinned = roomContext.getFocusUuid() == user.uuid;
+    final lockedUser = context.read<MeetingUIState>().lockedUser;
+    final hasInteract =
+        whiteboardController.isDrawWhiteboardEnabledWithUserId(user.uuid);
     switch (action) {
-      case MemberActionType.hostMuteAudio:
-        muteMemberAudio(user, true);
+      case NEActionMenuIDs.audio:
+        muteMemberAudio(user, user.isAudioOn);
         break;
-      case MemberActionType.hostUnMuteAudio:
-        muteMemberAudio(user, false);
+      case NEActionMenuIDs.video:
+        muteMemberVideo(user, user.isVideoOn);
         break;
-      case MemberActionType.hostMuteVideo:
-        muteMemberVideo(user, true);
+      case NEActionMenuIDs.focusVideo:
+        setFocusVideo(user, !isPinned);
         break;
-      case MemberActionType.hostUnMuteVideo:
-        muteMemberVideo(user, false);
+      case NEActionMenuIDs.lockVideo:
+        if (lockedUser != user.uuid) {
+          context.read<MeetingUIState>().lockUserVideo(user.uuid);
+          showToast(meetingUiLocalizations.meetingPinViewTip(
+              meetingUiLocalizations.meetingBottomRightCorner));
+        } else {
+          context.read<MeetingUIState>().lockUserVideo(null);
+          showToast(meetingUiLocalizations.meetingUnpinViewTip);
+        }
         break;
-      case MemberActionType.setFocusVideo:
-        setFocusVideo(user, true);
-        break;
-      case MemberActionType.cancelFocusVideo:
-        setFocusVideo(user, false);
-        break;
-      case MemberActionType.lockVideo:
-        context.read<MeetingUIState>().lockUserVideo(user.uuid);
-        showToast(meetingUiLocalizations.meetingPinViewTip(
-            meetingUiLocalizations.meetingBottomRightCorner));
-        break;
-      case MemberActionType.unlockVideo:
-        context.read<MeetingUIState>().lockUserVideo(null);
-        showToast(meetingUiLocalizations.meetingUnpinViewTip);
-        break;
-      case MemberActionType.changeHost:
+      case NEActionMenuIDs.changeHost:
         changeHost(user);
         break;
-      case MemberActionType.reclaimHost:
+      case NEActionMenuIDs.reclaimHost:
         reclaimHost(user);
         break;
-      case MemberActionType.removeMember:
+      case NEActionMenuIDs.removeMember:
         if (isSelfHostOrCoHost() &&
             !isSelf &&
             !isUserCoHost &&
@@ -835,71 +745,74 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
           removeMember(user);
         }
         break;
-      case MemberActionType.hostRejectHandsUp:
+      case NEActionMenuIDs.rejectHandsUp:
         hostRejectHandsUp(user);
         break;
-      case MemberActionType.awardedMemberWhiteboardInteraction:
-        _awardedWhiteboardInteraction(user);
+      case NEActionMenuIDs.whiteboardInteraction:
+        if (!hasInteract) {
+          _awardedWhiteboardInteraction(user);
+        } else {
+          _undoWhiteboardInteraction(user);
+        }
         break;
-      case MemberActionType.undoMemberWhiteboardInteraction:
-        _undoWhiteboardInteraction(user);
-        break;
-      case MemberActionType.hostStopScreenShare:
+      case NEActionMenuIDs.screenShare:
         _hostStopScreenShare(user);
         break;
-      case MemberActionType.hostStopWhiteBoardShare:
+      case NEActionMenuIDs.whiteBoardShare:
         _hostStopWhiteBoard(user);
         break;
-      case MemberActionType.updateNick:
+      case NEActionMenuIDs.updateNick:
         _rename(user);
         break;
-      case MemberActionType.hostMuteAudioAndVideo:
-        muteMemberAudioAndVideo(user, true);
+      case NEActionMenuIDs.audioAndVideo:
+        if (user.isVideoOn && user.isAudioOn) {
+          muteMemberAudioAndVideo(user, true);
+        } else {
+          muteMemberAudioAndVideo(user, false);
+        }
         break;
-      case MemberActionType.hostUnmuteAudioAndVideo:
-        muteMemberAudioAndVideo(user, false);
-        break;
-      case MemberActionType.makeCoHost:
-        roomContext.makeCoHost(user.uuid).then((result) {
-          commonLogger.i('makeCoHost result: $result');
-          if (result.isSuccess()) {
-            final member = roomContext.getMember(user.uuid);
-            if (member != null) {
-              showToast(
-                '${member.name}${meetingUiLocalizations.participantUserHasBeenAssignCoHostRole}',
-              );
-            }
-          } else if (result.code == NEErrorCode.overRoleLimitCount) {
-            /// 达到分配角色的上限
-            showToast(meetingUiLocalizations.participantOverRoleLimitCount);
-          }
-        });
-        break;
-      case MemberActionType.cancelCoHost:
-        roomContext.cancelCoHost(user.uuid).then((result) {
-          commonLogger.i('cancelCoHost result: $result');
-          if (result.isSuccess()) {
-            final member = roomContext.getMember(user.uuid);
-            if (member != null) {
-              // 这个人在共享，结束他
-              var userUuid = rtcController.getScreenSharingUserUuid();
-              if (userUuid == user.uuid &&
-                  !roomContext.isScreenSharePermissionEnabled) {
-                rtcController.stopMemberScreenShare(userUuid!);
+      case NEActionMenuIDs.coHost:
+        if (isUserCoHost) {
+          roomContext.cancelCoHost(user.uuid).then((result) {
+            commonLogger.i('cancelCoHost result: $result');
+            if (result.isSuccess()) {
+              final member = roomContext.getMember(user.uuid);
+              if (member != null) {
+                // 这个人在共享，结束他
+                var userUuid = rtcController.getScreenSharingUserUuid();
+                if (userUuid == user.uuid &&
+                    !roomContext.isScreenSharePermissionEnabled) {
+                  roomContext.stopMemberScreenShare(userUuid!);
+                }
+                // 这个人在白板，结束他
+                userUuid = whiteboardController.getWhiteboardSharingUserUuid();
+                if (userUuid == user.uuid &&
+                    !roomContext.isWhiteboardPermissionEnabled) {
+                  whiteboardController.stopMemberWhiteboardShare(userUuid!);
+                }
+                showToast(
+                    '${member.name}${meetingUiLocalizations.participantUserHasBeenRevokeCoHostRole}');
               }
-              // 这个人在白板，结束他
-              userUuid = whiteboardController.getWhiteboardSharingUserUuid();
-              if (userUuid == user.uuid &&
-                  !roomContext.isWhiteboardPermissionEnabled) {
-                whiteboardController.stopMemberWhiteboardShare(userUuid!);
-              }
-              showToast(
-                  '${member.name}${meetingUiLocalizations.participantUserHasBeenRevokeCoHostRole}');
             }
-          }
-        });
+          });
+        } else {
+          roomContext.makeCoHost(user.uuid).then((result) {
+            commonLogger.i('makeCoHost result: $result');
+            if (result.isSuccess()) {
+              final member = roomContext.getMember(user.uuid);
+              if (member != null) {
+                showToast(
+                  '${member.name}${meetingUiLocalizations.participantUserHasBeenAssignCoHostRole}',
+                );
+              }
+            } else if (result.code == NEErrorCode.overRoleLimitCount) {
+              /// 达到分配角色的上限
+              showToast(meetingUiLocalizations.participantOverRoleLimitCount);
+            }
+          });
+        }
         break;
-      case MemberActionType.putInWaitingRoom:
+      case NEActionMenuIDs.putInWaitingRoom:
         if (isSelfHostOrCoHost() &&
             !isUserOwner &&
             !isSelf &&
@@ -918,11 +831,209 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
           });
         }
         break;
-      case MemberActionType.chatPrivate:
+      case NEActionMenuIDs.chatPrivate:
+        break;
+      default:
+        NEMeetingUIKit.instance.notifyOnInjectedMenuItemClick(context,
+            NEActionMenuClickInfo(itemId: action, userUuid: user.uuid));
         break;
     }
     onMemberItemClick?.call(action, user);
     setState(() {});
+  }
+
+  bool shouldShowAction(NEMeetingMenuItem menuActionItem, NERoomMember user) {
+    final isSelfHost = roomContext.isMySelfHost();
+    final isSelf = roomContext.isMySelf(user.uuid);
+    final isUserCoHost = roomContext.isCoHost(user.uuid);
+    final isUserHost = roomContext.isHost(user.uuid);
+    final isUserOwner = roomContext.isOwner(user.uuid);
+    final isCoHostFull = roomContext.getCoHosts().length >=
+        meetingUIState.sdkConfig.scheduledMemberConfig.coHostLimit;
+    final hasScreenSharing =
+        roomContext.rtcController.getScreenSharingUserUuid() != null;
+    final hasWhiteboardSharing =
+        whiteboardController.getWhiteboardSharingUserUuid() != null;
+    final isCurrentSharingWhiteboard =
+        whiteboardController.isWhiteboardSharing(user.uuid);
+    final isSelfSharingWhiteboard = whiteboardController.isSharingWhiteboard();
+    final lockedUser = context.read<MeetingUIState>().lockedUser;
+    bool shouldShow = true;
+    switch (menuActionItem.itemId) {
+      case NEActionMenuIDs.audio:
+        shouldShow = shouldShow && user.isAudioConnected;
+        break;
+      case NEActionMenuIDs.audioAndVideo:
+        shouldShow = shouldShow && user.isAudioConnected;
+        break;
+      case NEActionMenuIDs.focusVideo:
+        shouldShow = !hasScreenSharing;
+        break;
+      case NEActionMenuIDs.lockVideo:
+        shouldShow = user.isVideoOn &&
+                lockedUser != user.uuid &&
+                !hasScreenSharing &&
+                !hasWhiteboardSharing &&
+                roomContext.getFocusUuid() == null ||
+            lockedUser == user.uuid;
+        break;
+      case NEActionMenuIDs.changeHost:
+        shouldShow = !isSelf && !user.isRoomSystemDevice;
+        break;
+      case NEActionMenuIDs.reclaimHost:
+        shouldShow = isUserHost && roomContext.canReclaimHost;
+        break;
+      case NEActionMenuIDs.removeMember:
+        shouldShow = !isSelf && !isUserCoHost && !isUserHost && !isUserOwner;
+        break;
+      case NEActionMenuIDs.rejectHandsUp:
+        shouldShow = user.isRaisingHand;
+        break;
+      case NEActionMenuIDs.whiteboardInteraction:
+        shouldShow =
+            !isSelf && isSelfSharingWhiteboard && !user.isRoomSystemDevice;
+        break;
+      case NEActionMenuIDs.screenShare:
+        shouldShow =
+            (user.isSharingScreen || user.isSharingSystemAudio) && !isSelf;
+        break;
+      case NEActionMenuIDs.whiteBoardShare:
+        shouldShow = isCurrentSharingWhiteboard;
+        break;
+      case NEActionMenuIDs.updateNick:
+        return !arguments.options.noRename && (isSelf || isSelfHostOrCoHost());
+      case NEActionMenuIDs.coHost:
+        shouldShow = !isSelf &&
+            (!isUserCoHost && !isCoHostFull || isUserCoHost) &&
+            !user.isRoomSystemDevice;
+        break;
+      case NEActionMenuIDs.putInWaitingRoom:
+        shouldShow = !isUserOwner &&
+            !isSelf &&
+            !isUserHost &&
+            !isUserCoHost &&
+            waitingRoomManager.waitingRoomEnabledOnEntryListenable.value &&
+            !user.isRoomSystemDevice;
+        break;
+      case NEActionMenuIDs.chatPrivate:
+        return !isSelf &&
+            meetingUIState.sdkConfig.isMeetingChatSupported &&
+            // 已经加入聊天室才展示私聊按钮
+            context.read<MeetingUIState>().inMeetingChatroom.hasJoin &&
+            (isSelfHostOrCoHost() ||
+                roomContext.chatPermission == NEChatPermission.freeChat ||
+                (roomContext.chatPermission != NEChatPermission.noChat &&
+                    roomContext.isHostOrCoHost(user.uuid))) &&
+            !user.isRoomSystemDevice;
+    }
+    if (shouldShow) {
+      switch (menuActionItem.visibility) {
+        case NEMenuVisibility.visibleExcludeHost:
+          shouldShow = shouldShow && !isSelfHostOrCoHost();
+          break;
+        case NEMenuVisibility.visibleToHostOnly:
+          shouldShow = shouldShow && isSelfHostOrCoHost();
+          break;
+        case NEMenuVisibility.visibleExcludeRoomSystemDevice:
+          shouldShow = shouldShow && !user.isRoomSystemDevice;
+          break;
+        case NEMenuVisibility.visibleToOwnerOnly:
+          shouldShow = shouldShow && roomContext.isOwner(roomContext.myUuid);
+          break;
+        case NEMenuVisibility.visibleToHostExcludeCoHost:
+          shouldShow = shouldShow && isSelfHost;
+          break;
+        default:
+          break;
+      }
+    }
+    return shouldShow;
+  }
+
+  String getMenuItemTitle(NEMeetingMenuItem menuActionItem, NERoomMember user) {
+    String? menuItemTitle;
+    final isPinned = roomContext.getFocusUuid() == user.uuid;
+    final lockedUser = context.read<MeetingUIState>().lockedUser;
+    final hasInteract =
+        whiteboardController.isDrawWhiteboardEnabledWithUserId(user.uuid);
+    final isUserCoHost = roomContext.isCoHost(user.uuid);
+    switch (menuActionItem.itemId) {
+      case NEActionMenuIDs.audio:
+        menuItemTitle = user.isAudioOn
+            ? meetingUiLocalizations.participantMute
+            : meetingUiLocalizations.participantUnmute;
+        break;
+      case NEActionMenuIDs.video:
+        menuItemTitle = user.isVideoOn
+            ? meetingUiLocalizations.participantStopVideo
+            : meetingUiLocalizations.participantStartVideo;
+        break;
+      case NEActionMenuIDs.audioAndVideo:
+        menuItemTitle = user.isAudioOn && user.isVideoOn
+            ? meetingUiLocalizations.participantTurnOffAudioAndVideo
+            : meetingUiLocalizations.participantTurnOnAudioAndVideo;
+        break;
+      case NEActionMenuIDs.focusVideo:
+        menuItemTitle = isPinned
+            ? meetingUiLocalizations.participantUnassignActiveSpeaker
+            : meetingUiLocalizations.participantAssignActiveSpeaker;
+        break;
+      case NEActionMenuIDs.lockVideo:
+        menuItemTitle = lockedUser == user.uuid
+            ? meetingUiLocalizations.meetingUnpinView
+            : meetingUiLocalizations.meetingPinView;
+        break;
+      case NEActionMenuIDs.changeHost:
+        menuItemTitle = meetingUiLocalizations.participantTransferHost;
+        break;
+      case NEActionMenuIDs.reclaimHost:
+        menuItemTitle = meetingUiLocalizations.meetingReclaimHost;
+        break;
+      case NEActionMenuIDs.removeMember:
+        menuItemTitle = meetingUiLocalizations.participantRemove;
+        break;
+      case NEActionMenuIDs.rejectHandsUp:
+        menuItemTitle = meetingUiLocalizations.meetingHandsUpDown;
+        break;
+      case NEActionMenuIDs.whiteboardInteraction:
+        menuItemTitle = hasInteract
+            ? meetingUiLocalizations.participantUndoWhiteBoardInteract
+            : meetingUiLocalizations.participantWhiteBoardInteract;
+        break;
+      case NEActionMenuIDs.screenShare:
+        menuItemTitle = meetingUiLocalizations.screenShareStop;
+        break;
+      case NEActionMenuIDs.whiteBoardShare:
+        menuItemTitle = meetingUiLocalizations.whiteBoardClose;
+        break;
+      case NEActionMenuIDs.updateNick:
+        menuItemTitle = meetingUiLocalizations.participantRename;
+        break;
+      case NEActionMenuIDs.coHost:
+        menuItemTitle = isUserCoHost
+            ? meetingUiLocalizations.participantUnassignCoHost
+            : meetingUiLocalizations.participantAssignCoHost;
+        break;
+      case NEActionMenuIDs.putInWaitingRoom:
+        menuItemTitle = meetingUiLocalizations.participantPutInWaitingRoom;
+        break;
+      case NEActionMenuIDs.chatPrivate:
+        menuItemTitle = meetingUiLocalizations.chatPrivate;
+        break;
+    }
+    NEMenuItemInfo? itemInfo;
+    if (menuActionItem is NESingleStateMenuItem) {
+      itemInfo = menuActionItem.singleStateItem;
+    } else if (menuActionItem is NECheckableMenuItem) {
+      itemInfo = menuActionItem.checked
+          ? menuActionItem.checkedStateItem
+          : menuActionItem.uncheckStateItem;
+    }
+    if (menuItemTitle == null && itemInfo != null) {
+      menuItemTitle =
+          (itemInfo.textGetter?.call(context) ?? itemInfo.text)?.trim();
+    }
+    return menuItemTitle ?? '';
   }
 
   Future<void> _hostStopWhiteBoard(NERoomMember member) async {
@@ -939,7 +1050,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     final value = await DialogUtils.showStopSharingDialog(context);
     if (value != true) return;
     final future = user.isSharingScreen
-        ? roomContext.rtcController.stopMemberScreenShare(user.uuid)
+        ? roomContext.stopMemberScreenShare(user.uuid)
         : roomContext.rtcController.stopMemberSystemAudioShare(user.uuid);
     await lifecycleExecute(future.then((NEResult? result) {
       if (!mounted || result == null) return;
@@ -1182,7 +1293,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
       showToast(meetingUiLocalizations.participantFailedToTransferHost);
       return;
     }
-    lifecycleExecute(roomContext.handOverHost(user.uuid))
+    lifecycleExecute(roomContext.handOverHost(user.uuid, false))
         .then((NEResult? result) {
       if (mounted && result != null && !result.isSuccess()) {
         showToast(
@@ -1208,6 +1319,9 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
     }
     if (user.clientType == NEClientType.sip) {
       subtitle.add(meetingUiLocalizations.meetingSip);
+    }
+    if (user.clientType == NEClientType.h323) {
+      subtitle.add(meetingUiLocalizations.h323);
     }
     if (meetingUIState.interpretationController.isUserInterpreter(user.uuid)) {
       subtitle.add(meetingUiLocalizations.interpInterpreter);
@@ -1238,7 +1352,7 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
             overflow: TextOverflow.ellipsis,
           ),
           Text(
-            '(${subtitle.join('，')})',
+            '${subtitle.join('，')}',
             style: subTitleTextStyle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -1300,36 +1414,10 @@ class MeetMemberPageState extends LifecycleBaseState<MeetMemberPage>
 }
 
 class _ActionData {
-  final MemberActionType action;
+  final int actionId;
   final NERoomMember user;
 
-  _ActionData(this.action, this.user);
-}
-
-enum MemberActionType {
-  hostMuteAudio,
-  hostUnMuteAudio,
-  hostMuteVideo,
-  hostUnMuteVideo,
-  setFocusVideo,
-  cancelFocusVideo,
-  lockVideo,
-  unlockVideo,
-  changeHost,
-  reclaimHost,
-  removeMember,
-  hostRejectHandsUp,
-  awardedMemberWhiteboardInteraction,
-  undoMemberWhiteboardInteraction,
-  hostStopScreenShare,
-  hostStopWhiteBoardShare,
-  updateNick,
-  hostMuteAudioAndVideo,
-  hostUnmuteAudioAndVideo,
-  makeCoHost,
-  cancelCoHost,
-  putInWaitingRoom,
-  chatPrivate,
+  _ActionData(this.actionId, this.user);
 }
 
 class WaitingRoomMemberList extends StatefulWidget {
@@ -1620,17 +1708,17 @@ class _WaitingRoomMemberListState extends State<WaitingRoomMemberList>
     }
     final actions = [
       buildActionSheet(meetingUiLocalizations.participantAdmit, user,
-          WaitingRoomMemberActionType.admit),
+          WaitingRoomNEMenuActionIDs.admit),
       buildActionSheet(meetingUiLocalizations.waitingRoomAutoAdmit, user,
-          WaitingRoomMemberActionType.autoAdmit),
+          WaitingRoomNEMenuActionIDs.autoAdmit),
       buildActionSheet(meetingUiLocalizations.participantRemove, user,
-          WaitingRoomMemberActionType.expel),
+          WaitingRoomNEMenuActionIDs.expel),
       buildActionSheet(meetingUiLocalizations.participantRename, user,
-          WaitingRoomMemberActionType.rename),
+          WaitingRoomNEMenuActionIDs.rename),
       // 已经加入聊天室才展示私聊按钮
       if (context.read<MeetingUIState>().waitingRoomChatroom.hasJoin)
         buildActionSheet(meetingUiLocalizations.chatPrivate, user,
-            WaitingRoomMemberActionType.chatPrivate),
+            WaitingRoomNEMenuActionIDs.chatPrivate),
     ];
     DialogUtils.showChildNavigatorPopup<WaitingRoomMemberAction>(
       context,
@@ -1661,19 +1749,19 @@ class _WaitingRoomMemberListState extends State<WaitingRoomMemberList>
 
   void handleMemberAction(WaitingRoomMemberAction action) {
     switch (action.action) {
-      case WaitingRoomMemberActionType.expel:
+      case WaitingRoomNEMenuActionIDs.expel:
         expelMember(action.member);
         break;
-      case WaitingRoomMemberActionType.admit:
+      case WaitingRoomNEMenuActionIDs.admit:
         admitMember(action.member.uuid);
         break;
-      case WaitingRoomMemberActionType.rename:
+      case WaitingRoomNEMenuActionIDs.rename:
         renameMember(action.member.uuid, action.member.name);
         break;
-      case WaitingRoomMemberActionType.autoAdmit:
+      case WaitingRoomNEMenuActionIDs.autoAdmit:
         admitMember(action.member.uuid, autoAdmit: true);
         break;
-      case WaitingRoomMemberActionType.chatPrivate:
+      case WaitingRoomNEMenuActionIDs.chatPrivate:
         break;
     }
     widget.onMemberItemClick?.call(action.action, action.member);
@@ -1684,7 +1772,14 @@ class _WaitingRoomMemberListState extends State<WaitingRoomMemberList>
       isShowMaxMembersTipDialog = true;
       showMaxMembersTipDialog();
     } else {
-      widget.waitingRoomManager.admitMember(uuid, autoAdmit: autoAdmit);
+      widget.waitingRoomManager
+          .admitMember(uuid, autoAdmit: autoAdmit)
+          .then((result) {
+        if (result.code == 1022) {
+          ToastUtils.showToast(
+              context, meetingUiLocalizations.memberCountOutOfRange);
+        }
+      });
     }
   }
 
@@ -1796,11 +1891,11 @@ class _WaitingRoomMemberListState extends State<WaitingRoomMemberList>
   }
 
   Widget buildActionSheet(String text, NEWaitingRoomMember user,
-      WaitingRoomMemberActionType memberActionType) {
+      WaitingRoomNEMenuActionIDs NEMenuActionIDs) {
     return CupertinoActionSheetAction(
       child: buildPopupText(text),
       onPressed: () {
-        Navigator.pop(context, WaitingRoomMemberAction(user, memberActionType));
+        Navigator.pop(context, WaitingRoomMemberAction(user, NEMenuActionIDs));
       },
     );
   }
@@ -1836,12 +1931,12 @@ class _WaitingRoomMemberListState extends State<WaitingRoomMemberList>
 
 class WaitingRoomMemberAction {
   final NEWaitingRoomMember member;
-  final WaitingRoomMemberActionType action;
+  final WaitingRoomNEMenuActionIDs action;
 
   WaitingRoomMemberAction(this.member, this.action);
 }
 
-enum WaitingRoomMemberActionType {
+enum WaitingRoomNEMenuActionIDs {
   expel,
   admit,
   autoAdmit,
@@ -2116,6 +2211,8 @@ class _InviteMemberListState extends State<InviteMemberList>
         return meetingUiLocalizations.sipCallStatusError;
       case NERoomMemberInviteState.waitingJoin:
         return meetingUiLocalizations.callStatusWaitingJoin;
+      case NERoomMemberInviteState.busy:
+        return meetingUiLocalizations.sipCallBusy;
       default:
         break;
     }

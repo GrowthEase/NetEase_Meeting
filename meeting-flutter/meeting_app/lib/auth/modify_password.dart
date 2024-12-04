@@ -232,8 +232,8 @@ class ModifyPasswordState extends AppBaseState {
       final result =
           await NEMeetingKit.instance.getAccountService().resetPassword(
                 AuthManager().accountId!,
-                oldPassword,
                 newPassword,
+                oldPassword,
               );
       if (!mounted) return;
       LoadingUtil.cancelLoading();

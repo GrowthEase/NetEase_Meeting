@@ -147,6 +147,7 @@ class BottomSheetUtils {
     Color? actionColor,
     bool isSubpage = false,
     ScrollPhysics? physics,
+    Color? contentBackgroundColor,
   }) {
     actionText ??= NEMeetingUIKit.instance.getUIKitLocalizations().globalCancel;
     return showModalBottomSheet<T>(
@@ -186,7 +187,7 @@ class BottomSheetUtils {
                     Flexible(
                       child: Container(
                           decoration: BoxDecoration(
-                            color: _UIColors.white,
+                            color: contentBackgroundColor ?? _UIColors.white,
                             borderRadius: BorderRadius.all(
                               Radius.circular(8),
                             ),
@@ -244,7 +245,6 @@ class BottomSheetUtils {
           body = Container(
             color: Colors.transparent,
             alignment: Alignment.bottomRight,
-            padding: EdgeInsets.only(right: 24),
             child: body,
           );
         }
@@ -358,6 +358,53 @@ class BottomSheetUtils {
               ),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  /// 显示呼叫弹窗
+  /// [buildContext] 上下文
+  /// [onCallOutUser] 点击呼叫用户
+  /// [callOutUserText] 呼叫用户标题
+  /// [onCallOutRoom] 点击呼叫会议室
+  /// [callOutRoomText] 呼叫会议室标题
+  ///
+  static void showCallOutModalBottomSheet(
+      BuildContext buildContext, String title,
+      {required Function() onCallOutUser,
+      required String callOutUserText,
+      required Function() onCallOutRoom,
+      required String callOutRoomText,
+      required String cancelTitle}) {
+    showCupertinoModalPopup(
+      context: buildContext,
+      builder: (BuildContext context) {
+        return CupertinoActionSheet(
+          title: Text(title),
+          actions: <Widget>[
+            CupertinoActionSheetAction(
+              child: Text(callOutUserText),
+              onPressed: () {
+                Navigator.pop(context);
+                onCallOutUser();
+              },
+            ),
+            CupertinoActionSheetAction(
+              child: Text(callOutRoomText),
+              onPressed: () {
+                Navigator.pop(context);
+                onCallOutRoom();
+              },
+            ),
+          ],
+          cancelButton: CupertinoActionSheetAction(
+            child: Text(cancelTitle),
+            isDefaultAction: true,
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
         );
       },
     );

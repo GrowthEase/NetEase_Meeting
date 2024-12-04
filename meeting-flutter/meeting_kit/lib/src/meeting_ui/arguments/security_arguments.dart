@@ -9,7 +9,12 @@ class SecurityArguments {
   final WaitingRoomManager waitingRoomManager;
   final ValueListenable<bool> isMySelfManagerListenable;
   final bool isGuestJoinSupported;
+  final EmojiResponseHelper emojiResponseHelper;
 
-  SecurityArguments(this.roomContext, this.waitingRoomManager,
-      this.isMySelfManagerListenable, this.isGuestJoinSupported);
+  SecurityArguments(
+      this.roomContext,
+      this.waitingRoomManager,
+      this.isMySelfManagerListenable,
+      this.isGuestJoinSupported,
+      this.emojiResponseHelper);
 }

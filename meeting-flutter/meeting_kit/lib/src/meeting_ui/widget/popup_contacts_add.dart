@@ -48,33 +48,6 @@ class _ContactsAddPopupState extends PopupBaseState<ContactsAddPopup>
   @override
   String get title => widget.titleBuilder.call(newContactList.length);
 
-  @override
-  List<Widget> buildActions() {
-    return [
-      GestureDetector(
-        onTap: () {
-          if (newContactList.length <= 0) {
-            return;
-          }
-          addScheduledMembers();
-          Navigator.maybePop(context);
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Text(
-            meetingUiLocalizations.globalSure,
-            style: TextStyle(
-              color: newContactList.length <= 0
-                  ? _UIColors.color_999999
-                  : _UIColors.color_337eff,
-              fontSize: 16,
-            ),
-          ),
-        ),
-      )
-    ];
-  }
-
   /// 添加参会者
   void addScheduledMembers() {
     newContactList.forEach((element) {
@@ -88,16 +61,70 @@ class _ContactsAddPopupState extends PopupBaseState<ContactsAddPopup>
 
   @override
   Widget buildBody() {
-    return ContactList(
-      alreadySelectedUserUuids:
-          widget.scheduledMemberList.map((e) => e.userUuid).toList(),
-      onSelectedContactListChanged: (selectedContacts) {
-        setState(() {
-          newContactList = selectedContacts;
-        });
-      },
-      itemClickCallback: widget.itemClickCallback,
-      hideAvatar: hideAvatar,
+    return Column(
+      children: [
+        Expanded(
+          child: ContactList(
+            alreadySelectedUserUuids:
+                widget.scheduledMemberList.map((e) => e.userUuid).toList(),
+            onSelectedContactListChanged: (selectedContacts) {
+              setState(() {
+                newContactList = selectedContacts;
+              });
+            },
+            itemClickCallback: widget.itemClickCallback,
+            hideAvatar: hideAvatar,
+          ),
+        ),
+        Container(height: 0.5, color: _UIColors.colorE6E7EB),
+        buildActionButton(),
+      ],
     );
+  }
+
+  Widget buildActionButton() {
+    return Container(
+        padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 10,
+            bottom: 10 + MediaQuery.of(context).padding.bottom),
+        color: _UIColors.white,
+        child: ElevatedButton(
+          style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                return states.contains(WidgetState.disabled)
+                    ? _UIColors.color50337eff
+                    : _UIColors.color337eff;
+              }),
+              shape: WidgetStateProperty.all(
+                RoundedRectangleBorder(
+                  side: BorderSide(
+                      color: newContactList.length > 0
+                          ? _UIColors.color337eff
+                          : _UIColors.color50337eff,
+                      width: 0),
+                  borderRadius: BorderRadius.all(Radius.circular(8)),
+                ),
+              )),
+          onPressed: newContactList.length > 0
+              ? () {
+                  if (newContactList.length <= 0) {
+                    return;
+                  }
+                  addScheduledMembers();
+                  Navigator.maybePop(context);
+                }
+              : null,
+          child: Container(
+            height: 48,
+            alignment: Alignment.center,
+            child: Text(
+              NEMeetingUIKit.instance.getUIKitLocalizations().globalSure,
+              style: TextStyle(color: Colors.white, fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ));
   }
 }

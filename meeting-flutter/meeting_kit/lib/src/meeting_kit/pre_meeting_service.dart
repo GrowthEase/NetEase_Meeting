@@ -26,6 +26,7 @@ abstract class NEPreMeetingService {
   Future<VoidResult> removeFavoriteMeeting(int meetingId);
 
   /// 获取历史会议列表，返回会议时间早于 anchorId 的最多 limit 个会议。
+  /// 只返回加入过且已结束的会议
   /// 如果 anchorId 小于等于 0，则从头开始查询。
   /// * [anchorId] 锚点Id，用于分页查询
   /// * [limit] 查询数量
@@ -71,8 +72,17 @@ abstract class NEPreMeetingService {
 
   /// 查询特定状态下的会议列表，不指定则返回 init，started 列表。
   /// 目前不支持查询 cancel，recycled 状态下的会议列表
+  /// 只返回本端预约或者他人预约邀请的会议
   /// * [status] 目标会议状态列表
+  @Deprecated('use getScheduledMeetingList instead')
   Future<NEResult<List<NEMeetingItem>>> getMeetingList(
+      List<NEMeetingItemStatus> status);
+
+  /// 查询特定状态下的会议列表，不指定则返回 init，started 列表。
+  /// 目前不支持查询 cancel，recycled 状态下的会议列表
+  /// 只返回本端预约或者他人预约邀请的会议
+  /// * [status] 目标会议状态列表
+  Future<NEResult<List<NEMeetingItem>>> getScheduledMeetingList(
       List<NEMeetingItemStatus> status);
 
   /// 根据 meetingNum 获取预约会议成员列表
@@ -117,13 +127,16 @@ abstract class NEPreMeetingService {
 
   ///
   /// 获取本地历史会议记录列表，不支持漫游保存，默认保存最近10条记录
+  /// 只返回加入过的会议记录
   /// 结果，数据类型为[NELocalHistoryMeeting]列表
   ///
+  @deprecated
   List<NELocalHistoryMeeting> getLocalHistoryMeetingList();
 
   ///
   /// 清空本地历史会议列表
   ///
+  @deprecated
   void clearLocalHistoryMeetingList();
 
   ///

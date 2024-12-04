@@ -17,6 +17,15 @@ enum NEMenuVisibility {
 
   /// 仅主持人可见
   visibleToHostOnly,
+
+  /// SIP/H323不可见
+  visibleExcludeRoomSystemDevice,
+
+  /// 仅对会议创建者可见
+  visibleToOwnerOnly,
+
+  /// 仅对会议主持人可见，联席主持人不可见
+  visibleToHostExcludeCoHost,
 }
 
 typedef NEMenuItemTextGetter(BuildContext context);
@@ -76,6 +85,8 @@ class _MenuClickType {
   static const int base = 0;
 
   static const int stateful = 1;
+
+  static const int action = 2;
 }
 
 /// 单状态的菜单项被点击时的描述信息，只包含菜单ID
@@ -117,9 +128,32 @@ class NEStatefulMenuClickInfo extends NEMenuClickInfo {
   }
 }
 
+/// 成员菜单点击时，传递操作信息
+class NEActionMenuClickInfo extends NEMenuClickInfo {
+  /// 点击菜单操作对应的成员uuid
+  final String userUuid;
+
+  NEActionMenuClickInfo({required int itemId, required this.userUuid})
+      : super(itemId);
+
+  @override
+  int get type => _MenuClickType.action;
+
+  Map<String, dynamic> toJson() => {
+        'type': type,
+        'itemId': itemId,
+        'userUuid': userUuid,
+      };
+
+  @override
+  String toString() {
+    return 'NEActionMenuClickInfo{userUuid: $userUuid}';
+  }
+}
+
 /// 会议自定义菜单项
 /// 通过 NEMeetingOptions.injectedMoreMenuItems 添加自定义菜单项
-/// 菜单项基类。菜单通过ID来唯一标识，大于等于 [firstInjectedItemId] 的菜单为自定义菜单，小于为SDK内置菜单。
+/// 菜单项基类。菜单通过ID来唯一标识，在区间[0,100)以及[100000,110000]范围内的菜单为SDK内置菜单, 自定义菜单可以使用其他ID。
 /// 目前SDK提供了单状态菜单
 /// [NESingleStateMenuItem]与双状态菜单
 /// [NECheckableMenuItem]实现可供使用。单状态菜单始终展示相同的标题与图标；多状态的菜单包含与状态数一一对应的标题与图标，在菜单状态变更时会触发UI更新。
@@ -127,7 +161,7 @@ class NEStatefulMenuClickInfo extends NEMenuClickInfo {
 abstract class NEMeetingMenuItem {
   static const int firstInjectedItemId = firstInjectableMenuId;
 
-  /// 菜单项ID, 从0-99为预留Id，自定义注入菜单Id请使用100以上
+  /// 菜单项ID, [0,100)以及[100000,110000]为预留Id，自定义注入菜单Id请使用其他ID
   final int itemId;
 
   final NEMenuVisibility visibility;
@@ -147,7 +181,10 @@ abstract class NEMeetingMenuItem {
   bool get isValid => true;
 
   @protected
-  bool get isBuiltInMenuItem => itemId < firstInjectedItemId;
+  bool get isBuiltInMenuItem =>
+      itemId < firstInjectedItemId ||
+      (itemId >= NEActionMenuIDs.actionMenuStartId &&
+          itemId <= NEActionMenuIDs.actionMenuEndId);
 
   @override
   String toString() {

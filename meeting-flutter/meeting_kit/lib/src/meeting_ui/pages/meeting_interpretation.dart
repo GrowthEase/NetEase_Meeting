@@ -229,17 +229,14 @@ class _InMeetingInterpretationManagementPageState
             }),
       ),
       backgroundColor: _UIColors.colorF2F3F5,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: InterpreterListPage(
-                  controller: interpreterListController,
-                  hideAvatar: hideAvatar),
-            ),
-            bottomActionButtons(),
-          ],
-        ),
+      body: Column(
+        children: [
+          Expanded(
+            child: InterpreterListPage(
+                controller: interpreterListController, hideAvatar: hideAvatar),
+          ),
+          bottomActionButtons(),
+        ],
       ),
     );
     return AutoPopIfNotManager(
@@ -304,7 +301,11 @@ class _InMeetingInterpretationManagementPageState
                   ),
               ],
             ),
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 8,
+                bottom: 8 + MediaQuery.of(context).padding.bottom),
           );
         });
   }
@@ -1858,24 +1859,32 @@ class _SelectInterpreterFromInMeetingPageState
     /// 移除自己和SIP成员
     return pageData.filteredUserList
         .whereType<NEBaseRoomMember>()
-        .whereNot((element) =>
-            element is NERoomMember && element.clientType == NEClientType.sip)
+        .whereNot(
+            (element) => element is NERoomMember && element.isRoomSystemDevice)
         .toList();
   }
 
   Widget _buildMemberListPage(_PageData pageData, String? searchKey) {
     final memberList = getFilterMemberList(pageData);
     return memberList.isEmpty
-        ? Container(
-            alignment: Alignment.center,
-            child: Text(
-              meetingUiLocalizations.participantNotFound,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.normal,
-                color: _UIColors.color3D3D3D,
-                decoration: TextDecoration.none,
-              ),
+        ? Padding(
+            padding: EdgeInsets.only(top: 64),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                NEMeetingImages.assetImage(NEMeetingImages.iconNoContent,
+                    width: 120, height: 120),
+                SizedBox(height: 8),
+                Text(
+                  meetingUiLocalizations.participantNotFound,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.normal,
+                    color: _UIColors.color3D3D3D,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+              ],
             ),
           )
         : buildMembers(memberList);
@@ -1981,7 +1990,7 @@ class _SelectInterpreterFromInMeetingPageState
             overflow: TextOverflow.ellipsis,
           ),
           Text(
-            '(${subtitle.join(',')})',
+            '${subtitle.join(',')}',
             style: subTitleTextStyle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

@@ -27,6 +27,7 @@ const kMeetingStepServerNotifyJoinRtc = "server_join_rtc";
 const kEventJoinMeeting = "${_kComponent}_join_meeting";
 const kMeetingStepMeetingInfo = "meeting_info";
 const kMeetingStepAnonymousLogin = "anonymous_login";
+const kMeetingStepGuestLogin = "guest_login";
 
 const kEventMeetingEnd = "${_kComponent}_meeting_end";
 

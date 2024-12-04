@@ -5,6 +5,7 @@
 class RouterName {
   static const String main = 'main';
   static const String mobileLogin = 'mobileLogin';
+  static const String guestLogin = 'guestLogin';
   static const String corpAccountLogin = 'corpAccountLogin';
   static const String resetInitialPassword = 'resetInitialPassword';
   static const String ssoLogin = 'ssoLogin';

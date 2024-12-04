@@ -43,6 +43,8 @@ class MeetingArguments extends MeetingBaseArguments {
     requestTimeStamp = DateTime.now().millisecondsSinceEpoch;
     _isWhiteboardTransparent =
         ValueNotifier(options.enableTransparentWhiteboard ?? false);
+    _isLeaveTheMeetingRequiresConfirmationEnable = ValueNotifier(
+        options.enableLeaveTheMeetingRequiresConfirmation ?? true);
   }
 
   MeetingArguments copyWith({
@@ -79,4 +81,12 @@ class MeetingArguments extends MeetingBaseArguments {
   bool get isWhiteboardTransparent => _isWhiteboardTransparent.value;
 
   set isWhiteboardTransparent(value) => _isWhiteboardTransparent.value = value;
+
+  late final ValueNotifier<bool> _isLeaveTheMeetingRequiresConfirmationEnable;
+
+  bool get isLeaveTheMeetingRequiresConfirmationEnable =>
+      _isLeaveTheMeetingRequiresConfirmationEnable.value;
+
+  set isLeaveTheMeetingRequiresConfirmationEnable(value) =>
+      _isLeaveTheMeetingRequiresConfirmationEnable.value = value;
 }

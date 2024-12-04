@@ -23,8 +23,12 @@ class NEMeetingOptions {
   /// 额外选项
   late final Map<String, dynamic> extras;
 
-  /// 配置是否在会议界面中显示会议时长
+  /// 废弃，配置是否在会议界面中显示会议时长
+  @Deprecated('use meetingDurationDisplayType')
   late final bool? showMeetingTime;
+
+  /// 配置会议界面中时间显示类型
+  late final NEMeetingElapsedTimeDisplayType? meetingElapsedTimeDisplayType;
 
   /// 配置是否始终在视频画面上显示名字，默认显示
   late final bool? showNameInVideo;
@@ -87,6 +91,9 @@ class NEMeetingOptions {
 
   /// "更多"自定义菜单，可添加监听器处理菜单点击事件
   late final List<NEMeetingMenuItem>? fullMoreMenuItems;
+
+  /// "成员列表菜单操作项"自定义菜单，可添加监听器处理菜单点击事件
+  late final List<NEMeetingMenuItem>? memberActionMenuItems;
 
   /// 页面退出恢复页面原始方向
   late final List<DeviceOrientation> restorePreferredOrientations;
@@ -200,6 +207,15 @@ class NEMeetingOptions {
   /// 配置主持人和联席主持人是否可以直接开关参会者的音视频，不需要参会者同意，默认需要参会者同意。
   late final bool enableDirectMemberMediaControlByHost;
 
+  /// 配置成员离开会议是否需要弹窗确认
+  late final bool? enableLeaveTheMeetingRequiresConfirmation;
+
+  /// 配置举手交互入口是否显示
+  late final bool showHandsUp;
+
+  /// 配置表情回应交互入口是否显示
+  late final bool showEmojiResponse;
+
   NEMeetingOptions.fromJson(Map<String, dynamic> json) {
     title = json['title'] as String?;
     noVideo = (json['noVideo'] ?? true) as bool;
@@ -207,6 +223,9 @@ class NEMeetingOptions {
     noMuteAllVideo = (json['noMuteAllVideo'] ?? true) as bool;
     noMuteAllAudio = (json['noMuteAllAudio'] ?? false) as bool;
     showMeetingTime = json['showMeetingTime'] as bool?;
+    meetingElapsedTimeDisplayType =
+        NEMeetingElapsedTimeDisplayTypeExtension.mapValueToEnum(
+            json['meetingElapsedTimeDisplayType'] as int?);
     showNameInVideo = json['showNameInVideo'] as bool?;
     noChat = (json['noChat'] ?? false) as bool;
     noLive = (json['noLive'] ?? false) as bool;
@@ -235,6 +254,8 @@ class NEMeetingOptions {
     fullToolbarMenuItems =
         buildMenuItemList(json['fullToolbarMenuItems'] as List?);
     fullMoreMenuItems = buildMenuItemList(json['fullMoreMenuItems'] as List?);
+    memberActionMenuItems =
+        buildMenuItemList(json['memberActionMenuItems'] as List?);
     joinTimeout =
         (json['joinTimeout'] as int?) ?? NEMeetingConstants.meetingJoinTimeout;
     audioProfile = json['audioProfile'] == null
@@ -271,11 +292,15 @@ class NEMeetingOptions {
         (json['autoEnableCaptionsOnJoin'] ?? false) as bool;
     chatMessageNotificationType =
         NEChatMessageNotificationTypeExtension.mapValueToEnum(
-            json['chatMessageNotificationType']);
+            json['chatMessageNotificationType'] as int?);
     pluginNotifyDuration = json['pluginNotifyDuration'] ?? 5000;
     showNotYetJoinedMembers = json['showNotYetJoinedMembers'] as bool?;
     enableDirectMemberMediaControlByHost =
         (json['enableDirectMemberMediaControlByHost'] ?? false) as bool;
+    enableLeaveTheMeetingRequiresConfirmation =
+        (json['enableLeaveTheMeetingRequiresConfirmation'] ?? true) as bool;
+    showHandsUp = (json['showHandsUp'] ?? true) as bool;
+    showEmojiResponse = (json['showEmojiResponse'] ?? true) as bool;
   }
 
   NEMeetingOptions({
@@ -285,6 +310,7 @@ class NEMeetingOptions {
     this.noMuteAllVideo = true,
     this.noMuteAllAudio = false,
     this.showMeetingTime,
+    this.meetingElapsedTimeDisplayType,
     this.showNameInVideo = true,
     this.noChat = false,
     this.noInvite = false,
@@ -331,7 +357,11 @@ class NEMeetingOptions {
     this.showNotYetJoinedMembers,
     this.fullToolbarMenuItems,
     this.fullMoreMenuItems,
+    this.memberActionMenuItems,
     this.enableDirectMemberMediaControlByHost = false,
+    this.enableLeaveTheMeetingRequiresConfirmation,
+    this.showHandsUp = true,
+    this.showEmojiResponse = true,
   });
 
   bool get isLongMeetingIdEnabled =>
@@ -354,6 +384,7 @@ class NEMeetingOptions {
       noMuteAllVideo: noMuteAllVideo,
       noMuteAllAudio: noMuteAllAudio,
       showMeetingTime: showMeetingTime,
+      meetingElapsedTimeDisplayType: meetingElapsedTimeDisplayType,
       showNameInVideo: showNameInVideo,
       noChat: noChat,
       noInvite: noInvite,
@@ -393,6 +424,7 @@ class NEMeetingOptions {
       cloudRecordConfig: cloudRecordConfig,
       fullToolbarMenuItems: fullToolbarMenuItems,
       fullMoreMenuItems: fullMoreMenuItems,
+      memberActionMenuItems: memberActionMenuItems,
       noCaptions: noCaptions,
       noTranscription: noTranscription,
       autoEnableCaptionsOnJoin: autoEnableCaptionsOnJoin,
@@ -401,6 +433,10 @@ class NEMeetingOptions {
       showNotYetJoinedMembers: showNotYetJoinedMembers,
       enableDirectMemberMediaControlByHost:
           enableDirectMemberMediaControlByHost,
+      enableLeaveTheMeetingRequiresConfirmation:
+          enableLeaveTheMeetingRequiresConfirmation,
+      showHandsUp: showHandsUp,
+      showEmojiResponse: showEmojiResponse,
     );
   }
 }

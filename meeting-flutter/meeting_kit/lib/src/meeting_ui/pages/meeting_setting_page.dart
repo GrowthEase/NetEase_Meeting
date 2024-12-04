@@ -4,13 +4,13 @@
 
 part of meeting_ui;
 
-class MeetingSettingPage extends StatefulWidget {
-  static const String routeName = '/meetingSetting';
+class InMeetingSettingsPage extends StatefulWidget {
+  static const String routeName = '/InMeetingSettings';
   final Function(ValueKey switchKey, dynamic value)? onItemValueChanged;
   final ValueListenable<bool> isMySelfManagerListenable;
   final NERoomContext roomContext;
 
-  const MeetingSettingPage(
+  const InMeetingSettingsPage(
       {Key? key,
       this.onItemValueChanged,
       required this.roomContext,
@@ -40,12 +40,18 @@ class MeetingSettingState extends LifecycleBaseState<StatefulWidget>
 
   final _notificationType = ValueNotifier<NEChatMessageNotificationType>(
       NEChatMessageNotificationType.barrage);
+  final _meetingElapsedTimeType =
+      ValueNotifier<NEMeetingElapsedTimeDisplayType>(
+          NEMeetingElapsedTimeDisplayType.none);
 
   @override
   void initState() {
     super.initState();
     SettingsRepository().getChatMessageNotificationType().then((value) {
       _notificationType.value = value;
+    });
+    SettingsRepository().getMeetingElapsedTimeDisplayType().then((value) {
+      _meetingElapsedTimeType.value = value;
     });
   }
 
@@ -151,6 +157,8 @@ class MeetingSettingState extends LifecycleBaseState<StatefulWidget>
   List<MeetingSwitchItem> getSettingVideoItems() {
     return [
       buildFrontCameraMirror(),
+      buildHideVideoOffAttendees(),
+      buildHideMyVideo(),
     ];
   }
 
@@ -169,6 +177,7 @@ class MeetingSettingState extends LifecycleBaseState<StatefulWidget>
       buildNotYetJoinSettings(),
       buildCaptionsSettings(),
       buildShowNameInVideo(),
+      buildLeaveTheMeetingRequiresConfirmation(),
     ];
   }
 
@@ -240,6 +249,26 @@ class MeetingSettingState extends LifecycleBaseState<StatefulWidget>
     );
   }
 
+  MeetingSwitchItem buildHideVideoOffAttendees() {
+    return buildSwitchItem(
+      key: MeetingUIValueKeys.hideVideoOffAttendees,
+      label: NEMeetingUIKit.instance
+          .getUIKitLocalizations()
+          .settingHideVideoOffAttendees,
+      asyncData: settings.isHideVideoOffAttendeesEnabled(),
+      onDataChanged: settings.enableHideVideoOffAttendees,
+    );
+  }
+
+  MeetingSwitchItem buildHideMyVideo() {
+    return buildSwitchItem(
+      key: MeetingUIValueKeys.hideMyVideo,
+      label: NEMeetingUIKit.instance.getUIKitLocalizations().settingHideMyVideo,
+      asyncData: settings.isHideMyVideoEnabled(),
+      onDataChanged: settings.enableHideMyVideo,
+    );
+  }
+
   /// 新消息提醒
   Widget buildChatMessageNotification() {
     return ValueListenableBuilder(
@@ -269,9 +298,22 @@ class MeetingSettingState extends LifecycleBaseState<StatefulWidget>
     }
   }
 
+  String getMeetingElapsedTimeDisplayTypeText(
+      NEMeetingElapsedTimeDisplayType type) {
+    switch (type) {
+      case NEMeetingElapsedTimeDisplayType.none:
+        return localizations.settingShowNone;
+      case NEMeetingElapsedTimeDisplayType.meetingElapsedTime:
+        return localizations.settingShowMeetingElapsedTime;
+      case NEMeetingElapsedTimeDisplayType.participationElapsedTime:
+        return localizations.settingShowParticipationElapsedTime;
+    }
+  }
+
   void showNotificationTypeDialog() {
     BottomSheetUtils.showMeetingBottomDialog(
         buildContext: context,
+        isSubpage: true,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -301,6 +343,43 @@ class MeetingSettingState extends LifecycleBaseState<StatefulWidget>
         onItemValueChanged?.call(
             MeetingUIValueKeys.chatMessageNotification, type);
         SettingsRepository().setChatMessageNotificationType(type);
+        Navigator.of(context).pop();
+      },
+    );
+  }
+
+  void showMeetingElapsedTimeDisplayTypeDialog() {
+    BottomSheetUtils.showMeetingBottomDialog(
+        buildContext: context,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            buildElapsedTimeDisplayItem(
+              title: localizations.settingShowNone,
+              type: NEMeetingElapsedTimeDisplayType.none,
+            ),
+            buildElapsedTimeDisplayItem(
+              title: localizations.settingShowMeetingElapsedTime,
+              type: NEMeetingElapsedTimeDisplayType.meetingElapsedTime,
+            ),
+            buildElapsedTimeDisplayItem(
+              title: localizations.settingShowParticipationElapsedTime,
+              type: NEMeetingElapsedTimeDisplayType.participationElapsedTime,
+            ),
+          ],
+        ));
+  }
+
+  Widget buildElapsedTimeDisplayItem(
+      {required String title, required NEMeetingElapsedTimeDisplayType type}) {
+    return MeetingCheckItem(
+      title: title,
+      isSelected: _meetingElapsedTimeType.value == type,
+      onTap: () {
+        _meetingElapsedTimeType.value = type;
+        onItemValueChanged?.call(
+            MeetingUIValueKeys.meetingElapsedTimeDisplayType, type);
+        SettingsRepository().setMeetingElapsedTimeDisplayType(type);
         Navigator.of(context).pop();
       },
     );
@@ -344,15 +423,18 @@ class MeetingSettingState extends LifecycleBaseState<StatefulWidget>
   }
 
   /// 显示会议持续事件
-  MeetingSwitchItem buildMeetTimeItem() {
-    return buildSwitchItem(
-      key: MeetingUIValueKeys.openShowMeetTime,
-      label: NEMeetingUIKit.instance
-          .getUIKitLocalizations()
-          .settingShowMeetDuration,
-      asyncData: settings.isShowMyMeetingElapseTimeEnabled(),
-      onDataChanged: (value) => settings.enableShowMyMeetingElapseTime(value),
-    );
+  Widget buildMeetTimeItem() {
+    return ValueListenableBuilder(
+        valueListenable: _meetingElapsedTimeType,
+        builder: (context, value, _) {
+          return MeetingArrowItem(
+              key: MeetingUIValueKeys.meetingElapsedTimeDisplayType,
+              title: NEMeetingUIKit.instance
+                  .getUIKitLocalizations()
+                  .settingShowElapsedTime,
+              content: getMeetingElapsedTimeDisplayTypeText(value),
+              onTap: showMeetingElapsedTimeDisplayTypeDialog);
+        });
   }
 
   /// 字幕设置
@@ -392,6 +474,18 @@ class MeetingSettingState extends LifecycleBaseState<StatefulWidget>
       asyncData:
           settings.isShowNotYetJoinedMembersEnabled().then((value) => !value),
       onDataChanged: (value) => settings.enableShowNotYetJoinedMembers(!value),
+    );
+  }
+
+  /// 离开会议需要弹窗确认
+  Widget buildLeaveTheMeetingRequiresConfirmation() {
+    return buildSwitchItem(
+      key: MeetingUIValueKeys.enableLeaveTheMeetingRequiresConfirmation,
+      label: NEMeetingUIKit.instance
+          .getUIKitLocalizations()
+          .settingLeaveTheMeetingRequiresConfirmation,
+      asyncData: settings.isLeaveTheMeetingRequiresConfirmationEnabled(),
+      onDataChanged: settings.enableLeaveTheMeetingRequiresConfirmation,
     );
   }
 }

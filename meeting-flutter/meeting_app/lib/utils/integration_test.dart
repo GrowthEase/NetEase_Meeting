@@ -30,6 +30,7 @@ class MeetingValueKey {
   static const userSelfMeetingNumCreateMeeting =
       ValueKey('userSelfMeetingNumCreateMeeting');
   static const inputMeetingId = ValueKey('inputMeetingId');
+  static const inputMeetingNickname = ValueKey('inputMeetingNickname');
   static const clearAnonyMeetIdInput = ValueKey('clearAnonyMeetIdInput');
 
   /// hintNick = '请输入昵称'
@@ -70,6 +71,8 @@ class MeetingValueKey {
   static const enableAudioDeviceSwitch = ValueKey('enableAudioDeviceSwitch');
   static const showShareUserVideo = ValueKey('showShareUserVideo');
   static const showName = ValueKey('showName');
+  static const hideVideoOffAttendees = ValueKey('hideVideoOffAttendees');
+  static const hideMyVideo = ValueKey('hideMyVideo');
 
   ///会议创建模板[MeetCreateRoute]
   static const openMicrophoneCreateMeeting =

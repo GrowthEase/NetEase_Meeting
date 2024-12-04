@@ -314,21 +314,22 @@ class _HistoryMeetingRouteState extends AppBaseState<HistoryMeetingRoute> {
   /// 缺省图
   Widget buildEmptyView(String content) {
     return Center(
-      child: SingleChildScrollView(
-        child: Column(children: [
-          Image(
-            image: AssetImage(AssetName.emptyHistoryMeetingList),
-          ),
-          Text(
-            content,
-            style: TextStyle(
-                fontSize: 13,
-                color: AppColors.color_666666,
-                fontWeight: FontWeight.w400,
-                decoration: TextDecoration.none),
-          )
-        ]),
-      ),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Image(
+          image: AssetImage(AssetName.emptyMeetingList),
+          width: 120,
+          height: 120,
+        ),
+        SizedBox(height: 8),
+        Text(
+          content,
+          style: TextStyle(
+              fontSize: 14,
+              color: AppColors.color_666666,
+              fontWeight: FontWeight.w400,
+              decoration: TextDecoration.none),
+        )
+      ]),
     );
   }
 

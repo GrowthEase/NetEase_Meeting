@@ -198,6 +198,9 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String get globalPhotosPermission => 'Albums unavailable';
 
   @override
+  String get globalGoBack => 'Back';
+
+  @override
   String get authImmediatelyRegister => 'Register Now';
 
   @override
@@ -290,6 +293,11 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
 
   @override
   String get authGetCheckCode => 'Get code';
+
+  @override
+  String authGetCheckCodeAgain(Object seconds) {
+    return 'Retrieve ${seconds}S';
+  }
 
   @override
   String get authNewRegister => 'New user registration';
@@ -466,6 +474,11 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String get meetingHold => 'Start';
 
   @override
+  String meetingHoldSubject(Object userName) {
+    return '$userName\'s meeting';
+  }
+
+  @override
   String get meetingNetworkAbnormalityCheckAndRejoin =>
       'Network abnormality, please check the network connection and rejoin the meeting.';
 
@@ -490,6 +503,9 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
 
   @override
   String get meetingNum => 'Meeting ID';
+
+  @override
+  String get meetingNickname => 'Nickname';
 
   @override
   String get meetingStatusInit => 'Upcoming';
@@ -546,6 +562,9 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
 
   @override
   String get meetingEnterId => 'Enter meeting ID';
+
+  @override
+  String get meetingEnterNickname => 'Enter your  nickname';
 
   @override
   String meetingSubject(Object userName) {
@@ -929,12 +948,41 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String get copyMeetingAll => 'Copy all';
 
   @override
-  String get meetingCrossAppNoPermission =>
+  String get meetingGuestJoinNotSupportedTitle =>
+      'The meeting is closed to outsiders';
+
+  @override
+  String get meetingGuestJoinNotSupported =>
       'Sorry, the meeting you are trying to join is not open to outsiders. If necessary, contact the meeting organizer to enable the guest joining right.';
+
+  @override
+  String get meetingCrossAppJoinNotSupportedTitle =>
+      'The meeting cannot be joined';
+
+  @override
+  String get meetingCrossAppJoinNotSupported =>
+      'Sorry, the meeting you are trying to join was not created by your team/organization and is not supported for joining. You can log out and try to join through the \'Join Meeting\' portal.';
 
   @override
   String get meetingCrossAppJoinTip =>
       'The meeting was created by another team/organization and you will join as a guest. Do you want to join?';
+
+  @override
+  String get meetingGuestJoinVerify => 'Guest authentication';
+
+  @override
+  String get meetingGuestJoinVerifyTip =>
+      'To ensure the security of the meeting, please enter your phone number for authentication.';
+
+  @override
+  String get meetingLiveToOtherPlatform =>
+      'Live streaming to third-party platforms';
+
+  @override
+  String get meetingLiveReloadUpload => 'Reupload';
+
+  @override
+  String get meetingCastScreen => 'Cast screen';
 
   @override
   String get historyMeeting => 'Meeting history';
@@ -965,10 +1013,6 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
       'Generating cloud recording file';
 
   @override
-  String get nan =>
-      'Sorry, the meeting you are trying to join is not open to outsiders. If necessary, contact the meeting organizer to enable the guest joining right.';
-
-  @override
   String get settings => 'Settings';
 
   @override
@@ -984,7 +1028,7 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
   String get settingFeedback => 'Feedback';
 
   @override
-  String get settingBeauty => 'Beauty';
+  String get settingBeauty => 'Beautify';
 
   @override
   String get settingVirtualBackground => 'Background';
@@ -1197,6 +1241,12 @@ class MeetingAppLocalizationsEn extends MeetingAppLocalizations {
 
   @override
   String get settingLanguageTip => 'English';
+
+  @override
+  String get settingVolumeOutput => 'Volume';
+
+  @override
+  String get settingVolumeInput => 'Volume';
 
   @override
   String get evaluationTitle => 'Evaluation';

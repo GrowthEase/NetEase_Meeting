@@ -126,6 +126,11 @@ class HttpApiHelper {
     return execute(_StopMemberActivitiesApi(meetingId));
   }
 
+  /// 全部手放下
+  static Future<NEResult<void>> _handsUpDownAllApi(String roomUuid) {
+    return execute(_HandsUpDownAllApi(roomUuid));
+  }
+
   /// 通讯录搜索
   static Future<NEResult<List<NEContact>>> _searchContacts(
       String? name, String? phoneNumber, int? pageSize, int? pageNum) {

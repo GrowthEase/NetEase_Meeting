@@ -64,6 +64,10 @@ class MeetingBaseArguments {
     return items;
   }
 
+  /// 成员列表菜单操作项
+  List<NEMeetingMenuItem> get memberActionMenuItems =>
+      options.memberActionMenuItems ?? NEMenuActionItems.defaultActionMenuItems;
+
   /// 最小化
   bool get noMinimize => options.noMinimize;
 
@@ -85,6 +89,9 @@ class MeetingBaseArguments {
 
   String? get iosBroadcastAppGroup =>
       CoreRepository().initedConfig?.iosBroadcastAppGroup;
+
+  String? get iosBroadcastScheme =>
+      CoreRepository().initedConfig?.iosBroadcastScheme;
 
   /// 本地配置
   bool get videoMute => _videoMuteListenable.value;

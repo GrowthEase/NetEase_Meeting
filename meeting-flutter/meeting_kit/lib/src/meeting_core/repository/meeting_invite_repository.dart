@@ -144,6 +144,16 @@ class MeetingInviteRepository with _AloggerMixin {
   Future<NEResult<bool>> checkInviteState(int meetingId) {
     return HttpApiHelper.execute(_CheckInviteStateApi(meetingId));
   }
+
+  Future<NEResult<NERoomSIPCallInfo?>> callOutRoomSystem(
+      NERoomSystemDevice device) async {
+    final roomContext = MeetingRepository().currentRoomContext;
+    if (roomContext == null) {
+      return NEResult(
+          code: -1, msg: 'callOutRoomSystem error roomContext not exist');
+    }
+    return roomContext.sipController.callOutRoomSystem(device);
+  }
 }
 
 ///
