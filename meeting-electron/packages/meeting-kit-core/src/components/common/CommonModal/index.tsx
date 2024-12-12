@@ -29,12 +29,13 @@ const CommonModal: ModalType = (props: ModalProps) => {
 }
 
 CommonModal.confirm = (props) => {
-  window.ipcRenderer?.send(IPCEvent.sharingScreen, {
-    method: 'openModal',
-  })
   if (props.key && modalMaps.has(props.key)) {
     return modalMaps.get(props.key) as ConfirmModal
   }
+
+  window.ipcRenderer?.send(IPCEvent.sharingScreen, {
+    method: 'openModal',
+  })
 
   const modal = AntModal.confirm({
     icon: null,
@@ -69,6 +70,10 @@ CommonModal.warning = (props) => {
   if (props.key && modalMaps.has(props.key)) {
     return modalMaps.get(props.key) as WarningModal
   }
+
+  window.ipcRenderer?.send(IPCEvent.sharingScreen, {
+    method: 'openModal',
+  })
 
   const modal = AntModal.warning({
     icon: null,

@@ -20,6 +20,7 @@ export interface InputProps {
   onValueChange?: (value: string) => string;
   defaultValue?: string;
   prefix?: React.ReactNode;
+  meetingNum?: string;
   [key: string]: NEProps;
 }
 

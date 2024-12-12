@@ -11,6 +11,7 @@ import {
   NEMeetingInfo,
   NEMember,
   Role,
+  UserEventType,
 } from '../../../../types'
 
 import { errorCodeMap } from '../../../../config'
@@ -23,6 +24,11 @@ import Modal from '../../../common/Modal'
 import Toast from '../../../common/toast'
 import './index.less'
 import CommonModal from '../../../common/CommonModal'
+import Emoji from '../../../common/Emoji'
+import useMemberActionMenuItems, {
+  NEActionMenuIDs,
+} from '../../../../hooks/useMemberActionMenuItems'
+import { MenuClickType } from '../../../../kit/interface'
 
 interface MemberItemProps {
   data: NEMember
@@ -47,7 +53,9 @@ const MemberItem: React.FC<MemberItemProps> = ({
 }) => {
   const { t, i18n } = useTranslation()
   const { dispatch } = useMeetingInfoContext()
-  const { noChat, globalConfig } = useGlobalContext()
+  const { noChat, globalConfig, eventEmitter } = useGlobalContext()
+
+  const { memberActionMenuItems } = useMemberActionMenuItems(data)
 
   const { localMember } = meetingInfo
   const isWhiteSharer = meetingInfo.whiteboardUuid === localMember.uuid
@@ -97,7 +105,10 @@ const MemberItem: React.FC<MemberItemProps> = ({
       return false
     }
 
-    if (data.clientType === NEClientType.SIP) {
+    if (
+      data.clientType === NEClientType.SIP ||
+      data.clientType === NEClientType.H323
+    ) {
       return false
     }
 
@@ -122,7 +133,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
   }, [localMember, meetingInfo, data, isCoHost, isHost])
 
   let items: {
-    key: memberAction | hostAction
+    key: memberAction | hostAction | number
     label: string
     isShow?: boolean
     onClick?: MenuProps['onClick']
@@ -145,7 +156,8 @@ const MemberItem: React.FC<MemberItemProps> = ({
       isShow:
         isWhiteSharer &&
         data.properties.wbDrawable?.value !== '1' &&
-        data.clientType !== NEClientType.SIP,
+        data.clientType !== NEClientType.SIP &&
+        data.clientType !== NEClientType.H323,
       onClick: async () => {
         try {
           await neMeeting?.sendMemberControl(
@@ -528,7 +540,9 @@ const MemberItem: React.FC<MemberItemProps> = ({
           key: hostAction.transferHost,
           label: t('participantTransferHost'),
           isShow:
-            data.role !== Role.host && data.clientType !== NEClientType.SIP,
+            data.role !== Role.host &&
+            data.clientType !== NEClientType.SIP &&
+            data.clientType !== NEClientType.H323,
           onClick: () => {
             CommonModal.confirm({
               title: t('participantTransferHost'),
@@ -555,7 +569,8 @@ const MemberItem: React.FC<MemberItemProps> = ({
             data.role !== Role.host &&
             data.role !== Role.coHost &&
             !isOverCohostLimitCount &&
-            data.clientType !== NEClientType.SIP,
+            data.clientType !== NEClientType.SIP &&
+            data.clientType !== NEClientType.H323,
           onClick: async () => {
             try {
               await neMeeting?.sendHostControl(hostAction.setCoHost, data.uuid)
@@ -578,7 +593,9 @@ const MemberItem: React.FC<MemberItemProps> = ({
           key: hostAction.unSetCoHost,
           label: t('participantUnassignCoHost'),
           isShow:
-            data.role === Role.coHost && data.clientType !== NEClientType.SIP,
+            data.role === Role.coHost &&
+            data.clientType !== NEClientType.SIP &&
+            data.clientType !== NEClientType.H323,
           onClick: async () => {
             try {
               await neMeeting?.sendHostControl(
@@ -597,7 +614,10 @@ const MemberItem: React.FC<MemberItemProps> = ({
         {
           key: hostAction.remove,
           label: t('participantRemove'),
-          isShow: data.role !== Role.host && data.uuid !== ownerUserUuid,
+          isShow:
+            data.role !== Role.host &&
+            data.role !== Role.coHost &&
+            data.uuid !== ownerUserUuid,
           onClick: () => {
             removeDialog()
           },
@@ -651,11 +671,377 @@ const MemberItem: React.FC<MemberItemProps> = ({
     })
   }
 
-  items = items.filter((item) => {
-    const { isShow } = item
+  items = memberActionMenuItems.map((item) => {
+    let onClick = async () => {
+      // 自定义
+      eventEmitter?.emit(UserEventType.OnInjectedMenuItemClick, {
+        itemId: item.key,
+        state: item.checked ? 1 : 0,
+        isChecked: item.checked ?? false,
+        type:
+          item.checked === undefined
+            ? MenuClickType.Base
+            : MenuClickType.Stateful,
+      })
+    }
 
-    delete item.isShow
-    return Boolean(isShow)
+    switch (item.key) {
+      case NEActionMenuIDs.audio:
+        onClick = async () => {
+          if (item.checked) {
+            try {
+              if (isMySelf) {
+                await neMeeting?.unmuteLocalAudio()
+              } else {
+                await neMeeting?.sendHostControl(
+                  hostAction.unmuteMemberAudio,
+                  data.uuid
+                )
+              }
+            } catch (err: unknown) {
+              const knownError = err as {
+                message: string
+                msg: string
+                code: number
+              }
+
+              Toast.fail(
+                knownError?.msg ||
+                  t(errorCodeMap[knownError?.code] || 'unMuteAudioFail')
+              )
+            }
+          } else {
+            try {
+              if (isMySelf) {
+                await neMeeting?.muteLocalAudio()
+              } else {
+                await neMeeting?.sendHostControl(
+                  hostAction.muteMemberAudio,
+                  data.uuid
+                )
+              }
+            } catch {
+              Toast.fail(t('participantMuteAudioFail'))
+            }
+          }
+        }
+
+        break
+
+      case NEActionMenuIDs.video:
+        onClick = async () => {
+          if (item.checked) {
+            try {
+              if (isMySelf) {
+                await neMeeting?.unmuteLocalVideo()
+              } else {
+                await neMeeting?.sendHostControl(
+                  hostAction.unmuteMemberVideo,
+                  data.uuid
+                )
+              }
+            } catch (err: unknown) {
+              const knownError = err as {
+                message: string
+                msg: string
+                code: number
+              }
+
+              Toast.fail(
+                knownError?.msg ||
+                  t(
+                    errorCodeMap[knownError?.code] ||
+                      'participantUnMuteVideoFail'
+                  )
+              )
+            }
+          } else {
+            try {
+              if (isMySelf) {
+                await neMeeting?.muteLocalVideo()
+              } else {
+                await neMeeting?.sendHostControl(
+                  hostAction.muteMemberVideo,
+                  data.uuid
+                )
+              }
+            } catch {
+              Toast.fail(t('participantMuteVideoFail'))
+            }
+          }
+        }
+
+        break
+
+      case NEActionMenuIDs.focusVideo:
+        onClick = async () => {
+          if (item.checked) {
+            try {
+              await neMeeting?.sendHostControl(hostAction.unsetFocus, data.uuid)
+            } catch {
+              Toast.fail(t('participantFailedToUnassignActiveSpeaker'))
+            }
+          } else {
+            try {
+              await neMeeting?.sendHostControl(hostAction.setFocus, data.uuid)
+            } catch {
+              Toast.fail(t('participantFailedToAssignActiveSpeaker'))
+            }
+          }
+        }
+
+        break
+
+      case NEActionMenuIDs.lockVideo:
+        onClick = async () => {
+          if (item.checked) {
+            dispatch?.({
+              type: ActionType.UPDATE_MEETING_INFO,
+              data: {
+                pinVideoUuid: '',
+              },
+            })
+          } else {
+            dispatch?.({
+              type: ActionType.UPDATE_MEETING_INFO,
+              data: {
+                pinVideoUuid: data.uuid,
+              },
+            })
+          }
+        }
+
+        break
+
+      case NEActionMenuIDs.changeHost:
+        onClick = async () => {
+          CommonModal.confirm({
+            title: t('participantTransferHost'),
+            content: t('participantTransferHostConfirm', {
+              userName: data.name,
+            }),
+            onOk: async () => {
+              try {
+                await neMeeting?.sendHostControl(
+                  hostAction.transferHost,
+                  data.uuid
+                )
+              } catch {
+                Toast.fail(t('participantFailedToTransferHost'))
+              }
+            },
+          })
+        }
+
+        break
+
+      case NEActionMenuIDs.reclaimHost:
+        onClick = async () => {
+          try {
+            await neMeeting?.sendMemberControl(
+              memberAction.takeBackTheHost,
+              data.uuid
+            )
+          } catch {
+            Toast.fail(t('meetingReclaimHostFailed'))
+          }
+        }
+
+        break
+
+      case NEActionMenuIDs.removeMember:
+        onClick = async () => {
+          removeDialog()
+        }
+
+        break
+
+      case NEActionMenuIDs.rejectHandsUp:
+        onClick = async () => {
+          try {
+            await neMeeting?.sendHostControl(
+              hostAction.rejectHandsUp,
+              data.uuid
+            )
+          } catch {
+            Toast.fail(t('participantFailedToLowerHand'))
+          }
+        }
+
+        break
+
+      case NEActionMenuIDs.whiteboardInteraction:
+        onClick = async () => {
+          if (item.checked) {
+            try {
+              await neMeeting?.sendMemberControl(
+                memberAction.cancelShareWhiteShare,
+                data.uuid
+              )
+            } catch {
+              Toast.fail(t('undoWhiteBoardInteractFail'))
+            }
+          } else {
+            try {
+              await neMeeting?.sendMemberControl(
+                memberAction.shareWhiteShare,
+                data.uuid
+              )
+            } catch {
+              Toast.fail(t('whiteBoardInteractFail'))
+            }
+          }
+        }
+
+        break
+
+      case NEActionMenuIDs.screenShare:
+        onClick = async () => {
+          CommonModal.confirm({
+            title: t('screenShareStop'),
+            content: t('closeCommonTips') + t('closeScreenShareTips'),
+            onOk: async () => {
+              try {
+                await neMeeting?.sendHostControl(
+                  data.isSharingSystemAudio
+                    ? hostAction.closeAudioShare
+                    : hostAction.closeScreenShare,
+                  data.uuid
+                )
+              } catch {
+                Toast.fail(t('screenShareStopFail'))
+              }
+            },
+          })
+        }
+
+        break
+
+      case NEActionMenuIDs.whiteBoardShare:
+        onClick = async () => {
+          CommonModal.confirm({
+            title: t('whiteBoardClose'),
+            content: t('closeCommonTips') + t('closeWhiteShareTips'),
+            onOk: async () => {
+              try {
+                await neMeeting?.sendHostControl(
+                  hostAction.closeWhiteShare,
+                  data.uuid
+                )
+              } catch {
+                Toast.fail(t('whiteBoardShareStopFail'))
+              }
+            },
+          })
+        }
+
+        break
+
+      case NEActionMenuIDs.updateNick:
+        onClick = async () => {
+          handleUpdateUserNickname?.(data.uuid, data.name, 'room')
+        }
+
+        break
+
+      case NEActionMenuIDs.audioAndVideo:
+        onClick = async () => {
+          if (item.checked) {
+            try {
+              if (isMySelf) {
+                await neMeeting?.unmuteLocalAudio()
+                await neMeeting?.unmuteLocalVideo()
+              } else {
+                await neMeeting?.sendHostControl(
+                  hostAction.unmuteVideoAndAudio,
+                  data.uuid
+                )
+              }
+            } catch (error: unknown) {
+              const knownError = error as {
+                message: string
+                msg: string
+                code: number
+              }
+
+              Toast.fail(
+                knownError?.msg ||
+                  t(errorCodeMap[knownError?.code] || knownError?.code)
+              )
+            }
+          } else {
+            try {
+              await neMeeting?.sendHostControl(
+                hostAction.muteVideoAndAudio,
+                data.uuid
+              )
+            } catch {
+              // TODO:
+            }
+          }
+        }
+
+        break
+
+      case NEActionMenuIDs.coHost:
+        onClick = async () => {
+          if (item.checked) {
+            try {
+              await neMeeting?.sendHostControl(
+                hostAction.unSetCoHost,
+                data.uuid
+              )
+            } catch (err: unknown) {
+              const knownError = err as { message: string; msg: string }
+
+              Toast.fail(knownError.message || knownError.msg)
+            }
+          } else {
+            try {
+              await neMeeting?.sendHostControl(hostAction.setCoHost, data.uuid)
+            } catch (err: unknown) {
+              const knownError = err as {
+                message: string
+                msg: string
+                code: number
+              }
+
+              if (knownError.code === 1002) {
+                Toast.fail(t('coHostLimit'))
+              } else {
+                Toast.fail(knownError.message || knownError.msg)
+              }
+            }
+          }
+        }
+
+        break
+
+      case NEActionMenuIDs.putInWaitingRoom:
+        onClick = async () => {
+          try {
+            await neMeeting?.putInWaitingRoom(data.uuid)
+          } catch (err: unknown) {
+            const knownError = err as { message: string; msg: string }
+
+            Toast.fail(knownError?.msg || knownError?.message)
+          }
+        }
+
+        break
+
+      case NEActionMenuIDs.chatPrivate:
+        onClick = async () => {
+          neMeeting?.sendMemberControl(memberAction.privateChat, data.uuid)
+        }
+
+        break
+    }
+
+    return {
+      ...item,
+      onClick,
+    }
   })
 
   return (
@@ -687,14 +1073,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
         </div>
       </div>
       <div className={classNames('member-item-actions')}>
-        {data.isHandsUp && (isHost || isCoHost) && (
-          <svg
-            className="icon iconfont icon-blue iconraisehands1x"
-            aria-hidden="true"
-          >
-            <use xlinkHref="#iconraisehands1x" />
-          </svg>
-        )}
+        {data.isHandsUp && <Emoji type={2} size={16} emojiKey="[举手]" />}
         {data.properties.phoneState?.value == '1' && (
           <svg
             className="icon iconfont icon-green icondianhua-copy"
@@ -709,6 +1088,14 @@ const MemberItem: React.FC<MemberItemProps> = ({
             aria-hidden="true"
           >
             <use xlinkHref="#iconSIP1" />
+          </svg>
+        )}
+        {data.clientType == NEClientType.H323 && (
+          <svg
+            className="icon iconfont iconSIPwaihudianhua icon-blue"
+            aria-hidden="true"
+          >
+            <use xlinkHref="#icona-323" />
           </svg>
         )}
         {data.isSharingSystemAudio && (
@@ -799,7 +1186,9 @@ const MemberItem: React.FC<MemberItemProps> = ({
             />
           </svg>
         )}
-        {(isHost || isCoHost) && data.isAudioConnected ? (
+        {items.findIndex((item) => item.key === NEActionMenuIDs.audio) !== -1 &&
+        (isHost || isCoHost) &&
+        data.isAudioConnected ? (
           !data.isAudioOn ? (
             <Button
               onClick={async () => {

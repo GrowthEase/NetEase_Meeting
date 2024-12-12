@@ -1,4 +1,4 @@
-import { SaveSipCallItem } from '../kit'
+import { SaveSipCallItem,  SaveRoomSipCallItem} from '../kit'
 
 export function saveCallRecord(key: string, value: SaveSipCallItem[]) {
   const oldValue = localStorage.getItem(key)
@@ -8,6 +8,20 @@ export function saveCallRecord(key: string, value: SaveSipCallItem[]) {
     newValue = [...value, ...JSON.parse(oldValue)]
     if (newValue.length > 100) {
       newValue.splice(100, newValue.length - 100)
+    }
+  }
+
+  localStorage.setItem(key, JSON.stringify(newValue))
+}
+
+export function saveRoomSIPCallRecord(key: string, value: SaveRoomSipCallItem[], limit: number = 100) {
+  const oldValue = localStorage.getItem(key)
+  let newValue: SaveRoomSipCallItem[] = value
+
+  if (oldValue) {
+    newValue = [...value, ...JSON.parse(oldValue)]
+    if (newValue.length > limit) {
+      newValue.splice(limit, newValue.length - limit)
     }
   }
 

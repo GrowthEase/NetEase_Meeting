@@ -147,13 +147,72 @@ export default class NESettingsServiceHandle {
       case 89:
         res = await this.isCaptionsSupported()
         break
+      case 91:
+        res = await this.setASRTranslationLanguage(data)
+        break
+      case 93:
+        res = await this.getASRTranslationLanguage()
+        break
+      case 95:
+        res = await this.enableCaptionBilingual(data)
+        break
+      case 97:
+        res = await this.isCaptionBilingualEnabled()
+        break
+      case 1099:
+        res = await this.enableTranscriptionBilingual(data)
+        break
+      case 1101:
+        res = await this.isTranscriptionBilingualEnabled()
+        break
+      case 1103:
+        res = await this.isMeetingChatSupported()
+        break
       case 1105:
         res = await this.enableShowNotYetJoinedMembers(data)
         break
       case 1107:
         res = await this.isShowNotYetJoinedMembersEnabled()
         break
-
+      case 1109:
+        res = await this.setChatMessageNotificationType(data)
+        break
+      case 1111:
+        res = await this.getChatMessageNotificationType()
+        break
+      case 1113:
+        res = await this.isShowNameInVideoEnabled()
+        break
+      case 1115:
+        res = await this.enableShowNameInVideo(data)
+        break
+      case 1117:
+        res = await this.isHideMyVideoEnabled()
+        break
+      case 1119:
+        res = await this.enableHideMyVideo(data)
+        break
+      case 1121:
+        res = await this.enableHideVideoOffAttendees(data)
+        break
+      case 1123:
+        res = await this.isHideVideoOffAttendeesEnabled()
+        break
+      case 1125:
+        res = await this.enableShowMyMeetingParticipationTime(data)
+        break
+      case 1127:
+        res = await this.isShowMyMeetingParticipationTimeEnabled()
+        break
+      case 1129:
+        res = await this.isCallOutRoomSystemDeviceSupported()
+        break
+      case 1131:
+        res = await this.enableLeaveTheMeetingRequiresConfirmation(data)
+        break
+      case 1133:
+        res = await this.isLeaveTheMeetingRequiresConfirmationEnabled()
+        break
       default:
         return JSON.stringify(FailureBodySync(undefined, 'method not found'))
     }
@@ -387,5 +446,107 @@ export default class NESettingsServiceHandle {
 
   async isCaptionsSupported() {
     return await this._settingsService.isCaptionsSupported()
+  }
+
+  async isMeetingChatSupported() {
+    return await this._settingsService.isMeetingChatSupported()
+  }
+
+  async setChatMessageNotificationType(data) {
+    const { type } = JSON.parse(data)
+
+    return await this._settingsService.setChatMessageNotificationType(type)
+  }
+
+  async getChatMessageNotificationType() {
+    return await this._settingsService.getChatMessageNotificationType()
+  }
+
+  async setASRTranslationLanguage(data) {
+    const { language } = JSON.parse(data)
+
+    return await this._settingsService.setASRTranslationLanguage(language)
+  }
+
+  async getASRTranslationLanguage() {
+    return await this._settingsService.getASRTranslationLanguage()
+  }
+
+  async enableCaptionBilingual(data) {
+    const { enable } = JSON.parse(data)
+
+    return await this._settingsService.enableCaptionBilingual(enable)
+  }
+
+  async isCaptionBilingualEnabled() {
+    return await this._settingsService.isCaptionBilingualEnabled()
+  }
+
+  async enableTranscriptionBilingual(data) {
+    const { enable } = JSON.parse(data)
+
+    return await this._settingsService.enableTranscriptionBilingual(enable)
+  }
+
+  async isTranscriptionBilingualEnabled() {
+    return await this._settingsService.isTranscriptionBilingualEnabled()
+  }
+
+  async enableShowNameInVideo(data) {
+    const { enable } = JSON.parse(data)
+
+    return await this._settingsService.enableShowNameInVideo(enable)
+  }
+
+  async isShowNameInVideoEnabled() {
+    return await this._settingsService.isShowNameInVideoEnabled()
+  }
+
+  async enableShowMyMeetingParticipationTime(data) {
+    const { enable } = JSON.parse(data)
+
+    return await this._settingsService.enableShowMyMeetingParticipationTime(
+      enable
+    )
+  }
+
+  async isShowMyMeetingParticipationTimeEnabled() {
+    return await this._settingsService.isShowMyMeetingParticipationTimeEnabled()
+  }
+
+  async enableHideVideoOffAttendees(data) {
+    const { enable } = JSON.parse(data)
+
+    return await this._settingsService.enableHideVideoOffAttendees(enable)
+  }
+
+  async isHideVideoOffAttendeesEnabled() {
+    return await this._settingsService.isHideVideoOffAttendeesEnabled()
+  }
+
+  async enableHideMyVideo(data) {
+    const { enable } = JSON.parse(data)
+
+    return await this._settingsService.enableHideMyVideo(enable)
+  }
+
+  async isHideMyVideoEnabled() {
+    return await this._settingsService.isHideMyVideoEnabled()
+  }
+
+  async enableLeaveTheMeetingRequiresConfirmation(data) {
+    const { enable } = JSON.parse(data)
+
+    return await this._settingsService.enableLeaveTheMeetingRequiresConfirmation(
+      enable
+    )
+  }
+
+  async isLeaveTheMeetingRequiresConfirmationEnabled() {
+    return await this._settingsService.isLeaveTheMeetingRequiresConfirmationEnabled()
+  }
+
+  async isCallOutRoomSystemDeviceSupported() {
+    return await this._settingsService.isCallOutRoomSystemDeviceSupported()
   }
 }

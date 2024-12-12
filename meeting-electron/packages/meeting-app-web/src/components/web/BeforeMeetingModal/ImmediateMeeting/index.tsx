@@ -7,7 +7,6 @@ import { SettingTabType } from '@meeting-module/components/web/Setting/Setting';
 import { useTranslation } from 'react-i18next';
 import { getDefaultDeviceId } from '@meeting-module/utils';
 import './index.less';
-import { worker } from '@meeting-module/components/web/Meeting/Meeting';
 import Toast from '@meeting-module/components/common/toast';
 import { NESettingsService } from 'nemeeting-web-sdk';
 
@@ -40,7 +39,6 @@ const ImmediateMeeting: React.FC<ImmediateMeetingProps> = ({
   shortMeetingNum = '',
   submitLoading,
   onSummit,
-  onSettingChange,
   ...restProps
 }) => {
   const { t } = useTranslation();
@@ -62,13 +60,12 @@ const ImmediateMeeting: React.FC<ImmediateMeetingProps> = ({
 
   const [form] = Form.useForm();
   const videoPreviewRef = useRef<HTMLDivElement>(null);
-  const [cameraId, setCameraId] = useState<string>('');
+  const [, setCameraId] = useState<string>('');
   const [openAudio, setOpenAudio] = useState<boolean>(false);
   const [openVideo, setOpenVideo] = useState<boolean>(false);
   const [previewController, setPreviewController] = useState<
     NEPreviewController | undefined | null
   >(initPreviewController);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const mirror = setting?.videoSetting.enableVideoMirroring || false;
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -118,31 +115,6 @@ const ImmediateMeeting: React.FC<ImmediateMeetingProps> = ({
 
       onSummit?.(data);
     }
-  }
-
-  function onHandleSettingChange({
-    openAudio,
-    openVideo,
-    cameraId,
-  }: {
-    openAudio: boolean;
-    openVideo: boolean;
-    cameraId: string;
-  }) {
-    setting &&
-      onSettingChange &&
-      onSettingChange({
-        ...setting,
-        normalSetting: {
-          ...setting.normalSetting,
-          openAudio,
-          openVideo,
-        },
-        videoSetting: {
-          ...setting.videoSetting,
-          deviceId: cameraId,
-        },
-      });
   }
 
   useEffect(() => {
@@ -234,79 +206,17 @@ const ImmediateMeeting: React.FC<ImmediateMeetingProps> = ({
 
   const onOpenMicStatusChange = (checked: boolean) => {
     setOpenAudio(checked);
-    onHandleSettingChange({
-      openAudio: checked,
-      openVideo,
-      cameraId,
-    });
+    settingsService?.enableTurnOnMyAudioWhenJoinMeeting(checked);
   };
 
   const onOpenCameraStatusChange = (checked: boolean) => {
     setOpenVideo(checked);
-    onHandleSettingChange({
-      openAudio,
-      openVideo: checked,
-      cameraId,
-    });
+    settingsService?.enableTurnOnMyVideoWhenJoinMeeting(checked);
   };
 
   const onMeetingPasswordChange = (value: string) => {
     setPassword(value);
   };
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const view = videoPreviewRef.current;
-    const uuid = 'mySelf';
-
-    if (canvas && view && openVideo) {
-      const offscreen = canvas.transferControlToOffscreen();
-
-      worker.postMessage(
-        {
-          canvas: offscreen,
-          uuid,
-        },
-        [offscreen],
-      );
-
-      const handleMessage = (e: MessageEvent) => {
-        const { event, payload } = e.data;
-
-        if (event === 'onVideoFrameData') {
-          const { data, width, height } = payload;
-
-          const viewWidth = view.clientWidth;
-          const viewHeight = view.clientHeight;
-
-          if (viewWidth / (width / height) > viewHeight) {
-            canvas.style.height = `${viewHeight}px`;
-            canvas.style.width = `${viewHeight * (width / height)}px`;
-          } else {
-            canvas.style.width = `${viewWidth}px`;
-            canvas.style.height = `${viewWidth / (width / height)}px`;
-          }
-
-          worker.postMessage(
-            {
-              frame: {
-                width,
-                height,
-                data,
-              },
-              uuid,
-            },
-            [data.bytes.buffer],
-          );
-        }
-      };
-
-      window.addEventListener('message', handleMessage);
-      return () => {
-        window.removeEventListener('message', handleMessage);
-      };
-    }
-  }, [openVideo]);
 
   useEffect(() => {
     if (restProps.open) {

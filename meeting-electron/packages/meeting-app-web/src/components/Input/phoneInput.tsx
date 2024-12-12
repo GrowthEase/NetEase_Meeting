@@ -1,6 +1,5 @@
 import React, { FC } from 'react';
 import BaseInput, { InputProps } from './baseInput';
-// import { Icon } from 'antd';
 import './index.less';
 import { useTranslation } from 'react-i18next';
 

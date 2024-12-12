@@ -23,6 +23,7 @@ import {
 } from '../../../utils'
 import { Logger } from '../../../utils/Logger'
 import NESettingsServiceInterface, {
+  NEChatMessageNotificationType,
   NEInterpretationConfig,
   NEMeetingASRTranslationLanguage,
   ScheduledMemberConfig,
@@ -52,6 +53,31 @@ export default class NESettingsService implements NESettingsServiceInterface {
     this._neMeeting.openSettingsWindow(type)
 
     return SuccessBody(void 0)
+  }
+
+  async isMeetingChatSupported(): Promise<NEResult<boolean>> {
+    return SuccessBody(
+      !!this._neMeeting.globalConfig?.appConfig.APP_ROOM_RESOURCE.chatroom
+    )
+  }
+
+  async setChatMessageNotificationType(
+    type: NEChatMessageNotificationType
+  ): Promise<NEResult<void>> {
+    const settings = this.getLocalSettings()
+
+    settings.normalSetting.chatMessageNotificationType = type
+
+    this.setLocalSettings(settings)
+    return SuccessBody(void 0)
+  }
+
+  async getChatMessageNotificationType(): Promise<
+    NEResult<NEChatMessageNotificationType>
+  > {
+    const settings = this.getLocalSettings()
+
+    return SuccessBody(settings.normalSetting.chatMessageNotificationType ?? 0)
   }
 
   async setGalleryModeMaxMemberCount(count: 9 | 16): Promise<NEResult<void>> {
@@ -156,8 +182,8 @@ export default class NESettingsService implements NESettingsServiceInterface {
    * 查询应用预约会议指定成员配置
    */
   async getScheduledMemberConfig(): Promise<NEResult<ScheduledMemberConfig>> {
-    const scheduleConfig =
-      this._neMeeting.globalConfig?.appConfig.MEETING_SCHEDULED_MEMBER_CONFIG
+    const scheduleConfig = this._neMeeting.globalConfig?.appConfig
+      .MEETING_SCHEDULED_MEMBER_CONFIG
 
     if (scheduleConfig) {
       return SuccessBody({
@@ -176,8 +202,8 @@ export default class NESettingsService implements NESettingsServiceInterface {
 
   /** 查询应用同声传译配置 */
   async getInterpretationConfig(): Promise<NEResult<NEInterpretationConfig>> {
-    const interpretationConfig =
-      this._neMeeting.globalConfig?.appConfig.APP_ROOM_RESOURCE.interpretation
+    const interpretationConfig = this._neMeeting.globalConfig?.appConfig
+      .APP_ROOM_RESOURCE.interpretation
 
     if (interpretationConfig) {
       return SuccessBody({
@@ -197,7 +223,38 @@ export default class NESettingsService implements NESettingsServiceInterface {
       })
     }
   }
+  /**
+   * 设置是否显示会议时长
+   * @param enable true-开启，false-关闭
+   */
+  async enableShowMyMeetingParticipationTime(
+    enable: boolean
+  ): Promise<NEResult<void>> {
+    try {
+      const enableSchema = z.boolean()
 
+      enableSchema.parse(enable)
+    } catch (errorUnkown) {
+      const error = errorUnkown as ZodError
+
+      throw FailureBody(undefined, error.message)
+    }
+
+    const settings = this.getLocalSettings()
+
+    settings.normalSetting.showParticipationTime = enable
+
+    this.setLocalSettings(settings)
+    return SuccessBody(void 0)
+  }
+  /**
+   * 查询是否显示参会时长
+   */
+  async isShowMyMeetingParticipationTimeEnabled(): Promise<NEResult<boolean>> {
+    const settings = this.getLocalSettings()
+
+    return SuccessBody(!!settings.normalSetting.showParticipationTime)
+  }
   /**
    * 设置是否显示会议时长
    * @param enable true-开启，false-关闭
@@ -865,6 +922,89 @@ export default class NESettingsService implements NESettingsServiceInterface {
     const settings = this.getLocalSettings()
 
     return SuccessBody(!!settings.captionSetting.showTranslationBilingual)
+  }
+  async enableShowNameInVideo(enable: boolean): Promise<NEResult<void>> {
+    const settings = this.getLocalSettings()
+
+    settings.videoSetting.showMemberName = enable
+
+    this.setLocalSettings(settings)
+
+    return SuccessBody(void 0)
+  }
+
+  async isShowNameInVideoEnabled(): Promise<NEResult<boolean>> {
+    const settings = this.getLocalSettings()
+
+    return SuccessBody(!!settings.videoSetting.showMemberName)
+  }
+
+  async enableHideVideoOffAttendees(enable: boolean): Promise<NEResult<void>> {
+    const settings = this.getLocalSettings()
+
+    settings.videoSetting.enableHideVideoOffAttendees = enable
+
+    this.setLocalSettings(settings)
+
+    return SuccessBody(void 0)
+  }
+
+  async isHideVideoOffAttendeesEnabled(): Promise<NEResult<boolean>> {
+    const settings = this.getLocalSettings()
+
+    return SuccessBody(!!settings.videoSetting.enableHideVideoOffAttendees)
+  }
+
+  async enableHideMyVideo(enable: boolean): Promise<NEResult<void>> {
+    const settings = this.getLocalSettings()
+
+    settings.videoSetting.enableHideMyVideo = enable
+
+    this.setLocalSettings(settings)
+
+    return SuccessBody(void 0)
+  }
+
+  async isHideMyVideoEnabled(): Promise<NEResult<boolean>> {
+    const settings = this.getLocalSettings()
+
+    return SuccessBody(!!settings.videoSetting.enableHideMyVideo)
+  }
+
+  async enableLeaveTheMeetingRequiresConfirmation(
+    enable: boolean
+  ): Promise<NEResult<void>> {
+    const settings = this.getLocalSettings()
+
+    settings.normalSetting.leaveTheMeetingRequiresConfirmation = enable
+
+    this.setLocalSettings(settings)
+
+    return SuccessBody(void 0)
+  }
+
+  async isLeaveTheMeetingRequiresConfirmationEnabled(): Promise<
+    NEResult<boolean>
+  > {
+    const settings = this.getLocalSettings()
+
+    return SuccessBody(
+      !!settings.normalSetting.leaveTheMeetingRequiresConfirmation
+    )
+  }
+
+  async isCallOutRoomSystemDeviceSupported(): Promise<NEResult<boolean>> {
+    return SuccessBody(
+      !!this._neMeeting.globalConfig?.appConfig.APP_ROOM_RESOURCE
+        .callOutRoomSystemDevice
+    )
+  }
+
+  async getLiveMaxThirdPartyCount(): Promise<NEResult<number>> {
+    return SuccessBody(
+      this._neMeeting.globalConfig?.appConfig.MEETING_LIVE?.maxThirdPartyNum ||
+        5
+    )
   }
 
   private toInnerASRTranslationLanguage(

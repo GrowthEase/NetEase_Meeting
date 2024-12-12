@@ -129,6 +129,7 @@ export default function useElectronInvite(data: {
         } else if (
           status === NEMeetingInviteStatus.rejected ||
           status === NEMeetingInviteStatus.canceled ||
+          status === NEMeetingInviteStatus.busy ||
           status === NEMeetingInviteStatus.removed
         ) {
           const notificationCardWindow = getWindow('notificationCardWindow')

@@ -1,6 +1,20 @@
 import request from './request';
 import { APP_KEY } from '../config';
-import { EnterPriseInfo, LoginUserInfo } from '../types';
+import { EnterPriseInfo, GuestMeetingInfo, LoginUserInfo } from '../types';
+import { getUUID } from '@meeting-module/utils';
+
+function getDeviceId(): string {
+  let uuid = window.sessionStorage.getItem('NERoomkit-uuid');
+
+  if (uuid) {
+    return uuid;
+  } else {
+    uuid = getUUID();
+    window.sessionStorage.setItem('NERoomkit-uuid', uuid);
+  }
+
+  return uuid;
+}
 
 // 发送短信验证码-新接口
 export function sendVerifyCodeApi(params: {
@@ -96,4 +110,52 @@ export function modifyPasswordApi(params: {
     },
     method: 'POST',
   }) as unknown as Promise<LoginUserInfo>;
+}
+
+export function getMeetingInfoForGuest(
+  meetingNum: string,
+): Promise<GuestMeetingInfo> {
+  return request({
+    url: `/scene/meeting/v2/meetingInfoForGuest/${meetingNum}`,
+    headers: {
+      deviceId: getDeviceId(),
+    },
+    method: 'GET',
+  }) as unknown as Promise<GuestMeetingInfo>;
+}
+
+export function sendVerifyCodeApiByGuest(
+  meetingNum: string,
+  phoneNum: string,
+): Promise<void> {
+  return request({
+    url: `/scene/meeting/v2/smsForGuestJoinWithMeetingNum/${meetingNum}`,
+    params: {
+      phoneNum,
+    },
+    headers: {
+      deviceId: getDeviceId(),
+    },
+    method: 'GET',
+  }) as unknown as Promise<void>;
+}
+
+export function getMeetingInfoForGuestByPhoneNum(data: {
+  meetingNum: string;
+  phoneNum: string;
+  verifyCode: string;
+}): Promise<GuestMeetingInfo> {
+  const { meetingNum, phoneNum, verifyCode } = data;
+
+  return request({
+    url: `/scene/meeting/v2/meetingInfoForGuest/${meetingNum}`,
+    params: {
+      phoneNum,
+      verifyCode,
+    },
+    headers: {
+      deviceId: getDeviceId(),
+    },
+    method: 'GET',
+  }) as unknown as Promise<GuestMeetingInfo>;
 }

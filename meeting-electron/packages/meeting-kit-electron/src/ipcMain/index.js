@@ -40,9 +40,10 @@ const EventType = {
   chooseFileDone: 'nemeeting-choose-file-done',
   openBrowserWindow: 'open-browser-window',
   FlushStorageData: 'flushStorageData',
-  QuiteFullscreen: 'quiteFullscreen',
+  QuiteFullscreen: 'leave-full-screen',
+  EnterFullscreen: 'enter-full-screen',
   IsMainFullScreen: 'isMainFullScreen',
-  IsMainFullScreenReply: 'isMainFullscreen-reply',
+  IsMaximized: 'isMaximized',
   GetDeviceAccessStatus: 'getDeviceAccessStatus',
   GetVirtualBackground: 'getVirtualBackground',
 
@@ -175,7 +176,15 @@ function addGlobalIpcMainListeners() {
   ipcMain.on(EventType.MaximizeWindow, (event) => {
     const mainWindow = BrowserWindow.fromWebContents(event.sender)
 
-    mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize()
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize()
+      mainWindow.setResizable(true)
+      mainWindow.setMovable(true)
+    } else {
+      mainWindow.maximize()
+      mainWindow.setResizable(false)
+      mainWindow.setMovable(false)
+    }
   })
 
   ipcMain.handle(EventType.GetDeviceAccessStatus, () => {
@@ -403,10 +412,21 @@ function addGlobalIpcMainListeners() {
     shell.openExternal(url)
   })
 
+  let _isMaximized = false
+
   ipcMain.on(EventType.QuiteFullscreen, (event) => {
     const mainWindow = BrowserWindow.fromWebContents(event.sender)
 
-    mainWindow.isFullScreen() && mainWindow.setFullScreen(false)
+    mainWindow.isFullScreenPrivate && mainWindow.setFullScreen(false)
+    _isMaximized && mainWindow.maximize()
+  })
+
+  ipcMain.on(EventType.EnterFullscreen, (event) => {
+    const mainWindow = BrowserWindow.fromWebContents(event.sender)
+
+    _isMaximized = mainWindow.isMaximized()
+    _isMaximized && mainWindow.unmaximize()
+    !mainWindow.isFullScreenPrivate && mainWindow.setFullScreen(true)
   })
 
   ipcMain.on(EventType.FlushStorageData, (event) => {
@@ -421,11 +441,18 @@ function addGlobalIpcMainListeners() {
   })
 
   // 主窗口是否为全屏状态
-  ipcMain.on(EventType.IsMainFullScreen, async (event) => {
+  ipcMain.handle(EventType.IsMainFullScreen, (event) => {
     const mainWindow = BrowserWindow.fromWebContents(event.sender)
-    const isFullscreen = mainWindow?.isFullScreen() || mainWindow?.isMaximized()
+    const isFullscreen = mainWindow?.isFullScreen()
 
-    event.sender.send(EventType.IsMainFullScreenReply, isFullscreen)
+    return isFullscreen
+  })
+
+  ipcMain.handle(EventType.IsMaximized, (event) => {
+    const mainWindow = BrowserWindow.fromWebContents(event.sender)
+    const isMaximized = mainWindow?.isMaximized()
+
+    return isMaximized
   })
 
   ipcMain.on(EventType.OpenDevTools, async (event) => {

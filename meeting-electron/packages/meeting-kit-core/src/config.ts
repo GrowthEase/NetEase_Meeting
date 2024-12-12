@@ -20,5 +20,5 @@ export const MAJOR_AUDIO = '$majorAudio'
 export const MAJOR_DEFAULT_VOLUME = 25
 export const PLAYOUT_DEFAULT_VOLUME = 70
 export const RECORD_DEFAULT_VOLUME = 100
-export const IM_VERSION = '9.17.5'
-export const RTC_VERSION = '5.6.30'
+export const IM_VERSION = '10.5.0'
+export const RTC_VERSION = '5.6.40'

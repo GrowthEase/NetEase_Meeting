@@ -261,7 +261,7 @@ app.whenReady().then(() => {
   })
 
   // 登录完成也会触发此事件
-  ipcMain.on('beforeEnterRoom', () => {
+  ipcMain.on('beforeEnterRoom', (_, notLogin) => {
     console.log('beforeEnterRoom')
 
     inMeeting = false
@@ -269,10 +269,22 @@ app.whenReady().then(() => {
     beforeMeetingWindow?.webContents.send('beforeMeeting', true)
     powerSaveBlockerId && powerSaveBlocker.stop(powerSaveBlockerId)
     powerSaveBlockerId = null
-    beforeMeetingWindow?.setBounds({
-      width: 720,
-      height: 480,
-    })
+    if (notLogin) {
+      // 退出登录，关闭会前的窗口
+      Object.keys(beforeNewWins).forEach((key) => {
+        beforeNewWins[key]?.close()
+      })
+      beforeMeetingWindow?.setBounds({
+        width: 375,
+        height: 670,
+      })
+    } else {
+      beforeMeetingWindow?.setBounds({
+        width: 720,
+        height: 480,
+      })
+    }
+
     windowCenter(beforeMeetingWindow)
   })
 

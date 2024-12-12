@@ -227,16 +227,7 @@ const ScreenShareListModal = forwardRef<
   )
 
   const getIsFullScreen = async () => {
-    return new Promise((resolve) => {
-      window.ipcRenderer?.send(IPCEvent.isMainFullscreen)
-      window.ipcRenderer?.once(
-        // 注意这里使用 `once` 而非 `on`
-        IPCEvent.isMainFullscreenReply,
-        (event, isFullScreen) => {
-          resolve(isFullScreen) // 使用 resolve
-        }
-      )
-    })
+    return window.ipcRenderer?.invoke(IPCEvent.isMainFullscreen)
   }
 
   useEffect(() => {
@@ -392,10 +383,12 @@ const ScreenShareListModal = forwardRef<
           </Button>
         </div>
       }
-      bodyStyle={{
-        padding: '0 0 0 10px',
-        height: '440px',
-        overflowY: 'scroll',
+      styles={{
+        body: {
+          padding: '0 0 0 10px',
+          height: '440px',
+          overflowY: 'scroll',
+        },
       }}
     >
       <Spin spinning={isLoading}>

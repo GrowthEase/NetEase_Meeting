@@ -5,6 +5,7 @@ import AudioIcon from '../AudioIcon'
 import './index.less'
 import { useTranslation } from 'react-i18next'
 import { NEMeetingInviteStatus } from '../../../kit'
+import Emoticons from '../Emoticons'
 
 interface AudioCardProps {
   className?: string
@@ -43,6 +44,7 @@ const AudioCard: React.FC<AudioCardProps> = (props) => {
       case NEMeetingInviteStatus.noAnswer:
       case NEMeetingInviteStatus.error:
       case NEMeetingInviteStatus.canceled:
+      case NEMeetingInviteStatus.busy:
         return (
           <div
             className="invite-state-wrapper"
@@ -65,6 +67,7 @@ const AudioCard: React.FC<AudioCardProps> = (props) => {
       case NEMeetingInviteStatus.noAnswer:
       case NEMeetingInviteStatus.error:
       case NEMeetingInviteStatus.canceled:
+      case NEMeetingInviteStatus.busy:
         return (
           <div
             className="invite-state-icon"
@@ -87,6 +90,12 @@ const AudioCard: React.FC<AudioCardProps> = (props) => {
       style={style}
       className={`nemeeting-audio-card ${className || ''}`}
     >
+      <Emoticons
+        size={40}
+        userUuid={member.uuid}
+        isHandsUp={member.isHandsUp}
+        className="nemeeting-audio-card-emoticons"
+      />
       <div className="nemeeting-audio-card-content">
         <div className="nemeeting-audio-card-avatar">
           <UserAvatar

@@ -9,7 +9,6 @@ import { IPCEvent } from '../../../app/src/types'
 import waitingRoomBg from '../../../assets/waiting-room-bg.png'
 import usePostMessageHandle from '../../../hooks/usePostMessagehandle'
 import usePreviewHandler from '../../../hooks/usePreviewHandler'
-import YUVCanvas from '../../../libs/yuv-canvas'
 import {
   useGlobalContext,
   useMeetingInfoContext,
@@ -20,7 +19,6 @@ import {
   EventType,
   MeetingDeviceInfo,
   MeetingSetting,
-  UserEventType,
 } from '../../../types/innerType'
 import { NEMeetingLeaveType } from '../../../types/type'
 import {
@@ -31,8 +29,12 @@ import {
   setDefaultDevice,
   setLocalStorageSetting,
 } from '../../../utils'
-import { closeWindow, getWindow, openWindow } from '../../../utils/windowsProxy'
-import { getYuvFrame, YuvFrame } from '../../../utils/yuvFrame'
+import {
+  closeWindow,
+  getWindow,
+  openWindow,
+  closeAllWindows,
+} from '../../../utils/windowsProxy'
 import AudioIcon from '../../common/AudioIcon'
 import Modal, { ConfirmModal } from '../../common/Modal'
 import PCTopButtons from '../../common/PCTopButtons'
@@ -44,10 +46,8 @@ import { useWaitingRoom } from '../../../hooks/useWaitingRoom'
 import useElectronInvite from '../../../hooks/useElectronInvite'
 import CommonModal from '../../common/CommonModal'
 import { useMount } from 'ahooks'
-
-type YUVCanvasType = {
-  drawFrame: (data: YuvFrame) => void
-}
+import RendererManager from '../../../libs/Renderer/RendererManager'
+import usePreview from '../../../hooks/usePreview'
 
 interface WaitRoomProps {
   className?: string
@@ -62,7 +62,6 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
     logger,
     eventEmitter,
     outEventEmitter,
-    dispatch: globalDispatch,
     notificationApi,
     noChat,
     globalConfig,
@@ -76,16 +75,15 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
   const [recordDeviceList, setRecordDeviceList] = useState<NEDeviceBaseInfo[]>(
     []
   )
-  const yuvRef = useRef<YUVCanvasType>()
-  const canvasRef = useRef<HTMLCanvasElement>(null)
   const [playoutDeviceList, setPlayoutDeviceList] = useState<
     NEDeviceBaseInfo[]
   >([])
   const [isDarkMode, setIsDarkMode] = useState(true)
   const { dispatch } = useMeetingInfoContext()
   const [settingOpen, setSettingOpen] = useState(false)
-  const [settingModalTab, setSettingModalTab] =
-    useState<SettingTabType>('normal')
+  const [settingModalTab, setSettingModalTab] = useState<SettingTabType>(
+    'normal'
+  )
 
   const { waitingRoomInfo } = useWaitingRoomContext()
   const closeModalRef = useRef<ConfirmModal | null>(null)
@@ -184,8 +182,22 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
     setRecordVolume,
   } = useWaitingRoom({
     closeModalHandle,
-    handleVideoFrameData,
   })
+
+  const {
+    startPreview: settingStartPreview,
+    stopPreview: settingStopPreview,
+  } = usePreview()
+
+  const settingStartPreviewRef = useRef(false)
+
+  const openVideoRef = useRef(openVideo)
+
+  openVideoRef.current = openVideo
+
+  const meetingInfoRef = useRef(meetingInfo)
+
+  meetingInfoRef.current = meetingInfo
 
   const getDevices = useCallback(() => {
     let _setting = meetingInfo.setting
@@ -423,6 +435,22 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
         handlePostMessage(childWindow, result, replyKey)
       } else if (event === 'previewController' && previewController) {
         const { replyKey, fnKey, args } = payload
+
+        if (fnKey === 'stopPreview') {
+          settingStopPreview()
+          settingStartPreviewRef.current = false
+        } else if (fnKey === 'startPreview') {
+          settingStartPreview()
+          settingStartPreviewRef.current = true
+        }
+
+        if (
+          openVideoRef.current &&
+          ['stopPreview', 'startPreview'].includes(fnKey)
+        ) {
+          return
+        }
+
         const result = previewController[fnKey]?.(...args)
 
         handlePostMessage(childWindow, result, replyKey)
@@ -459,11 +487,23 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
   }
 
   useEffect(() => {
+    return () => {
+      notificationApi?.destroy(WAITING_ROOM_MEMBER_MSG_KEY)
+    }
+  }, [])
+
+  useEffect(() => {
     window.ipcRenderer?.invoke(IPCEvent.getThemeColor).then((isDark) => {
       setIsDarkMode(isDark)
     })
     getDevices()
   }, [getDevices])
+
+  useEffect(() => {
+    if (!openVideo && settingStartPreviewRef.current) {
+      neMeeting?.previewController?.startPreview()
+    }
+  }, [openVideo])
 
   useEffect(() => {
     const debounceHandle = debounce(getDevices, 1000)
@@ -533,40 +573,37 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
       }
     }
 
-    closeModal = CommonModal.confirm({
-      title: t('leave'),
-      content: t('meetingLeaveConfirm'),
-      focusTriggerAfterClose: false,
-      transitionName: '',
-      mask: false,
-      width: 300,
-      footer: (
-        <div className="nemeeting-modal-confirm-btns">
-          <Button
-            onClick={() => {
-              closeModal?.destroy()
-              closeModal = null
-            }}
-          >
-            {t('globalCancel')}
-          </Button>
-          <Button type="primary" onClick={handleLeave}>
-            {t('leave')}
-          </Button>
-        </div>
-      ),
-    })
-  }, [dispatch, t, neMeeting])
-
-  function handleVideoFrameData(uuid, bSubVideo, data, type, width, height) {
-    const canvas = canvasRef.current
-
-    if (canvas && videoCanvasWrapRef.current) {
-      canvas.style.height = `${videoCanvasWrapRef.current.clientHeight}px`
+    if (
+      meetingInfoRef.current.setting.normalSetting
+        .leaveTheMeetingRequiresConfirmation === false
+    ) {
+      handleLeave()
+    } else {
+      closeModal = CommonModal.confirm({
+        title: t('leave'),
+        content: t('meetingLeaveConfirm'),
+        focusTriggerAfterClose: false,
+        transitionName: '',
+        mask: false,
+        width: 300,
+        footer: (
+          <div className="nemeeting-modal-confirm-btns">
+            <Button
+              onClick={() => {
+                closeModal?.destroy()
+                closeModal = null
+              }}
+            >
+              {t('globalCancel')}
+            </Button>
+            <Button type="primary" onClick={handleLeave}>
+              {t('leave')}
+            </Button>
+          </div>
+        ),
+      })
     }
-
-    yuvRef.current?.drawFrame(getYuvFrame(data, width, height))
-  }
+  }, [dispatch, t, neMeeting])
 
   async function onDeviceChange(
     type: 'video' | 'speaker' | 'microphone',
@@ -731,12 +768,6 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
   )
 
   useEffect(() => {
-    const canvas = canvasRef.current
-
-    if (canvas) {
-      yuvRef.current = YUVCanvas.attach(canvas)
-    }
-
     function closeWindowHandle() {
       if (closeModal) {
         closeModal.destroy()
@@ -775,24 +806,32 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
   }, [handleNewMessage, eventEmitter])
 
   useEffect(() => {
-    function handleAcceptInvite(options, callback) {
-      // 需要先离开当前会议
-      globalDispatch?.({
-        type: ActionType.UPDATE_GLOBAL_CONFIG,
-        data: {
-          waitingJoinOtherMeeting: true,
-          joinLoading: true,
-        },
-      })
-      // 在会中
-      eventEmitter?.emit(UserEventType.JoinOtherMeeting, options, callback)
-    }
+    if (openVideo && videoCanvasWrapRef.current && window.isElectronNative) {
+      const context = {
+        view: videoCanvasWrapRef.current,
+        userUuid: '',
+        sourceType: 'video',
+      }
 
-    eventEmitter?.on(EventType.AcceptInvite, handleAcceptInvite)
-    return () => {
-      eventEmitter?.off(EventType.AcceptInvite, handleAcceptInvite)
+      const render = RendererManager.instance.createRenderer(context)
+
+      return () => {
+        RendererManager.instance.removeRenderer(context, render)
+      }
     }
-  }, [eventEmitter, globalDispatch])
+  }, [openVideo])
+
+  // 进入等候室关闭会中所有窗口
+  useEffect(() => {
+    closeAllWindows()
+    // 重置会中 endMeetingAction
+    dispatch?.({
+      type: ActionType.UPDATE_MEETING_INFO,
+      data: {
+        endMeetingAction: 0,
+      },
+    })
+  }, [])
 
   return (
     <div
@@ -1185,14 +1224,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
               className={`waiting-room-canvas-content ${
                 setting?.videoSetting.enableVideoMirroring ? 'video-mirror' : ''
               }`}
-            >
-              {window.isElectronNative && (
-                <canvas
-                  className="nemeeting-video-view-canvas"
-                  ref={canvasRef}
-                />
-              )}
-            </div>
+            ></div>
           </div>
           {/* 聊天室消息按钮 */}
           {showChatRoom &&
@@ -1239,7 +1271,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
               <use xlinkHref="#iconcross"></use>
             </svg>
           </div>
-          <ChatRoom />
+          {openChatRoom && <ChatRoom />}
         </div>
       </div>
     </div>

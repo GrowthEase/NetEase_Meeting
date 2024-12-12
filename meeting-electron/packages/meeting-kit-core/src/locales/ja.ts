@@ -29,6 +29,9 @@ export default {
   globalOpen: `開く`,
   globalStart: '開く',
   globalDelete: '消去',
+  globalEdit: '編定',
+  globalAdd: '追加',
+  globalGoBack: '返回',
   joinMeeting: `会議に参加`,
   copyMeetingIdAndLink: `会議IDとリンクをコピーします`,
   copyAll: `すべてコピー`,
@@ -37,6 +40,7 @@ export default {
     '予約が成功しました、会議のリンクを共有してください',
   waitingRoomRemoveAllMemberTips: '全員を削除しますか？',
   meetingGuestJoinName: `ゲスト`,
+  meetingGuestRememberJoinName: '入会ニックネームを覚えておく ',
   participants: `${attendee}`,
   meetingJoinFail: `ミーティングに参加できませんでした`,
   reJoinMeetingFail: `${meeting}ミーティング に再参加できませんでした`,
@@ -103,6 +107,8 @@ export default {
   settingHideNotYetJoinedMembers: '未加入メンバーを非表示にする',
   settingHideNotYetJoinedMembersTip:
     '有効にすると、未参加および通話中のメンバーはレイアウトビューに表示されません',
+  settingHideVideoOffAttendees: '音声参加者を非表示にする',
+  settingHideMyVideo: 'セルフビューを非表示する',
   unSupportBrowserTitle: 'ブラウザが互換性がありません',
   unSupportBrowserTip:
     'お使いのブラウザは、当社のサービスをサポートしていないことが検出されました。最高の体験を得るために、以下のブラウザをご利用いただくことをお勧めします',
@@ -130,6 +136,7 @@ export default {
   meetingSwitchOtherDevice: `${host} ホストに移出したか、別のデバイスに切り替えたため、${meeting} ミーティングを退出しました`,
   sure: '確定',
   yesterday: '昨日',
+  meetingRoom: '会議室',
   meetingInviteUrlTips: '会議リンクをコピーします',
   // forbiddenByHostVideo: `${host} ホストがお前のビデオを停止しました`,
   meetingSipNumber: 'SIP 電話',
@@ -149,6 +156,7 @@ export default {
   screenShare: '画面共有',
   meetingRoomScreenCasting: 'スクリーンキャスト',
   meetingLiveMode: 'ライブモード',
+  sipDisplayName: '入会名称',
   screenShareTips:
     ' 画面に表示されているすべてのもののキャプチャを開始します。 ',
   screenShareOverLimit: '誰かが既に共有しているため、共有できません',
@@ -234,6 +242,11 @@ export default {
   undoWhiteBoardInteractFail: 'ホワイトボード操作の取り消しに失敗しました',
   sip: 'SIP 電話/端末が会議に参加する',
   sipTip: 'sip',
+  sipCallRoom: 'SIP/H.323',
+  sipProtocol: 'コールシグナリングプロトコル',
+
+  sipCallOutRoomInputTip: 'IPまたはSIP URIまたは登録されたデバイス番号',
+  h323CallOutRoomInputTip: 'IPまたはE.164番号',
   live: '生放送',
   liveUrl: 'ライブURL', //直播功能
   liveLink: '生放送リンク', //直播功能
@@ -245,6 +258,7 @@ export default {
   liveViewPageBackgroundImage: 'ページの背景画像を見る',
   liveCoverPicture: '生きカバー画像',
   liveCoverPictureTip: '16:9を推奨、5M以下',
+  liveReUpload: '再アップロード',
   liveSelectTip: '左からお選びください',
   livePasswordTip: '6桁のパスワードを入力してください',
   liveStatusChange: '生放送配信の状況を変更しました',
@@ -438,7 +452,7 @@ export default {
   startTime: '開始時間',
   creator: '作成者',
   cloudRecordingLink: 'クラウド録画リンク',
-  generatingCloudRecordingFile: 'クラウド記録ファイルの生成',
+  generatingCloudRecordingFile: 'クラウド記録ファイルの生成...',
   stopRecordFailed: '停止录制失败',
   startRecordFailed: '开启录制失败',
   messageRecalled: 'メッセージを取り消しました',
@@ -925,7 +939,7 @@ export default {
   meetingGuestJoinAuthTitle: '訪問者認証',
   meetingGuestJoinAuthTip:
     '会議の安全のため,携帯番号を入力して認証をお願いします',
-  meetingGuestJoinNamePlaceholder: '入会昵称',
+  meetingGuestJoinNamePlaceholder: '入会名を入力してください',
   meetingRoleGuest: '外部訪問者',
   // 视频布局
   layoutSettings: 'レイアウト設定',
@@ -978,6 +992,7 @@ export default {
   sipCallAgainEx: 'さいよびだし',
   sipCallStatusRejected: 'リジェクト',
   sipCallStatusCanceled: 'キャンセル済み',
+  sipCallStatusBusy: 'busy',
   sipCallStatusError: 'よびだしれいがい',
   sipCallStatusCalling: '電話通話中',
   sipCallStatusWaiting: '等待呼叫中',
@@ -1271,4 +1286,57 @@ export default {
   preferMotionModel: 'ビデオの滑らかさを優先',
   preferMotionModelTips:
     'パフォーマンスと帯域幅の占有率を削減し、共有の円滑性を優先的に確保',
+
+  ethernet: '有线',
+  wifi: 'Wi-Fi',
+
+  meetingLiveToOtherPlatform: 'サードパーティ製プラットフォームへのライブ配信',
+  meetingLiveToOtherPlatformSetting: 'ライブプラットフォームの設定',
+  platformName: 'プラットフォーム名',
+  pushUrl: 'プッシュアドレス',
+  pushSecret: 'プッシュキー',
+  pushSecretTip: 'プッシュフローキーを入力してください',
+
+  emoticons: '応答',
+  allowMembersToReplyWithEmoticons: 'メンバーの表情応答を許可',
+  handsUp: '挙手',
+  handsUpCount: '{{count}} 人が手を挙げています',
+  handsUpDownAll: 'すべての手を放す',
+  handsUpDownAllSuccess: 'すべての手を置いた',
+  handsUpDownAllFailure: 'すべての手を下ろすことに失敗しました',
+  confirmJoinMeeting: 'ミーティングへの参加を確認する',
+
+  settingAutomaticSavingOfMeetingChatRecords: '会議やチャットの記録は自動的に保存されます',
+  settingAutomaticSavingOfMeetingChatRecordsTips:
+    'オンにすると、あなたが司会をしている間に自動的にチャットが保存されます。',
+
+  virtualBackgroundNotSupported:
+    '申し訳ありませんが、仮想背景機能は、あなたのデバイスのハードウェアやシステムの制約により、現在はご利用できません。',
+  virtualBackgroundSupportedTitle: '設備の性能が不足している',
+  virtualBackgroundSupportedDesc:
+    'デバイスのパフォーマンスが不足しているため、バーチャルバックグラウンド機能をオンにすると、ビデオ品質が低下したり、カートンが発生したりする可能性があります。まだオープンしようとしていますか',
+  virtualBackgroundSupportedDescBtn: '強制オープン',
+
+  settingLeaveTheMeetingRequiresConfirmation: 'ミーティングの退出時に確認する',
+  meetingAppointNewHost: '新しい司会者を指定する',
+  meetingAppointAndLeave: '割り当てて離れる',
+
+  cloudRecordingEnableAISummary: 'スマート録画を開始します',
+  cloudRecordingEnableAISummaryTip:
+    '開催後、本会議の議事録(総括、未処理を含む)を作成します。',
+  cloudRecordingAISummaryStarted:
+    '本会議はすでに知能録画を開始して、知能AI紀要を生成します(総括、未処理を含みます)',
+  cloudRecordingAISummaryFailed: 'スマート録画オンに失敗しましたので、後ほど録画をオフにして再度お試しください。',
+  cloudRecordingUnableToStart: 'クラウド録画が起動しません',
+  cloudRecordingUnableToStartTips: '現在、会議中にマイクやビデオをオンにしている人がいません。録画を開始するため、ミュートを解除してください。',
+
+  settingShowParticipationTime: '参会時間の表示',
+  settingShowMeetingElapsedTime: '会議の継続時間',
+  settingShowParticipationElapsedTime: '参会時間',
+
+  settingEnterFullscreen: '会議の開始や参加時は自動的に全画面モードになります。',
+
+  enterFullscreenTips: 'ESCを押すか、右上のボタンをクリックして全画面モードを終了します。',
+
+  preMeetingSubject: 'スケジュールされた会議',
 }

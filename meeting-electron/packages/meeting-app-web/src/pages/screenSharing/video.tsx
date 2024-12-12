@@ -7,10 +7,10 @@ import SpeakerList from '@meeting-module/components/web/SpeakerList';
 import useWatermark from '@meeting-module/hooks/useWatermark';
 import { NEMeetingInfo, NEMember } from '@meeting-module/types';
 
-import { worker } from '@meeting-module/components/web/Meeting/Meeting';
 import './index.less';
 import { IPCEvent } from '@/types';
 import { useMeetingInfoContext } from '@meeting-module/store';
+import Emoticons from '@meeting-module/components/common/Emoticons';
 
 const VideoCard: React.FC<{
   member: NEMember;
@@ -23,9 +23,6 @@ const VideoCard: React.FC<{
   const { meetingInfo } = useMeetingInfoContext();
   const mouseLeaveTimerRef = useRef<null | ReturnType<typeof setTimeout>>(null);
   const viewRef = useRef<HTMLDivElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [canvasWidth, setCanvasWidth] = useState(0);
-  const [canvasHeight, setCanvasHeight] = useState(0);
   const [isMouseLeave, setIsMouseLeave] = useState<boolean>(true);
 
   const isInPhone = useMemo(() => {
@@ -42,23 +39,6 @@ const VideoCard: React.FC<{
 
     return false;
   }, [isMouseLeave, meetingInfo.setting.videoSetting.showMemberName]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-
-    if (canvas && viewRef.current) {
-      canvas.style.height = `${viewRef.current.clientHeight}px`;
-      const offscreen = canvas.transferControlToOffscreen();
-
-      worker.postMessage(
-        {
-          canvas: offscreen,
-          uuid: member.uuid,
-        },
-        [offscreen],
-      );
-    }
-  }, [member.uuid]);
 
   useEffect(() => {
     if (member.isVideoOn) {
@@ -85,6 +65,17 @@ const VideoCard: React.FC<{
           },
           parentWindow.origin,
         );
+      } else {
+        parentWindow?.postMessage(
+          {
+            event: 'neMeeting',
+            payload: {
+              fnKey: 'setupLocalVideoCanvas',
+              args: [member.uuid, false],
+            },
+          },
+          parentWindow.origin,
+        );
       }
 
       return () => {
@@ -99,52 +90,21 @@ const VideoCard: React.FC<{
             },
             parentWindow.origin,
           );
+        } else {
+          parentWindow?.postMessage(
+            {
+              event: 'neMeeting',
+              payload: {
+                fnKey: 'setupLocalVideoCanvas',
+                args: [member.uuid, true],
+              },
+            },
+            parentWindow.origin,
+          );
         }
       };
     }
   }, [member.isVideoOn, member.uuid, isMySelf]);
-
-  useEffect(() => {
-    function handleMessage(e: MessageEvent) {
-      const { event, payload } = e.data;
-
-      if (event === 'onVideoFrameData') {
-        const { uuid, width, height } = payload;
-
-        if (uuid === member.uuid) {
-          if (viewRef.current) {
-            const canvas = canvasRef.current;
-
-            if (canvas) {
-              const viewWidth = viewRef.current.clientWidth;
-              const viewHeight = viewRef.current.clientHeight;
-              let canvasWidth = 0;
-              let canvasHeight = 0;
-
-              if (viewWidth / (width / height) > viewHeight) {
-                canvasHeight = viewHeight;
-                canvasWidth = viewHeight * (width / height);
-              } else {
-                canvasWidth = viewWidth;
-                canvasHeight = viewWidth / (width / height);
-              }
-
-              setCanvasWidth(canvasWidth);
-              setCanvasHeight(canvasHeight);
-            }
-          }
-
-          return;
-        }
-      }
-    }
-
-    window.addEventListener('message', handleMessage);
-
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
-  }, []);
 
   return (
     <div
@@ -162,15 +122,15 @@ const VideoCard: React.FC<{
         setIsMouseLeave(false);
       }}
     >
-      <canvas
-        ref={canvasRef}
-        className="nemeeting-video-view-canvas"
-        style={{
-          display: member.isVideoOn ? '' : 'none',
-          width: canvasWidth,
-          height: canvasHeight,
-        }}
-      />
+      <div className={classNames('nemeeting-video-card-emoticons-container')}>
+        <Emoticons
+          size={40}
+          isHandsUp={member.isHandsUp}
+          userUuid={member.uuid}
+          onlyHandsUp
+        />
+        <Emoticons size={40} userUuid={member.uuid} />
+      </div>
       {member.isVideoOn ? (
         ''
       ) : (
@@ -244,9 +204,31 @@ export default function VideoPage() {
     const memberListVideoOff = memberListWithoutSelf.filter(
       (member) => !member.isVideoOn,
     );
-    const sortMemberList = meetingInfo
-      ? [meetingInfo.localMember, ...memberListVideoOn, ...memberListVideoOff]
-      : [];
+    let sortMemberList: NEMember[] = [];
+
+    const enableHideMyVideo =
+      meetingInfo?.setting.videoSetting?.enableHideMyVideo;
+    const enableHideVideoOffAttendees =
+      meetingInfo?.setting.videoSetting?.enableHideVideoOffAttendees;
+
+    // 开启隐藏非视频参会者
+    if (enableHideVideoOffAttendees) {
+      sortMemberList = meetingInfo ? [...memberListVideoOn] : [];
+      // 如果未开启隐藏本端
+      if (!enableHideMyVideo) {
+        sortMemberList = [meetingInfo.localMember, ...sortMemberList];
+      }
+    } else {
+      sortMemberList = meetingInfo
+        ? [...memberListVideoOn, ...memberListVideoOff]
+        : [];
+      if (!enableHideMyVideo) {
+        sortMemberList = meetingInfo
+          ? [meetingInfo.localMember, ...sortMemberList]
+          : [...sortMemberList];
+      }
+    }
+
     const viewOrder =
       meetingInfo?.remoteViewOrder || meetingInfo?.localViewOrder;
 
@@ -272,7 +254,11 @@ export default function VideoPage() {
     }
 
     if (videoCount === 1) {
-      return [meetingInfo?.localMember];
+      if (enableHideMyVideo) {
+        return sortMemberList.length > 0 ? [sortMemberList[0]] : [];
+      } else {
+        return [meetingInfo?.localMember];
+      }
     }
 
     const res = sortMemberList.slice((pageNum - 1) * 4, pageNum * 4);
@@ -324,21 +310,7 @@ export default function VideoPage() {
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data;
 
-      if (event === 'onVideoFrameData') {
-        const { uuid, data, width, height } = payload;
-
-        worker.postMessage(
-          {
-            frame: {
-              width,
-              height,
-              data,
-            },
-            uuid,
-          },
-          [data.bytes.buffer],
-        );
-      } else if (event === 'updateData') {
+      if (event === 'updateData') {
         const { meetingInfo, memberList } = payload;
 
         meetingInfo && setMeetingInfo(meetingInfo);

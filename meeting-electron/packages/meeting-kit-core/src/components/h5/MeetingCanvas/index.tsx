@@ -188,6 +188,7 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
                   ? members.map((member: NEMember, i: number) => {
                       return (
                         <VideoCard
+                          isH5={true}
                           style={{
                             display: `${
                               i === 1 &&
@@ -227,6 +228,7 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
                   : members.map((member: NEMember) => {
                       return (
                         <VideoCard
+                          isH5={true}
                           showBorder={
                             meetingInfo.focusUuid
                               ? meetingInfo.focusUuid === member.uuid

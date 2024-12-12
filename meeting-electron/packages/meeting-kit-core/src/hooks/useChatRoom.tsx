@@ -7,6 +7,7 @@ import {
 import { useMount, useUpdateEffect } from 'ahooks'
 import {
   ActionType,
+  CreateMeetingResponse,
   EventType,
   getWindow,
   hostAction,
@@ -89,7 +90,10 @@ type ChatRoomContextType = {
   openFile?: (msg: NERoomChatMessage, isDic: boolean) => void
   downloadAttachment?: (msg: NERoomChatMessage, path: string) => void
   cancelDownloadAttachment?: (msg: NERoomChatMessage) => void
-  exportChatroomHistoryMessageList?: (meetingId?: number) => void
+  exportChatroomHistoryMessageList?: (
+    meetingId?: number,
+    myUuid?: string
+  ) => void
   addEventListenerAtChatWindow?: () => void
   fetchHistoryMessages?: (meetingId?: number) => Promise<void>
   clearMessages?: () => void
@@ -120,6 +124,7 @@ export const ChatRoomContextProvider: React.FC<Props> = (props) => {
   const isSendWaitingChatroomRef = React.useRef<boolean>(false)
   const privateChatMemberIdRef = React.useRef<string>(privateChatMemberId)
   const disabledRef = React.useRef<number>(0)
+  const exportFileName = React.useRef<string>('')
 
   meetingInfoRef.current = meetingInfo
   messagesRef.current = messages
@@ -157,7 +162,8 @@ export const ChatRoomContextProvider: React.FC<Props> = (props) => {
       .filter(
         (member) =>
           member.uuid != meetingInfo.myUuid &&
-          member.clientType !== NEClientType.SIP
+          member.clientType !== NEClientType.SIP &&
+          member.clientType !== NEClientType.H323
       )
       .forEach((member) => {
         if (member.role === Role.host) {
@@ -624,16 +630,29 @@ export const ChatRoomContextProvider: React.FC<Props> = (props) => {
     }
   }
 
-  async function exportChatroomHistoryMessageList(meetingId?: number) {
+  async function exportChatroomHistoryMessageList(
+    meetingId?: number,
+    myUuid: string = ''
+  ) {
     if (neMeeting?.roomService) {
-      const _meetingInfo = meetingId
-        ? await neMeeting.getMeetingInfoByMeetingId(meetingId)
-        : meetingInfo
+      let _meetingInfo:
+        | NEMeetingInfo
+        | CreateMeetingResponse
+        | undefined = undefined
 
-      const { data: url } =
-        await neMeeting.roomService.exportChatroomHistoryMessages(
-          String(_meetingInfo.meetingId)
-        )
+      try {
+        _meetingInfo = meetingId
+          ? await neMeeting.getMeetingInfoByMeetingId(meetingId)
+          : meetingInfo
+      } catch {
+        //
+      }
+
+      const {
+        data: url,
+      } = await neMeeting.roomService.exportChatroomHistoryMessages(
+        String(_meetingInfo?.meetingId || meetingId)
+      )
 
       const blob = new Blob([url], {
         type: 'text/csv;charset=UTF-8',
@@ -641,11 +660,18 @@ export const ChatRoomContextProvider: React.FC<Props> = (props) => {
       const link = document.createElement('a')
 
       link.href = window.URL.createObjectURL(blob)
-      const fileName = `${_meetingInfo.subject}_${dayjs(
-        _meetingInfo.startTime
-      ).format('YYYYMMDDHHmmss')}.csv`
+      const fileName = _meetingInfo
+        ? `${_meetingInfo.subject}_${dayjs(_meetingInfo.startTime).format(
+            'YYYYMMDDHHmmss'
+          )}.csv`
+        : exportFileName.current
 
-      link.download = decodeURIComponent(fileName)
+      if (myUuid && window.isElectronNative) {
+        link.download = `auto_save!${myUuid}!` + decodeURIComponent(fileName)
+      } else {
+        link.download = decodeURIComponent(fileName)
+      }
+
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -668,6 +694,7 @@ export const ChatRoomContextProvider: React.FC<Props> = (props) => {
 
       if (chatController) {
         startTime = startTime - 1
+        // 获取等候室聊天室历史记录
         try {
           const res = await chatController.fetchChatroomHistoryMessages(
             {
@@ -682,8 +709,9 @@ export const ChatRoomContextProvider: React.FC<Props> = (props) => {
               messages.push(formatMessage(item))
             })
           }
-        } catch {
+        } catch (e) {
           //
+          console.log('fetchChatroomHistoryMessages error', e)
         }
 
         try {
@@ -695,13 +723,15 @@ export const ChatRoomContextProvider: React.FC<Props> = (props) => {
             0
           )
 
+          console.log('fetchChatroomHistoryMessages11', res)
           if (res.code === 0 && res.data.length > 0) {
             res.data.forEach((item) => {
               messages.push(formatMessage(item))
             })
           }
-        } catch {
+        } catch (e) {
           //
+          console.log('fetchChatroomHistoryMessages1 error', e)
         }
       }
     } else {
@@ -1018,6 +1048,14 @@ export const ChatRoomContextProvider: React.FC<Props> = (props) => {
   useUpdateEffect(() => {
     setMessages([])
   }, [inWaitingRoom])
+
+  useEffect(() => {
+    if (meetingInfo.subject && meetingInfo.startTime) {
+      exportFileName.current = `${meetingInfo.subject}_${dayjs(
+        meetingInfo.startTime
+      ).format('YYYYMMDDHHmmss')}.csv`
+    }
+  }, [meetingInfo.subject, meetingInfo.startTime])
 
   return (
     <ChatRoomContext.Provider

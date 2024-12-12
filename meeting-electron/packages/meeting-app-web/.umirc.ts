@@ -1,4 +1,7 @@
 import { defineConfig } from 'umi';
+import ts from 'typescript';
+import path from 'path';
+import fs from 'fs';
 
 const platform = process.env.PLATFORM;
 const nodeEnv = process.env.NODE_ENV;
@@ -45,6 +48,11 @@ const WEBSITE_URL = {
   development: 'https://meeting.163.com/',
   production: 'https://meeting.163.com/',
   private: 'https://meeting.163.com/',
+}[RUN_ENV];
+
+const RECORD_URL = {
+  production: 'https://meeting.163.com/recordInfo',
+  development: 'https://meeting.163.com/recordInfo',
 }[RUN_ENV];
 
 const PRIVATE_CONFIG = {
@@ -167,7 +175,57 @@ if (platform === 'electron' || nodeEnv === 'development') {
   );
 }
 
+function rendererCompile() {
+  const renderersTSPath = path.join(
+    __dirname,
+    '../meeting-kit-core/src/libs/Renderer/Renderers/ts',
+  );
+
+  const renderersJSPath = renderersTSPath.replace(/\/ts$/, 'js');
+  if (!fs.existsSync(renderersJSPath)) {
+    fs.mkdirSync(renderersJSPath);
+  }
+  fs.readdirSync(renderersTSPath).forEach((item) => {
+    let filePath = path.join(renderersTSPath, item);
+    if (filePath.endsWith('.ts')) {
+      const sourceCode = fs.readFileSync(filePath, 'utf8');
+      const result = ts.transpileModule(sourceCode, {
+        compilerOptions: { module: ts.ModuleKind.CommonJS },
+      });
+
+      fs.writeFileSync(
+        filePath.replace(/\.ts/, '.js').replace(/\/ts/, '/js'),
+        result.outputText,
+      );
+    }
+  });
+}
+
+class RendererCompilePlugin {
+  apply(compiler) {
+    compiler.hooks.watchRun.tapAsync(
+      'RendererCompilePlugin',
+      (compilation, callback) => {
+        // 执行你的自定义方法
+        console.log('changedFiles', compiler.watchFileSystem.watcher);
+        // this.customMethod();
+
+        callback();
+      },
+    );
+  }
+
+  customMethod() {
+    rendererCompile();
+  }
+}
+
+rendererCompile();
+
 export default defineConfig({
+  locale: false,
+  initialState: false,
+  layout: false,
   favicon: 'favicon.ico',
   nodeModulesTransform: {
     type: 'none',
@@ -193,6 +251,10 @@ export default defineConfig({
       .rule('js')
       .include.add(require('path').resolve(__dirname, '../meeting-kit-core/'))
       .end();
+
+    // memo.plugin('RendererCompilePlugin')
+    //   .use(RendererCompilePlugin);
+
     memo.module
       .rule('node')
       .test(/\.node$/)
@@ -211,5 +273,6 @@ export default defineConfig({
     'process.env.CREATE_ACCOUNT_URL': CREATE_ACCOUNT_URL,
     'process.env.PRIVATE_CONFIG': PRIVATE_CONFIG,
     'process.env.WEBSITE_URL': WEBSITE_URL,
+    'process.env.RECORD_URL': RECORD_URL,
   },
 });

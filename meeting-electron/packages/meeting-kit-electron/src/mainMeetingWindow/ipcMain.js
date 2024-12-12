@@ -20,7 +20,9 @@ function focusWindow(event, url) {
   const win = BrowserWindow.fromWebContents(event.sender)
 
   if (win === currentWindow) {
-    if (newWins[url] && !newWins[url].isDestroyed()) {
+    if (url === 'mainWindow') {
+      win.show()
+    } else if (newWins[url] && !newWins[url].isDestroyed()) {
       openNewWindow(url)
       newWins[url].show()
     }
@@ -160,7 +162,7 @@ function handleIgnoreMouseEvents(event, data) {
 function addIpcMainListeners(window) {
   currentWindow = window
 
-  let alreadySetWidth = false
+  // let alreadySetWidth = false
 
   ipcMain.on(EventType.FocusWindow, focusWindow)
   ipcMain.on(EventType.AnnotationWindow, annotationWindow)
@@ -181,17 +183,23 @@ function addIpcMainListeners(window) {
 
     mainWindow?.webContents.send('openChatroomOrMemberList-reply', isOpen)
     // resize结束通知渲染进程
-    if (mainWindow?.isFullScreen() || mainWindow?.isMaximized()) {
+    if (
+      mainWindow?.isFullScreen() ||
+      mainWindow?.isMaximized() ||
+      mainWindow?.isFullScreenPrivate ||
+      mainWindow?.isMaximizedPrivate
+    ) {
       return
     }
 
     const mousePosition = screen.getCursorScreenPoint()
-    const { x: displayX, width: displayW } =
-      screen.getDisplayNearestPoint(mousePosition).workArea // 鼠标所在屏幕的大小
+    const { x: displayX, width: displayW } = screen.getDisplayNearestPoint(
+      mousePosition
+    ).workArea // 鼠标所在屏幕的大小
     const { x: mainX, width: mainW } = mainWindow.getBounds() // 当前窗口的大小
 
-    if (isOpen && !alreadySetWidth) {
-      alreadySetWidth = true
+    if (isOpen) {
+      // alreadySetWidth = true
       const newWidth = mainW + 320
       const exceedW = newWidth + mainX - (displayX + displayW)
 
@@ -205,8 +213,8 @@ function addIpcMainListeners(window) {
           width: Math.round(newWidth),
         })
       }
-    } else if (!isOpen && alreadySetWidth) {
-      alreadySetWidth = false
+    } else {
+      // alreadySetWidth = false
       mainWindow.setBounds({ width: Math.round(mainW - 320) })
     }
 

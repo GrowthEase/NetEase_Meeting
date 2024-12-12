@@ -32,8 +32,13 @@
     display: none;
   }
   .member-item-actions {
+    display: flex;
+    align-items: center;
     white-space: nowrap;
     height: 28px;
+    .nemeeting-emoji-item {
+      padding: 5px;
+    }
     .more-button {
       display: none;
     }
@@ -100,7 +105,8 @@
       margin-left: 0px;
     }
     &.more-button-enable:hover {
-      .iconfont {
+      .iconfont,
+      .nemeeting-emoji-item {
         display: none;
       }
       .more-button {
@@ -153,6 +159,9 @@
 .nemeeting-member-item:hover {
   background-color: rgba(0, 0, 0, 0.08);
   border-radius: 8px;
+  .nemeeting-emoji-item {
+    display: none;
+  }
   .icon-hover {
     display: none;
   }
@@ -212,6 +221,10 @@
 .nemeeting-member-item-hover {
   background-color: rgba(0, 0, 0, 0.08);
   border-radius: 8px;
+
+  .nemeeting-emoji-item {
+    display: none;
+  }
   .icon-hover {
     display: none;
   }

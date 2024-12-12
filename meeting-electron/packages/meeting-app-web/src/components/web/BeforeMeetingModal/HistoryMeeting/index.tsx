@@ -7,7 +7,6 @@ import {
   NEMeetingWebAppItem,
   NEPreMeetingService,
 } from 'nemeeting-web-sdk';
-import { IPCEvent } from '../../../../types';
 import { MeetingListItem } from '@meeting-module/types/type';
 import dayjs from 'dayjs';
 import {
@@ -22,10 +21,15 @@ import EventEmitter from 'eventemitter3';
 import UserAvatar from '@meeting-module/components/common/Avatar';
 
 import EmptyImg from '../../../../assets/empty.png';
-import { NEMeetingTranscriptionInfo } from '@meeting-module/kit/interface/service/pre_meeting_service';
+import {
+  NEMeetingRecord,
+  NEMeetingTranscriptionInfo,
+} from '@meeting-module/kit/interface/service/pre_meeting_service';
 import TranscriptionModal from '../Transcription/TranscriptionModal';
 import NEContactsService from '@meeting-module/kit/impl/service/meeting_contacts_service';
 import { NERoomService } from 'neroom-types';
+import { RECORD_URL } from '@/config';
+import useUserInfo from '@meeting-module/hooks/useUserInfo';
 
 type MeetingSwitchType = 'all' | 'collect';
 
@@ -112,12 +116,12 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
   );
 
   const [showDetails, setShowDetails] = useState<boolean>(false);
-  const [recordList, setRecordList] = useState<string[] | null>(null);
+  const [recordList, setRecordList] = useState<
+    string[] | null | NEMeetingRecord[]
+  >(null);
   const [openTranscriptionModal, setOpenTranscriptionModal] = useState(false);
   // 导出状态，1.可导出，2.没权限，3.已过期
   const [chatroomExportAccess, setChatroomExportAccess] = useState<number>(0);
-  const [recordListCollapseOpen, setRecordListCollapseOpen] =
-    useState<boolean>(false);
 
   const [pluginInfoList, setPluginInfoList] = useState<NEMeetingWebAppItem[]>(
     [],
@@ -127,6 +131,9 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
   >(undefined);
 
   const [enableChatroom, setEnableChatroom] = useState<boolean>(false);
+
+  const [recordingFileGeneration, setRecordingFileGeneration] =
+    useState<string>('notStarted');
 
   useEffect(() => {
     if (open) {
@@ -319,6 +326,7 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
           const data = res.data;
 
           if (data) {
+            setRecordingFileGeneration(checkRecordingFileGeneration(data));
             data.forEach((item) => {
               item.infoList.forEach((info) => {
                 info.url && recordList.push(info.url);
@@ -326,7 +334,6 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
             });
           }
 
-          console.log('recordList》》》', recordList);
           setRecordList(recordList);
         }
       })
@@ -381,12 +388,39 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
     eventEmitter.emit(EventType.OnHistoryMeetingPageModeChanged, 'detail');
   };
 
-  const onUrlClick = (url) => {
-    if (window.isElectronNative) {
-      window.ipcRenderer?.invoke(IPCEvent.downloadFileByURL, url);
-    } else {
-      window.open(url);
+  // const onUrlClick = (url) => {
+  //   if (window.isElectronNative) {
+  //     window.ipcRenderer?.invoke(IPCEvent.downloadFileByURL, url);
+  //   } else {
+  //     window.open(url);
+  //   }
+  // };
+  const { getUserInfo } = useUserInfo();
+
+  const jumpToRecordPage = (meeting: MeetingListItem) => {
+    const userInfo = getUserInfo();
+
+    if (meeting?.meetingId && userInfo?.appKey && userInfo?.userUuid) {
+      if (window?.isElectronNative && window.ipcRenderer) {
+        window.ipcRenderer.send(
+          'open-browser-window',
+          `${RECORD_URL}?id=${meeting.meetingId}&meetingAppKey=${userInfo?.appKey}&user=${userInfo?.userUuid}`,
+        );
+      } else {
+        window.open(
+          `${RECORD_URL}?id=${meeting.meetingId}&meetingAppKey=${userInfo?.appKey}&user=${userInfo?.userUuid}`,
+        );
+      }
     }
+  };
+
+  // 检测录制文件是否有生成完成的，如果有，则可以跳转至录制页面
+  const checkRecordingFileGeneration = (recordList): string => {
+    const hasURL = recordList
+      ?.map((record) => record.infoList.some((info) => info.url))
+      .includes(true);
+
+    return hasURL ? 'completed' : 'InProgress';
   };
 
   const MeetingDetails = useMemo(() => {
@@ -530,25 +564,36 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
                   <div
                     className="nemeeting-detail-app-item nemeeting-detail-app-item-chat"
                     onClick={() => {
-                      setRecordListCollapseOpen(!recordListCollapseOpen);
+                      if (recordingFileGeneration === 'completed') {
+                        jumpToRecordPage(currentMeeting);
+                      }
                     }}
                   >
                     <div className="nemeeting-detail-app-item-title">
                       {i18n.record}
                     </div>
-                    <svg
-                      style={
-                        recordListCollapseOpen
-                          ? { transform: 'rotate(90deg)' }
-                          : {}
-                      }
-                      className="icon iconfont iconchat-history"
-                      aria-hidden="true"
+
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                      className="record-file-generating"
                     >
-                      <use xlinkHref="#iconyoujiantou-16px-2"></use>
-                    </svg>
+                      {recordingFileGeneration === 'InProgress' && (
+                        <div>{i18n.recordFileGenerating}</div>
+                      )}
+                      {recordingFileGeneration === 'completed' && (
+                        <svg
+                          className="icon iconfont iconchat-history"
+                          aria-hidden="true"
+                        >
+                          <use xlinkHref="#iconyoujiantou-16px-2"></use>
+                        </svg>
+                      )}
+                    </div>
                   </div>
-                  {recordListCollapseOpen ? (
+                  {/* {recordListCollapseOpen ? (
                     <div className="nemeeting-record-wrap">
                       <div className="nemeeting-record-list">
                         {recordList.length === 0 ? (
@@ -585,7 +630,7 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
                         )}
                       </div>
                     </div>
-                  ) : null}
+                  ) : null} */}
                 </>
               )}
               {chatroomExportAccess === 1 && enableChatroom && (
@@ -692,7 +737,6 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
     recordList,
     chatroomExportAccess,
     pluginInfoList,
-    recordListCollapseOpen,
     canShowTranscription,
     enableChatroom,
   ]);

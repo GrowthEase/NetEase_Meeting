@@ -2,9 +2,14 @@ import React, { useMemo, useState } from 'react'
 import classNames from 'classnames'
 import { useTranslation } from 'react-i18next'
 
-import { Button, Divider, Popover, Switch, Dropdown, MenuProps } from 'antd'
+import { Button, Popover, Switch, Dropdown, MenuProps } from 'antd'
 import { useGlobalContext, useMeetingInfoContext } from '../../../store'
-import { ActionType, LayoutTypeEnum, Role } from '../../../types'
+import {
+  ActionType,
+  LayoutTypeEnum,
+  MeetingSetting,
+  Role,
+} from '../../../types'
 import './index.less'
 import Toast from '../../common/toast'
 import useMeetingCanvas from '../../../hooks/useMeetingCanvas'
@@ -14,10 +19,11 @@ import CommonModal from '../../common/CommonModal'
 interface MeetingLayoutProps {
   className?: string
   onSettingClick?: () => void
+  onSettingChange?: (setting: MeetingSetting) => void
 }
 // 会议持续时间
 const MeetingLayout: React.FC<MeetingLayoutProps> = React.memo(
-  ({ className, onSettingClick }: MeetingLayoutProps) => {
+  ({ className, onSettingClick, onSettingChange }: MeetingLayoutProps) => {
     const { t } = useTranslation()
     const { dispatch, meetingInfo } = useMeetingInfoContext()
     const { neMeeting } = useGlobalContext()
@@ -50,6 +56,14 @@ const MeetingLayout: React.FC<MeetingLayoutProps> = React.memo(
     const isHostOrCohost = useMemo(() => {
       return localMember.role === Role.host || localMember.role === Role.coHost
     }, [localMember.role])
+
+    const enableHideMyVideo = useMemo(() => {
+      return !!meetingInfo.setting.videoSetting.enableHideMyVideo
+    }, [meetingInfo.setting.videoSetting.enableHideMyVideo])
+
+    const enableHideVideoOffAttendees = useMemo(() => {
+      return !!meetingInfo.setting.videoSetting.enableHideVideoOffAttendees
+    }, [meetingInfo.setting.videoSetting.enableHideVideoOffAttendees])
 
     const handleRemoteViewOrder = (open: boolean) => {
       let viewOrder = ''
@@ -252,6 +266,20 @@ const MeetingLayout: React.FC<MeetingLayoutProps> = React.memo(
       },
     ]
 
+    function handleEnableHideMyVideo(checked: boolean) {
+      const setting = meetingInfo.setting
+
+      setting.videoSetting.enableHideMyVideo = checked
+      onSettingChange?.(setting)
+    }
+
+    function handleEnableHideVideoOffAttendees(checked: boolean) {
+      const setting = meetingInfo.setting
+
+      setting.videoSetting.enableHideVideoOffAttendees = checked
+      onSettingChange?.(setting)
+    }
+
     return (
       <Popover
         overlayClassName="nemeeting-layout-list-popover"
@@ -286,6 +314,8 @@ const MeetingLayout: React.FC<MeetingLayoutProps> = React.memo(
                         className={classNames('nemeeting-layout-group-item', {
                           ['nemeeting-layout-group-item-active']: item.active,
                           ['nemeeting-layout-group-item-disable']: item.disable,
+                          ['nemeeting-layout-group-item-left-border']:
+                            groupIndex !== 0,
                         })}
                         key={item.key}
                         onClick={item.onClick}
@@ -317,64 +347,93 @@ const MeetingLayout: React.FC<MeetingLayoutProps> = React.memo(
                         </div>
                       </div>
                     ))}
-                    {groupIndex !== layoutGroups.length - 1 && (
+                    {/* {groupIndex !== layoutGroups.length - 1 && (
                       <Divider
                         type="vertical"
                         className="nemeeting-layout-group-line"
                       />
-                    )}
+                    )} */}
                   </div>
                 </div>
               ))}
             </div>
-            {enableResetGalleryLayout || isHostOrCohost ? (
-              <div
-                className="nemeeting-layout-footer"
-                style={
-                  localMember.role === 'member'
-                    ? { justifyContent: 'center' }
-                    : undefined
-                }
-              >
-                {isHostOrCohost ? (
-                  <div className="nemeeting-layout-footer-left">
-                    <Switch
-                      checked={enableRemoteViewOrder}
-                      onChange={(checked) => {
-                        handleRemoteViewOrder(checked)
-                      }}
-                    />
-                    <span className="nemeeting-layout-footer-text">
-                      {t('followGalleryLayout')}
-                    </span>
-                    <Popover content={t('followGalleryLayoutTips')}>
-                      <svg className="icon iconfont" aria-hidden="true">
-                        <use xlinkHref="#icona-45"></use>
-                      </svg>
-                    </Popover>
-                    {enableRemoteViewOrder &&
-                    meetingInfo.isScheduledMeeting !== 0 ? (
-                      <Dropdown menu={{ items }}>
-                        <svg
-                          className={classNames('icon iconfont')}
-                          aria-hidden="true"
-                        >
-                          <use xlinkHref="#icona-xialajiantou-xianxing-14px1"></use>
-                        </svg>
-                      </Dropdown>
-                    ) : null}
-                  </div>
-                ) : null}
-                {enableResetGalleryLayout ? (
-                  <div
-                    className="link-button"
-                    onClick={() => onResetGalleryLayout()}
-                  >
-                    {t('resetGalleryLayout')}
-                  </div>
-                ) : null}
+            <div className="nemeeting-layout-footer-wrapper">
+              <div className="nemeeting-layout-footer">
+                <div className="nemeeting-layout-footer-left">
+                  <Switch
+                    checked={enableHideMyVideo}
+                    onChange={(checked) => {
+                      handleEnableHideMyVideo(checked)
+                    }}
+                  />
+                  <span className="nemeeting-layout-footer-text">
+                    {t('settingHideMyVideo')}
+                  </span>
+                </div>
               </div>
-            ) : null}
+              <div className="nemeeting-layout-footer">
+                <div className="nemeeting-layout-footer-left">
+                  <Switch
+                    checked={enableHideVideoOffAttendees}
+                    onChange={(checked) => {
+                      handleEnableHideVideoOffAttendees(checked)
+                    }}
+                  />
+                  <span className="nemeeting-layout-footer-text">
+                    {t('settingHideVideoOffAttendees')}
+                  </span>
+                </div>
+              </div>
+
+              {enableResetGalleryLayout || isHostOrCohost ? (
+                <div
+                  className="nemeeting-layout-footer"
+                  style={
+                    localMember.role === 'member'
+                      ? { justifyContent: 'center' }
+                      : undefined
+                  }
+                >
+                  {isHostOrCohost ? (
+                    <div className="nemeeting-layout-footer-left">
+                      <Switch
+                        checked={enableRemoteViewOrder}
+                        onChange={(checked) => {
+                          handleRemoteViewOrder(checked)
+                        }}
+                      />
+                      <span className="nemeeting-layout-footer-text">
+                        {t('followGalleryLayout')}
+                      </span>
+                      <Popover content={t('followGalleryLayoutTips')}>
+                        <svg className="icon iconfont" aria-hidden="true">
+                          <use xlinkHref="#icona-45"></use>
+                        </svg>
+                      </Popover>
+                      {enableRemoteViewOrder &&
+                      meetingInfo.isScheduledMeeting !== 0 ? (
+                        <Dropdown menu={{ items }}>
+                          <svg
+                            className={classNames('icon iconfont')}
+                            aria-hidden="true"
+                          >
+                            <use xlinkHref="#icona-xialajiantou-xianxing-14px1"></use>
+                          </svg>
+                        </Dropdown>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  {enableResetGalleryLayout ? (
+                    <div
+                      className="link-button"
+                      onClick={() => onResetGalleryLayout()}
+                    >
+                      {t('resetGalleryLayout')}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
           </>
         }
       >

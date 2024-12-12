@@ -441,6 +441,22 @@ class NEPreMeetingService
 
     return this._IpcMainListener<string>(seqId)
   }
+  async getScheduledMeetingList(
+    status: NEMeetingItemStatus[]
+  ): Promise<NEResult<NEMeetingItem[]>> {
+    const functionName = 'getScheduledMeetingList'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [status],
+      seqId,
+    })
+
+    return this._IpcMainListener<NEMeetingItem[]>(seqId)
+  }
 
   addListener(listener: NEPreMeetingListener): void {
     this._listeners.push(listener)

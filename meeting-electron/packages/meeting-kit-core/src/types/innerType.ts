@@ -6,6 +6,7 @@ import {
   NERoomCaptionMessage,
   NERoomEndReason,
   NERoomCaptionTranslationLanguage,
+  NERoomSipDeviceInviteProtocolType
 } from 'neroom-types'
 import { ReactNode } from 'react'
 import NEMeetingService from '../services/NEMeeting'
@@ -29,9 +30,18 @@ import {
   VideoResolution,
 } from './type'
 import NEMeetingInviteService from '../services/NEMeetingInviteService'
-import { NEWindowMode } from '../kit/interface/service/meeting_service'
-import { NEMeetingRecurringRule } from '../kit/interface'
+import {
+  NEWindowMode,
+  NEMenuVisibility,
+} from '../kit/interface/service/meeting_service'
+import {
+  NEMeetingItemLiveBackground,
+  NEmeetingItemLivePushThirdPart,
+  NEMeetingRecurringRule,
+} from '../kit/interface'
 import { IM } from './NEMeetingKit'
+
+export { NEMenuVisibility }
 
 /**
  * 内部使用的类型不对外暴露
@@ -105,6 +115,13 @@ export interface CreateMeetingResponse {
     }
     liveConfig?: {
       liveAddress: string
+    }
+    livePrivateConfig?: {
+      title: string
+      password?: string
+      pushThirdParties: NEmeetingItemLivePushThirdPart[]
+      background?: NEMeetingItemLiveBackground
+      enableThirdParties?: boolean
     }
   }
   /** 周期性会议 */
@@ -323,6 +340,9 @@ export enum EventType {
 
   // 暂停参会者活动
   OnStopMemberActivities = 'OnStopMemberActivities',
+
+  // 表情回应
+  OnEmoticonsReceived = 'OnEmoticonsReceived',
 }
 
 export interface GetAccountInfoListResponse {
@@ -383,6 +403,7 @@ export enum UserEventType {
   OpenFeedbackWindow = 'OpenFeedbackWindow',
   OpenChatWindow = 'openChatWindow',
   StopWhiteboard = 'StopWhiteboard',
+  StopSharingComputerSound = 'stopSharingComputerSound',
 }
 
 export enum memberAction {
@@ -419,37 +440,40 @@ export enum MeetingSecurityCtrlValue {
   ANNOTATION_DISABLE = 0x1,
 
   /// 是否允许屏幕共享
-  SCREEN_SHARE_DISABLE = 0x2,
+  SCREEN_SHARE_DISABLE = 0x1 << 1,
 
   /// 是否允许开启白板
-  WHILE_BOARD_SHARE_DISABLE = 0x4,
+  WHILE_BOARD_SHARE_DISABLE = 0x1 << 2,
 
   /// 是否允许自己改名
-  EDIT_NAME_DISABLE = 0x8,
+  EDIT_NAME_DISABLE = 0x1 << 3,
 
   /// 是否是全体静音
-  AUDIO_OFF = 0x10,
+  AUDIO_OFF = 0x1 << 4,
 
   /// 是否允许自行解除静音
-  AUDIO_NOT_ALLOW_SELF_ON = 0x20,
+  AUDIO_NOT_ALLOW_SELF_ON = 0x1 << 5,
 
   /// 是否是全体关闭视频
-  VIDEO_OFF = 0x40,
+  VIDEO_OFF = 0x1 << 6,
 
   /// 是否允许自行打开视频
-  VIDEO_NOT_ALLOW_SELF_ON = 0x80,
+  VIDEO_NOT_ALLOW_SELF_ON = 0x1 << 7,
 
   /// 表情回复开关
-  EMOJI_RESP_DISABLE = 0x100,
+  EMOJI_RESP_DISABLE = 0x1 << 8,
 
   /// 本地录制开关
-  LOCAL_RECORD_DISABLE = 0x200,
+  LOCAL_RECORD_DISABLE = 0x1 << 9,
 
   /// 成员加入离开播放提示音
-  PLAY_SOUND = 0x400,
+  PLAY_SOUND = 0x1 << 10,
 
   /// 头像显示隐藏
-  AVATAR_HIDE = 0x800,
+  AVATAR_HIDE = 0x1 << 11,
+
+  /// 智能会议纪要
+  SMART_SUMMARY = 0x1 << 12,
 }
 
 export enum SecurityCtrlEnum {
@@ -517,6 +541,13 @@ export enum SecurityCtrlEnum {
    * 0: 显示头像
    */
   AVATAR_HIDE = 'AVATAR_HIDE',
+
+  /**
+   * 智能会议纪要
+   * 1: 开启
+   * 0: 关闭
+   */
+  SMART_SUMMARY = 'SMART_SUMMARY',
 }
 
 export interface MeetingPermission {
@@ -526,10 +557,12 @@ export interface MeetingPermission {
   unmuteVideoBySelfPermission: boolean
   updateNicknamePermission: boolean
   whiteboardPermission: boolean
+  emojiRespPermission: boolean
   videoAllOff: boolean
   audioAllOff: boolean
   playSound: boolean
   avatarHide: boolean
+  smartSummary: boolean
 }
 
 export enum hostAction {
@@ -838,6 +871,7 @@ export type GetMeetingConfigResponse = {
       sip: boolean
       waitingRoom: boolean
       sipInvite: boolean
+      callOutRoomSystemDevice: boolean
       appInvite: boolean
       caption: boolean
       guest: boolean
@@ -855,6 +889,7 @@ export type GetMeetingConfigResponse = {
         maxCustomLanguageLength: number
         maxLanguagesPerInterpreter: number
       }
+      summary: boolean
     }
     MEETING_BEAUTY?: {
       enable: boolean
@@ -893,6 +928,9 @@ export type GetMeetingConfigResponse = {
       enable: boolean // 预约会议时是否支持选定成员，默认true
       coHostLimit: number // 模版里配置的联席主持人人数限制，默认4 待定
       max: number // 单会议人数限制
+    }
+    MEETING_LIVE?: {
+      maxThirdPartyNum: number
     }
     inboundPhoneNumber?: string
     outboundPhoneNumber?: string
@@ -1040,6 +1078,7 @@ export interface NEMeetingCreateOptions extends NEMeetingBaseOptions {
   noWhiteBoard?: boolean
   openLive?: boolean
   liveOnlyEmployees?: boolean
+  liveChatRoomEnable?: boolean
   noCloudRecord?: boolean
   extraData?: string
   attendeeVideoOff?: boolean
@@ -1061,6 +1100,22 @@ export interface NEMeetingCreateOptions extends NEMeetingBaseOptions {
     started: boolean
   }
   cloudRecordConfig?: NECloudRecordConfig
+  liveConfig?: NEMeetingLivePrivateConfig
+}
+
+export interface PlatformInfo {
+  platformName: string
+  pushUrl: string
+  pushSecretKey?: string
+  id?: string
+}
+
+interface NEMeetingLivePrivateConfig {
+  title: string
+  background?: NEMeetingItemLiveBackground
+  pushThirdParties?: NEmeetingItemLivePushThirdPart[]
+  enableThirdParties?: boolean
+  password?: string
 }
 interface NEMeetingBaseOptions {
   meetingId?: number
@@ -1111,6 +1166,7 @@ export enum MeetingErrorCode {
   ReuseIMError = 112001,
   RtcNetworkError = 10002, // rtc所有的服务器地址都连接失败 <NETWORK_ERROR 10002>
   NoPermission = 10212, // 无权限
+  RepeatJoinRtc = 30004
 }
 
 export enum LayoutTypeEnum {
@@ -1155,16 +1211,17 @@ export enum NEMenuIDs { // 菜单项ID
   caption = 32,
   transcription = 33,
   feedback = 34,
+  emoticons = 35,
 }
 
-export enum SingleMeunIds { // 单状态按钮
+export enum SingleMenuIds { // 单状态按钮
   participants = 3,
   manageParticipants = 4,
   invite = 20,
   chat = 21,
 }
 
-export enum MutipleMenuIds { // 多状态按钮
+export enum MultipleMenuIds { // 多状态按钮
   mic = 0,
   camera = 1,
   screenShare = 2,
@@ -1178,12 +1235,6 @@ export interface MeetingDeviceInfo {
   defaultDevice?: boolean
   default?: boolean // 应用层添加字段，用于判断当前选择的根据默认设备走还是选择了和默认设备一样的设备
   originDeviceId?: string // 原始设备id
-}
-
-export enum NEMenuVisibility {
-  VISIBLE_ALWAYS = 0, // 默认总是可见
-  VISIBLE_EXCLUDE_HOST = 1, // 仅主持人可见
-  VISIBLE_TO_HOST_ONLY = 2, // 非主持人可见
 }
 
 export type NECloudRecordConfig = {
@@ -1213,6 +1264,8 @@ export interface MeetingSetting {
     openVideo: boolean
     openAudio: boolean
     showDurationTime: boolean
+    showParticipationTime: boolean
+    showTimeType: number
     showSpeakerList: boolean
     showToolbar: boolean
     enableTransparentWhiteboard: boolean
@@ -1222,6 +1275,9 @@ export interface MeetingSetting {
     chatMessageNotificationType: NEChatMessageNotificationType
     foldChatMessageBarrage: boolean
     enableShowNotYetJoinedMembers: boolean
+    automaticSavingOfMeetingChatRecords: boolean
+    leaveTheMeetingRequiresConfirmation: boolean
+    enterFullscreen: boolean
   }
   captionSetting: {
     /** 字幕字号 */
@@ -1244,6 +1300,8 @@ export interface MeetingSetting {
     galleryModeMaxCount: number
     enableFrontCameraMirror: boolean
     showMemberName: boolean
+    enableHideVideoOffAttendees?: boolean
+    enableHideMyVideo?: boolean
   }
   audioSetting: {
     recordDeviceId: string
@@ -1283,6 +1341,7 @@ export interface MeetingSetting {
   beautySetting: {
     beautyLevel: number
     virtualBackgroundPath: string
+    enableVirtualBackgroundForce?: boolean
     externalVirtualBackgroundPath?: string
     enableVirtualBackground: boolean
     virtualBackgroundList?: string[]
@@ -1315,6 +1374,9 @@ export interface BeforeMeetingConfig {
         maxCustomLanguageLength: number
         maxLanguagesPerInterpreter: number
       }
+    }
+    MEETING_LIVE?: {
+      maxThirdPartyNum: number
     }
     MEETING_SCHEDULED_MEMBER_CONFIG?: {
       enable: boolean // 预约会议时是否支持选定成员，默认true
@@ -1633,4 +1695,11 @@ export interface SaveSipCallItem {
   userUuid: string
   name: string
   phoneNumber: string
+}
+
+export interface SaveRoomSipCallItem {
+  userUuid: string
+  name: string
+  protocol: NERoomSipDeviceInviteProtocolType
+  roomIP: string
 }

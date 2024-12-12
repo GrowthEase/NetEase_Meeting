@@ -35,6 +35,8 @@ $ pnpm install:app
 ```bash
 $ pnpm start:meeting-app-web
 ```
+### H5入口
+web服务启动后，在对应url添加h5路径即为H5入口如: http://localhost:8000/h5
 
 ### 启动 Electron
 
@@ -44,7 +46,7 @@ $ pnpm start:meeting-app-web
 $ pnpm start:meeting-app-electron
 ```
 
-## 打包
+## 应用打包
 
 ### web
 
@@ -61,6 +63,42 @@ $ pnpm run build:web
     $ pnpm run build:electron
 - 产物地址
   packages/meeting-app-electron/dist
+```
+
+## 组件打包
+### web
+
+#### 打包core
+进入meeting-electron/packages/meeting-kit-core
+```bash
+$ pnpm run build
+
+```
+#### 打包web组件
+进入meeting-electron/packages/meeting-kit-web
+```bash
+$ pnpm run build
+
+完成后会在meeting-kit-web文件夹下生成dist文件即为web组件产物
+```
+### H5
+
+#### 打包core
+修改meeting-electron/packages/meeting-kit-core/package.json内容如下：
+```bash
+main字段值修改为: "dist/index.umd.js"
+typings字段值修改为: "dist/types/kit/index.d.ts"
+```
+package.json修改完成后执行打包命令：
+```bash
+$ pnpm run build:h5
+```
+#### 打包H5组件
+进入meeting-electron/packages/meeting-kit-web
+```bash
+$ pnpm run build
+
+完成后会在meeting-kit-web文件夹下生成dist文件即为H5组件产物
 ```
 
 ## 修改应用名称

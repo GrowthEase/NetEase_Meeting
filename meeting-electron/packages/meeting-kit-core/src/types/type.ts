@@ -22,7 +22,13 @@ import {
 } from './innerType'
 import NEMeetingInviteService from '../services/NEMeetingInviteService'
 import { IM } from './NEMeetingKit'
-import { NEMenuVisibility } from '../kit/interface/service/meeting_service'
+import {
+  NECheckableMenuItem,
+  NEMeetingMenuItem,
+  NEMenuVisibility,
+  NESingleStateMenuItem,
+} from '../kit/interface/service/meeting_service'
+import { NEChatMessageNotificationType } from '../kit/interface'
 
 export interface NEMember {
   /**
@@ -140,6 +146,7 @@ export enum NEClientType {
   SIP,
   MAC,
   MINIAPP,
+  H323,
 }
 export enum NEMeetingRole {
   /** 参会者 */
@@ -217,6 +224,12 @@ export interface NEMeetingInfo extends NEMeetingSDKInfo {
    * 更多按钮配置
    */
   moreBarList: MoreBarList
+  /**
+   * 成员列名会控菜单
+   */
+  memberActionMenuItems: Array<
+    NEMeetingMenuItem | NESingleStateMenuItem | NECheckableMenuItem
+  >
   /**
    * 成员自定义标签
    */
@@ -384,6 +397,18 @@ export interface NEMeetingInfo extends NEMeetingSDKInfo {
 
   /** 隐藏头像*/
   avatarHide?: boolean
+
+  /** 表情回应 */
+  emoticons?: Record<
+    string,
+    {
+      emojiKey: string
+      time: number
+    }
+  >
+
+  /** 结束会议操作：0:未打开 1:右下角 2:居中 3:关闭按钮 */
+  endMeetingAction?: number
 }
 
 export interface NEJoinMeetingParams {
@@ -496,10 +521,14 @@ export interface NEMeetingSDKInfo {
   updateNicknamePermission?: boolean
   whiteboardPermission?: boolean
   localRecordPermission?: boolean
+  emojiRespPermission?: boolean
+  smartSummary?: boolean
   audioAllOff?: boolean // 原先audioOff已废弃
   videoAllOff?: boolean
   /** 是否开启转写 */
   isTranscriptionEnabled?: boolean
+  // 缓存当前加入会议的配置，访客断网重新入会需要
+  joinOption?: JoinOptions
 }
 
 export interface InterpretationRes {
@@ -934,6 +963,12 @@ export interface JoinOptions {
    */
   moreBarList?: MoreBarList
   /**
+   * 成员列名会控菜单
+   */
+  memberActionMenuItems?: Array<
+    NEMeetingMenuItem | NESingleStateMenuItem | NECheckableMenuItem
+  >
+  /**
    * 是否能够通过长按空格解除静音
    */
   enableUnmuteBySpace?: boolean
@@ -954,6 +989,10 @@ export interface JoinOptions {
    * 是否显示会议持续时间，默认为false 不显示
    */
   showDurationTime?: boolean
+
+  enableLeaveTheMeetingRequiresConfirmation?: boolean
+
+  showParticipationTime?: boolean
 
   chatroomConfig?: {
     /**
@@ -1026,6 +1065,9 @@ export interface JoinOptions {
   joinTimeout?: number
 
   enableDirectMemberMediaControlByHost?: boolean
+
+  chatMessageNotificationType?: NEChatMessageNotificationType
+  showNameInVideo?: boolean
 }
 
 export enum NEMeetingIdDisplayOption {
@@ -1725,6 +1767,7 @@ export enum NEMeetingInviteStatus {
   removed,
   canceled,
   waitingJoin,
+  busy,
 }
 
 export interface NEMeetingScheduledMember {
@@ -1915,3 +1958,16 @@ export interface NEResult<T = null> {
 }
 
 export type NEProps = unknown
+
+export interface GuestMeetingInfo {
+  /** 跨应用入会token */
+  meetingUserToken: string
+  /** 跨应用入会uuid */
+  meetingUserUuid: string
+  /** 跨应用入会appKey */
+  meetingAppKey: string
+  /** 跨应用鉴权类型 */
+  meetingAuthType: string
+  /** 访客跨应用入会类型 0 不允许访客入会 1 实名访客入会 2 匿名访客入会*/
+  guestJoinType: string
+}

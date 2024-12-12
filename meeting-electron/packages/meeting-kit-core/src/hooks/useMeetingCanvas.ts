@@ -48,8 +48,17 @@ export default function useMeetingCanvas(
     Record<string, null | ReturnType<typeof setTimeout>>
   >({})
 
-  const hideNoVideoMembers =
-    meetingInfo.localMember.properties?.hideNoVideoMembers?.value === '1'
+  const hideNoVideoMembers = useMemo(() => {
+    return meetingInfo.localMember.properties?.hideNoVideoMembers?.value === '1'
+  }, [meetingInfo.localMember.properties?.hideNoVideoMembers?.value])
+
+  const enableHideMyVideo = useMemo(() => {
+    return !!meetingInfo.setting.videoSetting.enableHideMyVideo
+  }, [meetingInfo.setting.videoSetting?.enableHideMyVideo])
+
+  const enableHideVideoOffAttendees = useMemo(() => {
+    return !!meetingInfo.setting.videoSetting.enableHideVideoOffAttendees
+  }, [meetingInfo.setting.videoSetting?.enableHideVideoOffAttendees])
 
   const inInvitingMemberList = useMemo(() => {
     return meetingInfo.setting.normalSetting.enableShowNotYetJoinedMembers
@@ -61,24 +70,91 @@ export default function useMeetingCanvas(
     meetingInInvitingMemberList,
     meetingInfo.setting.normalSetting.enableShowNotYetJoinedMembers,
   ])
+  const enableVoicePriorityDisplay = useMemo(() => {
+    return (
+      meetingInfo.setting?.normalSetting?.enableVoicePriorityDisplay !== false
+    )
+  }, [meetingInfo.setting?.normalSetting?.enableVoicePriorityDisplay])
 
   const originMemberList = useMemo(() => {
-    return inInvitingMemberList
-      ? meetingMemberList.concat(inInvitingMemberList)
-      : meetingMemberList
-  }, [meetingMemberList, inInvitingMemberList])
+    const _originMemberList = [...meetingMemberList]
 
-  const memberList = useMemo(() => {
-    if (hideNoVideoMembers) {
-      const list = originMemberList.filter(
-        (item) => item.isVideoOn || item.isSharingScreen
-      )
+    let list: NEMember[] = _originMemberList
 
-      return list.length > 0 ? list : [meetingInfo.localMember]
+    if (isAudioMode) {
+      if (enableHideVideoOffAttendees) {
+        list = [meetingInfo.localMember]
+      } else {
+        // 隐藏本端
+        if (enableHideMyVideo && _originMemberList.length > 1) {
+          const localMember = meetingInfo.localMember
+
+          if (
+            meetingInfo.focusUuid !== localMember.uuid &&
+            meetingInfo.pinVideoUuid !== localMember.uuid
+          ) {
+            const index = _originMemberList.findIndex((item) => {
+              return item.uuid === localMember.uuid
+            })
+
+            if (index > -1) {
+              _originMemberList.splice(index, 1)
+            }
+          }
+        }
+
+        list = _originMemberList
+      }
+    } else {
+      if (
+        enableHideVideoOffAttendees &&
+        (_originMemberList.length > 1 || meetingInfo.screenUuid)
+      ) {
+        list = _originMemberList.filter((member) => {
+          return (
+            member.isVideoOn ||
+            meetingInfo.focusUuid === member.uuid ||
+            meetingInfo.pinVideoUuid === member.uuid ||
+            meetingInfo.screenUuid === member.uuid || 
+            (meetingInfo.lastActiveSpeakerUuid === member.uuid &&
+              member.isAudioOn &&
+              enableVoicePriorityDisplay)
+          )
+        })
+      }
+
+      // 如果开启隐藏本端视图 则去除本端
+      if (enableHideMyVideo) {
+        const localMember = meetingInfo.localMember
+
+        if (
+          meetingInfo.focusUuid !== localMember.uuid &&
+          meetingInfo.pinVideoUuid !== localMember.uuid
+        ) {
+          const index = list.findIndex((item) => {
+            return item.uuid === localMember.uuid
+          })
+
+          if (index > -1) {
+            list.splice(index, 1)
+          }
+        }
+      }
     }
 
-    return originMemberList
-  }, [hideNoVideoMembers, originMemberList, meetingInfo.localMember])
+    return list
+  }, [
+    enableHideMyVideo,
+    enableHideVideoOffAttendees,
+    meetingMemberList,
+    meetingInfo.pinVideoUuid,
+    meetingInfo.focusUuid,
+    meetingInfo.localMember,
+    inInvitingMemberList?.length,
+    meetingInfo.lastActiveSpeakerUuid,
+    enableVoicePriorityDisplay,
+    isAudioMode,
+  ])
 
   // 是否能够提前订阅
   const canPreSubscribe = useMemo(() => {
@@ -95,24 +171,26 @@ export default function useMeetingCanvas(
     meetingInfo.focusUuid,
     meetingInfo.setting?.normalSetting?.enableVoicePriorityDisplay,
   ])
-  const enableVoicePriorityDisplay = useMemo(() => {
-    return (
-      meetingInfo.setting?.normalSetting?.enableVoicePriorityDisplay !== false
-    )
-  }, [meetingInfo.setting?.normalSetting?.enableVoicePriorityDisplay])
 
+  const memberList = useMemo(() => {
+    return inInvitingMemberList
+      ? originMemberList.concat(inInvitingMemberList)
+      : originMemberList
+  }, [originMemberList, inInvitingMemberList])
   // 对成员列表进行排序
   const groupMembers = useMemo(() => {
+    const _meetingMemberList = [...originMemberList]
+
     if (isAudioMode) {
       // 如果是音频模式则所有成员都在一页不用分页;
       const list = inInvitingMemberList
-        ? meetingMemberList.concat(inInvitingMemberList)
-        : meetingMemberList
+        ? _meetingMemberList.concat(inInvitingMemberList)
+        : _meetingMemberList
 
       return [list]
     } else {
       return groupMembersService({
-        memberList: meetingMemberList,
+        memberList: _meetingMemberList,
         inInvitingMemberList: inInvitingMemberList,
         groupNum: isSpeaker ? groupNum : meetingInfo.galleryModeMaxCount ?? 16,
         screenUuid: meetingInfo.screenUuid,
@@ -128,10 +206,11 @@ export default function useMeetingCanvas(
         pinVideoUuid: meetingInfo.pinVideoUuid,
         viewOrder: meetingInfo.remoteViewOrder || meetingInfo.localViewOrder,
         hostUuid: meetingInfo.hostUuid,
+        enableHideVideoOffAttendees,
       })
     }
   }, [
-    meetingMemberList,
+    originMemberList,
     inInvitingMemberList,
     meetingInfo.focusUuid,
     meetingInfo.screenUuid,
@@ -150,6 +229,7 @@ export default function useMeetingCanvas(
     groupType,
     meetingInfo.localMember.uuid,
     enableVoicePriorityDisplay,
+    enableHideVideoOffAttendees,
   ])
 
   function handleViewDoubleClick(member: NEMember) {
@@ -247,7 +327,7 @@ export default function useMeetingCanvas(
       })
       // 需要恢复订阅
       currentVideoOnMemberUuids.forEach((uuid) => {
-        const streamType =
+        let streamType =
           mainUuid == uuid
             ? 0
             : canPreSubscribe
@@ -256,11 +336,18 @@ export default function useMeetingCanvas(
               : 1
             : 1
 
+        if (
+          meetingInfo.layout === LayoutTypeEnum.Gallery &&
+          currentMemberList.length <= 3
+        ) {
+          streamType = 0
+        }
+
         if (neMeeting?.subscribeMembersMap[uuid] === streamType) {
           return
         }
 
-        neMeeting?.subscribeRemoteVideoStream(uuid, streamType)
+        neMeeting?.subscribeRemoteVideoStream(uuid, streamType as 0 | 1)
       })
     }
   }

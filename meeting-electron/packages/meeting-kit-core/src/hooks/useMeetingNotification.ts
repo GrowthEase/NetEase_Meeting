@@ -85,7 +85,9 @@ function useMeetingNotificationInMeeting(): void {
           }
 
           message.data = dataObj
-          if (!meetingInfo.meetingNum) {
+          const isPluginMessage = !!dataObj.data.pluginId
+
+          if (!meetingInfo.meetingNum && !isPluginMessage) {
             return
           }
 

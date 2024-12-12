@@ -91,7 +91,6 @@ const AudioSetting: React.FC<AudioSettingProps> = ({
   onEnableMusicModeChange,
   onEnableAudioStereoChange,
   onEnableAudioEchoCancellationChange,
-  preMeetingSetting,
   openAudio,
   previewController,
 }) => {
@@ -531,9 +530,6 @@ const AudioSetting: React.FC<AudioSettingProps> = ({
           <div className="video-setting-content">
             {/* 若会前未选择，则会中不可用 */}
             <Checkbox
-              disabled={
-                inMeeting && !preMeetingSetting?.audioSetting?.enableAudioAI
-              }
               className=""
               checked={setting.enableAudioAI}
               onChange={onEnableAudioAIChange}
@@ -542,7 +538,6 @@ const AudioSetting: React.FC<AudioSettingProps> = ({
             </Checkbox>
             <div className="voice-quality-content">
               <Checkbox
-                disabled={inMeeting}
                 className="checkbox-space"
                 checked={setting.enableMusicMode}
                 onChange={onEnableMusicModeChange}
@@ -553,10 +548,6 @@ const AudioSetting: React.FC<AudioSettingProps> = ({
                 {setting.enableMusicMode ? (
                   <>
                     <Checkbox
-                      disabled={
-                        inMeeting &&
-                        !preMeetingSetting?.audioSetting?.enableMusicMode
-                      }
                       className="check-space"
                       checked={setting.enableAudioEchoCancellation}
                       onChange={onEnableAudioEchoCancellationChange}
@@ -564,7 +555,6 @@ const AudioSetting: React.FC<AudioSettingProps> = ({
                       {t('echoCancellation')}
                     </Checkbox>
                     <Checkbox
-                      disabled={inMeeting}
                       className="check-space"
                       checked={setting.enableAudioStereo}
                       onChange={onEnableAudioStereoChange}

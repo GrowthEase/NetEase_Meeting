@@ -1,0 +1,61 @@
+.nemeeting-app-guest-join {
+  .meeting-guest-join-wrapper {
+    background-color: #fff;
+    border-radius: 8px;
+    margin: 0 16px;
+  }
+  .meeting-guest-join-num {
+    margin-bottom: 16px;
+  }
+  .join-meeting-modal-input {
+    border: none;
+    box-shadow: none !important;
+    height: 48px;
+    input::placeholder {
+      font-weight: normal;
+    }
+  }
+  .guest-footer-agreement {
+    margin: 40px 16px 16px 16px;
+    justify-content: flex-start;
+  }
+  .nemeeting-input-prefix {
+    min-width: 93px !important;
+    .meeting-id-prefix {
+      margin-right: 26px;
+    }
+  }
+  .guest-join-meeting-line-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 48px;
+    padding: 0 16px;
+    .nemeeting-switch.nemeeting-switch-checked .nemeeting-switch-handle {
+      inset-inline-start: calc(100% - 22px);
+    }
+    .nemeeting-switch {
+      display: inline-block;
+      width: 40px;
+      height: 24px;
+      min-width: 40px;
+      .nemeeting-switch-inner {
+        display: inline-block;
+        width: 40px;
+        height: 24px;
+      }
+      .nemeeting-switch-handle {
+        &::before {
+          width: 20px;
+          height: 20px;
+        }
+      }
+    }
+  }
+  .guest-join-meeting-footer-button {
+    .nemeeting-btn-primary:disabled {
+      background: #87bbff;
+      color: #fff;
+    }
+  }
+}

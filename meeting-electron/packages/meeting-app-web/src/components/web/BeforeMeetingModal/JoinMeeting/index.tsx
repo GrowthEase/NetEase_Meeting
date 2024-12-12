@@ -8,7 +8,6 @@ import { getDefaultDeviceId, getMeetingDisplayId } from '@meeting-module/utils';
 import Toast from '@meeting-module/components/common/toast';
 import { SettingTabType } from '@meeting-module/components/web/Setting/Setting';
 import './index.less';
-import { worker } from '@meeting-module/components/web/Meeting/Meeting';
 import { NESettingsService } from 'nemeeting-web-sdk';
 
 type SummitValue = {
@@ -44,7 +43,6 @@ const JoinMeeting: React.FC<JoinMeetingProps> = ({
   submitLoading,
   setting,
   onSummit,
-  onSettingChange,
   onClearRecentMeetingList,
   ...restProps
 }) => {
@@ -63,7 +61,7 @@ const JoinMeeting: React.FC<JoinMeetingProps> = ({
   };
 
   const videoPreviewRef = useRef<HTMLDivElement>(null);
-  const [cameraId, setCameraId] = useState<string>('');
+  const [, setCameraId] = useState<string>('');
   const [openAudio, setOpenAudio] = useState<boolean>(false);
   const [openVideo, setOpenVideo] = useState<boolean>(false);
   const [openRecentMeetingList, setOpenRecentMeetingList] = useState(false);
@@ -75,7 +73,6 @@ const JoinMeeting: React.FC<JoinMeetingProps> = ({
   const [previewController, setPreviewController] = useState<
     NEPreviewController | undefined | null
   >(initPreviewController);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const mirror = setting?.videoSetting.enableVideoMirroring || false;
 
@@ -83,20 +80,12 @@ const JoinMeeting: React.FC<JoinMeetingProps> = ({
 
   const onOpenMicStatusChange = (checked: boolean) => {
     setOpenAudio(checked);
-    onHandleSettingChange({
-      openAudio: checked,
-      openVideo,
-      cameraId,
-    });
+    settingsService?.enableTurnOnMyAudioWhenJoinMeeting(checked);
   };
 
   const onOpenCameraStatusChange = (checked: boolean) => {
     setOpenVideo(checked);
-    onHandleSettingChange({
-      openAudio,
-      openVideo: checked,
-      cameraId,
-    });
+    settingsService?.enableTurnOnMyVideoWhenJoinMeeting(checked);
   };
 
   const items: MenuProps['items'] = [
@@ -133,31 +122,6 @@ const JoinMeeting: React.FC<JoinMeetingProps> = ({
     };
 
     onSummit?.(data);
-  }
-
-  function onHandleSettingChange({
-    openAudio,
-    openVideo,
-    cameraId,
-  }: {
-    openAudio: boolean;
-    openVideo: boolean;
-    cameraId: string;
-  }) {
-    setting &&
-      onSettingChange &&
-      onSettingChange({
-        ...setting,
-        normalSetting: {
-          ...setting.normalSetting,
-          openAudio,
-          openVideo,
-        },
-        videoSetting: {
-          ...setting.videoSetting,
-          deviceId: cameraId,
-        },
-      });
   }
 
   useEffect(() => {
@@ -254,60 +218,6 @@ const JoinMeeting: React.FC<JoinMeetingProps> = ({
     setting?.normalSetting.openVideo,
     setting?.normalSetting.openAudio,
   ]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const view = videoPreviewRef.current;
-    const uuid = 'mySelf';
-
-    if (canvas && view && openVideo) {
-      const offscreen = canvas.transferControlToOffscreen();
-
-      worker.postMessage(
-        {
-          canvas: offscreen,
-          uuid,
-        },
-        [offscreen],
-      );
-
-      const handleMessage = (e: MessageEvent) => {
-        const { event, payload } = e.data;
-
-        if (event === 'onVideoFrameData') {
-          const { data, width, height } = payload;
-
-          const viewWidth = view.clientWidth;
-          const viewHeight = view.clientHeight;
-
-          if (viewWidth / (width / height) > viewHeight) {
-            canvas.style.height = `${viewHeight}px`;
-            canvas.style.width = `${viewHeight * (width / height)}px`;
-          } else {
-            canvas.style.width = `${viewWidth}px`;
-            canvas.style.height = `${viewWidth / (width / height)}px`;
-          }
-
-          worker.postMessage(
-            {
-              frame: {
-                width,
-                height,
-                data,
-              },
-              uuid,
-            },
-            [data.bytes.buffer],
-          );
-        }
-      };
-
-      window.addEventListener('message', handleMessage);
-      return () => {
-        window.removeEventListener('message', handleMessage);
-      };
-    }
-  }, [openVideo]);
 
   useEffect(() => {
     if (restProps.open) {

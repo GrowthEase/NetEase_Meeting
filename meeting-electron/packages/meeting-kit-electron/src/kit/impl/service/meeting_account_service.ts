@@ -40,6 +40,25 @@ class NEMeetingAccountService
     return this._IpcMainListener<NEAccountInfo>(seqId)
   }
 
+  async loginByDynamicToken(
+    userUuid: string,
+    token: string,
+    authType: string
+  ): Promise<NEResult<void>> {
+    const functionName = 'loginByDynamicToken'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [userUuid, token, authType],
+      seqId,
+    })
+
+    return this._IpcMainListener<void>(seqId)
+  }
+
   async loginByToken(
     userUuid: string,
     token: string

@@ -13,6 +13,7 @@ import {
   getLocalStorageSetting,
   setLocalStorageSetting,
 } from '../../../kit'
+import { EmoticonsBtnPopover } from '../../web/ControlBar/Buttons/useEmoticonsButton'
 
 type BulletScreenMessageProps = {
   className?: string
@@ -138,6 +139,19 @@ const BulletScreenMessage: React.FC<BulletScreenMessageProps> = (props) => {
               window.ipcRenderer?.send(IPCEvent.IgnoreMouseEvents, true)
           }}
         >
+          <div className="control-bar-button-list">
+            <EmoticonsBtnPopover
+              placement="top"
+              align={{ offset: [125, -15] }}
+              showHandsUpPopoverContent={false}
+            >
+              <svg className="icon iconfont huiying-icon" aria-hidden="true">
+                <use xlinkHref="#iconbiaoqinghuiying"></use>
+              </svg>
+            </EmoticonsBtnPopover>
+          </div>
+
+          <div className="nemeeting-bullet-screen-message-input-divider" />
           {inputFocus ? (
             <PrivateChatMemberPopover
               onOpenChange={(open) => {
@@ -145,6 +159,7 @@ const BulletScreenMessage: React.FC<BulletScreenMessageProps> = (props) => {
                   inputRef.current?.focus()
                 }
               }}
+              align={{ offset: [12, -10] }}
               renderPrivateChatMember={(
                 privateChatMemberId,
                 privateChatMember

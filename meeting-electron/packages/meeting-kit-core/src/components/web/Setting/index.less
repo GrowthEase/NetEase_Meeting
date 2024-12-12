@@ -1,4 +1,8 @@
 .nemeeting-setting {
+  .setting-wrap.normal-setting {
+    height: auto;
+    min-height: 100%;
+  }
   .normal-setting {
     .normal-setting-item {
       display: flex;
@@ -116,9 +120,9 @@
     color: #fff;
   }
   .nemeeting-menu-title-content {
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
+    // text-overflow: ellipsis;
+    // overflow: hidden;
+    line-height: 24px;
     width: 100px;
   }
   .nemeeting-menu-light .nemeeting-menu-item-selected {
@@ -385,9 +389,6 @@
     white-space: nowrap;
     color: #333333;
   }
-  .toolbar-tip {
-    color: #333333;
-  }
 }
 .nemeeting-select-dropdown
   .nemeeting-select-item-option-selected:not(
@@ -546,10 +547,13 @@
     width: 180px;
     .nemeeting-menu-item {
       color: #333;
-      height: 40px;
       margin-top: 16px;
+      height: auto;
+      min-height: 40px;
       border-radius: 8px;
       transition: none;
+      text-overflow: unset;
+      white-space: unset;
       padding-inline-start: 8px;
       padding-inline-end: 0px;
     }
@@ -578,7 +582,8 @@
     margin-bottom: 5px;
     overflow-x: hidden;
     margin-right: 2px;
-    height: 550px;
+    padding-bottom: 20px;
+    // height: 550px;
     flex: 1;
     overflow-y: auto;
     .nemeeting-btn-primary {
@@ -594,7 +599,7 @@
     padding: 0 12px;
     color: #666;
     .icon-menu {
-      font-size: 22px;
+      font-size: 20px;
       color: #c5c8cd;
     }
   }
@@ -952,7 +957,12 @@
   }
 }
 
-.screen-share-setting-title{
+.screen-share-setting-title {
   height: 16px;
   line-height: 16px;
+}
+
+.toolbar-tip {
+  max-width: 560px;
+  color: #333333;
 }

@@ -177,7 +177,21 @@ export default class NEMeetingMessageChannelService
       throw FailureBody(undefined, error.message)
     }
 
-    return this._neMeeting.getSessionMessagesHistory(param).then((res) => {
+    const options: {
+      sessionId: string
+      fromTime?: number
+      toTime?: number
+      limit?: number
+      order?: NEMessageSearchOrder
+    } = {
+      ...param,
+    }
+
+    if (param.searchOrder !== undefined) {
+      options.order = param.searchOrder
+    }
+
+    return this._neMeeting.getSessionMessagesHistory(options).then((res) => {
       const result = res.map((item) => {
         return this._customSessionMessageToMeetingSessionMessage(item)
       })

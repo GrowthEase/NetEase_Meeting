@@ -1,4 +1,0 @@
-[submodule "roomkit/src/third_party/nebase"]
-	path = roomkit/src/third_party/nebase
-	url = ssh://git@g.hz.netease.com:22222/shasta/ne_base.git
-	ignore = dirty

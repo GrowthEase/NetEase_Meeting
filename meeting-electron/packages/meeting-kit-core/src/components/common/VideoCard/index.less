@@ -237,6 +237,13 @@
 
 .nemeeting-audio-card {
   box-sizing: border-box;
+  position: relative;
+  .nemeeting-audio-card-emoticons {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    z-index: 99;
+  }
   .nemeeting-audio-card-name-wrap {
     display: flex;
     justify-content: center;
@@ -355,4 +362,20 @@
   box-sizing: border-box;
   padding: 10px;
   justify-content: center;
+}
+
+.nemeeting-main-video-card {
+  .nemeeting-video-card-emoticons-container {
+    position: absolute;
+    top: 13px;
+    left: 13px;
+  }
+}
+
+.nemeeting-video-card-emoticons-container {
+  z-index: 99;
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  display: flex;
 }

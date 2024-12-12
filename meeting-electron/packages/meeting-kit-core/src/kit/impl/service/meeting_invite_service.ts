@@ -9,6 +9,9 @@ import {
 import { NEJoinMeetingParams, NEMeetingInviteStatus } from '../../../types/type'
 import NEMeetingInviteServiceInterface, {
   NEMeetingInviteStatusListener,
+  NERoomSIPCallInfo,
+  NERoomSipDeviceInviteProtocolType,
+  NERoomSystemDevice,
 } from '../../interface/service/meeting_invite_service'
 import NEMeetingService from '../../../services/NEMeeting'
 import EventEmitter from 'eventemitter3'
@@ -18,6 +21,7 @@ import {
   NEResult,
   SuccessBody,
   FailureBodySync,
+  NERoomSipDeviceInviteProtocolType as NERoomKitSipDeviceInviteProtocolType,
 } from 'neroom-types'
 import {
   NEJoinMeetingOptions,
@@ -118,6 +122,30 @@ export default class NEMeetingInviteService
       throw FailureBodySync(undefined, 'roomUuid not found')
     }
   }
+
+  async callOutRoomSystem(
+    device: NERoomSystemDevice
+  ): Promise<NEResult<NERoomSIPCallInfo>> {
+    if (this._neMeeting.sipController) {
+      const protocol =
+        device.protocol === NERoomSipDeviceInviteProtocolType.IP
+          ? NERoomKitSipDeviceInviteProtocolType.SIP
+          : NERoomKitSipDeviceInviteProtocolType.H323
+      const deviceInfo = {
+        ...device,
+        protocol,
+      }
+
+      return this._neMeeting.sipController
+        ?.callOutRoomSystem(deviceInfo)
+        .then((res) => {
+          return SuccessBody(res as NERoomSIPCallInfo)
+        })
+    } else {
+      return FailureBody(undefined, 'sipController not found')
+    }
+  }
+
   addMeetingInviteStatusListener(
     listener: NEMeetingInviteStatusListener
   ): void {

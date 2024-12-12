@@ -119,7 +119,7 @@ function closeWindow(name: windows): void {
 
 function closeAllWindows(excludes?: string[]): void {
   Object.keys(windowsProxy).forEach((key) => {
-    if (excludes && excludes.includes(key)) {
+    if ((excludes && excludes.includes(key)) || windowsClosed[key]) {
       return
     }
 

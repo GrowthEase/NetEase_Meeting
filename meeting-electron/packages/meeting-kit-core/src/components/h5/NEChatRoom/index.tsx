@@ -200,7 +200,11 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
       ...videoOn,
       ...audioOn,
       ...other,
-    ].filter((item) => item.clientType !== NEClientType.SIP)
+    ].filter(
+      (item) =>
+        item.clientType !== NEClientType.SIP &&
+        item.clientType !== NEClientType.H323
+    )
 
     return res
   }, [

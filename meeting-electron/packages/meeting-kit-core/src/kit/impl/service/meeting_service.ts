@@ -38,6 +38,7 @@ import MeetingService from '../../../services/NEMeeting'
 import { LOCAL_STORAGE_KEY } from '../../../config'
 import { getLocalUserInfo } from '../../../utils'
 import { NEMeetingAttendeeOffType } from '../../interface/service/pre_meeting_service'
+import { NEChatMessageNotificationType } from '../../interface'
 
 const MODULE_NAME = 'NEMeetingService'
 const LISTENER_CHANNEL = `NEMeetingKitListener::${MODULE_NAME}`
@@ -187,7 +188,7 @@ export default class NEMeetingService implements NEMeetingServiceInterface {
         meetingNum: z.string(),
       })
 
-      const optsSchema = this._getStartJoinOptsSchema()
+      const optsSchema = this._getStartJoinOptsSchema().optional()
 
       paramSchema.parse(param, {
         path: ['param'],
@@ -225,7 +226,7 @@ export default class NEMeetingService implements NEMeetingServiceInterface {
         meetingNum: z.string(),
       })
 
-      const optsSchema = this._getStartJoinOptsSchema()
+      const optsSchema = this._getStartJoinOptsSchema().optional()
 
       paramSchema.parse(param, {
         path: ['param'],
@@ -565,6 +566,10 @@ export default class NEMeetingService implements NEMeetingServiceInterface {
       showMeetingTime: z.boolean().optional(),
       enableSpeakerSpotlight: z.boolean().optional(),
       enableShowNotYetJoinedMembers: z.boolean().optional(),
+      chatMessageNotificationType: z
+        .nativeEnum(NEChatMessageNotificationType)
+        .optional(),
+      showNameInVideo: z.boolean().optional(),
       noInvite: z.boolean().optional(),
       noSip: z.boolean().optional(),
       noChat: z.boolean().optional(),

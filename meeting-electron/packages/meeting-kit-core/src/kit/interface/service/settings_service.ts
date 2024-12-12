@@ -28,11 +28,51 @@ export enum NEMeetingASRTranslationLanguage {
   japanese = 3,
 }
 
+/// 聊天消息提醒类型
+export enum NEChatMessageNotificationType {
+  /// 弹幕
+  barrage = 0,
+
+  /// 气泡
+  bubble = 1,
+
+  /// 不提醒
+  noRemind = 2,
+}
+
 interface NESettingsService {
   /**
    * 打开设置窗口
    */
   openSettingsWindow(type?: string): Promise<NEResult<void>>
+  /**
+   * 设置聊天新消息提醒类型
+   *
+   * @param type 聊天新消息提醒类型
+   */
+  setChatMessageNotificationType: (
+    type: NEChatMessageNotificationType
+  ) => Promise<NEResult<void>>
+  /**
+   * 查询聊天新消息提醒类型
+   *
+   * @param type 聊天新消息提醒类型
+   */
+  getChatMessageNotificationType: () => Promise<
+    NEResult<NEChatMessageNotificationType>
+  >
+  /**
+   * 设置是否显示参会时长
+   *
+   * @param enable true-开启，false-关闭
+   */
+  enableShowMyMeetingParticipationTime: (
+    enable: boolean
+  ) => Promise<NEResult<void>>
+  /**
+   * 查询显示参会时长功能开启状态
+   */
+  isShowMyMeetingParticipationTimeEnabled: () => Promise<NEResult<boolean>>
   /**
    * 设置是否显示会议时长
    *
@@ -116,10 +156,13 @@ interface NESettingsService {
    * 是否支持访客入会
    */
   isGuestJoinSupported: () => Promise<NEResult<boolean>>
+  /**
+   * 查询应用是否支持聊天室服务
+   */
+  isMeetingChatSupported: () => Promise<NEResult<boolean>>
 
   /** 查询应用session会话Id */
   getAppNotifySessionId: () => Promise<NEResult<string>>
-
   /**
    * 查询应用是否支持等候室
    */
@@ -301,6 +344,52 @@ interface NESettingsService {
    * 查询会中转写同时显示双语是否开启
    */
   isTranscriptionBilingualEnabled(): Promise<NEResult<boolean>>
+  /**
+   * 设置是否在视频中显示用户名
+   * @param enable 是否显示
+   */
+  enableShowNameInVideo(enable: boolean): Promise<NEResult<void>>
+  /**
+   * 查询是否在视频中显示用户名
+   */
+  isShowNameInVideoEnabled(): Promise<NEResult<boolean>>
+  /**
+   * 设置开启/关闭隐藏非视频参会者
+   * @param enable 是否显示
+   */
+  enableHideVideoOffAttendees(enable: boolean): Promise<NEResult<void>>
+  /**
+   * 查询是否开启隐藏非视频参会者
+   */
+  isHideVideoOffAttendeesEnabled(): Promise<NEResult<boolean>>
+  /**
+   * 设置开启/关闭隐藏本人视图
+   * @param enable 是否显示
+   */
+  enableHideMyVideo(enable: boolean): Promise<NEResult<void>>
+  /**
+   * 查询是否开启隐藏本人视图
+   */
+  isHideMyVideoEnabled(): Promise<NEResult<boolean>>
+  /**
+   * 设置是否离开会议需要弹窗确认
+   * @param enable 是否显示
+   */
+  enableLeaveTheMeetingRequiresConfirmation(
+    enable: boolean
+  ): Promise<NEResult<void>>
+  /**
+   * 查询是否离开会议需要弹窗确认
+   */
+  isLeaveTheMeetingRequiresConfirmationEnabled(): Promise<NEResult<boolean>>
+  /**
+   * 查询应用是否支持会议设备邀请
+   */
+  isCallOutRoomSystemDeviceSupported(): Promise<NEResult<boolean>>
+  /**
+   * 获取第三方推流最大设置个数
+   */
+  getLiveMaxThirdPartyCount(): Promise<NEResult<number>>
 }
 
 export type NEInterpretationConfig = {
