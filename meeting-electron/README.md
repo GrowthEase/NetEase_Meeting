@@ -100,6 +100,13 @@ $ pnpm run build
 
 完成后会在meeting-kit-web文件夹下生成dist文件即为H5组件产物
 ```
+#### 打包Electron组件
+进入meeting-electron/packages/meeting-kit-electron
+```bash
+$ pnpm run build
+
+完成后会在meeting-kit-electron文件夹下生成dist文件即为Electron组件产物
+```
 
 ## 修改应用名称
 ### Electron
