@@ -1,8 +1,7 @@
-# 网易会议组件概述
-网易会议组件目前已经开源，源代码已经上传至 Github。该项目由网易云信团队自研，结合网易云信系统相关通讯功能，实时音视频、即时消息、白板、直播等功能构建一套会议系统，可以让开发者很容易具备高效稳定会议系统能力, 一周就能开发出一个属于自己的ZOOM。
+# 网易会议概述
+网易会议客户端目前已经开源，源代码已经上传至 Github。该项目由网易云信团队自研，结合网易云信系统相关通讯功能，实时音视频、即时消息、白板、直播等功能构建一套会议系统，可以让开发者很容易具备高效稳定会议系统能力, 一周就能开发出一个属于自己的ZOOM。
 
-
-网易会议NEMeeting SDK(以下简称SDK)提供了一套简单易用的接口，允许开发者通过调用 SDK提供的API，快速地集成音视频会议功能至现有应用中。为企业打造专属的会议能力，卓越的音视频性能，丰富的会议协作能力，坚实的会议安全保障，提升协作效率，满足大中小会议全场景需求。提供全套开放、简单、安全的视频会议服务。您可以使用进行远程音视频会议、在线协作、会管会控、会议录制、指定邀请、布局管理等。
+> 更多信息请查看[网易视频会议解决方案](https://doc.yunxin.163.com/meeting/concept/TM0MjIwODk?platform=client)，或通过[网易会议官网](https://meeting.163.com/)下载体验。
 
 
 ## 功能特性
@@ -47,10 +46,10 @@
 </table>
 
 
-# 网易会议组件架构
-整套会议系统客户端支持 Android、iOS、Web、Electron、Windows、macOS等平台, 如何确保用户快速接入以及各端一致性问题, 我们对会议客户端进行了一定的拆分设计。
+# 网易会议架构
+整套会议系统客户端支持 Android、iOS、Web、H5、Electron、Windows、macOS等平台, 如何确保用户快速接入以及各端一致性问题, 我们对会议客户端进行了一定的拆分设计。
 
-## 网易会议组件架构：
+## 网易会议架构：
 
 ![meeting framework](./images/网易会议组件架构.png)
 
@@ -58,17 +57,17 @@
 
 云信基础能力 SDK 层。包含即时通信（IM）、实时音视频（RTC）、互动白板、聊天室等。
 
-### [NERoom](https://doc.yunxin.163.com/neroom/docs/home-page?platform=android)
+### [NERoom](https://doc.yunxin.163.com/neroom/concept?platform=client)
 
 NERoom 是一个无 UI 的房间服务组件，不包含业务逻辑，只提供房间基础能力封装。通过配置房间的模板，可以定义房间内的角色、资源、成员的权限等，快速开发出房间维度的上层业务组件。如果开发者不复用NEMeetingKit的默认UI实现，可以基于NERoom自己搭建上层应用。
 
-### [MeetingKit](https://doc.yunxin.163.com/meetingkit/docs/home-page?platform=android)
+### [MeetingKit](https://doc.yunxin.163.com/meeting/guide?platform=android)
 
 Meeting SDK 是一个带UI的会议服务组件, 相比于NERoom 我们提供了一整套的标准会议UI实现, 同时我们也提供了有限的UI自定义功能。
 
 移动端基于 Flutter 实现, 为了方便原生项目接入, 同样我们提供混合开发模式允许通过Java以及OC等原生语言接入。
 
-桌面端基于 Qt 实现, 为了便于客户集成, 我们通过IPC等机制把Qt相关实现进行了隔离, 避免用户工程集成问题。
+桌面端基于 Electron 实现, 为了便于客户集成, 我们通过IPC等机制把Electron相关实现进行了隔离, 避免用户工程集成问题。
 
 ### App
 
@@ -94,10 +93,11 @@ Meeting SDK 是一个带UI的会议服务组件, 相比于NERoom 我们提供了
 
 # 集成方法概述
 为了方便客户的集成，我们在开源代码的基础上，提供了基于组件的集成方式。
-1. [Android 集成方式](https://doc.yunxin.163.com/meetingkit/docs/TQ0NjEyMDQ?platform=android)
-2. [iOS 集成方式](https://doc.yunxin.163.com/meetingkit/docs/DY3ODM4MDE?platform=iOS)
-3. [Windows 集成方式](https://doc.yunxin.163.com/meetingkit/docs/TY0MzEzNDg?platform=windows)
-4. [Mac 集成方式](https://doc.yunxin.163.com/meetingkit/docs/TEyODIwOTA?platform=macOS)
+1. [Android 组件集成](https://doc.yunxin.163.com/meeting/guide?platform=android)
+2. [iOS 组件集成](https://doc.yunxin.163.com/meeting/guide?platform=iOS)
+3. [Windows/Mac 组件集成](https://doc.yunxin.163.com/meeting/guide?platform=pc)
+4. [Web/H5 组件集成](https://doc.yunxin.163.com/meeting/guide?platform=web)
+5. [Electron 组件集成](https://doc.yunxin.163.com/meeting/guide?platform=electron)
 
 # 代码许可
 The MIT License（MIT）
