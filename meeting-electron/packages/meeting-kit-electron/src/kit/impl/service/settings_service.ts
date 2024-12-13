@@ -6,7 +6,10 @@ import NESettingsServiceInterface, {
 } from 'nemeeting-core-sdk/dist/web/types/kit/interface/service/settings_service'
 import { BUNDLE_NAME } from '../meeting_kit'
 import { NEResult } from 'neroom-types'
-import { NECloudRecordConfig } from 'nemeeting-core-sdk'
+import {
+  NEChatMessageNotificationType,
+  NECloudRecordConfig,
+} from 'nemeeting-core-sdk'
 import ElectronBaseService from './meeting_electron_base_service'
 
 const MODULE_NAME = 'NESettingsService'
@@ -15,8 +18,7 @@ let seqCount = 0
 
 export default class NESettingsService
   extends ElectronBaseService
-  implements NESettingsServiceInterface
-{
+  implements NESettingsServiceInterface {
   constructor(_win: BrowserWindow) {
     super(_win)
   }
@@ -34,6 +36,85 @@ export default class NESettingsService
     })
 
     return this._IpcMainListener<void>(seqId)
+  }
+
+  async setChatMessageNotificationType(
+    type: NEChatMessageNotificationType
+  ): Promise<NEResult<void>> {
+    const functionName = 'setChatMessageNotificationType'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [type],
+      seqId,
+    })
+
+    return this._IpcMainListener<void>(seqId)
+  }
+
+  async enableShowNameInVideo(enable: boolean): Promise<NEResult<void>> {
+    const functionName = 'enableShowNameInVideo'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [enable],
+      seqId,
+    })
+
+    return this._IpcMainListener<void>(seqId)
+  }
+
+  async isShowNameInVideoEnabled(): Promise<NEResult<boolean>> {
+    const functionName = 'isShowNameInVideoEnabled'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [],
+      seqId,
+    })
+
+    return this._IpcMainListener<boolean>(seqId)
+  }
+
+  async isMeetingChatSupported(): Promise<NEResult<boolean>> {
+    const functionName = 'isMeetingChatSupported'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [],
+      seqId,
+    })
+
+    return this._IpcMainListener<boolean>(seqId)
+  }
+
+  async getChatMessageNotificationType(): Promise<
+    NEResult<NEChatMessageNotificationType>
+  > {
+    const functionName = 'getChatMessageNotificationType'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [],
+      seqId,
+    })
+
+    return this._IpcMainListener<NEChatMessageNotificationType>(seqId)
   }
 
   /**
@@ -286,6 +367,129 @@ export default class NESettingsService
 
     return this._IpcMainListener<boolean>(seqId)
   }
+
+  async enableShowMyMeetingParticipationTime(
+    enable: boolean
+  ): Promise<NEResult<void>> {
+    const functionName = 'enableShowMyMeetingParticipationTime'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [enable],
+      seqId,
+    })
+
+    return this._IpcMainListener<void>(seqId)
+  }
+  async isShowMyMeetingParticipationTimeEnabled(): Promise<NEResult<boolean>> {
+    const functionName = 'isShowMyMeetingParticipationTimeEnabled'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [],
+      seqId,
+    })
+
+    return this._IpcMainListener<boolean>(seqId)
+  }
+
+  async enableHideVideoOffAttendees(enable: boolean): Promise<NEResult<void>> {
+    const functionName = 'enableHideVideoOffAttendees'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [enable],
+      seqId,
+    })
+
+    return this._IpcMainListener<void>(seqId)
+  }
+  async isHideVideoOffAttendeesEnabled(): Promise<NEResult<boolean>> {
+    const functionName = 'isHideVideoOffAttendeesEnabled'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [],
+      seqId,
+    })
+
+    return this._IpcMainListener<boolean>(seqId)
+  }
+
+  async enableHideMyVideo(enable: boolean): Promise<NEResult<void>> {
+    const functionName = 'enableHideMyVideo'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [enable],
+      seqId,
+    })
+
+    return this._IpcMainListener<void>(seqId)
+  }
+  async isHideMyVideoEnabled(): Promise<NEResult<boolean>> {
+    const functionName = 'isHideMyVideoEnabled'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [],
+      seqId,
+    })
+
+    return this._IpcMainListener<boolean>(seqId)
+  }
+
+  async enableLeaveTheMeetingRequiresConfirmation(
+    enable: boolean
+  ): Promise<NEResult<void>> {
+    const functionName = 'enableHideMyVideo'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [enable],
+      seqId,
+    })
+
+    return this._IpcMainListener<void>(seqId)
+  }
+  async isLeaveTheMeetingRequiresConfirmationEnabled(): Promise<
+    NEResult<boolean>
+  > {
+    const functionName = 'isHideMyVideoEnabled'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [],
+      seqId,
+    })
+
+    return this._IpcMainListener<boolean>(seqId)
+  }
+
   async enableAudioAINS(enable: boolean): Promise<NEResult<void>> {
     const functionName = 'enableAudioAINS'
 
@@ -388,6 +592,22 @@ export default class NESettingsService
 
     return this._IpcMainListener<boolean>(seqId)
   }
+
+  async isCallOutRoomSystemDeviceSupported(): Promise<NEResult<boolean>> {
+    const functionName = 'isCallOutRoomSystemDeviceSupported'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [],
+      seqId,
+    })
+
+    return this._IpcMainListener<boolean>(seqId)
+  }
+
   async getBeautyFaceValue(): Promise<NEResult<number>> {
     const functionName = 'getBeautyFaceValue'
 
@@ -911,6 +1131,21 @@ export default class NESettingsService
     })
 
     return this._IpcMainListener<boolean>(seqId)
+  }
+
+  async getLiveMaxThirdPartyCount(): Promise<NEResult<number>> {
+    const functionName = 'getLiveMaxThirdPartyCount'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [],
+      seqId,
+    })
+
+    return this._IpcMainListener<number>(seqId)
   }
 
   private _generateSeqId(functionName: string) {

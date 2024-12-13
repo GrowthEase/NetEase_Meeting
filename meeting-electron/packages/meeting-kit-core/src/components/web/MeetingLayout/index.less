@@ -96,13 +96,18 @@
       }
     }
   }
+  .nemeeting-layout-footer-wrapper {
+    padding: 0px 24px 20px 24px;
+  }
+  .nemeeting-layout-footer:not(:first-child) {
+    margin-top: 8px;
+  }
   .nemeeting-layout-footer {
-    height: 50px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     color: #666;
-    padding: 0 24px;
     color: #fff;
     .link-button {
       cursor: pointer;
@@ -144,8 +149,12 @@
     }
     .nemeeting-layout-group-item {
       cursor: pointer;
-      margin: 0 15px;
+      padding: 0 15px;
+      &.nemeeting-layout-group-item-left-border:first-child {
+        border-left: 1px solid #666;
+      }
     }
+
     .nemeeting-layout-group-item-icon {
       font-size: 80px;
     }

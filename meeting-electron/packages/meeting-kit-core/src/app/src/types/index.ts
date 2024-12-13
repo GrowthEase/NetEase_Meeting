@@ -17,7 +17,8 @@ export enum IPCEvent {
   setNPS = 'set-meeting-nps',
   isMainFullscreen = 'isMainFullScreen',
   isMainFullscreenReply = 'isMainFullscreen-reply',
-  quiteFullscreen = 'quiteFullscreen',
+  quiteFullscreen = 'leave-full-screen',
+  enterFullscreen = 'enter-full-screen',
   meetingStatus = 'meetingStatus',
   createMeeting = 'createMeeting',
   joinMeeting = 'joinMeeting',
@@ -176,4 +177,5 @@ export interface LoginUserInfo {
     meetingMaxMinutes: number
     meetingMaxMembers: number
   }
+  appKey?: string
 }

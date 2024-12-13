@@ -119,12 +119,11 @@ import ConnectAudioModal from '../ConnectAudioModal'
 import SharingComputerSound from '../SharingComputerSound'
 import useScreenSharing from '../../../hooks/useScreenSharing'
 import useWindowManage from '../../../hooks/useSetting'
-
-const worker = new Worker(
-  new URL('../../../libs/yuv-canvas/worker.js', import.meta.url)
-)
-
-export { worker }
+import useCloudRecord from '../../../hooks/useCloudRecord'
+import { EndDropdown } from '../ControlBar/Buttons/EndButton'
+import useFullscreen from '../../../hooks/useFullscreen'
+import FullScreenButton from '../FullScreenButton'
+import usePreview from '../../../hooks/usePreview'
 
 interface AppProps {
   width: number
@@ -137,8 +136,9 @@ interface SpeakerListProps {
 
 // 说话者列表
 const SpeakerListWrap: React.FC<SpeakerListProps> = ({ isLocalScreen }) => {
-  const { memberList } =
-    useContext<MeetingInfoContextInterface>(MeetingInfoContext)
+  const { memberList } = useContext<MeetingInfoContextInterface>(
+    MeetingInfoContext
+  )
   const { eventEmitter } = useContext<GlobalContextInterface>(GlobalContext)
   // 是否隐藏到屏幕侧边
   const [speakerList, setSpeakerList] = useState<Speaker[]>([])
@@ -213,13 +213,21 @@ type ModalType = {
   update: (props) => void
 }
 
+let childWindowMessageListener
+
 const MeetingContent: React.FC<AppProps> = ({ height }) => {
   const { t } = useTranslation()
 
-  const { dispatch, meetingInfo, memberList, inInvitingMemberList } =
-    useMeetingInfoContext()
-  const { waitingRoomInfo, memberList: waitingRoomMemberList } =
-    useWaitingRoomContext()
+  const {
+    dispatch,
+    meetingInfo,
+    memberList,
+    inInvitingMemberList,
+  } = useMeetingInfoContext()
+  const {
+    waitingRoomInfo,
+    memberList: waitingRoomMemberList,
+  } = useWaitingRoomContext()
   const {
     eventEmitter,
     outEventEmitter,
@@ -242,12 +250,13 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
     addEventListenerAtChatWindow,
     clearMessages,
   } = useChatRoomContext()
+
   const [showLiveModel, setShowLiveModel] = useState(false)
   const showCloudRecordingUIRef = useRef<boolean>(true)
-  const cloudRecordModalRef = useRef<ConfirmModal | null>(null)
   const becomeInterpreterRef = useRef<ModalType | null>(null)
   const { languageMap } = useDefaultLanguageOptions()
   const { firstLanguage, secondLanguage } = useMyLangList()
+  const { handleRecord } = useCloudRecord()
 
   const { localMember } = meetingInfo
 
@@ -266,6 +275,9 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
   })
 
   useMeetingPlaySound()
+
+  const { isFullScreen } = useFullscreen()
+  const { startPreview, stopPreview } = usePreview()
 
   showCloudRecordingUIRef.current = showCloudRecordingUI !== false
 
@@ -304,14 +316,19 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
   const [pluginMeetingId, setPluginMeetingId] = useState<number>()
   const [chatRoomMeetingId, setChatRoomId] = useState<number>()
   const [pluginInfo, setPluginInfo] = useState<NEMeetingWebAppItem>()
-  const [settingModalTab, setSettingModalTab] =
-    useState<SettingTabType>('normal')
-  const [screenShareModalOpen, setScreenShareModalOpen] =
-    useState<boolean>(false)
-  const [shareLocalComputerSound, setShareLocalComputerSound] =
-    useState<boolean>(false)
+  const [settingModalTab, setSettingModalTab] = useState<SettingTabType>(
+    'normal'
+  )
+  const [screenShareModalOpen, setScreenShareModalOpen] = useState<boolean>(
+    false
+  )
+  const [
+    shareLocalComputerSound,
+    setShareLocalComputerSound,
+  ] = useState<boolean>(false)
   const screenShareModalRef = useRef<ScreenShareModalRef>(null)
   const newMeetingWebRef = useRef<HTMLDivElement>(null)
+  const myCanvasRef = useRef<HTMLDivElement>(null)
   const canShowInterpreterModalRef = useRef(true)
   const toastIdRef = useRef<string>('')
   const [isDarkMode, setIsDarkMode] = useState(true)
@@ -335,6 +352,32 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
 
   usePreviewHandler()
 
+  useEffect(() => {
+    myCanvasRef.current &&
+      neMeeting?.rtcController?.setupLocalVideoCanvas(myCanvasRef.current)
+  }, [neMeeting?.rtcController])
+
+  useUpdateEffect(() => {
+    // 解决关闭非视图参数者入会开启视频入会，没有画布情况下video中设置无效问题
+    if (meetingInfo.localMember.isInRtcChannel) {
+      if (
+        meetingInfoRef.current.isUnMutedVideo &&
+        ((meetingInfoRef.current.unmuteVideoBySelfPermission &&
+          !meetingInfoRef.current.videoAllOff) ||
+          meetingInfoRef.current.hostUuid ===
+            meetingInfoRef.current.localMember.uuid)
+      ) {
+        neMeeting?.unmuteLocalVideo()
+        // 后续设置为false
+        dispatch?.({
+          type: ActionType.UPDATE_MEETING_INFO,
+          data: {
+            isUnMutedVideo: false,
+          },
+        })
+      }
+    }
+  }, [meetingInfo.localMember.isInRtcChannel])
   const isHostOrCoHost = useMemo(() => {
     return localMember.role === Role.host || localMember.role === Role.coHost
   }, [localMember.role])
@@ -480,9 +523,8 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
   }
 
   const handleControlBarDefaultButtonClick = async (key: string) => {
-    const autoShare =
-      !!meetingInfoRef.current.setting.screenShareSetting
-        ?.screenShareOptionInMeeting
+    const autoShare = !!meetingInfoRef.current.setting.screenShareSetting
+      ?.screenShareOptionInMeeting
 
     // 如果是全屏共享，则重置
     if (meetingInfo.rightDrawerTabActiveKey && isElectronSharingScreen) {
@@ -664,8 +706,6 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
     meetingNum: meetingInfo.meetingNum,
     isLocalSharingScreen: localMember.isSharingScreen,
   })
-  // 是否在预览
-  const [isStartPreview, setIsStartPreview] = useState(false)
 
   const openRightDrawer = useMemo(() => {
     return meetingInfo.rightDrawerTabs.length > 0
@@ -742,7 +782,10 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
 
   useEffect(() => {
     if (meetingInfo.screenUuid) {
-      if (meetingInfo.setting.screenShareSetting?.sideBySideModeOpen) {
+      if (
+        meetingInfo.setting.screenShareSetting?.sideBySideModeOpen &&
+        meetingInfo.screenUuid !== localMember.uuid
+      ) {
         dispatch?.({
           type: ActionType.UPDATE_MEETING_INFO,
           data: {
@@ -820,7 +863,12 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
       inMeeting: meetingInfo.meetingNum ? true : false,
     })
     if (!meetingInfo.meetingNum) {
-      closeAllWindows()
+      const excludes =
+        meetingInfo.notificationMessages.length > 0
+          ? ['notificationCardWindow']
+          : []
+
+      closeAllWindows(excludes)
       isFirstTimeOpenTranscription.current = true
       transcriptionMsgCountRef.current = 0
     }
@@ -873,78 +921,6 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
     return resultList
   }, [memberList])
 
-  const handleRecord = useCallback(() => {
-    if (cloudRecordModalRef.current) {
-      return
-    }
-
-    cloudRecordModalRef.current = CommonModal.confirm({
-      width: 390,
-      title: meetingInfo.isCloudRecording
-        ? t('endCloudRecording')
-        : t('isStartCloudRecord'),
-      content: meetingInfo.isCloudRecording
-        ? t('syncRecordFileAfterMeetingEnd')
-        : showCloudRecordingUIRef.current
-        ? t('startRecordTip')
-        : t('startRecordTipNoNotify'),
-      afterClose: () => {
-        cloudRecordModalRef.current = null
-      },
-      okText: t('sure'),
-      cancelText: t('globalCancel'),
-      onOk: () => {
-        if (meetingInfo.isCloudRecording) {
-          neMeeting
-            ?.stopCloudRecord()
-            .then(() => {
-              dispatch?.({
-                type: ActionType.UPDATE_MEETING_INFO,
-                data: {
-                  cloudRecordState: RecordState.NotStart,
-                },
-              })
-              return true
-            })
-            .catch((e) => {
-              // todo 需要翻译
-              Toast.fail(e.msg || e.message || e.code || t('stopRecordFailed'))
-              return Promise.reject(e)
-            })
-        } else {
-          dispatch?.({
-            type: ActionType.UPDATE_MEETING_INFO,
-            data: {
-              cloudRecordState: RecordState.Starting,
-            },
-          })
-          neMeeting
-            ?.startCloudRecord()
-            .then(() => {
-              dispatch?.({
-                type: ActionType.UPDATE_MEETING_INFO,
-                data: {
-                  cloudRecordState: RecordState.Recording,
-                },
-              })
-            })
-            .catch((e) => {
-              dispatch?.({
-                type: ActionType.UPDATE_MEETING_INFO,
-                data: {
-                  cloudRecordState: RecordState.NotStart,
-                },
-              })
-              Toast.fail(e.msg || e.message || e.code || t('startRecordFailed'))
-              return Promise.reject(e)
-            })
-        }
-
-        cloudRecordModalRef.current?.destroy()
-      },
-    })
-  }, [meetingInfo.isCloudRecording, dispatch, t, neMeeting])
-
   const showRecord = useMemo(() => {
     const cloudRecord = meetingInfo.cloudRecordState
 
@@ -967,11 +943,11 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
         newWindow?.postMessage(payload.postMessageData, newWindow.origin)
     }
 
+    windowLoadListener(newWindow)
     // 不是第一次打开
     if (newWindow?.firstOpen === false) {
       postMessage()
     } else {
-      windowLoadListener(newWindow)
       newWindow?.addEventListener('load', () => {
         postMessage()
       })
@@ -1065,10 +1041,10 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
       } else if (event === 'previewController' && previewController) {
         const { replyKey, fnKey, args } = payload
 
-        if (fnKey === 'startPreview') {
-          setIsStartPreview(true)
-        } else if (fnKey === 'stopPreview') {
-          setIsStartPreview(false)
+        if (fnKey === 'stopPreview') {
+          stopPreview()
+        } else if (fnKey === 'startPreview') {
+          startPreview()
         }
 
         const result = previewController[fnKey]?.(...args)
@@ -1096,6 +1072,11 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
       }
     }
 
+    if (childWindowMessageListener) {
+      childWindow?.removeEventListener?.('message', childWindowMessageListener)
+    }
+
+    childWindowMessageListener = messageListener
     childWindow?.addEventListener?.('message', messageListener)
   }
 
@@ -1215,7 +1196,7 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
     }
   }, [meetingInfo.meetingNum])
 
-  useMount(() => {
+  useEffect(() => {
     const _setting = getLocalStorageSetting()
 
     if (_setting) {
@@ -1427,7 +1408,7 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
       eventEmitter?.off(EventType.AcceptInvite, joinOtherMeeting)
       window.ipcRenderer?.removeAllListeners(IPCEvent.alreadyInMeeting)
     }
-  })
+  }, [])
 
   useEffect(() => {
     handleOpenChatroomOrMemberList(openRightDrawer)
@@ -1438,6 +1419,7 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
     eventEmitter?.emit(UserEventType.RejoinMeeting, {
       isAudioOn: localMember.isAudioOn,
       isVideoOn: localMember.isVideoOn,
+      joinOption: meetingInfoRef.current.joinOption,
     })
     globalDispatch?.({
       type: ActionType.UPDATE_GLOBAL_CONFIG,
@@ -1679,7 +1661,7 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
   }, [
     meetingInfo.setting?.audioSetting?.enableAudioAI,
     meetingInfo.setting?.audioSetting?.enableMusicMode,
-    meetingInfo.setting?.audioSetting?.enableAudioStereo,
+    meetingInfo.setting?.audioSetting?.enableAudioEchoCancellation,
     meetingInfo.setting?.audioSetting?.enableAudioStereo,
     neMeeting,
   ])
@@ -1933,6 +1915,14 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
       },
     })
     window.ipcRenderer?.send(IPCEvent.quiteFullscreen)
+    try {
+      if (meetingInfoRef.current.localMember.isSharingSystemAudio) {
+        await neMeeting?.stopShareSystemAudio()
+      }
+    } catch {
+      //
+    }
+
     try {
       await neMeeting?.unmuteLocalScreenShare({
         sourceId: shareItem?.id || shareItem?.displayId,
@@ -2340,70 +2330,6 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
   ])
 
   useEffect(() => {
-    function handle(uuid, bSubVideo, data, type, width, height) {
-      if (isStartPreview && uuid === localMember.uuid) {
-        const settingWindow = getWindow('settingWindow')
-
-        settingWindow?.postMessage(
-          {
-            event: 'onVideoFrameData',
-            payload: {
-              uuid,
-              bSubVideo,
-              data,
-              type,
-              width,
-              height,
-            },
-          },
-          settingWindow.origin,
-          [data.bytes.buffer]
-        )
-      }
-
-      if (meetingInfo.screenUuid === localMember.uuid) {
-        const shareVideoWindow = getWindow('shareVideoWindow')
-
-        shareVideoWindow?.postMessage(
-          {
-            event: 'onVideoFrameData',
-            payload: {
-              uuid,
-              bSubVideo,
-              data,
-              type,
-              width,
-              height,
-            },
-          },
-          shareVideoWindow.origin,
-          [data.bytes.buffer]
-        )
-      } else {
-        const type = bSubVideo ? 'screen' : 'video'
-
-        worker.postMessage(
-          {
-            frame: {
-              width,
-              height,
-              data,
-            },
-            uuid,
-            type,
-          },
-          [data.bytes.buffer]
-        )
-      }
-    }
-
-    eventEmitter?.on(EventType.onVideoFrameData, handle)
-    return () => {
-      eventEmitter?.off(EventType.onVideoFrameData, handle)
-    }
-  }, [meetingInfo.screenUuid, eventEmitter, isStartPreview, localMember.uuid])
-
-  useEffect(() => {
     const properties = localMember.properties
 
     if (properties) {
@@ -2421,8 +2347,7 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
 
       if (properties.speakerOn && properties.speakerOn.value) {
         if (properties.speakerOn.value === '0') {
-          const speakerVolume =
-            neMeeting?.previewController?.getPlayoutDeviceVolume?.()
+          const speakerVolume = neMeeting?.previewController?.getPlayoutDeviceVolume?.()
 
           neMeeting?.previewController?.setPlayoutDeviceVolume?.(0)
           neMeeting?.previewController?.setPlayoutDeviceMute?.(true)
@@ -2465,6 +2390,10 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
   }, [online, waitingRejoinMeeting, isElectronSharingScreen, t])
 
   useUpdateEffect(() => {
+    if (!meetingInfo.meetingNum) {
+      return
+    }
+
     if (window.isElectronNative) {
       if (meetingInfo.interpretation?.started) {
         if (meetingInfo.isInterpreter || isHostOrCoHost) {
@@ -2513,6 +2442,7 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
       setInterFloatingWindow(false)
     }
   }, [
+    meetingInfo.meetingNum,
     meetingInfo.interpretation?.started,
     meetingInfo.isInterpreter,
     isHostOrCoHost,
@@ -2554,7 +2484,7 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
   ])
 
   const meetingWebStyle = useMemo(() => {
-    let top = window.isElectronNative ? 28 : 0
+    let top = !isFullScreen && window.isElectronNative ? 28 : 0
 
     if (meetingInfo.isScreenSharingMeeting || isElectronSharingScreen) {
       top = 0
@@ -2573,6 +2503,7 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
     height,
     meetingInfo.isRooms,
     meetingInfo.isScreenSharingMeeting,
+    isFullScreen,
   ])
 
   useUpdateEffect(() => {
@@ -2731,14 +2662,15 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
         background: isElectronSharingScreen ? 'transparent' : undefined,
       }}
     >
-      {!isElectronSharingScreen && window.isElectronNative && (
+      {!isElectronSharingScreen && window.isElectronNative && !isFullScreen && (
         <div className="electron-in-meeting-drag-bar">
           <div className="drag-region" />
-          <SharingComputerSound />
           {t('appTitle')}
           <PCTopButtons />
         </div>
       )}
+      <EndDropdown />
+      <SharingComputerSound />
       {meetingInfo.isRooms && !meetingInfo.isScreenSharingMeeting && (
         <RoomsHeader style={{ right: openRightDrawer ? 320 : 0 }} />
       )}
@@ -2802,18 +2734,18 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
                         isLocalScreen={isLocalScreen}
                       />
                     )}
-                    {meetingInfo.showDurationTime && (
-                      <MeetingDuration
-                        className="nemeeting-top-right-item"
-                        startTime={meetingInfo.rtcStartTime}
-                      />
-                    )}
+                    <MeetingDuration className="nemeeting-top-right-item" />
                     {showLayout && (
                       <MeetingLayout
                         className="nemeeting-top-right-item"
                         onSettingClick={() => onSettingClick('video')}
+                        onSettingChange={onSettingChange}
                       />
                     )}
+                    <FullScreenButton
+                      className="nemeeting-top-right-item"
+                      isFullScreen={isFullScreen}
+                    />
                   </div>
                 )}
                 {!meetingInfo.isRooms && !waitingRejoinMeeting && (
@@ -3038,6 +2970,9 @@ const MeetingContent: React.FC<AppProps> = ({ height }) => {
         visible={feedbackOpen}
         onClose={() => setFeedbackOpen(false)}
       />
+
+      {/* 本端默认渲染画布，纯音频模式没有画布情况第一次本端开启视频会报错*/}
+      <div className="nemeeting-my-canvas" ref={myCanvasRef}></div>
     </div>
   )
 }

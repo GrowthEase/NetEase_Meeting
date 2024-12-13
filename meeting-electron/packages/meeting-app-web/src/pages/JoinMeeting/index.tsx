@@ -7,9 +7,10 @@ import JoinMeeting from '../../components/web/BeforeMeetingModal/JoinMeeting';
 import './index.less';
 import { MeetingSetting } from '@meeting-module/types';
 import { useGlobalContext } from '@meeting-module/store';
-import { IPCEvent } from '@/types';
+import { IPCEvent, ServerGuestErrorCode } from '@/types';
 import Toast from '@meeting-module/components/common/toast';
 import {
+  CommonModal,
   Modal,
   NELocalHistoryMeeting,
   setLocalStorageSetting,
@@ -150,6 +151,18 @@ const JoinMeetingPage: React.FC = () => {
           Toast.info(t('meetingLocked'));
         } else if (payload?.code === 1004) {
           Toast.fail(t('meetingNotExist'));
+        } else if (
+          payload?.code === ServerGuestErrorCode.MEETING_GUEST_JOIN_DISABLED
+        ) {
+          CommonModal.warning({
+            width: 400,
+            content: (
+              <div className="nemeeting-cross-app-permission">
+                {t('meetingCrossAppJoinNotSupported')}
+              </div>
+            ),
+            okText: t('IkonwIt'),
+          });
         } else {
           Toast.fail(payload.errorMsg || t('meetingJoinFail'));
         }

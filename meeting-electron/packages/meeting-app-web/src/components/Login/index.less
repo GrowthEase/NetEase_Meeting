@@ -16,6 +16,22 @@
   box-shadow: 0 10px 30px rgba(47, 56, 111, 0.1);
   border-radius: 10px;
   box-sizing: border-box;
+  .footer-login-entry {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .nemeeting-btn {
+      padding: 0;
+      margin: 0 8px;
+      color: #8d90a0;
+      font-size: 12px;
+      line-height: 12px;
+      height: 12px;
+      &:hover {
+        color: #337eff;
+      }
+    }
+  }
   .electron-drag-bar {
     border-bottom: none;
   }
@@ -36,6 +52,18 @@
   box-sizing: border-box;
   padding: 0 28px;
   height: 100%;
+  .home-back-icon-wrapper {
+    height: 44px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  .home-back-icon {
+    cursor: pointer;
+  }
   .before-login-content {
     // display: flex;
     flex: 1;
@@ -100,7 +128,7 @@
   }
   .logo {
     display: block;
-    margin: 40% auto 10% auto;
+    margin: 15% auto 10% auto;
     width: 126px;
     height: 120px;
   }
@@ -124,12 +152,11 @@
   }
   .footer {
     // position: absolute;
-    height: 200px;
     text-align: center;
-    margin-bottom: 40px;
-    margin-top: 25px;
+    bottom: 40px;
+    position: absolute;
     .footer-login-type {
-      margin-bottom: 32px;
+      margin-bottom: 20px;
       .nemeeting-login-type-icon {
         .icon {
           margin-bottom: 8px;
@@ -164,7 +191,7 @@
       font-size: 24px;
       padding: 0;
       color: #333333;
-      margin: 0 0 30px 0;
+      margin: 0 0 10px 0;
       text-align: left;
       display: flex;
       justify-content: space-between;
@@ -249,9 +276,17 @@
   .before-login .login-panel .nemeeting-btn {
     margin: 0 auto;
   }
+
+@media (min-aspect-ratio: 13/20) {
+  .footer {
+    display: none;
+  }
+}
 }
 
 .footer-agreement {
+  // width: 90%;
+  margin: 0 auto;
   margin-bottom: 16px;
   color: #999999;
   font-size: 14px;
@@ -261,6 +296,7 @@
   justify-content: center;
 
   .text {
+    width: 290px;
     display: inline-block;
     margin-left: 8px;
     text-align: center;
@@ -288,6 +324,7 @@
   .login-and-register-btn {
     margin-top: 40%;
     margin-bottom: 0px;
+    transition: none;
   }
   .no-enterprise-tip {
     color: #666666;
@@ -299,7 +336,7 @@
   .footer {
     position: absolute;
     bottom: 40px;
-    width: 308px;
+    // width: 308px;
     height: 52px;
     margin: 0;
   }
@@ -416,3 +453,4 @@
     text-align: left;
   }
 }
+

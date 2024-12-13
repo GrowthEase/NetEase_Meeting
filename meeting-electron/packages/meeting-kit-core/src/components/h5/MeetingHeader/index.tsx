@@ -321,12 +321,15 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
               } */}
             {localMember?.isVideoOn && (
               <>
-                <i
-                  className="iconfont icon-white iconyx-tv-filpx"
+                <svg
+                  className="icon iconfont icon-white"
                   onClick={() => {
                     switchDevice('camera')
                   }}
-                ></i>
+                  aria-hidden="true"
+                >
+                  <use xlinkHref="#iconyx-tv-filpx"></use>
+                </svg>
               </>
             )}
           </div>
@@ -339,12 +342,15 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
             >
               {showSubject ? subject : i18n.globalAppName}
             </span>
-            <i
+            <svg
+              className="icon iconfont icon-white"
               onClick={() => {
                 setShowMeetingInfo(!showMeetingInfo)
               }}
-              className="iconfont icona-45"
-            ></i>
+              aria-hidden="true"
+            >
+              <use xlinkHref="#icona-45"></use>
+            </svg>
           </div>
 
           <div className="header-right">

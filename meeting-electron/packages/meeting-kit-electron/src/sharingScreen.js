@@ -7,8 +7,8 @@ const isWin32 = process.platform === 'win32'
 const MEETING_HEADER_HEIGHT = 28
 const NOTIFY_WINDOW_WIDTH = 408
 const NOTIFY_WINDOW_HEIGHT = 200
-const WINDOW_WIDTH = 1200
 const COLLAPSE_WINDOW_WIDTH = 350
+let WINDOW_WIDTH = 1080
 
 let mY = 0
 
@@ -225,11 +225,9 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
         const nowDisplay = shareScreen || screen.getPrimaryDisplay()
         const { x, y, width } = nowDisplay.workArea
 
-        mainWindow.setBackgroundColor('rgba(255, 255, 255, 0)')
         mainWindow.setOpacity(0)
         setTimeout(() => {
           mainWindow.setOpacity(1)
-          mainWindow.setBackgroundColor('rgba(255, 255, 255,0)')
         }, 300)
 
         createNotifyWindow(mainWindow)
@@ -258,16 +256,6 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
         setMainWindowHeight()
 
         mainWindow.setAlwaysOnTop(true, 'normal', 100)
-        if (isWin32) {
-          mainWindowAlwaysOnTopTimer = setInterval(() => {
-            if (mainWindow && !mainWindow.isDestroyed()) {
-              mainWindow.setAlwaysOnTop(true, 'normal', 100)
-            } else {
-              clearInterval(mainWindowAlwaysOnTopTimer)
-              mainWindowAlwaysOnTopTimer = null
-            }
-          }, 1000)
-        }
 
         // 先强制保护窗口内容，避免共享被捕获
         mainWindow.setContentProtection(true)
@@ -297,7 +285,6 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
             setTimeout(() => {
               if (mainWindow.isDestroyed()) return
               mainWindow.setOpacity(1)
-              !isWin32 && mainWindow.setBackgroundColor('#ffffff')
             }, 300)
           }
 
@@ -323,9 +310,33 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
         mainWindow.setContentProtection(false)
 
         break
+      case 'startAnnotation':
+        if (isWin32) {
+          mainWindowAlwaysOnTopTimer = setInterval(() => {
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.setAlwaysOnTop(true, 'normal', 100)
+            } else {
+              clearInterval(mainWindowAlwaysOnTopTimer)
+              mainWindowAlwaysOnTopTimer = null
+            }
+          }, 1000)
+        }
+
+        break
+      case 'stopAnnotation':
+        if (mainWindowAlwaysOnTopTimer) {
+          clearInterval(mainWindowAlwaysOnTopTimer)
+          mainWindowAlwaysOnTopTimer = null
+        }
+
+        break
       case 'controlBarVisibleChangeByMouse':
         if (sharingScreen.isSharing) {
-          if (data) {
+          if (data.open) {
+            if (data.width && data.width > 500) {
+              WINDOW_WIDTH = data.width
+            }
+
             mainWindow.setBounds({
               width: WINDOW_WIDTH,
             })
@@ -346,12 +357,18 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
 
         break
       case 'openDeviceList':
-        mainHeight.push(800)
-        setMainWindowHeight()
+        if (sharingScreen.isSharing) {
+          mainHeight.push(800)
+          setMainWindowHeight()
+        }
+
         break
       case 'closeDeviceList':
-        removeMainHeight(800)
-        setMainWindowHeight(true)
+        if (sharingScreen.isSharing) {
+          removeMainHeight(800)
+          setMainWindowHeight(true)
+        }
+
         break
       case 'openPopover':
         mainHeight.push(150)

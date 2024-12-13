@@ -45,6 +45,9 @@ export default class NEMeetingInviteServiceHandle {
       case 3:
         res = await this.acceptInvite(data)
         break
+      case 9:
+        res = await this.callOutRoomSystem(data)
+        break
       default:
         return JSON.stringify(FailureBodySync(undefined, 'method not found'))
     }
@@ -62,5 +65,11 @@ export default class NEMeetingInviteServiceHandle {
     const { meetingId } = JSON.parse(data)
 
     return await this._meetingInviteService.rejectInvite(meetingId)
+  }
+
+  async callOutRoomSystem(data: string) {
+    const { device } = JSON.parse(data)
+
+    return await this._meetingInviteService.callOutRoomSystem(device)
   }
 }

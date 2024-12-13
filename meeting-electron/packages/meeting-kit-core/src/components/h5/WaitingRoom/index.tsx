@@ -26,7 +26,12 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
   const { t } = useTranslation()
   const { waitingRoomInfo } = useWaitingRoomContext()
   const [showExitAction, setShowExitAction] = useState(false)
-  const { neMeeting, eventEmitter, noChat } = useGlobalContext()
+  const {
+    neMeeting,
+    eventEmitter,
+    noChat,
+    outEventEmitter,
+  } = useGlobalContext()
   const [showCloseDialog, setShowCloseDialog] = useState(false)
   const [receiveMsg, setReceiveMsg] = useState<NERoomChatMessage[]>() // 聊天室未读消息
   const [chatroomVisible, setChatroomVisible] = useState(false)
@@ -140,7 +145,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
       closeText: '',
       reason: '',
     })
-    neMeeting?.eventEmitter?.emit(EventType.RoomEnded, reason)
+    outEventEmitter?.emit(EventType.RoomEnded, reason)
   }
 
   const onClickOpenVideo = (isOpen: boolean) => {

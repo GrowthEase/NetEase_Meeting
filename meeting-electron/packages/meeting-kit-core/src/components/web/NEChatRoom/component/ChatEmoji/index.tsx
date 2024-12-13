@@ -42,6 +42,7 @@ const ChatEmojiPopover: React.FC<ChatEmojiPopoverProps> = (props) => {
     <Popover
       trigger={['click']}
       placement="top"
+      align={{ offset: [-8, -5] }}
       overlayClassName="nemeeting-chat-emoji-popover"
       content={renderContent()}
       arrow={false}

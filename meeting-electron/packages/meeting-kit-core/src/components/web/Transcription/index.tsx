@@ -421,7 +421,7 @@ export const Transcription: React.FC<TranscriptionProps> = ({
   useEffect(() => {
     // 更新缓存信息
     if (transcriptionMessageList && transcriptionMessageList?.length > 5) {
-      const arr = new Array(5).fill(0)
+      const arr = new Array(10).fill(0)
 
       arr.forEach((_, index) => {
         const cacheIndex = transcriptionMessageList.length - 5 + index
@@ -445,6 +445,12 @@ export const Transcription: React.FC<TranscriptionProps> = ({
     }
   }
 
+  const handleRowsRendered = ({ startIndex, stopIndex }) => {
+    for (let i = startIndex; i <= stopIndex; i++) {
+      cache.clear(i, 0)
+    }
+  }
+
   return (
     <div className="nemeeting-transcription">
       <div className="nemeeting-transcription-content" ref={contentWrapperRef}>
@@ -464,6 +470,7 @@ export const Transcription: React.FC<TranscriptionProps> = ({
               scrollToIndex={scrollToIndex}
               onScroll={handleScroll}
               data={currentTime}
+              onRowsRendered={handleRowsRendered}
             />
           )}
         </AutoSizer>

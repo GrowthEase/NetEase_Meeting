@@ -1,6 +1,6 @@
 import NEMeetingKit from './meeting_kit'
 import NEMeetingService from './service/meeting_service'
-import NEPreMeetingService from './service/pre_meeting_service'
+import NEPreMeetingService, { NEMeetingItemLiveBackground, NEmeetingItemLivePushThirdPart, NEMeetingRecurringRule }  from './service/pre_meeting_service'
 import NESettingsService from './service/settings_service'
 import NEMeetingInviteService from './service/meeting_invite_service'
 import NEFeedbackService from './service/feedback_service'
@@ -28,4 +28,7 @@ export {
   NEContactsService,
   NEMeetingMessageChannelService,
   NEAccountService,
+  NEMeetingItemLiveBackground,
+  NEmeetingItemLivePushThirdPart,
+  NEMeetingRecurringRule
 }

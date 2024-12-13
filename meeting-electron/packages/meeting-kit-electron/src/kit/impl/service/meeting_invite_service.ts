@@ -3,6 +3,7 @@ import { NEJoinMeetingParams } from 'nemeeting-core-sdk/dist/web/types/types/typ
 import { NEJoinMeetingOptions } from 'nemeeting-core-sdk/dist/web/types/kit/interface/service/meeting_service'
 import NEMeetingInviteServiceInterface, {
   NEMeetingInviteStatusListener,
+  NERoomSystemDevice,
 } from 'nemeeting-core-sdk/dist/web/types/kit/interface/service/meeting_invite_service'
 import { NEResult } from 'neroom-types'
 import { BUNDLE_NAME } from '../meeting_kit'
@@ -73,6 +74,21 @@ export default class NEMeetingInviteService
     if (index !== -1) {
       this._listeners.splice(index, 1)
     }
+  }
+
+  async callOutRoomSystem(device: NERoomSystemDevice): Promise<NEResult<void>> {
+    const functionName = 'callOutRoomSystem'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [device],
+      seqId,
+    })
+
+    return this._IpcMainListener<void>(seqId)
   }
 
   private _addListening(): void {

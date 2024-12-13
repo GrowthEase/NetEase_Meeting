@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "lint": "eslint . --fix --max-warnings 0",
-    "install:app": "pnpm install && pnpm -F nemeeting-core-sdk build && pnpm -F nemeeting-web-sdk build && pnpm -F nemeeting-electron-sdk build",
+    "install:app": "pnpm install --shamefully-hoist --ignore-scripts && pnpm -F nemeeting-core-sdk build && pnpm -F nemeeting-web-sdk build && pnpm -F nemeeting-electron-sdk build",
     "build": "pnpm recursive run build",
     "build:web": "pnpm -F nemeeting-core-sdk build && pnpm -F nemeeting-web-sdk build && pnpm -F nemeeting-app-web build:prod",
     "build:electron": "npm run build:web && pnpm install --shamefully-hoist && node build.js",

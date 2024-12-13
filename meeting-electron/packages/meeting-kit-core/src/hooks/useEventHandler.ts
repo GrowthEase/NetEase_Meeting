@@ -64,6 +64,8 @@ import { Logger } from '../utils/Logger'
 import { IPCEvent } from '../app/src/types'
 import { MAJOR_AUDIO } from '../config'
 import { useEnableCaption } from './useCaption'
+import { getWindow } from '../kit'
+import { useChatRoomContext } from './useChatRoom'
 
 const logger = new Logger('Meeting-NeMeeting', true)
 
@@ -92,8 +94,12 @@ interface UseEventHandlerInterface {
 }
 
 export default function useEventHandler(): UseEventHandlerInterface {
-  const { meetingInfo, memberList, dispatch } =
-    useContext<MeetingInfoContextInterface>(MeetingInfoContext)
+  const {
+    meetingInfo,
+    memberList,
+    dispatch,
+  } = useContext<MeetingInfoContextInterface>(MeetingInfoContext)
+  const { exportChatroomHistoryMessageList } = useChatRoomContext()
   const {
     neMeeting,
     joinLoading,
@@ -106,8 +112,9 @@ export default function useEventHandler(): UseEventHandlerInterface {
     enableDirectMemberMediaControlByHost,
   } = useContext<GlobalContextInterface>(GlobalContext)
   const { dispatch: waitingRoomDispatch } = useWaitingRoomContext()
-  const { eventEmitter, outEventEmitter } =
-    useContext<GlobalContextInterface>(GlobalContext)
+  const { eventEmitter, outEventEmitter } = useContext<GlobalContextInterface>(
+    GlobalContext
+  )
   const [leaveCallback, setLeaveCallback] = useState<
     ((reason: NEMeetingLeaveType) => void) | null
   >(null)
@@ -116,8 +123,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
     enableDirectMemberMediaControlByHost
   )
 
-  enableDirectMemberMediaControlByHostRef.current =
-    enableDirectMemberMediaControlByHost
+  enableDirectMemberMediaControlByHostRef.current = enableDirectMemberMediaControlByHost
 
   const { enableCaption } = useEnableCaption({ neMeeting, dispatch })
   const meetingInfoRef = useRef<NEMeetingInfo>(meetingInfo)
@@ -142,21 +148,26 @@ export default function useEventHandler(): UseEventHandlerInterface {
   const isAlreadyPlayAudioRef = useRef<boolean>(false)
   const [showReplayDialog, setShowReplayDialog] = useState<boolean>(false)
   const [showStartPlayDialog, setShowStartPlayDialog] = useState(false)
-  const [showReplayScreenDialog, setShowReplayScreenDialog] =
-    useState<boolean>(false)
+  const [showReplayScreenDialog, setShowReplayScreenDialog] = useState<boolean>(
+    false
+  )
   const isOpenAudioByHostRef = useRef<boolean>(false)
   const isOpenVideoByHostRef = useRef<boolean>(false)
   const [isShowAudioDialog, setIsShowAudioDialog] = useState<boolean>(false)
   const [isShowVideoDialog, setIsShowVideoDialog] = useState<boolean>(false)
   // const [online, setOnline] = useState(true)
-  const [showReplayAudioSlaveDialog, setShowReplayAudioSlaveDialog] =
-    useState<boolean>(false)
-  const [networkQuality, setNetworkQuality] =
-    useState<NERoomRtcNetworkQualityInfo>({
-      userUuid: '',
-      downStatus: 0,
-      upStatus: 0,
-    })
+  const [
+    showReplayAudioSlaveDialog,
+    setShowReplayAudioSlaveDialog,
+  ] = useState<boolean>(false)
+  const [
+    networkQuality,
+    setNetworkQuality,
+  ] = useState<NERoomRtcNetworkQualityInfo>({
+    userUuid: '',
+    downStatus: 0,
+    upStatus: 0,
+  })
   const canShowNetworkToastRef = useRef(true)
   const isReplayedRef = useRef<boolean>(false)
   const isReplayedVideoRef = useRef<boolean>(false)
@@ -181,11 +192,16 @@ export default function useEventHandler(): UseEventHandlerInterface {
     // 关闭共享权限
     if (
       !newPermission.screenSharePermission &&
-      oldPermission.screenSharePermission &&
-      localMember.isSharingScreen
+      oldPermission.screenSharePermission
     ) {
       Toast.info(t('sharingStopByHost'))
-      outEventEmitter?.emit('enableShareScreen')
+      if (localMember.isSharingScreen) {
+        outEventEmitter?.emit('enableShareScreen')
+      }
+
+      if (localMember.isSharingSystemAudio) {
+        outEventEmitter?.emit(UserEventType.StopSharingComputerSound)
+      }
     }
 
     if (
@@ -219,7 +235,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
           data: {
             uuid: rtcMember.uuid,
             member: {
-              isInRtcChannel: rtcMember.isInRtcChannel,
+              isInRtcChannel: true,
             },
           },
         })
@@ -228,33 +244,27 @@ export default function useEventHandler(): UseEventHandlerInterface {
     [dispatch, enableCaption]
   )
 
-  useEffect(() => {
-    if (localMember.isHandsUp && localMember.isSharingScreen) {
-      neMeeting?.sendMemberControl(memberAction.handsDown, localMember.uuid)
+  function handleJoinRtcCacheList(member: NERoomMember) {
+    const roomMember = memberListRef.current.find(
+      (item) => item.uuid === member.uuid
+    )
+
+    if (roomMember) {
+      handleMemberJoinRtc(member, roomMember)
+      // 清除对应缓存
+      const index = memberJoinRtcCacheListRef.current.findIndex(
+        (item) => item.uuid === member.uuid
+      )
+
+      index > -1 && memberJoinRtcCacheListRef.current.splice(index, 1)
     }
-  }, [
-    localMember.isHandsUp,
-    localMember.isSharingScreen,
-    neMeeting,
-    localMember.uuid,
-  ])
+  }
 
   useEffect(() => {
     if (memberList.length > 0 && memberJoinRtcCacheListRef.current.length > 0) {
-      memberJoinRtcCacheListRef.current.forEach((member) => {
-        const roomMember = memberListRef.current.find(
-          (item) => item.uuid === member.uuid
-        )
-
-        if (roomMember) {
-          handleMemberJoinRtc(member, roomMember)
-          // 清除对应缓存
-          const index = memberJoinRtcCacheListRef.current.findIndex(
-            (item) => item.uuid === member.uuid
-          )
-
-          index > -1 && memberJoinRtcCacheListRef.current.splice(index, 1)
-        }
+      const tmpMemberJoinRtcCacheList = [...memberJoinRtcCacheListRef.current]
+      tmpMemberJoinRtcCacheList.forEach((member) => {
+        handleJoinRtcCacheList(member)
       })
     }
   }, [memberList.length, handleMemberJoinRtc])
@@ -274,6 +284,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
     logger.debug('添加监听事件')
     addEventListener()
     return () => {
+      logger.debug('移除监听事件')
       removeEventListener()
     }
   }, [])
@@ -284,7 +295,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
     } else {
       neMeeting?.chatController?.leaveChatroom(1)
     }
-  }, [localMember, neMeeting])
+  }, [localMember.role, neMeeting])
 
   // useEffect(() => {
   //   if (canShowNetworkToastRef.current) {
@@ -431,6 +442,24 @@ export default function useEventHandler(): UseEventHandlerInterface {
         leaveType = NEMeetingLeaveType.UNKNOWN
       }
 
+      if (!window.isElectronNative) {
+        const leaveReasonMap = {
+          [NEMeetingCode.MEETING_DISCONNECTING_CLOSED_BY_HOST]: t(
+            'meetingEnded'
+          ),
+          [NEMeetingCode.MEETING_DISCONNECTING_END_OF_LIFE]: t('END_OF_LIFE'),
+          [NEMeetingCode.MEETING_DISCONNECTING_REMOVED_BY_HOST]: t('KICK_OUT'),
+          [NEMeetingCode.MEETING_DISCONNECTING_SYNC_DATA_ERROR]: t(
+            'SYNC_DATA_ERROR'
+          ),
+          [NEMeetingCode.MEETING_DISCONNECTING_JOIN_TIMEOUT]: 'JOIN_TIMEOUT',
+        }
+
+        if (leaveReasonMap[leaveType]) {
+          Toast.info(leaveReasonMap[leaveType])
+        }
+      }
+
       outEventEmitter?.emit(EventType.RoomEnded, leaveType)
       memberJoinRtcCacheListRef.current = []
       // eventEmitter?.removeAllListeners()
@@ -447,6 +476,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
   const unmuteMyAudio = useCallback(() => {
     const localMember = meetingInfoRef.current.localMember
 
+    neMeeting?.sendMemberControl(memberAction.handsDown, localMember.uuid)
     if (localMember.isAudioOn) {
       return
     }
@@ -458,18 +488,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
       localMember.role === Role.coHost ||
       enableDirectMemberMediaControlByHostRef.current
     ) {
-      neMeeting?.unmuteLocalAudio().then(() => {
-        dispatch &&
-          dispatch({
-            type: ActionType.UPDATE_MEMBER,
-            data: {
-              uuid: localMember.uuid,
-              member: {
-                isHandsUp: false,
-              },
-            },
-          })
-      })
+      neMeeting?.unmuteLocalAudio()
       return
     }
 
@@ -480,18 +499,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
       } else {
         // 如果已举手则音频不需要弹框
         Toast.info(t('hostAgreeAudioHandsUp'))
-        neMeeting?.unmuteLocalAudio().then(() => {
-          dispatch &&
-            dispatch({
-              type: ActionType.UPDATE_MEMBER,
-              data: {
-                uuid: localMember.uuid,
-                member: {
-                  isHandsUp: false,
-                },
-              },
-            })
-        })
+        neMeeting?.unmuteLocalAudio()
       }
     }
   }, [dispatch, eventEmitter, t, neMeeting])
@@ -500,6 +508,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
     (isMySelf = false) => {
       const localMember = meetingInfoRef.current.localMember
 
+      neMeeting?.sendMemberControl(memberAction.handsDown, localMember.uuid)
       if (localMember.isVideoOn) {
         return
       }
@@ -510,18 +519,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
           isMySelf) ||
         enableDirectMemberMediaControlByHostRef.current
       ) {
-        neMeeting?.unmuteLocalVideo().then(() => {
-          dispatch &&
-            dispatch({
-              type: ActionType.UPDATE_MEMBER,
-              data: {
-                uuid: localMember.uuid,
-                member: {
-                  isHandsUp: false,
-                },
-              },
-            })
-        })
+        neMeeting?.unmuteLocalVideo()
       } else {
         setIsOpenVideoByHost(true)
         setIsShowVideoDialog(true)
@@ -592,11 +590,6 @@ export default function useEventHandler(): UseEventHandlerInterface {
             !meetingInfoRef.current.localMember.isAudioOn
           ) {
             Toast.info(t('hostAgreeAudioHandsUp'))
-          }
-
-          // 如果当前在举手状态，则放下手
-          if (meetingInfoRef.current.localMember.isHandsUp) {
-            neMeeting?.sendMemberControl(memberAction.handsDown, member.uuid)
           }
         }
       }
@@ -932,11 +925,17 @@ export default function useEventHandler(): UseEventHandlerInterface {
                 Toast.info(t('meetingUserIsNowTheHost', { user: nowHost.name }))
               }
             })
+            // 主持人被收回，重置关闭状态
+            dispatch?.({
+              type: ActionType.UPDATE_MEETING_INFO,
+              data: {
+                endMeetingAction: 0,
+              },
+            })
           }
 
           // 被设置为主持人或者联席主持人不需要再举手
           if (afterRole === Role.coHost || afterRole === Role.host) {
-            neMeeting?.sendMemberControl(memberAction.handsDown, member.uuid)
             eventEmitter?.emit('needAudioHandsUp', false)
             eventEmitter?.emit('needVideoHandsUp', false)
           }
@@ -1064,12 +1063,6 @@ export default function useEventHandler(): UseEventHandlerInterface {
           // 当前静音且不是自己操作
           if (mute && member.uuid !== operator.uuid) {
             Toast.info(t('participantHostMuteVideo'))
-          }
-
-          if (!mute) {
-            if (meetingInfoRef.current.localMember.isHandsUp) {
-              neMeeting?.sendMemberControl(memberAction.handsDown, member.uuid)
-            }
           }
         }
       }
@@ -1205,12 +1198,6 @@ export default function useEventHandler(): UseEventHandlerInterface {
           ) {
             // 允许自行解除静音，且本身在举手情况下解除举手
             eventEmitter?.emit('needAudioHandsUp', false)
-            if (meetingInfoRef.current.localMember.isHandsUp) {
-              neMeeting?.sendMemberControl(
-                memberAction.handsDown,
-                meetingInfoRef.current.localMember.uuid
-              )
-            }
           }
 
           switch (value) {
@@ -1250,10 +1237,6 @@ export default function useEventHandler(): UseEventHandlerInterface {
               }
 
               setIsOpenAudioByHost(true)
-              neMeeting?.sendMemberControl(
-                memberAction.handsDown,
-                meetingInfoRef.current.localMember.uuid
-              )
               if (
                 meetingInfoRef.current.localMember.isAudioOn ||
                 meetingInfoRef.current.localMember.role === Role.host ||
@@ -1289,12 +1272,6 @@ export default function useEventHandler(): UseEventHandlerInterface {
             // 允许自行解除静音，且本身在举手情况下解除举手
             console.log('needVideoHandsUp', value)
             eventEmitter?.emit('needVideoHandsUp', false)
-            if (meetingInfoRef.current.localMember.isHandsUp) {
-              neMeeting?.sendMemberControl(
-                memberAction.handsDown,
-                meetingInfoRef.current.localMember.uuid
-              )
-            }
           }
 
           // 根据不同类型执行对应逻辑
@@ -1327,10 +1304,6 @@ export default function useEventHandler(): UseEventHandlerInterface {
               break
             case AttendeeOffType.disable: // 解除静音
               setIsOpenVideoByHost(true)
-              neMeeting?.sendMemberControl(
-                memberAction.handsDown,
-                meetingInfoRef.current.localMember.uuid
-              )
               if (
                 meetingInfoRef.current.localMember.isVideoOn ||
                 meetingInfoRef.current.localMember.role === Role.host ||
@@ -1485,24 +1458,29 @@ export default function useEventHandler(): UseEventHandlerInterface {
             meetingInfoRef.current.localMember.role !== Role.coHost
           ) {
             handlePermissionChange(permissionConfig, {
-              annotationPermission:
-                !!meetingInfoRef.current.annotationPermission,
-              screenSharePermission:
-                !!meetingInfoRef.current.screenSharePermission,
-              unmuteAudioBySelfPermission:
-                !!meetingInfoRef.current.unmuteAudioBySelfPermission,
-              unmuteVideoBySelfPermission:
-                !!meetingInfoRef.current.unmuteVideoBySelfPermission,
-              updateNicknamePermission:
-                !!meetingInfoRef.current.updateNicknamePermission,
-              whiteboardPermission:
-                !!meetingInfoRef.current.whiteboardPermission,
+              annotationPermission: !!meetingInfoRef.current
+                .annotationPermission,
+              screenSharePermission: !!meetingInfoRef.current
+                .screenSharePermission,
+              unmuteAudioBySelfPermission: !!meetingInfoRef.current
+                .unmuteAudioBySelfPermission,
+              unmuteVideoBySelfPermission: !!meetingInfoRef.current
+                .unmuteVideoBySelfPermission,
+              updateNicknamePermission: !!meetingInfoRef.current
+                .updateNicknamePermission,
+              whiteboardPermission: !!meetingInfoRef.current
+                .whiteboardPermission,
+              emojiRespPermission: !!meetingInfoRef.current.emojiRespPermission,
               videoAllOff: !!meetingInfoRef.current.videoAllOff,
               audioAllOff: !!meetingInfoRef.current.audioAllOff,
               playSound: !!meetingInfoRef.current.playSound,
               avatarHide: !!meetingInfoRef.current.avatarHide,
+              smartSummary: !!meetingInfoRef.current.smartSummary,
             })
-            if (permissionConfig.avatarHide) {
+            if (
+              permissionConfig.avatarHide &&
+              !meetingInfoRef.current.avatarHide
+            ) {
               Toast.success(t('hostSetAvatarHide'))
             }
           }
@@ -1632,6 +1610,32 @@ export default function useEventHandler(): UseEventHandlerInterface {
         }
       }
     )
+    eventEmitter?.on(EventType.OnEmoticonsReceived, (data) => {
+      const videoWin = getWindow('shareVideoWindow')
+
+      videoWin?.postMessage({
+        event: 'eventEmitter',
+        payload: {
+          key: EventType.OnEmoticonsReceived,
+          args: [data],
+        },
+      })
+
+      const emoticons = meetingInfoRef.current.emoticons ?? {}
+
+      dispatch?.({
+        type: ActionType.UPDATE_MEETING_INFO,
+        data: {
+          emoticons: {
+            ...emoticons,
+            [data.userUuid]: {
+              time: Date.now(),
+              emojiKey: data.emojiKey,
+            },
+          },
+        },
+      })
+    })
     eventEmitter?.on(
       EventType.MemberPropertiesDeleted,
       (userUuid: string, keys: string[]) => {
@@ -1775,6 +1779,18 @@ export default function useEventHandler(): UseEventHandlerInterface {
     //   }
     // )
     eventEmitter?.on(EventType.RoomEnded, (reason: string) => {
+      // 自动保存会议聊天记录
+      if (
+        meetingInfoRef.current?.setting?.normalSetting
+          ?.automaticSavingOfMeetingChatRecords &&
+        window.isElectronNative
+      ) {
+        exportChatroomHistoryMessageList?.(
+          meetingInfoRef.current.meetingId,
+          meetingInfoRef.current.myUuid
+        )
+      }
+
       logger.debug(
         'onRoomEnded: %o %t',
         reason,
@@ -1875,6 +1891,17 @@ export default function useEventHandler(): UseEventHandlerInterface {
       }, 200)
     )
     eventEmitter?.on(EventType.ClientBanned, () => {
+      if (
+        meetingInfoRef.current?.setting?.normalSetting
+          ?.automaticSavingOfMeetingChatRecords &&
+        window.isElectronNative
+      ) {
+        exportChatroomHistoryMessageList?.(
+          meetingInfoRef.current.meetingId,
+          meetingInfoRef.current.myUuid
+        )
+      }
+
       logger.debug('clientBanned: 当前用户被踢出 %t')
       Toast.info(t('meetingSwitchOtherDevice'))
       setIsShowAudioDialog(false)
@@ -1998,10 +2025,6 @@ export default function useEventHandler(): UseEventHandlerInterface {
       const senderUuid = res.senderUuid
       const localMember = meetingInfoRef.current.localMember
 
-      if (localMember.isHandsUp) {
-        neMeeting?.sendMemberControl(memberAction.handsDown, localMember.uuid)
-      }
-
       const isMySelf = senderUuid === localMember.uuid
 
       switch (
@@ -2009,16 +2032,10 @@ export default function useEventHandler(): UseEventHandlerInterface {
       ) {
         case 1:
           logger.debug('开启mic请求 %t')
-          if (!isMySelf && localMember.isHandsUp && !localMember.isAudioOn) {
-            // 非主持人或者联席主持人打开自己的
-            Toast.info(t('hostAgreeAudioHandsUp'))
-          }
-
           unmuteMyAudio()
           break
         case 2:
           logger.debug('开启camera请求 %t')
-          // this.$neMeeting.sendMemberControl(memberAction.handsDown, [this.localInfo.avRoomUid]);
           unmuteMyVideo(isMySelf)
           break
         case 3:
@@ -2028,7 +2045,6 @@ export default function useEventHandler(): UseEventHandlerInterface {
             Toast.info(t('hostAgreeAudioHandsUp'))
           }
 
-          // this.$neMeeting.sendMemberControl(memberAction.handsDown, [this.localInfo.avRoomUid]);
           unmuteMyAudio()
           unmuteMyVideo(isMySelf)
           break
@@ -2561,8 +2577,11 @@ export default function useEventHandler(): UseEventHandlerInterface {
   }
 
   const confirmUnMuteMyAudio = () => {
-    const { localMember, unmuteAudioBySelfPermission, screenUuid } =
-      meetingInfoRef.current
+    const {
+      localMember,
+      unmuteAudioBySelfPermission,
+      screenUuid,
+    } = meetingInfoRef.current
     const isHost =
       localMember.role === Role.host || localMember.role === Role.coHost
     const isScreen = !!screenUuid && screenUuid === localMember.uuid
@@ -2588,38 +2607,19 @@ export default function useEventHandler(): UseEventHandlerInterface {
     }
 
     isOpenAudioByHostRef.current = false
-    neMeeting
-      ?.unmuteLocalAudio()
-      .then(() => {
-        // 如果是举手状态则放下
-        if (localMember.isHandsUp) {
-          neMeeting?.sendMemberControl(
-            memberAction.handsDown,
-            meetingInfoRef.current.localMember.uuid
-          )
-        }
-
-        dispatch &&
-          dispatch({
-            type: ActionType.UPDATE_MEMBER,
-            data: {
-              uuid: localMember.uuid,
-              member: {
-                isHandsUp: false,
-              },
-            },
-          })
-      })
-      .catch((e: unknown) => {
-        Toast.info(t('participantUnMuteAudioFail'))
-        logger.error('muteLocalAudio %o %t', e)
-      })
+    neMeeting?.unmuteLocalAudio().catch((e: unknown) => {
+      Toast.info(t('participantUnMuteAudioFail'))
+      logger.error('muteLocalAudio %o %t', e)
+    })
     setIsShowAudioDialog(false)
   }
 
   const confirmUnMuteMyVideo = () => {
-    const { localMember, unmuteVideoBySelfPermission, screenUuid } =
-      meetingInfoRef.current
+    const {
+      localMember,
+      unmuteVideoBySelfPermission,
+      screenUuid,
+    } = meetingInfoRef.current
     const isHost =
       localMember.role === Role.host || localMember.role === Role.coHost
     const isScreen = !!screenUuid && screenUuid === localMember.uuid
@@ -2645,32 +2645,10 @@ export default function useEventHandler(): UseEventHandlerInterface {
     }
 
     isOpenVideoByHostRef.current = false
-    neMeeting
-      ?.unmuteLocalVideo()
-      .then(() => {
-        // 如果是举手状态则放下
-        if (localMember.isHandsUp) {
-          neMeeting?.sendMemberControl(
-            memberAction.handsDown,
-            meetingInfoRef.current.localMember.uuid
-          )
-        }
-
-        dispatch &&
-          dispatch({
-            type: ActionType.UPDATE_MEMBER,
-            data: {
-              uuid: localMember.uuid,
-              member: {
-                isHandsUp: false,
-              },
-            },
-          })
-      })
-      .catch((e: unknown) => {
-        Toast.info(t('participantUnMuteVideoFail'))
-        logger.error('muteLocalVideo %o %t', e)
-      })
+    neMeeting?.unmuteLocalVideo().catch((e: unknown) => {
+      Toast.info(t('participantUnMuteVideoFail'))
+      logger.error('muteLocalVideo %o %t', e)
+    })
     setIsShowVideoDialog(false)
   }
 

@@ -29,6 +29,7 @@ import './index.less'
 import InSipInvitingMemberItem from './InSipInvitingMemberItem'
 import WaitingRoomMemberItem from './WaitingRoomMemberItem'
 import classNames from 'classnames'
+import Emoji from '../../common/Emoji'
 
 interface MemberListFooterProps {
   meetingInfo: NEMeetingInfo
@@ -76,10 +77,10 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
 
   // 是否允许checkbox需要与当前整体会控状态一致
   useEffect(() => {
-    allowUnMuteVideoBySelfRef.current =
-      !!meetingInfoRef.current?.unmuteAudioBySelfPermission
-    allowUnMuteAudioBySelfRef.current =
-      !!meetingInfoRef.current?.unmuteVideoBySelfPermission
+    allowUnMuteVideoBySelfRef.current = !!meetingInfoRef.current
+      ?.unmuteAudioBySelfPermission
+    allowUnMuteAudioBySelfRef.current = !!meetingInfoRef.current
+      ?.unmuteVideoBySelfPermission
   }, [])
 
   useEffect(() => {
@@ -334,7 +335,11 @@ const MemberListFooter: React.FC<MemberListFooterProps> = ({
 
           Toast.fail(knownError?.msg || knownError?.message)
         }
+        notAllowJoinRef.current = false
       },
+      onCancel: () => {
+        notAllowJoinRef.current = false
+      }
     })
   }
 
@@ -507,19 +512,27 @@ const MemberList: React.FC = () => {
     inInvitingMemberList: inSipInvitingMemberList,
   } = useMeetingInfoContext()
   const { neMeeting, eventEmitter, globalConfig } = useGlobalContext()
-  const { waitingRoomInfo, memberList: waitingRoomMemberList } =
-    useWaitingRoomContext()
+  const {
+    waitingRoomInfo,
+    memberList: waitingRoomMemberList,
+  } = useWaitingRoomContext()
   const scrollRef = useRef<HTMLDivElement>(null)
   const getWaitingRoomMemberRef = useRef(false)
 
-  const [updateUserNicknameModalOpen, setUpdateUserNicknameModalOpen] =
-    useState(false)
+  const [
+    updateUserNicknameModalOpen,
+    setUpdateUserNicknameModalOpen,
+  ] = useState(false)
 
   const [updateUserNicknameInfo, setUpdateUserNicknameInfo] = useState({
     oldName: '',
     uuid: '',
     roomType: 'room',
   })
+
+  const handUpCount = useMemo(() => {
+    return memberList.filter((item) => item.isHandsUp).length
+  }, [memberList])
 
   useEffect(() => {
     eventEmitter?.on(
@@ -1003,7 +1016,37 @@ const MemberList: React.FC = () => {
           </div>
         </div>
       )}
-
+      {isHostOrCoHost &&
+        handUpCount > 0 &&
+        (meetingInfo.activeMemberManageTab === 'room' ||
+          (meetingInfo.activeMemberManageTab === 'invite' &&
+            !showSipInviteTab) ||
+          (meetingInfo.activeMemberManageTab === 'waitingRoom' &&
+            !showWaitingTab)) && (
+          <div className="pd20 ">
+            <div className="nemeeting-member-list-hands-up">
+              <div className="hands-down-content">
+                <Emoji type={2} size={24} emojiKey="[举手]" />
+                {t('handsUpCount', { count: handUpCount })}
+              </div>
+              <div
+                className="hands-down-all"
+                onClick={() => {
+                  neMeeting
+                    ?.handsDownAll()
+                    .then(() => {
+                      Toast.success(t('handsUpDownAllSuccess'))
+                    })
+                    .catch(() => {
+                      Toast.fail(t('handsUpDownAllFailure'))
+                    })
+                }}
+              >
+                {t('handsUpDownAll')}
+              </div>
+            </div>
+          </div>
+        )}
       <div className="member-list-content" ref={scrollRef}>
         {(meetingInfo.activeMemberManageTab === 'room' ||
           (meetingInfo.activeMemberManageTab === 'invite' &&

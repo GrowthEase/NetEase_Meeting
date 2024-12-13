@@ -1,6 +1,26 @@
 .invite-modal .nemeeting-modal-body {
   padding: 0;
 }
+.invite-modal .nemeeting-modal-content {
+  height: 500px;
+}
+
+.invite-modal {
+  .nemeeting-modal-header {
+    height: 32px;
+    .nemeeting-modal-title {
+      font-size: 14px;
+      line-height: 32px;
+    }
+  }
+  .nemeeting-modal-content {
+    .nemeeting-modal-close {
+      top: 0px;
+      right: 0px;
+    }
+  }
+}
+
 .nemeeting-invite-content {
   height: 450px;
   display: flex;
@@ -25,7 +45,7 @@
     display: flex;
     justify-content: center;
     margin-bottom: 32px;
-    margin-top: 30px;
+    margin-top: 118px;
     align-items: center;
     flex-direction: column;
   }
@@ -106,9 +126,9 @@
     min-width: 100px;
     text-align: center;
   }
-  .nemeeting-SIP-tab {
-    margin: 8px 60px 12px 60px;
-  }
+  // .nemeeting-SIP-tab {
+  //   margin: 8px 60px 12px 60px;
+  // }
   .nemeeting-SIP-btn {
     width: 100%;
     margin-bottom: 39px;
@@ -144,6 +164,17 @@
     display: flex;
     align-content: center;
     position: relative;
+    .nemeeting-select-selection-placeholder {
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      width: 100%;
+      display: block;
+    }
+    .nemeeting-select-selector {
+      padding: 0;
+      width: 315px;
+    }
     .nemeeting-select-outlined.nemeeting-select-status-error:not(
         .nemeeting-select-customize-input
       )
@@ -173,6 +204,12 @@
     text-align: center;
     margin-top: 16px;
   }
+
+  .nemeeting-SIP-calling-failed{
+    color: #f24957;
+    text-align: center;
+    margin-top: 16px;
+  }
   .nemeeting-SIP-call-other-wrap {
     display: flex;
     align-content: center;
@@ -198,6 +235,17 @@
       .nemeeting-select-selection-search-input {
         margin-left: 48px;
       }
+    }
+  }
+  .nemeeting-room-SIP-phone-select {
+    flex: 1;
+    .nemeeting-select-selector {
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      outline: none;
+      box-shadow: none !important;
+      border-radius: 0;
     }
   }
 }
@@ -254,7 +302,7 @@
   justify-content: center;
   border-top: 1px solid #ebedf0;
   position: absolute;
-  bottom: 12px;
+  bottom: -5px;
   width: 100%;
   left: 50%;
   transform: translateX(-50%);
@@ -378,7 +426,7 @@
 }
 
 .recent-call-item-title-name {
-  width: 70px;
+  width: 60px;
   display: inline-block;
   margin-right: 10px;
   overflow: hidden;
@@ -386,11 +434,36 @@
   white-space: nowrap;
 }
 
+.recent-sip-call-item-phone-number {
+  display: inline-block;
+  width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-sip-call-item-protocol-name {
+  display: inline-block;
+  width: 50px;
+  margin-right: 10px;
+  overflow: hidden;
+  border-radius: 4px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  background: #f0f1f5;
+  box-sizing: border-box;
+  border: 1px solid #E6E7EB
+}
+
 .recent-call-dropdown {
   .nemeeting-dropdown-menu {
     max-height: 200px;
     overflow-y: auto;
     padding: 0px !important;
+    .nemeeting-dropdown-menu-title-content {
+      display: block;
+    }
     .nemeeting-dropdown-menu-item {
       padding: 5px 15px;
       height: 40px;
@@ -399,3 +472,73 @@
     }
   }
 }
+.nemeeting-batch-call {
+  height: 270px;
+}
+
+.nemeeting-room-sip-wrap {
+  padding: 48px 90px 0 90px;
+  .nemeeting-room-sip-line {
+    width: 315px;
+    height: 70px;
+    .room-sip-line-label {
+      height: 22px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 22px;
+      letter-spacing: 0px;
+      color: #000000;
+    }
+    .room-sip-line-input {
+      height: 40px;
+      font-size: 14px;
+    }
+    .nemeeting-input-outlined {
+      border: none;
+      border-bottom: 1px solid #cdcfd7;
+      box-shadow: none;
+      padding: 9px 0 5px 0;
+      border-radius: 0;
+    }
+  }
+  .nemeeting-room-sip-btn {
+    width: 315px;
+    height: 40px;
+    margin-top: 40px;
+    border-radius: 8px;
+    opacity: 1;
+  }
+  .baseInput .nemeeting-input {
+    font-size: 14px;
+  }
+}
+
+.nemeeting-room-choose {
+  display: flex;
+  height: 22px;
+  margin-bottom: 16px;
+}
+
+.nemeeting-room-sip-display-name {
+  .baseInput {
+    height: 40px;
+    padding-top: 0px;
+      .baseInputContent {
+        padding: 0 11px;
+      }
+  }
+}
+
+.room-sip-display-name {
+  font-weight: 500;
+  margin-right: 32px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nemeeting-SIP-calling-wrap {
+  margin-top: 32px;
+}
+

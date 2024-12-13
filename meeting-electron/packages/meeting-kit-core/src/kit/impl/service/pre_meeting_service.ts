@@ -139,8 +139,9 @@ class NEPreMeetingService implements NEPreMeetingServiceInterface {
       lines.forEach((line) => {
         if (line.trim().length > 0) {
           try {
-            const [timestamp, fromUserUuid, fromNickname, content] =
-              JSON.parse(line)
+            const [timestamp, fromUserUuid, fromNickname, content] = JSON.parse(
+              line
+            )
 
             list.push({
               timestamp: Number(timestamp),
@@ -517,6 +518,12 @@ class NEPreMeetingService implements NEPreMeetingServiceInterface {
     return SuccessBody(res.map(this._formatMeetingItem))
   }
 
+  async getScheduledMeetingList(
+    status: NEMeetingItemStatus[]
+  ): Promise<NEResult<NEMeetingItem[]>> {
+    return this.getMeetingList(status)
+  }
+
   async getScheduledMeetingMemberList(
     meetingNum: string
   ): Promise<NEResult<NEScheduledMember[]>> {
@@ -888,8 +895,8 @@ class NEPreMeetingService implements NEPreMeetingServiceInterface {
         meetingResponse?.settings.roomInfo.roomProperties?.guest?.value === '1',
       password: meetingResponse.settings.roomInfo.password ?? '',
       settings: {
-        cloudRecordOn:
-          !meetingResponse.settings.roomInfo.roomConfig.resource.record,
+        cloudRecordOn: !meetingResponse.settings.roomInfo.roomConfig.resource
+          .record,
         controls: controls,
         currentAudioControl: {
           type: 'audio',
@@ -923,8 +930,14 @@ class NEPreMeetingService implements NEPreMeetingServiceInterface {
         meetingNum: '',
         state: NEMeetingItemLiveStatus.NEMeetingItemLiveStatusInit,
         taskId: '',
-        title: '',
+        title: meetingResponse.settings.livePrivateConfig?.title || '',
         liveChatRoomIndependent: false,
+        liveBackground: meetingResponse.settings.livePrivateConfig?.background,
+        livePushThirdParties:
+          meetingResponse.settings.livePrivateConfig?.pushThirdParties,
+        enableThirdParties: !!meetingResponse.settings.livePrivateConfig
+          ?.enableThirdParties,
+        livePassword: meetingResponse.settings.livePrivateConfig?.password,
       },
       recurringRule: meetingResponse.recurringRule,
       extraData:
@@ -1024,6 +1037,14 @@ class NEPreMeetingService implements NEPreMeetingServiceInterface {
       attendeeVideoOff: attendeeVideo.off,
       attendeeAudioOff: attendeeAudio.off,
       attendeeAudioOffType: attendeeAudio.attendeeOff,
+      liveChatRoomEnable: item.live.liveChatRoomEnable,
+      liveConfig: {
+        title: item.live.title,
+        background: item.live.liveBackground,
+        pushThirdParties: item.live.livePushThirdParties,
+        password: item.live.livePassword,
+        enableThirdParties: !!item.live.enableThirdParties,
+      },
       startTime: item.startTime,
       endTime: item.endTime,
       enableWaitingRoom: item.waitingRoomEnabled,

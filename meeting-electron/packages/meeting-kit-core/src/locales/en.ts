@@ -32,6 +32,9 @@ export default {
   globalOpen: `Open`,
   globalStart: 'Turn on',
   globalDelete: 'delete',
+  globalEdit: 'Edit',
+  globalAdd: 'Add',
+  globalGoBack: 'Back',
   joinMeeting: 'Join Meeting',
   meetingCopyInviteInfo: 'Copy the invitation ',
   participants: `${attendee}`, // 会议成员列表标题
@@ -60,6 +63,8 @@ export default {
   settingHideNotYetJoinedMembers: 'Hide unjoined members',
   settingHideNotYetJoinedMembersTip:
     'Once enabled, non-participants and members in a call will not be displayed in the layout view.',
+  settingHideVideoOffAttendees: 'Hide non-video participants',
+  settingHideMyVideo: 'Hide self view',
   unSupportBrowserTitle: 'Browser not compatible',
   unSupportBrowserTip:
     'We have detected that the browser you are using does not support our service. For the best experience, we recommend using the following browsers.',
@@ -119,6 +124,10 @@ export default {
   save: 'Save',
   saveSuccess: 'Saved successfully',
   saveFail: 'Failed to save',
+  sipCallRoom: 'Call SIP/H.323',
+  sipCallOutRoomInputTip: 'IP address or SIP URI or registered device number',
+  h323CallOutRoomInputTip: 'IP address or E.164 number',
+  sipProtocol: 'Call Signaling Protocol',
   done: 'Complete',
   notify: 'Notification',
   meetingSwitchOtherDevice: `You are removed by ${host} or switched to another device, you have left ${meeting}`,
@@ -140,6 +149,7 @@ export default {
   meetingInviteUrlTips: 'Copy the invitation link',
   meetingRoomScreenCasting: 'Screen sharing',
   meetingLiveMode: 'Live',
+  sipDisplayName: 'Nick name',
   IkonwIt: 'Got it',
 
   screenShare: 'ShareScreen',
@@ -243,6 +253,7 @@ export default {
   liveViewPageBackgroundImage: 'View page background image',
   liveCoverPicture: 'Live cover image',
   liveCoverPictureTip: '16:9 , no more than 5 M',
+  liveReUpload: 'Reupload',
   liveSelectTip: 'Select Live from the left',
   livePasswordTip: 'Enter a 6-digit password',
   liveStatusChange: 'Live status has changed',
@@ -261,7 +272,7 @@ export default {
   liveInteraction: 'Interaction',
   liveInteractionTips: `If enabled, messaging in ${meeting} and live stream is visible`,
   liveViewSetting: 'View Settings',
-  liveViewSettingChange: '主播发生变更',
+  liveViewSettingChange: 'The view is changed',
   liveViewPreviewTips: 'Live streaming preview',
   liveViewPreviewDesc: 'Select a view layout',
   liveStart: 'Start',
@@ -413,6 +424,7 @@ export default {
   audioMuteOpenTips:
     'Unable to use the microphone. It has been detected that you are speaking. If you wish to speak, please click the "Unmute" button and then speak again.',
   networkError: 'Network Error',
+  meetingRoom: 'Meeting Room',
   startCloudRecord: 'Cloud recording',
   stopCloudRecord: 'Stop recording',
   recording: 'Recording',
@@ -441,7 +453,7 @@ export default {
   startTime: 'Start Time',
   creator: 'Creator',
   cloudRecordingLink: 'Cloud recording link',
-  generatingCloudRecordingFile: 'Generating cloud recording file',
+  generatingCloudRecordingFile: 'Generating cloud recording file...',
   stopRecordFailed: '停止录制失败',
   startRecordFailed: '开启录制失败',
   messageRecalled: 'Message recalled',
@@ -817,6 +829,7 @@ export default {
   waitingRoomRemoveAllMemberTip:
     'Are you sure you want to remove all waiting members?',
   meetingGuestJoinName: 'Join Name',
+  meetingGuestRememberJoinName: 'Remember nickname',
   unableMeetingBlacklistTitle:
     'Are you sure to turn off the meeting blacklist?',
   meetingJoinBeforeHost: 'Attendees can join before host',
@@ -990,6 +1003,7 @@ export default {
   sipCallAgainEx: 'Call again',
   sipCallStatusRejected: 'Rejected',
   sipCallStatusCanceled: 'Cancelled',
+  sipCallStatusBusy: 'busy',
   sipCallStatusError: 'Call exception',
   sipCallStatusCalling: 'Calling',
   sipCallStatusWaiting: 'Waiting for call',
@@ -1012,6 +1026,7 @@ export default {
   sipAddressInvite: 'Contacts',
   sipJoinOtherMeetingTip: 'Will leave the current meeting once you accept.',
   callStatusWaitingJoin: 'To join',
+
   globalReject: 'Reject',
 
   meetingOpen: 'Show',
@@ -1293,4 +1308,54 @@ export default {
 
   ethernet: 'Ethernet',
   wifi: 'Wi-Fi',
+
+  meetingLiveToOtherPlatform: 'Live streaming to third-party platforms',
+  meetingLiveToOtherPlatformSetting: 'Live streaming platform Settings',
+  platformName: 'Platform Name',
+  pushUrl: 'Push Address',
+  pushSecret: 'Push Key',
+  pushSecretTip: 'Please fill in the push key',
+
+  emoticons: 'React',
+  allowMembersToReplyWithEmoticons: 'Allow emojis and reactions',
+  handsUp: 'Raise hand',
+  handsUpCount: '{{count}} participants are raising hands',
+  handsUpDownAll: 'Lower all hands',
+  handsUpDownAllSuccess: "All participants' hands lowered",
+  handsUpDownAllFailure: 'Failed to lower all hands',
+  confirmJoinMeeting: 'Confirm join meeting',
+
+  settingAutomaticSavingOfMeetingChatRecords: 'Auto save chat messages',
+  settingAutomaticSavingOfMeetingChatRecordsTips:
+    'Chat records will be automatically saved when you leave the meeting as the host.',
+
+  virtualBackgroundNotSupported:
+    'Sorry, the virtual background feature is unavailable due to your device hardware or system limitations.',
+  virtualBackgroundSupportedTitle: 'Insufficient device performance',
+  virtualBackgroundSupportedDesc:
+    "Your device's performance is insufficient, enabling the virtual background function may result in a decrease in video quality or stuttering. Do you still want to try enabling it",
+  virtualBackgroundSupportedDescBtn: 'Continue',
+
+  settingLeaveTheMeetingRequiresConfirmation: 'Ask me to confirm when l leave a meeting',
+  meetingAppointNewHost: 'Assign a new host',
+  meetingAppointAndLeave: 'Assign and leave',
+
+  cloudRecordingEnableAISummary: 'Enable smart recording',
+  cloudRecordingEnableAISummaryTip:
+    'When enabled, this meeting will generate smart AI minutes (including summary and to-do list)',
+  cloudRecordingAISummaryStarted:
+    'This meeting has started smart recording and will generate smart AI minutes (including summary and to-do list)',
+  cloudRecordingAISummaryFailed: 'Smart recording fails to be enabled. Please stop recording later and try again',
+  cloudRecordingUnableToStart: 'Unable to start cloud recording',
+  cloudRecordingUnableToStartTips: 'No microphone or video is enabled in the meeting. To start recording, please unmute.',
+
+  settingShowParticipationTime: 'Show Connected Time',
+  settingShowMeetingElapsedTime: 'Meeting duration',
+  settingShowParticipationElapsedTime: 'Connected time',
+
+  settingEnterFullscreen: 'Enter full screen automatically when starting or joining a meeting',
+
+  enterFullscreenTips: 'Press ESC or click the button in the upper right corner to exit full screen mode',
+
+  preMeetingSubject: ' Scheduled meeting',
 }

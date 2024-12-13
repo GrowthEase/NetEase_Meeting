@@ -79,6 +79,9 @@ import {
   NEMeetingItem,
 } from 'nemeeting-web-sdk';
 import CommonModal from '@meeting-module/components/common/CommonModal';
+import LiveSettingModal from './LiveSetting/LiveSettingModal';
+import { LiveSettingInfo } from '@/types';
+import NEPreMeetingService from '@meeting-module/kit/impl/service/pre_meeting_service';
 
 dayjs.extend(weekday);
 dayjs.extend(localeData);
@@ -257,6 +260,7 @@ type SummitValue = {
   openLive: boolean;
   audioOff: boolean;
   liveOnlyEmployees: boolean;
+  liveChatRoomEnable?: boolean;
   meetingId?: number;
   attendeeAudioOffType?: AttendeeOffType;
   enableWaitingRoom?: boolean;
@@ -267,6 +271,7 @@ type SummitValue = {
   interpretation?: CreateMeetingResponse['interpretation'];
   timezoneId?: CreateMeetingResponse['timezoneId'];
   cloudRecordConfig?: CreateMeetingResponse['cloudRecordConfig'];
+  livePrivateConfig?: LiveSettingInfo;
 };
 
 interface ScheduleMeetingModalProps extends ModalProps {
@@ -281,6 +286,7 @@ interface ScheduleMeetingModalProps extends ModalProps {
   onCancel?: () => void;
   eventEmitter: EventEmitter;
   meetingContactsService?: NEContactsService;
+  preMeetingService?: NEPreMeetingService;
 }
 
 const ScheduleMeeting = forwardRef<
@@ -297,6 +303,7 @@ const ScheduleMeeting = forwardRef<
     onSummit,
     globalConfig,
     eventEmitter,
+    preMeetingService,
     ...restProps
   } = props;
   const {
@@ -348,6 +355,8 @@ const ScheduleMeeting = forwardRef<
     'edit' | 'exitEdit' | 'cancel' | ''
   >('');
 
+  const [openLiveSettingModal, setOpenLiveSettingModal] = useState(false);
+
   const [openInterpretationSetting, setOpenInterpretationSetting] =
     useState(false);
 
@@ -366,6 +375,7 @@ const ScheduleMeeting = forwardRef<
     'interpretation',
     form,
   );
+  const [livePrivateConfig, setLivePrivateConfig] = useState<LiveSettingInfo>();
   const enableGuestJoin = Form.useWatch('enableGuestJoin', form);
   const formScheduledMembers = Form.useWatch('scheduledMembers', form);
 
@@ -391,6 +401,7 @@ const ScheduleMeeting = forwardRef<
         })
       : [];
   }, [language]);
+  const livePrivateConfigRef = useRef<LiveSettingInfo>();
 
   function passwordValidator(_, value: PasswordValue) {
     if (value?.enable && !/^\d{6}$/.test(value?.password)) {
@@ -581,6 +592,12 @@ const ScheduleMeeting = forwardRef<
         };
       }
 
+      if (livePrivateConfigRef.current && values.openLive) {
+        data.livePrivateConfig = { ...livePrivateConfigRef.current };
+        data.liveChatRoomEnable =
+          livePrivateConfigRef.current.liveChatRoomEnable;
+      }
+
       onSummit?.(data);
     });
   }
@@ -645,6 +662,14 @@ const ScheduleMeeting = forwardRef<
       openLive: meeting?.live.enable,
       enableJoinBeforeHost: meeting.enableJoinBeforeHost,
       liveOnlyEmployees: liveOnlyEmployees,
+      liveChatRoomEnable: meeting.live.liveChatRoomEnable,
+      livePrivateConfig: {
+        title: meeting.live.title,
+        background: meeting.live.liveBackground,
+        pushThirdParties: meeting.live.livePushThirdParties,
+        liveChatRoomEnable: meeting.live.liveChatRoomEnable,
+        password: meeting.live.livePassword,
+      },
       scheduledMembers: meeting.scheduledMemberList,
       enableWaitingRoom: meeting?.waitingRoomEnabled,
       enableGuestJoin: meeting.enableGuestJoin,
@@ -748,6 +773,14 @@ const ScheduleMeeting = forwardRef<
       repeatInfo = defaultRepeatInfo;
     }
 
+    setLivePrivateConfig({
+      title: meeting.live.title,
+      background: meeting.live.liveBackground,
+      pushThirdParties: meeting.live.livePushThirdParties,
+      liveChatRoomEnable: meeting.live.liveChatRoomEnable,
+      password: meeting.live.livePassword,
+    });
+
     form.setFieldValue('repeat', { ...repeatInfo });
   }
 
@@ -762,13 +795,17 @@ const ScheduleMeeting = forwardRef<
       }
 
       if (meeting) {
-        console.log('setEditMeetingInfo>>>>>>>>>>', meeting);
-
         setEditMeetingInfo(meeting, getDefaultRepeatInfo(startTime));
       } else {
         setIsDetail(false);
+        const subject = `${nickname}` + t('preMeetingSubject');
+
+        setLivePrivateConfig({
+          title: subject,
+          liveChatRoomEnable: true,
+        });
         form.setFieldsValue({
-          subject: `${nickname}预约的会议`,
+          subject,
           startTime: startTime,
           endTime: startTime.add(30, 'minute'),
           meetingPassword: {
@@ -1164,6 +1201,10 @@ const ScheduleMeeting = forwardRef<
     }
   }, [isDetail, meeting?.recurringRule]);
 
+  function handleOpenLiveSetting() {
+    setOpenLiveSettingModal(true);
+  }
+
   const showEditBtn = useMemo(() => {
     if (meeting) {
       return meeting?.ownerUserUuid === userInfo?.userUuid;
@@ -1188,6 +1229,12 @@ const ScheduleMeeting = forwardRef<
       isDetail ? 'detail' : 'edit',
     );
   }, [isDetail]);
+
+  function handleLiveSettingSave(liveInfo: LiveSettingInfo) {
+    livePrivateConfigRef.current = { ...liveInfo };
+    setLivePrivateConfig(liveInfo);
+    setOpenLiveSettingModal(false);
+  }
 
   return (
     <div className="schedule-meeting-container-wrap">
@@ -1544,9 +1591,20 @@ const ScheduleMeeting = forwardRef<
                       </Button>
                     </div>
                   ) : (
-                    <Checkbox disabled={isDetail}>
-                      <span>{i18n.openMeetingLive}</span>
-                    </Checkbox>
+                    <div className="schedule-meeting-live-wrap">
+                      <Checkbox checked={openLive} disabled={isDetail}>
+                        <span>{i18n.openMeetingLive}</span>
+                      </Checkbox>
+                      {openLive && (
+                        <Button
+                          size="small"
+                          type="link"
+                          onClick={handleOpenLiveSetting}
+                        >
+                          {t('settings')}
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </Form.Item>
               )}
@@ -1706,6 +1764,18 @@ const ScheduleMeeting = forwardRef<
       >
         {modalContent}
       </Modal>
+      <LiveSettingModal
+        width={375}
+        maxCount={globalConfig?.appConfig?.MEETING_LIVE?.maxThirdPartyNum || 5}
+        title={t('meetingLive')}
+        destroyOnClose
+        liveInfo={livePrivateConfig}
+        footer={null}
+        preMeetingService={preMeetingService}
+        open={openLiveSettingModal}
+        onSave={handleLiveSettingSave}
+        onCancel={() => setOpenLiveSettingModal(false)}
+      />
       <Modal
         open={openInterpretationSetting}
         title={t('interpInterpreter')}

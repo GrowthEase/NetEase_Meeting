@@ -184,6 +184,7 @@ function getMeetingKitInstance(): NEMeetingKit {
               'getMeetingMessageChannelService',
               'getContactsService',
               'getFeedbackService',
+              'getGuestService',
             ].includes(propKey)
           ) {
             return function () {

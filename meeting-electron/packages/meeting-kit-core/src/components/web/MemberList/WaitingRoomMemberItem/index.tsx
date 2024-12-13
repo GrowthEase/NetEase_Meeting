@@ -111,7 +111,11 @@ const WaitingRoomMemberItem: React.FC<MemberItemProps> = ({
 
           Toast.fail(error?.msg || error?.message)
         }
+        notAllowJoinRef.current = false
       },
+      onCancel: () => {
+        notAllowJoinRef.current = false
+      }
     })
   }
 

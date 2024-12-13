@@ -5,23 +5,12 @@ import { useTranslation } from 'react-i18next'
 import React, { useEffect } from 'react'
 import { Button, Checkbox, Popover, Select, Radio } from 'antd'
 import { IPCEvent } from '../../../app/src/types'
-import { NEChatMessageNotificationType } from '../../../kit'
+import { MeetingSetting } from '../../../kit'
 
 interface NormalSettingProps {
   inMeeting?: boolean
-  setting: {
-    openVideo: boolean
-    openAudio: boolean
-    showDurationTime: boolean
-    showSpeakerList: boolean
-    showToolbar: boolean
-    enableTransparentWhiteboard: boolean
-    enableVoicePriorityDisplay: boolean
-    enableShowNotYetJoinedMembers: boolean
-    downloadPath: string
-    language: string
-    chatMessageNotificationType: NEChatMessageNotificationType
-  }
+  setting: MeetingSetting['normalSetting']
+  onSettingChange: (setting: MeetingSetting['normalSetting']) => void
   onOpenVideoChange: (e: CheckboxChangeEvent) => void
   onOpenAudioChange: (e: CheckboxChangeEvent) => void
   onShowTimeChange: (e: CheckboxChangeEvent) => void
@@ -30,6 +19,8 @@ interface NormalSettingProps {
   onEnableTransparentWhiteboardChange: (e: CheckboxChangeEvent) => void
   onEnableVoicePriorityDisplay: (e: CheckboxChangeEvent) => void
   onEnableShowNotYetJoinedMembers: (e: CheckboxChangeEvent) => void
+  onAutomaticSavingOfMeetingChatRecords: (e: CheckboxChangeEvent) => void
+  onLeaveTheMeetingRequiresConfirmation: (e: CheckboxChangeEvent) => void
   onDownloadPathChange: (path: string) => void
   onLanguageChange: (value: string) => void
   onChatMessageNotificationTypeChange: (value: number) => void
@@ -37,6 +28,7 @@ interface NormalSettingProps {
 const NormalSetting: React.FC<NormalSettingProps> = ({
   inMeeting,
   setting,
+  onSettingChange,
   onShowSpeakerListChange,
   onShowTimeChange,
   onOpenAudioChange,
@@ -47,7 +39,9 @@ const NormalSetting: React.FC<NormalSettingProps> = ({
   onDownloadPathChange,
   onLanguageChange,
   onChatMessageNotificationTypeChange,
+  onLeaveTheMeetingRequiresConfirmation,
   onEnableShowNotYetJoinedMembers,
+  onAutomaticSavingOfMeetingChatRecords,
 }) => {
   const { t } = useTranslation()
 
@@ -59,6 +53,16 @@ const NormalSetting: React.FC<NormalSettingProps> = ({
     }[navigator.language.split('-')[0]] || 'en-US'
 
   const languageValue = setting.language || defaultLanguage
+
+  function onShowParticipationTime(e: CheckboxChangeEvent) {
+    setting.showParticipationTime = e.target.checked
+    onSettingChange({ ...setting })
+  }
+
+  function onEnterFullscreen(e: CheckboxChangeEvent) {
+    setting.enterFullscreen = e.target.checked
+    onSettingChange({ ...setting })
+  }
 
   function handleDownloadPathChange() {
     window.ipcRenderer?.send(IPCEvent.downloadPath, 'set')
@@ -78,12 +82,7 @@ const NormalSetting: React.FC<NormalSettingProps> = ({
   }, [setting])
 
   return (
-    <div
-      className="setting-wrap normal-setting w-full h-full"
-      style={{
-        paddingBottom: '50px',
-      }}
-    >
+    <div className="setting-wrap normal-setting w-full h-full">
       <div>
         {/* <div className="normal-setting-title">{t('meeting')}</div> */}
         <div className="normal-setting-item">
@@ -104,6 +103,14 @@ const NormalSetting: React.FC<NormalSettingProps> = ({
             onChange={onShowTimeChange}
           >
             {t('showMeetingTime')}
+          </Checkbox>
+        </div>
+        <div className="normal-setting-item">
+          <Checkbox
+            checked={setting.showParticipationTime ?? false}
+            onChange={onShowParticipationTime}
+          >
+            {t('settingShowParticipationTime')}
           </Checkbox>
         </div>
         <div className="normal-setting-item">
@@ -137,6 +144,14 @@ const NormalSetting: React.FC<NormalSettingProps> = ({
               </svg>
             </span>
           </Popover>
+        </div>
+        <div className="normal-setting-item">
+          <Checkbox
+            checked={setting.leaveTheMeetingRequiresConfirmation ?? true}
+            onChange={onLeaveTheMeetingRequiresConfirmation}
+          >
+            <span>{t('settingLeaveTheMeetingRequiresConfirmation')}</span>
+          </Checkbox>
         </div>
         <div className="normal-setting-item">
           <Checkbox
@@ -189,6 +204,14 @@ const NormalSetting: React.FC<NormalSettingProps> = ({
               </svg>
             </span>
           </Popover>
+        </div>
+        <div className="normal-setting-item">
+          <Checkbox
+            checked={setting.enterFullscreen}
+            onChange={onEnterFullscreen}
+          >
+            <span>{t('settingEnterFullscreen')}</span>
+          </Checkbox>
         </div>
         <div className="normal-setting-item">
           <Checkbox
@@ -272,6 +295,34 @@ const NormalSetting: React.FC<NormalSettingProps> = ({
               >
                 {t('chosePath')}
               </Button>
+            </div>
+          ) : null}
+          {setting.downloadPath ? (
+            <div className="normal-setting-item">
+              <Checkbox
+                checked={setting.automaticSavingOfMeetingChatRecords}
+                onChange={onAutomaticSavingOfMeetingChatRecords}
+              >
+                <span>{t('settingAutomaticSavingOfMeetingChatRecords')}</span>
+              </Checkbox>
+              <Popover
+                trigger={'hover'}
+                placement={'top'}
+                content={
+                  <div className="toolbar-tip">
+                    {t('settingAutomaticSavingOfMeetingChatRecordsTips')}
+                  </div>
+                }
+              >
+                <span>
+                  <svg
+                    className="icon iconfont icona-45 nemeeting-blacklist-tip"
+                    aria-hidden="true"
+                  >
+                    <use xlinkHref="#icona-45"></use>
+                  </svg>
+                </span>
+              </Popover>
             </div>
           ) : null}
         </div>

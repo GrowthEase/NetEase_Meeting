@@ -2,7 +2,7 @@ import { EventPriority, XKitReporter } from '@xkit-yx/utils'
 import React, { useContext, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { IPCEvent } from '../app/src/types'
-import { errorCodeMap, IM_VERSION, RTC_VERSION } from '../config'
+import { errorCodeMap, IM_VERSION, MAJOR_AUDIO, RTC_VERSION } from '../config'
 import NEMeetingService from '../services/NEMeeting'
 import {
   MeetingInfoContext,
@@ -61,8 +61,11 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
   } = useGlobalContext()
 
   // 加入或者创建回调
-  const { dispatch, memberList, meetingInfo } =
-    useContext<MeetingInfoContextInterface>(MeetingInfoContext)
+  const {
+    dispatch,
+    memberList,
+    meetingInfo,
+  } = useContext<MeetingInfoContextInterface>(MeetingInfoContext)
   const { dispatch: waitingRoomDispatch } = useWaitingRoomContext()
   const xkitReportRef = useRef<XKitReporter | null>(null)
   const rejoinCountRef = useRef(0)
@@ -192,14 +195,15 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
     )
     eventEmitter?.on(
       UserEventType.RejoinMeeting,
-      (data: { isAudioOn: boolean; isVideoOn: boolean }) => {
+      (data: { isAudioOn: boolean; isVideoOn: boolean, joinOption: JoinOptions }) => {
         if (joinOptionRef.current) {
           joinOptionRef.current.audio = data.isAudioOn ? 1 : 2
           joinOptionRef.current.video = data.isVideoOn ? 1 : 2
         }
 
+        const _options = data.joinOption ? data.joinOption :  joinOptionRef.current
         const options = {
-          ...joinOptionRef.current,
+          ..._options,
           password: passwordRef.current,
         }
 
@@ -344,6 +348,14 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         type: ActionType.RESET_MEETING,
         data: null,
       })
+    globalDispatch?.({
+      type: ActionType.UPDATE_GLOBAL_CONFIG,
+      data: {
+        interpretationSetting: {
+          listenLanguage: MAJOR_AUDIO,
+        },
+      },
+    })
     joinMeeting(options, data.isJoinOther, data.isRejoin)
       .then(() => {
         if (data.isRejoin) {
@@ -525,7 +537,18 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
   }
 
   const asyncSetting = (setting: MeetingSetting, joinOptions: JoinOptions) => {
+
     if (setting) {
+      if (joinOptions.enableLeaveTheMeetingRequiresConfirmation !== undefined) {
+        setting.normalSetting.leaveTheMeetingRequiresConfirmation =
+          joinOptions.enableLeaveTheMeetingRequiresConfirmation
+      }
+
+      if (joinOptions.showParticipationTime !== undefined) {
+        setting.normalSetting.showParticipationTime =
+          joinOptions.showParticipationTime
+      }
+
       if (joinOptions.showDurationTime !== undefined) {
         setting.normalSetting.showDurationTime = joinOptions.showDurationTime
       }
@@ -551,6 +574,15 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       if (joinOptions.enableShowNotYetJoinedMembers !== undefined) {
         setting.normalSetting.enableShowNotYetJoinedMembers =
           joinOptions.enableShowNotYetJoinedMembers
+      }
+
+      if (joinOptions.chatMessageNotificationType !== undefined) {
+        setting.normalSetting.chatMessageNotificationType =
+          joinOptions.chatMessageNotificationType
+      }
+
+      if (joinOptions.showNameInVideo !== undefined) {
+        setting.videoSetting.showMemberName = joinOptions.showNameInVideo
       }
 
       setLocalStorageSetting(JSON.stringify(setting))
@@ -651,6 +683,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
     }
 
     if (meeting && meeting.meetingInfo) {
+      meeting.meetingInfo.joinOption = joinOptionRef.current
       if (joinOptionRef.current) {
         joinOptionRef.current.meetingNum = meeting.meetingInfo.meetingNum
       }

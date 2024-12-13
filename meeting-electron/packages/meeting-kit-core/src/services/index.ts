@@ -21,6 +21,7 @@ export const defaultMenus = [
   { id: NEMenuIDs.participants },
   { id: NEMenuIDs.record },
   { id: NEMenuIDs.chat },
+  { id: NEMenuIDs.emoticons },
   { id: NEMenuIDs.invite },
   { id: NEMenuIDs.setting },
 ]
@@ -94,6 +95,8 @@ export function createDefaultSetting(): MeetingSetting {
       openVideo: false,
       openAudio: false,
       showDurationTime: false,
+      showParticipationTime: false,
+      showTimeType: 0, // 0: DurationTime, 1: ParticipationTime
       showSpeakerList: true,
       showToolbar: true,
       enableTransparentWhiteboard: false,
@@ -103,6 +106,9 @@ export function createDefaultSetting(): MeetingSetting {
       chatMessageNotificationType: 0,
       foldChatMessageBarrage: false,
       enableShowNotYetJoinedMembers: true,
+      automaticSavingOfMeetingChatRecords: false,
+      leaveTheMeetingRequiresConfirmation: true,
+      enterFullscreen: false,
     },
     videoSetting: {
       deviceId: '',
@@ -208,6 +214,7 @@ export function createMeetingInfoFactory(): NEMeetingInfo {
     screenSharePermission: true,
     localRecordPermission: true,
     updateNicknamePermission: true,
+    emojiRespPermission: true,
     isLocked: false,
     isAllowParticipantsEnableCaption: true,
     liveConfig: {

@@ -402,6 +402,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
   const sliderGroupMembers = useMemo(() => {
     let sliderGroupMembers = isSpeaker ? groupMembers.slice(1) : groupMembers
 
+    // 表示只有共享者一个人或者其他人都没有开启视频再隐藏非视图情况下
     if (groupMembers.length === 1 && !!meetingInfo.screenUuid) {
       sliderGroupMembers = groupMembers
     }

@@ -135,12 +135,14 @@ export default class NEMeetingService
 
     const seqId = this._generateSeqId(functionName)
 
-    this._win.webContents.send(BUNDLE_NAME, {
-      module: MODULE_NAME,
-      method: functionName,
-      args: [],
-      seqId,
-    })
+    if (!this._win.isDestroyed()) {
+      this._win.webContents.send(BUNDLE_NAME, {
+        module: MODULE_NAME,
+        method: functionName,
+        args: [],
+        seqId,
+      })
+    }
 
     return this._IpcMainListener<NEResult<NEMeetingInfo>>(seqId)
   }

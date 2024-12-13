@@ -6,6 +6,7 @@ import {
   MeetingEventType,
   MeetingSetting,
   NEMeetingInfo,
+  UserEventType,
 } from '../types'
 import { useGlobalContext, useMeetingInfoContext } from '../store'
 import { useTranslation } from 'react-i18next'
@@ -43,7 +44,6 @@ interface WaitingRoomProps {
     reason: number
     notNeedAutoClose?: boolean
   }) => void
-  handleVideoFrameData?: (uuid, bSubVideo, data, type, width, height) => void
 }
 
 type WaitingRoomReturn = {
@@ -74,7 +74,7 @@ type WaitingRoomReturn = {
 }
 
 export function useWaitingRoom(data: WaitingRoomProps): WaitingRoomReturn {
-  const { handleVideoFrameData, closeModalHandle } = data
+  const { closeModalHandle } = data
 
   const { t } = useTranslation()
   const [openAudio, setOpenAudio] = useState<boolean>(false)
@@ -255,26 +255,6 @@ export function useWaitingRoom(data: WaitingRoomProps): WaitingRoomReturn {
           settingWindow.origin
         )
       },
-      onVideoFrameData: (uuid, bSubVideo, data, type, width, height) => {
-        handleVideoFrameData?.(uuid, bSubVideo, data, type, width, height)
-        const settingWindow = getWindow('settingWindow')
-
-        settingWindow?.postMessage(
-          {
-            event: 'onVideoFrameData',
-            payload: {
-              uuid,
-              bSubVideo,
-              data,
-              type,
-              width,
-              height,
-            },
-          },
-          '*',
-          [data.bytes.buffer]
-        )
-      },
     }
     previewConText?.addPreviewRoomListener(previewRoomListenerRef.current)
   }
@@ -424,6 +404,7 @@ export function useWaitingRoom(data: WaitingRoomProps): WaitingRoomReturn {
           type: ActionType.RESET_MEETING,
           data: null,
         })
+        window.ipcRenderer?.send(IPCEvent.focusWindow, 'mainWindow')
         neMeeting?.rejoinAfterAdmittedToRoom().then(() => {
           console.warn('rejoinAfterAdmittedToRoom', meetingInfoRef.current)
           // 使用eventEmitter auth组件无法监听到
@@ -467,9 +448,9 @@ export function useWaitingRoom(data: WaitingRoomProps): WaitingRoomReturn {
               setTimeout(() => {
                 neMeeting?.leave()
               }, 2000)
-            } else {
-              neMeeting?.leave()
             }
+          } else {
+            neMeeting?.leave()
           }
         }
       }
@@ -564,6 +545,26 @@ export function useWaitingRoom(data: WaitingRoomProps): WaitingRoomReturn {
       outEventEmitter?.emit(EventType.RoomEnded, leaveType)
     }
   }, [])
+
+  useEffect(() => {
+    function handleAcceptInvite(options, callback) {
+      // 需要先离开当前会议
+      globalDispatch?.({
+        type: ActionType.UPDATE_GLOBAL_CONFIG,
+        data: {
+          waitingJoinOtherMeeting: true,
+          joinLoading: true,
+        },
+      })
+      // 在会中
+      eventEmitter?.emit(UserEventType.JoinOtherMeeting, options, callback)
+    }
+
+    // eventEmitter?.on(EventType.AcceptInvite, handleAcceptInvite)
+    return () => {
+      eventEmitter?.off(EventType.AcceptInvite, handleAcceptInvite)
+    }
+  }, [eventEmitter, globalDispatch])
 
   useEffect(() => {
     addPreviewRoomListener()

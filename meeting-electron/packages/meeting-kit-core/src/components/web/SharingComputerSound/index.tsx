@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { useGlobalContext, useMeetingInfoContext } from '../../../store'
 import { useTranslation } from 'react-i18next'
 import './index.less'
+import { UserEventType } from '../../../kit'
 
 const SharingComputerSound = () => {
-  const { neMeeting } = useGlobalContext()
+  const { neMeeting, outEventEmitter } = useGlobalContext()
   const { meetingInfo } = useMeetingInfoContext()
   const { t } = useTranslation()
 
@@ -14,6 +15,16 @@ const SharingComputerSound = () => {
       !meetingInfo.screenUuid
     )
   }, [meetingInfo.screenUuid, meetingInfo.systemAudioUuid, meetingInfo.myUuid])
+
+  useEffect(() => {
+    outEventEmitter?.on(UserEventType.StopSharingComputerSound, () => {
+      neMeeting?.stopShareSystemAudio?.()
+    })
+
+    return () => {
+      outEventEmitter?.off(UserEventType.StopSharingComputerSound)
+    }
+  }, [outEventEmitter])
 
   return enable ? (
     <div className="sharing-computer-sound-wrapper">

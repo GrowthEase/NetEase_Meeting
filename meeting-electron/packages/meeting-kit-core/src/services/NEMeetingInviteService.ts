@@ -1,4 +1,9 @@
-import { NEResult, NECustomSessionMessage } from 'neroom-types'
+import {
+  NEResult,
+  NECustomSessionMessage,
+  NERoomSystemDevice,
+  NERoomSipCallResponse,
+} from 'neroom-types'
 import NEMeetingService from './NEMeeting'
 import { EventType, GetMeetingConfigResponse } from '../types'
 import {
@@ -12,7 +17,14 @@ interface InitOptions {
   neMeeting: NEMeetingService
   eventEmitter: EventEmitter
 }
-
+interface NEMeetingInviteListener {
+  // 房间呼出状态改变的回调事件。
+  onMeetingInviteStatusChanged(
+    status: NEMeetingInviteStatus,
+    meetingId: string,
+    inviteInfo: NEMeetingInviteInfo
+  ): void
+}
 export default class NEMeetingInviteService {
   private _neMeeting: NEMeetingService
   private _event: EventEmitter
@@ -61,6 +73,16 @@ export default class NEMeetingInviteService {
         }
       )
     })
+  }
+
+  /**
+   * 呼叫指定房间设备
+   * @param device 设备信息
+   */
+  async callOutRoomSystem(
+    device: NERoomSystemDevice
+  ): Promise<NEResult<NERoomSipCallResponse> | undefined> {
+    return this._neMeeting.sipController?.callOutRoomSystem(device)
   }
 
   on<K extends keyof NEMeetingInviteListener>(
@@ -176,13 +198,4 @@ export default class NEMeetingInviteService {
       this._handleMeetingInviteStatusChanged.bind(this)
     )
   }
-}
-
-interface NEMeetingInviteListener {
-  // 房间呼出状态改变的回调事件。
-  onMeetingInviteStatusChanged(
-    status: NEMeetingInviteStatus,
-    meetingId: string,
-    inviteInfo: NEMeetingInviteInfo
-  ): void
 }
