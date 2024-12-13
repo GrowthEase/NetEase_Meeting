@@ -49,7 +49,7 @@
 # 网易会议架构
 整套会议系统客户端支持 Android、iOS、Web、H5、Electron、Windows、macOS等平台, 如何确保用户快速接入以及各端一致性问题, 我们对会议客户端进行了一定的拆分设计。
 
-## 网易会议组件架构：
+## 网易会议架构：
 
 ![meeting framework](./images/网易会议组件架构.png)
 
@@ -93,10 +93,11 @@ Meeting SDK 是一个带UI的会议服务组件, 相比于NERoom 我们提供了
 
 # 集成方法概述
 为了方便客户的集成，我们在开源代码的基础上，提供了基于组件的集成方式。
-1. [Android 集成方式](https://doc.yunxin.163.com/meetingkit/docs/TQ0NjEyMDQ?platform=android)
-2. [iOS 集成方式](https://doc.yunxin.163.com/meetingkit/docs/DY3ODM4MDE?platform=iOS)
-3. [Windows 集成方式](https://doc.yunxin.163.com/meetingkit/docs/TY0MzEzNDg?platform=windows)
-4. [Mac 集成方式](https://doc.yunxin.163.com/meetingkit/docs/TEyODIwOTA?platform=macOS)
+1. [Android 组件集成](https://doc.yunxin.163.com/meeting/guide?platform=android)
+2. [iOS 组件集成](https://doc.yunxin.163.com/meeting/guide?platform=iOS)
+3. [Windows/Mac 组件集成](https://doc.yunxin.163.com/meeting/guide?platform=pc)
+4. [Web/H5 组件集成](https://doc.yunxin.163.com/meeting/guide?platform=web)
+5. [Electron 组件集成](https://doc.yunxin.163.com/meeting/guide?platform=electron)
 
 # 代码许可
 The MIT License（MIT）
