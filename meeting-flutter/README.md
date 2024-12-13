@@ -81,3 +81,42 @@ meeting_kit/
 ```
 
 `meeting_kit` 提供的接口可参考 [meeting_kit 接口文档](https://doc.yunxin.163.com/meeting/client-apis?platform=client)。
+
+
+## 快速开始
+
+### 下载安装 Flutter
+
+请参考 [Flutter 官网](https://docs.flutter.dev/get-started/install/macos/mobile-android#download-then-install-flutter) 下载安装 Flutter。
+
+> 请确保 Flutter 版本为 3.22.2 及以上。
+
+### 下载依赖
+
+在 `meeting-app` 根目录下执行以下命令安装依赖：
+
+```bash
+$ cd meeting-app
+$ flutter pub get
+```
+
+### 运行项目
+
+在 `meeting-app` 根目录下执行以下命令运行项目：
+
+```bash
+$ flutter run
+```
+
+> 运行前，请确保已经连接到 Android 或 iOS 真机设备。
+
+### 完成登录
+
+1. 您需要[开通网易会议解决方案](https://doc.yunxin.163.com/meeting/concept/TkzMjExNDY?platform=client)，并获取到 AppKey 后，才能完成登录。
+2. 通过管理后台[设置企业代码](https://doc.yunxin.163.com/meeting/concept/DI1MDY1ODg?platform=client)，并完成[创建账号](https://doc.yunxin.163.com/meeting/concept/jU1MzI3MzU?platform=client)，才能进行后续登录操作。
+3.  APP 端页面输入 **企业代码**，选择合适的方式进行登录：[SSO登录](https://doc.yunxin.163.com/meeting/concept/jE0MjEwNzc?platform=client) 和 [账号密码登录](https://doc.yunxin.163.com/meeting/concept/jAwMTA5MDY?platform=client)
+
+
+### 更多定制开发
+
+请参考 [定制开发](./meeting_app/README.md) 文档。
