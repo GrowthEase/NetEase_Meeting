@@ -7,6 +7,7 @@ import {
   NEWatermarkConfig,
 } from '../../../types/type'
 import { NEMeetingControl } from './pre_meeting_service'
+import { NEChatMessageNotificationType } from './settings_service'
 
 export { NEJoinMeetingParams }
 
@@ -26,11 +27,17 @@ export enum NEMenuVisibility {
   VISIBLE_EXCLUDE_HOST = 1,
   /** 对应菜单仅主持人可见 */
   VISIBLE_TO_HOST_ONLY = 2,
+  /** SIP/H323不可见 */
+  VISIBLE_EXCLUDE_ROOM_SYSTEM_DEVICE = 3,
+  /** 仅对会议创建者可见 */
+  VISIBLE_TO_OWNER_ONLY = 4,
+  /** 仅对会议主持人可见，联席主持人不可见 */
+  VISIBLE_TO_HOST_EXCLUDE_COHOST = 5,
 }
 
 export type NEMeetingMenuItem = {
   itemId: number
-  visibility: NEMenuVisibility
+  visibility?: NEMenuVisibility
 }
 
 export type NESingleStateMenuItem = NEMeetingMenuItem & {
@@ -211,6 +218,8 @@ export type NEMeetingOptions = {
   /** 配置是否在会议界面中显示会议时长，默认为false，入会前设置，会议中无法设置 */
   showMeetingTime?: boolean
 
+  /** 配置是否在会议界面中显示参会时长，默认为false */
+  showParticipationTime?: boolean
   /** 配置是否开启语音激励，默认为true */
   enableSpeakerSpotlight?: boolean
 
@@ -219,6 +228,12 @@ export type NEMeetingOptions = {
 
   /** 配置会议中是否显示"邀请"按钮，默认为false，即显示*/
   noInvite?: boolean
+
+  /** 配置新聊天消息提醒类型 */
+  chatMessageNotificationType?: NEChatMessageNotificationType
+
+  /** 配置是否始终在视频画面上显示名字，默认显示 */
+  showNameInVideo?: boolean
 
   /** 配置会议中是否显示"sip"功能菜单，默认为false，即显示*/
   noSip?: boolean
@@ -316,6 +331,11 @@ export type NEMeetingOptions = {
     NEMeetingMenuItem | NESingleStateMenuItem | NECheckableMenuItem
   >
 
+  /// "成员列表菜单操作项"自定义菜单，可添加监听器处理菜单点击事件
+  memberActionMenuItems?: Array<
+    NEMeetingMenuItem | NESingleStateMenuItem | NECheckableMenuItem
+  >
+
   /**
    * 超时时间，单位毫秒(ms)，默认为 45000ms。
    */
@@ -355,6 +375,9 @@ export type NEMeetingOptions = {
    * 配置主持人和联席主持人是否可以直接开关参会者的音视频，不需要参会者同意，默认需要参会者同意。
    */
   enableDirectMemberMediaControlByHost?: boolean
+
+  /** 配置成员离开会议是否需要弹窗确认 */
+  enableLeaveTheMeetingRequiresConfirmation?: boolean
 }
 
 /** 自定义菜单按钮点击事件监听器，通过{@link NEMeetingService#setOnInjectedMenuItemClickListener}方法设置监听器 */

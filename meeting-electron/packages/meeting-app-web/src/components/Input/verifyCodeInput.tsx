@@ -1,15 +1,23 @@
-import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import React, {
+  FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import BaseInput, { InputProps } from './baseInput';
 import './index.less';
-import { sendVerifyCodeApi } from '../../api';
+import { sendVerifyCodeApi, sendVerifyCodeApiByGuest } from '../../api';
 import { Button } from 'antd';
 import Toast from '@meeting-module/components/common/toast';
 import { useTranslation } from 'react-i18next';
 
 const VerifyCodeInput: FC<InputProps> = (props) => {
   const { t } = useTranslation();
-  const { phone, scene, appKey, ...otherProps } = props;
+  const { phone, scene, appKey, meetingNum, ...otherProps } = props;
   const [count, setCount] = useState(60);
+  const countTimerRef = useRef<NodeJS.Timeout | number>();
 
   const checkCode = (value: string) => {
     return /^\d{6}$/.test(value);
@@ -19,22 +27,34 @@ const VerifyCodeInput: FC<InputProps> = (props) => {
     if (count < 1) {
       setCount(60);
     } else if (count < 60) {
-      setTimeout(() => {
+      countTimerRef.current = setTimeout(() => {
+        countTimerRef.current = undefined;
         setCount(count - 1);
       }, 1000);
+    } else {
+      countTimerRef.current && clearTimeout(countTimerRef.current);
+      countTimerRef.current = undefined;
     }
   }, [count]);
 
   const sendCode = useCallback(() => {
     if (!phone) return;
     setCount(59);
-    sendVerifyCodeApi({
-      appKey,
-      mobile: phone,
-      scene,
-    }).catch((e) => {
-      Toast.fail(e.msg || e.message || e.code);
-    });
+    if (meetingNum) {
+      sendVerifyCodeApiByGuest(meetingNum, phone as string).catch((e) => {
+        setCount(60);
+        Toast.fail(e.msg || e.message || e.code);
+      });
+    } else {
+      sendVerifyCodeApi({
+        appKey: appKey as string,
+        mobile: phone as string,
+        scene: scene as number,
+      }).catch((e) => {
+        setCount(60);
+        Toast.fail(e.msg || e.message || e.code);
+      });
+    }
   }, [phone, scene, appKey]);
 
   const suffix = useMemo(() => {

@@ -4,6 +4,7 @@ const {
   shell,
   ipcMain,
   globalShortcut,
+  app,
 } = require('electron')
 const path = require('path')
 const NEMeetingKit = require('./kit/impl/meeting_kit')
@@ -45,7 +46,7 @@ function createBeforeMeetingWindow() {
 
   if (isLocal) {
     beforeMeetingWindow.loadURL('http://localhost:8000/')
-    beforeMeetingWindow.webContents.openDevTools()
+    // beforeMeetingWindow.webContents.openDevTools()
   } else {
     beforeMeetingWindow.loadFile(path.join(__dirname, '../build/index.html'))
   }
@@ -75,18 +76,8 @@ function createBeforeMeetingWindow() {
         newWin.setWindowButtonVisibility?.(false)
       }
 
-      newWin.webContents.session.removeAllListeners('will-download')
-      newWin.webContents.session.on('will-download', (event, item) => {
-        item.on('done', (event, state) => {
-          if (state === 'completed') {
-            const path = event.sender.getSavePath()
-
-            shell.showItemInFolder(path)
-          }
-        })
-      })
       if (isLocal) {
-        newWin.webContents.openDevTools()
+        // newWin.webContents.openDevTools()
       }
     }
   )
@@ -399,6 +390,7 @@ function createBeforeMeetingWindow() {
         neMeetingKit.getMeetingMessageChannelService(),
       getContactsService: neMeetingKit.getContactsService(),
       getFeedbackService: neMeetingKit.getFeedbackService(),
+      getGuestService: neMeetingKit.getGuestService(),
     }
 
     modules[module]?.[fnKey](...args)
@@ -407,6 +399,7 @@ function createBeforeMeetingWindow() {
           result: res,
         })
         if (fnKey === 'initialize') {
+          console.log('开始初始化')
           neMeetingKit.setExceptionHandler({
             onError: () => {
               // 会中进程崩溃

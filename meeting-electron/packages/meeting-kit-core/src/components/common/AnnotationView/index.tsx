@@ -98,32 +98,39 @@ const AnnotationView: React.FC<AnnotationViewProps> = ({
     const param = data.param
 
     if (param.funcName === 'exportAsBase64String') {
-      const wbData = param.result.content
-      let screenData: string = ''
-      const screenRes =
-        meetingInfo.screenUuid === meetingInfo.myUuid
-          ? await neMeeting?.takeLocalScreenSnapshot()
-          : await neMeeting?.takeRemoteScreenSnapshot(meetingInfo.screenUuid)
-
-      if (screenRes?.code === 0 && typeof screenRes.data === 'string') {
-        screenData = screenRes.data
-      }
-
-      if (!screenData.includes(';base64,')) {
-        screenData = await window.ipcRenderer?.invoke(IPCEvent.getImageBase64, {
-          filePath: screenData,
-          isDelete: true,
-        })
-      }
-
       if (saveAnnotationRef.current === false) {
-        saveAnnotationRef.current = true
-        saveAnnotation({
-          screenData,
-          wbData,
-        }).finally(() => {
+        try {
+          saveAnnotationRef.current = true
+          const wbData = param.result.content
+          let screenData: string = ''
+          const screenRes =
+            meetingInfo.screenUuid === meetingInfo.myUuid
+              ? await neMeeting?.takeLocalScreenSnapshot()
+              : await neMeeting?.takeRemoteScreenSnapshot(
+                  meetingInfo.screenUuid
+                )
+
+          if (screenRes?.code === 0 && typeof screenRes.data === 'string') {
+            screenData = screenRes.data
+          }
+
+          if (!screenData.includes(';base64,')) {
+            screenData = await window.ipcRenderer?.invoke(
+              IPCEvent.getImageBase64,
+              {
+                filePath: screenData,
+                isDelete: true,
+              }
+            )
+          }
+
+          await saveAnnotation({
+            screenData,
+            wbData,
+          })
+        } finally {
           saveAnnotationRef.current = false
-        })
+        }
       }
     } else if (param.funcName === 'isClearAvailable') {
       if (checkIsClearAvailableCountRef.current > 5) {
@@ -180,42 +187,45 @@ const AnnotationView: React.FC<AnnotationViewProps> = ({
       }
     }
 
-    if (isEnable) {
-      window.addEventListener('message', (e) => {
-        try {
-          const data = JSON.parse(e.data)
+    function listener(e) {
+      try {
+        const data = JSON.parse(e.data)
 
-          switch (data.action) {
-            case 'webPageLoaded':
-              neMeeting?.annotationLogin()
-              break
-            case 'webGetAuth':
-              neMeeting?.annotationAuth()
-              break
-            case 'webJoinWBSucceed':
-              break
-            case 'webDirectCallReturn':
-              webDirectCallReturnHandler(data)
-              break
-            case 'webToolCollectionEvent':
-              webToolCollectionEventHandler(data)
-              break
-            case 'webRoomStateChange':
-              data.param.isEditable && setIsEditable(true)
-              iframeDomHideToast()
-              break
-            default:
-              break
-          }
-        } catch (e) {
-          console.log('annotation error', e)
+        switch (data.action) {
+          case 'webPageLoaded':
+            neMeeting?.annotationLogin()
+            break
+          case 'webGetAuth':
+            neMeeting?.annotationAuth()
+            break
+          case 'webJoinWBSucceed':
+            break
+          case 'webDirectCallReturn':
+            webDirectCallReturnHandler(data)
+            break
+          case 'webToolCollectionEvent':
+            webToolCollectionEventHandler(data)
+            break
+          case 'webRoomStateChange':
+            data.param.isEditable && setIsEditable(true)
+            iframeDomHideToast()
+            break
+          default:
+            break
         }
-      })
+      } catch (e) {
+        console.log('annotation error', e)
+      }
+    }
+
+    if (isEnable) {
+      window.addEventListener('message', listener)
       neMeeting?.getAnnotationUrl().then((url) => {
         setWhiteboardUrl(url)
       })
       eventEmitter?.on(EventType.RoomAnnotationWebJsBridge, postMessage)
       return () => {
+        window.removeEventListener('message', listener)
         eventEmitter?.off(EventType.RoomAnnotationWebJsBridge, postMessage)
       }
     }

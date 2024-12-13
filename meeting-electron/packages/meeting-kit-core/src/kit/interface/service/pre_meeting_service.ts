@@ -131,6 +131,25 @@ export type NEMeetingItemLive = {
   taskId: string
   title: string
   liveChatRoomIndependent: boolean
+  liveBackground?: NEMeetingItemLiveBackground
+  livePushThirdParties?: NEmeetingItemLivePushThirdPart[]
+  enableThirdParties?: boolean
+  livePassword?: string
+}
+
+export type NEmeetingItemLivePushThirdPart = {
+  platformName: string
+  pushUrl: string
+  pushSecretKey?: string
+}
+
+export type NEMeetingItemLiveBackground = {
+  backgroundUrl?: string
+  backgroundFile?: Blob | string
+  notStartCoverUrl?: string
+  thumbnailBackUrl?: string
+  thumbnailBackFile?: Blob | string
+  notStartThumbnailUrl?: string
 }
 
 export type NEMeetingRecurringRule = CreateMeetingResponse['recurringRule']
@@ -391,6 +410,16 @@ interface NEPreMeetingService {
    * @param meetingId 会议唯一 Id
    */
   exportChatroomHistoryMessageList(meetingId: number): Promise<NEResult<string>>
+
+  /**
+   * 查询特定状态下的会议列表。如果不指定要查询的状态，则会默认查询{@link NEMeetingItemStatus#init}、{@link NEMeetingItemStatus#started}列表。 目前暂不支持查询{@link NEMeetingItemStatus#cancel} 与 {@linkNEMeetingItemStatus#recycled} 状态下的会议列表。
+   * 只返回本端预约或者他人预约邀请的会议
+   *
+   * @param status 目标会议状态列表
+   */
+  getScheduledMeetingList(
+    status: NEMeetingItemStatus[]
+  ): Promise<NEResult<NEMeetingItem[]>>
 }
 
 /**

@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { NECustomSessionMessage } from 'neroom-types'
+import { NECommonError, NECustomSessionMessage } from 'neroom-types'
 import React, {
   forwardRef,
   useCallback,
@@ -38,8 +38,10 @@ const MeetingNotificationList = forwardRef<
 >((props, ref) => {
   const { sessionIds, isH5, onClick } = props
   const { t } = useTranslation()
-  const { neMeeting: neMeetingContext, eventEmitter: eventEmitterContext } =
-    useGlobalContext()
+  const {
+    neMeeting: neMeetingContext,
+    eventEmitter: eventEmitterContext,
+  } = useGlobalContext()
   const { meetingInfo, dispatch } = useMeetingInfoContext()
   const contentDomRef = React.useRef<HTMLDivElement>(null)
 
@@ -100,6 +102,7 @@ const MeetingNotificationList = forwardRef<
         sessionId,
         limit: 20,
         toTime: toTime,
+        searchOrder: 0,
       }).then((res) => {
         let { data: msgs } = res
 
@@ -137,7 +140,18 @@ const MeetingNotificationList = forwardRef<
     Modal.confirm({
       key: 'notifyCenterAllClear',
       width: 300,
-      title: t('notifyCenterAllClear'),
+      title: (
+        <div
+          style={{
+            fontSize: 16,
+            fontWeight: 500,
+            textAlign: 'center',
+            paddingTop: 20,
+          }}
+        >
+          {t('notifyCenterAllClear')}
+        </div>
+      ),
       onOk: async () => {
         try {
           const promises = sessionIds.map((sessionId) => {
@@ -152,8 +166,10 @@ const MeetingNotificationList = forwardRef<
             },
           })
           setNotificationListMap({})
-        } catch (error) {
-          Toast.fail(t('networkError'))
+        } catch (e: unknown) {
+          const error = e as NECommonError
+
+          Toast.fail(error.msg || error.message)
           throw error
         }
       },

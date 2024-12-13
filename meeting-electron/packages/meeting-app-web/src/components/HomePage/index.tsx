@@ -50,6 +50,7 @@ const Homepage: React.FC = () => {
   const [showExitApp, setShowExitApp] = useState(false);
   const [updateProgress, setUpdateProgress] = useState(0);
   const [goGuest, setGoGuest] = useState(true); // 是否跳转到访客页面
+  const [inMeeting, setInMeeting] = useState(false);
   const [updateInfo, setUpdateInfo] = useState({
     title: '',
     description: '',
@@ -245,70 +246,7 @@ const Homepage: React.FC = () => {
 
   useEffect(() => {
     handleAuth(location.href);
-    checkUpdate();
   }, []);
-
-  const checkUpdate = () => {
-    if (window.isElectronNative) {
-      const ipcRenderer = window.ipcRenderer;
-      let userUuid = '';
-
-      try {
-        const user = JSON.parse(
-          localStorage.getItem(LOCALSTORAGE_USER_INFO) as string,
-        );
-
-        userUuid = user?.userUuid || '';
-      } catch (error) {
-        console.log('LOCALSTORAGE_USER_INFO Error', error);
-      }
-
-      ipcRenderer?.invoke(IPCEvent.getCheckUpdateInfo).then(async (res) => {
-        console.log('getCheckUpdateInfo', res);
-        const localUpdateInfo = await window.ipcRenderer?.invoke(
-          IPCEvent.getLocalUpdateInfo,
-        );
-
-        axios({
-          url: UPDATE_URL,
-          method: 'POST',
-          headers: {
-            clientType:
-              localUpdateInfo.platform === 'darwin'
-                ? ClientType.ElectronMac
-                : ClientType.ElectronWindows,
-            sdkVersion: res.versionCode,
-          },
-          data: {
-            ...res,
-            accountId: userUuid,
-          },
-        }).then(async (res) => {
-          console.log('updateInfo>>>>', res.data);
-          if (res.data.code != 200 && res.data.code != 0) {
-            return;
-          }
-
-          const tmpData = res.data.ret;
-
-          if (!tmpData || tmpData.notify == 0) {
-            return;
-          }
-
-          localUpdateInfoRef.current = localUpdateInfo;
-          if (localUpdateInfo.platform == 'darwin') {
-            checkUpdateHandle({
-              ...tmpData,
-            });
-          } else if (localUpdateInfo.platform == 'win32') {
-            checkUpdateHandle({
-              ...tmpData,
-            });
-          }
-        });
-      });
-    }
-  };
 
   const checkUpdateHandle = async (data: ResUpdateInfo) => {
     let needUpdate = false;
@@ -392,6 +330,10 @@ const Homepage: React.FC = () => {
 
   const onLogged = () => {
     handleAuth(location.href);
+  };
+
+  const onJoined = () => {
+    setInMeeting(true);
   };
 
   const exitApp = () => {
@@ -483,14 +425,14 @@ const Homepage: React.FC = () => {
 
     return (
       <>
-        {!window.isElectronNative && <Header />}
-        <BeforeLogin onLogged={onLogged} />
-        {!window.isElectronNative && (
+        {!window.isElectronNative && !inMeeting && <Header />}
+        <BeforeLogin onLogged={onLogged} onJoined={onJoined} />
+        {!window.isElectronNative && !inMeeting && (
           <Footer className="whiteTheme" logo={false} />
         )}
       </>
     );
-  }, [isLogined, loginLoading, goGuest, isH5]);
+  }, [isLogined, loginLoading, goGuest, isH5, inMeeting]);
 
   useUpdateEffect(() => {
     const isChrome =

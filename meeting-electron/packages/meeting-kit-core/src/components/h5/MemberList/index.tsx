@@ -150,7 +150,7 @@ const MemberListUI: React.FC<MemberListProps> = ({
         return false
       }
 
-      if (item.clientType === NEClientType.SIP) {
+      if (item.clientType === NEClientType.SIP || item.clientType === NEClientType.H323) {
         return false
       }
 
@@ -665,6 +665,16 @@ const MemberListUI: React.FC<MemberListProps> = ({
                       ) : (
                         ''
                       )}
+                      {member?.clientType === NEClientType.H323 ? (
+                        <svg
+                          className="iconfont iconSIPwaihudianhua icon-blue"
+                          aria-hidden="true"
+                        >
+                          <use xlinkHref="#icona-323" />
+                        </svg>
+                      ) : (
+                        ''
+                      )}
                       {member?.isVideoOn ? (
                         <svg className="iconfont" aria-hidden="true">
                           <use xlinkHref="#iconyx-tv-video-onx"></use>
@@ -759,7 +769,10 @@ const MemberListUI: React.FC<MemberListProps> = ({
         visible={showOperation}
         actions={userActions}
         getContainer={null}
-        onClose={() => setShowOperation(false)}
+        onClose={() => {
+          setShowOperation(false)
+          setClickMember(undefined)
+        }}
         popupClassName={'action-sheet'}
       />
       <Dialog

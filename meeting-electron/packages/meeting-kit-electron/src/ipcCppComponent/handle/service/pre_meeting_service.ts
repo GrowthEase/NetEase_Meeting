@@ -99,7 +99,13 @@ export default class NEPreMeetingServiceHandle {
         res = await this.clearLocalHistoryMeetingList()
         break
       case 47:
-        res = await this.getHistoryMeetingTranscriptionMessageList()
+        res = await this.getHistoryMeetingTranscriptionMessageList(data)
+        break
+      case 49:
+        res = await this.loadChatroomHistoryMessageView(data)
+        break
+      case 51:
+        res = await this.getScheduledMeetingList(data)
         break
       default:
         return JSON.stringify(FailureBodySync(undefined, 'method not found'))
@@ -256,5 +262,19 @@ export default class NEPreMeetingServiceHandle {
       meetingId,
       fileKey
     )
+  }
+
+  async loadChatroomHistoryMessageView(data: string) {
+    const { meetingId } = JSON.parse(data)
+
+    return await this._preMeetingService.loadChatroomHistoryMessageView(
+      meetingId
+    )
+  }
+
+  async getScheduledMeetingList(data: string) {
+    const { status } = JSON.parse(data)
+
+    return await this._preMeetingService.getScheduledMeetingList(status)
   }
 }

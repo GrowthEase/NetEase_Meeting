@@ -1,0 +1,174 @@
+
+.light-theme {
+    .control-bar-end-button-cancel-container {
+        background-color: #fff;
+    }
+    .control-bar-end-button-cancel {
+        color: #1E1F27;
+    }  
+}
+.control-bar-end-button-cancel-container {
+    background-color: rgba(11, 11, 11, 0.9);
+}
+.control-bar-end-button-cancel {
+    
+    color: #fff;
+}
+
+.nemeeting-end-dropdown-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 9999;
+    .control-bar-end-button-cancel-container {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 60px;
+    }
+    .control-bar-end-button-cancel {
+        position: absolute;
+        bottom: 20px;
+        right: 45px;
+        cursor: pointer;
+    }
+    .nemeeting-end-host-transfer-content {
+        width: 240px;
+        .nemeeting-end-host-transfer-header {
+            height: 36px;
+            text-align: center;
+            line-height: 36px;
+            color: #1E1F27;
+        }
+        .nemeeting-end-host-transfer-list {
+            height: 286px;
+            overflow-y: auto;
+            background-color: #F5F5F6;
+            padding: 4px;
+            .nemeeting-end-host-transfer-list-item {
+                display: flex;
+                align-items: center;
+                padding: 4px 12px;
+                border-radius: 8px;
+                cursor: pointer;
+                &:hover {
+                    background: rgba(0, 0, 0, 0.08);
+                }
+                .member-name-content {
+                    flex: 1;
+                    width: 0;
+                    margin: 0 6px;
+                    display: flex;
+                    .member-name-text {
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                    .member-role {
+                        color: #8D90A0;
+                        white-space:nowrap;
+                    }
+                }
+                .iconfont {
+                    color: #337EFF;
+                }
+
+            }
+
+        }
+        .nemeeting-end-host-transfer-footer {
+            text-align: center;
+            padding: 8px;
+            .nemeeting-end-host-transfer-footer-button {
+                border-radius: 8px;
+                background: #337EFF;
+                color: #fff;
+                text-align: center;
+                line-height: 36px;
+                cursor: pointer;
+            }
+        }
+    }
+    .nemeeting-end-dropdown-content {
+        padding: 8px;
+    }
+    .nemeeting-end-dropdown-content, .nemeeting-end-host-transfer-content  {
+        position: absolute;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 1);
+        box-shadow: 0px 4px 20px 0px rgba(0, 0, 0, 0.3);
+    }
+}
+
+.nemeeting-end-bottom-left {
+    .nemeeting-end-dropdown-content, .nemeeting-end-host-transfer-content  {
+        right: 16px;
+        bottom: 64px;
+    }
+}
+.nemeeting-end-bottom-left-open-drawer {
+    .nemeeting-end-dropdown-content, .nemeeting-end-host-transfer-content  {
+        right: 336px;
+        bottom: 64px;
+    }
+    .control-bar-end-button-cancel {
+        right: 365px;
+    }
+
+}
+.nemeeting-end-top-left {
+    .nemeeting-end-dropdown-content, .nemeeting-end-host-transfer-content  {
+        left: 14px;
+        top: 32px;
+    }
+
+}
+.nemeeting-end-top-right {
+    .nemeeting-end-dropdown-content, .nemeeting-end-host-transfer-content  {
+        right: 14px;
+        top: 42px;
+    }
+
+}
+.nemeeting-end-center {
+    .nemeeting-end-dropdown-content, .nemeeting-end-host-transfer-content  {
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+    }
+}
+
+
+.nemeeting-end-dropdown-danger-button, .nemeeting-end-dropdown-button {
+    width: 160px;
+    height: 36px;
+    line-height: 36px;
+    border-radius: 8px;   
+    text-align: center;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 8px;
+    &:first-child {
+        margin-top: 0;
+    }
+    
+}
+
+.nemeeting-end-dropdown-button {
+    border: 1px solid #CDCFD7;
+    &:hover {
+        background: rgba(0, 0, 0, 0.08);
+    }
+}
+
+.nemeeting-end-dropdown-danger-button {
+    color: #fff;
+    background: #f51d45;
+    &:hover {
+        background: #E21C40;
+    }
+}
+
+

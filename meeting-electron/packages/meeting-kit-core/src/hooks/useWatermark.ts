@@ -58,7 +58,18 @@ function useWatermark(params?: WatermarkParams & { disabled?: boolean }): void {
         stopDrawWatermark(params?.container)
       }
     }
-  }, [meetingInfo, params])
+  }, [
+    meetingInfo.meetingNum,
+    meetingInfo.watermark?.videoFormat,
+    meetingInfo.watermark?.videoStrategy,
+    meetingInfo.watermark?.videoStyle,
+    meetingInfo.localMember?.name,
+    meetingInfo.watermarkConfig?.name,
+    meetingInfo.watermarkConfig?.phone,
+    meetingInfo.watermarkConfig?.email,
+    meetingInfo.watermarkConfig?.jobNumber,
+    params,
+  ])
 }
 
 export default useWatermark

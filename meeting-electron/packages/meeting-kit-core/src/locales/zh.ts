@@ -29,6 +29,9 @@ export default {
   globalOpen: `打开`, // 通用
   globalStart: '开启',
   globalDelete: '删除',
+  globalEdit: '编辑',
+  globalAdd: '添加',
+  globalGoBack: '返回',
   participants: `${attendee}`, // 会议成员列表标题
   meetingJoinFail: `加入会 议失败`, //  加入会议失败提示
   reJoinMeetingFail: `重新加入${meeting}失败`, // 重试加入会议失败提示
@@ -50,6 +53,7 @@ export default {
   leaveByHost: `您已被${host}移出会议`,
   leaveBySelf: `您已在其他设备登录`,
   meetingLiveMode: '直播模式',
+  sipDisplayName: '入会名称',
 
   participantTurnOffVideos: '全体关闭视频',
   participantMuteVideoAllDialogTips: '所有以及新加入成员将被关闭视频',
@@ -213,6 +217,7 @@ export default {
   liveViewPageBackgroundImage: '观看页背景图',
   liveCoverPicture: '直播封面图',
   liveCoverPictureTip: '建议 16:9 的图，不超过 5 M',
+  liveReUpload: '点击重新上传',
   liveSelectTip: '请从左侧选择直播画面',
   livePasswordTip: '请输入6位数字密码',
   liveStatusChange: '直播状态发生变化',
@@ -387,7 +392,8 @@ export default {
   stopCloudRecord: '停止录制',
   recording: '录制中',
   isStartCloudRecord: '是否开始云录制？',
-  startRecordTip: '开启后，将录制会议过程中的音视频与共享屏幕内容到云端',
+  startRecordTip:
+    '开启后，将录制会议过程中的音视频与共享屏幕内容到云端，同时告知所有参会成员',
   startRecordTipNoNotify:
     '开启后，将录制会议过程中的音视频与共享屏幕内容到云端',
   beingMeetingRecorded: '该会议正在录制中',
@@ -405,7 +411,7 @@ export default {
   startTime: '开始时间',
   creator: '创建人',
   cloudRecordingLink: '云录制链接',
-  generatingCloudRecordingFile: '云录制文件生成中',
+  generatingCloudRecordingFile: '云录制文件生成中...',
   stopRecordFailed: '停止录制失败',
   startRecordFailed: '开启录制失败',
   messageRecalled: '消息已被撤回',
@@ -466,6 +472,7 @@ export default {
   notAllowJoin: '不允许用户再次加入该会议',
   participantExpelWaitingMemberDialogTitle: '移除等候成员',
   moveToWaitingRoom: '移至等候室',
+  meetingRoom: '会议室',
   // 暂停会者活动
   stopMemberActivities: '暂停参会者活动',
   stopMemberActivitiesTitle: '暂停所有参会者活动？',
@@ -730,6 +737,8 @@ export default {
   settingHideNotYetJoinedMembers: '隐藏未入会成员',
   settingHideNotYetJoinedMembersTip:
     '开启后，未入会和呼叫中的成员将不会在视图布局中显示',
+  settingHideVideoOffAttendees: '隐藏非视频参会者',
+  settingHideMyVideo: '隐藏本人视图',
 
   settingFindNewVersion: '发现新版本',
   settingUpdateFailed: '更新失败',
@@ -891,6 +900,10 @@ export default {
   loadFail: '加载失败',
   // sip外呼
   sipCallByNumber: '拨号入会',
+  sipCallRoom: '呼叫SIP/H.323会议室',
+  sipProtocol: '呼叫信令协议',
+  sipCallOutRoomInputTip: '请输入IP地址 或 SIP URI 或 已注册设备号码',
+  h323CallOutRoomInputTip: '请输入IP地址 或 E.164 号码',
   sipCall: '呼叫',
   sipContacts: '会议通讯录',
   sipNumberPlaceholder: '请输入手机号',
@@ -915,6 +928,7 @@ export default {
   sipCallAgainEx: '再次呼叫',
   sipCallStatusRejected: '已拒接',
   sipCallStatusCanceled: '呼叫已取消',
+  sipCallStatusBusy: '对方忙',
   sipCallStatusError: '呼叫异常',
   sipCallStatusCalling: '电话呼叫中',
   sipCallStatusWaiting: '等待呼叫中',
@@ -936,6 +950,14 @@ export default {
   sipAddressInvite: '通讯录邀请',
   sipJoinOtherMeetingTip: '加入后将离开当前会议',
   callStatusWaitingJoin: '待入会',
+
+  roomSipCallIsInInviting: '该会议室已在呼叫中',
+  roomSipCallIsInBlacklist:'该成员已被标记不允许再次加入，如需邀请，请关闭会议黑名单',
+  roomSipCallIsInMeeting:'该设备已在会议中',
+  roomSipCallrLimit:'已达会议人数上限',
+  roomSipCallrNetworkError:'网络连接失败',
+  roomSipCallrNickNameLimit: '入会名称字符太长，请重新设置',
+
   globalReject: '拒绝',
   // todo
   readyPlayOthersAudioAndVideo: '即将开始播放其他成员的音视频',
@@ -955,6 +977,7 @@ export default {
   meetingGuestJoinAuthTip: '为保障会议安全，请输入手机号进行身份验证',
   meetingGuestJoinNamePlaceholder: '请输入入会昵称',
   meetingGuestJoinName: '入会昵称',
+  meetingGuestRememberJoinName: '记住入会昵称',
   meetingRoleGuest: '外部访客',
 
   meetingOpen: '展开',
@@ -1178,16 +1201,18 @@ export default {
   connectAudioTitle: '请选择会议音频的连接方式',
   usingComputerAudioTips:
     '小型会议可直接使用“电脑音频”，以此作为您的会议音频接入方式。',
-  usingComputerAudio: '使用电脑音频',
+  usingComputerAudio: '连接电脑音频',
   secondaryConfirmTitle: '请使用音频接入',
   secondaryConfirmContent: '未接入音频，您与其他成员将无法听见彼此的声音。',
-  secondaryConfirmOk: '选择电脑音频',
+  secondaryConfirmOk: '连接电脑音频',
   secondaryConfirmCancel: '继续',
 
   meetingCrossAppNoPermission:
     '很抱歉，您尝试加入的会议暂未对外部人员开放。如有需要，请联系会议组织者开启访客入会权限。',
   meetingCrossAppJoinTip:
     '该会议由其他团队/组织创建，您将以访客身份加入，是否加入会议？',
+  meetingCrossAppJoinNotSupported:
+    '很抱歉，您尝试加入的会议并非由您的团队/组织创建，暂不支持加入。您可退出登录，通过“加入会议”入口尝试加入。',
   computerSoundOnly: '仅电脑音频',
   sharingComputerSound: '您正在共享电脑音频',
 
@@ -1211,4 +1236,59 @@ export default {
 
   ethernet: '有线',
   wifi: 'Wi-Fi',
+
+  meetingLiveToOtherPlatform: '直播至第三方平台',
+  meetingLiveToOtherPlatformSetting: '第三方直播平台设置',
+  platformName: '平台名称',
+  platformNameTip: '请输入平台名称',
+  platformNamePlaceholder: '请填写需要推送的平台名称',
+  pushUrl: '推流地址',
+  pushUrlTip: '请输入推流地址',
+  pushUrlPlaceholder: '请填写推流地址rtmp://',
+  pushSecret: '推流密钥',
+  pushSecretTip: '请填写推流密钥',
+  pushUrlErrorTip: '请填写正确的RTMP地址',
+  emoticons: '回应',
+  allowMembersToReplyWithEmoticons: '允许成员表情回应',
+  handsUp: '举手',
+  handsUpCount: '{{count}}人正在举手',
+  handsUpDownAll: '全部手放下',
+  handsUpDownAllSuccess: '已将全部手放下',
+  handsUpDownAllFailure: '全部手放下失败',
+  confirmJoinMeeting: '确认入会',
+
+  settingAutomaticSavingOfMeetingChatRecords: '自动保存会议聊天记录',
+  settingAutomaticSavingOfMeetingChatRecordsTips:
+    '开启后，你作为主持人时离会将自动保存聊天记录',
+
+  virtualBackgroundNotSupported:
+    '很抱歉，由于您的设备硬件或系统限制，当前无法使用虚拟背景功能。',
+  virtualBackgroundSupportedTitle: '设备性能不足',
+  virtualBackgroundSupportedDesc:
+    '您的设备性能不足，开启虚拟背景功能可能会导致视频质量下降或出现卡顿。您仍然希望尝试开启吗？',
+  virtualBackgroundSupportedDescBtn: '强制开启',
+
+  settingLeaveTheMeetingRequiresConfirmation: '离开会议需要弹窗确认',
+  meetingAppointNewHost: '指定一名新主持人',
+  meetingAppointAndLeave: '指定并离开',
+
+  cloudRecordingEnableAISummary: '同时开启智能录制',
+  cloudRecordingEnableAISummaryTip:
+    '开启后本场会议将生成智能AI纪要（含总结、待办）',
+  cloudRecordingAISummaryStarted:
+    '本场会议已开启智能录制，将生成智能AI纪要（含总结、待办）',
+  cloudRecordingAISummaryFailed: '智能录制开启失败，请稍后关闭录制后重试',
+  cloudRecordingUnableToStart: '无法启动云录制',
+  cloudRecordingUnableToStartTips: '当前会议中无人开启麦克风或视频，为了启动录制，请解除静音',
+
+  settingShowParticipationTime: '显示参会时长',
+  settingShowMeetingElapsedTime: '会议持续时间',
+  settingShowParticipationElapsedTime: '参会时长',
+
+  settingEnterFullscreen: '开始或加入会议时自动进入全屏模式',
+
+  enterFullscreenTips: '按ESC或点击右上角按钮退出全屏模式',
+
+  preMeetingSubject: '预约的会议',
+
 }

@@ -25,6 +25,7 @@ import {
   NEMeetingScheduledMember,
   NEMeetingItem,
   NEContactsService,
+  NEPreMeetingService,
 } from 'nemeeting-web-sdk';
 import useUserInfo from '@meeting-module/hooks/useUserInfo';
 import { MenuProps } from 'antd/lib';
@@ -65,6 +66,7 @@ interface ScheduleMeetingModalProps extends ModalProps {
   onCancel?: () => void;
   eventEmitter: EventEmitter;
   meetingContactsService?: NEContactsService;
+  preMeetingService?: NEPreMeetingService;
 }
 
 const ScheduleMeetingModal: React.FC<ScheduleMeetingModalProps> = (props) => {

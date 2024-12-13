@@ -24,6 +24,7 @@ import {
   closeMeetingWindow,
 } from '../../mainMeetingWindow/index'
 import NEFeedbackService from './service/feedback_service'
+import NEGuestService from './service/guest_service'
 
 export const BUNDLE_NAME = 'NEMeetingKit'
 
@@ -45,6 +46,7 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
   private _preMeetingService: NEPreMeetingService | undefined
   private _contactsService: NEContactsService | undefined
   private _feedbackService: NEFeedbackService | undefined
+  private _guestService: NEGuestService | undefined
   private _meetingMessageChannelService:
     | NEMeetingMessageChannelService
     | undefined
@@ -132,6 +134,9 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
   getContactsService(): NEContactsService | undefined {
     return this._contactsService
   }
+  getGuestService(): NEGuestService | undefined {
+    return this._guestService
+  }
   addGlobalEventListener(listener: NEGlobalEventListener): void {
     this._globalEventListeners = this._globalEventListeners
       ? { ...this._globalEventListeners, ...listener }
@@ -188,11 +193,13 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
 
       const seqId = this._generateSeqId(functionName)
 
-      this._win.webContents.send(BUNDLE_NAME, {
-        method: functionName,
-        args: [config],
-        seqId,
-      })
+      if (!this._win?.isDestroyed()) {
+        this._win.webContents.send(BUNDLE_NAME, {
+          method: functionName,
+          args: [config],
+          seqId,
+        })
+      }
 
       return this._IpcMainListener<NEMeetingCorpInfo | undefined>(seqId).then(
         (res) => {
@@ -204,6 +211,7 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
             this._preMeetingService?.setWin(this._win)
             this._contactsService?.setWin(this._win)
             this._meetingMessageChannelService?.setWin(this._win)
+            this._guestService?.setWin(this._win)
           } else {
             this._isInitialized = true
             this._initConfig = config
@@ -217,6 +225,7 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
             this._meetingMessageChannelService =
               new NEMeetingMessageChannelService(this._win)
             this._feedbackService = new NEFeedbackService(this._win)
+            this._guestService = new NEGuestService(this._win)
 
             this._onMeetingEnd()
           }

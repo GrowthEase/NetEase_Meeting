@@ -75,7 +75,7 @@ export function useAnnotation(
       )
     }
   }
-
+  /*
   function iframeDomShowNickname() {
     const iframeDom = document.getElementById(
       'nemeeting-annotation-iframe'
@@ -88,6 +88,7 @@ export function useAnnotation(
       )
     }
   }
+    */
 
   function iframeDomSetNickname(name: string) {
     const iframeDom = document.getElementById(
@@ -112,7 +113,7 @@ export function useAnnotation(
     iframeDomSetColor('rgb(224, 32, 32)')
     iframeDomSetUploadPlugin()
     iframeDomHideTool()
-    iframeDomShowNickname()
+    // iframeDomShowNickname()
 
     meetingInfo.annotationDrawEnabled &&
       isMain &&

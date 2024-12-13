@@ -1043,6 +1043,10 @@ export function getMeetingPermission(value: number): MeetingPermission {
       (value & MeetingSecurityCtrlValue.WHILE_BOARD_SHARE_DISABLE) ===
       MeetingSecurityCtrlValue.WHILE_BOARD_SHARE_DISABLE
     ),
+    emojiRespPermission: !(
+      (value & MeetingSecurityCtrlValue.EMOJI_RESP_DISABLE) ===
+      MeetingSecurityCtrlValue.EMOJI_RESP_DISABLE
+    ),
     videoAllOff:
       (value & MeetingSecurityCtrlValue.VIDEO_OFF) ===
       MeetingSecurityCtrlValue.VIDEO_OFF,
@@ -1055,6 +1059,9 @@ export function getMeetingPermission(value: number): MeetingPermission {
     avatarHide:
       (value & MeetingSecurityCtrlValue.AVATAR_HIDE) ===
       MeetingSecurityCtrlValue.AVATAR_HIDE,
+    smartSummary:
+      (value & MeetingSecurityCtrlValue.SMART_SUMMARY) ===
+      MeetingSecurityCtrlValue.SMART_SUMMARY,
   }
 }
 
@@ -1062,4 +1069,18 @@ export function getGMTTimeText(tz: string = dayjs.tz.guess()) {
   const timezoneText = timezones_zh[tz]
 
   return timezoneText ? timezoneText.split(' ')[0] : '(GMT+08:00)'
+}
+
+export function getThumbnailUrl(url: string): string {
+  let result = url
+
+  if (url) {
+    // 判断url是否有?
+    result =
+      url +
+      (url.indexOf('?') > -1 ? '&' : '?') +
+      'imageView&thumbnail=160x90&quality=50&tostatic=0'
+  }
+
+  return result
 }

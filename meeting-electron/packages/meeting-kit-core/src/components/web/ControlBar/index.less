@@ -49,6 +49,9 @@
     color: #fff;
     background: #f51d45;
   }
+  .control-bar-end-button-cancel {
+    color: #fff;
+  }
   .device-popover {
     .nemeeting-popover-inner,
     .nemeeting-popover-arrow::before {
@@ -63,6 +66,7 @@
     .device-list {
       color: @black-theme-color;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 5px;
       .device-item {
         &:hover {
           background: rgba(255, 255, 255, 0.1);
@@ -109,7 +113,8 @@
   .screen-sharing-popover {
     .nemeeting-popover-inner,
     .nemeeting-popover-arrow::before {
-      background-image: @black-theme-background-image;
+      background-color: rgba(11, 11, 11, 0.9);
+      // background-image: @black-theme-background-image;
     }
     .screen-sharing-popover-item {
       color: @black-theme-color;
@@ -185,6 +190,9 @@
         color: #fff;
         background: rgba(254, 59, 48, 1);
       }
+    }
+    .control-bar-end-button-cancel {
+      color: #1E1F27;
     }
     .device-popover {
       .nemeeting-popover-inner,
@@ -433,12 +441,13 @@
       min-width: 48px;
     }
   }
-  .control-bar-end-button {
+  .control-bar-end-button, .control-bar-end-button-cancel {
     position: absolute;
     right: 20px;
-    top: 14px;
+    top: 50%;
+    transform: translateY(-50%);
     border-radius: 4px;
-    padding: 6px 14px;
+    padding: 10px 12px;
     cursor: pointer;
   }
   .control-bar-stop-sharing-button {
@@ -485,6 +494,7 @@
     background: red;
   }
 }
+
 .hand-up-popover {
   cursor: pointer;
   .iconfont {
@@ -562,7 +572,7 @@
       font-weight: 400;
       color: #ffffff;
       opacity: 1;
-      margin-top: 5px;
+      margin-top: 0px;
     }
   }
   .nemeeting-popover-content {
@@ -843,6 +853,24 @@
       padding: 0 2px 0 4px;
     }
   }
+  .host-hands-up-popover {
+    .nemeeting-popover-inner {
+      padding: 8px;
+      border-radius: 12px;
+      background: rgba(11, 11, 11, 0.9);
+      .hands-down-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        cursor: pointer;
+        padding-right: 8px;
+        .nemeeting-emoji-item {
+          margin-right: 5px;
+        }
+      }
+    }
+  }
 }
 
 .control-bar-container .device-popover .nemeeting-popover-inner {
@@ -874,7 +902,7 @@
     margin: 0px !important;
     display: flex;
     justify-content: center;
-    .control-bar-button-item-text{
+    .control-bar-button-item-text {
       max-width: 64px;
       overflow: hidden;
       text-overflow: ellipsis;

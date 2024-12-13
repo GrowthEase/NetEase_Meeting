@@ -1,5 +1,8 @@
 @import '../../../../src/styles/variables.less';
 
+.nemeeting-duration-click {
+  cursor: pointer;
+}
 .nemeeting-duration {
   height: 21px;
   line-height: 21px;
@@ -12,11 +15,41 @@
   background: #3d3d3d;
   font-family: Monaco;
   line-height: 24px;
+  .button-allow {
+    margin-left: 5px;
+    transform: rotate(90deg);
+    font-size: 12px;
+  }
 }
 
-// .light-theme{
-//   .nemeeting-duration {
-//     color: @light-theme-color;
-//     background: none;
-//   }
-// }
+.nemeeting-dropdown.nemeeting-duration-dropdown {
+  .nemeeting-dropdown-menu {
+    background-color: rgba(11, 11, 11, 0.9);
+    border-radius: 12px;
+    box-shadow: 0px 4px 20px 0px rgba(0, 0, 0, 0.3);
+    .nemeeting-dropdown-menu-title-content {
+      color: @black-theme-color;
+      .nemeeting-dropdown-menu-item-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-width: 120px;
+        cursor: pointer;
+        .iconfont {
+          color: #337EFF;
+      }
+      }
+    }
+  }
+}
+
+.light-theme{
+  .nemeeting-dropdown.nemeeting-duration-dropdown {
+    .nemeeting-dropdown-menu {
+      background-color: @light-theme-background-color;
+      .nemeeting-dropdown-menu-title-content {
+        color: @light-theme-text-color;
+      }
+    }
+  }
+}

@@ -20,6 +20,7 @@ import AddressInvitation from './AddressInvitation'
 import './index.less'
 import SIP from './SIP'
 import useWatermark from '../../../hooks/useWatermark'
+import RoomSIP from './RoomSIP'
 
 const InviteModal: React.FC<ModalProps> = ({ onCancel, ...restProps }) => {
   const { t } = useTranslation()
@@ -109,6 +110,16 @@ const Tabs: React.FC<TabsProps> = ({
           {t('sipCallByPhone')}
         </div>
       )}
+      {/* callOutRoomSystemDevice 算是SIP呼叫的一个补充，必须同时配置才显示，不过我个人觉得这个配置应该由服务器来决定好，如果SIP没配置，就不应该能配置callOutRoomSystemDevice*/}
+      {config.callOutRoomSystemDevice && config.sip && (
+      <div
+        className={`nemeeting-local-tab ${
+          activeTab == 'Room' ? 'nemeeting-tab-selected' : ''
+        }`}
+        onClick={() => changeTab('Room')}
+      >
+        {t('meetingRoom')}
+      </div>)}
     </div>
   ) : null
 }
@@ -364,6 +375,9 @@ const InviteContent: React.FC<InviteContentProps> = ({
           eventEmitter={eventEmitter}
           meetingInfoDispatch={meetingInfoDispatch}
         />
+      )}
+      {activeTab === 'Room' && isHostOrCoHost && (
+        <RoomSIP neMeeting={neMeeting} eventEmitter={eventEmitter} />
       )}
     </div>
   )

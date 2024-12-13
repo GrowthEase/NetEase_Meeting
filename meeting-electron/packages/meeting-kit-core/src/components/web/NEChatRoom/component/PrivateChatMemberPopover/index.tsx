@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Input, Popover, Tabs } from 'antd'
+import { Input, Popover, PopoverProps, Tabs } from 'antd'
 import { useTranslation } from 'react-i18next'
 import { useMeetingInfoContext } from '../../../../../store'
 import './index.less'
@@ -19,7 +19,7 @@ type PrivateChatMemberPopoverProps = {
   getPopupContainer?: (triggerNode: HTMLElement) => HTMLElement
   onOpenChange?: (open: boolean) => void
   onPrivateChatMemberSelected?: (privateChatMemberId: string) => void
-}
+} & PopoverProps
 
 const PrivateChatMemberPopover: React.FC<PrivateChatMemberPopoverProps> = (
   props
@@ -54,8 +54,10 @@ const PrivateChatMemberPopover: React.FC<PrivateChatMemberPopoverProps> = (
 
   const [privateChatTab, setPrivateChatTab] = useState('meeting')
   const [privateChatSearchName, setPrivateChatSearchName] = useState('')
-  const [privateChatMemberPopoverOpen, setPrivateChatMemberPopoverOpen] =
-    useState(false)
+  const [
+    privateChatMemberPopoverOpen,
+    setPrivateChatMemberPopoverOpen,
+  ] = useState(false)
   const [privateChatMember, setPrivateChatMember] = useState<ChatRoomMember>()
 
   const searchInputPlaceholder = t('participantSearchMember')
@@ -290,6 +292,7 @@ const PrivateChatMemberPopover: React.FC<PrivateChatMemberPopoverProps> = (
       placement="top"
       overlayClassName="nemeeting-private-chat-member-popover"
       content={renderContent()}
+      align={props.align}
       arrow={false}
       open={privateChatMemberPopoverOpen}
       onOpenChange={(open) => {

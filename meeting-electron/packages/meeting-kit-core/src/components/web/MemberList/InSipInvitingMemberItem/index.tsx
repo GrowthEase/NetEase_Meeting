@@ -70,6 +70,7 @@ const InSipInvitingMemberItem: React.FC<InvitingMemberItemProps> = ({
         callByUserUuid(data.uuid)
         break
       case NEMeetingInviteStatus.canceled:
+      case NEMeetingInviteStatus.busy:
         // 再次呼叫
         callByUserUuid(data.uuid)
         break
@@ -90,6 +91,7 @@ const InSipInvitingMemberItem: React.FC<InvitingMemberItemProps> = ({
       [NEMeetingInviteStatus.noAnswer]: t('sipCallStatusUnaccepted'),
       [NEMeetingInviteStatus.rejected]: t('sipCallStatusRejected'),
       [NEMeetingInviteStatus.canceled]: t('sipCallStatusCanceled'),
+      [NEMeetingInviteStatus.busy]: t('sipCallStatusBusy'),
     }
     const color =
       data.inviteState ===
@@ -111,10 +113,11 @@ const InSipInvitingMemberItem: React.FC<InvitingMemberItemProps> = ({
       [NEMeetingInviteStatus.rejected]: t('sipCall'),
       [NEMeetingInviteStatus.noAnswer]: t('sipCall'),
       [NEMeetingInviteStatus.canceled]: t('sipCall'),
+      [NEMeetingInviteStatus.busy]: t('sipCall'),
       [NEMeetingInviteStatus.error]: t('sipCall'),
     }
-
-    return btnTextMap[data.inviteState]
+    //做一层容错
+    return btnTextMap[data.inviteState] || t('sipCall')
   }, [data.inviteState, t])
   const btnColor = useMemo(() => {
     const btnColorMap = {
@@ -124,6 +127,7 @@ const InSipInvitingMemberItem: React.FC<InvitingMemberItemProps> = ({
       [NEMeetingInviteStatus.rejected]: '#26BD71',
       [NEMeetingInviteStatus.noAnswer]: '#26BD71',
       [NEMeetingInviteStatus.canceled]: '#26BD71',
+      [NEMeetingInviteStatus.busy]: '#26BD71',
       [NEMeetingInviteStatus.error]: '#26BD71',
     }
 

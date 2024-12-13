@@ -1,6 +1,6 @@
 {
   "name": "nemeeting-electron-sdk",
-  "version": "4.8.0",
+  "version": "4.9.0",
   "description": "NetEase Meeting Electron SDK",
   "keywords": ["Meeting", "Electron"],
   "license": "MIT",
@@ -17,8 +17,8 @@
     "network": "^0.7.0",
     "semver": "^7.5.4",
     "systeminformation": "^5.21.11",
-    "neroom-types": "1.31.2",
-    "neroom-node-sdk": "1.31.0"
+    "neroom-types": "1.32.0",
+    "neroom-node-sdk": "1.32.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.9",

@@ -17,6 +17,13 @@ export const LOCALSTORAGE_MEETING_SETTING = 'ne-meeting-setting';
 export const LOCALSTORAGE_SSO_APP_KEY = 'ne-meeting-sso-app-key';
 export const LOCALSTORAGE_INVITE_MEETING_URL = 'invite-ne-meeting-url';
 
+export const LOCAL_GUEST_RECENT_MEETING_LIST =
+  'ne-meeting-guest-recent-meeting-list';
+
+export const LOCAL_GUEST_JOIN_NICKNAME = 'ne-meeting-guest-join-nickname';
+export const LOCAL_GUEST_REMEMBER_NICKNAME =
+  'ne-meeting-guest-remember-nickname';
+
 export const SSO_APP_KEY = isApp ? process.env.SSO_APP_KEY : ''; // test
 
 export const PROTOCOL = 'nemeeting';
@@ -24,6 +31,11 @@ export const PROTOCOL = 'nemeeting';
 export const MEETING_ENV = isApp ? process.env.MEETING_ENV : '';
 
 export const PRIVATE_CONFIG = isApp ? process.env.PRIVATE_CONFIG : '';
+
+export const RECORD_URL = process.env.RECORD_URL;
+
+export const IMAGE_SIZE_LIMIT = 5 * 1024 * 1024;
+
 /**
  * 上线需修改配置
  */

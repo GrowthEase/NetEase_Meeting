@@ -9,6 +9,8 @@ import { EventType } from '../../../types'
 import { useTranslation } from 'react-i18next'
 import { useCanvasSetting } from './useSetting'
 import { useMount, useUpdateEffect } from 'ahooks'
+import CommonModal from '../../common/CommonModal'
+import Toast from '../../common/toast'
 
 interface virtualBackground {
   src: string
@@ -19,8 +21,9 @@ interface BeautySettingProps {
   beautyLevel: number
   mirror: boolean
   virtualBackgroundPath: string
+  enableVirtualBackgroundForce?: boolean
   onBeautyLevelChange: (level: number) => void
-  onVirtualBackgroundChange: (path: string) => void
+  onVirtualBackgroundChange: (path: string, force: boolean) => void
   startPreview: (canvas: HTMLElement) => void
   stopPreview: () => Promise<void>
   virtualBackgroundList: virtualBackground[]
@@ -41,8 +44,10 @@ enum tagNERoomVirtualBackgroundSourceStateReason {
 const VIRTUAL_ERROR_TOAST = 'virtualErrorToast'
 
 const BeautySetting: React.FC<BeautySettingProps> = ({
+  previewController,
   beautyLevel,
   virtualBackgroundPath,
+  enableVirtualBackgroundForce = false,
   onBeautyLevelChange,
   onVirtualBackgroundChange,
   getVirtualBackground,
@@ -70,11 +75,40 @@ const BeautySetting: React.FC<BeautySettingProps> = ({
   ])
 
   const isOpeningFileWindowRef = useRef<boolean>(false) // 防止重复打开文件选择窗口
+  // 虚拟背景硬件支持 0： 支持，1：由于设备硬件或系统原因，当前设备不支持该功能 2：可以强制开启
+  const virtualBackgroundSupportedTypeRef = useRef<number>(0)
+  // const notRemindMeAgainRef = useRef<boolean>(false) // 是否不再提示
 
   const [radioValue, setRadioValue] = useState('')
 
   function handleVirtualBackgroundChange(path) {
-    onVirtualBackgroundChange(path)
+    if (virtualBackgroundSupportedTypeRef.current === 1) {
+      Toast.fail(t('virtualBackgroundNotSupported'))
+      return
+    }
+
+    if (
+      path !== '' &&
+      virtualBackgroundSupportedTypeRef.current === 2 &&
+      !virtualBackgroundPath
+    ) {
+      CommonModal.confirm({
+        title: t('virtualBackgroundSupportedTitle'),
+        content: (
+          <div>
+            <div>{t('virtualBackgroundSupportedDesc')}</div>
+          </div>
+        ),
+        okText: t('virtualBackgroundSupportedDescBtn'),
+        okType: 'danger',
+        onOk: () => {
+          onVirtualBackgroundChange(path, true)
+        },
+      })
+      return
+    }
+
+    onVirtualBackgroundChange(path, enableVirtualBackgroundForce)
   }
 
   useMount(() => {
@@ -82,8 +116,8 @@ const BeautySetting: React.FC<BeautySettingProps> = ({
       localStorage.getItem('nemeeting-global-config') || '{}'
     )
     const isBeautyAvailable = !!globalConfig?.appConfig?.MEETING_BEAUTY?.enable
-    const isVirtualBackgroundAvailable =
-      !!globalConfig?.appConfig?.MEETING_VIRTUAL_BACKGROUND?.enable
+    const isVirtualBackgroundAvailable = !!globalConfig?.appConfig
+      ?.MEETING_VIRTUAL_BACKGROUND?.enable
 
     if (isBeautyAvailable && isVirtualBackgroundAvailable) {
       setRadioValue('beauty')
@@ -201,6 +235,14 @@ const BeautySetting: React.FC<BeautySettingProps> = ({
         }
       }
     }
+
+    // 获取是否支持虚拟背景
+    previewController
+      .getVirtualBackgroundSupportedType?.()
+      // @ts-expect-error 多窗口，同步转异步
+      .then((value) => {
+        virtualBackgroundSupportedTypeRef.current = value
+      })
 
     window.addEventListener('message', handleVirtualBackgroundChange)
     return () => {

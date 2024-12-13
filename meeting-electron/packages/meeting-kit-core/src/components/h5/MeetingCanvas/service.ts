@@ -18,6 +18,7 @@ export function groupMembersService(data: {
   pinVideoUuid?: string
   hostUuid?: string
   viewOrder?: string
+  enableHideVideoOffAttendees?: boolean
 }): Array<NEMember[]> {
   const {
     memberList,
@@ -36,6 +37,7 @@ export function groupMembersService(data: {
     viewOrder,
     inInvitingMemberList,
     hostUuid,
+    enableHideVideoOffAttendees,
   } = data
 
   if (memberList.length === 0) {
@@ -90,11 +92,12 @@ export function groupMembersService(data: {
     }
 
     // 进行分组
-    groupMembers = getGroupMembers(
-      tmpMemberList,
+    groupMembers = getGroupMembers({
+      memberList: tmpMemberList,
       groupNum,
-      inInvitingMemberList
-    )
+      inInvitingMemberList,
+      enableHideVideoOffAttendees,
+    })
     return groupMembers
   }
 
@@ -232,11 +235,13 @@ export function groupMembersService(data: {
           (member) => member.uuid === screenUuid
         ) as NEMember
 
-        const screenMember = JSON.parse(
-          JSON.stringify(_screenMember)
-        ) as NEMember
+        let screenMember
 
-        screenMember.isSharingScreenView = true
+        if (_screenMember) {
+          screenMember = JSON.parse(JSON.stringify(_screenMember)) as NEMember
+
+          screenMember.isSharingScreenView = true
+        }
 
         if (pinVideoUuid) {
           const index = tmpMemberList.findIndex(
@@ -246,7 +251,7 @@ export function groupMembersService(data: {
           if (index >= 0) {
             mainViewMember = tmpMemberList[index]
             tmpMemberList.splice(index, 1)
-            tmpMemberList.unshift(screenMember)
+            screenMember && tmpMemberList.unshift(screenMember)
           }
         } else {
           mainViewMember = screenMember
@@ -281,11 +286,12 @@ export function groupMembersService(data: {
     }
 
     // 进行分组
-    groupMembers = getGroupMembers(
-      tmpMemberList,
+    groupMembers = getGroupMembers({
+      memberList: tmpMemberList,
       groupNum,
-      inInvitingMemberList
-    )
+      inInvitingMemberList,
+      enableHideVideoOffAttendees,
+    })
 
     if (firstMember && secondMember) {
       groupMembers.unshift([firstMember, secondMember])
@@ -300,12 +306,25 @@ export function groupMembersService(data: {
   return groupMembers
 }
 
-function getGroupMembers(
-  memberList: NEMember[],
-  groupNum: number,
+function getGroupMembers(data: {
+  memberList: NEMember[]
+  groupNum: number
   inInvitingMemberList?: NEMember[]
-) {
+  enableHideVideoOffAttendees?: boolean
+}) {
+  const { memberList, groupNum, inInvitingMemberList } = data
   let tmpMemberList = [...memberList]
+
+  // if (enableHideVideoOffAttendees) {
+  //   // 去除当前正在共享屏幕，但是没有开启视频的成员
+  //   const index = tmpMemberList.findIndex(
+  //     (member) => member.isSharingScreenView && !member.isVideoOn
+  //   )
+
+  //   if (index) {
+  //     tmpMemberList.splice(index, 1)
+  //   }
+  // }
 
   if (inInvitingMemberList) {
     tmpMemberList = tmpMemberList.concat(inInvitingMemberList)

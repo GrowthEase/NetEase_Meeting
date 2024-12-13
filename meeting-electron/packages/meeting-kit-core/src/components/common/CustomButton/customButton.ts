@@ -1,6 +1,6 @@
 /* 自定义按钮 */
 
-import { CommonBar, NEMenuIDs, SingleMeunIds } from '../../../types'
+import { CommonBar, NEMenuIDs, SingleMenuIds } from '../../../types'
 import { checkType, deepClone, hasOwnType, isLegalParam } from '../../../utils'
 
 class BaseCustomBtnConfig {
@@ -201,33 +201,6 @@ class BaseCustomBtnConfig {
           )
         }
 
-        // if (hasOwnType(btnItem, 'btnConfig') && (checkType(btnItem.btnConfig, 'object') || checkType(btnItem.btnConfig, 'array'))) {
-        //   const checkBtnConfigArr =  [...this.btnConfigBasic.slice(0, -1)],
-        //   isSingle = Object.values(SingleMeunIds).includes(btnItem.id);
-        //   if (isSingle) {
-        //     if (!checkType(btnItem.btnConfig, 'object')) {
-        //       throw new Error(`this menuitem's btnConfig isn't object , id ${btnItem.id} : ${JSON.stringify(btnItem)}`)
-        //     }
-        //     for (const btnConfigItem of checkBtnConfigArr) {
-        //       if (!hasOwnType(btnItem.btnConfig, btnConfigItem)) {
-        //         throw new Error(`this menuitem's btnConfig missing ${btnConfigItem} : ${JSON.stringify(btnItem)}`)
-        //       }
-        //     }
-        //   } else {
-        //     if (!checkType(btnItem.btnConfig, 'array')) {
-        //       throw new Error(`this menuitem's btnConfig isn't array , id ${btnItem.id} : ${JSON.stringify(btnItem)}`)
-        //     }
-        //     for (const btnConfigItem of checkBtnConfigArr) {
-        //       for (const confKey in btnItem.btnConfig) {
-        //         if (!hasOwnType(btnItem.btnConfig[confKey], btnConfigItem)) {
-        //           throw new Error(`this menuitem's btnConfig missing ${btnConfigItem} : ${JSON.stringify(btnItem)}`)
-        //         }
-        //       }
-        //     }
-        //   }
-        // } else if (hasOwnType(btnItem, 'btnConfig') && !(checkType(btnItem.btnConfig, 'object') || checkType(btnItem.btnConfig, 'array'))) {
-        //   throw new Error(`this menuitem's btnConfig isn't ${Object.values(SingleMeunIds).includes(btnItem.id) ? 'object' : 'array'} , id ${btnItem.id} : ${JSON.stringify(btnItem)}`)
-        // }
         if (
           hasOwnType(btnItem, 'btnConfig') &&
           !(
@@ -237,7 +210,7 @@ class BaseCustomBtnConfig {
         ) {
           throw new Error(
             `this menuitem's btnConfig isn't ${
-              Object.values(SingleMeunIds).includes(btnItem.id)
+              Object.values(SingleMenuIds).includes(btnItem.id)
                 ? 'object'
                 : 'array'
             } , id ${btnItem.id} : ${JSON.stringify(btnItem)}`

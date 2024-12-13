@@ -1,7 +1,0 @@
-include(default)
-
-[settings]
-arch=armv8
-os.version=10.15
-compiler.libcxx=libc++
-compiler.cppstd=14

@@ -31,7 +31,7 @@ import { NEError, NEMeetingInfo, NEMeetingLanguage } from './types/type'
 import { checkType, getDefaultLanguage } from './utils'
 import { Logger } from './utils/Logger'
 import React from 'react'
-import { createRoot } from 'react-dom/client.js'
+import { createRoot, Root } from 'react-dom/client.js'
 import dayjs from 'dayjs'
 import timezone from 'dayjs/plugin/timezone'
 import localeData from 'dayjs/plugin/localeData'
@@ -63,6 +63,7 @@ const eventEmitter = new Eventemitter()
 const outEventEmitter = new Eventemitter()
 
 let roomkit
+let root: Root | undefined
 
 const joinLoading = undefined
 
@@ -128,7 +129,7 @@ const render = async (
     console.warn('getGlobalConfig', e)
   }
 
-  const root = createRoot(view)
+  root = createRoot(view)
 
   root.render(
     <GlobalContextProvider
@@ -352,17 +353,24 @@ const NEMeetingKit: NEMeetingKitInterface = new Proxy<NEMeetingKitInterface>(
     getReducerMeetingInfo: (callback: (data) => void) => {
       outEventEmitter.emit(UserEventType.GetReducerMeetingInfo, callback)
     },
-    destroy: () => {
+    destroy: async () => {
       eventEmitter.emit('destroy')
 
       NEMeetingKit.afterLeaveCallback = null
       NEMeetingKit.view = null
-      NEMeetingKit.neMeeting?.release()
+      try {
+        await NEMeetingKit.neMeeting?.release()
+      } catch (error) {
+        console.warn('release neMeeting error', error)
+      }
+
       NEMeetingKit.inviteService?.destroy()
       NEMeetingKit.inviteService = undefined
       NEMeetingKit.neMeeting = undefined
       NEMeetingKit.isInitialized = false
       outEventEmitter.removeAllListeners()
+      root?.unmount()
+      root = undefined
     },
     on: (eventName: EventName, callback: (...args) => void) => {
       outEventEmitter.on(eventName, callback)

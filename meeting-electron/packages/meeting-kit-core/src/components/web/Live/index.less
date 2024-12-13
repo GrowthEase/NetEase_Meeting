@@ -70,6 +70,15 @@
     margin-top: 0;
     margin-bottom: 0;
   }
+  .nemeeting-live-third-edit-btn {
+    color: #337eff;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 400;
+    margin-bottom: 0;
+    margin-top: 0;
+    margin-left: -8px;
+  }
   .copy-link {
     margin-left: 12px;
     color: #337eff;
@@ -529,8 +538,8 @@
     }
   }
   .nemeeting-live-bg-preview {
-    width: 100px;
-    height: 56px;
+    width: 160px;
+    height: 90px;
     box-sizing: border-box;
     border: 0.5px dashed #e2e2e2;
     background-color: #fafafa;
@@ -556,45 +565,16 @@
     margin-bottom: 6px;
   }
   .nemeeting-live-bg-preview-spin {
-    height: 56px;
+    height: 60px;
   }
-  .nemeeting-live-bg-preview-img-container {
-    height: 100%;
-    width: 100%;
-    position: relative;
-    border-radius: 2px;
-    overflow: hidden;
-    &:hover {
-      .nemeeting-live-bg-preview-re-upload {
-        display: flex;
-      }
-    }
-  }
-  .nemeeting-live-bg-preview-img-wrap {
-    width: 100px;
-    height: 56px;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    .icon-close-wrap {
-      position: absolute;
-      right: -8px;
-      top: -8px;
-      height: 16px;
-      width: 16px;
-      background-color: #83838b;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      color: #fff;
-    }
-    .icon-close {
-      font-size: 10px;
-    }
-  }
+}
+.nemeeting-live-bg-preview-img-wrap {
+  width: 160px;
+  height: 90px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   .nemeeting-live-bg-preview-re-upload {
     position: absolute;
     background-color: rgba(0, 0, 0, 0.5);
@@ -609,6 +589,18 @@
     flex-direction: column;
     cursor: pointer;
   }
+  .nemeeting-live-bg-preview-img-container {
+    height: 100%;
+    width: 100%;
+    position: relative;
+    border-radius: 2px;
+    overflow: hidden;
+    &:hover {
+      .nemeeting-live-bg-preview-re-upload {
+        display: flex;
+      }
+    }
+  }
   .nemeeting-live-bg-preview-re-upload-tip {
     color: #fff;
     font-size: 12px;
@@ -619,5 +611,111 @@
     height: 100%;
     object-fit: contain;
     border-radius: 2px;
+  }
+  .icon-close-wrap {
+    position: absolute;
+    right: -8px;
+    top: -8px;
+    height: 16px;
+    width: 16px;
+    background-color: #83838b;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    color: #fff;
+  }
+
+  .icon-close {
+    font-size: 10px;
+  }
+}
+
+.nemeeting-live-third-part-wrapper {
+  overflow-y: auto;
+  .nemeeting-live-third-part {
+    height: 430px;
+    box-sizing: border-box;
+    padding: 20px;
+  }
+  .nemeeting-live-setting-platform-item-name {
+    color: #333;
+    flex: 1;
+  }
+  .nemeeting-live-setting-platform-item {
+    justify-content: space-between;
+  }
+  .nemeeting-live-setting-add-wrapper {
+    display: flex;
+    align-items: center;
+    height: 36px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    padding: 0 16px;
+    cursor: pointer;
+    margin-bottom: 8px;
+    align-items: center;
+    color: #337eff;
+    &:hover {
+      background-color: #ebf2ff;
+    }
+  }
+}
+.nemeeting-live-third-footer {
+  border-top: 1px solid #ebedf0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  background-color: #fff;
+  padding: 12px 20px;
+  box-sizing: border-box;
+  border-radius: 0 0 10px 10px;
+  .nemeeting-live-setting-footer-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+}
+.live-add-other-platform-container {
+  .nemeeting-push-url-error-tip {
+    color: #ff4d4f;
+    font-size: 12px;
+    left: 0;
+    position: absolute;
+  }
+  .add-other-platform-content-item {
+    margin-top: 20px;
+    position: relative;
+  }
+  .add-other-platform-header {
+    height: 44px;
+    width: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .add-other-platform-back {
+    position: absolute;
+    height: 44px;
+    line-height: 44px;
+    left: 0;
+    cursor: pointer;
+    font-size: 14px;
+    color: #337eff;
+  }
+  .nemeeting-input-password-icon {
+    height: 20px;
+    width: 20px;
+  }
+  .add-other-platform-title {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+    text-align: center;
+    color: #1e1f27;
   }
 }

@@ -1,3 +1,5 @@
+import { NEmeetingItemLivePushThirdPart } from '@meeting-module/kit/interface';
+
 export enum IPCEvent {
   beforeLogin = 'beforeLogin',
   beforeEnterRoom = 'beforeEnterRoom',
@@ -15,7 +17,8 @@ export enum IPCEvent {
   setNPS = 'set-meeting-nps',
   isMainFullscreen = 'isMainFullScreen',
   isMainFullscreenReply = 'isMainFullscreen-reply',
-  quiteFullscreen = 'quiteFullscreen',
+  quiteFullscreen = 'leave-full-screen',
+  enterFullscreen = 'enter-full-screen',
   meetingStatus = 'meetingStatus',
   createMeeting = 'createMeeting',
   joinMeeting = 'joinMeeting',
@@ -172,4 +175,51 @@ export interface LoginUserInfo {
     meetingMaxMinutes: number;
     meetingMaxMembers: number;
   };
+}
+
+export interface GuestMeetingInfo {
+  /** 跨应用入会token */
+  meetingUserToken: string;
+  /** 跨应用入会uuid */
+  meetingUserUuid: string;
+  /** 跨应用入会appKey */
+  meetingAppKey: string;
+  /** 跨应用鉴权类型 */
+  meetingAuthType: string;
+  /** 访客跨应用入会类型 0 不允许访客入会 1 实名访客入会 2 匿名访客入会*/
+  guestJoinType: string;
+}
+
+export enum ServerGuestErrorCode {
+  MEETING_GUEST_JOIN_DISABLED = 3432,
+  MEETING_GUEST_NEED_VERIFY = 3433,
+}
+
+export interface PushThirdPart {
+  pushThirdParties;
+}
+
+export interface LiveSettingInfo {
+  background?: LiveBackground;
+  password?: string;
+  title?: string;
+  pushThirdParties?: NEmeetingItemLivePushThirdPart[];
+  enableThirdParties?: boolean;
+  liveChatRoomEnable?: boolean;
+}
+
+export interface LiveBackground {
+  backgroundUrl?: string;
+  notStartCoverUrl?: string;
+  backgroundFile?: Blob | string;
+  thumbnailBackUrl?: string;
+  notStartThumbnailUrl?: string;
+  thumbnailBackFile?: Blob | string;
+}
+
+export interface PlatformInfo {
+  platformName: string;
+  pushUrl: string;
+  pushSecretKey?: string;
+  id?: string;
 }

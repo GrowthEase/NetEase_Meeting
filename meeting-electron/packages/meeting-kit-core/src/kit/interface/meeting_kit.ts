@@ -15,6 +15,7 @@ import NESettingsService from './service/settings_service'
 import { IM } from '../../types/NEMeetingKit'
 import NEMeetingMessageChannelService from './service/meeting_message_channel_service'
 import NEFeedbackService from './service/feedback_service'
+import { NEGuestService } from './service/guest_service'
 
 export type NEMeetingKitServerConfig = NEServerConfig
 
@@ -60,7 +61,7 @@ interface NEMeetingKit {
   /*
    * 查询会议SDK当前是否已经完成初始化
    */
-  get isInitialized(): boolean
+  readonly isInitialized: boolean
   /**
    * 初始化会议组件，只有在完成初始化后才能调用会议组件的其他接口。
    * 可通过 NEMeetingKitConfig#appKey 初始化。也可以
@@ -116,6 +117,11 @@ interface NEMeetingKit {
    *  @return 反馈服务实例
    */
   getFeedbackService(): NEFeedbackService | undefined
+  /**
+   *  获取访客服务，如果未完成初始化，则返回为空
+   *  @return 反馈访客实例
+   */
+  getGuestService(): NEGuestService | undefined
   /**
    * 注册登录状态监听器
    * @param listener 全局事件监听器

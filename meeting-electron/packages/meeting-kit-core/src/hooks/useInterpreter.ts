@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useGlobalContext, useMeetingInfoContext } from '../store'
 import useWatch from './useWatch'
-import { ActionType } from '../types'
+import { ActionType, MeetingErrorCode } from '../types'
 import { getLocalStorageSetting } from '../utils'
 import { MAJOR_AUDIO } from '../config'
 import { useTranslation } from 'react-i18next'
@@ -235,8 +235,10 @@ export default function useInterpreter() {
             ]
 
           langChannel !== listenChannel &&
-            (await neMeeting?.joinRtcChannel(langChannel).catch(() => {
-              rejoinChannel(langChannel, index === 0, true)
+            (await neMeeting?.joinRtcChannel(langChannel).catch((e) => {
+              if(e.code != MeetingErrorCode.RepeatJoinRtc) {
+                rejoinChannel(langChannel, index === 0, true)
+              }
             }))
 
           // 如果是翻译员并且开启了音频 则pub 传译语言
@@ -323,8 +325,11 @@ export default function useInterpreter() {
             langChannelList[0] &&
             !preLangChannelList.includes(langChannelList[0])
           ) {
-            await neMeeting?.joinRtcChannel(langChannelList[0]).catch(() => {
-              rejoinChannel(langChannelList[0], true)
+            await neMeeting?.joinRtcChannel(langChannelList[0]).catch((e) => {
+              // 重复加入引起的报错
+              if(e.code != MeetingErrorCode.RepeatJoinRtc) {
+                rejoinChannel(langChannelList[0], true)
+              }
             })
           }
 
@@ -333,8 +338,10 @@ export default function useInterpreter() {
             langChannelList[1] &&
             !preLangChannelList.includes(langChannelList[1])
           ) {
-            await neMeeting?.joinRtcChannel(langChannelList[1]).catch(() => {
-              rejoinChannel(langChannelList[1], false)
+            await neMeeting?.joinRtcChannel(langChannelList[1]).catch((e) => {
+              if(e.code != MeetingErrorCode.RepeatJoinRtc) {
+                rejoinChannel(langChannelList[1], false)
+              }
             })
           }
 

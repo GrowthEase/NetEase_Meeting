@@ -15,7 +15,6 @@ const ScreenShareSetting: React.FC<ScreenShareSettingProps> = (props) => {
   const { t } = useTranslation()
 
   const handleSideBySideModeChange = (checked) => {
-    console.log(checked)
     setting.sideBySideModeOpen = checked
     props.onSettingChange({ ...setting })
   }

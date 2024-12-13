@@ -20,6 +20,8 @@ interface VideoSettingProps {
   openVideo: boolean
   onOpenVideoChange: (e: CheckboxChangeEvent) => void
   onShowMemberNameChange: (e: CheckboxChangeEvent) => void
+  onEnableHideMyVideo: (e: CheckboxChangeEvent) => void
+  onEnableHideVideoOffAttendees: (e: CheckboxChangeEvent) => void
   setting: {
     deviceId: string
     isDefaultDevice?: boolean
@@ -27,6 +29,8 @@ interface VideoSettingProps {
     enableVideoMirroring: boolean
     galleryModeMaxCount: number
     showMemberName: boolean
+    enableHideVideoOffAttendees?: boolean
+    enableHideMyVideo?: boolean
   }
 }
 
@@ -42,6 +46,8 @@ const VideoSetting: React.FC<VideoSettingProps> = ({
   openVideo,
   onOpenVideoChange,
   onShowMemberNameChange,
+  onEnableHideMyVideo,
+  onEnableHideVideoOffAttendees,
 }) => {
   const { t } = useTranslation()
   const { videoCanvas, canvasRef } = useCanvasSetting()
@@ -84,6 +90,7 @@ const VideoSetting: React.FC<VideoSettingProps> = ({
     <div className="setting-wrap w-full h-full video-setting">
       <div
         ref={videoCanvas}
+        id="nemeeting-preview-video-dom"
         className={`video-canvas ${
           setting.enableVideoMirroring ? 'video-mirror' : ''
         }`}
@@ -144,6 +151,22 @@ const VideoSetting: React.FC<VideoSettingProps> = ({
               onChange={onShowMemberNameChange}
             >
               {t('settingShowName')}
+            </Checkbox>
+          </div>
+          <div className="video-open">
+            <Checkbox
+              checked={setting.enableHideVideoOffAttendees}
+              onChange={onEnableHideVideoOffAttendees}
+            >
+              <span>{t('settingHideVideoOffAttendees')}</span>
+            </Checkbox>
+          </div>
+          <div className="video-open">
+            <Checkbox
+              checked={setting.enableHideMyVideo}
+              onChange={onEnableHideMyVideo}
+            >
+              <span>{t('settingHideMyVideo')}</span>
             </Checkbox>
           </div>
         </div>

@@ -645,6 +645,15 @@ const InterpreterSetting = forwardRef<
             setInterpreterSelected(tmpList)
           })
         }
+      } else {
+        setInterpreterSelected([
+          {
+            userId: undefined,
+            firstLang: '',
+            secondLang: '',
+            key: '',
+          },
+        ])
       }
     }, [
       neMeeting,

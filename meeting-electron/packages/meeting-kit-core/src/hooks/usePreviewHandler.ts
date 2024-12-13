@@ -63,10 +63,14 @@ export default function usePreviewHandler(): void {
     const virtualBackgroundPath =
       meetingInfo.setting?.beautySetting?.virtualBackgroundPath
 
+    const enableVirtualBackgroundForce =
+      meetingInfo.setting?.beautySetting?.enableVirtualBackgroundForce ?? false
+
     neMeeting?.previewController?.enableVirtualBackground?.(
       !!virtualBackgroundPath &&
         meetingInfo.setting.beautySetting?.enableVirtualBackground !== false,
-      virtualBackgroundPath
+      virtualBackgroundPath,
+      enableVirtualBackgroundForce
     )
   }, [
     meetingInfo.setting?.beautySetting?.virtualBackgroundPath,

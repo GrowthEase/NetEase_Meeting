@@ -182,31 +182,7 @@ const VideoGalleryLayout: React.FC<VideoGalleryLayoutIF> = (props) => {
     const videoContainerDom = document.querySelector(selector) as HTMLElement
 
     if (window.isElectronNative && selector.startsWith('.dragging-handle')) {
-      /*
-      const canvas = videoContainerDom?.firstElementChild
-      if (canvas) {
-        try {
-          const newCanvas = document.createElement('canvas')
-          newCanvas.className = canvas.className
-          const style = canvas.getAttribute('style')
-          style && newCanvas.setAttribute('style', style)
-          videoContainerDom.removeChild(canvas)
-          videoContainerDom.insertBefore(
-            newCanvas,
-            videoContainerDom.firstChild
-          )
-          const offscreen = newCanvas.transferControlToOffscreen()
-          worker.postMessage(
-            {
-              canvas: offscreen,
-              uuid: member.uuid,
-              type: 'video',
-            },
-            [offscreen]
-          )
-        } catch {}
-      }
-      */
+      //
     } else {
       const videoDom = videoContainerDom.getElementsByClassName(
         'nertc-video-container'

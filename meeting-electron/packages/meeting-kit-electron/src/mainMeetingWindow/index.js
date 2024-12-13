@@ -6,6 +6,7 @@ const {
   app,
   dialog,
 } = require('electron')
+const { download } = require('electron-dl')
 const path = require('path')
 const {
   addScreenSharingIpc,
@@ -20,9 +21,14 @@ const {
 } = require('../ipcMain')
 const { initMonitoring } = require('../utils/monitoring')
 const os = require('os')
+const NEMeetingKit = require('../kit/impl/meeting_kit')
 
 // 获取操作系统类型
 const platform = os.platform()
+const version = os.release()
+
+const isMacOS15 = platform === 'darwin' && version.startsWith('24')
+
 initMonitoring()
 
 if (isLocal) {
@@ -31,6 +37,14 @@ if (isLocal) {
 
 // 窗口数量
 app.commandLine.appendSwitch('--max-active-webgl-contexts', 1000)
+// 开启 SharedArrayBuffer
+app.commandLine.appendSwitch('enable-features', 'SharedArrayBuffer')
+// 开启 web gpu
+/*
+if (!isMacOS15) {
+  app.commandLine.appendSwitch('--enable-unsafe-webgpu')
+}
+*/
 
 if (process.platform === 'win32') {
   app.commandLine.appendSwitch('high-dpi-support', 'true')
@@ -129,6 +143,8 @@ function openMeetingWindow(data) {
       y: Math.round(y + (height - MINI_HEIGHT) / 2),
     })
     mainWindow.setMinimumSize(MINI_WIDTH, MINI_HEIGHT)
+    mainWindow.isFullScreenPrivate = false
+    mainWindow.isMaximizedPrivate = false
   }
 
   function setThemeColor() {
@@ -160,20 +176,22 @@ function openMeetingWindow(data) {
       y: 7,
     },
     hasShadow: true,
-    backgroundColor: '#fff',
     transparent: true,
     show: false,
     webPreferences: {
       contextIsolation: false,
       nodeIntegration: true,
       enableRemoteModule: true,
+      backgroundThrottling: false,
       preload: path.join(__dirname, '../preload.js'),
     },
   })
 
   if (isLocal) {
     mainWindow.loadURL(`http://localhost:8000/#/${urlPath}`)
-    mainWindow.webContents.openDevTools()
+    setTimeout(() => {
+      mainWindow.webContents.openDevTools()
+    }, 3000)
   } else {
     mainWindow.loadFile(path.join(__dirname, '../../build/index.html'), {
       hash: urlPath,
@@ -183,38 +201,99 @@ function openMeetingWindow(data) {
   // 最大化
   mainWindow.on('maximize', () => {
     mainWindow?.webContents.send('maximize-window', true)
+    mainWindow.isMaximizedPrivate = true
   })
 
   // 取消最大化
   mainWindow.on('unmaximize', () => {
     mainWindow?.webContents.send('maximize-window', false)
+    mainWindow.isMaximizedPrivate = false
   })
 
   mainWindow.webContents.session.removeAllListeners('will-download')
-  mainWindow.webContents.session.on('will-download', (event, item) => {
-    item.on('done', (event, state) => {
-      if (state === 'completed' && mainWindow.inMeeting) {
-        console.log('mainWindow will-download')
-        const path = event.sender.getSavePath()
+  mainWindow.webContents.session.on('will-download', async (event, item) => {
+    // 获取文件名
+    const fileName = item.getFilename()
 
-        shell.showItemInFolder(path)
+    if (fileName.includes('auto_save!')) {
+      event.preventDefault()
+
+      const url = item.getURL()
+      const paths = fileName.split('!')
+
+      mainWindow.webContents
+        .executeJavaScript(
+          `localStorage.getItem("ne-meeting-setting-${paths[1]}")`,
+          true
+        )
+        .then((res) => {
+          try {
+            const setting = JSON.parse(res)
+
+            download(mainWindow, url, {
+              directory:
+                setting?.normalSetting?.downloadPath ||
+                app.getPath('downloads'),
+              filename: `${paths[2]}`,
+              overwrite: true,
+              openFolderWhenDone: false,
+            })
+          } catch {
+            //
+          }
+        })
+    } else {
+      item.on('done', (event, state) => {
+        const uuidCsvRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.csv$/i
+
+        if (
+          state === 'completed' &&
+          fileName.endsWith('csv') &&
+          !uuidCsvRegex.test(fileName)
+        ) {
+          // 文件下载完成，打开文件所在路径
+          const path = event.sender.getSavePath()
+
+          shell.showItemInFolder(path)
+        }
+      })
+    }
+  })
+
+  // 用来区分关闭窗口的方式
+  let beforeQuit = false
+
+  app.on('before-quit', async () => {
+    if (mainWindow.inMeeting) {
+      beforeQuit = true
+    } else {
+      console.log('开始反初始化')
+      const neMeetingKit = NEMeetingKit.default.getInstance()
+
+      try {
+        neMeetingKit.isInitialized && (await neMeetingKit.unInitialize())
+      } catch (error) {
+        console.log('unInitialize error', error)
       }
-    })
+    }
   })
 
   mainWindow.on('close', function (event) {
     if (mainWindow.inMeeting) {
       event.preventDefault()
-      mainWindow?.webContents.send('main-close-before')
+      mainWindow?.webContents.send('main-close-before', beforeQuit)
       mainWindow?.show()
+      beforeQuit = false
     }
   })
 
   mainWindow.on('leave-full-screen', () => {
-    mainWindow.setTitle('网易会议')
+    mainWindow?.webContents.send('leave-full-screen')
+    mainWindow.isFullScreenPrivate = false
   })
   mainWindow.on('enter-full-screen', () => {
-    mainWindow.setTitle('')
+    mainWindow?.webContents.send('enter-full-screen')
+    mainWindow.isFullScreenPrivate = true
   })
 
   mainWindow.webContents.once('dom-ready', () => {
@@ -233,9 +312,7 @@ function openMeetingWindow(data) {
     }
   })
 
-  if (isWin32) {
-    mainWindow.setBackgroundColor('rgba(255, 255, 255,0)')
-  }
+  mainWindow.setBackgroundColor('rgba(255, 255, 255,0)')
 
   mainWindow.webContents.send(
     'set-theme-color',
@@ -245,6 +322,27 @@ function openMeetingWindow(data) {
   screen.on('display-removed', displayChanged)
 
   screen.on('display-added', displayChanged)
+
+  /*
+  function debounce(func, wait) {
+    let timeout
+
+    return function (...args) {
+      clearTimeout(timeout)
+      timeout = setTimeout(() => {
+        func.apply(this, args)
+      }, wait)
+    }
+  }
+
+  const neMeetingDisplayChanged = debounce(() => {
+    const display = screen.getDisplayMatching(mainWindow.getBounds())
+
+    mainWindow.webContents.send('neMeetingDisplayChanged', display.size)
+  }, 1000)
+
+  mainWindow.on('moved', neMeetingDisplayChanged)
+  */
 
   setWindowOpenHandler(mainWindow)
 

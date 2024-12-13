@@ -27,6 +27,12 @@ function openNewWindow(url) {
 
   if (!newWin || newWin.isDestroyed()) return
 
+  if (sharingScreen.isSharing) {
+    newWin?.setContentProtection(true)
+  } else {
+    newWin?.setContentProtection(false)
+  }
+
   if (url.includes('bulletScreenMessage')) {
     newWin.setWindowButtonVisibility?.(false)
 
@@ -392,8 +398,6 @@ function setWindowOpenHandler(mainWindow) {
   mainWindow.webContents.on(
     'did-create-window',
     (newWin, { url: originalUrl }) => {
-      // 先强制保护窗口内容，避免共享被捕获
-      newWin.setContentProtection(true)
       // newWin.setParentWindow(mainWindow);
 
       const url = originalUrl.replace(/.*?(?=#)/, '')
@@ -437,19 +441,6 @@ function setWindowOpenHandler(mainWindow) {
           }
         })
       }
-
-      // 聊天窗口打开下载文件夹
-      newWin.webContents.session.removeAllListeners('will-download')
-      newWin.webContents.session.on('will-download', (event, item) => {
-        item.on('done', (event, state) => {
-          if (state === 'completed') {
-            // 文件下载完成，打开文件所在路径
-            const path = event.sender.getSavePath()
-
-            shell.showItemInFolder(path)
-          }
-        })
-      })
 
       openNewWindow(url)
 

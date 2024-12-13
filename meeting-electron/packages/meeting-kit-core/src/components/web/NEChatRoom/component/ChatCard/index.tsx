@@ -16,10 +16,15 @@ export function t(string: string, values: Record<string, string>): string {
 }
 
 export const addUrlSearch = (url: string, search: string): string => {
-  const urlObj = new URL(url)
+  try {
+    const urlObj = new URL(url)
 
-  urlObj.search += (urlObj.search.startsWith('?') ? '&' : '?') + search
-  return urlObj.href
+    urlObj.search += (urlObj.search.startsWith('?') ? '&' : '?') + search
+    return urlObj.href
+  } catch (error) {
+    console.log('new Url error', error)
+    return ''
+  }
 }
 
 export const matchExt = (extname: string): string => {

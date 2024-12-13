@@ -10,7 +10,7 @@ import { LOCALSTORAGE_USER_INFO, NOT_FIRST_LOGIN } from '../../../config';
 
 import { NECommonError, NEPreviewController } from 'neroom-types';
 import qs from 'qs';
-import { IPCEvent } from '../../../types';
+import { IPCEvent, ServerGuestErrorCode } from '../../../types';
 import {
   CreateMeetingResponse,
   EventType,
@@ -567,7 +567,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     } catch (error) {
       const e = error as NECommonError;
 
-      if (e.code === 3432) {
+      if (e.code === ServerGuestErrorCode.MEETING_GUEST_JOIN_DISABLED) {
         isGuestJoin = true;
         setShowCrossAppForbiddenDialog(true);
       }
@@ -791,6 +791,8 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                     backgroundColor: '#fff',
                     border: 'none',
                     fontSize: 16,
+                    height: 24,
+                    padding: '0 11px',
                   }}
                 />
               </div>

@@ -128,6 +128,7 @@ const MeetingNotification = forwardRef<
             ) {
               return
             }
+
             onNotificationCardWinOpen?.(message)
           } else {
             if (notifyCard && notifyCard.popUp) {

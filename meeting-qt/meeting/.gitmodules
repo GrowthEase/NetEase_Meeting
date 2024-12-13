@@ -1,8 +1,0 @@
-[submodule "third_party/meeting-sdk-desktop-tests"]
-	path = third_party/meeting-sdk-desktop-tests
-	url = ../meeting-sdk-desktop-tests.git
-	ignore = dirty
-[submodule "third_party/xkit"]
-	path = third_party/xkit
-	url = ssh://git@g.hz.netease.com:22222/yunxin-app/xkit-desktop.git
-	ignore = dirty

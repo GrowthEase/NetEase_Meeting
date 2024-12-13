@@ -62,7 +62,7 @@ import Toast from '../../common/toast'
 import Network from '../../common/Network'
 import './index.less'
 
-import { useMount, useUpdateEffect } from 'ahooks'
+import { useMount, useUpdateEffect, usePrevious } from 'ahooks'
 import { IPCEvent } from '../../../app/src/types'
 import MuteAudioIcon from '../../../assets/mute-audio.png'
 import MuteSpeakIcon from '../../../assets/mute-speak.png'
@@ -76,6 +76,8 @@ import { createDefaultCaptionSetting } from '../../../services'
 import useTranslationOptions from '../../../hooks/useTranslationOptions'
 import reactStringReplace from 'react-string-replace'
 import Emoji from '../../common/Emoji'
+import useEmoticonsButton from './Buttons/useEmoticonsButton'
+import { EndButton } from './Buttons/EndButton'
 
 type ButtonType = {
   id: number | string
@@ -111,8 +113,11 @@ const ControlBar: React.FC<ControlBarProps> = ({
 }) => {
   const { waitingRoomInfo } = useWaitingRoomContext()
   const { t, i18n } = useTranslation()
-  const { meetingInfo, memberList, inInvitingMemberList } =
-    useMeetingInfoContext()
+  const {
+    meetingInfo,
+    memberList,
+    inInvitingMemberList,
+  } = useMeetingInfoContext()
   const { dispatch: waitingRoomDispatch } = useWaitingRoomContext()
   const {
     neMeeting,
@@ -156,8 +161,9 @@ const ControlBar: React.FC<ControlBarProps> = ({
   const [audioDeviceListOpen, setAudioDeviceListOpen] = useState(false)
   const [videoDeviceListOpen, setVideoDeviceListOpen] = useState(false)
   const [recordPopoverOpen, setRecordPopoverOpen] = useState(false)
-  const [screenSharingPopoverOpen, setScreenSharingPopoverOpen] =
-    useState(false)
+  const [screenSharingPopoverOpen, setScreenSharingPopoverOpen] = useState(
+    false
+  )
   const [cameras, setCameras] = useState<NEDeviceBaseInfo[]>([])
   const [microphones, setMicrophones] = useState<NEDeviceBaseInfo[]>([])
   const [speakers, setSpeakers] = useState<NEDeviceBaseInfo[]>([])
@@ -166,6 +172,10 @@ const ControlBar: React.FC<ControlBarProps> = ({
   const [selectedSpeaker, setSelectedSpeaker] = useState<string>()
   const [isDarkMode, setIsDarkMode] = useState(true)
   const [handUpPopoverOpen, setHandUpPopoverOpen] = useState(false)
+  const [openCaptionPopover, setOpenCaptionPopover] = useState(false)
+  const handUpPopoverOpenTimerRef = useRef<null | ReturnType<
+    typeof setTimeout
+  >>(null)
   const [newMsg, setNewMsg] = useState<{
     fromNick: string
     fromAvatar?: string
@@ -200,13 +210,19 @@ const ControlBar: React.FC<ControlBarProps> = ({
     return localMember.role === Role.host || localMember.role === Role.coHost
   }, [localMember.role])
 
+  const isHost = localMemberRef.current.role === Role.host
+
   const isHostOrCoHostRef = useRef(isHostOrCoHost)
+
+  const { emoticonsBtn } = useEmoticonsButton(open)
 
   isHostOrCoHostRef.current = isHostOrCoHost
 
   const handUpCount = useMemo(() => {
     return memberList.filter((item) => item.isHandsUp).length
   }, [memberList])
+
+  const preHandUpCount = usePrevious(handUpCount)
 
   const isElectronSharingScreen = useMemo(() => {
     return window.ipcRenderer && localMember.isSharingScreen
@@ -219,6 +235,12 @@ const ControlBar: React.FC<ControlBarProps> = ({
 
     return controlBarVisibleByMouse
   }, [controlBarVisibleByMouse, newMsg])
+
+  const isElectronSharingScreenToolsShowRef = useRef(
+    isElectronSharingScreenToolsShow
+  )
+
+  isElectronSharingScreenToolsShowRef.current = isElectronSharingScreenToolsShow
 
   const toolBarList = useMemo(() => {
     return meetingInfo.toolBarList
@@ -504,17 +526,19 @@ const ControlBar: React.FC<ControlBarProps> = ({
 
     if (localMember.isVideoOn) {
       try {
-        dispatch?.({
-          type: ActionType.UPDATE_MEMBER,
-          data: {
-            uuid: localMember.uuid,
-            member: { isVideoOn: false },
-          },
-        })
         await neMeeting?.muteLocalVideo()
         // 本端断网情况也需要先关闭
-      } catch {
-        // Toast.fail(t('muteVideoFail'))
+      } finally {
+        // 加下延迟，否则设置预览的时候预览会有问题
+        setTimeout(() => {
+          dispatch?.({
+            type: ActionType.UPDATE_MEMBER,
+            data: {
+              uuid: localMember.uuid,
+              member: { isVideoOn: false },
+            },
+          })
+        }, 1000)
       }
     } else {
       if (!needHandUp('video')) {
@@ -1168,65 +1192,37 @@ const ControlBar: React.FC<ControlBarProps> = ({
   const memberListBtn = {
     id: 3,
     key: 'memberList',
-    icon: (
-      <Popover
-        destroyTooltipOnHide
-        align={isElectronSharingScreen ? { offset: [0, 35] } : undefined}
-        placement={isElectronSharingScreen ? 'bottom' : 'top'}
-        autoAdjustOverflow={false}
-        getTooltipContainer={(node) => node}
-        open={handUpPopoverOpen}
-        content={
-          <div
-            className="nemeeting-handsUp"
-            onClick={(e) => {
-              if (!isHostOrCoHost) {
-                e.stopPropagation()
-                if (handUpModalRef.current) {
-                  return
-                }
-
-                handUpModalRef.current = CommonModal.confirm({
-                  title: '',
-                  content: t('cancelHandUpTips'),
-                  okText: t('cancelHandsUp'),
-                  onOk: async () => {
-                    try {
-                      await neMeeting?.sendMemberControl(
-                        memberAction.handsDown,
-                        localMember.uuid
-                      )
-                    } catch {
-                      Toast.fail(t('cancelHandsUpFail'))
-                    }
-
-                    handUpModalRef.current = undefined
-                  },
-                  onCancel: () => {
-                    handUpModalRef.current = undefined
-                  },
-                })
-              }
-            }}
-          >
-            <svg
-              className="icon icon-tool iconfont nemeeting-icon-handsup"
-              aria-hidden="true"
+    popover: (children) => {
+      return (
+        <Popover
+          destroyTooltipOnHide
+          align={
+            isElectronSharingScreen ? { offset: [0, 7] } : { offset: [0, -7] }
+          }
+          placement={isElectronSharingScreen ? 'bottom' : 'top'}
+          autoAdjustOverflow={false}
+          getTooltipContainer={(node) => node}
+          open={handUpPopoverOpen && isHostOrCoHost && handUpCount > 0}
+          rootClassName="host-hands-up-popover"
+          arrow={false}
+          content={
+            <div
+              className="hands-down-content"
+              onClick={() => {
+                onDefaultButtonClick?.('memberList')
+              }}
             >
-              <use xlinkHref="#iconraisehands1x"></use>
-            </svg>
-            {isHostOrCoHost ? (
-              <span>{handUpCount}</span>
-            ) : (
-              <>
-                <span className="hand-up-label">{t('inHandsUp')}</span>
-                <span className="hand-down-label">{t('handsUpDown')}</span>
-              </>
-            )}
-          </div>
-        }
-        rootClassName="hand-up-popover"
-      >
+              <Emoji type={2} size={32} emojiKey="[举手]" />
+              {t('handsUpCount', { count: handUpCount })}
+            </div>
+          }
+        >
+          {children}
+        </Popover>
+      )
+    },
+    icon: (
+      <>
         <svg className="icon icon-tool iconfont" aria-hidden="true">
           <use xlinkHref="#iconyx-tv-attendeex"></use>
         </svg>
@@ -1238,7 +1234,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
             ? memberList.length + waitingRoomInfo.memberCount
             : memberList.length}
         </span>
-      </Popover>
+      </>
     ),
     label: isHostOrCoHost
       ? t('memberListBtnForHost')
@@ -1273,8 +1269,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
     },
     hidden: !(
       showCloudRecordMenuItem &&
-      (globalConfig?.appConfig?.APP_ROOM_RESOURCE.record ||
-        meetingInfo.isWaitingRoomEnabled) &&
+      globalConfig?.appConfig?.APP_ROOM_RESOURCE.record &&
       isHostOrCoHostRef.current
     ),
     label: meetingInfo.isCloudRecording
@@ -1557,6 +1552,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
                   return
                 }
 
+                setOpenCaptionPopover(false)
                 onTargetLanguageChange(item.value)
               }}
             >
@@ -1611,6 +1607,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
               !meetingInfoRef.current.setting.captionSetting
                 ?.showCaptionBilingual
             )
+            setOpenCaptionPopover(false)
           }}
         >
           <div>{t('transcriptionShowBilingual')}</div>
@@ -1637,6 +1634,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
                 neMeeting?.allowParticipantsEnableCaption(
                   !meetingInfoRef.current.isAllowParticipantsEnableCaption
                 )
+                setOpenCaptionPopover(false)
               }}
             >
               <div>{t('transcriptionAllowEnableCaption')}</div>
@@ -1672,14 +1670,19 @@ const ControlBar: React.FC<ControlBarProps> = ({
           <use xlinkHref="#iconzimu"></use>
         </svg>
         <Popover
+          open={openCaptionPopover}
+          onOpenChange={(open) => setOpenCaptionPopover(open)}
           arrow={false}
           rootClassName={'nemeeting-web-caption-size-pop'}
           content={enableMemberContent}
           placement={isElectronSharingScreen ? 'bottom' : 'top'}
           title={t('transcriptionTargetLang')}
-          trigger="hover"
+          trigger="click"
         >
-          <div className="nemeeting-more-caption-arrow">
+          <div
+            className="nemeeting-more-caption-arrow"
+            onClick={(e) => e.stopPropagation()}
+          >
             {isElectronSharingScreen ? (
               <CaretDownOutlined />
             ) : (
@@ -1784,6 +1787,12 @@ const ControlBar: React.FC<ControlBarProps> = ({
       }
 
       const annotationDrawEnabled = meetingInfoRef.current.annotationDrawEnabled
+
+      const enable = !annotationDrawEnabled
+
+      window.ipcRenderer?.send(IPCEvent.sharingScreen, {
+        method: enable ? 'startAnnotation' : 'stopAnnotation',
+      })
 
       neMeeting?.setAnnotationEnableDraw(!annotationDrawEnabled)
       dispatch?.({
@@ -1949,18 +1958,18 @@ const ControlBar: React.FC<ControlBarProps> = ({
   if (toolBarList.length > 0) {
     toolBarList.forEach((item) => {
       let btn = {
-        0: audioBtn,
-        1: videoBtn,
-        2: screenShareBtn,
-        3: memberListBtn,
-        21: chatBtn,
-        20: inviteBtn,
-        22: whiteBoardBtn,
-        26: securityBtn,
-        27: recordBtn,
-        28: settingBtn,
-        25: liveBtn,
-        // 29: notificationBtn,
+        [NEMenuIDs.mic]: audioBtn,
+        [NEMenuIDs.camera]: videoBtn,
+        [NEMenuIDs.screenShare]: screenShareBtn,
+        [NEMenuIDs.participants]: memberListBtn,
+        [NEMenuIDs.chat]: chatBtn,
+        [NEMenuIDs.invite]: inviteBtn,
+        [NEMenuIDs.whiteBoard]: whiteBoardBtn,
+        [NEMenuIDs.security]: securityBtn,
+        [NEMenuIDs.record]: recordBtn,
+        [NEMenuIDs.setting]: settingBtn,
+        [NEMenuIDs.live]: liveBtn,
+        [NEMenuIDs.emoticons]: emoticonsBtn,
       }[item.id]
 
       const proxyItem = new Proxy(item, {
@@ -2208,8 +2217,6 @@ const ControlBar: React.FC<ControlBarProps> = ({
         leaveTimerRef.current = null
       }
     }
-
-    const isHost = localMemberRef.current.role === Role.host
 
     closeModal = CommonModal.confirm({
       title: isHost ? t('meetingQuit') : t('leave'),
@@ -2535,7 +2542,8 @@ const ControlBar: React.FC<ControlBarProps> = ({
                         if (!localMember.isAudioConnected) {
                           return
                         }
-
+          
+                        setAudioDeviceListOpen(false)
                         neMeeting
                           ?.selectSpeakers(getDefaultDeviceId(item.deviceId))
                           .then(() => {
@@ -2586,6 +2594,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
                           return
                         }
 
+                        setAudioDeviceListOpen(false)
                         neMeeting
                           ?.changeLocalAudio(getDefaultDeviceId(item.deviceId))
                           .then(() => {
@@ -2628,6 +2637,8 @@ const ControlBar: React.FC<ControlBarProps> = ({
                     className="device-item"
                     key={item.deviceName}
                     onClick={() => {
+
+                      setVideoDeviceListOpen(false)
                       neMeeting
                         ?.changeLocalVideo(getDefaultDeviceId(item.deviceId))
                         .then(() => {
@@ -3039,7 +3050,13 @@ const ControlBar: React.FC<ControlBarProps> = ({
       }
     )
     eventEmitter?.on(MeetingEventType.leaveOrEndRoom, () => {
-      handleLeaveOrEnd()
+      // handleLeaveOrEnd()
+      dispatch?.({
+        type: ActionType.UPDATE_MEETING_INFO,
+        data: {
+          endMeetingAction: 2,
+        },
+      })
     })
 
     eventEmitter?.on(
@@ -3127,11 +3144,16 @@ const ControlBar: React.FC<ControlBarProps> = ({
   }, [localMember.role])
 
   useEffect(() => {
+    if (preHandUpCount && handUpCount < preHandUpCount) {
+      return
+    }
+
+    handUpPopoverOpenTimerRef.current &&
+      clearTimeout(handUpPopoverOpenTimerRef.current)
     if (isElectronSharingScreen) {
       setTimeout(() => {
         setHandUpPopoverOpen(
-          (!!controlBarVisibleByMouse || !!newMsg) &&
-            (localMember.isHandsUp || (isHostOrCoHost && handUpCount > 0)) &&
+          (localMember.isHandsUp || (isHostOrCoHost && handUpCount > 0)) &&
             !meetingInfo.isRooms
         )
       }, 200)
@@ -3141,15 +3163,11 @@ const ControlBar: React.FC<ControlBarProps> = ({
           !meetingInfo.isRooms
       )
     }
-  }, [
-    controlBarVisibleByMouse,
-    isElectronSharingScreen,
-    localMember.isHandsUp,
-    isHostOrCoHost,
-    handUpCount,
-    meetingInfo.isRooms,
-    newMsg,
-  ])
+
+    handUpPopoverOpenTimerRef.current = setTimeout(() => {
+      setHandUpPopoverOpen(false)
+    }, 5000)
+  }, [localMember.isHandsUp, isHostOrCoHost, handUpCount, meetingInfo.isRooms])
 
   useMount(() => {
     getCameras()
@@ -3199,8 +3217,14 @@ const ControlBar: React.FC<ControlBarProps> = ({
     }
 
     if (window.ipcRenderer) {
-      window.ipcRenderer.on('main-close-before', () => {
-        closeModal = handleLeaveOrEnd()
+      window.ipcRenderer.on('main-close-before', (_, beforeQuit) => {
+        // closeModal = handleLeaveOrEnd()
+        dispatch?.({
+          type: ActionType.UPDATE_MEETING_INFO,
+          data: {
+            endMeetingAction: beforeQuit ? 2 : 3,
+          },
+        })
       })
 
       // 设置页面切换音频或者视频设备 setting: {type: 'video'|'audio', deviceId: string, deviceName?: string}
@@ -3250,6 +3274,11 @@ const ControlBar: React.FC<ControlBarProps> = ({
   }, [selectedMicrophone])
 
   useEffect(() => {
+    if (!localMember.isAudioConnected) {
+      CommonModal.destroy('speakerVolumeMuteTips')
+      return
+    }
+
     if (selectedSpeaker) {
       const deviceInfo = speakers.find(
         (item) =>
@@ -3276,13 +3305,15 @@ const ControlBar: React.FC<ControlBarProps> = ({
         })
       }
     }
-  }, [selectedSpeaker])
+  }, [selectedSpeaker, localMember.isAudioConnected])
 
   useEffect(() => {
     if (isElectronSharingScreen) {
       window.ipcRenderer?.send(IPCEvent.sharingScreen, {
         method: 'controlBarVisibleChangeByMouse',
-        data: isElectronSharingScreenToolsShow,
+        data: {
+          open: isElectronSharingScreenToolsShow,
+        },
       })
       if (!isElectronSharingScreenToolsShow) {
         setAudioDeviceListOpen(false)
@@ -3291,6 +3322,46 @@ const ControlBar: React.FC<ControlBarProps> = ({
       }
     }
   }, [isElectronSharingScreen, isElectronSharingScreenToolsShow])
+
+  useEffect(() => {
+    if (isElectronSharingScreen) {
+      const dom = document.querySelector(
+        '.nemeeting-sharing-screen .nemeeting-drawer-content .control-bar-button-list'
+      )
+
+      const resizeWidth = debounce(() => {
+        {
+          let width = 0
+          const children = Array.from(dom?.children ?? [])
+
+          children.forEach((item) => {
+            width += item.clientWidth
+          })
+
+          width += 50
+
+          if (isElectronSharingScreenToolsShowRef.current) {
+            window.ipcRenderer?.send(IPCEvent.sharingScreen, {
+              method: 'controlBarVisibleChangeByMouse',
+              data: {
+                open: isElectronSharingScreenToolsShowRef.current,
+                width: width,
+              },
+            })
+          }
+        }
+      }, 100)
+      const observer = new ResizeObserver(() => {
+        resizeWidth()
+      })
+
+      dom && observer.observe(dom)
+      return () => {
+        dom && observer.unobserve(dom)
+        observer.disconnect()
+      }
+    }
+  }, [isElectronSharingScreen])
 
   useEffect(() => {
     if (isElectronSharingScreen) {
@@ -3334,6 +3405,10 @@ const ControlBar: React.FC<ControlBarProps> = ({
   }, [newMsg, isElectronSharingScreen])
 
   useEffect(() => {
+    if (preHandUpCount && handUpCount < preHandUpCount) {
+      return
+    }
+
     if (isElectronSharingScreen) {
       if (isHostOrCoHost && handUpCount > 0 && !!controlBarVisibleByMouse) {
         window.ipcRenderer?.send(IPCEvent.sharingScreen, {
@@ -3481,6 +3556,8 @@ const ControlBar: React.FC<ControlBarProps> = ({
   }, [meetingInfo.cloudRecordState, showCloudRecordingUI])
 
   const rootStyle = useMemo(() => {
+    return { width: '100%' }
+    /*
     if (!isElectronSharingScreen) {
       return { width: '100%' }
     }
@@ -3516,6 +3593,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
     }
 
     return { width: '100%' }
+    */
   }, [
     isElectronSharingScreen,
     i18n.language,
@@ -3588,7 +3666,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
     }
   }, [memberList.length, inInvitingMemberList?.length, meetingInfo.maxMembers])
 
-  return (
+  return meetingInfo.endMeetingAction === 1 && isHost ? null : (
     <Drawer
       open={
         !meetingInfo.hiddenControlBar &&
@@ -3673,10 +3751,8 @@ const ControlBar: React.FC<ControlBarProps> = ({
           {isElectronSharingScreen && (
             <div
               className={classNames('control-bar-meeting-info', {
-                ['control-bar-meeting-info-small']:
-                  !isElectronSharingScreenToolsShow,
-                ['control-bar-meeting-info-border']:
-                  isElectronSharingScreenToolsShow,
+                ['control-bar-meeting-info-small']: !isElectronSharingScreenToolsShow,
+                ['control-bar-meeting-info-border']: isElectronSharingScreenToolsShow,
               })}
             >
               {isElectronSharingScreenToolsShow ? (
@@ -3712,8 +3788,8 @@ const ControlBar: React.FC<ControlBarProps> = ({
               )}
             </div>
           )}
-          {isElectronSharingScreen &&
-          !isElectronSharingScreenToolsShow ? null : (
+          {(isElectronSharingScreen && !isElectronSharingScreenToolsShow) ||
+          (meetingInfo.endMeetingAction === 1 && isHost) ? null : (
             <>
               {isObserver
                 ? null
@@ -3745,22 +3821,27 @@ const ControlBar: React.FC<ControlBarProps> = ({
                       <div
                         key={button.key}
                         // audio video 按钮位置
-                        className={classNames('control-bar-button-item-box', {
-                          'control-bar-button-item-box-zh':
-                            i18n.language === 'zh-CN',
-                          'control-bar-button-item-box-audio':
-                            button.key === 'audio' && !isElectronSharingScreen,
-                          'control-bar-button-item-box-video':
-                            button.key === 'video' && !isElectronSharingScreen,
-                          'control-bar-button-item-box-video-en':
-                            button.key === 'video' &&
-                            !isElectronSharingScreen &&
-                            i18n.language === 'en-US',
-                          'control-bar-button-item-box-audio-jp':
-                            button.key === 'audio' &&
-                            !isElectronSharingScreen &&
-                            i18n.language === 'ja-JP',
-                        })}
+                        className={classNames(
+                          'control-bar-button-item-box control-bar-button-item-box-zh',
+                          {
+                            'control-bar-button-item-box-zh':
+                              i18n.language === 'zh-CN',
+                            'control-bar-button-item-box-audio':
+                              button.key === 'audio' &&
+                              !isElectronSharingScreen,
+                            'control-bar-button-item-box-video':
+                              button.key === 'video' &&
+                              !isElectronSharingScreen,
+                            'control-bar-button-item-box-video-en':
+                              button.key === 'video' &&
+                              !isElectronSharingScreen &&
+                              i18n.language === 'en-US',
+                            'control-bar-button-item-box-audio-jp':
+                              button.key === 'audio' &&
+                              !isElectronSharingScreen &&
+                              i18n.language === 'ja-JP',
+                          }
+                        )}
                       >
                         {button.popover ? button.popover(content) : content}
                         {renderDevicePopoverContent(button.key)}
@@ -3779,9 +3860,11 @@ const ControlBar: React.FC<ControlBarProps> = ({
                     rootClassName="screen-sharing-popover"
                     trigger={['hover']}
                     align={
-                      i18n.language.startsWith('ja')
-                        ? { offset: [-80, 0] }
-                        : { offset: [0, 0] }
+                      i18n.language.startsWith('en')
+                        ? { offset: [-50, 0] }
+                        : i18n.language.startsWith('ja')
+                        ? { offset: [-100, 0] }
+                        : { offset: [-30, 0] }
                     }
                     arrow={false}
                     open={screenSharingPopoverOpen}
@@ -3817,8 +3900,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
                             dispatch?.({
                               type: ActionType.UPDATE_MEETING_INFO,
                               data: {
-                                startSystemAudioLoopbackCapture:
-                                  !meetingInfo.startSystemAudioLoopbackCapture,
+                                startSystemAudioLoopbackCapture: !meetingInfo.startSystemAudioLoopbackCapture,
                               },
                             })
                           }}
@@ -3857,21 +3939,23 @@ const ControlBar: React.FC<ControlBarProps> = ({
                           <use xlinkHref="#iconjiantou-shang"></use>
                         </svg>
                       ) : (
-                        <CaretDownOutlined />
+                        <svg
+                          style={{
+                            color: '#F51D45',
+                            transform: 'rotate(180deg)',
+                          }}
+                          className="icon iconfont"
+                          aria-hidden="true"
+                        >
+                          <use xlinkHref="#iconjiantou-shang"></use>
+                        </svg>
                       )}
                     </span>
                   </Popover>
                 </div>
-              ) : (
-                <div
-                  className="control-bar-end-button"
-                  onClick={handleLeaveOrEnd}
-                >
-                  {localMember.role === Role.host
-                    ? t('meetingQuit')
-                    : t('leave')}
-                </div>
-              )}
+              ) : open ? (
+                <EndButton />
+              ) : null}
             </>
           )}
           <MemberNotify

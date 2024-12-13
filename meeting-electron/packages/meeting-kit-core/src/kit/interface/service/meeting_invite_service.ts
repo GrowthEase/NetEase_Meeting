@@ -11,6 +11,23 @@ export type NEMeetingInviteStatusListener = {
   ) => void
 }
 
+export enum NERoomSipDeviceInviteProtocolType {
+  IP = 1,
+  H323 = 2,
+}
+
+export type NERoomSystemDevice = {
+  protocol: NERoomSipDeviceInviteProtocolType
+  deviceAddress: string
+  name?: string
+}
+
+export type NERoomSIPCallInfo = {
+  userUuid?: string
+  name?: string
+  isRepeatedCall?: boolean
+}
+
 interface NEMeetingInviteService {
   /**
    * 接受邀请，加入一个当前正在进行中的会议
@@ -45,6 +62,15 @@ interface NEMeetingInviteService {
   removeMeetingInviteStatusListener: (
     listener: NEMeetingInviteStatusListener
   ) => void
+
+  /**
+   * 呼叫指定会议设备
+   *
+   * @param device 设备
+   */
+  callOutRoomSystem: (
+    device: NERoomSystemDevice
+  ) => Promise<NEResult<NERoomSIPCallInfo>>
 }
 
 export default NEMeetingInviteService

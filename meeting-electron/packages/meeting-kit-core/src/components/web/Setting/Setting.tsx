@@ -98,20 +98,27 @@ const Setting: React.FC<SettingProps> = ({
 
   const [setting, setSetting] = useState<MeetingSetting>()
 
-  const [recordSetting, setRecordSetting] =
-    useState<MeetingSetting['recordSetting']>()
-  const [captionSetting, setCaptionSetting] =
-    useState<MeetingSetting['captionSetting']>()
-  const [normalSetting, setNormalSetting] =
-    useState<MeetingSetting['normalSetting']>()
-  const [videoSetting, setVideoSetting] =
-    useState<MeetingSetting['videoSetting']>()
-  const [audioSetting, setAudioSetting] =
-    useState<MeetingSetting['audioSetting']>()
-  const [beautySetting, setBeautySetting] =
-    useState<MeetingSetting['beautySetting']>()
-  const [screenShareSetting, setScreenShareSetting] =
-    useState<MeetingSetting['screenShareSetting']>()
+  const [recordSetting, setRecordSetting] = useState<
+    MeetingSetting['recordSetting']
+  >()
+  const [captionSetting, setCaptionSetting] = useState<
+    MeetingSetting['captionSetting']
+  >()
+  const [normalSetting, setNormalSetting] = useState<
+    MeetingSetting['normalSetting']
+  >()
+  const [videoSetting, setVideoSetting] = useState<
+    MeetingSetting['videoSetting']
+  >()
+  const [audioSetting, setAudioSetting] = useState<
+    MeetingSetting['audioSetting']
+  >()
+  const [beautySetting, setBeautySetting] = useState<
+    MeetingSetting['beautySetting']
+  >()
+  const [screenShareSetting, setScreenShareSetting] = useState<
+    MeetingSetting['screenShareSetting']
+  >()
   const { neMeeting } = useGlobalContext()
 
   const [currenMenuKey, setCurrenMenuKey] = useState<SettingTabType>(defaultTab)
@@ -816,6 +823,14 @@ const Setting: React.FC<SettingProps> = ({
       })
   }
 
+  function onLeaveTheMeetingRequiresConfirmation(e: CheckboxChangeEvent) {
+    normalSetting &&
+      setNormalSetting({
+        ...normalSetting,
+        leaveTheMeetingRequiresConfirmation: e.target.checked,
+      })
+  }
+
   function onShowToolbarChange(e: CheckboxChangeEvent) {
     normalSetting &&
       setNormalSetting({
@@ -858,6 +873,14 @@ const Setting: React.FC<SettingProps> = ({
       })
   }
 
+  function onAutomaticSavingOfMeetingChatRecords(e: CheckboxChangeEvent) {
+    normalSetting &&
+      setNormalSetting({
+        ...normalSetting,
+        automaticSavingOfMeetingChatRecords: e.target.checked,
+      })
+  }
+
   function onEnableVoicePriorityDisplay(e: CheckboxChangeEvent) {
     normalSetting &&
       setNormalSetting({
@@ -871,6 +894,22 @@ const Setting: React.FC<SettingProps> = ({
       setNormalSetting({
         ...normalSetting,
         enableShowNotYetJoinedMembers: !e.target.checked,
+      })
+  }
+
+  function onEnableHideMyVideo(e: CheckboxChangeEvent) {
+    videoSetting &&
+      setVideoSetting({
+        ...videoSetting,
+        enableHideMyVideo: e.target.checked,
+      })
+  }
+
+  function onEnableHideVideoOffAttendees(e: CheckboxChangeEvent) {
+    videoSetting &&
+      setVideoSetting({
+        ...videoSetting,
+        enableHideVideoOffAttendees: e.target.checked,
       })
   }
 
@@ -928,7 +967,6 @@ const Setting: React.FC<SettingProps> = ({
 
   function getVirtualBackground() {
     window.ipcRenderer?.invoke(IPCEvent.getVirtualBackground).then((list) => {
-      console.log('getVirtualBackground', list)
       setVirtualBackgroundList(list)
     })
   }
@@ -1234,14 +1272,21 @@ const Setting: React.FC<SettingProps> = ({
         {currenMenuKey === 'normal' && normalSetting && (
           <NormalSetting
             inMeeting={inMeeting}
+            onSettingChange={setNormalSetting}
             onEnableTransparentWhiteboardChange={
               onEnableTransparentWhiteboardChange
+            }
+            onAutomaticSavingOfMeetingChatRecords={
+              onAutomaticSavingOfMeetingChatRecords
             }
             onEnableVoicePriorityDisplay={onEnableVoicePriorityDisplay}
             setting={normalSetting}
             onOpenAudioChange={onOpenAudioChange}
             onOpenVideoChange={onOpenVideoChange}
             onShowSpeakerListChange={onShowSpeakerListChange}
+            onLeaveTheMeetingRequiresConfirmation={
+              onLeaveTheMeetingRequiresConfirmation
+            }
             onShowTimeChange={onShowTimeChange}
             onShowToolbarChange={onShowToolbarChange}
             onDownloadPathChange={onDownloadPathChange}
@@ -1257,6 +1302,8 @@ const Setting: React.FC<SettingProps> = ({
             enableTransparentWhiteboard={
               normalSetting.enableTransparentWhiteboard
             }
+            onEnableHideVideoOffAttendees={onEnableHideVideoOffAttendees}
+            onEnableHideMyVideo={onEnableHideMyVideo}
             onEnableVideoMirroringChange={onEnableVideoMirroringChange}
             onGalleryModeMaxCountChange={onGalleryModeMaxCountChange}
             setting={videoSetting}
@@ -1341,6 +1388,9 @@ const Setting: React.FC<SettingProps> = ({
             virtualBackgroundList={virtualBackgroundList}
             getVirtualBackground={getVirtualBackground}
             virtualBackgroundPath={beautySetting.virtualBackgroundPath}
+            enableVirtualBackgroundForce={
+              beautySetting.enableVirtualBackgroundForce
+            }
             mirror={videoSetting.enableVideoMirroring}
             beautyLevel={beautySetting.beautyLevel}
             onBeautyLevelChange={(level) => {
@@ -1349,10 +1399,11 @@ const Setting: React.FC<SettingProps> = ({
                 beautyLevel: level,
               })
             }}
-            onVirtualBackgroundChange={(path) => {
+            onVirtualBackgroundChange={(path, force) => {
               setBeautySetting({
                 ...beautySetting,
                 virtualBackgroundPath: path,
+                enableVirtualBackgroundForce: force,
               })
             }}
           />

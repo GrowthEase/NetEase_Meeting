@@ -16,6 +16,7 @@ import ChatRoom from '../NEChatRoom'
 import MemberList from '../MemberList'
 import './index.less'
 import TranscriptionWrapper from '../Transcription/TranscriptionWrapper'
+import { IPCEvent } from '../../../app/src/types'
 
 interface MeetingRightDrawerProps extends DrawerProps {
   isElectronSharingScreen?: boolean
@@ -37,6 +38,9 @@ const MeetingRightDrawer: React.FC<MeetingRightDrawerProps> = ({
   const { t } = useTranslation()
   const { meetingInfo, dispatch } = useMeetingInfoContext()
   const { pluginList, onClickPlugin } = useMeetingPlugin()
+  const [drawerTop, setDrawerTop] = React.useState(
+    window.isElectronNative ? 28 : 0
+  )
 
   const { rightDrawerTabs, rightDrawerTabActiveKey } = meetingInfo
 
@@ -120,6 +124,16 @@ const MeetingRightDrawer: React.FC<MeetingRightDrawerProps> = ({
     }
   }, [rightDrawerTabActiveKey])
 
+  useEffect(() => {
+    window.ipcRenderer?.on(IPCEvent.enterFullscreen, () => {
+      setDrawerTop(0)
+    })
+
+    window.ipcRenderer?.on(IPCEvent.quiteFullscreen, () => {
+      setDrawerTop(window.isElectronNative ? 28 : 0)
+    })
+  }, [])
+
   return (
     <Drawer
       title={null}
@@ -135,7 +149,7 @@ const MeetingRightDrawer: React.FC<MeetingRightDrawerProps> = ({
       }
       rootStyle={{
         position: 'absolute',
-        top: window.isElectronNative ? 28 : 0,
+        top: drawerTop,
       }}
       rootClassName={classNames(
         getClsWithPrefix('root'),

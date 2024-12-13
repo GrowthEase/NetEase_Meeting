@@ -28,6 +28,7 @@ import NEMeetingMessageChannelService from './service/meeting_message_channel_se
 import { getEnterPriseInfoApi } from '../../app/src/api'
 import { IM } from '../../types/NEMeetingKit'
 import NEFeedbackService from './service/feedback_service'
+import NEGuestService from './service/guest_service'
 
 export default class NEMeetingKit implements NEMeetingKitInterface {
   private _logger: Logger | undefined
@@ -38,6 +39,7 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
   private _preMeetingService: NEPreMeetingService | undefined
   private _contactsService: NEContactsService | undefined
   private _feedbackService: NEFeedbackService | undefined
+  private _guestService: NEGuestService | undefined
   private _meetingMessageChannelService:
     | NEMeetingMessageChannelService
     | undefined
@@ -169,11 +171,12 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
               neMeeting,
               eventEmitter: neMeeting.outEventEmitter,
             })
-            this._meetingMessageChannelService =
-              new NEMeetingMessageChannelService({
+            this._meetingMessageChannelService = new NEMeetingMessageChannelService(
+              {
                 neMeeting,
                 logger,
-              })
+              }
+            )
             this._meetingService = new NEMeetingService({
               neMeeting,
               meetingKit: MeetingKit.actions,
@@ -185,6 +188,10 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
             })
             this._feedbackService = new NEFeedbackService({
               neMeeting,
+            })
+            this._guestService = new NEGuestService({
+              neMeeting,
+              meetingKit: this,
             })
           }
 
@@ -198,8 +205,9 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
     })
   }
 
-  unInitialize(): Promise<NEResult<void>> {
-    MeetingKit.actions.destroy()
+  async unInitialize(): Promise<NEResult<void>> {
+    console.warn('unInitialize')
+    await MeetingKit.actions.destroy()
     this._isInitialized = false
     return Promise.resolve(SuccessBody(void 0))
   }
@@ -246,6 +254,9 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
   }
   getFeedbackService(): NEFeedbackService | undefined {
     return this._feedbackService
+  }
+  getGuestService(): NEGuestService | undefined {
+    return this._guestService
   }
   addGlobalEventListener(listener: NEGlobalEventListener): void {
     this._globalEventListeners = this._globalEventListeners
@@ -296,6 +307,7 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
         NEContactsService: this._contactsService,
         NEMeetingMessageChannelService: this._meetingMessageChannelService,
         NEFeedbackService: this._feedbackService,
+        NEGuestService: this._guestService,
       }
 
       const service = module ? serviceMap[module] : this
@@ -314,10 +326,13 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
             })
             .catch((error) => {
               this._logger?.warn(module, method, args, error)
-
-              window.ipcRenderer?.send(seqId, {
-                error,
-              })
+              try {
+                window.ipcRenderer?.send(seqId, {
+                  error,
+                })
+              } catch (error) {
+                //
+              }
             })
         }
       }

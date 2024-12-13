@@ -15,10 +15,22 @@ export default function MeetingPage() {
       setIsMaximized(value);
     }
 
+    function handleEnterFullscreen() {
+      setIsMaximized(true);
+    }
+
+    function handleQuitFullscreen() {
+      setIsMaximized(false);
+    }
+
     // NEMeetingKit.actions.on('onScreenSharingStatusChange', setIsSharingScreen);
     window.ipcRenderer?.on(IPCEvent.maximizeWindow, handleMaximizeWindow);
+    window.ipcRenderer?.on(IPCEvent.enterFullscreen, handleEnterFullscreen);
+    window.ipcRenderer?.on(IPCEvent.quiteFullscreen, handleQuitFullscreen);
     return () => {
       window.ipcRenderer?.off(IPCEvent.maximizeWindow, handleMaximizeWindow);
+      window.ipcRenderer?.off(IPCEvent.enterFullscreen, handleEnterFullscreen);
+      window.ipcRenderer?.off(IPCEvent.quiteFullscreen, handleQuitFullscreen);
     };
   }, []);
 

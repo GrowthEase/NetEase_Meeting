@@ -1,6 +1,89 @@
-import React, { CSSProperties } from 'react'
-import './index.less'
+import React, { CSSProperties, useEffect, useState } from 'react'
 import { Tooltip } from 'antd'
+import classNames from 'classnames'
+import './index.less'
+
+import a1 from './assets/a-1.png'
+import a2 from './assets/a-2.png'
+import a3 from './assets/a-3.png'
+import a4 from './assets/a-4.png'
+import a5 from './assets/a-5.png'
+import a6 from './assets/a-6.png'
+import a7 from './assets/a-7.png'
+import a8 from './assets/a-8.png'
+import a9 from './assets/a-9.png'
+import a10 from './assets/a-10.png'
+import a11 from './assets/a-11.png'
+import a12 from './assets/a-12.png'
+import a13 from './assets/a-13.png'
+import a14 from './assets/a-14.png'
+import a15 from './assets/a-15.png'
+import a16 from './assets/a-16.png'
+import a17 from './assets/a-17.png'
+import a18 from './assets/a-18.png'
+import a19 from './assets/a-19.png'
+import a20 from './assets/a-20.png'
+import a21 from './assets/a-21.png'
+import a22 from './assets/a-22.png'
+import a23 from './assets/a-23.png'
+import a24 from './assets/a-24.png'
+import a25 from './assets/a-25.png'
+import a26 from './assets/a-26.png'
+import a27 from './assets/a-27.png'
+import a28 from './assets/a-28.png'
+import a29 from './assets/a-29.png'
+import a30 from './assets/a-30.png'
+import a31 from './assets/a-31.png'
+import a32 from './assets/a-32.png'
+import a33 from './assets/a-33.png'
+import a34 from './assets/a-34.png'
+import a35 from './assets/a-35.png'
+import a36 from './assets/a-36.png'
+import a37 from './assets/a-37.png'
+import a38 from './assets/a-38.png'
+import a39 from './assets/a-39.png'
+import a40 from './assets/a-40.png'
+import a41 from './assets/a-41.png'
+import a42 from './assets/a-42.png'
+import a43 from './assets/a-43.png'
+import a44 from './assets/a-44.png'
+import a45 from './assets/a-45.png'
+import a46 from './assets/a-46.png'
+import a47 from './assets/a-47.png'
+import a48 from './assets/a-48.png'
+import a49 from './assets/a-49.png'
+import a50 from './assets/a-50.png'
+import a51 from './assets/a-51.png'
+import a52 from './assets/a-52.png'
+import a53 from './assets/a-53.png'
+import a54 from './assets/a-54.png'
+import a55 from './assets/a-55.png'
+import a56 from './assets/a-56.png'
+import a57 from './assets/a-57.png'
+import a58 from './assets/a-58.png'
+import a59 from './assets/a-59.png'
+import a60 from './assets/a-60.png'
+import a61 from './assets/a-61.png'
+import a62 from './assets/a-62.png'
+import a63 from './assets/a-63.png'
+import a64 from './assets/a-64.png'
+import a65 from './assets/a-65.png'
+import a66 from './assets/a-66.png'
+import a67 from './assets/a-67.png'
+import a68 from './assets/a-68.png'
+import a1000 from './assets/a-1000.png'
+import a1001 from './assets/a-1001.png'
+import a1002 from './assets/a-1002.png'
+import a1003 from './assets/a-1003.png'
+import a1004 from './assets/a-1004.png'
+import a1005 from './assets/a-1005.png'
+import a1006 from './assets/a-1006.png'
+import a2000 from './assets/a-2000.png'
+import a2001 from './assets/a-2001.png'
+import a2002 from './assets/a-2002.png'
+import a2003 from './assets/a-2003.png'
+import a2004 from './assets/a-2004.png'
+import a2005 from './assets/a-2005.png'
 
 const tipsText = {
   '[大笑]': { zh: '大笑', en: 'Laugh', ja: '大笑いする' },
@@ -71,91 +154,112 @@ const tipsText = {
   '[筋斗云]': { zh: '筋斗云', en: 'Cloud', ja: '筋斗雲' },
   '[火箭]': { zh: '火箭', en: 'Rocket', ja: 'ロヶット' },
   '[救护车]': { zh: '救护车', en: 'Ambulance', ja: '救急車' },
+  '[点赞]': { zh: '点赞', en: 'Thumbs Up', ja: 'いいね' },
+  '[爱心]': { zh: '爱心', en: 'Heart', ja: '心' },
+  '[惊叹]': { zh: '惊叹', en: 'Open Mouth', ja: '驚嘆する' },
+  '[撒花]': { zh: '撒花', en: 'Tada', ja: '花をまく' },
 }
 
 export const emojiMap = {
-  '[大笑]': 'a-1',
-  '[开心]': 'a-2',
-  '[色]': 'a-3',
-  '[酷]': 'a-4',
-  '[奸笑]': 'a-5',
-  '[亲]': 'a-6',
-  '[伸舌头]': 'a-7',
-  '[眯眼]': 'a-8',
-  '[可爱]': 'a-9',
-  '[鬼脸]': 'a-10',
-  '[偷笑]': 'a-11',
-  '[喜悦]': 'a-12',
-  '[狂喜]': 'a-13',
-  '[惊讶]': 'a-14',
-  '[流泪]': 'a-15',
-  '[流汗]': 'a-16',
-  '[天使]': 'a-17',
-  '[笑哭]': 'a-18',
-  '[尴尬]': 'a-19',
-  '[惊恐]': 'a-20',
-  '[大哭]': 'a-21',
-  '[烦躁]': 'a-22',
-  '[恐怖]': 'a-23',
-  '[两眼冒星]': 'a-24',
-  '[害羞]': 'a-25',
-  '[睡着]': 'a-26',
-  '[冒星]': 'a-27',
-  '[口罩]': 'a-28',
-  '[OK]': 'a-29',
-  '[好吧]': 'a-30',
-  '[鄙视]': 'a-31',
-  '[难受]': 'a-32',
-  '[不屑]': 'a-33',
-  '[不舒服]': 'a-34',
-  '[愤怒]': 'a-35',
-  '[鬼怪]': 'a-36',
-  '[发怒]': 'a-37',
-  '[生气]': 'a-38',
-  '[不高兴]': 'a-39',
-  '[皱眉]': 'a-40',
-  '[心碎]': 'a-41',
-  '[心动]': 'a-42',
-  '[好的]': 'a-43',
-  '[低级]': 'a-44',
-  '[赞]': 'a-45',
-  '[鼓掌]': 'a-46',
-  '[给力]': 'a-47',
-  '[打你]': 'a-48',
-  '[阿弥陀佛]': 'a-49',
-  '[拜拜]': 'a-50',
-  '[第一]': 'a-51',
-  '[拳头]': 'a-52',
-  '[手掌]': 'a-53',
-  '[剪刀]': 'a-54',
-  '[招手]': 'a-55',
-  '[不要]': 'a-56',
-  '[举着]': 'a-57',
-  '[思考]': 'a-58',
-  '[猪头]': 'a-59',
-  '[不听]': 'a-60',
-  '[不看]': 'a-61',
-  '[不说]': 'a-62',
-  '[猴子]': 'a-63',
-  '[炸弹]': 'a-64',
-  '[睡觉]': 'a-65',
-  '[筋斗云]': 'a-66',
-  '[火箭]': 'a-67',
-  '[救护车]': 'a-68',
+  '[大笑]': a1,
+  '[开心]': a2,
+  '[色]': a3,
+  '[酷]': a4,
+  '[奸笑]': a5,
+  '[亲]': a6,
+  '[伸舌头]': a7,
+  '[眯眼]': a8,
+  '[可爱]': a9,
+  '[鬼脸]': a10,
+  '[偷笑]': a11,
+  '[喜悦]': a12,
+  '[狂喜]': a13,
+  '[惊讶]': a14,
+  '[流泪]': a15,
+  '[流汗]': a16,
+  '[天使]': a17,
+  '[笑哭]': a18,
+  '[尴尬]': a19,
+  '[惊恐]': a20,
+  '[大哭]': a21,
+  '[烦躁]': a22,
+  '[恐怖]': a23,
+  '[两眼冒星]': a24,
+  '[害羞]': a25,
+  '[睡着]': a26,
+  '[冒星]': a27,
+  '[口罩]': a28,
+  '[OK]': a29,
+  '[好吧]': a30,
+  '[鄙视]': a31,
+  '[难受]': a32,
+  '[不屑]': a33,
+  '[不舒服]': a34,
+  '[愤怒]': a35,
+  '[鬼怪]': a36,
+  '[发怒]': a37,
+  '[生气]': a38,
+  '[不高兴]': a39,
+  '[皱眉]': a40,
+  '[心碎]': a41,
+  '[心动]': a42,
+  '[好的]': a43,
+  '[低级]': a44,
+  '[赞]': a45,
+  '[鼓掌]': a46,
+  '[给力]': a47,
+  '[打你]': a48,
+  '[阿弥陀佛]': a49,
+  '[拜拜]': a50,
+  '[第一]': a51,
+  '[拳头]': a52,
+  '[手掌]': a53,
+  '[剪刀]': a54,
+  '[招手]': a55,
+  '[不要]': a56,
+  '[举着]': a57,
+  '[思考]': a58,
+  '[猪头]': a59,
+  '[不听]': a60,
+  '[不看]': a61,
+  '[不说]': a62,
+  '[猴子]': a63,
+  '[炸弹]': a64,
+  '[睡觉]': a65,
+  '[筋斗云]': a66,
+  '[火箭]': a67,
+  '[救护车]': a68,
 }
 
-export function getEmojiPath(emojiKey: string): string | undefined {
-  const emoji = emojiMap[emojiKey]
+export const emoji2Map = {
+  '[鼓掌]': [a1000, a2000],
+  '[点赞]': [a1001, a2001],
+  '[爱心]': [a1002, a2002],
+  '[笑哭]': [a1003, a2003],
+  '[惊叹]': [a1004, a2004],
+  '[撒花]': [a1005, a2005],
+  '[举手]': [a1006, a1006],
+}
 
-  if (emoji) {
-    return require('./assets/' + emoji + '.png')
+export function getEmojiPath(
+  emojiKey: string,
+  type?: number,
+  animate?: boolean
+): string | undefined {
+  if (type === 2) {
+    const index = animate ? 1 : 0
+
+    return emoji2Map[emojiKey][index] || undefined
+  } else {
+    return emojiMap[emojiKey] || undefined
   }
-
-  return
 }
 
 interface EmojiItemProps {
   emojiKey: string
+  type?: number // 1 聊天室； 2 表情回应
+  animate?: boolean
+  disabled?: boolean
   language?: string
   size?: number
   style?: CSSProperties | undefined
@@ -164,6 +268,9 @@ interface EmojiItemProps {
 
 const EmojiItem: React.FC<EmojiItemProps> = ({
   language,
+  type = 1,
+  animate = false,
+  disabled = false,
   size = 30,
   emojiKey,
   onClick,
@@ -173,17 +280,36 @@ const EmojiItem: React.FC<EmojiItemProps> = ({
     height: size,
     fontSize: size,
     lineHeight: `${size}px`,
-    display: 'inline-block',
   }
 
-  const path = getEmojiPath(emojiKey)
+  const [path, setPath] = useState(getEmojiPath(emojiKey, type, animate))
 
   const tip = language ? tipsText[emojiKey][language] : ''
 
+  const onMouseEnter = () => {
+    type === 2 && setPath(getEmojiPath(emojiKey, type, true) ?? '')
+  }
+
+  const onMouseLeave = () => {
+    type === 2 && setPath(getEmojiPath(emojiKey, type, animate) ?? '')
+  }
+
+  useEffect(() => {
+    setPath(getEmojiPath(emojiKey, type, animate) ?? '')
+  }, [emojiKey, type, animate])
+
   return path ? (
-    <Tooltip placement="top" trigger={tip ? ['hover'] : []} title={tip}>
+    <Tooltip
+      placement="top"
+      trigger={tip && !disabled ? ['hover'] : []}
+      title={tip}
+    >
       <img
-        className="nemeeting-emoji-item"
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        className={classNames('nemeeting-emoji-item', {
+          ['nemeeting-emoji-item-disabled']: disabled,
+        })}
         style={style}
         src={path}
         onClick={() => onClick?.(emojiKey)}

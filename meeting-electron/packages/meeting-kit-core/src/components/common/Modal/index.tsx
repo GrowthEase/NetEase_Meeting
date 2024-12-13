@@ -29,12 +29,13 @@ const Modal: ModalType = (props: ModalProps) => {
 }
 
 Modal.confirm = (props) => {
-  window.ipcRenderer?.send(IPCEvent.sharingScreen, {
-    method: 'openModal',
-  })
   if (props.key && modalMaps.has(props.key)) {
     return modalMaps.get(props.key) as ConfirmModal
   }
+
+  window.ipcRenderer?.send(IPCEvent.sharingScreen, {
+    method: 'openModal',
+  })
 
   const modal = AntModal.confirm({
     wrapClassName: 'nemeeting-custom-confirm-modal',
@@ -69,6 +70,10 @@ Modal.warning = (props) => {
   if (props.key && modalMaps.has(props.key)) {
     return modalMaps.get(props.key) as WarningModal
   }
+
+  window.ipcRenderer?.send(IPCEvent.sharingScreen, {
+    method: 'openModal',
+  })
 
   const modal = AntModal.warning({
     wrapClassName: 'nemeeting-custom-confirm-modal',

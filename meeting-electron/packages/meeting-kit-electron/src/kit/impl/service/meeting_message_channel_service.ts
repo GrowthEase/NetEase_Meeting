@@ -1,5 +1,5 @@
 import { BrowserWindow, ipcMain } from 'electron'
-import { NEResult } from 'neroom-types'
+import { NEResult, SuccessBody } from 'neroom-types'
 import NEMeetingMessageChannelServiceInterface, {
   NEMeetingGetMessageHistoryParams,
   NEMeetingMessageChannelListener,
@@ -45,6 +45,11 @@ export default class NEMeetingMessageChannelService
     const functionName = 'queryUnreadMessageList'
 
     const seqId = this._generateSeqId(functionName)
+
+    if (this._win.isDestroyed()) {
+      console.log('queryUnreadMessageList window is destroyed')
+      return Promise.resolve(SuccessBody([]))
+    }
 
     this._win.webContents.send(BUNDLE_NAME, {
       module: MODULE_NAME,

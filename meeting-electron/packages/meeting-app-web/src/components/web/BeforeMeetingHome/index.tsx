@@ -31,6 +31,7 @@ import {
   Toast,
   CommonModal,
   NEMeetingLanguage,
+  closeAllWindows,
 } from 'nemeeting-web-sdk';
 
 import dayjs from 'dayjs';
@@ -66,7 +67,7 @@ import {
 
 import { NECustomSessionMessage, NECommonError } from 'neroom-types';
 import qs from 'qs';
-import { IPCEvent } from '../../../types';
+import { IPCEvent, ServerGuestErrorCode } from '../../../types';
 import usePostMessageHandle from '@meeting-module/hooks/usePostMessagehandle';
 import {
   CreateOptions,
@@ -107,6 +108,7 @@ import UnSupportBrowserModal from '../BeforeMeetingModal/unSupportBrowser';
 import InviteScheduleMeetingModal from '../BeforeMeetingModal/ScheduleMeeting/InviteScheduleMeetingModal';
 import getMeetingKitInstance, { checkSystemRequirements } from './neMeetingKit';
 import { useUpdateEffect } from 'ahooks';
+import { getMeetingIdFromUrl } from '@/utils';
 
 const MeetingKitInstance = getMeetingKitInstance();
 
@@ -193,24 +195,32 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
   const passwordRef = React.useRef<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLogin, setIsLogin] = useState(false);
-  const [immediateMeetingModalOpen, setImmediateMeetingModalOpen] =
-    useState(false);
+  const [immediateMeetingModalOpen, setImmediateMeetingModalOpen] = useState(
+    false,
+  );
   const [joinMeetingModalOpen, setJoinMeetingModalOpen] = useState(false);
-  const [scheduleMeetingModalOpen, setScheduleMeetingModalOpen] =
-    useState(false);
-  const [inviteScheduleMeetingModalOpen, setInviteScheduleMeetingModalOpen] =
-    useState(false);
+  const [scheduleMeetingModalOpen, setScheduleMeetingModalOpen] = useState(
+    false,
+  );
+  const [
+    inviteScheduleMeetingModalOpen,
+    setInviteScheduleMeetingModalOpen,
+  ] = useState(false);
   const [npsModalOpen, setNpsModalOpen] = useState(false);
   const [historyMeetingModalOpen, setHistoryMeetingModalOpen] = useState(false);
-  const [notificationListModalOpen, setNotificationListModalOpen] =
-    useState(false);
-  const [updateUserNicknameModalOpen, setUpdateUserNicknameModalOpen] =
-    useState(false);
+  const [notificationListModalOpen, setNotificationListModalOpen] = useState(
+    false,
+  );
+  const [
+    updateUserNicknameModalOpen,
+    setUpdateUserNicknameModalOpen,
+  ] = useState(false);
   const [imageCropModalOpen, setImageCropModalOpen] = useState(false);
   const [aboutModalOpen, setAboutModalOpen] = useState(false);
   // 不支持当前浏览器的弹窗
-  const [unSupportBrowserModalOpen, setUnSupportBrowserModalOpen] =
-    useState(false);
+  const [unSupportBrowserModalOpen, setUnSupportBrowserModalOpen] = useState(
+    false,
+  );
   const [accountInfo, setAccountInfo] = useState<NEAccountInfo>();
   const accountInfoRef = React.useRef<NEAccountInfo>();
   const joinByGuestRef = useRef<boolean>(false);
@@ -222,8 +232,10 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [inMeeting, setInMeeting] = useState(false);
   const [loginLoading, setLoginLoading] = useState(true);
-  const [meetingListGroupByDate, setMeetingListGroupByDate] =
-    useState<MeetingListGroupByDate>([]);
+  const [
+    meetingListGroupByDate,
+    setMeetingListGroupByDate,
+  ] = useState<MeetingListGroupByDate>([]);
 
   const inMeetingRef = useRef<boolean>(false);
 
@@ -234,11 +246,14 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     NELocalHistoryMeeting[]
   >([]);
   // 当前的预约会议详情，传递给InviteScheduleMeetingModal，展示会议邀请信息
-  const [currentScheduleMeetingInfo, setCurrentScheduleMeetingInfo] =
-    useState<NEMeetingItem>();
+  const [
+    currentScheduleMeetingInfo,
+    setCurrentScheduleMeetingInfo,
+  ] = useState<NEMeetingItem>();
   const [isAvatarUpdateSupported, setIsAvatarUpdateSupported] = useState(false);
-  const [isNicknameUpdateSupported, setIsNicknameUpdateSupported] =
-    useState(false);
+  const [isNicknameUpdateSupported, setIsNicknameUpdateSupported] = useState(
+    false,
+  );
 
   const currentMeetingInfoRef = useRef({
     meetingId: 0,
@@ -277,8 +292,10 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
 
   const electronInMeetingRef = useRef<boolean>(false);
 
-  const [customMessage, setCustomMessage] =
-    useState<NECustomSessionMessage | null>(null);
+  const [
+    customMessage,
+    setCustomMessage,
+  ] = useState<NECustomSessionMessage | null>(null);
 
   const meetingService = useMemo(() => {
     if (isInitialized) {
@@ -319,14 +336,10 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
   // 用于被邀请端打开会议详情时候，邀请端取消会议，被邀请端关闭会议详情
   const openMeetingDetailMeetingNumRef = useRef('');
   const { handlePostMessage } = usePostMessageHandle();
-  const [privateConfig, setPrivateConfig] =
-    useState<NEMeetingPrivateConfig | null>(null);
-
-  function getMeetingIdFromUrl(url) {
-    const match = url.match(/meetingId=([^&]+)/);
-
-    return match ? match[1] : null;
-  }
+  const [
+    privateConfig,
+    setPrivateConfig,
+  ] = useState<NEMeetingPrivateConfig | null>(null);
 
   const [notificationApi, contextHolder] = notification.useNotification({
     stack: false,
@@ -404,9 +417,11 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       IPCEvent.changeMirror,
       !!setting?.videoSetting?.enableVideoMirroring,
     );
-    window.ipcRenderer?.on(IPCEvent.electronJoinMeeting, (e, url) => {
+    function handleUrl(e, url) {
       handleInvitationUrl(url);
-    });
+    }
+
+    window.ipcRenderer?.on(IPCEvent.electronJoinMeeting, handleUrl);
     window.ipcRenderer?.on(
       IPCEvent.beforeLogin,
       (e, beforeMeeting: boolean) => {
@@ -414,7 +429,10 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       },
     );
     return () => {
-      window.ipcRenderer?.removeAllListeners(IPCEvent.electronJoinMeeting);
+      window.ipcRenderer?.removeListener(
+        IPCEvent.electronJoinMeeting,
+        handleUrl,
+      );
       window.ipcRenderer?.removeAllListeners(IPCEvent.beforeLogin);
     };
   }, [isLogin]);
@@ -734,6 +752,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     await accountService?.logout();
 
     await MeetingKitInstance.unInitialize();
+    closeAllWindows();
 
     window.location.reload();
   }, [onLogout, accountService]);
@@ -785,7 +804,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
         console.log('getPrivateConfig error', error);
       }
     } else {
-      privateConfig = PRIVATE_CONFIG as unknown as NEMeetingPrivateConfig;
+      privateConfig = (PRIVATE_CONFIG as unknown) as NEMeetingPrivateConfig;
       console.log('privateConfig>>>', privateConfig);
     }
 
@@ -848,8 +867,9 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       ?.startMeeting(param, opts)
       .then(async () => {
         try {
-          const { data: currentMeetingInfo } =
-            await meetingService.getCurrentMeetingInfo();
+          const {
+            data: currentMeetingInfo,
+          } = await meetingService.getCurrentMeetingInfo();
 
           currentMeetingInfoRef.current = {
             ...currentMeetingInfoRef.current,
@@ -940,6 +960,8 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       interpretation,
       timezoneId,
       cloudRecordConfig,
+      livePrivateConfig,
+      liveChatRoomEnable,
     } = value;
 
     setImmediateMeetingModalOpen(false);
@@ -949,8 +971,9 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       return;
     }
 
-    const { data: meetingItem } =
-      await preMeetingService.createScheduleMeetingItem();
+    const {
+      data: meetingItem,
+    } = await preMeetingService.createScheduleMeetingItem();
 
     if (audioOff) {
       meetingItem.settings.controls = [
@@ -994,6 +1017,16 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     meetingItem.enableGuestJoin = enableGuestJoin;
     meetingItem.timezoneId = timezoneId;
     meetingItem.cloudRecordConfig = cloudRecordConfig;
+    if (livePrivateConfig && openLive) {
+      meetingItem.live.liveBackground = livePrivateConfig.background;
+      meetingItem.live.livePushThirdParties =
+        livePrivateConfig.pushThirdParties;
+      meetingItem.live.livePassword = livePrivateConfig.password;
+      meetingItem.live.title = livePrivateConfig.title;
+      meetingItem.live.liveChatRoomEnable = liveChatRoomEnable;
+      meetingItem.live.enableThirdParties =
+        livePrivateConfig.enableThirdParties;
+    }
 
     const promise = meetingId
       ? preMeetingService.editMeeting(meetingItem, !!meetingItem.recurringRule)
@@ -1077,6 +1110,8 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       meetingIdDisplayOption: NEMeetingIdDisplayOption.DISPLAY_ALL,
       showMeetingRemainingTip: true,
       showCloudRecordingUI: true,
+      enableLeaveTheMeetingRequiresConfirmation: true,
+      showParticipationTime: true,
       fullMoreMenuItems: options.moreBarList?.map((item) => {
         const menuItem = {
           itemId: item.id,
@@ -1132,9 +1167,6 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
   async function checkJoinByGuest(joinOptions: Partial<JoinOptions>) {
     let result = false;
 
-    if (window.isElectronNative) {
-      return result;
-    }
     if (!joinOptions.meetingNum) {
       return result;
     }
@@ -1150,16 +1182,33 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     } catch (error: unknown) {
       const e = error as NECommonError;
 
-      if (e.code === 3432) {
-        CommonModal.warning({
-          width: 400,
-          content: (
-            <div className="nemeeting-cross-app-permission">
-              {t('meetingCrossAppNoPermission')}
-            </div>
-          ),
-          okText: t('IkonwIt'),
-        });
+      if (e.code === ServerGuestErrorCode.MEETING_GUEST_JOIN_DISABLED) {
+        if (window.isElectronNative) {
+          const joinMeetingWindow = getWindow('joinMeetingWindow');
+
+          joinMeetingWindow?.postMessage(
+            {
+              event: 'joinMeetingFail',
+              payload: {
+                code: ServerGuestErrorCode.MEETING_GUEST_JOIN_DISABLED,
+                errorMsg: '',
+              },
+            },
+            joinMeetingWindow.origin,
+          );
+          return true;
+        } else {
+          CommonModal.warning({
+            width: 400,
+            content: (
+              <div className="nemeeting-cross-app-permission">
+                {t('meetingCrossAppNoPermission')}
+              </div>
+            ),
+            okText: t('IkonwIt'),
+          });
+        }
+
         return true;
       } else {
         return false;
@@ -1186,6 +1235,23 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       guestJoinType
     ) {
       result = true;
+
+      if (window.isElectronNative) {
+        const joinMeetingWindow = getWindow('joinMeetingWindow');
+
+        joinMeetingWindow?.postMessage(
+          {
+            event: 'joinMeetingFail',
+            payload: {
+              code: ServerGuestErrorCode.MEETING_GUEST_JOIN_DISABLED,
+              errorMsg: '',
+            },
+          },
+          joinMeetingWindow.origin,
+        );
+        return result;
+      }
+
       // 不允许访客入会
       if (guestJoinType == '0') {
         CommonModal.warning({
@@ -1237,6 +1303,17 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     joinByInvite?: boolean,
     type?: 'join' | 'guestJoin',
   ) {
+    const isGuest =
+      type !== 'guestJoin' &&
+      (await checkJoinByGuest(joinOptions).catch(() => {
+        //
+      }));
+
+    if (isGuest) {
+      setSubmitLoading(false);
+      return;
+    }
+
     // 不支持的浏览器直接return
     if (!window.isElectronNative && !checkSystemRequirements()) {
       setUnSupportBrowserModalOpen(true);
@@ -1475,6 +1552,8 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       .catch((error: unknown) => {
         const e = error as NECommonError;
 
+        Toast.fail(e.message || e.msg || 'failed');
+
         // 用户被注销或者删除
         if (e.code === 404 || e.code === 401) {
           Toast.warning(i18n.tokenExpired);
@@ -1572,9 +1651,11 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
           status === NEMeetingStatus.MEETING_STATUS_IDLE
         ) {
           setInMeeting(false);
+          /*
           if (window.isElectronNative) {
             window.ipcRenderer?.send(IPCEvent.beforeEnterRoom);
           }
+            */
 
           currentMeetingInfoRef.current = {
             meetingId: 0,
@@ -1592,13 +1673,16 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
           console.log('MEETING_STATUS_DISCONNECTING', arg);
 
           const reasonMap = {
-            [NEMeetingCode.MEETING_DISCONNECTING_CLOSED_BY_HOST]:
-              t('meetingEnded'),
+            [NEMeetingCode.MEETING_DISCONNECTING_CLOSED_BY_HOST]: t(
+              'meetingEnded',
+            ),
             [NEMeetingCode.MEETING_DISCONNECTING_END_OF_LIFE]: t('END_OF_LIFE'),
-            [NEMeetingCode.MEETING_DISCONNECTING_REMOVED_BY_HOST]:
-              t('KICK_OUT'),
-            [NEMeetingCode.MEETING_DISCONNECTING_SYNC_DATA_ERROR]:
-              t('SYNC_DATA_ERROR'),
+            [NEMeetingCode.MEETING_DISCONNECTING_REMOVED_BY_HOST]: t(
+              'KICK_OUT',
+            ),
+            [NEMeetingCode.MEETING_DISCONNECTING_SYNC_DATA_ERROR]: t(
+              'SYNC_DATA_ERROR',
+            ),
             [NEMeetingCode.MEETING_DISCONNECTING_JOIN_TIMEOUT]: 'JOIN_TIMEOUT',
           };
 
@@ -1606,9 +1690,8 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
             reasonMap[
               NEMeetingCode.MEETING_DISCONNECTING_LOGIN_ON_OTHER_DEVICE
             ] = t('meetingSwitchOtherDevice');
+            (arg || arg === 0) && reasonMap[arg] && Toast.info(reasonMap[arg]);
           }
-
-          (arg || arg === 0) && reasonMap[arg] && Toast.info(reasonMap[arg]);
 
           window.ipcRenderer?.send(IPCEvent.quiteFullscreen);
           setTimeout(
@@ -1709,24 +1792,20 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                   i18next.changeLanguage(language);
                 }
 
-                const sessionIdRes =
-                  await settingsService.getAppNotifySessionId();
-                const isAvatarUpdateSupportedRes =
-                  await settingsService?.isAvatarUpdateSupported();
+                const sessionIdRes = await settingsService.getAppNotifySessionId();
+                const isAvatarUpdateSupportedRes = await settingsService?.isAvatarUpdateSupported();
 
                 isAvatarUpdateSupportedRes &&
                   setIsAvatarUpdateSupported(isAvatarUpdateSupportedRes.data);
 
-                const isNicknameUpdateSupportedRes =
-                  await settingsService?.isNicknameUpdateSupported();
+                const isNicknameUpdateSupportedRes = await settingsService?.isNicknameUpdateSupported();
 
                 isNicknameUpdateSupportedRes &&
                   setIsNicknameUpdateSupported(
                     isNicknameUpdateSupportedRes.data,
                   );
 
-                const isMeetingLiveSupportedRes =
-                  await settingsService?.isMeetingLiveSupported();
+                const isMeetingLiveSupportedRes = await settingsService?.isMeetingLiveSupported();
 
                 isMeetingLiveSupportedRes &&
                   setAppLiveAvailable(isMeetingLiveSupportedRes.data);
@@ -1735,25 +1814,35 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                   sessionId: sessionIdRes?.data || '',
                 };
 
-                const { data: interpreterConfig } =
-                  await settingsService.getInterpretationConfig();
-                const { data: scheduleConfig } =
-                  await settingsService.getScheduledMemberConfig();
+                const {
+                  data: interpreterConfig,
+                } = await settingsService.getInterpretationConfig();
+                const {
+                  data: scheduleConfig,
+                } = await settingsService.getScheduledMemberConfig();
 
-                const { data: whiteboard } =
-                  await settingsService.isMeetingWhiteboardSupported();
+                const {
+                  data: whiteboard,
+                } = await settingsService.isMeetingWhiteboardSupported();
 
-                const { data: live } =
-                  await settingsService.isMeetingLiveSupported();
+                const {
+                  data: live,
+                } = await settingsService.isMeetingLiveSupported();
 
-                const { data: record } =
-                  await settingsService.isMeetingCloudRecordSupported();
+                const {
+                  data: record,
+                } = await settingsService.isMeetingCloudRecordSupported();
 
-                const { data: guest } =
-                  await settingsService.isGuestJoinSupported();
+                const {
+                  data: guest,
+                } = await settingsService.isGuestJoinSupported();
 
-                const { data: waitingRoom } =
-                  await settingsService.isWaitingRoomSupported();
+                const {
+                  data: waitingRoom,
+                } = await settingsService.isWaitingRoomSupported();
+                const {
+                  data: maxThirdPartyNum,
+                } = await settingsService.getLiveMaxThirdPartyCount();
 
                 setGlobalConfig({
                   appConfig: {
@@ -1783,6 +1872,9 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                           max: scheduleConfig.scheduleMemberMax,
                         }
                       : undefined,
+                    MEETING_LIVE: {
+                      maxThirdPartyNum: maxThirdPartyNum || 5,
+                    },
                   },
                 });
               }
@@ -1836,6 +1928,9 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
               }
             })
             .catch((e) => {
+              console.log('loginByToken error', e);
+              Toast.fail(e.message || e.msg || 'failed');
+
               setLoginLoading(false);
 
               setIsLogin(false);
@@ -1889,8 +1984,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
     function messageListener(e) {
       const { event, payload } = e.data;
 
-      const messageChannelService =
-        MeetingKitInstance.getMeetingMessageChannelService();
+      const messageChannelService = MeetingKitInstance.getMeetingMessageChannelService();
 
       if (event === 'neMeetingKit') {
         const { replyKey, fnKey, args } = payload;
@@ -2275,8 +2369,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       onSessionMessageRecentChanged: onSessionMessageRecentChanged,
       onSessionMessageAllDeleted: onDeleteAllSessionMessage,
     };
-    const messageChannelService =
-      MeetingKitInstance.getMeetingMessageChannelService();
+    const messageChannelService = MeetingKitInstance.getMeetingMessageChannelService();
 
     async function onReceiveMessage(message?: NEMeetingSessionMessage) {
       const sessionId = currentMeetingInfoRef.current.sessionId;
@@ -2291,8 +2384,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
           message.data = data;
         }
 
-        const messageChannelService =
-          MeetingKitInstance.getMeetingMessageChannelService();
+        const messageChannelService = MeetingKitInstance.getMeetingMessageChannelService();
 
         if (notificationListModalOpen || getWindow('notificationListWindow')) {
           messageChannelService?.clearUnreadCount(sessionId);
@@ -2351,6 +2443,10 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
       meetingId: number,
       message: NECustomSessionMessage,
     ) {
+      if (inMeetingRef.current && window.isElectronNative) {
+        return;
+      }
+
       if (status === NEMeetingInviteStatus.calling) {
         let data = message.data;
 
@@ -2879,7 +2975,8 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                                                   meeting.meetingNum;
                                                 if (window.isElectronNative) {
                                                   openBeforeMeetingWindow({
-                                                    name: 'scheduleMeetingWindow',
+                                                    name:
+                                                      'scheduleMeetingWindow',
                                                     postMessageData: {
                                                       event: 'windowOpen',
                                                       payload: {
@@ -3038,12 +3135,9 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
                   video: value.openCamera ? 1 : 2,
                   audio: value.openMic ? 1 : 2,
                 };
-                const isJoinByGuest = await checkJoinByGuest(options);
 
-                if (!isJoinByGuest) {
-                  setSubmitLoading(true);
-                  joinMeeting(options);
-                }
+                setSubmitLoading(true);
+                joinMeeting(options);
               }}
             />
             <ScheduleMeetingModal
@@ -3054,6 +3148,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
               globalConfig={globalConfig}
               eventEmitter={eventEmitter}
               meeting={editMeeting}
+              preMeetingService={preMeetingService}
               meetingContactsService={contactsService}
               onCancel={() => setScheduleMeetingModalOpen(false)}
               onJoinMeeting={(meetingId) => {

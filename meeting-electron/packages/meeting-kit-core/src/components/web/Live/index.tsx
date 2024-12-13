@@ -16,8 +16,13 @@ import {
   useGlobalContext,
   useMeetingInfoContext,
 } from '../../../store'
-import { ActionType, LiveBackgroundInfo, NELiveMember } from '../../../types'
-import { copyElementValue } from '../../../utils'
+import {
+  ActionType,
+  LiveBackgroundInfo,
+  NELiveMember,
+  PlatformInfo,
+} from '../../../types'
+import { copyElementValue, getThumbnailUrl } from '../../../utils'
 import Toast from '../../common/toast'
 import './index.less'
 import LivePreview from './LivePreview'
@@ -25,6 +30,8 @@ import LivePreview from './LivePreview'
 import { message, Spin, Upload } from 'antd'
 import arrowImg from '../../../assets/arrow.png'
 import { IPCEvent } from '../../../app/src/types'
+import Modal from '../../common/Modal'
+import LiveThirdPart from './LiveThirdPart'
 
 type Model = '' | 'gallery' | 'focus' | 'shareScreen'
 interface LiveProps {
@@ -57,6 +64,7 @@ interface LiveInfoProps {
   onClickDeleteBackground: () => void
   onClickUploadCover: () => void
   onClickDeleteCover: () => void
+  onClickThirdPart: () => void
   liveBackgroundInfo?: LiveBackgroundInfo
   uploadBackgroundLoading?: boolean
   uploadCoverLoading?: boolean
@@ -64,6 +72,8 @@ interface LiveInfoProps {
   onBackgroundChange: (info) => void
   coverBeforeUpload: (file, fileList) => boolean | Promise<File>
   onCoverChange: (info) => void
+  enableThirdPartPush: boolean
+  onEnableThirdPartPushChange: (checked: boolean) => void
 }
 interface LocalMember extends NELiveMember {
   isSelected: boolean
@@ -143,12 +153,14 @@ const LiveTitleInfo: React.FC<LiveTitleInfoProps> = (props) => {
   )
 }
 
-const LiveBgPreviewImg: React.FC<LiveBgPreviewImgProps> = ({
+export const LiveBgPreviewImg: React.FC<LiveBgPreviewImgProps> = ({
   url,
   onClose,
   onClick,
   isStarted,
 }) => {
+  const { t } = useTranslation()
+
   function handleClose(event) {
     event.stopPropagation()
     onClose?.()
@@ -174,7 +186,7 @@ const LiveBgPreviewImg: React.FC<LiveBgPreviewImgProps> = ({
               <path d="M6.5 1L6.5 13" stroke="white" strokeLinecap="round" />
             </svg>
             <span className="nemeeting-live-bg-preview-re-upload-tip">
-              重新上传
+              {t('liveReUpload')}
             </span>
           </div>
         )}
@@ -241,6 +253,7 @@ const LiveInfo: React.FC<LiveInfoProps> = (props) => {
     onClickDeleteCover,
     onClickUploadBackground,
     onClickUploadCover,
+    onClickThirdPart,
     liveBackgroundInfo,
     uploadBackgroundLoading,
     uploadCoverLoading,
@@ -248,6 +261,8 @@ const LiveInfo: React.FC<LiveInfoProps> = (props) => {
     onCoverChange,
     coverBeforeUpload,
     backgroundBeforeUpload,
+    enableThirdPartPush,
+    onEnableThirdPartPushChange,
   } = props
   const { t } = useTranslation()
   const liveBgPreviewImgBackgroundMemo = useMemo(
@@ -345,6 +360,30 @@ const LiveInfo: React.FC<LiveInfoProps> = (props) => {
             </label>
           </div>
           <div className="chat-tip">({t('onlyEmployeesAllowTip')})</div>
+        </div>
+        <div className="form-item-employees">
+          <div className="chat-tip nemeeting-live-employees">
+            <input
+              type="checkbox"
+              name="enableThirdPartPush"
+              id="enableThirdPartPush"
+              disabled={isStarted}
+              className="live-checkbox"
+              checked={enableThirdPartPush}
+              onChange={() => onEnableThirdPartPushChange(!enableThirdPartPush)}
+            />
+            <label className="sub-title" htmlFor="enableThirdPartPush">
+              <span>{t('meetingLiveToOtherPlatform')}</span>
+            </label>
+            {enableThirdPartPush && !isStarted && (
+              <span
+                className="nemeeting-live-third-edit-btn"
+                onClick={onClickThirdPart}
+              >
+                {t('globalEdit')}
+              </span>
+            )}
+          </div>
         </div>
       </div>
       <div className="form-wrap nemeeting-live-enable-chat-wrap">
@@ -641,6 +680,9 @@ const Live: React.FC<LiveProps> = (props) => {
   const [uploadCoverLoading, setUploadCoverLoading] = useState(false)
   // 是否显示直播状态变化通知
   const [showLayoutChangeTip, setShowLayoutChangeTip] = useState(false)
+  const [openLiveThirdPartModal, setOpenLiveThirdPartModal] = useState(false)
+  const [platformInfoList, setPlatformInfoList] = useState<PlatformInfo[]>([])
+  const [enableThirdPartPush, setEnableThirdPartPush] = useState(false)
   const isMountedRef = useRef(false)
   const [onlyEmployeesAllow, setOnlyEmployeesAllow] = useState(false)
   // 缓存服务端的成员列表，用于和本地更新检查，如关闭视频重新打开，也应该在选中状态
@@ -949,6 +991,15 @@ const Live: React.FC<LiveProps> = (props) => {
     }
   }, [meetingInfo.liveBackgroundInfo?.newSequence])
 
+  useEffect(() => {
+    neMeeting?.getLive3PartInfo().then((res) => {
+      setPlatformInfoList(res)
+      if (res.length > 0) {
+        setEnableThirdPartPush(true)
+      }
+    })
+  }, [])
+
   function getLiveInfo() {
     const liveInfo = neMeeting?.getLiveInfo()
 
@@ -1103,6 +1154,7 @@ const Live: React.FC<LiveProps> = (props) => {
         liveChatRoomEnable: enableChat,
         onlyEmployeesAllow: onlyEmployeesAllow,
       }),
+      enableThirdParties: enableThirdPartPush,
     }
 
     if (enablePassword) {
@@ -1305,18 +1357,8 @@ const Live: React.FC<LiveProps> = (props) => {
     console.log('onCoverChange', info)
   }
 
-  function getThumbnailUrl(url: string): string {
-    let result = url
-
-    if (url) {
-      // 判断url是否有?
-      result =
-        url +
-        (url.indexOf('?') > -1 ? '&' : '?') +
-        'imageView&thumbnail=100x56&quality=50&tostatic=0'
-    }
-
-    return result
+  function onClickThirdPart() {
+    setOpenLiveThirdPartModal(true)
   }
 
   function uploadWebFile(file, type: 'background' | 'cover') {
@@ -1362,7 +1404,6 @@ const Live: React.FC<LiveProps> = (props) => {
         }
 
         liveBackgroundInfoRef.current = {
-          ...liveBackgroundInfoRef.current,
           ...data,
         }
         neMeeting?.liveController
@@ -1435,6 +1476,27 @@ const Live: React.FC<LiveProps> = (props) => {
     })
   }
 
+  function handelSaveLiveThirdPart(platformInfoList: PlatformInfo[]) {
+    setPlatformInfoList(platformInfoList)
+    setOpenLiveThirdPartModal(false)
+    if (platformInfoList.length === 0) {
+      setEnableThirdPartPush(false)
+    }
+
+    if (isStarted) {
+      setShowLayoutChangeTip(true)
+      setCanUpdate(true)
+    }
+  }
+
+  function onEnableThirdPartPushChange(enable: boolean) {
+    setEnableThirdPartPush(enable)
+    if (!enable && isStarted) {
+      setShowLayoutChangeTip(true)
+      setCanUpdate(true)
+    }
+  }
+
   return (
     <div className="nemeeting-live-config">
       <LiveTitleInfo
@@ -1445,6 +1507,8 @@ const Live: React.FC<LiveProps> = (props) => {
         onHandleCopy={onHandleCopy}
       />
       <LiveInfo
+        enableThirdPartPush={enableThirdPartPush}
+        onEnableThirdPartPushChange={onEnableThirdPartPushChange}
         onBackgroundChange={onBackgroundChange}
         onCoverChange={onCoverChange}
         backgroundBeforeUpload={backgroundBeforeUpload}
@@ -1468,6 +1532,7 @@ const Live: React.FC<LiveProps> = (props) => {
         onClickDeleteCover={onClickDeleteCover}
         onClickUploadBackground={onClickUploadBackground}
         onClickUploadCover={onClickUploadCover}
+        onClickThirdPart={onClickThirdPart}
         isStarted={isStarted}
         onlyEmployeesAllow={onlyEmployeesAllow}
         setOnlyEmployeesAllow={setOnlyEmployeesAllow}
@@ -1486,6 +1551,19 @@ const Live: React.FC<LiveProps> = (props) => {
         onSelectMember={onSelectMember}
         showLayoutChangeTip={showLayoutChangeTip}
       />
+      <Modal
+        footer={null}
+        width={375}
+        open={openLiveThirdPartModal}
+        onCancel={() => setOpenLiveThirdPartModal(false)}
+        title={t('meetingLive')}
+      >
+        <LiveThirdPart
+          onCancel={() => setOpenLiveThirdPartModal(false)}
+          onSave={handelSaveLiveThirdPart}
+          platformInfoList={platformInfoList}
+        />
+      </Modal>
       {/*  开始直播按钮*/}
       <div className="live-footer">
         {isStarted ? (
