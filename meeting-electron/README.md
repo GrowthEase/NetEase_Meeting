@@ -1,5 +1,5 @@
 <div align="center"><a name="readme-top"></a>
-<img height="200" src="./logo.png">
+<img height="200" src="https://yx-web-nosdn.netease.im/common/ed291fed73f04ce99f7dae55f20187da/nemeeting-logo.png">
 <h1>Meeting-Electron</h1>
 本项目是网易会议的Electron、Web实现
 </div>  
