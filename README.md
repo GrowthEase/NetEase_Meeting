@@ -57,11 +57,11 @@
 
 云信基础能力 SDK 层。包含即时通信（IM）、实时音视频（RTC）、互动白板、聊天室等。
 
-### [NERoom](https://doc.yunxin.163.com/neroom/docs/home-page?platform=android)
+### [NERoom](https://doc.yunxin.163.com/neroom/concept?platform=client)
 
 NERoom 是一个无 UI 的房间服务组件，不包含业务逻辑，只提供房间基础能力封装。通过配置房间的模板，可以定义房间内的角色、资源、成员的权限等，快速开发出房间维度的上层业务组件。如果开发者不复用NEMeetingKit的默认UI实现，可以基于NERoom自己搭建上层应用。
 
-### [MeetingKit](https://doc.yunxin.163.com/meetingkit/docs/home-page?platform=android)
+### [MeetingKit](https://doc.yunxin.163.com/meeting/guide?platform=android)
 
 Meeting SDK 是一个带UI的会议服务组件, 相比于NERoom 我们提供了一整套的标准会议UI实现, 同时我们也提供了有限的UI自定义功能。
 
