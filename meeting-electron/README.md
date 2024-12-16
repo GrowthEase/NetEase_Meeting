@@ -1,12 +1,12 @@
 <div align="center"><a name="readme-top"></a>
 <img height="200" src="https://yx-web-nosdn.netease.im/common/ed291fed73f04ce99f7dae55f20187da/nemeeting-logo.png">
 <h1>Meeting-Electron</h1>
-本项目是网易会议的Electron、Web实现
+本项目是网易会议的Electron、Web实现。能够以简洁方便的方式集成和使用网易会议。其中Electron端底层基于C++ RTC实现，Web端底层基于WebRTC实现。
+
 </div>  
 
-
 ## ✨ 平台支持
-- [Electron](https://www.electronjs.org/)
+- Windows/macOS(基于[Electron](https://www.electronjs.org/))
 - Web
 - H5  
 
@@ -14,7 +14,7 @@
 
 ## ☀️ 授权协议
 
-[MIT](https://github.com/NG-ZORRO/ng-zorro-antd/blob/master/LICENSE)
+MIT
 
 ## ☀️ 项目结构
 ```
@@ -122,7 +122,6 @@ $ pnpm run build:electron
 
 ## ⌨️ 组件打包
 #### Web
-进入meeting-electron/packages/meeting-kit-core
 ```bash
 $ cd meeting-electron/packages/meeting-kit-core
 $ pnpm run build
@@ -146,7 +145,6 @@ $ pnpm run build
 > 完成后会在meeting-kit-web文件夹下生成dist文件夹即为H5组件产物, 可根据引入方式使用对应文件
 
 #### Electron
-进入meeting-electron/packages/meeting-kit-electron
 ```bash
 $ cd meeting-electron/packages/meeting-kit-electron
 $ pnpm run build
