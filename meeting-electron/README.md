@@ -1,21 +1,9 @@
 <div align="center"><a name="readme-top"></a>
 <img height="200" src="https://yx-web-nosdn.netease.im/common/ed291fed73f04ce99f7dae55f20187da/nemeeting-logo.png">
 <h1>Meeting-Electron</h1>
-本项目是网易会议的Electron、Web实现。能够以简洁方便的方式集成和使用网易会议。其中Electron端底层基于C++ RTC实现，能够提供更多的能力。
+本项目是网易会议的Electron、Web实现。能够以简洁方便的方式集成和使用网易会议。其中Electron端底层基于C++ RTC实现，Web端底层基于WebRTC实现。
 
 </div>  
-
-## ✨ 功能区别
-
-|                 | Electron </br>(C++ RTC) | Web </br>(WebRTC) |
-|------------------|-------------------------|-------------------|
-| 本地录制  | ✔️         |❌   
-| 共享时被批注  | ✔️         |❌   
-| 虚拟背景  | ✔️         |❌   
-| 美颜  | ✔️         |❌   
-| 音频降噪  | ✔️         |❌   
-| 音乐模式与专业模式（回声消除、启动立体声）  | ✔️         |❌   
-| 仅共享电脑音频  | ✔️         |❌
 
 ## ✨ 平台支持
 - Windows/macOS(基于[Electron](https://www.electronjs.org/))
