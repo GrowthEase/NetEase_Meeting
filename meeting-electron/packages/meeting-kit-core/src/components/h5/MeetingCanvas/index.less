@@ -1,8 +1,38 @@
 .ne-meeting-app-h5 {
+  .video-view-wrap {
+    border-radius: 0;
+    border: 1px solid #000;
+  }
+  .nemeeting-main-video-card {
+    border: none;
+  }
+}
+.ne-meeting-app-h5 {
   .meeting-canvas {
     position: relative;
     overflow: hidden;
-
+    .nemeeting-edit-whiteboard-btn {
+      position: absolute;
+      bottom: 160px;
+      right: 10px;
+      background-color: #1677ff;
+      border-radius: 15px;
+      min-width: 70px;
+      text-align: center;
+      line-height: 30px;
+      z-index: 100;
+      height: 30px;
+      color: #fff;
+    }
+    .nemeeting-whiteboard-mask {
+      position: absolute;
+      background: transparent;
+      left: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 99;
+    }
     .small-video-card {
       position: absolute !important;
       width: 20%;
@@ -47,11 +77,27 @@
     .whiteboard-wrap {
       height: 100%;
       width: 100%;
+      overflow: hidden;
+    }
+    .nemeeting-whiteboard-mask {
+      position: absolute;
+      height: 100%;
+      width: 100%;
+      left: 0;
+      top: 0;
+      z-index: 100;
     }
 
     .whiteboard-view {
       height: 100%;
       width: 100%;
+    }
+    .whiteboard-transparent {
+      position: absolute;
+      height: 100%;
+      width: 100%;
+      top: 0;
+      left: 0;
     }
 
     .whiteboard-index {

@@ -51,7 +51,7 @@ function useMoreButtons(onButtonClick?: onButtonClickFn): MoreButtonItem[] {
         }
       >
         <svg className="icon iconfont icon-image" aria-hidden="true">
-          <use xlinkHref="#icontongzhizhongxinrukou"></use>
+          <use xlinkHref="#icontongzhi-mianxing"></use>
         </svg>
       </Badge>
     ),
@@ -76,7 +76,7 @@ function useMoreButtons(onButtonClick?: onButtonClickFn): MoreButtonItem[] {
     key: 'interpretation',
     icon: (
       <svg className="icon iconfont icon-image" aria-hidden="true">
-        <use xlinkHref="#icontongshengchuanyi"></use>
+        <use xlinkHref="#icontongshengchuanyi-mianxing"></use>
       </svg>
     ),
     label: t('interpretation'),
@@ -94,7 +94,7 @@ function useMoreButtons(onButtonClick?: onButtonClickFn): MoreButtonItem[] {
     key: 'caption',
     icon: (
       <svg className="icon iconfont icon-image" aria-hidden="true">
-        <use xlinkHref="#iconzimu"></use>
+        <use xlinkHref="#iconkaiqizimu-mianxing"></use>
       </svg>
     ),
     label: meetingInfo.isCaptionsEnabled

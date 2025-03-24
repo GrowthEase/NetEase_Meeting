@@ -370,6 +370,7 @@ export default class NEMeetingInviteService
       encryptionConfig: encryptionConfig,
       showCloudRecordMenuItem: opts?.showCloudRecordMenuItem,
       showCloudRecordingUI: opts?.showCloudRecordingUI,
+      showLocalRecordingUI: opts?.showLocalRecordingUI,
       avatar: param.avatar,
       watermarkConfig: param?.watermarkConfig,
       noNotifyCenter: opts?.noNotifyCenter,
@@ -449,6 +450,7 @@ export default class NEMeetingInviteService
         // NEMeetingChatroomConfig
         showCloudRecordMenuItem: z.boolean().optional(),
         showCloudRecordingUI: z.boolean().optional(),
+        showLocalRecordingUI: z.boolean().optional(),
         noNotifyCenter: z.boolean().optional(),
         noWebApps: z.boolean().optional(),
       })

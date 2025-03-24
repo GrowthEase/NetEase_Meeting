@@ -17,14 +17,18 @@ type GlobalContextPageContextValue = {
   eventEmitter?: EventEmitter;
   globalConfig?: GetMeetingConfigResponse;
   interpretationSetting?: NEMeetingInterpretationSettings;
+  noChat?: boolean;
   dispatch: Dispatch;
 };
 
 function useGlobalContextPageContext(): GlobalContextPageContextValue {
   const fnReplyCount = useRef(0);
   const [globalConfig, setGlobalConfig] = useState<GetMeetingConfigResponse>();
-  const [interpretationSetting, setInterpretationSetting] =
-    useState<NEMeetingInterpretationSettings>();
+  const [noChat, setNoChat] = useState<boolean>();
+  const [
+    interpretationSetting,
+    setInterpretationSetting,
+  ] = useState<NEMeetingInterpretationSettings>();
   const dispatch = useCallback((payload: Action<ActionType>) => {
     const parentWindow = window.parent;
 
@@ -47,17 +51,23 @@ function useGlobalContextPageContext(): GlobalContextPageContextValue {
         const replyKey = `reply-${fnReplyCount.current}`;
         const parentWindow = window.parent;
 
-        parentWindow?.postMessage(
-          {
-            event: eventKey,
-            payload: {
-              replyKey,
-              fnKey: propKey,
-              args: args,
+        try {
+          parentWindow?.postMessage(
+            {
+              event: eventKey,
+              payload: {
+                replyKey,
+                fnKey: propKey,
+                args: args,
+              },
             },
-          },
-          parentWindow.origin,
-        );
+            parentWindow.origin,
+          );
+        } catch (error) {
+          // ignore 异常
+          console.error(error);
+        }
+
         const handleMessage = (e: MessageEvent) => {
           const { event, payload } = e.data;
 
@@ -154,6 +164,23 @@ function useGlobalContextPageContext(): GlobalContextPageContextValue {
             );
           }
 
+          if (propKey === 'nosService') {
+            return new Proxy(
+              {},
+              {
+                get: function (_, propKey) {
+                  if (propKey === 'isSupported') {
+                    return true;
+                  }
+
+                  return function (...args) {
+                    return postMessage('nosService', propKey, args);
+                  };
+                },
+              },
+            );
+          }
+
           return function (...args: unknown[]) {
             return postMessage('neMeeting', propKey, args);
           };
@@ -169,7 +196,11 @@ function useGlobalContextPageContext(): GlobalContextPageContextValue {
       if (event === 'eventEmitter') {
         eventEmitter.emit.apply(eventEmitter, [payload.key, ...payload.args]);
       } else if (event === 'updateData') {
-        const { globalConfig, interpretationSetting } = payload;
+        const { globalConfig, interpretationSetting, noChat } = payload;
+
+        if (noChat !== undefined) {
+          setNoChat(noChat);
+        }
 
         interpretationSetting &&
           setInterpretationSetting(interpretationSetting);
@@ -189,6 +220,7 @@ function useGlobalContextPageContext(): GlobalContextPageContextValue {
     globalConfig,
     interpretationSetting,
     dispatch,
+    noChat,
   };
 }
 

@@ -277,6 +277,7 @@ const GuestBeforeMeeting: React.FC<GuestBeforeMeetingProps> = (props) => {
                   setJoinMeetingLoading(false);
                 });
             } else {
+              Toast.fail(e.msg || e.message);
               setJoinMeetingLoading(false);
             }
           },
@@ -287,7 +288,7 @@ const GuestBeforeMeeting: React.FC<GuestBeforeMeetingProps> = (props) => {
         if (err.code === 3433) {
           setNeedAuth(true);
         } else {
-          Toast.fail(err.msg || t('networkAbnormality'));
+          Toast.fail(err.msg || err.message || t('networkAbnormality'));
         }
       });
   }

@@ -2,7 +2,7 @@
   "name": "nemeeting-web-sdk",
   "author": "netease",
   "license": "MIT",
-  "version": "4.9.0",
+  "version": "4.12.5",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
   "typings": "dist/src/index.d.ts",
@@ -14,8 +14,8 @@
   },
   "dependencies": {
     "nemeeting-core-sdk": "workspace:^",
-    "neroom-types": "1.32.0",
-    "neroom-web-sdk": "1.32.0"
+    "neroom-web-sdk": "1.36.1",
+    "neroom-types": "1.36.1"
   },
   "devDependencies": {
     "@rollup/plugin-json": "^4.1.0",

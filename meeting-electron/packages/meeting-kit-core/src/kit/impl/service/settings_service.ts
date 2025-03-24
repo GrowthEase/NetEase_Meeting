@@ -13,6 +13,7 @@ import NEMeetingService from '../../../services/NEMeeting'
 import {
   MeetingSetting,
   NECloudRecordConfig,
+  NELocalRecordConfig,
   NECloudRecordStrategyType,
 } from '../../../types'
 import {
@@ -164,6 +165,28 @@ export default class NESettingsService implements NESettingsServiceInterface {
     return SuccessBody(void 0)
   }
 
+  async getLocalRecordConfig(): Promise<NEResult<NELocalRecordConfig>> {
+    const settings = this.getLocalSettings()
+
+    return SuccessBody({
+      enable: settings.recordSetting.autoCloudRecord,
+      recordStrategy: settings.recordSetting.autoCloudRecordStrategy,
+    })
+  }
+
+  async setLocalRecordConfig(
+    config: NELocalRecordConfig
+  ): Promise<NEResult<void>> {
+    console.log('setLocalRecordConfig() config: ', config)
+    const settings = this.getLocalSettings()
+
+    // settings.recordSetting.autoCloudRecord = config.enable
+    // settings.recordSetting.autoCloudRecordStrategy = config.recordStrategy
+
+    this.setLocalSettings(settings)
+    return SuccessBody(void 0)
+  }
+
   /** 查询应用session会话Id */
   async isGuestJoinSupported(): Promise<NEResult<boolean>> {
     return SuccessBody(
@@ -182,8 +205,8 @@ export default class NESettingsService implements NESettingsServiceInterface {
    * 查询应用预约会议指定成员配置
    */
   async getScheduledMemberConfig(): Promise<NEResult<ScheduledMemberConfig>> {
-    const scheduleConfig = this._neMeeting.globalConfig?.appConfig
-      .MEETING_SCHEDULED_MEMBER_CONFIG
+    const scheduleConfig =
+      this._neMeeting.globalConfig?.appConfig.MEETING_SCHEDULED_MEMBER_CONFIG
 
     if (scheduleConfig) {
       return SuccessBody({
@@ -202,8 +225,8 @@ export default class NESettingsService implements NESettingsServiceInterface {
 
   /** 查询应用同声传译配置 */
   async getInterpretationConfig(): Promise<NEResult<NEInterpretationConfig>> {
-    const interpretationConfig = this._neMeeting.globalConfig?.appConfig
-      .APP_ROOM_RESOURCE.interpretation
+    const interpretationConfig =
+      this._neMeeting.globalConfig?.appConfig.APP_ROOM_RESOURCE.interpretation
 
     if (interpretationConfig) {
       return SuccessBody({
@@ -449,9 +472,18 @@ export default class NESettingsService implements NESettingsServiceInterface {
    * 查询应用是否支持会议直播
    */
   async isMeetingLiveSupported(): Promise<NEResult<boolean>> {
-    return SuccessBody(
-      !!this._neMeeting.globalConfig?.appConfig.APP_ROOM_RESOURCE.live
-    )
+    const officialPushEnabled =
+      !!this._neMeeting.globalConfig?.appConfig.APP_LIVE?.officialPushEnabled
+    const thirdPartyPushEnabled =
+      !!this._neMeeting.globalConfig?.appConfig.APP_LIVE?.thirdPartyPushEnabled
+
+    if (officialPushEnabled || thirdPartyPushEnabled) {
+      return SuccessBody(
+        !!this._neMeeting.globalConfig?.appConfig.APP_ROOM_RESOURCE.live
+      )
+    }
+
+    return SuccessBody(false)
   }
 
   /*
@@ -1004,6 +1036,34 @@ export default class NESettingsService implements NESettingsServiceInterface {
     return SuccessBody(
       this._neMeeting.globalConfig?.appConfig.MEETING_LIVE?.maxThirdPartyNum ||
         5
+    )
+  }
+
+  async enableSideBySideMode(enable: boolean): Promise<NEResult<void>> {
+    const settings = this.getLocalSettings()
+
+    settings.screenShareSetting.sideBySideModeOpen = enable
+
+    this.setLocalSettings(settings)
+
+    return SuccessBody(void 0)
+  }
+
+  async isSideBySideModeEnabled(): Promise<NEResult<boolean>> {
+    const settings = this.getLocalSettings()
+
+    return SuccessBody(!!settings.screenShareSetting?.sideBySideModeOpen)
+  }
+
+  async isMeetingLiveOfficialPushSupported(): Promise<NEResult<boolean>> {
+    return SuccessBody(
+      !!this._neMeeting.globalConfig?.appConfig.APP_LIVE?.officialPushEnabled
+    )
+  }
+
+  async isMeetingLiveThirdPartyPushSupported(): Promise<NEResult<boolean>> {
+    return SuccessBody(
+      !!this._neMeeting.globalConfig?.appConfig.APP_LIVE?.thirdPartyPushEnabled
     )
   }
 

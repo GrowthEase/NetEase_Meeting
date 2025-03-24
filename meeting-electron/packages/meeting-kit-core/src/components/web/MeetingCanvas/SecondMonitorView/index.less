@@ -1,0 +1,75 @@
+
+.light-theme {
+  .second-monitor-view-drag-bar {
+    color: #2e2e38;
+    background-color: #fff;
+  }
+  .second-monitor-view-switch {
+    color: #2e2e38;
+    background-color: #fff;
+  }
+}
+.second-monitor-view-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+
+}
+.second-monitor-view-drag-bar {
+    width: 100%;
+    font-size: 12px;
+    color: #fff;
+    text-align: center;
+    line-height: 28px;
+    background-color: #2e2e38;
+    height: 28px;
+    position: relative;
+    .drag-region {
+      -webkit-app-region: drag;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 100px;
+    }
+  }
+  .second-monitor-view-container {
+    flex: 1;
+    width: 100%;
+    // padding-top: 30px;    
+    background-color: rgb(61, 61, 61);
+    position: relative;
+    .nemeeting-top-right-wrap {
+      position: absolute;
+      top: 5px;
+      right: 0;
+      z-index: 1000;
+      display: flex;
+      .nemeeting-top-right-item {
+        margin-right: 5px;
+        height: 24px;
+        border-radius: 4px;
+      }
+
+    }
+  }
+ 
+  .second-monitor-view-switch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    z-index: 1000;
+    color: #fff;
+    .icon {
+      margin-right: 5px;
+    }
+  }

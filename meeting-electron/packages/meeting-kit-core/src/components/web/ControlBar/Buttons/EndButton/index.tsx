@@ -17,7 +17,13 @@ import { useTranslation } from 'react-i18next'
 import './index.less'
 import { IPCEvent } from '../../../../../app/src/types'
 
-const EndDropdown: React.FC<React.PropsWithChildren> = () => {
+type EndDropdownProps = {
+  endMeetingAction?: number
+  onCancel?: () => void
+}
+
+const EndDropdown: React.FC<EndDropdownProps> = (props) => {
+  const { onCancel } = props
   const { t } = useTranslation()
   const { neMeeting } = useGlobalContext()
   const { meetingInfo, memberList, dispatch } = useMeetingInfoContext()
@@ -27,8 +33,12 @@ const EndDropdown: React.FC<React.PropsWithChildren> = () => {
 
   const isHost = localMember.role === Role.host
 
+  const endMeetingAction = useMemo(() => {
+    return props.endMeetingAction ?? meetingInfo.endMeetingAction
+  }, [props.endMeetingAction, meetingInfo.endMeetingAction])
+
   const placementCls = useMemo(() => {
-    switch (meetingInfo.endMeetingAction) {
+    switch (endMeetingAction) {
       case 1:
         return meetingInfo.rightDrawerTabActiveKey
           ? 'nemeeting-end-bottom-left-open-drawer'
@@ -36,11 +46,11 @@ const EndDropdown: React.FC<React.PropsWithChildren> = () => {
       case 2:
         return 'nemeeting-end-center'
       case 3:
-        return window.isWins32
+        return window.systemPlatform !== 'darwin'
           ? 'nemeeting-end-top-right'
           : 'nemeeting-end-top-left'
     }
-  }, [meetingInfo.endMeetingAction, meetingInfo.rightDrawerTabActiveKey])
+  }, [endMeetingAction, meetingInfo.rightDrawerTabActiveKey])
 
   const hostTransferMemberList = useMemo(() => {
     // 主持人->联席主持人->自己->举手->屏幕共享（白板）>音视频>视频->音频->昵称排序
@@ -152,11 +162,12 @@ const EndDropdown: React.FC<React.PropsWithChildren> = () => {
   }
 
   useEffect(() => {
-    if (meetingInfo.endMeetingAction === undefined) {
+    if (endMeetingAction === undefined) {
       return
     }
 
-    if (meetingInfo.endMeetingAction === 0) {
+    if (endMeetingAction === 0) {
+      CommonModal.destroy('endMeetingActionLeave')
       setHostTransferOpen(false)
       setHostTransferId('')
       window.ipcRenderer?.send(IPCEvent.sharingScreen, {
@@ -188,6 +199,7 @@ const EndDropdown: React.FC<React.PropsWithChildren> = () => {
                   endMeetingAction: 0,
                 },
               })
+              onCancel?.()
             },
             onOk: async () => {
               try {
@@ -209,7 +221,7 @@ const EndDropdown: React.FC<React.PropsWithChildren> = () => {
       }
     }
   }, [
-    meetingInfo.endMeetingAction,
+    endMeetingAction,
     isHost,
     meetingInfo.setting.normalSetting.leaveTheMeetingRequiresConfirmation,
   ])
@@ -231,6 +243,7 @@ const EndDropdown: React.FC<React.PropsWithChildren> = () => {
             endMeetingAction: 0,
           },
         })
+        onCancel?.()
       } else {
         const index = hostTransferMemberList.findIndex(
           (item) => item.uuid === hostTransferId
@@ -243,7 +256,19 @@ const EndDropdown: React.FC<React.PropsWithChildren> = () => {
     }
   }, [hostTransferMemberList])
 
-  return isHost && meetingInfo.endMeetingAction ? (
+  useEffect(() => {
+    window.addEventListener('blur', () => {
+      dispatch?.({
+        type: ActionType.UPDATE_MEETING_INFO,
+        data: {
+          endMeetingAction: 0,
+        },
+      })
+      onCancel?.()
+    })
+  }, [])
+
+  return isHost && endMeetingAction ? (
     <div
       className={`nemeeting-end-dropdown-container ${placementCls}`}
       onClick={() => {
@@ -253,9 +278,10 @@ const EndDropdown: React.FC<React.PropsWithChildren> = () => {
             endMeetingAction: 0,
           },
         })
+        onCancel?.()
       }}
     >
-      {meetingInfo.endMeetingAction === 1 ? (
+      {endMeetingAction === 1 ? (
         <div className="control-bar-end-button-cancel-container">
           <div className="control-bar-end-button-cancel">
             {t('globalCancel')}
@@ -310,7 +336,7 @@ const EndDropdown: React.FC<React.PropsWithChildren> = () => {
             </div>
           </div>
         </div>
-      ) : meetingInfo.endMeetingAction ? (
+      ) : endMeetingAction ? (
         <div
           className={`nemeeting-end-dropdown-content`}
           onClick={(e) => e.stopPropagation()}
@@ -321,7 +347,7 @@ const EndDropdown: React.FC<React.PropsWithChildren> = () => {
           <div className="nemeeting-end-dropdown-button" onClick={onLeave}>
             {t('leave')}
           </div>
-          {meetingInfo.endMeetingAction !== 1 && (
+          {endMeetingAction !== 1 && (
             <div
               className="nemeeting-end-dropdown-button"
               onClick={() => {
@@ -331,6 +357,7 @@ const EndDropdown: React.FC<React.PropsWithChildren> = () => {
                     endMeetingAction: 0,
                   },
                 })
+                onCancel?.()
               }}
             >
               {t('globalCancel')}

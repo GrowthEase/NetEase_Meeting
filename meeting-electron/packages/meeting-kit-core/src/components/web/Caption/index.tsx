@@ -405,6 +405,11 @@ const WebCaption: React.FC<CaptionProps> = (props) => {
 
   const captionElementRef = useRef<Rnd | null>(null)
 
+  // 保存百分比位置
+  const positionInfoRef = useRef({ left: 0, top: 0 })
+
+  const wrapDomRef = useRef<Element | null>(null)
+
   const onResize = useCallback((entries: ResizeObserverEntry[]) => {
     for (const entry of entries) {
       const { width, height } = entry.contentRect
@@ -424,7 +429,8 @@ const WebCaption: React.FC<CaptionProps> = (props) => {
 
         let captionWidth = captionEle.clientWidth
 
-        let needUpdatePosition = false
+        let needUpdateXPosition = false
+        let needUpdateYPosition = false
         let needUpdateSize = false
 
         if (left + captionEle.clientWidth > width) {
@@ -436,19 +442,22 @@ const WebCaption: React.FC<CaptionProps> = (props) => {
             captionLeft = width - captionEle.clientWidth - 2
           }
 
-          needUpdatePosition = true
+          needUpdateXPosition = true
         }
 
         if (top + captionEle.clientHeight > height) {
           captionTop = height - captionEle.clientHeight - 62
-          needUpdatePosition = true
+          needUpdateYPosition = true
         }
 
-        needUpdatePosition &&
-          setPosition({
-            x: captionLeft,
-            y: captionTop,
-          })
+        setPosition({
+          x: needUpdateXPosition
+            ? captionLeft
+            : width * positionInfoRef.current.left,
+          y: needUpdateYPosition
+            ? captionTop
+            : height * positionInfoRef.current.top,
+        })
         needUpdateSize && setWidth(`${captionWidth}px`)
       }
     }
@@ -473,14 +482,39 @@ const WebCaption: React.FC<CaptionProps> = (props) => {
 
   useEffect(() => {
     const wrapDom = document.querySelector('.meeting-web')
-    const y = (wrapDom?.clientHeight || 0) - 300
+
+    wrapDomRef.current = wrapDom
+    let y = (wrapDom?.clientHeight || 0) - 300
+
+    const x = (wrapDom?.clientWidth || 0) / 2 - 246
+
+    y = y <= 0 ? 540 : y
+
+    setPositionInfo(x, y)
 
     // 底部居中
     setPosition({
-      x: (wrapDom?.clientWidth || 0) / 2 - 246,
-      y: y <= 0 ? 540 : y,
+      x,
+      y,
     })
   }, [])
+
+  // 保存百分比。用于父窗口变化之后相对位置不变
+  function setPositionInfo(x: number, y: number) {
+    const wrapDom = wrapDomRef.current
+
+    const captionEle = captionElementRef.current?.getSelfElement()
+
+    if (wrapDom && captionEle) {
+      positionInfoRef.current = {
+        left: x / wrapDom.clientWidth,
+        top: y / wrapDom.clientHeight,
+      }
+
+      console.warn(positionInfoRef.current)
+    }
+  }
+
   return (
     <Rnd
       ref={(c) => (captionElementRef.current = c)}
@@ -491,6 +525,7 @@ const WebCaption: React.FC<CaptionProps> = (props) => {
       size={{ width, height: 'auto' }}
       onDragStop={(e, d) => {
         setPosition({ x: d.x, y: d.y })
+        setPositionInfo(d.x, d.y)
       }}
       onResizeStop={(e, direction, ref, delta, position) => {
         setWidth(ref.style.width)

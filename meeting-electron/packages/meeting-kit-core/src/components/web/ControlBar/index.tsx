@@ -29,6 +29,7 @@ import {
   ActionType,
   EventType,
   hostAction,
+  LocalRecordState,
   MeetingEventType,
   MeetingSetting,
   memberAction,
@@ -78,6 +79,7 @@ import reactStringReplace from 'react-string-replace'
 import Emoji from '../../common/Emoji'
 import useEmoticonsButton from './Buttons/useEmoticonsButton'
 import { EndButton } from './Buttons/EndButton'
+import useDeviceChangeToast from '../../../hooks/useDeviceChangeToast'
 
 type ButtonType = {
   id: number | string
@@ -91,7 +93,8 @@ type ButtonType = {
 }
 
 let closeModal
-
+let closeWhiteBoardModal
+let closeScreenShareModal
 interface ControlBarProps extends DrawerProps {
   controlBarVisibleByMouse?: boolean
   onDefaultButtonClick?: (key: string) => void
@@ -113,11 +116,8 @@ const ControlBar: React.FC<ControlBarProps> = ({
 }) => {
   const { waitingRoomInfo } = useWaitingRoomContext()
   const { t, i18n } = useTranslation()
-  const {
-    meetingInfo,
-    memberList,
-    inInvitingMemberList,
-  } = useMeetingInfoContext()
+  const { meetingInfo, memberList, inInvitingMemberList } =
+    useMeetingInfoContext()
   const { dispatch: waitingRoomDispatch } = useWaitingRoomContext()
   const {
     neMeeting,
@@ -125,7 +125,9 @@ const ControlBar: React.FC<ControlBarProps> = ({
     eventEmitter,
     logger,
     showCloudRecordMenuItem,
+    showLocalRecordMenuItem,
     showCloudRecordingUI,
+    showLocalRecordingUI,
     globalConfig,
     noCaptions,
     noChat,
@@ -145,7 +147,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
   localMemberRef.current = meetingInfo.localMember
 
   // 超出人数限制，不再提示
-  const nomoreParticipantUpperLimitTipRef = useRef<boolean>(false)
+  const noMoreParticipantUpperLimitTipRef = useRef<boolean>(false)
 
   const lockButtonClickRef = useRef<Record<string, boolean>>({})
   const handUpModalRef = useRef<{
@@ -157,13 +159,14 @@ const ControlBar: React.FC<ControlBarProps> = ({
   const stopScreenShareClickRef = useRef(false)
 
   const [securityPopoverOpen, setSecurityPopoverOpen] = useState(false)
+  const [recordControlPopoverOpen, setRecordControlPopoverOpen] =
+    useState(false)
   const [moreBtnOpen, setMoreBtnOpen] = useState(false)
   const [audioDeviceListOpen, setAudioDeviceListOpen] = useState(false)
   const [videoDeviceListOpen, setVideoDeviceListOpen] = useState(false)
   const [recordPopoverOpen, setRecordPopoverOpen] = useState(false)
-  const [screenSharingPopoverOpen, setScreenSharingPopoverOpen] = useState(
-    false
-  )
+  const [screenSharingPopoverOpen, setScreenSharingPopoverOpen] =
+    useState(false)
   const [cameras, setCameras] = useState<NEDeviceBaseInfo[]>([])
   const [microphones, setMicrophones] = useState<NEDeviceBaseInfo[]>([])
   const [speakers, setSpeakers] = useState<NEDeviceBaseInfo[]>([])
@@ -173,6 +176,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
   const [isDarkMode, setIsDarkMode] = useState(true)
   const [handUpPopoverOpen, setHandUpPopoverOpen] = useState(false)
   const [openCaptionPopover, setOpenCaptionPopover] = useState(false)
+  const [openLocalRecordPopover, setOpenLocalRecordPopover] = useState(false)
   const handUpPopoverOpenTimerRef = useRef<null | ReturnType<
     typeof setTimeout
   >>(null)
@@ -194,6 +198,8 @@ const ControlBar: React.FC<ControlBarProps> = ({
   const notNotifyRef = useRef(false)
 
   const leaveTimerRef = useRef<null | ReturnType<typeof setTimeout>>(null)
+  const stopScreenShareRef = useRef<null | ReturnType<typeof setTimeout>>(null)
+  const stopWhiteBoardRef = useRef<null | ReturnType<typeof setTimeout>>(null)
 
   selectedCameraRef.current = selectedCamera
   selectedMicrophoneRef.current = selectedMicrophone
@@ -215,6 +221,17 @@ const ControlBar: React.FC<ControlBarProps> = ({
   const isHostOrCoHostRef = useRef(isHostOrCoHost)
 
   const { emoticonsBtn } = useEmoticonsButton(open)
+
+  const isLinux = useMemo(() => {
+    return window.systemPlatform === 'linux'
+  }, [])
+
+  useDeviceChangeToast({
+    microphones,
+    speakers,
+    selectedMicrophone,
+    selectedSpeaker,
+  })
 
   isHostOrCoHostRef.current = isHostOrCoHost
 
@@ -326,7 +343,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
           !isHostOrCoHost
         ) {
           Toast.info(t('participantHostMuteAllAudio'))
-          neMeeting?.muteLocalAudio()
+          await neMeeting?.muteLocalAudio()
         }
       } catch (e: unknown) {
         const error = e as NECommonError
@@ -362,6 +379,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
 
             Toast.fail(
               error?.msg ||
+                error?.message ||
                 t(errorCodeMap[error?.code] || 'participantUnMuteAudioFail')
             )
           }
@@ -519,6 +537,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
     }
 
     if (lockButtonClickRef.current['video']) {
+      console.info('lockButtonClick video', lockButtonClickRef.current['video'])
       return
     }
 
@@ -530,7 +549,18 @@ const ControlBar: React.FC<ControlBarProps> = ({
         // 本端断网情况也需要先关闭
       } finally {
         // 加下延迟，否则设置预览的时候预览会有问题
-        setTimeout(() => {
+        if (window.isElectronNative) {
+          setTimeout(() => {
+            dispatch?.({
+              type: ActionType.UPDATE_MEMBER,
+              data: {
+                uuid: localMember.uuid,
+                member: { isVideoOn: false },
+              },
+            })
+            lockButtonClickRef.current['video'] = false
+          }, 1000)
+        } else {
           dispatch?.({
             type: ActionType.UPDATE_MEMBER,
             data: {
@@ -538,8 +568,11 @@ const ControlBar: React.FC<ControlBarProps> = ({
               member: { isVideoOn: false },
             },
           })
-        }, 1000)
+          lockButtonClickRef.current['video'] = false
+        }
       }
+
+      return
     } else {
       if (!needHandUp('video')) {
         if (cameras.length <= 0) {
@@ -556,10 +589,17 @@ const ControlBar: React.FC<ControlBarProps> = ({
 
             logger?.error('unmuteLocalVideo error', knownError)
             if (knownError.code === 50000) {
-              neMeeting?.muteLocalVideo()
+              await neMeeting?.muteLocalVideo()
             } else {
+              // web 下10223重复打开，不报错
+              if (!window.isElectronNative && knownError.code === 10223) {
+                lockButtonClickRef.current['video'] = false
+                return
+              }
+
               Toast.fail(
                 knownError?.msg ||
+                  knownError?.message ||
                   t(
                     errorCodeMap[knownError?.code] ||
                       'participantUnMuteVideoFail'
@@ -594,15 +634,23 @@ const ControlBar: React.FC<ControlBarProps> = ({
           <use
             xlinkHref={`${
               localMember.isAudioOn
-                ? '#iconyx-tv-voice-onx'
-                : '#iconyx-tv-voice-offx'
+                ? isDarkMode
+                  ? 'iconyinliang0'
+                  : 'iconyinliang0hei'
+                : isDarkMode
+                ? '#iconkaiqimaikefeng-mianxing'
+                : '#iconkaiqimaikefeng'
             }`}
           ></use>
         </svg>
       )
     ) : (
       <svg className="icon iconfont icon-red" aria-hidden="true">
-        <use xlinkHref="#icondisconnect-audio"></use>
+        <use
+          xlinkHref={`${
+            isDarkMode ? '#iconkaiqiyinpin-mianxing' : '#iconkaiqiyinpin'
+          }`}
+        ></use>
       </svg>
     ),
     label: localMember.isAudioConnected
@@ -627,8 +675,10 @@ const ControlBar: React.FC<ControlBarProps> = ({
         <use
           xlinkHref={`${
             localMember.isVideoOn
-              ? '#iconyx-tv-video-onx'
-              : '#iconyx-tv-video-offx'
+              ? '#iconguanbishexiangtou-mianxing'
+              : isDarkMode
+              ? '#iconkaiqishexiangtou-mianxing'
+              : '#iconkaiqishexiangtou'
           }`}
         ></use>
       </svg>
@@ -644,10 +694,108 @@ const ControlBar: React.FC<ControlBarProps> = ({
     setIsAvatarHide(!!meetingInfo.avatarHide)
   }, [meetingInfo.avatarHide])
 
+  const localRecordPermissionItem = () => {
+    return (
+      <div className="device-list">
+        <div
+          className="device-item"
+          key={t('localRecordPermissionForHost')}
+          onClick={(event) => {
+            event.stopPropagation()
+            console.log('localRecordPermissionItem')
+            setOpenLocalRecordPopover(false)
+            neMeeting
+              ?.securityControl({
+                LOCAL_RECORD_PERMISSION_1: false,
+                LOCAL_RECORD_PERMISSION_2: false,
+              })
+              .catch((e) => {
+                Toast.fail(e.msg || e.message)
+              })
+          }}
+        >
+          <div className="device-item-label">
+            {t('localRecordPermissionForHost')}
+          </div>
+          {!!meetingInfo?.localRecordPermission?.host && (
+            <svg
+              className="icon iconfont iconcheck-line-regular1x-blue"
+              aria-hidden="true"
+            >
+              <use xlinkHref="#iconcheck-line-regular1x"></use>
+            </svg>
+          )}
+        </div>
+
+        <div
+          className="device-item"
+          key={t('localRecordPermissionForSome')}
+          onClick={(event) => {
+            event.stopPropagation()
+            console.log('localRecordPermissionItem 发送录制权限请求')
+            Toast.info(t('localRecordPermissionForSomeTip'))
+            setOpenLocalRecordPopover(false)
+            neMeeting
+              ?.securityControl({
+                LOCAL_RECORD_PERMISSION_1: false,
+                LOCAL_RECORD_PERMISSION_2: true,
+              })
+              .catch((e) => {
+                Toast.fail(e.msg || e.message)
+              })
+          }}
+        >
+          <div className="device-item-label">
+            {t('localRecordPermissionForSome')}
+          </div>
+          {!!meetingInfo?.localRecordPermission?.some && (
+            <svg
+              className="icon iconfont iconcheck-line-regular1x-blue"
+              aria-hidden="true"
+            >
+              <use xlinkHref="#iconcheck-line-regular1x"></use>
+            </svg>
+          )}
+        </div>
+
+        <div
+          className="device-item"
+          key={t('localRecordPermissionForAll')}
+          onClick={(event) => {
+            event.stopPropagation()
+            console.log('localRecordPermissionItem')
+            setOpenLocalRecordPopover(false)
+            neMeeting
+              ?.securityControl({
+                LOCAL_RECORD_PERMISSION_1: true,
+                LOCAL_RECORD_PERMISSION_2: true,
+              })
+              .catch((e) => {
+                Toast.fail(e.msg || e.message)
+              })
+          }}
+        >
+          <div className="device-item-label">
+            {t('localRecordPermissionForAll')}
+          </div>
+          {meetingInfo?.localRecordPermission?.all && (
+            <svg
+              className="icon iconfont iconcheck-line-regular1x-blue"
+              aria-hidden="true"
+            >
+              <use xlinkHref="#iconcheck-line-regular1x"></use>
+            </svg>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   const securityItem = (key: SecurityItem) => {
     let action: SecurityCtrlEnum
-
+    //console.log('securityItem key: ', key)
     let permission = !meetingInfo[key]
+    let localRecordPermissionFlag = false
 
     switch (key) {
       case SecurityItem.screenSharePermission:
@@ -674,8 +822,14 @@ const ControlBar: React.FC<ControlBarProps> = ({
         action = SecurityCtrlEnum.ANNOTATION_DISABLE
         permission = !!meetingInfo[key]
         break
+      case SecurityItem.localRecordPermission:
+        localRecordPermissionFlag = true
+        action = SecurityCtrlEnum.LOCAL_RECORD
+        permission = !!meetingInfo[key]
+        break
     }
 
+    //console.log('securityItem localRecordPermissionFlag: ', localRecordPermissionFlag)
     const titleMap = {
       [SecurityItem.screenSharePermission]: t('screenShare'),
       [SecurityItem.unmuteAudioBySelfPermission]: t('unmuteAudioBySelf'),
@@ -683,6 +837,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
       [SecurityItem.updateNicknamePermission]: t('updateNicknameBySelf'),
       [SecurityItem.whiteboardPermission]: t('whiteboardShare'),
       [SecurityItem.annotationPermission]: t('annotation'),
+      [SecurityItem.localRecordPermission]: t('localRecord'),
     }
 
     return (
@@ -691,6 +846,18 @@ const ControlBar: React.FC<ControlBarProps> = ({
         key={key}
         onClick={(event) => {
           event.stopPropagation()
+          console.log(
+            'securityControl localRecordPermissionFlag: ',
+            localRecordPermissionFlag
+          )
+          console.log(
+            'securityControl openLocalRecordPopover: ',
+            openLocalRecordPopover
+          )
+          if (localRecordPermissionFlag) {
+            setOpenLocalRecordPopover(!openLocalRecordPopover)
+            return
+          }
 
           neMeeting
             ?.securityControl({
@@ -701,14 +868,50 @@ const ControlBar: React.FC<ControlBarProps> = ({
             })
         }}
       >
-        <div className="device-item-label">{titleMap[key]}</div>
-        {!!meetingInfo[key] && (
+        {key !== SecurityItem.localRecordPermission && (
+          <div className="device-item-label">{titleMap[key]}</div>
+        )}
+        {!!meetingInfo[key] && !localRecordPermissionFlag && (
           <svg
             className="icon iconfont iconcheck-line-regular1x-blue"
             aria-hidden="true"
           >
             <use xlinkHref="#iconcheck-line-regular1x"></use>
           </svg>
+        )}
+        {localRecordPermissionFlag && (
+          <Popover
+            open={openLocalRecordPopover}
+            onOpenChange={(open) => setOpenLocalRecordPopover(open)}
+            autoAdjustOverflow={false}
+            getTooltipContainer={(node) => node}
+            arrow={false}
+            trigger={['click']}
+            rootClassName="security-popover device-popover"
+            placement={'rightBottom'}
+            title={t('localRecordPermissionSetting')}
+            content={localRecordPermissionItem()}
+          >
+            <div className="local-record-popover-wrapper">
+              <div
+                className="device-item-label"
+                style={{ marginLeft: 0, width: '100%' }}
+              >
+                {titleMap[key]}
+              </div>
+              <svg
+                style={{
+                  fontSize: '17px',
+                  width: '17px',
+                  color: '##8D90A0',
+                }}
+                className="icon iconfont device-item-label"
+                aria-hidden="true"
+              >
+                <use xlinkHref="#iconyoujiantou-16px-2"></use>
+              </svg>
+            </div>
+          </Popover>
         )}
       </div>
     )
@@ -978,12 +1181,14 @@ const ControlBar: React.FC<ControlBarProps> = ({
                 {securityItem(SecurityItem.whiteboardPermission)}
                 {globalConfig?.appConfig.APP_ROOM_RESOURCE.annotation &&
                   securityItem(SecurityItem.annotationPermission)}
+                {securityItem(SecurityItem.localRecordPermission)}
               </div>
               <div
                 onClick={stopMemberActivities}
                 className="device-list-title suspend-participant-activity-title"
                 style={{
                   color: '#f51d45',
+                  justifyContent: 'center',
                 }}
               >
                 {t('stopMemberActivities')}
@@ -998,7 +1203,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
     icon: (
       <div>
         <svg className={classNames('icon iconfont')} aria-hidden="true">
-          <use xlinkHref="#iconanquan"></use>
+          <use xlinkHref="#iconanquan-mianxing"></use>
         </svg>
       </div>
     ),
@@ -1009,17 +1214,89 @@ const ControlBar: React.FC<ControlBarProps> = ({
     hidden: localMember.hide || !isHostOrCoHost,
   }
 
+  function isClearShareScreenAndAnnotationAvailble(): Promise<boolean>  {
+    return new Promise((resolve) => {
+      eventEmitter?.off(EventType.IsClearAnnotationAvailbleResult)
+      eventEmitter?.on(EventType.IsClearAnnotationAvailbleResult, (data) => {
+        console.warn('收到当前批注是否有绘制内容的结果: ', data)
+        stopScreenShareRef.current && clearTimeout(stopScreenShareRef.current)
+        resolve(data);
+      })
+      //增加一个定时器，超时5s认为获取失败
+      stopScreenShareRef.current && clearTimeout(stopScreenShareRef.current)
+      stopScreenShareRef.current = setTimeout(() => {
+        stopScreenShareRef.current = null
+        resolve(true)
+      }, 5 * 1000)
+      console.log('发送检查批注是否有绘制内容的指令')
+      const annotationWindow = getWindow('annotationWindow')
+      console.warn('发送批注是否有内容的指令 annotationWindow:', annotationWindow)
+      annotationWindow?.postMessage({
+        event: 'eventEmitter',
+        payload: {
+          key: EventType.IsClearAnnotationAvailble,
+          args: [],
+        },
+      })
+    })
+  }
+
+  function handleSaveShareScreenAndAnnotationPhoto(): Promise<{
+    result: string,
+    reason: string,
+    openFileResult: boolean
+  }> {
+    return new Promise((resolve, reject) => {
+      eventEmitter?.off(EventType.AnnotationSavePhotoDone)
+      eventEmitter?.on(EventType.AnnotationSavePhotoDone, (data) => {
+        console.warn('收到批注保存完成的通知: ', data)
+        stopScreenShareRef.current && clearTimeout(stopScreenShareRef.current)
+        if (data.result == 'failed') {
+          reject(data);
+        } else {
+          resolve(data);
+        }
+      })
+      stopScreenShareRef.current && clearTimeout(stopScreenShareRef.current)
+      stopScreenShareRef.current = setTimeout(() => {
+        stopScreenShareRef.current = null
+        reject({
+          result: 'failed',
+          reason: 'save annotation timeout',
+          openFileResult: false
+        });
+      }, 30 * 1000)
+      const annotationWindow = getWindow('annotationWindow')
+      console.warn('发送批注保存的指令 annotationWindow:', annotationWindow)
+      annotationWindow?.postMessage({
+        event: 'eventEmitter',
+        payload: {
+          key: EventType.AnnotationSavePhoto,
+          args: [],
+        },
+      })
+    })
+  }
+
   const screenShareBtn = {
     id: 2,
     key: 'screenShare',
     icon: (
       <svg
         className={classNames('icon iconfont', {
-          'icon-blue': localMember.isSharingScreen,
+          'icon-green': !localMember.isSharingScreen && isDarkMode,
+          'icon-green-light': !localMember.isSharingScreen && !isDarkMode,
+          'icon-red': localMember.isSharingScreen,
         })}
         aria-hidden="true"
       >
-        <use xlinkHref="#iconyx-tv-sharescreen1x"></use>
+        <use
+          xlinkHref={`${
+            localMember.isSharingScreen
+              ? '#icontingzhigongxiang'
+              : '#icontouping-mianxing'
+          }`}
+        ></use>
       </svg>
     ),
     label: !localMember.isSharingScreen
@@ -1063,20 +1340,49 @@ const ControlBar: React.FC<ControlBarProps> = ({
             ),
           })
         } else {
-          CommonModal.confirm({
-            title: t('screenShare'),
-            okText: t('yes'),
-            cancelText: t('no'),
-            content: (
-              <div>
-                {globalConfig?.appConfig?.APP_ROOM_RESOURCE?.screenShare
-                  ?.message || t('screenShareWarning')}
-              </div>
-            ),
-            onOk: () => {
-              shareScreen()
-            },
-          })
+          if (
+            meetingInfoRef.current.setting.screenShareSetting
+              ?.noMoreScreenShareMessage
+          ) {
+            shareScreen()
+          } else {
+            let notRemindMeAgain = false
+
+            CommonModal.confirm({
+              title: t('screenShare'),
+              okText: t('yes'),
+              cancelText: t('no'),
+              content: (
+                <>
+                  <div>
+                    {globalConfig?.appConfig?.APP_ROOM_RESOURCE?.screenShare
+                      ?.message || t('screenShareWarning')}
+                  </div>
+                  <Checkbox
+                    style={{
+                      left: '24px',
+                      bottom: '24px',
+                      position: 'absolute',
+                    }}
+                    onChange={(e) => {
+                      notRemindMeAgain = e.target.checked
+                    }}
+                  >
+                    {t('notRemindMeAgain')}
+                  </Checkbox>
+                </>
+              ),
+              onOk: () => {
+                const setting = meetingInfoRef.current.setting
+
+                setting.screenShareSetting.noMoreScreenShareMessage =
+                  notRemindMeAgain
+                onSettingChange(setting)
+
+                shareScreen()
+              },
+            })
+          }
         }
       } else {
         shareScreen()
@@ -1084,9 +1390,16 @@ const ControlBar: React.FC<ControlBarProps> = ({
     },
     hidden: localMember.hide || isElectronSharingScreen,
   }
-
+  //停止白板共享
   const handleStopWhiteboard = async () => {
     try {
+      closeWhiteBoardModal?.destroy()
+      closeWhiteBoardModal = null
+      try {
+        await neMeeting?.whiteboardController?.logout()
+      } catch (e) {
+        console.warn('停止白板 logout失败: ', e)
+      }
       await neMeeting?.whiteboardController?.stopWhiteboardShare()
       if (window.isElectronNative && meetingInfo.enableTransparentWhiteboard) {
         window.ipcRenderer
@@ -1095,13 +1408,150 @@ const ControlBar: React.FC<ControlBarProps> = ({
             console.log('whiteboardTransparentMirror failed', e)
           })
       }
-
       neMeeting?.roomContext?.deleteRoomProperty('whiteboardConfig')
+      console.warn('关闭白板后，检查cloudRecordState, whiteboardCloudRecord: ', meetingInfoRef.current.cloudRecordState, meetingInfoRef.current?.whiteboardCloudRecord)
+      if (meetingInfoRef.current.cloudRecordState == RecordState.Recording && meetingInfoRef.current?.whiteboardCloudRecord) {
+        whiteBoardStopPushStream()
+      }
     } catch {
       Toast.fail(t('whiteBoardShareStopFail'))
     }
   }
 
+  function isClearWhiteboardAvailble(): Promise<boolean>  {
+    return new Promise((resolve) => {
+      eventEmitter?.off(EventType.IsClearWhiteboardAvailbleResult)
+      eventEmitter?.on(EventType.IsClearWhiteboardAvailbleResult, (data) => {
+        console.warn('收到当前白板是否有绘制内容的结果: ', data)
+        stopWhiteBoardRef.current && clearTimeout(stopWhiteBoardRef.current)
+        resolve(data);
+      })
+      //增加一个定时器，超时5s认为获取失败
+      stopWhiteBoardRef.current && clearTimeout(stopWhiteBoardRef.current)
+      stopWhiteBoardRef.current = setTimeout(() => {
+        stopWhiteBoardRef.current = null
+        resolve(true)
+      }, 5 * 1000)
+      console.log('发送检查白板是否有绘制内容的指令')
+      const dualMonitorsWindow = getWindow('dualMonitorsWindow')
+      console.warn('当前是否存在双屏场景 dualMonitorsWindow:', dualMonitorsWindow)
+      if (dualMonitorsWindow) {
+        dualMonitorsWindow?.postMessage({
+          event: 'eventEmitter',
+          payload: {
+            key: EventType.IsClearWhiteboardAvailble,
+            args: [],
+          },
+        })
+      }
+      neMeeting?.eventEmitter?.emit(
+        EventType.IsClearWhiteboardAvailble,
+      )
+    })
+  }
+
+  function handleSaveWhiteboardPhoto(): Promise<{
+    result: string,
+    reason: string,
+    openFileResult: boolean
+  }>  {
+    return new Promise((resolve, reject) => {
+      eventEmitter?.off(EventType.WhiteboardSavePhotoDone)
+      eventEmitter?.on(EventType.WhiteboardSavePhotoDone, (data) => {
+        console.warn('收到白板保存完成的通知')
+        stopWhiteBoardRef.current && clearTimeout(stopWhiteBoardRef.current)
+        if (data.result == 'failed') {
+          reject(data);
+        } else {
+          resolve(data);
+        }
+      })
+      //增加一个定时器，超时30s认为保存失败
+      stopWhiteBoardRef.current && clearTimeout(stopWhiteBoardRef.current)
+      stopWhiteBoardRef.current = setTimeout(() => {
+        stopWhiteBoardRef.current = null
+        reject({
+          result: 'failed',
+          reason: 'save whiteboard timeout',
+          openFileResult: false
+        });
+      }, 30 * 1000)
+      console.log('发送白板截图的指令')
+      const dualMonitorsWindow = getWindow('dualMonitorsWindow')
+      console.warn('当前是否存在双屏场景 dualMonitorsWindow:', dualMonitorsWindow)
+      if (dualMonitorsWindow) {
+        dualMonitorsWindow?.postMessage({
+          event: 'eventEmitter',
+          payload: {
+            key: EventType.WhiteboardSavePhoto,
+            args: [],
+          },
+        })
+      }
+      neMeeting?.eventEmitter?.emit(
+        EventType.WhiteboardSavePhoto,
+      )
+    })
+  }
+
+  function whiteBoardStartPushStream(){
+    if (window.isElectronNative) {
+      return
+    }
+    //开启了云录制 && 加入房间时配置了白板云录制能力
+    console.log('开启白板后，检查whiteboardCloudRecord: ', meetingInfo.cloudRecordState, meetingInfoRef.current?.whiteboardCloudRecord)
+    console.log('开启白板后，检查isJoinedWhiteboard: ', neMeeting?.whiteboardController?.isJoinedWhiteboard)
+    console.log('开启白板后，检查cloudRecordState: ', meetingInfoRef.current.cloudRecordState)
+    if (meetingInfoRef.current.cloudRecordState == RecordState.Recording &&
+      meetingInfoRef.current?.whiteboardCloudRecord &&
+      neMeeting?.whiteboardController?.isJoinedWhiteboard) {
+
+        //开始推流之前先停止推流，兼容重连场景
+        whiteBoardStopPushStream()
+      //获取到白板流，可以使用rtc推至服务器
+      let limitFrameRate: VideoFrameRate = 5
+      if (
+        meetingInfoRef.current.setting.screenShareSetting
+          ?.sharedLimitFrameRateEnable &&
+        meetingInfoRef.current.setting.screenShareSetting
+          ?.sharedLimitFrameRate
+      ) {
+        limitFrameRate = meetingInfoRef.current.setting.screenShareSetting
+          .sharedLimitFrameRate as VideoFrameRate
+      }
+      const whiteBoardStream = neMeeting?.whiteboardController?.getStream?.({frameRate: limitFrameRate})
+      console.log('获取白板流 whiteBoardStream: ', whiteBoardStream)
+      if (whiteBoardStream && whiteBoardStream.getVideoTracks().length > 0) {
+        neMeeting?.rtcController?.setEnableExternalScreenVideo?.(true)
+        neMeeting?.rtcController?.pushExternalScreenVideoFrame?.(whiteBoardStream.getVideoTracks()[0])
+        neMeeting?.unmuteLocalScreenShare({
+          limitFrameRate,
+          //白板使用音视频sdk的视频辅流通道传输白板数据，因此不需要通知服务器
+          needRequestMeetingServerScreenShare: false
+        })
+      }
+    } else if (
+      meetingInfo.cloudRecordState != RecordState.Recording &&
+      meetingInfoRef.current?.whiteboardCloudRecord &&
+      neMeeting?.whiteboardController?.isJoinedWhiteboard
+      ){
+      //此时关闭了云录制，需要主动停止白板推流
+      whiteBoardStopPushStream()
+    }
+  }
+
+  function whiteBoardStopPushStream(){
+    if (window.isElectronNative) {
+      return
+    }
+    console.log('关闭白板推流')
+    neMeeting?.muteLocalScreenShare({
+      needRequestMeetingServerScreenShare: false
+    })
+    neMeeting?.whiteboardController?.stopStream?.()
+  }
+
+  //白板会控按钮
   const whiteBoardBtn = {
     id: 22,
     key: 'whiteBoard',
@@ -1112,7 +1562,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
         })}
         aria-hidden="true"
       >
-        <use xlinkHref="#iconyx-baiban"></use>
+        <use xlinkHref="#iconbaiban-mianxing"></use>
       </svg>
     ),
     label: !localMember.isSharingWhiteboard
@@ -1125,8 +1575,72 @@ const ControlBar: React.FC<ControlBarProps> = ({
 
       lockButtonClickRef.current['whiteBoard'] = true
       if (localMember.isSharingWhiteboard) {
-        handleStopWhiteboard()
+        //关闭白板流程
+        const isClearAvailble = await isClearWhiteboardAvailble()
+        console.log('isClearAvailble: ', isClearAvailble)
+        if (isClearAvailble) {
+           // 停止白板需要增加二次确认弹框，用于提示是否保存白板截图
+          // v4.11.0版本支持，需求稿:https://docs.popo.netease.com/lingxi/61ace73d775b42fdac74727bc7e5c381
+          closeWhiteBoardModal?.destroy()
+          closeWhiteBoardModal = null
+          closeWhiteBoardModal = CommonModal.confirm({
+            title: '',
+            content: t('whiteBoardCloseModalContent'),
+            focusTriggerAfterClose: false,
+            transitionName: '',
+            mask: false,
+            afterClose: () => {
+              closeWhiteBoardModal = null
+            },
+            width: 400,
+            height: 200,
+            wrapClassName: 'nemeeting-leave-or-end-meeting-modal',
+            footer: (
+              <div className="nemeeting-modal-confirm-btns">
+                <Button
+                  onClick={() =>{
+                    closeWhiteBoardModal.destroy()
+                    closeWhiteBoardModal = null
+                    handleStopWhiteboard()
+                  }}
+                >
+                  {t('whiteBoardCloseModalNotSaveButtonText')}
+                </Button>
+                <Button
+                  onClick={() => {
+                    closeWhiteBoardModal.destroy()
+                    closeWhiteBoardModal = null
+                  }}
+                >
+                  {t('globalCancel')}
+                </Button>
+                <Button type="primary"
+                  onClick={() => {
+                    console.log('点击导出白板')
+                    closeWhiteBoardModal.destroy()
+                    closeWhiteBoardModal = null
+                    handleSaveWhiteboardPhoto().then((data)=>{
+                      console.log('点击导出白板完成 data: ', data)
+                      handleStopWhiteboard()
+                    }).catch( (error) => {
+                      console.log('点击导出白板完成 error: ', error)
+                      if (error.result == 'failed') {
+                        Toast.fail(error.reason)
+                      }
+                      handleStopWhiteboard()
+                    })
+                  }}
+                >
+                  {t('whiteBoardCloseModalSaveButtonText')}
+                </Button>
+              </div>
+            ),
+          })
+        } else {
+          handleStopWhiteboard()
+        }
       } else {
+        //开启白板流程
         if (!meetingInfo.whiteboardPermission && !isHostOrCoHost) {
           Toast.fail(t('shareNoPermission'))
           lockButtonClickRef.current['whiteBoard'] = false
@@ -1168,6 +1682,45 @@ const ControlBar: React.FC<ControlBarProps> = ({
                 isTransparent: meetingInfo.enableTransparentWhiteboard,
               })
             )
+
+            if (neMeeting?.whiteboardController?.isJoinedWhiteboard) {
+              whiteBoardStartPushStream()
+            } else {
+              eventEmitter?.off(EventType.OnWhiteboardConnected)
+              eventEmitter?.on(EventType.OnWhiteboardConnected, () => {
+                console.warn('收到白板加入房间成功的结果')
+                whiteBoardStartPushStream()
+              })
+            }
+
+            // setTimeout(() => {
+            //   //开启了云录制 && 加入房间时配置了白板云录制能力
+            //   console.error('开启白板后，检查cloudRecordState, whiteboardCloudRecord: ', meetingInfo.cloudRecordState, meetingInfoRef.current?.whiteboardCloudRecord)
+            //   if (meetingInfo.cloudRecordState == RecordState.Recording && meetingInfoRef.current?.whiteboardCloudRecord) {
+            //     //获取到白板流，可以使用rtc推至服务器
+            //     let limitFrameRate: VideoFrameRate = 5
+            //     if (
+            //       meetingInfoRef.current.setting.screenShareSetting
+            //         ?.sharedLimitFrameRateEnable &&
+            //       meetingInfoRef.current.setting.screenShareSetting
+            //         ?.sharedLimitFrameRate
+            //     ) {
+            //       limitFrameRate = meetingInfoRef.current.setting.screenShareSetting
+            //         .sharedLimitFrameRate as VideoFrameRate
+            //     }
+            //     const whiteBoardStream = neMeeting?.whiteboardController?.getStream?.({frameRate: limitFrameRate})
+            //     console.log('获取白板流whiteBoardStream: ', whiteBoardStream)
+            //     if (whiteBoardStream && whiteBoardStream.getVideoTracks().length > 0) {
+            //       neMeeting?.rtcController?.setEnableExternalScreenVideo?.(true)
+            //       neMeeting?.rtcController?.pushExternalScreenVideoFrame?.(whiteBoardStream.getVideoTracks()[0])
+            //       neMeeting?.unmuteLocalScreenShare({
+            //         limitFrameRate,
+            //         //白板使用音视频sdk的视频辅流通道传输白板数据，因此不需要通知服务器
+            //         needRequestMeetingServerScreenShare: false
+            //       })
+            //     }
+            //   }
+            // }, 3000)
           } catch (e: unknown) {
             const error = e as NECommonError
 
@@ -1224,7 +1777,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
     icon: (
       <>
         <svg className="icon icon-tool iconfont" aria-hidden="true">
-          <use xlinkHref="#iconyx-tv-attendeex"></use>
+          <use xlinkHref="#iconguanlicanhuizhe-mianxing"></use>
         </svg>
         {!!waitingRoomInfo.unReadMsgCount && !!waitingRoomInfo.memberCount && (
           <span className="waiting-room-unread-count-label"></span>
@@ -1245,36 +1798,194 @@ const ControlBar: React.FC<ControlBarProps> = ({
     hidden: localMember.hide,
   }
 
+  const localRecordAvailable = useMemo(() => {
+    console.info(
+      '是否要显示本地录制按钮 localRecordPermission:',
+      meetingInfoRef.current.localRecordPermission
+    )
+    console.info(
+      '是否要显示本地录制按钮 localMember:',
+      meetingInfoRef.current.localMember
+    )
+    let isLocalRecordAvailable = true
+
+    if (meetingInfoRef.current.localRecordPermission?.host) {
+      //房间录制权限为host，此时自己不是主持人或者联席主持人，没有本地录制设置权限
+      if (
+        meetingInfoRef.current.localMember.role !== Role.host &&
+        meetingInfoRef.current.localMember.role !== Role.coHost
+      ) {
+        isLocalRecordAvailable = false
+      }
+    } else if (meetingInfoRef.current.localRecordPermission?.some) {
+      //房间录制权限为部分人可录制，此时判断自己的成员属性localRecordAvailable
+      isLocalRecordAvailable =
+        meetingInfoRef.current.localMember.localRecordAvailable
+    } else if (meetingInfoRef.current.localRecordPermission?.all) {
+      //房间录制权限全体人可录制
+      isLocalRecordAvailable = true
+    }
+
+    console.info(
+      '是否要显示本地录制按钮 isLocalRecordAvailable:',
+      isLocalRecordAvailable
+    )
+    return isLocalRecordAvailable
+  }, [
+    meetingInfo.localMember.role,
+    meetingInfo.localMember.localRecordAvailable,
+    meetingInfo.localRecordPermission,
+  ])
+
+  const canShowRecordPopover = useMemo(() => {
+    if (isHostOrCoHost) {
+      return (
+        window.isElectronNative &&
+        ((meetingInfo.isCloudRecording && meetingInfo.isLocalRecording) ||
+          (!meetingInfo.isCloudRecording && !meetingInfo.isLocalRecording))
+      )
+    } else {
+      return false
+    }
+  }, [
+    isHostOrCoHost,
+    meetingInfo.isCloudRecording,
+    meetingInfo.isLocalRecording,
+  ])
+
+  const needStopRecord = useMemo(() => {
+    if (meetingInfo.isLocalRecording) {
+      return true
+    }
+
+    // 云录制开启
+    if (meetingInfo.isCloudRecording) {
+      // 如果只是开了云录制，只有主持人才能停止
+      if (isHostOrCoHost) {
+        return true
+      } else {
+        return false
+      }
+    } else {
+      return false
+    }
+  }, [
+    isHostOrCoHost,
+    meetingInfo.isLocalRecording,
+    meetingInfo.isCloudRecording,
+  ])
   const recordBtn = {
     id: 27,
     key: 'record',
+    popover: canShowRecordPopover
+      ? (children) => {
+          return (
+            <Popover
+              destroyTooltipOnHide
+              align={
+                isElectronSharingScreen
+                  ? { offset: [0, 5] }
+                  : { offset: [0, -5] }
+              }
+              arrow={false}
+              trigger={['click']}
+              rootClassName="record-popover device-popover"
+              open={recordControlPopoverOpen}
+              getTooltipContainer={(node) => node}
+              onOpenChange={(open) => {
+                setRecordControlPopoverOpen(open)
+              }}
+              autoAdjustOverflow={false}
+              placement={isElectronSharingScreen ? 'bottom' : 'top'}
+              content={
+                <>
+                  {isHostOrCoHost &&
+                    showCloudRecordMenuItem &&
+                    globalConfig?.appConfig?.APP_ROOM_RESOURCE.record && (
+                      <div
+                        onClick={() => {
+                          onDefaultButtonClick?.('cloudRecord')
+                        }}
+                        className="device-list-title suspend-participant-activity-title-item"
+                      >
+                        {meetingInfo.isCloudRecording
+                          ? t('stopCloudRecord')
+                          : t('startCloudRecord')}
+                      </div>
+                    )}
+                  {localRecordAvailable &&
+                    showLocalRecordMenuItem &&
+                    globalConfig?.appConfig?.APP_ROOM_RESOURCE.localRecord && (
+                      <div
+                        onClick={() => {
+                          onDefaultButtonClick?.('localRecord')
+                          setRecordControlPopoverOpen(false)
+                        }}
+                        className="device-list-title suspend-participant-activity-title-item"
+                      >
+                        {meetingInfo.isLocalRecording
+                          ? t('stopLocalRecord')
+                          : t('startLocalRecord')}
+                      </div>
+                    )}
+                </>
+              }
+            >
+              {children}
+            </Popover>
+          )
+        }
+      : null,
     icon: (
       <svg
         className={classNames('icon iconfont', {
-          'icon-red': meetingInfo.isCloudRecording,
+          'icon-red': needStopRecord,
         })}
         aria-hidden="true"
       >
         <use
           xlinkHref={`${
-            meetingInfo.isCloudRecording
-              ? '#icontingzhiluzhi'
-              : '#iconluzhizhong'
+            needStopRecord
+              ? '#icontingzhiluzhi-mianxing'
+              : '#iconluzhi-mianxing'
           }`}
         ></use>
       </svg>
     ),
     onClick: async () => {
-      onDefaultButtonClick?.('record')
+      if (canShowRecordPopover) {
+        setRecordControlPopoverOpen(!recordControlPopoverOpen)
+      } else {
+        if (window.isElectronNative) {
+          if (isHostOrCoHostRef.current) {
+            if (meetingInfo.isCloudRecording) {
+              onDefaultButtonClick?.('cloudRecord')
+            } else if (meetingInfo.isLocalRecording) {
+              onDefaultButtonClick?.('localRecord')
+            }
+          } else {
+            onDefaultButtonClick?.('localRecord')
+          }
+        } else {
+          // web只有云录制
+          onDefaultButtonClick?.('cloudRecord')
+        }
+      }
     },
     hidden: !(
-      showCloudRecordMenuItem &&
-      globalConfig?.appConfig?.APP_ROOM_RESOURCE.record &&
-      isHostOrCoHostRef.current
+      //云录制的要求
+      (
+        (showCloudRecordMenuItem &&
+          globalConfig?.appConfig?.APP_ROOM_RESOURCE.record &&
+          isHostOrCoHostRef.current) ||
+        //本地录制的要求
+        (localRecordAvailable &&
+          showLocalRecordMenuItem &&
+          window.isElectronNative &&
+          globalConfig?.appConfig?.APP_ROOM_RESOURCE.localRecord)
+      )
     ),
-    label: meetingInfo.isCloudRecording
-      ? t('stopCloudRecord')
-      : t('startCloudRecord'),
+    label: needStopRecord ? t('stopRecord') : t('record'), //此时文案应该是录制（包含云录制和本地录制）
   }
 
   function newMsgsContent() {
@@ -1373,7 +2084,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
         content={newMsgsContent()}
       >
         <svg className="icon iconfont" aria-hidden="true">
-          <use xlinkHref="#iconchat1x"></use>
+          <use xlinkHref="#iconliaotian-mianxing"></use>
         </svg>
         {!!meetingInfo.unReadChatroomMsgCount && (
           <span className="chat-unread-count-label">
@@ -1404,7 +2115,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
     key: 'invite',
     icon: (
       <svg className="icon iconfont" aria-hidden="true">
-        <use xlinkHref="#iconyx-tv-invitex"></use>
+        <use xlinkHref="#iconyaoqing-mianxing"></use>
       </svg>
     ),
     label: t('inviteBtn'),
@@ -1428,7 +2139,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
         }
       >
         <svg className="icon iconfont" aria-hidden="true">
-          <use xlinkHref="#icontongzhizhongxinrukou"></use>
+          <use xlinkHref="#icontongzhi-mianxing"></use>
         </svg>
       </Badge>
     ),
@@ -1447,19 +2158,33 @@ const ControlBar: React.FC<ControlBarProps> = ({
     hidden: localMember.hide || meetingInfo.noNotifyCenter === true,
   }
 
+  const isMeetingLiveOfficialPushSupported =
+    globalConfig?.appConfig?.APP_LIVE?.officialPushEnabled
+
+  const isMeetingLiveThirdPartyPushSupported =
+    globalConfig?.appConfig?.APP_LIVE?.thirdPartyPushEnabled
+
+  const isMeetingLiveSupported = globalConfig?.appConfig.APP_ROOM_RESOURCE.live
+
+  const isLiveBtnSupported =
+    neMeeting?.liveController?.isSupported &&
+    isHostOrCoHost &&
+    isMeetingLiveSupported &&
+    (isMeetingLiveOfficialPushSupported || isMeetingLiveThirdPartyPushSupported)
+
   const liveBtn = {
     id: 25,
     key: 'live',
     icon: (
       <svg className="icon iconfont" aria-hidden="true">
-        <use xlinkHref="#iconlive-f"></use>
+        <use xlinkHref="#iconzhibo-mianxing"></use>
       </svg>
     ),
     label: t('live'),
     onClick: async () => {
       onDefaultButtonClick?.('live')
     },
-    hidden: !(neMeeting?.liveController?.isSupported && isHostOrCoHost),
+    hidden: !isLiveBtnSupported,
   }
 
   const settingBtn = {
@@ -1467,7 +2192,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
     key: 'setting',
     icon: (
       <svg className="icon iconfont" aria-hidden="true">
-        <use xlinkHref="#iconyx-tv-settingx1"></use>
+        <use xlinkHref="#iconshezhi-mianxing"></use>
       </svg>
     ),
     label: t('settings'),
@@ -1483,7 +2208,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
     key: 'interpretation',
     icon: (
       <svg className="icon iconfont" aria-hidden="true">
-        <use xlinkHref="#icontongshengchuanyi"></use>
+        <use xlinkHref="#icontongshengchuanyi-mianxing"></use>
       </svg>
     ),
     label: t('interpretation'),
@@ -1553,6 +2278,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
                 }
 
                 setOpenCaptionPopover(false)
+                setMoreBtnOpen(false)
                 onTargetLanguageChange(item.value)
               }}
             >
@@ -1578,12 +2304,19 @@ const ControlBar: React.FC<ControlBarProps> = ({
         <Popover
           arrow={false}
           rootClassName={'nemeeting-web-caption-translation-options-pop'}
+          fresh
           content={translationOptionsContent}
           title={null}
-          trigger="hover"
+          trigger="click"
           placement="right"
         >
-          <div className="nemeeting-caption-enable-member-wrapper">
+          <div
+            className="nemeeting-caption-enable-member-wrapper"
+            onClick={(e) => {
+              e.stopPropagation()
+              e.preventDefault()
+            }}
+          >
             <div>
               {translationMap[targetTranslationLanguage || ''] ||
                 t('transcriptionNotTranslated')}
@@ -1659,6 +2392,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
     translationMap,
     targetTranslationLanguage,
     isHostOrCoHost,
+    translationOptionsContent,
   ])
   // 字幕
   const captionBtn = {
@@ -1667,7 +2401,15 @@ const ControlBar: React.FC<ControlBarProps> = ({
     icon: (
       <div className="nemeeting-more-caption">
         <svg className="icon iconfont" aria-hidden="true">
-          <use xlinkHref="#iconzimu"></use>
+          <use
+            xlinkHref={
+              meetingInfo.isCaptionsEnabled
+                ? isDarkMode
+                  ? '#iconguanbizimu-mianxing'
+                  : '#iconguanbizimu'
+                : '#iconkaiqizimu-mianxing'
+            }
+          ></use>
         </svg>
         <Popover
           open={openCaptionPopover}
@@ -1707,7 +2449,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
     key: 'transcription',
     icon: (
       <svg className="icon iconfont" aria-hidden="true">
-        <use xlinkHref="#iconzhuanxie"></use>
+        <use xlinkHref="#iconshishizhuanxie-mianxing"></use>
       </svg>
     ),
     label: t('transcription'),
@@ -1723,7 +2465,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
     key: 'feedback',
     icon: (
       <svg className="icon iconfont" aria-hidden="true">
-        <use xlinkHref="#iconwentifankui"></use>
+        <use xlinkHref="#iconwentifankui-mianxing"></use>
       </svg>
     ),
     label: t('feedback'),
@@ -1741,7 +2483,8 @@ const ControlBar: React.FC<ControlBarProps> = ({
 
       if (
         screenMember?.clientType === NEClientType.MAC ||
-        screenMember?.clientType === NEClientType.PC
+        screenMember?.clientType === NEClientType.PC ||
+        screenMember?.clientType === NEClientType.LINUX
       ) {
         if (
           meetingInfo.annotationPermission ||
@@ -1802,7 +2545,10 @@ const ControlBar: React.FC<ControlBarProps> = ({
         },
       })
     },
-    hidden: localMember.hide || !isAnnotationBtnShow,
+    hidden:
+      localMember.hide ||
+      !isAnnotationBtnShow ||
+      window.systemPlatform === 'linux',
   }
 
   useEffect(() => {
@@ -1823,7 +2569,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
     moreBarList.forEach((item) => {
       // 在屏幕共享下，过滤更多菜单的按钮
       if (isElectronSharingScreen) {
-        if (![3, 21, 20, 29, 30, 31, 32, 33, 34].includes(item.id)) {
+        if (![3, 21, 20, 25, 29, 30, 31, 32, 33, 34].includes(item.id)) {
           return
         }
       }
@@ -2107,18 +2853,16 @@ const ControlBar: React.FC<ControlBarProps> = ({
       )
     },
     icon: (
-      <div>
-        <Badge
-          dot={
-            meetingInfo.notificationMessages.filter((msg) => msg.unRead)
-              .length > 0
-          }
-        >
-          <svg className="icon iconfont" aria-hidden="true">
-            <use xlinkHref="#iconyx-tv-more1x"></use>
-          </svg>
-        </Badge>
-      </div>
+      <Badge
+        dot={
+          meetingInfo.notificationMessages.filter((msg) => msg.unRead).length >
+          0
+        }
+      >
+        <svg className="icon iconfont" aria-hidden="true">
+          <use xlinkHref="#icongengduo-mianxing"></use>
+        </svg>
+      </Badge>
     ),
     label: t('moreBtn'),
     hidden: localMember.hide || moreButtons.length === 0,
@@ -2249,6 +2993,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
                 closeModal.destroy()
                 closeModal = null
                 try {
+                  console.log('结束会议了00')
                   await neMeeting?.end()
                 } catch (error) {
                   Toast.fail(t('endFailed'))
@@ -2269,7 +3014,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
       res && setCameras([...res])
       // 如果当前选择的是跟随系统默认设备
       const isDefaultVideoDevice =
-        meetingInfo.setting.videoSetting.isDefaultDevice
+        meetingInfoRef.current.setting.videoSetting.isDefaultDevice
 
       if (isDefaultVideoDevice) {
         const defaultDevice = res?.find((item) => item.default)
@@ -2349,7 +3094,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
       res && setMicrophones([...res])
       // 如果当前选择的是跟随系统默认设备
       const isDefaultRecordDevice = checkIsDefaultDevice(
-        meetingInfo.setting.audioSetting.recordDeviceId
+        meetingInfoRef.current.setting.audioSetting.recordDeviceId
       )
 
       if (isDefaultRecordDevice) {
@@ -2419,7 +3164,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
       res && setSpeakers([...res])
       // 如果当前选择的是跟随系统默认设备
       const isDefaultPlayoutDevice = checkIsDefaultDevice(
-        meetingInfo.setting.audioSetting.playoutDeviceId
+        meetingInfoRef.current.setting.audioSetting.playoutDeviceId
       )
 
       if (isDefaultPlayoutDevice) {
@@ -2542,7 +3287,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
                         if (!localMember.isAudioConnected) {
                           return
                         }
-          
+
                         setAudioDeviceListOpen(false)
                         neMeeting
                           ?.selectSpeakers(getDefaultDeviceId(item.deviceId))
@@ -2637,7 +3382,6 @@ const ControlBar: React.FC<ControlBarProps> = ({
                     className="device-item"
                     key={item.deviceName}
                     onClick={() => {
-
                       setVideoDeviceListOpen(false)
                       neMeeting
                         ?.changeLocalVideo(getDefaultDeviceId(item.deviceId))
@@ -2744,7 +3488,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
               window.ipcRenderer &&
               (!!globalConfig?.appConfig?.MEETING_VIRTUAL_BACKGROUND?.enable ||
                 !!globalConfig?.appConfig?.MEETING_BEAUTY?.enable) &&
-              type === 'video' && (
+              type === 'video' && !isLinux && (
                 <div
                   className="nesetting"
                   onClick={() => handleSettingClick('beauty')}
@@ -2832,8 +3576,18 @@ const ControlBar: React.FC<ControlBarProps> = ({
             member: { isSharingScreen: false },
           },
         })
+        try {
+          neMeeting?.annotationController?.logout()
+        } catch (e) {
+          console.log('停止批注 logout error: ', e)
+        }
+        window.ipcRenderer?.send(IPCEvent.sharingScreen, {
+          method: 'stop',
+        })
         await neMeeting?.muteLocalScreenShare()
         stopScreenShareClickRef.current = true
+        closeScreenShareModal?.destroy()
+        closeScreenShareModal = null
       } catch {
         Toast.fail(t('screenShareStopFail'))
       }
@@ -2939,6 +3693,14 @@ const ControlBar: React.FC<ControlBarProps> = ({
         const memberCount = waitingRoomInfo.memberCount + 1
 
         if (isElectronSharingScreen) {
+          waitingRoomDispatch?.({
+            type: ActionType.WAITING_ROOM_UPDATE_INFO,
+            data: {
+              info: {
+                memberCount: memberCount,
+              },
+            },
+          })
           window.ipcRenderer?.send(IPCEvent.notifyShow, {
             memberCount: memberCount,
           })
@@ -3110,6 +3872,13 @@ const ControlBar: React.FC<ControlBarProps> = ({
     eventEmitter?.on(UserEventType.StopWhiteboard, () => {
       handleStopWhiteboard()
     })
+
+    eventEmitter?.on(UserEventType.HostCloseWhiteShareOrScreenShare, () => {
+      closeWhiteBoardModal?.destroy()
+      closeWhiteBoardModal = null
+      closeScreenShareModal?.destroy()
+      closeScreenShareModal = null
+    })
     return () => {
       outEventEmitter?.off('enableShareScreen')
       outEventEmitter?.off(UserEventType.LeaveMeeting)
@@ -3260,54 +4029,6 @@ const ControlBar: React.FC<ControlBarProps> = ({
   }, [isElectronSharingScreen])
 
   useEffect(() => {
-    if (selectedMicrophone) {
-      const deviceInfo = microphones.find(
-        (item) =>
-          item.deviceId == selectedMicrophone &&
-          !!meetingInfo.setting.audioSetting.isDefaultRecordDevice ==
-            !!item.default
-      )
-
-      deviceInfo &&
-        Toast.info(`${t('currentMicDevice')}: ${deviceInfo.deviceName}`, 1000)
-    }
-  }, [selectedMicrophone])
-
-  useEffect(() => {
-    if (!localMember.isAudioConnected) {
-      CommonModal.destroy('speakerVolumeMuteTips')
-      return
-    }
-
-    if (selectedSpeaker) {
-      const deviceInfo = speakers.find(
-        (item) =>
-          item.deviceId == selectedSpeaker &&
-          !!meetingInfo.setting.audioSetting.isDefaultPlayoutDevice ==
-            !!item.default
-      )
-
-      deviceInfo &&
-        Toast.info(
-          `${t('currentSpeakerDevice')}: ${deviceInfo.deviceName}`,
-          1000
-        )
-
-      const mute = neMeeting?.rtcController?.getPlayoutDeviceMute?.()
-      const volume = neMeeting?.rtcController?.getPlayoutDeviceVolume?.()
-      const settingVolume = meetingInfo.setting.audioSetting.playouOutputtVolume
-
-      if (mute || volume === 0 || settingVolume === 0) {
-        CommonModal.warning({
-          key: 'speakerVolumeMuteTips',
-          title: t('commonTitle'),
-          content: t('speakerVolumeMuteTips'),
-        })
-      }
-    }
-  }, [selectedSpeaker, localMember.isAudioConnected])
-
-  useEffect(() => {
     if (isElectronSharingScreen) {
       window.ipcRenderer?.send(IPCEvent.sharingScreen, {
         method: 'controlBarVisibleChangeByMouse',
@@ -3325,44 +4046,31 @@ const ControlBar: React.FC<ControlBarProps> = ({
 
   useEffect(() => {
     if (isElectronSharingScreen) {
-      const dom = document.querySelector(
-        '.nemeeting-sharing-screen .nemeeting-drawer-content .control-bar-button-list'
+      const doms = document.querySelectorAll(
+        '.nemeeting-sharing-screen .nemeeting-drawer-content .control-bar-button-list .control-bar-button-item-box'
       )
 
-      const resizeWidth = debounce(() => {
-        {
-          let width = 0
-          const children = Array.from(dom?.children ?? [])
+      let width = 340
 
-          children.forEach((item) => {
-            width += item.clientWidth
-          })
-
-          width += 50
-
-          if (isElectronSharingScreenToolsShowRef.current) {
-            window.ipcRenderer?.send(IPCEvent.sharingScreen, {
-              method: 'controlBarVisibleChangeByMouse',
-              data: {
-                open: isElectronSharingScreenToolsShowRef.current,
-                width: width,
-              },
-            })
-          }
-        }
-      }, 100)
-      const observer = new ResizeObserver(() => {
-        resizeWidth()
-      })
-
-      dom && observer.observe(dom)
-      return () => {
-        dom && observer.unobserve(dom)
-        observer.disconnect()
+      if (i18n.language === 'en-US') {
+        width = 400
+      } else if (i18n.language === 'ja-JP') {
+        width = 420
       }
-    }
-  }, [isElectronSharingScreen])
 
+      width += doms.length * 70
+
+      window.ipcRenderer?.send(IPCEvent.sharingScreen, {
+        method: 'controlBarVisibleChangeByMouse',
+        data: {
+          open: isElectronSharingScreenToolsShowRef.current,
+          width: width,
+        },
+      })
+    }
+  }, [isElectronSharingScreen, isHostOrCoHost, i18n.language, recordBtn.hidden])
+
+  //controlBar在屏幕共享场下，需要调整高度
   useEffect(() => {
     if (isElectronSharingScreen) {
       if (
@@ -3370,7 +4078,8 @@ const ControlBar: React.FC<ControlBarProps> = ({
         audioDeviceListOpen ||
         securityPopoverOpen ||
         moreBtnOpen ||
-        screenSharingPopoverOpen
+        screenSharingPopoverOpen ||
+        recordControlPopoverOpen
       ) {
         window.ipcRenderer?.send(IPCEvent.sharingScreen, {
           method: 'openDeviceList',
@@ -3386,6 +4095,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
     audioDeviceListOpen,
     screenSharingPopoverOpen,
     securityPopoverOpen,
+    recordControlPopoverOpen,
     moreBtnOpen,
     isElectronSharingScreen,
   ])
@@ -3420,12 +4130,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
         })
       }
     }
-  }, [
-    isElectronSharingScreen,
-    isHostOrCoHost,
-    handUpCount,
-    controlBarVisibleByMouse,
-  ])
+  }, [isElectronSharingScreen, isHostOrCoHost, handUpCount])
 
   useEffect(() => {
     if (meetingInfo.detectMutedMic !== false) {
@@ -3547,13 +4252,27 @@ const ControlBar: React.FC<ControlBarProps> = ({
 
   const showRecordUI = useMemo(() => {
     const cloudRecord = meetingInfo.cloudRecordState
-
+    if (cloudRecord === RecordState.Recording) {
+      whiteBoardStartPushStream()
+    } else {
+      whiteBoardStopPushStream()
+    }
     return (
       (cloudRecord === RecordState.Recording ||
         cloudRecord === RecordState.Starting) &&
       showCloudRecordingUI
     )
   }, [meetingInfo.cloudRecordState, showCloudRecordingUI])
+
+  const showLocalRecordUI = useMemo(() => {
+    const localRecord = meetingInfo.localRecordState
+
+    return (
+      (localRecord === LocalRecordState.Recording ||
+        localRecord === LocalRecordState.Starting) &&
+      showLocalRecordingUI
+    )
+  }, [meetingInfo.localRecordState, showLocalRecordingUI])
 
   const rootStyle = useMemo(() => {
     return { width: '100%' }
@@ -3639,7 +4358,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
           }
         }
 
-        if (!nomoreParticipantUpperLimitTipRef.current) {
+        if (!noMoreParticipantUpperLimitTipRef.current) {
           CommonModal.warning({
             key: 'participantUpperLimitReleaseSeatsTip',
             title: t('commonTitle'),
@@ -3650,7 +4369,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
                   <Checkbox
                     style={{ marginTop: '10px' }}
                     onChange={(e) => {
-                      nomoreParticipantUpperLimitTipRef.current =
+                      noMoreParticipantUpperLimitTipRef.current =
                         e.target.checked
                     }}
                   >
@@ -3733,7 +4452,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
           <div className="control-bar-rooms-icon" onClick={handleVideo}>
             {localMember.isVideoOn ? (
               <svg className={classNames('icon iconfont')} aria-hidden="true">
-                <use xlinkHref="#iconyx-tv-video-onx"></use>
+                <use xlinkHref="#iconguanbishexiangtou-mianxing"></use>
               </svg>
             ) : (
               <img className="icon-image" src={MuteVideoIcon} />
@@ -3747,12 +4466,19 @@ const ControlBar: React.FC<ControlBarProps> = ({
           </div>
         </div>
       ) : (
-        <div className="control-bar-button-list">
+        <div
+          className={classNames('control-bar-button-list', {
+            ['screen-sharing-small-bar']:
+              !isElectronSharingScreenToolsShow && isElectronSharingScreen,
+          })}
+        >
           {isElectronSharingScreen && (
             <div
               className={classNames('control-bar-meeting-info', {
-                ['control-bar-meeting-info-small']: !isElectronSharingScreenToolsShow,
-                ['control-bar-meeting-info-border']: isElectronSharingScreenToolsShow,
+                ['control-bar-meeting-info-small']:
+                  !isElectronSharingScreenToolsShow,
+                ['control-bar-meeting-info-border']:
+                  isElectronSharingScreenToolsShow,
               })}
             >
               {isElectronSharingScreenToolsShow ? (
@@ -3770,7 +4496,20 @@ const ControlBar: React.FC<ControlBarProps> = ({
                         <use xlinkHref="#iconyunluzhi"></use>
                       </svg>
                       <span className="sharing-screen-record-title">
-                        {meetingInfo.cloudRecordState === RecordState.Recording
+                        {meetingInfoRef.current.cloudRecordState === RecordState.Recording
+                          ? t('recording')
+                          : t('startingRecording')}
+                      </span>
+                    </div>
+                  )}
+                  {showLocalRecordUI && (
+                    <div className="sharing-screen-record">
+                      <svg className="icon iconfont" aria-hidden="true">
+                        <use xlinkHref="#iconbendiluzhi1"></use>
+                      </svg>
+                      <span className="sharing-screen-record-title">
+                        {meetingInfo.localRecordState ===
+                        LocalRecordState.Recording
                           ? t('recording')
                           : t('startingRecording')}
                       </span>
@@ -3788,8 +4527,7 @@ const ControlBar: React.FC<ControlBarProps> = ({
               )}
             </div>
           )}
-          {(isElectronSharingScreen && !isElectronSharingScreenToolsShow) ||
-          (meetingInfo.endMeetingAction === 1 && isHost) ? null : (
+          {meetingInfo.endMeetingAction === 1 && isHost ? null : (
             <>
               {isObserver
                 ? null
@@ -3797,7 +4535,11 @@ const ControlBar: React.FC<ControlBarProps> = ({
                     const content = (
                       <>
                         <div
-                          className="control-bar-button-item"
+                          className={classNames('control-bar-button-item', {
+                            'control-bar-button-item-display-none':
+                              isElectronSharingScreen &&
+                              !isElectronSharingScreenToolsShow,
+                          })}
                           onClick={button.onClick}
                         >
                           {button.icon}
@@ -3824,6 +4566,9 @@ const ControlBar: React.FC<ControlBarProps> = ({
                         className={classNames(
                           'control-bar-button-item-box control-bar-button-item-box-zh',
                           {
+                            'control-bar-button-item-display-none':
+                              isElectronSharingScreen &&
+                              !isElectronSharingScreenToolsShow,
                             'control-bar-button-item-box-zh':
                               i18n.language === 'zh-CN',
                             'control-bar-button-item-box-audio':
@@ -3850,8 +4595,69 @@ const ControlBar: React.FC<ControlBarProps> = ({
                     )
                   })}
               {isElectronSharingScreen ? (
-                <div className="control-bar-stop-sharing-button">
-                  <span onClick={shareScreen}>{t('screenShareStop')}</span>
+                <div
+                  className={classNames('control-bar-stop-sharing-button', {
+                    'control-bar-button-item-display-none':
+                      isElectronSharingScreen &&
+                      !isElectronSharingScreenToolsShow,
+                  })}
+                >
+                  <span onClick={ async () => {
+                    const isClearAvailble =  await isClearShareScreenAndAnnotationAvailble()
+                    if (isClearAvailble) {
+                      // 当存在批注时，停止屏幕共享需要增加二次确认弹框，用于提示是否保存批注内容
+                      // v4.11.0版本支持，需求稿:https://docs.popo.netease.com/lingxi/61ace73d775b42fdac74727bc7e5c381
+                      closeScreenShareModal?.destroy()
+                      closeScreenShareModal = null
+                      closeScreenShareModal = CommonModal.confirm({
+                        title: '',
+                        content: t('screenShareCloseModalContent'),
+                        focusTriggerAfterClose: false,
+                        transitionName: '',
+                        mask: false,
+                        afterClose: () => {
+                          closeScreenShareModal = null
+                        },
+                        width: 400,
+                        wrapClassName: 'nemeeting-leave-or-end-meeting-modal',
+                        footer: (
+                          <div className="nemeeting-modal-confirm-btns">
+                            <Button
+                              danger
+                              onClick={() =>{
+                                closeScreenShareModal.destroy()
+                                closeScreenShareModal = null
+                                shareScreen()
+                              }}
+                            >
+                              {t('screenShareCloseModalExitButtonText')}
+                            </Button>
+                            <Button type="primary"
+                              onClick={ () => {
+                                console.warn('点击保存批注')
+                                closeScreenShareModal.destroy()
+                                closeScreenShareModal = null
+                                handleSaveShareScreenAndAnnotationPhoto().then((data)=>{
+                                  console.log('点击保存批注完成, data: ', data)
+                                  shareScreen()
+                                }).catch (error => {
+                                  console.log('点击保存批注完成, error: ', error)
+                                  if (error.result == 'failed') {
+                                    Toast.fail(error.reason)
+                                  }
+                                  shareScreen()
+                                })
+                              }}
+                            >
+                              {t('screenShareCloseModalSaveButtonText')}
+                            </Button>
+                          </div>
+                        ),
+                      })
+                    } else {
+                      shareScreen()
+                    }
+                  }}>{t('screenShareStop')}</span>
                   <Popover
                     destroyTooltipOnHide
                     getTooltipContainer={(node) => node}
@@ -3900,7 +4706,8 @@ const ControlBar: React.FC<ControlBarProps> = ({
                             dispatch?.({
                               type: ActionType.UPDATE_MEETING_INFO,
                               data: {
-                                startSystemAudioLoopbackCapture: !meetingInfo.startSystemAudioLoopbackCapture,
+                                startSystemAudioLoopbackCapture:
+                                  !meetingInfo.startSystemAudioLoopbackCapture,
                               },
                             })
                           }}

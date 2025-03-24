@@ -24,7 +24,7 @@ const InvitePage: React.FC = () => {
   }, [t]);
 
   return (
-    <div className="invite-page">
+    <div className="invite-page nemeeting-invite-page">
       {neMeeting && (
         <InviteContent
           meetingInfo={meetingInfo}

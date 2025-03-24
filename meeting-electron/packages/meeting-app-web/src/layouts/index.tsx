@@ -25,6 +25,7 @@ import '@meeting-module/locales/i18n';
 import globalErrorCatch from '@meeting-module/utils/globalErrorCatch';
 import { getLocalStorageSetting } from 'nemeeting-web-sdk';
 import { MeetingSetting } from '@meeting-module/kit';
+import { ChatRoomContextProvider } from '@meeting-module/hooks/useChatRoom';
 
 const Layout: React.FC = (props) => {
   const { i18n } = useTranslation();
@@ -120,36 +121,36 @@ const Layout: React.FC = (props) => {
       }
       theme={{ hashed: false }}
     >
-      {windowOpen && (
-        <GlobalContext.Provider
+      <GlobalContext.Provider
+        value={{
+          neMeeting,
+          eventEmitter,
+          globalConfig,
+          interpretationSetting,
+          dispatch: globalDispatch,
+        }}
+      >
+        <MeetingInfoContext.Provider
           value={{
-            neMeeting,
-            eventEmitter,
-            globalConfig,
-            interpretationSetting,
-            dispatch: globalDispatch,
+            meetingInfo,
+            memberList,
+            inInvitingMemberList,
+            dispatch: meetingInfoDispatch,
           }}
         >
-          <MeetingInfoContext.Provider
+          <WaitingRoomContext.Provider
             value={{
-              meetingInfo,
-              memberList,
-              inInvitingMemberList,
-              dispatch: meetingInfoDispatch,
+              waitingRoomInfo,
+              memberList: waitingRoomMemberList,
+              dispatch: waitingRoomInfoDispatch,
             }}
           >
-            <WaitingRoomContext.Provider
-              value={{
-                waitingRoomInfo,
-                memberList: waitingRoomMemberList,
-                dispatch: waitingRoomInfoDispatch,
-              }}
-            >
-              <>{props.children}</>
-            </WaitingRoomContext.Provider>
-          </MeetingInfoContext.Provider>
-        </GlobalContext.Provider>
-      )}
+            <ChatRoomContextProvider>
+              {windowOpen && props.children}
+            </ChatRoomContextProvider>
+          </WaitingRoomContext.Provider>
+        </MeetingInfoContext.Provider>
+      </GlobalContext.Provider>
     </ConfigProvider>
   );
 };

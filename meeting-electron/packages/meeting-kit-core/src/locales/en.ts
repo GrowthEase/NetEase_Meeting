@@ -34,7 +34,10 @@ export default {
   globalDelete: 'delete',
   globalEdit: 'Edit',
   globalAdd: 'Add',
+  globalPlay: 'play',
+  globalPlayAudio: 'play audio',
   globalGoBack: 'Back',
+  globalClosePage: '关闭页面',
   joinMeeting: 'Join Meeting',
   meetingCopyInviteInfo: 'Copy the invitation ',
   participants: `${attendee}`, // 会议成员列表标题
@@ -190,7 +193,7 @@ export default {
   shareNoPermission: 'Sharing failed, only the host can share',
   localRecordPermission: 'Local Recording Permissions',
   localRecordOnlyHost: 'Only the host can record',
-  localRecordAll: 'Allow all members to record',
+  localRecordAll: 'All participants can record',
   meetingLockMeetingByHost: `Meeting locked, ${attendee} is unable to join ${meeting}`,
   meetingLockMeetingByHostFail: `Meeting failed to be locked`,
   meetingUnLockMeetingByHost: `Meeting is unlocked, ${attendee} is able to join ${meeting}`,
@@ -237,6 +240,7 @@ export default {
   audioAlreadyOpen: 'You are unmuted, No hand up is required',
   whiteBoardInteract: 'Grant the whiteboard permission',
   whiteBoardInteractFail: 'Failed to grant the whiteboard permission',
+  whiteBoardPackUp: 'Hide',
   undoWhiteBoardInteract: 'Revoke the whiteboard permission',
   undoWhiteBoardInteractFail: 'Failed to revoke the whiteboard permission',
   sip: 'SIP Call',
@@ -425,8 +429,16 @@ export default {
     'Unable to use the microphone. It has been detected that you are speaking. If you wish to speak, please click the "Unmute" button and then speak again.',
   networkError: 'Network Error',
   meetingRoom: 'Meeting Room',
+  startLocalRecord: 'Local recording',
+  stopLocalRecord: 'Stop local recording',
   startCloudRecord: 'Cloud recording',
-  stopCloudRecord: 'Stop recording',
+  stopRecord: 'Stop recording',
+
+  isStartLocalRecord: 'Are you sure you want to start a local recording?',
+  startLocalRecordTip:
+    'After the recording starts, all participants will be informed.',
+  endLocalRecording: 'Are you sure you want to end local recording?',
+
   recording: 'Recording',
   isStartCloudRecord: 'Are you sure you want to start a cloud recording?',
   startRecordTip:
@@ -571,6 +583,9 @@ export default {
   meetingUserIsNowTheHost: '{{user}} is the host now.',
   meetingReclaimHostFailed: 'Reclaim Host failed',
 
+  lookAtMe: 'Camera view',
+  lootAtMyself: 'Selfie view',
+
   // 暂停会者活动
   stopMemberActivities: 'Pause participant activities',
   stopMemberActivitiesTitle: 'Pause all participant activities?',
@@ -679,6 +694,12 @@ export default {
   virtualBackgroundError4:
     'The device does not support the use of virtual backgrounds',
   virtualBackgroundError5: 'Failed to turn on virtual background',
+  virtualBackgroundError6: 'Unsupported video format',
+  virtualBackgroundError7: 'File does not exist',
+  virtualBackgroundError8: 'The file size cannot exceed 500MB',
+  virtualBackgroundError9: 'Non-jpg or png file',
+  virtualBackgroundError10: 'Unsupported virtual background types',
+  fileSizeLimit500MB: 'The file size cannot exceed 500MB',
   // 共享
   selectSharedContent: 'Select shared content',
   startShare: 'Start sharing',
@@ -1025,6 +1046,13 @@ export default {
   sipInviteInfo: 'Copy details',
   sipAddressInvite: 'Contacts',
   sipJoinOtherMeetingTip: 'Will leave the current meeting once you accept.',
+  roomSipCallIsInInviting: '该会议室已在呼叫中',
+  roomSipCallIsInBlacklist:'该设备已被标记不允许再次加入，如需邀请，请关闭会议黑名单',
+  roomSipCallIsInMeeting:'会议室呼叫: 该设备已在会议中',
+  roomSipCallrLimit:'已达会议人数上限',
+  roomSipCallrNetworkError:'网络连接失败',
+  roomSipCallrNickNameLimit: '入会名称字符太长，请重新设置',
+
   callStatusWaitingJoin: 'To join',
 
   globalReject: 'Reject',
@@ -1235,6 +1263,23 @@ export default {
   meetingCrossAppJoinTip:
     'The meeting was created by another team/organization and you will join as a guest. Do you want to join?',
 
+  //本地录制
+  syncLocalRecordFileAfterMeetingEnd: 'After the meeting ends, the recording file will be automatically converted to MP4 format',
+  localRecord: 'Local Recording',
+  localRecordPath: 'Save recording files to',
+  remaining: 'Available',
+  openDir: 'Open',
+  resetDefaultDir: 'Restore default',
+  localRecordTipFirst: 'You can also find corresponding meeting records in ',
+  localRecordTipSecond: 'historical meetings',
+  localRecordTipThird: '中，找到对应的会议录制记录',
+  localRecordAudio: 'Also record audio files',
+  localRecordNickName: "Display participants names' in the recording",
+  localRecordTimestamp: 'Add a timestamp to the recording',
+  localRecordTimestampTip: 'Enable this option to embed the date and time of the actual meeting into the videorecording',
+  localRecordScreenShareAndVideo: 'Record video during screen sharing',
+  localRecordScreenShareSideBySideVideo: 'Place video next to the shared screen in the recording',
+
   // 新聊天室
   copy: 'copy',
   recall: 'recall',
@@ -1349,6 +1394,43 @@ export default {
   cloudRecordingUnableToStart: 'Unable to start cloud recording',
   cloudRecordingUnableToStartTips: 'No microphone or video is enabled in the meeting. To start recording, please unmute.',
 
+  localRecordingUnableToStart: 'You have been muted',
+  localRecordingUnableToStartTips: 'Unable to record voice',
+  localRecordingCancelTips: 'Continue without audio',
+
+  localRecordDisConnectAudioTitle: 'You have disconnected the audio',
+  localRecordDisConnectAudioContent: 'To include audio in your recording, click',
+  localRecordDisConnectAudioOkText: 'PC audio',
+  localRecordDeleteDirectoryTitle: 'Delete',
+  localRecordDeleteDirectoryContent: 'You will permanently delete this recording from your computer which cannot be undone',
+  localRecordOpenFileTitle: 'Folder does not exist',
+  localRecordOpenFileContent: 'Check whether the local recording file has been moved, renamed, or deleted',
+  localRecordRemuxTitle: 'Convert meeting recording',
+  localRecordRemuxContent: 'You have a recording that needs to be converted before viewing.',
+  localRecordRemuxOkText: 'Convert done',
+  localRecordStopRemuxTitle: 'Stop converting',
+  localRecordStopRemuxContent: 'If you stop, the conversion file will not be generated, and the original recording file can be viewed at the save address',
+  localRecordStopRemuxCompleted: 'Recording file transcoding is complete',
+
+  startLocalRecordTipByMember:
+  'Some members have enabled local recording of the meeting, and they can share the local recording files with other members.',
+
+
+  localRecordPermissionSetting: 'Local recording Settings',
+  localRecordPermissionForHost: 'Only the host can record',
+  localRecordPermissionForAll: 'All participants can record',
+  localRecordPermissionForSome: 'Allows some participants to record',
+  localRecordPermissionForSomeTip: 'Go to the participant list to record permissions for a single member',
+
+  localRecordPermissionAllow: 'Allow to record',
+  localRecordPermissionNotAllow: 'Do not record',
+
+  localRecordPermissionCancelTip: 'Local recording permission revoked',
+  localRecordPermissionAllowTip: 'The host has allowed you to record',
+  localRecordPermissionNotAllowTip: 'The host has banned you from recording',
+
+
+
   settingShowParticipationTime: 'Show Connected Time',
   settingShowMeetingElapsedTime: 'Meeting duration',
   settingShowParticipationElapsedTime: 'Connected time',
@@ -1358,4 +1440,68 @@ export default {
   enterFullscreenTips: 'Press ESC or click the button in the upper right corner to exit full screen mode',
 
   preMeetingSubject: ' Scheduled meeting',
+
+  deviceTestTitle: 'Device Test',
+  deviceVideoTest: 'Video Test',
+  deviceAudioTest: 'Audio Test',
+  deviceTestVideoTip: 'Can you see the camera image?',
+  deviceTestAudioSpeak: 'Speak into the mic,',
+  deviceTestAudioTip: 'can you hear your own voice?',
+  deviceTestError: 'Device exception',
+  deviceTestNormal: 'Device normal',
+  deviceTestItem: 'Test item',
+  deviceTestResult: 'Result',
+  deviceTestAbnormal: 'Abnormal',
+  deviceTestNoPermission: 'No permission',
+  deviceTestOk: 'Normal',
+  deviceTestAbnormalTip:
+    'The media devices are abnormal, please make sure that mic and camera are allowed to access. You can also close the page and re-enter it',
+  deviceTestCanSee: 'Yes',
+  deviceTestCannotSee: 'No',
+  deviceTestCanHear: 'Yes',
+  deviceTestCannotHear: 'NO',
+  deviceTestConfirmTip:
+    'We suggest that you conduct media devices testing before joining the meeting',
+  deviceTestSkip: 'Skip',
+  deviceTestRightNow: 'Test',
+
+  meetingSetVirtualBackground: 'Virtual background',
+  meetingSetBeauty: 'Set beauty filter',
+  meetingPin: 'Lock view',
+  meetingShowVideoOffAttendees: 'Show non-video participants',
+  meetingShowMyVideo: 'Show self view',
+
+  settingDualMonitors: 'Use dual monitors',
+  settingDualMonitorsTip:
+    "Show participants' videos and screen shared content on separate screens",
+  swapSecondMonitor: 'Switch control screen',
+
+  noSpeakerVolume: 'Not hearing anything?',
+  adjustSpeakerVolume: 'Turn up volume',
+
+  whiteBoardCloseModalContent: 'End whiteboard, do you need to export the current content?',
+  whiteBoardCloseModalSaveButtonText: 'Export',
+  whiteBoardCloseModalNotSaveButtonText: "Don't export",
+  screenShareCloseModalContent: 'Do you need to save the current annotation?',
+  screenShareCloseModalSaveButtonText: 'Save',
+  screenShareCloseModalExitButtonText: 'Direct exit',
+
+  cloudRecordMode: 'Cloud Recording Settings',
+  cloudRecordModeTip: '(For cloud recording that you have enabled, the following modes are used by default)',
+  cloudRecordTheCurrentSpeakerWithSharedScreen: 'Record active speaker with shared screen',
+  cloudRecordGalleryViewWithSharedScreen: 'Record gallery view with shared screen',
+  cloudRecordGalleryViewWithSharedScreenTip: 'Record both gallery view and shared content on the same video',
+  cloudRecordThenCurrentSpeakerGalleryViewAndSharedScreenSeparately:
+    'Record active speaker, gallery view and shared screen separately',
+  cloudRecordSeparateRecordingCurrentSpeaker: 'Active speaker',
+  cloudRecordSeparateRecordingGalleryView: 'Gallery view',
+  cloudRecordSeparateRecordingSharedScreen: 'Shared screen',
+  cloudRecordSeparateAudioFile: 'Record an audio-only file',
+  cloudRecordSelectAtLeastOneCloudRecordingMode: 'Please select at least one cloud recording mode',
+
+  audioHasHowlingTitle: 'Echo detected in the current environment',
+  audioHasHowling: 'To ensure a good meeting call experience, it is recommended that you turn off the microphone and speaker by disconnecting the audio',
+  audioHowlingOk: 'Disconnect audio',
+
+  beOccupied: 'Device is in use',
 }

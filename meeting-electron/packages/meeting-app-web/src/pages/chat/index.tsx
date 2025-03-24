@@ -6,7 +6,6 @@ import { useMeetingInfoContext } from '@meeting-module/store';
 import useWatermark from '@meeting-module/hooks/useWatermark';
 
 import './index.less';
-import { ChatRoomContextProvider } from '@meeting-module/hooks/useChatRoom';
 
 const ChatPage: React.FC = () => {
   useWatermark();
@@ -42,29 +41,27 @@ const ChatPage: React.FC = () => {
 
   return (
     <>
-      <ChatRoomContextProvider>
-        <div className="history-chat-wrapper">
-          <div className="electron-drag-bar">
-            <div className="drag-region" />
-            <span
-              style={{
-                fontWeight: window.systemPlatform === 'win32' ? 'bold' : '500',
-              }}
-              className="chat-history-title"
-            >
-              {preMeeting ? t('chatHistory') : t('chat')}
-            </span>
-            <PCTopButtons minimizable={false} maximizable={false} />
-          </div>
-          {preMeeting ? (
-            meetingId ? (
-              <ChatRoom meetingId={meetingId} />
-            ) : null
-          ) : (
-            <ChatRoom />
-          )}
+      <div className="history-chat-wrapper">
+        <div className="electron-drag-bar">
+          <div className="drag-region" />
+          <span
+            style={{
+              fontWeight: window.systemPlatform === 'win32' ? 'bold' : '500',
+            }}
+            className="chat-history-title"
+          >
+            {preMeeting ? t('chatHistory') : t('chat')}
+          </span>
+          <PCTopButtons minimizable={false} maximizable={false} />
         </div>
-      </ChatRoomContextProvider>
+        {preMeeting ? (
+          meetingId ? (
+            <ChatRoom meetingId={meetingId} />
+          ) : null
+        ) : (
+          <ChatRoom />
+        )}
+      </div>
     </>
   );
 };

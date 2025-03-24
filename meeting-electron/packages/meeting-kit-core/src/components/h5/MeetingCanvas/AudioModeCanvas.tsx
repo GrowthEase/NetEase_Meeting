@@ -28,7 +28,6 @@ const AudioModeCanvas: React.FC<AudioModeCanvasH5Props> = ({
     memberList,
   })
   const onSizeChange = useCallback(() => {
-    console.log('setIsPortrait>>>', screen.orientation.angle === 0)
     setIsPortrait(screen.orientation.angle === 0)
   }, [])
 
@@ -72,7 +71,7 @@ const AudioModeCanvas: React.FC<AudioModeCanvasH5Props> = ({
         spaceBetween={50}
         slidesPerView={1}
         modules={[Pagination]}
-        pagination={true}
+        pagination={{ dynamicBullets: true }}
         className={'meeting-canvas-swiper meeting-audio-mode-canvas-swiper'}
         onActiveIndexChange={(swp) => {
           setActiveIndex(swp.activeIndex)
@@ -89,6 +88,7 @@ const AudioModeCanvas: React.FC<AudioModeCanvasH5Props> = ({
                       {members.map((member) => {
                         return (
                           <VideoCard
+                            isH5={true}
                             isAudioMode={true}
                             showBorder={
                               meetingInfo.focusUuid

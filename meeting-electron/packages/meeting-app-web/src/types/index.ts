@@ -84,6 +84,7 @@ export enum IPCEvent {
   childWindowClosed = 'childWindow:closed',
   getMonitoringInfo = 'getMonitoringInfo',
   getVirtualBackground = 'getVirtualBackground',
+  getConverImage = 'getConverImage',
   getImageBase64 = 'nemeeting-get-image-base64',
   addVirtualBackgroundReply = 'addVirtualBackground-reply',
 

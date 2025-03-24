@@ -68,7 +68,7 @@ const RoomsHeader: React.FC<RoomsHeaderProps> = ({ style }) => {
         )}
         <div className="rooms-header-member">
           <svg className="icon icon-tool iconfont" aria-hidden="true">
-            <use xlinkHref="#iconyx-tv-attendeex"></use>
+            <use xlinkHref="#iconguanlicanhuizhe-mianxing"></use>
           </svg>
           <span className="member-list-count-label">{memberList.length}</span>
         </div>

@@ -75,8 +75,10 @@ interface SettingProps {
     deviceName?: string // 只有electron c++时候需要，web和c++ deviceId不一致 需要通过name来辅助判断
   ) => void
   defaultTab?: SettingTabType
+  defaultSubTab?: string
   open?: boolean
   inMeeting?: boolean
+  onMenuClick?: (key: string) => void
 }
 
 const Setting: React.FC<SettingProps> = ({
@@ -86,6 +88,8 @@ const Setting: React.FC<SettingProps> = ({
   onDeviceChange,
   defaultTab = 'normal',
   inMeeting,
+  defaultSubTab,
+  onMenuClick,
   ...resProps
 }) => {
   const { t, i18n } = useTranslation()
@@ -98,27 +102,20 @@ const Setting: React.FC<SettingProps> = ({
 
   const [setting, setSetting] = useState<MeetingSetting>()
 
-  const [recordSetting, setRecordSetting] = useState<
-    MeetingSetting['recordSetting']
-  >()
-  const [captionSetting, setCaptionSetting] = useState<
-    MeetingSetting['captionSetting']
-  >()
-  const [normalSetting, setNormalSetting] = useState<
-    MeetingSetting['normalSetting']
-  >()
-  const [videoSetting, setVideoSetting] = useState<
-    MeetingSetting['videoSetting']
-  >()
-  const [audioSetting, setAudioSetting] = useState<
-    MeetingSetting['audioSetting']
-  >()
-  const [beautySetting, setBeautySetting] = useState<
-    MeetingSetting['beautySetting']
-  >()
-  const [screenShareSetting, setScreenShareSetting] = useState<
-    MeetingSetting['screenShareSetting']
-  >()
+  const [recordSetting, setRecordSetting] =
+    useState<MeetingSetting['recordSetting']>()
+  const [captionSetting, setCaptionSetting] =
+    useState<MeetingSetting['captionSetting']>()
+  const [normalSetting, setNormalSetting] =
+    useState<MeetingSetting['normalSetting']>()
+  const [videoSetting, setVideoSetting] =
+    useState<MeetingSetting['videoSetting']>()
+  const [audioSetting, setAudioSetting] =
+    useState<MeetingSetting['audioSetting']>()
+  const [beautySetting, setBeautySetting] =
+    useState<MeetingSetting['beautySetting']>()
+  const [screenShareSetting, setScreenShareSetting] =
+    useState<MeetingSetting['screenShareSetting']>()
   const { neMeeting } = useGlobalContext()
 
   const [currenMenuKey, setCurrenMenuKey] = useState<SettingTabType>(defaultTab)
@@ -134,6 +131,7 @@ const Setting: React.FC<SettingProps> = ({
       src: string
       path: string
       isDefault: boolean
+      type: 'image' | 'video'
     }[]
   >([])
   const [preMeetingSetting, setPreMeetingSetting] = useState<MeetingSetting>()
@@ -145,6 +143,10 @@ const Setting: React.FC<SettingProps> = ({
 
   // 当前在哪个播放状态
   const testVideoStateRef = useRef(false)
+
+  const isLinux = useMemo(() => {
+    return window.systemPlatform === 'linux'
+  }, [])
 
   useUpdateEffect(() => {
     if (inMeeting) {
@@ -244,7 +246,7 @@ const Setting: React.FC<SettingProps> = ({
       )
     }
 
-    if (showBeauty) {
+    if (showBeauty && !isLinux) {
       defaultMenus.push(
         getItem(
           <span title={t('beautySettingTitle')}>
@@ -346,10 +348,18 @@ const Setting: React.FC<SettingProps> = ({
       setShowTranscript(false)
     }
 
-    if (appRoomConfig?.record) {
-      setShowRecord(true)
+    if (window.isElectronNative) {
+      if (appRoomConfig?.record || appRoomConfig?.localRecord) {
+        setShowRecord(true)
+      } else {
+        setShowRecord(false)
+      }
     } else {
-      setShowRecord(false)
+      if (appRoomConfig?.record) {
+        setShowRecord(true)
+      } else {
+        setShowRecord(false)
+      }
     }
   }
 
@@ -592,6 +602,10 @@ const Setting: React.FC<SettingProps> = ({
       let _audioSetting = { ..._setting?.audioSetting }
 
       previewController.enumRecordDevices().then(({ data }) => {
+        //console.log('设置页面请求mic设备列表: ', data)
+        data = data.filter(item =>{
+          return !item.deviceName.includes('立体声混音')
+        })
         data = setDefaultDevice(data)
         setRecordDeviceList(data)
         const recordDeviceId = _setting?.audioSetting.recordDeviceId
@@ -783,6 +797,56 @@ const Setting: React.FC<SettingProps> = ({
       })
   }
 
+  //本地录制配置相关配置
+
+  function onLocalRecordAudioChange(value: boolean) {
+    recordSetting &&
+      setRecordSetting({
+        ...recordSetting,
+        localRecordAudio: value,
+      })
+  }
+
+  function onLocalRecordNickNameChange(value: boolean) {
+    recordSetting &&
+      setRecordSetting({
+        ...recordSetting,
+        localRecordNickName: value,
+      })
+  }
+
+  function onLocalRecordTimestampChange(value: boolean) {
+    recordSetting &&
+      setRecordSetting({
+        ...recordSetting,
+        localRecordTimestamp: value,
+      })
+  }
+
+  function onLocalRecordScreenShareAndVideoChange(value: boolean) {
+    recordSetting &&
+      setRecordSetting({
+        ...recordSetting,
+        localRecordScreenShareAndVideo: value,
+      })
+  }
+
+  function onLocalRecordScreenShareSideBySideVideoChange(value: boolean) {
+    recordSetting &&
+      setRecordSetting({
+        ...recordSetting,
+        localRecordScreenShareSideBySideVideo: value,
+      })
+  }
+
+  function onLocalRecordDefaultPathChange(value: string) {
+    recordSetting &&
+      setRecordSetting({
+        ...recordSetting,
+        localRecordDefaultPath: value,
+      })
+  }
+
   function onOpenVideoChange(e: CheckboxChangeEvent) {
     normalSetting &&
       setNormalSetting({
@@ -914,10 +978,10 @@ const Setting: React.FC<SettingProps> = ({
   }
 
   function onHandleMenuClick(e) {
-    console.log(e.key)
     setCurrenMenuKey(e.key)
     const { current } = settingRightRef
 
+    onMenuClick?.(e.key)
     if (!current) {
       return
     }
@@ -976,6 +1040,7 @@ const Setting: React.FC<SettingProps> = ({
     deviceName: string,
     deviceInfo: MeetingDeviceInfo
   ) {
+    console.log('麦克风设备切换：', deviceInfo)
     audioSetting &&
       setAudioSetting({
         ...audioSetting,
@@ -1208,8 +1273,10 @@ const Setting: React.FC<SettingProps> = ({
   }
 
   useEffect(() => {
-    setCurrenMenuKey(defaultTab)
-  }, [resProps.open, defaultTab])
+    if (defaultTab) {
+      setCurrenMenuKey(defaultTab)
+    }
+  }, [resProps.open, defaultTab, defaultSubTab])
 
   useEffect(() => {
     if (resProps.open) {
@@ -1309,6 +1376,7 @@ const Setting: React.FC<SettingProps> = ({
             setting={videoSetting}
             startPreview={startPreview}
             stopPreview={stopPreview}
+            previewController={previewController}
             videoDeviceList={videoDeviceList}
             onDeviceChange={onVideoDeviceChange}
             onResolutionChange={onResolutionChange}
@@ -1368,6 +1436,17 @@ const Setting: React.FC<SettingProps> = ({
             setting={recordSetting}
             onAutoCloudRecordStrategyChange={onAutoCloudRecordStrategyChange}
             onAutoCloudRecordChange={onAutoCloudRecordChange}
+            onLocalRecordAudioChange={onLocalRecordAudioChange}
+            onLocalRecordNickNameChange={onLocalRecordNickNameChange}
+            onLocalRecordTimestampChange={onLocalRecordTimestampChange}
+            onLocalRecordScreenShareAndVideoChange={
+              onLocalRecordScreenShareAndVideoChange
+            }
+            onLocalRecordScreenShareSideBySideVideoChange={
+              onLocalRecordScreenShareSideBySideVideoChange
+            }
+            onLocalRecordDefaultPathChange={onLocalRecordDefaultPathChange}
+            onSettingChange={setRecordSetting}
           />
         )}
         {currenMenuKey === 'screenShare' && (
@@ -1377,37 +1456,43 @@ const Setting: React.FC<SettingProps> = ({
           />
         )}
         {currenMenuKey === 'security' && <SecuritySetting />}
-        {currenMenuKey === 'beauty' && videoSetting && beautySetting && (
-          <BeautySetting
-            inMeeting={inMeeting}
-            eventEmitter={eventEmitter}
-            previewController={previewController}
-            startPreview={startPreview}
-            stopPreview={stopPreview}
-            enableVideoMirroring={videoSetting.enableVideoMirroring}
-            virtualBackgroundList={virtualBackgroundList}
-            getVirtualBackground={getVirtualBackground}
-            virtualBackgroundPath={beautySetting.virtualBackgroundPath}
-            enableVirtualBackgroundForce={
-              beautySetting.enableVirtualBackgroundForce
-            }
-            mirror={videoSetting.enableVideoMirroring}
-            beautyLevel={beautySetting.beautyLevel}
-            onBeautyLevelChange={(level) => {
-              setBeautySetting({
-                ...beautySetting,
-                beautyLevel: level,
-              })
-            }}
-            onVirtualBackgroundChange={(path, force) => {
-              setBeautySetting({
-                ...beautySetting,
-                virtualBackgroundPath: path,
-                enableVirtualBackgroundForce: force,
-              })
-            }}
-          />
-        )}
+        {currenMenuKey === 'beauty' &&
+          videoSetting &&
+          beautySetting &&
+          !isLinux && (
+            <BeautySetting
+              inMeeting={inMeeting}
+              eventEmitter={eventEmitter}
+              previewController={previewController}
+              startPreview={startPreview}
+              stopPreview={stopPreview}
+              defaultTab={defaultSubTab as 'beauty' | 'virtual'}
+              enableVideoMirroring={videoSetting.enableVideoMirroring}
+              virtualBackgroundList={virtualBackgroundList}
+              getVirtualBackground={getVirtualBackground}
+              virtualBackgroundPath={beautySetting.virtualBackgroundPath}
+              enableVirtualBackgroundForce={
+                beautySetting.enableVirtualBackgroundForce
+              }
+              mirror={videoSetting.enableVideoMirroring}
+              beautyLevel={beautySetting.beautyLevel}
+              onBeautyLevelChange={(level) => {
+                setBeautySetting({
+                  ...beautySetting,
+                  beautyLevel: level,
+                })
+              }}
+              onVirtualBackgroundChange={(path, force, type) => {
+                setBeautySetting({
+                  ...beautySetting,
+                  virtualBackgroundPath: path,
+                  enableVirtualBackgroundForce: force,
+                  virtualBackgroundType: type,
+                })
+              }}
+              onEnableVideoMirroringChange={onEnableVideoMirroringChange}
+            />
+          )}
         {currenMenuKey === 'monitoring' && <MonitoringSetting />}
       </div>
     </div>

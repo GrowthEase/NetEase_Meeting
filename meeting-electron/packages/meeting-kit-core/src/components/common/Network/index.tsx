@@ -1,6 +1,13 @@
 import { Popover } from 'antd'
 import { NERoomRtcNetworkQualityInfo, NERoomRtcStats } from 'neroom-types'
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 import { GlobalContext, MeetingInfoContext } from '../../../store'
 import {
@@ -10,7 +17,6 @@ import {
   NEMeetingInfo,
   NEMember,
 } from '../../../types'
-import Toast from '../toast'
 import { SettingTabType } from '../../web/Setting/Setting'
 import './index.less'
 
@@ -111,21 +117,24 @@ const Network: React.FC<{
   onlyIcon?: boolean
   onSettingClick?: (type: SettingTabType) => void
 }> = ({ className, onlyIcon, onSettingClick }) => {
-  const { eventEmitter, online } =
-    useContext<GlobalContextInterface>(GlobalContext)
-  const { t } = useTranslation()
-  const { meetingInfo, memberList } =
-    useContext<MeetingInfoContextInterface>(MeetingInfoContext)
+  const { eventEmitter, online } = useContext<GlobalContextInterface>(
+    GlobalContext
+  )
+  const { meetingInfo, memberList } = useContext<MeetingInfoContextInterface>(
+    MeetingInfoContext
+  )
   const networkQualityTimerRef = useRef<null | ReturnType<typeof setTimeout>>(
     null
   )
   // 下行网络
-  const [networkQualityInfo, setNetworkQualityInfo] =
-    useState<NERoomRtcNetworkQualityInfo>({
-      userUuid: '',
-      downStatus: 0,
-      upStatus: 0,
-    })
+  const [
+    networkQualityInfo,
+    setNetworkQualityInfo,
+  ] = useState<NERoomRtcNetworkQualityInfo>({
+    userUuid: '',
+    downStatus: 0,
+    upStatus: 0,
+  })
   const canShowNetworkToastRef = useRef(true)
   // 下行网络延迟
   const [networkDelay, setNetworkDelay] = useState(0)
@@ -152,52 +161,41 @@ const Network: React.FC<{
   }
 
   useEffect(() => {
-    if (canShowNetworkToastRef.current) {
-      if (
-        networkQualityInfo.downStatus >= 4 ||
-        networkQualityInfo.upStatus >= 4
-      ) {
-        Toast.info(t('networkNotStable'))
-        canShowNetworkToastRef.current = false
-        setTimeout(() => {
-          canShowNetworkToastRef.current = true
-        }, 15000)
-      }
-    }
-  }, [networkQualityInfo.downStatus, networkQualityInfo.upStatus, t])
-  useEffect(() => {
     canShowNetworkToastRef.current = !!online
   }, [online])
-  useEffect(() => {
-    eventEmitter?.on(
-      EventType.NetworkQuality,
-      (data: NERoomRtcNetworkQualityInfo[]) => {
-        if (data) {
-          const localNetwork = data.find((item) => {
-            return item.userUuid === meetingInfo.myUuid
-          })
 
-          if (localNetwork) {
-            // 设置下行网络质量
-            setNetworkQualityInfo(localNetwork)
-          }
+  const networkQualityHandle = useCallback(
+    (data: NERoomRtcNetworkQualityInfo[]) => {
+      if (data) {
+        const localNetwork = data.find((item) => {
+          return item.userUuid === meetingInfo.myUuid
+        })
+
+        if (localNetwork) {
+          // 设置下行网络质量
+          setNetworkQualityInfo(localNetwork)
         }
-
-        if (networkQualityTimerRef.current) {
-          clearTimeout(networkQualityTimerRef.current)
-          networkQualityTimerRef.current = null
-        }
-
-        networkQualityTimerRef.current = setTimeout(() => {
-          // 4表示网络差，5s未收到回调表示断网或者信号差
-          setNetworkQualityInfo({
-            userUuid: '',
-            upStatus: 4,
-            downStatus: 4,
-          })
-        }, 4000)
       }
-    )
+
+      if (networkQualityTimerRef.current) {
+        clearTimeout(networkQualityTimerRef.current)
+        networkQualityTimerRef.current = null
+      }
+
+      networkQualityTimerRef.current = setTimeout(() => {
+        // 4表示网络差，5s未收到回调表示断网或者信号差
+        setNetworkQualityInfo({
+          userUuid: '',
+          upStatus: 4,
+          downStatus: 4,
+        })
+      }, 4000)
+    },
+    [meetingInfo.myUuid]
+  )
+
+  useEffect(() => {
+    eventEmitter?.on(EventType.NetworkQuality, networkQualityHandle)
     eventEmitter?.on(
       EventType.RtcStats,
       (data: NERoomRtcStats & PacketLossRate) => {
@@ -216,9 +214,10 @@ const Network: React.FC<{
       }
     )
     return () => {
-      eventEmitter?.off(EventType.NetworkQuality)
+      eventEmitter?.off(EventType.NetworkQuality, networkQualityHandle)
+      eventEmitter?.off(EventType.RtcStats)
     }
-  }, [eventEmitter, meetingInfo.myUuid])
+  }, [eventEmitter, networkQualityHandle])
 
   const signalColor = useMemo(() => {
     if (

@@ -1,25 +1,84 @@
 import React, { useCallback, useEffect, useRef } from 'react'
 import { useGlobalContext, useMeetingInfoContext } from '../store'
-import { ActionType, RecordState, Role, Toast } from '../kit'
+import {
+  ActionType,
+  getLocalStorageSetting,
+  RecordState,
+  Role,
+  Toast,
+} from '../kit'
 import { useTranslation } from 'react-i18next'
 import { Popover, Checkbox } from 'antd'
 import CommonModal, { ConfirmModal } from '../components/common/CommonModal'
 import useAISummary from './useAISummary'
 
+export function getCloudRecordConfig() {
+  const recordSetting = getLocalStorageSetting().recordSetting
+
+  const config = {
+    rtcRecordType: 100,
+    modeList: [] as Array<{ mode: number }>,
+  }
+
+  if (recordSetting.cloudRecordGalleryViewWithSharedScreen) {
+    config.modeList.push({
+      mode: 1,
+    })
+  }
+
+  if (recordSetting.cloudRecordCurrentSpeakerWithSharedScreen) {
+    config.modeList.push({
+      mode: 2,
+    })
+  }
+
+  if (recordSetting.cloudRecordSeparateRecordingCurrentSpeaker) {
+    config.modeList.push({
+      mode: 3,
+    })
+  }
+
+  if (recordSetting.cloudRecordSeparateRecordingGalleryView) {
+    config.modeList.push({
+      mode: 4,
+    })
+  }
+
+  if (recordSetting.cloudRecordSeparateRecordingSharedScreen) {
+    config.modeList.push({
+      mode: 5,
+    })
+  }
+
+  if (recordSetting.cloudRecordSeparateAudioFile) {
+    config.modeList.push({
+      mode: 6,
+    })
+  }
+
+  if (config.modeList.length === 0) {
+    config.modeList.push({
+      mode: 2,
+    })
+  }
+
+  return config
+}
+
 const useCloudRecord = () => {
   const { t } = useTranslation()
   const { neMeeting, showCloudRecordingUI } = useGlobalContext()
   const { meetingInfo, memberList, dispatch } = useMeetingInfoContext()
-  const {
-    isAISummarySupported,
-    isAISummaryStarted,
-    startAISummary,
-  } = useAISummary()
+  const { isAISummarySupported, isAISummaryStarted, startAISummary } =
+    useAISummary()
 
+  const memberListRef = useRef(memberList)
   const showCloudRecordingUIRef = useRef<boolean>(true)
   const cloudRecordModalRef = useRef<ConfirmModal | null>(null)
 
   const localMember = meetingInfo.localMember
+
+  memberListRef.current = memberList
 
   showCloudRecordingUIRef.current = showCloudRecordingUI !== false
 
@@ -27,9 +86,9 @@ const useCloudRecord = () => {
   const noCloudRecordRemind = useCallback(
     (checkedAISummary) => {
       const noCloudRecord =
-        memberList.findIndex(
+        memberListRef.current.findIndex(
           (item) =>
-            item.isAudioOn ||
+            (item.isAudioOn && item.isAudioConnected) ||
             item.isVideoOn ||
             item.isSharingScreen ||
             item.isSharingSystemAudio
@@ -44,8 +103,10 @@ const useCloudRecord = () => {
         })
         checkedAISummary && startAISummary()
 
+        const config = getCloudRecordConfig()
+
         neMeeting
-          ?.startCloudRecord()
+          ?.startCloudRecord(config)
           .then(() => {
             dispatch?.({
               type: ActionType.UPDATE_MEETING_INFO,
@@ -76,7 +137,7 @@ const useCloudRecord = () => {
               await neMeeting?.reconnectMyAudio()
             }
 
-            await neMeeting?.unmuteLocalAudio()
+            await neMeeting?.unmuteLocalAudio(undefined, true)
             startRecording()
           },
         })
@@ -84,13 +145,23 @@ const useCloudRecord = () => {
         startRecording()
       }
     },
-    [memberList, meetingInfo.localMember.isAudioConnected]
+    [
+      memberList,
+      meetingInfo.localMember.isAudioConnected,
+      meetingInfo.setting.recordSetting,
+    ]
   )
 
   // 重复开启云录制
 
   const handleRecord = useCallback(() => {
     let checkedAISummary = false
+
+    // 临时去除只弹一次弹窗的逻辑，否则会议纪要后面无法打开
+    // if(meetingInfo.isCloudRecordingConfirmed && !meetingInfo.isCloudRecording){
+    //   noCloudRecordRemind(checkedAISummary)
+    //   return
+    // }
 
     cloudRecordModalRef.current = CommonModal.confirm({
       width: 390,
@@ -175,6 +246,12 @@ const useCloudRecord = () => {
               return Promise.reject(e)
             })
         } else {
+          dispatch?.({
+            type: ActionType.UPDATE_MEETING_INFO,
+            data: {
+              isCloudRecordingConfirmed: true,
+            },
+          })
           noCloudRecordRemind(checkedAISummary)
         }
 

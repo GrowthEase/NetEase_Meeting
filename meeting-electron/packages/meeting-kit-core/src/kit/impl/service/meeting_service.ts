@@ -44,13 +44,13 @@ const MODULE_NAME = 'NEMeetingService'
 const LISTENER_CHANNEL = `NEMeetingKitListener::${MODULE_NAME}`
 
 export default class NEMeetingService implements NEMeetingServiceInterface {
+  public _meetingStatusListeners: NEMeetingStatusListener[] = []
   private _neMeeting: MeetingService
   private _meetingKit: NEMeetingKit
   private _meetingStatus: NEMeetingStatus = NEMeetingStatus.MEETING_STATUS_IDLE
   private _listeners: NEMeetingServiceListener[] = []
   private _menuItemClickListeners: NEMeetingOnInjectedMenuItemClickListener[] =
     []
-  private _meetingStatusListeners: NEMeetingStatusListener[] = []
 
   constructor(params: { neMeeting: MeetingService; meetingKit: NEMeetingKit }) {
     this._neMeeting = params.neMeeting
@@ -89,6 +89,11 @@ export default class NEMeetingService implements NEMeetingServiceInterface {
     this._meetingKit.on(
       UserEventType.onMeetingStatusChanged,
       (status: NEMeetingStatus) => {
+        console.warn(
+          'onMeetingStatusChanged',
+          status,
+          this._meetingStatusListeners
+        )
         this._meetingStatus = status
         this._meetingStatusListeners?.forEach((listener) => {
           listener?.onMeetingStatusChanged?.({ status })
@@ -161,6 +166,14 @@ export default class NEMeetingService implements NEMeetingServiceInterface {
       throw FailureBodySync(undefined, error.message)
     }
 
+    if (opts?.fullToolbarMenuItems) {
+      this._checkDuplicateItemId(opts.fullToolbarMenuItems)
+    }
+
+    if (opts?.fullMoreMenuItems) {
+      this._checkDuplicateItemId(opts.fullMoreMenuItems)
+    }
+
     const options: CreateOptions = this._createMeetingOptionsToCreateOptions(
       param,
       opts
@@ -169,7 +182,11 @@ export default class NEMeetingService implements NEMeetingServiceInterface {
     return new Promise((resolve, reject) => {
       this._meetingKit.create(options, (e) => {
         if (e) {
-          reject(e)
+          if (typeof e.code === 'number') {
+            reject(e)
+          } else {
+            reject(FailureBodySync(e.code, e.message))
+          }
         } else {
           resolve(SuccessBody(void 0))
 
@@ -201,6 +218,14 @@ export default class NEMeetingService implements NEMeetingServiceInterface {
       const error = errorUnkown as ZodError
 
       throw FailureBodySync(undefined, error.message)
+    }
+
+    if (opts?.fullToolbarMenuItems) {
+      this._checkDuplicateItemId(opts.fullToolbarMenuItems)
+    }
+
+    if (opts?.fullMoreMenuItems) {
+      this._checkDuplicateItemId(opts.fullMoreMenuItems)
     }
 
     const options = this._joinMeetingOptionsToJoinOptions(param, opts)
@@ -239,6 +264,14 @@ export default class NEMeetingService implements NEMeetingServiceInterface {
       const error = errorUnkown as ZodError
 
       throw FailureBodySync(undefined, error.message)
+    }
+
+    if (opts?.fullToolbarMenuItems) {
+      this._checkDuplicateItemId(opts.fullToolbarMenuItems)
+    }
+
+    if (opts?.fullMoreMenuItems) {
+      this._checkDuplicateItemId(opts.fullMoreMenuItems)
     }
 
     const options = this._joinMeetingOptionsToJoinOptions(param, opts)
@@ -355,7 +388,11 @@ export default class NEMeetingService implements NEMeetingServiceInterface {
   addMeetingStatusListener(listener: NEMeetingStatusListener): void {
     this._meetingStatusListeners.push(listener)
   }
-  removeMeetingStatusListener(listener: NEMeetingStatusListener): void {
+  removeMeetingStatusListener(listener?: NEMeetingStatusListener): void {
+    if (!listener) {
+      this._meetingStatusListeners = []
+    }
+
     this._meetingStatusListeners = this._meetingStatusListeners.filter(
       (l) => l !== listener
     )
@@ -442,7 +479,6 @@ export default class NEMeetingService implements NEMeetingServiceInterface {
     meetingList = meetingList.slice(0, 10)
 
     const obj = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) ?? '{}')
-
     const userInfo = getLocalUserInfo()
 
     if (userInfo) {
@@ -591,7 +627,9 @@ export default class NEMeetingService implements NEMeetingServiceInterface {
       joinTimeout: z.number().optional(),
       // NEMeetingChatroomConfig
       showCloudRecordMenuItem: z.boolean().optional(),
+      showLocalRecordMenuItem: z.boolean().optional(),
       showCloudRecordingUI: z.boolean().optional(),
+      showLocalRecordingUI: z.boolean().optional(),
       noNotifyCenter: z.boolean().optional(),
       noWebApps: z.boolean().optional(),
     })
@@ -693,7 +731,9 @@ export default class NEMeetingService implements NEMeetingServiceInterface {
       meetingIdDisplayOption: opts?.meetingIdDisplayOption,
       encryptionConfig: encryptionConfig,
       showCloudRecordMenuItem: opts?.showCloudRecordMenuItem,
+      showLocalRecordMenuItem: opts?.showLocalRecordMenuItem,
       showCloudRecordingUI: opts?.showCloudRecordingUI,
+      showLocalRecordingUI: opts?.showLocalRecordingUI,
       avatar: param.avatar,
       watermarkConfig: param?.watermarkConfig,
       noNotifyCenter: opts?.noNotifyCenter,
@@ -705,6 +745,34 @@ export default class NEMeetingService implements NEMeetingServiceInterface {
     }
 
     return options
+  }
+
+  private _checkDuplicateItemId(items: Array<{ itemId: number }>): void {
+    const duplicateItemId = this._findDuplicateItemId(items)
+
+    if (duplicateItemId) {
+      throw FailureBodySync(
+        undefined,
+        `不允许添加相同 Id 的菜单项，相同 Id 的菜单项为: ${duplicateItemId}`,
+        -5
+      )
+    }
+  }
+
+  private _findDuplicateItemId(
+    items: Array<{ itemId: number }>
+  ): number | null {
+    const itemIds = new Set<number>()
+
+    for (const item of items) {
+      if (itemIds.has(item.itemId)) {
+        return item.itemId // 返回找到的重复 itemId
+      }
+
+      itemIds.add(item.itemId)
+    }
+
+    return null // 没有找到重复，返回空
   }
 
   private _isNESingleStateMenuItem(

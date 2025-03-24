@@ -11,3 +11,14 @@ window.platform = process.platform
 window.systemPlatform = process.platform
 window.isWins32 = process.platform === 'win32'
 window.isChildWindow = true
+window.electronPopover = {
+  show: (items) => {
+    ipcRenderer.send('showPopover', items)
+  },
+  hide: () => {
+    ipcRenderer.send('hidePopover')
+  },
+  update: (items) => {
+    ipcRenderer.send('updatePopover', items)
+  },
+}

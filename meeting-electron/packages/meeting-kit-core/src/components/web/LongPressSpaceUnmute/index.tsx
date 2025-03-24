@@ -238,7 +238,7 @@ const LongPressSpaceUnmute: React.FC = () => {
     <div>
       {longPressSpaceAudio ? (
         <div className="long-press-space-box">
-          <AudioIcon memberId={localMember.uuid} />
+          <AudioIcon className="mic-img" memberId={localMember.uuid} />
           {/* <img className="mic-img" src={micImage} alt="" /> */}
           <span>{t('unmute')}</span>
         </div>

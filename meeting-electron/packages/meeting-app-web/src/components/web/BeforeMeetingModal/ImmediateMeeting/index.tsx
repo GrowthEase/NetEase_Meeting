@@ -246,8 +246,7 @@ const ImmediateMeeting: React.FC<ImmediateMeetingProps> = ({
               <div
                 className="meeting-num-title"
                 style={{
-                  fontWeight:
-                    window.systemPlatform === 'win32' ? 'bold' : '500',
+                  fontWeight: 'bold',
                 }}
               >
                 {i18n.usePersonalMeetingID}
@@ -278,8 +277,7 @@ const ImmediateMeeting: React.FC<ImmediateMeetingProps> = ({
               <div
                 className="meeting-password-title"
                 style={{
-                  fontWeight:
-                    window.systemPlatform === 'win32' ? 'bold' : '500',
+                  fontWeight: 'bold',
                 }}
               >
                 {i18n.meetingPassword}

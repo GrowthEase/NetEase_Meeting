@@ -103,21 +103,23 @@ export const GlobalContextProvider: React.FC<GlobalProviderProps> = (props) => {
 export const useGlobalContext = (): GlobalContextType =>
   React.useContext<GlobalContextType>(GlobalContext)
 
-export const MeetingInfoContext =
-  React.createContext<MeetingInfoContextInterface>({
+export const MeetingInfoContext = React.createContext<MeetingInfoContextInterface>(
+  {
     meetingInfo: createMeetingInfoFactory(),
     memberList: [],
     inInvitingMemberList: [],
-  })
-export const WaitingRoomContext =
-  React.createContext<WaitingRoomContextInterface>({
+  }
+)
+export const WaitingRoomContext = React.createContext<WaitingRoomContextInterface>(
+  {
     waitingRoomInfo: {
       memberCount: 0,
       isEnabledOnEntry: false,
       unReadMsgCount: 0,
     },
     memberList: [],
-  })
+  }
+)
 export const useWaitingRoomContext = (): WaitingRoomContextInterface =>
   React.useContext<WaitingRoomContextInterface>(WaitingRoomContext)
 
@@ -130,8 +132,9 @@ const waitingRoomReducer = (
 ): WaitingRoomContextInterface => {
   switch (action.type) {
     case ActionType.WAITING_ROOM_ADD_MEMBER: {
-      const { member } = (action as Action<ActionType.WAITING_ROOM_ADD_MEMBER>)
-        .data
+      const {
+        member,
+      } = (action as Action<ActionType.WAITING_ROOM_ADD_MEMBER>).data
       const { memberList } = state
       const index = memberList.findIndex((item) => item.uuid === member.uuid)
 
@@ -145,8 +148,9 @@ const waitingRoomReducer = (
     }
 
     case ActionType.WAITING_ROOM_REMOVE_MEMBER: {
-      const { uuid } = (action as Action<ActionType.WAITING_ROOM_REMOVE_MEMBER>)
-        .data
+      const {
+        uuid,
+      } = (action as Action<ActionType.WAITING_ROOM_REMOVE_MEMBER>).data
       const { memberList } = state
       const index = memberList.findIndex((member) => member.uuid === uuid)
 
@@ -155,9 +159,8 @@ const waitingRoomReducer = (
     }
 
     case ActionType.WAITING_ROOM_UPDATE_MEMBER: {
-      const memberInfo = (
-        action as Action<ActionType.WAITING_ROOM_UPDATE_MEMBER>
-      ).data
+      const memberInfo = (action as Action<ActionType.WAITING_ROOM_UPDATE_MEMBER>)
+        .data
       const { memberList } = state
       const index = memberList.findIndex(
         (item) => item.uuid === memberInfo.uuid
@@ -172,26 +175,27 @@ const waitingRoomReducer = (
 
     case ActionType.WAITING_ROOM_UPDATE_INFO: {
       let { waitingRoomInfo } = state
-      const { info } = (action as Action<ActionType.WAITING_ROOM_UPDATE_INFO>)
-        .data
+      const {
+        info,
+      } = (action as Action<ActionType.WAITING_ROOM_UPDATE_INFO>).data
 
       waitingRoomInfo = { ...waitingRoomInfo, ...info }
       return { ...state, waitingRoomInfo }
     }
 
     case ActionType.WAITING_ROOM_SET_MEMBER_LIST: {
-      const { memberList } = (
-        action as Action<ActionType.WAITING_ROOM_SET_MEMBER_LIST>
-      ).data
+      const {
+        memberList,
+      } = (action as Action<ActionType.WAITING_ROOM_SET_MEMBER_LIST>).data
 
       return { ...state, memberList: [...memberList] }
     }
 
     case ActionType.WAITING_ROOM_ADD_MEMBER_LIST: {
       const { memberList: oldMemberList } = state
-      const { memberList } = (
-        action as Action<ActionType.WAITING_ROOM_SET_MEMBER_LIST>
-      ).data
+      const {
+        memberList,
+      } = (action as Action<ActionType.WAITING_ROOM_SET_MEMBER_LIST>).data
 
       console.log('WAITING_ROOM_ADD_MEMBER_LIST', memberList)
       return { ...state, memberList: [...oldMemberList, ...memberList] }
@@ -258,6 +262,23 @@ const meetingInfoReducer = (
       return { ...state, memberList: [...memberList], meetingInfo }
     }
 
+    case ActionType.UPDATE_MEMBERS: {
+      const { members } = (action as Action<ActionType.UPDATE_MEMBERS>).data
+      const { memberList } = state
+
+      members.forEach((member) => {
+        const index = memberList.findIndex((item) => item.uuid === member.uuid)
+
+        if (index > -1) {
+          memberList[index] = { ...memberList[index], ...member }
+        }
+      })
+      return {
+        ...state,
+        memberList: [...memberList],
+      }
+    }
+
     case ActionType.ADD_MEMBER: {
       const { member } = (action as Action<ActionType.ADD_MEMBER>).data
       const { memberList, inInvitingMemberList } = state
@@ -317,15 +338,21 @@ const meetingInfoReducer = (
     }
 
     case ActionType.UPDATE_MEMBER_PROPERTIES: {
-      const { uuid, properties } = (
-        action as Action<ActionType.DELETE_MEMBER_PROPERTIES>
-      ).data
+      const {
+        uuid,
+        properties,
+      } = (action as Action<ActionType.UPDATE_MEMBER_PROPERTIES>).data
       const { memberList, meetingInfo } = state
       const index = memberList.findIndex((item) => item.uuid === uuid)
 
       if (index > -1) {
         const member = memberList[index]
-
+        if(member && properties?.localRecord){
+          member.isLocalRecording = properties.localRecord?.value == '1'
+        }
+        if(member && properties?.localRecordAvailable){
+          member.localRecordAvailable = properties.localRecordAvailable?.value == '1'
+        }
         member.properties = {
           ...member.properties,
           ...properties,
@@ -345,9 +372,10 @@ const meetingInfoReducer = (
     }
 
     case ActionType.DELETE_MEMBER_PROPERTIES: {
-      const { uuid, properties } = (
-        action as Action<ActionType.DELETE_MEMBER_PROPERTIES>
-      ).data
+      const {
+        uuid,
+        properties,
+      } = (action as Action<ActionType.DELETE_MEMBER_PROPERTIES>).data
       const { memberList, meetingInfo } = state
       const index = memberList.findIndex((item) => item.uuid === uuid)
 
@@ -402,8 +430,8 @@ const meetingInfoReducer = (
       if (partMeetingInfo.interpretation) {
         const localMember = meetingInfo.localMember
 
-        meetingInfo.isInterpreter =
-          !!partMeetingInfo.interpretation.interpreters?.[localMember.uuid]
+        meetingInfo.isInterpreter = !!partMeetingInfo.interpretation
+          .interpreters?.[localMember.uuid]
       }
 
       // 如果有取消共享的需要重新排序下列表

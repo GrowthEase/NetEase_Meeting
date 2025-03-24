@@ -350,8 +350,14 @@ export type NEMeetingOptions = {
   /** 菜单按钮是否显示"云录制" */
   showCloudRecordMenuItem?: boolean
 
+  /** 菜单按钮是否显示"本地录制" */
+  showLocalRecordMenuItem?: boolean
+
   /** 会议中是否展示云录制中UI */
   showCloudRecordingUI?: boolean
+
+  /** 会议中是否展示本地录制中UI */
+  showLocalRecordingUI?: boolean
 
   /** 是否允许音频设备切换 */
   // public boolean enableAudioDeviceSwitch = true;
@@ -378,6 +384,122 @@ export type NEMeetingOptions = {
 
   /** 配置成员离开会议是否需要弹窗确认 */
   enableLeaveTheMeetingRequiresConfirmation?: boolean
+
+  /**
+   * 入会之前是否进行设备检测，默认为false 主要用于h5端检测
+   */
+  showDeviceTest?: boolean
+
+  /**
+   * 是否开启共享并排模式
+   */
+  enableSideBySideMode?: boolean
+  /**
+   * 是否开启举手功能
+   */
+  showHandsUp?: boolean
+  /**
+   * 是否开启表情响应
+   */
+  showEmojiResponse?: boolean
+
+  /**
+   * 配置会议中是否显示"会议信息"查看入口，默认显示
+   */
+  showMeetingInfo?: boolean
+
+  /** 白板配置 */
+  whiteBoradAddDocConfig?: AddDocConfig[]
+
+  /**
+   * 是否开启白板的云录制
+   */
+  whiteboardCloudRecord?: boolean
+
+  /**
+   * 是否开启白板容器的宽高比
+   */
+  whiteBoradContainerAspectRatio?: AspectRatio
+}
+
+export interface StaticDocParam {
+  /**
+   * 图片高度
+   */
+  height: number
+  /**
+   * 图片宽度
+   */
+  width: number
+  /**
+   * index偏移量
+   */
+  offset: number
+  /**
+   * 文档页数
+   */
+  pageCount: number
+  /**
+   * 图片url的模板。 格式为: "https://??/?{index}.jpg", "https://??/?{index}.png" 如果offset为1，则第5页的图片为: "https://??/?6.jpg", 或者"https://??/?6.png"
+   */
+  template: string
+}
+export interface DynamicDocParam {
+  /**
+   * 图片高度
+   */
+  height: number
+  /**
+   * 图片宽度
+   */
+  width: number
+  /**
+   * 文档页数
+   */
+  pageCount: number
+  /**
+   * 动态文档URL
+   */
+  url: string
+}
+export interface MediaDocParam {
+  /**
+   * 动态文档URL
+   */
+  url: string
+  object: string
+  bucket: string
+}
+
+export interface UrlDocParam {
+  /**
+   * URL页面资源参数
+   */
+  url: string
+  trans: string // 填写'url'即可
+}
+
+export interface AddDocConfig  {
+  /**
+   * 文档的唯一id
+   */
+  docId: string;
+  /**
+   * 文档类型，会影响弹窗中文档的图标"pdf" | "ppt" | "doc" | "mp4"
+   */
+  fileType: string;
+  /**
+   * 文档名称，会影响弹窗中文档名称
+   */
+  name: string;
+  /**
+   * 是否在文档弹窗中显示删除按钮
+   */
+  showDelete: boolean;
+  /**
+   * 文档具体的数据参数
+   */
+  params: StaticDocParam | DynamicDocParam | MediaDocParam | UrlDocParam;
 }
 
 /** 自定义菜单按钮点击事件监听器，通过{@link NEMeetingService#setOnInjectedMenuItemClickListener}方法设置监听器 */
@@ -410,6 +532,17 @@ export enum MenuClickType {
   Stateful,
 }
 
+export enum AspectRatio {
+  /**
+   * 自适应
+   */
+  adaption = 0,
+  /**
+   * 16:9
+   */
+  aspectRatio_16_9 = 1,
+}
+
 /**
  * 提供创建和加入会议时必要的基本配置信息和选项开关，通过这些配置和选项可控制入会时的行为，如音视频的开启状态等
  */
@@ -423,6 +556,17 @@ export type NEStartMeetingOptions = NEMeetingOptions & {
 
   /** 配置是否允许访客入会 默认为false*/
   enableGuestJoin?: boolean
+
+  /** 白板配置 */
+  whiteBoradAddDocConfig?: AddDocConfig[]
+  /**
+   * 是否开启白板的云录制
+   */
+  whiteboardCloudRecord?: boolean
+  /**
+   * 是否开启白板容器的宽高比
+   */
+  whiteBoradContainerAspectRatio?: AspectRatio
 }
 export type NEJoinMeetingOptions = NEMeetingOptions
 
@@ -496,7 +640,7 @@ interface NEMeetingService {
    *
    * @param listener 要移除的监听实例
    */
-  removeMeetingStatusListener(listener: NEMeetingStatusListener): void
+  removeMeetingStatusListener(listener?: NEMeetingStatusListener): void
   /**
    * 离开当前进行中的会议，并通过参数控制是否同时结束当前会议；
    *

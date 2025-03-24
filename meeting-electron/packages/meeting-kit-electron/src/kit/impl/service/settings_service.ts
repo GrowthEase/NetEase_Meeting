@@ -460,7 +460,7 @@ export default class NESettingsService
   async enableLeaveTheMeetingRequiresConfirmation(
     enable: boolean
   ): Promise<NEResult<void>> {
-    const functionName = 'enableHideMyVideo'
+    const functionName = 'enableLeaveTheMeetingRequiresConfirmation'
 
     const seqId = this._generateSeqId(functionName)
 
@@ -476,7 +476,7 @@ export default class NESettingsService
   async isLeaveTheMeetingRequiresConfirmationEnabled(): Promise<
     NEResult<boolean>
   > {
-    const functionName = 'isHideMyVideoEnabled'
+    const functionName = 'isLeaveTheMeetingRequiresConfirmationEnabled'
 
     const seqId = this._generateSeqId(functionName)
 
@@ -1146,6 +1146,36 @@ export default class NESettingsService
     })
 
     return this._IpcMainListener<number>(seqId)
+  }
+
+  async isMeetingLiveOfficialPushSupported(): Promise<NEResult<boolean>> {
+    const functionName = 'isMeetingLiveOfficialPushSupported'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [],
+      seqId,
+    })
+
+    return this._IpcMainListener<boolean>(seqId)
+  }
+
+  async isMeetingLiveThirdPartyPushSupported(): Promise<NEResult<boolean>> {
+    const functionName = 'isMeetingLiveThirdPartyPushSupported'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [],
+      seqId,
+    })
+
+    return this._IpcMainListener<boolean>(seqId)
   }
 
   private _generateSeqId(functionName: string) {

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import classNames from 'classnames'
 import './index.less'
@@ -34,6 +34,13 @@ const BulletScreenMessage: React.FC<BulletScreenMessageProps> = (props) => {
   const [inputFocus, setInputFocus] = useState(false)
 
   const expand = !meetingInfo.setting.normalSetting.foldChatMessageBarrage
+
+  const emoticonsBtnHidden = useMemo(() => {
+    return (
+      meetingInfo.showEmojiResponse === false &&
+      meetingInfo.showHandsUp === false
+    )
+  }, [meetingInfo.showHandsUp, meetingInfo.showEmojiResponse])
 
   function handleExpandBtnClick(enable: boolean) {
     const _setting = getLocalStorageSetting()
@@ -139,19 +146,28 @@ const BulletScreenMessage: React.FC<BulletScreenMessageProps> = (props) => {
               window.ipcRenderer?.send(IPCEvent.IgnoreMouseEvents, true)
           }}
         >
-          <div className="control-bar-button-list">
-            <EmoticonsBtnPopover
-              placement="top"
-              align={{ offset: [125, -15] }}
-              showHandsUpPopoverContent={false}
-            >
-              <svg className="icon iconfont huiying-icon" aria-hidden="true">
-                <use xlinkHref="#iconbiaoqinghuiying"></use>
-              </svg>
-            </EmoticonsBtnPopover>
-          </div>
+          {emoticonsBtnHidden ? (
+            false
+          ) : (
+            <>
+              <div className="control-bar-button-list">
+                <EmoticonsBtnPopover
+                  placement="top"
+                  align={{ offset: [125, -15] }}
+                  showHandsUpPopoverContent={false}
+                >
+                  <svg
+                    className="icon iconfont huiying-icon"
+                    aria-hidden="true"
+                  >
+                    <use xlinkHref="#iconbiaoqinghuiying"></use>
+                  </svg>
+                </EmoticonsBtnPopover>
+              </div>
 
-          <div className="nemeeting-bullet-screen-message-input-divider" />
+              <div className="nemeeting-bullet-screen-message-input-divider" />
+            </>
+          )}
           {inputFocus ? (
             <PrivateChatMemberPopover
               onOpenChange={(open) => {

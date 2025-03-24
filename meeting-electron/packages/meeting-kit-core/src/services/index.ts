@@ -8,6 +8,7 @@ import {
   NEMeetingInfo,
   NEMenuIDs,
   RecordState,
+  LocalRecordState,
   Role,
 } from '../types'
 
@@ -16,14 +17,13 @@ export const defaultMenus = [
   { id: NEMenuIDs.mic },
   { id: NEMenuIDs.camera },
   { id: NEMenuIDs.security },
+  { id: NEMenuIDs.invite },
+  { id: NEMenuIDs.participants },
+  { id: NEMenuIDs.chat },
   { id: NEMenuIDs.screenShare },
   { id: NEMenuIDs.whiteBoard },
-  { id: NEMenuIDs.participants },
   { id: NEMenuIDs.record },
-  { id: NEMenuIDs.chat },
   { id: NEMenuIDs.emoticons },
-  { id: NEMenuIDs.invite },
-  { id: NEMenuIDs.setting },
 ]
 
 export const defaultMoreMenus = [
@@ -35,6 +35,7 @@ export const defaultMoreMenus = [
   { id: NEMenuIDs.transcription },
   { id: NEMenuIDs.interpretation },
   { id: NEMenuIDs.live },
+  { id: NEMenuIDs.setting },
   { id: NEMenuIDs.feedback },
 ]
 
@@ -109,6 +110,7 @@ export function createDefaultSetting(): MeetingSetting {
       automaticSavingOfMeetingChatRecords: false,
       leaveTheMeetingRequiresConfirmation: true,
       enterFullscreen: false,
+      dualMonitors: false,
     },
     videoSetting: {
       deviceId: '',
@@ -140,10 +142,23 @@ export function createDefaultSetting(): MeetingSetting {
       beautyLevel: 0,
       virtualBackgroundPath: '',
       enableVirtualBackground: true,
+      virtualBackgroundType: 2,
     },
     recordSetting: {
       autoCloudRecord: false,
       autoCloudRecordStrategy: 0,
+      localRecordAudio: false,
+      localRecordNickName: true,
+      localRecordTimestamp: false,
+      localRecordScreenShareAndVideo: false,
+      localRecordScreenShareSideBySideVideo: false,
+      localRecordDefaultPath: '',
+      cloudRecordCurrentSpeakerWithSharedScreen: true,
+      cloudRecordGalleryViewWithSharedScreen: false,
+      cloudRecordSeparateRecordingCurrentSpeaker: false,
+      cloudRecordSeparateRecordingGalleryView: false,
+      cloudRecordSeparateRecordingSharedScreen: false,
+      cloudRecordSeparateAudioFile: false,
     },
     captionSetting: createDefaultCaptionSetting(),
     screenShareSetting: {
@@ -151,6 +166,7 @@ export function createDefaultSetting(): MeetingSetting {
       screenShareOptionInMeeting: 0,
       sharedLimitFrameRateEnable: false,
       sharedLimitFrameRate: 20,
+      noMoreScreenShareMessage: false,
     },
   }
 }
@@ -212,7 +228,11 @@ export function createMeetingInfoFactory(): NEMeetingInfo {
     annotationPermission: true,
     whiteboardPermission: true,
     screenSharePermission: true,
-    localRecordPermission: true,
+    localRecordPermission: {
+      all: false,
+      host: true,
+      some: false
+    },
     updateNicknamePermission: true,
     emojiRespPermission: true,
     isLocked: false,
@@ -238,9 +258,17 @@ export function createMeetingInfoFactory(): NEMeetingInfo {
     setting: createDefaultSetting(),
     isCloudRecording: false,
     cloudRecordState: RecordState.NotStart,
+    isCloudRecordingConfirmed: false,
     rightDrawerTabs: [],
     activeMemberManageTab: 'room',
     notificationMessages: [],
     privateChatMemberId: 'meetingAll',
+    //本地录制相关的参数缺省值为false
+    isLocalRecording: false,
+    localRecordState: LocalRecordState.NotStart,
+    isLocalRecordingConfirmed: false,
+    isOtherLocalRecordingConfirmed: false,
+    isOtherCloudRecordingStartConfirmed: false,
+    isOtherCloudRecordingStopConfirmed: false
   }
 }

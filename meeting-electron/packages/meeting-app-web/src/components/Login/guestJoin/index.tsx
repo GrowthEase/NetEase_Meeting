@@ -64,7 +64,7 @@ const GuestJoinModal: React.FC<BeforeHomeProps> = (props) => {
   } = props;
 
   return (
-    <Modal {...props} width={370} title={t('joinMeeting')} footer={null}>
+    <Modal {...props} width={370} title={t('joinMeeting')} footer={null} rootClassName=' nemeeting-guest-join-wrapper'>
       <GuestJoin
         checkIsAgree={checkIsAgree}
         isAgree={isAgree}

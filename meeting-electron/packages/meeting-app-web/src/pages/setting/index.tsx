@@ -15,7 +15,17 @@ export default function IndexPage() {
   const { t } = useTranslation();
   const [visisble, setVisible] = useState(false);
   const [inMeeting, setInMeeting] = useState(false);
-  const [defaultTab, setDefaultTab] = useState<SettingTabType>('normal');
+  const [defaultTab, setDefaultTab] = useState<SettingTabType | ''>('normal');
+  const [defaultSubTab, setDefaultSubTab] = useState<string>('');
+
+  useEffect(() => {
+    document.title = t('settings');
+  }, [t]);
+
+  function onMenuClick() {
+    setDefaultSubTab('');
+    setDefaultTab('');
+  }
 
   function proxyHandle(propKey: string | symbol) {
     return function (...args) {
@@ -108,9 +118,10 @@ export default function IndexPage() {
     function handleMessage(e: MessageEvent) {
       const { event, payload } = e.data;
 
-      if (event === 'openSetting') {
-        setDefaultTab(payload.type);
-        setInMeeting(payload.inMeeting);
+      if (event === 'updateData') {
+        payload.type !== undefined && setDefaultTab(payload.type);
+        payload.subType !== undefined && setDefaultSubTab(payload.subType);
+        payload.inMeeting !== undefined && setInMeeting(payload.inMeeting);
         setVisible(true);
       }
     }
@@ -140,6 +151,8 @@ export default function IndexPage() {
           previewContext={previewContext}
           previewController={previewController}
           defaultTab={defaultTab}
+          defaultSubTab={defaultSubTab}
+          onMenuClick={onMenuClick}
         />
       )}
     </div>

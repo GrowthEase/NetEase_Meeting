@@ -1,6 +1,6 @@
 import { Modal as AntModal, ModalFuncProps, ModalProps } from 'antd'
 import classNames from 'classnames'
-import React from 'react'
+import React, { useEffect } from 'react'
 import i18n from '../../../locales/i18n'
 
 import './index.less'
@@ -14,11 +14,27 @@ const modalMaps = new Map<string, ConfirmModal | WarningModal>()
 type ModalType = React.FC<ModalProps> & {
   confirm: (props: ModalFuncProps & { key?: string }) => ConfirmModal
   warning: (props: ModalFuncProps & { key?: string }) => WarningModal
+  info: (props: ModalFuncProps & { key?: string }) => WarningModal
   destroyAll: () => void
   destroy: (key: string) => void
 }
 
 const Modal: ModalType = (props: ModalProps) => {
+  useEffect(() => {
+    if (!window.isElectronNative) {
+      return
+    }
+
+    if (props.open) {
+      window.ipcRenderer?.send(IPCEvent.sharingScreen, {
+        method: 'openModal',
+      })
+    } else {
+      window.ipcRenderer?.send(IPCEvent.sharingScreen, {
+        method: 'closeModal',
+      })
+    }
+  }, [props.open])
   return (
     <AntModal
       {...props}
@@ -27,6 +43,8 @@ const Modal: ModalType = (props: ModalProps) => {
     />
   )
 }
+
+Modal.info = AntModal.info
 
 Modal.confirm = (props) => {
   if (props.key && modalMaps.has(props.key)) {

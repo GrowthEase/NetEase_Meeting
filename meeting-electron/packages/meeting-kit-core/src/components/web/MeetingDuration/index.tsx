@@ -17,7 +17,6 @@ const MeetingDuration: React.FC<MeetingDurationProps> = React.memo(
     const { meetingInfo, dispatch } = useMeetingInfoContext()
     const timerRef = useRef<null | ReturnType<typeof setTimeout>>()
     const [durationTime, setDurationTime] = useState('')
-    const [joinMeetingTime, setJoinMeetingTime] = useState(0)
 
     const normalSetting = meetingInfo.setting.normalSetting
 
@@ -30,16 +29,18 @@ const MeetingDuration: React.FC<MeetingDurationProps> = React.memo(
         normalSetting.showDurationTime &&
         normalSetting.showParticipationTime
       ) {
-        return [meetingInfo.rtcStartTime, joinMeetingTime][showTimeType]
+        return [meetingInfo.rtcStartTime, meetingInfo.joinMeetingTime][
+          showTimeType
+        ]
       } else if (normalSetting.showDurationTime) {
         return meetingInfo.rtcStartTime
       } else {
-        return joinMeetingTime
+        return meetingInfo.joinMeetingTime
       }
     }, [
       normalSetting.showDurationTime,
       normalSetting.showParticipationTime,
-      joinMeetingTime,
+      meetingInfo.joinMeetingTime,
       meetingInfo.rtcStartTime,
       showTimeType,
     ])
@@ -72,12 +73,6 @@ const MeetingDuration: React.FC<MeetingDurationProps> = React.memo(
         setLocalStorageSetting(JSON.stringify(_setting))
       }
     }
-
-    useEffect(() => {
-      if (meetingInfo.meetingNum) {
-        setJoinMeetingTime(Date.now())
-      }
-    }, [meetingInfo.meetingNum])
 
     useEffect(() => {
       const _startTime = Math.min(startTime, new Date().getTime())

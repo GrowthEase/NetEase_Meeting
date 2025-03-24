@@ -44,9 +44,16 @@ export default function useMeetingCanvas(
   } = useMeetingInfoContext()
   const { globalConfig, neMeeting } = useGlobalContext()
   const preSpeakerLayoutInfo = useRef<'top' | 'right'>('top')
+
   const unsubscribeMembersTimerMap = useRef<
     Record<string, null | ReturnType<typeof setTimeout>>
   >({})
+
+  const activeSpeakerListReportIntervalRef = useRef(3000)
+
+  activeSpeakerListReportIntervalRef.current =
+    globalConfig?.appConfig.MEETING_CLIENT_CONFIG?.activeSpeakerConfig
+      .activeSpeakerListReportInterval || 3000
 
   const hideNoVideoMembers = useMemo(() => {
     return meetingInfo.localMember.properties?.hideNoVideoMembers?.value === '1'
@@ -115,7 +122,7 @@ export default function useMeetingCanvas(
             member.isVideoOn ||
             meetingInfo.focusUuid === member.uuid ||
             meetingInfo.pinVideoUuid === member.uuid ||
-            meetingInfo.screenUuid === member.uuid || 
+            meetingInfo.screenUuid === member.uuid ||
             (meetingInfo.lastActiveSpeakerUuid === member.uuid &&
               member.isAudioOn &&
               enableVoicePriorityDisplay)
@@ -129,7 +136,8 @@ export default function useMeetingCanvas(
 
         if (
           meetingInfo.focusUuid !== localMember.uuid &&
-          meetingInfo.pinVideoUuid !== localMember.uuid
+          meetingInfo.pinVideoUuid !== localMember.uuid &&
+          _originMemberList.length > 1
         ) {
           const index = list.findIndex((item) => {
             return item.uuid === localMember.uuid
@@ -194,6 +202,7 @@ export default function useMeetingCanvas(
         inInvitingMemberList: inInvitingMemberList,
         groupNum: isSpeaker ? groupNum : meetingInfo.galleryModeMaxCount ?? 16,
         screenUuid: meetingInfo.screenUuid,
+        dualMonitors: meetingInfo.dualMonitors,
         focusUuid: meetingInfo.focusUuid,
         myUuid: meetingInfo.localMember.uuid,
         activeSpeakerUuid: meetingInfo.lastActiveSpeakerUuid || '',
@@ -230,6 +239,7 @@ export default function useMeetingCanvas(
     meetingInfo.localMember.uuid,
     enableVoicePriorityDisplay,
     enableHideVideoOffAttendees,
+    meetingInfo.dualMonitors,
   ])
 
   function handleViewDoubleClick(member: NEMember) {

@@ -246,7 +246,79 @@ const Homepage: React.FC = () => {
 
   useEffect(() => {
     handleAuth(location.href);
+    checkUpdate();
   }, []);
+
+  const checkUpdate = () => {
+    if (window.isElectronNative) {
+      const ipcRenderer = window.ipcRenderer;
+      let userUuid = '';
+
+      try {
+        const user = JSON.parse(
+          localStorage.getItem(LOCALSTORAGE_USER_INFO) as string,
+        );
+
+        userUuid = user?.userUuid || '';
+      } catch (error) {
+        console.log('LOCALSTORAGE_USER_INFO Error', error);
+      }
+
+      ipcRenderer?.invoke(IPCEvent.getCheckUpdateInfo).then(async (res) => {
+        console.log('getCheckUpdateInfo', res);
+        const localUpdateInfo = await window.ipcRenderer?.invoke(
+          IPCEvent.getLocalUpdateInfo,
+        );
+        let clientType = ClientType.ElectronWindows;
+
+        if (localUpdateInfo.platform === 'darwin') {
+          clientType = ClientType.ElectronMac;
+        } else if (window.systemPlatform === 'linux') {
+          clientType = window.isArm64
+            ? ClientType.ElectronLinuxArm64
+            : ClientType.ElectronLinuxX86;
+        } else {
+          clientType = ClientType.ElectronWindows;
+        }
+
+        console.info(
+          'updateVersion',
+          clientType,
+          res.versionCode,
+          window.isArm64,
+        );
+
+        axios({
+          url: UPDATE_URL,
+          method: 'POST',
+          headers: {
+            clientType,
+            sdkVersion: res.versionCode,
+          },
+          data: {
+            ...res,
+            accountId: userUuid,
+          },
+        }).then(async (res) => {
+          console.log('updateInfo>>>>', res.data);
+          if (res.data.code != 200 && res.data.code != 0) {
+            return;
+          }
+
+          const tmpData = res.data.ret;
+
+          if (!tmpData || tmpData.notify == 0) {
+            return;
+          }
+
+          localUpdateInfoRef.current = localUpdateInfo;
+          checkUpdateHandle({
+            ...tmpData,
+          });
+        });
+      });
+    }
+  };
 
   const checkUpdateHandle = async (data: ResUpdateInfo) => {
     let needUpdate = false;

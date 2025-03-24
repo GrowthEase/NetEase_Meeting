@@ -1,17 +1,20 @@
 {
   "name": "nemeeting-app-electron",
-  "version": "4.8.0",
+  "version": "4.12.5",
   "keywords": [],
   "license": "MIT",
+  "homepage": "https://meeting.163.com",
+  "author": "netease <netease@163.com>",
   "main": "src/index.js",
   "scripts": {
     "build": "electron-builder build",
-    "start": "cross-env MODE=local electron-forge start",
+    "start": "cross-env ENV_MODE=local electron-forge start",
     "start:prod": "electron-forge start"
   },
   "dependencies": {
-    "electron-log": "^5.0.0",
     "electron-dl": "^3.5.1",
+    "electron-log": "^5.0.0",
+    "electron-updater": "^6.1.1",
     "fs-extra": "^10.1.0",
     "nemeeting-electron-sdk": "workspace:^"
   },
@@ -23,7 +26,7 @@
   },
   "build": {
     "extraMetadata": {
-      "name": "Netease"
+      "name": "NeteaseMeeting"
     },
     "productName": "网易会议",
     "appId": "com.netease.nmc.Meeting",
@@ -36,6 +39,7 @@
       "node_modules/**/neroom-node-sdk/build/Release/*.dylib",
       "node_modules/**/neroom-node-sdk/build/Release/*.lib",
       "node_modules/**/neroom-node-sdk/build/Release/*.dll",
+      "node_modules/**/neroom-node-sdk/build/Release/*.so",
       "node_modules/**/neroom-node-sdk/build/Release/*.framework/**/*",
       "node_modules/**/neroom-node-sdk/assets/**/*",
       "node_modules/**/neroom-node-sdk/dist/**/*",
@@ -43,13 +47,13 @@
       "package.json"
     ],
     "asarUnpack": [
-      "**/node_modules/nemeeting-kit-electron/node_modules/neroom-node-sdk/**"
+      "**/node_modules/nemeeting-electron-sdk/node_modules/neroom-node-sdk/**"
     ],
     "mac": {
       "artifactName": "meeting.${ext}",
       "mergeASARs": false,
       "icon": "assets/macx.icns",
-      "identity": "Hangzhou WangyiZhiyun Technology Co. Ltd. (7C9A6NRV5L)",
+      "identity": null,
       "target": [
         {
           "target": "dmg",
@@ -96,6 +100,23 @@
       "artifactName": "meeting.${ext}",
       "icon": "assets/win.ico",
       "target": "nsis"
+    },
+    "linux": {
+      "icon": "assets/linux.icns",
+      "desktop": {
+        "StartupNotify": "false",
+        "Encoding": "UTF-8",
+        "MimeType": "x-scheme-handler/nemeeting"
+      },
+      "target": [
+        {
+          "target": "deb",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
     },
     "extraResources": [
       {

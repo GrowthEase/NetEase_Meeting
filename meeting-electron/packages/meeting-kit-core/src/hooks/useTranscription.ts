@@ -80,23 +80,123 @@ export default function useTranscription(params: CaptionProps): CaptionRes {
     NERoomCaptionMessage[]
   >([TranscriptionStartMessage])
 
-  const generateTranscriptionMessageList = useCallback(() => {
-    let segments: NERoomCaptionMessage[] = []
+  const transcriptionMessageListRef = useRef(transcriptionMessageList)
 
-    if (neMeeting?.liveTranscriptionController?.isTranscriptionEnabled()) {
-      segments = [
+  transcriptionMessageListRef.current = transcriptionMessageList
+
+  const generateTranscriptionMessageList = useCallback(
+    (needMerge?: boolean, isMessageFinal?: boolean) => {
+      let segments: NERoomCaptionMessage[] = []
+      const tmpTranscriptionMessages = [
         ...currentFinalTranscriptionMessages.current,
-        ...currentNonFinalTranscriptionMessagesMapRef.current.values(),
-      ].sort((a, b) => a.timestamp - b.timestamp)
-    }
+      ]
 
-    setTranscriptionMessageList(
-      [...transcriptionMessagesRef.current, ...segments].flat()
-    )
-  }, [neMeeting?.liveTranscriptionController])
+      if (neMeeting?.liveTranscriptionController?.isTranscriptionEnabled()) {
+        if (needMerge) {
+          // 表示已是一句完整的句子则从tmpTranscriptionMessages合并最后两项
+
+          if (isMessageFinal) {
+            // 删除最后一项,合并到最后一个相同id的消息上
+            const originLastMsg = tmpTranscriptionMessages.pop()
+            const len = tmpTranscriptionMessages.length
+            const lastMsg = tmpTranscriptionMessages[len - 1]
+
+            if (len > 0) {
+              // 合并到最后一个相同id的消息上
+              const index = tmpTranscriptionMessages.findLastIndex(
+                (msg) => msg.fromUserUuid === originLastMsg?.fromUserUuid
+              )
+
+              if (index > -1) {
+                tmpTranscriptionMessages[index].content =
+                  lastMsg.content + originLastMsg?.content
+
+                if (originLastMsg?.translationContent) {
+                  tmpTranscriptionMessages[index].translationContent =
+                    (lastMsg.translationContent || '') +
+                    (originLastMsg?.translationContent || '')
+                }
+              }
+            } else {
+              originLastMsg && tmpTranscriptionMessages.push(originLastMsg)
+            }
+
+            currentFinalTranscriptionMessages.current = tmpTranscriptionMessages
+          } else {
+            const tmpMessagesLen = tmpTranscriptionMessages.length
+            const tmpCurrentNonFinalTranscriptionMessagesMap = new Map(
+              currentNonFinalTranscriptionMessagesMapRef.current
+            )
+            const lastMessage: NERoomCaptionMessage = JSON.parse(
+              JSON.stringify(tmpTranscriptionMessages[tmpMessagesLen - 1])
+            )
+
+            const tmpNonFinalMsg =
+              tmpCurrentNonFinalTranscriptionMessagesMap.get(
+                lastMessage.fromUserUuid
+              )
+
+            lastMessage.content = lastMessage.content + tmpNonFinalMsg?.content
+
+            if (tmpNonFinalMsg?.translationContent) {
+              lastMessage.translationContent =
+                (lastMessage.translationContent || '') +
+                (tmpNonFinalMsg.translationContent || '')
+            }
+
+            currentNonFinalTranscriptionMessagesMapRef.current.delete(
+              lastMessage.fromUserUuid
+            )
+            tmpTranscriptionMessages[tmpMessagesLen - 1] = lastMessage
+          }
+        }
+
+        segments = [
+          ...tmpTranscriptionMessages,
+          ...currentNonFinalTranscriptionMessagesMapRef.current.values(),
+        ].sort((a, b) => a.timestamp - b.timestamp)
+      }
+
+      setTranscriptionMessageList(
+        [...transcriptionMessagesRef.current, ...segments].flat()
+      )
+    },
+    [neMeeting?.liveTranscriptionController]
+  )
 
   const handleReceiveTranscriptionMessageList = useCallback(
     (messages: NERoomCaptionMessage[]) => {
+      //如果一段时间内仅有一个人持续说话，则持续在末尾追加文字，无需换行，大于200字再换行
+
+      let needMerge = false
+      let isMessageFinal = false
+
+      if (messages.length === 1) {
+        const transcriptionMessages = transcriptionMessageListRef.current
+        const len = transcriptionMessages.length
+        const nonFinale =
+          currentNonFinalTranscriptionMessagesMapRef.current.get(
+            messages[0].fromUserUuid
+          )
+
+        // 判断最后一条消息是否和新接受到消息为同一个人。且最后一条消息是已断句的，如果不是断句的走原先逻辑即可。
+        if (
+          len > 0 &&
+          transcriptionMessages[len - 1].fromUserUuid ===
+            messages[0].fromUserUuid &&
+          !nonFinale &&
+          transcriptionMessages[len - 1].isFinal
+        ) {
+          const lastMessage = transcriptionMessages[len - 1]
+
+          // 如果最后一条消息长度小于200则添加到最后，如果是大于200则走原先逻辑
+          if (lastMessage.content.length < 200) {
+            needMerge = true
+            isMessageFinal = messages[0].isFinal
+          }
+        }
+      }
+
       messages.forEach((message) => {
         const nonFinale =
           currentNonFinalTranscriptionMessagesMapRef.current.get(
@@ -120,7 +220,7 @@ export default function useTranscription(params: CaptionProps): CaptionRes {
         }
       })
 
-      generateTranscriptionMessageList()
+      generateTranscriptionMessageList(needMerge, isMessageFinal)
     },
     [generateTranscriptionMessageList]
   )

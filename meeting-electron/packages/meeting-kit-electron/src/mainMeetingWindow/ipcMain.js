@@ -1,6 +1,7 @@
 const { ipcMain, BrowserWindow, screen } = require('electron')
 const { newWins, openNewWindow } = require('./childWindow')
 const { MINI_WIDTH, MINI_HEIGHT, isWin32 } = require('../constant')
+const { showElectronPopover, hideElectronPopover, updateElectronPopover } = require('../utils/popup')
 
 const EventType = {
   OpenChatroomOrMemberList: 'openChatroomOrMemberList',
@@ -11,6 +12,9 @@ const EventType = {
   CaptionWindowChange: 'captionWindowChange',
   ChangeSetting: 'changeSetting',
   IgnoreMouseEvents: 'ignoreMouseEvents',
+  ShowPopover: 'showPopover',
+  HidePopover: 'hidePopover',
+  UpdatePopover: 'updatePopover',
 }
 
 let currentWindow = null
@@ -159,6 +163,22 @@ function handleIgnoreMouseEvents(event, data) {
   }
 }
 
+function showPopover(event, items) {
+  const mainWindow = BrowserWindow.fromWebContents(event.sender)
+
+  showElectronPopover(items, mainWindow)
+}
+
+function hidePopover() {
+  hideElectronPopover()
+}
+
+function updatePopover(event, items) {
+  const mainWindow = BrowserWindow.fromWebContents(event.sender)
+
+  updateElectronPopover(items, mainWindow)
+}
+
 function addIpcMainListeners(window) {
   currentWindow = window
 
@@ -192,11 +212,11 @@ function addIpcMainListeners(window) {
       return
     }
 
-    const mousePosition = screen.getCursorScreenPoint()
-    const { x: displayX, width: displayW } = screen.getDisplayNearestPoint(
-      mousePosition
+    const mainWindowBounds = mainWindow.getBounds()
+    const { x: displayX, width: displayW } = screen.getDisplayMatching(
+      mainWindowBounds
     ).workArea // 鼠标所在屏幕的大小
-    const { x: mainX, width: mainW } = mainWindow.getBounds() // 当前窗口的大小
+    const { x: mainX, width: mainW } = mainWindowBounds // 当前窗口的大小
 
     if (isOpen) {
       // alreadySetWidth = true
@@ -224,6 +244,9 @@ function addIpcMainListeners(window) {
   ipcMain.on(EventType.ChangeSetting, changeSetting)
 
   ipcMain.on(EventType.IgnoreMouseEvents, handleIgnoreMouseEvents)
+  ipcMain.on(EventType.ShowPopover, showPopover)
+  ipcMain.on(EventType.HidePopover, hidePopover)
+  ipcMain.on(EventType.UpdatePopover, updatePopover)
 }
 
 function removeIpcMainListeners() {
@@ -237,6 +260,9 @@ function removeIpcMainListeners() {
   ipcMain.removeListener(EventType.changeSetting, changeSetting)
   ipcMain.removeAllListeners(EventType.OpenChatroomOrMemberList)
   ipcMain.removeListener(EventType.IgnoreMouseEvents, handleIgnoreMouseEvents)
+  ipcMain.removeListener(EventType.ShowPopover, showPopover)
+  ipcMain.removeListener(EventType.HidePopover, hidePopover)
+  ipcMain.removeListener(EventType.UpdatePopover, updatePopover)
 }
 
 module.exports = {

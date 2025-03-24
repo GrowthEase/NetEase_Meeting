@@ -227,7 +227,6 @@ const InterpretationWindow: React.FC<InterpretationWindowProps> = ({
     const preLang = interpretationSetting?.speakerLanguage
 
     if (preLang === language) {
-      console.log('切换语言相同')
       return
     }
 
@@ -494,7 +493,7 @@ const InterpretationWindow: React.FC<InterpretationWindowProps> = ({
         aria-hidden="true"
         style={{ color: '#fff', fontSize: '24px' }}
       >
-        <use xlinkHref="#icontongshengchuanyi"></use>
+        <use xlinkHref="#icontongshengchuanyi-mianxing"></use>
       </svg>
     </div>
   )

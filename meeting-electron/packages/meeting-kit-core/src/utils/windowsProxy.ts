@@ -27,6 +27,8 @@ type windows =
   | 'transcriptionWindow'
   | 'transcriptionInMeetingWindow'
   | 'bulletScreenMessageWindow'
+  | 'liveWindow'
+  | 'dualMonitorsWindow'
   | string
 
 const windowsUrl: {
@@ -57,6 +59,8 @@ const windowsUrl: {
   transcriptionWindow: '#/transcriptionWindow',
   transcriptionInMeetingWindow: '#/transcriptionInMeetingWindow',
   bulletScreenMessageWindow: '#/bulletScreenMessageWindow',
+  liveWindow: '#/live',
+  dualMonitorsWindow: '#/dualMonitors',
 }
 
 const windowsClosed: {
@@ -113,8 +117,12 @@ function getWindow(name: windows): WindowProxy | null {
   return null
 }
 
-function closeWindow(name: windows): void {
-  windowsProxy[name]?.close()
+function closeWindow(name: windows, common: boolean = true): void {
+  if (common) {
+    windowsProxy[name]?.close()
+  } else {
+    windowsClosed[name] = true
+  }
 }
 
 function closeAllWindows(excludes?: string[]): void {
@@ -144,4 +152,16 @@ function getActiveWindows(): SelfWindowProxy[] {
   return activeWindows
 }
 
-export { getWindow, openWindow, closeWindow, closeAllWindows, getActiveWindows }
+// 删除窗口缓存
+function removeWindow(name: windows): void {
+  delete windowsProxy[name]
+}
+
+export {
+  getWindow,
+  openWindow,
+  closeWindow,
+  closeAllWindows,
+  getActiveWindows,
+  removeWindow,
+}

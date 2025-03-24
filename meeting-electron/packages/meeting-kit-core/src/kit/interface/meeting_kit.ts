@@ -1,4 +1,8 @@
-import { NEGlobalEventListener, NEServerConfig } from 'neroom-types'
+import {
+  NEGlobalEventListener,
+  NERoomWhiteboardAppConfig,
+  NEServerConfig,
+} from 'neroom-types'
 import {
   NEMeetingAppNoticeTips,
   NEMeetingLanguage,
@@ -50,6 +54,8 @@ export type NEMeetingKitConfig = {
   width: number
   /** 用于设置会议显示区域高度，(设置为0 则根据容器自适应) */
   height: number
+  /** 白板防盗链配置 */
+  whiteboardAppConfig?: NERoomWhiteboardAppConfig
 }
 
 /**
@@ -149,6 +155,10 @@ interface NEMeetingKit {
    * 设置异常处理
    */
   setExceptionHandler(handler: ExceptionHandler): void
+  /**
+   * 启动Marvel
+   */
+  startMarvel(): Promise<NEResult<void>>
 }
 
 export default NEMeetingKit

@@ -11,6 +11,7 @@ const {
 const log = require('electron-log/main')
 const path = require('path')
 const fs = require('fs')
+const os = require('os')
 
 const { getLogDate } = require('nemeeting-electron-sdk/lib/utils/log')
 const {
@@ -28,6 +29,15 @@ const { initUpdateListener } = require('./utils/update')
 const { watchProtocol } = require('./utils/agreement')
 
 const privateConfigFileName = 'xkit_server_private.json'
+const isLinux = process.platform === 'linux'
+
+// linux arm架构需要关闭硬件加速，否则渲染卡顿
+if (isLinux && os.arch() === 'arm64') {
+  app.disableHardwareAcceleration()
+  app.commandLine.appendSwitch('--in-process-gpu')
+  app.commandLine.appendSwitch('--disable-gpu')
+  app.commandLine.appendSwitch('--disable-software-rasterizer')
+}
 
 app.commandLine.appendSwitch('--max-active-webgl-contexts', 1000)
 
@@ -75,7 +85,7 @@ crashReporter.start({
 })
 
 // 处理 win SSO 登录，
-if (isWin32) {
+if (isWin32 || isLinux) {
   const appLock = app.requestSingleInstanceLock()
 
   if (!appLock) {
@@ -239,6 +249,7 @@ app.whenReady().then(() => {
   })
 
   ipcMain.on('beforeLogin', () => {
+    console.log('beforeLogin')
     mainWindow?.destroy()
     mainWindow = null
     inMeeting = false
@@ -262,7 +273,7 @@ app.whenReady().then(() => {
 
   // 登录完成也会触发此事件
   ipcMain.on('beforeEnterRoom', (_, notLogin) => {
-    console.log('beforeEnterRoom')
+    console.log('beforeEnterRoom', notLogin)
 
     inMeeting = false
     beforeMeetingWindow?.show()
@@ -381,10 +392,16 @@ app.whenReady().then(() => {
     },
   ]
 
-  // 创建菜单
-  const menu = Menu.buildFromTemplate(template)
+  if(process.platform !== 'linux') {
+    // 创建菜单
+    const menu = Menu.buildFromTemplate(template)
 
-  Menu.setApplicationMenu(menu)
+    Menu.setApplicationMenu(menu)
+  }else {
+    // linux
+    Menu.setApplicationMenu(null)
+  }
+  
 
   // checkUpdate();
 

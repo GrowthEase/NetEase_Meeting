@@ -84,7 +84,6 @@ const SortableItem = SortableElement<SortableItemProps>((props) => {
     >
       <VideoCard
         onCallClick={() => {
-          console.log('ddddd', onCallClick)
           onCallClick?.(member)
         }}
         mirroring={
@@ -102,12 +101,13 @@ const SortableItem = SortableElement<SortableItemProps>((props) => {
         }
         isSubscribeVideo={member.isVideoOn}
         isMain={false}
-        streamType={members.length > 3 ? 1 : 0}
+        streamType={members.length > 4 ? 1 : 0}
         isMySelf={member.uuid === meetingInfo.myUuid}
         key={member.uuid}
         type={'video'}
         className={`h-full text-white nemeeting-video-card video-card`}
         member={member}
+        showInPhoneTip={true}
       />
     </div>
   )

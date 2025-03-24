@@ -160,7 +160,7 @@ const ScreenShareListModal = forwardRef<
 
               _screenList.push({
                 id: item.id,
-                name: `桌面 ${index + 1}`,
+                name: `${t('desktop')} ${index + 1}`,
                 thumbnail:
                   item.thumbImage && item.thumbImage.length > 0
                     ? toDataURL(item.thumbImage.data, item.thumbImage.size)
@@ -191,6 +191,19 @@ const ScreenShareListModal = forwardRef<
             }
           })
 
+          // linux下无桌面列表需要上层实现
+          if(window.systemPlatform === 'linux' && _screenList.length === 0) {
+            _screenList.push({
+                id: 0,
+                name: t('desktop'),
+                thumbnail: '',
+                appIcon: '',
+                displayId: 0,
+                isApp: false,
+                index: 0,
+              })
+          }
+
           setShareInfos({
             windowList: _windowList,
             screenList: _screenList,
@@ -198,6 +211,8 @@ const ScreenShareListModal = forwardRef<
           if (_screenList.length > 0) {
             handleSelectShare(_screenList[0])
             autoShare && onStartShare(_screenList[0], preferMotion)
+          } else if (_windowList.length > 0) {
+            setCurrentInfo(_windowList[0])
           }
 
           setIsLoading(false)
@@ -265,11 +280,23 @@ const ScreenShareListModal = forwardRef<
           onClick={() => handleSelectShare(item)}
         >
           <div className="share-item-img-wrapper">
-            <img
+          {
+            item.thumbnail ? (
+              <img
               src={item.thumbnail}
               alt={item.name}
               className="share-item-img"
             ></img>
+            ) : (
+              <svg
+                  className="icon iconfont computer-sound-only-icon"
+                  aria-hidden="true"
+                >
+                  <use xlinkHref="#icongongxiangpingmu1"></use>
+                </svg>
+            )
+          }
+            
           </div>
           <div className="share-item-name" title={item.name}>
             {item.name}

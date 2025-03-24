@@ -103,11 +103,45 @@
   .video-mirror {
     transform: rotatey(180deg);
   }
+  .video-mirror-check {
+    position: absolute;
+    bottom: 5px;
+  }
   .video-mirror-check,
   .video-resolution-check {
     margin-top: 20px;
     .icona-45 {
       color: #cccccc;
+    }
+  }
+
+  .video-mirror-radio {
+    position: absolute;
+    z-index: 1;
+    top: 250px;
+    left: 192px;
+    //width: 540px;
+    display: flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    width: 156px;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    opacity: 1;
+
+    .nemeeting-radio-button-wrapper {
+      width: 76px !important;
+      height: 28px !important;
+      border: 0px !important;
+      padding: 0;
+      font-size: 12px;
+      background: initial;
+      color: #fff;
+    }
+    .nemeeting-radio-button-wrapper-checked {
+      background: rgba(255, 255, 255, 0.3) !important;
     }
   }
   .video-open {
@@ -141,10 +175,19 @@
     //overflow-y: auto;
   }
   .video-setting {
-    display: flex;
-    flex-direction: column;
+    // display: flex;
+    // flex-direction: column;
     margin-top: 20px;
     // align-items: center;
+    position: relative;
+    // height: 480px;
+    //overflow-x: hidden;
+    //overflow-y: auto;
+
+    .nemeeting-radio-button-wrapper:not(:first-child)::before,
+    .nemeeting-radio-button-wrapper-checked:not(.nemeeting-radio-button-wrapper-disabled)::before {
+      background-color: initial;
+    }
   }
   .normal-setting-language {
     display: flex;
@@ -257,7 +300,7 @@
   .video-canvas {
     width: 540px;
     height: 304px;
-    background-color: #000;
+    // background-color: #000;
     margin-bottom: 20px;
     margin-top: -15px;
     overflow: hidden;
@@ -307,12 +350,17 @@
     .radio-item {
       margin-right: 48px;
     }
+
+    .video-mirror-check {
+      position: initial;
+      margin-top: 0;
+    }
   }
   .video-device-select {
     width: 320px;
   }
   .audio-device-select {
-    // max-width: 300px;
+    max-width: 412px;
     flex: 1;
   }
   .icon-color {
@@ -391,9 +439,7 @@
   }
 }
 .nemeeting-select-dropdown
-  .nemeeting-select-item-option-selected:not(
-    .nemeeting-select-item-option-disabled
-  ) {
+  .nemeeting-select-item-option-selected:not(.nemeeting-select-item-option-disabled) {
   background-color: inherit;
   color: #337eff;
   font-weight: 400;
@@ -402,14 +448,17 @@
   color: #000;
 }
 .nemeeting-select-dropdown
-  .nemeeting-select-item-option-active:not(
-    .nemeeting-select-item-option-disabled
-  ) {
+  .nemeeting-select-item-option-active:not(.nemeeting-select-item-option-disabled) {
   background: #f7f8fa;
 }
 
 .beauty-setting {
   margin-top: 20px;
+  position: relative;
+  overflow-y: auto;
+  height: 480px;
+  overflow-x: hidden;
+
   .beauty-setting-slider {
     height: 16px;
     .beauty-effect-title {
@@ -462,7 +511,7 @@
   .beauty-video-canvas {
     width: 540px;
     height: 304px;
-    background-color: #333;
+    // background-color: #333;
     overflow: hidden;
     margin: -15px 0 20px 0;
     border-radius: 6px;
@@ -482,6 +531,8 @@
     overflow-y: auto;
     .virtual-selected-item {
       border: 2px solid #337eff;
+      width: 102px !important;
+      height: 66px !important;
     }
     .beauty-setting-background-item {
       box-sizing: border-box;
@@ -535,6 +586,14 @@
         display: block;
         margin: 15px 0 6px 0;
       }
+    }
+
+    .iconfont {
+      font-size: 16px;
+      color: #fff;
+      position: absolute;
+      bottom: 5px;
+      left: 5px;
     }
   }
 }
@@ -931,9 +990,6 @@
 .record-setting {
   display: flex;
   flex-direction: column;
-  .record-setting-content-sub-item {
-    padding: 10px 0 0 20px;
-  }
 }
 
 .screen-share-setting-item {

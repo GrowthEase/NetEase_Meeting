@@ -31,7 +31,10 @@ export default {
   globalDelete: '消去',
   globalEdit: '編定',
   globalAdd: '追加',
-  globalGoBack: '返回',
+  globalPlay: '播放',
+  globalPlayAudio: '播放音频',
+  globalGoBack: '戻る',
+  globalClosePage: '关闭页面',
   joinMeeting: `会議に参加`,
   copyMeetingIdAndLink: `会議IDとリンクをコピーします`,
   copyAll: `すべてコピー`,
@@ -238,6 +241,7 @@ export default {
 
   whiteBoardInteract: 'ホワイトボード操作権限が付与されました',
   whiteBoardInteractFail: 'ホワイトボード操作権限が付与のは失敗しました',
+  whiteBoardPackUp: 'やめる',
   undoWhiteBoardInteract: 'ホワイトボード操作権限が撤回しました',
   undoWhiteBoardInteractFail: 'ホワイトボード操作の取り消しに失敗しました',
   sip: 'SIP 電話/端末が会議に参加する',
@@ -427,10 +431,15 @@ export default {
   audioMuteOpenTips:
     'マイクを使用できません。話しているのが検出されました。発言する場合は、「ミュート解除」ボタンをクリックしてから再度発言してください。',
   networkError: 'ネットワークエラー',
-
+  startLocalRecord: 'ローカル録音',
   startCloudRecord: 'クラウド録画',
-  stopCloudRecord: '記録の停止',
+  stopRecord: '記録の停止',
   recording: '録画中',
+  isStartLocalRecord: 'ローカル収録開始しますか?',
+  startLocalRecordTip:
+    'オンにすると、参加者全員に録画開始のアラートが届きます。',
+  endLocalRecording: 'ローカル収録終了ですか?',
+  syncLocalRecordFileAfterMeetingEnd: '会議終了後、録画ファイルは自動的にMP4形式に変換されます。',
   isStartCloudRecord: 'クラウド録画を有効にするかどうか',
   startRecordTip:
     'オンにすると、会議中の音声ビデオと共有画面のコンテンツをクラウドに録画し、参加メンバー全員に通知します',
@@ -571,6 +580,8 @@ export default {
   meetingUserIsNowTheHost: '{{user}}は司会者になりました',
   meetingReclaimHostFailed: '司会者を回収失敗',
 
+  lookAtMe: 'カメラビュー',
+  lootAtMyself: '自分のビュー',
   // 会前
   appTitle: '網易会議',
   immediateMeeting: '会議を開始',
@@ -663,6 +674,12 @@ export default {
   virtualBackgroundError3: 'カスタム背景画像の色形式が無効',
   virtualBackgroundError4: 'デバイスは仮想背景の使用をサポートしていません。',
   virtualBackgroundError5: '仮想バックグラウンドをオンにできませんでした',
+  virtualBackgroundError6: '対応していないビデオフォーマットです',
+  virtualBackgroundError7: 'ファイルは存在しません',
+  virtualBackgroundError8: 'ファイルサイズは500MBを超えてはいけません',
+  virtualBackgroundError9: '非jpgまたはpngファイルです',
+  virtualBackgroundError10: '仮想背景に対応していません。',
+  fileSizeLimit500MB: 'ファイルサイズは500MBを超えてはいけません',
   // 共享
   selectSharedContent: '何を共有するかを選択する',
   startShare: '共有開始',
@@ -1006,7 +1023,7 @@ export default {
   meetingRepeatQuit: '会議終了',
   sipContactsPrivacy:
     'アドレス帳へのアクセスを許可してください連絡先に電話で入会します',
-  sipContactNoNumber: '会議人数上限に達しました',
+  sipContactNoNumber: 'ユーザー番号なし',
   sipCallIsInMeeting: 'ユーザーは会議中です',
   sipCallIsInInviting: 'ユーザーが招待中',
   sipCallIsInBlacklist:
@@ -1019,6 +1036,14 @@ export default {
   sipAddressInvite: '連絡する',
   sipJoinOtherMeetingTip: '参加後は本会議を離れます',
   callStatusWaitingJoin: '入会していない',
+  roomSipCallIsInInviting: '该会议室已在呼叫中',
+  roomSipCallIsInBlacklist:
+    '该成员已被标记不允许再次加入，如需邀请，请关闭会议黑名单',
+  roomSipCallIsInMeeting: '会议室呼叫: 该设备已在会议中',
+  roomSipCallrLimit: '已达会议人数上限',
+  roomSipCallrNetworkError: '网络连接失败',
+  roomSipCallrNickNameLimit: '入会名称字符太长，请重新设置',
+
   globalReject: '拒否',
   meetingOpen: '展開',
   meetingClose: '折り畳み',
@@ -1215,7 +1240,21 @@ export default {
     '申し訳ありませんが、参加させていただいた会議は外部の方に公開しておりません。ご希望の場合は、会議主催者に連絡してゲスト入会を開始します。',
   meetingCrossAppJoinTip:
     '他のチーム/組織が作成した会議にゲストとして参加します。会議に参加しますか?',
-
+  //本地录制
+  localRecord: 'ローカル録音',
+  localRecordPath: '録画ファイルを保存します。',
+  remaining: '残ります',
+  openDir: '開けます',
+  resetDefaultDir: '黙認します',
+  localRecordTipFirst: '您也可以在',
+  localRecordTipSecond: '历史会议',
+  localRecordTipThird: '中，找到对应的会议录制记录',
+  localRecordAudio: '音声ファイルを録音します',
+  localRecordNickName: '録画ファイルに出席者の名前を表示します。',
+  localRecordTimestamp: '録画ファイルにタイムスタンプを入れます。',
+  localRecordTimestampTip: 'オンにすると,現在の日時を録画中に埋め込むことができます',
+  localRecordScreenShareAndVideo: '画面共有中にビデオを同時に録画します',
+  localRecordScreenShareSideBySideVideo: 'ビデオは録画ファイル内で共有コンテンツの横に表示されます',
   // 新聊天室
   copy: 'コピー',
   recall: '撤回します',
@@ -1306,7 +1345,8 @@ export default {
   handsUpDownAllFailure: 'すべての手を下ろすことに失敗しました',
   confirmJoinMeeting: 'ミーティングへの参加を確認する',
 
-  settingAutomaticSavingOfMeetingChatRecords: '会議やチャットの記録は自動的に保存されます',
+  settingAutomaticSavingOfMeetingChatRecords:
+    '会議やチャットの記録は自動的に保存されます',
   settingAutomaticSavingOfMeetingChatRecordsTips:
     'オンにすると、あなたが司会をしている間に自動的にチャットが保存されます。',
 
@@ -1326,17 +1366,122 @@ export default {
     '開催後、本会議の議事録(総括、未処理を含む)を作成します。',
   cloudRecordingAISummaryStarted:
     '本会議はすでに知能録画を開始して、知能AI紀要を生成します(総括、未処理を含みます)',
-  cloudRecordingAISummaryFailed: 'スマート録画オンに失敗しましたので、後ほど録画をオフにして再度お試しください。',
+  cloudRecordingAISummaryFailed:
+    'スマート録画オンに失敗しましたので、後ほど録画をオフにして再度お試しください。',
   cloudRecordingUnableToStart: 'クラウド録画が起動しません',
   cloudRecordingUnableToStartTips: '現在、会議中にマイクやビデオをオンにしている人がいません。録画を開始するため、ミュートを解除してください。',
+  localRecordingUnableToStart: '消音になりました',
+  localRecordingUnableToStartTips: '音声は録音できません',
+  localRecordingCancelTips: '無音録音が続きます',
+
+
+  localRecordDisConnectAudioTitle: '消音になりました',
+  localRecordDisConnectAudioContent: '音声を録音するにはクリックします',
+  localRecordDisConnectAudioOkText: 'オーディオに接続します',
+  localRecordDeleteDirectoryTitle: '録画ファイルを削除します',
+  localRecordDeleteDirectoryContent: 'あなたはコンピュータから永久にこの録画ファイルを削除しますこの操作を撤回することはできません',
+  localRecordOpenFileTitle: 'フォルダは存在しません',
+  localRecordOpenFileContent: 'ローカル録画ファイルが移動、名前変更、削除されているか確認します。',
+
+  localRecordRemuxTitle: '会議の録画ファイルを切り替えています。',
+  localRecordRemuxContent: '本会議での録画ファイルは変換中ですので、少々お待ちください。',
+  localRecordRemuxOkText: '',
+  localRecordStopRemuxTitle: '切り替えを停止します',
+  localRecordStopRemuxContent: '停止した場合、変換ファイルは生成されませんので、保存先でオリジナルの録画ファイルを見ることができます。',
+  localRecordStopRemuxCompleted: '録画ファイルのトランスコードが完了しました',
+
+  startLocalRecordTipByMember:
+    '会議のローカル録画を開始したメンバーは、他のメンバーと共有することができます。',
+
+
+  localRecordPermissionSetting: 'ローカル録画設定',
+  localRecordPermissionForHost: '司会者のみ録画可能',
+  localRecordPermissionForAll: '全員録画可能',
+  localRecordPermissionForSome: '一部のメンバーは録画を許可します',
+  localRecordPermissionForSomeTip: '出席者リストに行って個々のメンバーの録画権限操作を行います。',
+
+  localRecordPermissionAllow: '録画許可',
+  localRecordPermissionNotAllow: '録画禁止',
+
+  localRecordPermissionCancelTip: 'ローカル録画権は回収されました',
+  localRecordPermissionAllowTip: '司会者から収録許可が下りました',
+  localRecordPermissionNotAllowTip: '司会者からは録画禁止',
+
+
+
 
   settingShowParticipationTime: '参会時間の表示',
   settingShowMeetingElapsedTime: '会議の継続時間',
   settingShowParticipationElapsedTime: '参会時間',
 
-  settingEnterFullscreen: '会議の開始や参加時は自動的に全画面モードになります。',
+  settingEnterFullscreen:
+    '会議の開始や参加時は自動的に全画面モードになります。',
 
-  enterFullscreenTips: 'ESCを押すか、右上のボタンをクリックして全画面モードを終了します。',
+  enterFullscreenTips:
+    'ESCを押すか、右上のボタンをクリックして全画面モードを終了します。',
 
   preMeetingSubject: 'スケジュールされた会議',
+
+  deviceTestTitle: '設備検査',
+  deviceVideoTest: 'ビデオ検出',
+  deviceAudioTest: '音声検出',
+  deviceTestVideoTip: 'カメラの画面が見えますか?',
+  deviceTestAudioSpeak: 'マイクに向かって話してくださいました ,',
+  deviceTestAudioTip: '自分の声が聞こえますか?',
+  deviceTestError: '機器の異常検知',
+  deviceTestNormal: '装置は正常',
+  deviceTestItem: '検査項目',
+  deviceTestResult: '検査結果',
+  deviceTestAbnormal: '異常',
+  deviceTestNoPermission: '権限なし',
+  deviceTestOk: '正常',
+  deviceTestAbnormalTip:
+    'メディアデバイスが異常です。マイクとカメラへのアクセスが許可されていることを確認してください。ページを閉じて、再度アクセスすることもできます',
+  deviceTestCanSee: 'はい',
+  deviceTestCannotSee: 'ない',
+  deviceTestCanHear: 'はい',
+  deviceTestCannotHear: 'ない',
+  deviceTestConfirmTip:
+    '会議に参加する前にメディアデバイスのテストを行うことをお勧めします',
+  deviceTestSkip: 'スキップ',
+  deviceTestRightNow: 'テスト',
+
+  meetingSetVirtualBackground: 'バーチャル背景',
+  meetingSetBeauty: '美顔',
+  meetingPin: 'ロック＃ロック＃',
+  meetingShowVideoOffAttendees: '非ビデオ参加者の表示',
+  meetingShowMyVideo: '本人ビューを表示',
+  settingDualMonitors: 'デュアル モ二タ-を使用する',
+  settingDualMonitorsTip:
+    'オンにすると、2つのディスプレイに参加者のビデオ画面、画面共有コンテンツをそれぞれ表示することができます',
+  swapSecondMonitor: '画面の切り替え',
+
+  noSpeakerVolume: '何も聞こえなかった？',
+  adjustSpeakerVolume: '音量を上げる',
+
+  whiteBoardCloseModalContent: '現在の内容を導き出す必要がありますか?',
+  whiteBoardCloseModalSaveButtonText: '輸出',
+  whiteBoardCloseModalNotSaveButtonText: '輸出ない',
+  screenShareCloseModalContent: '現在の注釈を保存する必要がありますか？',
+  screenShareCloseModalSaveButtonText: '保存する',
+  screenShareCloseModalExitButtonText: '直接退出する',
+
+  cloudRecordMode: 'クラウド レコーディングの設定',
+  cloudRecordModeTip: '(オンにしたクラウド録画は、デフォルトで以下のモードで録画されます)',
+  cloudRecordTheCurrentSpeakerWithSharedScreen: '共有画面付きでアクティブ スピーカーをレコーディング',
+  cloudRecordGalleryViewWithSharedScreen: '共有画面付きでギャラリー ビューをレコーディング',
+  cloudRecordGalleryViewWithSharedScreenTip: 'ギャラリー ビューと共有コンテンツの両方を、同じビデオにレコーディングします',
+  cloudRecordThenCurrentSpeakerGalleryViewAndSharedScreenSeparately:
+    'アクティブ スピーカー、ギャラリー ビュー、共有画面を別々にレコーディング',
+  cloudRecordSeparateRecordingCurrentSpeaker: 'アクティブ スピーカー',
+  cloudRecordSeparateRecordingGalleryView: 'ギャラリー ビュー',
+  cloudRecordSeparateRecordingSharedScreen: '共有画面',
+  cloudRecordSeparateAudioFile: '音声ファイルを個別に録音する',
+  cloudRecordSelectAtLeastOneCloudRecordingMode: 'クラウド録画モードを少なくとも1つ選択します',
+
+  audioHasHowlingTitle: '現在の環境でエコが検出されました',
+  audioHasHowling: '会議での通話体験を保つため、マイクとスピーカーを無効にするために音声を切断することをおすすめします',
+  audioHowlingOk: '音声を遮断します',
+
+  beOccupied: '機器が使用中です',
 }

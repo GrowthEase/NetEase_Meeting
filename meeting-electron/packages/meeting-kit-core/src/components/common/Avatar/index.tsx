@@ -19,6 +19,7 @@ interface AvatarProps {
   onFocus?: (e: React.FocusEvent<HTMLDivElement>) => void
   onMouseLeave?: (e: React.MouseEvent<HTMLDivElement>) => void
   inviteState?: NEMeetingInviteStatus | NERoomMemberInviteState
+  showNetworkQuality?: boolean
   onCallClick?: () => void
 }
 const UserAvatar: React.FC<AvatarProps> = ({
@@ -32,6 +33,7 @@ const UserAvatar: React.FC<AvatarProps> = ({
   onFocus,
   onMouseEnter,
   onMouseLeave,
+  showNetworkQuality,
 }) => {
   const [canShowImg, setCanShowImg] = useState(true)
   const imgRef = useRef<HTMLImageElement>(null)
@@ -73,11 +75,24 @@ const UserAvatar: React.FC<AvatarProps> = ({
       style={{ ...style }}
       className={`nemeeting-avatar nemeeting-avatar-${size} ${className || ''}`}
     >
-      {getUserName(nickname)}
-      {avatar && canShowImg && !isAvatarHide && (
-        <img ref={imgRef} className="nemeeting-avatar-img" src={avatar} />
+      <div className="nemeeting-avatar-wrapper">
+        {getUserName(nickname, size === 16 ? 1 : 2)}
+        {avatar && canShowImg && !isAvatarHide && (
+          <img ref={imgRef} className="nemeeting-avatar-img" src={avatar} />
+        )}
+        {isEdit && <EditOutlined className="avatar-edit-icon" />}
+      </div>
+
+      {showNetworkQuality && (
+        <div className="nemeeting-avatar-network">
+          <svg
+            className="icon nemeeting-icon-network-quality"
+            aria-hidden="true"
+          >
+            <use xlinkHref="#icona-zu684" />
+          </svg>
+        </div>
       )}
-      {isEdit && <EditOutlined className="avatar-edit-icon" />}
     </div>
   )
 }

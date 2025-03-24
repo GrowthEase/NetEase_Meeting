@@ -64,6 +64,16 @@ const NormalSetting: React.FC<NormalSettingProps> = ({
     onSettingChange({ ...setting })
   }
 
+  function onDualMonitors(e: CheckboxChangeEvent) {
+    setting.dualMonitors = e.target.checked
+    // 同时勾中全屏进入
+    if (setting.dualMonitors && !inMeeting) {
+      setting.enterFullscreen = true
+    }
+
+    onSettingChange({ ...setting })
+  }
+
   function handleDownloadPathChange() {
     window.ipcRenderer?.send(IPCEvent.downloadPath, 'set')
     window.ipcRenderer?.once(IPCEvent.downloadPathReply, (event, arg) => {
@@ -205,14 +215,39 @@ const NormalSetting: React.FC<NormalSettingProps> = ({
             </span>
           </Popover>
         </div>
-        <div className="normal-setting-item">
-          <Checkbox
-            checked={setting.enterFullscreen}
-            onChange={onEnterFullscreen}
-          >
-            <span>{t('settingEnterFullscreen')}</span>
-          </Checkbox>
-        </div>
+        {window.isElectronNative ? (
+          <div className="normal-setting-item">
+            <Checkbox checked={setting.dualMonitors} onChange={onDualMonitors}>
+              <span>{t('settingDualMonitors')}</span>
+            </Checkbox>
+            <Popover
+              trigger={'hover'}
+              placement={'top'}
+              content={
+                <div className="toolbar-tip">{t('settingDualMonitorsTip')}</div>
+              }
+            >
+              <span>
+                <svg
+                  className="icon iconfont icona-45 nemeeting-blacklist-tip"
+                  aria-hidden="true"
+                >
+                  <use xlinkHref="#icona-45"></use>
+                </svg>
+              </span>
+            </Popover>
+          </div>
+        ) : null}
+        {window.isElectronNative ? (
+          <div className="normal-setting-item">
+            <Checkbox
+              checked={setting.enterFullscreen}
+              onChange={onEnterFullscreen}
+            >
+              <span>{t('settingEnterFullscreen')}</span>
+            </Checkbox>
+          </div>
+        ) : null}
         <div className="normal-setting-item">
           <Checkbox
             checked={!setting.enableShowNotYetJoinedMembers}
@@ -250,7 +285,7 @@ const NormalSetting: React.FC<NormalSettingProps> = ({
           >
             {t('chat')}
           </div>
-          <div className="normal-setting-download">
+          <div className="normal-setting-download" style={{ marginBottom: 20 }}>
             <div className="normal-setting-label">
               {t('settingChatMessageNotification')}
             </div>
@@ -273,7 +308,10 @@ const NormalSetting: React.FC<NormalSettingProps> = ({
             </Radio.Group>
           </div>
           {setting.downloadPath ? (
-            <div className="normal-setting-download">
+            <div
+              className="normal-setting-download"
+              style={{ marginBottom: 20 }}
+            >
               <div className="normal-setting-label">{t('downloadPath')}</div>
               <Popover
                 trigger="hover"

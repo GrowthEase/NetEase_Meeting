@@ -49,6 +49,15 @@ import {
   NERoomCaptionTranslationLanguage,
   NERoomScreenConfig,
   NERoomSystemDevice,
+  NERoomStartLocalRecordOptions,
+  NERoomUpdateLocalRecordLayoutsOptions,
+  NERoomStreamLayer,
+  NERoomVideoFrame,
+  NERoomLiveBackgroundInfo,
+  NERoomLiveBackgroundParam,
+  NERoomRecordConfig,
+  IAntiLeechProp,
+  IAntiLeechInfo,
 } from 'neroom-types'
 
 import { Md5 } from 'ts-md5/dist/md5'
@@ -82,7 +91,9 @@ import {
 import {
   EndRoomReason,
   GetAccountInfoListResponse,
+  LocalRecordState,
   MeetingEventType,
+  NEMeetingGetListBySizeParams,
   PlatformInfo,
   RecordState,
   tagNERoomRtcAudioProfileType,
@@ -90,7 +101,7 @@ import {
   UserEventType,
   WaitingRoomContextInterface,
   WATERMARK_STRATEGY,
-  WATERMARK_STYLE,
+  WATERMARK_STYLE
 } from '../types/innerType'
 import {
   EnterPriseInfo,
@@ -148,7 +159,9 @@ import {
   NEMeetingWebAppItem,
 } from '../kit/interface/service/pre_meeting_service'
 import { createDefaultCaptionSetting } from '.'
-import RendererManager from '../libs/Renderer/RendererManager'
+import { getCloudRecordConfig } from '../hooks/useCloudRecord'
+
+const DEFAULT_SERVER_RUL = 'https://meeting.yunxinroom.com'
 
 const logger = new Logger('Meeting-NeMeeting', true)
 
@@ -264,12 +277,12 @@ export default class NEMeetingService {
   subscribeMembersMap: Record<string, 0 | 1> = {}
   outEventEmitter: EventEmitter
   appKey = ''
-  public _meetingServerDomain = 'https://meeting.yunxinroom.com'
+  public _meetingServerDomain = DEFAULT_SERVER_RUL
   private _screenSharingSourceId = ''
   private _isAnonymous = false
   private _isLoginedByAccount = false // 是否已通过账号登录
   private _meetingStatus = 'unlogin'
-  private authService: NEAuthService | null = null
+  public authService: NEAuthService | null = null
   private messageService: NEMessageChannelService | null = null
   private _roomkit: Roomkit
   private _eventEmitter: EventEmitter
@@ -306,6 +319,12 @@ export default class NEMeetingService {
   private _previewListener
   private _joinTimeoutTimer: null | ReturnType<typeof setTimeout> = null
   private _isMySelfJoinRtc = false
+  private _startWebLocalAudioVolumeIndicationTimer: null | ReturnType<
+    typeof setInterval
+  > = null
+
+  // 共享屏幕视频渲染map
+  private _sharingScreenVideoMap: Record<string, HTMLElement> = {}
 
   constructor(params: {
     roomkit: Roomkit
@@ -573,7 +592,7 @@ export default class NEMeetingService {
       params.neRtcServerAddresses ||
       params.whiteboardConfig ||
       (params.meetingServerDomain &&
-        params.meetingServerDomain !== 'https://roomkit.netease.im')
+        params.meetingServerDomain !== DEFAULT_SERVER_RUL)
     ) {
       options.serverConfig = {
         roomKitServerConfig: {
@@ -606,7 +625,7 @@ export default class NEMeetingService {
       } catch (error) {
         console.log('privateConfig error', error)
       }
-    } else if (params.serverUrl) {
+    } else if (params.serverUrl && params.serverUrl !== DEFAULT_SERVER_RUL) {
       this._meetingServerDomain = params.serverUrl
       options.serverUrl = params.serverUrl
     }
@@ -620,12 +639,15 @@ export default class NEMeetingService {
         console.log('logsPath error', error)
       }
     }
+    //白板防盗链
+    if (params.whiteboardAppConfig) {
+      options.whiteboardAppConfig = params.whiteboardAppConfig
+    }
 
     if (!this._roomkit.isInitialized) {
       await this._roomkit.initialize(options)
     }
 
-    RendererManager.instance.roomKit = this._roomkit
     // axios.defaults.baseURL = this._meetigServerDomain;
     this._request = this.createRequest()
     this.authService = this._roomkit.authService
@@ -778,17 +800,21 @@ export default class NEMeetingService {
             validVolumeThreshold,
             volumeIndicationInterval,
             volumeIndicationWindowSize,
+            activeSpeakerListReportInterval,
           } = activeSpeakerConfig
 
           activeSpeakerConfig.activeSpeakerVolumeThreshold =
             activeSpeakerVolumeThreshold || 30
-          activeSpeakerConfig.enableVideoPreSubscribe = !!enableVideoPreSubscribe
+          activeSpeakerConfig.enableVideoPreSubscribe =
+            !!enableVideoPreSubscribe
           activeSpeakerConfig.maxActiveSpeakerCount = maxActiveSpeakerCount || 3
           activeSpeakerConfig.validVolumeThreshold = validVolumeThreshold || 10
           activeSpeakerConfig.volumeIndicationInterval =
             volumeIndicationInterval || 200
           activeSpeakerConfig.volumeIndicationWindowSize =
             volumeIndicationWindowSize || 15
+          activeSpeakerConfig.activeSpeakerListReportInterval =
+            activeSpeakerListReportInterval || 3000
         } else {
           activeSpeakerConfig = {
             activeSpeakerVolumeThreshold: 30,
@@ -797,6 +823,7 @@ export default class NEMeetingService {
             validVolumeThreshold: 10,
             volumeIndicationInterval: 200,
             volumeIndicationWindowSize: 15,
+            activeSpeakerListReportInterval: 3000,
           }
         }
 
@@ -999,8 +1026,8 @@ export default class NEMeetingService {
       })
   }
 
-  async openSettingsWindow(type?: string): Promise<void> {
-    this.outEventEmitter.emit(UserEventType.OpenSettingsWindow, type)
+  async openSettingsWindow(type?: string, subType?: string): Promise<void> {
+    this.outEventEmitter.emit(UserEventType.OpenSettingsWindow, type, subType)
     return
   }
 
@@ -1116,6 +1143,22 @@ export default class NEMeetingService {
     return res.meetingList
   }
 
+  async getMeetingListBySize(
+    params: NEMeetingGetListBySizeParams
+  ): Promise<CreateMeetingResponse[]> {
+    const { states = [1, 2, 3], offset = 0, size = 20 } = params
+    const data = await this._request.get(`/scene/meeting/v2/list`, {
+      params: {
+        states: states.join(','),
+        offset,
+        size,
+      },
+    })
+    const res = data.data
+
+    return res.meetingList
+  }
+
   async getScheduledMembers(meetingNum: string): Promise<NEScheduledMember[]> {
     return this._request
       .get(
@@ -1171,7 +1214,14 @@ export default class NEMeetingService {
       `/scene/meeting/${this.appKey}/v2/info/${meetingId}`
     )
 
-    this._meetingInfo = res.data
+    if (
+      !this._meetingInfo?.meetingNum ||
+      (this._meetingInfo?.meetingNum &&
+        this._meetingInfo.meetingNum == meetingId)
+    ) {
+      this._meetingInfo = res.data
+    }
+
     return res.data
   }
 
@@ -1216,7 +1266,7 @@ export default class NEMeetingService {
     const clientType = window.isElectronNative
       ? window.isWins32
         ? 'pc'
-        : 'mac'
+        : window.systemPlatform === 'linux' ? 'linux' : 'mac'
       : 'web'
 
     const deviceId = this._roomkit.deviceId || window.NERoom.getDeviceId?.()
@@ -1369,6 +1419,11 @@ export default class NEMeetingService {
       interpretation,
       timezoneId,
     } = options
+
+
+    const recordConfig = getCloudRecordConfig()
+
+
     const data = {
       password,
       subject,
@@ -1415,11 +1470,10 @@ export default class NEMeetingService {
       timezoneId,
       recordConfig: {
         recordStrategy: options.cloudRecordConfig?.recordStrategy,
+        ...recordConfig,
       },
       livePrivateConfig: liveConfig,
     }
-
-    console.log('scheduleMeeting', data)
 
     if (openLive) {
       const extensionConfig = {
@@ -1439,6 +1493,7 @@ export default class NEMeetingService {
             liveConfig?.background?.backgroundFile
           )
         } else {
+          console.log('sss', liveConfig?.background?.backgroundFile)
           res = await this.nosService?.uploadResource({
             blob: liveConfig?.background?.backgroundFile as Blob,
             type: 'image',
@@ -1584,6 +1639,9 @@ export default class NEMeetingService {
         options.attendeeAudioOffType,
         !!options.attendeeAudioOff
       )
+
+      const recordConfig = getCloudRecordConfig()
+
       const data = await this._request
         .put<string, ResponseData>(
           `/scene/meeting/${this.appKey}/v1/create/${this._meetingType}`,
@@ -1627,6 +1685,7 @@ export default class NEMeetingService {
             },
             recordConfig: {
               recordStrategy: cloudRecordConfig?.recordStrategy,
+              ...recordConfig,
             },
           }
         )
@@ -1657,6 +1716,19 @@ export default class NEMeetingService {
       })
       this._meetingInfo = res
       const initialProperties = {}
+
+      if (
+        settings?.audioSetting?.usingComputerAudio === false &&
+        window.h5App
+      ) {
+        if (window.isElectronNative) {
+          initialProperties['audioDisconnected'] = '1'
+        } else {
+          initialProperties['audioDisconnected'] = {
+            value: '1',
+          }
+        }
+      }
 
       if (options.memberTag) {
         initialProperties['tag'] = { value: options.memberTag }
@@ -1703,6 +1775,17 @@ export default class NEMeetingService {
     }
 
     return []
+  }
+
+  async getBackgroundInfo(): Promise<
+    NEResult<NERoomLiveBackgroundInfo> | undefined
+  > {
+    return this.liveController?.getBackgroundInfo()
+  }
+  async updateBackgroundInfo(
+    param: NERoomLiveBackgroundParam
+  ): Promise<NEResult<number> | undefined> {
+    return this.liveController?.updateBackgroundInfo(param)
   }
 
   async getSessionMessagesHistory(options: {
@@ -1790,7 +1873,7 @@ export default class NEMeetingService {
       })
   }
 
-  getLiveInfo(): NERoomLiveInfo | null {
+  async getLiveInfo(): NERoomLiveInfo | null {
     if (!this.liveController) {
       return null
     }
@@ -1940,6 +2023,14 @@ export default class NEMeetingService {
         console.log('authService.login', error)
       }
 
+      if (!this._accountInfo) {
+        this._accountInfo = {
+          userUuid: this._userUuid,
+          userToken: this._token,
+        }
+      }
+
+      localStorage.setItem(ACCOUNT_INFO_KEY, JSON.stringify(this._accountInfo))
       anonymousJoinStep?.endWith({
         code: data.code,
         msg: data.msg || 'success',
@@ -1985,9 +2076,13 @@ export default class NEMeetingService {
     return leaveRoom
   }
 
+  reset() {
+    this._reset()
+  }
+
   async end(): Promise<void> {
     try {
-      logger.debug('end():  %s %t', this._isAnonymous)
+      logger.warn('end():  %s %t', this._isAnonymous)
       this.roomContext && (await this.roomContext.endRoom())
       if (this._isAnonymous) {
         this._meetingStatus = 'unlogin'
@@ -2160,7 +2255,8 @@ export default class NEMeetingService {
       })
     })
     let localHandsUp = false
-
+    let isSomeOneLocalRecording = false
+    console.warn('getMeetingInfo members: ', members)
     members.forEach((member) => {
       // 去除只显示加入rtc房间的 ，h5断网之后会重新离开rtc，然后立马恢复，dom元素设置会存在问题，造成黑屏
       // if (member.isInRtcChannel || member.uuid === localMember.uuid) {
@@ -2170,6 +2266,23 @@ export default class NEMeetingService {
 
       if (member.isSharingSystemAudio) {
         systemAudioUuid = member.uuid
+      }
+      let isLocalRecording = false
+      let localRecordAvailable = false
+      //初始入会时，判断每一个成功当前是否有在本地录制，以及是否有本地录制权限
+      if(member.properties?.localRecord){
+        isLocalRecording = member.properties?.localRecord?.value == '1'
+        console.log('当前有人在本地录制 isLocalRecording: ',isLocalRecording)
+        isSomeOneLocalRecording = isLocalRecording
+      }
+
+      if(member.properties?.localRecordAvailable){
+        localRecordAvailable = member.properties.localRecordAvailable.value == '1'
+        console.log('localRecordAvailable 变更: ',localRecordAvailable)
+      } else if(member.role?.name === NEMeetingRole.host || member.role?.name === NEMeetingRole.coHost){
+        localRecordAvailable = true
+      } else {
+        localRecordAvailable = false
       }
 
       if (member.role?.name === NEMeetingRole.host) {
@@ -2196,8 +2309,12 @@ export default class NEMeetingService {
         }
       }
 
-      memberList.push({ ...member, role: member.role?.name, isHandsUp })
+      memberList.push({ ...member, role: member.role?.name, isHandsUp,isLocalRecording, localRecordAvailable })
     })
+    //如果当前有人在本地录制，需要展示左上角的本地录制中的图标
+    if (isSomeOneLocalRecording) {
+      this.eventEmitter?.emit(MeetingEventType.needShowLocalRecordTip, true)
+    }
     const {
       subject,
       startTime,
@@ -2236,6 +2353,11 @@ export default class NEMeetingService {
     const permissionConfig = getMeetingPermission(
       Number(roomProperties.securityCtrl?.value || 0) || 0
     )
+    console.warn('getMeetingPermission 获取房间权限信息: ', permissionConfig)
+    localMember.localRecordAvailable = false
+    if (this.isHostOrCohost || permissionConfig.localRecordPermission.all){
+      localMember.localRecordAvailable = true
+    }
 
     return {
       memberList,
@@ -2261,6 +2383,7 @@ export default class NEMeetingService {
         waitingRoomChatPermission,
         isAllowParticipantsEnableCaption: this.getIsAllowParticipantsEnableCaption(),
         remoteViewOrder,
+        joinMeetingTime: Date.now(),
         isScheduledMeeting: isScheduledMeeting,
         scheduledMeetingViewOrder: settings.roomInfo.viewOrder,
         isWaitingRoomEnabled: this.waitingRoomController?.isWaitingRoomEnabledOnEntry(),
@@ -2290,6 +2413,10 @@ export default class NEMeetingService {
         cloudRecordState: this.roomContext.isCloudRecording
           ? RecordState.Recording
           : RecordState.NotStart,
+        isLocalRecording: this.roomContext.isLocalRecording,
+        localRecordState: this.roomContext.isLocalRecording
+          ? LocalRecordState.Recording
+          : LocalRecordState.NotStart,
         // isUnMutedAudio: this.isUnMutedAudio,
         // isUnMutedVideo: this.isUnMutedVideo,
         videoOff: roomProperties.videoOff
@@ -2512,7 +2639,6 @@ export default class NEMeetingService {
             )
         }
       }
-
       return this.rtcController.reconnectMyAudio()
     }
 
@@ -2572,6 +2698,44 @@ export default class NEMeetingService {
   > {
     return await this.rtcController?.takeLocalSnapshot?.(1)
   }
+  //** 本地录制相关接口 */
+  startLocalRecord(
+    options: NERoomStartLocalRecordOptions
+  ){
+    let {recordAudio, isShowTimestampCover, filePath, fileName, coverConfigFilePath, defaultCoverConfigFilePath, coverTitle, coverMeetingNumber, coverCreateTime} = options
+    console.log('startLocalRecord options: ', options)
+    return this.rtcController?.startLocalRecord?.({
+      recordAudio,
+      isShowTimestampCover,
+      filePath,
+      fileName,
+      coverConfigFilePath,
+      defaultCoverConfigFilePath,
+      coverTitle,
+      coverMeetingNumber,
+      coverCreateTime
+    })
+  }
+  stopLocalRecord(){
+    return this.rtcController?.stopLocalRecord?.()
+  }
+  updateLocalRecordLayouts(
+    options:NERoomUpdateLocalRecordLayoutsOptions[]
+  ){
+    console.log('updateLocalRecordLayouts 同步布局: ', options)
+    return this.rtcController?.updateLocalRecordLayouts?.(options)
+  }
+  pushLocalRecorderVideoFrame(
+    uid: string,
+    streamLayer: NERoomStreamLayer,
+    frame: NERoomVideoFrame
+  ){
+    console.log('pushLocalRecorderVideoFrame 同步白板数据')
+    return this.rtcController?.pushLocalRecorderVideoFrame?.(uid, streamLayer, frame)
+  }
+  stopLocalRecorderRemux(){
+    return this.previewController?.stopLocalRecorderRemux?.()
+  }
   async sendEmoticon(key: string) {
     const commandId = 11000
     const data = {
@@ -2613,6 +2777,61 @@ export default class NEMeetingService {
       event: 'setIgnoreMouseEvents',
       payload: !enable,
     })
+  }
+
+  whiteboardLogin(): void {
+    this.whiteboardController?.login?.()
+  }
+
+  whiteboardAuth(): void {
+    this.whiteboardController?.auth?.()
+  }
+  async getWhiteboardUrl(): Promise<string | undefined> {
+    return this.whiteboardController?.getWhiteboardUrl?.()
+  }
+  setWhiteboardEnableDraw(enable: boolean): void {
+    this.whiteboardController?.setEnableDraw(enable)
+  }
+  resetWhiteboardCanvas(): void {
+    this.whiteboardController?.resetWhiteboardCanvas?.()
+  }
+
+  setupWhiteboardCanvas(): void {
+    const sendWhiteboardWebJsBridge = (webJsBridge: string) => {
+      this._eventEmitter.emit(EventType.WhiteboardWebJsBridge, webJsBridge)
+      const dualMonitorsWindow = getWindow('dualMonitorsWindow')
+
+      dualMonitorsWindow?.postMessage({
+        event: 'eventEmitter',
+        payload: {
+          key: EventType.WhiteboardWebJsBridge,
+          args: [webJsBridge],
+        },
+      })
+    }
+
+    this.whiteboardController?.setupWhiteboardCanvas({
+      onLogin: sendWhiteboardWebJsBridge,
+      onLogout: sendWhiteboardWebJsBridge,
+      onAuth: sendWhiteboardWebJsBridge,
+      onDrawEnableChanged: sendWhiteboardWebJsBridge,
+      onToolConfigChanged: sendWhiteboardWebJsBridge,
+    })
+  }
+
+  //刷新防盗链
+  getAntiLeechInfo(prop: IAntiLeechProp, url: string): Promise<IAntiLeechInfo> {
+    return this._request({
+      method: 'POST',
+      url: `/scene/apps/v1/vod/refresh-url`,
+      data: {
+        bucketName: prop.bucket,
+        objectKey: prop.object,
+        url: url,
+      },
+    }).then((res) => {
+      return res.data
+    }) as unknown as Promise<IAntiLeechInfo>
   }
 
   async unmuteLocalAudio(
@@ -2715,8 +2934,10 @@ export default class NEMeetingService {
     })
   }
 
-  async startCloudRecord(): Promise<NEResult<null> | undefined> {
-    return this.roomContext?.startCloudRecord()
+  async startCloudRecord(
+    config?: NERoomRecordConfig
+  ): Promise<NEResult<null> | undefined> {
+    return this.roomContext?.startCloudRecord(config)
   }
 
   async stopCloudRecord(): Promise<NEResult<null> | undefined> {
@@ -2764,10 +2985,12 @@ export default class NEMeetingService {
     return SuccessBody([])
   }
 
-  async muteLocalScreenShare(): Promise<NEResult<null> | undefined> {
+  async muteLocalScreenShare(config?: {
+    needRequestMeetingServerScreenShare: boolean
+  }): Promise<NEResult<null> | undefined> {
     logger.debug('muteLocalScreenShare')
 
-    return this.rtcController?.stopScreenShare().then(() => {
+    return this.rtcController?.stopScreenShare(config).then(() => {
       if (window.isElectronNative) {
         return this.annotationController?.stopAnnotation()
       }
@@ -2779,7 +3002,9 @@ export default class NEMeetingService {
   }
 
   async unmuteLocalScreenShare(
-    params?: NERoomScreenConfig
+    params?: NERoomScreenConfig & {
+      preferMotion?: boolean
+    }
   ): Promise<NEResult<null> | undefined> {
     logger.debug('unmuteLocalScreenShare %t %o', params)
 
@@ -2789,7 +3014,26 @@ export default class NEMeetingService {
       options = { ...params, sourceId: this._screenSharingSourceId }
     }
 
-    return this.rtcController?.startScreenShare(options)
+    if (window.systemPlatform === 'linux' && !params?.isApp) {
+      return this.rtcController?.startRectShare?.({
+        sourceRectangle: {
+          x: 0,
+          y: 0,
+          width: 0,
+          heigth: 0
+        },
+        regionRectangle: {
+          x: 0,
+          y: 0,
+          width: 0,
+          heigth: 0
+        },
+        preferMotion: !!params?.preferMotion
+      })
+    } else {
+      return this.rtcController?.startScreenShare(options)
+    }
+
   }
 
   async changeLocalAudio(
@@ -2864,6 +3108,10 @@ export default class NEMeetingService {
       const res = await this.rtcController.enumRecordDevices()
 
       logger.debug('getMicrophones success, %o %t', res.data)
+      //console.warn('mic设备列表: ', res.data)
+      res.data = res.data.filter(item =>{
+        return !item.deviceName.includes('立体声混音')
+      })
       const data = setDefaultDevice(res.data)
 
       return data
@@ -3075,7 +3323,7 @@ export default class NEMeetingService {
   }
 
   saveSettings(settings: SaveSettingInterface): Promise<void> {
-    return this._request.patch(
+    return this._request.post(
       `/scene/meeting/${this.appKey}/v1/account/settings`,
       {
         settings,
@@ -3099,6 +3347,7 @@ export default class NEMeetingService {
 
   // key: SecurityCtrlEnum
   securityControl(params: { [key: string]: boolean }) {
+
     return this._request
       .put(
         `/scene/apps/${this.appKey}/v1/rooms/${this.meetingNum}/securityCtrl`,
@@ -3246,6 +3495,10 @@ export default class NEMeetingService {
 
       url = res?.data
     } else {
+      // @ts-expect-error im 需要构造一个name和lastModified
+      avatar.lastModified = new Date()
+      // @ts-expect-error im 需要构造一个name和lastModified
+      avatar.name = 'avatar.png'
       const res = await this.nosService?.uploadResource({
         blob: avatar,
         type: 'image',
@@ -3273,25 +3526,16 @@ export default class NEMeetingService {
 
     if (shareVideoWindow) {
       if (isRemove) {
-        const context = {
-          userUuid: uuid,
-          sourceType: 'video',
-        }
-
-        RendererManager.instance.removeRenderer(context)
+        this.rtcController?.removeLocalVideoCanvas?.()
+        delete this._sharingScreenVideoMap[uuid]
       } else {
         const view = shareVideoWindow?.document.getElementById(
           `nemeeting-${uuid}-video-card`
         )
 
         if (view) {
-          const context = {
-            view: view,
-            userUuid: uuid,
-            sourceType: 'video',
-          }
-
-          RendererManager.instance.createRenderer(context)
+          this.rtcController?.setupLocalVideoCanvas?.(view)
+          this._sharingScreenVideoMap[uuid] = view
         }
       }
     }
@@ -3316,13 +3560,8 @@ export default class NEMeetingService {
     )
 
     if (view) {
-      const context = {
-        view: view,
-        userUuid: uuid,
-        sourceType: 'video',
-      }
-
-      RendererManager.instance.createRenderer(context)
+      this._sharingScreenVideoMap[uuid] = view
+      this.rtcController?.setupRemoteVideoCanvas?.(view, uuid)
     }
 
     return this.rtcController
@@ -3348,12 +3587,8 @@ export default class NEMeetingService {
     const shareVideoWindow = getWindow('shareVideoWindow')
 
     if (shareVideoWindow) {
-      const context = {
-        userUuid: uuid,
-        sourceType: 'video',
-      }
-
-      RendererManager.instance.removeRenderer(context)
+      this.rtcController?.removeRemoteVideoCanvas?.(uuid)
+      delete this._sharingScreenVideoMap[uuid]
     }
 
     return this.rtcController
@@ -3488,7 +3723,7 @@ export default class NEMeetingService {
     return window.isElectronNative
       ? window.isWins32
         ? NEClientReportType.PC
-        : NEClientReportType.MAC
+        : window.systemPlatform === 'linux' ? NEClientReportType.LINUX : NEClientReportType.MAC
       : NEClientReportType.WEB
   }
   async updateInterpretation(data: {
@@ -3519,6 +3754,34 @@ export default class NEMeetingService {
     )
   }
 
+  startWebLocalAudioVolumeIndication() {
+    if (!this.localMember?.isAudioOn) {
+      return
+    }
+
+    const defaultTime = this.globalConfig?.appConfig.MEETING_CLIENT_CONFIG
+      ?.activeSpeakerConfig?.volumeIndicationInterval
+
+    if (this._startWebLocalAudioVolumeIndicationTimer) {
+      clearInterval(this._startWebLocalAudioVolumeIndicationTimer)
+    }
+
+    this._startWebLocalAudioVolumeIndicationTimer = setInterval(() => {
+      const volume = this.rtcController?.getLocalAudioLevel()
+
+      this._eventEmitter.emit(
+        EventType.RtcLocalAudioVolumeIndication,
+        volume,
+        false
+      )
+    }, defaultTime || 200)
+  }
+
+  stopWebLocalAudioVolumeIndication() {
+    this._startWebLocalAudioVolumeIndicationTimer &&
+      clearInterval(this._startWebLocalAudioVolumeIndicationTimer)
+  }
+
   private _moveToWaitingRoomReset() {
     // this.rtcController = null
     this.whiteboardController = undefined
@@ -3528,7 +3791,6 @@ export default class NEMeetingService {
   }
 
   private _reset(): void {
-    RendererManager.instance.rtcController = undefined
     this.roomContext = null
     this.rtcController = undefined
     this.whiteboardController = undefined
@@ -3544,7 +3806,9 @@ export default class NEMeetingService {
     this._screenSharingSourceId = ''
     this.annotationController = undefined
     this._isMySelfJoinRtc = false
-
+    this._startWebLocalAudioVolumeIndicationTimer &&
+      clearInterval(this._startWebLocalAudioVolumeIndicationTimer)
+    this._startWebLocalAudioVolumeIndicationTimer = null
     this.liveTranscriptionController?.destroy()
     this.liveTranscriptionController = undefined
   }
@@ -3554,6 +3818,27 @@ export default class NEMeetingService {
         getWindow('settingWindow')?.postMessage({
           event: 'onNetworkQuality',
           payload: data,
+        })
+        getWindow('shareVideoWindow')?.postMessage({
+          event: 'eventEmitter',
+          payload: {
+            key: EventType.NetworkQuality,
+            args: [data],
+          },
+        })
+        getWindow('memberWindow')?.postMessage({
+          event: 'eventEmitter',
+          payload: {
+            key: EventType.NetworkQuality,
+            args: [data],
+          },
+        })
+        getWindow('dualMonitorsWindow')?.postMessage({
+          event: 'eventEmitter',
+          payload: {
+            key: EventType.NetworkQuality,
+            args: [data],
+          },
         })
         this._eventEmitter.emit(EventType.NetworkQuality, data)
       },
@@ -3739,6 +4024,22 @@ export default class NEMeetingService {
           settingWindow.origin
         )
       },
+      onLocalRecorderStatus: (state, tasdId) => {
+        console.warn('previewRoomContext 本地录制状态通知: ', state)
+        this._eventEmitter.emit(
+          EventType.OnLocalRecorderStatus,
+          state,
+          tasdId
+        )
+      },
+      onLocalRecorderError: (error, tasdId) => {
+        console.warn('previewRoomContext 本地录制错误通知: ', error)
+        this._eventEmitter.emit(
+          EventType.OnLocalRecorderError,
+          error,
+          tasdId
+        )
+      },
     }
     previewRoomContext?.addPreviewRoomListener(this._previewListener)
   }
@@ -3822,6 +4123,16 @@ export default class NEMeetingService {
           args: [webJsBridge],
         },
       })
+
+      const dualMonitorsWindow = getWindow('dualMonitorsWindow')
+
+      dualMonitorsWindow?.postMessage({
+        event: 'eventEmitter',
+        payload: {
+          key: EventType.RoomAnnotationWebJsBridge,
+          args: [webJsBridge],
+        },
+      })
     }
 
     this.annotationController?.setupCanvas({
@@ -3895,6 +4206,10 @@ export default class NEMeetingService {
               this._isMySelfJoinRtc = true
               this._joinTimeoutTimer && clearTimeout(this._joinTimeoutTimer)
               this._joinTimeoutTimer = null
+              // 非h5环境开启AI啸叫检测
+              if (!window.h5App) {
+                this.rtcController?.enableAIhowling?.()
+              }
             }
           }
 
@@ -3979,6 +4294,25 @@ export default class NEMeetingService {
           isSharing,
           operator
         ) => {
+          const isMySelf = member.uuid === this._userUuid
+
+          if (!isSharing && isMySelf) {
+            Object.keys(this._sharingScreenVideoMap).forEach((uuid) => {
+              if (this._sharingScreenVideoMap[uuid]) {
+                if (uuid === this._userUuid) {
+                  this.rtcController?.removeLocalVideoCanvas?.(
+                    this._sharingScreenVideoMap[uuid]
+                  )
+                } else {
+                  this.rtcController?.removeRemoteVideoCanvas?.(
+                    uuid,
+                    this._sharingScreenVideoMap[uuid]
+                  )
+                }
+              }
+            })
+          }
+
           this._eventEmitter.emit(
             EventType.MemberScreenShareStateChanged,
             member,
@@ -4202,10 +4536,10 @@ export default class NEMeetingService {
         },
         onRtcRemoteAudioVolumeIndication: (data, channelName) => {
           if (data?.length === 0) return
-          getWindow('shareVideoWindow')?.postMessage({
-            event: 'audioVolumeIndication',
-            payload: data[0],
-          })
+          // getWindow('shareVideoWindow')?.postMessage({
+          //   event: 'audioVolumeIndication',
+          //   payload: data[0],
+          // })
           if (!window.ipcRenderer && this.rtcController) {
             const rtc = this.rtcController._rtc
             const localVolume = rtc?.localStream?.getAudioLevel()
@@ -4219,7 +4553,7 @@ export default class NEMeetingService {
               .filter((item) => {
                 return item.volume > 1
               })
-            if (localVolume > 0) {
+            if (localVolume > 0 && this.roomContext?.localMember.isAudioOn) {
               const localData = {
                 userUuid: this.localMember?.uuid as string,
                 volume: localVolume / 10,
@@ -4258,6 +4592,26 @@ export default class NEMeetingService {
                 args: [[...arr], channelName],
               },
             })
+
+            const dualMonitorsWindow = getWindow('dualMonitorsWindow')
+
+            dualMonitorsWindow?.postMessage({
+              event: 'eventEmitter',
+              payload: {
+                key: EventType.RtcAudioVolumeIndication,
+                args: [[...arr], channelName],
+              },
+            })
+
+            const shareVideoWindow = getWindow('shareVideoWindow')
+
+            shareVideoWindow?.postMessage({
+              event: 'eventEmitter',
+              payload: {
+                key: EventType.RtcAudioVolumeIndication,
+                args: [[...arr], channelName],
+              },
+            })
           }
           // if (arr.length >= 1 && window.isElectronNative) {
           // arr.sort((a, b) => Number(b?.volume) - Number(a?.volume))
@@ -4282,6 +4636,9 @@ export default class NEMeetingService {
             recordState,
             operatorMember
           )
+        },
+        onAudioHowling: (data) => {
+          this._eventEmitter.emit(EventType.AudioHowling, data)
         },
         onRtcVirtualBackgroundSourceEnabled: (enabled, reason) => {
           const settingWindow = getWindow('settingWindow')
@@ -4389,10 +4746,32 @@ export default class NEMeetingService {
             message
           )
         },
+        onLocalRecorderStatus: (state, tasdId) => {
+          console.warn('本地录制状态通知: ', state)
+          this._eventEmitter.emit(
+            EventType.OnLocalRecorderStatus,
+            state,
+            tasdId
+          )
+        },
+        onLocalRecorderError: (error, tasdId) => {
+          console.warn('本地录制错误通知: ', error)
+          this._eventEmitter.emit(
+            EventType.OnLocalRecorderError,
+            error,
+            tasdId
+          )
+        },
+        onWhiteboardConnected: () => {
+          console.warn('白板sdk加入房间并且链接成功')
+          this._eventEmitter.emit(EventType.OnWhiteboardConnected)
+        },
       })
   }
 
   private async _joinHandler(options: NEMeetingJoinOptions) {
+    const settings = getLocalStorageSetting()
+
     const meetingId =
       this._meetingType === 2
         ? this._privateMeetingNum
@@ -4420,7 +4799,7 @@ export default class NEMeetingService {
     })
     this._meetingInfo = res
     // result = await this._siganling.join(options)
-    logger.debug('options..', options)
+    logger.debug('加入房间 options..', options)
     // 跨应用互通逻辑
     const { meetingAppKey, meetingUserUuid, meetingUserToken } = res
     let crossAppAuthorization: NECrossAppAuthorization | undefined
@@ -4434,6 +4813,16 @@ export default class NEMeetingService {
     }
 
     const initialProperties = {}
+
+    if (settings?.audioSetting?.usingComputerAudio === false && !window.h5App) {
+      if (window.isElectronNative) {
+        initialProperties['audioDisconnected'] = '1'
+      } else {
+        initialProperties['audioDisconnected'] = {
+          value: '1',
+        }
+      }
+    }
 
     if (options.memberTag) {
       initialProperties['tag'] = { value: options.memberTag }
@@ -4565,6 +4954,22 @@ export default class NEMeetingService {
           userUuid
         )
         return
+      case memberAction.allowLocalRecord: // 授权本地录制权限
+        return (this.roomContext as NERoomContext).updateMemberProperty(
+          userUuid,
+          'localRecordAvailable',
+          JSON.stringify({
+            value: '1',
+          })
+        )
+      case memberAction.notAllowLocalRecord: // 授权本地录制权限
+        return (this.roomContext as NERoomContext).updateMemberProperty(
+          userUuid,
+          'localRecordAvailable',
+          JSON.stringify({
+            value: '0',
+          })
+        )
     }
   }
 
@@ -4607,6 +5012,7 @@ export default class NEMeetingService {
           AttendeeOffType.offAllowSelfOn + `_${new Date().getTime()}`
         )
       case hostAction.unmuteMemberVideo:
+        console.log('sendCustomMessage', this.meetingNum, userUuid)
         return (this
           .messageService as NEMessageChannelService).sendCustomMessage(
           this.meetingNum,
@@ -4859,7 +5265,6 @@ export default class NEMeetingService {
 
     console.log('start get controller')
     this.rtcController = this.roomContext.rtcController
-    RendererManager.instance.rtcController = this.rtcController
     this.whiteboardController = this.roomContext.whiteboardController
     this.annotationController = this.roomContext.annotationController
     this._addAnnotationView()
@@ -5077,6 +5482,7 @@ export default class NEMeetingService {
             if (majorVolume < settingVolume && majorVolume <= 100) {
               majorVolume += perVolume
               majorVolume = Math.min(majorVolume, 100)
+              console.log('调节音量', majorVolume)
               this.rtcController?.adjustChannelPlaybackSignalVolume(
                 '',
                 majorVolume
@@ -5092,11 +5498,31 @@ export default class NEMeetingService {
   }
   private handleLocalAudioVolumeIndication(data, isChannel: boolean) {
     if (this.localMember?.isAudioOn) {
-      getWindow('shareVideoWindow')?.postMessage({
-        event: 'audioVolumeIndication',
+      // getWindow('shareVideoWindow')?.postMessage({
+      //   event: 'audioVolumeIndication',
+      //   payload: {
+      //     userUuid: this.localMember?.uuid,
+      //     volume: data,
+      //   },
+      // })
+
+      const shareVideoWindow = getWindow('shareVideoWindow')
+
+      shareVideoWindow?.postMessage({
+        event: 'eventEmitter',
         payload: {
-          userUuid: this.localMember?.uuid,
-          volume: data,
+          key: EventType.RtcLocalAudioVolumeIndication,
+          args: [data],
+        },
+      })
+
+      const dualMonitorsWindow = getWindow('dualMonitorsWindow')
+
+      dualMonitorsWindow?.postMessage({
+        event: 'eventEmitter',
+        payload: {
+          key: EventType.RtcLocalAudioVolumeIndication,
+          args: [data],
         },
       })
     }

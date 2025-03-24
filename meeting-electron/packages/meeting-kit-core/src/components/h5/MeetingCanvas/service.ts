@@ -11,6 +11,7 @@ export function groupMembersService(data: {
   activeSpeakerUuid: string
   groupType: 'web' | 'h5'
   enableSortByVoice: boolean
+  dualMonitors?: boolean
   layout?: LayoutTypeEnum
   isWhiteboardTransparent?: boolean
   enableVoicePriorityDisplay: boolean
@@ -24,7 +25,7 @@ export function groupMembersService(data: {
     memberList,
     groupNum,
     focusUuid,
-    screenUuid,
+    dualMonitors,
     myUuid,
     activeSpeakerUuid,
     enableSortByVoice,
@@ -32,13 +33,20 @@ export function groupMembersService(data: {
     groupType,
     layout,
     isWhiteboardTransparent,
-    whiteboardUuid,
     pinVideoUuid,
     viewOrder,
     inInvitingMemberList,
     hostUuid,
     enableHideVideoOffAttendees,
   } = data
+  let screenUuid = data.screenUuid
+  let whiteboardUuid = data.whiteboardUuid
+
+  // 如果是双屏模式，则主画面不显示共享画面
+  if (dualMonitors) {
+    screenUuid = ''
+    whiteboardUuid = ''
+  }
 
   if (memberList.length === 0) {
     return []
@@ -215,7 +223,10 @@ export function groupMembersService(data: {
   }
 
   function generateMembers() {
-    if (groupType === 'h5') {
+    if (
+      groupType === 'h5' &&
+      (!whiteboardUuid || (whiteboardUuid && isWhiteboardTransparent))
+    ) {
       // 第一页只有两项
       if (screenUuid) {
         const member = tmpMemberList.find(
@@ -293,8 +304,16 @@ export function groupMembersService(data: {
       enableHideVideoOffAttendees,
     })
 
-    if (firstMember && secondMember) {
-      groupMembers.unshift([firstMember, secondMember])
+    if (groupType === 'h5') {
+      if (firstMember && secondMember) {
+        groupMembers.unshift([firstMember, secondMember])
+      } else if (whiteboardUuid) {
+        const _whiteboardMember = tmpMemberList.find(
+          (member) => member.uuid === whiteboardUuid
+        ) as NEMember
+
+        _whiteboardMember && groupMembers.unshift([_whiteboardMember])
+      }
     } else {
       // 目前只有web存在不同layout
       if (!layout || (layout && layout === 'speaker')) {

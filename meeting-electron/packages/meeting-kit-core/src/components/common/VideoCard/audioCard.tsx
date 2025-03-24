@@ -6,6 +6,7 @@ import './index.less'
 import { useTranslation } from 'react-i18next'
 import { NEMeetingInviteStatus } from '../../../kit'
 import Emoticons from '../Emoticons'
+import useNetworkQuality from '../../../hooks/useNetworkQuality'
 
 interface AudioCardProps {
   className?: string
@@ -23,6 +24,7 @@ const AudioCard: React.FC<AudioCardProps> = (props) => {
   const isInPhone = useMemo(() => {
     return member.properties?.phoneState?.value == '1'
   }, [member.properties?.phoneState?.value])
+  const { isNetworkQualityBad } = useNetworkQuality(member)
 
   const inviteStateContent = useMemo(() => {
     switch (member.inviteState) {
@@ -104,6 +106,7 @@ const AudioCard: React.FC<AudioCardProps> = (props) => {
             inviteState={member.inviteState}
             onCallClick={() => onCallClick?.(member)}
             size={size || 64}
+            showNetworkQuality={isNetworkQualityBad}
           />
           {inviteStateContent}
           {CallingIcon}
@@ -135,7 +138,7 @@ const AudioCard: React.FC<AudioCardProps> = (props) => {
                 />
               ) : (
                 <svg className="icon icon-red iconfont" aria-hidden="true">
-                  <use xlinkHref="#iconyx-tv-voice-offx"></use>
+                  <use xlinkHref="#iconkaiqimaikefeng-mianxing"></use>
                 </svg>
               )}
             </div>

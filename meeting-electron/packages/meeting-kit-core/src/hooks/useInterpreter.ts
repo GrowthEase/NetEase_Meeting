@@ -215,8 +215,7 @@ export default function useInterpreter() {
         localMember.role === 'host' || localMember.role === 'cohost'
       const isUnMutedAudio =
         (meetingInfoRef.current.isUnMutedAudio &&
-          meetingInfoRef.current.unmuteAudioBySelfPermission &&
-          !meetingInfoRef.current.videoAllOff) ||
+          meetingInfoRef.current.unmuteAudioBySelfPermission) ||
         isHost
 
       if (
@@ -236,7 +235,7 @@ export default function useInterpreter() {
 
           langChannel !== listenChannel &&
             (await neMeeting?.joinRtcChannel(langChannel).catch((e) => {
-              if(e.code != MeetingErrorCode.RepeatJoinRtc) {
+              if (e.code != MeetingErrorCode.RepeatJoinRtc) {
                 rejoinChannel(langChannel, index === 0, true)
               }
             }))
@@ -327,7 +326,7 @@ export default function useInterpreter() {
           ) {
             await neMeeting?.joinRtcChannel(langChannelList[0]).catch((e) => {
               // 重复加入引起的报错
-              if(e.code != MeetingErrorCode.RepeatJoinRtc) {
+              if (e.code != MeetingErrorCode.RepeatJoinRtc) {
                 rejoinChannel(langChannelList[0], true)
               }
             })
@@ -339,7 +338,7 @@ export default function useInterpreter() {
             !preLangChannelList.includes(langChannelList[1])
           ) {
             await neMeeting?.joinRtcChannel(langChannelList[1]).catch((e) => {
-              if(e.code != MeetingErrorCode.RepeatJoinRtc) {
+              if (e.code != MeetingErrorCode.RepeatJoinRtc) {
                 rejoinChannel(langChannelList[1], false)
               }
             })

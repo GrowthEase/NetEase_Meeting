@@ -141,7 +141,7 @@ const ScheduleMeetingPage: React.FC = () => {
             editMeeting?.status === 1 ? (
             <div
               style={{
-                right: window.systemPlatform !== 'win32' ? '12px' : '44px',
+                right: window.systemPlatform === 'darwin' ? '12px' : '44px',
               }}
               className="schedule-meeting-pc-buttons"
             >

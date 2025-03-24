@@ -32,6 +32,9 @@ export default {
   globalEdit: '编辑',
   globalAdd: '添加',
   globalGoBack: '返回',
+  globalPlay: '播放',
+  globalPlayAudio: '只播放音频',
+  globalClosePage: '关闭页面',
   participants: `${attendee}`, // 会议成员列表标题
   meetingJoinFail: `加入会 议失败`, //  加入会议失败提示
   reJoinMeetingFail: `重新加入${meeting}失败`, // 重试加入会议失败提示
@@ -200,6 +203,7 @@ export default {
   audioAlreadyOpen: '音频已打开，无需申请举手',
   whiteBoardInteract: '授权白板互动', //主持人操作成员授权白板功能菜单
   whiteBoardInteractFail: '授权白板互动失败', //主持人操作成员授权白板成功提示
+  whiteBoardPackUp: '收起',
   undoWhiteBoardInteract: '取消白板互动', //主持人操作成员撤回白板功能菜单
   undoWhiteBoardInteractFail: '取消白板互动失败', //主持人操作成员撤回白板失败提示
   sip: 'SIP电话/终端入会',
@@ -388,9 +392,19 @@ export default {
   audioMuteOpenTips:
     '无法使用麦克风，检测到您正在讲话，如需发言，请点击“解除静音”按钮后再次发言',
   networkError: '网络错误',
+  startLocalRecord: '本地录制',
   startCloudRecord: '云录制',
-  stopCloudRecord: '停止录制',
+  stopRecord: '停止录制',
+  stopLocalRecord: '停止本地录制',
+  stopCloudRecord: '停止云录制',
   recording: '录制中',
+
+  isStartLocalRecord: '是否开始本地录制？',
+  startLocalRecordTip: '开启后，所有参会成员将收到录制开始提醒',
+  endLocalRecording: '是否结束本地录制',
+  syncLocalRecordFileAfterMeetingEnd:
+    '会议结束后，录制文件将自动转换为MP4格式。',
+
   isStartCloudRecord: '是否开始云录制？',
   startRecordTip:
     '开启后，将录制会议过程中的音视频与共享屏幕内容到云端，同时告知所有参会成员',
@@ -530,6 +544,8 @@ export default {
   meetingUserIsNowTheHost: '{{user}}已经成为主持人',
   meetingReclaimHostFailed: '收回主持人失败',
 
+  lookAtMe: '他人看我',
+  lootAtMyself: '我看自己',
   // 会前
   appTitle: '网易会议',
   immediateMeeting: '发起会议',
@@ -622,6 +638,12 @@ export default {
   virtualBackgroundError3: '自定义背景图片的颜色格式无效',
   virtualBackgroundError4: '该设备不支持使用虚拟背景',
   virtualBackgroundError5: '虚拟背景开启失败',
+  virtualBackgroundError6: '不支持的视频格式',
+  virtualBackgroundError7: '文件不存在',
+  virtualBackgroundError8: '文件大小不能超过500MB',
+  virtualBackgroundError9: '非 jpg 或 png 文件',
+  virtualBackgroundError10: '不支持的虚拟背景类型',
+  fileSizeLimit500MB: '文件大小不能超过500MB',
   // 共享
   selectSharedContent: '选择共享内容',
   startShare: '开始共享',
@@ -952,10 +974,11 @@ export default {
   callStatusWaitingJoin: '待入会',
 
   roomSipCallIsInInviting: '该会议室已在呼叫中',
-  roomSipCallIsInBlacklist:'该成员已被标记不允许再次加入，如需邀请，请关闭会议黑名单',
-  roomSipCallIsInMeeting:'该设备已在会议中',
-  roomSipCallrLimit:'已达会议人数上限',
-  roomSipCallrNetworkError:'网络连接失败',
+  roomSipCallIsInBlacklist:
+    '该成员已被标记不允许再次加入，如需邀请，请关闭会议黑名单',
+  roomSipCallIsInMeeting: '该设备已在会议中',
+  roomSipCallrLimit: '已达会议人数上限',
+  roomSipCallrNetworkError: '网络连接失败',
   roomSipCallrNickNameLimit: '入会名称字符太长，请重新设置',
 
   globalReject: '拒绝',
@@ -1160,6 +1183,22 @@ export default {
   meetingCloudRecord: '自动云录制',
   meetingEnableCouldRecordWhenHostJoin: '主持人入会后开启',
   meetingEnableCouldRecordWhenMemberJoin: '成员入会后开启',
+  //本地录制
+  filePath: '文件位置',
+  localRecord: '本地录制',
+  localRecordPath: '录制文件保存至',
+  remaining: '剩余',
+  openDir: '打开文件夹',
+  resetDefaultDir: '恢复默认地址',
+  localRecordTipFirst: '您也可以在',
+  localRecordTipSecond: '历史会议',
+  localRecordTipThird: '中，找到对应的会议录制记录',
+  localRecordAudio: '同时录制音频文件',
+  localRecordNickName: '在录制文件中显示参会者名称',
+  localRecordTimestamp: '在录制文件中加入时间戳',
+  localRecordTimestampTip: '开启后，可以在录制视频的过程中嵌入当前日期和时间',
+  localRecordScreenShareAndVideo: '屏幕共享期间同时录制视频',
+  localRecordScreenShareSideBySideVideo: '视频在录制文件里将呈现在共享内容旁边',
   // 新聊天室
   copy: '复制',
   recall: '撤回',
@@ -1279,7 +1318,46 @@ export default {
     '本场会议已开启智能录制，将生成智能AI纪要（含总结、待办）',
   cloudRecordingAISummaryFailed: '智能录制开启失败，请稍后关闭录制后重试',
   cloudRecordingUnableToStart: '无法启动云录制',
-  cloudRecordingUnableToStartTips: '当前会议中无人开启麦克风或视频，为了启动录制，请解除静音',
+  cloudRecordingUnableToStartTips:
+    '当前会议中无人开启麦克风或视频，为了启动录制，请解除静音',
+
+  localRecordingUnableToStart: '您已静音',
+  localRecordingUnableToStartTips: '无法录制语音',
+  localRecordingCancelTips: '继续无声录制',
+
+  localRecordDisConnectAudioTitle: '您已断开音频',
+  localRecordDisConnectAudioContent: '要在录制中包含音频，请点击 “连接音频”',
+  localRecordDisConnectAudioOkText: '连接音频',
+  localRecordDeleteDirectoryTitle: '删除录制文件',
+  localRecordDeleteDirectoryContent:
+    '你将从电脑中永久删除此录制文件此操作无法撤销',
+  localRecordOpenFileTitle: '文件夹不存在',
+  localRecordOpenFileContent: '请检查本地录制文件是否已移动、重命名或删除',
+
+  localRecordRemuxTitle: '正在转换会议录制文件',
+  localRecordRemuxContent: '您在本次会议中的录制文件正在转换过程中，请稍后',
+  localRecordRemuxOkText: '转换完成',
+
+  localRecordStopRemuxTitle: '停止转换',
+  localRecordStopRemuxContent:
+    '如果停止，将不会生成转换文件，可在保存地址查看原始录制文件',
+  localRecordStopRemuxCompleted: '录制文件转码已经完成',
+
+  startLocalRecordTipByMember:
+    '有成员开启了会议本地录制，他们可以将本地录制文件分享给其他成员。',
+
+  localRecordPermissionSetting: '本地录制设置',
+  localRecordPermissionForHost: '仅主持人可录制',
+  localRecordPermissionForAll: '全体成员可录制',
+  localRecordPermissionForSome: '允许部分成员录制',
+  localRecordPermissionForSomeTip: '请前往参会者列表对单个成员进行录制权限操作',
+
+  localRecordPermissionAllow: '允许录制',
+  localRecordPermissionNotAllow: '禁止录制',
+
+  localRecordPermissionCancelTip: '本地录制权限被收回',
+  localRecordPermissionAllowTip: '主持人已允许你录制',
+  localRecordPermissionNotAllowTip: '主持人已禁止你录制',
 
   settingShowParticipationTime: '显示参会时长',
   settingShowMeetingElapsedTime: '会议持续时间',
@@ -1291,4 +1369,73 @@ export default {
 
   preMeetingSubject: '预约的会议',
 
+  youAreWatchingTheScreen: '您正观看{{name}}的屏幕',
+
+  sharedScreenZoom: '共享屏幕缩放',
+  adaptToTheWindow: '适应窗口',
+  actualSize: '实际大小',
+
+  deviceTestTitle: '设备检测',
+  deviceVideoTest: '视频检测',
+  deviceAudioTest: '音频检测',
+  deviceTestVideoTip: '您能看到摄像头画面吗？',
+  deviceTestAudioSpeak: '请对着麦克风讲话,',
+  deviceTestAudioTip: '您能听到自己的声音吗？',
+  deviceTestError: '设备检测异常',
+  deviceTestNormal: '设备检测正常',
+  deviceTestItem: '检测项目',
+  deviceTestResult: '检测结果',
+  deviceTestAbnormal: '异常',
+  deviceTestNoPermission: '无权限',
+  deviceTestOk: '正常',
+  deviceTestAbnormalTip:
+    '媒体设各异常，请确保已允许访问麦克风和摄像头。您也可以关闭页面，并重新进入',
+  deviceTestCanSee: '能看到',
+  deviceTestCannotSee: '看不到',
+  deviceTestCanHear: '能听到',
+  deviceTestCannotHear: '听不到',
+  deviceTestConfirmTip:
+    '为了保障会议的顺利进行，建议在加入会议前进行媒体设备检测',
+  deviceTestSkip: '跳过',
+  deviceTestRightNow: '立即检查',
+
+  meetingSetVirtualBackground: '设置虚拟背景',
+  meetingSetBeauty: '设置美颜',
+  meetingPin: '锁定',
+  meetingShowVideoOffAttendees: '显示非视频参会者',
+  meetingShowMyVideo: '显示本人视图',
+  settingDualMonitors: '启用双显示器模式',
+  settingDualMonitorsTip:
+    '开启后，支持在两个显示器中分别显示参会者的视频画面、屏幕共享内容',
+  swapSecondMonitor: '切换主控屏',
+
+  noSpeakerVolume: '什么都没听到？',
+  adjustSpeakerVolume: '调高音量',
+
+  cloudRecordMode: '云录制设置',
+  cloudRecordModeTip: '(针对您发起的云录制，默认按以下模式录制)',
+  cloudRecordTheCurrentSpeakerWithSharedScreen: '录制带有共享屏幕的当前演讲者',
+  cloudRecordGalleryViewWithSharedScreen: '录制带有共享屏幕的画廊视图',
+  cloudRecordGalleryViewWithSharedScreenTip: '同时录制画廊视图和共享屏幕',
+  cloudRecordThenCurrentSpeakerGalleryViewAndSharedScreenSeparately:
+    '分别录制当前演讲者、画廊视图和共享屏幕',
+  cloudRecordSeparateRecordingCurrentSpeaker: '当前演讲者',
+  cloudRecordSeparateRecordingGalleryView: '画廊视图',
+  cloudRecordSeparateRecordingSharedScreen: '共享的屏幕',
+  cloudRecordSeparateAudioFile: '录制一个单独音频文件',
+  cloudRecordSelectAtLeastOneCloudRecordingMode: '至少选择一种云录制模式',
+
+  //退出白板&批注的二次确认
+  whiteBoardCloseModalContent: '结束白板是否需要导出当前内容？',
+  whiteBoardCloseModalSaveButtonText: '导出',
+  whiteBoardCloseModalNotSaveButtonText: '不导出',
+  screenShareCloseModalContent: '是否需要保存当前批注？',
+  screenShareCloseModalSaveButtonText: '保存',
+  screenShareCloseModalExitButtonText: '直接退出',
+
+  audioHasHowlingTitle: '检测到当前环境存在回声',
+  audioHasHowling: '为保证会议通话体验，建议您通过断开音频来关闭麦克风和扬声器',
+  audioHowlingOk: '断开音频',
+
+  beOccupied: '设备被占用',
 }

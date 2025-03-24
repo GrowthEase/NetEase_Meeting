@@ -369,6 +369,7 @@ const NEMeetingKit: NEMeetingKitInterface = new Proxy<NEMeetingKitInterface>(
       NEMeetingKit.neMeeting = undefined
       NEMeetingKit.isInitialized = false
       outEventEmitter.removeAllListeners()
+      eventEmitter.removeAllListeners()
       root?.unmount()
       root = undefined
     },

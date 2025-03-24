@@ -7,6 +7,7 @@ import {
   AttendeeOffType as NEAttendeeOffType,
   NEMeetingWebAppItem,
   NELocalHistoryMeeting,
+  NELocalRecordInfo
 } from '../../../types/type'
 import { NEMeetingRoleType } from './meeting_service'
 
@@ -20,12 +21,24 @@ export { NEMeetingWebAppItem }
 
 export { NELocalHistoryMeeting }
 
+export { NELocalRecordInfo }
+
 export type NEPreMeetingListener = {
   /**
    * 会议信息变更回调，一次回调可能包含多个会议信息或状态的变更
    * @param meetingItemList 变更的会议列表
    */
-  onMeetingItemInfoChanged: (meetingItemList: NEMeetingItem[]) => void
+  onMeetingItemInfoChanged?: (meetingItemList: NEMeetingItem[]) => void
+  /**
+   * 本地录制状态回调
+   * @param status 本地录制的状态
+   */
+  onLocalRecorderStatus?: (status: number) => void
+  /**
+   * 本地录制状态回调
+   * @param status 本地录制错误
+   */
+  onLocalRecorderError?: (status: number) => void
 }
 
 /// 聊天室导出状态
@@ -334,9 +347,13 @@ interface NEPreMeetingService {
   /**
    * 根据会议状态查询会议信息列表， 不传默认返回NEMeetingItemStatus.init, NEMeetingItemStatus.started
    * @param status 会议状态
+   * @param offset 偏移量
+   * @param size 数量，默认20
    */
   getMeetingList(
-    status: NEMeetingItemStatus[]
+    status: NEMeetingItemStatus[],
+    offset: number,
+    size: number
   ): Promise<NEResult<NEMeetingItem[]>>
   /**
    * 查询预约会议成员列表
@@ -420,6 +437,8 @@ interface NEPreMeetingService {
   getScheduledMeetingList(
     status: NEMeetingItemStatus[]
   ): Promise<NEResult<NEMeetingItem[]>>
+
+  stopLocalRecorderRemux(): void
 }
 
 /**

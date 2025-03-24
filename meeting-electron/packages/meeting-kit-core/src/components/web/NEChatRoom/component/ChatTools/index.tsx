@@ -288,7 +288,7 @@ const ChatTools: React.FC<ChatRoomProps> = (props) => {
             </div>
           ))}
         </div>
-        <div className="permission-content-session">
+        <div className="permission-content-session" style={{ marginBottom: 0 }}>
           <div className="permission-content-session-title">
             {t('chatPermissionInWaitingRoom')}
           </div>

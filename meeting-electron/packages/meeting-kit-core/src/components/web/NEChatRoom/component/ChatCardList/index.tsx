@@ -40,6 +40,7 @@ const ChatCardList: React.FC<ChatRoomProps> = (props) => {
     downloadAttachment,
     cancelDownloadAttachment,
     fetchHistoryMessages,
+    clearMessages,
   } = useChatRoomContext()
 
   const [virtualListHeight, setVirtualListHeight] = useState<number>()
@@ -330,6 +331,13 @@ const ChatCardList: React.FC<ChatRoomProps> = (props) => {
       window.removeEventListener('resize', handleResize)
     }
   }, [])
+
+  // 会前查询会议聊天记录的会议id，切换的时候需要清空消息
+  useEffect(() => {
+    if (props.meetingId) {
+      clearMessages?.()
+    }
+  }, [props.meetingId])
 
   return (
     <div className={`nemeeting-chatroom-list-wrapper`} ref={contentWrapperRef}>

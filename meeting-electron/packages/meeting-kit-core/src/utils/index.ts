@@ -19,7 +19,7 @@ import { NEMeetingPrivateConfig } from '../types/type'
 import EventEmitter from 'eventemitter3'
 import { MenuClickType } from '../kit/interface/service/meeting_service'
 import { createDefaultSetting } from '../services'
-import { i18n, MeetingPermission, MeetingSecurityCtrlValue } from '../kit'
+import { i18n, MeetingPermission, MeetingSecurityCtrlValue, LocalRecordPermission } from '../kit'
 import { NEMeetingASRTranslationLanguage } from '../kit/interface'
 import timezones_zh from '../locales/timezones/timezones_zh'
 
@@ -353,9 +353,9 @@ export function filterDate(time: number) {
 
 // 判断系统
 export function getClientType(): 'Android' | 'IOS' | 'PC' {
-  const u = navigator.userAgent
-  const isAndroid = u.indexOf('Android') > -1 || u.indexOf('Adr') > -1 //判断是否是 android终端
-  const isIOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/) //判断是否是 iOS终端
+  const u = navigator.userAgent.toLocaleLowerCase()
+  const isAndroid = u.indexOf('android') > -1 || u.indexOf('adr') > -1 //判断是否是 android终端
+  const isIOS = !!u.match(/\(i[^;]+;( u;)? cpu.+mac os x/) //判断是否是 iOS终端
 
   if (isAndroid) {
     return 'Android'
@@ -388,10 +388,10 @@ export function getBrowserType(): BrowserType {
 // 获取ios系统版本
 export function getIosVersion(): string {
   // 获取 User Agent 字符串
-  const userAgent = navigator.userAgent
+  const userAgent = navigator.userAgent.toLowerCase()
 
   // 使用正则表达式提取 iOS 版本号
-  const match = userAgent.match(/(iPhone|iPad|iPod)\s+OS\s+([\d_]+)/)
+  const match = userAgent.match(/(iphone|ipad|ipod)\s+os\s+([\d_]+)/)
 
   return match && match[2] ? match[2].replace(/_/g, '.') : ''
 }
@@ -658,7 +658,7 @@ export function objectToQueryString(
 /**
  * 中文（最多两位，取最后两位） 》 英文 （最多两位，取前面两位）》 数字（最多两位，取最后两位） 》* 号
  */
-export function getUserName(name: string): string {
+export function getUserName(name: string, maxLength = 2): string {
   if (!name) {
     return '*'
   }
@@ -673,11 +673,11 @@ export function getUserName(name: string): string {
   const allDigits = digitMatch ? digitMatch.join('') : ''
 
   if (allChinese) {
-    return allChinese.slice(-2) // 取后面最多两个中文字符
+    return allChinese.slice(-maxLength) // 取后面最多两个中文字符
   } else if (allEnglish) {
-    return allEnglish.slice(0, 2) // 取前面最多两位英文字母
+    return allEnglish.slice(0, maxLength) // 取前面最多两位英文字母
   } else if (allDigits) {
-    return allDigits.slice(-2) // 取后面最多两位数字
+    return allDigits.slice(-maxLength) // 取后面最多两位数字
   } else {
     return '*'
   }
@@ -1017,7 +1017,36 @@ export function toInnerASRTranslationLanguage(
   return langMap[lang] || NERoomCaptionTranslationLanguage.NONE
 }
 
+/**
+  0 0(默认): 仅主持人可以开启录制
+  0 1(部分成员可以开启录制)
+  1 0 保留位，不做处理
+  1 1（全部成员可开启录制）
+**/
+function getLocalRecordPermission(value: number): LocalRecordPermission{
+  console.log('MeetingSecurityCtrlValue.LOCAL_RECORD: ', MeetingSecurityCtrlValue.LOCAL_RECORD)
+  let bite13 = (value & (0x1 << 13)) == (0x1 << 13)
+  let bite14 = (value & (0x1 << 14)) == (0x1 << 14)
+  console.log(`getLocalRecordPermission bite13: ${bite13},  bite14: ${bite14}`)
+  const permission = {
+    host: true,
+    some: false,
+    all: false
+  }
+  if (bite13 && bite14) {
+    permission.all = true
+    permission.host = false
+  } else if(!bite13 && bite14) {
+    permission.some = true
+    permission.host = false
+  }
+  //如果解析非法值，也返回默认值
+  return permission
+}
+
 export function getMeetingPermission(value: number): MeetingPermission {
+  console.log('解析权限value: ', value)
+
   return {
     annotationPermission: !(
       (value & MeetingSecurityCtrlValue.ANNOTATION_DISABLE) ===
@@ -1062,6 +1091,7 @@ export function getMeetingPermission(value: number): MeetingPermission {
     smartSummary:
       (value & MeetingSecurityCtrlValue.SMART_SUMMARY) ===
       MeetingSecurityCtrlValue.SMART_SUMMARY,
+    localRecordPermission: getLocalRecordPermission(value)
   }
 }
 
@@ -1083,4 +1113,31 @@ export function getThumbnailUrl(url: string): string {
   }
 
   return result
+}
+
+export function isiPhone14() {
+  const screenWidth = window.screen.width * window.devicePixelRatio
+  const screenHeight = window.screen.height * window.devicePixelRatio
+
+  // iphone 14 pro max分辨率
+  const iPhone14ProMaxWidth = 1290
+  const iPhone14ProMaxHeight = 2796
+  // iPhone 14分辨率
+  const iPhone14Width = 1170
+  const iPhone14Height = 2532
+  // iPhone 14 Plus分辨率
+  const iPhone14PlusWidth = 1284
+  const iPhone14PlusHeight = 2778
+  // iPhone 14 pro分辨率
+  const iPhone14ProWidth = 1179
+  const iPhone14ProHeight = 2556
+
+  return (
+    (screenWidth === iPhone14PlusWidth &&
+      screenHeight === iPhone14PlusHeight) ||
+    (screenWidth === iPhone14ProWidth && screenHeight === iPhone14ProHeight) ||
+    (screenWidth === iPhone14Width && screenHeight === iPhone14Height) ||
+    (screenWidth === iPhone14ProMaxWidth &&
+      screenHeight === iPhone14ProMaxHeight)
+  )
 }

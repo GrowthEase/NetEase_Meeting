@@ -9,9 +9,10 @@ const {
 const path = require('path')
 const NEMeetingKit = require('./kit/impl/meeting_kit')
 
-const isLocal = process.env.MODE === 'local'
+const isLocal = process.env.ENV_MODE === 'local'
 
 const newWins = {}
+const isLinux = process.platform === 'linux'
 
 function createBeforeMeetingWindow() {
   // 获取当前，鼠标所在的屏幕中心
@@ -20,6 +21,7 @@ function createBeforeMeetingWindow() {
   const { x, y, width, height } = nowDisplay.workArea
   const beforeMeetingWindow = new BrowserWindow({
     titleBarStyle: 'hidden',
+    frame: !isLinux,
     width: 720,
     height: 480,
     x: Math.round(x + (width - 720) / 2),
@@ -45,8 +47,10 @@ function createBeforeMeetingWindow() {
   const homeWindowWidth = 720
 
   if (isLocal) {
-    beforeMeetingWindow.loadURL('http://localhost:8000/')
-    // beforeMeetingWindow.webContents.openDevTools()
+    beforeMeetingWindow.loadURL('https://localhost:8000/')
+    setTimeout(() => {
+      beforeMeetingWindow.webContents.openDevTools()
+    }, 1000)
   } else {
     beforeMeetingWindow.loadFile(path.join(__dirname, '../build/index.html'))
   }
@@ -77,7 +81,7 @@ function createBeforeMeetingWindow() {
       }
 
       if (isLocal) {
-        // newWin.webContents.openDevTools()
+        //newWin.webContents.openDevTools()
       }
     }
   )
@@ -90,6 +94,7 @@ function createBeforeMeetingWindow() {
         width: 375,
         height: 670,
         titleBarStyle: 'hidden',
+        frame: !isLinux,
         maximizable: false,
         minimizable: false,
         resizable: false,
@@ -184,6 +189,7 @@ function createBeforeMeetingWindow() {
           action: 'allow',
           overrideBrowserWindowOptions: {
             ...commonOptions,
+            frame: true,
           },
         }
       } else if (url.includes('#/chat')) {
@@ -231,6 +237,7 @@ function createBeforeMeetingWindow() {
             ...commonOptions,
             maximizable: false,
             titleBarStyle: 'hidden',
+            frame: !isLinux,
             minimizable: false,
             fullscreenable: false,
             alwaysOnTop: 'screen-saver',
@@ -293,7 +300,7 @@ function createBeforeMeetingWindow() {
           overrideBrowserWindowOptions: {
             ...commonOptions,
             width: 520,
-            height: 533,
+            height: 541,
             trafficLightPosition: {
               x: 10,
               y: 13,
@@ -479,6 +486,26 @@ function createBeforeMeetingWindow() {
                 {
                   module: 'preMeetingListeners',
                   fnKey: 'onMeetingItemInfoChanged',
+                  args,
+                }
+              )
+            },
+            onLocalRecorderStatus: (...args) => {
+              beforeMeetingWindow.webContents.send(
+                'NEMeetingKitElectron-Listener',
+                {
+                  module: 'preMeetingListeners',
+                  fnKey: 'onLocalRecorderStatus',
+                  args,
+                }
+              )
+            },
+            onLocalRecorderError: (...args) => {
+              beforeMeetingWindow.webContents.send(
+                'NEMeetingKitElectron-Listener',
+                {
+                  module: 'preMeetingListeners',
+                  fnKey: 'onLocalRecorderError',
                   args,
                 }
               )

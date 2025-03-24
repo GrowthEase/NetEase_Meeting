@@ -5,9 +5,11 @@ export const errorCodeMap = {
   '10119': 'errorCodes.10119',
   '10229': 'errorCodes.10229',
   '10212': 'errorCodes.10212',
+  beOccupied: 'beOccupied',
 }
 
 export const LOCAL_STORAGE_KEY = 'ne-meeting-recent-meeting-list'
+export const LOCAL_STORAGE_LOCAL_RECORD_KEY = 'ne-meeting-recent-meeting-list'
 
 export const LOCALSTORAGE_USER_INFO = 'userinfoV2'
 export const NOT_FIRST_LOGIN = 'nemeeting-notFirstLogin'
@@ -15,6 +17,8 @@ export const ACCOUNT_INFO_KEY = '__ne_meeting_account_info__'
 export const LOCALSTORAGE_MEETING_SETTING = 'ne-meeting-setting'
 export const LOCALSTORAGE_LOGIN_BACK = 'ne-meeting-loginBackUrl'
 export const LOCALSTORAGE_CUSTOM_LANGS = 'ne-meeting-custom-langs'
+//本地录制存储在localStorage中的key
+export const LOCALSTORAGE_LOCAL_RECORD_INFO = 'ne-meeting-local-record-info'
 export const LANGUAGE_KEY = 'ne-meeting-language'
 export const MAJOR_AUDIO = '$majorAudio'
 export const MAJOR_DEFAULT_VOLUME = 25

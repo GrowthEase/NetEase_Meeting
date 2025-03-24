@@ -319,7 +319,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
                 }
               >
                 <svg className="icon iconfont icon-chat" aria-hidden="true">
-                  <use xlinkHref="#iconchat1x"></use>
+                  <use xlinkHref="#iconliaotian-mianxing"></use>
                 </svg>
               </Badge>
               <span>{t('chat')}</span>

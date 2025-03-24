@@ -1,7 +1,7 @@
 import { NEResult } from 'neroom-types'
-import { NECloudRecordConfig } from '../../../types'
+import { NECloudRecordConfig, NELocalRecordConfig } from '../../../types'
 
-export { NECloudRecordConfig }
+export { NECloudRecordConfig, NELocalRecordConfig }
 
 /**
  * 字幕/转写目标翻译语言枚举
@@ -288,6 +288,14 @@ interface NESettingsService {
    * @param config 云录制配置
    */
   setCloudRecordConfig(config: NECloudRecordConfig): Promise<NEResult<void>>
+
+  /** 获取本地录制配置 */
+  getLocalRecordConfig(): Promise<NEResult<NELocalRecordConfig>>
+  /**
+   * 设置本地录制配置
+   * @param config 本地录制配置
+   */
+  setLocalRecordConfig(config: NELocalRecordConfig): Promise<NEResult<void>>
   /**
    * 设置应用聊天室默认文件下载保存路径
    * @param filePath 聊天室文件保存路径
@@ -390,6 +398,24 @@ interface NESettingsService {
    * 获取第三方推流最大设置个数
    */
   getLiveMaxThirdPartyCount(): Promise<NEResult<number>>
+
+  /**
+   * 是否屏幕共享开启并排模式
+   * @param enable 是否开启
+   */
+  enableSideBySideMode(enable: boolean): Promise<NEResult<void>>
+  /**
+   * 查询是否开启并排模式
+   */
+  isSideBySideModeEnabled(): Promise<NEResult<boolean>>
+  /**
+   * 查询直播官方推流是否支持
+   */
+  isMeetingLiveOfficialPushSupported: () => Promise<NEResult<boolean>>
+  /**
+   * 查询直播第三方推流是否支持
+   */
+  isMeetingLiveThirdPartyPushSupported: () => Promise<NEResult<boolean>>
 }
 
 export type NEInterpretationConfig = {

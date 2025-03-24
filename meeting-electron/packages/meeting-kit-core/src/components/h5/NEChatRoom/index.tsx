@@ -72,8 +72,9 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
 }) => {
   const { t } = useTranslation()
 
-  const { neMeeting, eventEmitter } =
-    useContext<GlobalContextInterface>(GlobalContext)
+  const { neMeeting, eventEmitter } = useContext<GlobalContextInterface>(
+    GlobalContext
+  )
   const { meetingInfo, memberList, dispatch } = useContext(MeetingInfoContext)
   const [selfShow, setSelfShow] = useState(false)
   const [unReadMsgs, setUnReadMsgsCount] = useState(0)
@@ -87,7 +88,6 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
   const [actionSheetOpen, setActionSheetOpen] = useState<boolean>(false)
   const [avatarClickMsg, setAvatarClickMsg] = useState<NERoomChatMessage>()
   const [longPressMsg, setLongPressMsg] = useState<NERoomChatMessage>()
-  const [showToBottom, setShowToBottom] = useState<boolean>(false)
   const [inputRange, setInputRange] = useState<Range>()
   const [emojiOpen, setEmojiOpen] = useState<boolean>(false)
   const emojiOpenRef = useRef(false)
@@ -97,13 +97,15 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
   const privateChatMemberIdRef = useRef(privateChatMemberId)
   const msgListRef = useRef(msgList)
   const disabledRef = useRef(0)
-  const isScrolledToBottomRef = useRef(true)
 
   privateChatMemberIdRef.current = privateChatMemberId
   msgListRef.current = msgList
 
-  const { localMember, meetingChatPermission, waitingRoomChatPermission } =
-    meetingInfo
+  const {
+    localMember,
+    meetingChatPermission,
+    waitingRoomChatPermission,
+  } = meetingInfo
 
   const chatController = neMeeting?.chatController
 
@@ -312,23 +314,6 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
       setActionSheetOpen(false)
     }
   }, [localMember.role, privateChatMembers])
-
-  useEffect(() => {
-    if (contentRef.current) {
-      const lastMsg = msgList[msgList.length - 1]
-
-      if (isScrolledToBottomRef.current || lastMsg?.isMe) {
-        setTimeout(
-          () => {
-            scrollToBottom()
-          },
-          lastMsg?.type === 'image' ? 100 : 0
-        )
-      } else {
-        setShowToBottom(true)
-      }
-    }
-  }, [msgList.length])
 
   const chatroomUIProps = {
     msgs: msgList,
@@ -756,31 +741,6 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
     setActionSheetOpen(actionSheetOpen)
   }
 
-  const onScroll = () => {
-    setLongPressMsg(undefined)
-    if (contentRef.current) {
-      const { clientHeight, scrollHeight, scrollTop } = contentRef.current
-
-      isScrolledToBottomRef.current =
-        scrollHeight - clientHeight <= scrollTop + 10
-      if (isScrolledToBottomRef.current) {
-        setShowToBottom(false)
-      }
-    }
-  }
-
-  const scrollToBottom = () => {
-    if (contentRef.current) {
-      contentRef.current.scrollTop = contentRef.current.scrollHeight
-      isScrolledToBottomRef.current = true
-      setShowToBottom(false)
-    }
-  }
-
-  useUpdateEffect(() => {
-    visible && scrollToBottom()
-  }, [visible])
-
   useEffect(() => {
     function handleManagersUpdated(data: NEMember[]) {
       setHostOrCohostList(data)
@@ -906,11 +866,7 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
           </span>
           <span className="title">{t('chat')}</span>
         </div>
-        <div
-          className="ne-chatroom-content"
-          ref={contentRef}
-          onScroll={onScroll}
-        >
+        <div className="ne-chatroom-content" ref={contentRef}>
           <NEChatRoomUI
             {...chatroomUIProps}
             longPressMsg={longPressMsg}
@@ -918,15 +874,8 @@ const NEChatRoom: React.FC<NEChatRoomProps> = ({
             onResendMsg={onResendMsg}
             onAvatarClick={onAvatarClick}
             onLongPress={setLongPressMsg}
+            visible={visible}
           />
-          {visible && showToBottom && (
-            <div
-              className="ne-chatroom-to-bottom"
-              onClick={() => scrollToBottom()}
-            >
-              ↓ {t('newMessage')}
-            </div>
-          )}
         </div>
         {disabled !== 0 ? (
           <div className="ne-chatroom-footer-disabled-content">

@@ -24,3 +24,4 @@ package-lock.json
 
 /docs
 
+/src/libs/Renderer/Renderers/js

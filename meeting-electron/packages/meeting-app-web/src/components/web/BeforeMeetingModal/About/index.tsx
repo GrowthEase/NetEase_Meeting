@@ -43,7 +43,7 @@ const AboutContent: React.FC = () => {
       <div className="app-about-logo-wrap">
         <img className="app-about-logo-image" src={AppAboutLogoImage} />
         <div className="app-about-version">
-          {i18n.version} {pkg.version}
+          {i18n.version} {pkg.version}{window.systemPlatform === 'linux' ? '-beta' : ''}
           {!!window.ipcRenderer}
         </div>
       </div>

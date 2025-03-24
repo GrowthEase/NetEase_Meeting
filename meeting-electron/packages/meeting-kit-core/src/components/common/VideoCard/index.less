@@ -8,6 +8,56 @@
   width: 100%;
   position: relative;
   border-radius: 8px;
+  .nemeeting-invite-state {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .nemeeting-answeringPhone-icon {
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #fff;
+    border-radius: 50%;
+  }
+  .nemeeting-answeringPhone-tip {
+    font-size: 16px;
+    line-height: 22px;
+    color: #fff;
+    position: absolute;
+    margin-top: 90px;
+  }
+  .nemeeting-video-card-operate {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    right: 8px;
+    top: 8px;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    border-radius: 4px;
+    &.nemeeting-video-card-operate-extra-top {
+      top: 38px;
+    }
+    &:hover {
+      background-color: #337EFF;
+    }
+    .icon-operator {
+      height: 100%;
+      font-size: 18px;
+    }
+  }
+  .nemeeting-card-network {
+    font-size: 12px!important;
+    margin-right: 5px;
+  }
   .nemeeting-screen-stop-btn {
     background-color: #f51d45;
     color: #fff;
@@ -26,6 +76,9 @@
 
   &:hover {
     .cancel-focus {
+      display: flex;
+    }
+    .nemeeting-video-card-operate {
       display: flex;
     }
   }
@@ -83,6 +136,7 @@
     bottom: 4px;
     left: 4px;
     display: flex;
+    max-width: 90%;
   }
 
   .nickname-tip {
@@ -146,6 +200,26 @@
     overflow: hidden;
     border: 1px solid #fff;
   }
+  .nemeeting-canvas-transform-wrapper {
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .react-transform-wrapper {
+      width: 100%;
+      height: 100%;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      left: 0;
+      position: absolute;
+    }
+  }
+
   .video-view .nertc-video-container-local {
     width: 100% !important;
     height: 100% !important;
@@ -378,4 +452,49 @@
   top: 5px;
   left: 5px;
   display: flex;
+}
+
+.nemeeting-canvas-zoom-toast {
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 99;
+  padding: 12px 25px;
+}
+.nemeeting-member-operator-dropdown {
+  .nemeeting-dropdown-menu {
+    background-color: rgba(11, 11, 11, 0.9);
+    .nemeeting-dropdown-menu-item {
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+      }
+    }
+    .nemeeting-dropdown-menu-title-content{
+      color: #fff;
+    }
+    .nemeeting-dropdown-menu-item-divider {
+      background-color: rgba(255, 255, 255, 0.1)
+    }
+  }
+}
+.light-theme {
+  .nemeeting-dropdown-menu {
+    background-color: rgba(255, 255, 255, 0.9);
+    .nemeeting-dropdown-menu-item {
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+      }
+    }
+    .nemeeting-dropdown-menu-title-content{
+      color: #1e1f27;
+    }
+    .nemeeting-dropdown-menu-item-divider {
+      background-color: rgba(51, 51, 51, 0.1)
+    }
+  }
 }

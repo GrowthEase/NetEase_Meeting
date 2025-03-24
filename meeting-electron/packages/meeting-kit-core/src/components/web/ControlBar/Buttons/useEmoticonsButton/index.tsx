@@ -91,46 +91,50 @@ const EmoticonsBtnPopover: React.FC<EmoticonsBtnPopoverProps> = (props) => {
       }
       content={
         <div>
-          <div className="emoticons-list-container">
-            {emojiKeys.map((emojiKey) => (
-              <Emoji
-                disabled={!meetingInfo.emojiRespPermission && !isHostOrCoHost}
-                key={emojiKey}
-                type={2}
-                size={36}
-                language={language}
-                emojiKey={emojiKey}
-                onClick={(emojiKey) => {
-                  if (meetingInfo.emojiRespPermission || isHostOrCoHost) {
-                    neMeeting?.sendEmoticon(emojiKey)
-                  }
+          {meetingInfo.showEmojiResponse === false ? null : (
+            <div className="emoticons-list-container">
+              {emojiKeys.map((emojiKey) => (
+                <Emoji
+                  disabled={!meetingInfo.emojiRespPermission && !isHostOrCoHost}
+                  key={emojiKey}
+                  type={2}
+                  size={36}
+                  language={language}
+                  emojiKey={emojiKey}
+                  onClick={(emojiKey) => {
+                    if (meetingInfo.emojiRespPermission || isHostOrCoHost) {
+                      neMeeting?.sendEmoticon(emojiKey)
+                    }
 
-                  setEmoticonsPopoverOpen(false)
-                }}
-              />
-            ))}
-          </div>
-          <div
-            className="emoticons-hand-container"
-            onClick={async () => {
-              if (localMember.isHandsUp) {
-                await neMeeting?.sendMemberControl(
-                  memberAction.handsDown,
-                  localMember.uuid
-                )
-              } else {
-                await neMeeting?.sendMemberControl(
-                  memberAction.handsUp,
-                  localMember.uuid
-                )
-              }
+                    setEmoticonsPopoverOpen(false)
+                  }}
+                />
+              ))}
+            </div>
+          )}
+          {meetingInfo.showHandsUp === false ? null : (
+            <div
+              className="emoticons-hand-container"
+              onClick={async () => {
+                if (localMember.isHandsUp) {
+                  await neMeeting?.sendMemberControl(
+                    memberAction.handsDown,
+                    localMember.uuid
+                  )
+                } else {
+                  await neMeeting?.sendMemberControl(
+                    memberAction.handsUp,
+                    localMember.uuid
+                  )
+                }
 
-              setEmoticonsPopoverOpen(false)
-            }}
-          >
-            <Emoji type={2} size={32} emojiKey="[举手]" />
-            {localMember.isHandsUp ? t('handsUpDown') : t('handsUp')}
-          </div>
+                setEmoticonsPopoverOpen(false)
+              }}
+            >
+              <Emoji type={2} size={32} emojiKey="[举手]" />
+              {localMember.isHandsUp ? t('handsUpDown') : t('handsUp')}
+            </div>
+          )}
         </div>
       }
     >
@@ -144,10 +148,8 @@ function useEmoticonsButton(open?: boolean) {
   const { neMeeting } = useGlobalContext()
   const { meetingInfo } = useMeetingInfoContext()
   const { t } = useTranslation()
-  const [
-    emoticonsPermissionsPopoverOpen,
-    setEmoticonsPermissionsPopoverOpen,
-  ] = useState(false)
+  const [emoticonsPermissionsPopoverOpen, setEmoticonsPermissionsPopoverOpen] =
+    useState(false)
 
   const localMember = meetingInfo.localMember
   const isHostOrCoHost =
@@ -173,12 +175,15 @@ function useEmoticonsButton(open?: boolean) {
     icon: (
       <div>
         <svg className="icon iconfont" aria-hidden="true">
-          <use xlinkHref="#iconbiaoqinghuiyingjushou"></use>
+          <use xlinkHref="#iconhuiying-mianxing"></use>
         </svg>
       </div>
     ),
     label: t('emoticons'),
-    hidden: isElectronSharingScreen,
+    hidden:
+      isElectronSharingScreen ||
+      (meetingInfo.showEmojiResponse === false &&
+        meetingInfo.showHandsUp === false),
   }
 
   function renderEmoticonsPermissionsPopoverContent() {
@@ -205,7 +210,8 @@ function useEmoticonsButton(open?: boolean) {
                 onClick={() => {
                   neMeeting
                     ?.securityControl({
-                      [SecurityCtrlEnum.EMOJI_RESP_DISABLE]: !!meetingInfo.emojiRespPermission,
+                      [SecurityCtrlEnum.EMOJI_RESP_DISABLE]:
+                        !!meetingInfo.emojiRespPermission,
                     })
                     .then(() => {
                       setEmoticonsPermissionsPopoverOpen(false)

@@ -205,7 +205,7 @@ const AudioSetting: React.FC<AudioSettingProps> = ({
     } else {
       setRecordVolume(0)
       startRecordDeviceTest((code, level) => {
-        setRecordVolume((level as number) / 100)
+        setRecordVolume(level as number)
       }).then(() => {
         const recordOutputVolume = setting.recordOutputVolume
 

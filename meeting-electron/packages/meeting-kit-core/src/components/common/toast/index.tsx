@@ -95,11 +95,10 @@ class Toast extends React.Component {
           <div className="nemeeting-toast-fragment-wrap">
             <div className="nemeeting-toast-fragment-content">
               <svg className="icon iconfont iconinfo" aria-hidden="true">
-                <use xlinkHref="#icona-45 "></use>
+                <use xlinkHref="#icona-45"></use>
               </svg>
               {/*<i className="iconfont icona-45 iconinfo"></i>*/}
               <span
-                onClick={() => console.log('ssssss')}
                 className="nemeeint-toast-content"
               >
                 {msg}
