@@ -145,7 +145,7 @@ const SpeakerList: React.FC<SpeakerListProps> = ({
       <div className="speaker-list-inner">
         <div className={'speaker-list-mic'}>
           <svg className={'icon speaker-icon'} aria-hidden="true">
-            <use xlinkHref="#iconyx-tv-voice-onx"></use>
+            <use xlinkHref="#iconyinliang0hei"></use>
           </svg>
         </div>
         <span className={'speaker-title'}>{t('meetingSpeakingPrefix')}：</span>

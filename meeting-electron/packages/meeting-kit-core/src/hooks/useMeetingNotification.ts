@@ -79,7 +79,7 @@ function useMeetingNotificationInMeeting(): void {
                   action: 'join',
                 },
               ]
-              notifyCard.footTip = t('sipJoinOtherMeetingTip')
+              notifyCard.footTip = window.isElectronNative ? '' : t('sipJoinOtherMeetingTip')
               dataObj.data.notifyCard = notifyCard
             }
           }

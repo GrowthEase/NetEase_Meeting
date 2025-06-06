@@ -1,8 +1,10 @@
-const { screen, shell } = require('electron')
+const { screen } = require('electron')
 const { sharingScreen } = require('../sharingScreen')
 const path = require('path')
+const { handleDualMonitorsWin } = require('../module/dualMonitors')
 
 const isWin32 = process.platform === 'win32'
+const isLinux = process.platform === 'linux'
 const MEETING_HEADER_HEIGHT = isWin32 ? 31 : 28
 
 let selfWindow = null
@@ -35,11 +37,8 @@ function openNewWindow(url) {
 
   if (url.includes('bulletScreenMessage')) {
     newWin.setWindowButtonVisibility?.(false)
-
-    const mousePosition = screen.getCursorScreenPoint()
-    const nowDisplay = screen.getDisplayNearestPoint(mousePosition)
     // 通过位置信息获取对应的屏幕
-    const currentScreen = sharingScreen.shareScreen || nowDisplay
+    const currentScreen = screen.getPrimaryDisplay()
 
     // 获取屏幕的位置，宽度和高度
     const screenX = currentScreen.bounds.x
@@ -55,11 +54,8 @@ function openNewWindow(url) {
     newWin.setAlwaysOnTop(true, 'screen-saver')
   } else if (url.includes('screenSharing/video')) {
     newWin.setWindowButtonVisibility?.(false)
-
-    const mousePosition = screen.getCursorScreenPoint()
-    const nowDisplay = screen.getDisplayNearestPoint(mousePosition)
     // 通过位置信息获取对应的屏幕
-    const currentScreen = sharingScreen.shareScreen || nowDisplay
+    const currentScreen = screen.getPrimaryDisplay()
 
     // 获取屏幕的位置，宽度和高度
     const screenX = currentScreen.bounds.x
@@ -76,10 +72,8 @@ function openNewWindow(url) {
   } else if (url.includes('notification/card')) {
     newWin.setWindowButtonVisibility?.(false)
     // 获取主窗口的位置信息
-    const mousePosition = screen.getCursorScreenPoint()
-    const nowDisplay = screen.getDisplayNearestPoint(mousePosition)
     // 通过位置信息获取对应的屏幕
-    const currentScreen = sharingScreen.shareScreen || nowDisplay
+    const currentScreen = screen.getPrimaryDisplay()
     // 获取屏幕的位置，宽度和高度
     const screenX = currentScreen.bounds.x
     const screenY = currentScreen.bounds.y
@@ -113,8 +107,8 @@ function openNewWindow(url) {
     if (sharingScreen.shareScreen) {
       newWin.setBounds(sharingScreen.shareScreen.bounds)
     }
-
-    // newWin.webContents.openDevTools();
+  } else if (url.includes('/dualMonitors')) {
+    handleDualMonitorsWin(newWin)
   }
 
   setExcludeWindowList()
@@ -129,6 +123,7 @@ function setWindowOpenHandler(mainWindow) {
       width: 375,
       height: 670,
       titleBarStyle: 'hidden',
+      frame: !isLinux,
       maximizable: false,
       minimizable: false,
       resizable: false,
@@ -138,6 +133,7 @@ function setWindowOpenHandler(mainWindow) {
       webPreferences: {
         contextIsolation: false,
         nodeIntegration: true,
+        backgroundThrottling: false,
         preload: path.join(__dirname, '../ipc.js'),
       },
     }
@@ -153,6 +149,7 @@ function setWindowOpenHandler(mainWindow) {
           width: pW - 2,
           height: pH,
           titleBarStyle: 'hidden',
+          frame: !isLinux,
           transparent: true,
         },
       }
@@ -161,6 +158,7 @@ function setWindowOpenHandler(mainWindow) {
         action: 'allow',
         overrideBrowserWindowOptions: {
           ...commonOptions,
+          frame: !isLinux,
           titleBarStyle: mainWindow.inMeeting ? 'default' : 'hidden',
         },
       }
@@ -178,6 +176,7 @@ function setWindowOpenHandler(mainWindow) {
         action: 'allow',
         overrideBrowserWindowOptions: {
           ...commonOptions,
+          frame: true,
           titleBarStyle: 'default',
         },
       }
@@ -200,9 +199,10 @@ function setWindowOpenHandler(mainWindow) {
         action: 'allow',
         overrideBrowserWindowOptions: {
           ...commonOptions,
+          frame: true,
           titleBarStyle: 'default',
           width: 498,
-          height: 480,
+          height: 520,
         },
       }
     } else if (url.includes('#/member')) {
@@ -210,6 +210,7 @@ function setWindowOpenHandler(mainWindow) {
         action: 'allow',
         overrideBrowserWindowOptions: {
           ...commonOptions,
+          frame: true, // linux 下需要覆盖为true,否则没有标题栏
           titleBarStyle: 'default',
           width: 400,
           height: 600,
@@ -221,6 +222,7 @@ function setWindowOpenHandler(mainWindow) {
         overrideBrowserWindowOptions: {
           ...commonOptions,
           titleBarStyle: 'hidden',
+          frame: !isLinux,
         },
       }
     } else if (url.includes('#/transcriptionInMeeting')) {
@@ -229,6 +231,7 @@ function setWindowOpenHandler(mainWindow) {
         overrideBrowserWindowOptions: {
           ...commonOptions,
           titleBarStyle: 'default',
+          frame: true,
           width: 400,
           height: 600,
         },
@@ -312,6 +315,7 @@ function setWindowOpenHandler(mainWindow) {
           ...commonOptions,
           maximizable: false,
           titleBarStyle: 'hidden',
+          frame: !isLinux,
           minimizable: false,
           fullscreenable: false,
           transparent: true,
@@ -337,12 +341,15 @@ function setWindowOpenHandler(mainWindow) {
           ...commonOptions,
           maximizable: false,
           titleBarStyle: 'hidden',
+          frame: !isLinux,
           minimizable: false,
           fullscreenable: false,
           hasShadow: false,
           alwaysOnTop: 'screen-saver',
           resizable: true,
           skipTaskbar: true,
+          minHeight,
+          minWidth,
           width: minWidth,
           height: minHeight,
           x: Math.round(x + (width - minWidth) / 2),
@@ -350,7 +357,7 @@ function setWindowOpenHandler(mainWindow) {
         },
       }
 
-      if (isWin32) {
+      if (isWin32 || isLinux) {
         commonOptions.overrideBrowserWindowOptions = {
           ...commonOptions.overrideBrowserWindowOptions,
           transparent: true,
@@ -384,10 +391,35 @@ function setWindowOpenHandler(mainWindow) {
           ...commonOptions,
           width: 350,
           height: 400,
-          transparent: isWin32,
+          transparent: isWin32 || isLinux,
           roundedCorners: false,
           backgroundColor: 'rgba(0, 0, 0, 0.01)',
           skipTaskbar: true,
+        },
+      }
+    } else if (url.includes('#/live')) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          ...commonOptions,
+          width: 904,
+          height: 638,
+        },
+      }
+    } else if (url.includes('#/dualMonitors')) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          ...commonOptions,
+          maximizable: true,
+          minimizable: true,
+          resizable: true,
+          fullscreenable: false,
+          fullscreen: false,
+          width: 904,
+          height: 638,
+          minWidth: 904,
+          minHeight: 638,
         },
       }
     }
@@ -422,9 +454,19 @@ function setWindowOpenHandler(mainWindow) {
 
       if (url.includes('interpreterWindow')) {
         newWin.setWindowButtonVisibility?.(false)
+        newWin.setAlwaysOnTop(true, 'screen-saver', 100)
       } else if (url.includes('captionWindow')) {
         newWin.setWindowButtonVisibility?.(false)
         newWin.setAlwaysOnTop(true, 'screen-saver')
+        // 需要设置最小否则可以拖拽消失
+        if (isLinux) {
+          newWin.setMinimumSize(429, 128)
+          newWin.on('maximize', (event) => {
+            event.preventDefault()
+            return false
+          })
+        }
+
         newWin.on('will-resize', (event, newBounds) => {
           event.preventDefault()
           newWin.setBounds({
@@ -444,7 +486,7 @@ function setWindowOpenHandler(mainWindow) {
 
       openNewWindow(url)
 
-      // newWin.webContents.openDevTools()
+      //newWin.webContents.openDevTools()
     }
   )
 }

@@ -118,7 +118,7 @@ export const TranscriptionItem: React.FC<TranscriptionItemProps> = ({
       />
       <div className="nemeeting-transcription-item-name">
         <div className="nemeeting-transcription-item-name-wrapper">
-          <div className="nemeeting-transcription-item-nickname">
+          <div className="nemeeting-transcription-item-nickname nemeeting-ellipsis">
             {message.nickname}
           </div>
           <div className="nemeeting-transcription-item-time">
@@ -241,7 +241,7 @@ export const Transcription: React.FC<TranscriptionProps> = ({
     } else {
       setScrollToIndex(-1)
     }
-  }, [transcriptionMessageList?.length])
+  }, [transcriptionMessageList])
 
   const targetTranslationLanguage = useMemo(() => {
     return meetingInfo.setting.captionSetting?.targetLanguage
@@ -424,7 +424,7 @@ export const Transcription: React.FC<TranscriptionProps> = ({
       const arr = new Array(10).fill(0)
 
       arr.forEach((_, index) => {
-        const cacheIndex = transcriptionMessageList.length - 5 + index
+        const cacheIndex = transcriptionMessageList.length - 10 + index
 
         cache?.clear(cacheIndex, 0)
       })

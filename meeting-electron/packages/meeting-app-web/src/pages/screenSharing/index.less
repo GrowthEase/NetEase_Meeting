@@ -6,6 +6,7 @@
   background-color: #33333f;
   width: 100%;
   height: 100%;
+  
   .video-parent-page-header {
     height: 28px;
     line-height: 28px;
@@ -115,6 +116,32 @@
   line-height: 120px;
   box-sizing: border-box;
   border-radius: 0;
+  position: relative;
+  &:hover {
+    .nemeeting-video-card-operate {
+      display: flex;
+    }
+  }
+  .nemeeting-video-card-operate {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    right: 8px;
+    top: 8px;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    border-radius: 4px;
+    &:hover {
+      background-color: #337EFF;
+    }
+    .icon-operator {
+      height: 100%;
+      font-size: 18px;
+    }
+  }
   .nickname-tip {
     line-height: 16px;
     width: fit-content;
@@ -147,5 +174,11 @@
   display: flex;
   .nemeeting-emoji-item {
     display: block;
+  }
+}
+
+.screenSharing-video-mirror {
+  canvas {
+    transform: translate(-50%, -50%) rotateY(180deg) !important;
   }
 }

@@ -1,14 +1,36 @@
 .nemeeting-avatar {
-  background: linear-gradient(180deg, #5996ff 1.1%, #2575ff 100%);
-  color: #fff;
-  text-align: center;
-  border-radius: 100%;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   position: relative;
-  flex-shrink: 0;
+  .nemeeting-avatar-wrapper {
+    height: 100%;
+    width: 100%;
+    position: relative;
+    border-radius: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    text-align: center;
+    overflow: hidden;
+    color: #fff;
+    background: linear-gradient(180deg, #5996ff 1.1%, #2575ff 100%);
+  }
+  .nemeeting-avatar-network {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    color: #fff;
+    background-color: #F51D45;
+    bottom: 0px;
+    right: 0px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    svg {
+      transform: scale(0.66);
+    }
+  }
   .anticon.avatar-edit-icon {
     position: absolute;
     top: 0;
@@ -56,6 +78,11 @@
   .avatar-edit-icon {
     line-height: 64px;
   }
+  .nemeeting-avatar-network {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+  }
 }
 .nemeeting-avatar-48 {
   width: 48px;
@@ -63,6 +90,11 @@
   font-size: 18px;
   .avatar-edit-icon {
     line-height: 48px;
+  }
+  .nemeeting-avatar-network {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
   }
 }
 .nemeeting-avatar-36 {

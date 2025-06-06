@@ -121,13 +121,13 @@ const MeetingNotification = forwardRef<
           }
 
           if (window.isElectronNative) {
-            if (
-              (type === 'MEETING.INVITE' ||
-                type === 'MEETING.SCHEDULE.START') &&
-              noShowInvite
-            ) {
-              return
-            }
+            // if (
+            //   (type === 'MEETING.INVITE' ||
+            //     type === 'MEETING.SCHEDULE.START') &&
+            //   noShowInvite
+            // ) {
+            //   return
+            // }
 
             onNotificationCardWinOpen?.(message)
           } else {

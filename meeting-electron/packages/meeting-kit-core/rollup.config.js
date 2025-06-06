@@ -23,6 +23,14 @@ function buildConfig(platform) {
   )
 
   const plugins = [
+    replace({
+      values: {
+        'process.env.NODE_ENV': JSON.stringify('production'),
+        'process.env.PLATFORM': JSON.stringify(platform),
+        'window.h5App': platform === 'h5',
+      },
+      preventAssignment: true,
+    }),
     alias({
       entries: [{ find: '@', replacement: path.resolve(__dirname, 'src') }],
     }),
@@ -36,10 +44,6 @@ function buildConfig(platform) {
     }),
     typescript({
       tsconfig: './tsconfig.json',
-    }),
-    replace({
-      'process.env.NODE_ENV': JSON.stringify('production'),
-      'process.env.PLATFORM': JSON.stringify(platform),
     }),
     image(),
     json(),

@@ -567,6 +567,16 @@ const MemberList: React.FC = () => {
     neMeeting,
   ])
 
+  // 监听视图上的快捷操作修改昵称
+  useEffect(() => {
+    eventEmitter?.on(MeetingEventType.updateNickname, ({uuid, name, roomType}) => {
+      handleUpdateUserNickname(uuid, name, roomType)
+    })
+    return () => {
+      eventEmitter?.off(MeetingEventType.updateNickname)
+    }
+  }, [eventEmitter])
+
   const { localMember } = meetingInfo
 
   const [searchName, setSearchName] = useState('')
@@ -587,12 +597,12 @@ const MemberList: React.FC = () => {
 
   useEffect(() => {
     // 如果是主持人或者联席主持人才有等候室tab
-    if (localMember && localMember.role && !isHostOrCoHost) {
+    if (!isHostOrCoHost) {
       neMeeting?.updateMeetingInfo({
         activeMemberManageTab: 'room',
       })
     }
-  }, [isHostOrCoHost, localMember, neMeeting])
+  }, [isHostOrCoHost])
 
   const [showMemberList, setShowMemberList] = useState<NEMember[]>([])
 
@@ -894,7 +904,7 @@ const MemberList: React.FC = () => {
     [inSipInvitingMemberListFilter, neMeeting]
   )
   const showWaitingTab = useMemo(() => {
-    return waitingRoomMemberList.length > 0 && waitingRoomInfo.memberCount > 0
+    return waitingRoomMemberList.length > 0 || waitingRoomInfo.memberCount > 0
   }, [waitingRoomInfo.memberCount, waitingRoomMemberList.length])
 
   const showSipInviteTab = useMemo(() => {
@@ -923,7 +933,7 @@ const MemberList: React.FC = () => {
     //         AttendeeOffType.offAllowSelfOn,
     //         AttendeeOffType.offNotAllowSelfOn,
     //       ].includes(meetingInfo.audioOff) && (
-    //         <i className="iconfont iconyx-tv-voice-offx icon-red" />
+    //         <i className="iconfont iconkaiqimaikefeng icon-red" />
     //       )}
     //     </span>
     //   }
@@ -992,7 +1002,8 @@ const MemberList: React.FC = () => {
                 onClick={() => changeTab('waitingRoom')}
               >
                 <span style={{ position: 'relative' }}>
-                  {t('waitingRoom')}({waitingRoomInfo.memberCount})
+                  {t('waitingRoom')}(
+                  {waitingRoomInfo.memberCount || waitingRoomMemberList.length})
                   {!!waitingRoomInfo.unReadMsgCount && (
                     <span className="waiting-room-unread-notify"></span>
                   )}

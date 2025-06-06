@@ -84,7 +84,7 @@ const MemberNotify = forwardRef<
       icon: (
         <div className="nemeeting-waiting-room-member-manager">
           <svg className="icon iconfont" aria-hidden="true">
-            <use xlinkHref="#iconyx-tv-attendeex"></use>
+            <use xlinkHref="#iconguanlicanhuizhe-mianxing"></use>
           </svg>
         </div>
       ),

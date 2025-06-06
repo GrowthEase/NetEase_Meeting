@@ -10,7 +10,7 @@ interface PCTopButtonsProps {
 }
 
 const PCTopButtons: React.FC<PCTopButtonsProps> = (props) => {
-  const isWin = window.systemPlatform == 'win32'
+  const isWin = window.systemPlatform == 'win32' || window.systemPlatform === 'linux'
 
   const { minimizable = true, maximizable = true, size = 'small' } = props
 

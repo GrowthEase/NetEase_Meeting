@@ -11,7 +11,8 @@ declare module '*.svg' {
 
 interface Window {
   h5App?: boolean;
-  systemPlatform?: 'win32' | 'darwin';
+  systemPlatform?: 'win32' | 'darwin' | 'linux';
+  isArm64: boolean;
   isElectronNative?: boolean;
   NERoom?: any;
   electronLog?: (...params: any[]) => void;

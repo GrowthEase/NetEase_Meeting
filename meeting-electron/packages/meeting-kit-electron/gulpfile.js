@@ -10,7 +10,7 @@ gulp.task('ts-js', async function () {
     .pipe(ts.createProject('./tsconfig.json')())
     .pipe(gulp.dest('lib'))
 
-  await gulp.src('src/**/*+(.jpg|.png)').pipe(gulp.dest('lib'))
+  await gulp.src('src/**/*+(.jpg|.png|.mp4)').pipe(gulp.dest('lib'))
 })
 
 gulp.task('clean', function () {

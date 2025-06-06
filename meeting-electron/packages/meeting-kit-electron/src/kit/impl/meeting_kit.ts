@@ -82,6 +82,7 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
 
     const seqId = this._generateSeqId(functionName)
 
+    this._isInitialized = false
     this._win.webContents.send(BUNDLE_NAME, {
       method: functionName,
       args: [],
@@ -184,6 +185,20 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
     this._exceptionHandlers.push(handler)
   }
 
+  startMarvel(): Promise<NEResult<void>> {
+    const functionName = 'startMarvel'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      method: functionName,
+      args: [],
+      seqId,
+    })
+
+    return this._IpcMainListener<void>(seqId)
+  }
+
   private async _initialize(
     config: NEMeetingKitConfig,
     recover: boolean = false
@@ -211,6 +226,7 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
             this._preMeetingService?.setWin(this._win)
             this._contactsService?.setWin(this._win)
             this._meetingMessageChannelService?.setWin(this._win)
+            this._feedbackService?.setWin(this._win)
             this._guestService?.setWin(this._win)
           } else {
             this._isInitialized = true

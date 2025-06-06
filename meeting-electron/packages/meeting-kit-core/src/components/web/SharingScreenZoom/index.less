@@ -1,0 +1,100 @@
+.sharing-screen-zoom-wrapper {
+  -webkit-app-region: no-drag;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 28px;
+  line-height: 28px;
+  font-size: 12px;
+  overflow: hidden;
+  z-index: 9999;
+  display: flex;
+  border-radius: 8px;
+  color: #FFFFFF;
+  background-color: #7F7F80;
+  padding: 0 32px 0 20px;
+  .sharing-screen-zoom-button {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 4px;
+    color: #FFFFFF;
+    background-color: #8C8C8D;
+    font-size: 22px;
+  }
+  .sharing-screen-zoom-button:hover {
+    background-color: #FFF;
+    color: #53576A;
+  }
+  .sharing-screen-zoom-button.active {
+    background-color: #EBEBEB;
+    color: #53576A;
+  }
+}
+
+
+.sharing-screen-zoom-popover {
+  .nemeeting-popover-inner {
+    padding: 0;
+    background: rgba(11, 11, 11, 0.9);
+  }
+  .sharing-screen-zoom-content {
+    width: 160px;
+    color: #fff;
+    padding: 4px;
+    .sharing-screen-zoom-content-divider {
+      height: 0.5px;
+      background: #8D90A0;
+      margin: 8px 0px;
+    }
+    .sharing-screen-zoom-content-title {
+      font-size: 12px;
+      padding:4px 9px;
+      color: #8D90A0;
+    }
+    .sharing-screen-zoom-content-item {
+      padding: 6px 9px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      .icon {
+        color: #337eff;
+      }
+      &:hover {
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      &.red {
+        color: #FF5959;
+      }
+    }
+  }
+}
+
+.light-theme {
+  .sharing-screen-zoom-popover {
+    .nemeeting-popover-inner {
+      background: rgba(255, 255, 255, 0.9);
+      .sharing-screen-zoom-content {
+        color: #1e1f27;
+      }
+    }
+    .sharing-screen-zoom-content {
+      .sharing-screen-zoom-content-item {
+        &:hover {
+          border-radius: 8px;
+          background: #E5E5E5;
+        }
+      }
+    }
+  }
+}

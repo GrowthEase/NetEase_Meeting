@@ -1,4 +1,4 @@
-import { Button, Checkbox, Dropdown, MenuProps } from 'antd'
+import { Button, Dropdown, MenuProps } from 'antd'
 import classNames from 'classnames'
 import React, { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -29,6 +29,8 @@ import useMemberActionMenuItems, {
   NEActionMenuIDs,
 } from '../../../../hooks/useMemberActionMenuItems'
 import { MenuClickType } from '../../../../kit/interface'
+import { useMemberOperationHandle } from '../../../../hooks/useVideoShortcutOperation'
+import useNetworkQuality from '../../../../hooks/useNetworkQuality'
 
 interface MemberItemProps {
   data: NEMember
@@ -98,7 +100,23 @@ const MemberItem: React.FC<MemberItemProps> = ({
 
     return `${remarks.length ? `${remarks.join(',')}` : ''}`
   }, [localMember, meetingInfo, data, t])
+  const {
+    moveToWaitingRoom,
+    rejectHandsUp,
+    muteMemberAudio,
+    unmuteMemberAudio,
+    muteMemberVideo,
+    unmuteMemberVideo,
+    unmuteVideoAndAudio,
+    closeScreenShare,
+    transferHost,
+    takeBackTheHost,
+    unSetCoHost,
+    setCoHost,
+    removeDialog,
+  } = useMemberOperationHandle()
 
+  const { isNetworkQualityBad } = useNetworkQuality(data)
   const privateChatItemShow = useMemo(() => {
     // 自己不显示私聊
     if (data.uuid === localMember.uuid) {
@@ -132,6 +150,10 @@ const MemberItem: React.FC<MemberItemProps> = ({
     return false
   }, [localMember, meetingInfo, data, isCoHost, isHost])
 
+  function modifyMeetingNickName(data: NEMember) {
+    handleUpdateUserNickname?.(data.uuid, data.name, 'room')
+  }
+
   let items: {
     key: memberAction | hostAction | number
     label: string
@@ -142,7 +164,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
       key: memberAction.modifyMeetingNickName,
       label: t('noRename'),
       onClick: () => {
-        handleUpdateUserNickname?.(data.uuid, data.name, 'room')
+        modifyMeetingNickName(data)
       },
       isShow:
         (isCoHost || isHost || localMember.uuid === data.uuid) &&
@@ -199,13 +221,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
         meetingInfo.isWaitingRoomEnabled &&
         data.uuid !== localMember.uuid,
       onClick: async () => {
-        try {
-          await neMeeting?.putInWaitingRoom(data.uuid)
-        } catch (err: unknown) {
-          const knownError = err as { message: string; msg: string }
-
-          Toast.fail(knownError?.msg || knownError?.message)
-        }
+        moveToWaitingRoom(data)
       },
     },
   ]
@@ -255,46 +271,6 @@ const MemberItem: React.FC<MemberItemProps> = ({
         ]
       : []
 
-  const removeDialog = () => {
-    let isChecked = false
-
-    CommonModal.confirm({
-      title: t('participantRemove'),
-      width: 400,
-      content: (
-        <>
-          <div>{t('participantRemoveConfirm') + data.name}</div>
-          {meetingInfo.enableBlacklist && (
-            <Checkbox
-              className="close-checkbox-tip"
-              onChange={(e) => (isChecked = e.target.checked)}
-              style={{ marginTop: '10px' }}
-            >
-              {t('meetingNotAllowedToRejoin')}
-            </Checkbox>
-          )}
-        </>
-      ),
-      onOk: async () => {
-        try {
-          await neMeeting?.sendHostControl(
-            hostAction.remove,
-            data.uuid,
-            isChecked
-          )
-        } catch (err: unknown) {
-          const knownError = err as { message: string; msg: string }
-
-          Toast.fail(
-            knownError?.msg ||
-              knownError?.message ||
-              t('participantFailedToRemove')
-          )
-        }
-      },
-    })
-  }
-
   if (isHost || isCoHost) {
     items.push(
       ...[
@@ -303,14 +279,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
           label: t('lowerHand'),
           isShow: data.isHandsUp,
           onClick: async () => {
-            try {
-              await neMeeting?.sendHostControl(
-                hostAction.rejectHandsUp,
-                data.uuid
-              )
-            } catch {
-              Toast.fail(t('participantFailedToLowerHand'))
-            }
+            rejectHandsUp(data)
           },
         },
         {
@@ -318,18 +287,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
           label: t('participantMute'),
           isShow: data.isAudioOn && data.isAudioConnected,
           onClick: async () => {
-            try {
-              if (isMySelf) {
-                await neMeeting?.muteLocalAudio()
-              } else {
-                await neMeeting?.sendHostControl(
-                  hostAction.muteMemberAudio,
-                  data.uuid
-                )
-              }
-            } catch {
-              Toast.fail(t('participantMuteAudioFail'))
-            }
+            muteMemberAudio(data, isMySelf)
           },
         },
         {
@@ -337,27 +295,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
           label: t('participantUnmute'),
           isShow: !data.isAudioOn && data.isAudioConnected,
           onClick: async () => {
-            try {
-              if (isMySelf) {
-                await neMeeting?.unmuteLocalAudio()
-              } else {
-                await neMeeting?.sendHostControl(
-                  hostAction.unmuteMemberAudio,
-                  data.uuid
-                )
-              }
-            } catch (err: unknown) {
-              const knownError = err as {
-                message: string
-                msg: string
-                code: number
-              }
-
-              Toast.fail(
-                knownError?.msg ||
-                  t(errorCodeMap[knownError?.code] || 'unMuteAudioFail')
-              )
-            }
+            unmuteMemberAudio(data, isMySelf)
           },
         },
         {
@@ -365,18 +303,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
           label: t('participantStopVideo'),
           isShow: data.isVideoOn,
           onClick: async () => {
-            try {
-              if (isMySelf) {
-                await neMeeting?.muteLocalVideo()
-              } else {
-                await neMeeting?.sendHostControl(
-                  hostAction.muteMemberVideo,
-                  data.uuid
-                )
-              }
-            } catch {
-              Toast.fail(t('participantMuteVideoFail'))
-            }
+            muteMemberVideo(data, isMySelf)
           },
         },
         {
@@ -384,30 +311,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
           label: t('participantStartVideo'),
           isShow: !data.isVideoOn,
           onClick: async () => {
-            try {
-              if (isMySelf) {
-                await neMeeting?.unmuteLocalVideo()
-              } else {
-                await neMeeting?.sendHostControl(
-                  hostAction.unmuteMemberVideo,
-                  data.uuid
-                )
-              }
-            } catch (err: unknown) {
-              const knownError = err as {
-                message: string
-                msg: string
-                code: number
-              }
-
-              Toast.fail(
-                knownError?.msg ||
-                  t(
-                    errorCodeMap[knownError?.code] ||
-                      'participantUnMuteVideoFail'
-                  )
-              )
-            }
+            unmuteMemberVideo(data, isMySelf)
           },
         },
         {
@@ -430,28 +334,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
           label: t('unmuteVideoAndAudio'),
           isShow: (!data.isVideoOn || !data.isAudioOn) && data.isAudioConnected,
           onClick: async () => {
-            try {
-              if (isMySelf) {
-                await neMeeting?.unmuteLocalAudio()
-                await neMeeting?.unmuteLocalVideo()
-              } else {
-                await neMeeting?.sendHostControl(
-                  hostAction.unmuteVideoAndAudio,
-                  data.uuid
-                )
-              }
-            } catch (error: unknown) {
-              const knownError = error as {
-                message: string
-                msg: string
-                code: number
-              }
-
-              Toast.fail(
-                knownError?.msg ||
-                  t(errorCodeMap[knownError?.code] || knownError?.code)
-              )
-            }
+            unmuteVideoAndAudio(data, isMySelf)
           },
         },
         ...privateChatItems,
@@ -489,22 +372,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
               data.isSharingSystemAudio) &&
             localMember.uuid !== data.uuid,
           onClick: () => {
-            CommonModal.confirm({
-              title: t('screenShareStop'),
-              content: t('closeCommonTips') + t('closeScreenShareTips'),
-              onOk: async () => {
-                try {
-                  await neMeeting?.sendHostControl(
-                    data.isSharingSystemAudio
-                      ? hostAction.closeAudioShare
-                      : hostAction.closeScreenShare,
-                    data.uuid
-                  )
-                } catch {
-                  Toast.fail(t('screenShareStopFail'))
-                }
-              },
-            })
+            closeScreenShare(data)
           },
         },
         {
@@ -529,6 +397,37 @@ const MemberItem: React.FC<MemberItemProps> = ({
             })
           },
         },
+        {
+          key: hostAction.allowLocalReocrd,
+          label: t('localRecordPermissionAllow'),
+          isShow:
+            data.role !== Role.host &&
+            (data.clientType == NEClientType.PC || data.clientType == NEClientType.LINUX || data.clientType == NEClientType.MAC) &&
+            !data.isLocalRecording,
+          onClick: async () => {
+            try {
+              await neMeeting?.sendHostControl(hostAction.unsetFocus, data.uuid)
+            } catch {
+              Toast.fail(t('participantFailedToUnassignActiveSpeaker'))
+            }
+          },
+        },
+        {
+          key: hostAction.forbiddenLocalRecord,
+          label: t('localRecordPermissionNotAllow'),
+          isShow:
+            data.role !== Role.host &&
+            (data.clientType == NEClientType.PC ||
+              data.clientType == NEClientType.MAC || data.clientType == NEClientType.LINUX) &&
+            data.isLocalRecording == true,
+          onClick: async () => {
+            try {
+              await neMeeting?.sendHostControl(hostAction.unsetFocus, data.uuid)
+            } catch {
+              Toast.fail(t('participantFailedToUnassignActiveSpeaker'))
+            }
+          },
+        },
       ]
     )
   }
@@ -544,22 +443,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
             data.clientType !== NEClientType.SIP &&
             data.clientType !== NEClientType.H323,
           onClick: () => {
-            CommonModal.confirm({
-              title: t('participantTransferHost'),
-              content: t('participantTransferHostConfirm', {
-                userName: data.name,
-              }),
-              onOk: async () => {
-                try {
-                  await neMeeting?.sendHostControl(
-                    hostAction.transferHost,
-                    data.uuid
-                  )
-                } catch {
-                  Toast.fail(t('participantFailedToTransferHost'))
-                }
-              },
-            })
+            transferHost(data)
           },
         },
         {
@@ -572,21 +456,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
             data.clientType !== NEClientType.SIP &&
             data.clientType !== NEClientType.H323,
           onClick: async () => {
-            try {
-              await neMeeting?.sendHostControl(hostAction.setCoHost, data.uuid)
-            } catch (err: unknown) {
-              const knownError = err as {
-                message: string
-                msg: string
-                code: number
-              }
-
-              if (knownError.code === 1002) {
-                Toast.fail(t('coHostLimit'))
-              } else {
-                Toast.fail(knownError.message || knownError.msg)
-              }
-            }
+            setCoHost(data)
           },
         },
         {
@@ -597,16 +467,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
             data.clientType !== NEClientType.SIP &&
             data.clientType !== NEClientType.H323,
           onClick: async () => {
-            try {
-              await neMeeting?.sendHostControl(
-                hostAction.unSetCoHost,
-                data.uuid
-              )
-            } catch (err: unknown) {
-              const knownError = err as { message: string; msg: string }
-
-              Toast.fail(knownError.message || knownError.msg)
-            }
+            unSetCoHost(data)
           },
         },
         ...whiteBoardItems,
@@ -614,12 +475,9 @@ const MemberItem: React.FC<MemberItemProps> = ({
         {
           key: hostAction.remove,
           label: t('participantRemove'),
-          isShow:
-            data.role !== Role.host &&
-            data.role !== Role.coHost &&
-            data.uuid !== ownerUserUuid,
+          isShow: data.role !== Role.host && data.uuid !== ownerUserUuid,
           onClick: () => {
-            removeDialog()
+            removeDialog(data, !!meetingInfo.enableBlacklist)
           },
         },
       ]
@@ -639,7 +497,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
             data.role !== Role.coHost &&
             data.uuid !== localMember.uuid,
           onClick: () => {
-            removeDialog()
+            removeDialog(data, !!meetingInfo.enableBlacklist)
           },
         },
       ]
@@ -656,14 +514,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
       key: memberAction.takeBackTheHost,
       label: t('meetingReclaimHost'),
       onClick: async () => {
-        try {
-          await neMeeting?.sendMemberControl(
-            memberAction.takeBackTheHost,
-            data.uuid
-          )
-        } catch {
-          Toast.fail(t('meetingReclaimHostFailed'))
-        }
+        takeBackTheHost(data)
       },
       // 需要判断自己是否是主持人，是当前的会议拥有者
       isShow:
@@ -851,7 +702,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
 
       case NEActionMenuIDs.removeMember:
         onClick = async () => {
-          removeDialog()
+          removeDialog(data, !!meetingInfo.enableBlacklist)
         }
 
         break
@@ -898,6 +749,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
       case NEActionMenuIDs.screenShare:
         onClick = async () => {
           CommonModal.confirm({
+            key: 'screenShareStop',
             title: t('screenShareStop'),
             content: t('closeCommonTips') + t('closeScreenShareTips'),
             onOk: async () => {
@@ -1044,39 +896,99 @@ const MemberItem: React.FC<MemberItemProps> = ({
     }
   })
 
+  if (
+    (isHost || isCoHost) &&
+    data.role !== Role.host &&
+    data.role !== Role.coHost &&
+    (data.clientType == NEClientType.PC ||
+      data.clientType == NEClientType.MAC || data.clientType == NEClientType.LINUX) &&
+    meetingInfo.localRecordPermission?.some == true
+  ) {
+    if (data.localRecordAvailable == true) {
+      items.push({
+        key: hostAction.forbiddenLocalRecord,
+        label: t('localRecordPermissionNotAllow'),
+        onClick: async () => {
+          try {
+            await neMeeting?.sendMemberControl(
+              memberAction.notAllowLocalRecord,
+              data.uuid
+            )
+          } catch (e) {
+            console.log('关闭该成员录制权限失败: ', e.message)
+            Toast.fail(e.message)
+          }
+        },
+      })
+    } else {
+      items.push({
+        key: hostAction.allowLocalReocrd,
+        label: t('localRecordPermissionAllow'),
+        onClick: async () => {
+          try {
+            await neMeeting?.sendMemberControl(
+              memberAction.allowLocalRecord,
+              data.uuid
+            )
+          } catch (e) {
+            console.log('开启该成员录制权限失败: ', e.message)
+            Toast.fail(e.message)
+          }
+        },
+      })
+    }
+  }
+
   return (
     <div
       className={classNames('nemeeting-member-item', {
         'nemeeting-member-item-hover': isMemberItemHover,
       })}
     >
-      <UserAvatar
-        className="member-item-avatar"
-        nickname={data.name}
-        avatar={data.avatar}
-        size={32}
-      />
-      <div className="nemeeting-member-item-user">
-        <div
-          className={classNames('member-item-name', {
-            'nemeeting-item-member-Jp': i18n.language === 'ja-JP',
-          })}
-        >
-          {nickName}
-        </div>
-        <div
-          className={classNames('member-item-name nemeeting-item-member-role', {
-            'nemeeting-item-member-role-Jp': i18n.language === 'ja-JP',
-          })}
-        >
-          {name}
+      <div className="nemeeting-item-wrap">
+        <UserAvatar
+          className="member-item-avatar"
+          nickname={data.name}
+          avatar={data.avatar}
+          size={32}
+          showNetworkQuality={isNetworkQualityBad}
+        />
+        <div className="nemeeting-member-item-user">
+          <div
+            className={classNames('member-item-name', {
+              'nemeeting-item-member-Jp': i18n.language === 'ja-JP',
+            })}
+          >
+            {nickName}
+          </div>
+          <div
+            className={classNames(
+              'member-item-name nemeeting-item-member-role',
+              {
+                'nemeeting-item-member-role-Jp': i18n.language === 'ja-JP',
+              }
+            )}
+          >
+            {name}
+          </div>
         </div>
       </div>
+
       <div className={classNames('member-item-actions')}>
-        {data.isHandsUp && <Emoji type={2} size={16} emojiKey="[举手]" />}
+        {data.isLocalRecording && (
+          <svg
+            className="icon iconfont icon-red iconbendiluzhi1 icon-hover"
+            aria-hidden="true"
+          >
+            <use xlinkHref="#iconbendiluzhi1" />
+          </svg>
+        )}
+        {data.isHandsUp && (isHost || isCoHost) && (
+          <Emoji type={2} size={16} emojiKey="[举手]" />
+        )}
         {data.properties.phoneState?.value == '1' && (
           <svg
-            className="icon iconfont icon-green icondianhua-copy"
+            className="icon iconfont icon-green-light icondianhua-copy"
             aria-hidden="true"
           >
             <use xlinkHref="#icondianhua-copy" />
@@ -1100,7 +1012,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
         )}
         {data.isSharingSystemAudio && (
           <svg
-            className="icon iconfont iconyx-tv-sharescreen1x"
+            className="icon iconfont icontouping-mianxing"
             aria-hidden="true"
           >
             <use xlinkHref="#icondiannaoshengyingongxiang" />
@@ -1108,18 +1020,18 @@ const MemberItem: React.FC<MemberItemProps> = ({
         )}
         {data.isSharingScreen && (
           <svg
-            className="icon iconfont icon-blue icon-blue iconyx-tv-sharescreen1x"
+            className="icon iconfont icon-green-light icontouping-mianxing"
             aria-hidden="true"
           >
-            <use xlinkHref="#iconyx-tv-sharescreen1x" />
+            <use xlinkHref="#icontouping-mianxing" />
           </svg>
         )}
         {data.isSharingWhiteboard && (
           <svg
-            className="icon iconfont icon-blue iconyx-baiban"
+            className="icon iconfont icon-blue iconbaiban-mianxing"
             aria-hidden="true"
           >
-            <use xlinkHref="#iconyx-baiban" />
+            <use xlinkHref="#iconbaiban-mianxing" />
           </svg>
         )}
         {meetingInfo.focusUuid === data.uuid && (
@@ -1138,7 +1050,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
         >
           <use
             xlinkHref={`${
-              data.isVideoOn ? '#iconyx-tv-video-onx' : '#iconyx-tv-video-offx'
+              data.isVideoOn ? '#iconguanbishexiangtou-mianxing' : '#iconkaiqishexiangtou'
             }`}
           />
         </svg>
@@ -1161,9 +1073,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
             >
               <use
                 xlinkHref={`${
-                  data.isAudioOn
-                    ? '#iconyx-tv-voice-onx'
-                    : '#iconyx-tv-voice-offx'
+                  data.isAudioOn ? '#iconyinliang0hei' : '#iconkaiqimaikefeng'
                 }`}
               />
             </svg>
@@ -1179,9 +1089,7 @@ const MemberItem: React.FC<MemberItemProps> = ({
           >
             <use
               xlinkHref={`${
-                data.isAudioOn
-                  ? '#iconyx-tv-voice-onx'
-                  : '#iconyx-tv-voice-offx'
+                data.isAudioOn ? '#iconyinliang0hei' : '#iconkaiqimaikefeng'
               }`}
             />
           </svg>
@@ -1272,11 +1180,11 @@ const MemberItem: React.FC<MemberItemProps> = ({
           </Dropdown>
         ) : (
           <svg
-            className="icon iconfont iconyx-tv-more1x"
+            className="icon iconfont icongengduo-mianxing"
             aria-hidden="true"
             style={{ opacity: 0 }}
           >
-            <use xlinkHref="#iconyx-tv-more1x" />
+            <use xlinkHref="#icongengduo-mianxing" />
           </svg>
         )}
       </div>

@@ -20,21 +20,23 @@ import {
   MeetingInfoContextInterface,
   MeetingSetting,
   RecordState,
+  LocalRecordState,
   Role,
   UserEventType,
 } from '../../../types'
 import RemainTimeTip from '../../common/RemainTimeTip'
 import Dialog from '../ui/dialog'
-
 import MeetingNotification from '../../common/Notification'
 import { useMeetingNotificationInMeeting } from '../../../hooks/useMeetingNotification'
 import MeetingPluginPopup from '../MeetingPluginPopup'
 import './AppH5.less'
 import Record from '../../common/Record'
+import LocalRecord from '../../common/LocalRecord'
 import useWatermark from '../../../hooks/useWatermark'
 import { MAJOR_AUDIO } from '../../../config'
 import { setLocalStorageSetting } from '../../../utils'
 import Toast from '../../../components/common/toast'
+import useWebLocalAudioVolume from '../../../hooks/useWebLocalAudioVolume'
 
 interface AppProps {
   width: number | string
@@ -48,7 +50,7 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
   })
   useMeetingNotificationInMeeting()
 
-  const { meetingInfo, dispatch } =
+  const { meetingInfo, dispatch, memberList } =
     useContext<MeetingInfoContextInterface>(MeetingInfoContext)
   const { localMember } = meetingInfo
   const {
@@ -62,6 +64,10 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
   const toolTimer = useRef<null | ReturnType<typeof setTimeout>>(null)
 
   const meetingInfoRef = useRef(meetingInfo)
+  const memberListRef = useRef(memberList)
+  const myCanvasRef = useRef<HTMLDivElement>(null)
+
+  memberListRef.current = memberList
   const interpretationSettingRef = useRef(interpretationSetting)
 
   const [showMeetingTool, setShowMeetingTool] = useState<boolean>(true)
@@ -85,6 +91,9 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
     setShowTimeTip,
     timeTipContent,
   } = useEventHandler()
+
+  meetingInfoRef.current = meetingInfo
+  useWebLocalAudioVolume(localMember.isAudioOn)
 
   const { t } = useTranslation()
 
@@ -115,20 +124,19 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
 
       // 临时兼容竖屏键盘唤起导致的宽大于高事件
       if (innerWidth - innerHeight > 80) {
-        console.log({ innerHeight, innerWidth })
         // 横屏隐藏工具栏
         setShowMeetingTool(false)
       }
     }
   }, [])
 
-  // 结束录制弹窗提醒
+  // 结束云录制弹窗提醒
   const [endMeetingRecordingModal, setEndMeetingRecordingModal] =
     useState(false)
-  // 结束录制弹窗倒计时
+  // 结束云录制弹窗倒计时
   const [countdownNumber, setCountdownNumber] = useState<number>(-1)
 
-  const { showCloudRecordingUI } =
+  const { showCloudRecordingUI, showLocalRecordingUI } =
     useContext<GlobalContextInterface>(GlobalContext)
 
   const showRecord = useMemo(() => {
@@ -140,6 +148,38 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
       showCloudRecordingUI
     )
   }, [meetingInfo.cloudRecordState, showCloudRecordingUI])
+
+  const showLocalRecordingUIRef = useRef<boolean>(true)
+
+  showLocalRecordingUIRef.current = showLocalRecordingUI !== false
+  const showLocalRecord = useMemo(() => {
+    const localRecord = meetingInfo.localRecordState
+    const isLocalRecord =
+      (localRecord === LocalRecordState.Recording ||
+        localRecord === LocalRecordState.Starting) &&
+      showLocalRecordingUI
+
+    console.warn(
+      '是否展示本地录制UI localRecord: ',
+      localRecord,
+      ',showLocalRecordingUI: ',
+      showLocalRecordingUI,
+      'isLocalRecord: ',
+      isLocalRecord
+    )
+    console.log('memberList: ', memberListRef.current)
+
+    const isOtherLocalRecording = memberListRef.current.find(
+      (member) => member.isLocalRecording
+    )
+
+    return isLocalRecord || isOtherLocalRecording
+  }, [
+    meetingInfo.isLocalRecording,
+    meetingInfo.localRecordState,
+    showLocalRecordingUI,
+    memberList,
+  ])
 
   // 切换视图回调
   const onHandlerActionIndexChanged = (actionIndex: number) => {
@@ -164,6 +204,11 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
     },
     [dispatch]
   )
+
+  useEffect(() => {
+    myCanvasRef.current &&
+      neMeeting?.rtcController?.setupLocalVideoCanvas(myCanvasRef.current)
+  }, [neMeeting?.rtcController])
 
   useEffect(() => {
     window.addEventListener('resize', onSizeChange)
@@ -218,6 +263,17 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
         const isCloudRecording = recordState === 0
 
         if (!isCloudRecording) {
+          if (meetingInfoRef.current.isOtherCloudRecordingStopConfirmed) {
+            return
+          } else {
+            dispatch?.({
+              type: ActionType.UPDATE_MEETING_INFO,
+              data: {
+                isOtherCloudRecordingStopConfirmed: true,
+              },
+            })
+          }
+
           setEndMeetingRecordingModal(true)
         }
       })
@@ -311,6 +367,8 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
       }}
       onClick={_onclickRoomBoard}
     >
+      {/* 本端默认渲染画布，纯音频模式没有画布情况第一次本端开启视频会报错*/}
+      <div className="nemeeting-my-canvas" ref={myCanvasRef}></div>
       <Dialog
         visible={!!waitingRejoinMeeting}
         title={t('networkAbnormality')}
@@ -372,14 +430,28 @@ const Meeting: React.FC<AppProps> = ({ height, width }) => {
             visible={showMeetingTool}
             onClick={_onclickHeader}
           />
-          {showRecord && (
-            <div className="nemeeting-record-wrapper">
+          <div className="nemeeting-record-wrapper">
+            {meetingInfo.liveState === 2 && (
+              <div className="living nemeeting-h5-top-tip">
+                <span className="living-icon" />
+                <span>{t('living')}</span>
+              </div>
+            )}
+            {showRecord && (
               <Record
+                className="nemeeting-h5-top-tip"
                 recordState={meetingInfo.cloudRecordState}
                 notShowRecordBtn={true}
               />
-            </div>
-          )}
+            )}
+            {showLocalRecord && !showRecord && (
+              <LocalRecord
+                className="nemeeting-h5-top-tip"
+                localRecordState={meetingInfo.localRecordState}
+                notShowRecordBtn={true}
+              />
+            )}
+          </div>
           <MeetingCanvas
             className={'flex-1 h-full'}
             onActiveIndexChanged={onHandlerActionIndexChanged}

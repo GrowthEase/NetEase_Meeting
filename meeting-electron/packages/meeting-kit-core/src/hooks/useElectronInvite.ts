@@ -1,5 +1,5 @@
-import { useCallback, useEffect } from 'react'
-import { useGlobalContext } from '../store'
+import { useCallback, useEffect, useRef } from 'react'
+import { useGlobalContext, useMeetingInfoContext } from '../store'
 import { NEMeetingInviteInfo, NEMeetingInviteStatus } from '../types/type'
 import { getWindow, openWindow } from '../utils/windowsProxy'
 import { ActionType, EventType, UserEventType } from '../types'
@@ -14,6 +14,11 @@ export default function useElectronInvite(data: {
   const { t } = useTranslation()
   const { inviteService, neMeeting, eventEmitter, dispatch } =
     useGlobalContext()
+  const { meetingInfo } = useMeetingInfoContext()
+
+  const meetingInfoRef = useRef(meetingInfo)
+
+  meetingInfoRef.current = meetingInfo
 
   const onNotificationClickHandler = useCallback(
     (action: string, message: NECustomSessionMessage) => {
@@ -22,6 +27,11 @@ export default function useElectronInvite(data: {
       const type = data?.type
 
       if (type === 'MEETING.INVITE') {
+        // 目前只等候室使用。会中走其他逻辑
+        if (!meetingInfoRef.current.inWaitingRoom) {
+          return
+        }
+
         if (action === 'reject') {
           neMeeting?.rejectInvite(data.roomUuid)
         } else if (action === 'join') {
@@ -48,23 +58,26 @@ export default function useElectronInvite(data: {
     [neMeeting, dispatch, eventEmitter]
   )
 
-  const windowLoadListener = useCallback(
-    (childWindow) => {
-      function messageListener(e) {
-        const { event, payload } = e.data
+  const messageListener = useCallback(
+    (e) => {
+      const { event, payload } = e.data
 
-        if (event === 'notificationClick') {
-          const { action, message } = payload
+      if (event === 'notificationClick') {
+        const { action, message } = payload
 
-          if (action.startsWith('join') || action.startsWith('reject')) {
-            onNotificationClickHandler(action, message)
-          }
+        if (action.startsWith('join') || action.startsWith('reject')) {
+          onNotificationClickHandler(action, message)
         }
       }
-
-      childWindow?.addEventListener('message', messageListener)
     },
     [onNotificationClickHandler]
+  )
+
+  const windowLoadListener = useCallback(
+    (childWindow) => {
+      childWindow?.addEventListener('message', messageListener)
+    },
+    [messageListener]
   )
 
   const openNotificationCardWindow = useCallback(
@@ -157,7 +170,16 @@ export default function useElectronInvite(data: {
           EventType.OnMeetingInviteStatusChange,
           handleMeetingInviteStatusChanged
         )
+        const notificationCardWindow = getWindow('notificationCardWindow')
+
+        notificationCardWindow?.removeEventListener('message', messageListener)
       }
     }
-  }, [inviteService, t, needOpenWindow, openNotificationCardWindow])
+  }, [
+    inviteService,
+    t,
+    needOpenWindow,
+    openNotificationCardWindow,
+    messageListener,
+  ])
 }

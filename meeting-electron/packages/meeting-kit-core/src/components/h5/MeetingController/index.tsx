@@ -1,3 +1,4 @@
+import { useUpdateEffect } from 'ahooks'
 import { Badge, Modal } from 'antd-mobile/es'
 import React, {
   useCallback,
@@ -8,6 +9,13 @@ import React, {
   useRef,
   useState,
 } from 'react'
+import { useTranslation } from 'react-i18next'
+import {
+  errorCodeMap,
+  MAJOR_AUDIO,
+  MAJOR_DEFAULT_VOLUME,
+} from '../../../config'
+import useCaption from '../../../hooks/useCaption'
 import { defaultMenusInH5 } from '../../../services'
 import { GlobalContext, MeetingInfoContext } from '../../../store'
 import {
@@ -18,6 +26,7 @@ import {
   Role,
 } from '../../../types'
 import {
+  BrowserType,
   CustomButtonIdBoundaryValue,
   EventType,
   MeetingErrorCode,
@@ -26,11 +35,15 @@ import {
   NEMenuVisibility,
   NERoomChatMessage,
 } from '../../../types/innerType'
+import { getBrowserType, getClientType } from '../../../utils'
 import CustomButton from '../../common/CustomButton'
 import Toast from '../../common/toast'
+import Caption from '../Caption'
+import Interpretation from '../Interpretation'
 import MeetingNotificationListPopup from '../MeetingNotificationListPopup'
 import MemberList from '../MemberList'
 import NEChatRoom from '../NEChatRoom'
+import Setting from '../Setting'
 import Dialog from '../ui/dialog'
 import {
   AudioButton,
@@ -41,13 +54,6 @@ import {
 import './index.less'
 import MoreButtonsPopup from './MoreButtonsPopup'
 import useMoreButtons from './MoreButtonsPopup/useMoreButtons'
-import { useTranslation } from 'react-i18next'
-import Interpretation from '../Interpretation'
-import { MAJOR_AUDIO, MAJOR_DEFAULT_VOLUME } from '../../../config'
-import useCaption from '../../../hooks/useCaption'
-import Caption from '../Caption'
-import Setting from '../Setting'
-import { useUpdateEffect } from 'ahooks'
 
 interface MeetingControllerProps {
   className?: string
@@ -293,7 +299,7 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
     if (error?.code === MeetingErrorCode.NoPermission) {
       setPermissionVisible(true)
     } else {
-      Toast.fail(error?.message)
+      Toast.fail(t(errorCodeMap[error?.code] || error?.message || error?.msg))
     }
   }
 
@@ -515,6 +521,14 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
     })
   }
 
+  const isWX = useMemo(() => {
+    return getBrowserType() === BrowserType.WX
+  }, [])
+
+  const isIOS = useMemo(() => {
+    return getClientType() === 'IOS'
+  }, [])
+
   return (
     <>
       {visible && (
@@ -546,7 +560,7 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
           })}
           {/* <div>
           <svg className={`icon ${localMember.isSharingScreen ? 'icon-blue' : 'icon-white'}`} aria-hidden="true">
-            <use xlinkHref="#iconyx-tv-sharescreen1x"></use>
+            <use xlinkHref="#icontouping-mianxing"></use>
           </svg>
           <div onClick={toggleMuteAudio}>{localMember.isSharingScreen ? '取消共享' : '共享屏幕'}</div>
         </div> */}
@@ -560,7 +574,7 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
             >
               <Badge content={notificationUnReadCount ? Badge.dot : null}>
                 <svg className="icon-tool icon iconfont" aria-hidden="true">
-                  <use xlinkHref="#iconyx-tv-more1x"></use>
+                  <use xlinkHref="#icongengduo-mianxing"></use>
                 </svg>
               </Badge>
               {<div className="custom-text">{i18n.moreBtn}</div>}
@@ -656,12 +670,35 @@ const MeetingController: React.FC<MeetingControllerProps> = ({
         onClose={() => {
           setPermissionVisible(false)
         }}
-        actions={[
-          {
-            key: 'confirm',
-            text: t('gotIt'),
-          },
-        ]}
+        actions={
+          isWX && !isIOS
+            ? [
+                {
+                  key: 'confirm',
+                  text: t('gotIt'),
+                },
+                {
+                  key: 'leave',
+                  text: t('globalClosePage'),
+                  primary: true,
+                  onClick: () => {
+                    // 微信环境直接调用sdk关闭页面
+                    if (getBrowserType() === BrowserType.WX) {
+                      //@ts-expect-error 微信环境会有该变量
+                      WeixinJSBridge.call('closeWindow')
+                    } else {
+                      window.close()
+                    }
+                  },
+                },
+              ]
+            : [
+                {
+                  key: 'confirm',
+                  text: t('gotIt'),
+                },
+              ]
+        }
       />
       <Dialog
         visible={isShowHandsDownDialog}

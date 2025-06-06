@@ -41,6 +41,8 @@ export class NEActionMenuIDs {
   static putInWaitingRoom = 1000014
   /// 内置"私聊"菜单操作ID，
   static chatPrivate = 1000015
+  /// 内置"本地录制"菜单操作ID，
+  static localRecord = 1000016
 }
 
 function _isNESingleStateMenuItem(
@@ -128,6 +130,10 @@ const useMemberActionMenuItems = (member: NEMember) => {
         return false
       }
 
+      if (member.role === Role.host || member.role === Role.coHost) {
+        return true
+      }
+
       if (meetingInfo.meetingChatPermission === 1) {
         return true
       }
@@ -139,6 +145,7 @@ const useMemberActionMenuItems = (member: NEMember) => {
     meetingInfo,
     localMemberRole,
     isSIP,
+    member.role,
     noChat,
     globalConfig?.appConfig?.APP_ROOM_RESOURCE?.chatroom,
   ])
@@ -394,6 +401,9 @@ const useMemberActionMenuItems = (member: NEMember) => {
       {
         itemId: NEActionMenuIDs.removeMember,
       },
+      {
+        itemId: NEActionMenuIDs.localRecord,
+      },
     ]
 
     return items
@@ -563,6 +573,7 @@ const useMemberActionMenuItems = (member: NEMember) => {
     defaultMenuItemsMap,
     localMemberRole,
     isSIP,
+    isScreen,
     noRename,
     isOwner,
     isMySelf,
@@ -573,8 +584,6 @@ const useMemberActionMenuItems = (member: NEMember) => {
     privateChatItemShow,
     member,
   ])
-
-  
 
   return {
     memberActionMenuItems,

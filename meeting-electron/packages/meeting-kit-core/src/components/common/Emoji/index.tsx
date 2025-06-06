@@ -249,7 +249,7 @@ export function getEmojiPath(
   if (type === 2) {
     const index = animate ? 1 : 0
 
-    return emoji2Map[emojiKey][index] || undefined
+    return emoji2Map[emojiKey]?.[index] || undefined
   } else {
     return emojiMap[emojiKey] || undefined
   }
@@ -284,7 +284,7 @@ const EmojiItem: React.FC<EmojiItemProps> = ({
 
   const [path, setPath] = useState(getEmojiPath(emojiKey, type, animate))
 
-  const tip = language ? tipsText[emojiKey][language] : ''
+  const tip = language ? tipsText[emojiKey]?.[language] : ''
 
   const onMouseEnter = () => {
     type === 2 && setPath(getEmojiPath(emojiKey, type, true) ?? '')

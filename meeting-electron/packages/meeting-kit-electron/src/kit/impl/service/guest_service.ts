@@ -36,6 +36,7 @@ export default class NEGuestService
 
     return this._IpcMainListener<void>(seqId).then((res) => {
       this._win.show()
+      this._win.initMainWindowSize?.()
       this._win.inMeeting = true
       return res
     })

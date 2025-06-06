@@ -5,6 +5,7 @@ import {
   NERoomMemberInviteType,
   NECustomSessionMessage,
   NERtcEx,
+  NERoomWhiteboardAppConfig,
 } from 'neroom-types'
 
 import NEMeetingService from '../services/NEMeeting'
@@ -16,6 +17,7 @@ import {
   NECloudRecordConfig,
   NEWaitingRoomChatPermission,
   RecordState,
+  LocalRecordState,
   SearchAccountInfo,
   ServerError,
   WatermarkInfo,
@@ -71,6 +73,14 @@ export interface NEMember {
    * 当前成员是否正在共享白板
    */
   isSharingWhiteboardView: boolean
+  /**
+   * 当前成员是否正在本地录制
+   */
+  isLocalRecording: boolean
+  /**
+   * 当前成员是否有本地录制权限
+   */
+  localRecordAvailable: boolean
   /**
    * 用户名
    */
@@ -134,6 +144,7 @@ export enum NEClientReportType {
   PC = 'Windows',
   MINIAPP = 'miniApp',
   MAC = 'macOS',
+  LINUX = 'linux',
   UNKNOWN = 'unknown',
 }
 
@@ -147,6 +158,7 @@ export enum NEClientType {
   MAC,
   MINIAPP,
   H323,
+  LINUX,
 }
 export enum NEMeetingRole {
   /** 参会者 */
@@ -409,6 +421,35 @@ export interface NEMeetingInfo extends NEMeetingSDKInfo {
 
   /** 结束会议操作：0:未打开 1:右下角 2:居中 3:关闭按钮 */
   endMeetingAction?: number
+
+  /** 观看屏幕共享的比例 */
+  screenZoom?: number
+
+  /** 会议双屏模式模式 */
+  dualMonitors?: boolean
+
+  /** 第二显示器的用户  */
+  secondMonitorMember?: NEMember
+
+  /** 第二显示器的是否是全屏 */
+  secondMonitorFullScreen?: boolean
+
+  /** 是否是暗黑模式 */
+  isDarkMode?: boolean
+  isOtherLocalRecordingConfirmed?: boolean
+  isOtherCloudRecordingStartConfirmed?: boolean
+  isOtherCloudRecordingStopConfirmed?: boolean
+
+  /** 白板配置 */
+  whiteBoradAddDocConfig?: AddDocConfig[]
+  /**
+   * 是否开启白板的云录制
+   */
+  whiteboardCloudRecord?: boolean
+  /**
+   * 是否开启白板容器的宽高比
+   */
+  whiteBoradContainerAspectRatio?: AspectRatio
 }
 
 export interface NEJoinMeetingParams {
@@ -432,14 +473,20 @@ export interface NEJoinMeetingParams {
 
   /** 水印配置 */
   watermarkConfig: NEWatermarkConfig
+
 }
+
 export interface NEWatermarkConfig {
   name?: string
   phone?: string
   email?: string
   jobNumber?: string
 }
-
+export interface LocalRecordPermissionItem {
+  host: boolean
+  some: boolean
+  all: boolean
+}
 export interface NEMeetingSDKInfo {
   localMember: NEMember
   myUuid: string
@@ -505,6 +552,7 @@ export interface NEMeetingSDKInfo {
   enableBlacklist?: boolean
   meetingChatPermission?: NEChatPermission
   waitingRoomChatPermission?: NEWaitingRoomChatPermission
+  localRecordState?: LocalRecordState
   /**
    * 访客入会
    */
@@ -520,7 +568,7 @@ export interface NEMeetingSDKInfo {
   unmuteVideoBySelfPermission?: boolean
   updateNicknamePermission?: boolean
   whiteboardPermission?: boolean
-  localRecordPermission?: boolean
+  localRecordPermission?: LocalRecordPermissionItem
   emojiRespPermission?: boolean
   smartSummary?: boolean
   audioAllOff?: boolean // 原先audioOff已废弃
@@ -529,6 +577,16 @@ export interface NEMeetingSDKInfo {
   isTranscriptionEnabled?: boolean
   // 缓存当前加入会议的配置，访客断网重新入会需要
   joinOption?: JoinOptions
+  //本地录制确认弹框是否确认过
+  isCloudRecordingConfirmed?: boolean
+  //本地录制状态标识
+  isLocalRecording?: boolean
+  //本地录制确认弹框是否确认过
+  isLocalRecordingConfirmed?: boolean
+  /** 加入会议的时间 */
+  joinMeetingTime: number
+  showHandsUp?: boolean
+  showEmojiResponse?: boolean
 }
 
 export interface InterpretationRes {
@@ -605,6 +663,10 @@ export type NEMeetingInitConfig = {
    * 是否读取私有化配置文件
    */
   useAssetServerConfig?: boolean
+  /**
+   * 白板防盗链配置
+   */
+  whiteboardAppConfig?: NERoomWhiteboardAppConfig
 }
 export interface NEMeetingAssetWhiteboardServerConfig
   extends NEWhiteboardServerConfig {
@@ -1022,9 +1084,18 @@ export interface JoinOptions {
    */
   showCloudRecordMenuItem?: boolean
   /**
+   * 配置是否展示本地录制菜单按钮(默认展示)
+   */
+  showLocalRecordMenuItem?: boolean
+  /**
    * 配置是否展示云录制过程中的UI提示(默认展示)
    */
   showCloudRecordingUI?: boolean
+
+  /**
+   * 配置是否展示本地录制过程中的UI提示(默认展示)
+   */
+  showLocalRecordingUI?: boolean
   /**
    * 用户头像
    */
@@ -1068,6 +1139,121 @@ export interface JoinOptions {
 
   chatMessageNotificationType?: NEChatMessageNotificationType
   showNameInVideo?: boolean
+  /**
+   * 入会之前是否进行设备检测
+   */
+  showDeviceTest?: boolean
+
+  /**
+   * 是否开启共享并排模式
+   */
+  enableSideBySideMode?: boolean
+
+  /**
+   * 配置会议中是否显示"会议信息"查看入口，默认显示
+   */
+  showMeetingInfo?: boolean
+
+  /** 白板配置 */
+  whiteBoradAddDocConfig?: AddDocConfig[]
+
+  /**
+   * 是否开启白板的云录制
+   */
+  whiteboardCloudRecord?: boolean
+  /**
+   * 是否开启白板容器的宽高比
+   */
+  whiteBoradContainerAspectRatio?: AspectRatio
+}
+
+export interface StaticDocParam {
+  /**
+   * 图片高度
+   */
+  height: number
+  /**
+   * 图片宽度
+   */
+  width: number
+  /**
+   * index偏移量
+   */
+  offset: number
+  /**
+   * 文档页数
+   */
+  pageCount: number
+  /**
+   * 图片url的模板。 格式为: "https://??/?{index}.jpg", "https://??/?{index}.png" 如果offset为1，则第5页的图片为: "https://??/?6.jpg", 或者"https://??/?6.png"
+   */
+  template: string
+}
+export interface DynamicDocParam {
+  /**
+   * 图片高度
+   */
+  height: number
+  /**
+   * 图片宽度
+   */
+  width: number
+  /**
+   * 文档页数
+   */
+  pageCount: number
+  /**
+   * 动态文档URL
+   */
+  url: string
+}
+export interface MediaDocParam {
+  /**
+   * 动态文档URL
+   */
+  url: string
+  object: string
+  bucket: string
+}
+export interface UrlDocParam {
+  /**
+   * URL页面资源参数
+   */
+  url: string
+  trans: string // 填写'url'即可
+}
+export interface AddDocConfig  {
+  /**
+   * 文档的唯一id
+   */
+  docId: string;
+  /**
+   * 文档类型，会影响弹窗中文档的图标"pdf" | "ppt" | "doc" | "mp4"
+   */
+  fileType: string;
+  /**
+   * 文档名称，会影响弹窗中文档名称
+   */
+  name: string;
+  /**
+   * 是否在文档弹窗中显示删除按钮
+   */
+  showDelete: boolean;
+  /**
+   * 文档具体的数据参数
+   */
+  params: StaticDocParam | DynamicDocParam | MediaDocParam | UrlDocParam;
+}
+
+export enum AspectRatio {
+  /**
+   * 自适应
+   */
+  adaption = 0,
+  /**
+   * 16:9
+   */
+  aspectRatio_16_9 = 1,
 }
 
 export enum NEMeetingIdDisplayOption {
@@ -1183,6 +1369,13 @@ export interface NELocalHistoryMeeting {
 
   /** sipId */
   sipId?: string
+}
+
+export interface NELocalRecordInfo {
+  /** 录制地址 */
+  recordPath: string
+  /** 会议唯一标识 */
+  meetingId: number
 }
 
 export type CustomOptions = {
@@ -1678,6 +1871,8 @@ export enum NEMeetingStatus {
   MEETING_STATUS_DISCONNECTING = 6,
   /** 当前处于最小化状态 */
   MEETING_STATUS_INMEETING_MINIMIZED = 4,
+  /** 当前初始设备检测状态 */
+  MEETING_STATUS_DEVICE_TESTING = 7,
   /** 未知状态 */
   MEETING_STATUS_UNKNOWN = 100,
 }

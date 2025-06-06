@@ -32,6 +32,7 @@ import arrowImg from '../../../assets/arrow.png'
 import { IPCEvent } from '../../../app/src/types'
 import Modal from '../../common/Modal'
 import LiveThirdPart from './LiveThirdPart'
+import { useUpdateEffect } from 'ahooks'
 
 type Model = '' | 'gallery' | 'focus' | 'shareScreen'
 interface LiveProps {
@@ -40,6 +41,8 @@ interface LiveProps {
   title: string
   state: number | undefined
   randomPassword: string
+  // 用于electron独立窗口，重新打开时传入用于主动调用接口获取数据
+  open?: boolean
 }
 interface LiveTitleInfoProps {
   liveTitle: string
@@ -265,6 +268,7 @@ const LiveInfo: React.FC<LiveInfoProps> = (props) => {
     onEnableThirdPartPushChange,
   } = props
   const { t } = useTranslation()
+  const { globalConfig } = useGlobalContext()
   const liveBgPreviewImgBackgroundMemo = useMemo(
     () => (
       <LiveBgPreviewImg
@@ -303,187 +307,203 @@ const LiveInfo: React.FC<LiveInfoProps> = (props) => {
     ]
   )
 
+  const isMeetingLiveOfficialPushSupported =
+    globalConfig?.appConfig?.APP_LIVE?.officialPushEnabled
+
+  const isMeetingLiveThirdPartyPushSupported =
+    globalConfig?.appConfig?.APP_LIVE?.thirdPartyPushEnabled
+
   return (
     <div className="nemeeint-live-info">
       <div className="form-wrap">
-        <div className="form-item enable-wrap">
-          <input
-            type="checkbox"
-            name="enablePassword"
-            id="enablePassword"
-            className="live-checkbox"
-            onChange={() => setEnablePassword(!enablePassword)}
-            checked={enablePassword}
-            disabled={isStarted}
-          />
-          <label className="sub-title" htmlFor="enablePassword">
-            {t('enableLivePassword')}
-          </label>
-          <div className="password-input-wrap flex1">
-            <input
-              maxLength={6}
-              className="live-input"
-              value={livePassword}
-              onInput={onPasswordChange}
-              disabled={!enablePassword || isStarted}
-              placeholder={
-                enablePassword ? t('pleaseInputLivePasswordHint') : ''
-              }
-            />
-            {livePassword && !isStarted && (
-              <span
-                className="close-btn"
-                onClick={() => {
-                  setLivePassword('')
-                }}
-              >
-                <svg className="icon" aria-hidden="true">
-                  <use xlinkHref="#iconcross"></use>
-                </svg>
-              </span>
-            )}
-          </div>
-        </div>
-        <div className="form-item-employees">
-          <div className="chat-tip nemeeting-live-employees">
-            <input
-              type="checkbox"
-              name="onlyEmployeesAllow"
-              id="onlyEmployeesAllow"
-              className="live-checkbox"
-              checked={onlyEmployeesAllow}
-              disabled={isStarted}
-              onChange={() => setOnlyEmployeesAllow(!onlyEmployeesAllow)}
-            />
-            <label className="sub-title mr14" htmlFor="onlyEmployeesAllow">
-              {t('onlyEmployeesAllow')}
-            </label>
-          </div>
-          <div className="chat-tip">({t('onlyEmployeesAllowTip')})</div>
-        </div>
-        <div className="form-item-employees">
-          <div className="chat-tip nemeeting-live-employees">
-            <input
-              type="checkbox"
-              name="enableThirdPartPush"
-              id="enableThirdPartPush"
-              disabled={isStarted}
-              className="live-checkbox"
-              checked={enableThirdPartPush}
-              onChange={() => onEnableThirdPartPushChange(!enableThirdPartPush)}
-            />
-            <label className="sub-title" htmlFor="enableThirdPartPush">
-              <span>{t('meetingLiveToOtherPlatform')}</span>
-            </label>
-            {enableThirdPartPush && !isStarted && (
-              <span
-                className="nemeeting-live-third-edit-btn"
-                onClick={onClickThirdPart}
-              >
-                {t('globalEdit')}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-      <div className="form-wrap nemeeting-live-enable-chat-wrap">
-        {/*  开启观众互动*/}
-        <div className="form-item enable-wrap nemeeting-live-enable-chat">
-          <input
-            type="checkbox"
-            name="enableChat"
-            id="enableChat"
-            className="live-checkbox"
-            checked={enableChat}
-            onChange={() => setEnableChat(!enableChat)}
-          />
-          <label className="sub-title mr14" htmlFor="enableChat">
-            {t('enableChat')}
-          </label>
-          <span className="chat-tip flex1">{t('enableChatTip')}</span>
-        </div>
-        <div className="form-item enable-wrap ml35">
-          {/* 直播背景图 */}
-          <div className="nemeeting-live-bg-preview-wrap">
-            <div className="nemeeting-live-bg-preview-title">
-              {t('liveViewPageBackgroundImage')}
+        {isMeetingLiveOfficialPushSupported ? (
+          <>
+            <div className="form-item enable-wrap">
+              <input
+                type="checkbox"
+                name="enablePassword"
+                id="enablePassword"
+                className="live-checkbox"
+                onChange={() => setEnablePassword(!enablePassword)}
+                checked={enablePassword}
+                disabled={isStarted}
+              />
+              <label className="sub-title" htmlFor="enablePassword">
+                {t('enableLivePassword')}
+              </label>
+              <div className="password-input-wrap flex1">
+                <input
+                  maxLength={6}
+                  className="live-input"
+                  value={livePassword}
+                  onInput={onPasswordChange}
+                  disabled={!enablePassword || isStarted}
+                  placeholder={
+                    enablePassword ? t('pleaseInputLivePasswordHint') : ''
+                  }
+                />
+                {livePassword && !isStarted && (
+                  <span
+                    className="close-btn"
+                    onClick={() => {
+                      setLivePassword('')
+                    }}
+                  >
+                    <svg className="icon" aria-hidden="true">
+                      <use xlinkHref="#iconcross"></use>
+                    </svg>
+                  </span>
+                )}
+              </div>
             </div>
-            <Spin
-              wrapperClassName="nemeeting-live-bg-preview-spin"
-              className="nemeeting-live-span"
-              spinning={uploadBackgroundLoading}
-            >
-              {window.isElectronNative ? (
-                liveBackgroundInfo?.backgroundUrl ? (
-                  liveBgPreviewImgBackgroundMemo
-                ) : (
-                  <LiveBgPreviewItem
-                    isStarted={isStarted}
-                    onClick={onClickUploadBackground}
-                  />
-                )
-              ) : (
-                <Upload
-                  accept=".jpg,.png,.jpeg,"
-                  itemRender={() => null}
-                  onChange={onBackgroundChange}
-                  beforeUpload={backgroundBeforeUpload}
+            <div className="form-item-employees">
+              <div className="chat-tip nemeeting-live-employees">
+                <input
+                  type="checkbox"
+                  name="onlyEmployeesAllow"
+                  id="onlyEmployeesAllow"
+                  className="live-checkbox"
+                  checked={onlyEmployeesAllow}
                   disabled={isStarted}
-                  maxCount={1}
+                  onChange={() => setOnlyEmployeesAllow(!onlyEmployeesAllow)}
+                />
+                <label className="sub-title mr14" htmlFor="onlyEmployeesAllow">
+                  {t('onlyEmployeesAllow')}
+                </label>
+              </div>
+              <div className="chat-tip">({t('onlyEmployeesAllowTip')})</div>
+            </div>
+          </>
+        ) : null}
+        {isMeetingLiveThirdPartyPushSupported ? (
+          <div className="form-item-employees">
+            <div className="chat-tip nemeeting-live-employees">
+              <input
+                type="checkbox"
+                name="enableThirdPartPush"
+                id="enableThirdPartPush"
+                disabled={isStarted}
+                className="live-checkbox"
+                checked={enableThirdPartPush}
+                onChange={() =>
+                  onEnableThirdPartPushChange(!enableThirdPartPush)
+                }
+              />
+              <label className="sub-title" htmlFor="enableThirdPartPush">
+                <span>{t('meetingLiveToOtherPlatform')}</span>
+              </label>
+              {enableThirdPartPush && !isStarted && (
+                <span
+                  className="nemeeting-live-third-edit-btn"
+                  onClick={onClickThirdPart}
                 >
-                  {liveBackgroundInfo?.backgroundUrl ? (
+                  {t('globalEdit')}
+                </span>
+              )}
+            </div>
+          </div>
+        ) : null}
+      </div>
+      {isMeetingLiveOfficialPushSupported ? (
+        <div className="form-wrap nemeeting-live-enable-chat-wrap">
+          {/*  开启观众互动*/}
+          <div className="form-item enable-wrap nemeeting-live-enable-chat">
+            <input
+              type="checkbox"
+              name="enableChat"
+              id="enableChat"
+              className="live-checkbox"
+              checked={enableChat}
+              onChange={() => setEnableChat(!enableChat)}
+            />
+            <label className="sub-title mr14" htmlFor="enableChat">
+              {t('enableChat')}
+            </label>
+            <span className="chat-tip flex1">{t('enableChatTip')}</span>
+          </div>
+          <div className="form-item enable-wrap ml35">
+            {/* 直播背景图 */}
+            <div className="nemeeting-live-bg-preview-wrap">
+              <div className="nemeeting-live-bg-preview-title">
+                {t('liveViewPageBackgroundImage')}
+              </div>
+              <Spin
+                wrapperClassName="nemeeting-live-bg-preview-spin"
+                className="nemeeting-live-span"
+                spinning={uploadBackgroundLoading}
+              >
+                {window.isElectronNative ? (
+                  liveBackgroundInfo?.backgroundUrl ? (
                     liveBgPreviewImgBackgroundMemo
                   ) : (
                     <LiveBgPreviewItem
                       isStarted={isStarted}
                       onClick={onClickUploadBackground}
                     />
-                  )}
-                </Upload>
-              )}
-            </Spin>
-          </div>
-          {/* 直播封面 */}
-          <div className="nemeeting-live-bg-preview-wrap ml35">
-            <div className="nemeeting-live-bg-preview-title">
-              {t('liveCoverPicture')}
-            </div>
-            <Spin
-              wrapperClassName="nemeeting-live-bg-preview-spin"
-              spinning={uploadCoverLoading}
-            >
-              {window.isElectronNative ? (
-                liveBackgroundInfo?.coverUrl ? (
-                  liveBgPreviewImgCoverMemo
+                  )
                 ) : (
-                  <LiveBgPreviewItem
-                    isStarted={isStarted}
-                    onClick={onClickUploadCover}
-                  />
-                )
-              ) : (
-                <Upload
-                  accept=".jpg,.png,.jpeg,"
-                  itemRender={() => null}
-                  onChange={onCoverChange}
-                  beforeUpload={coverBeforeUpload}
-                  disabled={isStarted}
-                  maxCount={1}
-                >
-                  {liveBackgroundInfo?.coverUrl ? (
+                  <Upload
+                    accept=".jpg,.png,.jpeg,"
+                    itemRender={() => null}
+                    onChange={onBackgroundChange}
+                    beforeUpload={backgroundBeforeUpload}
+                    disabled={isStarted}
+                    maxCount={1}
+                  >
+                    {liveBackgroundInfo?.backgroundUrl ? (
+                      liveBgPreviewImgBackgroundMemo
+                    ) : (
+                      <LiveBgPreviewItem
+                        isStarted={isStarted}
+                        onClick={onClickUploadBackground}
+                      />
+                    )}
+                  </Upload>
+                )}
+              </Spin>
+            </div>
+            {/* 直播封面 */}
+            <div className="nemeeting-live-bg-preview-wrap ml35">
+              <div className="nemeeting-live-bg-preview-title">
+                {t('liveCoverPicture')}
+              </div>
+              <Spin
+                wrapperClassName="nemeeting-live-bg-preview-spin"
+                spinning={uploadCoverLoading}
+              >
+                {window.isElectronNative ? (
+                  liveBackgroundInfo?.coverUrl ? (
                     liveBgPreviewImgCoverMemo
                   ) : (
                     <LiveBgPreviewItem
                       isStarted={isStarted}
                       onClick={onClickUploadCover}
                     />
-                  )}
-                </Upload>
-              )}
-            </Spin>
+                  )
+                ) : (
+                  <Upload
+                    accept=".jpg,.png,.jpeg,"
+                    itemRender={() => null}
+                    onChange={onCoverChange}
+                    beforeUpload={coverBeforeUpload}
+                    disabled={isStarted}
+                    maxCount={1}
+                  >
+                    {liveBackgroundInfo?.coverUrl ? (
+                      liveBgPreviewImgCoverMemo
+                    ) : (
+                      <LiveBgPreviewItem
+                        isStarted={isStarted}
+                        onClick={onClickUploadCover}
+                      />
+                    )}
+                  </Upload>
+                )}
+              </Spin>
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
     </div>
   )
 }
@@ -657,9 +677,9 @@ const LiveView: React.FC<LiveViewProps> = (props) => {
 
 const MODEL_GALLERY = 'gallery'
 const Live: React.FC<LiveProps> = (props) => {
-  const { members, title, state, randomPassword } = props
+  const { members, title, state, randomPassword, open } = props
   const { meetingInfo } = useContext(MeetingInfoContext)
-  const { neMeeting } = useGlobalContext()
+  const { neMeeting, globalConfig } = useGlobalContext()
   const { dispatch } = useMeetingInfoContext()
   const { t } = useTranslation()
   const [model, setModel] = useState<Model>(MODEL_GALLERY)
@@ -668,7 +688,7 @@ const Live: React.FC<LiveProps> = (props) => {
   const [originMembersSelected, setOriginMembersSelected] = useState<string[]>(
     []
   )
-  const [membersFromLiveInfo, setMembersFromLiveInfo] = useState<string[]>([])
+  // const [membersFromLiveInfo, setMembersFromLiveInfo] = useState<string[]>([])
   const [originEnableChat, setOriginEnableChat] = useState<boolean>(true)
   const [membersSelected, setMembersSelected] = useState<string[]>([])
   const [liveTitle, setLiveTitle] = useState(title)
@@ -692,16 +712,43 @@ const Live: React.FC<LiveProps> = (props) => {
     meetingInfo.liveBackgroundInfo
   )
 
+  const membersSelectedRef = useRef(membersSelected)
+
+  membersSelectedRef.current = membersSelected
+
+  const liveTitleRef = useRef(liveTitle)
+
+  const isMeetingLiveOfficialPushSupported =
+    globalConfig?.appConfig?.APP_LIVE?.officialPushEnabled
+
+  liveTitleRef.current = liveTitle
+
   const memberCount = useMemo(() => {
     return membersSelected.length
   }, [membersSelected.length])
 
   const liveUrl = meetingInfo.liveConfig?.liveAddress
-  const canStart = membersSelected.length > 0 && members.length > 0
+
   const isStarted = state === 2
+
+  const canStart = useMemo(() => {
+    if (isMeetingLiveOfficialPushSupported) {
+      return membersSelected.length > 0 && members.length > 0
+    } else {
+      return (
+        membersSelected.length > 0 && members.length > 0 && enableThirdPartPush
+      )
+    }
+  }, [
+    membersSelected.length,
+    members.length,
+    isMeetingLiveOfficialPushSupported,
+    enableThirdPartPush,
+  ])
 
   liveBackgroundInfoRef.current = meetingInfo.liveBackgroundInfo
 
+  console.log('memberSelected', membersSelected)
   const onChangeModel = (_model: Model) => {
     if (memberCount === 0) {
       return
@@ -789,9 +836,13 @@ const Live: React.FC<LiveProps> = (props) => {
               }
 
               liveBackgroundInfoRef.current = data
-              neMeeting?.liveController
+              neMeeting
                 ?.updateBackgroundInfo(data)
                 .then((result) => {
+                  if (!result) {
+                    return
+                  }
+
                   dispatch?.({
                     type: ActionType.UPDATE_MEETING_INFO,
                     data: {
@@ -841,22 +892,20 @@ const Live: React.FC<LiveProps> = (props) => {
 
   useEffect(() => {
     // 直播中若已选中的直播成员关闭再开启视频，则需要重新更新选中项
-    const extraHistoryMembers: string[] = []
+    const membersSelected = [...membersSelectedRef.current]
 
-    members?.map((member) => {
-      const index = membersFromLiveInfo?.findIndex(
-        (uuid) => uuid === member.accountId
-      )
+    membersSelectedRef.current?.forEach((memberId) => {
+      const index = members.findIndex((member) => member.accountId === memberId)
 
-      if (index > -1) {
-        extraHistoryMembers.push(member.accountId)
+      // 当前成员不存在了需要把选中的也删除
+      if (index < 0) {
+        // 删除
+        const delIndex = membersSelected.findIndex((id) => id === memberId)
+
+        membersSelected.splice(delIndex, 1)
       }
     })
-    if (extraHistoryMembers.length) {
-      setMembersSelected(
-        Array.from(new Set([...membersSelected, ...extraHistoryMembers]))
-      )
-    }
+    setMembersSelected(membersSelected)
   }, [members])
 
   const localMembers = useMemo(() => {
@@ -953,9 +1002,13 @@ const Live: React.FC<LiveProps> = (props) => {
   }, [meetingInfo?.localMember?.role, state])
 
   const updateBackgroundInfo = useCallback(() => {
-    neMeeting?.liveController
+    neMeeting
       ?.getBackgroundInfo()
       .then((res) => {
+        if (!res) {
+          return
+        }
+
         const { data } = res
 
         if (!data) {
@@ -991,22 +1044,42 @@ const Live: React.FC<LiveProps> = (props) => {
     }
   }, [meetingInfo.liveBackgroundInfo?.newSequence])
 
-  useEffect(() => {
+  function getLive3PartInfo() {
     neMeeting?.getLive3PartInfo().then((res) => {
       setPlatformInfoList(res)
       if (res.length > 0) {
         setEnableThirdPartPush(true)
+      } else {
+        setEnableThirdPartPush(false)
       }
     })
+  }
+
+  useEffect(() => {
+    getLive3PartInfo()
   }, [])
 
-  function getLiveInfo() {
-    const liveInfo = neMeeting?.getLiveInfo()
+  useUpdateEffect(() => {
+    if (open) {
+      setPlatformInfoList([])
+      setEnableThirdPartPush(false)
+      getLive3PartInfo()
+      getLiveInfo()
+    }
+  }, [open])
+  useEffect(() => {
+    if (title && !liveTitle) {
+      setLiveTitle(title)
+    }
+  }, [title, liveTitle])
+
+  async function getLiveInfo() {
+    const liveInfo = await neMeeting?.getLiveInfo()
 
     if (liveInfo) {
       setModel(layout2model(liveInfo.liveLayout))
       setOriginModel(layout2model(liveInfo.liveLayout))
-      liveInfo.title && setLiveTitle(liveInfo.title)
+      setLiveTitle(liveInfo.title || '')
       // 更新密码和是否开启密码状态
       liveInfoPasswordRef.current = liveInfo.password || ''
       setLivePassword(liveInfo.password || '')
@@ -1032,7 +1105,7 @@ const Live: React.FC<LiveProps> = (props) => {
       }
 
       setOriginMembersSelected(_userUuidList)
-      setMembersFromLiveInfo([..._userUuidList])
+      // setMembersFromLiveInfo([..._userUuidList])
       if (_userUuidList?.length && state === 2) {
         if (members.length > 0) {
           let initMembersSelected = [..._userUuidList]
@@ -1274,7 +1347,7 @@ const Live: React.FC<LiveProps> = (props) => {
       liveBackgroundInfoRef.current.thumbnailBackgroundUrl = ''
     }
 
-    neMeeting?.liveController
+    neMeeting
       ?.updateBackgroundInfo({
         backgroundUrl: '',
         thumbnailBackgroundUrl: '',
@@ -1283,6 +1356,10 @@ const Live: React.FC<LiveProps> = (props) => {
           liveBackgroundInfoRef.current?.thumbnailCoverUrl || '',
       })
       .then((res) => {
+        if (!res) {
+          return
+        }
+
         dispatch?.({
           type: ActionType.UPDATE_MEETING_INFO,
           data: {
@@ -1307,7 +1384,7 @@ const Live: React.FC<LiveProps> = (props) => {
       liveBackgroundInfoRef.current.thumbnailCoverUrl = ''
     }
 
-    neMeeting?.liveController
+    neMeeting
       ?.updateBackgroundInfo({
         backgroundUrl: liveBackgroundInfoRef.current?.backgroundUrl || '',
         thumbnailBackgroundUrl:
@@ -1316,6 +1393,10 @@ const Live: React.FC<LiveProps> = (props) => {
         thumbnailCoverUrl: '',
       })
       .then((res) => {
+        if (!res) {
+          return
+        }
+
         dispatch?.({
           type: ActionType.UPDATE_MEETING_INFO,
           data: {
@@ -1406,11 +1487,15 @@ const Live: React.FC<LiveProps> = (props) => {
         liveBackgroundInfoRef.current = {
           ...data,
         }
-        neMeeting?.liveController
+        neMeeting
           ?.updateBackgroundInfo({
             ...data,
           })
           .then((result) => {
+            if (!result) {
+              return
+            }
+
             dispatch?.({
               type: ActionType.UPDATE_MEETING_INFO,
               data: {
@@ -1499,13 +1584,15 @@ const Live: React.FC<LiveProps> = (props) => {
 
   return (
     <div className="nemeeting-live-config">
-      <LiveTitleInfo
-        isStarted={isStarted}
-        liveTitle={liveTitle}
-        setLiveTitle={setLiveTitle}
-        liveUrl={liveUrl}
-        onHandleCopy={onHandleCopy}
-      />
+      {isMeetingLiveOfficialPushSupported ? (
+        <LiveTitleInfo
+          isStarted={isStarted}
+          liveTitle={liveTitle}
+          setLiveTitle={setLiveTitle}
+          liveUrl={liveUrl}
+          onHandleCopy={onHandleCopy}
+        />
+      ) : null}
       <LiveInfo
         enableThirdPartPush={enableThirdPartPush}
         onEnableThirdPartPushChange={onEnableThirdPartPushChange}

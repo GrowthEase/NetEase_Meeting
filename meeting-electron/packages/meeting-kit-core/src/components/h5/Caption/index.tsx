@@ -76,7 +76,8 @@ const CaptionMessageItemList: React.FC<CaptionMessageItemListProps> = ({
 }) => {
   return (
     <div className={`nemeeting-h5-caption-message-item-list`}>
-      {captionMessageList.map((item, index) => {
+      {/* h5目前只能显示两项 */}
+      {captionMessageList.slice(-2).map((item, index) => {
         return (
           <CaptionMessageItem
             key={index}

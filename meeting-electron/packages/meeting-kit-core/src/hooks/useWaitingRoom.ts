@@ -331,7 +331,11 @@ export function useWaitingRoom(data: WaitingRoomProps): WaitingRoomReturn {
 
   const handleMeetingUpdate = useCallback(
     (res) => {
-      if (res.data) {
+      // 需要判断是否是同一个会议，否则互踢的会有问题
+      if (
+        res.data &&
+        res.data.meetingNum === meetingInfoRef.current.meetingNum
+      ) {
         if (res.data?.type === 200) {
           window.isElectronNative && Toast.warning(t('tokenExpired'), 5000)
         } else {
@@ -359,8 +363,33 @@ export function useWaitingRoom(data: WaitingRoomProps): WaitingRoomReturn {
     })
   }, [meetingInfo.meetingNum, neMeeting, dispatch])
 
+  const handleReceiveScheduledMeetingUpdate = useCallback((res) => {
+    // 多端同时登录，本端在等候室，另外创建或者加入其他会议
+    const data = res.data
+
+    if (
+      data?.meetingNum !== meetingInfoRef.current.meetingNum &&
+      data?.state === 2
+    ) {
+      // Toast.info(t('meetingSwitchOtherDevice'))
+      setTimeout(() => {
+        // neMeeting?.leave()
+        if (window.isElectronNative) {
+          neMeeting?.reset()
+        }
+
+        outEventEmitter?.emit(
+          EventType.RoomEnded,
+          NEMeetingCode.MEETING_DISCONNECTING_LOGIN_ON_OTHER_DEVICE
+        )
+      }, 2000)
+    }
+  }, [])
   const handleWaitingRoomEvent = useCallback(() => {
-    eventEmitter?.on
+    eventEmitter?.on(
+      EventType.ReceiveScheduledMeetingUpdate,
+      handleReceiveScheduledMeetingUpdate
+    )
 
     eventEmitter?.on(
       EventType.RoomPropertiesChanged,
@@ -446,7 +475,15 @@ export function useWaitingRoom(data: WaitingRoomProps): WaitingRoomReturn {
             if (reason === 2) {
               Toast.info(t('meetingSwitchOtherDevice'))
               setTimeout(() => {
-                neMeeting?.leave()
+                // neMeeting?.leave()
+                if (window.isElectronNative) {
+                  neMeeting?.reset()
+                }
+
+                outEventEmitter?.emit(
+                  EventType.RoomEnded,
+                  NEMeetingCode.MEETING_DISCONNECTING_LOGIN_ON_OTHER_DEVICE
+                )
               }, 2000)
             }
           } else {
@@ -474,6 +511,10 @@ export function useWaitingRoom(data: WaitingRoomProps): WaitingRoomReturn {
     eventEmitter?.off(
       EventType.ReceiveScheduledMeetingUpdate,
       handleMeetingUpdate
+    )
+    eventEmitter?.off(
+      EventType.ReceiveScheduledMeetingUpdate,
+      handleReceiveScheduledMeetingUpdate
     )
     // eventEmitter?.off(EventType.MemberJoinWaitingRoom)
     // eventEmitter?.off(EventType.MemberLeaveWaitingRoom)
@@ -541,7 +582,8 @@ export function useWaitingRoom(data: WaitingRoomProps): WaitingRoomReturn {
       if (!leaveType && leaveType !== 0) {
         leaveType = NEMeetingLeaveType.UNKNOWN
       }
-
+      stopPreview()
+      neMeeting?.previewController?.stopRecordDeviceTest()
       outEventEmitter?.emit(EventType.RoomEnded, leaveType)
     }
   }, [])
@@ -560,7 +602,8 @@ export function useWaitingRoom(data: WaitingRoomProps): WaitingRoomReturn {
       eventEmitter?.emit(UserEventType.JoinOtherMeeting, options, callback)
     }
 
-    // eventEmitter?.on(EventType.AcceptInvite, handleAcceptInvite)
+    // 在等候室时候监听处理要求加入其他会议事件
+    eventEmitter?.on(EventType.AcceptInvite, handleAcceptInvite)
     return () => {
       eventEmitter?.off(EventType.AcceptInvite, handleAcceptInvite)
     }

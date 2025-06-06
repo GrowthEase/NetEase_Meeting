@@ -7,6 +7,7 @@ import { useMeetingInfoContext } from '../../../store'
 import { ActionType } from '../../../types'
 import WaitingRoom from '../WaitingRoom'
 import MeetingContent from './Meeting'
+import useElectronInvite from '../../../hooks/useElectronInvite'
 
 const antdPrefixCls = 'nemeeting'
 
@@ -20,6 +21,9 @@ interface AppProps {
 const Meeting: React.FC<AppProps> = ({ height, width }) => {
   const { meetingInfo, dispatch } = useMeetingInfoContext()
 
+  useElectronInvite({
+    needOpenWindow: !!(meetingInfo.meetingNum && meetingInfo.inWaitingRoom),
+  })
   useEffect(() => {
     let timer: null | ReturnType<typeof setTimeout> = null
     let count = 0

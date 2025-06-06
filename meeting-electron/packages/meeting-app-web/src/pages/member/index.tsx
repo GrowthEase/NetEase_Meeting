@@ -16,7 +16,7 @@ const MemberPage: React.FC = () => {
     });
   }, [t]);
 
-  return <MemberList />;
+  return <div className="nemeeting-member-page"><MemberList /></div>;
 };
 
 export default MemberPage;

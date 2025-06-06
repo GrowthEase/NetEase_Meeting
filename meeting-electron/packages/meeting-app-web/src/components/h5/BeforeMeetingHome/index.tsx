@@ -21,7 +21,7 @@ import { NEMeetingStatus } from '@meeting-module/types/type';
 import UserAvatar from '@meeting-module/components/common/Avatar';
 import Modal from '@meeting-module/components/common/Modal';
 import Toast from '@meeting-module/components/common/toast';
-import { ActionSheet } from 'antd-mobile/es';
+import { ActionSheet, Dialog as AntDialog } from 'antd-mobile/es';
 import { Action } from 'antd-mobile/es/components/action-sheet';
 import Dialog from '@meeting-module/components/h5/ui/dialog';
 import { errorCodeMap } from '@meeting-module/config';
@@ -157,10 +157,15 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
   ];
 
   function init(cb, crossAppKey?: string) {
+    //白板防盗链
     const config = {
       appKey: crossAppKey || appKey, //云信服务appkey
       meetingServerDomain: domain, //会议服务器地址，支持私有化部署
       locale: i18next.language, //语言
+      whiteboardAppConfig: {
+        nosAntiLeech: true,
+        nosAntiLeechExpire: 7200,
+      },
     };
 
     console.log('init config ', config);
@@ -171,11 +176,13 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
 
     NEMeetingKit.actions.init(0, 0, config, cb); // （width，height）单位px 建议比例4:3
     NEMeetingKit.actions.on('onMeetingStatusChanged', (status: number) => {
-      if (status === NEMeetingStatus.MEETING_STATUS_IN_WAITING_ROOM) {
-        // 到等候室
-        // setFeedbackModalOpen(false)
-      } else if (status === NEMeetingStatus.MEETING_STATUS_FAILED) {
-        setInMeeting(false);
+      switch (status) {
+        case NEMeetingStatus.MEETING_STATUS_FAILED:
+          setInMeeting(false);
+          break;
+        case NEMeetingStatus.MEETING_STATUS_IDLE:
+          setInMeeting(false);
+          break;
       }
     });
     NEMeetingKit.actions.on('roomEnded', () => {
@@ -259,15 +266,15 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
               );
 
               // 异常退出恢复会议
-              if (currentMeetingStr) {
+              if (currentMeetingStr && window.isElectronNative) {
                 const currentMeeting = JSON.parse(currentMeetingStr);
 
                 // 15分钟内恢复会议
                 if (currentMeeting.time > Date.now() - 1000 * 60 * 15) {
                   Modal.confirm({
-                    title: 'hint',
-                    content: 'restoreMeetingTips',
-                    okText: 'restore',
+                    title: i18n.hint,
+                    content: i18n.restoreMeetingTips,
+                    okText: i18n.restore,
                     onCancel: () => {
                       localStorage.removeItem('ne-meeting-current-info');
                     },
@@ -411,93 +418,136 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
 
     let modal;
 
-    return fetchJoin(options)
-      .then(() => {
-        setInMeeting(true);
-        setMeetingNum('');
-        isGuestJoinRef.current = type === 'guestJoin';
-      })
-      .catch((e) => {
-        console.log('join failed', e);
-        if (e?.code === 1019) {
-          Toast.info(t('meetingLocked'));
-          throw e;
-        }
+    function onJoinMeeting(options: JoinOptions) {
+      return fetchJoin(options)
+        .then(() => {
+          setInMeeting(true);
+          setMeetingNum('');
+          isGuestJoinRef.current = type === 'guestJoin';
+        })
+        .catch((e) => {
+          console.log('join failed', e);
+          if (e?.code === 1019) {
+            Toast.info(t('meetingLocked'));
+            throw e;
+          }
 
-        const InputComponent = (inputValue) => {
-          return (
-            <Input
-              placeholder={i18n.passwordPlaceholder}
-              value={inputValue}
-              maxLength={6}
-              allowClear
-              onChange={(event) => {
-                passwordRef.current = event.target.value.replace(/[^0-9]/g, '');
-                modal.update({
-                  content: <>{InputComponent(passwordRef.current)}</>,
-                  okButtonProps: {
-                    disabled: !passwordRef.current,
-                    style: !passwordRef.current
-                      ? { color: 'rgba(22, 119, 255, 0.5)' }
-                      : {},
-                  },
-                });
-              }}
-            />
-          );
-        };
-
-        if (e.code === 1020) {
-          passwordRef.current = '';
-          modal = Modal.confirm({
-            title: i18n.password,
-            content: <>{InputComponent('')}</>,
-            okButtonProps: {
-              disabled: true,
-              style: { color: 'rgba(22, 119, 255, 0.5)' },
-            },
-            onOk: async () => {
-              try {
-                await fetchJoin({
-                  ...options,
-                  password: passwordRef.current,
-                });
-                setInMeeting(true);
-              } catch (error: unknown) {
-                const e = error as NECommonError;
-
-                if (e.code === 1020) {
+          const InputComponent = (inputValue) => {
+            return (
+              <Input
+                placeholder={i18n.passwordPlaceholder}
+                value={inputValue}
+                maxLength={6}
+                allowClear
+                onChange={(event) => {
+                  passwordRef.current = event.target.value.replace(
+                    /[^0-9]/g,
+                    '',
+                  );
                   modal.update({
-                    content: (
-                      <>
-                        {InputComponent(passwordRef.current)}
-                        <div
-                          style={{
-                            color: '#fe3b30',
-                            textAlign: 'left',
-                            margin: '5px 0px -10px 0px',
-                          }}
-                        >
-                          {i18n.passwordError}
-                        </div>
-                      </>
-                    ),
+                    content: <>{InputComponent(passwordRef.current)}</>,
+                    okButtonProps: {
+                      disabled: !passwordRef.current,
+                      style: !passwordRef.current
+                        ? { color: 'rgba(22, 119, 255, 0.5)' }
+                        : {},
+                    },
                   });
-                } else if (e.code === 3102) {
-                  modal.destroy();
-                }
+                }}
+              />
+            );
+          };
 
-                throw e;
-              }
+          if (e.code === 1020) {
+            passwordRef.current = '';
+            modal = Modal.confirm({
+              title: i18n.password,
+              content: <>{InputComponent('')}</>,
+              okButtonProps: {
+                disabled: true,
+                style: { color: 'rgba(22, 119, 255, 0.5)' },
+              },
+              onOk: async () => {
+                try {
+                  await fetchJoin({
+                    ...options,
+                    password: passwordRef.current,
+                    showDeviceTest: false,
+                  });
+                  setInMeeting(true);
+                } catch (error: unknown) {
+                  const e = error as NECommonError;
+
+                  Toast.fail(e?.message || e?.msg || 'Failure');
+
+                  if (e.code === 1020) {
+                    modal.update({
+                      content: (
+                        <>
+                          {InputComponent(passwordRef.current)}
+                          <div
+                            style={{
+                              color: '#fe3b30',
+                              textAlign: 'left',
+                              margin: '5px 0px -10px 0px',
+                            }}
+                          >
+                            {i18n.passwordError}
+                          </div>
+                        </>
+                      ),
+                    });
+                  } else if (e.code === 3102) {
+                    modal.destroy();
+                  }
+
+                  throw e;
+                }
+              },
+              onCancel: () => {
+                setInMeeting(false);
+              },
+            });
+          } else {
+            Toast.info(e.msg || 'join failed');
+            throw e;
+          }
+        })
+        .finally(() => {
+          setSubmitLoading(false);
+        });
+    }
+
+    AntDialog.show({
+      title: t('deviceTestTitle'),
+      content: (
+        <div style={{ color: '#3D3D3D' }}>{t('deviceTestConfirmTip')}</div>
+      ),
+      closeOnAction: true,
+      actions: [
+        [
+          {
+            key: 'skip',
+            text: t('deviceTestSkip'),
+            style: {
+              color: '#53576A',
             },
-          });
-        } else {
-          throw e;
-        }
-      })
-      .finally(() => {
-        setSubmitLoading(false);
-      });
+            onClick: () => {
+              onJoinMeeting(options);
+            },
+          },
+          {
+            key: 'ok',
+            text: t('deviceTestRightNow'),
+            onClick: () => {
+              onJoinMeeting({ ...options, showDeviceTest: true });
+              setInMeeting(true);
+              setSubmitLoading(false);
+            },
+          },
+        ],
+      ],
+    });
   }
 
   const handleGuestJoin = useCallback(async () => {
@@ -512,7 +562,7 @@ const BeforeMeetingHome: React.FC<BeforeMeetingHomeProps> = ({ onLogout }) => {
 
     setShowCrossAppDialog(false);
     await NEMeetingKit.actions.neMeeting?.logout();
-    NEMeetingKit.actions.destroy();
+    await NEMeetingKit.actions.destroy();
     init((e) => {
       if (!e) {
         NEMeetingKit.actions.login(

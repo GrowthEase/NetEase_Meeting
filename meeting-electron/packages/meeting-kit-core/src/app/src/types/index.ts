@@ -86,13 +86,15 @@ export enum IPCEvent {
   getVirtualBackground = 'getVirtualBackground',
   getImageBase64 = 'nemeeting-get-image-base64',
   addVirtualBackgroundReply = 'addVirtualBackground-reply',
-
+  getCoverImage = 'getCoverImage',
   interpreterWindowChange = 'interpreterWindowChange',
   captionWindowChange = 'captionWindowChange',
   openDevTools = 'openDevTools',
   displayChanged = 'display-changed',
   openSettingWindow = 'openSettingWindow',
   IgnoreMouseEvents = 'ignoreMouseEvents',
+  popoverItemClick = 'popoverItemClick',
+  flushStorageData = 'flushStorageData',
 }
 
 export enum UpdateType {

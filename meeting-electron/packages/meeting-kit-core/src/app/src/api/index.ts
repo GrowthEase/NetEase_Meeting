@@ -65,14 +65,18 @@ export function loginApiNew(params: {
   }) as unknown as Promise<LoginUserInfo>
 }
 
-export function getEnterPriseInfoApi(params: {
-  code?: string
-  email?: string
-}): Promise<EnterPriseInfo> {
+export function getEnterPriseInfoApi(
+  params: {
+    code?: string
+    email?: string
+  },
+  baseURL?: string
+): Promise<EnterPriseInfo> {
   return request({
     url: `/scene/meeting/v2/app-info`,
     params,
     method: 'GET',
+    baseURL,
   }) as unknown as Promise<EnterPriseInfo>
 }
 

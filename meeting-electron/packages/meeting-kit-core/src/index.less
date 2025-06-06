@@ -2,6 +2,11 @@
 //@tailwind components;
 //@tailwind utilities;
 
+[contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 .icon {
   width: 1em;
   height: 1em;
@@ -163,6 +168,11 @@ code {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+.nemeeting-member-operator-dropdown {
+  .nemeeting-dropdown-menu-item-divider {
+    margin: 0!important;
+  }
 }
 .nemeeing-waiting-room-notify {
   overflow: visible !important;

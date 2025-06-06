@@ -2,7 +2,8 @@ const { app, autoUpdater, ipcMain } = require('electron')
 const path = require('path')
 const { unlink, rename, emptyDir } = require('fs-extra')
 const fs = require('fs')
-const { spawn } = require('child_process')
+const { spawnLog } = require('./linux/utils')
+const { updateLinux } = require('./linux')
 const { downloadUpdateFile, cancelUpdate } = require('./downloadHelper')
 const os = require('os')
 // import fs from "fs";
@@ -36,7 +37,7 @@ async function checkUpdate(
   // Set global tempdialog
   global.tempPath = path.join(app.getPath('temp'), tmpCacheFileName)
   const cacheFileName = getCacheFileName(fileUrl)
-  const filePath = path.join(global.tempPath, cacheFileName)
+  let filePath = path.join(global.tempPath, cacheFileName)
 
   console.log('filePath>>>>>>', filePath)
   const tempUpdateFileName = await createTempUpdateFile(
@@ -54,6 +55,7 @@ async function checkUpdate(
     md5,
     forceUpdate,
     done: async (e) => {
+      console.log('downloadUpdateFile done', e)
       if (e) {
         if (!window.isDestroyed()) {
           window.send('update-progress', 0)
@@ -67,7 +69,12 @@ async function checkUpdate(
       try {
         await rename(tempUpdateFile, filePath)
       } catch (e) {
-        removeCacheFile(global.tempPath)
+        console.log('rename error', e)
+        if(process.platform === 'linux') {
+          filePath = tempUpdateFile
+        }else {
+          removeCacheFile(global.tempPath)
+        }
       }
 
       window.send('update-progress', 100)
@@ -78,7 +85,7 @@ async function checkUpdate(
           '--updated',
           '--force-run',
         ])
-      } else {
+      } else if (process.platform === 'darwin') {
         const json = { url: `file://${filePath}` }
 
         fs.writeFileSync(global.tempPath + '/feed.json', JSON.stringify(json))
@@ -104,6 +111,9 @@ async function checkUpdate(
         })
 
         autoUpdater.checkForUpdates()
+      } else if(process.platform === 'linux') {
+        console.log('updateLinux', filePath)
+        updateLinux(filePath)
       }
     },
     onprogress: (progress) => {
@@ -135,26 +145,6 @@ async function createTempUpdateFile(name, cacheDir) {
 
   console.log('result>>>>>', result)
   return result
-}
-
-async function spawnLog(cmd, args) {
-  return new Promise((resolve, reject) => {
-    try {
-      const params = { detached: true }
-      const p = spawn(cmd, args, params)
-
-      p.on('error', (error) => {
-        reject(error)
-      })
-      p.unref()
-      if (p.pid !== undefined) {
-        console.log('resolve', resolve)
-        resolve(true)
-      }
-    } catch (error) {
-      reject(error)
-    }
-  })
 }
 
 function getVersionCode(version) {
@@ -192,6 +182,8 @@ function initUpdateListener(mainWindow, neroom, appName) {
   })
   ipcMain.handle('get-check-update-info', () => {
     const currentVersion = app.getVersion()
+
+    console.log('get-check-update-info', currentVersion)
 
     return {
       versionCode: getVersionCode(currentVersion),

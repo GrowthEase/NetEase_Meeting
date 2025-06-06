@@ -5,11 +5,12 @@ import NEGuestServiceInterface, {
 } from '../../interface/service/guest_service'
 import MeetingService from '../../../services/NEMeeting'
 import NEMeetingKit from '../meeting_kit'
-import { GuestMeetingInfo } from '../../../types/type'
+import { GuestMeetingInfo, NEMeetingStatusListener } from '../../../types/type'
 
 export default class NEGuestService implements NEGuestServiceInterface {
   private _neMeeting: MeetingService
   private _meetingKit: NEMeetingKit
+  private _meetingStatusListeners: NEMeetingStatusListener[] | undefined = []
   constructor(param: { neMeeting: MeetingService; meetingKit: NEMeetingKit }) {
     this._meetingKit = param.meetingKit
     this._neMeeting = param.neMeeting
@@ -33,7 +34,11 @@ export default class NEGuestService implements NEGuestServiceInterface {
       res = await this._neMeeting.getMeetingInfoForGuest(meetingNum)
     }
 
+    const meetingService = this._meetingKit.getMeetingService()
+
+    this._meetingStatusListeners = meetingService?._meetingStatusListeners
     try {
+      meetingService?.removeMeetingStatusListener()
       await this._meetingKit.unInitialize()
     } catch (error) {
       //
@@ -77,6 +82,13 @@ export default class NEGuestService implements NEGuestServiceInterface {
         })
         throw e
       })
+    const meetingService = this._meetingKit.getMeetingService()
+
+    // 需要把之前监听的事件缓存重新赋值，因为是新的实列
+    if (meetingService && this._meetingStatusListeners) {
+      meetingService._meetingStatusListeners = this._meetingStatusListeners
+    }
+
     await this._meetingKit
       .getMeetingService()
       ?.joinMeeting(param, opts)

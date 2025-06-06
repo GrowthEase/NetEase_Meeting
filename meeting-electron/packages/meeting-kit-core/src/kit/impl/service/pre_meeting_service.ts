@@ -26,6 +26,7 @@ import NEPreMeetingServiceInterface, {
   NEMeetingChatMessage,
   NEChatroomMessageSearchOrder,
   NELocalHistoryMeeting,
+  NELocalRecordInfo,
 } from '../../interface/service/pre_meeting_service'
 import {
   AttendeeOffType,
@@ -41,7 +42,10 @@ import { NEMeetingRoleType } from '../../interface/service/meeting_service'
 import axios from 'axios'
 import { NEMeetingWebAppItem } from '../../../types/type'
 import { getLocalUserInfo } from '../..'
-import { LOCAL_STORAGE_KEY } from '../../../config'
+import {
+  LOCAL_STORAGE_KEY,
+  LOCAL_STORAGE_LOCAL_RECORD_KEY,
+} from '../../../config'
 
 const MODULE_NAME = 'NEPreMeetingService'
 const LISTENER_CHANNEL = `NEMeetingKitListener::${MODULE_NAME}`
@@ -73,6 +77,31 @@ class NEPreMeetingService implements NEPreMeetingServiceInterface {
     )
 
     return SuccessBody(data)
+  }
+  async getLocalRecordInfoList(): Promise<NEResult<NELocalRecordInfo[]>> {
+    const str = localStorage.getItem(LOCAL_STORAGE_LOCAL_RECORD_KEY)
+    const data = str ? JSON.parse(str) : []
+    return SuccessBody(data)
+  }
+
+  async setLocalRecordInfoList(
+    myUuid: string,
+    info: NELocalRecordInfo
+  ): Promise<NEResult<void>> {
+    const str = localStorage.getItem(LOCAL_STORAGE_LOCAL_RECORD_KEY) || '{}'
+    let list = JSON.parse(str)
+    const data = list[myUuid] ? list[myUuid].push(info) : [info]
+    list[myUuid] = data
+    window.localStorage.setItem(
+      'ne-meeting-recent-meeting-list',
+      JSON.stringify(list)
+    )
+    return SuccessBody(void 0)
+  }
+
+  async clearLocalRecordInfoList(): Promise<NEResult<void>> {
+    localStorage.setItem(LOCAL_STORAGE_LOCAL_RECORD_KEY, '{}')
+    return SuccessBody(void 0)
   }
 
   async getLocalHistoryMeetingList(): Promise<
@@ -139,9 +168,8 @@ class NEPreMeetingService implements NEPreMeetingServiceInterface {
       lines.forEach((line) => {
         if (line.trim().length > 0) {
           try {
-            const [timestamp, fromUserUuid, fromNickname, content] = JSON.parse(
-              line
-            )
+            const [timestamp, fromUserUuid, fromNickname, content] =
+              JSON.parse(line)
 
             list.push({
               timestamp: Number(timestamp),
@@ -467,7 +495,11 @@ class NEPreMeetingService implements NEPreMeetingServiceInterface {
       throw FailureBody(undefined, error.message)
     }
 
-    const res = await this._meetingKit.getMeetingInfoByFetch(meetingNum)
+    const res = await this._meetingKit
+      .getMeetingInfoByFetch(meetingNum)
+      .catch((e) => {
+        throw FailureBody(undefined, e.message, e.code)
+      })
 
     return SuccessBody(this._formatMeetingItem(res))
   }
@@ -497,6 +529,32 @@ class NEPreMeetingService implements NEPreMeetingServiceInterface {
   }
 
   async getMeetingList(
+    status: NEMeetingItemStatus[],
+    offset: number,
+    size: number
+  ): Promise<NEResult<NEMeetingItem[]>> {
+    try {
+      const statusSchema = z.array(z.nativeEnum(NEMeetingItemStatus))
+
+      statusSchema.parse(status, {
+        path: ['status'],
+      })
+    } catch (errorUnkown) {
+      const error = errorUnkown as ZodError
+
+      throw FailureBody(undefined, error.message)
+    }
+
+    const res = await this._meetingKit.getMeetingListBySize({
+      states: status,
+      offset,
+      size,
+    })
+
+    return SuccessBody(res.map(this._formatMeetingItem))
+  }
+
+  async getScheduledMeetingList(
     status: NEMeetingItemStatus[]
   ): Promise<NEResult<NEMeetingItem[]>> {
     try {
@@ -516,12 +574,6 @@ class NEPreMeetingService implements NEPreMeetingServiceInterface {
     })
 
     return SuccessBody(res.map(this._formatMeetingItem))
-  }
-
-  async getScheduledMeetingList(
-    status: NEMeetingItemStatus[]
-  ): Promise<NEResult<NEMeetingItem[]>> {
-    return this.getMeetingList(status)
   }
 
   async getScheduledMeetingMemberList(
@@ -638,11 +690,17 @@ class NEPreMeetingService implements NEPreMeetingServiceInterface {
   }
 
   addListener(listener: NEPreMeetingListener): void {
+    console.warn('preMeetingService接受注册事件')
     this._listeners.push(listener)
   }
 
   removeListener(listener: NEPreMeetingListener): void {
     this._listeners = this._listeners.filter((l) => l !== listener)
+  }
+
+  stopLocalRecorderRemux() {
+    console.log('pre_meeting_service stopLocalRecorderRemux()')
+    return this._meetingKit?.stopLocalRecorderRemux?.()
   }
 
   private _addListening(): void {
@@ -670,7 +728,7 @@ class NEPreMeetingService implements NEPreMeetingServiceInterface {
           const meetingItemList = [meetingItem]
 
           this._listeners.forEach((l) => {
-            l.onMeetingItemInfoChanged(meetingItemList)
+            l?.onMeetingItemInfoChanged?.(meetingItemList)
           })
 
           window.ipcRenderer?.send(LISTENER_CHANNEL, {
@@ -679,6 +737,36 @@ class NEPreMeetingService implements NEPreMeetingServiceInterface {
             payload: [meetingItemList],
           })
         }
+      }
+    )
+
+    this._meetingKit.eventEmitter.on(
+      EventType.OnLocalRecorderStatus,
+      (state) => {
+        console.warn('perMeetingServer 本地录制状态通知: ', state)
+        this._listeners.forEach((l) => {
+          l?.onLocalRecorderStatus?.(state)
+        })
+        window.ipcRenderer?.send(LISTENER_CHANNEL, {
+          module: 'NEPreMeetingService',
+          event: 'onLocalRecorderStatus',
+          payload: [state],
+        })
+      }
+    )
+
+    this._meetingKit.eventEmitter.on(
+      EventType.OnLocalRecorderError,
+      (error) => {
+        console.warn('perMeetingServer 本地录制错误通知: ', error)
+        this._listeners.forEach((l) => {
+          l?.onLocalRecorderError?.(error)
+        })
+        window.ipcRenderer?.send(LISTENER_CHANNEL, {
+          module: 'NEPreMeetingService',
+          event: 'onLocalRecorderError',
+          payload: [error],
+        })
       }
     )
   }
@@ -895,8 +983,8 @@ class NEPreMeetingService implements NEPreMeetingServiceInterface {
         meetingResponse?.settings.roomInfo.roomProperties?.guest?.value === '1',
       password: meetingResponse.settings.roomInfo.password ?? '',
       settings: {
-        cloudRecordOn: !meetingResponse.settings.roomInfo.roomConfig.resource
-          .record,
+        cloudRecordOn:
+          !meetingResponse.settings.roomInfo.roomConfig.resource.record,
         controls: controls,
         currentAudioControl: {
           type: 'audio',
@@ -935,8 +1023,8 @@ class NEPreMeetingService implements NEPreMeetingServiceInterface {
         liveBackground: meetingResponse.settings.livePrivateConfig?.background,
         livePushThirdParties:
           meetingResponse.settings.livePrivateConfig?.pushThirdParties,
-        enableThirdParties: !!meetingResponse.settings.livePrivateConfig
-          ?.enableThirdParties,
+        enableThirdParties:
+          !!meetingResponse.settings.livePrivateConfig?.enableThirdParties,
         livePassword: meetingResponse.settings.livePrivateConfig?.password,
       },
       recurringRule: meetingResponse.recurringRule,

@@ -409,6 +409,7 @@ const InterpreterItem: React.FC<InterpreterItemProps> = ({
         listHeight={180}
         value={secondLanguage}
         className="ne-interpreter-language-select"
+        popupClassName="ne-interpreter-language-popup"
         suffixIcon={<CaretDownOutlined style={{ pointerEvents: 'none' }} />}
         onChange={handleSecondLanguageChange}
         options={secondLangOptions}
@@ -998,7 +999,6 @@ const InterpreterSetting = forwardRef<
       if (interpretation?.interpreters) {
         const keys = Object.keys(interpretation.interpreters)
 
-        console.log('interpretation1', interpretation.interpreters)
         // 去除空行
         const filterInterpreterSelected = interpreterSelected.filter(
           (item) => item.userId || item.firstLang || item.secondLang
@@ -1138,7 +1138,6 @@ const InterpreterSetting = forwardRef<
 
     const handleDeleteScheduleMember = (index: number, userId?: string) => {
       onDelete(index)
-      console.log('handleDeleteScheduleMember', index, userId)
       if (userId) {
         onDeleteScheduleMember?.(userId)
       }

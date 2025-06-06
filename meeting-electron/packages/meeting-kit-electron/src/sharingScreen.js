@@ -1,7 +1,7 @@
 const { BrowserWindow, ipcMain, screen } = require('electron')
 const path = require('path')
 
-const isLocal = process.env.MODE === 'local'
+const isLocal = process.env.ENV_MODE === 'local'
 const isWin32 = process.platform === 'win32'
 
 const MEETING_HEADER_HEIGHT = 28
@@ -9,6 +9,12 @@ const NOTIFY_WINDOW_WIDTH = 408
 const NOTIFY_WINDOW_HEIGHT = 200
 const COLLAPSE_WINDOW_WIDTH = 350
 let WINDOW_WIDTH = 1080
+
+
+const MEETING_CONTROL_BAR_FOLD_HEIGHT = 44
+const MEETING_CONTROL_BAR_UNFOLD_HEIGHT = 64
+
+const isLinux = process.platform === 'linux'
 
 let mY = 0
 
@@ -43,6 +49,7 @@ function createNotifyWindow(mainWindow) {
     x: Math.round(width + NOTIFY_WINDOW_WIDTH),
     y: Math.round(height + NOTIFY_WINDOW_HEIGHT),
     titleBarStyle: 'hidden',
+    frame: !isLinux,
     maximizable: false,
     minimizable: false,
     fullscreenable: false,
@@ -53,6 +60,7 @@ function createNotifyWindow(mainWindow) {
     show: false,
     hasShadow: false,
     webPreferences: {
+      webSecurity: false,
       contextIsolation: false,
       nodeIntegration: true,
       preload: path.join(__dirname, './ipc.js'),
@@ -64,7 +72,7 @@ function createNotifyWindow(mainWindow) {
   notifyWindow.setContentProtection(true)
 
   if (isLocal) {
-    notifyWindow.loadURL('http://localhost:8000/#/memberNotify')
+    notifyWindow.loadURL('https://localhost:8000/#/memberNotify')
   } else {
     notifyWindow.loadFile(path.join(__dirname, '../build/index.html'), {
       hash: 'memberNotify',
@@ -160,10 +168,11 @@ function closeMemberNotifyWindow() {
 function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
   let shareScreen = null
   // 用来改变工具栏视图的高度
-  let mainHeight = [60]
+  let mainHeight = [MEETING_CONTROL_BAR_UNFOLD_HEIGHT]
 
   function mainWindowCenter(mainWindow) {
-    const nowDisplay = shareScreen || screen.getPrimaryDisplay()
+    // const nowDisplay = shareScreen || screen.getPrimaryDisplay()
+    const nowDisplay = screen.getPrimaryDisplay()
     const { x, width } = nowDisplay.workArea
     const mainWindowWidth = mainWindow.getBounds().width
 
@@ -199,11 +208,11 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
       })
     }
 
-    if (height === 60) {
+    if (height === MEETING_CONTROL_BAR_UNFOLD_HEIGHT) {
       mainWindow.setBounds({
         width: WINDOW_WIDTH,
       })
-    } else if (height === 40) {
+    } else if (height === MEETING_CONTROL_BAR_FOLD_HEIGHT) {
       mainWindow.setBounds({
         width: COLLAPSE_WINDOW_WIDTH,
       })
@@ -222,16 +231,20 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
 
     switch (method) {
       case 'start': {
-        const nowDisplay = shareScreen || screen.getPrimaryDisplay()
+        sharingScreen.isSharing = true
+        // 先强制保护窗口内容，避免共享被捕获
+        mainWindow.setContentProtection(true)
+
+        // const nowDisplay = shareScreen || screen.getPrimaryDisplay()
+        const nowDisplay = screen.getPrimaryDisplay()
         const { x, y, width } = nowDisplay.workArea
 
         mainWindow.setOpacity(0)
         setTimeout(() => {
           mainWindow.setOpacity(1)
-        }, 300)
+        }, 800)
 
         createNotifyWindow(mainWindow)
-        sharingScreen.isSharing = true
 
         mainWindow.setMinimizable(false)
         mainWindow.setMinimumSize(1, 1)
@@ -252,13 +265,10 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
         })
 
         mainWindow.setMovable(true)
-        mainHeight = [60]
+        mainHeight = [MEETING_CONTROL_BAR_UNFOLD_HEIGHT]
         setMainWindowHeight()
 
         mainWindow.setAlwaysOnTop(true, 'normal', 100)
-
-        // 先强制保护窗口内容，避免共享被捕获
-        mainWindow.setContentProtection(true)
 
         break
       }
@@ -273,7 +283,6 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
             // TODO: 退出共享
           }
         })
-
         break
       }
 
@@ -285,7 +294,7 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
             setTimeout(() => {
               if (mainWindow.isDestroyed()) return
               mainWindow.setOpacity(1)
-            }, 300)
+            }, 800)
           }
 
           shareScreen = null
@@ -332,23 +341,22 @@ function addScreenSharingIpc({ mainWindow, initMainWindowSize }) {
         break
       case 'controlBarVisibleChangeByMouse':
         if (sharingScreen.isSharing) {
+          if (data.width && data.width > 500 && WINDOW_WIDTH !== data.width) {
+            WINDOW_WIDTH = data.width
+          }
           if (data.open) {
-            if (data.width && data.width > 500) {
-              WINDOW_WIDTH = data.width
-            }
-
             mainWindow.setBounds({
               width: WINDOW_WIDTH,
             })
-            removeMainHeight(60)
-            mainHeight.push(60)
+            removeMainHeight(MEETING_CONTROL_BAR_UNFOLD_HEIGHT)
+            mainHeight.push(MEETING_CONTROL_BAR_UNFOLD_HEIGHT)
             setMainWindowHeight(true)
           } else {
             mainWindow.setBounds({
               width: COLLAPSE_WINDOW_WIDTH,
             })
-            removeMainHeight(40)
-            mainHeight.push(40)
+            removeMainHeight(MEETING_CONTROL_BAR_FOLD_HEIGHT)
+            mainHeight.push(MEETING_CONTROL_BAR_FOLD_HEIGHT)
             setMainWindowHeight(true)
           }
 

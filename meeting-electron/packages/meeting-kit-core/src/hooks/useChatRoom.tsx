@@ -430,9 +430,11 @@ export const ChatRoomContextProvider: React.FC<Props> = (props) => {
       time: Date.now(),
       text: '',
       from: localMember.uuid,
+      isPrivate: !!privateChatMember,
       toNickname: privateChatMember?.nick,
       progress: { percentage: 1 },
       tempFile: file,
+      chatroomType: isSendWaitingChatroomRef.current ? 1 : 0,
     } as NERoomChatMessage
 
     setMessages((prev) => [...prev, tempMsg])
@@ -508,12 +510,18 @@ export const ChatRoomContextProvider: React.FC<Props> = (props) => {
               toAccounts,
               isSendWaitingChatroomRef.current ? 1 : 0
             )
+
       const msg: NERoomChatMessage | undefined = formatMessage(res?.data) as
         | NERoomChatMessage
         | undefined
 
       if (res?.code === 0 && msg) {
         const id = msg.messageUuid || idClient
+
+        // 桌面端未返回 toUserUuidList ，所以需要手动设置
+        if (toAccounts.length > 0) {
+          msg.isPrivate = true
+        }
 
         updateMsg(id, msg)
       } else {
@@ -635,10 +643,8 @@ export const ChatRoomContextProvider: React.FC<Props> = (props) => {
     myUuid: string = ''
   ) {
     if (neMeeting?.roomService) {
-      let _meetingInfo:
-        | NEMeetingInfo
-        | CreateMeetingResponse
-        | undefined = undefined
+      let _meetingInfo: NEMeetingInfo | CreateMeetingResponse | undefined =
+        undefined
 
       try {
         _meetingInfo = meetingId
@@ -648,11 +654,10 @@ export const ChatRoomContextProvider: React.FC<Props> = (props) => {
         //
       }
 
-      const {
-        data: url,
-      } = await neMeeting.roomService.exportChatroomHistoryMessages(
-        String(_meetingInfo?.meetingId || meetingId)
-      )
+      const { data: url } =
+        await neMeeting.roomService.exportChatroomHistoryMessages(
+          String(_meetingInfo?.meetingId || meetingId)
+        )
 
       const blob = new Blob([url], {
         type: 'text/csv;charset=UTF-8',
@@ -723,7 +728,6 @@ export const ChatRoomContextProvider: React.FC<Props> = (props) => {
             0
           )
 
-          console.log('fetchChatroomHistoryMessages11', res)
           if (res.code === 0 && res.data.length > 0) {
             res.data.forEach((item) => {
               messages.push(formatMessage(item))
@@ -1048,6 +1052,10 @@ export const ChatRoomContextProvider: React.FC<Props> = (props) => {
   useUpdateEffect(() => {
     setMessages([])
   }, [inWaitingRoom])
+
+  useUpdateEffect(() => {
+    setMessages([])
+  }, [meetingInfo.meetingNum])
 
   useEffect(() => {
     if (meetingInfo.subject && meetingInfo.startTime) {

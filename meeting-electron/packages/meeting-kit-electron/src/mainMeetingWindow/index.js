@@ -5,6 +5,7 @@ const {
   nativeTheme,
   app,
   dialog,
+  protocol,
 } = require('electron')
 const { download } = require('electron-dl')
 const path = require('path')
@@ -22,13 +23,18 @@ const {
 const { initMonitoring } = require('../utils/monitoring')
 const os = require('os')
 const NEMeetingKit = require('../kit/impl/meeting_kit')
+const {
+  registerDualMonitors,
+  unregisterDualMonitors,
+} = require('../module/dualMonitors')
+const { registerMarvel } = require('../module/marvel')
 
 // 获取操作系统类型
 const platform = os.platform()
-const version = os.release()
 
-const isMacOS15 = platform === 'darwin' && version.startsWith('24')
+const isLinux = platform === 'linux'
 
+app.commandLine.appendSwitch('disable-site-isolation-trials')
 initMonitoring()
 
 if (isLocal) {
@@ -46,18 +52,21 @@ if (!isMacOS15) {
 }
 */
 
+app.whenReady().then(() => {
+  protocol.registerFileProtocol('media', (request, callback) => {
+    const url = request.url.substr(8) // 去掉协议名
+    const videoPath = path.normalize(url) // 将url转换为正常路径
+
+    callback({ path: videoPath })
+  })
+})
+
 if (process.platform === 'win32') {
   app.commandLine.appendSwitch('high-dpi-support', 'true')
   // app.commandLine.appendSwitch('force-device-scale-factor', '1')
 }
 
 let mainWindow = null
-
-function displayChanged() {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow?.webContents.send('display-changed')
-  }
-}
 
 function checkSystemVersion() {
   const systemLanguage = app.getPreferredSystemLanguages()?.[0]
@@ -88,23 +97,27 @@ function checkSystemVersion() {
       })
   }
 
+  const version = os.release()
+
+  console.log('system version>>>', platform, version)
   // 如果是 Windows 系统
   if (platform === 'win32') {
-    const version = os.release()
-    const majorVersion = parseInt(version.split('.')[0])
+    // const majorVersion = parseInt(version.split('.')[0])
 
-    if (majorVersion < 10) {
-      // 弹出提示对话框
-      showDialog(
-        messageLanguageMap[systemLanguage],
-        btnTextLanguageMap[systemLanguage]
-      )
-      return false
-    } else {
-      return true
-    }
-  } else {
-    const version = os.release()
+    // if (majorVersion < 10) {
+    //   // 弹出提示对话框
+    //   showDialog(
+    //     messageLanguageMap[systemLanguage],
+    //     btnTextLanguageMap[systemLanguage]
+    //   )
+    //   return false
+    // } else {
+    //   return true
+    // }
+
+    // 部分window系统win10也会返回6.x版本，所以先关闭
+    return true
+  } else if (platform === 'darwin') {
     const macVersion = parseFloat(version)
 
     if (macVersion < 19.5) {
@@ -116,6 +129,8 @@ function checkSystemVersion() {
     } else {
       return true
     }
+  } else {
+    return true
   }
 }
 
@@ -130,8 +145,7 @@ function openMeetingWindow(data) {
 
   // 设置进入会议页面窗口大小及其他属性
   function initMainWindowSize() {
-    const mousePosition = screen.getCursorScreenPoint()
-    const nowDisplay = screen.getDisplayNearestPoint(mousePosition)
+    const nowDisplay = screen.getPrimaryDisplay()
     const { x, y, width, height } = nowDisplay.workArea
 
     mainWindow.setFullScreen(false)
@@ -170,6 +184,7 @@ function openMeetingWindow(data) {
 
   mainWindow = new BrowserWindow({
     titleBarStyle: 'hidden',
+    frame: !isLinux,
     title: '网易会议',
     trafficLightPosition: {
       x: 10,
@@ -179,6 +194,7 @@ function openMeetingWindow(data) {
     transparent: true,
     show: false,
     webPreferences: {
+      webSecurity: false,
       contextIsolation: false,
       nodeIntegration: true,
       enableRemoteModule: true,
@@ -188,7 +204,7 @@ function openMeetingWindow(data) {
   })
 
   if (isLocal) {
-    mainWindow.loadURL(`http://localhost:8000/#/${urlPath}`)
+    mainWindow.loadURL(`https://localhost:8000/#/${urlPath}`)
     setTimeout(() => {
       mainWindow.webContents.openDevTools()
     }, 3000)
@@ -198,6 +214,7 @@ function openMeetingWindow(data) {
     })
   }
 
+  mainWindow.isMainWindow = true
   // 最大化
   mainWindow.on('maximize', () => {
     mainWindow?.webContents.send('maximize-window', true)
@@ -244,7 +261,8 @@ function openMeetingWindow(data) {
         })
     } else {
       item.on('done', (event, state) => {
-        const uuidCsvRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.csv$/i
+        const uuidCsvRegex =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.csv$/i
 
         if (
           state === 'completed' &&
@@ -282,7 +300,11 @@ function openMeetingWindow(data) {
     if (mainWindow.inMeeting) {
       event.preventDefault()
       mainWindow?.webContents.send('main-close-before', beforeQuit)
-      mainWindow?.show()
+      // linux会回到非全屏状态
+      if (!isLinux) {
+        mainWindow?.show()
+      }
+
       beforeQuit = false
     }
   })
@@ -319,32 +341,11 @@ function openMeetingWindow(data) {
     nativeTheme.shouldUseDarkColors ?? true
   )
 
-  screen.on('display-removed', displayChanged)
-
-  screen.on('display-added', displayChanged)
-
-  /*
-  function debounce(func, wait) {
-    let timeout
-
-    return function (...args) {
-      clearTimeout(timeout)
-      timeout = setTimeout(() => {
-        func.apply(this, args)
-      }, wait)
-    }
-  }
-
-  const neMeetingDisplayChanged = debounce(() => {
-    const display = screen.getDisplayMatching(mainWindow.getBounds())
-
-    mainWindow.webContents.send('neMeetingDisplayChanged', display.size)
-  }, 1000)
-
-  mainWindow.on('moved', neMeetingDisplayChanged)
-  */
+  registerDualMonitors(mainWindow)
 
   setWindowOpenHandler(mainWindow)
+
+  registerMarvel()
 
   initMainWindowSize()
 
@@ -369,8 +370,7 @@ function closeMeetingWindow() {
 
   removeGlobalIpcMainListeners()
 
-  screen.removeListener('display-removed', displayChanged)
-  screen.removeListener('display-added', displayChanged)
+  unregisterDualMonitors()
 }
 
 module.exports = {

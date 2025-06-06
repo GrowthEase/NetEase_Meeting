@@ -20,11 +20,20 @@
     }
   }
 }
+.nemeeting-invite-page {
+  .nemeeting-invite-content {
+    height: 470px;
+    .invite-info-footer {
+      bottom: 0;
+    }
+  }
+}
 
 .nemeeting-invite-content {
   height: 450px;
   display: flex;
   flex-direction: column;
+  position: relative;
   .nemeeting-tabs-nav {
     height: 40px;
   }
@@ -45,7 +54,7 @@
     display: flex;
     justify-content: center;
     margin-bottom: 32px;
-    margin-top: 118px;
+    // margin-top: 118px;
     align-items: center;
     flex-direction: column;
   }
@@ -96,7 +105,7 @@
     align-items: center;
     justify-content: center;
     position: absolute;
-    bottom: 24px;
+    bottom: 0;
     left: 50%;
     transform: translateX(-50%);
   }

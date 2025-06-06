@@ -29,8 +29,10 @@ import { getEnterPriseInfoApi } from '../../app/src/api'
 import { IM } from '../../types/NEMeetingKit'
 import NEFeedbackService from './service/feedback_service'
 import NEGuestService from './service/guest_service'
+import pkg from '../../../package.json'
 
 export default class NEMeetingKit implements NEMeetingKitInterface {
+  private _appKey: string = ''
   private _logger: Logger | undefined
   private _meetingService: NEMeetingService | undefined
   private _meetingInviteService: NEMeetingInviteService | undefined
@@ -78,8 +80,11 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
   async initialize(
     config: NEMeetingKitConfig
   ): Promise<NEResult<NEMeetingCorpInfo | undefined>> {
+    console.log('initialize', config)
     try {
       if (config.appKey) {
+        this._appKey = config.appKey
+
         const configSchema = z.object({
           appKey: z.string(),
           serverUrl: z.string(),
@@ -117,18 +122,24 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
       serverUrl: config.serverUrl,
       extras: config.extras,
       useAssetServerConfig: config.useAssetServerConfig,
+      whiteboardAppConfig: config.whiteboardAppConfig,
     }
 
     return new Promise((resolve, reject) => {
       // 如果传了企业代码或者企业邮箱
       if (!config.appKey && (config.corpCode || config.corpEmail)) {
-        getEnterPriseInfoApi({
-          code: config.corpCode,
-          email: config.corpEmail,
-        })
+        getEnterPriseInfoApi(
+          {
+            code: config.corpCode,
+            email: config.corpEmail,
+          },
+          config.serverUrl
+        )
           .then((enterPriseInfo) => {
             _config.appKey = enterPriseInfo.appKey
-            MeetingKit.actions.init(width, height, _config, () => {
+            this._appKey = enterPriseInfo.appKey
+
+            MeetingKit.actions.init(width, height, _config, (e) => {
               const res = {
                 appKey: enterPriseInfo.appKey,
                 corpName: enterPriseInfo.appName || '',
@@ -145,8 +156,13 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
               }
 
               this._idpList = res.idpList
+              this._initHandler()
 
-              resolve(SuccessBody(res))
+              if (e) {
+                reject(e)
+              } else {
+                resolve(SuccessBody(res))
+              }
             })
           })
           .catch((error) => {
@@ -154,46 +170,7 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
           })
       } else {
         MeetingKit.actions.init(width, height, _config, (e) => {
-          const logger = new Logger('Meeting-NeMeeting', true)
-
-          const neMeeting = MeetingKit.actions.neMeeting
-
-          if (neMeeting) {
-            this._accountService = new NEMeetingAccountService(
-              neMeeting,
-              this._idpList
-            )
-            this._contactsService = new NEContactsService({
-              neMeeting,
-              logger,
-            })
-            this._meetingInviteService = new NEMeetingInviteService({
-              neMeeting,
-              eventEmitter: neMeeting.outEventEmitter,
-            })
-            this._meetingMessageChannelService = new NEMeetingMessageChannelService(
-              {
-                neMeeting,
-                logger,
-              }
-            )
-            this._meetingService = new NEMeetingService({
-              neMeeting,
-              meetingKit: MeetingKit.actions,
-            })
-            this._preMeetingService = new NEPreMeetingService(neMeeting)
-            this._settingsService = new NESettingsService({
-              logger,
-              neMeeting,
-            })
-            this._feedbackService = new NEFeedbackService({
-              neMeeting,
-            })
-            this._guestService = new NEGuestService({
-              neMeeting,
-              meetingKit: this,
-            })
-          }
+          this._initHandler()
 
           if (e) {
             reject(e)
@@ -290,8 +267,68 @@ export default class NEMeetingKit implements NEMeetingKitInterface {
     })
   }
 
+  async startMarvel(): Promise<NEResult<void>> {
+    const marvelConfig = {
+      marvelId: window.isWins32
+        ? '413fca4c42914546a2df535f997676c6'
+        : '151074864cd441e1847cc0e2892cc04b',
+      sdkName: 'meeting-kit',
+      sdkVersion: pkg.version,
+      userId: '',
+      deviceIdentifier: '',
+      appKey: this._appKey,
+    }
+
+    // window.startMarvel?.(marvelConfig)
+
+    window.ipcRenderer?.send('startMarvel', marvelConfig)
+
+    return SuccessBody(void 0)
+  }
+
   destroy(): void {
     MeetingKit.actions.destroy()
+  }
+
+  private _initHandler() {
+    const logger = new Logger('Meeting-NeMeeting', true)
+
+    const neMeeting = MeetingKit.actions.neMeeting
+
+    if (neMeeting) {
+      this._accountService = new NEMeetingAccountService(
+        neMeeting,
+        this._idpList
+      )
+      this._contactsService = new NEContactsService({
+        neMeeting,
+        logger,
+      })
+      this._meetingInviteService = new NEMeetingInviteService({
+        neMeeting,
+        eventEmitter: neMeeting.outEventEmitter,
+      })
+      this._meetingMessageChannelService = new NEMeetingMessageChannelService({
+        neMeeting,
+        logger,
+      })
+      this._meetingService = new NEMeetingService({
+        neMeeting,
+        meetingKit: MeetingKit.actions,
+      })
+      this._preMeetingService = new NEPreMeetingService(neMeeting)
+      this._settingsService = new NESettingsService({
+        logger,
+        neMeeting,
+      })
+      this._feedbackService = new NEFeedbackService({
+        neMeeting,
+      })
+      this._guestService = new NEGuestService({
+        neMeeting,
+        meetingKit: this,
+      })
+    }
   }
 
   private _electronMethodCallListener() {

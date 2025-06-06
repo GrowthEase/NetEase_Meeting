@@ -378,17 +378,6 @@ const PeriodicMeeting: React.FC<PeriodicMeetingProps> = ({
     });
   };
 
-  const addonBefore = (
-    <div className="nemeeting-addon" onClick={handleSubtraction}>
-      -
-    </div>
-  );
-  const addonAfter = (
-    <div className="nemeeting-addon" onClick={handleAdd}>
-      +
-    </div>
-  );
-
   // 根据不同的重复方式获取结束时间
   const getEndDateByTimes = (
     times: number,
@@ -577,6 +566,25 @@ const PeriodicMeeting: React.FC<PeriodicMeetingProps> = ({
       value?.customizedFrequency?.frequencyType,
     );
   }, [value?.type, value?.customizedFrequency?.frequencyType]);
+
+
+  const addonBefore = (
+    <div className="nemeeting-addon" onClick={handleSubtraction}>
+      -
+    </div>
+  );
+  const addonAfter = (
+    <div
+      className={
+        value?.endTimes === maxMeetingCount
+          ? 'nemeeting-addon disabled'
+          : 'nemeeting-addon'
+      }
+      onClick={handleAdd}
+    >
+      +
+    </div>
+  );
 
   function getEndDateByStartTime(
     startDate: dayjs.Dayjs,
@@ -986,7 +994,7 @@ const PeriodicMeeting: React.FC<PeriodicMeetingProps> = ({
                 value={value.endTimes}
                 addonBefore={addonBefore}
                 addonAfter={addonAfter}
-                maxLength={3}
+                maxLength={4}
                 onKeyPress={(event) => {
                   if (!/^\d+$/.test(event.key)) {
                     event.preventDefault();

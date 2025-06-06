@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useGlobalContext, useMeetingInfoContext } from '../store'
 import { EventType } from '../types'
 import { NERoomMember, NEMemberVolumeInfo } from 'neroom-types'
@@ -11,7 +11,22 @@ export default function useActiveSpeakerManager(): {
   const volumeIndicationsRef = useRef<Array<NEMemberVolumeInfo[]>>([])
   const activeSpeakerListRef = useRef<string[]>([])
   const [activeSpeakerList, setActiveSpeakerList] = useState<string[]>([])
+  const activeSpeakerTimer = useRef<null | ReturnType<typeof setTimeout>>(null)
+  const meetingInfoRef = useRef(meetingInfo)
 
+  meetingInfoRef.current = meetingInfo
+
+  const activeSpeakerListReportIntervalRef = useRef(3000)
+
+  activeSpeakerListReportIntervalRef.current =
+    globalConfig?.appConfig.MEETING_CLIENT_CONFIG?.activeSpeakerConfig
+      .activeSpeakerListReportInterval || 3000
+
+  const enableVoicePriorityDisplay = useMemo(() => {
+    return (
+      meetingInfo.setting?.normalSetting?.enableVoicePriorityDisplay !== false
+    )
+  }, [meetingInfo.setting?.normalSetting?.enableVoicePriorityDisplay])
   /// 更新“正在讲话”列表
   /// 1. 计算窗口内每个成员的平均音量；并按照音量从大到小排序
   /// 2. 过滤列表中音量小于阈值、音频关闭的成员
@@ -101,19 +116,6 @@ export default function useActiveSpeakerManager(): {
         )
         setActiveSpeakerList(newActiveSpeakerList)
       }
-
-      if (
-        newActiveSpeakerList.length > 0 &&
-        meetingInfo.setting?.normalSetting?.enableVoicePriorityDisplay !== false
-      ) {
-        eventEmitter?.emit(EventType.RtcActiveSpeakerChanged, {
-          userUuid: newActiveSpeakerList[0],
-        })
-      } else {
-        eventEmitter?.emit(EventType.RtcActiveSpeakerChanged, {
-          userUuid: '',
-        })
-      }
     }
   }, [
     meetingInfo.setting?.normalSetting?.enableVoicePriorityDisplay,
@@ -121,6 +123,37 @@ export default function useActiveSpeakerManager(): {
     globalConfig?.appConfig.MEETING_CLIENT_CONFIG?.activeSpeakerConfig,
     neMeeting?.roomContext,
   ])
+
+  function handleIntervalTime() {
+    activeSpeakerTimer.current && clearInterval(activeSpeakerTimer.current)
+    activeSpeakerTimer.current = setInterval(() => {
+      eventEmitter?.emit(EventType.RtcActiveSpeakerChanged, {
+        userUuid: activeSpeakerListRef.current?.[0] || '',
+      })
+    }, activeSpeakerListReportIntervalRef.current)
+  }
+
+  useEffect(() => {
+    // 未开启语音激励不处理
+    if (!enableVoicePriorityDisplay) {
+      return
+    }
+
+    eventEmitter?.emit(EventType.RtcActiveSpeakerChanged, {
+      userUuid:
+        activeSpeakerListRef.current?.[0] ||
+        meetingInfoRef.current.lastActiveSpeakerUuid,
+    })
+    // 3s更新一次主大画面
+    handleIntervalTime()
+
+    return () => {
+      if (activeSpeakerTimer.current) {
+        clearInterval(activeSpeakerTimer.current)
+        activeSpeakerTimer.current = null
+      }
+    }
+  }, [enableVoicePriorityDisplay])
 
   useEffect(() => {
     const activeSpeakerConfig =
@@ -156,6 +189,22 @@ export default function useActiveSpeakerManager(): {
         if (index > -1) {
           volumeIndicationsRef.current.splice(index, 1)
         }
+
+        // 如果离开的成员正好是当前主画面人员，则需要立即切换不等3s
+        if (
+          activeSpeakerListRef.current.length > 1 &&
+          activeSpeakerListRef.current[0] === member.uuid
+        ) {
+          if (
+            activeSpeakerListRef.current[0] ==
+            meetingInfoRef.current.lastActiveSpeakerUuid
+          ) {
+            eventEmitter?.emit(EventType.RtcActiveSpeakerChanged, {
+              userUuid: activeSpeakerListRef.current[1],
+            })
+            enableVoicePriorityDisplay && handleIntervalTime()
+          }
+        }
       })
       // 如果离开房间的成员在正在讲话列表中，则删除对应的成员;
       const newActiveSpeakerList = activeSpeakerListRef.current.filter(
@@ -178,7 +227,7 @@ export default function useActiveSpeakerManager(): {
     return () => {
       eventEmitter?.off(EventType.MemberLeaveRoom, handleMemberLeaveRoom)
     }
-  }, [])
+  }, [enableVoicePriorityDisplay])
 
   return {
     activeSpeakerList,

@@ -1,5 +1,5 @@
 import request from './request';
-import { APP_KEY } from '../config';
+import { APP_KEY, FREE_APP_KEY, FREE_DOMAIN_SERVER } from '../config';
 import { EnterPriseInfo, GuestMeetingInfo, LoginUserInfo } from '../types';
 import { getUUID } from '@meeting-module/utils';
 
@@ -16,17 +16,31 @@ function getDeviceId(): string {
   return uuid;
 }
 
+function getBaseUrl(appKey?: string) {
+  let baseUrl = '';
+
+  // 免费版appKey使用新域名
+  if (appKey === FREE_APP_KEY) {
+    baseUrl = FREE_DOMAIN_SERVER;
+  }
+
+  return baseUrl;
+}
+
 // 发送短信验证码-新接口
 export function sendVerifyCodeApi(params: {
   appKey?: string;
   mobile?: string;
   scene?: number;
 }) {
+  const appKey = params.appKey || APP_KEY;
+  const baseUrl = getBaseUrl(appKey);
+
   return request({
     method: 'GET',
-    url: `/scene/meeting/${params.appKey || APP_KEY}/v1/sms/${params.mobile}/${
-      params.scene
-    }`,
+    url: `${baseUrl}/scene/meeting/${params.appKey || APP_KEY}/v1/sms/${
+      params.mobile
+    }/${params.scene}`,
   });
 }
 
@@ -37,9 +51,11 @@ export function loginApi(params: {
   appKey?: string;
 }) {
   const appKey = params.appKey || APP_KEY;
+  const baseUrl = getBaseUrl(appKey);
+
   const url = params.verifyCode
-    ? `/scene/meeting/${appKey}/v1/mobile/${params.mobile}/login` // 验证码登录
-    : `/scene/meeting/${appKey}/v1/login/${params.username}`; // 账号密码登录
+    ? `${baseUrl}/scene/meeting/${appKey}/v1/mobile/${params.mobile}/login` // 验证码登录
+    : `${baseUrl}/scene/meeting/${appKey}/v1/login/${params.username}`; // 账号密码登录
 
   return request({
     url,
@@ -55,6 +71,8 @@ export function loginApiNew(params: {
   appKey?: string;
 }) {
   const appKey = params.appKey || APP_KEY || '';
+  const baseUrl = getBaseUrl(appKey);
+
   let url: string = '/scene/meeting/v1/login-username';
 
   if (params.username) {
@@ -68,6 +86,8 @@ export function loginApiNew(params: {
   if (params.email) {
     url = `/scene/meeting/v1/login-email`; // 邮箱登录
   }
+
+  url = `${baseUrl}${url}`;
 
   return request({
     url,
@@ -97,9 +117,10 @@ export function modifyPasswordApi(params: {
   username: string;
 }): Promise<LoginUserInfo> {
   const { password, username, appKey, newPassword } = params;
-
+  const baseUrl = getBaseUrl(appKey);
+ 
   return request({
-    url: `/scene/meeting/v2/password`,
+    url: `${baseUrl}/scene/meeting/v2/password`,
     data: {
       username,
       password,

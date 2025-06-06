@@ -171,10 +171,17 @@ export default function useCaption(params: CaptionProps): CaptionRes {
       let tmCaptionMessageList = [...captionMessageListRef.current]
 
       meetingMessageList.forEach((item) => {
-        const index = tmCaptionMessageList.findLastIndex(
+        const reverseTmCaptionMessageList = tmCaptionMessageList.reverse()
+        const reversedIndex = reverseTmCaptionMessageList.findIndex(
           (msg) => msg.fromUserUuid === item.fromUserUuid
         )
 
+        const index =
+          reversedIndex === -1
+            ? -1
+            : tmCaptionMessageList.length - 1 - reversedIndex
+
+        tmCaptionMessageList.reverse()
         // 原对话列表无此人直接加入末尾
         if (index < 0) {
           tmCaptionMessageList.push(item)
@@ -329,6 +336,8 @@ export default function useCaption(params: CaptionProps): CaptionRes {
       },
       onMySelfCaptionForbidden: () => {
         Toast.fail(t('transcriptionCaptionForbidden'))
+        neMeeting?.liveTranscriptionController?.enableCaption(false)
+        setEnableCaptionLoading(false)
         dispatch?.({
           type: ActionType.UPDATE_MEETING_INFO,
           data: {

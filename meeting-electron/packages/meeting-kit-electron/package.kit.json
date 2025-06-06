@@ -1,16 +1,13 @@
 {
   "name": "nemeeting-electron-sdk",
-  "version": "4.8.0",
-  "description": "NetEase Meeting",
-  "keywords": [],
+  "version": "4.9.0",
+  "description": "NetEase Meeting Electron SDK",
+  "keywords": ["Meeting", "Electron"],
   "license": "MIT",
-  "main": "lib/ipcCppComponent/index.js",
+  "main": "lib/kit/impl/meeting_kit.js",
   "files": ["lib", "build", "package.json"],
   "scripts": {
-    "build": "gulp && electron-builder build",
-    "build:lib": "gulp",
-    "start": "gulp && cross-env MODE=local electron-forge start",
-    "start:prod": "gulp && electron-forge start"
+    "build": "gulp"
   },
   "dependencies": {
     "applescript": "^1.0.0",
@@ -20,8 +17,9 @@
     "network": "^0.7.0",
     "semver": "^7.5.4",
     "systeminformation": "^5.21.11",
-    "neroom-types": "1.31.2",
-    "neroom-node-sdk": "1.31.0",
+    "electron-dl": "^3.5.1",
+    "neroom-types": "workspace:^",
+    "neroom-node-sdk": "workspace:^",
     "neipc-node-sdk": "workspace:^"
   },
   "devDependencies": {
@@ -36,52 +34,4 @@
     "del": "^6.0.0",
     "nemeeting-core-sdk": "workspace:^"
   },
-  "build": {
-    "extraMetadata": {
-      "name": "nemeet_sdk",
-      "main": "lib/ipcCppComponent/index.js"
-    },
-    "productName": "nemeet_sdk",
-    "appId": "com.netease.nmc.Meeting.Component",
-    "files": [
-      "build/**/*",
-      "src/**/*",
-      "lib/**/*",
-      "!node_modules/**/neroom-node-sdk/**/*",
-      "node_modules/**/neroom-node-sdk/build/Release/neroom.node",
-      "node_modules/**/neroom-node-sdk/build/Release/*.dylib",
-      "node_modules/**/neroom-node-sdk/build/Release/*.lib",
-      "node_modules/**/neroom-node-sdk/build/Release/*.dll",
-      "node_modules/**/neroom-node-sdk/build/Release/*.framework/**/*",
-      "node_modules/**/neroom-node-sdk/assets/**/*",
-      "node_modules/**/neroom-node-sdk/dist/**/*",
-      "node_modules/**/neroom-node-sdk/package.json",
-      "package.json"
-    ],
-    "asarUnpack": ["**/neroom-node-sdk/**"],
-    "mac": {
-      "artifactName": "meeting-component.${ext}",
-      "mergeASARs": false,
-      "icon": "assets/macx.icns",
-      "identity": null,
-      "target": [
-        {
-          "target": "zip",
-          "arch": ["universal"]
-        }
-      ],
-      "entitlements": "entitlements.mac.plist",
-      "hardenedRuntime": true,
-      "extendInfo": {
-        "NSMicrophoneUsageDescription": "需要使用您的麦克风",
-        "NSCameraUsageDescription": "需要使用您的摄像头",
-        "LSUIElement": true
-      }
-    },
-    "win": {
-      "artifactName": "nemeet_sdk.${ext}",
-      "icon": "assets/win.ico",
-      "target": "portable"
-    }
-  }
 }

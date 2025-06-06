@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
-
-import { ModalProps, Spin } from 'antd';
+import {ModalProps, Spin, Button } from 'antd';
 import { useTranslation } from 'react-i18next';
 import {
   NEMeetingService,
   NEMeetingWebAppItem,
   NEPreMeetingService,
+  getLocalStorageSetting
 } from 'nemeeting-web-sdk';
+import Modal from '@meeting-module/components/common/Modal';
 import { MeetingListItem } from '@meeting-module/types/type';
 import dayjs from 'dayjs';
 import {
@@ -28,7 +29,10 @@ import {
 import TranscriptionModal from '../Transcription/TranscriptionModal';
 import NEContactsService from '@meeting-module/kit/impl/service/meeting_contacts_service';
 import { NERoomService } from 'neroom-types';
-import { RECORD_URL } from '@/config';
+import {
+  RECORD_URL,
+  LOCALSTORAGE_LOCAL_RECORD_INFO,
+} from '@/config';
 import useUserInfo from '@meeting-module/hooks/useUserInfo';
 
 type MeetingSwitchType = 'all' | 'collect';
@@ -79,6 +83,8 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
     recordUrl: t('cloudRecordingLink'),
     record: t('startCloudRecord'),
     chat: t('chatHistory'),
+    localRecord: t('localRecord'),
+    filePath: t('filePath'),
     joinMeeting: t('meetingJoin'),
     recordFileGenerating: t('generatingCloudRecordingFile'),
     endTime: t('endTime'),
@@ -95,6 +101,8 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
     tomorrow: t('tomorrow'),
     yesterday: t('yesterday'),
     transcription: t('transcription'),
+    localRecordDeleteDirectoryTitle: t('localRecordDeleteDirectoryTitle'),
+    localRecordDeleteDirectoryContent: t('localRecordDeleteDirectoryContent')
   };
 
   const WeekdaysSort = [
@@ -135,6 +143,10 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
   const [recordingFileGeneration, setRecordingFileGeneration] =
     useState<string>('notStarted');
 
+  const [meetingRecordPath, setMeetingRecordPath] = useState<string>('')
+  const [meetingRecorAudio, setMeetingRecordAudio] = useState<Boolean>(false)
+  const [meetingRecordFirstMp4FilePath, setMeetingRecordFirstMp4FilePath] = useState<string>('')
+  const [meetingRecordFirstAacFilePath, setMeetingRecordFirstAacFilePath] = useState<string>('')
   useEffect(() => {
     if (open) {
       if (meetingId) {
@@ -159,6 +171,10 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
       setMeetingList([]);
     }
   }, [type, open, meetingId]);
+
+  useEffect (()=>{
+    getLocalRecordPath()
+  }, [meetingId, currentMeeting])
 
   let scrollRef;
 
@@ -213,7 +229,6 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
       const { startId = 0, limit = 20 } = params;
 
       const res = await preMeetingService?.[method]?.(startId, limit);
-
       const list = res?.data;
 
       return (
@@ -423,6 +438,112 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
     return hasURL ? 'completed' : 'InProgress';
   };
 
+  async function getLocalRecordPath(): Promise<string> {
+    console.log('getLocalRecordPath() 当前会议信息: ', currentMeeting)
+    if (!currentMeeting || !window.ipcRenderer) {
+      return ''
+    }
+    const setting = getLocalStorageSetting()
+    console.log('getLocalRecordPath() 当前会议设置内容: ', setting)
+    //临时代码
+    let localRecordDefaultPath =  '' //setting.recordSetting.localRecordDefaultPath
+    let str = window.localStorage.getItem(LOCALSTORAGE_LOCAL_RECORD_INFO) || "{}"
+    let list = JSON.parse(str)
+    let localRecordAudio = false
+    list[currentMeeting.ownerUserUuid] ? list[currentMeeting.ownerUserUuid].forEach(item => {
+      if (item.meetingId == currentMeeting.meetingId) {
+        localRecordDefaultPath = item.localRecordDefaultPath
+        localRecordAudio =  item.recordAudio
+      }
+    }) : null
+    console.log('getLocalRecordPath() localRecordDefaultPath: ', localRecordDefaultPath)
+    let meetingStartTime = formatDate(
+      currentMeeting.roomStartTime,
+      'YYYY-MM-DD HH:mm',
+      currentMeeting?.timezoneId,
+    )
+    //这里有个bug，currentMeeting记录的会议开始时间和meetingInfo记录的会议开始时间有2分钟的差值
+    meetingStartTime = meetingStartTime.replaceAll(':', '.')
+    if (!window.ipcRenderer || !window.ipcRenderer.invoke) {
+      return '';
+    }
+    try {
+      const {
+        meetingRecordPath,
+        meetingRecordFirstMp4FilePath,
+        meetingRecordFirstAacFilePath
+      } = await window.ipcRenderer.invoke('local-record-meetingid-path', {
+        meetingNum: currentMeeting?.meetingNum,
+        directory: localRecordDefaultPath || setting.recordSetting.localRecordDefaultPath,
+        meetingStartTime,
+        needGetMeetingRecordPath: localRecordDefaultPath ? false : true
+      });
+      console.log(
+        `获取到当前会议的录制文件路径 meetingRecordPath: ${meetingRecordPath}, meetingRecordFirstMp4FilePath: ${meetingRecordFirstMp4FilePath}, meetingRecordFirstAacFilePath: ${meetingRecordFirstAacFilePath}`
+      )
+      setMeetingRecordPath(meetingRecordPath)
+      setMeetingRecordAudio(localRecordAudio)
+      setMeetingRecordFirstMp4FilePath(meetingRecordFirstMp4FilePath)
+      setMeetingRecordFirstAacFilePath(meetingRecordFirstAacFilePath)
+      return ''
+    } catch (e) {
+      console.log('获取到当前会议的录制文件错误: ', e)
+      return ''
+    }
+  }
+
+  //打开当前下载路径
+  function openFile(isDir: boolean, isMp4?: boolean) {
+    if (!meetingRecordPath) {
+      return
+    }
+    console.log('打开文件: isDir: ', isDir)
+    console.log('打开文件: meetingRecordFirstMp4FilePath: ', meetingRecordFirstMp4FilePath)
+    window.ipcRenderer?.send('nemeeting-open-file', {
+      isDir,
+      filePath: isDir ? meetingRecordPath :  isMp4 ? meetingRecordFirstMp4FilePath : meetingRecordFirstAacFilePath,
+    })
+
+    window.ipcRenderer?.removeAllListeners('nemeeting-open-file-reply')
+    window.ipcRenderer?.once('nemeeting-open-file-reply', (_, exist) => {
+      if (!exist) {
+        //Toast.info(t('fileNotExist'))
+        Modal.warning({
+          title: t('localRecordOpenFileTitle'),
+          content: t('localRecordOpenFileContent'),
+          zIndex: 20000,
+        })
+      }
+    })
+  }
+
+  function deleteDirectory(){
+    if (!meetingRecordPath) {
+      return
+    }
+    console.log('删除当前录制的目录: ', meetingRecordPath)
+    window.ipcRenderer?.invoke('nemeeting-delete-directory', {
+      directory: meetingRecordPath
+    })
+    setMeetingRecordPath('')
+  }
+
+  const handleDeleteDirectoryModal = () => {
+    Modal.confirm({
+      title: t('localRecordDeleteDirectoryTitle'),
+      content: t('localRecordDeleteDirectoryContent'),
+      cancelText: t('globalCancel'),
+      okText: t('globalDelete'),
+      zIndex: 20000,
+      onOk: () => {
+        deleteDirectory()
+      },
+      okButtonProps: {
+        danger: true
+      },
+    });
+  }
+
   const MeetingDetails = useMemo(() => {
     return currentMeeting ? (
       <div className="nemeeting-details">
@@ -509,12 +630,8 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
               </span>
             </div>
           </div>
-          <div
-            className="meeting-detail-time"
-            style={{
-              height: currentMeeting?.timezoneId ? '115px' : '96px',
-            }}
-          >
+          {/*会议的起始时间UI*/}
+          <div className="meeting-detail-time">
             <div className="meeting-start-time">
               <div className="meeting-detail-item-label">{i18n.startTime}</div>
               <div className="meeting-start-time-right">
@@ -524,12 +641,6 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
                     'YYYY-MM-DD HH:mm',
                     currentMeeting?.timezoneId,
                   )}
-                </div>
-                <div
-                  style={{
-                    fontSize: '12px',
-                  }}
-                >
                   {getGMTTimeText(currentMeeting?.timezoneId)}
                 </div>
               </div>
@@ -543,17 +654,86 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
                     'YYYY-MM-DD HH:mm',
                     currentMeeting?.timezoneId,
                   )}
-                </div>
-                <div
-                  style={{
-                    fontSize: '12px',
-                  }}
-                >
                   {getGMTTimeText(currentMeeting?.timezoneId)}
                 </div>
               </div>
             </div>
           </div>
+          {/*会议本地录制UI*/}
+          { window.isElectronNative && meetingRecordPath ? (
+            <div
+              className="meeting-detail-local-record"
+              style={{
+                height: '144px',
+              }}
+            >
+              <div className="meeting-local-record">
+                <div className="meeting-detail-item-label">{i18n.localRecord}</div>
+              </div>
+              <div className="meeting-local-record">
+                <div className="meeting-detail-item-label">{ `${i18n.filePath}:`}</div>
+                <div className="meeting-local-record-right">
+                  <div
+                    style={{
+                      width: 230,
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis'
+                    }}
+                  >
+                    {meetingRecordPath}
+                  </div>
+                </div>
+              </div>
+              <div className="meeting-local-record">
+                <Button
+                  type="primary"
+                  style={{fontSize: 15, height: 28, padding: 4, width: meetingRecorAudio ? '55px': '90px' }}
+                  onClick={()=>{
+                    openFile(true)
+                  }}
+                >
+                  {t('globalOpen')}
+                </Button>
+                <Button
+                  style={{fontSize: 15, height: 28, padding: 4, width: meetingRecorAudio ? '65px': '90px' }}
+                  onClick={()=>{
+                    openFile(false, true)
+                  }}
+                >
+                  <svg
+                    className="icon iconfont iconchat-history"
+                    aria-hidden="true"
+                  >
+                    <use xlinkHref="#iconshexiangtoukai"></use>
+                  </svg> {t('globalPlay')}
+                </Button>
+                { meetingRecorAudio ? (
+                  <Button
+                    style={{fontSize: 15, height: 28, padding: 4, width: '110px' }}
+                    onClick={()=>{
+                      openFile(false, false)
+                    }}
+                  >
+                    <svg
+                      className="icon iconfont iconchat-history"
+                      aria-hidden="true"
+                    >
+                      <use xlinkHref="#iconshexiangtoukai"></use>
+                    </svg> {t('globalPlayAudio')}
+                  </Button>
+                ) : null}
+                <Button
+                  danger
+                  style={{ fontSize: 15, height: 28, padding: 4, width: meetingRecorAudio ? '55px': '90px' }}
+                  onClick={handleDeleteDirectoryModal}
+                >
+                  {t('globalDelete')}
+                </Button>
+              </div>
+            </div>
+            ) : null
+          }
           {recordList ||
           canShowTranscription ||
           chatroomExportAccess === 1 ||
@@ -739,6 +919,8 @@ const HistoryMeeting: React.FC<HistoryMeetingProps> = ({
     pluginInfoList,
     canShowTranscription,
     enableChatroom,
+    meetingRecordPath,
+    meetingRecorAudio
   ]);
 
   const MeetingContent = useMemo(() => {

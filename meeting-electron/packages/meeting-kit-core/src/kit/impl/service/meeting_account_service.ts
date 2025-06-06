@@ -424,7 +424,7 @@ class NEMeetingAccountService implements NEMeetingAccountServiceInterface {
           }
 
           this._listeners.forEach((l) => {
-            this._accountInfo && l.onAccountInfoUpdated?.(this._accountInfo)
+            this._accountInfo && l?.onAccountInfoUpdated?.(this._accountInfo)
           })
 
           window.ipcRenderer?.send(LISTENER_CHANNEL, {
@@ -441,7 +441,7 @@ class NEMeetingAccountService implements NEMeetingAccountServiceInterface {
       (evt: NEAuthEvent) => {
         if (evt === NEAuthEvent.KICK_OUT) {
           this._listeners.forEach((l) => {
-            l.onKickOut?.()
+            l?.onKickOut?.()
           })
 
           window.ipcRenderer?.send(LISTENER_CHANNEL, {

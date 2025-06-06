@@ -1,14 +1,16 @@
 import { useEffect } from 'react'
 import { useGlobalContext, useMeetingInfoContext } from '../store'
 import { NERoomBeautyEffectType } from '../types/innerType'
+import { EventType } from '../types'
+import { getWindow } from '../kit'
 
 export default function usePreviewHandler(): void {
   const { meetingInfo } = useMeetingInfoContext()
   const { neMeeting, globalConfig } = useGlobalContext()
 
   const isBeautyAvailable = !!globalConfig?.appConfig?.MEETING_BEAUTY?.enable
-  const isVirtualBackgroundAvailable =
-    !!globalConfig?.appConfig?.MEETING_VIRTUAL_BACKGROUND?.enable
+  const isVirtualBackgroundAvailable = !!globalConfig?.appConfig
+    ?.MEETING_VIRTUAL_BACKGROUND?.enable
 
   useEffect(() => {
     if (!isBeautyAvailable) {
@@ -66,12 +68,26 @@ export default function usePreviewHandler(): void {
     const enableVirtualBackgroundForce =
       meetingInfo.setting?.beautySetting?.enableVirtualBackgroundForce ?? false
 
-    neMeeting?.previewController?.enableVirtualBackground?.(
-      !!virtualBackgroundPath &&
-        meetingInfo.setting.beautySetting?.enableVirtualBackground !== false,
-      virtualBackgroundPath,
-      enableVirtualBackgroundForce
-    )
+    const virtualBackgroundType =
+      meetingInfo.setting?.beautySetting?.virtualBackgroundType || 2
+
+    const result =
+      neMeeting?.previewController?.enableVirtualBackground?.(
+        !!virtualBackgroundPath &&
+          meetingInfo.setting.beautySetting?.enableVirtualBackground !== false,
+        virtualBackgroundPath,
+        enableVirtualBackgroundForce,
+        virtualBackgroundType
+      ) || 0
+    const message = {
+      event: EventType.rtcVirtualBackgroundSourceEnabled,
+      payload: {
+        enabled: result === 0,
+        reason: result,
+      },
+    }
+    const settingWindow = getWindow('settingWindow')
+    settingWindow?.postMessage(message, settingWindow.origin)
   }, [
     meetingInfo.setting?.beautySetting?.virtualBackgroundPath,
     meetingInfo.setting?.beautySetting?.enableVirtualBackground,

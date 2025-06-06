@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import './index.less'
-import { Pagination } from 'swiper'
+import { Pagination, Virtual } from 'swiper'
 import 'swiper/css'
 import 'swiper/css/pagination'
 import VideoCard from '../../common/VideoCard'
@@ -17,13 +17,16 @@ import { useIsAudioMode } from '../../../hooks/useAudioMode'
 import AudioModeCanvas from './AudioModeCanvas'
 
 import { Swiper as SwiperClass } from 'swiper/types'
+import useActiveSpeakerManager from '../../../hooks/useActiveSpeakerManager'
 import useMeetingCanvas from '../../../hooks/useMeetingCanvas'
+import { useTranslation } from 'react-i18next'
 
 interface MeetingCanvasProps {
   className?: string
   onActiveIndexChanged: (activeIndex: number) => void
 }
 const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
+  const { t } = useTranslation()
   const { className, onActiveIndexChanged } = props
   // const [groupMembers, setGroupMembers] = useState<Array<NEMember[]>>([])
   const [groupNum] = useState<number>(4)
@@ -34,6 +37,10 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
   const [iosTime, setIosTime] = useState(0)
   const [showPagination, setShowPagination] = useState(true)
   const { eventEmitter, showScreenShareUserVideo } = useGlobalContext()
+  const [canEditWhiteboard, setCanEditWhiteboard] = useState(false)
+  const memberListRef = useRef(memberList)
+
+  memberListRef.current = memberList
 
   const { isAudioMode } = useIsAudioMode({
     meetingInfo,
@@ -42,6 +49,8 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
   const viewType = useMemo(() => {
     return meetingInfo.screenUuid ? 'screen' : 'video'
   }, [meetingInfo.screenUuid])
+
+  useActiveSpeakerManager()
 
   const {
     canPreSubscribe,
@@ -146,6 +155,30 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
     }
   }, [meetingInfo.whiteboardUuid])
 
+  const enableDraw = useMemo(() => {
+    return (
+      meetingInfo.whiteboardUuid === meetingInfo.localMember.uuid ||
+      meetingInfo.localMember.properties.wbDrawable?.value == '1'
+    )
+  }, [
+    meetingInfo.whiteboardUuid,
+    meetingInfo.localMember.uuid,
+    meetingInfo.localMember.properties,
+  ])
+
+  useEffect(() => {
+    if (!enableDraw) {
+      setCanEditWhiteboard(false)
+    }
+  }, [enableDraw])
+
+  function handleWhiteboardEdit(event) {
+    event.stopPropagation()
+    setCanEditWhiteboard(!canEditWhiteboard)
+    // 开启白板编辑需隐藏底部分页图标
+    setShowPagination(canEditWhiteboard)
+  }
+
   function handleCardClick(
     uuid: string,
     index: number,
@@ -166,13 +199,16 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
       <Swiper
         spaceBetween={50}
         slidesPerView={1}
-        modules={[Pagination]}
+        modules={[Pagination, Virtual]}
         pagination={
           showPagination && !meetingInfo?.isWhiteboardTransparent
             ? { dynamicBullets: true }
             : false
         }
-        className={'meeting-canvas-swiper h-full w-full'}
+        virtual
+        className={`meeting-canvas-swiper h-full w-full ${
+          canEditWhiteboard ? 'swiper-no-swiping' : ''
+        }`}
         onSwiper={(swiper) => (swiperInstanceRef.current = swiper)}
         onActiveIndexChange={(swp) => setActiveIndex(swp.activeIndex)}
       >
@@ -182,80 +218,135 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
               <SwiperSlide
                 className={'swiper-slide flex flex-wrap relative'}
                 key={index}
+                virtualIndex={index}
               >
                 {/*第一页展示大小屏*/}
-                {index === 0
-                  ? members.map((member: NEMember, i: number) => {
-                      return (
-                        <VideoCard
-                          isH5={true}
-                          style={{
-                            display: `${
-                              i === 1 &&
-                              showScreenShareUserVideo === false &&
-                              viewType === 'screen'
-                                ? 'none'
-                                : 'block'
-                            }`,
-                          }}
-                          isMySelf={member.uuid === meetingInfo.myUuid}
-                          key={`${member.uuid}-main-${i}-${
-                            i === 0 ? viewType : 'video'
-                          }`}
-                          noPin={true}
-                          isSubscribeVideo={index === activeIndex}
-                          isMain={i === 0}
-                          streamType={i === 0 && i === fullScreenIndex ? 0 : 1}
-                          type={i === 0 ? viewType : 'video'}
-                          iosTime={i !== fullScreenIndex ? iosTime : 0}
-                          avatarSize={i === fullScreenIndex ? 64 : 48}
-                          className={`${
-                            i === fullScreenIndex
-                              ? 'full-screen-card'
-                              : 'small-video-card'
-                          } ${
-                            member.uuid === meetingInfo.localMember.uuid
-                              ? 'local-member'
-                              : ''
-                          }`}
-                          onClick={(event) =>
-                            handleCardClick(member.uuid, i, event)
-                          }
-                          member={member}
-                        />
-                      )
-                    })
-                  : members.map((member: NEMember) => {
-                      return (
-                        <VideoCard
-                          isH5={true}
-                          showBorder={
-                            meetingInfo.focusUuid
-                              ? meetingInfo.focusUuid === member.uuid
-                              : meetingInfo.activeSpeakerUuid === member.uuid
-                          }
-                          streamType={1}
-                          noPin={true}
-                          avatarSize={48}
-                          isSubscribeVideo={index === activeIndex}
-                          isMain={false}
-                          isMySelf={member.uuid === meetingInfo.myUuid}
-                          key={member.uuid}
-                          type={'video'}
-                          style={{ height: '50%', width: '50%' }}
-                          className={`w-full h-full text-white w-1/2 h-1/2`}
-                          member={member}
-                        />
-                      )
-                    })}
+                {index === 0 ? (
+                  meetingInfo?.whiteboardUuid &&
+                  !meetingInfo.isWhiteboardTransparent ? (
+                    <div>
+                      {enableDraw && (
+                        <>
+                          {!canEditWhiteboard && (
+                            <div className="nemeeting-whiteboard-mask"></div>
+                          )}
+                          <div
+                            onClick={handleWhiteboardEdit}
+                            className="nemeeting-edit-whiteboard-btn"
+                          >
+                            {canEditWhiteboard
+                              ? t('whiteBoardPackUp')
+                              : t('globalEdit')}
+                          </div>
+                        </>
+                      )}
+                      <WhiteboardView
+                        className={'whiteboard-index'}
+                        canEdit={canEditWhiteboard}
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      {meetingInfo.whiteboardUuid &&
+                        meetingInfo.isWhiteboardTransparent && (
+                          <div className="whiteboard-transparent                                                                                                                                                                                                                                                                       -index">
+                            {enableDraw && (
+                              <div
+                                onClick={handleWhiteboardEdit}
+                                className="nemeeting-edit-whiteboard-btn"
+                              >
+                                {canEditWhiteboard
+                                  ? t('whiteBoardPackUp')
+                                  : t('globalEdit')}
+                              </div>
+                            )}
+                            <WhiteboardView
+                              className={'whiteboard-index'}
+                              canEdit={canEditWhiteboard}
+                            />
+                          </div>
+                        )}
+                      {members.map((member: NEMember, i: number) => {
+                        return (
+                          <VideoCard
+                            isH5={true}
+                            style={{
+                              display: `${
+                                i === 1 &&
+                                ((showScreenShareUserVideo === false &&
+                                  viewType === 'screen') ||
+                                  (meetingInfo.isWhiteboardTransparent &&
+                                    canEditWhiteboard))
+                                  ? 'none'
+                                  : 'block'
+                              }`,
+                            }}
+                            isMySelf={member.uuid === meetingInfo.myUuid}
+                            key={`${member.uuid}-main-${i}-${
+                              i === 0 ? viewType : 'video'
+                            }`}
+                            showInPhoneTip={i === 0}
+                            noPin={true}
+                            isSubscribeVideo={index === activeIndex}
+                            isMain={i === 0}
+                            streamType={
+                              i === 0 && i === fullScreenIndex ? 0 : 1
+                            }
+                            type={i === 0 ? viewType : 'video'}
+                            iosTime={i !== fullScreenIndex ? iosTime : 0}
+                            avatarSize={i === fullScreenIndex ? 64 : 48}
+                            className={`${
+                              i === fullScreenIndex
+                                ? 'full-screen-card'
+                                : 'small-video-card'
+                            } ${
+                              member.uuid === meetingInfo.localMember.uuid
+                                ? 'local-member'
+                                : ''
+                            }`}
+                            onClick={(event) =>
+                              handleCardClick(member.uuid, i, event)
+                            }
+                            member={member}
+                          />
+                        )
+                      })}
+                    </>
+                  )
+                ) : (
+                  members.map((member: NEMember) => {
+                    return (
+                      <VideoCard
+                        isH5={true}
+                        showBorder={
+                          meetingInfo.focusUuid
+                            ? meetingInfo.focusUuid === member.uuid
+                            : meetingInfo.activeSpeakerUuid === member.uuid
+                        }
+                        streamType={1}
+                        noPin={true}
+                        avatarSize={48}
+                        showInPhoneTip={true}
+                        isSubscribeVideo={index === activeIndex}
+                        isMain={false}
+                        isMySelf={member.uuid === meetingInfo.myUuid}
+                        key={member.uuid}
+                        type={'video'}
+                        style={{ height: '50%', width: '50%' }}
+                        className={`w-full h-full text-white w-1/2 h-1/2`}
+                        member={member}
+                      />
+                    )
+                  })
+                )}
               </SwiperSlide>
             )
           }
         })}
       </Swiper>
-      {meetingInfo?.whiteboardUuid && !meetingInfo.screenUuid && (
+      {/* {meetingInfo?.whiteboardUuid && !meetingInfo.screenUuid && (
         <WhiteboardView className={'whiteboard-index'} />
-      )}
+      )} */}
     </div>
   )
 }

@@ -235,7 +235,9 @@ class NEPreMeetingService
   }
 
   async getMeetingList(
-    status: NEMeetingItemStatus[]
+    status: NEMeetingItemStatus[],
+    offset: number,
+    size: number
   ): Promise<NEResult<NEMeetingItem[]>> {
     const functionName = 'getMeetingList'
 
@@ -244,7 +246,7 @@ class NEPreMeetingService
     this._win.webContents.send(BUNDLE_NAME, {
       module: MODULE_NAME,
       method: functionName,
-      args: [status],
+      args: [status, offset, size],
       seqId,
     })
 
@@ -441,6 +443,22 @@ class NEPreMeetingService
 
     return this._IpcMainListener<string>(seqId)
   }
+
+  stopLocalRecorderRemux() {
+    const functionName = 'stopLocalRecorderRemux'
+
+    const seqId = this._generateSeqId(functionName)
+
+    this._win.webContents.send(BUNDLE_NAME, {
+      module: MODULE_NAME,
+      method: functionName,
+      args: [],
+      seqId,
+    })
+
+    return this._IpcMainListener<string>(seqId)
+  }
+
   async getScheduledMeetingList(
     status: NEMeetingItemStatus[]
   ): Promise<NEResult<NEMeetingItem[]>> {
@@ -459,6 +477,7 @@ class NEPreMeetingService
   }
 
   addListener(listener: NEPreMeetingListener): void {
+    console.log('addListener: ', listener)
     this._listeners.push(listener)
   }
 
@@ -478,7 +497,6 @@ class NEPreMeetingService
       if (module !== MODULE_NAME) {
         return
       }
-
       this._listeners.forEach((l) => {
         l[event]?.(...payload)
       })

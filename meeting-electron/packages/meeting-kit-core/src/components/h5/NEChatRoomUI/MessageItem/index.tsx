@@ -235,7 +235,8 @@ const MessageItem: React.FC<MessageItemProps> = ({
           >
             <Image
               src={addUrlSearch(file.url, 'download=' + file.name)}
-              fit="contain"
+              // fit="contain"
+              height={120}
               onClick={() => {
                 if (contentDropdown) return
                 setImageViewerVisible(true)
@@ -243,6 +244,7 @@ const MessageItem: React.FC<MessageItemProps> = ({
             />
           </Spin>
           <ImageViewer
+            getContainer={() => document.body}
             image={addUrlSearch(file.url, 'download=' + file.name)}
             visible={imageViewerVisible}
             onClose={() => setImageViewerVisible(false)}

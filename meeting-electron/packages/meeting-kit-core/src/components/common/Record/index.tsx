@@ -25,7 +25,7 @@ const Record: React.FC<RecordProps> = ({
         <>
           <div className="nemeeting-record-left">
             <svg className="icon iconfont" aria-hidden="true">
-              <use xlinkHref="#iconluzhizhong1"></use>
+              <use xlinkHref="#iconyunluzhi"></use>
             </svg>
             <span
               className={classNames('nemeeting-record-title', {

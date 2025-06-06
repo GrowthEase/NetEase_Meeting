@@ -11,6 +11,8 @@ interface SettingWebProps {
   previewController: NEPreviewController
   inMeeting: boolean
   defaultTab?: SettingTabType
+  defaultSubTab?: string
+  onMenuClick?: (key: string) => void
 }
 // 设置页面用于Electron独立页面
 const SettingWeb: React.FC<SettingWebProps> = ({
@@ -18,6 +20,8 @@ const SettingWeb: React.FC<SettingWebProps> = ({
   previewController,
   inMeeting,
   defaultTab = 'normal',
+  defaultSubTab,
+  onMenuClick,
 }) => {
   const [setting, setSetting] = useState<MeetingSetting | null>(null)
   const settingRef = useRef<MeetingSetting | null>()
@@ -83,10 +87,12 @@ const SettingWeb: React.FC<SettingWebProps> = ({
       {previewController && setting && (
         <Setting
           defaultTab={defaultTab}
+          defaultSubTab={defaultSubTab}
           onSettingChange={onSettingChange}
           onDeviceChange={onDeviceChange}
           previewController={previewController}
           previewContext={previewContext}
+          onMenuClick={onMenuClick}
           inMeeting={inMeeting}
           open
         />

@@ -52,6 +52,7 @@ export default class NEMeetingService
 
     return this._IpcMainListener<NEResult<void>>(seqId).then((res) => {
       this._win.show()
+      this._win.initMainWindowSize?.()
       this._win.inMeeting = true
       return res
     })
@@ -74,6 +75,7 @@ export default class NEMeetingService
 
     return this._IpcMainListener<NEResult<void>>(seqId).then((res) => {
       this._win.show()
+      this._win.initMainWindowSize?.()
       this._win.inMeeting = true
       return res
     })
@@ -95,6 +97,7 @@ export default class NEMeetingService
 
     return this._IpcMainListener<NEResult<void>>(seqId).then((res) => {
       this._win.show()
+      this._win.initMainWindowSize?.()
       this._win.inMeeting = true
       return res
     })

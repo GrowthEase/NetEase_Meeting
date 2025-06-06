@@ -2,6 +2,7 @@ import { CommonBar, NEMember, Role } from '../../../types'
 import './index.less'
 import { useTranslation } from 'react-i18next'
 import React from 'react'
+import AudioIcon from '../../common/AudioIcon'
 
 // 音频管理组件
 type AudioButtonProps = {
@@ -36,9 +37,11 @@ const AudioButton: React.FC<AudioButtonProps> = ({
                 alt=""
               />
             ) : (
-              <svg className="icon-tool icon iconfont" aria-hidden="true">
-                <use xlinkHref="#iconyx-tv-voice-onx"></use>
-              </svg>
+              <AudioIcon
+                className="audio-icon-image icon-tool"
+                dark={false}
+                memberId={localMember.uuid}
+              />
             )}
           </>
         ) : (
@@ -54,7 +57,7 @@ const AudioButton: React.FC<AudioButtonProps> = ({
                 className="icon-red icon-tool icon iconfont"
                 aria-hidden="true"
               >
-                <use xlinkHref="#iconyx-tv-voice-offx"></use>
+                <use xlinkHref="#iconkaiqimaikefeng-mianxing"></use>
               </svg>
             )}
           </>
@@ -106,7 +109,7 @@ const VideoButton: React.FC<VideoButtonProps> = ({
               />
             ) : (
               <svg className="icon-tool icon iconfont" aria-hidden="true">
-                <use xlinkHref="#iconyx-tv-video-onx"></use>
+                <use xlinkHref="#iconguanbishexiangtou-mianxing"></use>
               </svg>
             )}
           </>
@@ -123,7 +126,7 @@ const VideoButton: React.FC<VideoButtonProps> = ({
                 className="icon-red icon-tool  icon iconfont"
                 aria-hidden="true"
               >
-                <use xlinkHref="#iconyx-tv-video-offx"></use>
+                <use xlinkHref="#iconkaiqishexiangtou-mianxing"></use>
               </svg>
             )}
           </>
@@ -188,7 +191,7 @@ const MemberButton: React.FC<MemberButtonProps> = ({
           <img className="custom-icon" src={item.btnConfig.icon} alt="" />
         ) : (
           <svg className="icon-tool icon iconfont" aria-hidden="true">
-            <use xlinkHref="#iconyx-tv-attendeex"></use>
+            <use xlinkHref="#iconguanlicanhuizhe-mianxing"></use>
           </svg>
         )}
         {/* 按钮文案 */}
@@ -235,7 +238,7 @@ const ChatButton: React.FC<ChatButtonProps> = ({
         <img className="custom-icon" src={item.btnConfig.icon} alt="" />
       ) : (
         <svg className="icon-tool icon iconfont" aria-hidden="true">
-          <use xlinkHref="#iconshipin-liaotian"></use>
+          <use xlinkHref="#iconliaotian-mianxing"></use>
         </svg>
       )}
       {/* 按钮文案 */}

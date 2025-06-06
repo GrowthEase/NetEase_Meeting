@@ -13,21 +13,34 @@ interface UseIsAudioModeProps {
   meetingInfo: NEMeetingInfo
   memberList: NEMember[]
 }
-export function useIsAudioMode(data: UseIsAudioModeProps): {
+export function useIsAudioMode(
+  data: UseIsAudioModeProps
+): {
   isAudioMode: boolean
 } {
   const { memberList, meetingInfo } = data
   const isAudioMode = useMemo(() => {
-    // 如果都为开启过视频则为音频模式；
-    return (
-      !meetingInfo.screenUuid &&
-      !meetingInfo.whiteboardUuid &&
-      memberList.every(
-        (item) =>
-          !item.isVideoOn && !item.isSharingScreen && !item.isSharingWhiteboard
+    if (meetingInfo.dualMonitors) {
+      return memberList.every((item) => !item.isVideoOn)
+    } else {
+      // 如果都为开启过视频则为音频模式；
+      return (
+        !meetingInfo.screenUuid &&
+        !meetingInfo.whiteboardUuid &&
+        memberList.every(
+          (item) =>
+            !item.isVideoOn &&
+            !item.isSharingScreen &&
+            !item.isSharingWhiteboard
+        )
       )
-    )
-  }, [memberList, meetingInfo.whiteboardUuid, meetingInfo.screenUuid])
+    }
+  }, [
+    memberList,
+    meetingInfo.whiteboardUuid,
+    meetingInfo.screenUuid,
+    meetingInfo.dualMonitors,
+  ])
 
   return {
     isAudioMode,

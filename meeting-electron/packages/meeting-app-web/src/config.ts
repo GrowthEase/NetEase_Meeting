@@ -1,8 +1,10 @@
 const isApp = typeof process != 'undefined';
 
 export const DOMAIN_SERVER = isApp ? process.env.MEETING_DOMAIN : '';
+export const FREE_DOMAIN_SERVER = 'https://trial.yunxinroom.com';
 
 export const APP_KEY = isApp ? process.env.APP_KEY : '';
+export const FREE_APP_KEY = '91d597b20132e6fa131615aa2d229388';
 
 export const UPDATE_URL = isApp ? process.env.UPDATE_URL : '';
 
@@ -23,6 +25,9 @@ export const LOCAL_GUEST_RECENT_MEETING_LIST =
 export const LOCAL_GUEST_JOIN_NICKNAME = 'ne-meeting-guest-join-nickname';
 export const LOCAL_GUEST_REMEMBER_NICKNAME =
   'ne-meeting-guest-remember-nickname';
+
+//本地录制存储在localStorage中的key
+export const LOCALSTORAGE_LOCAL_RECORD_INFO = 'ne-meeting-local-record-info';
 
 export const SSO_APP_KEY = isApp ? process.env.SSO_APP_KEY : ''; // test
 

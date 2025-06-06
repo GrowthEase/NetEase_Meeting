@@ -25,12 +25,19 @@ import { debounce, substringByByte3 } from '../../../utils'
 import UserAvatar from '../Avatar'
 import AudioCard from './audioCard'
 import AnnotationView from '../AnnotationView'
-import { NEMeetingInviteStatus } from '../../../kit'
+import { CommonModal, NEMeetingInviteStatus } from '../../../kit'
 import WhiteboardView from '../../web/MeetingCanvas/WhiteboardView'
-import { Button } from 'antd'
+import { Button, Dropdown } from 'antd'
 import Emoticons from '../Emoticons'
 import classNames from 'classnames'
-import RendererManager from '../../../libs/Renderer/RendererManager'
+import {
+  TransformWrapper,
+  TransformComponent,
+  ReactZoomPanPinchContentRef,
+} from 'react-zoom-pan-pinch'
+import useScreenSharingTransform from '../../../hooks/useScreenSharingTransform'
+import useVideoShortcutOperation from '../../../hooks/useVideoShortcutOperation'
+import useNetworkQuality from '../../../hooks/useNetworkQuality'
 
 interface VideoCardProps {
   isMySelf: boolean
@@ -40,6 +47,7 @@ interface VideoCardProps {
   type?: 'video' | 'screen' | 'whiteboard'
   speakerRightResizing?: boolean
   isSubscribeVideo?: boolean // 是否订阅视频流
+  isSecondMonitor?: boolean // 是否副屏
   className?: string
   showBorder?: boolean // 是否显示绿框
   onClick?: (e: React.MouseEvent<HTMLDivElement>) => void
@@ -57,6 +65,8 @@ interface VideoCardProps {
   noPin?: boolean
   onCallClick?: (member: NEMember) => void
   isH5?: boolean
+  showInPhoneTip?: boolean
+  operateExtraTop?: boolean
 }
 
 const VideoCard: React.FC<VideoCardProps> = (props) => {
@@ -80,17 +90,19 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     noPin,
     onCallClick,
     isH5,
+    isSecondMonitor,
+    showInPhoneTip,
+    operateExtraTop,
   } = props
   const { t } = useTranslation()
   const type = props.type || 'video'
   const { dispatch, meetingInfo } = useContext(MeetingInfoContext)
-  const {
-    neMeeting,
-    eventEmitter,
-    outEventEmitter,
-  } = useContext<GlobalContextInterface>(GlobalContext)
+  const { neMeeting, eventEmitter, outEventEmitter } =
+    useContext<GlobalContextInterface>(GlobalContext)
   const viewRef = useRef<HTMLDivElement | null>(null)
+  const canvasContainerRef = useRef<HTMLDivElement | null>(null)
   const annotationRef = useRef<HTMLDivElement | null>(null)
+  const transformWrapperRef = useRef<ReactZoomPanPinchContentRef | null>(null)
   const timer = useRef<null | ReturnType<typeof setTimeout>>(null)
   const mouseLeaveTimerRef = useRef<null | ReturnType<typeof setTimeout>>(null)
   const screenShareVideoResolutionRef = useRef<{
@@ -98,6 +110,25 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     height: number
   }>({ width: 0, height: 0 })
   const [isMouseLeave, setIsMouseLeave] = useState<boolean>(true)
+  const {
+    onTransformed,
+    onCanvasResize,
+    onWrapperResize,
+    onWheelStop,
+    scaleRef,
+    minScale,
+    maxScale,
+    zoomToast,
+  } = useScreenSharingTransform({
+    transformWrapperRef: transformWrapperRef.current,
+  })
+
+  const { operatorItems } = useVideoShortcutOperation({
+    member,
+    isMySelf,
+    isSecondMonitor,
+  })
+  const { isNetworkQualityBad } = useNetworkQuality(member)
 
   // 是否需要订阅当前流，非当前页面则不订阅
   const isSubscribeVideo = useMemo(() => {
@@ -116,11 +147,6 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     if (!isSubscribeVideo) {
       console.warn('非当前页不播放视频')
     } else {
-      viewRef.current &&
-        neMeeting?.rtcController?.setupRemoteVideoCanvas(
-          viewRef.current,
-          member.uuid
-        )
       // 开始订阅流
       // 定时器是为了 Electron 问题，第一次入会订阅不到流，rtc 没初始化成功。 后面需要改
       setTimeout(
@@ -188,11 +214,6 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
       return
     }
 
-    viewRef.current &&
-      neMeeting?.rtcController?.setupRemoteVideoSubStreamCanvas(
-        viewRef.current,
-        member.uuid
-      )
     setTimeout(
       () => {
         neMeeting?.rtcController?.subscribeRemoteVideoSubStream(member.uuid)
@@ -226,9 +247,6 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
 
   useEffect(() => {
     if (isMySelf) {
-      // 设置本端画布
-      viewRef.current &&
-        neMeeting?.rtcController?.setupLocalVideoCanvas(viewRef.current)
       // isVideoOn存在值则非第一次进入会议
       if (member.isVideoOn && type === 'video') {
         neMeeting?.rtcController?.playLocalStream('video')
@@ -290,9 +308,9 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     // 如果开启音视频进入会议
     if (member.isInRtcChannel) {
       if (
-        meetingInfo.isUnMutedVideo &&
-        ((meetingInfo.unmuteVideoBySelfPermission &&
-          !meetingInfo.videoAllOff) ||
+        meetingInfoRef.current.isUnMutedVideo &&
+        ((meetingInfoRef.current.unmuteVideoBySelfPermission &&
+          !meetingInfoRef.current.videoAllOff) ||
           isHost)
       ) {
         console.warn('开启视频')
@@ -307,11 +325,11 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
       }
 
       if (
-        meetingInfo.isUnMutedAudio &&
+        meetingInfoRef.current.isUnMutedAudio &&
         (meetingInfoRef.current.setting.audioSetting.usingComputerAudio ||
           isH5) &&
-        ((meetingInfo.unmuteAudioBySelfPermission &&
-          !meetingInfo.audioAllOff) ||
+        ((meetingInfoRef.current.unmuteAudioBySelfPermission &&
+          !meetingInfoRef.current.audioAllOff) ||
           isHost)
       ) {
         neMeeting?.unmuteLocalAudio()
@@ -342,8 +360,6 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
       // 非视频共享view
       if (member.isVideoOn && type === 'video') {
         if (isMySelf) {
-          viewRef.current &&
-            neMeeting?.rtcController?.setupLocalVideoCanvas(viewRef.current)
           // 本端直接播放
           neMeeting?.rtcController?.playLocalStream('video')
         } else {
@@ -481,22 +497,42 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
     onDoubleClick?.(member)
   }
 
-  useEffect(() => {
-    if (window.isElectronNative) {
-      if (
-        (member.isVideoOn && isSubscribeVideo && type === 'video') ||
-        (member.isSharingScreen && type === 'screen')
-      ) {
-        if (viewRef.current) {
-          const context = {
-            view: viewRef.current,
-            userUuid: member.uuid,
-            sourceType: type,
-          }
-          const render = RendererManager.instance.createRenderer(context)
+  const resizeTransformWrapper = debounce(() => {
+    const videoDom = canvasContainerRef.current
 
-          if (type === 'screen') {
-            const canvasDom = viewRef.current.getElementsByTagName('canvas')[0]
+    if (videoDom) {
+      const canvasDom = videoDom.getElementsByTagName('canvas')[0]
+
+      if (canvasDom && canvasDom.clientWidth && canvasDom.clientHeight) {
+        videoDom.style.width = canvasDom.clientWidth + 'px'
+        videoDom.style.height = canvasDom.clientHeight + 'px'
+      }
+
+      if (
+        transformWrapperRef.current &&
+        videoDom.parentElement?.parentElement
+      ) {
+        transformWrapperRef.current.zoomToElement(
+          videoDom.parentElement.parentElement,
+          scaleRef.current,
+          0
+        )
+      }
+    }
+  }, 300)
+
+  useEffect(() => {
+    if (
+      window.isElectronNative &&
+      member.isSharingScreen &&
+      type === 'screen'
+    ) {
+      const videoDom = canvasContainerRef.current
+
+      if (videoDom) {
+        if (type === 'screen') {
+          const observer = new MutationObserver(() => {
+            const canvasDom = videoDom.getElementsByTagName('canvas')[0]
 
             const observer = new ResizeObserver(() => {
               if (annotationRef.current) {
@@ -504,25 +540,67 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
                 annotationRef.current.style.height =
                   canvasDom.clientHeight + 'px'
               }
+
+              resizeTransformWrapper()
+
+              canvasDom && onCanvasResize(canvasDom)
             })
 
-            observer.observe(canvasDom)
-          }
+            canvasDom && onCanvasResize(canvasDom)
+            canvasDom && observer.observe(canvasDom)
+          })
 
+          observer.observe(videoDom, { childList: true })
+        }
+      }
+    }
+  }, [type, isSubscribeVideo, member.uuid, member.isSharingScreen])
+
+  useEffect(() => {
+    if (member.isVideoOn && type === 'video' && isSubscribeVideo) {
+      const videoDom = viewRef.current
+
+      if (videoDom) {
+        if (isMySelf) {
+          neMeeting?.rtcController?.setupLocalVideoCanvas(videoDom)
+          neMeeting?.rtcController?.playLocalStream('video')
           return () => {
-            RendererManager.instance.removeRenderer(context, render)
+            neMeeting?.rtcController?.removeLocalVideoCanvas?.(videoDom)
+          }
+        } else {
+          neMeeting?.rtcController?.setupRemoteVideoCanvas(
+            videoDom,
+            member.uuid
+          )
+          return () => {
+            neMeeting?.rtcController?.removeRemoteVideoCanvas?.(
+              member.uuid,
+              videoDom
+            )
           }
         }
       }
     }
-  }, [
-    eventEmitter,
-    type,
-    member.isVideoOn,
-    isSubscribeVideo,
-    member.uuid,
-    member.isSharingScreen,
-  ])
+  }, [member.isVideoOn, type, isSubscribeVideo, member.uuid, isMySelf])
+
+  useEffect(() => {
+    if (member.isSharingScreen && type === 'screen') {
+      const videoDom = canvasContainerRef.current
+
+      if (videoDom) {
+        neMeeting?.rtcController?.setupRemoteVideoSubStreamCanvas(
+          videoDom,
+          member.uuid
+        )
+        return () => {
+          neMeeting?.rtcController?.removeRemoteVideoSubStreamCanvas?.(
+            member.uuid,
+            videoDom
+          )
+        }
+      }
+    }
+  }, [type, isSubscribeVideo, member.uuid, member.isSharingScreen])
 
   useEffect(() => {
     function resize(data: { width: number; height: number }) {
@@ -546,9 +624,42 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
 
     const viewDom = viewRef.current
 
-    if (type === 'screen' && !window.isElectronNative && viewDom) {
+    function resizeCanvasContainer() {
+      const canvasContainer = canvasContainerRef.current
+
+      if (viewDom && canvasContainer) {
+        canvasContainer.style.width = viewDom.clientWidth + 'px'
+        canvasContainer.style.height = viewDom.clientHeight + 'px'
+
+        const canvasDom = canvasContainer.getElementsByTagName('canvas')[0]
+
+        if (canvasDom) {
+          const canvas = canvasDom
+          const view = canvasContainer
+          const width = canvas.width
+          const height = canvas.height
+
+          const viewWidth = view.clientWidth
+          const viewHeight = view.clientHeight
+
+          if (viewWidth / (width / height) > viewHeight) {
+            canvas.style.height = `${viewHeight}px`
+            canvas.style.width = `auto`
+          } else {
+            canvas.style.width = `${viewWidth}px`
+            canvas.style.height = `auto`
+          }
+        }
+      }
+    }
+
+    if (viewDom) {
       const observer = new ResizeObserver(() => {
-        resize(screenShareVideoResolutionRef.current)
+        !window.isElectronNative &&
+          resize(screenShareVideoResolutionRef.current)
+        resizeCanvasContainer()
+        resizeTransformWrapper()
+        onWrapperResize(transformWrapperRef.current)
       })
 
       observer.observe(viewDom)
@@ -560,6 +671,12 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
       }
     }
   }, [type, neMeeting, eventEmitter])
+
+  useEffect(() => {
+    if (!meetingInfo.screenUuid) {
+      CommonModal.destroy('screenShareStop')
+    }
+  }, [meetingInfo.screenUuid])
 
   function handleCallClick() {
     onCallClick?.(member)
@@ -636,11 +753,11 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
         <div className="sharing-view-user-label">
           {member.isSharingWhiteboardView ? (
             <svg className="icon iconfont" aria-hidden="true">
-              <use xlinkHref="#iconyx-baiban" />
+              <use xlinkHref="#iconbaiban-mianxing" />
             </svg>
           ) : (
             <svg className="icon iconfont" aria-hidden="true">
-              <use xlinkHref="#iconyx-tv-sharescreen1x" />
+              <use xlinkHref="#icontouping-mianxing" />
             </svg>
           )}
           <div className="sharing-view-user-label-name">{member.name}</div>
@@ -655,6 +772,10 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
 
     return null
   }
+
+  const isInPhone = useMemo(() => {
+    return member.properties?.phoneState?.value == '1'
+  }, [member.properties?.phoneState?.value])
 
   return isAudioMode ? (
     <AudioCard
@@ -725,28 +846,59 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
             }`}
             style={{
               display:
-                (type === 'video' && member.isVideoOn) ||
+                (type === 'video' && member.isVideoOn && !isInPhone) ||
                 (type === 'screen' && member.isSharingScreen && !isMySelf)
                   ? 'block'
                   : 'none',
             }}
           >
+            {zoomToast ? (
+              <div className="nemeeting-canvas-zoom-toast">{zoomToast}</div>
+            ) : null}
             {type === 'screen' ? (
-              <div
-                className="video-view-screen-share-annotation"
-                style={{
-                  display: meetingInfo.annotationEnabled ? 'block' : 'none',
-                  pointerEvents:
-                    !isMain || speakerRightResizing ? 'none' : 'visible',
-                }}
-                ref={annotationRef}
-              >
-                <AnnotationView isMain={isMain} isEnable={true} />
-              </div>
+              <>
+                <div className="nemeeting-canvas-transform-wrapper">
+                  <TransformWrapper
+                    ref={transformWrapperRef}
+                    minScale={minScale}
+                    maxScale={maxScale}
+                    initialScale={1}
+                    onTransformed={onTransformed}
+                    onWheelStop={onWheelStop}
+                    disabled={isH5}
+                  >
+                    <TransformComponent>
+                      <div
+                        id={`nemeeting-canvas-container-${member.uuid}-${type}`}
+                        className="nemeeting-canvas-container"
+                        ref={canvasContainerRef}
+                      >
+                        <div
+                          className="video-view-screen-share-annotation"
+                          style={{
+                            display: meetingInfo.annotationEnabled
+                              ? 'block'
+                              : 'none',
+                            pointerEvents:
+                              !isMain ||
+                              speakerRightResizing ||
+                              !meetingInfo.annotationDrawEnabled
+                                ? 'none'
+                                : 'visible',
+                          }}
+                          ref={annotationRef}
+                        >
+                          <AnnotationView isMain={isMain} isEnable={true} />
+                        </div>
+                      </div>
+                    </TransformComponent>
+                  </TransformWrapper>
+                </div>
+              </>
             ) : null}
             <span className="nemeeting-ios-time">{iosTime || ''}</span>
           </div>
-          {((type === 'video' && !member.isVideoOn) ||
+          {((type === 'video' && (!member.isVideoOn || isInPhone)) ||
             (type === 'screen' && !isMain && isMySelf)) && (
             <div
               className="h-full w-full"
@@ -795,10 +947,63 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
               </div>
             </div>
           )}
+          {/* 更多快捷操作 */}
+          {!isH5 && !member.inviteState && (
+            <Dropdown
+              getPopupContainer={() =>
+                document.querySelector('.meeting-web-wrapper') || document.body
+              }
+              rootClassName="nemeeting-member-operator-dropdown"
+              trigger={['click']}
+              menu={{ items: operatorItems }}
+              placement="bottomRight"
+            >
+              <div
+                className={classNames('nemeeting-video-card-operate', {
+                  ['nemeeting-video-card-operate-extra-top']: operateExtraTop,
+                })}
+              >
+                <svg className="icon iconfont icon-operator" aria-hidden="true">
+                  <use xlinkHref="#iconzimugengduo"></use>
+                </svg>
+              </div>
+            </Dropdown>
+          )}
+
+          {/* 系统通话提醒 */}
+          {isInPhone && (
+            <div className="nemeeting-invite-state">
+              <div
+                className="invite-state-wrapper"
+                style={{
+                  fontSize: '24px',
+                }}
+              >
+                <div className="nemeeting-answeringPhone-icon">
+                  <svg className="icon iconfont" aria-hidden="true">
+                    <use xlinkHref="#icondaihujiao"></use>
+                  </svg>
+                </div>
+                {showInPhoneTip && (
+                  <div className="nemeeting-answeringPhone-tip">
+                    {t('answeringPhone')}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           {!member.isSharingScreenView && !nicknameHide && (
             <div className="nick-and-focus-wrap">
               <div className={'nickname-tip'}>
                 <div className="nickname">
+                  {isNetworkQualityBad && (
+                    <svg
+                      className="icon iconfont icon-hover icon-red nemeeting-card-network"
+                      aria-hidden="true"
+                    >
+                      <use xlinkHref="#icona-zu684" />
+                    </svg>
+                  )}
                   {!member.inviteState && member.isAudioConnected ? (
                     member.isAudioOn ? (
                       <AudioIcon
@@ -811,7 +1016,7 @@ const VideoCard: React.FC<VideoCardProps> = (props) => {
                         className="icon icon-red iconfont"
                         aria-hidden="true"
                       >
-                        <use xlinkHref="#iconyx-tv-voice-offx"></use>
+                        <use xlinkHref="#iconkaiqimaikefeng-mianxing"></use>
                       </svg>
                     )
                   ) : null}

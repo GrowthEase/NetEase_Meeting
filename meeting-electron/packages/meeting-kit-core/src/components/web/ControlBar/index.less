@@ -16,6 +16,13 @@
     height: 24px !important;
     color: #fff !important;
   }
+  .local-record-popover-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    // margin-left: 10px;
+    width: 100%;
+  }
   .control-bar-button-list {
     background: rgba(11, 11, 11, 0.9);
     backdrop-filter: blur(10px);
@@ -150,6 +157,17 @@
   margin-right: 90px !important;
 }
 .light-theme {
+  .suspend-participant-activity-title-item {
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.05)!important;
+    }
+  }
+  .security-popover {
+    .nemeeting-popover-title {
+      color: #000;
+      opacity: 0.8;
+    }
+  }
   .control-bar-container {
     .member-list-count-label {
       color: #53576a;
@@ -192,7 +210,7 @@
       }
     }
     .control-bar-end-button-cancel {
-      color: #1E1F27;
+      color: #1e1f27;
     }
     .device-popover {
       .nemeeting-popover-inner,
@@ -294,8 +312,17 @@
   &.nemeeting-sharing-screen {
     .nemeeting-drawer-body {
       border-radius: 10px;
-      padding: 3px;
-      background: rgba(0, 0, 0, 0.1);
+      background: rgba(0, 0, 0, 0);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      .control-bar-button-list {
+        position: relative;
+        padding: 0 10px;
+        .control-bar-stop-sharing-button {
+          margin-top: 15px;
+        }
+      }
     }
     .nemeeting-drawer-content {
       background: rgba(0, 0, 0, 0);
@@ -334,7 +361,7 @@
   .nemeeting-drawer-body {
     padding: 0;
   }
-  .iconlive-f {
+  .iconzhibo-mianxing {
     font-size: 25px;
   }
   .control-bar-button-list {
@@ -343,6 +370,9 @@
     height: 100%;
     padding: 2px 0;
     box-sizing: border-box;
+  }
+  .control-bar-button-list.screen-sharing-small-bar {
+    width: 350px;
   }
   .control-bar-meeting-info-border {
     border-right: 1px solid #cccccc;
@@ -402,6 +432,10 @@
     cursor: pointer;
     position: absolute;
     right: 0;
+
+    .nemeeting-popover-content {
+      margin-bottom: 3px;
+    }
   }
   .control-bar-button-item {
     height: 100%;
@@ -441,7 +475,8 @@
       min-width: 48px;
     }
   }
-  .control-bar-end-button, .control-bar-end-button-cancel {
+  .control-bar-end-button,
+  .control-bar-end-button-cancel {
     position: absolute;
     right: 20px;
     top: 50%;
@@ -545,8 +580,45 @@
       border-bottom: none;
     }
   }
+  .nemeeting-popover-title {
+    color: #fff;
+  }
   &.device-popover .device-list .device-item .device-item-label {
     width: 180px;
+  }
+}
+
+.record-popover {
+  &.device-popover .device-list {
+    min-width: 180px;
+    max-width: 200px;
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+  &.device-popover .device-list .device-item .device-item-label {
+    width: 180px;
+  }
+  .device-list-title {
+    height: 32px;
+    line-height: 32px;
+    font-size: 14px;
+    font-weight: 400;
+    color: #ffffff;
+    opacity: 1;
+    margin-top: 0px;
+  }
+  .suspend-participant-activity-title-item {
+    text-align: center;
+    font-size: 14px;
+    padding: 5px 15px;
+    cursor: pointer;
+    color: #fff;
+    opacity: 0.8;
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+    }
   }
 }
 
@@ -621,7 +693,7 @@
         display: inline-block;
         width: 300px;
         opacity: 0.8;
-        margin-left: 10px;
+        // margin-left: 10px;
         font-weight: 400;
         color: #fff;
       }
@@ -834,7 +906,8 @@
 }
 
 .control-bar-button-item-box-zh {
-  width: 80px;
+  // width: 80px;
+  min-width: 70px;
   margin: 0px !important;
   display: flex;
   justify-content: center;
@@ -950,4 +1023,9 @@
       background: none;
     }
   }
+}
+
+
+.control-bar-button-item-display-none {
+  display: none !important;
 }

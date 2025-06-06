@@ -43,10 +43,8 @@ import Setting from '../Setting'
 import { SettingTabType } from '../Setting/Setting'
 import './index.less'
 import { useWaitingRoom } from '../../../hooks/useWaitingRoom'
-import useElectronInvite from '../../../hooks/useElectronInvite'
 import CommonModal from '../../common/CommonModal'
 import { useMount } from 'ahooks'
-import RendererManager from '../../../libs/Renderer/RendererManager'
 import usePreview from '../../../hooks/usePreview'
 
 interface WaitRoomProps {
@@ -81,9 +79,8 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
   const [isDarkMode, setIsDarkMode] = useState(true)
   const { dispatch } = useMeetingInfoContext()
   const [settingOpen, setSettingOpen] = useState(false)
-  const [settingModalTab, setSettingModalTab] = useState<SettingTabType>(
-    'normal'
-  )
+  const [settingModalTab, setSettingModalTab] =
+    useState<SettingTabType>('normal')
 
   const { waitingRoomInfo } = useWaitingRoomContext()
   const closeModalRef = useRef<ConfirmModal | null>(null)
@@ -93,9 +90,6 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
   >>()
   const { handlePostMessage } = usePostMessageHandle()
 
-  useElectronInvite({
-    needOpenWindow: true,
-  })
   usePreviewHandler()
   // useEventHandler()
   function closeModalHandle(data: {
@@ -162,6 +156,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
     openAudio,
     openVideo,
     setting,
+    setSetting,
     unReadMsgCount,
     isOffLine,
     nickname,
@@ -184,10 +179,8 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
     closeModalHandle,
   })
 
-  const {
-    startPreview: settingStartPreview,
-    stopPreview: settingStopPreview,
-  } = usePreview()
+  const { startPreview: settingStartPreview, stopPreview: settingStopPreview } =
+    usePreview()
 
   const settingStartPreviewRef = useRef(false)
 
@@ -261,6 +254,10 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
       let _audioSetting = { ..._setting.audioSetting }
 
       previewController.enumRecordDevices().then(({ data }) => {
+        console.log('等候室请求mic设备列表: ', data)
+        data = data.filter(item =>{
+          return !item.deviceName.includes('立体声混音')
+        })
         data = setDefaultDevice(data)
         setRecordDeviceList(data)
         const recordDeviceId = _setting?.audioSetting.recordDeviceId
@@ -451,9 +448,11 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
           return
         }
 
-        const result = previewController[fnKey]?.(...args)
+        if (fnKey !== 'setupLocalVideoCanvas') {
+          const result = previewController[fnKey]?.(...args)
 
-        handlePostMessage(childWindow, result, replyKey)
+          handlePostMessage(childWindow, result, replyKey)
+        }
       }
     }
 
@@ -466,9 +465,10 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
 
       windowLoadListener(settingWindow)
       const openSettingData = {
-        event: 'openSetting',
+        event: 'updateData',
         payload: {
           type,
+          globalConfig: JSON.parse(JSON.stringify(globalConfig)),
         },
       }
 
@@ -632,6 +632,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
   }
 
   function onSettingChange(setting: MeetingSetting) {
+    setSetting(setting)
     setLocalStorageSetting(JSON.stringify(setting))
     dispatch?.({
       type: ActionType.UPDATE_MEETING_INFO,
@@ -644,6 +645,8 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
   async function handleCloseModal(reason: number) {
     closeModalRef.current?.destroy?.()
     try {
+      stopPreview()
+      neMeeting?.previewController?.stopRecordDeviceTest()
       await neMeeting?.leave()
       outEventEmitter?.emit(EventType.RoomEnded, reason)
     } catch {
@@ -751,7 +754,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
         icon: (
           <div className="nemeeting-waiting-room-member-manager">
             <svg className="icon iconfont" aria-hidden="true">
-              <use xlinkHref="#iconchat1x"></use>
+              <use xlinkHref="#iconliaotian-mianxing"></use>
             </svg>
           </div>
         ),
@@ -807,16 +810,15 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
 
   useEffect(() => {
     if (openVideo && videoCanvasWrapRef.current && window.isElectronNative) {
-      const context = {
-        view: videoCanvasWrapRef.current,
-        userUuid: '',
-        sourceType: 'video',
-      }
-
-      const render = RendererManager.instance.createRenderer(context)
+      neMeeting?.previewController?.setupLocalVideoCanvas(
+        videoCanvasWrapRef.current
+      )
 
       return () => {
-        RendererManager.instance.removeRenderer(context, render)
+        videoCanvasWrapRef.current &&
+          neMeeting?.previewController?.removeLocalVideoCanvas?.(
+            videoCanvasWrapRef.current
+          )
       }
     }
   }, [openVideo])
@@ -940,7 +942,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
                           )}
                           aria-hidden="true"
                         >
-                          <use xlinkHref="#iconyx-tv-voice-offx"></use>
+                          <use xlinkHref="#iconkaiqimaikefeng-mianxing"></use>
                         </svg>
                       )}
                     </div>
@@ -1087,8 +1089,8 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
                       <use
                         xlinkHref={`${
                           openVideo
-                            ? '#iconyx-tv-video-onx'
-                            : '#iconyx-tv-video-offx'
+                            ? '#iconguanbishexiangtou-mianxing'
+                            : '#iconkaiqishexiangtou-mianxing'
                         }`}
                       ></use>
                     </svg>
@@ -1240,7 +1242,7 @@ const WaitRoom: React.FC<WaitRoomProps> = ({ className }) => {
                       className={classNames('icon iconfont icon-chat')}
                       aria-hidden="true"
                     >
-                      <use xlinkHref="#iconchat1x"></use>
+                      <use xlinkHref="#iconliaotian-mianxing"></use>
                     </svg>
                   </div>
                 </Badge>

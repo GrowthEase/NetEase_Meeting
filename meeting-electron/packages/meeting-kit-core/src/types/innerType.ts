@@ -37,6 +37,7 @@ import {
 import {
   NEMeetingItemLiveBackground,
   NEmeetingItemLivePushThirdPart,
+  NEMeetingItemStatus,
   NEMeetingRecurringRule,
 } from '../kit/interface'
 import { IM } from './NEMeetingKit'
@@ -257,6 +258,7 @@ export enum EventType {
   ChatroomMessageAttachmentProgress = 'chatroomMessageAttachmentProgress',
   ReceivePassThroughMessage = 'receivePassThroughMessage',
   ReceiveScheduledMeetingUpdate = 'receiveScheduledMeetingUpdate',
+  NeedRemuxLocalRecoredFile = 'needRemuxLocalRecoredFile',
   ReceivePluginMessage = 'receivePluginMessage',
   ReceiveAccountInfoUpdate = 'receiveAccountInfoUpdate',
   DeviceChange = 'deviceChange',
@@ -298,6 +300,7 @@ export enum EventType {
   // 说话者列表相关
   ActiveSpeakerActiveChanged = 'OnActiveSpeakerActiveChanged',
   ActiveSpeakerListChanged = 'OnActiveSpeakerListChanged',
+  ActiveSpeakerActiveChangedByMemberLeave = 'ActiveSpeakerActiveChangedByMemberLeave',
   // 通知
   onSessionMessageReceived = 'onSessionMessageReceived',
   onSessionMessageRecentChanged = 'onSessionMessageRecentChanged',
@@ -343,6 +346,32 @@ export enum EventType {
 
   // 表情回应
   OnEmoticonsReceived = 'OnEmoticonsReceived',
+
+  //本地录制状态
+  OnLocalRecorderStatus = 'OnLocalRecorderStatus',
+  //本地录制错误
+  OnLocalRecorderError = 'OnLocalRecorderError',
+  ShowDeviceTest = 'ShowDeviceTest',
+
+  // 白板
+  WhiteboardWebJsBridge = 'WhiteboardWebJsBridge',
+  //白板链接成功
+  OnWhiteboardConnected = 'OnWhiteboardConnected',
+  // 保存白板图片
+  AnnotationSavePhoto = 'AnnotationSavePhoto',
+  AnnotationSavePhotoDone = 'AnnotationSavePhotoDone',
+  IsClearAnnotationAvailble = 'IsClearAnnotationAvailble',
+  IsClearAnnotationAvailbleResult = 'IsClearAnnotationAvailbleResult',
+
+  WhiteboardSavePhoto = 'WhiteboardSavePhoto',
+  WhiteboardSavePhotoDone = 'WhiteboardSavePhotoDone',
+  IsClearWhiteboardAvailble = 'IsClearWhiteboardAvailble',
+  IsClearWhiteboardAvailbleResult = 'IsClearWhiteboardAvailbleResult',
+
+  WhiteboardLeave = 'isWhiteboardLeave',
+  WhiteboardLeaveResult = 'WhiteboardLeaveResult',
+  // 啸叫检测
+  AudioHowling = 'AudioHowling',
 }
 
 export interface GetAccountInfoListResponse {
@@ -364,6 +393,7 @@ export interface SearchAccountInfo {
 export enum MeetingEventType {
   rtcChannelError = 'meetingRtcChannelError',
   needShowRecordTip = 'needShowRecordTip',
+  needShowLocalRecordTip = 'needShowLocalRecordTip',
   leaveOrEndRoom = 'leaveOrEndRoom',
   noCameraPermission = 'noCameraPermission',
   noMicPermission = 'noMicPermission',
@@ -375,6 +405,7 @@ export enum MeetingEventType {
   openCaption = 'openCaption',
   openTranscriptionWindow = 'openTranscriptionWindow',
   transcriptionMsgCountChange = 'transcriptionMsgCountChange',
+  updateNickname = 'updateNickname',
 }
 
 export enum UserEventType {
@@ -389,6 +420,7 @@ export enum UserEventType {
   onMeetingStatusChanged = 'onMeetingStatusChanged',
   RejoinMeeting = 'rejoinMeeting',
   JoinOtherMeeting = 'joinOtherMeeting',
+  JoinMeetingFromDeviceTest = 'joinMeetingFromDeviceTest',
   CancelJoin = 'cancelJoin',
   SetScreenSharingSourceId = 'setScreenSharingSourceId',
   EndMeeting = 'endMeeting',
@@ -404,6 +436,7 @@ export enum UserEventType {
   OpenChatWindow = 'openChatWindow',
   StopWhiteboard = 'StopWhiteboard',
   StopSharingComputerSound = 'stopSharingComputerSound',
+  HostCloseWhiteShareOrScreenShare = 'hostCloseWhiteShareOrScreenShare',
 }
 
 export enum memberAction {
@@ -424,6 +457,8 @@ export enum memberAction {
   modifyMeetingNickName = 104,
   takeBackTheHost = 105,
   privateChat = 106,
+  allowLocalRecord = 120,
+  notAllowLocalRecord = 121
 }
 
 export enum SecurityItem {
@@ -474,6 +509,9 @@ export enum MeetingSecurityCtrlValue {
 
   /// 智能会议纪要
   SMART_SUMMARY = 0x1 << 12,
+
+  /// 本地录制(权限有3种，需要占用两个bit)//目前不会使用到LOCAL_RECORD变量，这里是注释说明
+  LOCAL_RECORD = (0x1 << 13) + (0x1 << 14),
 }
 
 export enum SecurityCtrlEnum {
@@ -548,8 +586,20 @@ export enum SecurityCtrlEnum {
    * 0: 关闭
    */
   SMART_SUMMARY = 'SMART_SUMMARY',
+
+  /**
+   * 本地录制
+   * 1: 开启
+   * 0: 关闭
+   */
+  LOCAL_RECORD = 'LOCAL_RECORD',
 }
 
+export interface LocalRecordPermission {
+  host: boolean,
+  some: boolean,
+  all: boolean
+}
 export interface MeetingPermission {
   annotationPermission: boolean
   screenSharePermission: boolean
@@ -563,6 +613,7 @@ export interface MeetingPermission {
   playSound: boolean
   avatarHide: boolean
   smartSummary: boolean
+  localRecordPermission: LocalRecordPermission
 }
 
 export enum hostAction {
@@ -605,6 +656,8 @@ export enum hostAction {
   updateNicknamePermission = 77,
   whiteboardPermission = 78,
   localRecordPermission = 79,
+  allowLocalReocrd = 80,
+  forbiddenLocalRecord = 81,
 }
 
 export type NERoomChatMessageType =
@@ -784,7 +837,9 @@ export interface GlobalContext {
   online?: boolean
   meetingIdDisplayOption?: NEMeetingIdDisplayOption
   showCloudRecordMenuItem?: boolean
+  showLocalRecordMenuItem?: boolean
   showCloudRecordingUI?: boolean
+  showLocalRecordingUI?: boolean
   noCaptions?: boolean
   noTranscription?: boolean
   pluginNotifyDuration?: number
@@ -800,6 +855,7 @@ export interface GlobalContext {
   defaultWindowMode?: NEWindowMode
 
   showScreenShareUserVideo?: boolean
+  showMeetingInfo?: boolean
   toolBarList?: ToolBarList
   moreBarList?: MoreBarList
   interpretationSetting?: NEMeetingInterpretationSettings
@@ -807,6 +863,13 @@ export interface GlobalContext {
   enableDirectMemberMediaControlByHost?: boolean
 }
 export enum RecordState {
+  NotStart = 'notStart',
+  Recording = 'recording',
+  Starting = 'starting',
+  Stopping = 'stopping',
+}
+
+export enum LocalRecordState {
   NotStart = 'notStart',
   Recording = 'recording',
   Starting = 'starting',
@@ -861,6 +924,10 @@ export type GetMeetingConfigResponse = {
   data: NEProps
   deviceConfig?: NEProps
   appConfig: {
+    APP_LIVE: {
+      officialPushEnabled: boolean
+      thirdPartyPushEnabled: boolean
+    }
     APP_ROOM_RESOURCE: {
       annotation: boolean
       whiteboard: boolean
@@ -868,6 +935,7 @@ export type GetMeetingConfigResponse = {
       live: boolean
       rtc: boolean
       record: boolean
+      localRecord: boolean
       sip: boolean
       waitingRoom: boolean
       sipInvite: boolean
@@ -963,8 +1031,17 @@ export interface ActionHandle {
   [ActionType.UPDATE_GLOBAL_CONFIG]: Partial<GlobalContext>
   [ActionType.RESET_NAME]: never
   [ActionType.UPDATE_MEMBER]: { uuid: string; member: Partial<NEMember> }
-  [ActionType.UPDATE_MEMBER_PROPERTIES]: { uuid: string; properties: string[] }
-  [ActionType.DELETE_MEMBER_PROPERTIES]: { uuid: string; properties: string[] }
+  [ActionType.UPDATE_MEMBERS]: {
+    members: Partial<NEMember> & { uuid: string }[]
+  }
+  [ActionType.UPDATE_MEMBER_PROPERTIES]: { uuid: string;  properties: Record<
+    string,
+    string | { value: string } | { value: '1' | '0' }
+  > }
+  [ActionType.DELETE_MEMBER_PROPERTIES]: { uuid: string; properties: Record<
+    string,
+    string | { value: string } | { value: '1' | '0' }
+  >  }
   [ActionType.ADD_MEMBER]: { member: NEMember }
   [ActionType.REMOVE_MEMBER]: { uuids: string[] }
   [ActionType.RESET_MEMBER]: null
@@ -1002,6 +1079,7 @@ export enum ActionType {
   UPDATE_NAME = 'updateName',
   RESET_NAME = 'resetName',
   UPDATE_MEMBER = 'updateMember',
+  UPDATE_MEMBERS = 'updateMembers',
   RESET_MEMBER = 'resetMember',
   UPDATE_MEMBER_PROPERTIES = 'updateMemberProperties',
   DELETE_MEMBER_PROPERTIES = 'deleteMemberProperties',
@@ -1062,6 +1140,27 @@ export enum LoginType {
   LoginByPassword = 2,
 }
 
+export enum NEMeetingStateTypeEnum {
+  NOT_START = 1, // 未开始
+  IN_MEETING = 2, // 进行中
+  ENDED = 3, // 已终止
+  CANCELED = 4, // 已取消
+  RECYCLED = 5, // 已回收
+}
+
+export enum NEMeetingTypeEnum {
+  RANDOM = 1, // 随机会议
+  PRIVATE = 2, // 个人会议
+  SCHEDULE_RANDOM = 3, // 预约会议
+}
+
+export interface NEMeetingGetListBySizeParams {
+  states?: NEMeetingItemStatus[]
+  types?: NEMeetingTypeEnum[]
+  offset?: number
+  size?: number
+}
+
 export interface NEMeetingGetListOptions {
   startTime?: number
   endTime?: number
@@ -1101,6 +1200,16 @@ export interface NEMeetingCreateOptions extends NEMeetingBaseOptions {
   }
   cloudRecordConfig?: NECloudRecordConfig
   liveConfig?: NEMeetingLivePrivateConfig
+  /** 白板配置 */
+  whiteBoradAddDocConfig?: AddDocConfig[]
+  /**
+   * 是否开启白板的云录制
+   */
+  whiteboardCloudRecord?: boolean
+  /**
+   * 是否开启白板容器的宽高比
+   */
+  whiteBoradContainerAspectRatio?: AspectRatio
 }
 
 export interface PlatformInfo {
@@ -1140,6 +1249,106 @@ interface NEMeetingBaseOptions {
 export interface NEMeetingJoinOptions extends NEMeetingBaseOptions {
   role?: Role
   joinMeetingReport?: IntervalEvent
+  /** 白板配置 */
+  whiteBoradAddDocConfig?: AddDocConfig[]
+  /**
+   * 是否开启白板的云录制
+   */
+  whiteboardCloudRecord?: boolean
+  /**
+   * 是否开启白板容器的宽高比
+   */
+  whiteBoradContainerAspectRatio?: AspectRatio
+}
+
+
+export interface StaticDocParam {
+  /**
+   * 图片高度
+   */
+  height: number
+  /**
+   * 图片宽度
+   */
+  width: number
+  /**
+   * index偏移量
+   */
+  offset: number
+  /**
+   * 文档页数
+   */
+  pageCount: number
+  /**
+   * 图片url的模板。 格式为: "https://??/?{index}.jpg", "https://??/?{index}.png" 如果offset为1，则第5页的图片为: "https://??/?6.jpg", 或者"https://??/?6.png"
+   */
+  template: string
+}
+export interface DynamicDocParam {
+  /**
+   * 图片高度
+   */
+  height: number
+  /**
+   * 图片宽度
+   */
+  width: number
+  /**
+   * 文档页数
+   */
+  pageCount: number
+  /**
+   * 动态文档URL
+   */
+  url: string
+}
+export interface MediaDocParam {
+  /**
+   * 动态文档URL
+   */
+  url: string
+  object: string
+  bucket: string
+}
+export interface UrlDocParam {
+  /**
+   * URL页面资源参数
+   */
+  url: string
+  trans: string // 填写'url'即可
+}
+
+export enum AspectRatio {
+  /**
+   * 自适应
+   */
+  adaption = 0,
+  /**
+   * 16:9
+   */
+  aspectRatio_16_9 = 1,
+}
+export interface AddDocConfig  {
+  /**
+   * 文档的唯一id
+   */
+  docId: string;
+  /**
+   * 文档类型，会影响弹窗中文档的图标"pdf" | "ppt" | "doc" | "mp4"
+   */
+  fileType: string;
+  /**
+   * 文档名称，会影响弹窗中文档名称
+   */
+  name: string;
+  /**
+   * 是否在文档弹窗中显示删除按钮
+   */
+  showDelete: boolean;
+  /**
+   * 文档具体的数据参数
+   */
+  params: StaticDocParam | DynamicDocParam | MediaDocParam | UrlDocParam;
 }
 
 export interface JoinHandlerOptions {
@@ -1238,6 +1447,15 @@ export interface MeetingDeviceInfo {
 }
 
 export type NECloudRecordConfig = {
+  autoCloudRecord: boolean
+  autoCloudRecordStrategy: NECloudRecordStrategyType
+  localRecordNickName: boolean
+  localRecordTimestamp: boolean
+  localRecordScreenShareAndVideo: boolean
+  localRecordScreenShareSideBySideVideo: boolean
+  localRecordDefaultPath: string
+}
+export type NELocalRecordConfig = {
   enable: boolean
   recordStrategy: NECloudRecordStrategyType
 }
@@ -1278,6 +1496,7 @@ export interface MeetingSetting {
     automaticSavingOfMeetingChatRecords: boolean
     leaveTheMeetingRequiresConfirmation: boolean
     enterFullscreen: boolean
+    dualMonitors: boolean
   }
   captionSetting: {
     /** 字幕字号 */
@@ -1302,6 +1521,7 @@ export interface MeetingSetting {
     showMemberName: boolean
     enableHideVideoOffAttendees?: boolean
     enableHideMyVideo?: boolean
+    showVideoMirror?: boolean
   }
   audioSetting: {
     recordDeviceId: string
@@ -1346,21 +1566,39 @@ export interface MeetingSetting {
     enableVirtualBackground: boolean
     virtualBackgroundList?: string[]
     externalVirtualBackgroundList?: string[]
+    virtualBackgroundType: number
   }
   recordSetting: {
     autoCloudRecord: boolean
     autoCloudRecordStrategy: NECloudRecordStrategyType //  1: 主持人入会后开启 2: 成员入会后开启
+    localRecordAudio: boolean //本地录制是否录制音频
+    localRecordNickName: boolean //本地录制是否录制昵称水印
+    localRecordTimestamp: boolean //本地录制是否录制时间戳水印
+    localRecordScreenShareAndVideo: boolean //本地录制屏幕共享期间 是否录制视频
+    localRecordScreenShareSideBySideVideo: boolean //本地录制屏幕共享期间，视频是否覆盖
+    localRecordDefaultPath: string //本地录制的路径
+    cloudRecordCurrentSpeakerWithSharedScreen: boolean // 录制带有共享屏幕的当前演讲者
+    cloudRecordGalleryViewWithSharedScreen: boolean // 录制带有共享屏幕的画廊视图
+    cloudRecordSeparateRecordingCurrentSpeaker: boolean // 云录制时，是否单独录制当前主讲人
+    cloudRecordSeparateRecordingGalleryView: boolean // 云录制时，是否单独录制画廊视图
+    cloudRecordSeparateRecordingSharedScreen: boolean // 云录制时，是否单独录制共享屏幕
+    cloudRecordSeparateAudioFile: boolean // 云录制时，是否单独录制音频文件
   }
   screenShareSetting: {
     sideBySideModeOpen: boolean
     screenShareOptionInMeeting: number // 0: 显示所有 1: 自动共享主屏幕 2: 只显示屏幕
     sharedLimitFrameRateEnable: boolean
     sharedLimitFrameRate: number
+    noMoreScreenShareMessage: boolean // 屏幕共享提示
   }
 }
 
 export interface BeforeMeetingConfig {
   appConfig: {
+    APP_LIVE: {
+      officialPushEnabled: boolean
+      thirdPartyPushEnabled: boolean
+    }
     APP_ROOM_RESOURCE: {
       whiteboard: boolean
       live: boolean
@@ -1620,6 +1858,8 @@ export enum ClientType {
   ElectronWindows = 15,
   ElectronMac = 16,
   RoomsAndroid = 20,
+  ElectronLinuxX86 = 21,
+  ElectronLinuxArm64 = 22,
 }
 
 export interface LiveBackgroundInfo {
@@ -1638,6 +1878,7 @@ export interface ActiveSpeakerConfig {
   volumeIndicationInterval: number
   volumeIndicationWindowSize: number
   enableVideoPreSubscribe: boolean
+  activeSpeakerListReportInterval: number
 }
 
 export type AvatarSize = 64 | 48 | 36 | 32 | 24 | 22 | 16

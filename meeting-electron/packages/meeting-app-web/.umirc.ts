@@ -128,6 +128,7 @@ if (platform === 'electron' || nodeEnv === 'development') {
     { path: '/joinMeeting', component: '@/pages/JoinMeeting' },
     { path: '/immediateMeeting', component: '@/pages/immediateMeeting' },
     { path: '/feedback', component: '@/pages/feedback' },
+    { path: '/live', component: '@/pages/live' },
 
     { path: '/monitoring', component: '@/pages/monitoring' },
     { path: '/addressBook', component: '@/pages/addressBook' },
@@ -172,6 +173,10 @@ if (platform === 'electron' || nodeEnv === 'development') {
       path: '/bulletScreenMessageWindow',
       component: '@/pages/bulletScreenMessage',
     },
+    {
+      path: '/dualMonitors',
+      component: '@/pages/dualMonitors',
+    },
   );
 }
 
@@ -181,7 +186,9 @@ function rendererCompile() {
     '../meeting-kit-core/src/libs/Renderer/Renderers/ts',
   );
 
-  const renderersJSPath = renderersTSPath.replace(/\/ts$/, 'js');
+  const renderersJSPath = renderersTSPath.replace(/\/ts$/, '/js');
+
+  console.log('renderersJSPath', renderersJSPath);
   if (!fs.existsSync(renderersJSPath)) {
     fs.mkdirSync(renderersJSPath);
   }
@@ -201,26 +208,8 @@ function rendererCompile() {
   });
 }
 
-class RendererCompilePlugin {
-  apply(compiler) {
-    compiler.hooks.watchRun.tapAsync(
-      'RendererCompilePlugin',
-      (compilation, callback) => {
-        // 执行你的自定义方法
-        console.log('changedFiles', compiler.watchFileSystem.watcher);
-        // this.customMethod();
 
-        callback();
-      },
-    );
-  }
-
-  customMethod() {
-    rendererCompile();
-  }
-}
-
-rendererCompile();
+// rendererCompile();
 
 export default defineConfig({
   locale: false,

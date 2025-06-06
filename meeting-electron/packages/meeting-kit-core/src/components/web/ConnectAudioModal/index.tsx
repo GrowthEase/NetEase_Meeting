@@ -25,6 +25,14 @@ const ConnectAudioModal: React.FC<ConnectAudioModalProps> = (props) => {
     return !!meetingInfo.isUnMutedAudio
   }, [meetingInfo.isUnMutedAudio])
 
+  const audioAllOff = useMemo(() => {
+    return !!meetingInfo.audioAllOff
+  }, [meetingInfo.audioAllOff])
+
+  const audioAllOffRef = useRef(audioAllOff)
+
+  audioAllOffRef.current = audioAllOff
+
   const isUnMutedAudioRef = useRef(isUnMutedAudio)
 
   isUnMutedAudioRef.current = isUnMutedAudio
@@ -42,7 +50,8 @@ const ConnectAudioModal: React.FC<ConnectAudioModalProps> = (props) => {
       setOpen(false)
       if (
         (openAudio || isUnMutedAudioRef.current) &&
-        unmuteAudioBySelfPermissionRef.current
+        unmuteAudioBySelfPermissionRef.current &&
+        !audioAllOffRef.current
       ) {
         neMeeting?.unmuteLocalAudio(undefined, true)
       }
@@ -67,9 +76,6 @@ const ConnectAudioModal: React.FC<ConnectAudioModalProps> = (props) => {
 
   useEffect(() => {
     if (!usingComputerAudio) {
-      setTimeout(() => {
-        neMeeting?.disconnectMyAudio()
-      })
       setOpen(true)
     }
   }, [meetingInfo.meetingNum])

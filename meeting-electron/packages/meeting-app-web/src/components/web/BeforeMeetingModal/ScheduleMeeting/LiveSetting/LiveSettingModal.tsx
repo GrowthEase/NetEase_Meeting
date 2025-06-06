@@ -4,6 +4,7 @@ import LiveSetting from '.';
 import Modal from '@meeting-module/components/common/Modal';
 import { LiveSettingInfo } from '@/types';
 import NEPreMeetingService from '@meeting-module/kit/impl/service/pre_meeting_service';
+import { BeforeMeetingConfig } from '@meeting-module/kit';
 
 interface LiveSettingModalProps extends ModalProps {
   onSave: (liveInfo: LiveSettingInfo) => void;
@@ -11,9 +12,17 @@ interface LiveSettingModalProps extends ModalProps {
   liveInfo?: LiveSettingInfo;
   preMeetingService?: NEPreMeetingService;
   maxCount: number;
+  globalConfig?: BeforeMeetingConfig;
 }
 const LiveSettingModal: React.FC<LiveSettingModalProps> = (props) => {
-  const { onCancel, onSave, liveInfo, preMeetingService, maxCount } = props;
+  const {
+    onCancel,
+    onSave,
+    liveInfo,
+    preMeetingService,
+    maxCount,
+    globalConfig,
+  } = props;
 
   return (
     <Modal
@@ -28,6 +37,7 @@ const LiveSettingModal: React.FC<LiveSettingModalProps> = (props) => {
         onCancel={() => onCancel?.()}
         onSave={onSave}
         liveInfo={liveInfo}
+        globalConfig={globalConfig}
         preMeetingService={preMeetingService}
       />
     </Modal>

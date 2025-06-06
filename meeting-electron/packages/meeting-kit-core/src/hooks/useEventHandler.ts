@@ -5,7 +5,6 @@ import {
   NEMediaTypes,
   NERoomEndReason,
   NERoomMember,
-  NERoomRtcNetworkQualityInfo,
   NEWaitingRoomMember,
 } from 'neroom-types'
 import {
@@ -58,7 +57,6 @@ import {
   getBrowserType,
   getMeetingPermission,
   throttle,
-  getClientType,
 } from '../utils'
 import { Logger } from '../utils/Logger'
 import { IPCEvent } from '../app/src/types'
@@ -78,7 +76,6 @@ interface UseEventHandlerInterface {
   isShowVideoDialog: boolean
   showReplayAudioSlaveDialog: boolean
   showTimeTip: boolean
-  networkQuality: NERoomRtcNetworkQualityInfo
   setIsOpenVideoByHost: (isOpen: boolean) => void
   setIsShowVideoDialog: DispatchR<SetStateAction<boolean>>
   setIsOpenAudioByHost: (isOpen: boolean) => void
@@ -160,14 +157,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
     showReplayAudioSlaveDialog,
     setShowReplayAudioSlaveDialog,
   ] = useState<boolean>(false)
-  const [
-    networkQuality,
-    setNetworkQuality,
-  ] = useState<NERoomRtcNetworkQualityInfo>({
-    userUuid: '',
-    downStatus: 0,
-    upStatus: 0,
-  })
+
   const canShowNetworkToastRef = useRef(true)
   const isReplayedRef = useRef<boolean>(false)
   const isReplayedVideoRef = useRef<boolean>(false)
@@ -178,7 +168,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
   >(undefined)
 
   interpretationSettingRef.current = interpretationSetting
-
+  const whiteBoardLeaveRef = useRef<null | ReturnType<typeof setTimeout>>(null)
   const { t } = useTranslation()
 
   const { localMember } = meetingInfo
@@ -188,13 +178,14 @@ export default function useEventHandler(): UseEventHandlerInterface {
     oldPermission: MeetingPermission
   ) => {
     const localMember = meetingInfoRef.current.localMember
-
     // 关闭共享权限
     if (
       !newPermission.screenSharePermission &&
       oldPermission.screenSharePermission
     ) {
-      Toast.info(t('sharingStopByHost'))
+      if(localMember.isSharingScreen || localMember.isSharingSystemAudio) {
+        Toast.info(t('sharingStopByHost'))
+      }
       if (localMember.isSharingScreen) {
         outEventEmitter?.emit('enableShareScreen')
       }
@@ -527,6 +518,39 @@ export default function useEventHandler(): UseEventHandlerInterface {
     },
     [dispatch, eventEmitter, neMeeting]
   )
+
+  function isWhiteboardLeave(): Promise<boolean>  {
+    return new Promise((resolve) => {
+      eventEmitter?.off(EventType.WhiteboardLeaveResult)
+      eventEmitter?.on(EventType.WhiteboardLeaveResult, (data) => {
+        console.warn('收到当前白板离开房间的结果: ', data)
+        whiteBoardLeaveRef.current && clearTimeout(whiteBoardLeaveRef.current)
+        resolve(data);
+      })
+      //增加一个定时器，超时5s认为获取失败
+      whiteBoardLeaveRef.current && clearTimeout(whiteBoardLeaveRef.current)
+      whiteBoardLeaveRef.current = setTimeout(() => {
+        whiteBoardLeaveRef.current = null
+        resolve(true)
+      }, 3 * 1000)
+      console.log('发送白板离开房间的指令')
+      const dualMonitorsWindow = getWindow('dualMonitorsWindow')
+      console.warn('当前是否存在双屏场景 dualMonitorsWindow:', dualMonitorsWindow)
+      if (dualMonitorsWindow) {
+        dualMonitorsWindow?.postMessage({
+          event: 'eventEmitter',
+          payload: {
+            key: EventType.WhiteboardLeave,
+            args: [],
+          },
+        })
+      }
+      neMeeting?.eventEmitter?.emit(
+        EventType.WhiteboardLeave,
+      )
+    })
+  }
+
   const addEventListener = useCallback(() => {
     console.warn('开始监听会议事件')
     outEventEmitter?.on(UserEventType.SetLeaveCallback, (callback) => {
@@ -960,12 +984,39 @@ export default function useEventHandler(): UseEventHandlerInterface {
           }
         }
 
+        let localRecordAvailable = false
+
+        if (meetingInfoRef.current.localRecordPermission?.host) {
+          //房间录制权限为host，此时该member不是主持人或者联席主持人，没有本地录制设置权限
+          if (afterRole !== Role.host && afterRole !== Role.coHost) {
+            localRecordAvailable = false
+          }
+        } else if (meetingInfoRef.current.localRecordPermission?.some) {
+          //房间录制权限为部分人可录制，此时判断该member的成员属性localRecordAvailable
+          if(beforeRole != Role.host){
+            const roomMember = memberListRef.current.find(
+              (item) => item.uuid === member.uuid
+            )
+            roomMember ? localRecordAvailable = roomMember.localRecordAvailable : null
+          }
+
+        } else if (meetingInfoRef.current.localRecordPermission?.all) {
+          //房间录制权限全体人可录制
+          localRecordAvailable = true
+        }
+        if (afterRole == Role.host || afterRole == Role.coHost) {
+          localRecordAvailable = true
+        }
+        console.warn('localRecordAvailable: ', localRecordAvailable)
         dispatch &&
           dispatch({
             type: ActionType.UPDATE_MEMBER,
             data: {
               uuid: member.uuid,
-              member: { role: afterRole },
+              member: {
+                role: afterRole,
+                localRecordAvailable,
+              },
             },
           })
         // 更新主持人
@@ -1014,6 +1065,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
         if (!isSharing) {
           if (operator.uuid !== member.uuid && isMySelf) {
             Toast.info(t('participantHostStoppedShare'))
+            eventEmitter?.emit(UserEventType.HostCloseWhiteShareOrScreenShare)
           }
         } else {
           // todo 如果是wx浏览器目前会随机出现无法启动播放音频辅流。提前弹框一次兼容，后续rtc4.6.60会更新
@@ -1069,16 +1121,8 @@ export default function useEventHandler(): UseEventHandlerInterface {
     )
     eventEmitter?.on(
       EventType.MemberWhiteboardStateChanged,
-      (member: NEMember, isOpen: boolean, operator: NEMember) => {
+      async (member: NEMember, isOpen: boolean, operator: NEMember) => {
         logger.debug('onMemberWhiteboardStateChanged: %o %t %t', member, isOpen)
-
-        dispatch &&
-          dispatch({
-            type: ActionType.UPDATE_MEETING_INFO,
-            data: {
-              whiteboardUuid: isOpen ? member.uuid : '',
-            },
-          })
         // 用户开着白板离开房间
         if (!member && !isOpen) {
           // 如果本端有被授权白板权限需要撤回
@@ -1129,15 +1173,28 @@ export default function useEventHandler(): UseEventHandlerInterface {
               meetingInfoRef.current.hostUuid !==
                 meetingInfoRef.current.localMember.uuid
             ) {
+
               Toast.info(t('hostCloseWhiteShareToast'))
+              eventEmitter?.emit(UserEventType.HostCloseWhiteShareOrScreenShare)
             }
 
             // 本端白板关闭
             if (member.uuid === meetingInfoRef.current.localMember.uuid) {
               !isOpen && neMeeting?.whiteboardController?.setEnableDraw(false)
             }
+            console.log('本端白板关闭')
+            isWhiteboardLeave().catch((e) => {
+              console.log('本端白板关闭 error: ', e)
+            })
           }
         }
+        dispatch &&
+          dispatch({
+            type: ActionType.UPDATE_MEETING_INFO,
+            data: {
+              whiteboardUuid: isOpen ? member.uuid : '',
+            },
+          })
       }
     )
     eventEmitter?.on(
@@ -1476,6 +1533,7 @@ export default function useEventHandler(): UseEventHandlerInterface {
               playSound: !!meetingInfoRef.current.playSound,
               avatarHide: !!meetingInfoRef.current.avatarHide,
               smartSummary: !!meetingInfoRef.current.smartSummary,
+              localRecordPermission: {all: false, some: false, host: true}
             })
             if (
               permissionConfig.avatarHide &&
@@ -1551,6 +1609,21 @@ export default function useEventHandler(): UseEventHandlerInterface {
       ) => {
         console.log('MemberPropertiesChanged', properties)
         logger.debug('onMemberPropertiesChanged: %o %t', properties, userUuid)
+        if (properties?.localRecord?.value == '1' && userUuid != meetingInfoRef.current.localMember.uuid){
+          console.log('当前有人在本地录制：',userUuid )
+          //此时有人进行本地录制了
+          eventEmitter?.emit(MeetingEventType.needShowLocalRecordTip, true)
+        }
+        if(userUuid == meetingInfoRef.current.localMember.uuid && properties?.localRecordAvailable){
+          if (properties?.localRecordAvailable?.value == '1'){
+            console.log('你被赋予录制的权限' )
+            Toast.info(t('localRecordPermissionAllowTip'))
+          } else if (properties?.localRecordAvailable?.value == '0'){
+            console.log('你被收回录制的权限' )
+            Toast.info(t('localRecordPermissionNotAllowTip'))
+          }
+        }
+
         if (properties.handsUp) {
           // handsup 1表示举手，2表示被放下
           const handsUp = properties.handsUp as Record<string, string>
@@ -1754,27 +1827,22 @@ export default function useEventHandler(): UseEventHandlerInterface {
       }
 
       canShowNetworkToastRef.current = false
-      setTimeout(() => {
-        setNetworkQuality({
-          userUuid: '',
-          upStatus: 4,
-          downStatus: 4,
-        })
-      }, 1000)
     })
-    // 不在这里监听否则全局2s更新一次
+
     // eventEmitter?.on(
     //   EventType.NetworkQuality,
     //   (data: NERoomRtcNetworkQualityInfo[]) => {
+    //     console.log('network', data)
     //     if (data) {
-    //       const localNetwork = data.find((item) => {
-    //         return item.userUuid === meetingInfoRef.current?.localMember.uuid
+    //       dispatch?.({
+    //         type: ActionType.UPDATE_MEMBERS,
+    //         data: {
+    //           members: data.map((item) => ({
+    //             uuid: item.userUuid,
+    //             isNetworkQualityBad: item.upStatus >= 4 || item.downStatus >= 4,
+    //           })),
+    //         },
     //       })
-    //       console.log("ssss", localNetwork)
-    //       if (localNetwork) {
-    //         // 设置下行网络质量
-    //         setNetworkQuality(localNetwork)
-    //       }
     //     }
     //   }
     // )
@@ -1791,11 +1859,17 @@ export default function useEventHandler(): UseEventHandlerInterface {
         )
       }
 
+      // if (meetingInfoRef.current.isLocalRecording) {
+      //   console.log('会议终止，主动停止录制')
+      //   neMeeting?.stopLocalRecord()
+      // }
+
       logger.debug(
         'onRoomEnded: %o %t',
         reason,
         waitingRejoinMeetingRef.current
       )
+      console.log('会议终止，主动停止录制 over')
       canShowNetworkToastRef.current = true
       if (reason === 'RTC_CHANNEL_ERROR') {
         eventEmitter.emit(MeetingEventType.rtcChannelError)
@@ -2358,8 +2432,8 @@ export default function useEventHandler(): UseEventHandlerInterface {
     })
     eventEmitter?.on(
       EventType.OnStartPlayMedia,
-      (data: { userUuid: string; type: NEMediaTypes }) => {
-        if (data.type === 'audio' && getClientType() === 'Android') {
+      (data: { userUuid: string; type: NEMediaTypes, channelName?: string }) => {
+        if (data.type === 'audio') {
           setShowStartPlayDialog(true)
         }
       }
@@ -2678,6 +2752,5 @@ export default function useEventHandler(): UseEventHandlerInterface {
     confirmUnMuteMyAudio,
     setShowTimeTip,
     timeTipContent,
-    networkQuality,
   }
 }

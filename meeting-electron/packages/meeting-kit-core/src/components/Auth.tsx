@@ -1,5 +1,5 @@
 import { EventPriority, XKitReporter } from '@xkit-yx/utils'
-import React, { useContext, useRef, useState } from 'react'
+import React, { useContext, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { IPCEvent } from '../app/src/types'
 import { errorCodeMap, IM_VERSION, MAJOR_AUDIO, RTC_VERSION } from '../config'
@@ -70,7 +70,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
   const xkitReportRef = useRef<XKitReporter | null>(null)
   const rejoinCountRef = useRef(0)
   const passwordRef = useRef('')
-  const [isAnonymousLogin, setIsAnonymousLogin] = useState(false) // 匿名登录模式
+  const isAnonymousLoginRef = useRef(false) // 匿名登录模式
   const joinOptionRef = useRef<JoinOptions | undefined>(undefined)
   // 加入或者创建回调
   const callbackRef = useRef<CallbackType | null>(null)
@@ -159,6 +159,17 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       })
     })
 
+    outEventEmitter?.on(UserEventType.JoinMeetingFromDeviceTest, () => {
+      if (isAnonymousLoginRef.current) {
+        anonymousJoin(joinOptionRef.current as JoinOptions)
+      } else {
+        joinMeetingHandler({
+          options: joinOptionRef.current as JoinOptions,
+          callback: callbackRef.current as (e?) => void,
+        })
+      }
+    })
+
     outEventEmitter?.on(
       UserEventType.CreateMeeting,
       (data: { options: CreateOptions; callback: (e?) => void }) => {
@@ -190,24 +201,31 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
           options,
           callback,
           isJoinOther: true,
+          type: 'join',
         })
       }
     )
     eventEmitter?.on(
       UserEventType.RejoinMeeting,
-      (data: { isAudioOn: boolean; isVideoOn: boolean, joinOption: JoinOptions }) => {
+      (data: {
+        isAudioOn: boolean
+        isVideoOn: boolean
+        joinOption: JoinOptions
+      }) => {
         if (joinOptionRef.current) {
           joinOptionRef.current.audio = data.isAudioOn ? 1 : 2
           joinOptionRef.current.video = data.isVideoOn ? 1 : 2
         }
 
-        const _options = data.joinOption ? data.joinOption :  joinOptionRef.current
+        const _options = data.joinOption
+          ? data.joinOption
+          : joinOptionRef.current
         const options = {
           ..._options,
           password: passwordRef.current,
         }
 
-        if (isAnonymousLogin) {
+        if (isAnonymousLoginRef.current) {
           outEventEmitter?.emit(UserEventType.AnonymousJoinMeeting, {
             options,
             callback: callbackRef.current,
@@ -236,6 +254,17 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         isRejoin?: boolean
         type: 'join' | 'joinByInvite'
       }) => {
+        if (data.options.showDeviceTest) {
+          callbackRef.current = data.callback
+          joinOptionRef.current = data.options
+          eventEmitter?.emit(EventType.ShowDeviceTest)
+          outEventEmitter?.emit(
+            UserEventType.onMeetingStatusChanged,
+            NEMeetingStatus.MEETING_STATUS_DEVICE_TESTING
+          )
+          return
+        }
+
         joinMeetingHandler(data)
       }
     )
@@ -249,6 +278,17 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         const { options, callback } = data
 
         callbackRef.current = callback
+        if (data.options.showDeviceTest) {
+          isAnonymousLoginRef.current = true
+          joinOptionRef.current = data.options
+          eventEmitter?.emit(EventType.ShowDeviceTest)
+          outEventEmitter?.emit(
+            UserEventType.onMeetingStatusChanged,
+            NEMeetingStatus.MEETING_STATUS_DEVICE_TESTING
+          )
+          return
+        }
+
         anonymousJoin(options, data.isRejoin)
           .then(() => {
             // 断网重新入会不需要触发回调
@@ -327,6 +367,26 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
     } catch (e) {
       console.warn('renderCallback failed', e)
     }
+
+    return () => {
+      console.log('销毁auth')
+      outEventEmitter?.off(UserEventType.GetReducerMeetingInfo)
+      outEventEmitter?.off(UserEventType.LoginWithPassword)
+      outEventEmitter?.off(UserEventType.Login)
+      outEventEmitter?.off(UserEventType.Logout)
+      outEventEmitter?.off(UserEventType.UpdateMeetingInfo)
+      outEventEmitter?.off(UserEventType.JoinMeetingFromDeviceTest)
+      outEventEmitter?.off(UserEventType.CreateMeeting)
+      outEventEmitter?.off(UserEventType.CreateMeeting)
+      eventEmitter?.off(UserEventType.CancelJoin)
+      eventEmitter?.off(UserEventType.JoinOtherMeeting)
+      eventEmitter?.off(UserEventType.RejoinMeeting)
+      outEventEmitter?.off(UserEventType.SetScreenSharingSourceId)
+      outEventEmitter?.off(UserEventType.JoinMeeting)
+      outEventEmitter?.off(UserEventType.AnonymousJoinMeeting)
+      outEventEmitter?.off(MeetingEventType.rejoinAfterAdmittedToRoom)
+      outEventEmitter?.off(UserEventType.UpdateInjectedMenuItem)
+    }
   })
 
   function joinMeetingHandler(data: {
@@ -334,7 +394,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
     callback: (e?) => void
     isRejoin?: boolean
     isJoinOther?: boolean
-    type: 'join' | 'joinByInvite' | 'guestJoin'
+    type?: 'join' | 'joinByInvite' | 'guestJoin'
   }) {
     const { options, callback } = data
 
@@ -504,6 +564,24 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       priority: EventPriority.HIGH,
     })
 
+    console.log('会议创建房间 options: ', options)
+    options.whiteBoradAddDocConfig && dispatch?.({
+      type: ActionType.UPDATE_MEETING_INFO,
+      data: {
+        whiteBoradAddDocConfig: options.whiteBoradAddDocConfig
+      },
+    })
+    // console.error('测试阶段，先将 whiteboardCloudRecord 设置为 true')
+    // options.whiteboardCloudRecord = true
+    // options.whiteBoradContainerAspectRatio =  AspectRatio.aspectRatio_16_9 //设置16:9
+
+    options.whiteboardCloudRecord && dispatch?.({
+      type: ActionType.UPDATE_MEETING_INFO,
+      data: {
+        whiteboardCloudRecord: options.whiteboardCloudRecord,
+        whiteBoradContainerAspectRatio: options.whiteBoradContainerAspectRatio
+      },
+    })
     globalDispatch?.({
       type: ActionType.JOIN_LOADING,
       data: true,
@@ -537,7 +615,6 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
   }
 
   const asyncSetting = (setting: MeetingSetting, joinOptions: JoinOptions) => {
-
     if (setting) {
       if (joinOptions.enableLeaveTheMeetingRequiresConfirmation !== undefined) {
         setting.normalSetting.leaveTheMeetingRequiresConfirmation =
@@ -585,6 +662,13 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         setting.videoSetting.showMemberName = joinOptions.showNameInVideo
       }
 
+      if (joinOptions.enableSideBySideMode !== undefined) {
+        setting.screenShareSetting = {
+          ...setting.screenShareSetting,
+          sideBySideModeOpen: joinOptions.enableSideBySideMode,
+        }
+      }
+
       setLocalStorageSetting(JSON.stringify(setting))
 
       dispatch?.({
@@ -609,6 +693,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       NEMeetingStatus.MEETING_STATUS_INMEETING
     )
     joinOptionRef.current = options
+    joinOptionRef.current.showDeviceTest = false
 
     updateGlobalConfig({
       showSubject: !!options.showSubject,
@@ -644,10 +729,14 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
           : 0,
         showCloudRecordingUI:
           options.showCloudRecordingUI === false ? false : true,
+        showLocalRecordingUI:
+          options.showLocalRecordingUI === false ? false : true,
         showScreenShareUserVideo:
           options.showScreenShareUserVideo === false ? false : true,
         showCloudRecordMenuItem:
           options.showCloudRecordMenuItem === false ? false : true,
+        showLocalRecordMenuItem:
+          options.showLocalRecordMenuItem === false ? false : true,
         noChat: options.noChat,
         noWhiteboard: options.noWhiteboard,
         noCaptions: options.noCaptions,
@@ -663,6 +752,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         detectMutedMic: options.detectMutedMic === false ? false : true,
         defaultWindowMode: options.defaultWindowMode || NEWindowMode.Normal,
         pluginNotifyDuration: options.pluginNotifyDuration,
+        showMeetingInfo: options.showMeetingInfo === false ? false : true,
         enableDirectMemberMediaControlByHost:
           options.enableDirectMemberMediaControlByHost,
       },
@@ -670,7 +760,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
     rejoinCountRef.current = 0
   }
 
-  function handleMeetingInfo(data?: {
+  async function handleMeetingInfo(data?: {
     isUnMutedVideo: boolean
     isUnMutedAudio: boolean
   }) {
@@ -678,7 +768,25 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
     const meeting = neMeeting?.getMeetingInfo()
     const setting = getLocalStorageSetting() || createDefaultSetting()
 
+    console.log('入会成功之后的 meetingInfo信息: ', meeting)
     if (setting) {
+      //刷新新增的setting(比如4.10.0版本新增了localRecord的配置选项，但是初始化是优先获取localStorage中的配置，所以meetingInfo中的setting可能会不包含新增的默认配置)
+      console.info('录制参数recordSetting: ', setting.recordSetting)
+      if (
+        setting.recordSetting &&
+        setting.recordSetting.localRecordNickName == undefined
+      ) {
+        console.info('刷新默认的录制参数')
+        Object.assign(setting.recordSetting, {
+          localRcordAudio: false,
+          localRecordNickName: true,
+          localRecordTimestamp: false,
+          localRecordScreenShareAndVideo: false,
+          localRecordScreenShareSideBySideVideo: false,
+          localRecordDefaultPath: '',
+        })
+      }
+
       asyncSetting(setting, options)
     }
 
@@ -813,13 +921,15 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
           }
         }
 
-        audioSetting.recordDeviceId &&
-          neMeeting?.changeLocalAudio(audioSetting.recordDeviceId)
-        audioSetting.playoutDeviceId &&
-          neMeeting?.selectSpeakers(audioSetting.playoutDeviceId)
-        videoSetting.deviceId &&
-          neMeeting?.changeLocalVideo(videoSetting.deviceId)
-        neMeeting?.setVideoProfile(videoSetting.resolution || 720)
+        if (!window.h5App) {
+          audioSetting.recordDeviceId &&
+            neMeeting?.changeLocalAudio(audioSetting.recordDeviceId)
+          audioSetting.playoutDeviceId &&
+            neMeeting?.selectSpeakers(audioSetting.playoutDeviceId)
+          videoSetting.deviceId &&
+            neMeeting?.changeLocalVideo(videoSetting.deviceId)
+          neMeeting?.setVideoProfile(videoSetting.resolution || 720)
+        }
 
         // 处理音频降噪回音立体音等
         if (audioSetting && window?.isElectronNative) {
@@ -929,8 +1039,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
     // }
     if (meeting) {
       const meetingInfo = meeting.meetingInfo
-
-      // 入会判断是正在录制，如果在录制则弹框提醒
+      //入会判断是正在录制，如果在录制则弹框提醒
       if (
         meetingInfo.isCloudRecording &&
         meetingInfo.localMember.role !== Role.host &&
@@ -940,7 +1049,6 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       ) {
         eventEmitter?.emit(MeetingEventType.needShowRecordTip, true)
       }
-
       // 存在如果两个端同时入会，本端入会成功获取到的成员列表可能还未有另外一个端。但是本端会有收到memberJoin事件
       if (memberList && memberList.length > 0) {
         memberList.forEach((member) => {
@@ -956,7 +1064,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       }
 
       // 获取初始化直播状态
-      const liveInfo = neMeeting?.getLiveInfo()
+      const liveInfo = await neMeeting?.getLiveInfo()
 
       if (liveInfo) {
         meeting.meetingInfo.liveState = liveInfo.state
@@ -1017,7 +1125,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         break
       case 3104:
       case 1004:
-        Toast.info(err.message || (err.msg as string))
+        // Toast.info(err.message || (err.msg as string))
         hideLoadingPage()
         break
       case 1020:
@@ -1053,9 +1161,9 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         })
         break
       default:
-        Toast.info(
-          errorCodeMap[err.code] || err.msg || err.message || 'join failed'
-        )
+        // Toast.info(
+        //   errorCodeMap[err.code] || err.msg || err.message || 'join failed'
+        // )
         if (!isRejoin) {
           outEventEmitter?.emit(
             UserEventType.onMeetingStatusChanged,
@@ -1107,6 +1215,25 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       Toast.info('请输入会议号')
       throw new Error('meetingNum is empty')
     }
+    console.log('会议加入房间 options: ', options)
+    options.whiteBoradAddDocConfig && dispatch?.({
+      type: ActionType.UPDATE_MEETING_INFO,
+      data: {
+        whiteBoradAddDocConfig: options.whiteBoradAddDocConfig
+      },
+    })
+
+    // console.error('测试阶段，先将 whiteboardCloudRecord 设置为 true')
+    // options.whiteboardCloudRecord = true
+    // options.whiteBoradContainerAspectRatio = AspectRatio.aspectRatio_16_9 //设置16:9
+
+    options.whiteboardCloudRecord && dispatch?.({
+      type: ActionType.UPDATE_MEETING_INFO,
+      data: {
+        whiteboardCloudRecord: options.whiteboardCloudRecord,
+        whiteBoradContainerAspectRatio: options.whiteBoradContainerAspectRatio
+      },
+    })
 
     joinOptionRef.current = options
     const joinMeetingReport = new IntervalEvent({
@@ -1123,7 +1250,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
         type: ActionType.JOIN_LOADING,
         data: true,
       })
-    setIsAnonymousLogin(false)
+    isAnonymousLoginRef.current = false
     options.password = options.password || passwordRef.current
     const _neMeeting = neMeeting as NEMeetingService
     let joinFunc = isJoinOther
@@ -1204,7 +1331,7 @@ const Auth: React.FC<AuthProps> = ({ renderCallback }) => {
       })
     joinOptionRef.current = options
     options.password = options.password || passwordRef.current
-    setIsAnonymousLogin(true)
+    isAnonymousLoginRef.current = true
     return (neMeeting as NEMeetingService)
       .anonymousJoin({ ...options, joinMeetingReport })
       .then((res) => {

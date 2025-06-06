@@ -8,7 +8,7 @@ import './index.less';
 import { PlusCircleOutlined } from '@ant-design/icons';
 import { AddOtherPlatform } from '@meeting-module/components/web/Live/AddOtherPlatform';
 import NEPreMeetingService from '@meeting-module/kit/impl/service/pre_meeting_service';
-import { Toast } from '@meeting-module/kit';
+import { BeforeMeetingConfig, Toast } from '@meeting-module/kit';
 
 interface LiveSettingProps {
   className?: string;
@@ -16,6 +16,7 @@ interface LiveSettingProps {
   onCancel: () => void;
   onSave: (liveInfo: LiveSettingInfo) => void;
   preMeetingService?: NEPreMeetingService;
+  globalConfig?: BeforeMeetingConfig;
   maxCount: number;
 }
 
@@ -51,6 +52,7 @@ const LiveSetting: React.FC<LiveSettingProps> = ({
   onCancel,
   onSave,
   maxCount,
+  globalConfig,
 }) => {
   const { t } = useTranslation();
   const [liveTitle, setLiveTitle] = useState(liveInfo?.title || '');
@@ -73,7 +75,14 @@ const LiveSetting: React.FC<LiveSettingProps> = ({
   const liveBackgroundInfoRef = useRef<LiveBackgroundInfo | undefined>(
     liveBackgroundInfo,
   );
-  liveBackgroundInfoRef.current = liveBackgroundInfo
+
+  const isMeetingLiveOfficialPushSupported =
+    globalConfig?.appConfig?.APP_LIVE?.officialPushEnabled;
+
+  const isMeetingLiveThirdPartyPushSupported =
+    globalConfig?.appConfig?.APP_LIVE?.thirdPartyPushEnabled;
+
+  liveBackgroundInfoRef.current = liveBackgroundInfo;
 
   useEffect(() => {
     if (liveInfo) {
@@ -403,203 +412,223 @@ const LiveSetting: React.FC<LiveSettingProps> = ({
       {!showAddOtherPlatform ? (
         <>
           <div className="live-meeting-container">
-            <div>
-              <div className="live-meeting-title">{t('meetingLiveTitle')}</div>
-              <div>
-                <Input
-                  value={liveTitle}
-                  placeholder={t('liveTitlePlaceholder')}
-                  maxLength={30}
-                  onChange={(e) => onTitleChange(e.target.value)}
-                  allowClear={true}
-                />
-              </div>
-            </div>
-            {/* 直播密码 */}
-            <div className="nemeeting-live-setting-item">
-              <div style={{ width: '100%' }}>
-                <Checkbox
-                  checked={enablePassword}
-                  onChange={(e) => {
-                    setEnablePassword(e.target.checked);
-                  }}
-                >
-                  {t('enableLivePassword')}
-                </Checkbox>
-                {enablePassword && (
-                  <div className="nemeeting-live-setting-pwd">
+            {isMeetingLiveOfficialPushSupported ? (
+              <>
+                <div>
+                  <div className="live-meeting-title">
+                    {t('meetingLiveTitle')}
+                  </div>
+                  <div>
                     <Input
-                      placeholder={enablePassword ? t('livePasswordTip') : ``}
-                      value={password}
-                      maxLength={6}
-                      allowClear
-                      onKeyPress={(event) => {
-                        if (!/^\d+$/.test(event.key)) {
-                          event.preventDefault();
-                        }
-                      }}
-                      onChange={(event) => {
-                        const password = event.target.value.replace(
-                          /[^0-9]/g,
-                          '',
-                        );
-
-                        setPassword(password);
-                      }}
+                      value={liveTitle}
+                      placeholder={t('liveTitlePlaceholder')}
+                      maxLength={30}
+                      onChange={(e) => onTitleChange(e.target.value)}
+                      allowClear={true}
                     />
                   </div>
-                )}
-              </div>
-            </div>
-            {/* 观众互动 */}
-            <div className="nemeeting-live-setting-item">
-              <div>
-                <div>
+                </div>
+                {/* 直播密码 */}
+                <div className="nemeeting-live-setting-item">
+                  <div style={{ width: '100%' }}>
+                    <Checkbox
+                      checked={enablePassword}
+                      onChange={(e) => {
+                        setEnablePassword(e.target.checked);
+                      }}
+                    >
+                      {t('enableLivePassword')}
+                    </Checkbox>
+                    {enablePassword && (
+                      <div className="nemeeting-live-setting-pwd">
+                        <Input
+                          placeholder={
+                            enablePassword ? t('livePasswordTip') : ``
+                          }
+                          value={password}
+                          maxLength={6}
+                          allowClear
+                          onKeyPress={(event) => {
+                            if (!/^\d+$/.test(event.key)) {
+                              event.preventDefault();
+                            }
+                          }}
+                          onChange={(event) => {
+                            const password = event.target.value.replace(
+                              /[^0-9]/g,
+                              '',
+                            );
+
+                            setPassword(password);
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {/* 观众互动 */}
+                <div className="nemeeting-live-setting-item">
+                  <div>
+                    <div>
+                      <Checkbox
+                        checked={liveChatRoomEnable}
+                        onChange={(e) =>
+                          setLiveChatRoomEnable(e.target.checked)
+                        }
+                      >
+                        {t('enableChat')}
+                      </Checkbox>
+                    </div>
+                    <div className="live-setting-tip">{t('enableChatTip')}</div>
+                  </div>
+                </div>
+                <div className="nemeeting-live-setting-item nemeeting-live-setting-item-preview">
+                  {/* 直播背景图 */}
+                  <div className="nemeeting-live-bg-preview-wrap">
+                    <div className="nemeeting-live-bg-preview-title">
+                      {t('liveViewPageBackgroundImage')}
+                    </div>
+                    <Spin
+                      wrapperClassName="nemeeting-live-bg-preview-spin"
+                      className="nemeeting-live-span"
+                      spinning={uploadBackgroundLoading}
+                    >
+                      {window.isElectronNative ? (
+                        liveBackgroundInfo?.backgroundUrl ? (
+                          liveBgPreviewImgBackgroundMemo
+                        ) : (
+                          <LiveBgPreviewItem
+                            onClick={onClickUploadBackground}
+                          />
+                        )
+                      ) : (
+                        <Upload
+                          accept=".jpg,.png,.jpeg,"
+                          itemRender={() => null}
+                          onChange={onBackgroundChange}
+                          beforeUpload={backgroundBeforeUpload}
+                          disabled={false}
+                          maxCount={1}
+                        >
+                          {liveBackgroundInfo?.backgroundUrl ? (
+                            liveBgPreviewImgBackgroundMemo
+                          ) : (
+                            <LiveBgPreviewItem
+                              onClick={onClickUploadBackground}
+                            />
+                          )}
+                        </Upload>
+                      )}
+                    </Spin>
+                  </div>
+                  {/* 直播封面 */}
+                  <div className="nemeeting-live-bg-preview-wrap ml35">
+                    <div className="nemeeting-live-bg-preview-title">
+                      {t('liveCoverPicture')}
+                    </div>
+                    <Spin
+                      wrapperClassName="nemeeting-live-bg-preview-spin"
+                      spinning={uploadCoverLoading}
+                    >
+                      {window.isElectronNative ? (
+                        liveBackgroundInfo?.coverUrl ? (
+                          liveBgPreviewImgCoverMemo
+                        ) : (
+                          <LiveBgPreviewItem onClick={onClickUploadCover} />
+                        )
+                      ) : (
+                        <Upload
+                          accept=".jpg,.png,.jpeg,"
+                          itemRender={() => null}
+                          onChange={onCoverChange}
+                          beforeUpload={coverBeforeUpload}
+                          disabled={false}
+                          maxCount={1}
+                        >
+                          {liveBackgroundInfo?.coverUrl ? (
+                            liveBgPreviewImgCoverMemo
+                          ) : (
+                            <LiveBgPreviewItem onClick={onClickUploadCover} />
+                          )}
+                        </Upload>
+                      )}
+                    </Spin>
+                  </div>
+                </div>
+              </>
+            ) : null}
+
+            {isMeetingLiveThirdPartyPushSupported ? (
+              <>
+                <div className="nemeeting-live-setting-item">
                   <Checkbox
-                    checked={liveChatRoomEnable}
-                    onChange={(e) => setLiveChatRoomEnable(e.target.checked)}
+                    checked={enableAddOtherPlatform}
+                    onChange={(e) =>
+                      setEnableAddOtherPlatform(e.target.checked)
+                    }
                   >
-                    {t('enableChat')}
+                    {t('meetingLiveToOtherPlatform')}
                   </Checkbox>
                 </div>
-                <div className="live-setting-tip">{t('enableChatTip')}</div>
-              </div>
-            </div>
-            <div className="nemeeting-live-setting-item nemeeting-live-setting-item-preview">
-              {/* 直播背景图 */}
-              <div className="nemeeting-live-bg-preview-wrap">
-                <div className="nemeeting-live-bg-preview-title">
-                  {t('liveViewPageBackgroundImage')}
-                </div>
-                <Spin
-                  wrapperClassName="nemeeting-live-bg-preview-spin"
-                  className="nemeeting-live-span"
-                  spinning={uploadBackgroundLoading}
-                >
-                  {window.isElectronNative ? (
-                    liveBackgroundInfo?.backgroundUrl ? (
-                      liveBgPreviewImgBackgroundMemo
-                    ) : (
-                      <LiveBgPreviewItem onClick={onClickUploadBackground} />
-                    )
-                  ) : (
-                    <Upload
-                      accept=".jpg,.png,.jpeg,"
-                      itemRender={() => null}
-                      onChange={onBackgroundChange}
-                      beforeUpload={backgroundBeforeUpload}
-                      disabled={false}
-                      maxCount={1}
-                    >
-                      {liveBackgroundInfo?.backgroundUrl ? (
-                        liveBgPreviewImgBackgroundMemo
-                      ) : (
-                        <LiveBgPreviewItem onClick={onClickUploadBackground} />
-                      )}
-                    </Upload>
-                  )}
-                </Spin>
-              </div>
-              {/* 直播封面 */}
-              <div className="nemeeting-live-bg-preview-wrap ml35">
-                <div className="nemeeting-live-bg-preview-title">
-                  {t('liveCoverPicture')}
-                </div>
-                <Spin
-                  wrapperClassName="nemeeting-live-bg-preview-spin"
-                  spinning={uploadCoverLoading}
-                >
-                  {window.isElectronNative ? (
-                    liveBackgroundInfo?.coverUrl ? (
-                      liveBgPreviewImgCoverMemo
-                    ) : (
-                      <LiveBgPreviewItem onClick={onClickUploadCover} />
-                    )
-                  ) : (
-                    <Upload
-                      accept=".jpg,.png,.jpeg,"
-                      itemRender={() => null}
-                      onChange={onCoverChange}
-                      beforeUpload={coverBeforeUpload}
-                      disabled={false}
-                      maxCount={1}
-                    >
-                      {liveBackgroundInfo?.coverUrl ? (
-                        liveBgPreviewImgCoverMemo
-                      ) : (
-                        <LiveBgPreviewItem onClick={onClickUploadCover} />
-                      )}
-                    </Upload>
-                  )}
-                </Spin>
-              </div>
-            </div>
-
-            <div className="nemeeting-live-setting-item">
-              <Checkbox
-                checked={enableAddOtherPlatform}
-                onChange={(e) => setEnableAddOtherPlatform(e.target.checked)}
-              >
-                {t('meetingLiveToOtherPlatform')}
-              </Checkbox>
-            </div>
-            {enableAddOtherPlatform && (
-              <div className="nemeeting-live-setting-add-item">
-                <div className="nemeeting-live-setting-add-item-wrap">
-                  {platformInfoList.map((item, index) => (
-                    <div
-                      key={index}
-                      className="nemeeting-live-setting-add-wrapper nemeeting-live-setting-platform-item"
-                    >
-                      <div
-                        className="nemeeting-live-setting-platform-item-name nemeeting-ellipsis"
-                        title={item.platformName}
-                      >
-                        {item.platformName}
-                      </div>
-                      <div>
-                        <Button
-                          type="link"
-                          size="small"
-                          onClick={(e) => editOtherPlatform(e, index)}
+                {enableAddOtherPlatform && (
+                  <div className="nemeeting-live-setting-add-item">
+                    <div className="nemeeting-live-setting-add-item-wrap">
+                      {platformInfoList.map((item, index) => (
+                        <div
+                          key={index}
+                          className="nemeeting-live-setting-add-wrapper nemeeting-live-setting-platform-item"
                         >
-                          {t('globalEdit')}
-                        </Button>
-                        <Button
-                          type="link"
-                          danger
-                          size="small"
-                          onClick={(e) => handleDeletePlatform(e, index)}
+                          <div
+                            className="nemeeting-live-setting-platform-item-name nemeeting-ellipsis"
+                            title={item.platformName}
+                          >
+                            {item.platformName}
+                          </div>
+                          <div>
+                            <Button
+                              type="link"
+                              size="small"
+                              onClick={(e) => editOtherPlatform(e, index)}
+                            >
+                              {t('globalEdit')}
+                            </Button>
+                            <Button
+                              type="link"
+                              danger
+                              size="small"
+                              onClick={(e) => handleDeletePlatform(e, index)}
+                            >
+                              {t('globalDelete')}
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      {platformInfoList.length < maxCount && (
+                        <div
+                          className="nemeeting-live-setting-add-wrapper"
+                          onClick={() => addOtherPlatform()}
                         >
-                          {t('globalDelete')}
-                        </Button>
-                      </div>
+                          <svg
+                            style={{ marginRight: '12px' }}
+                            viewBox="64 64 896 896"
+                            focusable="false"
+                            data-icon="plus"
+                            width="1em"
+                            height="1em"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
+                            <path d="M482 152h60q8 0 8 8v704q0 8-8 8h-60q-8 0-8-8V160q0-8 8-8z"></path>
+                            <path d="M192 474h672q8 0 8 8v60q0 8-8 8H160q-8 0-8-8v-60q0-8 8-8z"></path>
+                          </svg>
+                          <div>{t('globalAdd')}</div>
+                        </div>
+                      )}
                     </div>
-                  ))}
-                  {platformInfoList.length < maxCount && (
-                    <div
-                      className="nemeeting-live-setting-add-wrapper"
-                      onClick={() => addOtherPlatform()}
-                    >
-                      <svg
-                        style={{ marginRight: '12px' }}
-                        viewBox="64 64 896 896"
-                        focusable="false"
-                        data-icon="plus"
-                        width="1em"
-                        height="1em"
-                        fill="currentColor"
-                        aria-hidden="true"
-                      >
-                        <path d="M482 152h60q8 0 8 8v704q0 8-8 8h-60q-8 0-8-8V160q0-8 8-8z"></path>
-                        <path d="M192 474h672q8 0 8 8v60q0 8-8 8H160q-8 0-8-8v-60q0-8 8-8z"></path>
-                      </svg>
-                      <div>{t('globalAdd')}</div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+                  </div>
+                )}
+              </>
+            ) : null}
           </div>
           <div className="before-meeting-modal-footer before-meeting-schedule-modal-footer">
             <div className="nemeeting-live-setting-footer-button">

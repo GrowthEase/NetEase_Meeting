@@ -34,6 +34,13 @@ function globalErrorCatch() {
       colno,
       error,
     })
+    // js 异常导致页面不显示，刷新页面先保证应用正常
+    const dom = document.getElementById('meeting-web')
+
+    if (!dom && !window.isLocal) {
+      window.location.reload()
+    }
+
     return true
   }
 

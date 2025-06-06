@@ -1,33 +1,85 @@
 import classNames from 'classnames';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import AudioIcon from '@meeting-module/components/common/AudioIcon';
 import UserAvatar from '@meeting-module/components/common/Avatar';
 import SpeakerList from '@meeting-module/components/web/SpeakerList';
 import useWatermark from '@meeting-module/hooks/useWatermark';
-import { NEMeetingInfo, NEMember } from '@meeting-module/types';
+import {
+  EventType,
+  NEMeetingInfo,
+  NEMember,
+  Speaker,
+} from '@meeting-module/types';
 
 import './index.less';
 import { IPCEvent } from '@/types';
-import { useMeetingInfoContext } from '@meeting-module/store';
+import { useGlobalContext, useMeetingInfoContext } from '@meeting-module/store';
 import Emoticons from '@meeting-module/components/common/Emoticons';
+import useVideoShortcutOperation from '@meeting-module/hooks/useVideoShortcutOperation';
+import { useUpdateEffect } from 'ahooks';
+import useNetworkQuality from '@meeting-module/hooks/useNetworkQuality';
+import { NEMemberVolumeInfo } from 'neroom-types';
 
 const VideoCard: React.FC<{
   member: NEMember;
   sharingScreen: boolean;
-  volume: number;
   isMySelf: boolean;
-}> = ({ member, volume, isMySelf }) => {
+  enableVideoMirroring?: boolean;
+}> = ({ member, isMySelf, enableVideoMirroring }) => {
   useWatermark({ offsetX: 30, offsetY: 50 });
 
   const { meetingInfo } = useMeetingInfoContext();
   const mouseLeaveTimerRef = useRef<null | ReturnType<typeof setTimeout>>(null);
   const viewRef = useRef<HTMLDivElement | null>(null);
   const [isMouseLeave, setIsMouseLeave] = useState<boolean>(true);
+  const { isNetworkQualityBad } = useNetworkQuality(member);
 
   const isInPhone = useMemo(() => {
     return member.properties?.phoneState?.value == '1';
   }, [member.properties?.phoneState?.value]);
+
+  const { operatorItems } = useVideoShortcutOperation({
+    member,
+    isMySelf,
+  });
+
+  useUpdateEffect(() => {
+    const parentWindow = window.parent;
+
+    parentWindow.postMessage(
+      {
+        event: 'popover',
+        payload: {
+          type: 'hide',
+        },
+      },
+      parentWindow.origin,
+    );
+  }, [member.role]);
+
+  const handlePopover = useCallback(() => {
+    const parentWindow = window.parent;
+
+    parentWindow.postMessage(
+      {
+        event: 'popover',
+        payload: {
+          type: 'open',
+          items: operatorItems
+            ? JSON.parse(JSON.stringify(operatorItems))
+            : operatorItems,
+        },
+      },
+      parentWindow.origin,
+    );
+  }, [operatorItems]);
 
   const nicknameHide = useMemo(() => {
     if (
@@ -108,7 +160,9 @@ const VideoCard: React.FC<{
 
   return (
     <div
-      className="video-view-wrap video-card sharing-screen-video-card"
+      className={`video-view-wrap video-card sharing-screen-video-card ${
+        enableVideoMirroring && isMySelf ? 'screenSharing-video-mirror' : ''
+      }`}
       key={member.uuid}
       id={`nemeeting-${member.uuid}-video-card`}
       ref={viewRef}
@@ -122,6 +176,14 @@ const VideoCard: React.FC<{
         setIsMouseLeave(false);
       }}
     >
+      <div
+        className="nemeeting-video-card-operate"
+        onClick={() => handlePopover()}
+      >
+        <svg className="icon iconfont icon-operator" aria-hidden="true">
+          <use xlinkHref="#iconzimugengduo"></use>
+        </svg>
+      </div>
       <div className={classNames('nemeeting-video-card-emoticons-container')}>
         <Emoticons
           size={40}
@@ -157,12 +219,20 @@ const VideoCard: React.FC<{
       {nicknameHide ? null : (
         <div className={'nickname-tip'}>
           <div className="nickname">
+            {isNetworkQualityBad && (
+              <svg
+                className="icon iconfont icon-hover icon-red nemeeting-card-network"
+                aria-hidden="true"
+              >
+                <use xlinkHref="#icona-zu684" />
+              </svg>
+            )}
             {member.isAudioConnected ? (
               member.isAudioOn ? (
-                <AudioIcon className="icon iconfont" audioLevel={volume} />
+                <AudioIcon className="icon iconfont" memberId={member.uuid} />
               ) : (
                 <svg className="icon icon-red iconfont" aria-hidden="true">
-                  <use xlinkHref="#iconyx-tv-voice-offx"></use>
+                  <use xlinkHref="#iconkaiqimaikefeng-mianxing"></use>
                 </svg>
               )
             ) : null}
@@ -175,12 +245,17 @@ const VideoCard: React.FC<{
 };
 
 export default function VideoPage() {
+  const { eventEmitter } = useGlobalContext();
   const videoPageDomRef = useRef<HTMLDivElement | null>(null);
   const [memberList, setMemberList] = useState<NEMember[]>([]);
   const [meetingInfo, setMeetingInfo] = useState<NEMeetingInfo>();
   const [videoCount, setVideoCount] = useState(1);
   const [pageNum, setPageNum] = useState(1);
-  const [volumeMap, setVolumeMap] = useState<Record<string, number>>({});
+  const [speakerList, setSpeakerList] = useState<Speaker[]>([]);
+  // 说话者列表Timer
+  const audioVolumeIndicationTimer = useRef<
+    null | number | ReturnType<typeof setTimeout>
+  >(null);
 
   const memberListRef = useRef<NEMember[]>([]);
 
@@ -215,14 +290,14 @@ export default function VideoPage() {
     if (enableHideVideoOffAttendees) {
       sortMemberList = meetingInfo ? [...memberListVideoOn] : [];
       // 如果未开启隐藏本端
-      if (!enableHideMyVideo) {
+      if (!enableHideMyVideo || sortMemberList.length === 0) {
         sortMemberList = [meetingInfo.localMember, ...sortMemberList];
       }
     } else {
       sortMemberList = meetingInfo
         ? [...memberListVideoOn, ...memberListVideoOff]
         : [];
-      if (!enableHideMyVideo) {
+      if (!enableHideMyVideo || sortMemberList.length === 0) {
         sortMemberList = meetingInfo
           ? [meetingInfo.localMember, ...sortMemberList]
           : [...sortMemberList];
@@ -274,20 +349,57 @@ export default function VideoPage() {
     }
   }, [memberList, meetingInfo, videoCount, pageNum]);
 
-  const speakerList = useMemo(() => {
-    return memberList
-      .filter(
-        (member) =>
-          member.isAudioOn &&
-          member.isAudioConnected &&
-          volumeMap[member.uuid] > 0,
-      )
-      .map((member) => ({
-        uid: member.uuid,
-        nickName: member.name,
-        level: volumeMap[member.uuid],
-      }));
-  }, [memberList, volumeMap]);
+  useEffect(() => {
+    if (videoCount === 0) {
+      const handle = (data: NEMemberVolumeInfo[]) => {
+        const speakerList = data
+          .map((item) => {
+            const member = memberList.find(
+              (member) => member.uuid == item.userUuid,
+            );
+            let name = item.userUuid;
+
+            if (member) {
+              name = member.name;
+            }
+
+            return {
+              uid: item.userUuid,
+              nickName: name,
+              level: item.volume,
+              show:
+                member &&
+                member.role !== 'screen_sharer' &&
+                member.isAudioConnected,
+            };
+          })
+          .filter((item) => item.show);
+
+        setSpeakerList(speakerList);
+        if (audioVolumeIndicationTimer.current) {
+          clearTimeout(audioVolumeIndicationTimer.current);
+          audioVolumeIndicationTimer.current = null;
+        }
+
+        // 4s未收到新数据表示没人说话 情况列表
+        audioVolumeIndicationTimer.current = window.setTimeout(() => {
+          setSpeakerList([]);
+        }, 4000);
+      };
+
+      setSpeakerList((per) =>
+        per.filter((item) => {
+          return memberList.find((member) => member.uuid === item.uid)
+            ?.isAudioConnected;
+        }),
+      );
+
+      eventEmitter?.on(EventType.RtcAudioVolumeIndication, handle);
+      return () => {
+        eventEmitter?.off(EventType.RtcAudioVolumeIndication, handle);
+      };
+    }
+  }, [memberList, videoCount]);
 
   useEffect(() => {
     let height = 35;
@@ -327,23 +439,28 @@ export default function VideoPage() {
     };
   }, []);
 
+  //本地录制功能需要，当前渲染布局发生变化时，需要通知本地录制模块，更新录制的布局
   useEffect(() => {
-    function handleMessage(e: MessageEvent) {
-      const { event, payload } = e.data;
-
-      if (event === 'audioVolumeIndication') {
-        setVolumeMap({
-          ...volumeMap,
-          [payload.userUuid]: payload.volume,
-        });
-      }
+    if(!meetingInfo?.isLocalRecording){
+      return
     }
-
-    window.addEventListener('message', handleMessage);
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
-  }, [volumeMap]);
+    const parentWindow = window.parent;
+    parentWindow?.postMessage(
+      {
+        event: 'electronScreenSharevideoLayoutChange',
+        payload: {
+          memberListFilter,
+          videoCount,
+          pageNum,
+        },
+      },
+      parentWindow.origin,
+    );
+  }, [
+    memberListFilter,
+    videoCount,
+    meetingInfo?.isLocalRecording, //用于录制状态变化的通知，作用于首次开始录制
+  ]);
 
   return (
     <>
@@ -411,8 +528,10 @@ export default function VideoPage() {
                 }
                 member={member}
                 key={pageNum + member.uuid}
-                volume={volumeMap[member.uuid] || 0}
                 isMySelf={member.uuid === meetingInfo?.localMember.uuid}
+                enableVideoMirroring={
+                  meetingInfo?.setting.videoSetting.enableVideoMirroring
+                }
               />
             ) : null,
           )

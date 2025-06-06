@@ -144,7 +144,7 @@ const DatePickerFormItem: React.FC<DatePickerProps> = (props) => {
         }
         changeOnBlur
         format={'HH:mm'}
-        minuteStep={30}
+        minuteStep={15}
         suffixIcon={
           <svg
             className="icon iconfont iconjiantou-xia-copy"
@@ -357,8 +357,9 @@ const ScheduleMeeting = forwardRef<
 
   const [openLiveSettingModal, setOpenLiveSettingModal] = useState(false);
 
-  const [openInterpretationSetting, setOpenInterpretationSetting] =
-    useState(false);
+  const [openInterpretationSetting, setOpenInterpretationSetting] = useState(
+    false,
+  );
 
   const cancelRecurringRef = useRef(false);
 
@@ -429,7 +430,7 @@ const ScheduleMeeting = forwardRef<
         disabledHours: () => {
           const hours: number[] = [];
           const minHour =
-            dayjs().minute() >= 30 ? dayjs().hour() + 1 : dayjs().hour();
+            dayjs().minute() >= 45 ? dayjs().hour() + 1 : dayjs().hour();
 
           for (let i = 0; i < minHour; i++) {
             hours.push(i);
@@ -482,8 +483,14 @@ const ScheduleMeeting = forwardRef<
         disabledMinutes: (selectedHour: number) => {
           const minutes: number[] = [];
 
-          if (selectedHour === startTime.hour() && startTime.minute() === 0) {
-            minutes.push(30);
+          if (selectedHour === startTime.hour()) {
+            if (startTime.minute() === 0) {
+              minutes.push(15, 30, 45);
+            } else if (startTime.minute() === 15) {
+              minutes.push(30, 45);
+            } else if (startTime.minute() === 30) {
+              minutes.push(45);
+            }
           }
 
           return minutes;
@@ -495,7 +502,7 @@ const ScheduleMeeting = forwardRef<
         disabledHours: () => {
           const hours: number[] = [];
           const maxHour =
-            startTime.minute() === 30 ? startTime.hour() + 1 : startTime.hour();
+            startTime.minute() === 45 ? startTime.hour() + 1 : startTime.hour();
 
           for (let i = 0; i < maxHour; i++) {
             hours.push(i);
@@ -647,6 +654,14 @@ const ScheduleMeeting = forwardRef<
       });
     }
 
+    livePrivateConfigRef.current = {
+        title: meeting.live.title,
+        background: meeting.live.liveBackground,
+        pushThirdParties: meeting.live.livePushThirdParties,
+        liveChatRoomEnable: meeting.live.liveChatRoomEnable,
+        password: meeting.live.livePassword,
+      }
+
     form.setFieldsValue({
       subject: meeting.subject,
       startTime: dayjs(meeting.startTime),
@@ -664,11 +679,7 @@ const ScheduleMeeting = forwardRef<
       liveOnlyEmployees: liveOnlyEmployees,
       liveChatRoomEnable: meeting.live.liveChatRoomEnable,
       livePrivateConfig: {
-        title: meeting.live.title,
-        background: meeting.live.liveBackground,
-        pushThirdParties: meeting.live.livePushThirdParties,
-        liveChatRoomEnable: meeting.live.liveChatRoomEnable,
-        password: meeting.live.livePassword,
+        ...livePrivateConfigRef.current
       },
       scheduledMembers: meeting.scheduledMemberList,
       enableWaitingRoom: meeting?.waitingRoomEnabled,
@@ -822,7 +833,7 @@ const ScheduleMeeting = forwardRef<
           enableWaitingRoom: false,
           enableGuestJoin: false,
           scheduledMembers: [],
-          timezoneId: dayjs.tz.guess(),
+          timezoneId: dayjs.tz.guess() || 'Asia/Shanghai',
           autoCloudRecord: false,
           autoCloudRecordStrategy: 0,
         });
@@ -838,7 +849,7 @@ const ScheduleMeeting = forwardRef<
     if (restProps.open) {
       const endTime = form.getFieldValue('endTime');
 
-      if (endTime.subtract(30, 'minute') < startTime) {
+      if (endTime.subtract(15, 'minute') < startTime) {
         form.setFieldValue('endTime', startTime.add(30, 'minute'));
       }
 
@@ -862,7 +873,7 @@ const ScheduleMeeting = forwardRef<
     if (restProps.open) {
       const startTime = form.getFieldValue('startTime');
 
-      if (endTime?.subtract(30, 'minute') < startTime) {
+      if (endTime?.subtract(15, 'minute') < startTime) {
         form.setFieldValue('endTime', startTime.add(30, 'minute'));
       }
 
@@ -1771,6 +1782,7 @@ const ScheduleMeeting = forwardRef<
         destroyOnClose
         liveInfo={livePrivateConfig}
         footer={null}
+        globalConfig={globalConfig}
         preMeetingService={preMeetingService}
         open={openLiveSettingModal}
         onSave={handleLiveSettingSave}

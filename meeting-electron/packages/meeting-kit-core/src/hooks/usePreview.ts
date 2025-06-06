@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGlobalContext, useMeetingInfoContext } from '../store'
 import { getWindow } from '../kit'
-import RendererManager from '../libs/Renderer/RendererManager'
-import { IRenderer } from '../libs/Renderer/IRenderer'
 
 const videoDomId = 'nemeeting-preview-video-dom'
 const beautyDomId = 'beauty-video-canvas'
@@ -11,7 +9,7 @@ const usePreview = () => {
   const { neMeeting } = useGlobalContext()
   const { meetingInfo } = useMeetingInfoContext()
   const [isPreview, setIsPreview] = useState(false)
-  const previewRenderRef = useRef<IRenderer>()
+  const previewRef = useRef<HTMLElement>()
   const meetingInfoRef = useRef(meetingInfo)
 
   const { localMember } = meetingInfo
@@ -27,30 +25,31 @@ const usePreview = () => {
       settingWindow?.document.getElementById(beautyDomId)
 
     if (view) {
-      const context = {
-        view: view,
-        userUuid: meetingInfoRef.current.inWaitingRoom
-          ? ''
-          : meetingInfoRef.current.myUuid,
-        sourceType: 'video',
-      }
+      previewRef.current = view
+      const isPreviewController =
+        meetingInfoRef.current.inWaitingRoom ||
+        !meetingInfoRef.current.meetingNum
 
-      previewRenderRef.current = RendererManager.instance.createRenderer(
-        context
-      )
+      if (isPreviewController) {
+        neMeeting?.previewController?.setupLocalVideoCanvas(view)
+      } else {
+        neMeeting?.rtcController?.setupLocalVideoCanvas(view)
+      }
     }
   }
 
   const stopPreview = () => {
     setIsPreview(false)
-    const context = {
-      userUuid: meetingInfoRef.current.inWaitingRoom
-        ? ''
-        : meetingInfoRef.current.myUuid,
-      sourceType: 'video',
+    const isPreviewController =
+      meetingInfoRef.current.inWaitingRoom || !meetingInfoRef.current.meetingNum
+
+    if (isPreviewController) {
+      neMeeting?.previewController?.removeLocalVideoCanvas?.(previewRef.current)
+    } else {
+      neMeeting?.rtcController?.removeLocalVideoCanvas?.(previewRef.current)
     }
 
-    RendererManager.instance.removeRenderer(context, previewRenderRef.current)
+    previewRef.current = undefined
   }
 
   useEffect(() => {

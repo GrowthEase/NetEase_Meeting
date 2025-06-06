@@ -18,7 +18,7 @@
     "isolatedModules": false,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["node"]
+    "types": ["node", "@webgpu/types"]
   },
   "typedocOptions": {
     "entryPoints": ["./src/kit/interface/index.ts"],

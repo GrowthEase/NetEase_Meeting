@@ -4,19 +4,50 @@
   .nemeeting-record-wrapper {
     position: fixed;
     top: 70px;
+    left: 5px;
     z-index: 2;
+    display: flex;
+    align-items: center;
+  }
+  .nemeeting-my-canvas {
+    z-index: -1;
+    width: 0;
+    height: 0;
+    position: absolute;
+  }
+  .nemeeting-h5-top-tip {
+    margin-right: 4px;
+    background-color: #3d3d3d;
+  }
+  .living {
+    height: 21px;
+    color: #fff;
+    font-size: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 6px;
+    z-index: 20;
+    box-sizing: border-box;
+    .living-icon {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background-color: #fe3b30;
+      margin-right: 4px;
+    }
   }
   .nemeeint-online {
-    border: 1px solid #ebedf0;
-    background-color: #fff;
-    padding: 20px 30px;
-    color: #337eff;
+    background-color: rgba(0, 0, 0, 0.4);
+    padding: 10px 20px;
+    color: #eee;
     position: absolute;
-    top: 50%;
+    top: 10%;
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 100;
     border-radius: 10px;
+    width: 60%;
   }
   .nemeeting-switch {
     --height: 24px;

@@ -46,7 +46,11 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
   onClick,
 }) => {
   const { meetingInfo } = useMeetingInfoContext()
-  const { showCloudRecordingUI } = useGlobalContext()
+  const {
+    showCloudRecordingUI,
+    showLocalRecordingUI,
+    showMeetingInfo: canShowMeetingInfo,
+  } = useGlobalContext()
   const [showMeetingInfo, setShowMeetingInfo] = useState(false)
   const [showExitAction, setShowExitAction] = useState(false)
   const {
@@ -56,11 +60,14 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
   const {
     neMeeting,
     dispatch: globalDispatch,
+    eventEmitter,
     showSubject,
   } = useContext<GlobalContextInterface>(GlobalContext)
   const [actions, setActions] = useState<Action[]>([])
   // 开始录制弹窗提醒
   const [startMeetingRecordingModal, setStartMeetingRecordingModal] =
+    useState(false)
+  const [startMeetingLocalRecordingModal, setStartMeetingLocalRecordingModal] =
     useState(false)
   const isSwitchingRef = useRef<boolean>(false)
 
@@ -262,11 +269,56 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
 
   useEffect(() => {
     if (meetingInfo?.isCloudRecording && showCloudRecordingUI) {
+      if (meetingInfo.isOtherCloudRecordingStartConfirmed) {
+        return
+      } else {
+        dispatch?.({
+          type: ActionType.UPDATE_MEETING_INFO,
+          data: {
+            isOtherCloudRecordingStartConfirmed: true,
+          },
+        })
+      }
       setStartMeetingRecordingModal(true)
     } else {
       setStartMeetingRecordingModal(false)
     }
   }, [showCloudRecordingUI, meetingInfo?.isCloudRecording])
+
+  useEffect(() => {
+    eventEmitter?.on('needShowLocalRecordTip', () => {
+      console.log('H5需要弹框本地录制 showLocalRecordingUI: ', showLocalRecordingUI)
+      console.log('H5需要弹框本地录制 isOtherLocalRecordingConfirmed: ', meetingInfo.isOtherLocalRecordingConfirmed)
+      // 如果不显示ui则不弹窗提醒
+      if (!showLocalRecordingUI) {
+        return
+      }
+
+      if (meetingInfo.isOtherLocalRecordingConfirmed) {
+        return
+      } else {
+        dispatch?.({
+          type: ActionType.UPDATE_MEETING_INFO,
+          data: {
+            isOtherLocalRecordingConfirmed: true,
+          },
+        })
+      }
+
+      setStartMeetingLocalRecordingModal(true)
+    })
+    return () => {
+      eventEmitter?.off('needShowLocalRecordTip')
+    }
+  }, [meetingInfo.isOtherLocalRecordingConfirmed])
+
+  function handleShowMeetingInfo() {
+    if (canShowMeetingInfo === false) {
+      return
+    }
+
+    setShowMeetingInfo(!showMeetingInfo)
+  }
 
   return (
     <>
@@ -336,21 +388,19 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
           <div className="header-title">
             <span
               className={'meeting-name text-base'}
-              onClick={() => {
-                setShowMeetingInfo(!showMeetingInfo)
-              }}
+              onClick={handleShowMeetingInfo}
             >
               {showSubject ? subject : i18n.globalAppName}
             </span>
-            <svg
-              className="icon iconfont icon-white"
-              onClick={() => {
-                setShowMeetingInfo(!showMeetingInfo)
-              }}
-              aria-hidden="true"
-            >
-              <use xlinkHref="#icona-45"></use>
-            </svg>
+            {canShowMeetingInfo !== false && (
+              <svg
+                className="icon iconfont icon-white"
+                onClick={handleShowMeetingInfo}
+                aria-hidden="true"
+              >
+                <use xlinkHref="#icona-45"></use>
+              </svg>
+            )}
           </div>
 
           <div className="header-right">
@@ -394,6 +444,29 @@ const MeetingHeader: React.FC<MeetingHeaderProps> = ({
       >
         <div className="start-meeting-record-modal">
           <div className="record-message">{t('startRecordTipByMember')}</div>
+          <div className="record-agree-message">
+            {t('agreeInRecordMeeting')}
+          </div>
+        </div>
+      </Dialog>
+      <Dialog
+        visible={startMeetingLocalRecordingModal}
+        title={t('beingMeetingRecorded')}
+        cancelText={t('meetingLeaveFull')}
+        confirmText={t('gotIt')}
+        width={305}
+        onCancel={() => {
+          setStartMeetingLocalRecordingModal(false)
+          onExitClick()
+        }}
+        onConfirm={() => {
+          setStartMeetingLocalRecordingModal(false)
+        }}
+      >
+        <div className="start-meeting-record-modal">
+          <div className="record-message">
+            {t('startLocalRecordTipByMember')}
+          </div>
           <div className="record-agree-message">
             {t('agreeInRecordMeeting')}
           </div>

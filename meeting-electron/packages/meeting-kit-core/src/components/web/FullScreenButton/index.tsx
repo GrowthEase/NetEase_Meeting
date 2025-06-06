@@ -9,7 +9,7 @@ interface FullScreenButtonProps {
   className?: string
   isFullScreen: boolean
 }
-// 会议持续时间
+// 全屏按钮
 const FullScreenButton: React.FC<FullScreenButtonProps> = React.memo(
   ({ className, isFullScreen }: FullScreenButtonProps) => {
     const { t } = useTranslation()

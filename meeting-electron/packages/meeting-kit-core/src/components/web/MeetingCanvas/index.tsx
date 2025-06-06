@@ -31,6 +31,7 @@ import useMeetingCanvas from '../../../hooks/useMeetingCanvas'
 import AudioModeCanvas from './AudioModeCanvas'
 import VideoGalleryLayout from './VideoGalleryLayout'
 import Toast from '../../common/toast'
+import { useUpdateEffect } from 'ahooks'
 
 interface MeetingCanvasProps {
   className?: string
@@ -39,6 +40,7 @@ interface MeetingCanvasProps {
   isLocalScreen: boolean
   isAudioMode: boolean
   isFullSharingScreen: boolean
+  isShowControlBar: boolean
   onHandleFullSharingScreen: () => void
   wrapperWidth?: number
 }
@@ -51,7 +53,7 @@ const VIEW_RATIO = 16 / 9
 
 // 正常画布显示
 const BigRender: React.FC<MeetingCanvasProps> = (props) => {
-  const { isSpeaker, isAudioMode } = props
+  const { isSpeaker, isAudioMode, isShowControlBar } = props
   const { eventEmitter, neMeeting } = useGlobalContext()
   const { activeSpeakerList } = useActiveSpeakerManager()
   const { meetingInfo, dispatch } = useContext(MeetingInfoContext)
@@ -74,6 +76,10 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
   const isMounted = useRef(false)
   const { t } = useTranslation()
 
+  const activeIndexRef = useRef(activeIndex)
+
+  activeIndexRef.current = activeIndex
+
   // const [speakerRightViewColumnNum, setSpeakerRightViewColumnNum] = useState(1)
 
   const isGalleryLayout = useMemo(() => {
@@ -84,7 +90,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     isSpeaker && meetingInfo.speakerLayoutPlacement === 'right'
 
   const groupNum = useMemo(() => {
-    let groupNum = 4
+    let groupNum = 6
 
     if (isSpeakerLayoutPlacementRight) {
       groupNum = 6
@@ -126,12 +132,14 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
   isSpeakerRef.current = isSpeaker
 
   const showCollapseBtn = useMemo(() => {
-    if (
-      memberList.length === 1 ||
-      meetingInfo.whiteboardUuid ||
-      meetingInfo.localMember.isSharingScreen
-    ) {
-      return false
+    if (!meetingInfo.dualMonitors) {
+      if (
+        memberList.length === 1 ||
+        meetingInfo.whiteboardUuid ||
+        meetingInfo.localMember.isSharingScreen
+      ) {
+        return false
+      }
     }
 
     return isSpeaker
@@ -215,11 +223,17 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
   }
 
   const isSpeakerFull = useMemo(() => {
-    if (
-      meetingInfo.layout === LayoutTypeEnum.Gallery ||
-      meetingInfo.whiteboardUuid
-    ) {
-      return false
+    if (memberList.length === 1 && meetingInfo.dualMonitors) {
+      return true
+    }
+
+    if (!meetingInfo.dualMonitors) {
+      if (
+        meetingInfo.layout === LayoutTypeEnum.Gallery ||
+        meetingInfo.whiteboardUuid
+      ) {
+        return false
+      }
     }
 
     return isSpeakerLayoutPlacementRight
@@ -231,6 +245,8 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     speakerTopCollapse,
     meetingInfo.layout,
     meetingInfo.whiteboardUuid,
+    memberList.length,
+    meetingInfo.dualMonitors,
   ])
 
   const isHost = useMemo(() => {
@@ -287,7 +303,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
   )
 
   useEffect(() => {
-    setActiveIndex(0)
+    // setActiveIndex(0)
     // 切换到画廊模式需要设置下每个画布宽高比为16:9
     if (!isSpeaker && !isAudioMode) {
       if (swiperInstanceRef.current?.destroyed) {
@@ -337,7 +353,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
 
   useEffect(() => {
     if (isSpeakerRef.current && !isSpeakerLayoutPlacementRight) {
-      setSwiperWidth(windowInnerWidth * 0.6)
+      setSwiperWidth(windowInnerWidth * 0.85)
       return
     }
 
@@ -390,12 +406,15 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
   }, [])
 
   const videoViewWidth = useMemo(() => {
-    return isAudioMode ? 102 : Math.floor(videoViewHeight * VIEW_RATIO)
+    // 去除border
+    return isAudioMode ? 102 : Math.floor((videoViewHeight - 1) * VIEW_RATIO)
   }, [videoViewHeight, isAudioMode])
 
-  // 高度如果是演讲者模式，则宽高比16:9，否则100%
+  // 高度如果是演讲者模式，则宽高比16:9，否则100% 由于上下有2px的border 计算时候需要加上，否则不能铺满
   const swiperHeight = useMemo(() => {
-    return swiperWidth === '100%' ? '100%' : (swiperWidth * 0.25) / VIEW_RATIO
+    return swiperWidth === '100%'
+      ? '100%'
+      : (swiperWidth * (1 / 6) + 2) / VIEW_RATIO + 2
   }, [swiperWidth, isSpeaker])
 
   // 顶部成员画面
@@ -503,12 +522,31 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
   }
 
   // 是否显示主画面
-  const isShowMainVideo =
-    (isSpeaker &&
-      !meetingInfo.screenUuid &&
-      !mainMember?.hide &&
-      (!meetingInfo.whiteboardUuid || meetingInfo.isWhiteboardTransparent)) ||
-    !!meetingInfo.pinVideoUuid
+  const isShowMainVideo = useMemo(() => {
+    if (meetingInfo.pinVideoUuid) {
+      return true
+    }
+
+    if (isSpeaker) {
+      if (meetingInfo.dualMonitors) {
+        return true
+      } else {
+        return (
+          !meetingInfo.screenUuid &&
+          !mainMember?.hide &&
+          (!meetingInfo.whiteboardUuid || meetingInfo.isWhiteboardTransparent)
+        )
+      }
+    }
+  }, [
+    isSpeaker,
+    meetingInfo.screenUuid,
+    mainMember.hide,
+    meetingInfo.whiteboardUuid,
+    meetingInfo.isWhiteboardTransparent,
+    meetingInfo.pinVideoUuid,
+    meetingInfo.dualMonitors,
+  ])
 
   useEffect(() => {
     if (
@@ -519,10 +557,9 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
       setActiveIndex(activeIndex - 1)
     }
   }, [sliderGroupMembers, activeIndex])
-
   // 不在当前页的成员5s后取消订阅，如果5s内重新进入当前页则取消定时器
   useEffect(() => {
-    if (isElectronSharingScreen) {
+    if (isElectronSharingScreen || isGalleryLayout) {
       return
     }
 
@@ -538,6 +575,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
     activeSpeakerList,
     mainMember,
     isElectronSharingScreen,
+    isGalleryLayout,
   ])
 
   useEffect(() => {
@@ -646,6 +684,55 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
 
     return 1
   }, [groupNum, sliderGroupMembers, activeIndex])
+
+  //本地录制功能需要，当前渲染布局发生变化时，需要通知本地录制模块，更新录制的布局
+  useEffect(() => {
+    // console.log('本地录制状态监听， memberList: ', memberList)
+    // console.log('本地录制状态监听， sliderGroupMembers: ', sliderGroupMembers)
+    // console.log('本地录制状态监听， mainMember: ', mainMember)
+    // console.log('本地录制状态监听， activeIndex: ', activeIndex)
+    // console.log('本地录制状态监听， isSpeakerFull: ', isSpeakerFull)
+    // console.log('本地录制状态监听， isSpeakerLayoutPlacementRight: ', isSpeakerLayoutPlacementRight)
+    // console.log('本地录制状态监听， isElectronSharingScreen: ', isElectronSharingScreen)
+    // console.log('本地录制状态监听， isAudioMode: ', isAudioMode)
+    // console.log('本地录制状态监听， isShowSlider: ', isShowSlider)
+    if (!meetingInfo?.isLocalRecording) {
+      return
+    }
+
+    eventEmitter?.emit('layoutChange', {
+      isElectronSharingScreen,
+      isAudioMode,
+      isShowSlider,
+      sliderGroupMembers,
+      activeIndex,
+      mainMember,
+      isSpeakerFull,
+      isSpeakerLayoutPlacementRight,
+    })
+  }, [
+    sliderGroupMembers,
+    isSpeakerFull,
+    isSpeakerLayoutPlacementRight,
+    isElectronSharingScreen,
+    isAudioMode,
+    isShowSlider,
+    activeIndex,
+    meetingInfo?.isLocalRecording, //用于录制状态变化的通知，作用于首次开始录制
+  ])
+
+  // 当maxResizableWidth大于resizableWidth时，设置resizableWidth为maxResizableWidth
+  useUpdateEffect(() => {
+    if (resizableWidth > maxResizableWidth) {
+      setResizableWidth(maxResizableWidth)
+    }
+  }, [maxResizableWidth, resizableWidth])
+
+  useUpdateEffect(() => {
+    if (!isElectronSharingScreen) {
+      setResizableWidth(180)
+    }
+  }, [isElectronSharingScreen])
 
   return isElectronSharingScreen ? null : isAudioMode ? ( // 音频模式
     <AudioModeCanvas
@@ -902,6 +989,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
                 ['nemeeting-right']: isSpeakerLayoutPlacementRight,
                 ['nemeeting-collapse']: isSpeakerFull,
                 ['nemeeting-collapse-right']: speakerRightCollapse,
+                ['nemeeting-top-hide']: isShowControlBar === false,
               })}
               onClick={handleCollapse}
             >
@@ -930,6 +1018,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
             [mainMember].map((member) => {
               return (
                 <VideoCard
+                  operateExtraTop={isShowControlBar === false && isSpeakerFull}
                   onDoubleClick={handleViewDoubleClick}
                   mirroring={
                     meetingInfo.enableVideoMirror &&
@@ -956,6 +1045,7 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
                   style={{
                     backgroundColor: '#292929',
                   }}
+                  showInPhoneTip={true}
                   focusBtnClassName={
                     isSpeakerFull ||
                     memberList.length === 1 ||
@@ -972,15 +1062,17 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
             !meetingInfo.whiteboardUuid && (
               <div className="screen-video-wrap">
                 <VideoCard
+                  operateExtraTop={isShowControlBar === false && isSpeakerFull}
                   onCallClick={onCallClick}
                   showBorder={false}
                   isSubscribeVideo={true}
                   isMain={true}
                   isMySelf={mainMember.uuid === meetingInfo.myUuid}
                   key={mainMember.uuid}
-                  type={'screen'}
+                  type={meetingInfo.dualMonitors ? 'video' : 'screen'}
                   className={`w-full h-full text-white bg-black`}
                   member={mainMember}
+                  showInPhoneTip={true}
                   avatarSize={64}
                   speakerRightResizing={speakerRightResizing}
                 />
@@ -988,7 +1080,8 @@ const BigRender: React.FC<MeetingCanvasProps> = (props) => {
             )}
           {(!isShowMainVideo || meetingInfo.isWhiteboardTransparent) &&
             !!meetingInfo.whiteboardUuid &&
-            !meetingInfo.screenUuid && (
+            !meetingInfo.screenUuid &&
+            !meetingInfo.dualMonitors && (
               <WhiteboardView
                 isEnable={
                   !!meetingInfo.whiteboardUuid && !meetingInfo.screenUuid
@@ -1066,14 +1159,16 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
     isLocalScreen,
     onHandleFullSharingScreen,
     isAudioMode,
+    isShowControlBar,
   } = props
   const { meetingInfo } = useContext(MeetingInfoContext)
-
+  //console.warn('视频渲染窗口布局渲染 meetingInfo:', meetingInfo)
   const containerClassName = classNames('nemeeting-canvas-web', className, {
     'speaker-layout-right':
       isSpeaker && meetingInfo.speakerLayoutPlacement === 'right',
     'speaker-layout-top':
       isSpeaker && meetingInfo.speakerLayoutPlacement === 'top',
+    'nemeeting-top-hide': !isShowControlBar,
   })
 
   const isWin = window.systemPlatform === 'win32'
@@ -1107,6 +1202,7 @@ const MeetingCanvas: React.FC<MeetingCanvasProps> = (props) => {
             isSpeaker={isSpeaker}
             isLocalScreen={isLocalScreen}
             isFullSharingScreen={isFullSharingScreen}
+            isShowControlBar={isShowControlBar}
           />
         </div>
       )}

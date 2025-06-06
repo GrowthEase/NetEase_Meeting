@@ -45,6 +45,18 @@ const MeetingLayout: React.FC<MeetingLayoutProps> = React.memo(
       }
     }, [meetingInfo.layout, meetingInfo.speakerLayoutPlacement])
 
+    const galleryLayoutDisable = useMemo(() => {
+      if (meetingInfo.dualMonitors) {
+        return false
+      } else {
+        return !!meetingInfo.screenUuid || !!meetingInfo.whiteboardUuid
+      }
+    }, [
+      meetingInfo.screenUuid,
+      meetingInfo.whiteboardUuid,
+      meetingInfo.dualMonitors,
+    ])
+
     const enableRemoteViewOrder = useMemo(() => {
       return meetingInfo.remoteViewOrder !== undefined
     }, [meetingInfo.remoteViewOrder])
@@ -127,9 +139,9 @@ const MeetingLayout: React.FC<MeetingLayoutProps> = React.memo(
             icon: '#iconyx-layout-grid',
             title: t('galleryLayoutGrid'),
             active: layout === LayoutTypeEnum.Gallery,
-            disable: !!meetingInfo.screenUuid || !!meetingInfo.whiteboardUuid,
+            disable: galleryLayoutDisable,
             onClick: () => {
-              if (meetingInfo.screenUuid || meetingInfo.whiteboardUuid) return
+              if (galleryLayoutDisable) return
               dispatch?.({
                 type: ActionType.UPDATE_MEETING_INFO,
                 data: {
@@ -297,7 +309,7 @@ const MeetingLayout: React.FC<MeetingLayoutProps> = React.memo(
               <div>{t('layout')}</div>
               <div className="link-button" onClick={() => onSettingClick?.()}>
                 <svg className="icon iconfont" aria-hidden="true">
-                  <use xlinkHref="#iconyx-tv-settingx1"></use>
+                  <use xlinkHref="#iconshezhi-mianxing"></use>
                 </svg>
                 {t('layoutSettings')}
               </div>
