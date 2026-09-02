@@ -3,8 +3,6 @@
 这是一个基于 Umi、React 和 TypeScript 的会议邀请页，提供以下入口：
 
 - 邀请详情：`/` 或 `/invite?meeting=<会议邀请码>`
-- 账号注销：`/logout`
-- 注销身份验证：`/identity`
 
 ## 开发与构建
 
@@ -44,20 +42,18 @@ yarn build
 
 ### 顶部固定名称和图标
 
-公共顶部 Logo 组件位于 [`src/components/logo.tsx`](src/components/logo.tsx)，目前被注销页和身份验证页使用。
+邀请详情页中的软件名称和主图标位于 [`src/pages/invitePage/index.tsx`](src/pages/invitePage/index.tsx)。
 
-1. 修改文件末尾的文本 `网易会议`，替换为目标软件名称。
-2. 将组件中的内嵌 SVG 替换为目标 Logo。可以直接替换 `<svg>...</svg>` 内容，也可以改成图片：
+1. 修改卡片标题 `网易会议`，替换为目标软件名称。
+2. 将页面中的内嵌 SVG 替换为目标 Logo。可以直接替换 `<svg>...</svg>` 内容，也可以改成图片：
 
    ```tsx
-   <img src={require('../assets/logo.png')} alt="软件 Logo" />
+   <img src={require('../../assets/logo.png')} alt="软件 Logo" />
    ```
 
 3. 如果使用图片，请把文件放到 `src/assets/`，并根据图片比例调整 `width`、`height` 和外层间距。
 
 ### 邀请详情页名称
-
-邀请详情页的卡片标题是单独写在 [`src/pages/invitePage/index.tsx`](src/pages/invitePage/index.tsx) 中的 `网易会议`。替换顶部 Logo 后，还需要同步修改这里的标题，否则邀请页和其他页面的名称会不一致。
 
 该文件中还有“该页面会唤起网易会议”“若您已安装了网易会议”等提示语，如软件改名，应一并搜索并替换。
 
@@ -129,33 +125,8 @@ window.location.href = 'https://meeting.163.com/'
 
 将其替换为软件下载页、应用商店地址或自有下载页。若需要按操作系统分别跳转，应在 `download` 函数中根据 User-Agent 分流。
 
-## API 和环境配置
-
-`.umirc.ts` 中的 `baseUrl` 是线上邀请详情、短信验证和账号注销接口的服务地址：
-
-```ts
-const baseUrl = 'https://api.example.com/'
-```
-
-项目不再通过 `RUN_ENV` 切换环境，所有构建均使用线上配置：
-
-```bash
-yarn start
-yarn build
-```
-
-邀请页从 URL 查询参数 `meeting` 读取会议邀请码，然后请求：
-
-```text
-GET <baseUrl>/scene/meeting/v1/invite/info/<meeting>
-```
-
-请确保后端已配置跨域（CORS），并且返回数据至少包含 `meetingNum`、`subject`、`startTime`、`endTime`、`type` 和 `state`。网页入会还需要 `meetingAppKey` 和 `guestJoinType`。
-
 ## 发布前检查
 
 - 确认线上 API、`webJumpUrl`、`h5JumpUrl` 和 `publicPath` 均为正式发布地址，不要误填测试/QA 域名。
-- 不要把 AppKey、用户令牌、短信验证码或其他凭据写入源码或提交到 URL。当前注销流程会从 URL 读取 `id`、`t`、手机号和验证码，接入生产前应评估并改为短期一次性授权码或内存传递。
-- `doSendVerifyCode` 当前把手机号放在 GET URL 路径中，生产后端应做好限流、来源校验和日志脱敏。
 - 替换 Logo、背景和字体等资源前确认拥有相应的商标、版权和再分发授权。
 - 发布前执行一次完整构建，并在桌面浏览器、移动浏览器、微信/QQ 内置浏览器和已安装 APP 的环境分别验证跳转。

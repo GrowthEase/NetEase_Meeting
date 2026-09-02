@@ -1,0 +1,252 @@
+p {
+  margin: 0;
+  bottom: 0;
+}
+body,
+html {
+  margin: 0;
+  bottom: 0;
+  background-color: #ffffff;
+  //overflow: hidden;
+}
+//pc端
+@media screen and (min-width: 900px) {
+  .invitePageWrapper {
+    box-sizing: border-box;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 375px;
+    height: 724px;
+    transform: translate(-50%, -50%);
+    background-color: #ffffff;
+    border-radius: 5px;
+    padding: 0 58px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .wrapper {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    background-image: url('../../assets/background.png');
+    background-size: cover;
+  }
+  .downloadPageWrapper {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 375px;
+    height: 724px;
+    transform: translate(-50%, -50%);
+    background-color: #ffffff;
+    border-radius: 5px;
+  }
+  .downloadPage {
+    width: 95%;
+    height: 100%;
+    margin: 0 auto;
+    display: flex;
+    padding: 30px 0 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+  }
+}
+
+//移动端
+@media screen and (max-width: 900px) {
+  .invitePageWrapper {
+    box-sizing: border-box;
+    width: 100vw;
+    height: 90vh;
+    background-color: #ffffff;
+    display: flex;
+    padding: 0 50px;
+    min-height: 718px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .downloadPageWrapper {
+    position: absolute;
+    left: 50%;
+    height: 100%;
+    width: 100%;
+    padding: 20% 0;
+    transform: translateX(-50%);
+    background-color: #ffffff;
+    border-radius: 5px;
+  }
+  .downloadPage {
+    width: 95%;
+    height: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+.card {
+  width: 100%;
+  background-color: #fff;
+  border-radius: 8px;
+}
+.meetingLogo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.theme {
+  font-weight: 400;
+  font-size: 14px;
+  color: #333333;
+  letter-spacing: 0;
+  word-break: break-word;
+  font-weight: 400;
+}
+.meetingId {
+  margin: 15px 0 20px;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  color: #2d3033;
+  letter-spacing: 0;
+  word-break: break-word;
+}
+.copyIcon {
+  position: relative;
+  top: 3px;
+  left: 5px;
+  color: rgb(64, 139, 231);
+  font-weight: bold;
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+}
+.img {
+  width: 74px;
+  height: 74px;
+  margin: 40px 0;
+}
+.title {
+  font-weight: 500;
+  font-size: 20px;
+  height: 35px;
+  margin-top: 55px;
+}
+.line {
+  width: 20px;
+  height: 1px;
+  border-top: 1px solid gray;
+  margin: 0 5px;
+}
+.meetingStatusWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.time {
+  font-size: 24px;
+  font-weight: 500;
+  text-align: center;
+}
+.timeWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fb;
+  border-radius: 4px;
+  height: 110px;
+}
+
+.date {
+  text-align: center;
+  font-size: 12px;
+  width: 100px;
+}
+
+.webJoinBtn {
+  margin-top: 24px;
+  display: flex !important;
+  align-items: center;
+  width: 100%;
+}
+.appJoinBtn {
+  display: flex !important;
+  align-items: center;
+  width: 100%;
+}
+.webJoinBtnIcon {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+}
+.joinMeetingBtn {
+  font-size: 17px;
+  width: 100%;
+  text-align: center;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.footer {
+  width: 100%;
+  height: 200px;
+}
+.footDesc {
+  font-size: 12px;
+  color: #939699;
+  letter-spacing: 0;
+  line-height: 20px;
+  text-align: center;
+  margin: 10px 0;
+}
+
+.meetingIcon {
+  width: 70px;
+  height: 70px;
+  margin-top: 70px;
+  margin-bottom: 40px;
+}
+.downloadDesc {
+  text-align: center;
+  font-size: 14px;
+  color: #939699;
+  letter-spacing: 0;
+  margin: 20px;
+}
+.downloadBtn {
+  font-size: 16px;
+  width: 100%;
+  text-align: center;
+}
+.invalidMeeting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  height: 200px;
+}
+.openBrowserTip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+.openBrowserTipImg {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 200px;
+}

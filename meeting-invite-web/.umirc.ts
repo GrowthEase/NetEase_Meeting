@@ -20,8 +20,6 @@ export default defineConfig({
   routes: [
     { path: '/', component: '@/pages/invitePage' },
     { path: '/invite', component: '@/pages/invitePage' },
-    { path: '/logout', component: '@/pages/logout' },
-    { path: '/identity', component: '@/pages/identity' },
   ],
   links: [
     {
